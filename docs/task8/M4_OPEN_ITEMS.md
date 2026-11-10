@@ -1,5 +1,8 @@
 # M4 open items: D6, D8, D13, D14, plus the D16 ability-kind table
 
+> Current N9d follow-up: [N9D_APPROVED_IMPLEMENTATION.md](N9D_APPROVED_IMPLEMENTATION.md). All nine recommendation groups are approved and implemented. The final code passes 1,980/1,980 tests; all 144 presentations and 816 variants are accounted for with no pending ruling gates. Earlier statuses and results below are historical. Browser verification was waived; main/live/preview remain unchanged.
+
+
 This is a read-only survey of `task8-implementation` (working tree clean) and `origin/task8-m4-core` (081c590). No files were changed.
 
 Conventions:

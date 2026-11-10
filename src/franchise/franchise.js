@@ -100,7 +100,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
     badges: { challenger: 0, vanguard: 0, sovereign: 0 }, qualification: { challenger: 0, vanguard: 0, sovereign: 0 }, bottomFourStreak: 0,
     history: [], news: [], leagueNews: [], leagueNewsMeta: { v: 1, leaders: {} }, dex: { seen: {}, signed: {} },
     campaign: { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 },
-    settings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false, difficulty: 'pro', ...settings },
+    settings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, reducedFlash: false, liveClock: false, difficulty: 'pro', ...settings },
     tutorial: { seen: {} },
     pool: {}, staffContracts: {}, staffRaise: {}, offseason: null,
   };

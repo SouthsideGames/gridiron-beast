@@ -199,6 +199,6 @@ test('D3 Feather Relay: its rotation hook is NOT built; the contract text does n
   assert.equal(fr.name, 'Feather Relay');
   assert.match(text, /Respect rotation locks and legal availability/); assert.match(text, /Incoming receives NO normal attack that team turn/);
   assert.doesNotMatch(text, /penalt|half-strength|half strength|x0\.5|×0\.5|entry cost/i, 'no word about the entry penalty');
-  assert.ok(T8_PROVISIONAL.some((p) => p.id === 'feather-relay-voluntary' && /D3/.test(p.waitsOn)), 'D3 reconciled 2026-11-09: built; only its voluntary status for the rotation triggers waits');
+  assert.ok(T8_PROVISIONAL.some((p) => p.id === 'feather-relay-voluntary' && /N9c/.test(p.waitsOn)), 'D3 reconciled 2026-11-09: built; only its voluntary status for the rotation triggers waits');
   for (const id of ['lineup-order-stable', 'p8-pending-cleared-on-departure', 'rotation-hook-order']) assert.ok(T8_PROVISIONAL.some((p) => p.id === id), id);
 });

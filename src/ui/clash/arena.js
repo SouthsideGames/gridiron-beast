@@ -14,6 +14,7 @@ import { monsterSprite } from '../pixel-monster.js';
 import { stateAt, cuesFor, nextExchangeIndex, DURATION } from './choreographer.js';
 import { themeFor, decorSvg, padSvg, SHADOW_SVG, shieldRingSvg, COND_ICON as LEGACY_COND_ICON, COND_COLOR as LEGACY_COND_COLOR } from './arena-art.js';
 import { createFx } from './fx.js';
+import { reducedFlash as flashPref } from '../flash-pref.js';
 import { toArenaRecord, isT8Result, T8_STATUS_ICON, T8_STATUS_COLOR } from './t8-record.js';
 import { t8StateAt, t8CuesFor, t8NextExchangeIndex, STATUS_NAME } from './t8/timeline.js';
 import { buildClashT8, drawClashT8, t8Live } from './t8/fx-t8.js';
@@ -64,7 +65,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const spriteImg = (svg) => `<img class="cl-sprite" alt="" draggable="false" src="data:image/svg+xml;utf8,${encodeURIComponent(svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))}">`;
 
 /**
- * Mount the arena into `root` for `result`. Options: { speed, reducedMotion, onCursor(i), onEnd(), onQuality(q),
+ * Mount the arena into `root` for `result`. Options: { speed, reducedMotion, reducedFlash (soften flashes; the saved setting applies anyway), onCursor(i), onEnd(), onQuality(q),
  *   names: { a, b } (team names for the strips, the matchup line and the victory banner; default 'Side A' / 'Side B'),
  *   edge: (attackerType, defenderType) => 'strong' | 'weak' | 'even' (the matchup line's type edge; the arena itself never imports the engine),
  *   simple: true (franchise battles: Watch / Speed / Skip only, no step, scrubber or FX toggle),
@@ -95,6 +96,9 @@ export function createArena(root, result, opts = {}) {
   const theme = themeFor(result);
   let speed = opts.speed || 1, cursor = 0, playing = false, token = 0, quality = opts.quality || 'full'; const live = new Set();
   const reduced = () => !!opts.reducedMotion || document.documentElement.dataset.reducedMotion === '1';
+  // Reduce flashes (flash-pref.js): the setting, or the caller's option. Flashes and strobes are softened; nothing is hidden.
+  const softFlash = () => !!opts.reducedFlash || flashPref();
+  const calm = (frames) => frames.map((fr) => (typeof fr.filter === 'string' ? { ...fr, filter: fr.filter.replace(/brightness\((\d+(?:\.\d+)?)\)/g, (m, v) => (Number(v) > 1.5 ? 'brightness(1.5)' : m)) } : fr));
   const isLandscape = () => window.matchMedia('(orientation: landscape) and (min-width: 600px)').matches;
   const all = [...result.lines.a, ...result.lines.b];
   const byId = Object.fromEntries(all.map((x) => [x.id, x]));
@@ -123,7 +127,7 @@ export function createArena(root, result, opts = {}) {
   const $ = (sel) => root.querySelector(sel); const $$ = (sel) => Array.from(root.querySelectorAll(sel));
   const stage = $('.cl-stage'), viewport = $('.cl-viewport'), layer = $('.cl-layer'), dimEl = $('.cl-dim'), caption = $('.cl-caption');
   const monEl = Object.fromEntries(all.map((x) => [x.id, $(`.cl-mon[data-id="${x.id}"]`)]));
-  const fx = createFx($('.cl-fx'), { speed: () => speed, reduced, quality: () => quality });
+  const fx = createFx($('.cl-fx'), { speed: () => speed, reduced, quality: () => quality, reducedFlash: softFlash });
   const t8under = $('.cl-t8-under'), t8over = $('.cl-t8-over');
   /** The drawing api handed to the looks hook (read-only on the record; the hook draws, the arena keeps the state). In native t8 mode it
    *  adds the t8 presentation state, the playback time and the layer redraw, and `stateAt` returns the native state in the arena shape. */
@@ -194,7 +198,7 @@ export function createArena(root, result, opts = {}) {
   function t8Draw(t = t8Time()) {
     if (!t8under || !t8over || !t8under.isConnected) return;
     const g = t8Geom(); const vb = `0 0 ${g.W} ${g.H}`; if (t8under.getAttribute('viewBox') !== vb) { t8under.setAttribute('viewBox', vb); t8over.setAttribute('viewBox', vb); }
-    const d = drawClashT8(t8state, t, g, { quality, reduced: reduced() });
+    const d = drawClashT8(t8state, t, g, { quality, reduced: reduced(), reducedFlash: softFlash() });
     t8under.innerHTML = d.under; t8over.querySelector('.fx').innerHTML = d.over; t8over.querySelector('.hud').innerHTML = d.hud;
   }
   function t8Loop() { t8clock.raf = 0; if (!t8 || !root.isConnected) return; const t = t8Time(); t8Draw(t); if (playing || t8Live(t8state, t)) t8clock.raf = requestAnimationFrame(t8Loop); }
@@ -220,7 +224,7 @@ export function createArena(root, result, opts = {}) {
 
   // ---- animation helpers (Web Animations API; every duration is divided by the speed; reduced motion skips motion)
   const dur = (ms) => (reduced() ? 0 : ms / speed);
-  function anim(el, frames, ms, easing = 'ease-out') { if (!el || dur(ms) <= 0) return Promise.resolve(); const a = el.animate(frames, { duration: dur(ms), easing, fill: 'none' }); live.add(a); return a.finished.catch(() => {}).finally(() => live.delete(a)); }
+  function anim(el, frames, ms, easing = 'ease-out') { if (!el || dur(ms) <= 0) return Promise.resolve(); if (softFlash()) frames = calm(frames); const a = el.animate(frames, { duration: dur(ms), easing, fill: 'none' }); live.add(a); return a.finished.catch(() => {}).finally(() => live.delete(a)); }
   const rig = (id) => monEl[id]?.querySelector('.cl-rig');
   const body = (id) => monEl[id]?.querySelector('.cl-body');
   const setActing = (id, on) => { for (const el of $$('.cl-mon.acting')) el.classList.remove('acting'); if (on && id && monEl[id]) monEl[id].classList.add('acting'); };
@@ -362,7 +366,7 @@ export function createArena(root, result, opts = {}) {
       case 'walk-back': { applyState(st); await wait(dur(D)); break; }
       case 'ko': {
         const T = body(e.target); const R = rig(e.target); const major = cue.tier === 'major';
-        await anim(T, [{ filter: 'brightness(1)' }, { filter: 'brightness(4)' }, { filter: 'brightness(1)' }, { filter: 'brightness(4)' }, { filter: 'brightness(1)' }], D * 0.22, 'linear');
+        await anim(T, softFlash() ? [{ filter: 'brightness(1)' }, { filter: 'brightness(1.5)' }, { filter: 'brightness(1)' }] : [{ filter: 'brightness(1)' }, { filter: 'brightness(4)' }, { filter: 'brightness(1)' }, { filter: 'brightness(4)' }, { filter: 'brightness(1)' }], D * 0.22, 'linear'); // reduce flashes: one soft pulse instead of the double strobe
         if (major) banner('Knockout!', 'major', D * 0.9);
         fx.koPuff(chest(e.target), { seed: cue.i }); monEl[e.target].classList.add('falling');
         const { dx } = towards(e.actor && e.actor !== e.target ? e.actor : e.target, e.target); const away = dx >= 0 ? 1 : -1;

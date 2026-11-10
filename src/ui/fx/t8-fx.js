@@ -18,7 +18,7 @@ import { readiness } from './charge.js';
 import { familyById } from '../../data/beast-dex.js';
 
 export const DEX_ID = /^[A-Z]{3}-\d\d-F$/;
-export const T8_REVISION = 1; // bump when the drawing of a look changes (the reviewer's fingerprint includes it)
+export const T8_REVISION = 2; // bump when the drawing of a look changes (the reviewer's fingerprint includes it)
 const DEFAULT_DUR = 1.2, TAIL = 0.45, CUE = 0.9;
 const HOLD_MAX = 0.9;
 
@@ -28,7 +28,10 @@ const EXTRA_KINDS = new Set(['afterimage_end']);
 /**
  * Build the Task 8 presentation state for one play. `lookup(team, slot)` -> { element, name, species } | null.
  * `meta` (optional, reviewer / match HUD data): { hud: { 'off:WR1': { status: {id, remaining}, battery: bool, charge: {n, max, ready, cd, cdMax, spent} } },
- * pre: [events logged before the snap (game log lines with a Dex ability id)] }.
+ * pre: [events logged before the snap (game log lines with a Dex ability id)], preroll: true (the host plays the time before the snap),
+ * revealed: ['owner|ability'] (fields already revealed before the snap),
+ * staged: [{ ability, kind, team, slot, at: [x, y] | null, t: start | null, always: bool, name }] (presence marks the host knows from the
+ * game state, drawn through the ability's own sub-look `kind`: Sovereign Arm's vacant formation spot and the defender's return) }.
  */
 export function buildT8(sim, lookup, meta = null) {
   const events = sim?.events || []; const frames = sim?.frames || [];
@@ -72,10 +75,17 @@ export function buildT8(sim, lookup, meta = null) {
   // Ambient auras: a look that is on while its owner is on the field (no event needed), from the snap to the whistle.
   if (frames.length) for (const team of ['off', 'def']) for (const q of frames[0][team]) { const m = named(team, q[0]); const amb = m?.species ? AMBIENT[m.species] : null; if (!amb) continue;
     items.push({ id: amb.id, kind: 'ambient', team, slot: q[0], t0: 0, start: 0, dur: last + 0.3, end: last + 0.3, stop: last, ev: { by: q[0], side: team }, look: amb, base: amb, L: elementOf(m.element || amb.element), name: m.name, label: amb.name, species: m.species, main: false, sid: q[0].charCodeAt(0) * 13 + 5, origin: [q[1], q[2]], path: null }); }
+  // Staged presence marks (meta.staged; match-fx.js): not an engine event of this play but a fact of the game state the host read (an
+  // absence being served, the absentee's return). `always`: on for the whole draw (no clock); otherwise it plays once from `t`
+  // (default: it ends at the snap, so a pre-rolling host shows it before the snap).
+  for (const g of meta?.staged || []) { const base = LOOKS[g.ability]; const spec = base?.sub?.[g.kind]; if (!spec) continue; const m = named(g.team, g.slot); const dur = spec.dur ?? DEFAULT_DUR; const t0 = g.always ? 0 : g.t ?? -dur;
+    items.push({ id: base.id, kind: g.kind, phase: null, team: g.team, slot: g.slot, t0, start: t0, dur, end: g.always ? (frames.length ? last + 0.5 : Infinity) : t0 + dur, stop: null, stopEv: null, ev: { by: g.slot, side: g.team, name: g.name || m?.name || null }, look: spec, base, L: elementOf(base.element), name: g.name || m?.name || g.slot, label: base.name, species: m?.species || null, main: false, staged: true, always: !!g.always, sid: 61 + items.length * 7, origin: g.at || null, path: null }); }
   // Fields: the play's functional rectangles (play frame), with the reveal of the ones created at this snap (fresh).
-  const fields = (sim?.fields || []).map((f) => ({ ...f, lead: f.fresh ? (FIELD_REVEAL[f.ability]?.lead ?? 0) : 0, expiring: !!(f.expires || meta?.expires?.includes(f.ability)) })); // expiring: its clock runs out at this whistle (cleanup)
+  // meta.revealed (['owner|ability']): fields whose reveal already played before the snap on the play-call screen (match-fx.js); they are simply there.
+  const seen = (f) => !!f.fresh && !!meta?.revealed?.includes(`${f.owner}|${f.ability}`);
+  const fields = (sim?.fields || []).map((f) => (seen(f) ? { ...f, fresh: false } : f)).map((f) => ({ ...f, lead: f.fresh ? (FIELD_REVEAL[f.ability]?.lead ?? 0) : 0, expiring: !!(f.expires || meta?.expires?.includes(f.ability)) })); // expiring: its clock runs out at this whistle (cleanup)
   const obstacles = sim?.obstacles || [];
-  let preroll = Math.max(0, ...items.map((it) => -it.start), ...fields.map((f) => f.lead));
+  let preroll = Math.max(0, ...items.filter((it) => !it.always).map((it) => -it.start), ...fields.map((f) => f.lead));
   // A host that does not play time before the snap (the match screen starts at t = 0) gets the pre-snap choreography inside the play:
   // pre-snap lines (Prism Break) move to start at 0, field reveals run from 0, a lead-in before an event at the snap is dropped (the
   // bar over the head is the anticipation there). A host that pre-rolls passes meta.preroll = true and starts at -preroll (reviewer).
@@ -106,7 +116,7 @@ function hudOf(view) {
   return Object.keys(out).length ? out : null;
 }
 /** The longest an effect of this state keeps drawing after the last frame (end-of-play hold). */
-export function t8Hold(state, lastT) { if (!state) return 0; let hold = state.fields.some((f) => f.expiring) ? 0.7 : 0; for (const it of state.items) if (it.start <= lastT + 1e-6 && it.end > lastT) hold = Math.max(hold, Math.min(HOLD_MAX, it.end - lastT)); for (const b of state.badges) if (b.t0 <= lastT + 1e-6 && b.t0 > lastT - 0.3) hold = Math.max(hold, 0.6); return hold; }
+export function t8Hold(state, lastT) { if (!state) return 0; let hold = state.fields.some((f) => f.expiring) ? 0.7 : 0; for (const it of state.items) if (!it.always && it.start <= lastT + 1e-6 && it.end > lastT) hold = Math.max(hold, Math.min(HOLD_MAX, it.end - lastT)); for (const b of state.badges) if (b.t0 <= lastT + 1e-6 && b.t0 > lastT - 0.3) hold = Math.max(hold, 0.6); return hold; }
 /** Impact times that may shake the screen (ability activations flagged `shake`). */
 export function t8Shakes(state) { return (state?.items || []).filter((it) => it.main && it.base.shake).map((it) => it.t0); }
 
@@ -119,7 +129,7 @@ export function drawT8(state, t, pos, { quality = 'full', toSvg = null, ball = n
   let u = '', o = '', b = ''; let cues = 0;
   const S = (x, y) => toSvg(x, y);
   const cl = (x, pad) => Math.max(-halfWidth + pad, Math.min(halfWidth - pad, x));
-  const live = state.items.filter((it) => t >= it.start - 1e-6 && t < it.end + 1e-6);
+  const live = state.items.filter((it) => (it.always || t >= it.start - 1e-6) && t < it.end + 1e-6);
   // Fields first (ground), then obstacles, then the items by their start (older under newer).
   for (const f of state.fields) {
     const k = revealK(f, t);

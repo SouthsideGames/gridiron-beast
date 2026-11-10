@@ -1,3 +1,4 @@
+// N9d: rules.preparePreChoice saves the candidate from the visible look; playStart only validates that saved monster and its final assignment. Historical snap-selection notes below are superseded.
 // PSY-03-F Foresight (cerebrix, QB). Task 8 M3 (targeted effect).
 // Contract (Dex): while ready, one initially aligned opposing LB within 3 yards of the line is marked at random (both sides see the
 // candidate: a 'foresight_mark' event). At the snap the mark is validated: if the marked LB actually blitzes and Cerebrix is able, a
@@ -28,9 +29,10 @@ export default registerAbility({
   hooks: {
     playStart(ctx, self) {
       const st = ctx.state(self); if (self.team !== 'off' || ctx.kickoff || ctx.twoPoint || st.cd > 0) return;
-      const lbs = ctx.opponents(self.team).filter((d) => positionOf(d.slot) === 'LB' && Math.abs(d.lineX) <= FORESIGHT.depth).sort((p, q) => p.slot.localeCompare(q.slot));
-      if (!lbs.length) return;
-      const mark = lbs[Math.min(lbs.length - 1, Math.floor(ctx.rng.next() * lbs.length))];
+      const saved = st.preChoiceMark;
+      if (!saved || saved.key !== ctx.preChoice?.key) return;
+      const mark = ctx.opponents(self.team).find((d) => (d.mid || d.id) === saved.mid);
+      if (!mark) return; // no substitute when the selected package leaves the saved target out
       ctx.log(`${self.name} foresees ${mark.name}`, { kind: 'foresight_mark', by: self.slot, side: self.team, ability: 'PSY-03-F', victim: mark.slot });
       if (!BLITZ.has(mark.assignment?.a)) return; // no eligible blitz: readiness kept
       if (self.stun > 0 || self.sitsOut) return; // unable: readiness kept

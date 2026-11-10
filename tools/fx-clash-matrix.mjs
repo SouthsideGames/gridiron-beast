@@ -15,7 +15,7 @@ import { prepare, phasesOf, PHASES, LOOKS, drawSpan } from '../tests/helpers/fx-
 const arg = (k, d = null) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.slice(a.indexOf('=') + 1) : d; };
 const report = arg('report') && fs.existsSync(arg('report')) ? JSON.parse(fs.readFileSync(arg('report'), 'utf8')) : null;
 const pick = (id, stage, tier) => { const scs = listScenarios(id, stage, tier); return scs.find((s) => s.kind === 'valid' && !s.provisional) || scs.find((s) => s.kind === 'valid') || scs.find((s) => !s.provisional) || scs[0]; };
-const gatedBy = (id) => Object.entries(PROVISIONAL_POINTS).filter(([, p]) => (p.abilities || []).includes(id)).map(([k]) => k);
+const gatedBy = (id) => Object.entries(PROVISIONAL_POINTS).filter(([, p]) => !p.approved && (p.abilities || []).includes(id)).map(([k]) => k);
 const tick = (v) => (v === 'n/a' ? 'n/a' : v ? `✓ ${v}` : '✗');
 const rows = []; let complete = 0, partial = 0;
 for (const id of registeredClashAbilities()) {

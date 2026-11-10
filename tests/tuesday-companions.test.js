@@ -7,6 +7,11 @@ import * as Link from '../src/franchise/clash-link.js';
 import { logHash } from '../src/clash/engine.js';
 import { monsterOverall } from '../src/data/monsters.js';
 import { exportJson, importJson } from '../src/franchise/save.js';
+import { settleHeadless } from '../src/franchise/clash-link.js';
+// Task 8 M4 (D1): a Watch battle stops at the player's rotation prompt. These tests stand in for an owner who answers the first prompt
+// with "Auto for the rest of this battle" (an approved option), so the battle runs to its end; the assertions are unchanged.
+const AUTO = { headless: true };
+const settledBattle = (f) => settleHeadless(f.week.encounter, () => F.encounterBattle(f)); // the game's own Auto settlement (D1)
 
 const ready = (seed) => { const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed }); F.hireDefaultStaff(f); while (F.creationDraftPending(f) && F.onTheClock(f) === f.club) F.passDraftPick(f); f.settings.tutorial = false; f.welcomed = true; F.chooseGoal(f, 'wins'); F.scoutRegion(f, 'Coral Coast'); return f; };
 
@@ -58,7 +63,7 @@ test('companions grow with the club and make up for the prospect: a stronger ros
 test('companions cannot be signed: a win offers the prospect only, and no wild monster ever joins the roster', () => {
   let offers = 0;
   for (let seed = 20; seed < 40 && offers < 3; seed++) {
-    const f = ready(seed); F.startEncounter(f, 0); const r = F.resolveEncounter(f); if (!r.ok || f.week.encounter.status !== 'offer') continue; offers++;
+    const f = ready(seed); F.startEncounter(f, 0); const r = F.resolveEncounter(f, AUTO); if (!r.ok || f.week.encounter.status !== 'offer') continue; offers++;
     const pid = f.week.prospects[0].monster.id; const rel = F.releaseCandidates(f, f.week.prospects[0]);
     const s = F.acceptOffer(f, { releaseId: rel.needed ? rel.list[0].id : null }); assert.ok(s.ok, s.reason); assert.equal(s.monster.id, pid);
     assert.ok(!f.roster.some((m) => m.companion || /^wild_/.test(m.id)));
@@ -79,8 +84,20 @@ test('a battle started before a roster change, or saved under the old companion 
 test('Play, Auto and Skip to Results still fight the same companions; Skip Encounter still costs nothing', () => {
   const f = ready(16); const g = JSON.parse(JSON.stringify(f)); const h = JSON.parse(JSON.stringify(f));
   F.startEncounter(f, 0, { mode: 'auto' }); F.startEncounter(g, 0, { mode: 'skip' }); F.startEncounter(h, 0, { mode: 'play' });
-  assert.equal(logHash(F.encounterBattle(f)), logHash(F.encounterBattle(g)));
-  assert.deepEqual(F.encounterBattle(h).lines.b.map((x) => x.combatant.monsterId).sort(), F.encounterBattle(f).lines.b.map((x) => x.combatant.monsterId).sort());
+  // Task 8 M4 (D1): 'auto' and 'play' are Watch, which prompts the player's rotations; the owner answering Auto at the first prompt plays the same battle as Skip.
+  // The Watch log carries one extra entry, the record of the owner's Auto answer (`rotation_decision`); every other entry and the
+  // final state are the same battle as Skip.
+  const wf = settledBattle(f), sg = F.encounterBattle(g); const fights = (r) => JSON.stringify(r.log.filter((e) => e.kind !== 'rotation_decision').map(({ seq, ...e }) => e));
+  assert.deepEqual([wf.winner, wf.by, wf.exchanges, wf.stateHash], [sg.winner, sg.by, sg.exchanges, sg.stateHash]);
+  assert.equal(fights(wf), fights(sg)); // every gameplay event, in order (owner 2026-11-09: only the Auto-selection entry may differ)
+  const extra = wf.log.filter((e) => e.kind === 'rotation_decision'); assert.equal(extra.length, wf.log.length - sg.log.length);
+  assert.ok(extra.length >= 1 && extra.every((e) => e.choice === 'auto' || /auto/i.test(JSON.stringify(e))), 'the only extra entries record the Auto answer');
+  // The Auto settlement draws nothing and decides nothing itself: the same number of RNG draws as Skip, the same final lines, and
+  // the record holds only 'auto' answers (the AI policy, the same one Skip uses, makes every rotation choice).
+  assert.equal(wf.rngDraws, sg.rngDraws);
+  assert.equal(JSON.stringify(wf.lines), JSON.stringify(sg.lines)); assert.deepEqual(wf.hpShare, sg.hpShare);
+  assert.ok(Object.values(f.week.encounter.decisions?.a || {}).every((c) => c === 'auto')); assert.ok(!Object.keys(g.week.encounter.decisions?.a || {}).length);
+  assert.deepEqual(settledBattle(h).lines.b.map((x) => x.combatant.monsterId).sort(), settledBattle(f).lines.b.map((x) => x.combatant.monsterId).sort());
   const k = ready(17); const before = JSON.stringify({ roster: k.roster, board: k.board, rng: k.rngState }); F.skipEncounter(k);
   assert.equal(k.season.day, 2); assert.equal(JSON.stringify({ roster: k.roster, board: k.board, rng: k.rngState }), before);
 });

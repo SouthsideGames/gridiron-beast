@@ -1,3 +1,4 @@
+// Owner N9c supersedes historical awaiting-ruling comments for the resolved gates in this module.
 // DAR-03-C Predator Rhythm (duskrunner: Duskyre; Striker). Batch A.
 // Contract (Dex): after two consecutive performed normal attacks damage the SAME enemy monster's HP, the next own normal attack on
 // that monster (while it is still the enemy active) deals 140 / 150 / 160 / 170% by mastery. A miss, a shield-only hit, a change of
@@ -53,14 +54,10 @@ export default registerClashAbility({
         explain: () => 'After two hits the opposing side rotates its active out; the sequence on it is destroyed and the next attack is ordinary.',
         setup: () => ({ a: [{ species: 'duskrunner' }], b: [{ species: 'gravelpup', overall: 99 }, { species: 'tinhare', overall: 99 }], seed: 1, config: { policies: { a: 'none', b: 'manual' }, decisions: { b: { 1: 'stay', 2: 'b1', 3: 'stay', 4: 'stay', 5: 'stay', 6: 'stay', 7: 'stay', 8: 'stay' } } }, stopAt: { exchange: 4 } }),
         expect: (r, h) => { h.check('departure cleanup logged', h.has('cleanup', (e) => e.abilityId === 'DAR-03-C' && /destroyed/.test(e.text))); h.check('no third strike on exchange 3', !h.has('damage', (e) => e.abilityId === 'DAR-03-C' && e.ex === 3)); } },
-      { id: 'perk-awaiting', kind: 'blocked', title: 'The armed third strike meets a Shielded target: the Striker perk is decisive, awaiting ruling',
-        explain: () => 'Staged (controlled prerequisite): two HP-damaging hits on the target are already counted, and the target is Shielded. Whether the third strike keeps the Striker shield-break awaits a ruling: an ordinary attack is made and the sequence is kept.',
+      { id: 'perk-provisional', kind: 'valid', title: 'APPROVED N9c (plan reading: special): the third strike lands on the Shielded target without the shield-break',
+        explain: () => 'Approved reading T8_FLAGS.ordinaryPerks[DAR-03-C] = special. Approved by N9c.',
         setup: () => ({ a: [{ species: 'duskrunner', ability: { streak: 2, targetId: 'b0', armed: false } }], b: [{ species: 'gravelpup', overall: 99, status: SHIELD }], seed: 1, stopAt: { exchange: 1 } }),
-        expect: (r, h) => { h.awaiting('d5-perk'); h.check('ordinary attack instead', h.has('damage', (e) => e.actor === 'a0' && e.tag === 'ordinary')); h.check('no third strike', h.ab('damage').length === 0); } },
-      { id: 'perk-provisional', kind: 'valid', provisional: true, title: 'PROVISIONAL (plan reading: special): the third strike lands on the Shielded target without the shield-break',
-        explain: () => 'Provisional reading T8_FLAGS.ordinaryPerks[DAR-03-C] = special. Not approved; labelled.',
-        setup: () => ({ a: [{ species: 'duskrunner', ability: { streak: 2, targetId: 'b0', armed: false } }], b: [{ species: 'gravelpup', overall: 99, status: SHIELD }], seed: 1, stopAt: { exchange: 1 } }),
-        expect: (r, h) => { h.provisionalUsed('d5-perk'); const d = h.ab('damage')[0]; h.check('third strike, break x1', d && d.tag === 'special' && d.shield?.breakMult === 1); } },
+        expect: (r, h) => { h.rulingUsed('d5-perk'); const d = h.ab('damage')[0]; h.check('third strike, break x2', d && d.tag === 'ordinary' && d.shield?.breakMult === 2); } },
     ],
   },
 });

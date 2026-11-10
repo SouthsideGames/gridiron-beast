@@ -230,7 +230,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   let abilityCtx = null;
   let tickers = null; // Perf: the actors with a contract tick hook (built at the first tick, emptied when an actor is added)
   const buildAbilityCtx = () => { const arng = createRng(((Number(seed) >>> 0) ^ 0x7f4a7c15) >>> 0 || 13); return { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
-    state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
+    preChoice: t8g.preChoice || null, state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
     queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => (!FX || FX.canStart(a)) && activationAllowed(a),
     // Perf (outcome-identical, third pass): the opponents of a side are the engine's own defs / offs lists (order-preserving filters
     // of `actors`, extended by spawnActor in the same order), handed out without a copy. Every contract only reads the list (for-of,

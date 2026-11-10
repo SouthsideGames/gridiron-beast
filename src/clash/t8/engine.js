@@ -447,6 +447,11 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
           if (m.shield?.broken) log('status_end', att, rec, `${rec.c.name}'s Shielded ends (shield broken)`, { status: 'shielded', reason: 'broken' });
         }
         if (m.shield?.broken) callC('statusEnded', rec, { id: 'shielded', reason: 'broken', sourceId: att.c.id, abilityId: spec.abilityId ?? null });
+        if (!transferred && rec.hp > 0 && att.c.archetype === 'Tank') {
+          rec.clocks = rec.clocks.filter((k) => k.id !== 'tank-bruise');
+          startClock(rec, { id: 'tank-bruise', kind: 'duration', turns: 2, source: 'tank-perk' });
+          if (LOG) log('bruise', att, rec, `${rec.c.name} is bruised: healing reduced 25% for two normal turns`, { strength: 25, turns: 2, stage: 'resolution' });
+        }
         landed.push({ x: rec, loss, poolLoss: m.shield?.poolLoss ?? 0, transferred: !!transferred, prevented });
         if (transferred) res.transferred.push(rec.c.id);
         const actual = before - rec.hp; // actual HP lost (no overkill)
@@ -511,7 +516,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     if (!t || t.koed) return { amount: 0, budget: 0, exact: 0 };
     const b = base ?? (t.c.maxHp * pctMaxHp) / 100;
     const pen = penalty ?? (src && src.inAction ? penaltyOf(src, { support }) : 1);
-    const factors = [{ id: 'entry-penalty', factor: pen }, { id: 'stalemate-c6', factor: healMult }, { id: 'healing-reduced', factor: clashEffect(t.status).heal }].filter((f) => f.factor !== 1);
+    const factors = [{ id: 'entry-penalty', factor: pen }, { id: 'stalemate-c6', factor: healMult }, { id: 'healing-reduced', factor: clashEffect(t.status).heal }, { id: 'tank-bruise', factor: t.clocks.some((k) => k.id === 'tank-bruise') ? 0.75 : 1 }].filter((f) => f.factor !== 1);
     const r = resolveAmount(b, factors, { rounding, max: t.c.maxHp - t.hp });
     const budget = resolveAmount(b, factors, { rounding }).amount;
     const before = t.hp; t.hp += r.amount;
@@ -627,6 +632,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
      */
     provisional: (self, pointId, detail = '') => {
       const p = provisionalPoint(pointId); const x = byId.get(self.id) || null;
+      if (p.approved) return true; // N9c: approved behavior is available without provisional mode or labels
       if (PROV) { if (LOG) log('provisional', x, null, `${self.name}: ${self.abilityId} uses the PROVISIONAL reading ${pointId} (${p.reading})${detail ? `: ${detail}` : ''}`, { abilityId: self.abilityId, point: pointId, provisional: true, stage: 'activation', waitsOn: p.waitsOn }); return true; }
       reportUnmet('provisional', self.id, { abilityId: self.abilityId, unmet: [{ condition: 'awaiting ruling', point: pointId, waitsOn: p.waitsOn, detail }] });
       return false;

@@ -19,6 +19,11 @@ const FAMS = ['mindwing', 'shadewisp', 'cerebrix', 'echolot', 'enigmane', 'astra
 const put = (side, slot, species, extra = {}) => (L) => { Object.assign(L[side][slot], { id: `${species}_${slot}`, species, form: `${species}:0`, mastery: 0, type: extra.type || (['drakeling', 'wyrmkit', 'sablewing', 'scaleguard', 'vyrnax', 'aurodrax'].includes(species) ? 'Dragon' : 'Psychic'), ...extra }); };
 function run(off, def, mods, seed, t8, options = {}) {
   const O = lineup(11, 60), D = lineup(12, 64); const L = { offense: O.offense, defense: D.defense }; for (const m of mods) m(L);
+  if (Object.values(L.offense).some((m) => m.species === 'cerebrix')) {
+    const state = { phase: 'scrimmage', possession: 'home', quarter: 1, seed, ballOn: 30, ballLat: 0, playCount: 0, log: [], t8 };
+    const teams = { home: { offense: L.offense, defense: {}, offensePlays: [off] }, away: { offense: {}, defense: Object.fromEntries(Object.entries(L.defense).map(([sl,m])=>[sl,{...m,id:m.id||`def:${sl}`}])), defensePlays: [def] } };
+    R.preparePreChoice(state, teams); // controlled initial visible look, before the test's selected call
+  }
   return simulatePlay({ offensePlay: PLAYS[off], defensePlay: PLAYS[def], offense: L.offense, defense: L.defense, ballOn: 30, seed, options: { t8, offenseSide: 'home', ...options } });
 }
 const evs = (r, pred) => r.events.filter(pred);
@@ -113,7 +118,8 @@ test('Foresight (PSY-03-F): a marked LB within 3 yards who blitzes gets a 50% Co
   for (let seed = 1; seed <= 200; seed++) { // B12: n = 200 casts' worth of plays; tolerance for the 50% roll: 0.35..0.65 of casts
     const t8 = { status: {} }; const r = run('mesh', BLITZ[seed % BLITZ.length], [put('offense', 'QB', 'cerebrix', { mastery: 3 })], seed, t8);
     const mark = evs(r, (e) => e.kind === 'foresight_mark'); const cast = evs(r, (e) => e.kind === 'ability' && e.ability === 'PSY-03-F');
-    assert.equal(mark.length, 1, 'a candidate is always shown when an LB is within 3 yards');
+    if (!t8.preChoice.foresight.length) { assert.equal(mark.length, 0, 'no eligible LB in the visible base look: no mark'); continue; }
+    assert.equal(mark.length, 1, 'the saved pre-choice candidate is shown');
     const lb = r.events.find((e) => e.kind === 'foresight_mark').victim; const asg = PLAYS[BLITZ[seed % BLITZ.length]].assignments[lb].a;
     if (['rush', 'contain'].includes(asg)) {
       assert.equal(cast.length, 1); casts++; assert.equal(t8.ability.cerebrix_QB.cd, 3, 'mastery 3 cooldown 3, spent whatever the roll');
@@ -124,7 +130,7 @@ test('Foresight (PSY-03-F): a marked LB within 3 yards who blitzes gets a 50% Co
   for (let seed = 1; seed <= 20; seed++) { const t8 = { status: {} }; const r = run('mesh', 'cover_3', [put('offense', 'QB', 'cerebrix')], seed, t8); assert.ok(!evs(r, (e) => e.kind === 'foresight_mark').length, 'no LB within 3 yards: no candidate'); }
   // Confused cuts the effective Awareness by 20% for the play (a different status blocks).
   const t8 = { status: { 'def:LB1': { id: 'slowed', strength: 10, originalStrength: 10, remaining: 2, applications: 1, appliedThisUnit: false } } };
-  for (let seed = 1; seed <= 40; seed++) { const r = run('mesh', 'double_a_zero', [put('offense', 'QB', 'cerebrix')], seed, structuredClone(t8)); const st = evs(r, (e) => e.kind === 'status' && e.status === 'confused' && e.victim === 'LB1'); for (const s of st) assert.equal(s.accepted, false, 'a different status blocks'); }
+  for (let seed = 1; seed <= 40; seed++) { const r = run('mesh', 'mug_zero', [put('offense', 'QB', 'cerebrix')], seed, structuredClone(t8)); const st = evs(r, (e) => e.kind === 'status' && e.status === 'confused' && e.victim === 'LB1'); for (const s of st) assert.equal(s.accepted, false, 'a different status blocks'); }
 });
 
 test('Echo Landing (PSY-04-F): his kickoff caught in the field of play and returned without a TD banks a backfield Psychic field created at the next opposing snap even with him benched; cooldown six team defensive plays', () => {

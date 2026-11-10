@@ -172,10 +172,10 @@ test('provisional readings stay OFF in normal play: no franchise battle enables 
   // runBattle and runRecord never pass a provisional option: the t8 config it builds has none (static check on the adapter source)
   const src = fs.readFileSync(new URL('../../src/franchise/clash-link.js', import.meta.url), 'utf8'); assert.ok(!/provisional:\s*'on'/.test(src), 'the franchise adapter never switches provisional readings on');
   const fr = fs.readFileSync(new URL('../../src/franchise/franchise.js', import.meta.url), 'utf8'); assert.ok(!/provisional/.test(fr));
-  // the gated point in normal play: Dawn Song (D14 open) reports awaiting ruling (d14-dawn-song-target) on the franchise path and keeps its use
+  // N9c B: Dawn Song is no longer gated; normal franchise battles can heal the active caster.
   const sun = Link.eligibleBattlers(f.roster).map((m) => ({ ...Link.snapMonster(m) })); const a = [{ ...sun[0], species: 'sunwhistle', clashMasteryTier: 0, stage: 0 }]; const b = [{ ...sun[1], species: 'pebble' }];
   const rr = Link.runBattle({ a, b, seed: 3, ruleset: 't8', policies: { a: 'ai', b: 'ai' } });
-  const unmet = rr.log.filter((e) => e.kind === 'unmet' && e.abilityId === 'LIG-02-C'); assert.ok(unmet.length, 'the unmet ruling is logged'); assert.ok(unmet.every((e) => e.unmet.some((u) => u.condition === 'awaiting ruling' && u.point === 'd14-dawn-song-target')));
+  assert.ok(!rr.log.some((e) => e.kind === 'unmet' && e.unmet?.some((u) => u.point === 'd14-dawn-song-target')), 'approved Dawn Song is not held for a ruling'); assert.ok(rr.log.some((e) => e.kind === 'heal' && e.abilityId === 'LIG-02-C' && e.target === 'a0'), 'caster receives its actual heal');
   assert.ok(!rr.log.some((e) => e.kind === 'provisional'));
 });
 

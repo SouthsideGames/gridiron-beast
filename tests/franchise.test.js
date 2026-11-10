@@ -60,7 +60,7 @@ test('the weekly loop: scout, recruit, train, scout opponent, plan, lineup', () 
   // Tuesday is a Beast Clash encounter (GDD §26.1): a pitch is only possible after a lost battle.
   assert.equal(F.recruit(f, 0, 'playing_time').ok, false, 'no pitch before the battle');
   let signed = false;
-  const st = F.startEncounter(f, 0); assert.ok(st.ok, st.reason); const b = F.resolveEncounter(f); assert.ok(b.ok);
+  const st = F.startEncounter(f, 0); assert.ok(st.ok, st.reason); const b = F.resolveEncounter(f, { headless: true }); assert.ok(b.ok); // Task 8 M4 (D1): the owner answers the rotation prompt with Auto
   if (b.won) { const r = F.acceptOffer(f); assert.ok(r.ok, r.reason); signed = true; }
   else { const r = F.recruit(f, 0, 'playing_time'); assert.ok(r.ok, r.reason); if (r.success) signed = true; }
   assert.equal(f.season.day, 2);

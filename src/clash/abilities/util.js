@@ -35,7 +35,7 @@ export const isHarmful = (slot) => !!slot && !BENEFICIAL.includes(slot.id);
  * the ordinary attack and preserves its use); provisional mode applies T8_FLAGS.ordinaryPerks and returns its tag.
  */
 export function perkGate(api, self, foeId, tagFor) {
-  if (!api.perkDecisive(self, foeId)) return { ok: true, tag: 'special', decisive: false };
+  if (!api.perkDecisive(self, foeId)) return { ok: true, tag: tagFor, decisive: false };
   if (!api.provisional(self, 'd5-perk', `${api.get(foeId).name} makes the ordinary-only perk decisive for this strike`)) return { ok: false, decisive: true };
   return { ok: true, tag: tagFor, decisive: true };
 }

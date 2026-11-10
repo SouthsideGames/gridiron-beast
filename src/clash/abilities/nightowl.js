@@ -1,3 +1,4 @@
+// Owner N9c supersedes historical awaiting-ruling comments for the resolved gates in this module.
 // DAR-02-C Night Swoop (nightowl: Noctlet / Strixen; Striker). Batch A.
 // Contract (Dex): the first performed normal attack of each Clash resolves before opponents scheduled in the same round (the
 // priority tier: interrupts first, then priority attacks in ordinary initiative / tie order) at 110 / 120% normal damage by form,
@@ -52,14 +53,10 @@ export default registerClashAbility({
         explain: () => 'After the swoop, every attack is an ordinary attack at ordinary speed.',
         setup: () => ({ a: [{ species: 'nightowl' }], b: [{ species: 'gravelpup', overall: 99 }], seed: 2, stopAt: { exchange: 4 } }),
         expect: (r, h) => { h.check('exactly one swoop', h.ab('damage').length === 1); h.check('ordinary afterwards', h.ev('damage', (e) => e.actor === 'a0' && e.ex > 1).every((e) => e.tag === 'ordinary')); } },
-      { id: 'perk-awaiting', kind: 'blocked', title: 'Against a Shielded target the Striker perk would decide the hit: awaiting ruling, ordinary attack, opportunity kept',
-        explain: () => 'The opponent is Shielded, so whether the swoop keeps the ordinary-only Striker shield-break is decisive. In normal gameplay that awaits a ruling: no priority, an ordinary attack, and the first-attack opportunity is kept.',
+      { id: 'perk-provisional', kind: 'valid', title: 'APPROVED N9c (plan reading: special, no shield-break): the swoop fires against the Shielded target',
+        explain: () => 'Approved reading T8_FLAGS.ordinaryPerks[DAR-02-C] = special: the swoop gets priority and its power but no Striker shield-break. Approved by N9c.',
         setup: () => ({ a: [{ species: 'nightowl', overall: 60 }], b: [{ species: 'gravelpup', overall: 99, status: SHIELD }], seed: 1, stopAt: { exchange: 1 } }),
-        expect: (r, h) => { h.awaiting('d5-perk'); h.check('no priority', h.ev('initiative', (e) => e.ex === 1)[0].by !== 'priority'); h.check('ordinary attack', h.has('damage', (e) => e.actor === 'a0' && e.tag === 'ordinary')); h.check('opportunity kept', h.state('a0')?.used === false); } },
-      { id: 'perk-provisional', kind: 'valid', provisional: true, title: 'PROVISIONAL (plan reading: special, no shield-break): the swoop fires against the Shielded target',
-        explain: () => 'Provisional reading T8_FLAGS.ordinaryPerks[DAR-02-C] = special: the swoop gets priority and its power but no Striker shield-break. Not approved; labelled.',
-        setup: () => ({ a: [{ species: 'nightowl', overall: 60 }], b: [{ species: 'gravelpup', overall: 99, status: SHIELD }], seed: 1, stopAt: { exchange: 1 } }),
-        expect: (r, h) => { h.provisionalUsed('d5-perk'); const d = h.ab('damage')[0]; h.check('swoop as a special: break x1', d && d.tag === 'special' && d.shield?.breakMult === 1); } },
+        expect: (r, h) => { h.rulingUsed('d5-perk'); const d = h.ab('damage')[0]; h.check('swoop as a ordinary: break x2', d && d.tag === 'ordinary' && d.shield?.breakMult === 2); } },
     ],
   },
 });

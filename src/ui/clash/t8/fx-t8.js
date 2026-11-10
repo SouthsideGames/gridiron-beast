@@ -23,6 +23,7 @@
 //   ind (the owner's indicator), owner, me (owner state), state }.
 import { f2, h, op, clamp01, ease, elementOf, countFor, esc } from '../../fx/prims.js';
 import { LOOKS } from './looks/index.js';
+import { setFlashSoft } from './looks/common.js';
 import { t8StateAt, HARMFUL, STATUS_NAME } from './timeline.js';
 import { clashStatusBadge, abilityIcon, pips, turnMarker } from './badges.js';
 export { clashStatusBadge, abilityIcon, pips, turnMarker };
@@ -87,8 +88,9 @@ export function t8Live(state, t) { return state.items.some((it) => t >= it.start
  * Draw one frame. `geom`: { pos(id) -> { x, y (feet), size, side, slotIndex, active, ko } | null, slot(side, i) -> { x, y, size }, W, H,
  * reduced }. Returns { under, over, hud } (hud: the information layer: badges, icons, turn markers, the provisional label).
  */
-export function drawClashT8(state, t, geom, { quality = 'full', reduced = false, maxCues = 1, seed = 0 } = {}) {
+export function drawClashT8(state, t, geom, { quality = 'full', reduced = false, reducedFlash = false, maxCues = 1, seed = 0 } = {}) {
   if (!state || !geom) return { under: '', over: '', hud: '' };
+  setFlashSoft(reducedFlash); // Reduce flashes (flash-pref.js): the looks' impact flashes are drawn dimmer for this frame
   const st = t8StateAt(state.result, (state.cues.findLast ? state.cues.findLast((c) => c.at <= t + 1e-9) : [...state.cues].reverse().find((c) => c.at <= t + 1e-9))?.i ?? 0);
   let u = '', o = '', hud = ''; let cues = 0;
   const posOf = (id) => geom.pos(id); const slot = (side, i) => geom.slot(side, i);
@@ -107,6 +109,7 @@ export function drawClashT8(state, t, geom, { quality = 'full', reduced = false,
   for (const id of Object.keys(st.S)) {
     const s = st.S[id]; if (s.ko) continue; const p = gm(id); if (!p) continue; const hu = Math.max(p.size / 16, 4.5);
     const headY = Math.max(1.6 * hu, p.top - 1.7 * hu);
+    if (s.clocks?.['tank-bruise']) hud += `<text x="${p.x}" y="${headY - 2.3 * hu}" text-anchor="middle" font-size="${1.05 * hu}" fill="#e9b4ff" stroke="#0b1a14" stroke-width="${0.15 * hu}" paint-order="stroke">Bruised −25% heal · ${s.clocks['tank-bruise'].left}</text>`;
     if (s.status) { const pop = state.pops.find((x) => x.id === id && !x.end && t >= x.t0 && t < x.t0 + 0.35); const sc = pop ? 0.6 + 0.4 * ease((t - pop.t0) / 0.35) : 1; hud += clashStatusBadge(p.x, headY, hu * 1.25, s.status, { pop: sc, frozen: s.frozen, t }); }
     else { const gone = state.pops.find((x) => x.id === id && x.end && t >= x.t0 && t < x.t0 + 0.5); if (gone && gone.reason !== 'end of a standalone battle') { const kk = (t - gone.t0) / 0.5; hud += clashStatusBadge(p.x, headY - kk * 6, hu, { id: gone.status, remaining: null }, { pop: 1 + kk * 0.6, o: 1 - kk }); } }
     if (s.abilityId) {

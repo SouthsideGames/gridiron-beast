@@ -160,7 +160,7 @@ def render():
             lines += ['', '## Football: none', '', 'No unique football ability (approved Basic rule).', '', '## Beast Clash: none', '', 'No unique Beast Clash ability (approved Basic rule). Clash archetype: ' + f['clashArchetype'] + '; its existing shared archetype perks apply.']
         else:
             for mode, aid in f['abilities'].items():
-                a = by_ability[aid]; lines += ['', f'## {mode}: {a["name"]}', '', f'Ability ID: `{aid}`. Category: {a["category"]}.', '', str(a['activation']), '', str(a['mechanic']), '', 'Source: workbook v18. Apply the later shared overrides in [Approved Rules](../APPROVED_RULES.md) and the Task 8 specification.']
+                a = by_ability[aid]; lines += ['', f'## {mode}: {a["name"]}', '', f'Ability ID: `{aid}`. Category: {a["category"]}.', '', str(a['activation']), '', str(overrides['abilities'].get(aid, {}).get('mechanic', a['mechanic'])), '', 'Source: workbook v18. Apply the later shared overrides in [Approved Rules](../APPROVED_RULES.md) and the Task 8 specification.']
                 ov = overrides['abilities'].get(aid, {})
                 for item in a['details']:
                     rep = ov.get('sections', {}).get(item['section'])

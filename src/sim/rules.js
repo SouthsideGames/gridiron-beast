@@ -11,10 +11,11 @@ import { simulatePlay } from './engine.js';
 import * as T8S from './t8/status-runtime.js';
 import * as T8K from './t8/stamina-runtime.js';
 import * as T8F from './t8/field-runtime.js';
-import { toPlayFrame } from './t8/fields.js';
+import { toPlayFrame, placeRect } from './t8/fields.js';
 import { extraCooldownUnit, contractOf, abilityState, recordExecution, kickHook } from './abilities/registry.js';
 import { runGameHook } from './abilities/game.js';
-import { getPlay } from '../data/playbook.js';
+import { getPlay, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
+import { prismBreak } from './abilities/prism.js';
 import * as ST from './special-teams.js';
 import { showBattery } from './t8/stamina.js';
 
@@ -258,13 +259,104 @@ function preSnapHooks(state, t8, slots, offensePlay, defensePlay) {
   for (const [team, side, play] of [['off', slots.offense, offensePlay], ['def', slots.defense, defensePlay]]) for (const slot of play.onField) {
     const p = side[slot]; const c = p?.id && p.species ? contractOf(p.species) : null; if (!c?.hooks?.preSnap) continue;
     const self = { mid: p.id, family: p.species, form: p.form || `${p.species}:0`, mastery: p.mastery || 0, slot, team, type: p.type || null, name: p.name || slot };
-    let h = 2166136261; for (const ch of `${state.seed}|${state.playCount || 0}|${p.id}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
-    c.hooks.preSnap({ t8, rng: createRng((h >>> 0) || 23), state: (a) => abilityState(t8, a.mid, a.family, a.form, a.mastery), executed: (a, o) => recordExecution(t8, a.mid, a.family, o),
+    // `stream(key)`: the same seeded stream for another key than this play's index (N9c: Bloom Break keeps the placement choices of the
+    // play it was first due on, so a snap he sits out does not reroll them); stream(playIndex) is `rng` itself.
+    const streamOf = (key) => { let h = 2166136261; for (const ch of `${state.seed}|${key}|${p.id}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return createRng((h >>> 0) || 23); };
+    c.hooks.preSnap({ t8, rng: streamOf(state.playCount || 0), stream: streamOf, state: (a) => abilityState(t8, a.mid, a.family, a.form, a.mastery), executed: (a, o) => recordExecution(t8, a.mid, a.family, o),
       queueField: (spec) => T8F.queueField(t8, spec), ballOn: state.ballOn, offensePlay, defensePlay, slots: { off: slots.offense, def: slots.defense }, playIndex: state.playCount || 0, sitsOut: T8S.sitsOutPlay(state, p.id) }, self);
   }
 }
+/**
+ * Task 8 presentation (read only; the simulation never calls this): the banked pending fields the next scrimmage snap would create for
+ * these two calls, placed exactly as runScrimmagePlay places them (the same slots, eligibility and placement functions), in the
+ * absolute home-goal frame. Nothing is created, queued or written: the game state, its dice and its Task 8 block are untouched, and
+ * by default no contract hook runs: fields a contract queues inside the snap itself (Static Field, Charge Strip, Bramble Trap, Bloom
+ * Break, Runway, Crosswind Rescue) do not exist before it and are then not listed (see `inSnap` below). Each entry is the placed
+ * rectangle plus { ability, ownerTeam, payload, usesDefenseAlign } (usesDefenseAlign: its placement read a defender's alignment in
+ * the defensive call, which a caller that must not show the opponent's disguise leaves out).
+ *
+ * `inSnap: true` also lists the fields the snap's own pre-snap producers would queue (preSnapContracts, preSnapHooks). They run here
+ * exactly as at the snap (the same order, the same per-monster seeded stream: seed, play index, monster; never the game's dice), but
+ * on a structured copy of the Task 8 block, so the game is still only read. Such an entry carries `inSnap: true` and `callDependent`:
+ * true when its producer read an alignment of either chosen play (its place then follows the calls and is not fixed before them:
+ * Static Field, Charge Strip, Bramble Trap); false when the calls decide only whether its creator is on the field (Runway, Crosswind
+ * Rescue, Bloom Break: the rectangle is the same for every call he takes part in).
+ */
+export function previewPendingFields(state, teams, offensePlayId, defensePlayId, { inSnap = false } = {}) {
+  let t8 = state?.t8; if (!t8 || state.phase !== 'scrimmage' || state.finished) return [];
+  if (!inSnap && (!t8.fields?.pending?.length || !Array.isArray(t8.fields.list))) return [];
+  const offense = teams[state.possession], defense = teams[opponent(state.possession)];
+  const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
+  const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
+  const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean)), defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean));
+  const born = new Map(); // a field queued by this dry run -> whether its producer read a chosen play's alignment
+  if (inSnap && [...Object.values(slots.offense), ...Object.values(slots.defense)].some((x) => { const c = x?.id && x.species ? contractOf(x.species) : null; return !!(c?.preSnap || c?.hooks?.preSnap); })) {
+    t8 = structuredClone(t8); const view = { ...state, t8 }; T8F.activeFields(t8); // the copy's own field book
+    let read = false; const pend = t8.fields.pending;
+    pend.push = function (...xs) { for (const x of xs) born.set(x, read); read = false; return Array.prototype.push.apply(this, xs); };
+    const watch = (play) => ({ ...play, align: new Proxy(play.align || {}, { get(t, k) { read = true; return t[k]; } }) });
+    preSnapContracts(view, t8, slots); read = false;
+    preSnapHooks(view, t8, slots, watch(offensePlay), watch(defensePlay));
+    state = view;
+  }
+  const pending = t8.fields?.pending; if (!pending?.length || !Array.isArray(t8.fields.list)) return [];
+  const out = [];
+  for (const p of pending) {
+    if ((!p.benchOk && !p.offField && !offIds.has(p.owner) && !defIds.has(p.owner)) || !pendingEligible(state, t8, p, offIds, defIds)) continue;
+    if (p.maxOwn && out.some((f) => f.owner === p.owner && f.ability === p.ability)) continue; // the snap creates one; the next stays banked
+    let usesDefenseAlign = false;
+    const alignOf = (id) => { for (const [sl, x] of Object.entries(slots.offense)) if (x?.id === id) return offensePlay.align[sl] || null; for (const [sl, x] of Object.entries(slots.defense)) if (x?.id === id) { usesDefenseAlign = true; return defensePlay.align[sl] || null; } return null; };
+    const r = placeRect({ id: `P${out.length + 1}`, type: p.type, createdAt: state.playCount || 0, owner: p.owner, strength: p.strength ?? null, ...fieldPlacement(state, p, offensePlay, alignOf) });
+    out.push({ ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, ownerTeam: p.ownerTeam ?? null, payload: p.payload ?? null, usesDefenseAlign, ...(born.has(p) ? { inSnap: true, callDependent: !!born.get(p) } : {}) });
+  }
+  return out;
+}
+/** N9d: authoritative pre-choice boundary. Saved once per snap; never reads a selected play or its assignments.
+ * The first visible personnel look is locked. Headless callers use each club's first available formation.
+ * AI retains its approved play-choice policy; no unapproved blitz-weight adjustment is introduced. */
+export function preparePreChoice(state, teams, looks = {}) {
+  if (state.phase !== 'scrimmage' || state.finished) return null;
+  const t8 = (state.t8 ||= { status: {} });
+  const key = `${state.playCount || 0}|${state.possession}|${state.quarter}`;
+  if (t8.preChoice?.key === key) return t8.preChoice;
+  for (const old of t8.preChoice?.prism || []) if (t8.ability?.[old.mid]) t8.ability[old.mid].noCharge = false;
+  const off = teams[state.possession], def = teams[opponent(state.possession)];
+  if (!Object.values(off.offense || {}).some((m) => m?.species === 'cerebrix') && !Object.values(def.defense || {}).some((m) => m?.species === 'prism')) { delete t8.preChoice; return null; }
+  const offId = looks.offense || off.offensePlays?.[0] || 'inside_zone';
+  const defId = looks.defense || def.defensePlays?.[0] || 'cover_3';
+  const look = (id) => { const p = getPlay(id), f = (p.side === 'defense' ? DEFENSE_FORMATIONS : OFFENSE_FORMATIONS)[p.formation]; return { ...p, align: Object.fromEntries(p.onField.map((slot) => [slot, f?.align?.[slot] || p.align[slot]])) }; };
+  const op = look(offId), dp = look(defId);
+  const os = pickSlots(off.offense, op.onField, off, op), ds = pickSlots(def.defense, dp.onField, def, dp);
+  const record = t8.preChoice = { key, play: state.playCount || 0, offense: offId, defense: defId, foresight: [], prism: [] };
+  for (const [slot, m] of Object.entries(os)) {
+    if (m?.species !== 'cerebrix') continue;
+    const st = abilityState(t8, m.id, m.species, m.form || `${m.species}:0`, m.mastery || 0);
+    if (st.cd > 0 || T8S.sitsOutPlay(state, m.id)) continue;
+    const lbs = Object.entries(ds).filter(([sl, x]) => x?.id && positionOf(sl) === 'LB' && Math.abs(dp.align[sl]?.[0] ?? Infinity) <= 3).sort(([a], [b]) => a.localeCompare(b));
+    if (!lbs.length) continue;
+    let h = 2166136261; for (const ch of `${state.seed}|${key}|${m.id}|foresight`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+    const [targetSlot, target] = lbs[createRng(h >>> 0 || 1).int(lbs.length)];
+    const mark = { mid: m.id, slot, targetMid: target.id, targetSlot, at: dp.align[targetSlot], sourceAt: op.align[slot] };
+    record.foresight.push(mark); st.preChoiceMark = { key, play: record.play, mid: target.id };
+    log(state, `${m.name} foresees ${target.name}`, 'ability', { ability: 'PSY-03-F', kind: 'foresight_mark', by: m.id, victim: target.id, preChoice: true });
+  }
+  for (const [slot, m] of Object.entries(ds)) {
+    if (m?.species !== 'prism' || T8S.sitsOutPlay(state, m.id)) continue;
+    const st = abilityState(t8, m.id, m.species, m.form || `${m.species}:0`, m.mastery || 0);
+    if (st.charges < 3) continue;
+    const zone = prismBreak(t8, { yard: absYard(state, state.ballOn + 12), lat: absLat(state, state.ballLat || 0) }, opponent(state.possession), teams);
+    if (!zone) continue;
+    st.charges = 0; st.noCharge = true;
+    recordExecution(t8, m.id, m.species);
+    const removed = { kind: zone.kind, fields: zone.fields.map((f) => f.id), yard: zone.rect.yard, lat: zone.rect.lat };
+    record.prism.push({ mid: m.id, slot, at: dp.align[slot], removed });
+    log(state, `${m.name}'s Prism Break shatters ${zone.kind === 'base' ? 'an enemy field' : 'a hybrid overlap'}`, 'ability', { ability: 'LIG-04-F', by: m.id, removed, preChoice: true });
+  }
+  return record;
+}
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
+  preparePreChoice(state, teams);
   const { r, save } = rng(state);
   const offense = teams[state.possession], defense = teams[opponent(state.possession)];
   const edge = edgesFor(state, teams); if (edge.off || edge.def) options = { ...options, edge: { off: edge.off, def: edge.def } };
@@ -291,7 +383,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   // defender's slot stays vacant (no substitute) and he is not a participant (his status and stamina clocks pause)
   const serving = (t8.absences || []).filter((x) => x.serveOn === state.possession); let vacant = null;
   if (serving.length) { const gone = new Set(serving.map((x) => x.mid)); for (const [sl, p] of Object.entries(slots.defense)) if (p?.id && gone.has(p.id)) { delete slots.defense[sl]; (vacant ||= new Set()).add(sl); } t8.absences = t8.absences.filter((x) => !serving.includes(x)); }
-  const view = snapView(state, t8, slots, state.possession === 'home'); const preLines = preSnapLines(state, logMark, slots); // Task 8 presentation (data only)
+  const view = snapView(state, t8, slots, state.possession === 'home'); const preLines = [...(preSnapLines(state, logMark, slots) || []), ...(t8.preChoice?.prism || []).map((m) => { const [r] = toPlayFrame([{ ...m.removed, id: 'removed', type: 'removed' }], { home: state.possession === 'home', ballOn: state.ballOn, ballLat: state.ballLat || 0 }); return { ability: 'LIG-04-F', by: m.slot, side: 'def', rect: { yard: r.yard, lat: r.lat } }; })]; // Task 8 presentation (data only)
   const sim = simulatePlay({
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.

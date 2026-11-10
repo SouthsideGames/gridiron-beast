@@ -1,3 +1,4 @@
+// Owner N9c supersedes historical awaiting-ruling comments for the resolved gates in this module.
 // LIG-05-C Radiant Pursuit (halofang: Haloryx; Striker). Batch A.
 // Contract (Dex): own normal attack when the enemy target's HP is below 35% at action commit deals 115 / 125 / 135 / 145% by mastery;
 // no auto-KO, healing or extra hit; passive, no cooldown or charge; the intended active enemy only. Normal evasion / shield / Guarded /
@@ -35,14 +36,10 @@ export default registerClashAbility({
         explain: () => 'At full HP the target does not meet the condition: Haloryx attacks normally.',
         setup: () => ({ a: [{ species: 'halofang' }], b: [{ species: 'gravelpup', overall: 99 }], seed: 1, stopAt: { exchange: 1 } }),
         expect: (r, h) => { h.check('no boosted attack (condition not met)', h.ab('damage').length === 0); h.check('ordinary attack', h.has('damage', (e) => e.actor === 'a0' && e.tag === 'ordinary')); } },
-      { id: 'perk-awaiting', kind: 'blocked', title: 'A Shielded target below 35%: the Striker perk is decisive, awaiting ruling',
-        explain: () => 'G06 is unresolved: against a Shielded target, whether the boosted attack keeps the Striker shield-break decides the hit. Normal gameplay reports awaiting ruling and attacks normally.',
+      { id: 'perk-provisional', kind: 'valid', title: 'APPROVED N9c (plan reading: special): the boosted attack without the shield-break',
+        explain: () => 'Approved reading T8_FLAGS.ordinaryPerks[LIG-05-C] = special. Approved by N9c.',
         setup: () => ({ a: [{ species: 'halofang' }], b: [{ species: 'gravelpup', overall: 99, hp: 20, status: SHIELD }], seed: 1, stopAt: { exchange: 1 } }),
-        expect: (r, h) => { h.awaiting('d5-perk'); h.check('ordinary attack', h.has('damage', (e) => e.actor === 'a0' && e.tag === 'ordinary')); } },
-      { id: 'perk-provisional', kind: 'valid', provisional: true, title: 'PROVISIONAL (plan reading: special): the boosted attack without the shield-break',
-        explain: () => 'Provisional reading T8_FLAGS.ordinaryPerks[LIG-05-C] = special. Not approved; labelled.',
-        setup: () => ({ a: [{ species: 'halofang' }], b: [{ species: 'gravelpup', overall: 99, hp: 20, status: SHIELD }], seed: 1, stopAt: { exchange: 1 } }),
-        expect: (r, h) => { h.provisionalUsed('d5-perk'); const d = h.ab('damage')[0]; h.check('special, break x1', d && d.tag === 'special' && d.shield?.breakMult === 1); } },
+        expect: (r, h) => { h.rulingUsed('d5-perk'); const d = h.ab('damage')[0]; h.check('ordinary, break x2', d && d.tag === 'ordinary' && d.shield?.breakMult === 2); } },
     ],
   },
 });

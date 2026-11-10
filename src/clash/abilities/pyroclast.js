@@ -1,3 +1,4 @@
+// Owner N9c supersedes historical awaiting-ruling comments for the resolved gates in this module.
 // FIR-06-C Faultline (pyroclast: Pyroclast; Disruptor, legendary). Batch F.
 // Contract (Dex): once per Clash, create a fissure instead of the normal attack, marking the lineup position occupied by the normal attack
 // target (not the monster). It erupts at the end of the following exchange after rotations on the current occupant: single-target direct
@@ -49,14 +50,10 @@ export default registerClashAbility({
         explain: () => 'The target is Weakened (staged): the gate blocks Healing Reduced; the damage resolves and the use is spent.',
         setup: () => ({ a: [{ species: 'pyroclast', overall: 40 }], b: [{ species: 'gravelpup', overall: 99, sparring: true, status: { id: 'weakened', strength: 10, duration: 9 } }], seed: 1, stopAt: { exchange: 2 } }),
         expect: (r, h) => { h.check('damage landed', h.ab('damage').length === 1); h.check('Healing Reduced blocked by the gate', h.has('status_blocked', (e) => e.abilityId === 'FIR-06-C')); } },
-      { id: 'disputed-awaiting', kind: 'blocked', title: 'The launch target rotated out before the eruption: the target is disputed, awaiting ruling',
-        explain: () => 'The opposing side rotates its marked active out at exchange 1: the new occupant or the original monster? Normal gameplay reports awaiting ruling and the eruption does not resolve.',
+      { id: 'disputed-provisional', kind: 'valid', title: 'APPROVED N9c (active-position reading): the new occupant takes the eruption',
+        explain: () => 'Approved reading T8_FLAGS.delayedSlot = active position. Approved by N9c.',
         setup: () => ({ a: [{ species: 'pyroclast', overall: 40 }], b: [{ species: 'gravelpup', overall: 99 }, { species: 'tinhare', overall: 99 }], seed: 1, config: { policies: { a: 'none', b: 'manual' }, decisions: { b: { 1: 'b1', 5: 'stay', 9: 'stay', 13: 'stay', 17: 'stay', 21: 'stay', 25: 'stay', 29: 'stay' } } }, stopAt: { exchange: 2 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
-        expect: (r, h) => { h.awaiting('delayed-slot'); h.check('no eruption damage', h.ab('damage').length === 0); } },
-      { id: 'disputed-provisional', kind: 'valid', provisional: true, title: 'PROVISIONAL (active-position reading): the new occupant takes the eruption',
-        explain: () => 'Provisional reading T8_FLAGS.delayedSlot = active position. Not approved; labelled.',
-        setup: () => ({ a: [{ species: 'pyroclast', overall: 40 }], b: [{ species: 'gravelpup', overall: 99 }, { species: 'tinhare', overall: 99 }], seed: 1, config: { policies: { a: 'none', b: 'manual' }, decisions: { b: { 1: 'b1', 5: 'stay', 9: 'stay', 13: 'stay', 17: 'stay', 21: 'stay', 25: 'stay', 29: 'stay' } } }, stopAt: { exchange: 2 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
-        expect: (r, h) => { h.provisionalUsed('delayed-slot'); h.check('eruption on b1', h.ab('damage')[0]?.target === 'b1'); } },
+        expect: (r, h) => { h.rulingUsed('delayed-slot'); h.check('eruption on b1', h.ab('damage')[0]?.target === 'b1'); } },
     ],
   },
 });

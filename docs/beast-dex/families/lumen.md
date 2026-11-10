@@ -79,7 +79,7 @@ Ability ID: `LIG-03-C`. Category: Signature action.
 
 Lumen; uncommon; QB; Clash archetype Support → Support. Ready own normal action replaces attack when another living ally has removable harmful status.
 
-Clear Light: Remove harmful status first, then heal 10% maxHP. If status cannot be removed, no cast; no generic heal fallback.
+Cleanse the selected removable harmful status first, then heal 8 / 10 / 12 / 14% maximum HP by mastery. Recharge is five owner normal turns. Preserve the approved target, status gate, once-use and exception rules.
 
 Source: workbook v18. Apply the later shared overrides in [Approved Rules](../APPROVED_RULES.md) and the Task 8 specification.
 
@@ -93,7 +93,9 @@ Lowest HP-percentage eligible ally including reserves, never self.
 
 ### Core resolution
 
-Remove harmful status first, then heal 10% maxHP. If status cannot be removed, no cast; no generic heal fallback.
+**Approved Task 8 rule (N9d):** Cleanse the selected removable harmful status first, then heal 8 / 10 / 12 / 14% maximum HP by mastery. Recharge is five owner normal turns. Preserve the approved target, status gate, once-use and exception rules.
+
+> Superseded v18 text: Remove harmful status first, then heal 10% maxHP. If status cannot be removed, no cast; no generic heal fallback.
 
 ### Recharge / frequency
 

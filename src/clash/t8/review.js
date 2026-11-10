@@ -1,3 +1,4 @@
+import { provisionalPoint } from './flags.js';
 // Beast Clash t8 (M4 S15, engine side; no UI): the Clash ability reviewer's scenario runner. Spec §13 and §25 ("Both ability
 // reviewers"): every scenario is staged and seeded, establishes its prerequisites through the REAL engine (controlled prerequisite
 // inputs are labelled; the ability's own result is never manufactured), runs the complete trigger -> activation -> resolution ->
@@ -113,6 +114,9 @@ function helpers(r, ctx, checks, abilityId) {
     /** Normal gameplay: the ability reported `awaiting ruling` for this point (owner ruling 2026-11-09 rule 1). */
     awaiting: (point) => h.check(`awaiting ruling (${point}) is reported`, ev('unmet', (e) => e.abilityId === abilityId && e.unmet.some((u) => u.condition === 'awaiting ruling' && u.point === point)).length > 0),
     /** Provisional mode: the labelled reading was used. */
+    rulingUsed: (point) => provisionalPoint(point).approved
+      ? h.check(`Approved reading ${point} is not gated or provisional`, !ev('unmet', (e) => e.abilityId === abilityId && e.unmet?.some((u) => u.point === point)).length && !ev('provisional', (e) => e.abilityId === abilityId && e.point === point).length)
+      : h.provisionalUsed(point),
     provisionalUsed: (point) => h.check(`PROVISIONAL reading ${point} is labelled`, ev('provisional', (e) => e.abilityId === abilityId && e.point === point).length > 0),
   };
   return h;

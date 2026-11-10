@@ -77,7 +77,7 @@ Ability ID: `MET-06-C`. Category: Signature action.
 
 Aegistron; legendary; DL; Clash archetype Tank → Tank. Once per Clash own normal action replaces attack if no status and HP below60%.
 
-Fortress: Attempt Guarded50% for2 owner normal turns; while own episode active, store prevented HP damage up to20% maxHP. At natural expiry heal stored amount, subject Healing Reduced. No healing if removed/replaced/KO.
+Attempt Guarded 50% for two owner normal turns. While that own episode is active, store HP damage it prevents, capped at 10 / 15 / 20 / 25% maximum HP by mastery. Heal the stored amount only on natural expiry. Removed/replaced episodes pay nothing; no shield pool or counterattack.
 
 Source: workbook v18. Apply the later shared overrides in [Approved Rules](../APPROVED_RULES.md) and the Task 8 specification.
 
@@ -91,7 +91,9 @@ Self only.
 
 ### Core resolution
 
-Attempt Guarded50% for2 owner normal turns; while own episode active, store prevented HP damage up to20% maxHP. At natural expiry heal stored amount, subject Healing Reduced. No healing if removed/replaced/KO.
+**Approved Task 8 rule (N9d):** Attempt Guarded 50% for two owner normal turns. While that own episode is active, store HP damage it prevents, capped at 10 / 15 / 20 / 25% maximum HP by mastery. Heal the stored amount only on natural expiry. Removed/replaced episodes pay nothing; no shield pool or counterattack.
+
+> Superseded v18 text: Attempt Guarded50% for2 owner normal turns; while own episode active, store prevented HP damage up to20% maxHP. At natural expiry heal stored amount, subject Healing Reduced. No healing if removed/replaced/KO.
 
 ### Recharge / frequency
 

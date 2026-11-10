@@ -5,16 +5,18 @@ import { buildFx, fxSvg, kickSim } from '../../src/ui/ability-fx.js';
 import { fieldSvg, cameraFor } from '../../src/ui/field-view.js';
 import { drawT8 } from '../../src/ui/fx/t8-fx.js';
 import { LOOKS } from '../../src/ui/fx/looks/index.js';
+import { sequenceStaged } from '../../src/ui/fx/match-fx.js';
 
 export const PHASES = ['anticipation', 'activation', 'movement', 'impact', 'target', 'persistence', 'cleanup'];
 
 /** The reviewer's per-play preparation (screens/ability-reviewer.js openPlayer), without the DOM. */
 export function prepare(r, c) {
-  return r.plays.map((p) => {
+  return r.plays.map((p, pi) => {
     const kick = !p.sim?.frames?.length && p.kick ? kickSim(p.kick) : null; const sim = kick || p.sim; if (!sim?.frames?.length) return { p, sim: null };
     const sprites = kick ? { off: { K: { species: c.family, name: c.name, type: c.element }, P: { species: c.family, name: c.name, type: c.element } }, def: {} } : p.sprites;
     const lookup = (team, slot) => { const m = sprites?.[team]?.[slot]; return m ? { element: m.type, name: m.name, species: m.species } : null; };
-    return { p, sim, kick: !!kick, sprites, fx: buildFx(sim, lookup, { preroll: true }) };
+    const staged = sequenceStaged(r.plays, pi);
+    return { p, sim, kick: !!kick, sprites, fx: buildFx(sim, lookup, { preroll: true, ...(staged.length ? { staged } : {}) }) };
   });
 }
 

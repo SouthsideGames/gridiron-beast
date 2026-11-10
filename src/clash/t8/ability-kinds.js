@@ -26,7 +26,7 @@ export const ABILITY_KINDS = deepFreeze([
   row('FIR-01-C', 'emberfox', 'Stoke the Flame', 'D', 'reaction', 'repeatable', 'charges', [S('counterburst', 'reaction', true, false)]),
   row('FIR-02-C', 'ashkit', 'Cinder Clamp', 'E', 'attack modifier', 'repeatable', 'owner-turns', [S('normal direct attack', 'ordinary', false, P['FIR-02-C'])], { flag: 'ordinaryPerks' }),
   row('FIR-03-C', 'firestorm', 'Falling Star', 'S5', 'delayed', 'once', 'none', [S('main hit', 'delayed', false, false), S('splash', 'delayed', false, false)]),
-  row('FIR-04-C', 'cinderclaw', 'Molten Brand', 'D', 'reaction', 'once', 'none', [S('eruption', 'reaction', true, false, { contested: 'nonAttackTriggeredReactions' })], { review: 'needs owner review', note: 'Stone Divide names "attack-based retaliation"; whether a mark-triggered eruption counts is not stated', flag: 'stoneDivide.nonAttackTriggeredReactions' }),
+  row('FIR-04-C', 'cinderclaw', 'Molten Brand', 'D', 'reaction', 'once', 'none', [S('eruption', 'reaction', true, false, { contested: 'attackTriggeredReactions' })], { review: 'needs owner review', note: 'Stone Divide names "attack-based retaliation"; whether a mark-triggered eruption counts is not stated', flag: 'stoneDivide.nonAttackTriggeredReactions' }),
   row('FIR-05-C', 'pyrelynx', 'Heat Mirage', 'D', 'entry', 'repeatable', 'owner-turns', []),
   row('FIR-06-C', 'pyroclast', 'Faultline', 'F', 'delayed', 'once', 'none', [S('eruption', 'delayed', false, false)]),
   row('WAT-01-C', 'tidepaw', 'Second Tide', 'C', 'normal-action replacement', 'repeatable', 'performed-attacks', [], { signature: true }),
