@@ -48,3 +48,13 @@ test('N9d pre-choice timing: Watch and headless Skip agree when runoff ends the 
  for(const st of [watch,skip])step(st,teams,{}, {home:newTendencies(),away:newTendencies()}, {timeout:'none',tempo:'normal'});
  assert.equal(watch.t8.ability.away_FS.charges,0,'removal happens at the shared pre-choice opportunity');assert.deepEqual(skip,watch,'same result, ledger, fields and RNG even without an actual snap');
 });
+
+test('N9d Prism: an activation-play flag cannot leak through a benched snap and possession change',()=>{
+ const {state,teams}=setup();Object.assign(teams.away.defense.FS,{species:'prism',type:'Light'});teams.away.defensePlays=['cover_3'];
+ const st=abilityState(state.t8,'away_FS','prism','prism:0',0);st.charges=3;
+ state.t8.fields={list:[{...placeRect({id:'old',type:'Wind',centerLat:0,width:4,yardFrom:41,yardTo:43,createdAt:0,owner:'home_QB'}),ownerTeam:'home'}],pending:[],seq:1};
+ R.preparePreChoice(state,teams);assert.equal(st.noCharge,true);
+ // Its creator need not be in the chosen play after a look-based activation, so no source playEnd hook may run.
+ state.playCount++;state.possession='away';R.preparePreChoice(state,teams);
+ assert.equal(st.noCharge,false,'clear the old activation restriction before the no-specialist fast path');
+});

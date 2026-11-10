@@ -319,6 +319,7 @@ export function preparePreChoice(state, teams, looks = {}) {
   const t8 = (state.t8 ||= { status: {} });
   const key = `${state.playCount || 0}|${state.possession}|${state.quarter}`;
   if (t8.preChoice?.key === key) return t8.preChoice;
+  for (const old of t8.preChoice?.prism || []) if (t8.ability?.[old.mid]) t8.ability[old.mid].noCharge = false;
   const off = teams[state.possession], def = teams[opponent(state.possession)];
   if (!Object.values(off.offense || {}).some((m) => m?.species === 'cerebrix') && !Object.values(def.defense || {}).some((m) => m?.species === 'prism')) { delete t8.preChoice; return null; }
   const offId = looks.offense || off.offensePlays?.[0] || 'inside_zone';
@@ -326,7 +327,6 @@ export function preparePreChoice(state, teams, looks = {}) {
   const look = (id) => { const p = getPlay(id), f = (p.side === 'defense' ? DEFENSE_FORMATIONS : OFFENSE_FORMATIONS)[p.formation]; return { ...p, align: Object.fromEntries(p.onField.map((slot) => [slot, f?.align?.[slot] || p.align[slot]])) }; };
   const op = look(offId), dp = look(defId);
   const os = pickSlots(off.offense, op.onField, off, op), ds = pickSlots(def.defense, dp.onField, def, dp);
-  for (const old of t8.preChoice?.prism || []) if (t8.ability?.[old.mid]) t8.ability[old.mid].noCharge = false;
   const record = t8.preChoice = { key, play: state.playCount || 0, offense: offId, defense: defId, foresight: [], prism: [] };
   for (const [slot, m] of Object.entries(os)) {
     if (m?.species !== 'cerebrix') continue;
