@@ -9,7 +9,9 @@ import { cornerstoneOffers, TYPES, resolveSpecies } from '../../data/monsters.js
 import { TRAITS } from '../../data/species.js';
 import { STAFF, ROLE_LABEL, STAFF_ROLES } from '../../data/staff.js';
 import { createFranchise, hireStaff, nextStaffRole, salarySummary, staffMember, schemeAlignment, hireDefaultStaff, firstWeekWelcome, DIFFICULTY, commissionerWelcome } from '../../franchise/franchise.js';
-import { portraitSprite, monsterSprite, portraitSpec, SKIN_TONES, HAIR_COLORS, HAIR_STYLES, ACCESSORIES } from '../pixel-monster.js';
+import { portraitSprite, monsterSprite } from '../pixel-monster.js';
+import { coachEditorHtml, coachEditorActions, specOf } from '../coach-editor.js';
+import { DEFAULT_LOOK } from '../coach-portrait.js';
 import { BACKGROUNDS } from '../../data/staff.js';
 import { playCardSvg } from '../play-art.js';
 import { PLAYBOOKS } from '../../data/staff.js';
@@ -29,8 +31,8 @@ const LINES = {
 export function registerOnboardingScreens(Router, app) {
   let creating = false; // a new franchise is being saved (GDD §43.6)
   let draft = null;
-  const fresh = () => ({ step: 0, first: '', last: '', gender: 'Female', portrait: 0, skin: 1, hair: 1, style: 'short', accessory: 'none', hue: 210, background: 'player', hometown: '', club: null, rival: null, difficulty: 'pro', offense: null, defense: null, offerSeed: (Math.random() * 1e9) >>> 0, rerolls: 0 });
-  const spec = () => portraitSpec({ skin: draft.skin, hair: draft.hair, style: draft.style, accessory: draft.accessory, hue: draft.hue });
+  const fresh = () => ({ step: 0, first: '', last: '', gender: 'Female', portrait: 0, editor: { look: { ...DEFAULT_LOOK }, tab: 'face' }, background: 'player', hometown: '', club: null, rival: null, difficulty: 'pro', offense: null, defense: null, offerSeed: (Math.random() * 1e9) >>> 0, rerolls: 0 });
+  const spec = () => specOf(draft.editor);
 
   Router.registerScreen('onboarding', {
     title: "Commissioner's Office", back: false, tabs: false,
@@ -40,15 +42,8 @@ export function registerOnboardingScreens(Router, app) {
       let body = '';
       if (step === 'name') body = `<div class="grid2"><label class="field">First name<input id="first" maxlength="18" value="${esc(draft.first)}" autocomplete="given-name"></label><label class="field">Last name<input id="last" maxlength="18" value="${esc(draft.last)}" autocomplete="family-name"></label></div>`;
       if (step === 'look') {
-        const opt = (key, list, render) => `<div class="row" style="flex-wrap:wrap;gap:4px">${list.map((v, i) => `<button class="choice center ${String(draft[key]) === String(v) ? 'selected' : ''}" data-action="opt" data-k="${key}" data-v="${esc(String(v))}" style="padding:4px 6px;min-width:40px">${render(v, i)}</button>`).join('')}</div>`;
-        body = `<div class="row" style="align-items:flex-start;gap:12px"><div class="center">${portraitSprite(spec(), 96)}<div class="dim" style="font-size:11px">preview</div></div><div class="grow">
-          <div class="row" style="margin-bottom:8px">${['Female', 'Male', 'Nonbinary'].map((g) => `<button class="btn small ${draft.gender === g ? 'primary' : ''}" data-action="gender" data-v="${g}">${g === 'Nonbinary' ? 'Non-binary' : g}</button>`).join('')}</div>
-          <div class="muted" style="font-size:12px">SKIN</div>${opt('skin', SKIN_TONES.map((_, i) => i), (i) => `<span style="display:block;width:22px;height:22px;border-radius:50%;background:${SKIN_TONES[i]}"></span>`)}
-          <div class="muted" style="font-size:12px;margin-top:6px">HAIR</div>${opt('hair', HAIR_COLORS.map((_, i) => i), (i) => `<span style="display:block;width:22px;height:22px;border-radius:50%;background:${HAIR_COLORS[i]}"></span>`)}
-          <div class="muted" style="font-size:12px;margin-top:6px">STYLE</div>${opt('style', HAIR_STYLES, (v) => esc(v))}
-          <div class="muted" style="font-size:12px;margin-top:6px">EXTRA</div>${opt('accessory', ACCESSORIES, (v) => esc(v))}
-          <div class="muted" style="font-size:12px;margin-top:6px">SHIRT</div>${opt('hue', [210, 0, 15, 30, 52, 90, 120, 160, 190, 240, 270, 300, 330], (h) => `<span style="display:block;width:22px;height:22px;border-radius:4px;background:hsl(${h} 55% 45%)"></span>`)}
-        </div></div>`;
+        body = `<div class="row" style="margin-bottom:8px">${['Female', 'Male', 'Nonbinary'].map((g) => `<button class="btn small ${draft.gender === g ? 'primary' : ''}" data-action="gender" data-v="${g}">${g === 'Nonbinary' ? 'Non-binary' : g}</button>`).join('')}</div>
+          ${coachEditorHtml(draft.editor.look, { tab: draft.editor.tab, teamColor: draft.club ? TEAM_META[draft.club]?.color : null, teamNote: 'Team colours follow the club you pick next. You can change your look any time from My office.' })}`;
       }
       if (step === 'background') body = `<div class="stack" style="margin-top:8px">${Object.entries(BACKGROUNDS).map(([id, b]) => `<button class="choice ${draft.background === id ? 'selected' : ''}" data-action="background" data-v="${id}"><span class="name">${esc(b.label)}</span><div class="muted">${esc(b.text)}</div></button>`).join('')}</div>`;
       if (step === 'club') body = `<div class="stack">${STARTER_CLUBS.map((c) => `<button class="choice ${draft.club === c.name ? 'selected' : ''}" data-action="club" data-v="${esc(c.name)}"><span class="name" style="color:${TEAM_META[c.name].color}">${esc(c.name)}</span><span class="muted">${esc(divisionOf(c.name))} Division · ${esc(conferenceFor(divisionOf(c.name)))} Conference · last season ${c.record}</span></button>`).join('')}</div>${draft.rival ? `<div class="panel tight" style="border-color:#a855f7;margin-top:8px">⚔️ Your division rival: <b>${esc(draft.rival)}</b> · new GM ${esc(RIVAL_GMS[draft.rival])}. You meet twice a season.</div>` : ''}`;
@@ -72,7 +67,7 @@ export function registerOnboardingScreens(Router, app) {
       };
       delegate(root, {
         gender: (el) => { draft.gender = el.dataset.v; Router.render(); },
-        opt: (el) => { const k = el.dataset.k; draft[k] = ['skin', 'hair', 'hue'].includes(k) ? Number(el.dataset.v) : el.dataset.v; Router.render(); },
+        ...coachEditorActions(draft.editor, () => Router.render()),
         background: (el) => { const h = root.querySelector('#home'); if (h) draft.hometown = h.value.trim(); draft.background = el.dataset.v; Router.render(); },
         portrait: (el) => { const fi = root.querySelector('#first'), la = root.querySelector('#last'); if (fi) { draft.first = fi.value.trim(); draft.last = la.value.trim(); } draft.portrait = Number(el.dataset.v); Router.render(); },
         club: (el) => { draft.club = el.dataset.v; const others = DIVISIONS[divisionOf(draft.club)].filter((t) => t !== draft.club); draft.rival = others[Math.floor(Math.random() * others.length)]; Router.render(); },

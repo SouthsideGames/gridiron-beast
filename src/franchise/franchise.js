@@ -45,7 +45,9 @@ import { recordAchievementGlobal } from './achievement-store.js';
 import { pickOwner, setPickOwner, currentClassYear, picksOwnedBy, pickUsed, tradableYears, askForPlayer, askForPicks, executeTrade, canTakePlayer, pickKey, samePick, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, playerValue, positionNeeds, buildTradeCall, contractYear, transferPick, CALL_CHANCE } from './trades.js';
 import { evaluateProposal, deskAssets, deskUsage, spendProposal, buildIncomingOffer, DESK_RULES } from './trade-desk.js';
 export { DESK_RULES } from './trade-desk.js';
-import { QUESTIONS, isSituational, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST, MEDIA_QUESTIONS_PER_WEEK } from '../data/media.js';
+import { MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
+import { PRESS_QUESTIONS } from '../data/press.js';
+import { pressFacts, pickQuestions, fillQuestion, settlePress, pressQuestion, PRESS_PER_WEEK } from './press.js';
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, PACKAGE_SLOT_USE } from '../data/personnel.js';
@@ -2104,41 +2106,40 @@ export function natureReach(f, nature) {
  * injured starter) jump the queue when live; the rest are drawn by the natures on the field, so the press mostly asks
  * about the monsters the owner actually has. No question repeats within a season.
  */
+/** The facts franchise.js knows that the press module reads (src/franchise/press.js). */
+function pressHelp(f) {
+  const m = sundayMatchup(f); const hurt = f.roster.filter((x) => x.injury).filter((x) => { const healthy = f.roster.filter((y) => y.position === x.position && !y.injury).map(monsterOverall); return !healthy.length || monsterOverall(x) >= Math.max(...healthy) - 3; }).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0] || null;
+  return { matchup: m, record: record(f), streak: streakOf(f), hotseat: onHotSeat(f), star: mediaStar(f), injured: hurt, playoffLive: !f.season.finished && inPlayoffs(f) && !!playoffFixture(f), isLegend: (x) => !!x.legendary || (() => { try { return resolveSpecies(x)?.rarity === 'legendary'; } catch { return false; } })() };
+}
+/**
+ * Saturday's three questions (Media Day comedy overhaul): one recurring reporter each where possible, up to two about what is
+ * really happening at the club (read from saved data), every question with four answers (Professional, Trash Talk, Comedy,
+ * Unhinged). Chosen once per week and kept in the save; choosing them uses no franchise dice.
+ */
 export function mediaQuestions(f) {
-  if (!f.week.mediaQs) {
-    const { r, save } = frng(f);
-    f.season.mediaAsked ||= [];
-    const asked = new Set(f.season.mediaAsked);
-    const m = sundayMatchup(f);
-    const live = { rival: !!m?.rival, hotseat: onHotSeat(f), playoff: !!f.season.playoffs && !f.season.finished, streakW: streakOf(f) >= 3, streakL: streakOf(f) <= -3, injury: injuredStarter(f) };
-    const picks = [];
-    for (const [i, q] of QUESTIONS.entries()) { if (!isSituational(q) || asked.has(i)) continue; const key = Object.keys(live).find((k) => q[k]); if (key && live[key] && picks.length < 2) picks.push(i); }
-    const pool = QUESTIONS.map((q, i) => ({ q, i })).filter(({ q, i }) => !isSituational(q) && !asked.has(i) && !picks.includes(i));
-    while (picks.length < MEDIA_QUESTIONS_PER_WEEK && pool.length) {
-      const weighted = pool.map(({ i }) => [i, 1]); // no nature weighting (N7c B14)
-      const i = r.weighted(weighted); picks.push(i); pool.splice(pool.findIndex((x) => x.i === i), 1);
-    }
-    if (picks.length < MEDIA_QUESTIONS_PER_WEEK) { f.season.mediaAsked = []; } // a very long season: the press repeats itself
-    else f.season.mediaAsked.push(...picks);
-    save(); f.week.mediaQs = picks;
+  const facts = pressFacts(f, pressHelp(f));
+  if (!Array.isArray(f.week.mediaQs) || f.week.mediaQs.length !== PRESS_PER_WEEK || f.week.mediaQs.some((id) => !pressQuestion(id))) { // also replaces a list kept by a save from before the overhaul
+    f.season.mediaAsked = (f.season.mediaAsked || []).filter((x) => typeof x === 'string');
+    const generic = PRESS_QUESTIONS.filter((q) => !q.when).length; if (f.season.mediaAsked.filter((id) => !pressQuestion(id)?.when).length > generic - PRESS_PER_WEEK) f.season.mediaAsked = f.season.mediaAsked.filter((id) => pressQuestion(id)?.when); // a very long season: the generic questions come round again
+    f.week.mediaQs = pickQuestions(f, facts, f.season.mediaAsked); f.season.mediaAsked.push(...f.week.mediaQs);
   }
-  const m = sundayMatchup(f); const rec = record(f); const star = mediaStar(f);
-  const fill = (t) => t.replace(/\{opp\}/g, m?.opponent || 'our opponent').replace(/\{rival\}/g, f.rivals[f.tier]?.team || 'your rival').replace(/\{star\}/g, star?.name || 'your star').replace(/\{record\}/g, `${rec.w}-${rec.l}`).replace(/\{club\}/g, f.club).replace(/\{week\}/g, String(f.season.week));
-  return f.week.mediaQs.map((i) => ({ id: i, nature: QUESTIONS[i].nature, q: fill(QUESTIONS[i].q), a: QUESTIONS[i].a.map((a) => ({ ...a, text: fill(a.text), reach: natureReach(f, a.t) })) }));
+  return f.week.mediaQs.map((id) => fillQuestion(id, facts));
 }
 function mediaStar(f) { return f.roster.filter((m) => !m.injury).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0] || null; }
 function streakOf(f) { let n = 0; for (const g of f.season.schedule.filter((x) => x.result && !x.bye).reverse()) { const won = !!g.result.won; if (n === 0) n = won ? 1 : -1; else if ((n > 0) === won) n += won ? 1 : -1; else break; } return n; }
-/** A monster who would start if healthy is injured. */
-function injuredStarter(f) { const hurt = f.roster.filter((m) => m.injury); if (!hurt.length) return false; return hurt.some((m) => { const healthy = f.roster.filter((x) => x.position === m.position && !x.injury).map(monsterOverall); return !healthy.length || monsterOverall(m) >= Math.max(...healthy); }); }
-/** Answers: array of answer indexes, one per question. Boosts apply on Sunday. */
+/**
+ * Answers: one answer index per question (0 Professional, 1 Trash Talk, 2 Comedy, 3 Unhinged). The only gameplay effects are the
+ * two that existed before the overhaul: `hype` (trash talk before the rival game: the risky whole-team lift) and `star` (one
+ * monster in the spotlight). Everything else an answer does is narrative (the press's memory and tomorrow's headline).
+ */
 export function answerMedia(f, answers) {
-  const qs = mediaQuestions(f); const boosts = {}; let hype = false; let star = null;
-  qs.forEach((q, k) => { const a = q.a[answers[k]]; if (!a) return; if (a.hype) hype = true; if (a.star) star = mediaStar(f)?.id || null; }); // nature boosts retired (N7c B14)
-  f.week.media = { answers, boosts, hype, star };
+  const qs = mediaQuestions(f); const facts = pressFacts(f, pressHelp(f)); const boosts = {}; // nature boosts retired (N7c B14)
+  const out = settlePress(f, facts, qs, answers, mediaStar(f)?.id || null);
+  f.week.media = { answers, boosts, hype: out.hype, star: out.star, styles: out.styles, headline: out.headline };
   lineupCheck(f); // Saturday is done: lineup confirmed, on to Sunday
-  const starName = star ? f.roster.find((x) => x.id === star)?.name : null;
-  news(f, `Media day: ${[starName ? `${starName} in the spotlight` : null, hype ? 'you talked trash before the rival game' : null].filter(Boolean).join(' · ') || 'no headlines'}.`, 'info');
-  return { ok: true, boosts, hype, star };
+  const starName = out.star ? f.roster.find((x) => x.id === out.star)?.name : null;
+  news(f, `Media day: ${[starName ? `${starName} in the spotlight` : null, out.hype ? 'you talked trash before the rival game' : null].filter(Boolean).join(' · ') || 'no headlines'}. ${out.headline.paper}: “${out.headline.title}”`, 'info');
+  return { ok: true, boosts, hype: out.hype, star: out.star, styles: out.styles, headline: out.headline };
 }
 /**
  * Let the staff run the rest of the week with sensible defaults: the scout picks
@@ -2173,7 +2174,7 @@ export function autoRunToSunday(f) {
     else if (day === 2) { const order = ['passing', 'rushing', 'coverage', 'pass_rush']; const last = (f.trainingHistory || []).slice(-1)[0]; const focus = order[(order.indexOf(last) + 1) % order.length]; const r = setTraining(f, focus, 'normal'); did.push(`${TRAINING_FOCI[focus].label} practice ${r.success ? 'went well' : 'was sloppy'}${r.injury ? `; ${r.injury.name} hurt` : ''}`); }
     else if (day === 3) { const opp = opponentName(f); const side = opp ? (teamStrengths(aiTeam(f, opp)).passD < teamStrengths(aiTeam(f, opp)).runD ? 'defense' : 'offense') : 'offense'; scoutOpponent(f, side); did.push(opp ? `Scouted ${opp}'s ${side}` : 'Bye week'); }
     else if (day === 4) { setGamePlan(f, startingPlan(f, 'offense'), startingPlan(f, 'defense')); did.push('Coordinators set the game plan'); }
-    else if (day === 5) { const qs = mediaQuestions(f); answerMedia(f, qs.map((q) => Math.max(0, q.a.findIndex((a) => a.t === 'steady' || a.t === 'calm')))); did.push('Press conference: safe answers'); }
+    else if (day === 5) { const qs = mediaQuestions(f); answerMedia(f, qs.map(() => 0)); did.push('Press conference: professional answers'); } // the staff's default: Professional, which never talks trash
   }
   news(f, `Staff ran the week: ${did.join(' · ')}.`, 'info');
   return { ok: true, did };

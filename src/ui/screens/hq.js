@@ -16,6 +16,7 @@ import { ROUTE_LABELS } from '../../data/routes.js';
 import { yearOf } from '../../data/calendar.js';
 
 import * as F from '../../franchise/franchise.js';
+import { REPORTERS, STYLE_LABEL, STYLE_ICON } from '../../data/press.js';
 import { REGIONS, TRAINING_FOCI, ROLE_LABEL, trainingBonus } from '../../data/staff.js';
 import { PLAYS, LESSONS, counterPlays } from '../../data/playbook.js';
 import { tierById, TEAM_META, DIVISIONS, conferenceFor, divisionOf } from '../../data/league.js';
@@ -637,12 +638,15 @@ export function registerHqScreens(Router, app) {
       const lineup = r.ok ? `<p class="muted">✅ Lineup set: every starting position has a healthy monster.${r.tired.length ? ` <span style="color:var(--warn)">Tired: ${esc(r.tired.join(', '))}.</span>` : ''}</p>${borrowed}` : `<p style="color:var(--bad)">⚠️ No legal monster for ${r.problems.join(', ')}. Unless you fix the depth chart, Sunday is a forfeit (0-21).</p>${borrowed}`;
       if (f.week.media) {
         const md = f.week.media; const starM = md.star ? f.roster.find((x) => x.id === md.star) : null; const groups = starM ? `<span class="chip accent">${esc(starM.name)} in the spotlight: +2 awareness</span>` : '';
-        return `<div class="panel"><h3 style="margin-top:0">Press conference done</h3><p>${groups || 'No boosts.'}${md.hype ? ' <span class="chip bad">Trash talk: +2 all, risky</span>' : ''}</p>${lineup}</div><div class="grid2"><button class="btn block" data-action="roster">Depth chart</button><button class="btn primary block" data-action="done">Ready for Sunday →</button></div>`;
+        const hl = md.headline; const paper = hl ? `<div class="newspaper" role="img" aria-label="${esc(hl.paper)}: ${esc(hl.title)}"><div class="np-mast">${esc(hl.paper)}</div><div class="np-rule"></div><div class="np-title">${esc(hl.title)}</div><div class="np-sub">${esc(hl.sub)}</div><div class="np-kicker">${esc(hl.kicker)}</div></div>` : '';
+        return `${paper}<div class="panel"><h3 style="margin-top:0">Press conference done</h3><p>${groups || 'No boosts.'}${md.hype ? ' <span class="chip bad">Trash talk: +2 all, risky</span>' : ''}</p>${lineup}</div><div class="grid2"><button class="btn block" data-action="roster">Depth chart</button><button class="btn primary block" data-action="done">On to Sunday →</button></div>`;
       }
-      const qs = F.mediaQuestions(f); app.save();
-      return `<p class="muted">The press wants answers. Talk up your star to give him a lift on Sunday, or talk trash before a rival game for a risky boost to everyone.</p>
-        ${qs.map((q, k) => `<div class="panel"><b>🎤 “${esc(q.q)}”</b><div class="stack" style="margin-top:8px">${q.a.map((a, ai) => `<button class="choice ${mediaPicks[k] === ai ? 'selected' : ''}" data-action="answer" data-q="${k}" data-a="${ai}"><span>${esc(a.text)}</span><span class="dim" style="font-size:12px">${[a.hype ? 'trash talk' : '', a.star ? 'your star' : ''].filter(Boolean).join(' · ')}</span></button>`).join('')}</div></div>`).join('')}
-        ${lineup}<button class="btn primary big block" data-action="submit" ${mediaPicks.filter((x) => x != null).length === qs.length ? '' : 'disabled'}>Finish press conference</button>${mediaPicks.filter((x) => x != null).length === qs.length ? '' : `<p class="dim center" style="margin-top:4px">Answer all ${qs.length} questions to finish.</p>`}`;
+      const qs = F.mediaQuestions(f); app.save(); const answered = mediaPicks.filter((x) => x != null).length;
+      return `<p class="muted">Three questions. Pick how you answer each one: the tone is yours. Talking up a monster puts him in the spotlight on Sunday; trash talk before a rival game is a risky lift for everyone. Nothing else here changes the game.</p>
+        ${qs.map((q, k) => { const rep = REPORTERS[q.reporter]; return `<div class="panel press-q"><div class="press-rep">${portraitSprite(rep.portrait, 48)}<div class="grow"><div class="press-name">${esc(rep.name)}</div><div class="dim" style="font-size:12px">${esc(rep.role)} · ${esc(rep.outlet)}</div></div><span class="chip">${k + 1} / ${qs.length}</span></div>
+          <div class="press-text">“${esc(q.q)}”</div>
+          <div class="stack" style="margin-top:8px">${q.a.map((a, ai) => `<button class="choice press-a press-${a.t} ${mediaPicks[k] === ai ? 'selected' : ''}" data-action="answer" data-q="${k}" data-a="${ai}" aria-pressed="${mediaPicks[k] === ai}"><span class="press-style">${STYLE_ICON[a.t]} ${esc(STYLE_LABEL[a.t])}${[a.hype ? ' · <b>trash talk: risky boost</b>' : '', a.star ? ' · <b>spotlight</b>' : ''].join('')}</span><span>${esc(a.text)}</span></button>`).join('')}</div></div>`; }).join('')}
+        ${lineup}<button class="btn primary big block" data-action="submit" ${answered === qs.length ? '' : 'disabled'}>📰 Finish and read the headline</button>${answered === qs.length ? '' : `<p class="dim center" style="margin-top:4px">Answer all ${qs.length} questions to finish.</p>`}`;
     },
     mount(root) { delegate(root, {
       roster: () => Router.go('roster'), done: () => Router.go('hq', {}, { reset: true }),

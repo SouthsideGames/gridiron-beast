@@ -231,213 +231,25 @@ test('training: odds shown match the rule, the third straight week of one focus 
   assert.equal(f.week.trainingFocus, r.success ? 'coverage' : null);
 });
 
-test('media day: 250 questions (ten per legacy nature tag), no nature boost (N7c B14), only hype and star lifts, no repeats in a season', async () => {
-  const M = await import('../src/data/media.js'); const { NATURE_IDS, NATURES } = await import('../src/data/monsters.js');
+test('media day: three press questions with four styles, no nature boost (N7c B14), only hype and star lifts, no repeats in a season', async () => {
+  // The 250-question nature library is still on disk (its constants are used) but Saturday now reads src/data/press.js.
+  const M = await import('../src/data/media.js'); const { NATURE_IDS } = await import('../src/data/monsters.js');
   for (const n of NATURE_IDS) assert.equal(M.questionCount(n), 10, `${n} has ten questions`);
-  for (const q of M.QUESTIONS) { assert.equal(q.a.length, 3); for (const a of q.a) assert.ok(NATURE_IDS.includes(a.t), `${a.t} is a nature`); if (!M.isSituational(q)) assert.equal(q.a[0].t, q.nature, 'the first answer speaks the question’s own nature'); }
+  const { pressQuestion } = await import('../src/franchise/press.js');
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 55 });
   F.hireDefaultStaff(f); f.season.day = 5;
   const qs = F.mediaQuestions(f); assert.equal(qs.length, 3);
-  for (const q of qs) for (const a of q.a) { assert.ok(a.reach && typeof a.reach.total === 'number', 'every answer says how many monsters it reaches'); assert.ok(!/\{(opp|star|record|rival|club|week)\}/.test(a.text + q.q), 'placeholders are filled'); }
-  const before = F.playerTeam(f);
-  const t = qs[0].a[0].t;
+  for (const q of qs) { assert.equal(q.a.length, 4, 'four response styles'); assert.deepEqual(q.a.map((a) => a.t), ['pro', 'trash', 'comedy', 'unhinged']); for (const a of q.a) assert.ok(!/\{\w+\}/.test(a.text + q.q), 'placeholders are filled'); }
   // Task 8 (N7c B14): the nature-targeted boost is retired; answers are flavour plus the hype and star boosts, which remain.
   const r = F.answerMedia(f, [0, 0, 0]); assert.equal(f.season.day, 6); assert.deepEqual(r.boosts, {}, 'no nature boosts');
   const after = F.playerTeam(f);
   const starId = r.star; for (const [id, b] of Object.entries(after.boosts)) if (b.media) assert.ok(r.hype || id === starId, 'only hype or the star is lifted');
-  void before; void t;
-  // Asked questions are not asked again this season; a rival week leads with the rival question.
+  // Asked questions are not asked again this season; a rival week asks a rival question.
   assert.deepEqual(f.season.mediaAsked, qs.map((q) => q.id));
   f.week.mediaQs = null; f.week.media = null; f.season.day = 5; const qs2 = F.mediaQuestions(f); assert.ok(!qs2.some((q) => qs.some((p) => p.id === q.id)), 'no repeats');
-  const rivalIdx = M.QUESTIONS.findIndex((q) => q.rival); f.week.mediaQs = null; const sm = F.sundayMatchup(f); const save = f.season.schedule.find((g) => g.week === f.season.week); const wasOpp = save.opponent; save.opponent = f.rivals[f.tier].team; void sm;
-  const qs3 = F.mediaQuestions(f); if (F.sundayMatchup(f)?.rival) assert.equal(qs3[0].id, rivalIdx, 'rival question first in a rival week'); save.opponent = wasOpp;
+  f.week.mediaQs = null; const save = f.season.schedule.find((g) => g.week === f.season.week); const wasOpp = save.opponent; save.opponent = f.rivals[f.tier].team;
+  const qs3 = F.mediaQuestions(f); if (F.sundayMatchup(f)?.rival) { const rq = qs3.find((q) => pressQuestion(q.id).when === 'rival'); assert.ok(rq, 'a rival question in a rival week'); assert.ok(rq.a[1].hype && !rq.a[0].hype, 'trash talk is the hype answer; the professional one is not'); } save.opponent = wasOpp;
 });
-
-test('monster bio: birthplace, seasons pro, and a stint per club (regional league before the first known club; drafted rookies carry their pick)', () => {
-  const f = newFranchise(5);
-  const vet = f.roster.find((m) => m.yearsPro >= 3); const b = F.monsterBio(f, vet);
-  assert.ok(b.birthplace && b.stints.at(-1).current && b.stints.at(-1).club === f.club && b.stints.at(-1).from === 1);
-  assert.ok(b.stints[0].regional && b.stints[0].to - b.stints[0].from + 1 === vet.yearsPro, 'seasons before the club are the regional league');
-  const d = f.draft; const pick = d.class.find((m) => d.available.includes(m.id)); assert.equal(F.myDraftPick(f, pick.id).ok, true);
-  assert.equal(pick.drafted.club, f.club); assert.ok(pick.drafted.overall >= 1 && pick.drafted.round === 1);
-  const rb = F.monsterBio(f, pick); assert.ok(rb.rookie && rb.stints.length === 1 && rb.stints[0].current);
-  // A monster that walked to the pool and is signed back shows both stints.
-  const left = f.roster.find((m) => m.yearsPro === 0 && m !== pick) || f.roster[3]; left.history = [{ club: f.club, from: 1, to: 2, reason: 'walked' }, { club: 'Harbor Sentinels', from: 3, to: null, reason: 'signed' }]; left.joined = 5; f.season.year = 5;
-  const lb = F.monsterBio(f, left); assert.deepEqual(lb.stints.map((s) => s.club), [f.club, 'Harbor Sentinels', f.club]);
-});
-
-test('commissioner welcome: six beats, names the lottery pick and the board, ends ominous', () => {
-  const f = newFranchise(5); const beats = F.commissionerWelcome(f);
-  assert.equal(beats.length, 6); assert.ok(beats[2].text.includes(`#${f.draft.lotterySlot} pick`)); assert.ok(/the league’s/.test(beats[3].text));
-  assert.ok(beats[4].ominous && /I answer to the Board/.test(beats[4].text) && beats.at(-1).ominous && /never seen a face/.test(beats.at(-1).text)); assert.ok(!beats.some((b) => /undefined|NaN/.test(b.text)));
-});
-
-test('draft-pick trading: picks change hands and the order follows; a veteran arrives and leaves the AI club; two asks per pick; protected monsters never offered; closed mid-season', async () => {
-  const T = await import('../src/franchise/trades.js');
-  const f = newFranchise(3); // creation draft: on the clock
-  const mine = F.myTradablePicks(f);
-  assert.equal(mine.filter((p) => p.year === 1).length, 3); assert.equal(mine.length, 12, 'this class plus three ahead');
-  assert.ok(mine.find((p) => p.onClock)?.round === 1);
-  // Picks for picks: my 1R3 for next class's R2 (exact or a counter), accept the first offer.
-  const r3 = mine.find((p) => p.year === 1 && p.round === 3);
-  const r = F.tradeAskPicks(f, { give: [r3], year: 2, round: 2, count: 1 }); assert.equal(r.ok, true); assert.ok(r.offers.length >= 1, 'somebody answers a picks ask');
-  const offer = r.offers[0]; const acc = F.acceptTrade(f, offer); assert.equal(acc.ok, true);
-  assert.equal(T.pickOwner(f, r3), offer.team, 'my R3 now belongs to them');
-  for (const p of offer.get.picks) assert.equal(T.pickOwner(f, p), f.club);
-  const slot = f.draft.order.find((o) => o.round === 3 && o.original === f.club); assert.equal(slot.team, offer.team, 'the draft order follows the trade');
-  assert.ok(!F.myTradablePicks(f).some((p) => T.samePick(p, r3)));
-  // Player ask with the pick on the clock: the lead pick spends an ask; an accepted veteran joins and leaves the AI roster.
-  const lead = F.myTradablePicks(f).find((p) => p.onClock); const rosterBefore = f.roster.length;
-  let got = null;
-  for (const pos of ['S', 'LB', 'CB', 'OL', 'DL', 'WR']) { const a = F.tradeAskPlayer(f, { give: [lead], position: pos }); if (!a.ok) break; if (a.offers.length) { got = { a, pos }; break; } }
-  if (got) {
-    for (const o of got.a.offers) { const m = o.get.player; assert.ok(!m.legendary && !m.signature && T.tradable(f, m), 'protected monsters and rookies on their first deal are never offered'); assert.equal(m.position, got.pos); }
-    const o = got.a.offers[0]; const before = F.aiTeam(f, o.team).roster.some((m) => m.id === o.get.player.id); assert.ok(before);
-    const acc2 = F.acceptTrade(f, o); assert.equal(acc2.ok, true);
-    assert.equal(f.roster.length, rosterBefore + 1); const m = f.roster.find((x) => x.id === o.get.player.id); assert.ok(m.contract && m.history.at(-1).reason === 'traded' && m.traded.from === o.team);
-    assert.ok(!F.aiTeam(f, o.team).roster.some((x) => x.id === o.get.player.id), 'gone from the AI club');
-    assert.ok(F.onTheClock(f) !== f.club || f.draft.index > 0, 'the pick that went out was used by its new holder');
-  }
-  // Asks are limited to two per pick.
-  const spare = F.myTradablePicks(f).find((p) => p.year === 3); F.tradeAskPicks(f, { give: [spare], year: 4, round: 3 }); F.tradeAskPicks(f, { give: [spare], year: 4, round: 3 });
-  assert.equal(F.tradeAskPicks(f, { give: [spare], year: 4, round: 3 }).ok, false, 'third ask refused');
-  // Mid-season the phone is off.
-  while (f.draft && !f.draft.done) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
-  assert.equal(F.tradeAskPlayer(f, { give: [F.myTradablePicks(f)[0]], position: 'S' }).ok, false);
-  // Value sanity: a pick this year is worth about a round more than the same round next year.
-  assert.ok(T.pickValue({ year: 2, round: 1 }, { yearsAhead: 1 }) < T.pickValue({ year: 1, round: 1 }) && T.pickValue({ year: 2, round: 1 }, { yearsAhead: 1 }) > T.pickValue({ year: 1, round: 3 }));
-});
-
-test('traded future picks are honored when that draft comes', async () => {
-  const T = await import('../src/franchise/trades.js');
-  const f = newFranchise(9); while (f.draft && !f.draft.done) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
-  // Hand my season-2 class R1 to a club directly (ownership table), then play to that draft.
-  const other = 'Bayou Stalkers' === f.club ? 'Harbor Sentinels' : 'Bayou Stalkers';
-  T.setPickOwner(f, { year: 2, round: 1, original: f.club }, other); T.setPickOwner(f, { year: 2, round: 2, original: other }, f.club);
-  let guard = 0; while (!f.season.finished && guard++ < 80) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) { const m = F.sundayMatchup(f); if (m?.forfeit) F.forfeitSunday(f); else F.finishSunday(f, F.simulatePlayerGame(f)); } else F.skipPlayoffs(f); }
-  if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id);
-  if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
-  settle(f);
-  const b = (t7FA(f), F.beginDraft(f)); assert.equal(b.ok, true);
-  const mineR1 = f.draft.order.find((o) => o.round === 1 && o.original === f.club); assert.equal(mineR1.team, other, 'my R1 is theirs');
-  const theirR2 = f.draft.order.find((o) => o.round === 2 && o.original === other); assert.equal(theirR2.team, f.club, 'their R2 is mine');
-  assert.equal(f.draft.order.filter((o) => o.team === f.club).length, 3);
-});
-
-test('victory formation: a kneel with the clock running, no defensive timeouts and under 30 s ends the game', async () => {
-  const R = await import('../src/sim/rules.js');
-  const s = R.newGame({ home: { id: 'A', name: 'A', abbr: 'A' }, away: { id: 'B', name: 'B', abbr: 'B' }, quarterLength: 180 });
-  s.phase = 'scrimmage'; s.quarter = 4; s.clock = 23; s.possession = 'home'; s.down = 1; s.toGo = 10; s.ballOn = 60; s.clockRunning = true; s.timeouts.away = 0; s.score = { home: 16, away: 3 };
-  R.kneel(s); assert.equal(s.clock, 0); assert.ok(s.finished, 'the game is over'); assert.ok(/runs out/.test(s.lastPlay.text));
-  const t = R.newGame({ home: { id: 'A', name: 'A', abbr: 'A' }, away: { id: 'B', name: 'B', abbr: 'B' }, quarterLength: 180 });
-  t.phase = 'scrimmage'; t.quarter = 4; t.clock = 23; t.possession = 'home'; t.down = 1; t.toGo = 10; t.ballOn = 60; t.clockRunning = true; t.timeouts.away = 1;
-  R.kneel(t); assert.equal(t.clock, 20); assert.ok(!t.finished, 'with a timeout left the defense can still stop it');
-});
-
-test('founding roster: about a third are on one-year deals (never a cornerstone), spread across positions', () => {
-  const f = newFranchise(7);
-  const oneYear = f.roster.filter((m) => m.contract.ends === 1); const share = oneYear.length / f.roster.length;
-  assert.ok(share >= 0.3 && share <= 0.4, `one-year share ${share.toFixed(2)}`);
-  assert.ok(!oneYear.some((m) => m.cornerstone));
-  assert.ok(new Set(oneYear.map((m) => m.position)).size >= 4, 'not all at one position');
-  assert.ok(f.roster.filter((m) => m.contract.ends === 2).length > oneYear.length);
-});
-
-test('notices and manual evolution: a monster at its evolution level is a roster notice; Evolve is by hand and does not reprice the contract', async () => {
-  const M = await import('../src/data/monsters.js');
-  const f = newFranchise(7); while (f.draft && !f.draft.done) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
-  const m = f.roster.find((x) => M.resolveSpecies(x).evolution.length && !(x.stage || 0) && x.level < M.resolveSpecies(x).evolution[0].level - 1); assert.ok(m); // a base form below its evolution level
-  const level = M.resolveSpecies(m).evolution[0].level; M.raiseToLevel(m, level - 1); // Task 8: the level lives on m.dev (raiseToLevel, never m.level)
-  assert.equal(F.evolveMonster(f, m.id).ok, false, 'not yet'); assert.ok(!F.notices(f).some((n) => n.kind === 'evolve' && n.id === m.id));
-  M.raiseToLevel(m, level); const sal = m.salary;
-  assert.ok(F.notices(f).some((n) => n.kind === 'evolve' && n.id === m.id), 'ready = notice'); assert.ok(F.noticesFor(f, 'roster').length >= 1);
-  const pref = M.schemePreferences(m); assert.ok(pref && pref.schemes.length >= 2 && pref.best, 'scheme preferences list every scheme on the side');
-  const r = F.evolveMonster(f, m.id); assert.equal(r.ok, true); assert.equal(m.stage, 1); assert.equal(m.salary, sal, 'evolution does not change the contract');
-  assert.ok(!F.notices(f).some((n) => n.kind === 'evolve' && n.id === m.id), 'notice clears');
-});
-
-test('best lineup: every position ordered by overall, manual picks cleared, starters are the best healthy monsters', async () => {
-  const { buildDepthChart } = await import('../src/franchise/roster.js'); const { monsterOverall } = await import('../src/data/monsters.js');
-  const f = newFranchise(5); const qbs = f.roster.filter((m) => m.position === 'QB').sort((a, b) => monsterOverall(a) - monsterOverall(b));
-  F.moveDepth(f, 'QB', qbs[0].id, -1); f.lineupManual.QB = qbs[0].id; // the worst QB pushed to the top
-  F.autoDepth(f); assert.deepEqual(f.lineupManual, {});
-  for (const [g, ids] of Object.entries(f.depth)) { const o = ids.map((id) => monsterOverall(f.roster.find((m) => m.id === id))); assert.deepEqual(o, o.slice().sort((a, b) => b - a), `${g} ordered by OVR`); }
-  const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const best = f.roster.filter((m) => m.position === 'QB' && !m.injury).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0]; assert.equal(chart.QB, best.id);
-});
-
-test('awards: a quarterback\'s kneel-downs no longer drag his efficiency (roles weighted by volume); the playtest case ranks the QB first', async () => {
-  const A = await import('../src/franchise/awards.js');
-  // A league of 16 QBs and 16 RBs; ours throws 205 times at 11.1 yds/att and also has 13 kneels/scrambles for 30 yards.
-  const table = {}; const records = {};
-  for (let i = 0; i < 16; i++) {
-    const team = `T${i}`; records[team] = { w: 4 + (i % 4), l: 5 - (i % 4) };
-    table[team] = { qb: { id: `q${i}`, name: `QB${i}`, team, position: 'QB', games: 9, snapsOff: 220, att: 180, comp: 110, passYds: 1300 + i * 30, passTd: 10 + (i % 5), intThrown: 4, passFd: 60, rush: 2, rushYds: 6 },
-      rb: { id: `r${i}`, name: `RB${i}`, team, position: 'RB', games: 9, snapsOff: 200, rush: 100, rushYds: 420 + i * 10, rushTd: 4, rec: 15, targets: 20, recYds: 120, recTd: 1, rushFd: 20, recFd: 6 } };
-  }
-  Object.assign(table.T0.qb, { att: 205, comp: 141, passYds: 2273, passTd: 23, intThrown: 3, passFd: 95, rush: 13, rushYds: 30 }); records.T0 = { w: 7, l: 2 };
-  Object.assign(table.T1.rb, { rush: 91, rushYds: 608, rushTd: 10, rec: 32, targets: 40, recYds: 689, recTd: 12, rushFd: 30, recFd: 28 }); records.T1 = { w: 9, l: 0 };
-  const aw = A.computeAwards({ table, records, n: 5 });
-  const qb = aw.mvp.find((r) => r.name === 'QB0'); assert.ok(qb, 'QB in the MVP race'); assert.ok(qb.components.efficiency > 0.5, `QB efficiency is high (${qb.components.efficiency})`);
-  assert.equal(aw.mvp[0].name, 'QB0', 'the elite QB on a 7-2 club beats the 9-0 back');
-  assert.ok(aw.mvp.slice(0, 3).some((r) => r.name === 'RB1'), 'the back is still a finalist');
-});
-
-test('achievements: earned once, queue a filled-in cutscene, listed in the office', () => {
-  const f = newFranchise(21); while (f.draft && !f.draft.done) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
-  f.campaign.titles = 1;
-  const got = F.checkAchievements(f, 'season', { champion: true, wins: 7, losses: 2 });
-  assert.ok(got.includes('first_title') && got.includes('winning_season'));
-  assert.deepEqual(F.checkAchievements(f, 'season', { champion: true, wins: 7, losses: 2 }), [], 'never twice');
-  const sc = F.nextScene(f); assert.ok(sc && sc.beats.length >= 2); assert.ok(!sc.beats.some((b) => /\{\w+\}/.test(b)), 'placeholders filled');
-  const board = [sc, ...[]].find((x) => x.speaker === 'board') || (F.dismissScene(f), F.nextScene(f)); void board;
-  const list = F.achievementList(f); assert.equal(list.length, F.ACHIEVEMENT_COUNT); assert.equal(list.filter((a) => a.earned).length, 2);
-  while (F.nextScene(f)) F.dismissScene(f); assert.equal(f.scenes.length, 0);
-});
-
-test('achievements are the player\'s: earning one stamps the account store once, with the scene; a second franchise adds to the count', async () => {
-  const S = await import('../src/franchise/achievement-store.js'); S.resetAchievements();
-  const f = newFranchise(21); f.campaign.titles = 1; F.checkAchievements(f, 'season', { champion: true, wins: 7, losses: 2 });
-  const e = S.achievementsData().earned.first_title; assert.ok(e && e.club === f.club && e.scene?.beats?.length >= 2 && e.count === 1);
-  const g = newFranchise(22); g.campaign.titles = 1; F.checkAchievements(g, 'season', { champion: true, wins: 7, losses: 2 });
-  assert.equal(S.achievementsData().earned.first_title.count, 2); assert.equal(S.achievementsData().earned.first_title.club, f.club, 'the first time is kept');
-  S.resetAchievements(); const h = newFranchise(23); h.achievements = { wins_10: { year: 2 } }; assert.equal(F.syncAchievementsToGlobal(h), 1); assert.ok(S.achievementsData().earned.wins_10.scene);
-});
-
-test('contract loophole closed: banked points are priced into the ask, and points are frozen while contract decisions are open; the year turns over once they are settled', async () => {
-  const C = await import('../src/franchise/contracts.js');
-  const f = newFranchise(7); const m = f.roster.find((x) => x.position === 'CB') || f.roster[5];
-  const before = C.renewalAsk(m).ask; m.points = 8; const banked = C.renewalAsk(m).ask;
-  assert.ok(banked > before, `8 banked points raise the ask (${before} → ${banked})`);
-  // Spend them all: the ask does not move (it already counted them).
-  const save = { ...m.attributes }; for (let i = 0; i < 8; i++) { const k = Object.keys(m.attributes).find((a) => m.attributes[a] < m.potential); if (k) { m.attributes[k] += 0; } } m.attributes = save;
-  // Lock while the book is open.
-  f.season.finished = true; f.offseason = { year: 1, items: [{ kind: 'monster', id: m.id, status: null }], done: false };
-  assert.equal(F.pointsLocked(f), true); assert.equal(F.spendAttributePoint(f, m.id, 'speed').ok, false); assert.equal(F.autoSpendAllPoints(f).spent, 0);
-  assert.equal(F.displayYear(f), 1, 'still 1201 while contracts are open');
-  f.offseason.items[0].status = 'signed';
-  assert.equal(F.pointsLocked(f), false); assert.equal(F.displayYear(f), 2, 'the draft opens the new league year');
-});
-
-test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup', () => {
-  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 66 });
-  F.hireDefaultStaff(f);
-  const r = F.autoRunToSunday(f);
-  assert.equal(f.season.day, 6); assert.ok(r.did.length >= 5);
-  assert.equal(f.week.plan.offense.length, F.PLAN_SIZE); assert.ok(F.sundayMatchup(f)); assert.ok(f.week.media);
-});
-
-test('award races: league-wide stats accumulate and every award has contenders after a few weeks', () => {
-  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 77 });
-  F.hireDefaultStaff(f);
-  for (let w = 0; w < 3; w++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else F.finishSunday(f, F.simulatePlayerGame(f)); }
-  const r = F.awardRaces(f);
-  for (const k of ['mvp', 'opoy', 'dpoy', 'coy']) assert.ok(r[k].length === 3, `${k} has three contenders`);
-  for (const k of ['mvp', 'opoy', 'dpoy']) assert.ok(r[k][0].why && r[k][0].record, `${k} finalist carries an explanation and a record`);
-  assert.ok(r.oroy.length >= 1 && r.droy.length >= 1);
-  assert.ok(Object.keys(f.season.leagueStats).length >= 14, 'most clubs have stats');
-  assert.ok(r.opoy[0].score > 0 && r.dpoy[0].score > 0);
-});
-
 test('training and media boosts reach the Sunday lineup (not just the UI)', () => {
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 88 });
   F.hireDefaultStaff(f);

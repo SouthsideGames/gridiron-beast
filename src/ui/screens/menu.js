@@ -12,6 +12,9 @@ import { buildLabel, devDisplaysAllowed } from '../../version.js';
 import { summary, hireDefaultStaff, DIFFICULTY, dexCounts, DEX_GROUPS } from '../../franchise/franchise.js';
 import * as F from '../../franchise/franchise.js';
 import { BACKGROUNDS } from '../../data/staff.js';
+import { TEAM_META } from '../../data/league.js';
+import { coachEditorHtml, coachEditorActions, specOf } from '../coach-editor.js';
+import { parseCoach, lookFromLegacy } from '../coach-portrait.js';
 import { GYM_BY_CLUB } from '../../data/gyms.js';
 import { resetDex } from '../../franchise/dex-store.js';
 import { clashSettings } from '../../franchise/clash-link.js';
@@ -40,7 +43,7 @@ export function registerMenuScreens(Router, app) {
       // quiet link (the Franchises screen holds the three slots and their New / Import actions). The League Hub is inside the
       // franchise (HQ), not here.
       const card = f ? `<div class="panel menu-franchise">
-          <div class="row" style="gap:12px">${portraitSprite(f.owner.portrait + '|' + f.owner.first, 52)}<div class="grow" style="min-width:0">
+          <div class="row" style="gap:12px">${portraitSprite(f.owner.portrait + '|' + f.owner.first, 52, { teamColor: TEAM_META[f.club]?.color })}<div class="grow" style="min-width:0">
             <div class="mf-club">${esc(s.club)}</div>
             <div class="muted">GM ${esc(f.owner.first)} ${esc(f.owner.last)}</div>
             <div class="mf-meta"><span class="chip">${yearOf(s.year)}</span>${archived ? '<span class="chip">Legacy</span>' : `<span class="chip">Week ${s.week}</span><span class="chip accent">${s.record}</span>`}</div></div></div>
@@ -214,7 +217,7 @@ export function registerMenuScreens(Router, app) {
       const seasons = f.history.length; const wins = f.history.reduce((a, h) => a + h.record.w, 0) + F.record(f).w, losses = f.history.reduce((a, h) => a + h.record.l, 0) + F.record(f).l;
       const badges = Object.entries(f.campaign?.badges || {});
       const bg = BACKGROUNDS[f.owner.background];
-      return `<div class="panel"><div class="row" style="gap:12px">${portraitSprite(f.owner.portrait, 72)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(f.owner.first)} ${esc(f.owner.last)}</div><div class="muted">General manager, ${esc(f.club)} · ${yearOf(f.season.year)} · ${esc(diff.label)}</div>${bg ? `<div class="dim">${esc(bg.label)} · ${esc(bg.text)}</div>` : ''}</div></div></div>
+      return `<div class="panel"><div class="row" style="gap:12px">${portraitSprite(f.owner.portrait, 72, { teamColor: TEAM_META[f.club]?.color })}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(f.owner.first)} ${esc(f.owner.last)}</div><div class="muted">General manager, ${esc(f.club)} · ${yearOf(f.season.year)} · ${esc(diff.label)}</div>${bg ? `<div class="dim">${esc(bg.label)} · ${esc(bg.text)}</div>` : ''}<button class="btn small" data-action="editlook" style="margin-top:6px">✏️ Edit appearance</button></div></div></div>
         <div class="panel ${F.onHotSeat(f) ? 'hotseat' : ''}"><div class="row between"><b>Board</b><span class="chip ${F.onHotSeat(f) ? 'bad' : b.confidence > 0 ? 'good' : ''}">${F.confidenceLabel(b.confidence)} (${b.confidence >= 0 ? '+' : ''}${b.confidence})</span></div>
           ${g ? `<div style="margin-top:6px">🎯 This season: <b>${esc(g.label)}</b>${p ? ` · ${esc(p.text)}` : ''}</div><div class="bar" style="margin:6px 0 0"><i style="width:${Math.round((p?.pct || 0) * 100)}%"></i></div>` : '<div class="dim" style="margin-top:6px">No goal committed yet.</div>'}
           ${b.history.length ? `<div class="dim" style="margin-top:6px">Past: ${b.history.map((h) => `${yearOf(h.year)} ${h.met ? '✅' : '❌'} ${esc(h.label)}`).join(' · ')}</div>` : ''}</div>
@@ -224,6 +227,20 @@ export function registerMenuScreens(Router, app) {
           <div class="panel"><b>Hall of Fame</b> <span class="dim">${esc(diff.hof)}</span><div class="hof" style="margin-top:6px">${hof.rows.map((r) => `<div class="row between ${r.done ? 'done' : ''}"><span>${r.done ? '✓' : '○'} ${r.key}</span><span class="mono">${r.have} / ${r.goal}</span></div>`).join('')}</div>${hof.eligible ? '<p class="muted">Eligible: retire from HQ whenever you choose.</p>' : ''}</div>
         <div class="panel"><b>Franchises</b><div class="dim">Selling this club and starting another is coming (GDD §18.7). Sold franchises will sit here as cards; facing an old club will be a big day.</div></div>`;
     },
+    mount(root) { delegate(root, { editlook: () => { lookState = null; Router.go('coach-look'); } }); },
+  });
+  // ---------------------------------------------------------------- Coach appearance (coach creation expansion): edit any time
+  // Saving replaces f.owner.portrait and nothing else: the record, the career, achievements and every other field are untouched.
+  let lookState = null;
+  Router.registerScreen('coach-look', {
+    title: 'Coach appearance',
+    render({ f }) {
+      lookState ||= { look: parseCoach(f.owner.portrait) || lookFromLegacy(f.owner.portrait), tab: 'face' };
+      return `${coachEditorHtml(lookState.look, { tab: lookState.tab, teamColor: TEAM_META[f.club]?.color, teamNote: `Team colours are the ${f.club}'.` })}
+        <div class="grid2" style="margin-top:12px"><button class="btn block" data-action="cancel">Cancel</button><button class="btn primary block" data-action="savelook">Save appearance</button></div>`;
+    },
+    mount(root) { delegate(root, { ...coachEditorActions(lookState, () => Router.render()), cancel: () => { lookState = null; Router.back(); },
+      savelook: () => { app.f.owner.portrait = specOf(lookState); lookState = null; app.save(); toast('Appearance saved.'); Router.back(); } }); },
   });
   Router.registerScreen('more', {
     title: 'More',

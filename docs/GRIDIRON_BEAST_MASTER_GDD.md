@@ -543,3 +543,16 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Outstanding:** Actual eleven-player kickoff and kick coverage, specialist skill attributes, touchbacks and out-of-bounds rules, special-teams tackles and returns, blocked kicks, penalty handling, precise end-of-quarter try rules, weather, real opponent roster data and simulated AI records remain incomplete. Browser/mobile Safari end-to-end tests have not been completed. These mechanics are prototype features, not production-certified NFL rule implementations.
 
 **Unity handoff:** Carry over awareness-based RB lane evaluation, one contextual back button, league-record derivation, six-point touchdown state, explicit try state, kickoff transition state and rendered special-teams sequences. Replace provisional return calculations with real kick/return simulation before final port signoff.
+
+## 46. Franchise quality-of-life and personality update — on branch, awaiting owner review (2026-11-11)
+
+Detail and open decisions: `docs/FRANCHISE_QOL_UPDATE.md`. Amends §8 and §15.
+
+**Skip Wednesday:** Wednesday may be skipped. A skip is neutral: no training bonus, fatigue, injury roll or training-history entry, and it cannot be combined with training in the same week. This is the explicit consequence §8 requires for a missed action.
+
+**Field generator:** Franchise games draw their field: 65% grass, 35% elemental, split evenly across implemented fields, fixed by the save's seed, year and week. A boss (gym club) always plays on the field of its element. Water, Light, Dark and Dragon have no field yet; those bosses play on grass until a field is approved.
+
+**Media Day:** Saturday is a three-question press conference with three recurring reporters and four response styles (Professional, Trash Talk, Comedy, Unhinged), followed by a headline in THE BEAST TIMES. Questions about the club's events are asked only when saved data shows the event. Response style has no gameplay effect; rival hype and the monster spotlight are unchanged.
+
+**Coach appearance:** The coach portrait is built from modular layers (hair, face, outfit, extras, build), chosen in an editor at creation and editable later from My office without affecting the save.
+

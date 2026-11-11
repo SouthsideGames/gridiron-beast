@@ -1403,3 +1403,41 @@ html.apex-open, html.apex-open body { overflow: hidden; }
 .apex-scene.steady .apex-ring { transform: none; transition: opacity .9s ease; }
 .apex-scene.steady .apex-title { transform: none; }
 .apex-scene.steady .apex-figure { animation: none !important; }
+
+/* ---------------------------------------------------------------- Franchise QoL and personality update (2026-11-11) */
+/* Saturday Media Day: reporters, four answer styles, THE BEAST TIMES */
+.press-q .press-rep { display: flex; align-items: center; gap: 10px; }
+.press-q .press-name { font-weight: 800; }
+.press-q .press-text { margin-top: 8px; font-size: 16px; font-weight: 700; line-height: 1.35; }
+.press-a { gap: 2px; }
+.press-a .press-style { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted, #9fb3a8); }
+.press-a.press-trash { border-left: 4px solid #d2553f; }
+.press-a.press-pro { border-left: 4px solid #5b8fd6; }
+.press-a.press-comedy { border-left: 4px solid #e0b33b; }
+.press-a.press-unhinged { border-left: 4px solid #a45bd6; }
+.newspaper { background: #efe7d2; color: #1c1a15; border-radius: 6px; padding: 14px 14px 12px; margin-bottom: 12px; box-shadow: 0 6px 18px rgba(0,0,0,.35); font-family: Georgia, 'Times New Roman', serif; text-align: center; animation: np-drop .45s cubic-bezier(.2,.9,.3,1.2) both; }
+.newspaper .np-mast { font-size: 13px; letter-spacing: .32em; font-weight: 700; }
+.newspaper .np-rule { height: 3px; border-top: 2px solid #1c1a15; border-bottom: 1px solid #1c1a15; margin: 6px 0 10px; }
+.newspaper .np-title { font-size: 22px; line-height: 1.12; font-weight: 900; text-wrap: balance; }
+.newspaper .np-sub { margin-top: 8px; font-style: italic; font-size: 14px; line-height: 1.3; }
+.newspaper .np-kicker { margin-top: 6px; font-size: 12px; opacity: .75; }
+@keyframes np-drop { from { transform: translateY(-14px) rotate(-2.5deg) scale(.94); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .newspaper { animation: none; } }
+/* Coach appearance editor */
+.coach-editor .ce-top { display: flex; gap: 12px; align-items: center; }
+.coach-editor .ce-preview { background: var(--panel); border: 2px solid var(--line); border-radius: var(--r); padding: 6px; line-height: 0; }
+.coach-editor .ce-tabs { display: flex; gap: 6px; overflow-x: auto; margin: 10px 0 6px; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+.coach-editor .ce-tab { appearance: none; flex: 0 0 auto; min-height: var(--tap); padding: 0 12px; border-radius: 999px; border: 2px solid var(--line); background: var(--panel); color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+.coach-editor .ce-tab.on { border-color: var(--accent); background: #2a2a12; }
+.coach-editor .ce-option { padding: 8px 0; border-top: 1px solid var(--line); }
+.coach-editor .ce-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.coach-editor .ce-label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #9fb3a8); }
+.coach-editor .ce-stepper { display: flex; align-items: center; gap: 6px; }
+.coach-editor .ce-stepper .btn { min-width: var(--tap); min-height: var(--tap); }
+.coach-editor .ce-value { min-width: 96px; text-align: center; font-weight: 700; }
+.coach-editor .ce-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.coach-editor .ce-chip { appearance: none; min-height: 36px; padding: 4px 10px; border-radius: 8px; border: 2px solid var(--line); background: var(--panel); color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+.coach-editor .ce-chip.selected { border-color: var(--accent); background: #2a2a12; }
+.coach-editor .ce-chip.ce-swatch { padding: 3px; min-width: 36px; }
+.coach-editor .ce-chip.ce-swatch span { display: block; width: 26px; height: 26px; border-radius: 6px; }
+.skip-wed { border-style: dashed; }
