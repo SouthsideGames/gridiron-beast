@@ -14,7 +14,7 @@ import { footballAward, clashAward, OFFSEASON_POINTS, STANDARD_TRAINING_SHARE } 
 import * as F from '../src/core/fraction.js';
 const args = Object.fromEntries(process.argv.slice(2).map((a) => a.replace(/^--/, '').split('=')));
 const SEASONS = Number(args.seasons || 60); const OUT = args.out || 'docs/task8/m6/apex-alternatives.json';
-const SCHEDULES = { mixed: { football: 9, clash: 4 }, maximum: { football: 12, clash: 33 } }; // the benchmark manifest's two Apex schedules
+const SCHEDULES = { footballOnly: { football: 9, clash: 0 }, mixed: { football: 9, clash: 4 }, maximum: { football: 12, clash: 33 } }; // the benchmark manifest's schedules (football-only added for the AI-club case: few Clashes)
 // Each alternative: activity-training multiplier (Apex only), extra offseason points (Apex only), and the general training share
 // (25% in production; 50% is the top of the authorized range and would apply to every monster).
 const ALTS = [
@@ -22,7 +22,7 @@ const ALTS = [
   { id: 'share-50', label: 'Training share 50% for everyone (top of the authorized range)', mult: 1, extra: 0, share: 0.5, affectsOrdinary: true },
   ...[1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 8, 10, 12].map((k) => ({ id: `apex-x${k}`, label: `Apex-only activity training x${k}`, mult: k, extra: 0, share: 0.25 })),
   ...[10, 20, 30, 33, 35, 40].map((n) => ({ id: `apex-off+${n}`, label: `Apex-only offseason points ${OFFSEASON_POINTS} + ${n}`, mult: 1, extra: n, share: 0.25 })),
-  ...[[2, 28], [3, 25], [4, 20], [6, 15]].map(([k, n]) => ({ id: `apex-x${k}+off${n}`, label: `Apex-only activity training x${k} and offseason points ${OFFSEASON_POINTS} + ${n}`, mult: k, extra: n, share: 0.25 })),
+  ...[[2, 28], [2, 30], [2, 32], [3, 25], [3, 28], [4, 20], [6, 15]].map(([k, n]) => ({ id: `apex-x${k}+off${n}`, label: `Apex-only activity training x${k} and offseason points ${OFFSEASON_POINTS} + ${n}`, mult: k, extra: n, share: 0.25 })),
 ];
 function cohort() {
   const out = [];
