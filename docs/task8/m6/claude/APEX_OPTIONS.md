@@ -1,72 +1,88 @@
-# M6-01 Apex progression: measured alternatives (2026-11-10)
+# M6-01 Apex progression: proposed Apex-only training adjustment (2026-11-11)
 
-**Status: decision needed. Nothing here is implemented.** Simulation f716b02; every alternative was applied inside the harness
-only (`node tools/task8-m6-apex-alternatives.mjs --seasons=120`, raw results in `../apex-alternatives.json`).
+**Status: proposal for owner review. Nothing here is implemented.** The goal is kept as it stands: at least 90% of Apex reach all
+99s by season 15. Every alternative was applied inside the harness only
+(`node tools/task8-m6-apex-alternatives.mjs --seasons=120`, raw results in `../apex-alternatives.json`). Simulation f716b02.
 
-## The conflict
+## Proposal
 
-- **Gate (spec §16):** at least 90% of Apex reach all 99s by season 15 under sustained legal participation and equal investment.
+**For an Apex only: activity training ×2, and an offseason award of 34 points (the ordinary 2 plus 32).**
+
+| Schedule | Points a season | 90% all-99 by season | All-99 by season 15 |
+| --- | --- | --- | --- |
+| Football only (9 games, no Clashes) | 38.5 | 14 | 100% |
+| Mixed (9 games, 4 Clashes) | 40.5 | 13 | 100% |
+| Maximum (12 games, 33 Clashes) | 56.5 | 10 | 100% |
+
+- **It meets the goal on all three schedules with one season to spare.** The smallest setting that passes is ×2 with 2 + 30
+  (seasons 15 / 14 / 10), which leaves no margin for a missed season.
+- **Ordinary monsters are untouched.** Level XP, natural growth, Temper, starting ratings, ceilings, ageing and the calendar stay
+  exactly as they are.
+- **An Apex still starts at 10–15** and is not all-99 before season 10 on any schedule.
+- **Football-only matters** because AI-club Apex rarely fight Clashes (`BALANCE_ACCEPTANCE.md`). The earlier candidate
+  (×2 with 2 + 28) passed mixed and maximum but only 9% of the football-only cohort made season 15.
+
+## Why an adjustment is needed
+
 - **What an Apex needs:** 1,038 rating points from his 10–15 starts to all 99s. Natural growth to level 50 supplies 516 on
-  average. The other **522 must be trained**, one banked point each (neutral Temper, no age cost).
+  average. The other **522 must be trained**, one banked point each.
 - **To finish by season 15** he needs about **35 training points a season**.
-- **What the rules supply:** 25% of a bar per activity plus 2 offseason points: **5.25 a season** on the mixed schedule
-  (9 games, 4 Clashes) and **13.25** at maximum participation (12 games, 33 Clashes).
-- **Result at current rules:** 0 of 1,000 by season 15. 90% arrive at **season 101** (mixed) or **season 40** (maximum).
+- **What the rules supply:** 4.25 a season football-only, 5.25 mixed, 13.25 at maximum participation.
+- **Result at current rules:** 0 of 1,000 by season 15 on any schedule. 90% arrive at season 101 (mixed) or 40 (maximum);
+  football-only does not arrive within 120 seasons.
 
-Level XP is not the limit: the cohort reaches level 50 in season 7 (mixed) or 3 (maximum) and then waits on training points.
+Level XP is not the limit: the cohort reaches level 50 in season 9, 7 or 3 and then waits on training points.
 
 ## Alternatives measured
 
-Cohort: the benchmark's 1,000 forced Apex (100 per position), equal attribute investment, neutral grades, no injuries.
-Natural growth, level XP, evolution, the offseason, ceilings, starting ratings, Temper, age and the calendar are production code.
+Cohort: 1,000 forced Apex (100 per position), equal attribute investment, neutral grades, no injuries. Seasons are the one by
+which 90% are all-99, in the order football-only / mixed / maximum.
 
-| # | Alternative | Points a season (mixed / maximum) | 90% all-99 by season (mixed / maximum) | By season 15 (mixed / maximum) | Touches ordinary monsters |
-| --- | --- | --- | --- | --- | --- |
-| 0 | Current rules | 5.25 / 13.25 | 101 / 40 | 0% / 0% | — |
-| 1 | Training share 50% for everyone (top of the authorized range) | 8.5 / 24.5 | 62 / 22 | 0% / 0% | **Yes** |
-| 2 | Apex-only activity training ×3 | 11.75 / 35.75 | 45 / 15 | 0% / 100% | No |
-| 3 | Apex-only activity training ×12 | 41 / 137 | 13 / 4 | 100% / 100% | No |
-| 4 | Apex-only offseason award 2 + 30 | 35.25 / 43.25 | 15 / 13 | 98.2% / 100% | No |
-| 5 | Apex-only offseason award 2 + 33 | 38.25 / 46.25 | 14 / 12 | 100% / 100% | No |
-| 6 | Apex-only activity ×2 and offseason 2 + 28 | 36.5 / 52.5 | 15 / 11 | 100% / 100% | No |
-| 7 | Apex-only activity ×3 and offseason 2 + 25 | 36.75 / 60.75 | 15 / 9 | 100% / 100% | No |
-| 8 | Apex-only activity ×6 and offseason 2 + 15 | 36.5 / 84.5 | 15 / 7 | 100% / 100% | No |
-| 9 | Keep the rules; restate the gate | 5.25 / 13.25 | 101 / 40 | 0% / 0% | No |
+| # | Alternative (Apex only unless stated) | Points a season | 90% by season | All three by 15? |
+| --- | --- | --- | --- | --- |
+| 0 | Current rules | 4.25 / 5.25 / 13.25 | never / 101 / 40 | No |
+| 1 | Training share 50% for **every** monster (top of the authorized range) | 6.5 / 8.5 / 24.5 | 81 / 62 / 22 | No |
+| 2 | Activity ×3 | 8.75 / 11.75 / 35.75 | 61 / 45 / 15 | No |
+| 3 | Activity ×12 | 29 / 41 / 137 | 19 / 13 / 4 | No |
+| 4 | Offseason 2 + 30 | 34.25 / 35.25 / 43.25 | 16 / 15 / 13 | No |
+| 5 | Offseason 2 + 33 | 37.25 / 38.25 / 46.25 | 15 / 14 / 12 | **Yes** |
+| 6 | Activity ×2 and offseason 2 + 28 | 34.5 / 36.5 / 52.5 | 16 / 15 / 11 | No |
+| 7 | Activity ×2 and offseason 2 + 30 | 36.5 / 38.5 / 54.5 | 15 / 14 / 10 | **Yes** |
+| **8** | **Activity ×2 and offseason 2 + 32 (proposed)** | **38.5 / 40.5 / 56.5** | **14 / 13 / 10** | **Yes** |
+| 9 | Activity ×3 and offseason 2 + 28 | 36.75 / 39.75 / 63.75 | 15 / 14 / 9 | **Yes** |
+| 10 | Activity ×6 and offseason 2 + 15 | 30.5 / 36.5 / 84.5 | 18 / 15 / 7 | No |
 
-The full grid (activity ×1.5 to ×12, offseason +10 to +40, four hybrids) is in the raw file.
+The full grid (activity ×1.5 to ×12, offseason +10 to +40, seven hybrids) is in the raw file.
 
 ## What the numbers say
 
-- **The authorized range cannot do it.** A 50% share for everyone still needs 22 seasons at maximum participation, and it would
-  speed up every ordinary monster, which the gate does not ask for.
-- **The two schedules are 3.5 times apart** in activities (13 against 45). A multiplier alone that meets the gate on the mixed
-  schedule (×12) finishes in 4 seasons at maximum participation; one tuned to maximum (×3) takes 45 seasons on mixed.
-- **An offseason award is the only single lever that meets the gate on both schedules.** It does not depend on playing, so an
-  Apex who never plays would still finish in about 15 seasons.
-- **A hybrid keeps a link to playing.** Row 6 meets the gate on both schedules and leaves an active Apex finishing four seasons
-  sooner than a mixed one (11 against 15).
+- **The authorized range cannot do it.** A 50% share for everyone still needs 22 seasons at maximum participation and would
+  speed up every ordinary monster.
+- **A multiplier alone cannot do it.** The schedules are far apart in activities (9, 13 and 45 a season). The multiplier that
+  suits football-only would finish a maximum-participation Apex in three or four seasons.
+- **The offseason award does most of the work in every passing row.** It does not depend on playing. An Apex who never plays
+  still collects it, but he gains no levels and so none of the 516 points of natural growth: at 34 points a season he would need
+  about 30 seasons.
+- **The ×2 keeps a link to playing:** four seasons between a football-only Apex and a fully active one.
 
-## Recommendation (not approved)
+## The simpler alternative: row 5
 
-**Row 6: for an Apex only, activity training ×2 and an offseason award of 30 points (2 + 28).**
+Offseason 2 + 33 with no multiplier also passes (15 / 14 / 12). It is one number instead of two and leaves the sentence in §5
+("Apex does not receive an extra training multiplier") true as written. Against it: no margin on the football-only schedule, and
+playing changes the finish by only three seasons. If keeping §5 unchanged matters more than the margin, choose row 5 with 2 + 35
+(14 / 14 / 11).
 
-- It meets the gate on both documented schedules (100% by season 15; 90% by season 15 mixed, 11 maximum).
-- It leaves ordinary progression, Temper, starting ratings, ceilings, ageing and the calendar exactly as they are.
-- Most of the progress is the offseason award, so the result does not swing with how many Clashes a club happens to play.
-- An Apex still starts at 10–15, and even at maximum participation 90% of the cohort are not all-99 until season 11.
+## What approval would change
 
-**What approving it changes in the specification.** §5 says "Apex does not receive an extra training multiplier." Rows 2 to 8 all
-contradict that sentence, so any of them needs that sentence replaced by the approved rule. §6's offseason award (2 points for
-every eligible individual) would gain an Apex exception.
+- **Specification:** §6's offseason award (2 points for every eligible individual) gains an Apex exception. For the proposal
+  (row 8) the §5 sentence quoted above is replaced by the approved rule; for row 5 it stays.
+- **Code:** one Apex branch in the award functions (`src/franchise/t8/awards.js`) and the offseason; its own simulation commit,
+  full regression, identity baseline and replay check; the Apex career benchmark rerun on that commit.
+- **Economy:** a faster Apex makes the unimplemented Apex contract ask (B9, `ECONOMY_FINDINGS.md`) matter more. I would decide
+  the two together.
 
-**If you prefer not to change the rule (row 9),** the measured statement is: "90% of Apex reach all 99s by season 40 at maximum
-participation and by season 101 on the mixed schedule." The season-15 gate would then be retired or restated, and an all-99 Apex
-would not occur inside a 20-season franchise.
+## Limits
 
-## Limits of this evidence
-
-- Controlled careers: neutral grades (no performance bonus, which is worth at most 5 points of a bar per activity), full
-  participation in the scheduled activities, no injuries.
-- In real franchise runs most AI-club monsters are in very few Clashes (see `MASTERY_FINDINGS.md`), so an AI-club Apex sits
-  nearer the football-only pace than the mixed schedule. Rows 4 to 8 are robust to that; rows 2 and 3 are not.
-- Contract valuation (B9) was not re-run under any alternative; a faster-developing Apex is worth more.
+- Controlled cohort: every Apex plays every scheduled activity from season 1 with neutral grades and no injuries. In real
+  franchise runs only 33 of 58 Apex ever started a game, so real clubs would be slower than this table.
+- The awards are applied in the harness, not in the game; the season counts should be confirmed on the implemented rule.

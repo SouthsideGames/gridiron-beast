@@ -1,0 +1,154 @@
+O1-pass-T  machine: competing 0.003 CPU, steal 0.019 CPU, own 1.26 CPU (quiet), load 1.38 -> 1.27
+  R0 0.707 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1)]  (base 332.8 ms, cand 235.2 ms; paired median 0.696, IQR 0.608-0.832, 95% CI 0.609-0.840; wall 0.737, main thread 0.687)
+     0.707 = per-step 0.703 x volume 1.005 (ticks 7238/7201 = 1.005 x actors per tick 14.00/14.00 = 1.000)
+O2-run-M  machine: competing 0.000 CPU, steal 0.019 CPU, own 1.37 CPU (quiet), load 1.27 -> 1.23
+  R0 0.856 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1)]  (base 126.0 ms, cand 107.9 ms; paired median 0.780, IQR 0.695-0.964, 95% CI 0.680-1.023; wall 0.677, main thread 0.649)
+     0.856 = per-step 0.856 x volume 1.000 (ticks 3578/3579 = 1.000 x actors per tick 14.00/14.00 = 1.000)
+O3-wide-mismatch  machine: competing 0.000 CPU, steal 0.018 CPU, own 1.24 CPU (quiet), load 1.23 -> 1.54
+  R0 0.641 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1)]  (base 442.5 ms, cand 283.5 ms; paired median 0.660, IQR 0.624-0.733, 95% CI 0.624-0.735; wall 0.633, main thread 0.641)
+     0.641 = per-step 0.629 x volume 1.018 (ticks 12240/12024 = 1.018 x actors per tick 14.00/14.00 = 1.000)
+O4-redzone-cross  machine: competing 0.000 CPU, steal 0.018 CPU, own 1.44 CPU (quiet), load 1.54 -> 1.45
+  R0 0.943 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (base 150.6 ms, cand 142.0 ms; paired median 0.935, IQR 0.831-1.170, 95% CI 0.822-1.124; wall 0.873, main thread 0.742)
+     0.943 = per-step 0.909 x volume 1.038 (ticks 3588/3458 = 1.038 x actors per tick 14.00/14.00 = 1.000)
+O5-legendary-plays  machine: competing 0.000 CPU, steal 0.021 CPU, own 1.39 CPU (quiet), load 1.45 -> 1.72
+  R0 0.876 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1)]  (base 254.5 ms, cand 223.0 ms; paired median 0.826, IQR 0.674-0.902, 95% CI 0.656-0.898; wall 0.728, main thread 0.721)
+     0.876 = per-step 0.773 x volume 1.135 (ticks 6654/5865 = 1.135 x actors per tick 14.00/14.00 = 1.000)
+O6-rules-mix  machine: competing 0.000 CPU, steal 0.023 CPU, own 1.41 CPU (quiet), load 1.72 -> 1.71
+  R0 0.805 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1)]  (base 288.8 ms, cand 232.5 ms; paired median 0.820, IQR 0.711-0.905, 95% CI 0.682-0.870; wall 0.770, main thread 0.714)
+     0.805 = per-step 0.838 x volume 0.961 (ticks 6485/6749 = 0.961 x actors per tick 14.00/14.00 = 1.000)
+O7-rules-pass-T  machine: competing 0.000 CPU, steal 0.020 CPU, own 1.26 CPU (quiet), load 1.71 -> 1.5
+  R0 0.659 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1)]  (base 355.2 ms, cand 234.1 ms; paired median 0.763, IQR 0.577-0.927, 95% CI 0.553-0.943; wall 0.781, main thread 0.763)
+     0.659 = per-step 0.665 x volume 0.991 (ticks 7223/7290 = 0.991 x actors per tick 14.00/14.00 = 1.000)
+A1-overlapping-fields  machine: competing 0.000 CPU, steal 0.019 CPU, own 1.22 CPU (quiet), load 1.5 -> 1.44
+  R0 1.055 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1)]  (base 206.9 ms, cand 218.3 ms; paired median 0.917, IQR 0.777-1.077, 95% CI 0.760-1.077; wall 0.806, main thread 0.802)
+     1.055 = per-step 1.027 x volume 1.028 (ticks 5250/5108 = 1.028 x actors per tick 14.00/14.00 = 1.000)
+  R1 1.395 OVER 1.25  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (off 168.9 ms, on 217.4 ms, same process; paired median 1.395, IQR 1.192-1.464, 95% CI 1.173-1.445; ratio of medians 1.287; on first 1.413 / off first 1.395)
+     1.395 = per-step 1.416 x volume 0.986 (ticks 5174/5250 = 0.986 x actors per tick 14.00/14.00 = 1.000); per-step 95% CI 1.190-1.467
+     other metrics (paired medians): wall 1.232, main thread 1.264
+     reported, not the figure: old protocol R1 (cross-process) 0.996, process state (twin ability worker / matched worker) 0.774 (main thread 0.971, wall 0.951), R2 1.051
+     only:home.offense.WR1        x1.236 of the control only:none (CI 1.108-1.489) PROVISIONAL (0 ability events)
+     only:home.offense.WR2        x1.150 of the control only:none (CI 1.049-1.199) PROVISIONAL (4 ability events)
+     only:home.offense.RB         x1.314 of the control only:none (CI 1.140-1.578) PROVISIONAL (3 ability events)
+     only:home.offense.TE         x1.109 of the control only:none (CI 1.015-1.246) PROVISIONAL (0 ability events)
+     only:away.defense.SS         x1.106 of the control only:none (CI 0.981-1.340) PROVISIONAL (0 ability events)
+     only:away.defense.FS         x1.089 of the control only:none (CI 1.043-1.369) PROVISIONAL (16 ability events)
+     only:away.defense.LB1        x1.244 of the control only:none (CI 1.146-1.299) PROVISIONAL (15 ability events)
+     only:away.defense.DL1        x1.124 of the control only:none (CI 1.004-1.243) PROVISIONAL (0 ability events)
+     only:away.defense.CB1        x1.212 of the control only:none (CI 1.093-1.459) PROVISIONAL (1 ability events)
+     only:away.defense.CB2        x1.149 of the control only:none (CI 1.012-1.236) PROVISIONAL (1 ability events)
+     only:fields                  x1.387 of the control only:none (CI 1.341-1.758) PROVISIONAL (0 ability events)
+A2-summons-constructs  machine: competing 0.000 CPU, steal 0.021 CPU, own 1.23 CPU (quiet), load 1.44 -> 1.48
+  R0 0.978 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (base 252.5 ms, cand 246.9 ms; paired median 0.819, IQR 0.797-1.137, 95% CI 0.805-1.153; wall 0.802, main thread 0.766)
+     0.978 = per-step 0.929 x volume 1.053 (ticks 5950/5651 = 1.053 x actors per tick 14.00/14.00 = 1.000)
+  R1 1.294 OVER 1.25  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (off 208.8 ms, on 249.4 ms, same process; paired median 1.294, IQR 1.129-1.463, 95% CI 1.141-1.453; ratio of medians 1.195; on first 1.333 / off first 1.294)
+     1.294 = per-step 1.314 x volume 0.985 (ticks 5690/5950 = 0.956 x actors per tick 14.42/14.00 = 1.030); per-step 95% CI 1.159-1.475
+     other metrics (paired medians): wall 1.197, main thread 1.194
+     reported, not the figure: old protocol R1 (cross-process) 1.010, process state (twin ability worker / matched worker) 0.846 (main thread 1.108, wall 1.058), R2 0.988
+     only:home.offense.QB         x1.156 of the control only:none (CI 0.975-1.397) PROVISIONAL (16 ability events)
+     only:home.offense.LG         x1.118 of the control only:none (CI 1.074-1.229) PROVISIONAL (192 ability events)
+     only:away.defense.LB1        x1.104 of the control only:none (CI 1.014-1.356) PROVISIONAL (16 ability events)
+     only:away.defense.LB2        x1.044 of the control only:none (CI 0.872-1.110) PROVISIONAL (51 ability events)
+     only:away.defense.DL1        x1.063 of the control only:none (CI 0.957-1.343) PROVISIONAL (96 ability events)
+A3-delayed-effects  machine: competing 0.000 CPU, steal 0.018 CPU, own 1.21 CPU (quiet), load 1.48 -> 1.43
+  R0 0.957 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (base 188.5 ms, cand 180.3 ms; paired median 0.917, IQR 0.719-1.135, 95% CI 0.738-1.124; wall 0.788, main thread 0.737)
+     0.957 = per-step 0.950 x volume 1.007 (ticks 4562/4529 = 1.007 x actors per tick 14.00/14.00 = 1.000)
+  R1 1.347 OVER 1.25  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (off 155.8 ms, on 202.6 ms, same process; paired median 1.347, IQR 1.132-1.481, 95% CI 1.077-1.492; ratio of medians 1.301; on first 1.196 / off first 1.407)
+     1.347 = per-step 1.410 x volume 0.956 (ticks 4359/4562 = 0.956 x actors per tick 14.00/14.00 = 1.000); per-step 95% CI 1.127-1.562
+     other metrics (paired medians): wall 1.180, main thread 1.189
+     reported, not the figure: old protocol R1 (cross-process) 1.123, process state (twin ability worker / matched worker) 0.864 (main thread 1.032, wall 1.038), R2 1.075
+     only:home.offense.TE         x1.099 of the control only:none (CI 0.897-1.303) PROVISIONAL (16 ability events)
+     only:home.offense.RB         x1.278 of the control only:none (CI 1.135-1.536) PROVISIONAL (2 ability events)
+     only:home.offense.QB         x1.081 of the control only:none (CI 0.965-1.227) PROVISIONAL (1 ability events)
+     only:home.offense.WR1        x1.197 of the control only:none (CI 1.039-1.346) PROVISIONAL (16 ability events)
+     only:away.defense.LB1        x1.111 of the control only:none (CI 0.892-1.234) PROVISIONAL (30 ability events)
+     only:away.defense.LB2        x0.976 of the control only:none (CI 0.802-1.060) PROVISIONAL (8 ability events)
+     only:away.defense.FS         x1.101 of the control only:none (CI 0.929-1.247) PROVISIONAL (2 ability events)
+     only:away.defense.DL1        x1.116 of the control only:none (CI 0.951-1.289) PROVISIONAL (0 ability events)
+     only:away.defense.CB1        x0.991 of the control only:none (CI 0.906-1.297) PROVISIONAL (32 ability events)
+A4-legendary-sequence  machine: competing 0.000 CPU, steal 0.023 CPU, own 1.20 CPU (quiet), load 1.43 -> 1.3
+  R0 0.924 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1)]  (base 233.1 ms, cand 215.4 ms; paired median 0.930, IQR 0.726-1.079, 95% CI 0.701-1.049; wall 0.791, main thread 0.754)
+     0.924 = per-step 0.898 x volume 1.029 (ticks 5622/5465 = 1.029 x actors per tick 14.00/14.00 = 1.000)
+  R1 1.265 OVER 1.25  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (off 187.7 ms, on 225.3 ms, same process; paired median 1.265, IQR 1.095-1.314, 95% CI 1.033-1.310; ratio of medians 1.200; on first 1.182 / off first 1.310)
+     1.265 = per-step 1.232 x volume 1.027 (ticks 5699/5622 = 1.014 x actors per tick 14.18/14.00 = 1.013); per-step 95% CI 1.006-1.275
+     other metrics (paired medians): wall 1.168, main thread 1.155
+     reported, not the figure: old protocol R1 (cross-process) 1.046, process state (twin ability worker / matched worker) 0.871 (main thread 1.049, wall 0.974), R2 0.967
+     only:home.offense.QB         x1.078 of the control only:none (CI 1.002-1.224) PROVISIONAL (10 ability events)
+     only:home.offense.WR1        x1.202 of the control only:none (CI 0.987-1.313) PROVISIONAL (36 ability events)
+     only:home.offense.LG         x1.148 of the control only:none (CI 0.981-1.227) PROVISIONAL (26 ability events)
+     only:away.defense.CB1        x1.144 of the control only:none (CI 1.060-1.319) PROVISIONAL (8 ability events)
+     only:away.defense.LB1        x1.171 of the control only:none (CI 0.982-1.293) PROVISIONAL (16 ability events)
+A5-full-contracts  machine: competing 0.002 CPU, steal 0.017 CPU, own 1.16 CPU (quiet), load 1.3 -> 1.4
+  R0 0.723 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1)]  (base 451.6 ms, cand 326.5 ms; paired median 0.739, IQR 0.602-0.812, 95% CI 0.595-0.778; wall 0.710, main thread 0.700)
+     0.723 = per-step 0.713 x volume 1.014 (ticks 10551/10409 = 1.014 x actors per tick 14.00/14.00 = 1.000)
+  R1 1.240 within 1.25  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (off 311.8 ms, on 382.7 ms, same process; paired median 1.240, IQR 1.144-1.361, 95% CI 1.138-1.387; ratio of medians 1.228; on first 1.277 / off first 1.232)
+     1.240 = per-step 1.191 x volume 1.041 (ticks 10985/10551 = 1.041 x actors per tick 14.00/14.00 = 1.000); per-step 95% CI 1.093-1.332
+     other metrics (paired medians): wall 1.164, main thread 1.163
+     reported, not the figure: old protocol R1 (cross-process) 1.172, process state (twin ability worker / matched worker) 0.955 (main thread 1.058, wall 1.045), R2 0.848
+     only:home.offense.QB         x1.254 of the control only:none (CI 1.079-1.423) PROVISIONAL (24 ability events)
+     only:home.offense.RB         x1.119 of the control only:none (CI 0.945-1.206) PROVISIONAL (0 ability events)
+     only:home.offense.WR1        x1.212 of the control only:none (CI 1.039-1.425) PROVISIONAL (0 ability events)
+     only:home.offense.WR2        x1.154 of the control only:none (CI 1.091-1.415) PROVISIONAL (0 ability events)
+     only:home.offense.TE         x1.144 of the control only:none (CI 1.041-1.246) PROVISIONAL (46 ability events)
+     only:home.offense.LG         x1.149 of the control only:none (CI 1.046-1.282) PROVISIONAL (27 ability events)
+     only:home.offense.RG         x1.225 of the control only:none (CI 1.033-1.367) PROVISIONAL (19 ability events)
+     only:home.offense.WR3        x1.062 of the control only:none (CI 0.949-1.144) PROVISIONAL (0 ability events)
+     only:home.offense.C          x1.139 of the control only:none (CI 1.002-1.275) PROVISIONAL (0 ability events)
+     only:away.defense.DL1        x1.185 of the control only:none (CI 1.083-1.483) PROVISIONAL (24 ability events)
+     only:away.defense.DL2        x1.151 of the control only:none (CI 1.047-1.316) PROVISIONAL (24 ability events)
+     only:away.defense.LB1        x1.149 of the control only:none (CI 0.937-1.389) PROVISIONAL (0 ability events)
+     only:away.defense.LB2        x1.130 of the control only:none (CI 1.058-1.214) PROVISIONAL (3 ability events)
+     only:away.defense.CB1        x1.312 of the control only:none (CI 1.098-1.422) PROVISIONAL (93 ability events)
+     only:away.defense.CB2        x1.189 of the control only:none (CI 1.059-1.377) PROVISIONAL (0 ability events)
+     only:away.defense.FS         x1.272 of the control only:none (CI 1.108-1.452) PROVISIONAL (96 ability events)
+     only:away.defense.DL3        x1.039 of the control only:none (CI 0.924-1.299) PROVISIONAL (0 ability events)
+     only:away.defense.SS         x1.159 of the control only:none (CI 1.042-1.327) PROVISIONAL (0 ability events)
+X1-worst-case  machine: competing 0.000 CPU, steal 0.016 CPU, own 1.16 CPU (quiet), load 1.4 -> 1.17
+  R0 0.689 pass at 1.1  PROVISIONAL [noisy (IQR/median over 0.1)]  (base 420.2 ms, cand 289.5 ms; paired median 0.786, IQR 0.579-0.840, 95% CI 0.571-0.855; wall 0.643, main thread 0.677)
+     0.689 = per-step 0.671 x volume 1.026 (ticks 10311/10047 = 1.026 x actors per tick 14.00/14.00 = 1.000)
+  R1 1.437 OVER 1.25  PROVISIONAL [noisy (IQR/median over 0.1)]  (off 323.2 ms, on 431.4 ms, same process; paired median 1.437, IQR 1.284-1.575, 95% CI 1.268-1.625; ratio of medians 1.335; on first 1.480 / off first 1.432)
+     1.437 = per-step 1.407 x volume 1.021 (ticks 10301/10311 = 0.999 x actors per tick 14.31/14.00 = 1.022); per-step 95% CI 1.242-1.591
+     other metrics (paired medians): wall 1.351, main thread 1.322
+     reported, not the figure: old protocol R1 (cross-process) 1.490, process state (twin ability worker / matched worker) 1.116 (main thread 1.051, wall 1.053), R2 1.027
+     only:home.offense.QB         x1.029 of the control only:none (CI 0.904-1.460) PROVISIONAL (16 ability events)
+     only:home.offense.RB         x1.010 of the control only:none (CI 0.740-1.185) PROVISIONAL (0 ability events)
+     only:home.offense.WR1        x1.089 of the control only:none (CI 0.869-1.360) PROVISIONAL (0 ability events)
+     only:home.offense.WR2        x0.876 of the control only:none (CI 0.800-1.145) PROVISIONAL (0 ability events)
+     only:home.offense.TE         x1.131 of the control only:none (CI 0.903-1.228) PROVISIONAL (43 ability events)
+     only:home.offense.LG         x1.066 of the control only:none (CI 0.835-1.257) PROVISIONAL (64 ability events)
+     only:home.offense.RG         x1.028 of the control only:none (CI 0.932-1.233) PROVISIONAL (20 ability events)
+     only:home.offense.WR3        x0.952 of the control only:none (CI 0.723-1.090) PROVISIONAL (0 ability events)
+     only:home.offense.C          x0.957 of the control only:none (CI 0.869-1.218) PROVISIONAL (0 ability events)
+     only:away.defense.DL1        x1.105 of the control only:none (CI 0.889-1.260) PROVISIONAL (96 ability events)
+     only:away.defense.DL2        x0.961 of the control only:none (CI 0.880-1.266) PROVISIONAL (24 ability events)
+     only:away.defense.LB1        x1.101 of the control only:none (CI 0.874-1.315) PROVISIONAL (16 ability events)
+     only:away.defense.LB2        x1.160 of the control only:none (CI 0.871-1.230) PROVISIONAL (102 ability events)
+     only:away.defense.CB1        x1.089 of the control only:none (CI 0.847-1.292) PROVISIONAL (0 ability events)
+     only:away.defense.CB2        x0.915 of the control only:none (CI 0.803-1.196) PROVISIONAL (0 ability events)
+     only:away.defense.FS         x1.118 of the control only:none (CI 0.908-1.389) PROVISIONAL (96 ability events)
+     only:away.defense.DL3        x0.958 of the control only:none (CI 0.814-1.049) PROVISIONAL (0 ability events)
+     only:away.defense.SS         x0.986 of the control only:none (CI 0.784-1.294) PROVISIONAL (0 ability events)
+     only:fields                  x0.974 of the control only:none (CI 0.939-1.228) PROVISIONAL (0 ability events)
+
+R0 (engine, limit 1.1, every scene individually):
+  O1-pass-T                0.707 pass  CI 0.609-0.840  per-step 0.703 x volume 1.005  PROVISIONAL [noisy (IQR/median over 0.1)]
+  O2-run-M                 0.856 pass  CI 0.680-1.023  per-step 0.856 x volume 1.000  PROVISIONAL [noisy (IQR/median over 0.1)]
+  O3-wide-mismatch         0.641 pass  CI 0.624-0.735  per-step 0.629 x volume 1.018  PROVISIONAL [noisy (IQR/median over 0.1)]
+  O4-redzone-cross         0.943 pass  CI 0.822-1.124  per-step 0.909 x volume 1.038  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]
+  O5-legendary-plays       0.876 pass  CI 0.656-0.898  per-step 0.773 x volume 1.135  PROVISIONAL [noisy (IQR/median over 0.1)]
+  O6-rules-mix             0.805 pass  CI 0.682-0.870  per-step 0.838 x volume 0.961  PROVISIONAL [noisy (IQR/median over 0.1)]
+  O7-rules-pass-T          0.659 pass  CI 0.553-0.943  per-step 0.665 x volume 0.991  PROVISIONAL [noisy (IQR/median over 0.1)]
+  A1-overlapping-fields    1.055 pass  CI 0.760-1.077  per-step 1.027 x volume 1.028  PROVISIONAL [noisy (IQR/median over 0.1)]
+  A2-summons-constructs    0.978 pass  CI 0.805-1.153  per-step 0.929 x volume 1.053  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]
+  A3-delayed-effects       0.957 pass  CI 0.738-1.124  per-step 0.950 x volume 1.007  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]
+  A4-legendary-sequence    0.924 pass  CI 0.701-1.049  per-step 0.898 x volume 1.029  PROVISIONAL [noisy (IQR/median over 0.1)]
+  A5-full-contracts        0.723 pass  CI 0.595-0.778  per-step 0.713 x volume 1.014  PROVISIONAL [noisy (IQR/median over 0.1)]
+  X1-worst-case            0.689 pass  CI 0.571-0.855  per-step 0.671 x volume 1.026  PROVISIONAL [noisy (IQR/median over 0.1)]
+R1 (abilities, provisional budget 1.25, same-process paired median, every scene individually):
+  A1-overlapping-fields    1.395 OVER  CI 1.173-1.445  per-step 1.416 x volume 0.986  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (old cross-process 0.996)
+  A2-summons-constructs    1.294 OVER  CI 1.141-1.453  per-step 1.314 x volume 0.985  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (old cross-process 1.010)
+  A3-delayed-effects       1.347 OVER  CI 1.077-1.492  per-step 1.410 x volume 0.956  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (old cross-process 1.123)
+  A4-legendary-sequence    1.265 OVER  CI 1.033-1.310  per-step 1.232 x volume 1.027  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (old cross-process 1.046)
+  A5-full-contracts        1.240 within  CI 1.138-1.387  per-step 1.191 x volume 1.041  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (old cross-process 1.172)
+  X1-worst-case            1.437 OVER  CI 1.268-1.625  per-step 1.407 x volume 1.021  PROVISIONAL [noisy (IQR/median over 0.1)]  (old cross-process 1.490)
+quiet machine (competing CPU <= 0.05 and steal <= 0.05 CPU in every scene); official only when the owner accepts the conditions; results labelled PROVISIONAL stay provisional.
+Whole run: competing 0.000 CPU, steal 0.018 CPU, own 1.20 CPU. Load (1 min, includes the benchmark itself; recorded, not the rule) 1.17 to 1.72 on 2 CPUs. Metric process CPU time, warm-up 3, repeats 15, settle 1, sub-measurements 15; 16.5 min.
