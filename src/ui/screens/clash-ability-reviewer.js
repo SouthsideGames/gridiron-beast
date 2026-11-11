@@ -27,7 +27,8 @@ import { PHASES } from '../clash/t8/fx-t8.js';
 import { phaseEvidence, clashReviewCatalog } from '../clash/t8/evidence.js';
 import { elementFx } from '../ability-fx.js';
 import { syncReviews } from '../../franchise/review-store.js';
-import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, setClashFingerprint } from '../dev-review.js';
+import { reviewHtml, reviewHandlers as sharedHandlers, abilityStatus, abilityStateBadge, takeReviewerFocus } from '../dev-review.js';
+import { registerAbilityReviews, clashCatalog } from '../ability-review-inventory.js';
 import { SPECIES_DEX } from '../../data/species.js';
 
 export const NS = 'clashability';
@@ -37,19 +38,10 @@ const GROUP_CHIP = { main: '', blocked: '⛔ Blocked', failure: '✗ Failure / d
 const ARCH_GLYPH = { Tank: '🛡', Striker: '⚔️', Support: '💚', Disruptor: '🌀', Balanced: '⚖️' };
 const SP = new Map(SPECIES_DEX.map((s) => [s.id, s]));
 
-/** The catalog: one row per Clash ability, with its forms and the four tiers (from the engine's matrix). */
-export function clashCatalog() {
-  const rows = reviewMatrix(); const byAbility = new Map();
-  for (const r of rows) {
-    if (!byAbility.has(r.abilityId)) { const fam = familyById(r.family); const a = abilityById(r.abilityId); byAbility.set(r.abilityId, { abilityId: r.abilityId, name: r.name, family: r.family, familyName: fam?.name || r.family, element: SP.get(r.family)?.element || fam?.type || 'Metal', archetype: fam?.clashArchetype || '', rarity: fam?.rarity || '', position: fam?.position || '', forms: [], tiers: [0, 1, 2, 3], scenarios: 0, mechanic: a?.mechanic || '', details: a?.details || '', category: a?.category || '', activation: a?.activation || '' }); }
-    const c = byAbility.get(r.abilityId); if (!c.forms.some((f) => f.id === r.form)) c.forms.push({ id: r.form, name: r.formName, stage: r.stage }); c.scenarios = Math.max(c.scenarios, r.scenarios.length);
-  }
-  return [...byAbility.values()].sort((x, y) => x.abilityId.localeCompare(y.abilityId));
-}
+export { clashCatalog }; // the catalog now lives with the review inventory (src/ui/ability-review-inventory.js)
 
 export function registerClashAbilityReviewer(Router, app) {
-  const cat = clashCatalog();
-  for (const c of cat) setClashFingerprint(c.abilityId, [c.name, c.mechanic, c.details, c.category, c.activation, c.scenarios]);
+  const cat = registerAbilityReviews().clash; // the inventory, from the engine's registry; registers every fingerprint
   const st = { element: 'All', status: 'all', pick: {}, notesOpen: new Set(), synced: false, arena: null, pb: null, quality: 'full', reducedMotion: false };
   const elements = ['All', ...new Set(cat.map((c) => c.element))];
   const pickOf = (c) => (st.pick[c.abilityId] ||= { stage: 0, tier: 1, variant: null });
@@ -58,20 +50,21 @@ export function registerClashAbilityReviewer(Router, app) {
   Router.registerScreen('clash-ability-reviewer', {
     title: 'Clash Ability Reviewer', tabs: false,
     render() {
-      const state = Object.fromEntries(cat.map((c) => [c.abilityId, reviewState(NS, c.abilityId)]));
-      const count = { approved: 0, needs_work: 0, todo: 0 }; for (const c of cat) count[NEEDS_OWNER.has(state[c.abilityId]) ? 'todo' : state[c.abilityId]] += 1;
-      const ok = (c) => (st.element === 'All' || c.element === st.element) && (st.status === 'all' || (st.status === 'todo' ? NEEDS_OWNER.has(state[c.abilityId]) : state[c.abilityId] === st.status));
+      const fx = takeReviewerFocus(NS); if (fx) { st.status = fx.status || 'all'; st.element = 'All'; st.scrollTo = fx.anchor; } // opened from a review notification
+      const state = Object.fromEntries(cat.map((c) => [c.abilityId, abilityStatus(NS, c.abilityId)])); // 'pending' | 'approved' | 'revision'
+      const count = { approved: 0, revision: 0, pending: 0 }; for (const c of cat) count[state[c.abilityId]] += 1;
+      const ok = (c) => (st.element === 'All' || c.element === st.element) && (st.status === 'all' || (st.status === 'outstanding' ? state[c.abilityId] !== 'approved' : state[c.abilityId] === st.status));
       const list = cat.filter(ok); const rows = reviewMatrix().length;
       return `<p class="muted">Every Beast Clash ability from the Beast Dex, each form and each mastery tier (${cat.length} abilities, ${rows} form × tier rows). <b>▶ Scenario</b> demonstrates the complete interaction on the first run: the engine stages the prerequisites (HP, statuses, ability state, sparring partners, a selected seed, all labelled), plays the real battle to the activation and on through later turns until the cleanup, and ticks each phase from its own events. The <b>variant</b> list adds the labelled blocked, failure and interaction scenarios; a scenario marked PROVISIONAL runs an unapproved reading that normal play never uses. <b>▶ Natural battle</b> plays ordinary AI battles for activation frequency. Nothing is written to any franchise.</p>
         <div class="panel tight review-summary"><div class="row between"><b>Your review</b><span class="dim">${cat.length} abilities · all on the t8 engine</span></div>
-          <div class="row" style="gap:10px;font-size:13px;margin-top:4px"><span style="color:var(--good)">✓ ${count.approved} good</span><span style="color:var(--warn)">✎ ${count.needs_work} need work</span><span class="dim">🔔 ${count.todo} to review</span></div></div>
-        <div class="chips" style="margin:8px 0 4px">${[['all', 'All'], ['todo', '🔔 To review'], ['approved', '✓ Good'], ['needs_work', '✎ Waiting on dev']].map(([v, l]) => `<button class="chip ${v === st.status ? 'on' : ''}" data-action="st" data-v="${v}">${l}${v === 'all' ? '' : ` ${count[v]}`}</button>`).join('')}</div>
+          <div class="row" style="gap:10px;font-size:13px;margin-top:4px;flex-wrap:wrap"><span class="dim">🔔 ${count.pending} pending review</span><span style="color:var(--good)">✓ ${count.approved} approved</span><span style="color:var(--warn)">✎ ${count.revision} need revision</span></div></div>
+        <div class="chips" style="margin:8px 0 4px">${[['all', 'All'], ['pending', '🔔 Pending review'], ['approved', '✓ Approved'], ['revision', '✎ Needs revision']].map(([v, l]) => `<button class="chip ${v === st.status ? 'on' : ''}" data-action="st" data-v="${v}">${l}${v === 'all' ? '' : ` ${count[v]}`}</button>`).join('')}</div>
         <div class="panel tight" style="font-size:12px;margin:4px 0" data-rv2="fx"><b>Reviewer FX</b> (local, never saved): quality ${['full', 'low', 'min'].map((q) => `<button class="chip ${st.quality === q ? 'on accent' : ''}" data-action="quality" data-v="${q}">${q}</button>`).join('')} · <button class="chip ${st.reducedMotion ? 'on accent' : ''}" data-action="reduced">reduced motion ${st.reducedMotion ? 'on' : 'off'}</button></div>
         <div class="chips" style="margin:4px 0 8px">${elements.map((el) => `<button class="chip ${el === st.element ? 'on' : ''}" data-action="el" data-v="${el}">${el === 'All' ? 'All' : elementFx(el).glyph + ' ' + el}</button>`).join('')}</div>
         <div class="stack">${list.length ? '' : '<p class="dim center">Nothing here with these filters.</p>'}${list.map((c) => {
           const L = elementFx(c.element); const p = pickOf(c); const rv = state[c.abilityId]; const vars = variantsFor(c, p); if (!vars.some((v) => v.id === p.variant)) p.variant = vars[0]?.id || null;
-          return `<div class="panel tight audit-row ${rv === 'approved' ? 'rv-approved' : rv === 'needs_work' ? 'rv-needswork' : ''}" id="cl-${c.abilityId}">
-            <div class="row between"><b style="color:${L.a}">${esc(c.name)}</b> ${rv ? STATE_BADGE[rv] : ''}<span class="chip" style="border-color:${L.a};color:${L.a}">${L.glyph} ${esc(c.element)} · ${ARCH_GLYPH[c.archetype] || ''} ${esc(c.archetype)} · ${esc(c.rarity)}</span></div>
+          return `<div class="panel tight audit-row ${rv === 'approved' ? 'rv-approved' : rv === 'revision' ? 'rv-needswork' : ''}" id="cl-${c.abilityId}" data-status="${rv}">
+            <div class="row between"><b style="color:${L.a}">${esc(c.name)}</b> ${abilityStateBadge(NS, c.abilityId)}<span class="chip" style="border-color:${L.a};color:${L.a}">${L.glyph} ${esc(c.element)} · ${ARCH_GLYPH[c.archetype] || ''} ${esc(c.archetype)} · ${esc(c.rarity)}</span></div>
             <div class="dim" style="font-size:12px">${esc(c.abilityId)} · ${esc(c.familyName)} (${esc(c.family)}) · ${esc(c.category)}${c.activation ? ` · ${esc(c.activation)}` : ''}</div>
             ${c.mechanic ? `<div class="muted" style="font-size:12px;margin-top:2px">${esc(c.mechanic)}</div>` : ''}
             <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
@@ -84,6 +77,7 @@ export function registerClashAbilityReviewer(Router, app) {
     },
     mount(root) {
       if (!st.synced) { st.synced = true; syncReviews(NS).then((ok) => { if (ok) Router.render(); }); }
+      if (st.scrollTo) { const id = st.scrollTo; st.scrollTo = null; setTimeout(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }), 30); }
       delegate(root, {
         el: (el) => { st.element = el.dataset.v; Router.render(); },
         st: (el) => { st.status = el.dataset.v; Router.render(); },

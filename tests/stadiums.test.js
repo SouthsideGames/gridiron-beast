@@ -19,7 +19,7 @@ test('every club has one permanent stadium in a known environment; gym clubs sit
   const names = new Set();
   for (const club of ALL_TEAMS) { const s = stadiumFor(club); assert.ok(ENVIRONMENTS[s.env], club); assert.ok(!names.has(s.name), `unique name ${s.name}`); names.add(s.name); assert.equal(stadiumFor(club).env, s.env, 'permanent'); }
   for (const g of GYMS) { const env = Object.values(ENVIRONMENTS).find((e) => e.type === g.element); if (env) assert.equal(stadiumFor(g.club).type, g.element, `${g.club} plays in the ${env.name}`); }
-  assert.deepEqual(Object.values(ENVIRONMENTS).map((e) => e.type), [null, 'Ice', 'Fire', 'Nature', 'Electric', 'Earth', 'Metal']);
+  assert.deepEqual(Object.values(ENVIRONMENTS).map((e) => e.type), [null, 'Ice', 'Fire', 'Nature', 'Electric', 'Earth', 'Metal', 'Water', 'Light', 'Dark', null]); // the last is Dragon's Den: a look only
   assert.equal(stadiumFor('Ember City Beasts').env, 'volcanic'); assert.equal(stadiumFor('Ironpeak Rams').indoor, true);
   assert.equal(stadiumFor('Ember City Beasts', { 'Ember City Beasts': { name: 'New Pit', env: 'dome' } }).env, 'dome', 'a future stadium-management override replaces the default');
 });

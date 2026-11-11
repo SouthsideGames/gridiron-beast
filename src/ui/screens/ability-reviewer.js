@@ -10,14 +10,15 @@
 // mastery, collection, reward or save writes (the owner's verdicts and notes are review notes, as in the Playbook Audit).
 import { esc, delegate, sheet, toast } from '../dom.js';
 import { abilityById } from '../../data/beast-dex.js';
-import { reviewCatalog, reviewAbility } from '../../sim/abilities/review.js';
+import { reviewAbility } from '../../sim/abilities/review.js';
 import { reviewSequence, sequenceVariants } from '../../sim/abilities/review-sequence.js';
 import { fieldSvg, fieldDraw, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
 import { buildFx, elementFx, kickSim } from '../ability-fx.js';
 import { sequenceStaged } from '../fx/match-fx.js';
 import { reducedFlash } from '../flash-pref.js';
 import { syncReviews } from '../../franchise/review-store.js';
-import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, setFootballFingerprint } from '../dev-review.js';
+import { reviewHtml, reviewHandlers as sharedHandlers, abilityStatus, abilityStateBadge, takeReviewerFocus } from '../dev-review.js';
+import { registerAbilityReviews } from '../ability-review-inventory.js';
 
 const NS = 'fbability';
 const FORM_LABEL = (form) => `Stage ${Number(String(form).split(':')[1] || 0) + 1}`;
@@ -25,8 +26,7 @@ const SPEEDS = [0.25, 0.5, 1];
 const KIND_CHIP = { main: '', blocked: '⛔ Blocked', failure: '✗ Failure', interaction: '⇄ Interaction' };
 
 export function registerAbilityReviewer(Router, app) {
-  const cat = reviewCatalog();
-  for (const c of cat) { const a = abilityById(c.abilityId) || {}; setFootballFingerprint(c.abilityId, [a.name, a.category, a.activation, a.mechanic, a.details, a.ruling, a.values, c.registered]); }
+  const cat = registerAbilityReviews().football; // the inventory, from the registries; registers every fingerprint
   const st = { element: 'All', status: 'all', pick: {}, notesOpen: new Set(), raf: null, synced: false, pb: null, fxQuality: null, reducedFlash: false }; // fxQuality / reducedFlash: reviewer-local overrides (spec §13), never written to settings
   const elements = ['All', ...new Set(cat.map((c) => c.element))];
   const pickOf = (c) => (st.pick[c.family] ||= { form: c.forms[0], mastery: 0, primed: true, variant: 'main' });
@@ -34,19 +34,20 @@ export function registerAbilityReviewer(Router, app) {
   Router.registerScreen('ability-reviewer', {
     title: 'Ability Reviewer', tabs: false,
     render() {
-      const state = Object.fromEntries(cat.map((c) => [c.abilityId, reviewState(NS, c.abilityId)]));
-      const count = { approved: 0, needs_work: 0, todo: 0, pending: 0 }; for (const c of cat) { if (!c.registered) count.pending += 1; count[NEEDS_OWNER.has(state[c.abilityId]) ? 'todo' : state[c.abilityId]] += 1; }
-      const ok = (c) => (st.element === 'All' || c.element === st.element) && (st.status === 'all' || (st.status === 'pending' ? !c.registered : st.status === 'todo' ? NEEDS_OWNER.has(state[c.abilityId]) : state[c.abilityId] === st.status));
+      const fx = takeReviewerFocus(NS); if (fx) { st.status = fx.status || 'all'; st.element = 'All'; st.scrollTo = fx.anchor; } // opened from a review notification
+      const state = Object.fromEntries(cat.map((c) => [c.abilityId, abilityStatus(NS, c.abilityId)])); // 'pending' | 'approved' | 'revision'
+      const count = { approved: 0, revision: 0, pending: 0, unbuilt: 0 }; for (const c of cat) { if (!c.registered) count.unbuilt += 1; count[state[c.abilityId]] += 1; }
+      const ok = (c) => (st.element === 'All' || c.element === st.element) && (st.status === 'all' || (st.status === 'unbuilt' ? !c.registered : st.status === 'outstanding' ? state[c.abilityId] !== 'approved' : state[c.abilityId] === st.status));
       const list = cat.filter(ok);
       return `<p class="muted">Every football ability from the Beast Dex. <b>▶ Scenario</b> demonstrates the complete interaction on the first run: it prepares the charge, readiness, participants and the qualifying conditions on the real engine (fixed seeds and plays), plays to the activation and on through later plays until the cleanup, and ticks each phase from the engine's own events. The <b>variant</b> list adds labelled blocked, failure and interaction scenarios. Staged and controlled runs do not show how often an ability fires: <b>▶ Natural game</b> plays real AI games for that. Nothing is written to any franchise.</p>
-        <div class="panel tight review-summary"><div class="row between"><b>Your review</b><span class="dim">${cat.length} abilities · ${cat.length - count.pending} on the engine</span></div>
-          <div class="row" style="gap:10px;font-size:13px;margin-top:4px"><span style="color:var(--good)">✓ ${count.approved} good</span><span style="color:var(--warn)">✎ ${count.needs_work} need work</span><span class="dim">🔔 ${count.todo} to review</span><span class="dim">⏳ ${count.pending} not built yet</span></div></div>
-        <div class="chips" style="margin:8px 0 4px">${[['all', 'All'], ['todo', '🔔 To review'], ['approved', '✓ Good'], ['needs_work', '✎ Waiting on dev'], ['pending', '⏳ Not built']].map(([v, l]) => `<button class="chip ${v === st.status ? 'on' : ''}" data-action="st" data-v="${v}">${l}${v === 'all' ? '' : ` ${count[v]}`}</button>`).join('')}</div>
+        <div class="panel tight review-summary"><div class="row between"><b>Your review</b><span class="dim">${cat.length} abilities · ${cat.length - count.unbuilt} on the engine</span></div>
+          <div class="row" style="gap:10px;font-size:13px;margin-top:4px;flex-wrap:wrap"><span class="dim">🔔 ${count.pending} pending review</span><span style="color:var(--good)">✓ ${count.approved} approved</span><span style="color:var(--warn)">✎ ${count.revision} need revision</span>${count.unbuilt ? `<span class="dim">⏳ ${count.unbuilt} not built yet</span>` : ''}</div></div>
+        <div class="chips" style="margin:8px 0 4px">${[['all', 'All'], ['pending', '🔔 Pending review'], ['approved', '✓ Approved'], ['revision', '✎ Needs revision'], ...(count.unbuilt ? [['unbuilt', '⏳ Not built']] : [])].map(([v, l]) => `<button class="chip ${v === st.status ? 'on' : ''}" data-action="st" data-v="${v}">${l}${v === 'all' ? '' : ` ${count[v]}`}</button>`).join('')}</div>
         <div class="chips" style="margin:4px 0 8px">${elements.map((el) => `<button class="chip ${el === st.element ? 'on' : ''}" data-action="el" data-v="${el}">${el === 'All' ? 'All' : elementFx(el).glyph + ' ' + el}</button>`).join('')}</div>
         <div class="stack">${list.length ? '' : '<p class="dim center">Nothing here with these filters.</p>'}${list.map((c) => {
           const a = abilityById(c.abilityId) || {}; const L = elementFx(c.element); const p = pickOf(c); const rv = state[c.abilityId]; const vars = sequenceVariants(c.family);
-          return `<div class="panel tight audit-row ${rv === 'approved' ? 'rv-approved' : rv === 'needs_work' ? 'rv-needswork' : ''}" id="fb-${c.family}">
-            <div class="row between"><b style="color:${L.a}">${esc(c.name)}</b> ${rv ? STATE_BADGE[rv] : ''}<span class="chip" style="border-color:${L.a};color:${L.a}">${L.glyph} ${esc(c.element)} · ${esc(c.position)} · ${esc(c.rarity)}</span></div>
+          return `<div class="panel tight audit-row ${rv === 'approved' ? 'rv-approved' : rv === 'revision' ? 'rv-needswork' : ''}" id="fb-${c.family}" data-status="${rv}">
+            <div class="row between"><b style="color:${L.a}">${esc(c.name)}</b> ${abilityStateBadge(NS, c.abilityId)}<span class="chip" style="border-color:${L.a};color:${L.a}">${L.glyph} ${esc(c.element)} · ${esc(c.position)} · ${esc(c.rarity)}</span></div>
             <div class="dim" style="font-size:12px">${esc(c.abilityId)} · ${esc(c.family)} · ${esc(a.category || '')}${a.activation ? ` · ${esc(a.activation)}` : ''}</div>
             ${a.mechanic ? `<div class="muted" style="font-size:12px;margin-top:2px">${esc(a.mechanic)}</div>` : ''}
             <div class="dim" style="font-size:11px;margin-top:2px">Kickoffs: ${esc(c.specialPlays.kickoff)} · Two-point conversions: ${esc(c.specialPlays.twoPoint)} <span class="dim">(owner N8b)</span></div>
@@ -61,6 +62,7 @@ export function registerAbilityReviewer(Router, app) {
     },
     mount(root) {
       if (!st.synced) { st.synced = true; syncReviews(NS).then((ok) => { if (ok) Router.render(); }); }
+      if (st.scrollTo) { const id = st.scrollTo; st.scrollTo = null; setTimeout(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }), 30); }
       delegate(root, {
         el: (el) => { st.element = el.dataset.v; Router.render(); },
         st: (el) => { st.status = el.dataset.v; Router.render(); },
