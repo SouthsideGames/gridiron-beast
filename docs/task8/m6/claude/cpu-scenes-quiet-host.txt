@@ -1,0 +1,23 @@
+R0 (engine, limit 1.1, every scene individually):
+  O1-pass-T                0.728 pass  CI 0.655-0.764  per-step 0.725 x volume 1.005  PROVISIONAL [noisy (IQR/median over 0.1)]
+  O2-run-M                 0.615 pass  CI 0.512-0.663  per-step 0.615 x volume 1.000  PROVISIONAL [noisy (IQR/median over 0.1)]
+  O3-wide-mismatch         0.634 pass  CI 0.603-0.686  per-step 0.623 x volume 1.018  PROVISIONAL [noisy (IQR/median over 0.1)]
+  O4-redzone-cross         0.602 pass  CI 0.526-0.682  per-step 0.581 x volume 1.038  PROVISIONAL [noisy (IQR/median over 0.1)]
+  O5-legendary-plays       0.656 pass  CI 0.599-0.831  per-step 0.578 x volume 1.135  PROVISIONAL [noisy (IQR/median over 0.1)]
+  O6-rules-mix             0.650 pass  CI 0.560-0.762  per-step 0.677 x volume 0.961  PROVISIONAL [noisy (IQR/median over 0.1)]
+  O7-rules-pass-T          0.665 pass  CI 0.557-0.743  per-step 0.671 x volume 0.991  PROVISIONAL [noisy (IQR/median over 0.1)]
+  A1-overlapping-fields    0.754 pass  CI 0.645-0.977  per-step 0.733 x volume 1.028  PROVISIONAL [noisy (IQR/median over 0.1)]
+  A2-summons-constructs    0.719 pass  CI 0.606-0.939  per-step 0.683 x volume 1.053  PROVISIONAL [noisy (IQR/median over 0.1)]
+  A3-delayed-effects       0.654 pass  CI 0.614-0.801  per-step 0.649 x volume 1.007  PROVISIONAL [noisy (IQR/median over 0.1)]
+  A4-legendary-sequence    0.697 pass  CI 0.594-0.845  per-step 0.678 x volume 1.029  PROVISIONAL [noisy (IQR/median over 0.1)]
+  A5-full-contracts        0.735 pass  CI 0.659-0.824  per-step 0.725 x volume 1.014  PROVISIONAL [noisy (IQR/median over 0.1)]
+  X1-worst-case            0.696 pass  CI 0.642-0.816  per-step 0.678 x volume 1.026  PROVISIONAL [noisy (IQR/median over 0.1)]
+R1 (abilities, provisional budget 1.25, same-process paired median, every scene individually):
+  A1-overlapping-fields    1.602 OVER  CI 1.430-1.708  per-step 1.626 x volume 0.986  PROVISIONAL [noisy (IQR/median over 0.1)]  (old cross-process 1.596)
+  A2-summons-constructs    1.250 within  CI 1.075-1.379  per-step 1.269 x volume 0.985  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (old cross-process 1.316)
+  A3-delayed-effects       1.217 within  CI 1.092-1.583  per-step 1.274 x volume 0.956  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (old cross-process 1.530)
+  A4-legendary-sequence    1.184 within  CI 0.962-1.226  per-step 1.153 x volume 1.027  PROVISIONAL [noisy (IQR/median over 0.1)]  (old cross-process 1.237)
+  A5-full-contracts        1.282 OVER  CI 1.177-1.297  per-step 1.232 x volume 1.041  PROVISIONAL [noisy (IQR/median over 0.1); borderline (95% interval straddles the limit)]  (old cross-process 1.231)
+  X1-worst-case            1.544 OVER  CI 1.483-1.723  per-step 1.512 x volume 1.021  PROVISIONAL [noisy (IQR/median over 0.1)]  (old cross-process 1.553)
+quiet machine (competing CPU <= 0.05 and steal <= 0.05 CPU in every scene); official only when the owner accepts the conditions; results labelled PROVISIONAL stay provisional.
+Whole run: competing 0.002 CPU, steal 0.016 CPU, own 1.19 CPU. Load (1 min, includes the benchmark itself; recorded, not the rule) 1.24 to 1.97 on 2 CPUs. Metric process CPU time, warm-up 3, repeats 15, settle 1, sub-measurements 15; 15.5 min.
