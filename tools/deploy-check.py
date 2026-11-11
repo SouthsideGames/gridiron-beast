@@ -94,6 +94,9 @@ with sync_playwright() as pw:
         p.evaluate(GO, ['developer']); p.wait_for_timeout(300); check(p.locator('[data-change="qbreads"]').is_checked() != was, 'setting toggles and survives a reload')
         check(p.evaluate("() => !!window.__gb.f.settings.qbReads") == (not was), f'franchise settings.qbReads = {not was}')
         # A live franchise game on a disposable franchise from the test helper (served under the reserved prefix, not from the release)
+        # The browser keeps only 250 resource entries by default; a release with more modules than that fills the buffer before the
+        # helper loads, and the check below would then see nothing. Enlarge it first (entries already recorded are kept).
+        p.evaluate("() => performance.setResourceTimingBufferSize(10000)")
         p.evaluate("""async (prefix) => { const S = await import(prefix + 'franchise-soak.mjs'); const F = await import('./src/franchise/franchise.js');
           const f = S.newFranchise(6, { difficulty: 'rookie' }); Object.assign(f.settings, { reducedMotion: false, mode: 'full', speed: 1.6, devNotices: false, tutorial: false, qbReads: true }); if (window.__gb.settings) window.__gb.settings.devNotices = false;
           F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); F.autoRunToSunday(f); } window.__gb.f = f; }""", PREFIX)
