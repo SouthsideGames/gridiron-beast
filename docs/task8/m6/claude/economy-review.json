@@ -1,0 +1,124 @@
+{
+ "source": "docs/task8/m6/ai-20-season-seed-1.json and ai-20-season-seeds-2-3.json (simulation f716b02; hands-off owner; AI clubs only below)",
+ "cap": 1800000,
+ "staffAllowanceNote": "cap room = cap - roster payroll - staff allowance",
+ "clubSeasons": 900,
+ "seasons": 60,
+ "capRoom": {
+  "mean": 382025,
+  "p10": 320020,
+  "median": 375360,
+  "p90": 451860,
+  "min": 273900,
+  "shareOfCap": 21.2
+ },
+ "rosterSize": {
+  "mean": 36.8,
+  "full38": 49.8,
+  "under36": 17.7
+ },
+ "capRoomByMode": {
+  "compete": {
+   "clubSeasons": 416,
+   "meanRoom": 389815,
+   "meanTeamOvr": 58.5,
+   "meanWinPct": 49.3,
+   "meanWeakGroups": 2.54
+  },
+  "contend": {
+   "clubSeasons": 272,
+   "meanRoom": 365802,
+   "meanTeamOvr": 61.7,
+   "meanWinPct": 70.5,
+   "meanWeakGroups": 2.42
+  },
+  "retool": {
+   "clubSeasons": 64,
+   "meanRoom": 377982,
+   "meanTeamOvr": 54.2,
+   "meanWinPct": 30,
+   "meanWeakGroups": 2.3
+  },
+  "rebuild": {
+   "clubSeasons": 148,
+   "meanRoom": 391694,
+   "meanTeamOvr": 56.4,
+   "meanWinPct": 30.9,
+   "meanWeakGroups": 2.49
+  }
+ },
+ "capRoomByResult": {
+  "playoffClubs": 374581,
+  "nonPlayoffClubs": 389913,
+  "champions": 376158
+ },
+ "weakGroupsWithRoom": {
+  "clubSeasonsWithAWeakGroup": 893,
+  "ofThoseWithAtLeast100kRoom": 893
+ },
+ "freeAgency": {
+  "marketsRecorded": 60,
+  "aiSigningsPerMarket": 7,
+  "contested2plus": 50.8,
+  "contested3plus": 31.2,
+  "meanBidders": 2.12,
+  "salary": {
+   "median": 31400,
+   "p90": 35800,
+   "max": 45200
+  },
+  "salaryByBidders": {
+   "1": 28216,
+   "2": 31293,
+   "3": 33224,
+   "4+": 32335
+  },
+  "offersPerMarket": 14.9,
+  "revisionsPerMarket": 4.5,
+  "unsignedAtClosePerMarket": 25.9,
+  "marketProblems": 0
+ },
+ "extensions": {
+  "offered": 10880,
+  "signed": 8852,
+  "declined": 1865,
+  "declinedStarters": 735,
+  "acceptedAsOffered": 4067,
+  "compromised": 4785,
+  "signedShare": 81.4,
+  "midSeason": {
+   "offered": 2596,
+   "signed": 1754,
+   "declined": 734
+  }
+ },
+ "starterSales": {
+  "note": "sales of a starter by a rebuilding or retooling club (v4.sales); the three runs recorded 182 trades in all",
+  "total": 10,
+  "perSeason": 0.2,
+  "withPicks": 5,
+  "byBuyerMode": {
+   "compete": 3,
+   "contend": 6,
+   "retool": 1
+  },
+  "inSeason": 4
+ },
+ "rebuilding": {
+  "definition": "the four weakest AI clubs by team OVR in a season (seasons 1-15), three seasons later",
+  "n": 180,
+  "improvedShare": 70.6,
+  "meanOvrGain": 2.7,
+  "reachedPlayoffsWithin5": 66.7
+ },
+ "parity": {
+  "distinctChampions": 19,
+  "mostTitlesByOneClub": 7,
+  "championSeasons": 57,
+  "teamOvrSpread": {
+   "p10": 54,
+   "median": 59,
+   "p90": 64
+  }
+ }
+}
