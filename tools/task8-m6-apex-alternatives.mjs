@@ -22,6 +22,7 @@ const ALTS = [
   { id: 'share-50', label: 'Training share 50% for everyone (top of the authorized range)', mult: 1, extra: 0, share: 0.5, affectsOrdinary: true },
   ...[1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 8, 10, 12].map((k) => ({ id: `apex-x${k}`, label: `Apex-only activity training x${k}`, mult: k, extra: 0, share: 0.25 })),
   ...[10, 20, 30, 33, 35, 40].map((n) => ({ id: `apex-off+${n}`, label: `Apex-only offseason points ${OFFSEASON_POINTS} + ${n}`, mult: 1, extra: n, share: 0.25 })),
+  ...[[2, 28], [3, 25], [4, 20], [6, 15]].map(([k, n]) => ({ id: `apex-x${k}+off${n}`, label: `Apex-only activity training x${k} and offseason points ${OFFSEASON_POINTS} + ${n}`, mult: k, extra: n, share: 0.25 })),
 ];
 function cohort() {
   const out = [];
