@@ -4,6 +4,9 @@
 the frame-time figures from a headless desktop browser. This list is how to produce the phone result; until you send it back,
 the §14 gates (60 FPS target, selectable 30 FPS mode) stay open.
 
+**Link:** https://claude.ai/artifact/3qW6dbFAZ4yCc8i1SnAVq6 (private; the same testing link as before)
+**Build:** v43.5.1-t8-m6-preview · 2026-11-11 (commit d544fec, published as version 10)
+
 About 35 minutes. Parts A to D need only the phone. Part E needs a Mac and a cable and gives numbers.
 
 ## A. Set up (3 minutes)
@@ -12,7 +15,7 @@ About 35 minutes. Parts A to D need only the phone. Part E needs a Mac and a cab
 - [ ] **Low Power Mode off** (Settings → Battery). When it is on, Safari draws at 30 FPS and every result is wrong.
 - [ ] Battery above 50%, unplugged, phone cool, other apps closed.
 - [ ] Open the private preview **in Safari**, not inside the Claude app: Part E can only inspect Safari.
-- [ ] Main menu: confirm the build label matches the one named in my report.
+- [ ] Main menu: the build label reads **v43.5.1-t8-m6-preview · 2026-11-11**. If it shows v43.5.0, close the tab and reopen the link.
 - [ ] Continue your existing preview franchise (this also checks the save carried over).
 - [ ] Settings: Frame rate 60, Reduce flashes off, Reduce motion off.
 
