@@ -1,0 +1,72 @@
+{
+ "scope": "position coverage of every AI club: at the benchmark season-end snapshot, right after each season start, and before every kickoff (simulation-only board reinstatement, as the benchmark)",
+ "seeds": {
+  "1": {
+   "seasonStartsChecked": 19,
+   "clubWeeksBeforeKickoff": 2790,
+   "snapshotFlags": [],
+   "seasonStartFlags": 0,
+   "beforeKickoffFlags": 0
+  },
+  "2": {
+   "seasonStartsChecked": 19,
+   "clubWeeksBeforeKickoff": 2730,
+   "snapshotFlags": [
+    {
+     "year": 8,
+     "club": "Eastport Phantoms",
+     "size": 38,
+     "count": {
+      "QB": 2,
+      "RB": 4,
+      "WR": 5,
+      "TE": 2,
+      "OL": 9,
+      "DL": 5,
+      "LB": 3,
+      "CB": 3,
+      "S": 5,
+      "K": 0
+     },
+     "problems": [
+      "K"
+     ]
+    },
+    {
+     "year": 20,
+     "club": "Sundown Drakes",
+     "size": 38,
+     "count": {
+      "QB": 5,
+      "RB": 3,
+      "WR": 5,
+      "TE": 4,
+      "OL": 3,
+      "DL": 7,
+      "LB": 3,
+      "CB": 2,
+      "S": 6,
+      "K": 0
+     },
+     "problems": [
+      "K"
+     ]
+    }
+   ],
+   "seasonStartFlags": 0,
+   "beforeKickoffFlags": 0
+  },
+  "3": {
+   "seasonStartsChecked": 19,
+   "clubWeeksBeforeKickoff": 2985,
+   "snapshotFlags": [],
+   "seasonStartFlags": 0,
+   "beforeKickoffFlags": 0
+  }
+ },
+ "finalSeason": {
+  "ok": false,
+  "reason": "This franchise has completed its 20 seasons. Retire it to the Hall of Fame and the Franchise Legacy; a new franchise can begin in another slot.",
+  "year": 20
+ }
+}
