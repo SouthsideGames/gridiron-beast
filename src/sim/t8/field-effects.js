@@ -10,7 +10,7 @@
 //   Water slip chance per sharp cut/stop  Electric Stunned chance on first entry   Psychic inward pull, % of applicable max speed
 // A field with no strength applies no magnitude-dependent effect (no universal magnitude is invented). `payload.deadband` overrides
 // the Psychic centre deadband. Values §11 itself states (40% current-speed loss, the hybrids' numbers) are the constants below.
-import { effectsAt, maxSpeedFactor, contains } from './fields.js';
+import { effectsAt, effectsCore, effectsFor, maxSpeedFactor, contains } from './fields.js';
 import { applyStatus } from './status-runtime.js';
 import { createRng } from '../../core/rng.js';
 
@@ -41,13 +41,14 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   let clumps = []; let placed = false; // Living Terrain clumps: placed at the snap (first tick, after alignment)
   const driftDir = rng.chance(0.5) ? 1 : -1; // Froststorm: seeded side, fixed for the play
   const bonds = [], echoes = [];
+  let magEver = false; // Perf: has any monster's lookup carried the Magnetic Storm hybrid this play (tick sets it; magnetic() reads it)
   let t = 0;
   const ev = (a, kind, text, extra = {}) => log(text, { kind, by: a.slot, side: a.team, ...extra });
   // A monster's per-play field state. Perf (outcome-identical): every key it can take is declared at creation (undefined reads as
   // absent; nothing enumerates it), so all of them share one object shape.
   // Same for the effective-attribute layer record (layer(): a missing key and undefined both read as 0; nothing enumerates it).
   // Third pass: `m` is the lookup the last tick resolved for him (its entry events are done) and `byType` his type's memo map.
-  const fxState = (cut) => ({ seen: new Set(), attr: { awareness: undefined, catching: undefined, blocking: undefined }, drift: 0, cut, base: undefined, hybrid: undefined, echo: undefined, pend: undefined, metalUsed: undefined, slipped: undefined, lured: undefined, bonded: undefined, m: undefined, byType: undefined });
+  const fxState = (cut) => ({ seen: new Set(), attr: { awareness: 0, catching: 0, blocking: 0 }, drift: 0, cut, base: undefined, hybrid: undefined, echo: undefined, pend: undefined, metalUsed: undefined, slipped: undefined, lured: undefined, bonded: undefined, m: undefined, byType: undefined, fms: 0 });
   const applicableMax = (a) => a.maxSpeed; // already carries the shared modifiers (engine refreshMaxSpeed)
   const unpair = (a) => { if (a.engaged) { a.engaged.engaged = null; a.engaged = null; } };
 
@@ -74,14 +75,17 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   /** Effective-attribute layer (Dark Awareness, Steam Catching/Blocking): replaces its own previous delta, so it never compounds. */
   function layer(a, k, r) {
     const prev = a.fx.attr[k] || 0; if (!prev && !r) return;
-    const without = a.attrs[k] - prev, d = -without * r; a.attrs[k] = without + d; a.fx.attr[k] = d;
+    // Perf (outcome-identical, fourth pass): the same two numbers, stored only when they differ from what is there (a store of an
+    // equal number changes nothing; a zero is always stored so its sign is kept). At rest in a Dark field both repeat every tick.
+    const cur = a.attrs[k], without = cur - prev, d = -without * r, nv = without + d;
+    if (nv !== cur || nv === 0) a.attrs[k] = nv; if (d !== prev || d === 0) a.fx.attr[k] = d;
   }
 
   // Perf (outcome-identical): a play's field list and its rectangles never change during the play (abilities place and remove fields
   // in the stored list between plays), so effectsAt depends on the point only through which fields contain it. Each distinct
   // (monster type, set of containing fields) is resolved once per play, with the base-effect lookup built from it as before; both
   // are shared read-only (nothing writes into a.fx.base or the effectsAt result).
-  const memo = new Map(); const bigList = fields.length > 30;
+  const memo = new Map(), cores = new Map(); const bigList = fields.length > 30;
   // Perf (outcome-identical, third pass): the containment test reads each field's four bounds from flat arrays filled once per play
   // (the play-frame fields are plain copies that nothing changes during the play); a field with removed footprints (holes) keeps the
   // full `contains` test. The test itself is fields.js inRect unchanged (>= and <= on the same values). An actor outside the union of
@@ -97,7 +101,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   // truthiness), in one fixed order, so every lookup object shares one shape and the per-tick reads are monomorphic.
   const baseOf = (e) => {
     const base = { Fire: undefined, Water: undefined, Nature: undefined, Electric: undefined, Earth: undefined, Ice: undefined, Wind: undefined, Psychic: undefined, Dark: undefined, Light: undefined, Metal: undefined, Dragon: undefined };
-    for (const b of e.base) base[b.type] = { strength: b.strength, field: byId.get(b.fieldId) };
+    for (const b of e.base) base[b.type] = { strength: b.strength, field: byId.get(b.fieldId), centre: undefined }; // centre: the Psychic pull point, filled at first use
     return base;
   };
   function effectsHere(a) {
@@ -112,39 +116,55 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
     }
     let m = byType.get(k);
     if (!m) {
-      const e = effectsAt(fields, a.x, a.y, a.type);
-      m = { e, base: baseOf(e) }; byType.set(k, m);
+      // Perf (outcome-identical, fourth pass): everything tick() reads from a lookup on every tick is worked out once here with the
+      // same expressions: the hybrid's name, the Water entry, the Fire/Wind maximum-speed sum and the Dark Awareness share.
+      // The type-independent half of effectsAt is resolved once per set of containing fields (cores) and shared by every monster type.
+      let core = cores.get(k); if (!core) { core = effectsCore(fields, a.x, a.y); cores.set(k, core); }
+      const e = effectsFor(core, a.type); const base = baseOf(e), hybrid = e.hybrid?.name || null;
+      m = { e, base, hybrid, water: base.Water, ms: (-(base.Fire?.strength ?? 0) + (base.Wind?.strength ?? 0)) || 0, dark: pct(base.Dark?.strength), steam: hybrid === 'Steam', mind: hybrid === 'Mindstorm' };
+      byType.set(k, m);
     }
     return m;
   }
   function tick(now) {
     t = now;
     if (!placed) { placed = true; clumps = placeClumps(fields, actors, rng); if (clumps.length) log(`Living Terrain raises ${clumps.length} vine clump${clumps.length > 1 ? 's' : ''}`, { kind: 'field_clumps', clumps: clumps.map((c) => [c.x, c.y]) }); }
-    for (const a of actors) {
+    // Perf (outcome-identical, fourth pass). The loop does what it did, in the same order, with the per-lookup values read from the
+    // lookup (effectsHere) instead of being derived again for every monster on every tick:
+    //  - base and hybrid are stored only when his lookup changed (the same lookup would store the same two values);
+    //  - the maximum-speed entry is written or removed only when the sum differs from the one stored (nothing else writes
+    //    maxSpeedMods.field; removing an absent key and re-storing an equal number change nothing);
+    //  - the Steam layers and the Mindstorm echo are visited only when they can do something: layer() returns at once with no
+    //    previous delta and a zero share, and the echo branch needs the Mindstorm hybrid or an existing echo.
+    for (let i = 0; i < actors.length; i++) {
+      const a = actors[i];
       if (a.envImmune) continue; // M3 hook: an actor immune to environmental modifiers (Stormguard's guards) never experiences a field
       const st = (a.fx ||= fxState(a.cutUntil));
-      const m = effectsHere(a); const e = m.e;
-      st.base = m.base;
-      st.hybrid = e.hybrid?.name || null;
-      // Perf (outcome-identical, third pass): the entry checks run only when his resolved lookup is not the one of his previous tick.
-      // After one pass over a lookup every one of its field ids and its hybrid name is in `seen`, so with the same lookup again every
-      // test below would be false: no entry event, no Electric roll.
+      const m = effectsHere(a);
+      // The entry checks run only when his resolved lookup is not the one of his previous tick (third pass): after one pass over a
+      // lookup every one of its field ids and its hybrid name is in `seen`, so with the same lookup again every test below would be
+      // false: no entry event, no Electric roll.
       if (m !== st.m) {
-        st.m = m;
-        for (const b of e.base) if (!st.seen.has(b.fieldId)) {
+        st.m = m; st.base = m.base; st.hybrid = m.hybrid; if (m.hybrid === 'Magnetic Storm') magEver = true;
+        for (const b of m.e.base) if (!st.seen.has(b.fieldId)) {
           st.seen.add(b.fieldId); ev(a, 'field_enter', `${a.name} enters a ${b.type} field`, { field: b.fieldId, element: b.type });
           if (b.type === 'Electric') electric(a, st.base.Electric);
         }
         if (st.hybrid && !st.seen.has(st.hybrid)) { st.seen.add(st.hybrid); ev(a, 'field_enter', `${a.name} enters ${st.hybrid}`, { hybrid: st.hybrid }); }
       }
-      if (st.base.Water && a.cutUntil !== st.cut && a.cutUntil > t) water(a, st.base.Water);
-      st.cut = a.cutUntil;
-      const ms = -(st.base.Fire?.strength ?? 0) + (st.base.Wind?.strength ?? 0); // Fire and Wind: one maximum-speed property, added
-      { const had = a.maxSpeedMods?.field ?? 0; if (ms) (a.maxSpeedMods ||= {}).field = ms; else if (a.maxSpeedMods) delete a.maxSpeedMods.field; if ((ms || 0) !== had) refreshMaxSpeed?.(a); } // one aggregation with the statuses (§11)
-      layer(a, 'awareness', a.ignoreFieldAwareness ? 0 : pct(st.base.Dark?.strength)); // M3 hook: a.ignoreFieldAwareness (set by a contract's tick) ignores only the Dark base field's Awareness term
-      layer(a, 'catching', st.hybrid === 'Steam' ? STEAM.catching : 0); layer(a, 'blocking', st.hybrid === 'Steam' ? STEAM.blocking : 0);
-      if (st.hybrid === 'Mindstorm' && !st.echo) { st.echo = { of: a, x: a.x, y: a.y, live: true }; echoes.push(st.echo); placeEcho(st.echo); ev(a, 'field_echo', `A Mindstorm echo trails ${a.name}`, { hybrid: 'Mindstorm', x: +st.echo.x.toFixed(2), y: +st.echo.y.toFixed(2) }); }
-      else if (st.echo?.live) { if (st.hybrid === 'Mindstorm') placeEcho(st.echo); else st.echo.live = false; }
+      const cut = a.cutUntil;
+      if (m.water && cut !== st.cut && cut > t) water(a, m.water);
+      if (cut !== st.cut) st.cut = cut; // water() does not move cutUntil; an equal value is not stored again
+      const ms = m.ms; // Fire and Wind: one maximum-speed property, added
+      // One aggregation with the statuses (§11). st.fms is the entry this function last left in maxSpeedMods.field (0: none; tick is its
+      // only writer and both start empty with the play), so an unchanged sum touches nothing, exactly as before.
+      if (ms !== st.fms) { if (ms) (a.maxSpeedMods ||= {}).field = ms; else if (a.maxSpeedMods) delete a.maxSpeedMods.field; st.fms = ms; refreshMaxSpeed?.(a); }
+      layer(a, 'awareness', a.ignoreFieldAwareness ? 0 : m.dark); // M3 hook: a.ignoreFieldAwareness (set by a contract's tick) ignores only the Dark base field's Awareness term
+      if (m.steam || st.attr.catching || st.attr.blocking) { layer(a, 'catching', m.steam ? STEAM.catching : 0); layer(a, 'blocking', m.steam ? STEAM.blocking : 0); }
+      if (m.mind || st.echo) {
+        if (m.mind && !st.echo) { st.echo = { of: a, x: a.x, y: a.y, live: true }; echoes.push(st.echo); placeEcho(st.echo); ev(a, 'field_echo', `A Mindstorm echo trails ${a.name}`, { hybrid: 'Mindstorm', x: +st.echo.x.toFixed(2), y: +st.echo.y.toFixed(2) }); }
+        else if (st.echo?.live) { if (m.mind) placeEcho(st.echo); else st.echo.live = false; }
+      }
     }
     magnetic();
   }
@@ -156,6 +176,9 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   /** Magnetic Storm: once a play, nearest eligible nonparent pairs within 3 yd bond (one partner each); break at 6 yd, exit or whistle. */
   function magnetic() {
     for (const b of bonds) if (b.live && (hyp(b.a, b.b) > MAGNETIC_STORM.breakAt || b.a.fx.hybrid !== 'Magnetic Storm' || b.b.fx.hybrid !== 'Magnetic Storm')) { b.live = false; ev(b.a, 'field_unbond', `${b.a.name} and ${b.b.name} break the Magnetic Storm's hold`, { partner: b.b.slot, partnerSide: b.b.team }); }
+    // Perf (outcome-identical, fourth pass): a monster's hybrid is written only by tick(), which notes the first Magnetic Storm
+    // lookup; until then no monster can pass the filter below, so the candidate list is empty and the function returns here anyway.
+    if (!magEver) return;
     const free = actors.filter((a) => a.fx?.hybrid === 'Magnetic Storm' && !a.fx.bonded && !a.sitsOut); if (free.length < 2) return;
     const pairs = [];
     for (let i = 0; i < free.length; i++) for (let j = i + 1; j < free.length; j++) { const d = hyp(free[i], free[j]); if (d <= MAGNETIC_STORM.pairWithin) pairs.push([d, free[i], free[j]]); }
@@ -187,7 +210,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
     let dx = 0, dy = 0; const vmax = applicableMax(a);
     const P = st.base.Psychic;
     if (P?.strength != null) {
-      const c = centre(P.field), r = hyp(c, a), db = P.field.payload?.deadband ?? PSYCHIC_DEADBAND;
+      const c = (P.centre ||= centre(P.field)), r = hyp(c, a), db = P.field.payload?.deadband ?? PSYCHIC_DEADBAND;
       if (r > db) { const step = Math.min(pct(P.strength) * vmax * dt, r - db); dx += ((c.x - a.x) / r) * step; dy += ((c.y - a.y) / r) * step; }
     }
     for (const b of bonds) if (b.live && (b.a === a || b.b === a)) {
