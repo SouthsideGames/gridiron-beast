@@ -1,6 +1,6 @@
 # Franchise Mode quality-of-life and personality update (2026-11-11)
 
-Branch `franchise-qol-personality`, from main 65391d2 (PR #99). Final update the same day: four new fields, the final field rules, the Developer Tools cleanup and ability-review tracking. Owner authorised merge and publication to the main testing link as **v43.7.0-franchise-qol** once the targeted checks pass.
+Branch `franchise-qol-personality`, from main 65391d2 (PR #99). Final update the same day: four new fields, the final field rules, the Developer Tools cleanup and ability-review tracking. Merged as d303aee and published to the main testing link as **v43.7.0-franchise-qol** (artifact version 120) on the owner's authorisation; the 24 changed or added files were read back and match the merge commit.
 
 Only targeted tests were run for this update. **The full regression suite was not run**, and no multi-season simulation was run.
 
