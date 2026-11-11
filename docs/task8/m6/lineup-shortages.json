@@ -1,0 +1,47 @@
+{
+  "scope": "Season-end after offseason; no inference of in-season forfeits",
+  "shortages": [
+    {
+      "seed": 2,
+      "year": 8,
+      "club": "Eastport Phantoms",
+      "rosterSize": 38,
+      "capRoom": 354700,
+      "lineupProblems": 1,
+      "count": {
+        "QB": 2,
+        "RB": 4,
+        "WR": 5,
+        "TE": 2,
+        "OL": 9,
+        "DL": 5,
+        "LB": 3,
+        "CB": 3,
+        "S": 5,
+        "K": 0
+      },
+      "injured": 0
+    },
+    {
+      "seed": 2,
+      "year": 20,
+      "club": "Sundown Drakes",
+      "rosterSize": 38,
+      "capRoom": 348400,
+      "lineupProblems": 1,
+      "count": {
+        "QB": 5,
+        "RB": 3,
+        "WR": 5,
+        "TE": 4,
+        "OL": 3,
+        "DL": 7,
+        "LB": 3,
+        "CB": 2,
+        "S": 6,
+        "K": 0
+      },
+      "injured": 0
+    }
+  ]
+}

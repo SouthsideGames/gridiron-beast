@@ -1,0 +1,9 @@
+{
+  "runs": 11000,
+  "matchedIndividuals": 2000,
+  "allMatchedInitialRecords": true,
+  "ordinaryNinePerIndividual": true,
+  "apexTwoPerIndividual": true,
+  "apexNeverAged": true,
+  "apexNeverRetired": true
+}

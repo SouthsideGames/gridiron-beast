@@ -1,0 +1,7065 @@
+{
+  "source": "f716b02c41c81211d80e7389dc0cefd4c16ae155",
+  "scope": "Optimistic resource bound; synthetic sample, not played careers. No production settings changed.",
+  "schedule": {
+    "football": 13,
+    "clash": 35,
+    "seasons": 15
+  },
+  "assumptions": [
+    "Level 50 natural growth at time zero",
+    "Full participation and maximum grades in all activities",
+    "No injuries, missed games, retirement or aging costs",
+    "All training points allocated perfectly, even fractional bank progress spendable",
+    "Apex evolution has unchanged 99 ceilings, so no additional rating scaling"
+  ],
+  "production": {
+    "maxFootball": 0.3,
+    "maxClash": 0.3,
+    "annualOffseason": 2
+  },
+  "individuals": 1000,
+  "trainingNeeded": {
+    "min": 515,
+    "max": 529
+  },
+  "bounds": [
+    {
+      "share": 0.2,
+      "trainingAvailableUpperBound": 210,
+      "canPossiblyReachAll99": 0
+    },
+    {
+      "share": 0.25,
+      "trainingAvailableUpperBound": 246,
+      "canPossiblyReachAll99": 0
+    },
+    {
+      "share": 0.3,
+      "trainingAvailableUpperBound": 282,
+      "canPossiblyReachAll99": 0
+    },
+    {
+      "share": 0.35,
+      "trainingAvailableUpperBound": 318,
+      "canPossiblyReachAll99": 0
+    },
+    {
+      "share": 0.4,
+      "trainingAvailableUpperBound": 354,
+      "canPossiblyReachAll99": 0
+    },
+    {
+      "share": 0.45,
+      "trainingAvailableUpperBound": 390,
+      "canPossiblyReachAll99": 0
+    },
+    {
+      "share": 0.5,
+      "trainingAvailableUpperBound": 426,
+      "canPossiblyReachAll99": 0
+    }
+  ],
+  "rows": [
+    {
+      "position": "QB",
+      "seed": 1,
+      "form": "chillip:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "QB",
+      "seed": 2,
+      "form": "murkit:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 3,
+      "form": "murkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "QB",
+      "seed": 4,
+      "form": "mindle:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 5,
+      "form": "breezle:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 6,
+      "form": "ampette:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "QB",
+      "seed": 7,
+      "form": "firestorm:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 8,
+      "form": "nocturne:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 9,
+      "form": "lumen:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 10,
+      "form": "ampette:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 11,
+      "form": "ampette:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "QB",
+      "seed": 12,
+      "form": "cerebrix:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 13,
+      "form": "slatelet:0",
+      "temper": "calm",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "QB",
+      "seed": 14,
+      "form": "acornet:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 15,
+      "form": "cerebrix:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "QB",
+      "seed": 16,
+      "form": "chillip:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "QB",
+      "seed": 17,
+      "form": "breezle:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "QB",
+      "seed": 18,
+      "form": "brookit:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "QB",
+      "seed": 19,
+      "form": "firestorm:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "QB",
+      "seed": 20,
+      "form": "murkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 21,
+      "form": "acornet:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "QB",
+      "seed": 22,
+      "form": "chillip:0",
+      "temper": "balanced",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "QB",
+      "seed": 23,
+      "form": "zephyr:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "QB",
+      "seed": 24,
+      "form": "kindlet:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "QB",
+      "seed": 25,
+      "form": "chillip:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "QB",
+      "seed": 26,
+      "form": "ampette:0",
+      "temper": "steady",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "QB",
+      "seed": 27,
+      "form": "brookit:0",
+      "temper": "balanced",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "QB",
+      "seed": 28,
+      "form": "acornet:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "QB",
+      "seed": 29,
+      "form": "lumen:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "QB",
+      "seed": 30,
+      "form": "rivetto:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 31,
+      "form": "breezle:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "QB",
+      "seed": 32,
+      "form": "brookit:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "QB",
+      "seed": 33,
+      "form": "slatelet:0",
+      "temper": "steady",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "QB",
+      "seed": 34,
+      "form": "chillip:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "QB",
+      "seed": 35,
+      "form": "firestorm:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "QB",
+      "seed": 36,
+      "form": "scalekin:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 37,
+      "form": "ampette:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 38,
+      "form": "murkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "QB",
+      "seed": 39,
+      "form": "zephyr:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "QB",
+      "seed": 40,
+      "form": "chillip:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "QB",
+      "seed": 41,
+      "form": "rivetto:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 42,
+      "form": "chillip:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "QB",
+      "seed": 43,
+      "form": "scalekin:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "QB",
+      "seed": 44,
+      "form": "rivetto:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "QB",
+      "seed": 45,
+      "form": "firestorm:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 46,
+      "form": "zephyr:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "QB",
+      "seed": 47,
+      "form": "chillip:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "QB",
+      "seed": 48,
+      "form": "rivetto:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "QB",
+      "seed": 49,
+      "form": "brookit:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "QB",
+      "seed": 50,
+      "form": "slatelet:0",
+      "temper": "steady",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "QB",
+      "seed": 51,
+      "form": "nocturne:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 52,
+      "form": "lumen:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "QB",
+      "seed": 53,
+      "form": "zephyr:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "QB",
+      "seed": 54,
+      "form": "cerebrix:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 55,
+      "form": "acornet:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 56,
+      "form": "nocturne:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 57,
+      "form": "murkit:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "QB",
+      "seed": 58,
+      "form": "ampette:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "QB",
+      "seed": 59,
+      "form": "brookit:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "QB",
+      "seed": 60,
+      "form": "kindlet:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "QB",
+      "seed": 61,
+      "form": "slatelet:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 62,
+      "form": "murkit:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "QB",
+      "seed": 63,
+      "form": "cerebrix:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "QB",
+      "seed": 64,
+      "form": "rivetto:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "QB",
+      "seed": 65,
+      "form": "zephyr:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "QB",
+      "seed": 66,
+      "form": "nocturne:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "QB",
+      "seed": 67,
+      "form": "scalekin:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 68,
+      "form": "brookit:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "QB",
+      "seed": 69,
+      "form": "beamlet:0",
+      "temper": "balanced",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "QB",
+      "seed": 70,
+      "form": "beamlet:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "QB",
+      "seed": 71,
+      "form": "murkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 72,
+      "form": "lumen:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "QB",
+      "seed": 73,
+      "form": "murkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "QB",
+      "seed": 74,
+      "form": "nocturne:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "QB",
+      "seed": 75,
+      "form": "cerebrix:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "QB",
+      "seed": 76,
+      "form": "acornet:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 77,
+      "form": "acornet:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "QB",
+      "seed": 78,
+      "form": "slatelet:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "QB",
+      "seed": 79,
+      "form": "firestorm:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "QB",
+      "seed": 80,
+      "form": "beamlet:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "QB",
+      "seed": 81,
+      "form": "rivetto:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "QB",
+      "seed": 82,
+      "form": "murkit:0",
+      "temper": "steady",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "QB",
+      "seed": 83,
+      "form": "murkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 84,
+      "form": "acornet:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "QB",
+      "seed": 85,
+      "form": "acornet:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "QB",
+      "seed": 86,
+      "form": "firestorm:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "QB",
+      "seed": 87,
+      "form": "firestorm:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "QB",
+      "seed": 88,
+      "form": "rivetto:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "QB",
+      "seed": 89,
+      "form": "mindle:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 90,
+      "form": "firestorm:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "QB",
+      "seed": 91,
+      "form": "breezle:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "QB",
+      "seed": 92,
+      "form": "acornet:0",
+      "temper": "steady",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "QB",
+      "seed": 93,
+      "form": "cerebrix:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "QB",
+      "seed": 94,
+      "form": "lumen:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 95,
+      "form": "chillip:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "QB",
+      "seed": 96,
+      "form": "zephyr:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "QB",
+      "seed": 97,
+      "form": "slatelet:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "QB",
+      "seed": 98,
+      "form": "ampette:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "QB",
+      "seed": 99,
+      "form": "cerebrix:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "QB",
+      "seed": 100,
+      "form": "lumen:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 1,
+      "form": "skiddle:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "RB",
+      "seed": 2,
+      "form": "minkurk:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 3,
+      "form": "whirlhare:0",
+      "temper": "balanced",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "RB",
+      "seed": 4,
+      "form": "dreamhop:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 5,
+      "form": "whirlhare:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 6,
+      "form": "fuzzvolt:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "RB",
+      "seed": 7,
+      "form": "emberfox:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 8,
+      "form": "breezefang:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 9,
+      "form": "boulderox:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 10,
+      "form": "fuzzvolt:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 11,
+      "form": "fuzzvolt:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "RB",
+      "seed": 12,
+      "form": "drakeling:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 13,
+      "form": "gravelpup:0",
+      "temper": "calm",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "RB",
+      "seed": 14,
+      "form": "thistlehop:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 15,
+      "form": "duskrunner:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "RB",
+      "seed": 16,
+      "form": "skiddle:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "RB",
+      "seed": 17,
+      "form": "whirlhare:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "RB",
+      "seed": 18,
+      "form": "ottrip:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 19,
+      "form": "voltfin:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "RB",
+      "seed": 20,
+      "form": "minkurk:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 21,
+      "form": "ottrip:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 22,
+      "form": "skiddle:0",
+      "temper": "balanced",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "RB",
+      "seed": 23,
+      "form": "voltfin:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "RB",
+      "seed": 24,
+      "form": "drakeling:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "RB",
+      "seed": 25,
+      "form": "gravelpup:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "RB",
+      "seed": 26,
+      "form": "fuzzvolt:0",
+      "temper": "steady",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "RB",
+      "seed": 27,
+      "form": "ottrip:0",
+      "temper": "balanced",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "RB",
+      "seed": 28,
+      "form": "ottrip:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "RB",
+      "seed": 29,
+      "form": "boulderox:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "RB",
+      "seed": 30,
+      "form": "tinhare:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 31,
+      "form": "whirlhare:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "RB",
+      "seed": 32,
+      "form": "charbun:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 33,
+      "form": "fuzzvolt:0",
+      "temper": "steady",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "RB",
+      "seed": 34,
+      "form": "gravelpup:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "RB",
+      "seed": 35,
+      "form": "emberfox:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "RB",
+      "seed": 36,
+      "form": "raptlet:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 37,
+      "form": "fuzzvolt:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 38,
+      "form": "whirlhare:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 39,
+      "form": "voltfin:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "RB",
+      "seed": 40,
+      "form": "skiddle:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "RB",
+      "seed": 41,
+      "form": "tinhare:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 42,
+      "form": "gravelpup:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "RB",
+      "seed": 43,
+      "form": "raptlet:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "RB",
+      "seed": 44,
+      "form": "tinhare:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "RB",
+      "seed": 45,
+      "form": "emberfox:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 46,
+      "form": "voltfin:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 47,
+      "form": "skiddle:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "RB",
+      "seed": 48,
+      "form": "tinhare:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "RB",
+      "seed": 49,
+      "form": "charbun:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 50,
+      "form": "fuzzvolt:0",
+      "temper": "steady",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "RB",
+      "seed": 51,
+      "form": "breezefang:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 52,
+      "form": "boulderox:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "RB",
+      "seed": 53,
+      "form": "voltfin:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "RB",
+      "seed": 54,
+      "form": "duskrunner:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 55,
+      "form": "thistlehop:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 56,
+      "form": "breezefang:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 57,
+      "form": "minkurk:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "RB",
+      "seed": 58,
+      "form": "thistlehop:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "RB",
+      "seed": 59,
+      "form": "ottrip:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "RB",
+      "seed": 60,
+      "form": "drakeling:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "RB",
+      "seed": 61,
+      "form": "fuzzvolt:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 62,
+      "form": "minkurk:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "RB",
+      "seed": 63,
+      "form": "duskrunner:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "RB",
+      "seed": 64,
+      "form": "tinhare:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "RB",
+      "seed": 65,
+      "form": "voltfin:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "RB",
+      "seed": 66,
+      "form": "breezefang:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "RB",
+      "seed": 67,
+      "form": "raptlet:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 68,
+      "form": "charbun:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 69,
+      "form": "glowhare:0",
+      "temper": "balanced",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "RB",
+      "seed": 70,
+      "form": "minkurk:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "RB",
+      "seed": 71,
+      "form": "minkurk:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 72,
+      "form": "boulderox:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "RB",
+      "seed": 73,
+      "form": "minkurk:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 74,
+      "form": "breezefang:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "RB",
+      "seed": 75,
+      "form": "duskrunner:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "RB",
+      "seed": 76,
+      "form": "thistlehop:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 77,
+      "form": "ottrip:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "RB",
+      "seed": 78,
+      "form": "fuzzvolt:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 79,
+      "form": "emberfox:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "RB",
+      "seed": 80,
+      "form": "glowhare:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 81,
+      "form": "tinhare:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "RB",
+      "seed": 82,
+      "form": "minkurk:0",
+      "temper": "steady",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "RB",
+      "seed": 83,
+      "form": "whirlhare:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 84,
+      "form": "thistlehop:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "RB",
+      "seed": 85,
+      "form": "thistlehop:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "RB",
+      "seed": 86,
+      "form": "emberfox:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 87,
+      "form": "emberfox:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "RB",
+      "seed": 88,
+      "form": "tinhare:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "RB",
+      "seed": 89,
+      "form": "dreamhop:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 90,
+      "form": "emberfox:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "RB",
+      "seed": 91,
+      "form": "skiddle:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "RB",
+      "seed": 92,
+      "form": "ottrip:0",
+      "temper": "steady",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "RB",
+      "seed": 93,
+      "form": "duskrunner:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "RB",
+      "seed": 94,
+      "form": "boulderox:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 95,
+      "form": "gravelpup:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "RB",
+      "seed": 96,
+      "form": "voltfin:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "RB",
+      "seed": 97,
+      "form": "gravelpup:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "RB",
+      "seed": 98,
+      "form": "fuzzvolt:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "RB",
+      "seed": 99,
+      "form": "duskrunner:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "RB",
+      "seed": 100,
+      "form": "boulderox:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 1,
+      "form": "snowdart:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "WR",
+      "seed": 2,
+      "form": "batwhisk:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 3,
+      "form": "kitelet:0",
+      "temper": "balanced",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "WR",
+      "seed": 4,
+      "form": "trancefin:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 5,
+      "form": "kitelet:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 6,
+      "form": "boltdart:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "WR",
+      "seed": 7,
+      "form": "tidefin:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 8,
+      "form": "flicker:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 9,
+      "form": "voltfang:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 10,
+      "form": "boltdart:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 11,
+      "form": "boltdart:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "WR",
+      "seed": 12,
+      "form": "glimmer:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 13,
+      "form": "mudlark:0",
+      "temper": "calm",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "WR",
+      "seed": 14,
+      "form": "fernflit:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 15,
+      "form": "gustling:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "WR",
+      "seed": 16,
+      "form": "snowdart:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "WR",
+      "seed": 17,
+      "form": "kitelet:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "WR",
+      "seed": 18,
+      "form": "minnodart:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 19,
+      "form": "thornkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "WR",
+      "seed": 20,
+      "form": "batwhisk:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 21,
+      "form": "minnodart:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 22,
+      "form": "snowdart:0",
+      "temper": "balanced",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "WR",
+      "seed": 23,
+      "form": "thornkit:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "WR",
+      "seed": 24,
+      "form": "glimmer:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "WR",
+      "seed": 25,
+      "form": "mudlark:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "WR",
+      "seed": 26,
+      "form": "boltdart:0",
+      "temper": "steady",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "WR",
+      "seed": 27,
+      "form": "minnodart:0",
+      "temper": "balanced",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "WR",
+      "seed": 28,
+      "form": "minnodart:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "WR",
+      "seed": 29,
+      "form": "voltfang:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "WR",
+      "seed": 30,
+      "form": "springlet:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 31,
+      "form": "kitelet:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "WR",
+      "seed": 32,
+      "form": "sparkwick:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 33,
+      "form": "boltdart:0",
+      "temper": "steady",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "WR",
+      "seed": 34,
+      "form": "mudlark:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "WR",
+      "seed": 35,
+      "form": "tidefin:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "WR",
+      "seed": 36,
+      "form": "glidrake:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 37,
+      "form": "boltdart:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 38,
+      "form": "kitelet:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 39,
+      "form": "thornkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "WR",
+      "seed": 40,
+      "form": "snowdart:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "WR",
+      "seed": 41,
+      "form": "springlet:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 42,
+      "form": "mudlark:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "WR",
+      "seed": 43,
+      "form": "glidrake:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "WR",
+      "seed": 44,
+      "form": "springlet:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "WR",
+      "seed": 45,
+      "form": "tidefin:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 46,
+      "form": "thornkit:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 47,
+      "form": "snowdart:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "WR",
+      "seed": 48,
+      "form": "springlet:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "WR",
+      "seed": 49,
+      "form": "sparkwick:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 50,
+      "form": "boltdart:0",
+      "temper": "steady",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "WR",
+      "seed": 51,
+      "form": "flicker:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 52,
+      "form": "voltfang:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "WR",
+      "seed": 53,
+      "form": "thornkit:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "WR",
+      "seed": 54,
+      "form": "gustling:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 55,
+      "form": "fernflit:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 56,
+      "form": "flicker:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 57,
+      "form": "batwhisk:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "WR",
+      "seed": 58,
+      "form": "fernflit:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "WR",
+      "seed": 59,
+      "form": "minnodart:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "WR",
+      "seed": 60,
+      "form": "glimmer:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "WR",
+      "seed": 61,
+      "form": "boltdart:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 62,
+      "form": "batwhisk:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "WR",
+      "seed": 63,
+      "form": "gustling:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "WR",
+      "seed": 64,
+      "form": "springlet:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "WR",
+      "seed": 65,
+      "form": "thornkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "WR",
+      "seed": 66,
+      "form": "flicker:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "WR",
+      "seed": 67,
+      "form": "glidrake:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 68,
+      "form": "sparkwick:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 69,
+      "form": "dawnfinch:0",
+      "temper": "balanced",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "WR",
+      "seed": 70,
+      "form": "batwhisk:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "WR",
+      "seed": 71,
+      "form": "batwhisk:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 72,
+      "form": "voltfang:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "WR",
+      "seed": 73,
+      "form": "batwhisk:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 74,
+      "form": "flicker:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "WR",
+      "seed": 75,
+      "form": "gustling:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "WR",
+      "seed": 76,
+      "form": "fernflit:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 77,
+      "form": "minnodart:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "WR",
+      "seed": 78,
+      "form": "boltdart:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 79,
+      "form": "tidefin:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "WR",
+      "seed": 80,
+      "form": "dawnfinch:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 81,
+      "form": "springlet:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "WR",
+      "seed": 82,
+      "form": "batwhisk:0",
+      "temper": "steady",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "WR",
+      "seed": 83,
+      "form": "kitelet:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 84,
+      "form": "fernflit:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "WR",
+      "seed": 85,
+      "form": "fernflit:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "WR",
+      "seed": 86,
+      "form": "tidefin:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 87,
+      "form": "tidefin:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "WR",
+      "seed": 88,
+      "form": "springlet:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "WR",
+      "seed": 89,
+      "form": "trancefin:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 90,
+      "form": "tidefin:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "WR",
+      "seed": 91,
+      "form": "snowdart:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "WR",
+      "seed": 92,
+      "form": "minnodart:0",
+      "temper": "steady",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "WR",
+      "seed": 93,
+      "form": "gustling:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "WR",
+      "seed": 94,
+      "form": "voltfang:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 95,
+      "form": "mudlark:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "WR",
+      "seed": 96,
+      "form": "thornkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "WR",
+      "seed": 97,
+      "form": "mudlark:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "WR",
+      "seed": 98,
+      "form": "boltdart:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "WR",
+      "seed": 99,
+      "form": "gustling:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "WR",
+      "seed": 100,
+      "form": "voltfang:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 1,
+      "form": "walrump:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "TE",
+      "seed": 2,
+      "form": "gloamtoad:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 3,
+      "form": "sailmoth:0",
+      "temper": "balanced",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "TE",
+      "seed": 4,
+      "form": "pondermoose:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 5,
+      "form": "sailmoth:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 6,
+      "form": "wattram:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "TE",
+      "seed": 7,
+      "form": "wavehorn:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 8,
+      "form": "terrabull:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 9,
+      "form": "metalhorn:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 10,
+      "form": "wattram:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 11,
+      "form": "wattram:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "TE",
+      "seed": 12,
+      "form": "wyrmkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 13,
+      "form": "clodhorn:0",
+      "temper": "calm",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "TE",
+      "seed": 14,
+      "form": "stumpkin:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 15,
+      "form": "enigmane:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "TE",
+      "seed": 16,
+      "form": "walrump:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "TE",
+      "seed": 17,
+      "form": "sailmoth:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "TE",
+      "seed": 18,
+      "form": "kelpup:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 19,
+      "form": "thornback:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "TE",
+      "seed": 20,
+      "form": "gloamtoad:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 21,
+      "form": "kelpup:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 22,
+      "form": "walrump:0",
+      "temper": "balanced",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "TE",
+      "seed": 23,
+      "form": "thornback:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "TE",
+      "seed": 24,
+      "form": "wyrmkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "TE",
+      "seed": 25,
+      "form": "clodhorn:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "TE",
+      "seed": 26,
+      "form": "wattram:0",
+      "temper": "steady",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "TE",
+      "seed": 27,
+      "form": "kelpup:0",
+      "temper": "balanced",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "TE",
+      "seed": 28,
+      "form": "kelpup:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "TE",
+      "seed": 29,
+      "form": "metalhorn:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "TE",
+      "seed": 30,
+      "form": "anvilox:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 31,
+      "form": "sailmoth:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "TE",
+      "seed": 32,
+      "form": "coalump:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 33,
+      "form": "wattram:0",
+      "temper": "steady",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "TE",
+      "seed": 34,
+      "form": "clodhorn:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "TE",
+      "seed": 35,
+      "form": "wavehorn:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "TE",
+      "seed": 36,
+      "form": "crestback:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 37,
+      "form": "wattram:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 38,
+      "form": "sailmoth:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 39,
+      "form": "thornback:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "TE",
+      "seed": 40,
+      "form": "walrump:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "TE",
+      "seed": 41,
+      "form": "anvilox:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 42,
+      "form": "clodhorn:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "TE",
+      "seed": 43,
+      "form": "crestback:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "TE",
+      "seed": 44,
+      "form": "anvilox:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "TE",
+      "seed": 45,
+      "form": "wavehorn:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 46,
+      "form": "thornback:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 47,
+      "form": "walrump:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "TE",
+      "seed": 48,
+      "form": "anvilox:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "TE",
+      "seed": 49,
+      "form": "coalump:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 50,
+      "form": "wattram:0",
+      "temper": "steady",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "TE",
+      "seed": 51,
+      "form": "terrabull:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 52,
+      "form": "metalhorn:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "TE",
+      "seed": 53,
+      "form": "thornback:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "TE",
+      "seed": 54,
+      "form": "enigmane:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 55,
+      "form": "stumpkin:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 56,
+      "form": "terrabull:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 57,
+      "form": "gloamtoad:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "TE",
+      "seed": 58,
+      "form": "stumpkin:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "TE",
+      "seed": 59,
+      "form": "kelpup:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "TE",
+      "seed": 60,
+      "form": "wyrmkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "TE",
+      "seed": 61,
+      "form": "wattram:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 62,
+      "form": "gloamtoad:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "TE",
+      "seed": 63,
+      "form": "enigmane:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "TE",
+      "seed": 64,
+      "form": "anvilox:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "TE",
+      "seed": 65,
+      "form": "thornback:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "TE",
+      "seed": 66,
+      "form": "terrabull:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "TE",
+      "seed": 67,
+      "form": "crestback:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 68,
+      "form": "coalump:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 69,
+      "form": "lanternox:0",
+      "temper": "balanced",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "TE",
+      "seed": 70,
+      "form": "gloamtoad:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "TE",
+      "seed": 71,
+      "form": "gloamtoad:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 72,
+      "form": "metalhorn:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "TE",
+      "seed": 73,
+      "form": "gloamtoad:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 74,
+      "form": "terrabull:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "TE",
+      "seed": 75,
+      "form": "enigmane:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "TE",
+      "seed": 76,
+      "form": "stumpkin:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 77,
+      "form": "kelpup:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "TE",
+      "seed": 78,
+      "form": "wattram:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 79,
+      "form": "wavehorn:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "TE",
+      "seed": 80,
+      "form": "lanternox:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 81,
+      "form": "anvilox:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "TE",
+      "seed": 82,
+      "form": "gloamtoad:0",
+      "temper": "steady",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "TE",
+      "seed": 83,
+      "form": "sailmoth:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 84,
+      "form": "stumpkin:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "TE",
+      "seed": 85,
+      "form": "stumpkin:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "TE",
+      "seed": 86,
+      "form": "wavehorn:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 87,
+      "form": "wavehorn:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "TE",
+      "seed": 88,
+      "form": "anvilox:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "TE",
+      "seed": 89,
+      "form": "pondermoose:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 90,
+      "form": "wavehorn:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "TE",
+      "seed": 91,
+      "form": "walrump:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "TE",
+      "seed": 92,
+      "form": "kelpup:0",
+      "temper": "steady",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "TE",
+      "seed": 93,
+      "form": "enigmane:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "TE",
+      "seed": 94,
+      "form": "metalhorn:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 95,
+      "form": "clodhorn:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "TE",
+      "seed": 96,
+      "form": "thornback:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "TE",
+      "seed": 97,
+      "form": "clodhorn:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "TE",
+      "seed": 98,
+      "form": "wattram:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "TE",
+      "seed": 99,
+      "form": "enigmane:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "TE",
+      "seed": 100,
+      "form": "metalhorn:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 1,
+      "form": "floebear:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "OL",
+      "seed": 2,
+      "form": "umbruin:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 3,
+      "form": "nimbulk:0",
+      "temper": "balanced",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "OL",
+      "seed": 4,
+      "form": "thinkump:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 5,
+      "form": "nimbulk:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 6,
+      "form": "capaclod:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "OL",
+      "seed": 7,
+      "form": "mudcub:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 8,
+      "form": "glaciron:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 9,
+      "form": "pebble:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 10,
+      "form": "capaclod:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 11,
+      "form": "capaclod:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "OL",
+      "seed": 12,
+      "form": "scaleguard:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 13,
+      "form": "cobblump:0",
+      "temper": "calm",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "OL",
+      "seed": 14,
+      "form": "trunkle:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 15,
+      "form": "ironcub:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "OL",
+      "seed": 16,
+      "form": "floebear:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "OL",
+      "seed": 17,
+      "form": "nimbulk:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "OL",
+      "seed": 18,
+      "form": "barnaclod:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 19,
+      "form": "rootram:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "OL",
+      "seed": 20,
+      "form": "umbruin:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 21,
+      "form": "barnaclod:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 22,
+      "form": "floebear:0",
+      "temper": "balanced",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "OL",
+      "seed": 23,
+      "form": "rootram:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "OL",
+      "seed": 24,
+      "form": "scaleguard:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "OL",
+      "seed": 25,
+      "form": "cobblump:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "OL",
+      "seed": 26,
+      "form": "capaclod:0",
+      "temper": "steady",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "OL",
+      "seed": 27,
+      "form": "barnaclod:0",
+      "temper": "balanced",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "OL",
+      "seed": 28,
+      "form": "barnaclod:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "OL",
+      "seed": 29,
+      "form": "pebble:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "OL",
+      "seed": 30,
+      "form": "kettlump:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 31,
+      "form": "nimbulk:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "OL",
+      "seed": 32,
+      "form": "kilnback:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 33,
+      "form": "capaclod:0",
+      "temper": "steady",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "OL",
+      "seed": 34,
+      "form": "cobblump:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "OL",
+      "seed": 35,
+      "form": "mudcub:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "OL",
+      "seed": 36,
+      "form": "bulwyrm:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 37,
+      "form": "capaclod:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 38,
+      "form": "nimbulk:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 39,
+      "form": "rootram:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "OL",
+      "seed": 40,
+      "form": "floebear:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "OL",
+      "seed": 41,
+      "form": "kettlump:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 42,
+      "form": "cobblump:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "OL",
+      "seed": 43,
+      "form": "bulwyrm:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "OL",
+      "seed": 44,
+      "form": "kettlump:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "OL",
+      "seed": 45,
+      "form": "mudcub:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 46,
+      "form": "rootram:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 47,
+      "form": "floebear:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "OL",
+      "seed": 48,
+      "form": "kettlump:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "OL",
+      "seed": 49,
+      "form": "kilnback:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 50,
+      "form": "capaclod:0",
+      "temper": "steady",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "OL",
+      "seed": 51,
+      "form": "glaciron:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 52,
+      "form": "pebble:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "OL",
+      "seed": 53,
+      "form": "rootram:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "OL",
+      "seed": 54,
+      "form": "ironcub:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 55,
+      "form": "trunkle:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 56,
+      "form": "glaciron:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 57,
+      "form": "umbruin:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "OL",
+      "seed": 58,
+      "form": "trunkle:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "OL",
+      "seed": 59,
+      "form": "barnaclod:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "OL",
+      "seed": 60,
+      "form": "scaleguard:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "OL",
+      "seed": 61,
+      "form": "capaclod:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 62,
+      "form": "umbruin:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "OL",
+      "seed": 63,
+      "form": "ironcub:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "OL",
+      "seed": 64,
+      "form": "kettlump:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "OL",
+      "seed": 65,
+      "form": "rootram:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "OL",
+      "seed": 66,
+      "form": "glaciron:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "OL",
+      "seed": 67,
+      "form": "bulwyrm:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 68,
+      "form": "kilnback:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 69,
+      "form": "waxwick:0",
+      "temper": "balanced",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "OL",
+      "seed": 70,
+      "form": "umbruin:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "OL",
+      "seed": 71,
+      "form": "umbruin:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 72,
+      "form": "pebble:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "OL",
+      "seed": 73,
+      "form": "umbruin:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 74,
+      "form": "glaciron:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "OL",
+      "seed": 75,
+      "form": "ironcub:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "OL",
+      "seed": 76,
+      "form": "trunkle:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 77,
+      "form": "barnaclod:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "OL",
+      "seed": 78,
+      "form": "capaclod:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 79,
+      "form": "mudcub:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "OL",
+      "seed": 80,
+      "form": "waxwick:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 81,
+      "form": "kettlump:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "OL",
+      "seed": 82,
+      "form": "umbruin:0",
+      "temper": "steady",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "OL",
+      "seed": 83,
+      "form": "nimbulk:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 84,
+      "form": "trunkle:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "OL",
+      "seed": 85,
+      "form": "trunkle:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "OL",
+      "seed": 86,
+      "form": "mudcub:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 87,
+      "form": "mudcub:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "OL",
+      "seed": 88,
+      "form": "kettlump:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "OL",
+      "seed": 89,
+      "form": "thinkump:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 90,
+      "form": "mudcub:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "OL",
+      "seed": 91,
+      "form": "floebear:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "OL",
+      "seed": 92,
+      "form": "barnaclod:0",
+      "temper": "steady",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "OL",
+      "seed": 93,
+      "form": "ironcub:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "OL",
+      "seed": 94,
+      "form": "pebble:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 95,
+      "form": "cobblump:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "OL",
+      "seed": 96,
+      "form": "rootram:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "OL",
+      "seed": 97,
+      "form": "cobblump:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "OL",
+      "seed": 98,
+      "form": "capaclod:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "OL",
+      "seed": 99,
+      "form": "ironcub:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "OL",
+      "seed": 100,
+      "form": "pebble:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 1,
+      "form": "rimeboar:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "DL",
+      "seed": 2,
+      "form": "vexhound:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 3,
+      "form": "galebuck:0",
+      "temper": "balanced",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "DL",
+      "seed": 4,
+      "form": "omenox:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 5,
+      "form": "galebuck:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 6,
+      "form": "zaphog:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "DL",
+      "seed": 7,
+      "form": "cinderclaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 8,
+      "form": "mossclaw:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 9,
+      "form": "joltrex:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 10,
+      "form": "zaphog:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 11,
+      "form": "zaphog:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "DL",
+      "seed": 12,
+      "form": "ironjaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 13,
+      "form": "quarrox:0",
+      "temper": "calm",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "DL",
+      "seed": 14,
+      "form": "briarhog:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 15,
+      "form": "icehorn:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "DL",
+      "seed": 16,
+      "form": "rimeboar:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "DL",
+      "seed": 17,
+      "form": "galebuck:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "DL",
+      "seed": 18,
+      "form": "sploshog:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 19,
+      "form": "reefclaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "DL",
+      "seed": 20,
+      "form": "vexhound:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 21,
+      "form": "sploshog:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 22,
+      "form": "rimeboar:0",
+      "temper": "balanced",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "DL",
+      "seed": 23,
+      "form": "reefclaw:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "DL",
+      "seed": 24,
+      "form": "ironjaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "DL",
+      "seed": 25,
+      "form": "quarrox:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "DL",
+      "seed": 26,
+      "form": "zaphog:0",
+      "temper": "steady",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "DL",
+      "seed": 27,
+      "form": "sploshog:0",
+      "temper": "balanced",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "DL",
+      "seed": 28,
+      "form": "sploshog:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "DL",
+      "seed": 29,
+      "form": "joltrex:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "DL",
+      "seed": 30,
+      "form": "ingotusk:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 31,
+      "form": "galebuck:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "DL",
+      "seed": 32,
+      "form": "scorchub:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 33,
+      "form": "zaphog:0",
+      "temper": "steady",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "DL",
+      "seed": 34,
+      "form": "quarrox:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "DL",
+      "seed": 35,
+      "form": "cinderclaw:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "DL",
+      "seed": 36,
+      "form": "gnashlet:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 37,
+      "form": "zaphog:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 38,
+      "form": "galebuck:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 39,
+      "form": "reefclaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "DL",
+      "seed": 40,
+      "form": "rimeboar:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "DL",
+      "seed": 41,
+      "form": "ingotusk:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 42,
+      "form": "quarrox:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "DL",
+      "seed": 43,
+      "form": "gnashlet:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "DL",
+      "seed": 44,
+      "form": "ingotusk:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "DL",
+      "seed": 45,
+      "form": "cinderclaw:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 46,
+      "form": "reefclaw:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 47,
+      "form": "rimeboar:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "DL",
+      "seed": 48,
+      "form": "ingotusk:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "DL",
+      "seed": 49,
+      "form": "scorchub:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 50,
+      "form": "zaphog:0",
+      "temper": "steady",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "DL",
+      "seed": 51,
+      "form": "mossclaw:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 52,
+      "form": "joltrex:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "DL",
+      "seed": 53,
+      "form": "reefclaw:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "DL",
+      "seed": 54,
+      "form": "icehorn:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 55,
+      "form": "briarhog:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 56,
+      "form": "mossclaw:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 57,
+      "form": "vexhound:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "DL",
+      "seed": 58,
+      "form": "briarhog:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "DL",
+      "seed": 59,
+      "form": "sploshog:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "DL",
+      "seed": 60,
+      "form": "ironjaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "DL",
+      "seed": 61,
+      "form": "zaphog:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 62,
+      "form": "vexhound:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "DL",
+      "seed": 63,
+      "form": "icehorn:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "DL",
+      "seed": 64,
+      "form": "ingotusk:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "DL",
+      "seed": 65,
+      "form": "reefclaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "DL",
+      "seed": 66,
+      "form": "mossclaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "DL",
+      "seed": 67,
+      "form": "gnashlet:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 68,
+      "form": "scorchub:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 69,
+      "form": "solram:0",
+      "temper": "balanced",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "DL",
+      "seed": 70,
+      "form": "vexhound:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "DL",
+      "seed": 71,
+      "form": "vexhound:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 72,
+      "form": "joltrex:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "DL",
+      "seed": 73,
+      "form": "vexhound:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 74,
+      "form": "mossclaw:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "DL",
+      "seed": 75,
+      "form": "icehorn:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "DL",
+      "seed": 76,
+      "form": "briarhog:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 77,
+      "form": "sploshog:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "DL",
+      "seed": 78,
+      "form": "zaphog:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 79,
+      "form": "cinderclaw:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "DL",
+      "seed": 80,
+      "form": "solram:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 81,
+      "form": "ingotusk:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "DL",
+      "seed": 82,
+      "form": "vexhound:0",
+      "temper": "steady",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "DL",
+      "seed": 83,
+      "form": "galebuck:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 84,
+      "form": "briarhog:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "DL",
+      "seed": 85,
+      "form": "briarhog:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "DL",
+      "seed": 86,
+      "form": "cinderclaw:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 87,
+      "form": "cinderclaw:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "DL",
+      "seed": 88,
+      "form": "ingotusk:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "DL",
+      "seed": 89,
+      "form": "omenox:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 90,
+      "form": "cinderclaw:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "DL",
+      "seed": 91,
+      "form": "rimeboar:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "DL",
+      "seed": 92,
+      "form": "sploshog:0",
+      "temper": "steady",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "DL",
+      "seed": 93,
+      "form": "icehorn:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "DL",
+      "seed": 94,
+      "form": "joltrex:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 95,
+      "form": "quarrox:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "DL",
+      "seed": 96,
+      "form": "reefclaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "DL",
+      "seed": 97,
+      "form": "quarrox:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "DL",
+      "seed": 98,
+      "form": "zaphog:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "DL",
+      "seed": 99,
+      "form": "icehorn:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "DL",
+      "seed": 100,
+      "form": "joltrex:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 1,
+      "form": "hoarcub:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "LB",
+      "seed": 2,
+      "form": "crowlurk:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 3,
+      "form": "windrook:0",
+      "temper": "balanced",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "LB",
+      "seed": 4,
+      "form": "seerling:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 5,
+      "form": "windrook:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 6,
+      "form": "staticub:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "LB",
+      "seed": 7,
+      "form": "ashkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 8,
+      "form": "rockram:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 9,
+      "form": "mireclaw:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 10,
+      "form": "staticub:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 11,
+      "form": "staticub:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "LB",
+      "seed": 12,
+      "form": "steelpaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 13,
+      "form": "diggit:0",
+      "temper": "calm",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "LB",
+      "seed": 14,
+      "form": "barkbug:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 15,
+      "form": "halofang:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "LB",
+      "seed": 16,
+      "form": "hoarcub:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "LB",
+      "seed": 17,
+      "form": "windrook:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "LB",
+      "seed": 18,
+      "form": "newtide:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 19,
+      "form": "frostclaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "LB",
+      "seed": 20,
+      "form": "crowlurk:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 21,
+      "form": "newtide:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 22,
+      "form": "hoarcub:0",
+      "temper": "balanced",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "LB",
+      "seed": 23,
+      "form": "frostclaw:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "LB",
+      "seed": 24,
+      "form": "steelpaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "LB",
+      "seed": 25,
+      "form": "diggit:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "LB",
+      "seed": 26,
+      "form": "staticub:0",
+      "temper": "steady",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "LB",
+      "seed": 27,
+      "form": "newtide:0",
+      "temper": "balanced",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "LB",
+      "seed": 28,
+      "form": "newtide:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "LB",
+      "seed": 29,
+      "form": "mireclaw:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "LB",
+      "seed": 30,
+      "form": "brasshound:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 31,
+      "form": "windrook:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "LB",
+      "seed": 32,
+      "form": "embadger:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 33,
+      "form": "staticub:0",
+      "temper": "steady",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "LB",
+      "seed": 34,
+      "form": "diggit:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "LB",
+      "seed": 35,
+      "form": "ashkit:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "LB",
+      "seed": 36,
+      "form": "drakhound:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 37,
+      "form": "staticub:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 38,
+      "form": "windrook:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 39,
+      "form": "frostclaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "LB",
+      "seed": 40,
+      "form": "hoarcub:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "LB",
+      "seed": 41,
+      "form": "brasshound:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 42,
+      "form": "diggit:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "LB",
+      "seed": 43,
+      "form": "drakhound:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "LB",
+      "seed": 44,
+      "form": "brasshound:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "LB",
+      "seed": 45,
+      "form": "ashkit:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 46,
+      "form": "frostclaw:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 47,
+      "form": "hoarcub:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "LB",
+      "seed": 48,
+      "form": "brasshound:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "LB",
+      "seed": 49,
+      "form": "embadger:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 50,
+      "form": "staticub:0",
+      "temper": "steady",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "LB",
+      "seed": 51,
+      "form": "rockram:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 52,
+      "form": "mireclaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "LB",
+      "seed": 53,
+      "form": "frostclaw:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "LB",
+      "seed": 54,
+      "form": "halofang:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 55,
+      "form": "barkbug:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 56,
+      "form": "rockram:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 57,
+      "form": "crowlurk:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "LB",
+      "seed": 58,
+      "form": "barkbug:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "LB",
+      "seed": 59,
+      "form": "newtide:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "LB",
+      "seed": 60,
+      "form": "steelpaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "LB",
+      "seed": 61,
+      "form": "staticub:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 62,
+      "form": "crowlurk:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "LB",
+      "seed": 63,
+      "form": "halofang:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "LB",
+      "seed": 64,
+      "form": "brasshound:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "LB",
+      "seed": 65,
+      "form": "frostclaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "LB",
+      "seed": 66,
+      "form": "rockram:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "LB",
+      "seed": 67,
+      "form": "drakhound:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 68,
+      "form": "embadger:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 69,
+      "form": "lumbear:0",
+      "temper": "balanced",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "LB",
+      "seed": 70,
+      "form": "crowlurk:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "LB",
+      "seed": 71,
+      "form": "crowlurk:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 72,
+      "form": "mireclaw:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "LB",
+      "seed": 73,
+      "form": "crowlurk:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 74,
+      "form": "rockram:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "LB",
+      "seed": 75,
+      "form": "halofang:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "LB",
+      "seed": 76,
+      "form": "barkbug:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 77,
+      "form": "newtide:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "LB",
+      "seed": 78,
+      "form": "staticub:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 79,
+      "form": "ashkit:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "LB",
+      "seed": 80,
+      "form": "lumbear:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 81,
+      "form": "brasshound:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "LB",
+      "seed": 82,
+      "form": "crowlurk:0",
+      "temper": "steady",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "LB",
+      "seed": 83,
+      "form": "windrook:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 84,
+      "form": "barkbug:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "LB",
+      "seed": 85,
+      "form": "barkbug:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "LB",
+      "seed": 86,
+      "form": "ashkit:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 87,
+      "form": "ashkit:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "LB",
+      "seed": 88,
+      "form": "brasshound:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "LB",
+      "seed": 89,
+      "form": "seerling:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 90,
+      "form": "ashkit:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "LB",
+      "seed": 91,
+      "form": "hoarcub:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "LB",
+      "seed": 92,
+      "form": "newtide:0",
+      "temper": "steady",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "LB",
+      "seed": 93,
+      "form": "halofang:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "LB",
+      "seed": 94,
+      "form": "mireclaw:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 95,
+      "form": "diggit:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "LB",
+      "seed": 96,
+      "form": "frostclaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "LB",
+      "seed": 97,
+      "form": "diggit:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "LB",
+      "seed": 98,
+      "form": "staticub:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "LB",
+      "seed": 99,
+      "form": "halofang:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "LB",
+      "seed": 100,
+      "form": "mireclaw:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 1,
+      "form": "pumicat:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "CB",
+      "seed": 2,
+      "form": "swallit:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 3,
+      "form": "swallit:0",
+      "temper": "balanced",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "CB",
+      "seed": 4,
+      "form": "riddlet:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 5,
+      "form": "swallit:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 6,
+      "form": "fawnleaf:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "CB",
+      "seed": 7,
+      "form": "pyrelynx:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 8,
+      "form": "hailfang:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 9,
+      "form": "skywarden:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 10,
+      "form": "fawnleaf:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 11,
+      "form": "fawnleaf:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "CB",
+      "seed": 12,
+      "form": "shadewisp:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 13,
+      "form": "neonnewt:0",
+      "temper": "calm",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "CB",
+      "seed": 14,
+      "form": "pondskip:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 15,
+      "form": "shadowkit:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "CB",
+      "seed": 16,
+      "form": "pumicat:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "CB",
+      "seed": 17,
+      "form": "shiverkit:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "CB",
+      "seed": 18,
+      "form": "singecat:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 19,
+      "form": "tidepaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "CB",
+      "seed": 20,
+      "form": "spindlet:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 21,
+      "form": "pondskip:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 22,
+      "form": "pumicat:0",
+      "temper": "balanced",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "CB",
+      "seed": 23,
+      "form": "tidepaw:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "CB",
+      "seed": 24,
+      "form": "sablewing:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "CB",
+      "seed": 25,
+      "form": "pumicat:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "CB",
+      "seed": 26,
+      "form": "fawnleaf:0",
+      "temper": "steady",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "CB",
+      "seed": 27,
+      "form": "singecat:0",
+      "temper": "balanced",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "CB",
+      "seed": 28,
+      "form": "pondskip:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "CB",
+      "seed": 29,
+      "form": "shadowkit:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "CB",
+      "seed": 30,
+      "form": "gyroflit:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 31,
+      "form": "shiverkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "CB",
+      "seed": 32,
+      "form": "singecat:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 33,
+      "form": "neonnewt:0",
+      "temper": "steady",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "CB",
+      "seed": 34,
+      "form": "pumicat:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "CB",
+      "seed": 35,
+      "form": "pyrelynx:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "CB",
+      "seed": 36,
+      "form": "wyvlet:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 37,
+      "form": "fawnleaf:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 38,
+      "form": "swallit:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 39,
+      "form": "tidepaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "CB",
+      "seed": 40,
+      "form": "shiverkit:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "CB",
+      "seed": 41,
+      "form": "gyroflit:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 42,
+      "form": "pumicat:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "CB",
+      "seed": 43,
+      "form": "wyvlet:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "CB",
+      "seed": 44,
+      "form": "glarefly:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "CB",
+      "seed": 45,
+      "form": "pyrelynx:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 46,
+      "form": "tidepaw:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 47,
+      "form": "pumicat:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "CB",
+      "seed": 48,
+      "form": "gyroflit:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "CB",
+      "seed": 49,
+      "form": "singecat:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 50,
+      "form": "neonnewt:0",
+      "temper": "steady",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "CB",
+      "seed": 51,
+      "form": "hailfang:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 52,
+      "form": "shadowkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "CB",
+      "seed": 53,
+      "form": "tidepaw:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "CB",
+      "seed": 54,
+      "form": "shadowkit:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 55,
+      "form": "pondskip:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 56,
+      "form": "hailfang:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 57,
+      "form": "spindlet:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "CB",
+      "seed": 58,
+      "form": "fawnleaf:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "CB",
+      "seed": 59,
+      "form": "singecat:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "CB",
+      "seed": 60,
+      "form": "shadewisp:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "CB",
+      "seed": 61,
+      "form": "neonnewt:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 62,
+      "form": "spindlet:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "CB",
+      "seed": 63,
+      "form": "shadowkit:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "CB",
+      "seed": 64,
+      "form": "gyroflit:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "CB",
+      "seed": 65,
+      "form": "hailfang:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "CB",
+      "seed": 66,
+      "form": "hailfang:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "CB",
+      "seed": 67,
+      "form": "wyvlet:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 68,
+      "form": "sablewing:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 69,
+      "form": "glarefly:0",
+      "temper": "balanced",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "CB",
+      "seed": 70,
+      "form": "spindlet:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "CB",
+      "seed": 71,
+      "form": "spindlet:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 72,
+      "form": "skywarden:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "CB",
+      "seed": 73,
+      "form": "spindlet:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 74,
+      "form": "hailfang:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "CB",
+      "seed": 75,
+      "form": "shadowkit:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "CB",
+      "seed": 76,
+      "form": "pondskip:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 77,
+      "form": "pondskip:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "CB",
+      "seed": 78,
+      "form": "neonnewt:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 79,
+      "form": "pyrelynx:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "CB",
+      "seed": 80,
+      "form": "spindlet:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 81,
+      "form": "glarefly:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "CB",
+      "seed": 82,
+      "form": "spindlet:0",
+      "temper": "steady",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "CB",
+      "seed": 83,
+      "form": "swallit:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 84,
+      "form": "pondskip:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "CB",
+      "seed": 85,
+      "form": "pondskip:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "CB",
+      "seed": 86,
+      "form": "pyrelynx:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 87,
+      "form": "pyrelynx:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "CB",
+      "seed": 88,
+      "form": "glarefly:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "CB",
+      "seed": 89,
+      "form": "riddlet:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 90,
+      "form": "pyrelynx:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "CB",
+      "seed": 91,
+      "form": "shiverkit:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "CB",
+      "seed": 92,
+      "form": "pondskip:0",
+      "temper": "steady",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "CB",
+      "seed": 93,
+      "form": "shadowkit:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "CB",
+      "seed": 94,
+      "form": "shadowkit:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 95,
+      "form": "pumicat:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "CB",
+      "seed": 96,
+      "form": "tidepaw:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "CB",
+      "seed": 97,
+      "form": "neonnewt:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "CB",
+      "seed": 98,
+      "form": "fawnleaf:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "CB",
+      "seed": 99,
+      "form": "shadowkit:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "CB",
+      "seed": 100,
+      "form": "skywarden:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 1,
+      "form": "ptarmilet:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "S",
+      "seed": 2,
+      "form": "gloomoth:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 3,
+      "form": "pinwhirl:0",
+      "temper": "balanced",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "S",
+      "seed": 4,
+      "form": "gazeling:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 5,
+      "form": "pinwhirl:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 6,
+      "form": "buzzhawk:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "S",
+      "seed": 7,
+      "form": "leafhorn:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 8,
+      "form": "windlynx:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 9,
+      "form": "nightowl:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 10,
+      "form": "buzzhawk:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 11,
+      "form": "buzzhawk:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "S",
+      "seed": 12,
+      "form": "mindwing:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 13,
+      "form": "siltadillo:0",
+      "temper": "calm",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "S",
+      "seed": 14,
+      "form": "ivyowl:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 15,
+      "form": "prism:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "S",
+      "seed": 16,
+      "form": "ptarmilet:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "S",
+      "seed": 17,
+      "form": "pinwhirl:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "S",
+      "seed": 18,
+      "form": "wadelet:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 19,
+      "form": "stormlynx:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "S",
+      "seed": 20,
+      "form": "gloomoth:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 21,
+      "form": "wadelet:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 22,
+      "form": "ptarmilet:0",
+      "temper": "balanced",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "S",
+      "seed": 23,
+      "form": "stormlynx:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "S",
+      "seed": 24,
+      "form": "mindwing:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "S",
+      "seed": 25,
+      "form": "siltadillo:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "S",
+      "seed": 26,
+      "form": "buzzhawk:0",
+      "temper": "steady",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "S",
+      "seed": 27,
+      "form": "wadelet:0",
+      "temper": "balanced",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "S",
+      "seed": 28,
+      "form": "wadelet:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "S",
+      "seed": 29,
+      "form": "nightowl:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "S",
+      "seed": 30,
+      "form": "clockcrow:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 31,
+      "form": "pinwhirl:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "S",
+      "seed": 32,
+      "form": "ashpeck:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 33,
+      "form": "buzzhawk:0",
+      "temper": "steady",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "S",
+      "seed": 34,
+      "form": "siltadillo:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "S",
+      "seed": 35,
+      "form": "leafhorn:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "S",
+      "seed": 36,
+      "form": "skinklet:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 37,
+      "form": "buzzhawk:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 38,
+      "form": "pinwhirl:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 39,
+      "form": "stormlynx:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "S",
+      "seed": 40,
+      "form": "ptarmilet:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "S",
+      "seed": 41,
+      "form": "clockcrow:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 42,
+      "form": "siltadillo:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "S",
+      "seed": 43,
+      "form": "skinklet:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "S",
+      "seed": 44,
+      "form": "clockcrow:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "S",
+      "seed": 45,
+      "form": "leafhorn:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 46,
+      "form": "stormlynx:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 47,
+      "form": "ptarmilet:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "S",
+      "seed": 48,
+      "form": "clockcrow:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "S",
+      "seed": 49,
+      "form": "ashpeck:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 50,
+      "form": "buzzhawk:0",
+      "temper": "steady",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "S",
+      "seed": 51,
+      "form": "windlynx:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 52,
+      "form": "nightowl:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "S",
+      "seed": 53,
+      "form": "stormlynx:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "S",
+      "seed": 54,
+      "form": "prism:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 55,
+      "form": "ivyowl:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 56,
+      "form": "windlynx:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 57,
+      "form": "gloomoth:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "S",
+      "seed": 58,
+      "form": "ivyowl:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "S",
+      "seed": 59,
+      "form": "wadelet:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "S",
+      "seed": 60,
+      "form": "mindwing:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "S",
+      "seed": 61,
+      "form": "buzzhawk:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 62,
+      "form": "gloomoth:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "S",
+      "seed": 63,
+      "form": "prism:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "S",
+      "seed": 64,
+      "form": "clockcrow:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "S",
+      "seed": 65,
+      "form": "stormlynx:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "S",
+      "seed": 66,
+      "form": "windlynx:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "S",
+      "seed": 67,
+      "form": "skinklet:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 68,
+      "form": "ashpeck:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 69,
+      "form": "dazzlet:0",
+      "temper": "balanced",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "S",
+      "seed": 70,
+      "form": "gloomoth:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "S",
+      "seed": 71,
+      "form": "gloomoth:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 72,
+      "form": "nightowl:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "S",
+      "seed": 73,
+      "form": "gloomoth:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 74,
+      "form": "windlynx:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "S",
+      "seed": 75,
+      "form": "prism:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "S",
+      "seed": 76,
+      "form": "ivyowl:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 77,
+      "form": "wadelet:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "S",
+      "seed": 78,
+      "form": "buzzhawk:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 79,
+      "form": "leafhorn:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "S",
+      "seed": 80,
+      "form": "dazzlet:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 81,
+      "form": "clockcrow:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "S",
+      "seed": 82,
+      "form": "gloomoth:0",
+      "temper": "steady",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "S",
+      "seed": 83,
+      "form": "pinwhirl:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 84,
+      "form": "ivyowl:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "S",
+      "seed": 85,
+      "form": "ivyowl:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "S",
+      "seed": 86,
+      "form": "leafhorn:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 87,
+      "form": "leafhorn:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "S",
+      "seed": 88,
+      "form": "clockcrow:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "S",
+      "seed": 89,
+      "form": "gazeling:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 90,
+      "form": "leafhorn:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "S",
+      "seed": 91,
+      "form": "ptarmilet:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "S",
+      "seed": 92,
+      "form": "wadelet:0",
+      "temper": "steady",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "S",
+      "seed": 93,
+      "form": "prism:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "S",
+      "seed": 94,
+      "form": "nightowl:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 95,
+      "form": "siltadillo:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "S",
+      "seed": 96,
+      "form": "stormlynx:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "S",
+      "seed": 97,
+      "form": "siltadillo:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "S",
+      "seed": 98,
+      "form": "buzzhawk:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "S",
+      "seed": 99,
+      "form": "prism:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "S",
+      "seed": 100,
+      "form": "nightowl:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 1,
+      "form": "cubeling:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "K",
+      "seed": 2,
+      "form": "inklet:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 3,
+      "form": "gustpuff:0",
+      "temper": "balanced",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "K",
+      "seed": 4,
+      "form": "orblet:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 5,
+      "form": "gustpuff:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 6,
+      "form": "wattlet:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "K",
+      "seed": 7,
+      "form": "snowmoth:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 8,
+      "form": "sunwhistle:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 9,
+      "form": "gearwing:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 10,
+      "form": "wattlet:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 11,
+      "form": "wattlet:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "K",
+      "seed": 12,
+      "form": "vyrnax:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 13,
+      "form": "geodot:0",
+      "temper": "calm",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "K",
+      "seed": 14,
+      "form": "podling:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 15,
+      "form": "echolot:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "K",
+      "seed": 16,
+      "form": "cubeling:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "K",
+      "seed": 17,
+      "form": "gustpuff:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "K",
+      "seed": 18,
+      "form": "bubblop:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 19,
+      "form": "stoneguard:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "K",
+      "seed": 20,
+      "form": "inklet:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 21,
+      "form": "bubblop:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 22,
+      "form": "cubeling:0",
+      "temper": "balanced",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "K",
+      "seed": 23,
+      "form": "stoneguard:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "K",
+      "seed": 24,
+      "form": "vyrnax:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "K",
+      "seed": 25,
+      "form": "geodot:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "K",
+      "seed": 26,
+      "form": "wattlet:0",
+      "temper": "steady",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "K",
+      "seed": 27,
+      "form": "bubblop:0",
+      "temper": "balanced",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "K",
+      "seed": 28,
+      "form": "bubblop:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "K",
+      "seed": 29,
+      "form": "gearwing:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "K",
+      "seed": 30,
+      "form": "washerling:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 31,
+      "form": "gustpuff:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "K",
+      "seed": 32,
+      "form": "fusebug:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 33,
+      "form": "wattlet:0",
+      "temper": "steady",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "K",
+      "seed": 34,
+      "form": "geodot:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "K",
+      "seed": 35,
+      "form": "snowmoth:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "K",
+      "seed": 36,
+      "form": "eggling:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 37,
+      "form": "wattlet:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 38,
+      "form": "gustpuff:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 39,
+      "form": "stoneguard:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "K",
+      "seed": 40,
+      "form": "cubeling:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "K",
+      "seed": 41,
+      "form": "washerling:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 42,
+      "form": "geodot:0",
+      "temper": "calm",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "K",
+      "seed": 43,
+      "form": "eggling:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "K",
+      "seed": 44,
+      "form": "washerling:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "K",
+      "seed": 45,
+      "form": "snowmoth:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 46,
+      "form": "stoneguard:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 47,
+      "form": "cubeling:0",
+      "temper": "calm",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "K",
+      "seed": 48,
+      "form": "washerling:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "K",
+      "seed": 49,
+      "form": "fusebug:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 50,
+      "form": "wattlet:0",
+      "temper": "steady",
+      "trainingNeeded": 528
+    },
+    {
+      "position": "K",
+      "seed": 51,
+      "form": "sunwhistle:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 52,
+      "form": "gearwing:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "K",
+      "seed": 53,
+      "form": "stoneguard:0",
+      "temper": "steady",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "K",
+      "seed": 54,
+      "form": "echolot:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 55,
+      "form": "podling:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 56,
+      "form": "sunwhistle:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 57,
+      "form": "inklet:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "K",
+      "seed": 58,
+      "form": "podling:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "K",
+      "seed": 59,
+      "form": "bubblop:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "K",
+      "seed": 60,
+      "form": "vyrnax:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "K",
+      "seed": 61,
+      "form": "wattlet:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 62,
+      "form": "inklet:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "K",
+      "seed": 63,
+      "form": "echolot:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "K",
+      "seed": 64,
+      "form": "washerling:0",
+      "temper": "balanced",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "K",
+      "seed": 65,
+      "form": "stoneguard:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "K",
+      "seed": 66,
+      "form": "sunwhistle:0",
+      "temper": "balanced",
+      "trainingNeeded": 526
+    },
+    {
+      "position": "K",
+      "seed": 67,
+      "form": "eggling:0",
+      "temper": "calm",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 68,
+      "form": "fusebug:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 69,
+      "form": "twinklet:0",
+      "temper": "balanced",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "K",
+      "seed": 70,
+      "form": "inklet:0",
+      "temper": "calm",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "K",
+      "seed": 71,
+      "form": "inklet:0",
+      "temper": "balanced",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 72,
+      "form": "gearwing:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "K",
+      "seed": 73,
+      "form": "inklet:0",
+      "temper": "balanced",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 74,
+      "form": "sunwhistle:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "K",
+      "seed": 75,
+      "form": "echolot:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "K",
+      "seed": 76,
+      "form": "podling:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 77,
+      "form": "bubblop:0",
+      "temper": "steady",
+      "trainingNeeded": 523
+    },
+    {
+      "position": "K",
+      "seed": 78,
+      "form": "wattlet:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 79,
+      "form": "snowmoth:0",
+      "temper": "calm",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "K",
+      "seed": 80,
+      "form": "twinklet:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 81,
+      "form": "washerling:0",
+      "temper": "steady",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "K",
+      "seed": 82,
+      "form": "inklet:0",
+      "temper": "steady",
+      "trainingNeeded": 517
+    },
+    {
+      "position": "K",
+      "seed": 83,
+      "form": "gustpuff:0",
+      "temper": "balanced",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 84,
+      "form": "podling:0",
+      "temper": "balanced",
+      "trainingNeeded": 518
+    },
+    {
+      "position": "K",
+      "seed": 85,
+      "form": "podling:0",
+      "temper": "balanced",
+      "trainingNeeded": 521
+    },
+    {
+      "position": "K",
+      "seed": 86,
+      "form": "snowmoth:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 87,
+      "form": "snowmoth:0",
+      "temper": "steady",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "K",
+      "seed": 88,
+      "form": "washerling:0",
+      "temper": "balanced",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "K",
+      "seed": 89,
+      "form": "orblet:0",
+      "temper": "steady",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 90,
+      "form": "snowmoth:0",
+      "temper": "steady",
+      "trainingNeeded": 522
+    },
+    {
+      "position": "K",
+      "seed": 91,
+      "form": "cubeling:0",
+      "temper": "calm",
+      "trainingNeeded": 525
+    },
+    {
+      "position": "K",
+      "seed": 92,
+      "form": "bubblop:0",
+      "temper": "steady",
+      "trainingNeeded": 515
+    },
+    {
+      "position": "K",
+      "seed": 93,
+      "form": "echolot:0",
+      "temper": "calm",
+      "trainingNeeded": 519
+    },
+    {
+      "position": "K",
+      "seed": 94,
+      "form": "gearwing:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 95,
+      "form": "geodot:0",
+      "temper": "calm",
+      "trainingNeeded": 516
+    },
+    {
+      "position": "K",
+      "seed": 96,
+      "form": "stoneguard:0",
+      "temper": "balanced",
+      "trainingNeeded": 524
+    },
+    {
+      "position": "K",
+      "seed": 97,
+      "form": "geodot:0",
+      "temper": "calm",
+      "trainingNeeded": 520
+    },
+    {
+      "position": "K",
+      "seed": 98,
+      "form": "wattlet:0",
+      "temper": "steady",
+      "trainingNeeded": 529
+    },
+    {
+      "position": "K",
+      "seed": 99,
+      "form": "echolot:0",
+      "temper": "steady",
+      "trainingNeeded": 527
+    },
+    {
+      "position": "K",
+      "seed": 100,
+      "form": "gearwing:0",
+      "temper": "calm",
+      "trainingNeeded": 522
+    }
+  ]
+}
