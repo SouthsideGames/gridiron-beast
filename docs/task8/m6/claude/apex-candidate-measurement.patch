@@ -1,0 +1,88 @@
+diff -ru a/src/franchise/clash-link.js b/src/franchise/clash-link.js
+--- a/src/franchise/clash-link.js	2026-11-11 00:09:05.000000000 -0500
++++ b/src/franchise/clash-link.js	2026-11-11 03:16:21.645714445 -0500
+@@ -112,7 +112,8 @@
+ export function autoLineup(roster, n, seed = 1) {
+   const pool = eligibleBattlers(roster).map((m) => ({ species: m.species, archetype: archetypeOf(m.species), overall: monsterOverall(m), type: m.type, monster: m }));
+   if (!pool.length || n <= 0) return [];
+-  return chooseLineup(pool, Math.min(n, pool.length), createRng(seed)).map((x) => x.monster);
++  const out = chooseLineup(pool, Math.min(n, pool.length), createRng(seed)).map((x) => x.monster);
++  return globalThis.__m6Lineup ? globalThis.__m6Lineup(roster, n, out) : out; // measurement copy only
+ }
+ 
+ /** The policies a stored record was played with: its own, or (records from before 2026-10-22) manual for a 'play' battle with decisions and smart for everything else. */
+@@ -178,6 +179,7 @@
+  */
+ export function applyBattleEffects(roster, result, side, occasion, rng, { autoSpend = false, bonusPct = 0, bonusLabel = null, ledger = null, activityId = null, masteryScope = activityId } = {}) {
+   if (result.pending || result.staged || result.probed || result.provisional) return [];
++  if (globalThis.__m6Clash) globalThis.__m6Clash(result, side, occasion); // measurement copy only
+   const events = []; const fatigue = CLASH_FATIGUE[occasion] || 0;
+   const entries = []; for (const x of result.lines[side]) { const m = roster.find((mm) => mm.id === x.combatant.monsterId); if (m && !entries.some((e) => e.monsterId === m.id)) entries.push({ monsterId: m.id, x, m }); }
+   const award = ({ x, m }) => {
+diff -ru a/src/franchise/franchise.js b/src/franchise/franchise.js
+--- a/src/franchise/franchise.js	2026-11-11 00:09:05.000000000 -0500
++++ b/src/franchise/franchise.js	2026-11-11 03:16:21.643970129 -0500
+@@ -899,6 +899,7 @@
+ 
+ // ------------------------------------------------------------ season
+ export function startSeason(f, year) {
++  if (globalThis.__m6SeasonStart) globalThis.__m6SeasonStart(f, year); // measurement copy only
+   if (f.rewardLedger) pruneLedger(f.rewardLedger, (id) => Number(id.split(':')[1]) >= year); // completed activities of earlier seasons are no longer needed
+   const records = Object.fromEntries(ALL_TEAMS.map((t) => [t, blankRecord()]));
+   const lastRecords = f.season?.records || null;
+diff -ru a/src/franchise/progression.js b/src/franchise/progression.js
+--- a/src/franchise/progression.js	2026-11-11 00:09:05.000000000 -0500
++++ b/src/franchise/progression.js	2026-11-11 03:16:21.645045849 -0500
+@@ -36,7 +36,7 @@
+     }
+     if (m.level >= MAX_LEVEL) m.xp = 0;
+   }
+-  const points = addTrainingProgress(d, training); syncFromDev(m);
++  const points = addTrainingProgress(d, d.apex && process.env.M6_APEX_CAND ? FR.mul(training, FR.frac(2, 1)) : training); syncFromDev(m); // CANDIDATE, measurement copy only: Apex activity training x2
+   if (autoSpend && FR.floor(d.bank) > 0) autoSpendPoints(m, rng, { first: train?.[m.position] || null });
+   return { xp: xpGain, training, points, levelsGained: m.level - startLevel, events };
+ }
+@@ -130,7 +130,7 @@
+     m.yearsPro = (m.yearsPro ?? Math.max(0, m.age - 23)) + 1; m.fatigue = 0; m.injury = null;
+     // Task 8: the eligible offseason award, 2 banked training points (replaces the old direct maturation increases, spec §6).
+     // AI and pool monsters allocate it with the approved policy; the owner's club passes autoAllocate: false and decides.
+-    if (m.dev) { addBankedPoints(m.dev, OFFSEASON_POINTS); if (autoAllocate) autoSpendPoints(m, rng, { first: train?.[m.position] || null }); }
++    if (m.dev) { addBankedPoints(m.dev, m.dev.apex && process.env.M6_APEX_CAND ? 34 : OFFSEASON_POINTS); /* CANDIDATE, measurement copy only: Apex offseason 34 */ if (autoAllocate) autoSpendPoints(m, rng, { first: train?.[m.position] || null }); }
+     if (ageless) { if (m.dev) syncFromDev(m); if (marketPriced(m)) m.salary = salaryFor(m); continue; } // ageless: banked points still mirror to m.points
+     const cur = m.dev ? m.dev.current : m.attributes;
+     if (m.durPeak == null && m.age >= peakWindowAge(m.position)) m.durPeak = cur.durability;
+diff -ru a/src/franchise/t8/progression.js b/src/franchise/t8/progression.js
+--- a/src/franchise/t8/progression.js	2026-11-11 00:09:05.000000000 -0500
++++ b/src/franchise/t8/progression.js	2026-11-11 03:16:21.645231380 -0500
+@@ -30,7 +30,7 @@
+ /** Generate a level-1 individual of a form. `apex` may be forced for tests; otherwise legendaries never roll Apex. */
+ export function generateIndividual(rng, formId, { apex = null } = {}) {
+   const form = formById(formId); if (!form) throw new Error(`unknown form ${formId}`);
+-  const isApex = apex ?? (form.rarity !== 'legendary' && rng.next() < APEX_CHANCE);
++  const isApex = apex ?? (form.rarity !== 'legendary' && rng.next() < (globalThis.__m6ApexChance ?? APEX_CHANCE));
+   // Draw order is fixed (starting ranges, then potential ranges, then Temper) so seeds are reproducible.
+   const ref = each((a) => (isApex ? randInt(rng, APEX_START[0], APEX_START[1]) : randInt(rng, ...form.starting[a])));
+   const potential = each((a) => (isApex ? 99 : randInt(rng, ...form.potential[a])));
+diff -ru a/src/franchise/t8/selection.js b/src/franchise/t8/selection.js
+--- a/src/franchise/t8/selection.js	2026-11-11 00:09:05.000000000 -0500
++++ b/src/franchise/t8/selection.js	2026-11-11 03:16:21.645366552 -0500
+@@ -130,7 +130,7 @@
+   const form = formById(formId); if (!form) throw new Error(`unknown form ${formId}`);
+   if (!(target >= 0 && target <= 1)) throw new RangeError('target percentile must be in 0..1');
+   // `apexRoll: false` only for a retry within the SAME event, whose Apex roll already happened (one roll per event, N7f)
+-  if (apexRoll && form.rarity !== 'legendary' && rng.next() < APEX_CHANCE) return { dev: generateIndividual(rng, formId, { apex: true }), apex: true, percentile: null, probe: null };
++  if (apexRoll && form.rarity !== 'legendary' && rng.next() < (globalThis.__m6ApexChance ?? APEX_CHANCE)) return { dev: generateIndividual(rng, formId, { apex: true }), apex: true, percentile: null, probe: null };
+   const pool = []; const post = !!(history && history.seasons > 0);
+   if (post && metric !== 'current') throw new Error('post-history selection uses the current metric');
+   // The nine legal candidates are drawn first, in the approved order (each uniform and independent inside the form's ranges).
+diff -ru a/src/sim/game-runner.js b/src/sim/game-runner.js
+--- a/src/sim/game-runner.js	2026-11-11 00:09:05.000000000 -0500
++++ b/src/sim/game-runner.js	2026-11-11 03:16:21.638662657 -0500
+@@ -120,6 +120,7 @@
+     const ev = step(state, teams, controllers, tendencies);
+     steps += 1;
+     if (onStep) onStep(ev, state);
++    if (globalThis.__m6Probe) globalThis.__m6Probe(ev, state, teams); // measurement copy only
+     if (!ev && !state.finished) { // stuck phase guard
+       R.log(state, 'Runner guard: unexpected phase ' + state.phase, 'info');
+       break;

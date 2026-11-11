@@ -67,6 +67,22 @@ Field code was 680 ms of that, before this pass:
   loop, the per-play rules step, the contract hook dispatch and one contract's tick (Pyrelynx).
 - **X1** adds summoned actors: more bodies per tick is real work, not waste.
 
+### The two comparisons and their baselines
+
+These are different measurements with different baselines. Both come from the same protocol run.
+
+| | Engine comparison | Ability overhead |
+| --- | --- | --- |
+| Question | Is the Task 8 engine slower than the game before Task 8? | What do abilities cost on top of the same engine? |
+| Numerator | Task 8 build, abilities off | Task 8 build, abilities on |
+| Denominator | **The approved fixed pre-Task 8 baseline: `main` at 43976f45fafbd3bb8322458b6b8eb317708818a0 (v42.22.0)** | The **same** Task 8 build with abilities off, same process, paired |
+| Limit | 1.10 in every scene and every abilities-off twin | 1.25, provisional |
+| Uses the pre-Task 8 baseline? | Yes | No |
+
+- **Baseline confirmed.** `PERF_SCENES.md` names `main` 43976f4 as the fixed baseline. The copy used in all three runs was
+  compared file by file with `git archive 43976f4`: 172 source files, 0 differences. `origin/main` is still that commit.
+- **Candidate:** a frozen `git archive` of d544fec.
+
 ### Approved CPU protocol, rerun twice after the pass
 
 d544fec against main 43976f4. 3 warm-ups, 15 repeats, alternating order, bootstrap intervals. Both runs met the quiet-machine
