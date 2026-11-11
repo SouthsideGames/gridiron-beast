@@ -29,7 +29,7 @@ All of it is "work the same thing out once instead of every tick". No rule, valu
 | --- | --- |
 | `tools/perf/identity.mjs`, 19 scene variants and 12 full games, against 9421635 | Identical |
 | AI franchise benchmark, seed 1, one season | Same hashes as f716b02 and f9e7581 (77ce08b7…, e04831ba…) |
-| Full regression on a frozen copy of d544fec | REGRESSION_RESULT |
+| Full regression on a frozen copy of d544fec | 2,014 of 2,014; no failures, skips or cancellations (59 minutes) |
 
 ### Profile (deterministic workload, 25 loops, self time in field code)
 
@@ -52,9 +52,17 @@ Field code was 680 ms of that, before this pass:
 | The play loop itself (hook dispatch, obstacles, more actors) | 156 ms | 568 ms | 185 ms |
 | Everything else (contract hooks, defensive reads, per-play rules, logging) | about 740 ms | about 1,900 ms | about 1,280 ms |
 
-- **Garbage collection is now the largest single item** in all three scenes (it did not fall with this pass). The number of collections is about the same with
-  abilities on or off; each one takes longer (2.8 ms against 1.8 ms in A1) because more objects are alive when it runs.
-  I have not yet found which objects. That is the next investigation, and it is not field code.
+- **Garbage collection is now the largest single item** in all three scenes (it did not fall with this pass). The number of
+  collections is about the same with abilities on or off; each one takes longer (2.8 ms against 1.8 ms in A1) and about 65%
+  more memory survives each one (A5: 817 KB against 496 KB).
+- **What I checked about it, without a fix yet:**
+  - Not a leak: after a play, none of its monsters' working records are still held (heap snapshot after 30 plays, both modes).
+  - Not the saved play output: it is only 5% larger with abilities on in A5 (30% in A1, from field-entry events).
+  - Not the engine's memory pre-placement guess: turning it off changed nothing.
+  - What differs: with abilities on, each play's monster records and working objects live long enough to be moved to
+    long-lived memory (about 75 MB over 13 runs against under 1 MB with abilities off). I have not found why.
+- **This part is specific to the server's JavaScript engine (V8).** Safari on an iPhone uses a different engine with a
+  different collector, so this cost may be smaller or larger there. It is one more reason the phone has to be measured.
 - **A5 (full contracts, no staged fields):** garbage collection is 35% of its overhead; the next largest items are the play
   loop, the per-play rules step, the contract hook dispatch and one contract's tick (Pyrelynx).
 - **X1** adds summoned actors: more bodies per tick is real work, not waste.
