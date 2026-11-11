@@ -1,3 +1,5 @@
+> **Superseded status:** the owner authorized adoption and main integration after this report. See [owner adoption](../OWNER_ADOPTION_2026-11-11.md) and [final verification](../FINAL_VERIFICATION.md). Historical evidence and proposals below are preserved. Phone/visual approval and remaining performance limits are still open.
+
 # M6 status: what is done, what fails, what is provisional, what waits for the owner (2026-11-11)
 
 **M6 is open. Task 8 is not complete. Nothing is merged into main and no public release was made.**

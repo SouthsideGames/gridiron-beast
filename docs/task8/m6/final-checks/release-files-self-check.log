@@ -1,0 +1,22 @@
+ok: the released archive passes and lists exactly the published files
+ok: index.html stops loading src/fresh.js -> REMOVAL
+ok: a module disappears from the import chain but is still in the import map -> refused
+ok: a computed dynamic import -> refused
+ok: fetch of a local data file that does not exist -> refused
+ok: fetch of a local data file that exists -> included and reported as ADDED
+ok: new URL(asset, import.meta.url) to a missing image -> refused
+ok: a quoted sprite path in code that exists -> included
+ok: an imported module is missing -> refused
+ok: a module missing from the import map -> refused
+ok: the import map names a module nothing imports -> refused
+ok: a stylesheet url() to a missing image -> refused
+ok: a deliberately published extra file was deleted -> refused
+ok: an extra dropped from the manifest without investigation -> REMOVAL
+ok: a removal acknowledged with --allow-removal but no --reason -> refused
+ok: a removal acknowledged with --allow-removal and --reason -> passes, reason recorded
+ok: --allow-removal for a file that is not removed -> refused
+ok: no previous manifest -> refused
+ok: the word "import" in a comment or in markup is not an import
+ok: a wildcard in a line comment cannot swallow the following imports
+ok: line-comment markers inside a block cannot hide following imports
+RELEASE FILES CHECK PASSED (21/21)

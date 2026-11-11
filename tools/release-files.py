@@ -60,10 +60,11 @@ IMPORT = re.compile(r"""(?:^|[;{}])\s*(?:import|export)\s[^;'"]*?from\s*['"]([^'
 DYN_NONLITERAL = re.compile(r"""\bimport\s*\(\s*(?!['"])(?!`[^`$]*`)(?!\s*\))""")
 def strip_comments(src):
     """Blank out /* */ and // comments (keeping line numbers), so a comment such as '// import (validation)' is not code."""
-    # Remove line comments first: a glob such as looks/*.js in a // comment
-    # must not open a block comment that swallows genuine imports below it.
-    src = re.sub(r'(^|[^:\'"\\])//[^\n]*', lambda m: m.group(1), src)
-    return re.sub(r'/\*.*?\*/', lambda m: re.sub(r'[^\n]', ' ', m.group(0)), src, flags=re.S)
+    # Scan both comment forms in source order: a wildcard in a line comment
+    # cannot start a block, and // inside a block cannot eat its closing */.
+    comments = re.compile(r"/\*.*?\*/|(^|[^:'\"\\])//[^\n]*", re.S | re.M)
+    return comments.sub(lambda m: re.sub(r'[^\n]', ' ', m.group(0)) if m.group(0).startswith('/*') else (m.group(1) or ''), src)
+
 ASSET_CALL = re.compile(r"""\b(?:fetch|new\s+URL|new\s+Worker|new\s+SharedWorker|new\s+Audio|new\s+Image|importScripts)\s*\(\s*(['"`])([^'"`]+)\1""")
 ASSET_STR = re.compile(r"""(['"`])((?:\./|\.\./|src/|styles/|assets/|img/|audio/)[^'"`\s]*\.(?:js|mjs|css|json|png|svg|webp|jpg|jpeg|gif|mp3|ogg|wav|woff2?|webmanifest))(?:\?[^'"`]*)?\1""")
 modules, missing, stack = set(), [], list(entries)

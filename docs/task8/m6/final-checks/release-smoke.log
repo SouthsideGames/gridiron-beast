@@ -1,0 +1,23 @@
+✔ index.html is stamped for this release: every game module mapped to its versioned URL (41.308214ms)
+✔ the main.js script tag itself carries the release number, also when re-stamping an already stamped page (v42.5.0 fix) (86.745985ms)
+✔ adopted Apex awards double activity training, keep XP, and grant 42 total offseason points (17.890388ms)
+✔ football active mastery cap survives reload and resets per game; Clash executions stay uncapped (1.618087ms)
+✔ Apex contract premium follows each club knowledge without exposing a hidden prospect (2.956219ms)
+✔ Foresight public look uses most represented plan formation and deterministic plan-order ties (0.256209ms)
+✔ N9d Foresight: first visible look is saved before calls; audibles, reload and redraw cannot reroll or spend game RNG (80.473228ms)
+✔ N9d Foresight: called-play alignment is not the initial visible alignment (5.855354ms)
+✔ N9d Prism: fixed 12-yard reference selects an existing zone; pending zones stay banked; a reload cannot retarget (5.021438ms)
+✔ N9d Prism: no target keeps readiness and does not remove a zone created later in the same snap (3.873749ms)
+✔ N9d pre-choice timing: Watch and headless Skip agree when runoff ends the half before a snap (5.628839ms)
+✔ N9d Prism: an activation-play flag cannot leak through a benched snap and possession change (3.740891ms)
+✔ M6 Foresight uses the dominant public formation rather than the first plan entry (3.624079ms)
+✔ B1/B2 formulas: worked example, positive advantage required, bounds enforced (2.023498ms)
+✔ one opportunity per OL per play: outcome frequencies match the formulas (29.660209ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 512.963439

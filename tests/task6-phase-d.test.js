@@ -1,6 +1,8 @@
 // Task 6 Phase D: strategy modes (R2), rebuilding clubs' starter sales (R4), mode weights in contracts (R3), free-agency upgrades (R5)
 // and the draft (R7). Approved specification §1.8; owner's authorisation of 2026-11-02 (docs/TASK6_DECISIONS.md).
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import assert from 'node:assert/strict';
 import { MODES, STRATEGY, rawMode, nextMode, evaluateStrategies, modeOf, strategyInputs } from '../src/franchise/strategy.js';
 import { modeLength, leagueContracts, leagueUpgrades, upgradesAllowed, CONTEND_UPGRADES, UPGRADES_PER_OFFSEASON, UPGRADE_MIN } from '../src/franchise/league-season.js';
@@ -191,12 +193,16 @@ function assertR4Sales(f) {
   return sales;
 }
 
-// The fixture: league 52 after one played season (runFranchise(52, { seasons: 1 }): season 1, its offseason, free agency and the draft).
+// Fixed fixture: league 52 after one played season on c7fc56b (pre-adoption Task 8).
+// Freeze the scenario, not the game rules: unrelated reward/balance changes must not erase
+// the existence of the seller/buyer this trade-rule test constructs. All prerequisite,
+// positive-sale, negative-sale, fairness and registry assertions below remain unchanged.
+// Regenerated with runFranchise(52, { seasons: 1 }), Save.exportJson, gzip level 9, base64.
 // Its year-2 offseason trade window ran when free agency opened, with no sale, so the window is still open for one (saleOpen). Each
 // scenario works on its own copy (a save round trip).
 let played52 = null;
 const league52 = () => {
-  if (!played52) { const { f, problems } = runFranchise(52, { seasons: 1 }); assert.deepEqual(problems, []); played52 = Save.exportJson(f); }
+  if (!played52) played52 = gunzipSync(Buffer.from(readFileSync(new URL('./fixtures/task6-r4-sale-c7fc56b.json.gz.b64', import.meta.url), 'utf8').trim(), 'base64')).toString();
   return Save.importJson(played52);
 };
 const ATTRIBUTE_FLOOR = 20; // the lowest value a rating edit moves an attribute to (the same floor as the other rating edits in these tests)

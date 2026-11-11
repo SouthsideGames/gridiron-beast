@@ -1,0 +1,45 @@
+{
+ "root": "/workspace/scratch/cd212583d3d2/gridiron-beast",
+ "games": 120,
+ "abilitiesOn": {
+  "attempts": 4310,
+  "completionPct": 56.8,
+  "intPct": 0.9,
+  "yardsPerAttempt": 7.73,
+  "sackPct": 2,
+  "explosivePassPct": 10.9,
+  "deepCompletionPct": 37.6,
+  "sepAtArrival": 4.828,
+  "sepOnCompletions": 4.897,
+  "yardsPerCarry": 6.41,
+  "explosiveRunPct": 20.5,
+  "pointsPerTeamGame": 13.7,
+  "topReceiverShare": 0.507,
+  "sameReceiverAsLastPassPct": 33.8,
+  "longestSameReceiverRun": 3.633,
+  "firstReadPct": 67.4,
+  "defAbilityPerGame": {
+   "undefined": 45.2,
+   "snowball": 2.2
+  }
+ },
+ "abilitiesOff": {
+  "attempts": 4222,
+  "completionPct": 59.5,
+  "intPct": 1.2,
+  "yardsPerAttempt": 8.17,
+  "sackPct": 2.1,
+  "explosivePassPct": 12.2,
+  "deepCompletionPct": 43.3,
+  "sepAtArrival": 4.708,
+  "sepOnCompletions": 4.735,
+  "yardsPerCarry": 6.18,
+  "explosiveRunPct": 19.8,
+  "pointsPerTeamGame": 13.4,
+  "topReceiverShare": 0.514,
+  "sameReceiverAsLastPassPct": 33.7,
+  "longestSameReceiverRun": 3.5,
+  "firstReadPct": 68.4,
+  "defAbilityPerGame": {}
+ }
+}

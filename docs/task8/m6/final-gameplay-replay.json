@@ -1,0 +1,1012 @@
+{
+  "source": "77fe324cc52bf32528f1666b85e476576194d878",
+  "scope": "100 identical-input comparisons per mode; full football step outputs/frames/events and final state; full t8 standalone Clash result, execution and performance records. Not a save/reload UI test.",
+  "seeds": [
+    1,
+    100
+  ],
+  "footballPass": 100,
+  "clashPass": 100,
+  "rows": [
+    {
+      "seed": 1,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "a2a6a434f72a8f771e535e73d839be870a191c7af16d18434938dfd0e7786ae2",
+      "footballStepHash": "70411f1f39f3e528ea7f17eff970f882f91864840a9593223789beb947a2a817",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "58383b18e2c136d9046971c6d0d1618d71d376a505d81c8e4a9fd51cd105f800"
+    },
+    {
+      "seed": 2,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "dec61c9fc673dc1dcae5bf6b7d55c1ec898944deaaaf5be64ea0a2bce20c88c6",
+      "footballStepHash": "d09f669fb043d197379a4ce2b66e47116f97735c608ec2d12dd1907b5ed1e8e0",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "638a1c5ac1c5663820d374b877e319d09b604c42e236c09551bc74ad424230ac"
+    },
+    {
+      "seed": 3,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "4e22993acfaaca6790288d66af5081f4d62123ad662bc348fe57f3a551fc5b2c",
+      "footballStepHash": "992b8576e8f039bd30dc864ed5c2c695273d0477bf45bfdfc7169eeac3879f6a",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "eecfe5511e8d95007d2f8a1277eb042d1574c579016cfa4d53cd486944aa3cb6"
+    },
+    {
+      "seed": 4,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "636fa848a8dfd4bff52ce960d464243c95b64bed30bb026d78455d8263750f89",
+      "footballStepHash": "b49bc10fd3d73db4afe82eba053779ce308be9f2f2aacc6cac4615612ff1a014",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "1b5c761245fdbc03e411c0a844beeeae56d78a72ba205bc2524b3aa9fabfd482"
+    },
+    {
+      "seed": 5,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "e018e99df1915f7d9fe371fa901ed23060fd659e3204296312fa64833d669ce1",
+      "footballStepHash": "30156ee048e1eff422da09731332efbae1f6e0ff3ebc5bdba0bf8ecb216c549f",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "0e64c9bc144353ee0dfc8b54410643e0850feb27485ce83128fd60e4c31d9f65"
+    },
+    {
+      "seed": 6,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "5e4d7393bc8518f9c7e2e994250f2f93c22acfc6eb2b557973f5ae5ba6c726e4",
+      "footballStepHash": "99fa7df4c8503591947e271e42f5b2ad206256b34f1108d10d43a2fc815407f7",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "8c750c4854756e870f7d61fccec8f9d199bcd21bf3b6662821af75d94e686598"
+    },
+    {
+      "seed": 7,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "e53dc09092c4643483aba8e37c5dca176aa5b83f4c3965afaa440a2aaf8b0ab1",
+      "footballStepHash": "3543b2b3d6926d33ea79c5d0451c394796bfd22937175beaf8e2aef8fa1756f4",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "61c72cac4250754ee0c9b33e81063ea3ccbbfaab76008a23673ee2a6a6922874"
+    },
+    {
+      "seed": 8,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "59cfcd20520765491a2affa8c2918602ee22feef30181da7f6b64d48ca8f3ccd",
+      "footballStepHash": "ca6348a0f073678025c5ef9a829248bb039aa755dc01df58bf911150876ed39d",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "80f0a16be7c68c3bf19057130b6a35f5630f8db3e169798634931d79bd6452ad"
+    },
+    {
+      "seed": 9,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "740c36d425787b4183f98f47ba4409d304d977cecf7af28b6e60e4d02cffe71d",
+      "footballStepHash": "09a109f31af4231b8b0ef36d6c653f4ef34eedf038664bb460ef0155dde07110",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "d523004034e2064a57ba9b367b25148f84b7b771bcf6455b412c0a746f89e755"
+    },
+    {
+      "seed": 10,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "9537e7ef01b1d22592ea6112801091530907c29a2ef684056cb4c4cfbf2db8c0",
+      "footballStepHash": "7ea1976d645d6798fc3dc648138d0f8edd36668658c96d191d8c1b0107bd7d1c",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "f53b0fc1b6bf91fbf25a24d69ea085f3d3ff008c961545e6d5893f904e0bd819"
+    },
+    {
+      "seed": 11,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "e85503aae0e20f0fa2c3bab4cd6e98b2e51ed1f461f27c8b8aeb72d5cf5efc8f",
+      "footballStepHash": "e2494629f65db4d96c832f510fae48d43ffadfb42ca842b6abfede088b29e867",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "6b07e62aafaf84c3a1aff672cc22774af8e98bc7324fa9f5f4791de9d91f098f"
+    },
+    {
+      "seed": 12,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "ba5201d020fcdd8c58e331ccd4006e9d28a4331b3b028c9534c3cff74180a427",
+      "footballStepHash": "65b1eac68073c406f6bbda6eca133826b7f1f47dc3a1b6cacfaf59c9e5fb6883",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "c0a34b31012d77e25770b553e6fcb4e9a5908e991252634a6df1405d36686a5e"
+    },
+    {
+      "seed": 13,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "e3a2b687cd18ab07505dfda61fd50e58e2637179bed454a02162c751b881e831",
+      "footballStepHash": "67b354c8462b75085c5d4a8567e4fa02e28f4665c3a9920185b7ff3e71f05d05",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "9bd7b4c6d121aef24d31ac138d7d0f84053f2b1448da653886e13cd662139a58"
+    },
+    {
+      "seed": 14,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "5a695a8f10597bebf4fdc41dbf36563b4e5a8a9f3e0cc182f5860d812697baed",
+      "footballStepHash": "8c2cda40b9f8ef82d390cc34ea97474d5f8fcac2349ed44893e417a72e0d3e02",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "2421e2c92729f25498fbf320ce0ccfffb0ffaaccf93d943db864fcd5d46d64f6"
+    },
+    {
+      "seed": 15,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "25462eb1a0e7067ca9b09f9275f2cf9e4b3c0b12c6a8ae07f2556a88c14e8165",
+      "footballStepHash": "27ec1e535396f51c84ef0773053ad5a24c13051a089500a2b8478a07edbfa28e",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "a72e66e8f7364686464f95d407320a1816e0dd1db5e5d0878342d5b161ffd2fc"
+    },
+    {
+      "seed": 16,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "938d1b9b0179cec7f971a3e0961615cc8a4269cffb2a5f971fb6c5f2588e5942",
+      "footballStepHash": "d41763c83785e5cbd6779a2ae69e716285e4481bbd303fc8015361a77e6fa390",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "4b484393a7af2c0eccd9d49022c6e39c71469a4fd6a70f92acc98053bca8417a"
+    },
+    {
+      "seed": 17,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "cbdf525cb21210eb1b59e89171fe311fac5071f96daea953a2009b785783df0c",
+      "footballStepHash": "4945f317560dc5469592bc23ddfba1dee22229413f1be0722adf916419dff445",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "3e078a347c606b0dc7d2e98e835f1cea7759cfd494a12e741f11690c3229964d"
+    },
+    {
+      "seed": 18,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "e1115be58eaeb430de05a688df3b3aa9976bcaabdce1efc49425d73709b02646",
+      "footballStepHash": "7e112bf5e5e5eafa5312796842e5e6679d2c6566a50d08d0a2f0f398b36b58aa",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "0e978c7849eea2bf91e6400262333d9e23b403c13c770e204864ffce6fd5607f"
+    },
+    {
+      "seed": 19,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "8589c8fb5d8088914595c9ed1606c4e306ed62e3fc7000745aa3bbe59c26d0a3",
+      "footballStepHash": "d627ea2b6d5e10ca942c21e50f677f048bc5e10a9d8f519893023e2565cff0e0",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "49976aeb0e39d4414a3ff8e0d45f45f2f5aa77b27547028189b080d1d58736fa"
+    },
+    {
+      "seed": 20,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "2d04488d148e0975ca516e63bc513706de7953843a5e7272c554785299f05373",
+      "footballStepHash": "a390d38f9ee1b794d5728ed03a2ce909a0b58f0b8681a9a1635a064ea8f69853",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "4c837e93dcf0881a90c34e154fdc15d032880ad7710fd7a2f98990d6d7e207b1"
+    },
+    {
+      "seed": 21,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "fbd820a5fee1e34e820ccd8dd17405431420c3623caaceceba567754f8650560",
+      "footballStepHash": "1eb2eef992b8d37e302fb169da6f0b1edca46bd04a21ab7f77390b7c97a71e67",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "e87970d07699e448e7b36d80743ec01c0e4892ae08e84c7d5cae414ff6d7d4ac"
+    },
+    {
+      "seed": 22,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "e7c61e07b92054b5611539091889aa5252aab2d7473845b4591c450d2c208be4",
+      "footballStepHash": "42f2c779c4befcd3e0612301cdfd03523d9e0182e95cd4b71de956284f371b3d",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "c52e28ece821314bda02dcf878edee1cbc6e653c6ac80c518eb8403343d05e4e"
+    },
+    {
+      "seed": 23,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "cf8cc1b6df1752fdc1059f5ac23a35b4d8fa02e44320bb5f0edb665a05e98974",
+      "footballStepHash": "a8cd1a5e030a405a7af9c7a8b615773d5489d86b6b13596a392ba17f085c69c8",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "d6e30673efc08179c60d21273bd05edc97065fbb25d42160393070474074bb43"
+    },
+    {
+      "seed": 24,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "c10c35cf2dda8c703863d15ad79dea34df732935d915f608fe4e2e59752e57f1",
+      "footballStepHash": "4f4a1a5beea6e45095f0fddd6271f50fb0fb83aef94c7f3fdd7117a61cc7fbe2",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "900e6b60e27b9c15475a9f73b262da9f272a070f503c0726933196f0cf90b360"
+    },
+    {
+      "seed": 25,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "b307919c214a39f878495ba56fda8dc77411bee66e37e8569d5f46dd270d1ccf",
+      "footballStepHash": "01bfa454fe31490be0d2457ea207e5eebc15dced64ada0a0d0c609cfcea15e31",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "5724de4ee6d3c6d9a18b3d8b4da872b0b2f581741fc0aaf5087fa7db0f79d726"
+    },
+    {
+      "seed": 26,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "f743bad7c3014e2b397ffb343ef75cba8d052ae6c39e708ae479047718979ea5",
+      "footballStepHash": "24d4d5cef277df8f5d8531ba4c30ec8af0968ae17b2c60778eed2a83ac8125a6",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "f011e4d0f49b8a6400b5f000d4da441e3ab417cdca414f351ec4cf9a86ebee54"
+    },
+    {
+      "seed": 27,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "6c45f6b36dede1a32db23e1a30230d1f00407e932789e1578ee3d0a25f55cce2",
+      "footballStepHash": "ad411152f5fc76ad84fbe95bc81c4e9e5ba5520f4e3558f2b77bf488d366ea6b",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "c09fcbf99a5bc2429c513caf6b3d4fa60a56c8d2db406f899007d2b982fc7fe3"
+    },
+    {
+      "seed": 28,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "1ec1f95d4818e6e96846c4d6c0bb9c03a2a567ebe212775031b92c28b92968cc",
+      "footballStepHash": "c6c9657aaeadd5a132248a677fa3e61a8dbe1a4ecc29df8e62065438869cdf66",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "56c2c81636eab7717ab78a7e36cc1ff89c06cd5e1ea97dcc2b74e210ebe12269"
+    },
+    {
+      "seed": 29,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "7914fbb4a9c0d911bec395066f40b6c4907980111c8ad0198a18c36e42a85ab4",
+      "footballStepHash": "c6492fd4063c8feb609c1dc90c90d88fd4ead978a4950e91068ca995aee3ef67",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "001ce057a89ee9e2ce01cb5e12a191f83fa8f491e0675106fb737b462b515c45"
+    },
+    {
+      "seed": 30,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "7faee82ceb290581dc71173eb072b66001df0fbaa7470b1429741a7205d6a32d",
+      "footballStepHash": "acfb33dd917635254d8a53f20d3d2c6c4e3b7903dc996ced7036d4bda9cc10dd",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "62f761e5a9258836df8e5412f84ac37debdf7d9326bf9518ae57301911bcf5b0"
+    },
+    {
+      "seed": 31,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "8db5b7af4e16caefef12bab2909419c7ab6ce984bb784ca239653c3741bd4b85",
+      "footballStepHash": "cf13c37777e113da1683725dc79a30c40cd291443cca477b9e279e3a79ae7234",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "f4fe4e9ec5f6a73240092d235166220390787e18d4f35e0b4442db0fb2324cb4"
+    },
+    {
+      "seed": 32,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "e3067fea085f5a495a05fbd4a5e0e7d09c0e9fe7ab8cb4905a8e8a4bbca2b95f",
+      "footballStepHash": "3a133e3b85afa7cf53f205b4d73809d0021aaa8253eb2e0dae828d362b4f2d36",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "f55631adbe38c4398e9d0c6308cb4157978da8900acb304a5c8b0ee013cf746c"
+    },
+    {
+      "seed": 33,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "01b7ce15e749ce83c9f206689ede9ae1955eecb6bca9a6c60d54e1c0960499ee",
+      "footballStepHash": "cdca9923d12f3646b9f400ec4422190f55084a434afcf98fec639738c89c1da0",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "a4e73a6df476f1fc06cfa2bfe8823ab7b4cf9b34d0355ab7edfcd4d3cb50e4aa"
+    },
+    {
+      "seed": 34,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "684a674f44fb4bfed76fce3751925ee019038a04c38c5dc5e4c4de604c3b57da",
+      "footballStepHash": "6f9f35909b380a43f6b94130192c145dd469dd765da74985f11c0ff3ed8f8289",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "5ba9ebb5870406b0931d60d2f3eb4e7ba5769b4b974c9b216587b2604689e84a"
+    },
+    {
+      "seed": 35,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "f117fc9866d50ebcb8f4ad6372bc5265c9402f5f8787019206d8fd87ce7641ab",
+      "footballStepHash": "29f062a250668db5c26a17be17d1e8a21f24cb84f8ae75f404848e00605ae311",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "275628e256f535458db602c9e00d6f736c64280e331ace2ced8c56147baf35e4"
+    },
+    {
+      "seed": 36,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "09cd8a161916db0ba1e254ab8878398679a0eb50189b43eaef53d482a45de557",
+      "footballStepHash": "0ee9fce78ce95fcd87bd4a61b30bc9e3b15a026e7e7279588a0b1d308f65ff3b",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "9ff1ef6e8f9e52ab0594b2125f46961daf280750e14d124e5c75d6343f197730"
+    },
+    {
+      "seed": 37,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "1fa5c75d9c79bc2235ce9696168c8ba13518ecca8fc485f25f1c8038b5880c63",
+      "footballStepHash": "41680149a6c6742867c5a41352f47d40c4a96098f6a9917dc3760e5d89aa2e1c",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "4fe997acb0ecfaa00bf53b7e92891c00c776cadb23736fedd47e80f24868cfc1"
+    },
+    {
+      "seed": 38,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "347536d2277be08da523d727aa181a2d0d5eeee2a6844e8c4f949a9f3f90e252",
+      "footballStepHash": "7c5adab387c4c20417b4879a449d66c2e290dbf79b9bc12186cb2a0aeb7a7ef6",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "58c417d9e93146a302acc26504f5fbd7849efc431d348a74eb0d83b7a271903c"
+    },
+    {
+      "seed": 39,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "7971e9e45969947bf693148556b2ea02a9bedf4b6a8cd97385e811df9b12cc45",
+      "footballStepHash": "1dc55292f6d339b85659b3cfc1d29f50fb094d991e93bdaad665f62d3cad3935",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "e37bedab4e9fc4afdaea49f540810b14cacf0a57bd40d85ff1e822b7b644f3e7"
+    },
+    {
+      "seed": 40,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "81a76ecdf75e4fe23a7cf6fa44f8e30796a3371e8ca7c57ab548916c229a09e3",
+      "footballStepHash": "452461db75b7dafc2ac6e5c868c994f9edfffc8cb6f24ee6837502180b6a2aa8",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "e47db853647be39c0f67ce6351326e99a4e48020d7f22ab2ff343a703029c928"
+    },
+    {
+      "seed": 41,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "6ba718ab867017546d4c5403e12434246543317a6907abba178cb543f48570a0",
+      "footballStepHash": "dc41399ae1f3541e56d875bf123d8d9223ed650d6400ba1dadb6eb43347a26cf",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "a313a5e1cae83b903635e8b4daa9976db1ee09411241b33c454f6d1df2fd8859"
+    },
+    {
+      "seed": 42,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "fe915553fda21cb1924d6d2f7aa1b2ce184aeb858b9ea9b7f8640288ef652a04",
+      "footballStepHash": "69d72681243e57d1bd9845e099e50ee4b2e93d7d26d26caa482a526161ebfe44",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "051a9624f0ded0b457691aefc88f706d5ee4f79b5f029aef2a2fcf3726b37f44"
+    },
+    {
+      "seed": 43,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "7d387a4b60728823d916ebb3fdf0560669db014a38058ceb204938335940576e",
+      "footballStepHash": "955c4dbd66b9d91aa8a43bbbd5fddbd6d64e50d901a3391da74329fcc38224c6",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "0c2b95ac7019ac346c2bdf517dfaebda1b1765cf70dcabdd1d21e46b412a1ea2"
+    },
+    {
+      "seed": 44,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "97f15f6379e7a8b327642ff41eec301ffa0279d8ad9fbed290b910f17a94b6c1",
+      "footballStepHash": "ed6f9dcd4c883863ff9588af2e05e6f72690aa0170f4a83985d436da3a0c522d",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "61e3b5240580889306e5da379325e120269e126e03e66481cfa22cecabe7da13"
+    },
+    {
+      "seed": 45,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "f3501d894d8d2f7eeb176f4096ee7fd900b9ea00114bc08097b586542b42a444",
+      "footballStepHash": "6464fe1321d8b442523d803e2a57161074e9e112e99d568afd226dc23de2312e",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "ac117abebf5fd785518710676b54eb095ad884a91bd05e5c835b3861375516cf"
+    },
+    {
+      "seed": 46,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "51cbc69c0f36aac513c93f2900555e025194506dc01ac712c46e25af826ea146",
+      "footballStepHash": "ff46984a9cc93b48b6f86604fd44a729f8ad288e9325502c7c889a158571de8a",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "fb86115e74a992ce10608df1d97a6a95e36af6e600a6710b443a4d8e0f333b66"
+    },
+    {
+      "seed": 47,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "123e2feb404a51a0a22570ab56f1fb864bff287bd7f960fd0384d4b203a6da1b",
+      "footballStepHash": "7a28a602c5d3550c869bb0b7e8e8aa232f6fa9c715d239d2aa9cdc11e97dd1ce",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "63484b60a59c0475eb2d55dd4263998583d4d3a396075967e96f09a124f4d458"
+    },
+    {
+      "seed": 48,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "ecc2e7151181e75cea2bc4bb3b544fe3a1444d26ed65660d4e4659fe33b31419",
+      "footballStepHash": "6287fcbf02b08fa2da5e860c746fcda841f8586881613258df18898cd4063cac",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "d147c3b7b6fb4afef10c0bbd2f2eae0412c3f8969ebda6b5a7535f0ad25fa4f3"
+    },
+    {
+      "seed": 49,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "59cc8cdfa0f59ae2bbee364ab0f6da674685c8861f58eeef87804fc77ad3a2c9",
+      "footballStepHash": "ae9e0cfb926b8ecea493c0df16a6ed383e256087bd620c8d750cfeaf62625190",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "31882f0545256cc63b3ac08664c424dfc1a48790355747e4a158edb76578eb24"
+    },
+    {
+      "seed": 50,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "ddbbd4391fc48132b7df917ab719135cf486e7e117a239a4f29f391d3490e4ad",
+      "footballStepHash": "c11e92787a1789d7ec340f8b46fa78b08e8e15d84e4adc5ec1a8576023fecd48",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "723b900fd20e72058e6eadcc76bb6505294db39e966fc089b990960e4311f590"
+    },
+    {
+      "seed": 51,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "7786c35701e1c1e908c0542ab0c28f05757ce19083e11b33041e254a404a32f3",
+      "footballStepHash": "4b6c56834f6a97d6cf37a6f2e2bd06a11534ed02afd53b6ab6c8207ad99bc530",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "8076dd1d68ef718e81beb3191ca0ea3db81e10f421cd5793c7391f9c4f8943a9"
+    },
+    {
+      "seed": 52,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "4ad2e9b29f9ad5fbc9039c07690d7abe17bf676574aacaf90f877a8707f2fca0",
+      "footballStepHash": "cd3fa619f03ac900f23d610dbc0f15690d62238ce937c9b2ee80c281d56ff7c2",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "6763fe8d49364dfaf59c4b57636a85f84ef8e6fe8b20f5ecfdcb7a7405449ba2"
+    },
+    {
+      "seed": 53,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "058d62358d64130de9e782fc426770ffe12f0f7d7834bdfcede6fdc82deaf008",
+      "footballStepHash": "276d06f05aef72d4e24708d9c41b30f3106d94345f8f20e92a41aa52787c4117",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "caaa0eff782bd8e3e431a72e2b0b623638547bcae8cdec02eeec8b401503f823"
+    },
+    {
+      "seed": 54,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "025e08f64cd39bd4354ef37a604b07fa3874789d5d7dde7fd999fb347cda1cab",
+      "footballStepHash": "fca9ed036b46a826f5efbea0986957ce6730d3e7406c63014905c491704e3927",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "ffd72ff9dd24a6aac8ca9b6176243390aaa81fefeec9ea1a6f0312bed95347e9"
+    },
+    {
+      "seed": 55,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "97067991d834020ef185d124796c77e4787678a51eaf63306b5ca7c943a543fc",
+      "footballStepHash": "82a6be02b5eb9e9c8faffcb14c7cb2f03c0ee38056752c243449e8a7b3483b12",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "fa5dd493e361a1ed068340d2eedbe221fa4d56e9e398da47976380eef4778722"
+    },
+    {
+      "seed": 56,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "63a1b3da4747eb30f667b812145b665c9d9a2cc14b8f47d040ed7ec87a521ac9",
+      "footballStepHash": "8ec54c4582e84c45bde7484909071479018e3e73675997636a6c8de9eb5d5ad7",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "7a6a5d90755a46f61ff3c6d879aae89380890167812ba2a7bbe44e7daaa5a505"
+    },
+    {
+      "seed": 57,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "7179d555d29481ca2cb6f7a4f29c4b8131ae98504673a4400a1a0bd725fef8e2",
+      "footballStepHash": "ce903f8297635da79a7545b20b3e8d71799c281a33079b3c41f453f404662111",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "d2ee496e3b0b0c9ad7e6dae5853a889875dd15689d458076bab92e6cdb98751b"
+    },
+    {
+      "seed": 58,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "5838b0eef9b0b5096b08241fff362c756e55d5e437f4b5f8e106fb4acd97f3cb",
+      "footballStepHash": "4327c3bc87d88f7b3ee30837f22b7d9888ba2e1f5d12f2963438d1221268d38d",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "1d16352a60fc213e74185151abb0c634493ff3f8b8816f89e00972164135895e"
+    },
+    {
+      "seed": 59,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "84d72c3eaebc208eec58829a90d37891d2b453ab83b6c7be43acead0a89652d4",
+      "footballStepHash": "51fbd05c7c10f233a8dfdbc3ab923c041c6983526cb144abd226945427b1a7c0",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "3b61b036ce7df1afe18e119ba576b538624cc7ba12959ffe0c4b51d979a1f6be"
+    },
+    {
+      "seed": 60,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "50b7dc3abf1339878bdc8d929a0bab6cf9f8618a09626e6fb0d33302adb3b311",
+      "footballStepHash": "8afca398aa0d86ad266665a083d4ccb063f679ac7c6adddbd90c08a786fef032",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "00db15b9c5f016c54ed116ccb48ce24d528ed750e24334081055fadc406db059"
+    },
+    {
+      "seed": 61,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "8217cf1360357175975c95e75d7c77eb810b45226b0a7f71665f6905b90b83d3",
+      "footballStepHash": "06c793c13ad760f1e14a53c6432ca8b16a8466bfbac2669e57c98a98dbc0eabe",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "a9ea072808c42205f4881046b628725320ffe55338fc1dd9f8d9c36a8b69356e"
+    },
+    {
+      "seed": 62,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "c1bdf0cfaa5d4c55c250609109ad36cdd967d40a71cbadb981d61c5551abbfaf",
+      "footballStepHash": "5bf94c4fd344761e300145cd44a6798f0acd35a99c7e5b6f95926e852a0fd13c",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "e1f055dc9991f3a5f8d10aa6c4d093292200b7a2e4e3c8caee82f7c25fc46eeb"
+    },
+    {
+      "seed": 63,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "868b8f01712a7614e2f3a28e6765f597370eefd766fbcff9c40f74f18929e710",
+      "footballStepHash": "ca70d3e166aaeeadb7330e2261c61924e00c1cb21c4d5559825ad6759744cbe2",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "fdd894443538ca508a2bed5d8726225c74ea154dd4b0fe43700c6264a3051522"
+    },
+    {
+      "seed": 64,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "bcd1b760e444e910dc62b540280be7ffe93408db49b50c9cbadde54d9beaba45",
+      "footballStepHash": "0370a9f9bfe332950b02c191bdbbe8c1fecce1bbec768913fa81e5a4cd896fb0",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "0d0166d16e7be8fcab8c20ef92e65e22b33cb555bd19d1032a4422f906ed248a"
+    },
+    {
+      "seed": 65,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "185089174a7fb73b152d9094828e50538215a48517bdba4895b39eb722d20983",
+      "footballStepHash": "5d3b8033e0bbd770955533fa3e0bc075b49462879b50b80a11c245283c334f22",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "ffe6852e3e8566cc46b73c903c0a28500553f5f5c6e69827777aecb4fcdfa31f"
+    },
+    {
+      "seed": 66,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "3f64b1f842903a1788f94d5a298edba134313f1454eb263b4f3a05b8d2e635e4",
+      "footballStepHash": "7ee223d6fd629e1292939e34e5b24c41ab0a86123c6e751b0db8f7f426813b63",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "c61b4c5e16aa90545661c1b3a73954d45a355c893f55b1dce102350d9896814f"
+    },
+    {
+      "seed": 67,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "7f508a47866d834feacda6fb6fee5e7a696bd6bd933aae8dfe3b3348e9454eb3",
+      "footballStepHash": "498505132268315c33258f8d3790f928abf7b3527e311ee7bb6a750b3e2b207f",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "564fec9e87920cf2a1d4dfc5bc4c7f311ca3cdec27332cb17120a39f056f88ae"
+    },
+    {
+      "seed": 68,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "c53a4570834f77e5203481644b889e9587137a553792c22dc646f6d29be67e2d",
+      "footballStepHash": "4f3e3c8a732375f06dd56303a15b391d5341ee70c8731a3752a2ca8f5447a79a",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "781609cca4079b1ceec3a377dddc8634d6d496755c82b366ed4f0eb6f408557c"
+    },
+    {
+      "seed": 69,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "e6146027130185da5461906ddf84f6d3256f5a221f1b31f4fbb5acddec6fc636",
+      "footballStepHash": "e832f1eb8f5a3d444036cbf117d1203f6aa83912054350e36062ee8e06146353",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "f3ca3686e3a9494943fe97db9cb6de83115ee961ca088d8e4fd9fc3f26e2af86"
+    },
+    {
+      "seed": 70,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "c094328ee2e814c12349c094d01d33f14e85f5fb90cdb0401a43b278c4583000",
+      "footballStepHash": "8d706c1fd56a2174f3d8fe4e0ba3ef68ada1e4700147685876102d4ac34070fa",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "4c068ef6364961898e3bc4907073dfa3a56d6c5581ec97f5af1cd32206b5fe3d"
+    },
+    {
+      "seed": 71,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "43ccbb888638cfb7cd0b908d3e9b7c25c3233a3e5eb0c365af32bcfd7526e6b2",
+      "footballStepHash": "8422b8c63d354ce54ef2a09380a89d7de98233f2a54a5cf15313cb9c2e818612",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "407f478b0a6db2b99b6d021b18a2d2c73d1ad708c4c55e5875bf578204d226a6"
+    },
+    {
+      "seed": 72,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "e2e3f8ff79c8c5fdf32a1dcacf4225a35a55a0e4f9476cb1fa0035a7d18c088c",
+      "footballStepHash": "401df8106a37922a7b8fe393f24f6d174332f3ffcc1bbba3afcdb9bb504587b0",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "71b1c7d6b636c8dcc0ee207adf142a8cfe7c91dd71a2df9816976976960e381d"
+    },
+    {
+      "seed": 73,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "6769e2848bdbda6c94dcd37fefb0a38c481c913a1ff737650648e7ed1d897453",
+      "footballStepHash": "798ace66346fafcd9f7f9328c503c3879155e4b4f926c4ba379b7465472032d2",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "6271256ba71633fec1c5aeb0a027e83d92e6c03c2c4bf4b9f3afa87484089097"
+    },
+    {
+      "seed": 74,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "c6f43698f74d89996dfda29465c721cbde30aece732bcefb15aed90b0e9c42d4",
+      "footballStepHash": "8471c950c7c9ffccc6ca5ef3bb823e63765c4d895b73a5e31afb01dc8dfa8b65",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "73cf8688309c6561024552a3637a0748a9fb2456944583f5709e8fd09c64e22d"
+    },
+    {
+      "seed": 75,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "88902af4117dbb6a2c94607547f03adb306652fce8d956cf311fd5411a29a950",
+      "footballStepHash": "90d67404506cc4ddf471fc6f1d17ba9975b197b88450eda4d53c1a9f25723ef2",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "75e85739d60f6ed211e070b55dbd80258c22e4c83e7571c16b7cced4adcbe5a3"
+    },
+    {
+      "seed": 76,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "f3a00d63e6887a908babbc9a79f13da51021a4d6b0f68a5de6e05b7aa5923df4",
+      "footballStepHash": "0660bb1d92d329036d6a3205ff4275ec1c025348c699fbf0a80914632f35ba29",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "b2c79199a18afe0b645fe7fdfd803a0850587c6054a518ae198d742d10adadfc"
+    },
+    {
+      "seed": 77,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "36e4b13560622c3460bad3bdc35d8fa5a8d8109ff308f8dc3714f636c6fdd246",
+      "footballStepHash": "73c3b7125f7123a346ef4da9c6424ad84a6c790930ec2a525fce664361325cd6",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "2285a528a747dc27c319e76621039d73f11a826d185748b6868022c3f68284bd"
+    },
+    {
+      "seed": 78,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "21015b78e31ad2f54fd932bfd0aee7ef6ba1f322bbedaa0053154d85bf58c734",
+      "footballStepHash": "d5f583545e8c02c51a034de78959ed91a74ea658096679cd7d437b937408eedb",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "247e15de2fc818cb4296a1831910f654d14a74ddc518fbe1c8394ddfa32a5933"
+    },
+    {
+      "seed": 79,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "f8167ab91e882024dff22ff21c592cdc16c4fb868fd1b73d21770dbbd625dfe0",
+      "footballStepHash": "259e2604c7b3313d876491be626df637400d168c8e8b87bfb7d31f641b93ae18",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "aee0199f6c49aa928e1d76a754d9ab38811c00a56014aceeb914f6f3eda2543a"
+    },
+    {
+      "seed": 80,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "cfaf661f8f947735a9e74dc5f5586717ef1fc72e2857aece7c9ce2cd19a98d4f",
+      "footballStepHash": "5cd24322611eb94ec6cc3eaefde9d2a356b797355fae2e05bbf0e970b8f2666e",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "e8f1ad61eb2b99ab762a0fc189dd30f1b251d3bc6a860a8d87781b6ada2b5b86"
+    },
+    {
+      "seed": 81,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "89718cc5610aef739a2d0f999ee17deb9a8ca8a1d7b1e6a96f03d8ea73413441",
+      "footballStepHash": "161af6d7122e38ac0bcb2a239b4ddf1a92cdb44b2694c55481f765142435b8bc",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "c9760b51018ba1c229243828027e5143494ac537f2ec13a4d41fc66a534a7a0c"
+    },
+    {
+      "seed": 82,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "18449859d075aba4f98ef173d60ea59e9ebbbe5b40e2f03ec7ed18698b4c8b4b",
+      "footballStepHash": "a78166a8ca102a805797c1784f9f78a31869f7c8ecbe6272d8e03234d1968ac2",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "6788c112c04c019bfe7c43ef6cfef9dc2c804cede7012f170f68d5ca66e89ea3"
+    },
+    {
+      "seed": 83,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "76686328e45e55c3ab50cf75415fd8e23fba0f83737afab9bb7c387a583a27c2",
+      "footballStepHash": "69691cb6e3eb4a7292e8bff731a19cb9fa592ec0067db34316c0763e9d68cb48",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "a680979348d5fafc40cb6e29d868b106d2a5d44027b46346fa540b8d63951d6d"
+    },
+    {
+      "seed": 84,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "1e4afc76f0cd1c5e90d791520175bd00aea1304952305054a2953a2070dcb31e",
+      "footballStepHash": "4d3630422cae870cc25096ea7ae4fdf80222ea8cfefc65c5703f508aea162be1",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "6bfb020a2d7dada826159da7340314dfe53ca44340ce566ef840b70bbe3f8743"
+    },
+    {
+      "seed": 85,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "d6471bf0edf256923fe15fb6d82b5abf0e9e665ef68c2219fd1c509531f9d8ed",
+      "footballStepHash": "408d21ff53931a0b8679cfe3a566b1e126ef571967b243e670bd470ab4d35e15",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "97141aff69e04f6577236191a06fc8b855a14a037db3549e9dda995cbce3d524"
+    },
+    {
+      "seed": 86,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "0b9c5051289aac2b77c6dfd835848ba8511841f2e27772afb65760cd120c522e",
+      "footballStepHash": "2ba396568115970b779362105b1dfee520b7d383610287d9851e09528ae6f4cd",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "5022d27b90cb0dd9187514335a833afbd8a234ecd1043c17e679cea8ade0f796"
+    },
+    {
+      "seed": 87,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "52c98f6307a4cdb113b9a545ac4ee7d50fb58bfb8f2a4731567c383e94920943",
+      "footballStepHash": "821c67ecc4d3c922786d60a87b6eb794949fd900160c7130e6f393965c2c111e",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "fed24db89215db79d75720d850ba45a051f811dc2c3627203613f478d3b4609b"
+    },
+    {
+      "seed": 88,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "0d8f594b37ecb9d043a76b9b6aa63f52c148c1684d85cd2b2b7bbf87d1def973",
+      "footballStepHash": "69e36752f21c0b1544a4d14277756a3b95615c9cf96b17bef0cb103d85d229af",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "52f2a775f669c835b2c0dc1d20a4e38a20d253ebf0c446c2e31f7385516f9a04"
+    },
+    {
+      "seed": 89,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "9169421a68cf32ee6c707563adcc924829aa8ba9610539b7983600cb4d9ad6c2",
+      "footballStepHash": "12c608fb0f3f86f72a78b14dd6c2bbd7a2ab43adef7ed8313a55d0c5fe884525",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "09061aae6a1105f8ae882d9666377650ccb2f8d11314c6dd99e3854ffdb4dfcb"
+    },
+    {
+      "seed": 90,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "b1c4c30aa4ccf17640810117526c818306564931db45d8ed89bb145231681f2b",
+      "footballStepHash": "313555302dceb1bca73da10583b38b3e9b175ab4087c06127e5e41af5ce9d358",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "9b4d63e0ecd5b2ddebdfcdcb8a08fef39f5f7a50d328aea68b79d79cbf91719f"
+    },
+    {
+      "seed": 91,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "109289cea127d69f9e3593b5db68b34751e7598fd55426cdafed1026659efbec",
+      "footballStepHash": "04d6acb9dead9f69a0fe5be700931963d8a13b378b153077a2302724a2005ce5",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "8075853f1ffb2fc7c38be2eb3595f7aedc55ed84b8970e9be052b775008281a9"
+    },
+    {
+      "seed": 92,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "5724f5052c4051c7463982d2cae27eab8df115d0c8cc7692169d984f4e09a51d",
+      "footballStepHash": "079017212b84ad7a0562a9a197bfb83989b37b86f0116f2842c01b91bdefd4e4",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "1f90577a676588c5bbeb398412363f994c8d9d30a41023789342f2ca7b49e136"
+    },
+    {
+      "seed": 93,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "5f22764025d26ad49b8f872e935bda30dab219f1697ac0683ee388414f696933",
+      "footballStepHash": "2f90561144fc74c9db6c36780e46bc53382a70f33283a4d4643c25148ddcb9d5",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "90cb0d5c4ef68ad0f48a3d26fa8fb598747d7b83ff922eeca405d24d848a9e7a"
+    },
+    {
+      "seed": 94,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "087feb9ef6a5cbd104d365b871b4e4ab8e33d3f57fe9ebfdfbe53ad9941eddc5",
+      "footballStepHash": "0e0cd9af19295ecbfc3f943f614f1d4ecedebbf75f8154b92878ff69f34891d6",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "6bac01b0613e865b182ab270253f8ab3ec4aeab25729ee838e6061e447ac51ca"
+    },
+    {
+      "seed": 95,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "0e51546affd6adc8ca66afd0ab714d59a852afce8e9842701ae8c2b4af17e117",
+      "footballStepHash": "2e1bff55a5864469fe7651513e285a626aec0dbd65510066f961c0c7e44f0fe9",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "06db320b6aaf2ccff47775a236e8ae95fbde44bcb7b6d0501c7e0d3edb4167b2"
+    },
+    {
+      "seed": 96,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "6570f434f700ea3ccb1041fa2eed852507bd4124d348ee4117f946622f13c3f3",
+      "footballStepHash": "88f18ab07fe8bd54df875c581ce4e564993ccbd654d66b4c6d166aaf098ec214",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "43aa4004b5cd9aa2198ad4269acc9315b75bdc4dd0f625f859d76dd78ff810fc"
+    },
+    {
+      "seed": 97,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "01182eb77db2f7993a4466bcbdb9a24e629d49fc248ec6bae681e8433e5545b4",
+      "footballStepHash": "a4bfd4cb612c3dae227409a31247e011454f1561e372fcf9af5f41fea755b5a5",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "2ea8721d6f53239919e79475be8d38675c1df0b3fa58e5807c3b13257d4ca512"
+    },
+    {
+      "seed": 98,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "6c0159fdddeb41603dfbaa77a1752448cfda09d3ac0593935bc7ba4ebfd58387",
+      "footballStepHash": "92b1cd1131d1b87ceba52a79b00b6f5b5fec4d6aa5ad20e9511ecb4498a8a0f8",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "5e7277e61f166b491aaacb02ad162de0b19b3401c6d0759a025a666cba94dbef"
+    },
+    {
+      "seed": 99,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "ca2059acfb6d2dd61e0e5de65492cda1dd4aa55e12f595250b367995cd71d199",
+      "footballStepHash": "788fd9373155f7698dd1af245b9511a0a3a6d89aed8b69a03589b63f1ec9fe99",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "f1e1103be783aec54a3b170e4a19eb4548ffdf2097a58f428854df47bc2cd0a5"
+    },
+    {
+      "seed": 100,
+      "football": true,
+      "footballFinished": true,
+      "footballHash": "c1bbaeeca7eaa81b7f04e9db57b2bc0f3890b53136702c31ea32e5fa5659800d",
+      "footballStepHash": "5add545bf3eb60a0aa8978ccc2f18ff731e8eb2ccfab34d26a8639e96c7aaf64",
+      "clash": true,
+      "clashFinished": true,
+      "clashHash": "4a617c2ba9fe3414b04e676b014e3362275e08865e20c759274e5d972cc33755"
+    }
+  ]
+}

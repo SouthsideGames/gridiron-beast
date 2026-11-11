@@ -54,6 +54,9 @@ case('the word "import" in a comment or in markup is not an import', lambda r: e
 case('a wildcard in a line comment cannot swallow the following imports',
      lambda r: edit(r, 'src/main.js', lambda t: '// Generated looks live in looks/*.js; this is a line comment.\n' + t),
      True, files_has='src/ui/screens/menu.js')
+case('line-comment markers inside a block cannot hide following imports',
+     lambda r: edit(r, 'src/main.js', lambda t: '/* a note containing // ends here */\n' + t),
+     True, files_has='src/ui/screens/menu.js')
 for ok, name, why in results: print(('ok: ' if ok else 'FAIL: ') + name + (f'\n    {why}' if why else ''))
 bad = [r for r in results if not r[0]]
 print(f'RELEASE FILES CHECK {"PASSED" if not bad else "FAILED"} ({len(results) - len(bad)}/{len(results)})'); sys.exit(1 if bad else 0)

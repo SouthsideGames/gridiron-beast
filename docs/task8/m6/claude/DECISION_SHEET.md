@@ -1,3 +1,5 @@
+> **Superseded status:** the owner authorized adoption and main integration after this report. See [owner adoption](../OWNER_ADOPTION_2026-11-11.md) and [final verification](../FINAL_VERIFICATION.md). Historical evidence and proposals below are preserved. Phone/visual approval and remaining performance limits are still open.
+
 # M6 owner decision sheet (2026-11-11)
 
 Every decision still open in M6, in one place. **Nothing on this sheet is implemented or assumed.** A blank answer means the
