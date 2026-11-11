@@ -26,7 +26,7 @@
 
 | Gate | Measured | Next step |
 | --- | --- | --- |
-| Apex: 90% all-99 by season 15 | Current rules: 0%. Candidate (×2 and 34 offseason) in real club careers: 1.4% football-only, 40.0% mixed, 79.6% maximum (sustained starters 4.2% / 70.8% / 95.7%) | Owner decision 1 |
+| Apex: 90% of sustained starters all-99 by the end of season 15 | Current rules: 0%. Validated candidate (×2 and 42 offseason): 96 of 96 sustained starters; not adopted | Owner approval (decision 1) |
 | Mastery in 3–6 seasons of sustained use | 475 of 2,859 sustained starters; 1,754 never | Owner decisions 3, 4, 5 |
 | Ordinary pancake targets at defaults | 0.861 a game, 51.4% success (targets 0.2–0.6, 30–50%) | Owner decision 2 (qmax 0.10, b 0.30 meets all three) |
 | Ability overhead within 1.25: overlapping fields (A1) | 1.36–1.40 after the pass (was 1.60) | Garbage-collection diagnosis, `GC_DIAGNOSIS.md` |

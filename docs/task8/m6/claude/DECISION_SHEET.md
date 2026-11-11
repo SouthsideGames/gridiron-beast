@@ -11,7 +11,7 @@ adds a rule and needs a ruling before any code.
 
 | # | Decision | My recommendation | Kind |
 | --- | --- | --- | --- |
-| 1 | Apex training rate | Do not adopt ×2 + 34 as it stands; first rule on who the goal covers | New (candidate testing authorized) |
+| 1 | Apex training rate | Adopt ×2 with 42 offseason points (validated; awaiting your approval) | New (validation authorized, adoption not) |
 | 2 | Ordinary pancakes | qmax 0.10, b 0.30 | Authorized |
 | 3 | Football mastery pacing | At most 2 active credits a game | New |
 | 4 | Foresight never fires | Judge the look from the defence's most-called formation | New |
@@ -38,7 +38,8 @@ adds a rule and needs a ruling before any code.
 - **Problem:** he needs 522 trained points to reach all 99s. The rules supply 4 to 13 a season. In the controlled cohort 0 of
   1,000 are all-99 by season 15 on any schedule; the goal is 90%.
 - **Alternatives:**
-  - (a) Activity training ×2 and 34 offseason points, Apex only. **Your preferred candidate, now in validation.**
+  - (a) Activity training ×2 and 34 offseason points, Apex only. Validated first; fails in real careers.
+  - (a2) Activity training ×2 and 42 offseason points, Apex only. **Validated on eight seeds.**
   - (b) 37 offseason points and no multiplier (leaves the §5 sentence true).
   - (c) Keep the rules and change the goal.
 - **Evidence, controlled cohort** (every activity played, no injuries): (a) 90% by season 14 / 13 / 10 for football-only /
@@ -54,12 +55,13 @@ adds a rule and needs a ruling before any code.
 
   AI clubs bench a new Apex (he is the worst player on the roster), so he misses seasons and levels late; 14 of 170 were
   released. Sustained starters fall short by about 1 to 3 points a season.
-- **Recommendation:** do not adopt (a) as it stands. Decide two things:
-  1. **Who the goal covers.** I recommend sustained starters, the specification's "sustained legal participation". No
-     training rate gets every generated Apex there, because some never play.
-  2. **A larger offseason award.** In an indicative four-seed follow-up, ×2 with **42** offseason points put every sustained
-     starter at all 99s by season 15 on all three schedules (all entrants: 93% / 100% / 85%, the last limited by releases);
-     ×2 with 38 gave 88% / 100% / 100% for sustained starters. I would validate 42 on the full eight seeds before any adoption.
+- **Owner ruling (2026-11-11):** the goal is at least 90% of **sustained starters** at all 99s by the end of their fifteenth
+  season (`APEX_GOAL_DEFINITION.md`).
+- **Validation of ×2 with 42 total offseason points** (8 franchises, `APEX_VALIDATION_42.md`): sustained starters 30 of 30,
+  30 of 30 and 36 of 36 (football-only / mixed / maximum); all entrants 71.2% / 91.2% / 86.5%. Nobody finished before season
+  12 on AI clubs. A human owner at maximum participation is not measured; my estimate is about season 9.
+- **Recommendation:** adopt ×2 with 42, after deciding whether a season-9 finish for a human at maximum participation is
+  acceptable, and together with decision 8. **Not adopted until you say so.**
 - **For the player:** an Apex he keeps in the lineup gains ratings about seven times faster than now and can be complete in
   about 14 or 15 seasons instead of never. One he benches still will not get there. Ordinary monsters, Temper and level XP do not change.
 - **Kind:** new. Candidate testing is authorized; adoption is not.
