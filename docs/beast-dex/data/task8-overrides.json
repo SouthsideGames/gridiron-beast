@@ -1,0 +1,457 @@
+{
+  "version": "2026-11-09",
+  "precedence": "Owner-approved Task 8 rulings. Each override replaces the named Beast Dex v18 source section for implementation; the source text is kept in abilities.json as historical evidence and is exposed as `supersededRule` in the generated module. Only approved rulings appear here; open items are listed in docs/task8/APPROVAL_REGISTER.md.",
+  "rulingSources": {
+    "R1": "Owner rulings on Phase 1 items 1-40, 2026-11-06 23:46 (docs/task8/DECISIONS.md)",
+    "N7a": "Owner instruction 2026-11-07 00:13: no universal evasion, no multi-play Stunned, ordinary attacks normally connect",
+    "N7b": "Owner rulings on P1-P10 and additional rulings, 2026-11-07 09:21 (docs/task8/RULINGS_2026-11-07.md)",
+    "N7c": "Owner rulings on B1-B20, 2026-11-07 10:00 (docs/task8/RULINGS_2026-11-07b.md)",
+    "N7d": "Owner rulings on G1-G3, 2026-11-07 10:21 (docs/task8/RULINGS_2026-11-07c.md)",
+    "N7e": "Owner ruling on fractional training display, 2026-11-07 10:32",
+    "N7f": "Owner rulings on club strength, identities and scope, 2026-11-07 12:44 (docs/task8/RULINGS_2026-11-07d.md)",
+    "N7g": "Owner rulings on the Basic encounter XP bonus, encounter companions and Glacivern, 2026-11-07 15:08 (docs/task8/RULINGS_2026-11-07e.md)",
+    "N9d": "Owner approval of all nine follow-up recommendations, 2026-11-09; docs/task8/APPROVAL_REGISTER.md N9d"
+  },
+  "abilities": {
+    "FIR-01-C": {
+      "ruling": "N7b P1",
+      "sections": {
+        "Progression / notes": "Counterburst deals 60 / 70 / 80% of normal attack damage by Flaroo / Blazynx / Infernox, plus 0 / 5 / 10 / 15 percentage points by mastery. Normal type, damage-reduction and shield mitigation applies. No status or splash."
+      },
+      "values": {
+        "counterburstPctByStage": [
+          60,
+          70,
+          80
+        ],
+        "masteryBonusPts": [
+          0,
+          5,
+          10,
+          15
+        ]
+      }
+    },
+    "FIR-01-F": {
+      "ruling": "N7b P2; spec §9 (encounter rule)",
+      "sections": {
+        "Trigger / eligibility": "Completed official rushing attempts only. Three qualifying charges ignite for a future rushing carry. No receiving, returns or two-point charge/activation. A rushing attempt qualifies when its net gain exceeds the form threshold: Flaroo over 7 yards, Blazynx over 4 yards, Infernox any positive gain (whole yards: at least 8 / 5 / 1).",
+        "Core resolution": "First eligible tackle begins one tackle encounter. Snapshot all defenders already within tackling reach, break their attempts, spend ignition; later arrivals can tackle normally. No one-second window. Consuming carry earns no new charge. Normal strip/fumble rules remain. Do not copy old Eruption's defender stun."
+      },
+      "values": {
+        "minWholeYardsByStage": [
+          8,
+          5,
+          1
+        ]
+      }
+    },
+    "LIG-01-F": {
+      "ruling": "N7b P3, P4",
+      "sections": {
+        "Lifetime / persistence": "Created field lasts 1 / 1 / 2 / 2 participating offensive scrimmage plays by mastery, counting its creation play, for both forms. Created field clears at halftime. Pending creation carries through halftime under its approved carryover rule.",
+        "Progression / notes": "Approved Light field exposure cadence finalized in closeout10. Lifetime by mastery as above; placement and creator cooldown as approved."
+      },
+      "values": {
+        "lifetimePlaysByMastery": [
+          1,
+          1,
+          2,
+          2
+        ]
+      }
+    },
+    "LIG-02-F": {
+      "ruling": "N7b P7",
+      "sections": {
+        "Progression / notes": "Quickened strength +0 / +3 / +6 / +9 percentage points by mastery. Kickoffs are live plays using existing movement, blocking and tackling, so the Quickened coverage teammate's speed and acceleration take real effect; actual participants and return events are credited. Punts, field goals and extra points keep their approved scope."
+      }
+    },
+    "DAR-01-C": {
+      "ruling": "N7b P10",
+      "sections": {
+        "Recharge / frequency": "One counter per Clash, committed at eligible miss. While the counter is unused, each enemy normal attack against the active, able Umbrikit / Obscurat has an explicit 15% / 20% chance to miss entirely (one roll for the whole attack); explicitly undodgeable attacks bypass it without a roll. The dodge ends once the counter is used. No universal evasion is implied."
+      },
+      "values": {
+        "dodgePctByStage": [
+          15,
+          20
+        ]
+      }
+    },
+    "PSY-05-C": {
+      "ruling": "N7b P10",
+      "sections": {
+        "Trigger / eligibility": "Direct enemy normal attack missing source completely earns one trick. Every hit of multihit attack must miss. Reactions cannot earn trick. While no trick is stored, each enemy normal attack against the active Enigmane has an explicit 15% chance to strike an afterimage and miss entirely (one roll for the whole attack); explicitly undodgeable attacks bypass it without a roll."
+      },
+      "values": {
+        "afterimageMissPct": 15
+      }
+    },
+    "LIG-06-C": {
+      "sections": {
+        "Core resolution": "Deal 145 / 160 / 175 / 190% normal damage by mastery. Standard evasion, shield and damage reduction apply. Suppress only attack retaliation caused by this strike; passive damage auras and attached status responses remain. This replaces the normal attack and receives no ordinary-attack archetype perk."
+      },
+      "ruling": "N9d",
+      "mechanic": "Deal 145 / 160 / 175 / 190% normal damage by mastery. Standard evasion, shield and damage reduction apply. Suppress only attack retaliation caused by this strike; passive damage auras and attached status responses remain. This replaces the normal attack and receives no ordinary-attack archetype perk."
+    },
+    "LIG-03-C": {
+      "sections": {
+        "Core resolution": "Cleanse the selected removable harmful status first, then heal 8 / 10 / 12 / 14% maximum HP by mastery. Recharge is five owner normal turns. Preserve the approved target, status gate, once-use and exception rules."
+      },
+      "ruling": "N9d",
+      "mechanic": "Cleanse the selected removable harmful status first, then heal 8 / 10 / 12 / 14% maximum HP by mastery. Recharge is five owner normal turns. Preserve the approved target, status gate, once-use and exception rules."
+    },
+    "MET-01-C": {
+      "sections": {
+        "Core resolution": "After every third performed normal attack, attempt Empowered +10 / +15% outgoing damage by Ferrcub / Forgursa for 1 / 2 / 2 / 3 owner normal turns by mastery. Triggering attack gains no immediate bonus. The ordinary single-status gate and equal/stronger application rules apply; reset the count even if blocked."
+      },
+      "ruling": "N9d",
+      "mechanic": "After every third performed normal attack, attempt Empowered +10 / +15% outgoing damage by Ferrcub / Forgursa for 1 / 2 / 2 / 3 owner normal turns by mastery. Triggering attack gains no immediate bonus. The ordinary single-status gate and equal/stronger application rules apply; reset the count even if blocked."
+    },
+    "MET-06-C": {
+      "sections": {
+        "Core resolution": "Attempt Guarded 50% for two owner normal turns. While that own episode is active, store HP damage it prevents, capped at 10 / 15 / 20 / 25% maximum HP by mastery. Heal the stored amount only on natural expiry. Removed/replaced episodes pay nothing; no shield pool or counterattack."
+      },
+      "ruling": "N9d",
+      "mechanic": "Attempt Guarded 50% for two owner normal turns. While that own episode is active, store HP damage it prevents, capped at 10 / 15 / 20 / 25% maximum HP by mastery. Heal the stored amount only on natural expiry. Removed/replaced episodes pay nothing; no shield pool or counterattack."
+    },
+    "PSY-03-F": {
+      "sections": {
+        "Targets / placement": "N9d: before both calls, choose and save one opposing LB within 3 yards of LOS in the initial visible formation. The initial look is locked once per snap. At snap validate that same monster is participating and actually blitzes; no substitute or reload/audible/redraw reroll. No future call alignment is read. Preserve the fixed 50% Confused attempt, 20% Awareness reduction and approved cooldown."
+      },
+      "ruling": "N9d"
+    },
+    "LIG-04-F": {
+      "sections": {
+        "Targets / placement": "N9d: at the pre-choice boundary, with the source in the initial displayed defensive personnel, select the nearest existing enemy zone by exposed-footprint nearest edge, measured from the fixed point 12 yards beyond the upcoming LOS at ball lateral. Preserve creation-order ties and exact base/overlap removal. Pending fields and fields created at that same snap cannot be removed; no target keeps the bar. Save once per snap."
+      },
+      "ruling": "N9d"
+    },
+    "EAR-05-C": {
+      "sections": {
+        "Exceptions / counterplay": "N9d: ordinary attacks, normal-action specials and their secondary/commanded/assist hits, delayed impacts, DOT and transferred damage remain unaffected. Intercept eligible attack-triggered retaliation, including Molten Brand eruption. Healing-triggered Rubble Reprisal is unaffected. Preserve explicit Twin Thunder, Victory Surge, Arc Rebound and Riptide Pursuit inclusions and the active/able/once-use restrictions."
+      },
+      "ruling": "N9d"
+    },
+    "FIR-03-C": {
+      "sections": {
+        "Lifetime / persistence": "N9d: preserve the approved launch, charge and delayed-impact lifetime. Target the then-active position when impact starts. Due impacts resolve before the exchange-30 cap check. Not-yet-due impacts are discarded at the cap, without extending the battle. Preserve the named post-KO exception."
+      },
+      "ruling": "N9d"
+    },
+    "FIR-06-C": {
+      "sections": {
+        "Lifetime / persistence": "N9d: preserve the approved launch, charge and delayed-impact lifetime. Target the then-active position when impact starts. Due impacts resolve before the exchange-30 cap check. Not-yet-due impacts are discarded at the cap, without extending the battle. Preserve the named post-KO exception."
+      },
+      "ruling": "N9d"
+    }
+  },
+  "rules": [
+    {
+      "id": "mastery-only-values",
+      "ruling": "N7b P4",
+      "rule": "Ability values given only by mastery apply equally across forms unless an explicit approved form exception exists."
+    },
+    {
+      "id": "ordinary-attacks-connect",
+      "ruling": "N7a; N7b P10",
+      "rule": "Ordinary attacks connect. Misses arise only from explicit effects (Heat Mirage decoy, Snowbank Shot launch accuracy, Shadow Pounce dodge, Mind Game afterimage). Contract phrases such as 'normal evasion', 'normal dodge' or 'standard evasion' mean 'any explicit miss effect that applies'. There is no universal evasion system."
+    },
+    {
+      "id": "clash-rotation",
+      "ruling": "R1 item 26; N7b P8",
+      "rule": "Ordinary bench attacks are removed; explicit reserve abilities remain. Voluntary rotation occurs after both normal turns and before delayed impacts, at most once per side every four exchanges. The entrant acts next exchange; on its first normal turn after a voluntary rotation its damage multipliers, heals, shields and status-application chances are halved. A Stunned skip consumes that penalty. Entry effects, reactions and defensive effects are unchanged; nonnumeric effects remain usable. Knockout replacements and forced rotations carry no penalty. Explicit ability exceptions are preserved."
+    },
+    {
+      "id": "live-kickoffs",
+      "ruling": "N7b P7",
+      "rule": "Kickoffs are live plays using existing movement, blocking and tackling; actual participants and return events are credited. Punts, field goals and extra points keep their approved formula scope."
+    },
+    {
+      "id": "pancake-structure",
+      "ruling": "R1 item 7; N7b P5; N7c B1",
+      "rule": "One pancake attempt per OL per play, eligible only from an established block advantage. Success applies Knocked Down through the shared gate for the rest of the play. On failure Awareness decides recovery: a recovered failure keeps the block; an unrecovered failure ends the engagement and attempts Stumbled through the shared gate. One opportunity roll per OL per play at its first engagement; positive advantage required.",
+      "values": {
+        "a0": 0.0,
+        "w": 0.15,
+        "qmax": 0.1,
+        "b": 0.3,
+        "s": 1.5,
+        "lo": 0.05,
+        "hi": 0.8,
+        "c": 0.6,
+        "k": 0.4,
+        "rmax": 0.95,
+        "bounds": {
+          "a0": [
+            0,
+            0.05
+          ],
+          "w": [
+            0.1,
+            0.2
+          ],
+          "qmax": [
+            0.1,
+            0.2
+          ],
+          "b": [
+            0.25,
+            0.45
+          ],
+          "s": [
+            1.0,
+            2.0
+          ],
+          "lo": [
+            0.02,
+            0.1
+          ],
+          "hi": [
+            0.7,
+            0.9
+          ],
+          "c": [
+            0.55,
+            0.7
+          ],
+          "k": [
+            0.3,
+            0.45
+          ],
+          "rmax": [
+            0.9,
+            0.97
+          ]
+        }
+      }
+    },
+    {
+      "id": "football-stunned-scope",
+      "ruling": "R1 item 16; N7b; N7c B18",
+      "rule": "Football-applied Stunned: only currently approved rest-of-play sources. Stunned carried between Clash and football keeps its remaining duration 1:1; in football each remaining unit disables one participating football play. No other multi-play football Stunned source is approved."
+    },
+    {
+      "id": "te-contested-catching",
+      "ruling": "R1 item 6; N7b",
+      "rule": "TE contested catching uses the approved Agility-based role; TE Strength adds nothing to contested catches. WR Strength remains the approved contested-catch contributor."
+    },
+    {
+      "id": "ai-basic-lineup",
+      "ruling": "R1 item 39; N7b",
+      "rule": "AI may start a Basic when it is the best eligible individual; no rarity penalty in lineup choice."
+    },
+    {
+      "id": "collection-achievements",
+      "ruling": "R1 item 40; N7b",
+      "rule": "Separate collection achievements for the original 72 families, the 120 Basic families, and all 192 families. Evolutions add no family count."
+    },
+    {
+      "id": "cap-diagnostics",
+      "ruling": "N7b P9; N7c B4; N7d",
+      "rule": "Simultaneous-effect limits are diagnostics only. Never cancel, delay or delete a legitimate effect because a limit is exceeded; log a diagnostic and fail the test suite.",
+      "values": {
+        "fieldRectangles": 44,
+        "objectsPerScrimmagePlay": 13,
+        "collisionObjectsPerScrimmagePlay": 9,
+        "objectsPerKickoff": 0,
+        "objectsBetweenPlays": 0,
+        "livingTerrainClumpsPerOverlap": 4,
+        "mindstormEchoesPerPlay": 15,
+        "aurasPerPlay": 10,
+        "clashDelayedImpactsPerSide": 2,
+        "clashTwinThunderConstructsPerBattle": 2,
+        "clashDawnSongSchedulesPerSide": "lineupSize"
+      }
+    },
+    {
+      "id": "art-and-reviewers",
+      "ruling": "N7b",
+      "rule": "Art refinement remains paused. Both runtime-backed ability reviewers (football and Beast Clash) remain required."
+    },
+    {
+      "id": "shed-formula",
+      "ruling": "R1 item 6; N7c B2",
+      "rule": "Ordinary block shed: DL, CB, S 0.5 Agility + 0.3 Strength + 0.2 Tackling; LB 0.5 Strength + 0.3 Agility + 0.2 Tackling. Initial values; report ordinary shed effects separately from pancakes.",
+      "values": {
+        "DL": {
+          "agility": 0.5,
+          "strength": 0.3,
+          "tackling": 0.2
+        },
+        "CB": {
+          "agility": 0.5,
+          "strength": 0.3,
+          "tackling": 0.2
+        },
+        "S": {
+          "agility": 0.5,
+          "strength": 0.3,
+          "tackling": 0.2
+        },
+        "LB": {
+          "strength": 0.5,
+          "agility": 0.3,
+          "tackling": 0.2
+        }
+      }
+    },
+    {
+      "id": "fumble-shielded-order",
+      "ruling": "N7c B3",
+      "rule": "Determine whether a fumble would occur first; if it would, Shielded prevents it and consumes its whole episode."
+    },
+    {
+      "id": "clash-immediate-ko",
+      "ruling": "N7c B3",
+      "rule": "A monster at 0 HP on any damage path is knocked out immediately; its pending reactions, constructs, remaining hits and later turn are cancelled except contract-verified post-KO exceptions (Falling Star, Faultline, Molten Brand lethal eruption, Shared Burden current split, Mountain Shelter, Astral Strike continuation, Cinder Clamp release, Second Spring). The replacement enters right after the current hit finishes resolving."
+    },
+    {
+      "id": "special-teams-units",
+      "ruling": "P7; N7c B5",
+      "rule": "Kickoff kicking and return units and punt/FG/XP units come from depth lists. Formula-resolved plays grant participation (status countdown, stamina, participation rewards) without fabricated performance events."
+    },
+    {
+      "id": "level-xp-curve",
+      "ruling": "N7c B6",
+      "rule": "75 XP per level to level 50 (3,675 total) as the starting curve; the approved multiplier is tuned to the development benchmarks.",
+      "values": {
+        "xpPerLevel": 75,
+        "maxLevel": 50
+      }
+    },
+    {
+      "id": "veteran-history",
+      "ruling": "N7c B7",
+      "rule": "Generated veterans start at level 1 and simulate prior seasons with the approved model; accept when median within 1 level and 2 rating points and quartiles within 2 levels of played monsters."
+    },
+    {
+      "id": "telemetry",
+      "ruling": "N7c B8",
+      "rule": "Pressure only for attributable disruption. Viable window: responsible-defender separation >= 1.0 yd at a throwable tick AND no defender able to reach the ball-flight path first for an interception or breakup. Measurements only."
+    },
+    {
+      "id": "apex-contract",
+      "ruling": "N7c B9",
+      "rule": "Apex ask = salary(current OVR) + 0.5 x (salary(99) - salary(current OVR)); revalidate after economy recalibration."
+    },
+    {
+      "id": "afflicted-drain",
+      "ruling": "N7c B10",
+      "rule": "Stamina drain per counted play while Afflicted = permanent Durability / max(1, effective Durability), exact fraction; exhaustion begins immediately at zero."
+    },
+    {
+      "id": "clash-save",
+      "ruling": "N7c B11",
+      "rule": "Save at exchange boundaries with committed decisions, RNG state and reward idempotency."
+    },
+    {
+      "id": "test-acceptance",
+      "ruling": "N7c B12",
+      "rule": "Contract-based cases; freeze tolerance and sample size per probability before testing; guaranteed behaviour must succeed in every case."
+    },
+    {
+      "id": "retirements",
+      "ruling": "N7c B13-B15",
+      "rule": "Retire the ten legacy common traits, Nature side effects (preserve legitimate Ambition behaviour) and the fixed legacy cornerstone list; keep no-K cornerstone eligibility."
+    },
+    {
+      "id": "ai-information",
+      "ruling": "N7c B16",
+      "rule": "AI scouts under the player rules; close the recruit-salary and assistant-potential leaks."
+    },
+    {
+      "id": "basic-shares",
+      "ruling": "N7c B17",
+      "rule": "Basic share per generation event: rosters 25%, scouting 25%, encounters 30%, drafts 35%, FA arrivals 40%; never forces composition of existing rosters or markets.",
+      "values": {
+        "rosters": 0.25,
+        "scouting": 0.25,
+        "encounters": 0.3,
+        "draft": 0.35,
+        "faArrivals": 0.4
+      }
+    },
+    {
+      "id": "legendary-kickers",
+      "ruling": "N7c B19",
+      "rule": "All legendary kickers count toward the offensive legendary limit."
+    },
+    {
+      "id": "kickoff-classification",
+      "ruling": "N7c B20",
+      "rule": "Kickoff catches are not receptions; kickoffs are not defensive snaps. Per-ability field clocks and creation eligibility are preserved; Impact Pyre creates at its creator next eligible defensive snap; a cooldown never cancels an already-earned queued field."
+    },
+    {
+      "id": "field-clock-any-scrimmage",
+      "ruling": "N7d G1",
+      "abilities": [
+        "FIR-02-F",
+        "FIR-06-F",
+        "WAT-06-F"
+      ],
+      "rule": "Lifetime counts every completed scrimmage play by either team, including incompletions; special-teams plays do not count; explicit creation-play and halftime exceptions preserved."
+    },
+    {
+      "id": "field-clock-creator-participation",
+      "ruling": "N7d G2",
+      "abilities": [
+        "WIN-01-F",
+        "LIG-01-F"
+      ],
+      "rule": "Lifetime decrements only when the creator participates in an offensive scrimmage play; the field remains active while the countdown is paused."
+    },
+    {
+      "id": "field-creation-on-field",
+      "ruling": "N7d G3",
+      "abilities": [
+        "FIR-06-F",
+        "NAT-01-F",
+        "NAT-05-F",
+        "LIG-01-F",
+        "MET-05-F",
+        "DAR-01-F",
+        "WIN-04-F",
+        "PSY-01-F"
+      ],
+      "offFieldAllowed": [
+        "ICE-01-F",
+        "PSY-04-F",
+        "MET-03-F",
+        "WAT-06-F",
+        "WAT-01-F"
+      ],
+      "rule": "Wait for the creator next eligible on-field snap before spawning; the listed off-field abilities keep their explicit permissions."
+    },
+    {
+      "id": "fractional-display",
+      "ruling": "N7e",
+      "rule": "Show banked points floored to whole numbers and attribute bars as whole percentages; enable the exact-cost purchase when the exact banked balance covers the exact remaining cost; show that cost to two decimals rounded up. Display rounding never changes balances, deducts extra points or determines affordability. Preserve exact fractions through saves and evolution."
+    },
+    {
+      "id": "basic-encounter-xp-bonus",
+      "ruling": "N7g",
+      "rule": "Winning a scouting encounter whose recruitable target is a Basic awards extra level XP to eligible participants under normal participation rules; recruiting not required; Basic companions alone do not activate it; no bonus to training progress or ability mastery; once per encounter through the reward ledger; shown in the encounter preview and reward breakdown; a shared encounter rule, not an ability.",
+      "values": {
+        "levelXpBonusPct": 25
+      }
+    },
+    {
+      "id": "encounter-companion-basics",
+      "ruling": "N7g",
+      "rule": "The 30% encounter Basic share applies to encounter companions; strength matching is best-effort within legal development limits; easier encounters are acceptable."
+    },
+    {
+      "id": "glacivern-no-pilot-play",
+      "ruling": "N7g",
+      "rule": "Glacivern keeps K, Second Chance and Deep Winter; the Avalanche pilot play and its unlock references are retired and not replaced; not every legendary needs an unlocked play."
+    },
+    {
+      "id": "n9d-followup",
+      "ruling": "N9d",
+      "rule": "The nine-item approval in SPECIFICATION_BASELINE.md section 27 governs Foresight, Prism Break, mastery precedence, Stone Divide, pending impacts, Tank bruise, long-battle defaults, Bloom Break goal-line placement and opponent inspect."
+    }
+  ],
+  "openGaps": []
+}

@@ -42,7 +42,7 @@ export function legendCensus(f) {
  * Give a save its Task 7 block (idempotent). Needs the league registry: a franchise still on the generated rosters (a registry
  * migration that was rolled back) keeps the old free agency until it has one. Returns { ok, created, repairs }.
  */
-export function ensureFreeAgency(f, { fresh = false, schema = 9 } = {}) {
+export function ensureFreeAgency(f, { fresh = false, schema = 10 } = {}) { // schema 10: Task 8 (franchise.SCHEMA_VERSION; not imported, to keep this module free of the cycle)
   if (!f || typeof f !== 'object' || !hasLeague(f)) return { ok: false, created: false };
   if (f.freeAgency?.v) { if (f.schemaVersion !== schema) f.schemaVersion = schema; return { ok: true, created: false }; }
   f.freeAgency = initFreeAgency(f, { fresh });

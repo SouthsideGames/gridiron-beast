@@ -9,6 +9,9 @@
 // E eye, H eye highlight, K dark detail. Shading turns M/A into light/shade
 // variants; the outline pass rings everything in a dark tone of the main colour.
 
+import { structureGrid, installPixelFinish } from './sprite-gen.js';
+import './sprite-features.js'; // installs the v2 feature library, face and marking controls
+
 const W = 16, H = 16;
 const SCALE = { small: 0.78, medium: 0.9, large: 1 };
 const FRONT = new Set(['biped', 'blob', 'avian', 'insectoid']); // drawn facing the viewer, mirrored
@@ -265,6 +268,7 @@ function eyes(c, a, look) {
 }
 
 // ---------------------------------------------------------------- passes
+installPixelFinish((g) => shadeAndOutline(g));
 function shadeAndOutline(g) {
   const out = g.map((r) => r.slice());
   const empty = (x, y) => x < 0 || y < 0 || x >= W || y >= H || !g[y][x];
@@ -282,6 +286,7 @@ function shadeAndOutline(g) {
 
 /** Builds the 16×16 grid of colour codes for a species spec. */
 export function spriteGrid(spec) {
+  if (spec && spec.structure != null) return shadeAndOutline(structureGrid(spec).grid); // generator v2 (opt-in, sprite-gen.js); legacy recipes never reach it
   const body = TEMPLATES[spec.body] ? spec.body : 'biped';
   const c = makeCanvas(SCALE[spec.size] ?? 0.9);
   const feats = spec.features || [];
@@ -307,11 +312,13 @@ export function spriteGrid(spec) {
 }
 
 const cache = new Map();
+const bodyCache = new Map(); // sprite body (the rect rows, flipped or not) per spec and tint: shared by the inline svg and the field symbols
+const specKey = (spec, tint, flip) => JSON.stringify([spec.id || spec.name, tint, flip, spec.body, spec.size, spec.look, spec.features, spec.colors, spec.pattern || '', ...(spec.structure != null ? [spec.structure, spec.pose || '', spec.mirror || false, spec.eyes || '', spec.proportions || null, spec.features || null, spec.face || null, spec.markings || null] : [])]); // v2 fields only for v2 recipes, so legacy keys are unchanged
 
-/** Inline SVG for a species spec. `tint` (−6..6) nudges lightness per individual. */
-export function sprite16(spec, size = 48, { tint = 0, flip = false, cls = 'sprite' } = {}) {
-  const key = JSON.stringify([spec.id || spec.name, size, tint, flip, spec.body, spec.size, spec.look, spec.features, spec.colors, spec.pattern || '']);
-  if (cache.has(key)) return cache.get(key);
+/** The 16×16 pixel rows of a species spec as SVG rects (run-length merged), optionally mirrored. The same pixels sprite16 draws. */
+export function sprite16Body(spec, { tint = 0, flip = false } = {}) {
+  const key = specKey(spec, tint, flip);
+  if (bodyCache.has(key)) return bodyCache.get(key);
   const pal = palette(spec.colors || ['#888888', '#cccccc'], tint);
   const grid = spriteGrid(spec);
   let rects = '';
@@ -324,7 +331,29 @@ export function sprite16(spec, size = 48, { tint = 0, flip = false, cls = 'sprit
     }
   }
   const body = flip ? `<g transform="translate(16 0) scale(-1 1)">${rects}</g>` : rects;
+  bodyCache.set(key, body);
+  return body;
+}
+
+/** Inline SVG for a species spec. `tint` (−6..6) nudges lightness per individual. */
+export function sprite16(spec, size = 48, { tint = 0, flip = false, cls = 'sprite' } = {}) {
+  const key = `${size}|${cls}|${specKey(spec, tint, flip)}`;
+  if (cache.has(key)) return cache.get(key);
+  const body = sprite16Body(spec, { tint, flip });
   const svg = `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${body}</svg>`;
   cache.set(key, svg);
   return svg;
+}
+
+/**
+ * A reusable field sprite (docs/task8/RENDER_OPT.md, sprite caching): the same pixels as sprite16, as an SVG <symbol> drawn once
+ * into the field's <defs> and placed per player with <use>. Returns { id, symbol } for the spec, tint and facing; one entry per
+ * distinct sprite for the page's lifetime.
+ */
+const symbols = new Map(); let symbolSeq = 0;
+export function sprite16Symbol(spec, { tint = 0, flip = false } = {}) {
+  const key = specKey(spec, tint, flip);
+  let e = symbols.get(key);
+  if (!e) { const id = `fvs${++symbolSeq}`; e = { id, symbol: `<symbol id="${id}" viewBox="0 0 16 16" shape-rendering="crispEdges">${sprite16Body(spec, { tint, flip })}</symbol>` }; symbols.set(key, e); }
+  return e;
 }

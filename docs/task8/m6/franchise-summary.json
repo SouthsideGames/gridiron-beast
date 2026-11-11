@@ -1,0 +1,168 @@
+{
+  "source": "f716b02c41c81211d80e7389dc0cefd4c16ae155",
+  "sourceTree": "d4e36b76eae24ca7c4aac9fbdc8f13e588f8afd2",
+  "sourceRuntimeTree": "d41e19b526528aae1716c2a742ce9fbf1781323d",
+  "rawFile": "docs/task8/m6/ai-20-season-seed-1.json",
+  "rawSHA256": "9336a0529c3a30a9d2b31078c71ff653e9657930e61b0582fda1822330fedf34",
+  "benchmarkHash": "12f37e409624244bf430fd119c27c1513409f3b06b99e1b3f2856827741850cc",
+  "seed": 1,
+  "seasons": 20,
+  "errors": 0,
+  "problems": [],
+  "problemCount": 0,
+  "wallSeconds": 226,
+  "peakHeapMB": 561,
+  "scope": "Single-seed production health diagnostic; not statistical balance or CPU acceptance.",
+  "checkpoints": [
+    {
+      "year": 5,
+      "clubs": 15,
+      "lineupProblems": 0,
+      "roster": {
+        "min": 36,
+        "mean": 37.73,
+        "max": 38
+      },
+      "teamOverall": {
+        "min": 54,
+        "mean": 59.47,
+        "max": 64
+      },
+      "capRoom": {
+        "min": 311600,
+        "mean": 349638.67,
+        "max": 413500
+      },
+      "capRoomPercent": {
+        "min": 17.31111111111111,
+        "mean": 19.42,
+        "max": 22.97222222222222
+      },
+      "meanLevel": {
+        "min": 15.6,
+        "mean": 20.01,
+        "max": 24.1
+      },
+      "legendarySideViolations": 0,
+      "marketProblems": []
+    },
+    {
+      "year": 10,
+      "clubs": 15,
+      "lineupProblems": 0,
+      "roster": {
+        "min": 34,
+        "mean": 36.87,
+        "max": 38
+      },
+      "teamOverall": {
+        "min": 54,
+        "mean": 59.73,
+        "max": 65
+      },
+      "capRoom": {
+        "min": 309560,
+        "mean": 370548,
+        "max": 429600
+      },
+      "capRoomPercent": {
+        "min": 17.197777777777777,
+        "mean": 20.59,
+        "max": 23.866666666666667
+      },
+      "meanLevel": {
+        "min": 16.3,
+        "mean": 20.14,
+        "max": 23.3
+      },
+      "legendarySideViolations": 0,
+      "marketProblems": []
+    },
+    {
+      "year": 15,
+      "clubs": 15,
+      "lineupProblems": 0,
+      "roster": {
+        "min": 34,
+        "mean": 36.67,
+        "max": 38
+      },
+      "teamOverall": {
+        "min": 55,
+        "mean": 59.4,
+        "max": 63
+      },
+      "capRoom": {
+        "min": 316200,
+        "mean": 385470.67,
+        "max": 449500
+      },
+      "capRoomPercent": {
+        "min": 17.566666666666666,
+        "mean": 21.42,
+        "max": 24.97222222222222
+      },
+      "meanLevel": {
+        "min": 13.7,
+        "mean": 18.62,
+        "max": 23.1
+      },
+      "legendarySideViolations": 0,
+      "marketProblems": []
+    },
+    {
+      "year": 20,
+      "clubs": 15,
+      "lineupProblems": 0,
+      "roster": {
+        "min": 35,
+        "mean": 36.87,
+        "max": 38
+      },
+      "teamOverall": {
+        "min": 54,
+        "mean": 59.67,
+        "max": 64
+      },
+      "capRoom": {
+        "min": 315320,
+        "mean": 398434.67,
+        "max": 497400
+      },
+      "capRoomPercent": {
+        "min": 17.517777777777777,
+        "mean": 22.14,
+        "max": 27.633333333333333
+      },
+      "meanLevel": {
+        "min": 15.8,
+        "mean": 19.32,
+        "max": 23.4
+      },
+      "legendarySideViolations": 0,
+      "marketProblems": []
+    }
+  ],
+  "allAIClubSeasons": {
+    "rows": 300,
+    "lineupProblems": 0,
+    "negativeCapRoom": 0,
+    "capRoom": {
+      "min": 283800,
+      "mean": 383611.27,
+      "max": 572880
+    },
+    "teamOverall": {
+      "min": 46,
+      "mean": 58.7,
+      "max": 65
+    },
+    "trades": 62
+  },
+  "limitations": [
+    "Apex/Temper/mastery are not explicitly recorded by v4 schema",
+    "End-of-season cap room is not in-season offer pressure",
+    "Single seed cannot establish balance",
+    "Final integrated build must be retested"
+  ]
+}

@@ -9,7 +9,7 @@ import * as F from '../src/franchise/franchise.js';
 import { pack, unpack, checksum } from '../src/franchise/pack.js';
 import { createStore, memoryBackend, exportFranchise, validateImport, JOURNAL_KEY, STORAGE_VERSION } from '../src/franchise/store.js';
 
-const fixture = () => JSON.parse(fs.readFileSync(new URL('./fixtures/save-v31-season2.json', import.meta.url), 'utf8')).franchise;
+const fixture = () => JSON.parse(fs.readFileSync(new URL('./fixtures/save-v10-season2.json', import.meta.url), 'utf8')).franchise;
 const legacyText = () => JSON.stringify({ ...Save.migrate(fixture()), savedAt: 1_790_000_000_000 }); // a v39.1 save exactly as localStorage holds it (v39.1 always stamped savedAt)
 const mkLs = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), key: (i) => [...m.keys()][i] ?? null, get length() { return m.size; }, m }; };
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -235,11 +235,14 @@ test('export: complete and verifiable; tampering, truncation and foreign files a
 // ------------------------------------------------------------ preservation
 test('preservation: careers, timelines, Hall of Fame snapshots, awards, history and draft results survive every path byte for byte', async () => {
   const { store, f, backend, ls } = await migrated();
-  f.draftResults = f.draftResults || { 'Stonehaven Titans': [] };
-  const careers = JSON.stringify(f.roster.map((m) => [m.id, m.career, m.stats])); const history = JSON.stringify(f.history); const draft = JSON.stringify(f.draftResults);
+  // A schema-10 league save keeps its draft in `f.draft` (core) and writes no `draftResults` (draft.js, persist only before the
+  // registry). The store's separate draft part still exists for saves that carry it, so give it real drafted monsters to keep.
+  assert.ok(f.draft?.class?.length, 'the payload has a draft class');
+  f.draftResults = f.draftResults || { [f.draft.year]: { [f.club]: structuredClone(f.draft.class.slice(0, 12)) } };
+  const careers = JSON.stringify(f.roster.map((m) => [m.id, m.career, m.stats])); const history = JSON.stringify(f.history); const draft = JSON.stringify(f.draftResults); const draftCore = JSON.stringify(f.draft);
   await store.save(f); await store.keepCopy(f, 'weekly');
   for (const g of [(await reopen(backend, ls)).franchise, await store.readBackup('1:weekly'), validateImport(exportFranchise(f)).franchise]) {
-    assert.equal(JSON.stringify(g.roster.map((m) => [m.id, m.career, m.stats])), careers); assert.equal(JSON.stringify(g.history), history); assert.equal(JSON.stringify(g.draftResults), draft);
+    assert.equal(JSON.stringify(g.roster.map((m) => [m.id, m.career, m.stats])), careers); assert.equal(JSON.stringify(g.history), history); assert.equal(JSON.stringify(g.draftResults), draft); assert.equal(JSON.stringify(g.draft), draftCore);
   }
 });
 test('a new franchise gets its uid from the store at its first save, from the platform, never from the game RNG', async () => {

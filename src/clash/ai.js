@@ -1,3 +1,6 @@
+// FROZEN LEGACY RULESET (Task 8 M4 S0, docs/task8/M4_STATUS.md): this file plays the legacy rulesets ('current' = values 1.1.0,
+// 'v1.0.0') and must not change behaviour, so finished records and the golden fixtures keep replaying exactly. The Task 8
+// engine is ruleset 't8' in src/clash/t8/; src/clash/rulesets.js picks between them.
 // Beast Clash AI: deterministic decisions from a closed list of named policies. No callbacks.
 // Swap policies choose whether the front monster steps out; lineup selection builds a side for
 // the Lab's Auto button and for AI opponents. Everything here is deterministic given the seeded

@@ -177,6 +177,12 @@ export function registerRecoveryScreen(Router, app) {
     title: 'Save recovery', back: false, tabs: false,
     render() {
       const r = app.recovery || {}; const good = (r.backups || []).filter((b) => b.ok && b.kind !== 'quarantine');
+      // Task 8 fresh-save break (spec §15): a save from an earlier version is identified and refused, with Start New Franchise.
+      if (r.error?.code === 'incompatible') return `<div class="panel"><h3>This save is from an earlier version</h3>
+        <p>${esc(r.error.message)}</p>
+        <p class="muted">Nothing has been changed or deleted. Saves from earlier versions are not converted.</p></div>
+        <div class="stack" style="margin-top:12px"><button class="btn primary block" data-action="start-new">Start new franchise</button>
+        <button class="btn ghost block" data-action="leave">Go to the main menu</button></div>`;
       return `<div class="panel"><h3>Your save could not be loaded</h3>
         <p>The game stopped instead of loading a save that failed its integrity check${r.error ? ` (${esc(r.error.message)})` : ''}. Nothing has been changed or deleted.</p>
         <p class="muted">Choose a backup to restore. Progress made after the backup was saved will not be in it. The damaged save is kept on this device either way.</p></div>
@@ -186,6 +192,7 @@ export function registerRecoveryScreen(Router, app) {
     },
     mount(root) {
       root.addEventListener('click', async (e) => {
+        if (e.target.closest('[data-action="start-new"]')) { app.recovery = null; if (app.slots && app.storage?.store) { Router.go('franchises', {}, { reset: true }); toast('Choose a slot for the new franchise. The earlier-version save stays where it is.', 'info', 5000); } else Router.go('onboarding', { fresh: true }, { reset: true }); return; }
         const pick = e.target.closest('[data-action="pick"]'); const leave = e.target.closest('[data-action="leave"]');
         if (leave) { if (await confirmSheet('Go on without a franchise? The damaged save and all backups stay on this device; you can restore one later from Settings.', { title: 'Continue', okLabel: 'Continue' })) { app.recovery = null; Router.go('menu', {}, { reset: true }); } return; }
         if (!pick) return; const b = app.recovery.backups[Number(pick.dataset.i)];

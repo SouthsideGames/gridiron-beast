@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
 import * as Save from '../src/franchise/save.js';
 import { careerEvents, careerAfterGame, careerSeasonEnd, backfillCareer, careerTimeline, noteHallOfFame, setCareerEnabled, describeEvent, TIER, hasEvent } from '../src/franchise/career.js';
-import { generateMonster, SPECIES_BY_ID } from '../src/data/monsters.js';
+import { generateMonster, SPECIES_BY_ID, raiseToLevel } from '../src/data/monsters.js';
 import { executeTrade } from '../src/franchise/trades.js';
 import { createRng } from '../src/core/rng.js';
 import { newFranchise, runFranchise } from '../tools/franchise-soak.mjs';
@@ -13,7 +13,9 @@ import { newFranchise, runFranchise } from '../tools/franchise-soak.mjs';
 const keys = (m) => careerEvents(m).map((e) => e.k);
 const of = (m, t) => careerEvents(m).filter((e) => e.t === t);
 let freshN = 0;
-const fresh = (f, position = 'WR', extra = {}) => { const m = generateMonster(createRng(7000 + freshN++), { position, quality: 60 }); Object.assign(m, { salary: 30000, contract: { signed: 1, ends: 2 }, yearsPro: 0 }, extra); return m; };
+// Task 8 M1 (fixture drift): generated veterans now carry a simulated prior career (B7), sometimes evolved before the timeline; a
+// "fresh" monster is a first-year one at level 1, made explicit (yearsPro 0 at generation)
+const fresh = (f, position = 'WR', extra = {}) => { const m = generateMonster(createRng(7000 + freshN++), { position, quality: 60, yearsPro: 0 }); Object.assign(m, { salary: 30000, contract: { signed: 1, ends: 2 }, yearsPro: 0 }, extra); return m; };
 // a monster with a season book, as recordGame writes it
 const withSeason = (m, year, reg, post = {}, team = 'Ember City Beasts') => { m.stats ||= { v: 2, career: { reg: {}, post: {} }, season: { year: null, reg: {}, post: {} }, log: [], seasons: [] }; m.stats.seasons.push({ year, team, reg, post }); for (const [k, v] of Object.entries(reg)) m.stats.career.reg[k] = (m.stats.career.reg[k] || 0) + v; for (const [k, v] of Object.entries(post)) m.stats.career.post[k] = (m.stats.career.post[k] || 0) + v; return m; };
 
@@ -29,7 +31,7 @@ test('beginnings: the founding roster (cornerstones marked), the draft with roun
 });
 
 test('recruitment, free agency, a trade, a release and a return: each move is recorded once, and history follows the monster', () => {
-  const f = newFranchise(58); // seed 58: the staff signs an encounter prospect in week 2 (seed 57 from v42.13 to the first Phase B build; judged catch-point braking shifted its season; seed 53 from v42.8 to v42.12; seed 52 before v42.8)
+  const f = newFranchise(59); // seed 59: the staff signs an encounter prospect in week 6 (Task 8 retired Nature, N7c B14; seed 58 from Phase B to Task 8; seed 57 from v42.13 to the first Phase B build; judged catch-point braking shifted its season; seed 53 from v42.8 to v42.12; seed 52 before v42.8)
   // a Tuesday encounter signing, as the staff does it during the week
   let g = 0; while (!f.week.recruited && g++ < 30) { if (F.inPlayoffs(f)) break; F.autoRunToSunday(f); if (f.week.recruited) break; if (F.isBye(f)) { F.takeBye(f); continue; } const mm = F.sundayMatchup(f); if (!mm || mm.forfeit) break; F.finishSunday(f, F.simulatePlayerGame(f)); }
   const rec = f.roster.find((m) => m.id === f.week.recruited) || f.roster.find((m) => of(m, 'join')[0]?.x?.via === 'encounter');
@@ -56,7 +58,7 @@ function await_import() { return Career; }
 
 test('development: evolutions as they happen, older evolutions rebuilt honestly, level marks only at 10/20/30, a big season of growth', () => {
   const f = newFranchise(53); const sp = Object.values(SPECIES_BY_ID).find((s) => s.evolution?.length && s.rarity === 'common');
-  const m = generateMonster(createRng(9), { species: sp.id, quality: 60 }); m.level = sp.evolution[0].level; f.roster.push(m);
+  const m = generateMonster(createRng(9), { species: sp.id, quality: 60, yearsPro: 0 }); raiseToLevel(m, sp.evolution[0].level); f.roster.push(m); // Task 8 M1: a level-1 monster brought to the level honestly (readiness reads the development record)
   const r = F.evolveMonster(f, m.id); assert.ok(r.ok);
   const evo = of(m, 'evolve')[0]; assert.equal(evo.y, f.season.year); assert.equal(evo.x.to, m.name);
   const old = generateMonster(createRng(10), { species: sp.id, quality: 60 }); old.stage = 1; backfillCareer(f, old);

@@ -6,7 +6,7 @@
 // are reused as they are: renewalAsk, newContract, salaryFor, offseason(), positionNeeds, buildDepthChart.
 
 import { isGymClub } from '../data/gyms.js';
-import { generateMonster, monsterOverall, salaryFor, regionSpecies, ROSTER_MAX, ROSTER_MIN, FULL_ROSTER, clampAttr, resolveSpecies } from '../data/monsters.js';
+import { generateMonster, monsterOverall, salaryFor, regionSpecies, ROSTER_MAX, ROSTER_MIN, FULL_ROSTER, clampAttr, resolveSpecies, pickChannelSpecies } from '../data/monsters.js';
 import { POSITION_WEIGHTS, OFFENSE_BASE, DEFENSE_BASE, positionOf } from '../data/personnel.js';
 import { REGIONS } from '../data/staff.js';
 import { newContract, leagueContract, contractEnds, renewalAsk } from './contracts.js';
@@ -22,6 +22,7 @@ import { modeOf } from './strategy.js';
 import { strategyValue } from './fa-strategy.js';
 import { hasFreeAgency } from './fa-state.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
+import { clubIdentity, identityTilt, trainingPriority } from '../data/identities.js';
 import { SPECIES_DEX } from '../data/species.js';
 
 export const BAND = 4;                 // the nudge acts beyond ±4 of the club's target (decision C)
@@ -171,8 +172,8 @@ export function leagueAgeing(f, r, { year, ctx = {} }) {
   if (!hasLeague(f)) return 0; let n = 0;
   for (const club of order(f)) {
     const roster = clubRoster(f, club);
-    offseason(roster, r, ctx); // skips the ageless itself (progression.js); ctx: the old-save transition and last season's injuries (GDD §55)
-    for (const m of roster) { if (m.rookie === year) { m.yearsPro = 0; m.age -= 1; } if (m.signature) growSignature(m); n++; }
+    offseason(roster, r, { ...ctx, train: trainingPriority(clubIdentity(f, club)) }); // Task 8 D7: the identity's training priority; skips the ageless itself (progression.js); ctx: the old-save transition and last season's injuries (GDD §55)
+    for (const m of roster) { if (m.rookie === year) { m.yearsPro = 0; m.age -= 1; } n++; } // Task 8 (N7f): the rival's signature monster no longer grows automatically each season; he develops like everyone else
   }
   return n;
 }
@@ -221,10 +222,10 @@ export function leagueFreeAgency(f, r, { year, cap, targetOf, signUnsigned = nul
         let got = false;
         for (const [list, key] of [[f.league.waivers || [], 'fromWaivers'], [Object.values(f.pool || {}).flat(), 'fromPools']]) {
           // R1 b / R4 (owner 2026-11-05): the club's Task 6 strategy and, for a gym, its element decide among the affordable monsters at the position
-          const mode = modeOf(f, club); const element = GYM_BY_CLUB[club]?.element || null; const ro = clubRoster(f, club); const n = GROUP_SLOTS[pos]?.length || 1;
+          const mode = modeOf(f, club); const element = GYM_BY_CLUB[club]?.element || null; const identity = clubIdentity(f, club); const ro = clubRoster(f, club); const n = GROUP_SLOTS[pos]?.length || 1;
           const atPos = ro.filter((x) => x.position === pos && !x.injury).map(monsterOverall).sort((a, b) => b - a); const weakest = atPos.length >= n ? atPos[n - 1] : null;
           const depth = !urgent && ro.filter((x) => x.position === pos).length >= n; // non-essential depth (owner 2026-11-05 §6)
-          const vc = new Map(); const val = (x) => { if (!vc.has(x)) vc.set(x, strategyValue(x, { mode, ask: salaryFor(x), weakestStarter: weakest, element, depth })); return vc.get(x); };
+          const vc = new Map(); const val = (x) => { if (!vc.has(x)) vc.set(x, strategyValue(x, { mode, ask: salaryFor(x), weakestStarter: weakest, element, depth, identity })); return vc.get(x); };
           for (const m of list.filter((x) => x.position === pos && salaryFor(x) <= room).sort((a, b) => val(b) - val(a) || (a.id < b.id ? -1 : 1))) if (signUnsigned(club, m)) { out[key] = (out[key] || 0) + 1; got = true; break; }
           if (got) break;
         }
@@ -290,7 +291,8 @@ export function bestUpgrade(f, club, bench, cap) {
     for (const r of g.rows) { if (!(r.horizon <= PLAN.ageingHorizon && !r.successor)) continue;
       for (const m of pool) if (m.position === pos && qualifiesAsSuccessor(m, r.starter)) { const a = afford(m, pos); if (a) options.push({ kind: 'succession', m, starterOvr: monsterOverall(r.starter), gain: monsterOverall(m) - monsterOverall(r.starter), ...a }); } }
   }
-  options.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'weak' ? -1 : 1) || (b.gain - a.gain) || (a.m.id < b.m.id ? -1 : 1));
+  const id = clubIdentity(f, club); const tiltOf = (o) => (id ? identityTilt(id, o.m) : 0); // Task 8 D7: the identity's tie-break, added to the gain (overall points)
+  options.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'weak' ? -1 : 1) || ((b.gain + tiltOf(b)) - (a.gain + tiltOf(a))) || (a.m.id < b.m.id ? -1 : 1));
   return options[0] || null;
 }
 /** A regional veteran at about `quality`, cheaper if the room does not allow it; null when nothing affordable and the need is not urgent. */
@@ -299,12 +301,22 @@ export function generateArrival(f, r, { club, position, quality, room, floor = f
   for (const rn of regions) { const p = regionSpecies(rn, REGIONS[rn].types, 10).filter((s) => s.position === position && s.rarity !== 'legendary'); if (p.length) { regionName = rn; pool = p; break; } }
   if (!pool.length) return null;
   // R4 (owner 2026-11-05): a gym's arrival is of its element when the element has a species at the position (else any element: mixed support)
-  { const el = hasFreeAgency(f) ? GYM_BY_CLUB[club]?.element : null; const own = el ? SPECIES_DEX.filter((s) => s.element === el && s.position === position && s.rarity !== 'legendary') : [];
-    if (own.length) { pool = own; regionName = regions.find((rn) => (REGIONS[rn].types || []).includes(el)) || regionName; } }
-  const sp = r.pick(pool);
+  let el = null;
+  { el = hasFreeAgency(f) ? GYM_BY_CLUB[club]?.element : null; const own = el ? SPECIES_DEX.filter((s) => s.element === el && s.position === position && s.rarity !== 'legendary') : [];
+    if (own.length) { pool = own; regionName = regions.find((rn) => (REGIONS[rn].types || []).includes(el)) || regionName; } else el = null; } // Task 8: the element's Basics count (B17), so R4 holds where its only family at the position is a Basic
+  // Task 8 (N7c B17): the arrival channel's Basic share first, from the same element or region; else today's pick among originals
+  const basics = SPECIES_DEX.filter((s) => s.rarity === 'basic' && s.position === position && (el ? s.element === el : (REGIONS[regionName].types || []).includes(s.element)));
+  const originals = pool.filter((s) => s.rarity !== 'basic');
+  const sp = originals.length ? pickChannelSpecies(r, 'arrival', position, { originals, basics, pickOriginal: (rr, list) => rr.pick(list) }) : basics.length ? basics[r.int(basics.length)] : null; // an element with only a Basic here: that Basic
+  if (!sp) return null;
   let q = Math.max(MIN_QUALITY, Math.round(quality)); let m = null;
-  for (let i = 0; i < 12; i++) { m = generateMonster(r, { position, quality: q, species: sp.id, age: 24 + r.int(7) }); if (salaryFor(m) <= room || (floor && q <= MIN_QUALITY)) break; m = null; q = Math.max(MIN_QUALITY, q - 3); if (q === MIN_QUALITY && !floor && i > 6) break; }
+  for (let i = 0; i < 12; i++) {
+    m = generateMonster(r, { position, quality: q, species: sp.id, age: 24 + r.int(7), channel: 'arrival', apexRoll: i === 0 }); // one Apex roll per arrival event: retries never roll again (N7f)
+    if (m.apex) break; // an Apex is never discarded by an affordability retry (N7f)
+    if (salaryFor(m) <= room || (floor && q <= MIN_QUALITY)) break; m = null; q = Math.max(MIN_QUALITY, q - 3); if (q === MIN_QUALITY && !floor && i > 6) break;
+  }
   if (!m) return null;
+  if (m.apex && salaryFor(m) > room && !floor) { m.origin = regionName; claimMonster(f, m, `${club}|arrival-apex`); (f.pool ||= {}); (f.pool[regionName] ||= []).push(m); return null; } // unaffordable: he enters the market instead
   m.origin = regionName; m.salary = salaryFor(m); claimMonster(f, m, `${club}|arrival`);
   clubUniqueName(f, club, m);
   return m;
@@ -329,7 +341,7 @@ export function leagueNudge(f, r, { year, cap, targetOf, teamOf, rival = null, s
   const available = (club, pos, q, room) => {
     if (!signUnsigned || !isGymClub(club)) return null; const element = GYM_BY_CLUB[club]?.element || null;
     const list = [...(f.league.waivers || []), ...Object.values(f.pool || {}).flat()].filter((m) => m.position === pos && !m.injury && !isProtected(m) && monsterOverall(m) >= q && salaryFor(m) <= room)
-      .sort((a, b) => strategyValue(b, { mode: modeOf(f, club), ask: salaryFor(b), element }) - strategyValue(a, { mode: modeOf(f, club), ask: salaryFor(a), element }) || (a.id < b.id ? -1 : 1));
+      .sort((a, b) => strategyValue(b, { mode: modeOf(f, club), ask: salaryFor(b), element, identity: clubIdentity(f, club) }) - strategyValue(a, { mode: modeOf(f, club), ask: salaryFor(a), element, identity: clubIdentity(f, club) }) || (a.id < b.id ? -1 : 1));
     for (const m of list) if (signUnsigned(club, m)) return m; return null;
   };
   for (const club of order(f)) {

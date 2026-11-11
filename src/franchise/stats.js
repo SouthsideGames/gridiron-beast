@@ -13,7 +13,7 @@ import { TEAM_META } from '../data/league.js';
 export const STATS_VERSION = 2;
 
 /** Keys that are a maximum (longest play), not a sum. */
-export const MAX_KEYS = new Set(['longPass', 'longRec', 'longRush', 'fgLong']);
+export const MAX_KEYS = new Set(['longPass', 'longRec', 'longRush', 'fgLong', 'krLong']);
 
 /** Human labels for every counting key the sim records. */
 export const STAT_LABEL = Object.freeze({
@@ -22,10 +22,12 @@ export const STAT_LABEL = Object.freeze({
   rush: 'Car', rushYds: 'Rush yds', rushTd: 'Rush TD', rushFd: 'Rush 1st', longRush: 'Long',
   targets: 'Tgt', rec: 'Rec', recYds: 'Rec yds', recTd: 'Rec TD', recFd: 'Rec 1st', longRec: 'Long', yac: 'YAC', drops: 'Drops',
   td: 'TD', fum: 'Fum', fumLost: 'Lost', twoPt: '2-pt', twoPtAtt: '2-pt att',
-  pbSnaps: 'Pass blk', rbSnaps: 'Run blk', blocksLost: 'Beaten', sacksAllowed: 'Sacks alw', pressuresAllowed: 'Press alw',
+  pbSnaps: 'Pass blk', rbSnaps: 'Run blk', blocksLost: 'Beaten', pancakes: 'Pancakes', sacksAllowed: 'Sacks alw', pressuresAllowed: 'Press alw',
   tackles: 'Solo', assists: 'Ast', tfl: 'TFL', sacks: 'Sacks', pressures: 'Press', ff: 'FF', fr: 'FR', pd: 'PD', int: 'INT', defTd: 'Def TD',
   covTargets: 'Tgt vs', recAllowed: 'Rec alw', ydsAllowed: 'Yds alw', tdAllowed: 'TD alw',
   fga: 'FGA', fgm: 'FGM', fgLong: 'Long', xpa: 'XPA', xpm: 'XPM', fg0a: '<30 A', fg0m: '<30 M', fg30a: '30s A', fg30m: '30s M', fg40a: '40s A', fg40m: '40s M', fg50a: '50+ A', fg50m: '50+ M',
+  // Task 8 M2 live kickoffs: special-teams snaps, the kick, the return and its coverage (never receptions, defensive snaps or scrimmage tackles, B20).
+  stSnaps: 'ST snaps', kickoffs: 'Kickoffs', koTouchbacks: 'KO TB', krAtt: 'KR', krYds: 'KR yds', krLong: 'KR long', krTd: 'KR TD', stTackles: 'ST tkl', stAssists: 'ST ast', stTd: 'ST TD',
   jukes: 'Jukes', broken: 'Broken tkl', sheds: 'Sheds', abilities: 'Abilities', abilityPlays: 'Ability plays', abilityImpact: 'Ability impact', traitPlays: 'Trait plays',
 });
 
@@ -39,7 +41,7 @@ export const POSITION_COLUMNS = Object.freeze({
   RB: [['games', 'GP'], ['rush', 'Car'], ['rushYds', 'Yds'], ['ypc', 'Y/C'], ['rushTd', 'TD'], ['longRush', 'Lng'], ['targets', 'Tgt'], ['rec', 'Rec'], ['recYds', 'RecY'], ['recTd', 'RTD'], ['scrimmage', 'Scrim'], ['touches', 'Tch'], ['fumLost', 'FL']],
   WR: [['games', 'GP'], ['targets', 'Tgt'], ['rec', 'Rec'], ['catchPct', 'Ctch%'], ['recYds', 'Yds'], ['ypr', 'Y/R'], ['recTd', 'TD'], ['longRec', 'Lng'], ['yac', 'YAC'], ['recFd', '1st'], ['drops', 'Drp'], ['rushYds', 'Rush'], ['fumLost', 'FL']],
   TE: [['games', 'GP'], ['targets', 'Tgt'], ['rec', 'Rec'], ['catchPct', 'Ctch%'], ['recYds', 'Yds'], ['ypr', 'Y/R'], ['recTd', 'TD'], ['yac', 'YAC'], ['drops', 'Drp'], ['pbSnaps', 'PBlk'], ['rbSnaps', 'RBlk'], ['blocksLost', 'Btn'], ['fumLost', 'FL']],
-  OL: [['games', 'GP'], ['starts', 'GS'], ['snapsOff', 'Snaps'], ['pbSnaps', 'PBlk'], ['rbSnaps', 'RBlk'], ['blocksLost', 'Btn'], ['blockWinPct', 'Win%'], ['sacksAllowed', 'SckA'], ['pressuresAllowed', 'PrsA']],
+  OL: [['games', 'GP'], ['starts', 'GS'], ['snapsOff', 'Snaps'], ['pbSnaps', 'PBlk'], ['rbSnaps', 'RBlk'], ['blocksLost', 'Btn'], ['pancakes', 'Pnk'], ['blockWinPct', 'Win%'], ['sacksAllowed', 'SckA'], ['pressuresAllowed', 'PrsA']],
   DL: [['games', 'GP'], ['tackles', 'Solo'], ['assists', 'Ast'], ['tacklesTotal', 'Tot'], ['tfl', 'TFL'], ['sacks', 'Sck'], ['pressures', 'Prs'], ['ff', 'FF'], ['fr', 'FR'], ['pd', 'PD'], ['int', 'INT'], ['defTd', 'TD']],
   LB: [['games', 'GP'], ['tackles', 'Solo'], ['assists', 'Ast'], ['tacklesTotal', 'Tot'], ['tfl', 'TFL'], ['sacks', 'Sck'], ['pressures', 'Prs'], ['ff', 'FF'], ['pd', 'PD'], ['int', 'INT'], ['covTargets', 'TgtV'], ['ydsAllowed', 'YdsA'], ['defTd', 'TD']],
   CB: [['games', 'GP'], ['covTargets', 'Tgt'], ['recAllowed', 'RecA'], ['ydsAllowed', 'YdsA'], ['ydsPerTarget', 'Y/Tgt'], ['tdAllowed', 'TDA'], ['pd', 'PD'], ['int', 'INT'], ['tacklesTotal', 'Tkl'], ['tfl', 'TFL'], ['ff', 'FF'], ['defTd', 'TD']],

@@ -1,0 +1,367 @@
+{
+ "note": "Checkpoint 2 proposals: generator v2 recipes for 20 existing Basic families. Identity (id, name, type, position, colours, size, personality) and gameplay profiles are unchanged; only the art recipe is proposed. Not wired into the game.",
+ "recipes": [
+  {
+   "id": "kindlet",
+   "structure": "compact_upright",
+   "pose": "forward",
+   "proportions": {
+    "headSize": "large",
+    "limbLength": "short",
+    "headShape": "wedge"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "flame_tufts"
+    }
+   ],
+   "face": {
+    "eyeShape": "large",
+    "mouth": "open"
+   },
+   "markings": {
+    "pattern": "band"
+   },
+   "why": "Jittery little passer: chibi head, short limbs, flame tufts and wide eyes."
+  },
+  {
+   "id": "kilnback",
+   "structure": "shelled",
+   "pose": "braced",
+   "proportions": {
+    "shellShape": "angular"
+   },
+   "features": [
+    {
+     "id": "vent_fins"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   },
+   "why": "A brick kiln carried as an angular shell, vent fins puffing heat."
+  },
+  {
+   "id": "embadger",
+   "structure": "low_elongated_quadruped",
+   "pose": "forward",
+   "proportions": {
+    "limbThickness": "thick"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "claws",
+     "variant": "hooked"
+    }
+   ],
+   "markings": {
+    "pattern": "stripes",
+    "color": "dark"
+   },
+   "why": "Low, long badger built to tackle everything; heavy claws."
+  },
+  {
+   "id": "ottrip",
+   "structure": "compact_quadruped",
+   "pose": "neutral",
+   "proportions": {
+    "torsoLength": "long",
+    "limbLength": "short",
+    "footShape": "flat"
+   },
+   "features": [
+    {
+     "id": "whiskers"
+    },
+    {
+     "id": "paddle_tail",
+     "variant": "straight"
+    }
+   ],
+   "face": {
+    "mouth": "smile"
+   },
+   "why": "Slippery otter: long body, short legs, paddle tail."
+  },
+  {
+   "id": "pondskip",
+   "structure": "insectoid",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "antennae",
+     "variant": "straight"
+    },
+    {
+     "id": "water_sacs"
+    }
+   ],
+   "why": "Water strider seen from above, splayed legs riding the surface."
+  },
+  {
+   "id": "wadelet",
+   "structure": "running_avian",
+   "pose": "forward",
+   "proportions": {
+    "limbLength": "long"
+   },
+   "features": [
+    {
+     "id": "beak",
+     "variant": "long"
+    },
+    {
+     "id": "crest",
+     "variant": "plume"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   },
+   "why": "Long-legged wader patrolling the deep middle."
+  },
+  {
+   "id": "trunkle",
+   "structure": "heavy_quadruped",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "tusks"
+    },
+    {
+     "id": "leaves"
+    }
+   ],
+   "why": "Mossy little mammoth that blocks all game."
+  },
+  {
+   "id": "podling",
+   "structure": "plant_bodied",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "buds"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   },
+   "why": "A seed pod with a strong leg and no interest in running."
+  },
+  {
+   "id": "fuzzvolt",
+   "structure": "hopping",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "static_prongs"
+    }
+   ],
+   "markings": {
+    "pattern": "stripes"
+   },
+   "why": "Static-fluffed mouse zipping outside on its hind legs."
+  },
+  {
+   "id": "buzzhawk",
+   "structure": "perching_avian",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "beak",
+     "variant": "hooked"
+    },
+    {
+     "id": "static_prongs"
+    },
+    {
+     "id": "feathered_wings",
+     "variant": "raised"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   },
+   "why": "A buzzing hawk, wings raised to cover ground fast."
+  },
+  {
+   "id": "diggit",
+   "structure": "burrowing",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "claws",
+     "variant": "hooked"
+    },
+    {
+     "id": "whiskers"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   },
+   "why": "Burrowing mole popping up in the backfield."
+  },
+  {
+   "id": "geodot",
+   "structure": "construct",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "crystal_growths"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   },
+   "why": "Crystal golem cub with a geode heart and a heavy leg."
+  },
+  {
+   "id": "walrump",
+   "structure": "amorphous",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "tusks"
+    },
+    {
+     "id": "whiskers"
+    },
+    {
+     "id": "flippers"
+    }
+   ],
+   "why": "Walrus calf as a heavy, low blob: tusks, whiskers and flippers, slower than everyone."
+  },
+  {
+   "id": "galebuck",
+   "structure": "long_legged_quadruped",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "antlers",
+     "variant": "branching"
+    }
+   ],
+   "markings": {
+    "pattern": "backstripe"
+   },
+   "why": "Gale-swift buck looping around blockers."
+  },
+  {
+   "id": "batwhisk",
+   "structure": "batlike",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "fangs"
+    }
+   ],
+   "why": "A bat with a whiplash cut."
+  },
+  {
+   "id": "spindlet",
+   "structure": "arachnid",
+   "pose": "braced",
+   "features": [
+    {
+     "id": "fangs"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   },
+   "why": "Spindly spider baiting throws into its web."
+  },
+  {
+   "id": "beamlet",
+   "structure": "floating",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "halo"
+    },
+    {
+     "id": "light_orbs"
+    }
+   ],
+   "face": {
+    "mouth": "smile"
+   },
+   "why": "Beaming little sunbeam with a sharp eye and a glass jaw."
+  },
+  {
+   "id": "clockcrow",
+   "structure": "long_limbed_upright",
+   "pose": "neutral",
+   "proportions": {
+    "headShape": "beaked"
+   },
+   "features": [
+    {
+     "id": "crest",
+     "variant": "spike"
+    },
+    {
+     "id": "metal_panels"
+    }
+   ],
+   "markings": {
+    "pattern": "backstripe"
+   },
+   "why": "Clockwork crow walking upright on stiff stick limbs."
+  },
+  {
+   "id": "pondermoose",
+   "structure": "long_necked_quadruped",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "antlers",
+     "variant": "palmate"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   },
+   "markings": {
+    "pattern": "spots"
+   },
+   "why": "Pensive moose calf, head held high and elsewhere."
+  },
+  {
+   "id": "bulwyrm",
+   "structure": "coiled_serpent",
+   "pose": "braced",
+   "proportions": {
+    "headSize": "large"
+   },
+   "features": [
+    {
+     "id": "horns",
+     "variant": "curled"
+    },
+    {
+     "id": "ridge"
+    }
+   ],
+   "why": "Thick-coiled wyrm walling off rushers."
+  }
+ ]
+}

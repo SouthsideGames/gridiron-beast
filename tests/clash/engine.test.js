@@ -6,6 +6,10 @@ import { simulateClash, logHash, parseReplayKey, rampFor, rampModelFor } from '.
 import { CLASH_VALUES } from '../../src/clash/values.js';
 import { createRng } from '../../src/core/rng.js';
 import { mon, byArch, randomLineup, withoutRandomness, deepFrozen } from './helpers.js';
+import { legacyMonsters } from './legacy-monsters.js';
+
+// Task 8 M1 replaced the monster generator; the golden fixtures are fed the monsters they were pinned with (see legacy-monsters.js).
+const GOLDEN_LINEUP = legacyMonsters('75f2a27').randomLineup, HISTORICAL_LINEUP = legacyMonsters('dd2245d').randomLineup;
 
 const V = CLASH_VALUES;
 const quick = (a, b, seed = 1, config = {}) => simulateClash({ a, b, seed, config });
@@ -15,7 +19,7 @@ test('determinism: the same inputs give the same log hash, with Math.random and 
   const golden = {};
   withoutRandomness(() => {
     for (let seed = 1; seed <= 20; seed++) {
-      const rng = createRng(seed * 101); const a = randomLineup(rng, 1 + rng.int(5)), b = randomLineup(rng, 1 + rng.int(5));
+      const rng = createRng(seed * 101); const a = GOLDEN_LINEUP(rng, 1 + rng.int(5)), b = GOLDEN_LINEUP(rng, 1 + rng.int(5));
       const r1 = simulateClash({ a, b, seed }), r2 = simulateClash({ a, b, seed });
       assert.equal(logHash(r1), logHash(r2)); golden[seed] = { hash: logHash(r1), key: r1.replayKey };
     }
@@ -32,7 +36,10 @@ test('historical golden seeds: the values 1.0.0 fixture (Gate A-B.5 baseline) st
     for (let seed = 1; seed <= 20; seed++) {
       const k = parseReplayKey(stored[seed].key); assert.equal(JSON.parse(stored[seed].key).values, '1.0.0'); assert.equal(k.config.ruleset, 'v1.0.0');
       assert.equal(logHash(simulateClash({ a: k.a, b: k.b, seed: k.seed, config: k.config })), stored[seed].hash, `historical replay key ${seed}`);
-      const rng = createRng(seed * 101); const a = randomLineup(rng, 1 + rng.int(5)), b = randomLineup(rng, 1 + rng.int(5));
+      // Task 8 M1: the lineups are the frozen dd2245d monsters these seeds produced (original generator, original positions; see
+      // legacy-monsters.js), so all 20 rebuild exactly again; the earlier skip for the 7 species that moved position is not needed.
+      const rng = createRng(seed * 101); const a = HISTORICAL_LINEUP(rng, 1 + rng.int(5)), b = HISTORICAL_LINEUP(rng, 1 + rng.int(5));
+      assert.deepEqual({ a, b }, { a: k.a, b: k.b }, `historical lineup ${seed} is the one in its replay key`);
       assert.equal(logHash(simulateClash({ a, b, seed, config: { ruleset: 'v1.0.0' } })), stored[seed].hash, `historical lineup ${seed}`);
     }
   });
@@ -53,6 +60,7 @@ test('invariants over 2,000 random battles: HP never below 0 or NaN, every battl
     assert.ok(r.exchanges >= 1 && r.exchanges <= V.battle.exchangeCap);
     for (const x of [...r.lines.a, ...r.lines.b]) { assert.ok(Number.isFinite(x.hp) && x.hp >= 0 && x.hp <= x.maxHp, `${x.name} hp ${x.hp}`); assert.ok(x.shield >= 0); }
     if (r.by === 'knockout') assert.ok(r.lines[r.winner].some((x) => x.hp > 0) && r.lines[r.winner === 'a' ? 'b' : 'a'].every((x) => x.hp <= 0));
+    else if (r.by === 'coin' && !r.capped) { assert.ok([...r.lines.a, ...r.lines.b].every((x) => x.hp <= 0), 'an uncapped coin is a double knockout'); coin++; } // approved: a double knockout goes to the seeded coin
     else { assert.ok(r.capped); capped++; if (r.by === 'coin') coin++; }
     assert.deepEqual(a, snapA); assert.deepEqual(b, snapB); assert.ok(deepFrozen(r));
   }

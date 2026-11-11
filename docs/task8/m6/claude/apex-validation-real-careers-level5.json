@@ -1,0 +1,317 @@
+{
+ "files": 8,
+ "apexSeen": 643,
+ "meta": {
+  "games": 1523,
+  "clash": 3178,
+  "seasons": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20
+  ],
+  "boost": 0.1,
+  "boostYears": 5,
+  "candidate": true,
+  "policy": true
+ },
+ "cohorts": {
+  "F": {
+   "name": "football-only (never in a Clash lineup)",
+   "all": {
+    "n": 114,
+    "all99By": {
+     "10": 0,
+     "12": 0,
+     "13": 0,
+     "14": 0.9,
+     "15": 18.4
+    },
+    "medianSeasonAll99": 17,
+    "startsPerSeason": 6.7,
+    "clashesPerSeason": 0,
+    "starterSeasonsOf15": 10.2,
+    "idleSeasonsOf15": 4.3,
+    "unsignedAtSomeStart": 0,
+    "clubs": 1.36,
+    "sumAtSeason15": {
+     "p10": 1081,
+     "median": 1150
+    },
+    "notInLeagueAtSeason15": 11,
+    "pointsShortAtSeason15": {
+     "median": 38,
+     "p10": 107
+    },
+    "medianLevel50Season": 11
+   },
+   "starterIn12of15": {
+    "n": 52,
+    "all99By": {
+     "10": 0,
+     "12": 0,
+     "13": 0,
+     "14": 1.9,
+     "15": 40.4
+    },
+    "medianSeasonAll99": 16,
+    "startsPerSeason": 8.2,
+    "clashesPerSeason": 0,
+    "starterSeasonsOf15": 12.7,
+    "idleSeasonsOf15": 1.9,
+    "unsignedAtSomeStart": 0,
+    "clubs": 1.17,
+    "sumAtSeason15": {
+     "p10": 1147,
+     "median": 1178
+    },
+    "notInLeagueAtSeason15": 0,
+    "pointsShortAtSeason15": {
+     "median": 10,
+     "p10": 41
+    },
+    "medianLevel50Season": 9
+   },
+   "starterIn6of15": {
+    "n": 103,
+    "all99By": {
+     "10": 0,
+     "12": 0,
+     "13": 0,
+     "14": 1,
+     "15": 20.4
+    },
+    "medianSeasonAll99": 16,
+    "startsPerSeason": 7.4,
+    "clashesPerSeason": 0,
+    "starterSeasonsOf15": 11.3,
+    "idleSeasonsOf15": 3.1,
+    "unsignedAtSomeStart": 0,
+    "clubs": 1.4,
+    "sumAtSeason15": {
+     "p10": 1113,
+     "median": 1154
+    },
+    "notInLeagueAtSeason15": 0,
+    "pointsShortAtSeason15": {
+     "median": 34,
+     "p10": 75
+    },
+    "medianLevel50Season": 10
+   }
+  },
+  "M": {
+   "name": "mixed (first 4 Clashes a season)",
+   "all": {
+    "n": 76,
+    "all99By": {
+     "10": 0,
+     "12": 0,
+     "13": 0,
+     "14": 28.9,
+     "15": 57.9
+    },
+    "medianSeasonAll99": 15,
+    "startsPerSeason": 7.5,
+    "clashesPerSeason": 3.5,
+    "starterSeasonsOf15": 11.4,
+    "idleSeasonsOf15": 0.8,
+    "unsignedAtSomeStart": 2,
+    "clubs": 1.39,
+    "sumAtSeason15": {
+     "p10": 1159,
+     "median": 1188
+    },
+    "notInLeagueAtSeason15": 2,
+    "pointsShortAtSeason15": {
+     "median": 0,
+     "p10": 29
+    },
+    "medianLevel50Season": 9
+   },
+   "starterIn12of15": {
+    "n": 46,
+    "all99By": {
+     "10": 0,
+     "12": 0,
+     "13": 0,
+     "14": 47.8,
+     "15": 84.8
+    },
+    "medianSeasonAll99": 15,
+    "startsPerSeason": 8.3,
+    "clashesPerSeason": 3.8,
+    "starterSeasonsOf15": 12.8,
+    "idleSeasonsOf15": 0.3,
+    "unsignedAtSomeStart": 0,
+    "clubs": 1.2,
+    "sumAtSeason15": {
+     "p10": 1175,
+     "median": 1188
+    },
+    "notInLeagueAtSeason15": 0,
+    "pointsShortAtSeason15": {
+     "median": 0,
+     "p10": 13
+    },
+    "medianLevel50Season": 8
+   },
+   "starterIn6of15": {
+    "n": 72,
+    "all99By": {
+     "10": 0,
+     "12": 0,
+     "13": 0,
+     "14": 30.6,
+     "15": 61.1
+    },
+    "medianSeasonAll99": 15,
+    "startsPerSeason": 7.8,
+    "clashesPerSeason": 3.6,
+    "starterSeasonsOf15": 11.9,
+    "idleSeasonsOf15": 0.5,
+    "unsignedAtSomeStart": 2,
+    "clubs": 1.36,
+    "sumAtSeason15": {
+     "p10": 1162,
+     "median": 1188
+    },
+    "notInLeagueAtSeason15": 0,
+    "pointsShortAtSeason15": {
+     "median": 0,
+     "p10": 26
+    },
+    "medianLevel50Season": 9
+   }
+  },
+  "X": {
+   "name": "maximum (every Clash his club fights)",
+   "all": {
+    "n": 81,
+    "all99By": {
+     "10": 0,
+     "12": 2.5,
+     "13": 33.3,
+     "14": 64.2,
+     "15": 86.4
+    },
+    "medianSeasonAll99": 14,
+    "startsPerSeason": 7.3,
+    "clashesPerSeason": 8,
+    "starterSeasonsOf15": 11.2,
+    "idleSeasonsOf15": 1,
+    "unsignedAtSomeStart": 0,
+    "clubs": 1.31,
+    "sumAtSeason15": {
+     "p10": 1165,
+     "median": 1188
+    },
+    "notInLeagueAtSeason15": 4,
+    "pointsShortAtSeason15": {
+     "median": 0,
+     "p10": 23
+    },
+    "medianLevel50Season": 8
+   },
+   "starterIn12of15": {
+    "n": 51,
+    "all99By": {
+     "10": 0,
+     "12": 3.9,
+     "13": 51,
+     "14": 82.4,
+     "15": 98
+    },
+    "medianSeasonAll99": 13,
+    "startsPerSeason": 8.3,
+    "clashesPerSeason": 8.8,
+    "starterSeasonsOf15": 12.8,
+    "idleSeasonsOf15": 0.1,
+    "unsignedAtSomeStart": 0,
+    "clubs": 1.2,
+    "sumAtSeason15": {
+     "p10": 1188,
+     "median": 1188
+    },
+    "notInLeagueAtSeason15": 0,
+    "pointsShortAtSeason15": {
+     "median": 0,
+     "p10": 0
+    },
+    "medianLevel50Season": 7
+   },
+   "starterIn6of15": {
+    "n": 76,
+    "all99By": {
+     "10": 0,
+     "12": 2.6,
+     "13": 35.5,
+     "14": 68.4,
+     "15": 92.1
+    },
+    "medianSeasonAll99": 14,
+    "startsPerSeason": 7.8,
+    "clashesPerSeason": 8.5,
+    "starterSeasonsOf15": 11.9,
+    "idleSeasonsOf15": 0.2,
+    "unsignedAtSomeStart": 0,
+    "clubs": 1.32,
+    "sumAtSeason15": {
+     "p10": 1188,
+     "median": 1188
+    },
+    "notInLeagueAtSeason15": 0,
+    "pointsShortAtSeason15": {
+     "median": 0,
+     "p10": 0
+    },
+    "medianLevel50Season": 7
+   }
+  }
+ },
+ "rookiesEnteringBySeason5": 271,
+ "excludedPreDeveloped": 255,
+ "overall": {
+  "n": 271,
+  "all99By": {
+   "10": 0,
+   "12": 0.7,
+   "13": 10,
+   "14": 27.7,
+   "15": 49.8
+  },
+  "medianSeasonAll99": 16,
+  "startsPerSeason": 7.1,
+  "clashesPerSeason": 3.4,
+  "starterSeasonsOf15": 10.9,
+  "idleSeasonsOf15": 2.3,
+  "unsignedAtSomeStart": 2,
+  "clubs": 1.35,
+  "sumAtSeason15": {
+   "p10": 1108,
+   "median": 1187
+  },
+  "notInLeagueAtSeason15": 17,
+  "pointsShortAtSeason15": {
+   "median": 1,
+   "p10": 80
+  },
+  "medianLevel50Season": 9
+ }
+}

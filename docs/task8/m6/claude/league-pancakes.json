@@ -1,0 +1,162 @@
+{
+ "source": "6bebb06 (runtime f9e7581; simulation f716b02)",
+ "method": "node --import tools/task8-m6-league-pancake-probe.mjs tools/ai-franchise-benchmark.mjs --seeds=11-20 --seasons=6 in a measurement copy whose game loop calls the probe; every league and owner game of 60 franchise seasons per configuration; candidates built by editing pancake-structure in docs/beast-dex/data/task8-overrides.json and regenerating the Dex",
+ "definitions": "as tools/task8-m6-pancakes.mjs: ordinary pancakes only; Dragon Stomp attempts and knockdowns and guaranteed pancakes excluded; base OL = LG/RG; bootstrap 2,000 game-cluster resamples",
+ "targets": {
+  "frequency": [
+   0.2,
+   0.6
+  ],
+  "success": [
+   0.3,
+   0.5
+  ],
+  "lostMax": 0.15
+ },
+ "configurations": {
+  "default (qmax 0.15, b 0.35)": {
+   "games": 4687,
+   "unfinished": 0,
+   "totals": {
+    "scrimmagePlays": 252408,
+    "attempts": 34039,
+    "ordinarySuccess": 17511,
+    "baseSuccess": 16140,
+    "packageSuccess": 1371,
+    "lost": 2769,
+    "guaranteed": 415,
+    "abilityKnockdowns": 23317,
+    "abilityAttempts": 23739,
+    "ordinarySheds": 372463
+   },
+   "reconciled": true,
+   "point": {
+    "frequency": 0.8608918284617025,
+    "success": 0.5144393196039837,
+    "lost": 0.08134786568348071
+   },
+   "ci95": {
+    "frequency": [
+     0.8430232558139535,
+     0.8784937059953062
+    ],
+    "success": [
+     0.5086978351398447,
+     0.5200604721479242
+    ],
+    "lost": [
+     0.07841575982777434,
+     0.08433098591549296
+    ]
+   }
+  },
+  "qmax 0.12": {
+   "games": 4660,
+   "unfinished": 0,
+   "totals": {
+    "scrimmagePlays": 250001,
+    "attempts": 27156,
+    "ordinarySuccess": 13781,
+    "baseSuccess": 12651,
+    "packageSuccess": 1130,
+    "lost": 2286,
+    "guaranteed": 362,
+    "abilityKnockdowns": 22938,
+    "abilityAttempts": 23321,
+    "ordinarySheds": 369012
+   },
+   "reconciled": true,
+   "point": {
+    "frequency": 0.6787017167381975,
+    "success": 0.5074753277360436,
+    "lost": 0.08418029164825452
+   },
+   "ci95": {
+    "frequency": [
+     0.6631437768240344,
+     0.6925965665236051
+    ],
+    "success": [
+     0.5010811801356057,
+     0.5136396790663749
+    ],
+    "lost": [
+     0.0808199121522694,
+     0.08748494470601118
+    ]
+   }
+  },
+  "qmax 0.10": {
+   "games": 4716,
+   "unfinished": 0,
+   "totals": {
+    "scrimmagePlays": 254142,
+    "attempts": 22545,
+    "ordinarySuccess": 11467,
+    "baseSuccess": 10573,
+    "packageSuccess": 894,
+    "lost": 1931,
+    "guaranteed": 296,
+    "abilityKnockdowns": 22637,
+    "abilityAttempts": 22880,
+    "ordinarySheds": 377862
+   },
+   "reconciled": true,
+   "point": {
+    "frequency": 0.5604855810008482,
+    "success": 0.5086271900643158,
+    "lost": 0.0856509203814593
+   },
+   "ci95": {
+    "frequency": [
+     0.5481340118744699,
+     0.5738973706530959
+    ],
+    "success": [
+     0.5016326890830465,
+     0.5153387773118517
+    ],
+    "lost": [
+     0.08197601575085019,
+     0.08943125442948263
+    ]
+   }
+  },
+  "qmax 0.10, b 0.30": {
+   "games": 4698,
+   "unfinished": 0,
+   "totals": {
+    "scrimmagePlays": 253099,
+    "attempts": 22579,
+    "ordinarySuccess": 10451,
+    "baseSuccess": 9646,
+    "packageSuccess": 805,
+    "lost": 2175,
+    "guaranteed": 284,
+    "abilityKnockdowns": 23457,
+    "abilityAttempts": 23817,
+    "ordinarySheds": 378697
+   },
+   "reconciled": true,
+   "point": {
+    "frequency": 0.5133035334184759,
+    "success": 0.4628637229283848,
+    "lost": 0.09632844678683733
+   },
+   "ci95": {
+    "frequency": [
+     0.5009046402724564,
+     0.5250638569604087
+    ],
+    "success": [
+     0.4559614963902866,
+     0.469562121751513
+    ],
+    "lost": [
+     0.09244649981864345,
+     0.10035366931918656
+    ]
+   }
+  }
+ }
+}

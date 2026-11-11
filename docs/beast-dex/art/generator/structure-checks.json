@@ -1,0 +1,58 @@
+{
+ "combinations": 150,
+ "problems": [],
+ "identicalMasks": [],
+ "poseCollapses": [],
+ "closestNeutralPairs": [
+  {
+   "a": "heavy_quadruped",
+   "b": "shelled",
+   "jaccard": 0.797
+  },
+  {
+   "a": "burrowing",
+   "b": "segmented_crawler",
+   "jaccard": 0.774
+  },
+  {
+   "a": "heavy_quadruped",
+   "b": "amorphous",
+   "jaccard": 0.771
+  },
+  {
+   "a": "perching_avian",
+   "b": "plant_bodied",
+   "jaccard": 0.77
+  },
+  {
+   "a": "heavy_upright",
+   "b": "heavy_quadruped",
+   "jaccard": 0.77
+  },
+  {
+   "a": "heavy_upright",
+   "b": "construct",
+   "jaccard": 0.763
+  },
+  {
+   "a": "compact_upright",
+   "b": "perching_avian",
+   "jaccard": 0.757
+  },
+  {
+   "a": "heavy_upright",
+   "b": "shelled",
+   "jaccard": 0.753
+  },
+  {
+   "a": "shelled",
+   "b": "amorphous",
+   "jaccard": 0.752
+  },
+  {
+   "a": "compact_upright",
+   "b": "jellyfish",
+   "jaccard": 0.736
+  }
+ ]
+}

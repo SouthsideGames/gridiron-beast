@@ -11,8 +11,11 @@ import { SPECIES_DEX } from '../src/data/species.js';
 import { spriteGrid, palette } from '../src/ui/sprite16.js';
 import { evolvedSpec } from '../src/data/monsters.js';
 
-const out = process.argv[2] || 'export/sprites';
-const scale = Math.max(1, parseInt(process.argv[3] || '1', 10));
+// --basic: export the Beast Dex's Basic creation batch (docs/beast-dex/data/families.json) instead of the game's species dex.
+const basicMode = process.argv.includes('--basic');
+const pos = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+const out = pos[0] || 'export/sprites';
+const scale = Math.max(1, parseInt(pos[1] || '1', 10));
 fs.mkdirSync(out, { recursive: true });
 
 function crc32(buf) { let c, crc = 0xffffffff; for (let n = 0; n < buf.length; n++) { c = (crc ^ buf[n]) & 0xff; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; crc = (crc >>> 8) ^ c; } return (crc ^ 0xffffffff) >>> 0; }
@@ -35,7 +38,10 @@ function paint(spec, rgba, w, ox, oy) {
   }
 }
 
-const forms = SPECIES_DEX.flatMap((s) => [{ ...s, form: 'base', file: s.id }, ...s.evolution.map((e, i) => ({ ...evolvedSpec(s, i + 1), name: e.name, form: `evolved ${i + 1}`, file: `${s.id}_e${i + 1}`, level: e.level }))]);
+const forms = basicMode
+  ? JSON.parse(fs.readFileSync(new URL('../docs/beast-dex/data/families.json', import.meta.url), 'utf8')).filter((f) => f.rarity === 'basic')
+    .map((f) => ({ id: f.id, name: f.name, element: f.type, rarity: 'basic', position: f.position, ...f.art.spec, form: 'base', file: f.id }))
+  : SPECIES_DEX.flatMap((s) => [{ ...s, form: 'base', file: s.id }, ...s.evolution.map((e, i) => ({ ...evolvedSpec(s, i + 1), name: e.name, form: `evolved ${i + 1}`, file: `${s.id}_e${i + 1}`, level: e.level }))]);
 const cell = 16 * scale, cols = 12, rows = Math.ceil(forms.length / cols);
 const sheet = Buffer.alloc(cols * cell * rows * cell * 4);
 const atlas = [];

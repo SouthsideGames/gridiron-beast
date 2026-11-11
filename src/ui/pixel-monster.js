@@ -5,15 +5,30 @@
 
 import { createRng, hashString } from '../core/rng.js';
 import { TYPES, formOf } from '../data/monsters.js';
-import { sprite16, spriteGrid, palette } from './sprite16.js';
+import { sprite16, sprite16Symbol, spriteGrid, palette } from './sprite16.js';
 
 function hsl(h, s, l) { return `hsl(${h} ${s}% ${l}%)`; }
 
+const indTint = (m, sp) => createRng(hashString(`ind|${m?.id || m?.name || sp.id}`)).int(7) - 3;
 /** Returns an inline SVG string. `size` is the CSS pixel size. */
 export function monsterSprite(m, size = 48, { tint = null, flip = false } = {}) {
   const sp = formOf(m);
-  const t = tint ?? (createRng(hashString(`ind|${m?.id || m?.name || sp.id}`)).int(7) - 3);
+  const t = tint ?? indTint(m, sp);
   return sprite16(sp, size, { tint: t, flip });
+}
+
+/**
+ * The monster's field sprite as a reusable <symbol> (sprite16Symbol): { id, symbol }, the very pixels monsterSprite draws for
+ * this individual (same form, same tint). Cached per monster object; the cache is checked against the fields that decide the art
+ * (species, name, stage, id), so an evolution between plays is picked up.
+ */
+const refCache = new WeakMap();
+export function monsterSpriteRef(m, { flip = false } = {}) {
+  const stamp = `${m?.species}|${m?.name}|${m?.stage || 0}|${m?.id}`;
+  let c = m && typeof m === 'object' ? refCache.get(m) : null;
+  if (!c || c.stamp !== stamp) { const sp = formOf(m); c = { stamp, sp, tint: indTint(m, sp), refs: [null, null] }; if (m && typeof m === 'object') refCache.set(m, c); }
+  const i = flip ? 1 : 0;
+  return c.refs[i] || (c.refs[i] = sprite16Symbol(c.sp, { tint: c.tint, flip }));
 }
 
 /** Small type glyph (used in lists) as an inline SVG. */

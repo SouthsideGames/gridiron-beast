@@ -7,7 +7,8 @@ import * as F from '../src/franchise/franchise.js';
 import * as Save from '../src/franchise/save.js';
 import { canPlay } from '../src/data/personnel.js';
 import { leagueClubs, clubRoster, isProtected } from '../src/franchise/league-registry.js';
-import { releaseFromClub } from '../src/franchise/league.js';
+import { releaseFromClub, POOL_WORTH } from '../src/franchise/league.js';
+import { monsterOverall } from '../src/data/monsters.js';
 import { newFranchise } from '../tools/franchise-soak.mjs';
 import { t7Settle, t7FillToMin } from './t7-support.js';
 
@@ -16,7 +17,10 @@ import { t7Settle, t7FillToMin } from './t7-support.js';
 function openCB(f) {
   const cbs = f.roster.filter((m) => m.position === 'CB'); for (const m of cbs.slice(1)) m.injury = { weeks: 12, name: 'test injury' };
   for (const k of Object.keys(f.lineupManual)) delete f.lineupManual[k];
-  let n = 0; for (const c of leagueClubs(f).slice().sort()) { const cb = clubRoster(f, c).find((m) => m.position === 'CB' && !isProtected(m)); if (cb && releaseFromClub(f, c, cb.id, { year: f.season.year }).ok) n++; if (n >= 2) break; }
+  // Task 8 M1 (fixture drift): a castoff reaches the owner's market only at the pool grade (POOL_WORTH: OVR 52–60, or 24 and under);
+  // Dex CBs are often weaker and older, so they left the league and the market had no CB. Each released CB is chosen within the
+  // market grade and made pool-worthy explicitly (aged 24 at most) so he enters the pool, as the scenario needs.
+  let n = 0; for (const c of leagueClubs(f).slice().sort()) { const cb = clubRoster(f, c).find((m) => m.position === 'CB' && !isProtected(m) && monsterOverall(m) <= POOL_WORTH.market); if (cb) cb.age = Math.min(cb.age, POOL_WORTH.age); if (cb && releaseFromClub(f, c, cb.id, { year: f.season.year }).ok) n++; if (n >= 2) break; }
   return cbs.slice(1);
 }
 function toNextSeason(seed) {
@@ -36,7 +40,11 @@ test('a complete lineup progresses normally; an incomplete one is named exactly,
   assert.ok((g.fixes.CB || []).length > 0, 'cheapest legal free agents are listed');
   for (const x of g.fixes.CB) assert.equal(F.freeAgentMarket(f).find((y) => y.monster.id === x.id).monster.position, 'CB', 'only CBs are offered for a CB slot');
   assert.equal(canPlay('S', 'CB2'), false, 'a safety may not play CB');
-  // the game cannot be played: Sunday is a forfeit and the engine refuses a game
+  // the game cannot be played: Sunday is a forfeit and the engine refuses a game. Constructed (2026-11-08, after D1's founding rosters):
+  // the staff's Tuesday encounter may legally sign a scouted CB (here one of the CBs the AI clubs just released), which would close the
+  // hole before Sunday; the roster is filled to the maximum with non-CB reserves first, so no Tuesday signing can happen (the staff only
+  // signs below ROSTER_MAX) and the hole stays open to game day, as the scenario needs.
+  const filler = f.roster.find((x) => x.position === 'K'); while (f.roster.length < F.ROSTER_MAX) f.roster.push({ ...JSON.parse(JSON.stringify(filler)), id: `pad${f.roster.length}`, name: `Pad ${f.roster.length}` });
   F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); F.autoRunToSunday(f); }
   const m = F.sundayMatchup(f); assert.ok(m.forfeit); assert.equal(F.pregamePreview(f).ok, false, 'the game screen refuses an illegal lineup (the established forfeit rule)');
 });
@@ -63,7 +71,8 @@ test('season start: the gate stops the season unknowingly starting into forfeits
   assert.ok(!JSON.stringify(back).includes('acceptForfeits'), 'no bypass is saved');
   const year = back.season.year; const ok = F.startNextSeason(back, { acceptForfeits: true }); assert.ok(ok.ok, ok.reason); assert.equal(back.season.year, year + 1, 'a deliberate start is never a dead end');
   // the forfeit rule is unchanged: Sunday's game is a forfeit, recorded as 0-21
-  F.autoRunToSunday(back); if (F.isBye(back)) { F.takeBye(back); F.autoRunToSunday(back); }
+  // Keep the deliberately open slot: staff auto-run may legitimately recruit a replacement under the new M5 draft/development outcomes.
+  back.season.day = 6; if (F.isBye(back)) { F.takeBye(back); back.season.day = 6; }
   const m = F.sundayMatchup(back); assert.ok(m.forfeit); const res = F.forfeitSunday(back); assert.ok(res.ok); assert.equal(back.lastGame.forfeit, true); assert.equal(back.lastGame.oppScore, 21);
 });
 

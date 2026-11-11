@@ -95,16 +95,19 @@ test('team history comes from recorded moves only, and every recorded move appea
   }
 });
 
-test('an older save shows what it has: nothing is backfilled or invented by viewing', () => {
-  const fx = JSON.parse(fs.readFileSync(new URL('./fixtures/save-v31-season2.json', import.meta.url), 'utf8')).franchise;
-  const f = Save.migrate(fx); const before = JSON.stringify(f);
+test('a loaded save shows what it has: nothing is backfilled or invented by viewing; a pre-Task-8 save is refused unchanged', () => {
+  // Task 8 fresh-save break (spec §15): the v31 save is refused with the Start New Franchise message and left as it was
+  const fx = JSON.parse(fs.readFileSync(new URL('./fixtures/save-v31-season2.json', import.meta.url), 'utf8')).franchise; const fxBefore = JSON.stringify(fx);
+  assert.throws(() => Save.migrate(fx), (e) => e.code === 'incompatible' && e.message === Save.INCOMPATIBLE_MESSAGE); assert.equal(JSON.stringify(fx), fxBefore);
+  // a schema-10 save, loaded as the game loads it, then viewed page by page
+  const f = Save.importJson(Save.exportJson(played())); assert.equal(f.schemaVersion, 10); const before = JSON.stringify(f);
   for (const m of f.roster) {
     const pg = careerPage(f, m.id); const tl = careerTimeline(m, { club: f.club });
     assert.equal(pg.p.timeline.length, tl.length, `${m.name}: the page shows the timeline the save holds`);
     for (const [tab] of PAGE_TABS) careerPageHtml({ f, settings: {} }, { id: m.id, tab });
     if (!pg.p.complete && pg.p.seasons > pg.p.onRecord) assert.match(careerPageHtml({ f, settings: {} }, { id: m.id, tab: 'stats' }), /not counted|before this franchise kept his stats/, `${m.name}: the missing seasons are explained, not filled in`);
   }
-  assert.equal(JSON.stringify(f), before, 'viewing an older save writes nothing (no backfill, no stats initialisation)');
+  assert.equal(JSON.stringify(f), before, 'viewing a loaded save writes nothing (no backfill, no stats initialisation)');
 });
 
 test('Hall of Fame cards, older cards and an archived franchise\'s best monsters open read-only pages', () => {

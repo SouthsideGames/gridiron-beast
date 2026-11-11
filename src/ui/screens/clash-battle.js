@@ -3,13 +3,16 @@
 // this screen shows the record (through the arena player). Revised 2026-10-22 (owner brief): ONE selection phase (the monsters
 // and their order of entry), then ONE continuous battle with no further decisions; the next monster steps up on a knockout
 // until one side has nobody left. Watch and Skip to results are the identical battle.
+import { abilityInfo, masteryInfo } from '../ability-info.js';
 import { esc, delegate, toast, sheet, fmtMoney } from '../dom.js';
 import { monsterSprite } from '../pixel-monster.js';
 import * as F from '../../franchise/franchise.js';
-import { CLASH_MODES, CLASH_SPEEDS, clashSettings, pendingDecision, policiesOf, normalizeMode } from '../../franchise/clash-link.js';
+import { CLASH_MODES, CLASH_SPEEDS, clashSettings, pendingDecision, policiesOf, normalizeMode, isT8Record } from '../../franchise/clash-link.js';
 import { consequence } from '../../franchise/assist-advice.js';
 import { createArena } from '../clash/arena.js';
-import { stateAt } from '../clash/choreographer.js';
+import { stateAt as stateAtRecord } from '../clash/choreographer.js';
+import { toArenaRecord, T8_STATUS_ICON, T8_STATUS_NAME } from '../clash/t8-record.js';
+const stateAt = (r, i) => stateAtRecord(toArenaRecord(r), i);
 import { monsterOverall } from '../../data/monsters.js';
 import { archetypeOf } from '../../clash/stats.js';
 import { typeFactor, typeEdge } from '../../clash/types.js';
@@ -21,9 +24,10 @@ export const MODE_TEXT = Object.freeze({
   skip: { label: 'Skip to results', help: 'The same battle, resolved instantly. Skipping never changes who wins.' },
 });
 export const SPEED_LABEL = Object.freeze({ 1: 'Normal', 2: 'Fast', 4: 'Fastest' });
-export const HELP_HTML = `<p><b>Beast Clash</b> is a monster battle. Each side lines up its monsters in an order of entry; the two front monsters trade strikes, Supports and bench Disruptors act from the back. When a monster is knocked out, the next in line steps up with the battle as it stands (health and conditions carry on). The last side standing wins, or the side with more health left after 30 exchanges.</p>
-<p><b>One choice, one battle.</b> You pick your monsters and the order they enter before the battle, then it runs on its own to the end. No menus interrupt it.</p>
-<p><b>Watch battle</b> shows every exchange at the speed you choose. <b>Skip to results</b> plays the very same battle instantly: it is never a worse chance of winning, just less to watch.</p>
+export const HELP_HTML = `<p><b>Beast Clash</b> is a monster battle. Each side lines up its monsters in an order of entry. <b>One active fighter per side</b> trades strikes; the reserves wait and act only through abilities that name them (a reserve relay, a rescue, a commanded strike). When the active monster is knocked out, the next in line steps up with the battle as it stands (health, shields and statuses carry on). The last side standing wins, or the side with more health left after 30 exchanges.</p>
+<p><b>Rotations.</b> After both fighters have acted, a side may rotate its active monster out for a reserve (at most once every four exchanges). In <b>Watch battle</b> you are asked at each legal rotation: <b>Stay in</b>, bring in a reserve, or <b>Auto for the rest</b> of this battle (the game's own rotation policy, the one the other side uses). A monster that rotates in by choice acts at half strength on its first turn. Knockout replacements and forced rotations carry no penalty.</p>
+<p><b>Watch battle</b> shows every exchange at the speed you choose and asks you about rotations. <b>Skip to results</b> plays the battle instantly with the automatic rotation policy on your side. Neither is a worse chance of winning: a Watch battle in which you choose Auto at the first prompt is the very same battle as Skip.</p>
+<p><b>Statuses.</b> A monster carries one shared status at a time (Shielded, Guarded, Empowered, Weakened, Slowed, Stunned, Confused ...). In the pregame Clash and the overtime Clash, statuses carry into and out of the football game; a standalone Tuesday battle clears them at its end.</p>
 <p><b>Type edges:</b> ▲ next to a monster means its element hits the one in front of it harder; ▼ means it hits softer. Put a monster with ▲ in front, and keep your toughest for last.</p>
 <p><b>Tuesday encounters:</b> the monster you chose fights beside two wild companions. They are matched to your club's strength and cannot be signed; only the monster you chose can join you.</p>
 <p><b>Skipping a Tuesday encounter</b> is different: no battle happens, so there is no chance to sign that monster this week. Nothing else is lost.</p>
@@ -43,7 +47,7 @@ function bindings(app, Router) {
       record: (f) => f.week.encounter,
       preview: (f, i) => F.encounterPreview(f, i),
       start: (f, i, opts) => F.startEncounter(f, i, opts),
-      battle: (f) => F.encounterBattle(f),
+      battle: (f) => F.encounterBattle(f), decide: (f, ex, choice) => F.encounterDecide(f, ex, choice),
       resolve: (f) => F.resolveEncounter(f),
       occasion: 'encounter', mySide: 'a',
       resultHtml(f, e) {
@@ -79,7 +83,7 @@ function bindings(app, Router) {
       record: (f) => f.week.pregame,
       preview: (f) => F.pregamePreview(f),
       start: (f, i, opts) => F.startPregameClash(f, opts),
-      battle: (f) => F.pregameBattle(f),
+      battle: (f) => F.pregameBattle(f), decide: (f, ex, choice) => F.pregameDecide(f, ex, choice),
       resolve: (f) => F.resolvePregameClash(f),
       occasion: 'pregame', mySide: 'a',
       theirName: (f) => F.pregamePreview(f).opponent || 'Their team',
@@ -101,8 +105,8 @@ function bindings(app, Router) {
       title: 'Overtime · Beast Clash',
       record: (f) => f.week.overtime,
       preview: (f) => F.overtimePreview(f),
-      start: (f, i, opts) => F.startOvertimeClash(f, opts),
-      battle: (f) => F.overtimeBattle(f),
+      start: (f, i, opts) => F.startOvertimeClash(f, { ...opts, state: app.f?.game?.state || null }), // the football state: statuses and exhaustion carry into the deciding Clash (§10, §12)
+      battle: (f) => F.overtimeBattle(f), decide: (f, ex, choice) => F.overtimeDecide(f, ex, choice),
       resolve: (f) => F.resolveOvertimeClash(f),
       occasion: 'overtime', mySide: 'a',
       theirName: (f) => F.overtimePreview(f).opponent || 'Their team',
@@ -139,10 +143,12 @@ export function registerClashBattle(Router, app) {
     const s = settings(); const preferred = s.mode !== 'ask' ? s.mode : 'watch';
     const edge = (m, foe) => { if (!foe) return ''; const x = typeFactor(m.type, foe.type), y = typeFactor(foe.type, m.type); return x > 1 ? '<b class="edge strong" title="hits their front monster harder">▲</b>' : y > 1 ? '<b class="edge weak" title="their front monster hits this one harder">▼</b>' : ''; };
     const slotLabel = (i, n) => i === 0 ? 'enters first' : i === n - 1 && n > 1 ? 'last' : `${i + 1}${i === 1 ? 'nd' : i === 2 ? 'rd' : 'th'} in`;
-    const card = (m, i, side, n) => `<div class="item static cl-pick ${i === 0 ? 'first' : ''}" style="gap:8px"><span class="cl-slot ${i === 0 ? 'first' : ''}">${i + 1}</span>${monsterSprite(m, 34)}<div class="grow" style="font-size:12px;min-width:0"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b>${esc(m.name)}</b> <span class="dim">${monsterOverall(m)} OVR</span> ${side === 'a' ? edge(m, theirs[0]) : edge(m, mine[0])}</div><div class="dim" style="line-height:1.25">${ARCH_GLYPH[archetypeOf(m.species)] || ''} ${esc(archetypeOf(m.species) || '')} · ${esc(m.type)} · <b style="color:var(--ink-2)">${slotLabel(i, n)}</b>${m.companion ? ' · cannot sign' : ''}${m.fatigue >= 30 ? ` · <span style="color:var(--warn)">tired ${m.fatigue}%</span>` : ''}</div></div>${side === 'a' ? `<span class="cl-pick-btns"><button class="btn small ghost" data-action="moveup" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button><button class="btn small ghost" data-action="movedown" data-i="${i}" ${i === n - 1 ? 'disabled' : ''} aria-label="Move down">↓</button><button class="btn small ghost" data-action="remove" data-id="${m.id}" aria-label="Remove">✕</button></span>` : ''}</div>`;
+    // Task 8 M6: the Clash ability of each fighter; for your own monsters, its Clash mastery tier (the mode's mastery, spec §6).
+    const abLine = (m, side) => { const a = abilityInfo(m.species, 'clash'); if (!a) return '<div class="dim" style="line-height:1.25">No Clash ability (Basic)</div>'; const k = side === 'a' && m.dev ? masteryInfo(m, 'clash') : null; return `<div style="line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" data-clash-ability="${a.id}">✦ ${esc(a.name)}${k ? ` <span class="dim">· ${k.tier}${k.mastered ? '' : ` ${k.credits}/${k.next}`}</span>` : ''}</div>`; };
+    const card = (m, i, side, n) => `<div class="item static cl-pick ${i === 0 ? 'first' : ''}" style="gap:8px"><span class="cl-slot ${i === 0 ? 'first' : ''}">${i + 1}</span>${monsterSprite(m, 34)}<div class="grow" style="font-size:12px;min-width:0"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b>${esc(m.name)}</b> <span class="dim">${monsterOverall(m)} OVR</span> ${side === 'a' ? edge(m, theirs[0]) : edge(m, mine[0])}</div>${abLine(m, side)}<div class="dim" style="line-height:1.25">${ARCH_GLYPH[archetypeOf(m.species)] || ''} ${esc(archetypeOf(m.species) || '')} · ${esc(m.type)} · <b style="color:var(--ink-2)">${slotLabel(i, n)}</b>${m.companion ? ' · cannot sign' : ''}${m.fatigue >= 30 ? ` · <span style="color:var(--warn)">tired ${m.fatigue}%</span>` : ''}</div></div>${side === 'a' ? `<span class="cl-pick-btns"><button class="btn small ghost" data-action="moveup" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button><button class="btn small ghost" data-action="movedown" data-i="${i}" ${i === n - 1 ? 'disabled' : ''} aria-label="Move down">↓</button><button class="btn small ghost" data-action="remove" data-id="${m.id}" aria-label="Remove">✕</button></span>` : ''}</div>`;
     const rest = pv.eligible.filter((m) => !st.lineup.includes(m.id));
     const picker = st.lineup.length < pv.size || st.editing ? `<div class="list" style="margin-top:6px;max-height:280px;overflow:auto">${rest.map((m) => `<button class="item" style="min-height:0;padding:6px 8px" data-action="add" data-id="${m.id}" ${st.lineup.length >= pv.size ? 'disabled' : ''}>${monsterSprite(m, 28)}<div class="grow" style="font-size:12px;min-width:0"><b>${esc(m.name)}</b> <span class="dim">${ARCH_GLYPH[archetypeOf(m.species)] || ''} ${esc(archetypeOf(m.species) || '')} · ${esc(m.type)} · ${monsterOverall(m)} OVR${m.fatigue >= 30 ? ` · tired ${m.fatigue}%` : ''}</span> ${edge(m, theirs[0])}</div><span class="chip">${st.lineup.length >= pv.size ? 'full' : 'add'}</span></button>`).join('') || '<p class="dim">Everyone healthy is in the lineup.</p>'}</div>` : '';
-    return `<p class="muted">${b.introText ? b.introText(f) : `You met <b>${esc(pv.wild[0].name)}</b> in the wild${pv.wild.length > 1 ? ` with ${pv.wild.length - 1} wild companion${pv.wild.length > 2 ? 's' : ''} (matched to your club, cannot be signed)` : ''}. Win the ${pv.size}v${pv.size} and ${esc(pv.wild[0].name)} will want to join you; lose and you still get one pitch.`} <button class="btn small ghost" data-action="help">Help</button></p>
+    return `<p class="muted">${b.introText ? b.introText(f) : `You met <b>${esc(pv.wild[0].name)}</b> in the wild${pv.wild.length > 1 ? ` with ${pv.wild.length - 1} wild companion${pv.wild.length > 2 ? 's' : ''} (matched to your club, cannot be signed)` : ''}. Win the ${pv.size}v${pv.size} and ${esc(pv.wild[0].name)} will want to join you; lose and you still get one pitch.`} <button class="btn small ghost" data-action="help">Help</button></p>${pv.basicBonus?.active ? `<p class="panel tight" style="margin:6px 0"><b>✨ ${esc(pv.basicBonus.label)}</b><span class="dim"> for every battler if you win, even if you don't sign ${esc(pv.wild[0].name)}. Training and mastery are not boosted.</span></p>` : ''}
       <div class="panel cl-setup"><div class="row between"><b>Your lineup</b><span class="dim">${mine.length} of ${pv.size} · in order of entry</span></div>
         <div class="list" style="margin-top:6px">${mine.map((m, i) => card(m, i, 'a', mine.length)).join('')}${!mine.length ? `<p class="dim" style="margin:4px 0">No monsters picked. Add up to ${pv.size} below, or tap Auto lineup.</p>` : mine.length < pv.size ? `<p class="dim" style="margin:4px 0">${pv.size - mine.length} slot${pv.size - mine.length === 1 ? '' : 's'} open: add more, or enter with ${mine.length} (the battle shrinks to ${mine.length}v${mine.length}).</p>` : ''}</div>
         <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small" data-action="edit">${st.editing ? 'Done' : 'Change a monster'}</button><button class="btn small ghost" data-action="autol">Auto lineup</button></div>${picker}
@@ -154,32 +160,62 @@ export function registerClashBattle(Router, app) {
       </div>`;
   }
 
-  // ---------- the battle itself: continuous, no decisions
+  // ---------- the battle itself: continuous; in Watch the t8 engine stops at the player's legal rotation phases (D1) and the prompt below answers them
   function battleHtml(f, e) {
-    return `<div class="row between" style="margin-bottom:4px"><span class="muted">${e.size}v${e.size} · ${esc(B().title.split('·').pop().trim())}</span><button class="btn small ghost" data-action="help">Help</button></div>
+    const pend = isT8Record(e) && st.result?.pending ? pendingDecision(st.result) : null;
+    return `<div class="row between" style="margin-bottom:4px"><span class="muted">${e.size}v${e.size} · ${esc(B().title.split('·').pop().trim())}</span><span class="row" style="gap:6px">${pend ? '<button class="btn small primary" data-action="rotprompt">⇄ Rotation: your call</button>' : ''}<button class="btn small ghost" data-action="help">Help</button></span></div>
       <div id="fb-arena"></div>`;
   }
   function teamNames(f, e) { const theirs = st.kind === 'encounter' ? 'The wild' : (e.opponent || 'The opponent'); return { a: f.club.split(' ').pop(), b: theirs }; }
   function mountBattle(root, f, e) {
     const host = root.querySelector('#fb-arena'); if (!host) return;
     st.result = B().battle(f); if (!st.result) { toast('The battle could not be rebuilt.', 'bad'); return; }
-    const legacyPend = policiesOf(e).a === 'manual' ? pendingDecision(st.result) : null; // a 'play' battle from before 2026-10-22 left mid-decision: it finishes on its own as Auto
+    const legacyPend = !isT8Record(e) && policiesOf(e).a === 'manual' ? pendingDecision(st.result) : null; // a 'play' battle from before 2026-10-22 left mid-decision: it finishes on its own as Auto
     if (legacyPend) { e.policies = { a: 'smart', b: 'smart' }; e.mode = 'watch'; app.save(); st.result = B().battle(f); }
     const end = st.result.log.length - 1;
-    st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, onCursor: (i) => { st.cursor = i; }, onEnd: () => finish(f) });
+    // Looks hook (Task 8 M4): the Clash looks module (src/ui/fx/clash*, branch task8-fx-clash) plugs in here as `looks` once it exists;
+    // until then the arena plays its functional cues. See src/ui/clash/t8-record.js for the contract.
+    st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, looks: app.clashLooks || null, onCursor: (i) => { st.cursor = i; }, onEnd: () => atEnd(f) });
     if (st.cursor) st.arena.setCursor(Math.min(st.cursor, end));
-    if (st.cursor >= end) { finish(f); return; }
+    if (st.cursor >= end) { atEnd(f); return; }
     setTimeout(() => st.arena?.play(), 300);
   }
+  /** The log has been played to its last event: either the battle is over (settle it) or the engine stopped at the player's rotation prompt (D1). */
+  function atEnd(f) {
+    const e = B().record(f); const p = e && isT8Record(e) && st.result?.pending ? pendingDecision(st.result) : null;
+    if (p) { promptRotation(f, e, p); return; }
+    finish(f);
+  }
+  /**
+   * The rotation prompt (owner ruling D1, §25 item 1): at a legal rotation phase of the player's side in Watch mode: Stay in, bring in
+   * a reserve, or "Auto for the rest of this battle" (the AI policy, D2, from here on; never asked again). The answer is recorded on the
+   * battle record, so a reload or a replay continues identically; the arena then plays on from the prompt.
+   */
+  function promptRotation(f, e, p) {
+    if (document.querySelector('.sheet [data-rot]')) return;
+    const act = st.result.lines[p.side].find((x) => x.id === p.activeId); const foe = st.result.lines[p.side === 'a' ? 'b' : 'a'].find((x) => x.active);
+    const stat = (x) => (x.status ? ` · ${T8_STATUS_ICON[x.status.id] || ''} ${T8_STATUS_NAME[x.status.id] || x.status.id} (${x.status.remaining})` : '');
+    const edge = (x) => (foe ? (typeFactor(x.type, foe.type) > 1 ? ' <b class="edge strong">▲</b>' : typeFactor(foe.type, x.type) > 1 ? ' <b class="edge weak">▼</b>' : '') : '');
+    const row = (x, label, rot) => `<button class="item" data-rot="${rot}" style="min-height:0;padding:8px"><div class="grow" style="min-width:0"><div><b>${esc(x.name)}</b>${edge(x)} <span class="dim">${ARCH_GLYPH[x.archetype] || ''} ${esc(x.archetype)} · ${esc(x.type)}</span></div><div class="dim" style="font-size:12px">HP ${x.hp}/${x.maxHp}${stat(x)}</div></div><span class="chip ${rot === 'stay' ? 'accent' : ''}">${label}</span></button>`;
+    const html = `<p class="muted" style="margin:0 0 6px">Exchange ${p.ex}: after both fighters acted, you may rotate. A reserve that comes in by choice acts at <b>half strength</b> on its first turn (the next rotation is four exchanges away). ${foe ? `Their active: <b>${esc(foe.name)}</b> (${esc(foe.type)}, HP ${foe.hp}/${foe.maxHp}).` : ''}</p>
+      <div class="list">${act ? row(act, 'Stay in', 'stay') : ''}${p.reserves.map((o) => row(st.result.lines[p.side].find((x) => x.id === o.id) || { ...o, status: o.status ? { id: o.status, remaining: '?' } : null }, 'Bring in', o.id)).join('')}</div>
+      <button class="btn block" data-rot="auto" style="margin-top:8px">⚙ Auto for the rest of this battle</button><p class="dim" style="margin:4px 0 0">Auto hands your rotations to the game's own policy (the one the other side uses) and never asks again in this battle.</p>`;
+    const { el, close } = sheet(html, { title: 'Rotation: your call' });
+    el.addEventListener('click', (ev) => {
+      const b = ev.target.closest('[data-rot]'); if (!b) return; const choice = b.dataset.rot; close();
+      const r = B().decide(f, p.ex, choice); if (!r.ok) { toast(r.reason, 'bad'); return; }
+      app.save(); const from = st.arena ? st.arena.cursor : st.cursor; stop(); st.cursor = from; Router.render(); // the remount rebuilds the battle from the record and plays on from the prompt
+    });
+  }
   function finish(f) {
-    const r = B().resolve(f); if (!r.ok) { toast(r.reason, 'bad'); return; }
+    const r = B().resolve(f); if (!r.ok) { if (r.pending?.kind === 'rotation') { promptRotation(f, B().record(f), r.pending); return; } toast(r.reason, 'bad'); return; }
     app.save(); stop(); st.cursor = 0; Router.render();
   }
   /** Each battler's XP: amount gained, a bar toward the next level, and any level-up. */
   function xpRows(e) {
     const rows = (e.events || []).filter((x) => x.kind === 'xp'); const lv = (e.events || []).filter((x) => x.kind === 'levelup');
     if (!rows.length) return `<div class="dim" style="margin-top:4px">Your battlers earned experience${lv.length ? ` · <b>${esc(lv.map((x) => `${x.name} → level ${x.level}`).join(', '))}</b>` : ''}.</div>`;
-    return `<div style="margin-top:8px;text-align:left">${rows.map((x) => `<div class="row between" style="font-size:13px;gap:8px;margin-top:4px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${esc(x.name)}</b> <span class="mono" style="color:var(--good)">+${x.amount} XP</span>${x.levelsGained ? ` <span class="chip good">Level ${x.level}!</span>` : ''}</span><span class="dim mono" style="white-space:nowrap">Lv ${x.level} · ${x.xp}/${x.next}</span></div><div class="bar" style="margin:2px 0 0"><i style="width:${Math.min(100, Math.round(x.xp / x.next * 100))}%"></i></div>`).join('')}</div>`;
+    return `<div style="margin-top:8px;text-align:left">${rows.map((x) => `<div class="row between" style="font-size:13px;gap:8px;margin-top:4px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${esc(x.name)}</b> <span class="mono" style="color:var(--good)">${x.max ? 'MAX' : `+${Math.round(x.amount * 10) / 10} XP`}${x.training ? ` · +${Math.round(x.training * 1000) / 10}% training` : ''}${x.masteryCredits ? ` · +${x.masteryCredits} Clash mastery` : ''}${x.gradeAdj ? ` · grade ${x.gradeAdj > 0 ? '+' : ''}${Math.round(x.gradeAdj * 100)}%` : ''}</span>${x.bonus ? ` <span class="dim mono" title="${esc(x.bonusLabel || '')}">(${x.base} + ${x.bonus} Basic bonus)</span>` : ''}${x.levelsGained ? ` <span class="chip good">Level ${x.level}!</span>` : ''}</span><span class="dim mono" style="white-space:nowrap">Lv ${x.level} · ${x.xp}/${x.next}</span></div><div class="bar" style="margin:2px 0 0"><i style="width:${Math.min(100, Math.round(x.xp / x.next * 100))}%"></i></div>`).join('')}</div>`;
   }
   /** The outcome in one glance: who won and how, who is still standing on each side, knockouts by each side, then XP. */
   function resultHtml(f, e) {
@@ -218,6 +254,7 @@ export function registerClashBattle(Router, app) {
       delegate(root, {
         back: () => Router.back(),
         help: () => sheet(HELP_HTML, { title: 'How Beast Clash works' }),
+        rotprompt: () => atEnd(f),
         edit: () => { st.editing = !st.editing; Router.render(); },
         autol: () => { st.lineup = null; st.editing = false; Router.render(); },
         add: (el) => { const id = el.dataset.id; const pv = b.preview(f, st.i); if (!st.lineup.includes(id) && st.lineup.length < pv.size) st.lineup.push(id); else if (st.lineup.length >= pv.size) toast(`Up to ${pv.size} monsters`, 'info'); Router.render(); },

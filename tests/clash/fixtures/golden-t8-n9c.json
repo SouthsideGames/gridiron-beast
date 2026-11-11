@@ -1,0 +1,20 @@
+{
+  "ruling": "N9c B: Dawn Song heals the active caster; previously blocked pending ruling",
+  "reference": "golden-t8.json (preserved unchanged)",
+  "changes": {
+    "4": {
+      "previousHash": "1f6u4ap",
+      "previousState": "1yamelq",
+      "hash": "xt6f2q",
+      "state": "d6vxx0",
+      "ability": "LIG-02-C"
+    },
+    "14": {
+      "previousHash": "1cxyaaw",
+      "previousState": "1h9qpbn",
+      "hash": "8dng8r",
+      "state": "1i4kw4w",
+      "ability": "LIG-02-C"
+    }
+  }
+}

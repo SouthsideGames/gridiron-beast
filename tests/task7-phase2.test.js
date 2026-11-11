@@ -63,7 +63,7 @@ test('a new franchise and its league: every monster at his species position', ()
   const all = [...f.roster, ...Object.values(f.league.monsters)];
   assert.ok(all.length > 500);
   assert.deepEqual(all.filter((m) => m.position !== SPECIES_BY_ID[m.species]?.position).map((m) => `${m.name} ${m.position}`), []);
-  assert.equal(f.schemaVersion, 9); assert.equal(f.freeAgency.activeFrom, 1);
+  assert.equal(f.schemaVersion, 10); assert.equal(f.freeAgency.activeFrom, 1); // schema 10: Task 8 (fresh-save break)
 });
 
 test('lineup repair: entries that put a monster in another position are removed, nobody is released or changed', () => {
@@ -80,7 +80,8 @@ test('legendary limit: side from the species position, one offensive and one def
   assert.equal(legendSide(leg('a', 'stormcrown')), 'offense'); assert.equal(legendSide(leg('b', 'tsunarok')), 'defense');
   assert.equal(legendSide({ ...leg('c', 'tempestra'), position: 'CB' }), 'offense', 'side fixed by species, not the live position');
   assert.equal(legendSide({ id: 'n', species: SPECIES_DEX.find((s) => s.rarity === 'common').id }), null);
-  assert.ok(!SPECIES_DEX.some((s) => s.rarity === 'legendary' && s.position === 'K'), 'no legendary kicker');
+  const lk = SPECIES_DEX.filter((s) => s.rarity === 'legendary' && s.position === 'K'); assert.deepEqual(lk.map((s) => s.id), ['glacivern'], 'the Dex legendary kicker');
+  assert.equal(legendSide(leg('k', 'glacivern')), 'offense', 'N7c B19: legendary kickers count toward the offensive limit');
   const roster = [leg('a', 'stormcrown')];
   assert.equal(legendCheck(roster, leg('d', 'tsunarok')).ok, true, 'a defensive one fits');
   const second = legendCheck(roster, leg('e', 'aurelion')); assert.equal(second.ok, true); assert.equal(second.conditional, true); assert.deepEqual(second.replace, ['a'], 'replacement may be negotiated');

@@ -361,7 +361,11 @@ function compile(play) {
 // AI club, practice field or game plan can call them until the owner releases them. They live in PLAYS
 // (so the audit, art and engine can run them) and never in OFFENSE_IDS / DEFENSE_IDS, which every
 // game system draws from.
-const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: true }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN, BRACKET });
+// Owner ruling N8b (2026-11-08, item E): the designed bunch reserve plays that align two route runners within 5 yards are released
+// into ordinary play (they make Crossed Wires, ELE-01-F, reachable in released gameplay). Their formations stay reserve formations.
+export const RELEASED_RESERVE_OFFENSE = Object.freeze(['bunch_snag', 'bunch_whip', 'whip_corner', 'y_pivot', 'bunch_slant_arrow', 'bunch_scissors', 'corner_arrow', 'bunch_flood', 'post_wheel', 'bunch_verticals']);
+const RELEASED = new Set(RELEASED_RESERVE_OFFENSE);
+const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: !RELEASED.has(id) }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN, BRACKET });
 // Legendary Plays (GDD §36): built on the same assignments as every play, each tied to one Legendary monster who must be on
 // the field in its slot. Like reserve plays they live in PLAYS (engine, art, audit) and never in OFFENSE_IDS / DEFENSE_IDS:
 // a club can call one only when it holds that Legendary and has put the play in one of its six slots.
@@ -369,7 +373,7 @@ const LEGEND = (species, slot) => ({ legendary: { species, slot } });
 const LEGENDARY_OFFENSE = [
   offense('lp_dragons_gambit', "Dragon's Gambit", 'gun_pro', {
     QB: BOOT([[-5, 0], [-6, 1.5], [-6.5, 5], [-5, 9]]), RB: FAKE, WR1: R('over'), TE: R('corner'), WR2: R('comeback'), LG: BLOCK, RG: BLOCK,
-  }, { primary: 'WR1', progression: ['WR1', 'TE', 'WR2'], drop: 'pa', tags: ['pass', 'deep', 'play_action', 'boot', 'legendary'], ...LEGEND('aurodrax', 'QB'), desc: 'Run fake, then Aurodrax rolls right while the left receiver crosses the whole field deep. Sovereign Arm: the first read cannot be intercepted.' }),
+  }, { primary: 'WR1', progression: ['WR1', 'TE', 'WR2'], drop: 'pa', tags: ['pass', 'deep', 'play_action', 'boot', 'legendary'], ...LEGEND('aurodrax', 'QB'), desc: 'Run fake, then Aurodrax rolls right while the left receiver crosses the whole field deep. Sovereign Arm: once charged by three long completions in a row, his throw cannot be intercepted.' }),
   offense('lp_eye_of_the_storm', 'Eye of the Storm', 'gun_trips', {
     QB: { a: 'pass' }, WR1: R('sluggo'), WR3: R('whip'), WR2: R('dig'), RB: BLOCK, LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR1', progression: ['WR1', 'WR3', 'WR2'], drop: 'five', tags: ['pass', 'deep', 'long', 'legendary'], ...LEGEND('tempestra', 'WR1'), desc: 'Tempestra sells a slant from the trips side, her Cyclone spins the man on her hip, and she turns it up the field. A deep shot: big when it hits, five-step drop when it does not.' }),
@@ -382,9 +386,7 @@ const LEGENDARY_DEFENSE = [
   defense('lp_phantom_coverage', 'Phantom Coverage', 'nickel', {
     DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), CB1: ZONE('robber'), FS: MAN('wideL'), CB2: MAN('wideR'), SS: ZONE('deep_middle'),
   }, { align: { CB1: [1.5, -17], FS: [10, -9], SS: [12, 5] }, tags: ['pass', 'man', 'trap', 'legendary'], ...LEGEND('nyxshade', 'CB1'), desc: 'Nyxshade shows press on the left receiver, then vanishes into the short middle while the free safety rotates down to take his man. Night Veil: the quarterback never sees him.' }),
-  defense('lp_avalanche', 'Avalanche', 'nickel', {
-    DL1: RUSH('B_L'), DL2: RUSH('B_R'), FS: RUSH('A_L'), LB1: ZONE('hook_M'), CB1: ZONE('deep_half_L'), CB2: ZONE('deep_half_R'), SS: ZONE('flat_R'),
-  }, { align: { FS: [7.2, -1.8], CB1: [7, -17], CB2: [7, 17] }, tags: ['blitz', 'zone', 'legendary'], ...LEGEND('glacivern', 'FS'), desc: 'Glacivern lines up like a robber in the middle, then comes through the A gap; the corners bail to two deep halves. Whiteout freezes the first read, so the quarterback holds the ball.' }),
+  // lp_avalanche (Glacivern at FS) retired 2026-11-07 (owner): Glacivern is a K (B19); not every legendary has an unlocked play.
   defense('lp_rootbound', 'Rootbound', 'base', {
     DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: ZONE('short_M'), LB2: MAN('inside'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('hook_M'),
   }, { align: { LB1: [4, 0], LB2: [4.5, 3], FS: [6.5, 0] }, tags: ['run', 'man', 'legendary', 'anti_misdirection'], ...LEGEND('elderoot', 'LB1'), desc: 'Everyone packs inside Elderoot\'s grove: nobody bites on a fake and every defender near him reads faster. The corners are alone outside.' }),
@@ -392,9 +394,9 @@ const LEGENDARY_DEFENSE = [
 export const PLAYS = Object.freeze(Object.fromEntries([...OFFENSE_PLAYS, ...DEFENSE_PLAYS, ...RESERVE.offense, ...RESERVE.defense, ...LEGENDARY_OFFENSE, ...LEGENDARY_DEFENSE].map((p) => [p.id, compile(p)])));
 export const LEGENDARY_IDS = Object.freeze([...LEGENDARY_OFFENSE, ...LEGENDARY_DEFENSE].map((p) => p.id));
 export const isLegendary = (id) => !!PLAYS[id]?.legendary;
-export const OFFENSE_IDS = OFFENSE_PLAYS.map((p) => p.id);
+export const OFFENSE_IDS = [...OFFENSE_PLAYS.map((p) => p.id), ...RESERVE.offense.filter((p) => RELEASED.has(p.id)).map((p) => p.id)]; // N8b: the released bunch plays
 export const DEFENSE_IDS = DEFENSE_PLAYS.map((p) => p.id);
-export const RESERVE_OFFENSE_IDS = RESERVE.offense.map((p) => p.id);
+export const RESERVE_OFFENSE_IDS = RESERVE.offense.filter((p) => !RELEASED.has(p.id)).map((p) => p.id);
 export const RESERVE_DEFENSE_IDS = RESERVE.defense.map((p) => p.id);
 export const isReserve = (id) => !!PLAYS[id]?.reserve;
 export const getPlay = (id) => { const p = PLAYS[id]; if (!p) throw new Error(`Unknown play ${id}`); return p; };
@@ -556,7 +558,6 @@ export const LESSONS = Object.freeze({
   lp_eye_of_the_storm: { when: 'Against man coverage on the trips side.', watch: 'Tempestra’s slant fake: the defender on her hip spins, and she turns it up the field.', beats: 'All-Out Pressure, Run Wall and Max Drop, when nobody stays deep over her.', loses: 'Bear Front, Goal Line Stand and Goal Line Man (no room to go deep), and pressure: the five-step drop gets sacked more than any standard pass.' },
   lp_fault_line: { when: 'Short yardage and the goal line, after a few runs to the right.', watch: 'The false step right, then the cut behind Titanolith at left guard.', beats: 'Bear Front, All-Out Pressure and Cover 6: fronts that flow with the false step.', loses: 'Run Wall, Safety Blitz and Goal Line Stand: a full box that stays home or a blitzer through the gap before the pull.' },
   lp_phantom_coverage: { when: 'When the quarterback keeps throwing the in-breaker.', watch: 'Nyxshade shows press, then drops to the short middle; the free safety rotates down late to his man.', beats: 'Quick Slants, Levels, Mesh and the TE Seam into the middle.', loses: 'Play action (PA Boot, PA Post) and vertical shots (Three Verticals): the robber leaves the deep left to one late safety.' },
-  lp_avalanche: { when: 'Obvious passing downs.', watch: 'Glacivern shows robber, then comes through the A gap; Whiteout freezes the first read.', beats: 'Deep Post, PA Boot and Power Left: slow plays the blitz reaches first.', loses: 'PA Shot, Levels and outside runs (Stretch Left): the blitz empties the middle and the left flat.' },
   lp_rootbound: { when: 'Against a run-first offence that lives on fakes.', watch: 'The whole front stays inside Elderoot’s grove: nobody bites on play action or misdirection.', beats: 'Toss Sweep, QB Draw, Inside Zone and play action that needs a bite.', loses: 'Outside runs (Stretch Left, Jet Sweep) and the PA Boot rollout: everyone is packed inside the grove.' },
   double_a_mug: { when: 'Third-and-medium when the offence keeps the back in to block.', watch: 'Two rushers show in the A gaps before the snap; the centre has to choose one.', beats: 'QB Draw, Stick and Levels, the middle collapses.', loses: 'Bubble Screen and quick throws outside, where nobody is left in coverage; runs rarely hurt it.' },
   bracket_left: { when: 'Take away their best receiver when he lines up left.', watch: 'A corner underneath and inside, a safety over the top, on the left receiver. When he runs short, the safety lets him go and plays deep. Everyone else is on their own.', beats: 'The left receiver deep and over the middle: TE Seam, Levels, Three Verticals and Deep Post.', loses: 'The back on a Wheel, RB Screen, Deep Corner to the right, and the run.' },

@@ -16,7 +16,12 @@ import { ALL_TEAMS, tierById } from '../src/data/league.js';
 
 let n = 0;
 /** A monster at `position` of about `quality`, aged `age`, with an id of its own. */
-function mon(position, quality, age, extra = {}) { const m = generateMonster(createRng(1000 + n), { position, quality, age }); m.id = `t${n++}`; m.age = age; return Object.assign(m, extra); }
+// Task 8 M1 (N7f): `quality` no longer maps to an overall (it is a percentile target within a random Dex form, and young level-1
+// individuals can be weak), so each scenario monster is brought to exactly that overall, with potential at least that high
+// (explicit construction; the generated potential is kept when higher). An explicit `potential` in `extra` still wins.
+function mon(position, quality, age, extra = {}) { const m = generateMonster(createRng(1000 + n), { position, quality, age }); m.id = `t${n++}`; m.age = age; toOvr(m, quality); m.potential = Math.max(m.potential, quality); return Object.assign(m, extra); }
+/** Bring a monster to an exact overall by moving every attribute together (draws nothing, so later monsters are unchanged). */
+function toOvr(m, target) { for (let i = 0; i < 40 && monsterOverall(m) !== target; i++) { const d = target - monsterOverall(m); for (const k of Object.keys(m.attributes)) m.attributes[k] = Math.max(20, Math.min(99, m.attributes[k] + Math.sign(d) * Math.max(1, Math.abs(d) >> 1))); } assert.equal(monsterOverall(m), target); if (m.dev) m.dev.current = { ...m.attributes }; return m; }
 
 test('R1: horizon from the public onset; successors young and close (or with the potential); ready within 4; protected never successors', () => {
   const st = mon('QB', 72, 31); const h = horizonOf(st); assert.equal(h, publicOnset(st) - 31); assert.ok(h <= PLAN.ageingHorizon);
@@ -59,6 +64,9 @@ test('R3 in the league: a declining starter with a ready successor walks, one wi
   const [qb1, qb2] = qbs; qb1.age = publicOnset(qb1) + 2; qb2.age = 23; for (const k of Object.keys(qb2.attributes)) qb2.attributes[k] = qb1.attributes[k]; qb2.potential = Math.max(qb2.potential, monsterOverall(qb2) + 2);
   // RB: starter past his onset with nobody young behind him → kept, one season
   const [rb1, ...rbRest] = rbs; rb1.age = publicOnset(rb1) + 1; for (const b of rbRest) b.age = Math.max(b.age, 29);
+  // Task 8 M1 (seed drift): the Dex roster's RB1 now rates 52 against a league bench of 42, an exceptional veteran (2 seasons);
+  // the scenario is an ordinary declining starter, so his overall is set to the bench explicitly (still above his backups).
+  toOvr(rb1, Math.max(Math.round(leagueBenchOf(f).RB), ...rbRest.map((x) => monsterOverall(x) + 1)));
   // a reserve well past his onset → walks
   const res = roster.find((m) => !R.isProtected(m) && m.position === 'WR' && roster.filter((x) => x.position === 'WR' && monsterOverall(x) > monsterOverall(m)).length >= 3);
   res.age = publicOnset(res) + RESERVE_PAST_ONSET + 1;
@@ -88,6 +96,7 @@ test('cap trims: a designated successor goes only when no other reserve is left'
 test('R6: the successor premium (0.8 / 0.6 / 0.45 by the starter\'s horizon) on AI rosters only; never untradeable', () => {
   assert.equal(successorShare(-1), 0.8); assert.equal(successorShare(2), 0.8); assert.equal(successorShare(3), 0.6); assert.equal(successorShare(4), 0.6); assert.equal(successorShare(5), 0.45);
   const st = mon('CB', 74, 30), st2 = mon('CB', 73, 26), kid = mon('CB', 69, 23, { potential: 80 }), body = mon('CB', 50, 31);
+  for (const [m, o] of [[st, 74], [st2, 73], [kid, 69], [body, 50]]) toOvr(m, o); // the overalls the scenario names, set explicitly (Task 8 retired Nature, N7c B14: as generated, the kid now rated 74 and started ahead of st2)
   const roster = [st, st2, kid, body, mon('QB', 60, 25)];
   const withP = rosterWorth(roster, 1), without = rosterWorth(roster, 1, { succession: false });
   const h = Math.min(horizonOf(st), horizonOf(st2)); const share = successorShare(h);
@@ -116,7 +125,7 @@ test('R7 in the draft: the plan\'s need decides a close call; kicker and duplica
   for (let i = 0; i < 40 && base(rb) - base(qb) > 6; i++) { qb.potential += 1; }
   k.potential = 70; for (const key of Object.keys(k.attributes)) k.attributes[key] = Math.min(k.attributes[key], 60);
   const cls = [qb, rb, k];
-  const f = { draft: { class: cls, available: cls.map((m) => m.id), picks: [] } };
+  const f = { draft: { class: cls, available: cls.map((m) => m.id), picks: [], aiScouting: { X: { skill: 50, weeks: 0, revealed: Object.fromEntries(cls.map((m) => [m.id, 6])) } } } };
   const g = (x) => ({ rows: [], successionNeed: 0, weakNeed: 0, ...x });
   const plan = { groups: { QB: g({ weakNeed: 1 }), RB: g({ settled: true }), K: g({}) } }; // QB: a missing starter
   const noPlan = aiDraftPick(f, 'X', createRng(5)); const withPlan = aiDraftPick(f, 'X', createRng(5), { plan });

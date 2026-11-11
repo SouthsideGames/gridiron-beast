@@ -31,7 +31,11 @@ import { registerMatchScreens } from './ui/screens/match.js';
 import { registerCeremony } from './ui/screens/ceremony.js';
 import { registerPracticeScreens } from './ui/screens/practice.js';
 import { registerAbilityAudit, openAbilityPreview, registerAbilityBalance } from './ui/screens/ability-audit.js';
+import { syncDiscovery } from './franchise/t8/discovery.js';
+import { playPendingApex } from './ui/apex-ui.js';
+import { registerAbilityReviewer } from './ui/screens/ability-reviewer.js';
 import { registerClashLab } from './ui/screens/clash-lab.js';
+import { registerClashAbilityReviewer } from './ui/screens/clash-ability-reviewer.js';
 import { registerClashBattle } from './ui/screens/clash-battle.js';
 import { registerAiLab } from './ui/screens/ai-lab.js';
 import { registerAttrLab } from './ui/screens/attr-lab.js';
@@ -40,6 +44,8 @@ import { reviewQueue, devNoticesOn, freshAnnouncement, cardMismatches } from './
 import { syncReviews, onReviews } from './franchise/review-store.js';
 import { registerDexScreens } from './ui/screens/dex.js';
 import { installCareerLinks } from './ui/career-ui.js';
+import { applyFlashPref } from './ui/flash-pref.js';
+import { applyFrameRate } from './ui/frame-rate.js';
 
 const app = {
   f: null, // the franchise state (null before creation)
@@ -50,7 +56,7 @@ const app = {
   slot: 1,
   recovery: null, // set when the save failed its checks at start: the recovery screen lists the backups
   get settings() { return this.f?.settings || this.defaultSettings; },
-  defaultSettings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false, difficulty: 'pro' },
+  defaultSettings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, reducedFlash: false, liveClock: false, difficulty: 'pro' },
   /**
    * Save the franchise. Returns a promise of { ok, savedAt } once the write is committed, or { ok: false, error }. Callers
    * that only need "save soon" can ignore it, as before: the store queues and orders every request.
@@ -188,7 +194,7 @@ function saveOutcome(r) {
   failing = true; showSaveFailure(app, r.error);
 }
 
-function applySettings() { document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; }
+function applySettings() { document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); }
 
 function tabs(ctx, screenName) {
   if (!app.f || !ctx.inFranchise || isArchived(app.f)) return null; // an archive shows the Legacy shell, not the weekly tabs
@@ -201,8 +207,13 @@ function tabs(ctx, screenName) {
 export function start() {
   if (globalThis.__gbRefreshing) return; // src/fresh.js is refreshing an older release's cached files: nothing is read or saved first
   globalThis.__gb = app; // test hook: the UI check reaches the franchise state through it
-  Router.init({ root: $('#app'), context: () => ({ app, f: app.f, inFranchise: !!app.f, tabOf: TAB_OF }), tabs,
-    tip: (ctx, name) => (ctx.f ? tipHtml(ctx.f, name) : ''), mounted: (ctx, name) => { if (ctx.f) maybeSheetTip(ctx.f, name, () => app.save()); }, help: (ctx, name) => (ctx.f ? helpButtonHtml(name) : '') });
+  // Task 8 M6 (spec §5): the player's discovery records are brought up to date before every franchise screen is drawn (so a screen
+  // never shows an Apex it has not recorded), and a pending first-discovery panel opens once the screen is up, outside live play.
+  const APEX_QUIET = new Set(['match', 'clash-battle', 'ceremony', 'pregame', 'scene', 'onboarding', 'welcome', 'menu', 'franchises', 'recovery']);
+  app.findMonster = (id) => { const f = app.f; if (!f) return null; return f.roster.find((m) => m.id === id) || f.draft?.class?.find((m) => m.id === id) || f.week?.prospects?.map((p) => p.monster).find((m) => m?.id === id) || app.apexSeen?.get(id) || null; };
+  app.playApex = (name = Router.currentScreen()?.name) => { if (!app.f || APEX_QUIET.has(name)) return false; return playPendingApex({ f: app.f, find: app.findMonster, settings: app.settings, save: () => app.save({ immediate: true }), onDone: () => Router.render() }); };
+  Router.init({ root: $('#app'), context: () => { if (app.f) syncDiscovery(app.f); return { app, f: app.f, inFranchise: !!app.f, tabOf: TAB_OF }; }, tabs,
+    tip: (ctx, name) => (ctx.f ? tipHtml(ctx.f, name) : ''), mounted: (ctx, name) => { if (ctx.f) { maybeSheetTip(ctx.f, name, () => app.save()); app.playApex(name); } }, help: (ctx, name) => (ctx.f ? helpButtonHtml(name) : '') });
   initTutorial({ app, Router, openStats: () => openStatGuide() });
   registerMenuScreens(Router, app);
   registerOnboardingScreens(Router, app);
@@ -213,14 +224,16 @@ export function start() {
   registerMatchScreens(Router, app);
   registerPracticeScreens(Router, app);
   registerAbilityAudit(Router, app);
+  registerAbilityReviewer(Router, app);
   registerClashLab(Router, app); // Beast Clash developer tools
+  registerClashAbilityReviewer(Router, app); // Task 8 M4 S15 + fx: Developer → Clash Ability Reviewer (72 Clash abilities on the t8 engine, played with their arena looks; the fx presentation check folded in)
   registerAiLab(Router, app); // AI Testing Lab (GDD §53.8): Developer Tools only
   registerAttrLab(Router, app); // Attribute Testing Lab (GDD §8.2 audit): Developer Tools only
   registerEvoPreview(Router, app); // Preview Evolution: the real evolution scene on throwaway data, Developer Tools only
   registerClashBattle(Router, app); // Beast Clash in Franchise Mode: Tuesday encounters, the pregame Clash and the overtime Clash (GDD §26)
   registerAbilityBalance(Router);
   // "▶ See it" buttons anywhere (monster card, scout reports, free agents, sheets): one listener for all of them.
-  document.addEventListener('click', (e) => { const b = e.target.closest?.('[data-see-it]'); if (!b) return; e.preventDefault(); e.stopPropagation(); openAbilityPreview(app.settings, b.dataset.seeIt); }, true);
+  document.addEventListener('click', (e) => { const b = e.target.closest?.('[data-see-it]'); if (!b) return; e.preventDefault(); e.stopPropagation(); if (!app.seeAbility?.(b.dataset.seeIt, { form: b.dataset.form != null && b.dataset.form !== '' ? Number(b.dataset.form) : null, mastery: Number(b.dataset.mastery) || 0 })) openAbilityPreview(app.settings, b.dataset.seeIt); }, true);
   // Career links anywhere (awards, news, the draft, free agency, the Hall of Fame): one listener opens a monster's career by id (GDD §40.5).
   installCareerLinks(() => app.f, (screen, params) => Router.go(screen, params), { current: () => Router.currentScreen() });
   registerDexScreens(Router, app);

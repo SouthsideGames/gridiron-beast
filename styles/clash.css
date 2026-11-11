@@ -188,3 +188,24 @@ html[data-reduced-motion="1"] .cl-result-head { animation: none; }
 .cl-mode-label { font-size: 17px; font-weight: 800; }
 .cl-mode-help { font-weight: 400; font-size: 12px; opacity: .85; line-height: 1.25; }
 .cl-pick-btns .btn.small { min-width: 30px; padding: 0 4px; }
+
+/* ---- Task 8 Clash ability presentation (t8 mode): two SVG layers in stage pixels, under and over the monsters; the information layer
+   (status badge, ability icon, turn markers) sits in the over layer and is never hidden. The acting chevron moves aside for the badge. */
+.cl-t8 { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.cl-t8-under { z-index: 1; }
+.cl-t8-over { z-index: 125; }
+.cl-t8 text { font-family: inherit; user-select: none; }
+.cl-arena.t8 .cl-mon.acting::before { left: calc(50% - var(--size) * 0.55); margin-left: 0; }
+.cl-hud .cl-order { font-size: 11px; }
+.cl-hud .cl-order:empty { display: none; }
+/* the reviewer's own controls */
+.crv-list { display: grid; gap: 6px; }
+.crv-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
+.crv-row .crv-sel { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.crv-row select { font-size: 12px; padding: 4px; max-width: 120px; }
+.crv-prov { color: #fdba74; font-weight: 800; font-size: 11px; letter-spacing: .06em; }
+.crv-checks { font-size: 12px; display: grid; gap: 2px; }
+.crv-checks .ok { color: var(--good); } .crv-checks .bad { color: var(--bad); }
+.crv-phase { display: inline-flex; gap: 4px; flex-wrap: wrap; font-size: 11px; }
+.crv-phase span { padding: 1px 6px; border-radius: 10px; border: 1px solid var(--line); color: var(--ink-2); }
+.crv-phase span.on { border-color: var(--accent); color: var(--accent); }

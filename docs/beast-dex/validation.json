@@ -1,0 +1,63 @@
+{
+  "counts": {
+    "families": 192,
+    "forms": 222,
+    "modeAbilities": 144,
+    "originalFamilies": 72,
+    "originalForms": 102,
+    "basicFamilies": 120,
+    "basicForms": 120,
+    "legendaryFamilies": 12,
+    "types": 12,
+    "assertions": 28484,
+    "attributePairs": 2664,
+    "basicAttributePairs": 1440,
+    "evolutionCases": 5400,
+    "links": 1356
+  },
+  "positions": {
+    "RB": 19,
+    "LB": 19,
+    "QB": 19,
+    "DL": 19,
+    "CB": 20,
+    "TE": 19,
+    "OL": 19,
+    "WR": 20,
+    "S": 19,
+    "K": 19
+  },
+  "rarities": {
+    "common": 26,
+    "uncommon": 21,
+    "rare": 13,
+    "legendary": 12,
+    "basic": 120
+  },
+  "archetypes": {
+    "original": {
+      "Balanced": 15,
+      "Disruptor": 15,
+      "Striker": 14,
+      "Tank": 13,
+      "Support": 15
+    },
+    "basic": {
+      "Support": 23,
+      "Striker": 25,
+      "Disruptor": 23,
+      "Tank": 25,
+      "Balanced": 24
+    },
+    "all": {
+      "Balanced": 39,
+      "Disruptor": 38,
+      "Striker": 39,
+      "Tank": 38,
+      "Support": 38
+    }
+  },
+  "errors": [],
+  "runtimeTested": false,
+  "status": "PASS"
+}

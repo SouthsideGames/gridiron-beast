@@ -15,20 +15,27 @@ import { newFranchise } from '../tools/franchise-soak.mjs';
 import { t7FillToMin } from './t7-support.js';
 
 const legend = (sp, id) => { const m = generateMonster(createRng(id.length * 17), { species: sp, quality: 70, id }); m.contract = { signed: 1, ends: 3, years: 3 }; return m; };
-/** A pre-Task-7 save (schema 8, no free-agency block) opened by this build. */
-function asLegacy(f) { const raw = JSON.parse(Save.exportJson(f)).franchise; delete raw.freeAgency; raw.schemaVersion = 8; return Save.importJson(JSON.stringify(raw)); }
+/** A pre-Task-7 save (schema 8, no free-agency block), as an earlier build exported it. */
+function legacyText(f) { const raw = JSON.parse(Save.exportJson(f)); delete raw.franchise.freeAgency; raw.franchise.schemaVersion = 8; raw.schemaVersion = 8; return JSON.stringify(raw); }
+/** Task 8 fresh-save break (spec §15): this build refuses it with the Start New Franchise message and changes nothing. */
+function assertRefused(text) {
+  const obj = JSON.parse(text); const before = JSON.stringify(obj);
+  const incompatible = (e) => e.code === 'incompatible' && e.message === Save.INCOMPATIBLE_MESSAGE && e.schemaVersion === 8;
+  assert.throws(() => Save.importJson(text), incompatible, 'the pre-Task-8 save is refused, not migrated');
+  assert.throws(() => Save.migrate(obj.franchise), incompatible); assert.equal(JSON.stringify(obj), before, 'the refused save is not changed');
+}
 function offseasonToGate(f) {
   f.season.finished = true; f.offseason = null; assert.ok(F.openFreeAgency(f).ok); F.finishFreeAgency(f);
   assert.ok(F.beginDraft(f).ok); let g = 0; while (!f.draft.done && g++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
   t7FillToMin(f); for (const role of ['head_coach', 'off_coord', 'def_coord', 'head_scout', 'monster_trainer']) if (!f.staff?.[role]) F.hireDefaultStaff(f);
 }
 
-test('legacy save over the legendary limit: keeps every monster, cannot add on that side, and must comply before the deadline season', () => {
+test('legacy save over the legendary limit is refused (Task 8); an over-limit schema-10 roster keeps every monster, cannot add on that side, and must comply before the deadline season', () => {
   const base = newFranchise(61); base.roster.push(legend('stormcrown', 'L1'), legend('aurodrax', 'L2'));
-  const f = asLegacy(base); assert.ok(f, 'the old save is read');
-  assert.equal(f.schemaVersion, 9); assert.deepEqual(f.freeAgency.legacy.legends[f.club], { offense: 1, defense: 0 }, 'the excess is recorded, nothing removed');
-  assert.equal(f.freeAgency.complianceFrom, 2, 'opened in season 1: compliance before season 2');
-  assert.ok(f.roster.some((m) => m.id === 'L1') && f.roster.some((m) => m.id === 'L2'));
+  assertRefused(legacyText(base)); // the Task 7 legacy census (freeAgency.legacy.legends) only ever ran on a pre-Task-7 save
+  const f = Save.importJson(Save.exportJson(base)); assert.equal(f.schemaVersion, 10, 'the schema-10 franchise loads');
+  assert.equal(f.freeAgency.complianceFrom, 2, 'created in season 1: compliance before season 2');
+  assert.ok(f.roster.some((m) => m.id === 'L1') && f.roster.some((m) => m.id === 'L2'), 'loading keeps every monster');
   const third = legend('tempestra', 'L3'); third.contract = null; (f.freeAgency.extra ||= []).push(third);
   assert.equal(E.blocker(f, f.club, third, null).code, 'legendary', 'no third offensive legendary');
   const def = legend('tsunarok', 'D1'); def.contract = null; f.freeAgency.extra.push(def);
@@ -59,15 +66,12 @@ test('AI clubs comply by legal transactions before the gate; no AI club can acqu
   for (const c of leagueClubs(f)) { const o = overLimit(clubRoster(f, c)); assert.equal(o.offense + o.defense, 0, c); }
 });
 
-test('D3: a save opened in an offseason finishes it the old way (draft included, nothing rewound); the next offseason is Task 7', () => {
+test('D3: a pre-Task-7 save opened in an offseason is refused (Task 8); a schema-10 franchise\'s first offseason is already Task 7', () => {
   const base = newFranchise(63); base.season.finished = true; base.offseason = null;
-  const f = asLegacy(base); assert.equal(f.freeAgency.activeFrom, 2); assert.equal(F.task7Offseason(f), false);
-  assert.ok(F.beginDraft(f).ok, 'the draft opens without free agency, as before');
-  let g = 0; while (!f.draft.done && g++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
-  while (f.roster.length < F.ROSTER_MIN) { const e = F.offseasonMarket(f)[0]; F.signFreeAgent(f, e.monster.id); }
-  for (const role of ['head_coach', 'off_coord', 'def_coord', 'head_scout', 'monster_trainer']) if (!f.staff?.[role]) F.hireDefaultStaff(f);
-  const r = F.startNextSeason(f); assert.ok(r.ok, r.reason); assert.equal(f.season.year, 2);
-  assert.equal(F.task7Offseason(f), true, 'the offseason after season 2 is a Task 7 offseason');
+  assertRefused(legacyText(base)); // the D3 "finish it the old way" rule only ever applied to a save without the Task 7 block
+  const f = Save.importJson(Save.exportJson(base)); assert.equal(f.schemaVersion, 10);
+  assert.equal(f.freeAgency.activeFrom, 1); assert.equal(F.task7Offseason(f), true, 'the offseason after season 1 is a Task 7 offseason');
+  assert.ok(F.openFreeAgency(f).ok, 'free agency opens before the draft');
 });
 
 test('the 20-season endpoint: no free-agency offseason after the last season', () => {

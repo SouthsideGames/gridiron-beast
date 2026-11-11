@@ -1,0 +1,389 @@
+{
+ "_about": "Frozen football test lineups (see tests/tools/lineup.js): lineup(seed, quality) as computed at dd2245d, the last broadly regression-tested build before the Task 8 M1 generator switch. Key \"seed,quality\"; per slot the effectiveAttributes() and name the old generator produced.",
+ "lineups": {
+  "2,62": {
+   "offense": {
+    "QB": {"attrs":{"speed":55,"agility":59,"strength":47,"awareness":69,"catching":42,"arm":59,"accuracy":61,"blocking":27,"tackling":36,"coverage":39,"durability":67,"kicking":38},"name":"Cerebrix"},
+    "RB": {"attrs":{"speed":72,"agility":58,"strength":68,"awareness":55,"catching":70,"arm":39,"accuracy":32,"blocking":51,"tackling":37,"coverage":28,"durability":63,"kicking":28},"name":"Volcoil"},
+    "WR1": {"attrs":{"speed":67,"agility":70,"strength":42,"awareness":58,"catching":63,"arm":29,"accuracy":33,"blocking":39,"tackling":25,"coverage":33,"durability":54,"kicking":17},"name":"Lumini"},
+    "WR2": {"attrs":{"speed":64,"agility":70,"strength":48,"awareness":59,"catching":66,"arm":28,"accuracy":27,"blocking":34,"tackling":31,"coverage":33,"durability":59,"kicking":27},"name":"Nocturne"},
+    "TE": {"attrs":{"speed":58,"agility":63,"strength":70,"awareness":53,"catching":57,"arm":32,"accuracy":29,"blocking":64,"tackling":40,"coverage":33,"durability":67,"kicking":24},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":43,"agility":35,"strength":75,"awareness":50,"catching":17,"arm":26,"accuracy":27,"blocking":67,"tackling":34,"coverage":24,"durability":66,"kicking":18},"name":"Pebblit"},
+    "RG": {"attrs":{"speed":42,"agility":42,"strength":64,"awareness":46,"catching":25,"arm":25,"accuracy":24,"blocking":73,"tackling":34,"coverage":14,"durability":75,"kicking":12},"name":"Ferrcub"},
+    "WR3": {"attrs":{"speed":59,"agility":63,"strength":41,"awareness":48,"catching":55,"arm":24,"accuracy":25,"blocking":38,"tackling":23,"coverage":29,"durability":56,"kicking":20},"name":"Spriglet"},
+    "C": {"attrs":{"speed":42,"agility":49,"strength":74,"awareness":43,"catching":11,"arm":22,"accuracy":29,"blocking":57,"tackling":27,"coverage":18,"durability":69,"kicking":20},"name":"Pebblit"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":53,"agility":62,"strength":67,"awareness":50,"catching":29,"arm":26,"accuracy":26,"blocking":34,"tackling":61,"coverage":23,"durability":71,"kicking":24},"name":"Mossmaw"},
+    "DL2": {"attrs":{"speed":59,"agility":61,"strength":81,"awareness":54,"catching":26,"arm":27,"accuracy":20,"blocking":31,"tackling":62,"coverage":30,"durability":72,"kicking":17},"name":"Scorchulk"},
+    "LB1": {"attrs":{"speed":60,"agility":62,"strength":66,"awareness":51,"catching":37,"arm":26,"accuracy":20,"blocking":36,"tackling":69,"coverage":55,"durability":62,"kicking":21},"name":"Cindruff"},
+    "LB2": {"attrs":{"speed":65,"agility":70,"strength":65,"awareness":54,"catching":30,"arm":26,"accuracy":22,"blocking":41,"tackling":71,"coverage":52,"durability":66,"kicking":22},"name":"Cindruff"},
+    "CB1": {"attrs":{"speed":64,"agility":66,"strength":37,"awareness":61,"catching":43,"arm":25,"accuracy":18,"blocking":35,"tackling":45,"coverage":67,"durability":54,"kicking":12},"name":"Wispira"},
+    "CB2": {"attrs":{"speed":63,"agility":53,"strength":39,"awareness":51,"catching":43,"arm":22,"accuracy":21,"blocking":28,"tackling":50,"coverage":60,"durability":59,"kicking":13},"name":"Sablewing"},
+    "FS": {"attrs":{"speed":69,"agility":69,"strength":60,"awareness":65,"catching":54,"arm":19,"accuracy":26,"blocking":30,"tackling":66,"coverage":71,"durability":61,"kicking":19},"name":"Noctlet"},
+    "DL3": {"attrs":{"speed":62,"agility":58,"strength":70,"awareness":49,"catching":34,"arm":14,"accuracy":23,"blocking":30,"tackling":72,"coverage":31,"durability":67,"kicking":16},"name":"Glaciram"},
+    "SS": {"attrs":{"speed":69,"agility":69,"strength":54,"awareness":69,"catching":49,"arm":23,"accuracy":28,"blocking":37,"tackling":54,"coverage":62,"durability":55,"kicking":13},"name":"Statyx"}
+   }
+  },
+  "3,60": {
+   "offense": {
+    "QB": {"attrs":{"speed":44,"agility":55,"strength":45,"awareness":65,"catching":41,"arm":61,"accuracy":62,"blocking":29,"tackling":29,"coverage":26,"durability":57,"kicking":38},"name":"Cerebrix"},
+    "RB": {"attrs":{"speed":63,"agility":71,"strength":46,"awareness":54,"catching":54,"arm":25,"accuracy":23,"blocking":48,"tackling":29,"coverage":25,"durability":63,"kicking":22},"name":"Duskyre"},
+    "WR1": {"attrs":{"speed":66,"agility":63,"strength":50,"awareness":53,"catching":55,"arm":21,"accuracy":26,"blocking":37,"tackling":34,"coverage":29,"durability":58,"kicking":25},"name":"Lumini"},
+    "WR2": {"attrs":{"speed":66,"agility":65,"strength":40,"awareness":54,"catching":57,"arm":21,"accuracy":30,"blocking":39,"tackling":29,"coverage":33,"durability":50,"kicking":20},"name":"Lumini"},
+    "TE": {"attrs":{"speed":56,"agility":54,"strength":67,"awareness":59,"catching":57,"arm":29,"accuracy":35,"blocking":69,"tackling":34,"coverage":27,"durability":70,"kicking":28},"name":"Thornback"},
+    "LG": {"attrs":{"speed":41,"agility":41,"strength":71,"awareness":48,"catching":26,"arm":21,"accuracy":27,"blocking":65,"tackling":23,"coverage":16,"durability":67,"kicking":16},"name":"Shardok"},
+    "RG": {"attrs":{"speed":35,"agility":41,"strength":68,"awareness":50,"catching":32,"arm":27,"accuracy":10,"blocking":66,"tackling":27,"coverage":15,"durability":68,"kicking":16},"name":"Muddlet"},
+    "WR3": {"attrs":{"speed":68,"agility":66,"strength":44,"awareness":47,"catching":67,"arm":24,"accuracy":25,"blocking":34,"tackling":28,"coverage":26,"durability":60,"kicking":20},"name":"Spriglet"},
+    "C": {"attrs":{"speed":43,"agility":39,"strength":66,"awareness":48,"catching":22,"arm":18,"accuracy":22,"blocking":69,"tackling":37,"coverage":16,"durability":64,"kicking":17},"name":"Muddlet"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":51,"agility":58,"strength":73,"awareness":48,"catching":19,"arm":27,"accuracy":20,"blocking":33,"tackling":56,"coverage":30,"durability":61,"kicking":17},"name":"Scorchulk"},
+    "DL2": {"attrs":{"speed":57,"agility":60,"strength":68,"awareness":46,"catching":25,"arm":24,"accuracy":24,"blocking":34,"tackling":59,"coverage":28,"durability":62,"kicking":19},"name":"Scorchulk"},
+    "LB1": {"attrs":{"speed":59,"agility":61,"strength":68,"awareness":60,"catching":39,"arm":19,"accuracy":19,"blocking":36,"tackling":65,"coverage":49,"durability":63,"kicking":18},"name":"Craggo"},
+    "LB2": {"attrs":{"speed":53,"agility":66,"strength":60,"awareness":54,"catching":37,"arm":33,"accuracy":29,"blocking":39,"tackling":68,"coverage":46,"durability":57,"kicking":26},"name":"Cindruff"},
+    "CB1": {"attrs":{"speed":68,"agility":68,"strength":47,"awareness":47,"catching":45,"arm":20,"accuracy":22,"blocking":24,"tackling":44,"coverage":61,"durability":52,"kicking":15},"name":"Aquip"},
+    "CB2": {"attrs":{"speed":64,"agility":64,"strength":43,"awareness":47,"catching":47,"arm":14,"accuracy":19,"blocking":19,"tackling":44,"coverage":55,"durability":62,"kicking":20},"name":"Aquip"},
+    "FS": {"attrs":{"speed":61,"agility":64,"strength":56,"awareness":60,"catching":47,"arm":19,"accuracy":29,"blocking":33,"tackling":61,"coverage":63,"durability":58,"kicking":19},"name":"Prismara"},
+    "DL3": {"attrs":{"speed":53,"agility":53,"strength":66,"awareness":40,"catching":26,"arm":28,"accuracy":23,"blocking":31,"tackling":60,"coverage":32,"durability":62,"kicking":17},"name":"Glaciram"},
+    "SS": {"attrs":{"speed":66,"agility":71,"strength":56,"awareness":63,"catching":55,"arm":22,"accuracy":20,"blocking":31,"tackling":66,"coverage":61,"durability":60,"kicking":18},"name":"Galyx"}
+   }
+  },
+  "4,60": {
+   "offense": {
+    "QB": {"attrs":{"speed":55,"agility":55,"strength":54,"awareness":65,"catching":40,"arm":62,"accuracy":59,"blocking":27,"tackling":29,"coverage":31,"durability":57,"kicking":29},"name":"Cerebrix"},
+    "RB": {"attrs":{"speed":63,"agility":70,"strength":60,"awareness":47,"catching":46,"arm":23,"accuracy":37,"blocking":48,"tackling":36,"coverage":25,"durability":62,"kicking":25},"name":"Flaroo"},
+    "WR1": {"attrs":{"speed":68,"agility":57,"strength":44,"awareness":43,"catching":63,"arm":18,"accuracy":34,"blocking":36,"tackling":27,"coverage":35,"durability":56,"kicking":21},"name":"Lumini"},
+    "WR2": {"attrs":{"speed":76,"agility":69,"strength":43,"awareness":48,"catching":58,"arm":27,"accuracy":26,"blocking":39,"tackling":27,"coverage":24,"durability":56,"kicking":21},"name":"Ripplet"},
+    "TE": {"attrs":{"speed":65,"agility":59,"strength":70,"awareness":54,"catching":55,"arm":27,"accuracy":36,"blocking":61,"tackling":40,"coverage":36,"durability":60,"kicking":27},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":39,"agility":33,"strength":62,"awareness":40,"catching":18,"arm":23,"accuracy":24,"blocking":67,"tackling":29,"coverage":14,"durability":73,"kicking":13},"name":"Ferrcub"},
+    "RG": {"attrs":{"speed":49,"agility":42,"strength":63,"awareness":45,"catching":22,"arm":25,"accuracy":14,"blocking":65,"tackling":37,"coverage":16,"durability":71,"kicking":15},"name":"Ferrhorn"},
+    "WR3": {"attrs":{"speed":69,"agility":67,"strength":44,"awareness":48,"catching":60,"arm":28,"accuracy":20,"blocking":33,"tackling":28,"coverage":28,"durability":58,"kicking":21},"name":"Ripplet"},
+    "C": {"attrs":{"speed":40,"agility":42,"strength":70,"awareness":43,"catching":20,"arm":18,"accuracy":24,"blocking":65,"tackling":36,"coverage":24,"durability":68,"kicking":17},"name":"Pebblit"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":50,"agility":59,"strength":72,"awareness":49,"catching":28,"arm":21,"accuracy":22,"blocking":33,"tackling":67,"coverage":29,"durability":64,"kicking":16},"name":"Crustank"},
+    "DL2": {"attrs":{"speed":53,"agility":50,"strength":67,"awareness":48,"catching":37,"arm":26,"accuracy":28,"blocking":29,"tackling":62,"coverage":26,"durability":68,"kicking":14},"name":"Mossmaw"},
+    "LB1": {"attrs":{"speed":62,"agility":67,"strength":68,"awareness":46,"catching":37,"arm":14,"accuracy":31,"blocking":36,"tackling":65,"coverage":44,"durability":57,"kicking":14},"name":"Craggo"},
+    "LB2": {"attrs":{"speed":62,"agility":60,"strength":60,"awareness":48,"catching":39,"arm":20,"accuracy":18,"blocking":33,"tackling":69,"coverage":42,"durability":70,"kicking":22},"name":"Steelpaw"},
+    "CB1": {"attrs":{"speed":67,"agility":72,"strength":41,"awareness":50,"catching":42,"arm":21,"accuracy":25,"blocking":26,"tackling":38,"coverage":63,"durability":56,"kicking":17},"name":"Aquip"},
+    "CB2": {"attrs":{"speed":74,"agility":65,"strength":38,"awareness":50,"catching":39,"arm":23,"accuracy":26,"blocking":24,"tackling":45,"coverage":65,"durability":53,"kicking":10},"name":"Aquip"},
+    "FS": {"attrs":{"speed":67,"agility":70,"strength":59,"awareness":69,"catching":47,"arm":23,"accuracy":24,"blocking":24,"tackling":58,"coverage":65,"durability":54,"kicking":19},"name":"Noctlet"},
+    "DL3": {"attrs":{"speed":54,"agility":59,"strength":65,"awareness":42,"catching":29,"arm":21,"accuracy":23,"blocking":28,"tackling":57,"coverage":33,"durability":64,"kicking":12},"name":"Scorchulk"},
+    "SS": {"attrs":{"speed":71,"agility":68,"strength":48,"awareness":61,"catching":58,"arm":20,"accuracy":24,"blocking":29,"tackling":60,"coverage":61,"durability":59,"kicking":24},"name":"Noctlet"}
+   }
+  },
+  "5,64": {
+   "offense": {
+    "QB": {"attrs":{"speed":59,"agility":61,"strength":51,"awareness":71,"catching":43,"arm":65,"accuracy":57,"blocking":36,"tackling":32,"coverage":31,"durability":64,"kicking":30},"name":"Lumen"},
+    "RB": {"attrs":{"speed":71,"agility":77,"strength":61,"awareness":62,"catching":59,"arm":32,"accuracy":33,"blocking":47,"tackling":37,"coverage":35,"durability":62,"kicking":30},"name":"Flaroo"},
+    "WR1": {"attrs":{"speed":64,"agility":66,"strength":48,"awareness":53,"catching":65,"arm":30,"accuracy":35,"blocking":32,"tackling":30,"coverage":35,"durability":53,"kicking":21},"name":"Lumini"},
+    "WR2": {"attrs":{"speed":67,"agility":65,"strength":49,"awareness":58,"catching":63,"arm":31,"accuracy":31,"blocking":42,"tackling":24,"coverage":22,"durability":61,"kicking":26},"name":"Spriglet"},
+    "TE": {"attrs":{"speed":66,"agility":56,"strength":71,"awareness":58,"catching":63,"arm":31,"accuracy":24,"blocking":71,"tackling":37,"coverage":30,"durability":66,"kicking":27},"name":"Terrabull"},
+    "LG": {"attrs":{"speed":40,"agility":47,"strength":69,"awareness":52,"catching":24,"arm":25,"accuracy":21,"blocking":71,"tackling":30,"coverage":18,"durability":70,"kicking":15},"name":"Muddlet"},
+    "RG": {"attrs":{"speed":37,"agility":38,"strength":65,"awareness":46,"catching":23,"arm":18,"accuracy":21,"blocking":70,"tackling":27,"coverage":21,"durability":76,"kicking":9},"name":"Muddlet"},
+    "WR3": {"attrs":{"speed":68,"agility":67,"strength":46,"awareness":57,"catching":64,"arm":25,"accuracy":27,"blocking":30,"tackling":28,"coverage":31,"durability":57,"kicking":23},"name":"Zippit"},
+    "C": {"attrs":{"speed":39,"agility":41,"strength":67,"awareness":52,"catching":29,"arm":26,"accuracy":26,"blocking":67,"tackling":36,"coverage":10,"durability":64,"kicking":15},"name":"Muddlet"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":60,"agility":62,"strength":77,"awareness":53,"catching":29,"arm":17,"accuracy":27,"blocking":40,"tackling":63,"coverage":31,"durability":65,"kicking":16},"name":"Crustank"},
+    "DL2": {"attrs":{"speed":51,"agility":58,"strength":73,"awareness":53,"catching":27,"arm":18,"accuracy":26,"blocking":32,"tackling":63,"coverage":33,"durability":69,"kicking":29},"name":"Crustank"},
+    "LB1": {"attrs":{"speed":66,"agility":60,"strength":68,"awareness":59,"catching":36,"arm":22,"accuracy":20,"blocking":35,"tackling":66,"coverage":54,"durability":61,"kicking":10},"name":"Cindruff"},
+    "LB2": {"attrs":{"speed":67,"agility":63,"strength":69,"awareness":58,"catching":49,"arm":26,"accuracy":22,"blocking":34,"tackling":71,"coverage":56,"durability":67,"kicking":27},"name":"Craggo"},
+    "CB1": {"attrs":{"speed":65,"agility":74,"strength":38,"awareness":53,"catching":51,"arm":26,"accuracy":25,"blocking":25,"tackling":38,"coverage":60,"durability":57,"kicking":19},"name":"Aeralis"},
+    "CB2": {"attrs":{"speed":75,"agility":73,"strength":43,"awareness":51,"catching":44,"arm":34,"accuracy":21,"blocking":27,"tackling":41,"coverage":65,"durability":57,"kicking":16},"name":"Aquip"},
+    "FS": {"attrs":{"speed":67,"agility":68,"strength":60,"awareness":64,"catching":55,"arm":22,"accuracy":25,"blocking":27,"tackling":62,"coverage":53,"durability":56,"kicking":22},"name":"Psyflutter"},
+    "DL3": {"attrs":{"speed":53,"agility":56,"strength":68,"awareness":48,"catching":31,"arm":29,"accuracy":26,"blocking":36,"tackling":66,"coverage":20,"durability":69,"kicking":17},"name":"Mossmaw"},
+    "SS": {"attrs":{"speed":66,"agility":64,"strength":56,"awareness":69,"catching":59,"arm":29,"accuracy":25,"blocking":35,"tackling":66,"coverage":73,"durability":62,"kicking":27},"name":"Psyflutter"}
+   }
+  },
+  "7,60": {
+   "offense": {
+    "QB": {"attrs":{"speed":63,"agility":53,"strength":48,"awareness":55,"catching":39,"arm":64,"accuracy":62,"blocking":28,"tackling":28,"coverage":30,"durability":60,"kicking":34},"name":"Pyronix"},
+    "RB": {"attrs":{"speed":67,"agility":69,"strength":63,"awareness":56,"catching":48,"arm":34,"accuracy":30,"blocking":41,"tackling":39,"coverage":28,"durability":57,"kicking":29},"name":"Drakling"},
+    "WR1": {"attrs":{"speed":68,"agility":61,"strength":40,"awareness":49,"catching":58,"arm":29,"accuracy":25,"blocking":38,"tackling":29,"coverage":16,"durability":54,"kicking":22},"name":"Zippit"},
+    "WR2": {"attrs":{"speed":64,"agility":69,"strength":53,"awareness":49,"catching":65,"arm":24,"accuracy":30,"blocking":43,"tackling":28,"coverage":31,"durability":63,"kicking":18},"name":"Gustling"},
+    "TE": {"attrs":{"speed":59,"agility":55,"strength":70,"awareness":56,"catching":60,"arm":30,"accuracy":25,"blocking":63,"tackling":33,"coverage":34,"durability":72,"kicking":33},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":40,"agility":34,"strength":70,"awareness":43,"catching":19,"arm":20,"accuracy":22,"blocking":66,"tackling":33,"coverage":14,"durability":71,"kicking":12},"name":"Pebblit"},
+    "RG": {"attrs":{"speed":38,"agility":37,"strength":69,"awareness":46,"catching":17,"arm":24,"accuracy":19,"blocking":63,"tackling":27,"coverage":15,"durability":72,"kicking":16},"name":"Pebblit"},
+    "WR3": {"attrs":{"speed":67,"agility":70,"strength":48,"awareness":42,"catching":60,"arm":25,"accuracy":25,"blocking":36,"tackling":24,"coverage":27,"durability":50,"kicking":25},"name":"Gustling"},
+    "C": {"attrs":{"speed":45,"agility":36,"strength":71,"awareness":50,"catching":22,"arm":26,"accuracy":22,"blocking":73,"tackling":34,"coverage":24,"durability":61,"kicking":18},"name":"Pebblit"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":45,"agility":55,"strength":66,"awareness":40,"catching":23,"arm":24,"accuracy":21,"blocking":36,"tackling":60,"coverage":28,"durability":65,"kicking":23},"name":"Scorchulk"},
+    "DL2": {"attrs":{"speed":43,"agility":55,"strength":68,"awareness":49,"catching":33,"arm":34,"accuracy":24,"blocking":29,"tackling":64,"coverage":32,"durability":70,"kicking":20},"name":"Mossmaw"},
+    "LB1": {"attrs":{"speed":58,"agility":62,"strength":62,"awareness":55,"catching":37,"arm":22,"accuracy":18,"blocking":31,"tackling":61,"coverage":51,"durability":63,"kicking":18},"name":"Cryolynx"},
+    "LB2": {"attrs":{"speed":56,"agility":60,"strength":56,"awareness":56,"catching":37,"arm":29,"accuracy":24,"blocking":34,"tackling":67,"coverage":52,"durability":68,"kicking":11},"name":"Cindruff"},
+    "CB1": {"attrs":{"speed":53,"agility":66,"strength":47,"awareness":44,"catching":43,"arm":16,"accuracy":14,"blocking":22,"tackling":44,"coverage":63,"durability":54,"kicking":13},"name":"Aquip"},
+    "CB2": {"attrs":{"speed":65,"agility":66,"strength":49,"awareness":59,"catching":44,"arm":23,"accuracy":24,"blocking":23,"tackling":43,"coverage":59,"durability":56,"kicking":16},"name":"Wispira"},
+    "FS": {"attrs":{"speed":70,"agility":62,"strength":54,"awareness":61,"catching":48,"arm":21,"accuracy":24,"blocking":21,"tackling":60,"coverage":58,"durability":56,"kicking":20},"name":"Psyflutter"},
+    "DL3": {"attrs":{"speed":46,"agility":60,"strength":65,"awareness":62,"catching":25,"arm":29,"accuracy":24,"blocking":31,"tackling":65,"coverage":28,"durability":67,"kicking":21},"name":"Crustank"},
+    "SS": {"attrs":{"speed":65,"agility":56,"strength":55,"awareness":61,"catching":50,"arm":13,"accuracy":28,"blocking":21,"tackling":56,"coverage":62,"durability":61,"kicking":23},"name":"Psyflutter"}
+   }
+  },
+  "8,60": {
+   "offense": {
+    "QB": {"attrs":{"speed":53,"agility":53,"strength":56,"awareness":54,"catching":30,"arm":55,"accuracy":65,"blocking":29,"tackling":36,"coverage":20,"durability":60,"kicking":32},"name":"Pyronix"},
+    "RB": {"attrs":{"speed":73,"agility":70,"strength":56,"awareness":53,"catching":52,"arm":34,"accuracy":35,"blocking":43,"tackling":25,"coverage":32,"durability":65,"kicking":15},"name":"Zephyroo"},
+    "WR1": {"attrs":{"speed":67,"agility":70,"strength":40,"awareness":46,"catching":66,"arm":25,"accuracy":30,"blocking":35,"tackling":33,"coverage":30,"durability":58,"kicking":21},"name":"Spriglet"},
+    "WR2": {"attrs":{"speed":61,"agility":62,"strength":37,"awareness":47,"catching":63,"arm":26,"accuracy":31,"blocking":33,"tackling":32,"coverage":20,"durability":53,"kicking":25},"name":"Lumini"},
+    "TE": {"attrs":{"speed":57,"agility":54,"strength":67,"awareness":47,"catching":52,"arm":38,"accuracy":32,"blocking":64,"tackling":36,"coverage":31,"durability":63,"kicking":28},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":41,"agility":33,"strength":72,"awareness":43,"catching":21,"arm":22,"accuracy":28,"blocking":66,"tackling":35,"coverage":30,"durability":62,"kicking":19},"name":"Pebblit"},
+    "RG": {"attrs":{"speed":40,"agility":43,"strength":69,"awareness":43,"catching":19,"arm":25,"accuracy":25,"blocking":73,"tackling":32,"coverage":11,"durability":68,"kicking":15},"name":"Ferrcub"},
+    "WR3": {"attrs":{"speed":66,"agility":65,"strength":42,"awareness":55,"catching":62,"arm":25,"accuracy":17,"blocking":33,"tackling":26,"coverage":24,"durability":57,"kicking":28},"name":"Nocturne"},
+    "C": {"attrs":{"speed":42,"agility":36,"strength":71,"awareness":49,"catching":21,"arm":28,"accuracy":25,"blocking":67,"tackling":28,"coverage":13,"durability":69,"kicking":18},"name":"Pebblit"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":49,"agility":53,"strength":76,"awareness":50,"catching":32,"arm":28,"accuracy":18,"blocking":32,"tackling":68,"coverage":24,"durability":74,"kicking":14},"name":"Granigor"},
+    "DL2": {"attrs":{"speed":54,"agility":56,"strength":82,"awareness":55,"catching":25,"arm":23,"accuracy":23,"blocking":39,"tackling":64,"coverage":29,"durability":59,"kicking":18},"name":"Granigor"},
+    "LB1": {"attrs":{"speed":59,"agility":56,"strength":60,"awareness":63,"catching":37,"arm":26,"accuracy":20,"blocking":33,"tackling":69,"coverage":42,"durability":60,"kicking":21},"name":"Echolot"},
+    "LB2": {"attrs":{"speed":65,"agility":55,"strength":55,"awareness":61,"catching":45,"arm":23,"accuracy":26,"blocking":30,"tackling":67,"coverage":49,"durability":70,"kicking":24},"name":"Steelpaw"},
+    "CB1": {"attrs":{"speed":69,"agility":59,"strength":49,"awareness":48,"catching":36,"arm":19,"accuracy":18,"blocking":20,"tackling":49,"coverage":56,"durability":65,"kicking":14},"name":"Sablewing"},
+    "CB2": {"attrs":{"speed":65,"agility":64,"strength":40,"awareness":54,"catching":39,"arm":15,"accuracy":23,"blocking":26,"tackling":48,"coverage":73,"durability":47,"kicking":15},"name":"Wispira"},
+    "FS": {"attrs":{"speed":67,"agility":60,"strength":57,"awareness":56,"catching":49,"arm":20,"accuracy":26,"blocking":30,"tackling":60,"coverage":61,"durability":57,"kicking":18},"name":"Statyx"},
+    "DL3": {"attrs":{"speed":50,"agility":45,"strength":62,"awareness":47,"catching":35,"arm":21,"accuracy":32,"blocking":39,"tackling":66,"coverage":27,"durability":74,"kicking":20},"name":"Mossmaw"},
+    "SS": {"attrs":{"speed":64,"agility":61,"strength":54,"awareness":58,"catching":47,"arm":23,"accuracy":25,"blocking":27,"tackling":63,"coverage":64,"durability":64,"kicking":13},"name":"Florant"}
+   }
+  },
+  "9,62": {
+   "offense": {
+    "QB": {"attrs":{"speed":57,"agility":58,"strength":54,"awareness":64,"catching":39,"arm":64,"accuracy":63,"blocking":28,"tackling":25,"coverage":32,"durability":64,"kicking":27},"name":"Pyronix"},
+    "RB": {"attrs":{"speed":74,"agility":72,"strength":67,"awareness":53,"catching":54,"arm":34,"accuracy":32,"blocking":46,"tackling":36,"coverage":27,"durability":60,"kicking":27},"name":"Zephyroo"},
+    "WR1": {"attrs":{"speed":70,"agility":69,"strength":39,"awareness":54,"catching":66,"arm":28,"accuracy":31,"blocking":45,"tackling":29,"coverage":30,"durability":54,"kicking":25},"name":"Gustling"},
+    "WR2": {"attrs":{"speed":71,"agility":64,"strength":47,"awareness":52,"catching":57,"arm":29,"accuracy":33,"blocking":42,"tackling":32,"coverage":35,"durability":63,"kicking":26},"name":"Spriglet"},
+    "TE": {"attrs":{"speed":62,"agility":58,"strength":69,"awareness":59,"catching":55,"arm":35,"accuracy":26,"blocking":63,"tackling":42,"coverage":42,"durability":67,"kicking":26},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":43,"agility":35,"strength":77,"awareness":38,"catching":21,"arm":20,"accuracy":24,"blocking":65,"tackling":37,"coverage":9,"durability":71,"kicking":21},"name":"Pebblit"},
+    "RG": {"attrs":{"speed":42,"agility":39,"strength":72,"awareness":55,"catching":18,"arm":19,"accuracy":18,"blocking":70,"tackling":38,"coverage":17,"durability":70,"kicking":19},"name":"Pebblit"},
+    "WR3": {"attrs":{"speed":74,"agility":66,"strength":44,"awareness":51,"catching":58,"arm":34,"accuracy":29,"blocking":45,"tackling":30,"coverage":37,"durability":52,"kicking":23},"name":"Zappard"},
+    "C": {"attrs":{"speed":42,"agility":36,"strength":67,"awareness":47,"catching":22,"arm":17,"accuracy":18,"blocking":69,"tackling":29,"coverage":13,"durability":71,"kicking":16},"name":"Ferrcub"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":59,"agility":55,"strength":67,"awareness":52,"catching":27,"arm":29,"accuracy":19,"blocking":31,"tackling":71,"coverage":26,"durability":63,"kicking":19},"name":"Joltrex"},
+    "DL2": {"attrs":{"speed":56,"agility":58,"strength":69,"awareness":51,"catching":33,"arm":22,"accuracy":30,"blocking":34,"tackling":68,"coverage":32,"durability":67,"kicking":24},"name":"Mossmaw"},
+    "LB1": {"attrs":{"speed":61,"agility":62,"strength":60,"awareness":59,"catching":33,"arm":30,"accuracy":24,"blocking":37,"tackling":64,"coverage":58,"durability":64,"kicking":16},"name":"Murklaw"},
+    "LB2": {"attrs":{"speed":65,"agility":60,"strength":71,"awareness":61,"catching":49,"arm":23,"accuracy":21,"blocking":31,"tackling":68,"coverage":47,"durability":61,"kicking":27},"name":"Cindruff"},
+    "CB1": {"attrs":{"speed":68,"agility":73,"strength":42,"awareness":53,"catching":47,"arm":27,"accuracy":26,"blocking":23,"tackling":47,"coverage":63,"durability":55,"kicking":12},"name":"Aquip"},
+    "CB2": {"attrs":{"speed":70,"agility":67,"strength":41,"awareness":44,"catching":45,"arm":14,"accuracy":29,"blocking":25,"tackling":48,"coverage":74,"durability":54,"kicking":13},"name":"Frostpup"},
+    "FS": {"attrs":{"speed":61,"agility":70,"strength":60,"awareness":65,"catching":55,"arm":23,"accuracy":29,"blocking":24,"tackling":61,"coverage":62,"durability":63,"kicking":17},"name":"Galyx"},
+    "DL3": {"attrs":{"speed":54,"agility":55,"strength":71,"awareness":51,"catching":34,"arm":30,"accuracy":25,"blocking":30,"tackling":65,"coverage":38,"durability":68,"kicking":15},"name":"Glaciram"},
+    "SS": {"attrs":{"speed":66,"agility":68,"strength":62,"awareness":57,"catching":53,"arm":24,"accuracy":26,"blocking":29,"tackling":61,"coverage":61,"durability":62,"kicking":12},"name":"Florant"}
+   }
+  },
+  "11,60": {
+   "offense": {
+    "QB": {"attrs":{"speed":50,"agility":56,"strength":53,"awareness":59,"catching":35,"arm":61,"accuracy":63,"blocking":33,"tackling":24,"coverage":25,"durability":53,"kicking":26},"name":"Lumen"},
+    "RB": {"attrs":{"speed":74,"agility":69,"strength":67,"awareness":51,"catching":49,"arm":31,"accuracy":30,"blocking":53,"tackling":39,"coverage":24,"durability":55,"kicking":27},"name":"Bouldrox"},
+    "WR1": {"attrs":{"speed":62,"agility":69,"strength":38,"awareness":49,"catching":58,"arm":28,"accuracy":24,"blocking":40,"tackling":23,"coverage":30,"durability":52,"kicking":20},"name":"Lumini"},
+    "WR2": {"attrs":{"speed":62,"agility":70,"strength":38,"awareness":54,"catching":58,"arm":29,"accuracy":27,"blocking":33,"tackling":22,"coverage":33,"durability":57,"kicking":17},"name":"Lumini"},
+    "TE": {"attrs":{"speed":64,"agility":52,"strength":64,"awareness":54,"catching":64,"arm":26,"accuracy":33,"blocking":61,"tackling":28,"coverage":29,"durability":63,"kicking":9},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":40,"agility":43,"strength":68,"awareness":53,"catching":18,"arm":16,"accuracy":30,"blocking":63,"tackling":31,"coverage":14,"durability":64,"kicking":16},"name":"Muddlet"},
+    "RG": {"attrs":{"speed":44,"agility":42,"strength":73,"awareness":47,"catching":23,"arm":23,"accuracy":29,"blocking":67,"tackling":27,"coverage":23,"durability":66,"kicking":17},"name":"Pebblit"},
+    "WR3": {"attrs":{"speed":61,"agility":52,"strength":42,"awareness":51,"catching":52,"arm":27,"accuracy":27,"blocking":35,"tackling":28,"coverage":24,"durability":64,"kicking":28},"name":"Spriglet"},
+    "C": {"attrs":{"speed":42,"agility":41,"strength":57,"awareness":52,"catching":25,"arm":20,"accuracy":26,"blocking":59,"tackling":31,"coverage":21,"durability":60,"kicking":20},"name":"Muddlet"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":54,"agility":55,"strength":70,"awareness":45,"catching":31,"arm":22,"accuracy":29,"blocking":33,"tackling":70,"coverage":29,"durability":65,"kicking":15},"name":"Granigor"},
+    "DL2": {"attrs":{"speed":51,"agility":52,"strength":61,"awareness":45,"catching":28,"arm":30,"accuracy":31,"blocking":33,"tackling":61,"coverage":27,"durability":69,"kicking":17},"name":"Mossmaw"},
+    "LB1": {"attrs":{"speed":52,"agility":58,"strength":62,"awareness":60,"catching":43,"arm":22,"accuracy":15,"blocking":35,"tackling":75,"coverage":55,"durability":69,"kicking":15},"name":"Echolot"},
+    "LB2": {"attrs":{"speed":58,"agility":59,"strength":66,"awareness":58,"catching":39,"arm":31,"accuracy":23,"blocking":28,"tackling":68,"coverage":47,"durability":80,"kicking":11},"name":"Steelpaw"},
+    "CB1": {"attrs":{"speed":70,"agility":72,"strength":43,"awareness":46,"catching":42,"arm":17,"accuracy":19,"blocking":23,"tackling":42,"coverage":70,"durability":50,"kicking":10},"name":"Frostpup"},
+    "CB2": {"attrs":{"speed":73,"agility":61,"strength":49,"awareness":54,"catching":47,"arm":23,"accuracy":20,"blocking":22,"tackling":49,"coverage":61,"durability":52,"kicking":13},"name":"Wispira"},
+    "FS": {"attrs":{"speed":58,"agility":62,"strength":58,"awareness":64,"catching":47,"arm":24,"accuracy":30,"blocking":37,"tackling":53,"coverage":67,"durability":60,"kicking":16},"name":"Psyflutter"},
+    "DL3": {"attrs":{"speed":58,"agility":63,"strength":69,"awareness":57,"catching":20,"arm":19,"accuracy":22,"blocking":34,"tackling":63,"coverage":31,"durability":64,"kicking":20},"name":"Crustank"},
+    "SS": {"attrs":{"speed":61,"agility":60,"strength":51,"awareness":62,"catching":52,"arm":18,"accuracy":22,"blocking":35,"tackling":62,"coverage":61,"durability":56,"kicking":14},"name":"Psyflutter"}
+   }
+  },
+  "11,62": {
+   "offense": {
+    "QB": {"attrs":{"speed":52,"agility":58,"strength":54,"awareness":61,"catching":35,"arm":63,"accuracy":65,"blocking":34,"tackling":25,"coverage":26,"durability":54,"kicking":27},"name":"Lumen"},
+    "RB": {"attrs":{"speed":76,"agility":71,"strength":69,"awareness":53,"catching":51,"arm":31,"accuracy":31,"blocking":55,"tackling":40,"coverage":25,"durability":56,"kicking":28},"name":"Bouldrox"},
+    "WR1": {"attrs":{"speed":64,"agility":71,"strength":40,"awareness":51,"catching":60,"arm":29,"accuracy":25,"blocking":40,"tackling":24,"coverage":31,"durability":52,"kicking":21},"name":"Lumini"},
+    "WR2": {"attrs":{"speed":64,"agility":72,"strength":40,"awareness":56,"catching":60,"arm":30,"accuracy":28,"blocking":34,"tackling":23,"coverage":33,"durability":58,"kicking":18},"name":"Lumini"},
+    "TE": {"attrs":{"speed":66,"agility":54,"strength":66,"awareness":56,"catching":66,"arm":27,"accuracy":33,"blocking":63,"tackling":29,"coverage":30,"durability":64,"kicking":10},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":41,"agility":45,"strength":70,"awareness":55,"catching":19,"arm":17,"accuracy":31,"blocking":65,"tackling":32,"coverage":15,"durability":64,"kicking":17},"name":"Muddlet"},
+    "RG": {"attrs":{"speed":45,"agility":44,"strength":75,"awareness":49,"catching":24,"arm":23,"accuracy":30,"blocking":69,"tackling":28,"coverage":24,"durability":67,"kicking":17},"name":"Pebblit"},
+    "WR3": {"attrs":{"speed":63,"agility":54,"strength":44,"awareness":53,"catching":54,"arm":28,"accuracy":28,"blocking":36,"tackling":29,"coverage":24,"durability":65,"kicking":29},"name":"Spriglet"},
+    "C": {"attrs":{"speed":43,"agility":43,"strength":59,"awareness":54,"catching":26,"arm":21,"accuracy":27,"blocking":61,"tackling":32,"coverage":22,"durability":61,"kicking":21},"name":"Muddlet"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":56,"agility":57,"strength":72,"awareness":47,"catching":32,"arm":23,"accuracy":30,"blocking":34,"tackling":72,"coverage":30,"durability":66,"kicking":16},"name":"Granigor"},
+    "DL2": {"attrs":{"speed":53,"agility":54,"strength":63,"awareness":47,"catching":29,"arm":31,"accuracy":32,"blocking":34,"tackling":63,"coverage":28,"durability":70,"kicking":18},"name":"Mossmaw"},
+    "LB1": {"attrs":{"speed":54,"agility":59,"strength":64,"awareness":62,"catching":44,"arm":23,"accuracy":16,"blocking":36,"tackling":77,"coverage":57,"durability":69,"kicking":16},"name":"Echolot"},
+    "LB2": {"attrs":{"speed":60,"agility":60,"strength":68,"awareness":60,"catching":40,"arm":31,"accuracy":24,"blocking":28,"tackling":70,"coverage":49,"durability":81,"kicking":11},"name":"Steelpaw"},
+    "CB1": {"attrs":{"speed":72,"agility":74,"strength":44,"awareness":48,"catching":44,"arm":18,"accuracy":20,"blocking":24,"tackling":43,"coverage":72,"durability":51,"kicking":11},"name":"Frostpup"},
+    "CB2": {"attrs":{"speed":75,"agility":63,"strength":50,"awareness":56,"catching":49,"arm":23,"accuracy":21,"blocking":23,"tackling":50,"coverage":63,"durability":53,"kicking":13},"name":"Wispira"},
+    "FS": {"attrs":{"speed":60,"agility":63,"strength":59,"awareness":66,"catching":49,"arm":25,"accuracy":31,"blocking":38,"tackling":55,"coverage":69,"durability":61,"kicking":16},"name":"Psyflutter"},
+    "DL3": {"attrs":{"speed":60,"agility":65,"strength":71,"awareness":59,"catching":21,"arm":20,"accuracy":23,"blocking":35,"tackling":65,"coverage":32,"durability":65,"kicking":21},"name":"Crustank"},
+    "SS": {"attrs":{"speed":63,"agility":61,"strength":52,"awareness":64,"catching":54,"arm":19,"accuracy":23,"blocking":36,"tackling":64,"coverage":63,"durability":57,"kicking":15},"name":"Psyflutter"}
+   }
+  },
+  "12,64": {
+   "offense": {
+    "QB": {"attrs":{"speed":50,"agility":61,"strength":51,"awareness":61,"catching":44,"arm":66,"accuracy":65,"blocking":28,"tackling":34,"coverage":29,"durability":60,"kicking":32},"name":"Pyronix"},
+    "RB": {"attrs":{"speed":80,"agility":67,"strength":56,"awareness":57,"catching":57,"arm":38,"accuracy":27,"blocking":56,"tackling":34,"coverage":25,"durability":66,"kicking":25},"name":"Volcoil"},
+    "WR1": {"attrs":{"speed":85,"agility":68,"strength":41,"awareness":59,"catching":61,"arm":29,"accuracy":23,"blocking":38,"tackling":29,"coverage":32,"durability":58,"kicking":30},"name":"Gustling"},
+    "WR2": {"attrs":{"speed":78,"agility":66,"strength":47,"awareness":44,"catching":66,"arm":28,"accuracy":22,"blocking":41,"tackling":30,"coverage":37,"durability":59,"kicking":20},"name":"Zippit"},
+    "TE": {"attrs":{"speed":65,"agility":63,"strength":74,"awareness":56,"catching":55,"arm":32,"accuracy":28,"blocking":63,"tackling":43,"coverage":40,"durability":58,"kicking":22},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":39,"agility":45,"strength":76,"awareness":47,"catching":27,"arm":15,"accuracy":21,"blocking":66,"tackling":31,"coverage":24,"durability":67,"kicking":16},"name":"Muddlet"},
+    "RG": {"attrs":{"speed":40,"agility":45,"strength":66,"awareness":51,"catching":30,"arm":20,"accuracy":26,"blocking":65,"tackling":36,"coverage":19,"durability":66,"kicking":14},"name":"Shardok"},
+    "WR3": {"attrs":{"speed":72,"agility":72,"strength":49,"awareness":51,"catching":64,"arm":33,"accuracy":33,"blocking":35,"tackling":22,"coverage":30,"durability":63,"kicking":33},"name":"Spriglet"},
+    "C": {"attrs":{"speed":42,"agility":39,"strength":69,"awareness":47,"catching":24,"arm":21,"accuracy":25,"blocking":67,"tackling":31,"coverage":14,"durability":63,"kicking":17},"name":"Pebblit"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":52,"agility":55,"strength":76,"awareness":51,"catching":26,"arm":28,"accuracy":31,"blocking":33,"tackling":62,"coverage":33,"durability":77,"kicking":27},"name":"Vyrnax"},
+    "DL2": {"attrs":{"speed":61,"agility":61,"strength":72,"awareness":54,"catching":33,"arm":30,"accuracy":30,"blocking":34,"tackling":73,"coverage":23,"durability":69,"kicking":23},"name":"Ferronox"},
+    "LB1": {"attrs":{"speed":62,"agility":67,"strength":73,"awareness":55,"catching":39,"arm":24,"accuracy":21,"blocking":39,"tackling":71,"coverage":51,"durability":69,"kicking":16},"name":"Cindruff"},
+    "LB2": {"attrs":{"speed":57,"agility":67,"strength":60,"awareness":64,"catching":38,"arm":23,"accuracy":32,"blocking":39,"tackling":71,"coverage":56,"durability":65,"kicking":21},"name":"Murklaw"},
+    "CB1": {"attrs":{"speed":73,"agility":65,"strength":48,"awareness":61,"catching":49,"arm":21,"accuracy":28,"blocking":25,"tackling":50,"coverage":75,"durability":60,"kicking":23},"name":"Flarynx"},
+    "CB2": {"attrs":{"speed":65,"agility":71,"strength":42,"awareness":55,"catching":48,"arm":25,"accuracy":29,"blocking":32,"tackling":41,"coverage":71,"durability":56,"kicking":22},"name":"Umbrikit"},
+    "FS": {"attrs":{"speed":72,"agility":68,"strength":52,"awareness":61,"catching":54,"arm":30,"accuracy":27,"blocking":30,"tackling":62,"coverage":70,"durability":58,"kicking":12},"name":"Galyx"},
+    "DL3": {"attrs":{"speed":55,"agility":63,"strength":74,"awareness":52,"catching":28,"arm":19,"accuracy":23,"blocking":34,"tackling":62,"coverage":39,"durability":74,"kicking":15},"name":"Mossmaw"},
+    "SS": {"attrs":{"speed":63,"agility":66,"strength":51,"awareness":59,"catching":50,"arm":26,"accuracy":25,"blocking":28,"tackling":63,"coverage":62,"durability":67,"kicking":22},"name":"Statyx"}
+   }
+  },
+  "21,60": {
+   "offense": {
+    "QB": {"attrs":{"speed":53,"agility":49,"strength":51,"awareness":58,"catching":41,"arm":59,"accuracy":69,"blocking":30,"tackling":31,"coverage":20,"durability":53,"kicking":34},"name":"Lumen"},
+    "RB": {"attrs":{"speed":64,"agility":69,"strength":55,"awareness":58,"catching":53,"arm":33,"accuracy":30,"blocking":49,"tackling":39,"coverage":28,"durability":62,"kicking":26},"name":"Zephyroo"},
+    "WR1": {"attrs":{"speed":61,"agility":63,"strength":41,"awareness":50,"catching":61,"arm":37,"accuracy":28,"blocking":34,"tackling":28,"coverage":30,"durability":55,"kicking":15},"name":"Spriglet"},
+    "WR2": {"attrs":{"speed":71,"agility":65,"strength":43,"awareness":52,"catching":66,"arm":30,"accuracy":30,"blocking":35,"tackling":20,"coverage":29,"durability":51,"kicking":18},"name":"Zippit"},
+    "TE": {"attrs":{"speed":62,"agility":53,"strength":65,"awareness":53,"catching":62,"arm":26,"accuracy":28,"blocking":66,"tackling":35,"coverage":36,"durability":60,"kicking":18},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":39,"agility":36,"strength":69,"awareness":43,"catching":18,"arm":26,"accuracy":18,"blocking":64,"tackling":32,"coverage":12,"durability":70,"kicking":17},"name":"Ferrcub"},
+    "RG": {"attrs":{"speed":41,"agility":33,"strength":65,"awareness":43,"catching":20,"arm":22,"accuracy":22,"blocking":65,"tackling":28,"coverage":14,"durability":74,"kicking":15},"name":"Bramblet"},
+    "WR3": {"attrs":{"speed":69,"agility":55,"strength":42,"awareness":49,"catching":63,"arm":29,"accuracy":23,"blocking":39,"tackling":23,"coverage":34,"durability":54,"kicking":25},"name":"Zippit"},
+    "C": {"attrs":{"speed":37,"agility":46,"strength":72,"awareness":38,"catching":14,"arm":17,"accuracy":28,"blocking":72,"tackling":31,"coverage":13,"durability":67,"kicking":15},"name":"Ferrhorn"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":47,"agility":53,"strength":68,"awareness":50,"catching":32,"arm":26,"accuracy":24,"blocking":37,"tackling":60,"coverage":26,"durability":68,"kicking":16},"name":"Mossmaw"},
+    "DL2": {"attrs":{"speed":56,"agility":54,"strength":73,"awareness":44,"catching":27,"arm":26,"accuracy":23,"blocking":29,"tackling":58,"coverage":37,"durability":62,"kicking":20},"name":"Scorchulk"},
+    "LB1": {"attrs":{"speed":56,"agility":55,"strength":64,"awareness":59,"catching":43,"arm":25,"accuracy":31,"blocking":36,"tackling":67,"coverage":50,"durability":66,"kicking":12},"name":"Craggo"},
+    "LB2": {"attrs":{"speed":56,"agility":67,"strength":65,"awareness":58,"catching":41,"arm":15,"accuracy":25,"blocking":38,"tackling":69,"coverage":43,"durability":69,"kicking":19},"name":"Steelpaw"},
+    "CB1": {"attrs":{"speed":67,"agility":65,"strength":38,"awareness":49,"catching":38,"arm":18,"accuracy":25,"blocking":23,"tackling":43,"coverage":60,"durability":51,"kicking":25},"name":"Wispira"},
+    "CB2": {"attrs":{"speed":67,"agility":71,"strength":35,"awareness":52,"catching":44,"arm":22,"accuracy":19,"blocking":21,"tackling":44,"coverage":60,"durability":47,"kicking":17},"name":"Umbrikit"},
+    "FS": {"attrs":{"speed":64,"agility":65,"strength":55,"awareness":60,"catching":53,"arm":26,"accuracy":30,"blocking":24,"tackling":56,"coverage":56,"durability":63,"kicking":19},"name":"Noctlet"},
+    "DL3": {"attrs":{"speed":53,"agility":51,"strength":75,"awareness":51,"catching":31,"arm":21,"accuracy":19,"blocking":29,"tackling":55,"coverage":28,"durability":59,"kicking":18},"name":"Granigor"},
+    "SS": {"attrs":{"speed":61,"agility":68,"strength":49,"awareness":63,"catching":51,"arm":31,"accuracy":29,"blocking":31,"tackling":64,"coverage":63,"durability":60,"kicking":14},"name":"Noctlet"}
+   }
+  },
+  "21,62": {
+   "offense": {
+    "QB": {"attrs":{"speed":55,"agility":51,"strength":52,"awareness":60,"catching":42,"arm":61,"accuracy":71,"blocking":31,"tackling":32,"coverage":21,"durability":54,"kicking":34},"name":"Lumen"},
+    "RB": {"attrs":{"speed":66,"agility":71,"strength":57,"awareness":60,"catching":55,"arm":34,"accuracy":30,"blocking":51,"tackling":40,"coverage":29,"durability":63,"kicking":26},"name":"Zephyroo"},
+    "WR1": {"attrs":{"speed":63,"agility":65,"strength":43,"awareness":52,"catching":63,"arm":38,"accuracy":29,"blocking":35,"tackling":29,"coverage":31,"durability":56,"kicking":16},"name":"Spriglet"},
+    "WR2": {"attrs":{"speed":73,"agility":67,"strength":45,"awareness":54,"catching":68,"arm":31,"accuracy":31,"blocking":36,"tackling":21,"coverage":30,"durability":52,"kicking":19},"name":"Zippit"},
+    "TE": {"attrs":{"speed":64,"agility":55,"strength":67,"awareness":55,"catching":64,"arm":27,"accuracy":29,"blocking":68,"tackling":36,"coverage":37,"durability":61,"kicking":19},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":40,"agility":38,"strength":71,"awareness":45,"catching":19,"arm":27,"accuracy":19,"blocking":66,"tackling":33,"coverage":13,"durability":71,"kicking":18},"name":"Ferrcub"},
+    "RG": {"attrs":{"speed":42,"agility":35,"strength":67,"awareness":45,"catching":21,"arm":23,"accuracy":23,"blocking":67,"tackling":29,"coverage":15,"durability":75,"kicking":16},"name":"Bramblet"},
+    "WR3": {"attrs":{"speed":71,"agility":57,"strength":44,"awareness":51,"catching":65,"arm":30,"accuracy":23,"blocking":40,"tackling":24,"coverage":35,"durability":54,"kicking":26},"name":"Zippit"},
+    "C": {"attrs":{"speed":38,"agility":48,"strength":74,"awareness":40,"catching":15,"arm":18,"accuracy":29,"blocking":74,"tackling":32,"coverage":14,"durability":68,"kicking":16},"name":"Ferrhorn"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":49,"agility":55,"strength":70,"awareness":52,"catching":33,"arm":27,"accuracy":24,"blocking":38,"tackling":62,"coverage":27,"durability":69,"kicking":17},"name":"Mossmaw"},
+    "DL2": {"attrs":{"speed":58,"agility":56,"strength":75,"awareness":46,"catching":27,"arm":26,"accuracy":24,"blocking":30,"tackling":60,"coverage":38,"durability":62,"kicking":21},"name":"Scorchulk"},
+    "LB1": {"attrs":{"speed":58,"agility":56,"strength":66,"awareness":61,"catching":44,"arm":26,"accuracy":32,"blocking":37,"tackling":69,"coverage":52,"durability":67,"kicking":13},"name":"Craggo"},
+    "LB2": {"attrs":{"speed":58,"agility":68,"strength":67,"awareness":60,"catching":42,"arm":16,"accuracy":26,"blocking":39,"tackling":71,"coverage":45,"durability":70,"kicking":20},"name":"Steelpaw"},
+    "CB1": {"attrs":{"speed":69,"agility":67,"strength":39,"awareness":51,"catching":40,"arm":19,"accuracy":26,"blocking":24,"tackling":44,"coverage":62,"durability":52,"kicking":26},"name":"Wispira"},
+    "CB2": {"attrs":{"speed":69,"agility":73,"strength":36,"awareness":54,"catching":46,"arm":23,"accuracy":20,"blocking":22,"tackling":45,"coverage":62,"durability":48,"kicking":18},"name":"Umbrikit"},
+    "FS": {"attrs":{"speed":66,"agility":66,"strength":56,"awareness":62,"catching":55,"arm":26,"accuracy":31,"blocking":25,"tackling":58,"coverage":58,"durability":63,"kicking":20},"name":"Noctlet"},
+    "DL3": {"attrs":{"speed":55,"agility":53,"strength":77,"awareness":53,"catching":31,"arm":22,"accuracy":20,"blocking":30,"tackling":57,"coverage":29,"durability":60,"kicking":19},"name":"Granigor"},
+    "SS": {"attrs":{"speed":63,"agility":69,"strength":50,"awareness":65,"catching":53,"arm":32,"accuracy":30,"blocking":32,"tackling":66,"coverage":65,"durability":60,"kicking":14},"name":"Noctlet"}
+   }
+  },
+  "21,72": {
+   "offense": {
+    "QB": {"attrs":{"speed":65,"agility":61,"strength":56,"awareness":70,"catching":46,"arm":71,"accuracy":81,"blocking":35,"tackling":37,"coverage":25,"durability":58,"kicking":39},"name":"Lumen"},
+    "RB": {"attrs":{"speed":76,"agility":81,"strength":67,"awareness":70,"catching":65,"arm":39,"accuracy":35,"blocking":61,"tackling":44,"coverage":33,"durability":68,"kicking":31},"name":"Zephyroo"},
+    "WR1": {"attrs":{"speed":73,"agility":75,"strength":53,"awareness":62,"catching":73,"arm":43,"accuracy":34,"blocking":40,"tackling":33,"coverage":35,"durability":60,"kicking":20},"name":"Spriglet"},
+    "WR2": {"attrs":{"speed":83,"agility":77,"strength":55,"awareness":64,"catching":78,"arm":36,"accuracy":36,"blocking":40,"tackling":26,"coverage":35,"durability":56,"kicking":24},"name":"Zippit"},
+    "TE": {"attrs":{"speed":74,"agility":65,"strength":77,"awareness":65,"catching":74,"arm":31,"accuracy":34,"blocking":78,"tackling":40,"coverage":41,"durability":66,"kicking":24},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":44,"agility":48,"strength":81,"awareness":55,"catching":23,"arm":31,"accuracy":24,"blocking":76,"tackling":38,"coverage":18,"durability":75,"kicking":22},"name":"Ferrcub"},
+    "RG": {"attrs":{"speed":46,"agility":45,"strength":77,"awareness":55,"catching":26,"arm":27,"accuracy":28,"blocking":77,"tackling":33,"coverage":20,"durability":80,"kicking":21},"name":"Bramblet"},
+    "WR3": {"attrs":{"speed":81,"agility":67,"strength":54,"awareness":61,"catching":75,"arm":34,"accuracy":28,"blocking":45,"tackling":29,"coverage":39,"durability":59,"kicking":30},"name":"Zippit"},
+    "C": {"attrs":{"speed":42,"agility":58,"strength":84,"awareness":50,"catching":20,"arm":23,"accuracy":34,"blocking":84,"tackling":36,"coverage":19,"durability":73,"kicking":21},"name":"Ferrhorn"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":59,"agility":65,"strength":80,"awareness":62,"catching":37,"arm":31,"accuracy":29,"blocking":42,"tackling":72,"coverage":31,"durability":73,"kicking":21},"name":"Mossmaw"},
+    "DL2": {"attrs":{"speed":68,"agility":66,"strength":85,"awareness":56,"catching":32,"arm":31,"accuracy":28,"blocking":34,"tackling":70,"coverage":42,"durability":67,"kicking":25},"name":"Scorchulk"},
+    "LB1": {"attrs":{"speed":68,"agility":60,"strength":76,"awareness":71,"catching":48,"arm":30,"accuracy":36,"blocking":41,"tackling":79,"coverage":62,"durability":72,"kicking":18},"name":"Craggo"},
+    "LB2": {"attrs":{"speed":68,"agility":72,"strength":77,"awareness":70,"catching":46,"arm":21,"accuracy":31,"blocking":43,"tackling":81,"coverage":55,"durability":74,"kicking":24},"name":"Steelpaw"},
+    "CB1": {"attrs":{"speed":79,"agility":77,"strength":43,"awareness":61,"catching":50,"arm":23,"accuracy":31,"blocking":29,"tackling":48,"coverage":72,"durability":57,"kicking":30},"name":"Wispira"},
+    "CB2": {"attrs":{"speed":79,"agility":83,"strength":41,"awareness":64,"catching":56,"arm":27,"accuracy":25,"blocking":27,"tackling":49,"coverage":72,"durability":52,"kicking":23},"name":"Umbrikit"},
+    "FS": {"attrs":{"speed":76,"agility":70,"strength":60,"awareness":72,"catching":65,"arm":31,"accuracy":35,"blocking":29,"tackling":68,"coverage":68,"durability":68,"kicking":24},"name":"Noctlet"},
+    "DL3": {"attrs":{"speed":65,"agility":63,"strength":87,"awareness":63,"catching":36,"arm":27,"accuracy":24,"blocking":35,"tackling":67,"coverage":34,"durability":64,"kicking":23},"name":"Granigor"},
+    "SS": {"attrs":{"speed":73,"agility":73,"strength":54,"awareness":75,"catching":63,"arm":37,"accuracy":35,"blocking":36,"tackling":76,"coverage":75,"durability":65,"kicking":19},"name":"Noctlet"}
+   }
+  },
+  "22,60": {
+   "offense": {
+    "QB": {"attrs":{"speed":55,"agility":49,"strength":48,"awareness":63,"catching":49,"arm":66,"accuracy":67,"blocking":30,"tackling":30,"coverage":30,"durability":55,"kicking":35},"name":"Lumen"},
+    "RB": {"attrs":{"speed":75,"agility":72,"strength":56,"awareness":49,"catching":57,"arm":17,"accuracy":32,"blocking":50,"tackling":26,"coverage":32,"durability":55,"kicking":21},"name":"Volcoil"},
+    "WR1": {"attrs":{"speed":69,"agility":66,"strength":36,"awareness":50,"catching":55,"arm":24,"accuracy":25,"blocking":45,"tackling":23,"coverage":24,"durability":59,"kicking":23},"name":"Zippit"},
+    "WR2": {"attrs":{"speed":71,"agility":60,"strength":41,"awareness":46,"catching":61,"arm":24,"accuracy":18,"blocking":29,"tackling":20,"coverage":30,"durability":50,"kicking":29},"name":"Zappard"},
+    "TE": {"attrs":{"speed":61,"agility":59,"strength":68,"awareness":51,"catching":54,"arm":29,"accuracy":29,"blocking":56,"tackling":34,"coverage":32,"durability":64,"kicking":21},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":40,"agility":42,"strength":67,"awareness":49,"catching":27,"arm":25,"accuracy":18,"blocking":67,"tackling":32,"coverage":6,"durability":73,"kicking":21},"name":"Bramblet"},
+    "RG": {"attrs":{"speed":37,"agility":32,"strength":67,"awareness":56,"catching":21,"arm":21,"accuracy":18,"blocking":66,"tackling":33,"coverage":23,"durability":68,"kicking":24},"name":"Muddlet"},
+    "WR3": {"attrs":{"speed":69,"agility":67,"strength":38,"awareness":53,"catching":61,"arm":27,"accuracy":28,"blocking":33,"tackling":26,"coverage":27,"durability":58,"kicking":13},"name":"Gustling"},
+    "C": {"attrs":{"speed":46,"agility":43,"strength":69,"awareness":42,"catching":25,"arm":25,"accuracy":20,"blocking":63,"tackling":36,"coverage":15,"durability":74,"kicking":13},"name":"Ferrcub"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":50,"agility":58,"strength":73,"awareness":51,"catching":29,"arm":24,"accuracy":26,"blocking":29,"tackling":56,"coverage":29,"durability":65,"kicking":20},"name":"Scorchulk"},
+    "DL2": {"attrs":{"speed":58,"agility":53,"strength":70,"awareness":46,"catching":34,"arm":15,"accuracy":24,"blocking":39,"tackling":62,"coverage":26,"durability":70,"kicking":13},"name":"Mossmaw"},
+    "LB1": {"attrs":{"speed":64,"agility":62,"strength":70,"awareness":56,"catching":41,"arm":22,"accuracy":20,"blocking":33,"tackling":68,"coverage":49,"durability":62,"kicking":21},"name":"Cindruff"},
+    "LB2": {"attrs":{"speed":62,"agility":54,"strength":59,"awareness":52,"catching":38,"arm":23,"accuracy":25,"blocking":39,"tackling":66,"coverage":53,"durability":68,"kicking":17},"name":"Steelpaw"},
+    "CB1": {"attrs":{"speed":69,"agility":68,"strength":51,"awareness":50,"catching":45,"arm":22,"accuracy":16,"blocking":20,"tackling":47,"coverage":54,"durability":55,"kicking":16},"name":"Sablewing"},
+    "CB2": {"attrs":{"speed":68,"agility":73,"strength":34,"awareness":44,"catching":46,"arm":24,"accuracy":20,"blocking":25,"tackling":43,"coverage":65,"durability":55,"kicking":12},"name":"Aquip"},
+    "FS": {"attrs":{"speed":68,"agility":60,"strength":60,"awareness":62,"catching":59,"arm":18,"accuracy":28,"blocking":23,"tackling":63,"coverage":59,"durability":56,"kicking":9},"name":"Noctlet"},
+    "DL3": {"attrs":{"speed":54,"agility":53,"strength":70,"awareness":52,"catching":24,"arm":22,"accuracy":20,"blocking":33,"tackling":63,"coverage":26,"durability":74,"kicking":17},"name":"Mossmaw"},
+    "SS": {"attrs":{"speed":65,"agility":68,"strength":59,"awareness":64,"catching":50,"arm":23,"accuracy":26,"blocking":30,"tackling":57,"coverage":59,"durability":71,"kicking":15},"name":"Noctlet"}
+   }
+  },
+  "22,62": {
+   "offense": {
+    "QB": {"attrs":{"speed":57,"agility":51,"strength":49,"awareness":65,"catching":49,"arm":68,"accuracy":69,"blocking":31,"tackling":31,"coverage":31,"durability":56,"kicking":36},"name":"Lumen"},
+    "RB": {"attrs":{"speed":77,"agility":74,"strength":58,"awareness":51,"catching":59,"arm":18,"accuracy":33,"blocking":52,"tackling":27,"coverage":33,"durability":56,"kicking":22},"name":"Volcoil"},
+    "WR1": {"attrs":{"speed":71,"agility":68,"strength":38,"awareness":52,"catching":57,"arm":25,"accuracy":26,"blocking":46,"tackling":24,"coverage":25,"durability":60,"kicking":24},"name":"Zippit"},
+    "WR2": {"attrs":{"speed":73,"agility":62,"strength":43,"awareness":48,"catching":63,"arm":25,"accuracy":19,"blocking":29,"tackling":21,"coverage":31,"durability":51,"kicking":30},"name":"Zappard"},
+    "TE": {"attrs":{"speed":63,"agility":61,"strength":70,"awareness":53,"catching":56,"arm":30,"accuracy":29,"blocking":58,"tackling":35,"coverage":33,"durability":65,"kicking":22},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":41,"agility":44,"strength":69,"awareness":51,"catching":28,"arm":26,"accuracy":19,"blocking":69,"tackling":33,"coverage":7,"durability":74,"kicking":21},"name":"Bramblet"},
+    "RG": {"attrs":{"speed":38,"agility":34,"strength":69,"awareness":58,"catching":22,"arm":22,"accuracy":19,"blocking":68,"tackling":34,"coverage":24,"durability":69,"kicking":25},"name":"Muddlet"},
+    "WR3": {"attrs":{"speed":71,"agility":69,"strength":40,"awareness":55,"catching":63,"arm":28,"accuracy":29,"blocking":34,"tackling":27,"coverage":28,"durability":59,"kicking":14},"name":"Gustling"},
+    "C": {"attrs":{"speed":47,"agility":45,"strength":71,"awareness":44,"catching":26,"arm":26,"accuracy":21,"blocking":65,"tackling":37,"coverage":16,"durability":75,"kicking":14},"name":"Ferrcub"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":52,"agility":60,"strength":75,"awareness":53,"catching":30,"arm":25,"accuracy":27,"blocking":30,"tackling":58,"coverage":30,"durability":66,"kicking":21},"name":"Scorchulk"},
+    "DL2": {"attrs":{"speed":60,"agility":55,"strength":72,"awareness":48,"catching":34,"arm":16,"accuracy":25,"blocking":39,"tackling":64,"coverage":27,"durability":71,"kicking":14},"name":"Mossmaw"},
+    "LB1": {"attrs":{"speed":66,"agility":63,"strength":72,"awareness":58,"catching":42,"arm":23,"accuracy":21,"blocking":34,"tackling":70,"coverage":51,"durability":63,"kicking":22},"name":"Cindruff"},
+    "LB2": {"attrs":{"speed":64,"agility":55,"strength":61,"awareness":54,"catching":39,"arm":24,"accuracy":26,"blocking":40,"tackling":68,"coverage":55,"durability":69,"kicking":18},"name":"Steelpaw"},
+    "CB1": {"attrs":{"speed":71,"agility":70,"strength":52,"awareness":52,"catching":47,"arm":23,"accuracy":16,"blocking":21,"tackling":48,"coverage":56,"durability":56,"kicking":17},"name":"Sablewing"},
+    "CB2": {"attrs":{"speed":70,"agility":75,"strength":35,"awareness":46,"catching":48,"arm":25,"accuracy":21,"blocking":26,"tackling":44,"coverage":67,"durability":55,"kicking":13},"name":"Aquip"},
+    "FS": {"attrs":{"speed":70,"agility":61,"strength":61,"awareness":64,"catching":61,"arm":18,"accuracy":29,"blocking":24,"tackling":65,"coverage":61,"durability":57,"kicking":10},"name":"Noctlet"},
+    "DL3": {"attrs":{"speed":56,"agility":55,"strength":72,"awareness":54,"catching":24,"arm":23,"accuracy":21,"blocking":33,"tackling":65,"coverage":27,"durability":75,"kicking":18},"name":"Mossmaw"},
+    "SS": {"attrs":{"speed":67,"agility":69,"strength":59,"awareness":66,"catching":52,"arm":24,"accuracy":26,"blocking":31,"tackling":59,"coverage":61,"durability":72,"kicking":15},"name":"Noctlet"}
+   }
+  },
+  "22,72": {
+   "offense": {
+    "QB": {"attrs":{"speed":67,"agility":61,"strength":53,"awareness":75,"catching":54,"arm":78,"accuracy":79,"blocking":36,"tackling":36,"coverage":36,"durability":61,"kicking":40},"name":"Lumen"},
+    "RB": {"attrs":{"speed":87,"agility":84,"strength":68,"awareness":61,"catching":69,"arm":22,"accuracy":37,"blocking":62,"tackling":31,"coverage":38,"durability":60,"kicking":26},"name":"Volcoil"},
+    "WR1": {"attrs":{"speed":81,"agility":78,"strength":48,"awareness":62,"catching":67,"arm":30,"accuracy":31,"blocking":50,"tackling":29,"coverage":30,"durability":64,"kicking":28},"name":"Zippit"},
+    "WR2": {"attrs":{"speed":83,"agility":72,"strength":53,"awareness":58,"catching":73,"arm":29,"accuracy":24,"blocking":34,"tackling":26,"coverage":35,"durability":56,"kicking":34},"name":"Zappard"},
+    "TE": {"attrs":{"speed":73,"agility":71,"strength":80,"awareness":63,"catching":66,"arm":34,"accuracy":34,"blocking":68,"tackling":39,"coverage":37,"durability":69,"kicking":26},"name":"Wyrmlet"},
+    "LG": {"attrs":{"speed":45,"agility":54,"strength":79,"awareness":61,"catching":33,"arm":30,"accuracy":23,"blocking":79,"tackling":38,"coverage":11,"durability":78,"kicking":26},"name":"Bramblet"},
+    "RG": {"attrs":{"speed":43,"agility":44,"strength":79,"awareness":68,"catching":27,"arm":27,"accuracy":23,"blocking":78,"tackling":39,"coverage":29,"durability":74,"kicking":30},"name":"Muddlet"},
+    "WR3": {"attrs":{"speed":81,"agility":79,"strength":50,"awareness":65,"catching":73,"arm":32,"accuracy":33,"blocking":38,"tackling":32,"coverage":32,"durability":64,"kicking":19},"name":"Gustling"},
+    "C": {"attrs":{"speed":52,"agility":55,"strength":81,"awareness":54,"catching":30,"arm":31,"accuracy":25,"blocking":75,"tackling":41,"coverage":21,"durability":79,"kicking":18},"name":"Ferrcub"}
+   },
+   "defense": {
+    "DL1": {"attrs":{"speed":62,"agility":70,"strength":85,"awareness":63,"catching":34,"arm":29,"accuracy":32,"blocking":34,"tackling":68,"coverage":34,"durability":71,"kicking":26},"name":"Scorchulk"},
+    "DL2": {"attrs":{"speed":70,"agility":65,"strength":82,"awareness":58,"catching":39,"arm":20,"accuracy":30,"blocking":44,"tackling":74,"coverage":32,"durability":76,"kicking":19},"name":"Mossmaw"},
+    "LB1": {"attrs":{"speed":76,"agility":67,"strength":82,"awareness":68,"catching":46,"arm":27,"accuracy":25,"blocking":38,"tackling":80,"coverage":61,"durability":67,"kicking":26},"name":"Cindruff"},
+    "LB2": {"attrs":{"speed":74,"agility":59,"strength":71,"awareness":64,"catching":44,"arm":29,"accuracy":30,"blocking":44,"tackling":78,"coverage":65,"durability":73,"kicking":22},"name":"Steelpaw"},
+    "CB1": {"attrs":{"speed":81,"agility":80,"strength":56,"awareness":62,"catching":57,"arm":27,"accuracy":21,"blocking":25,"tackling":53,"coverage":66,"durability":60,"kicking":21},"name":"Sablewing"},
+    "CB2": {"attrs":{"speed":80,"agility":85,"strength":40,"awareness":56,"catching":58,"arm":29,"accuracy":26,"blocking":31,"tackling":48,"coverage":77,"durability":60,"kicking":17},"name":"Aquip"},
+    "FS": {"attrs":{"speed":80,"agility":65,"strength":65,"awareness":74,"catching":71,"arm":23,"accuracy":33,"blocking":28,"tackling":75,"coverage":71,"durability":62,"kicking":15},"name":"Noctlet"},
+    "DL3": {"attrs":{"speed":66,"agility":65,"strength":82,"awareness":64,"catching":29,"arm":27,"accuracy":25,"blocking":38,"tackling":75,"coverage":32,"durability":80,"kicking":23},"name":"Mossmaw"},
+    "SS": {"attrs":{"speed":77,"agility":74,"strength":64,"awareness":76,"catching":62,"arm":28,"accuracy":31,"blocking":36,"tackling":69,"coverage":71,"durability":77,"kicking":20},"name":"Noctlet"}
+   }
+  }
+ }
+}

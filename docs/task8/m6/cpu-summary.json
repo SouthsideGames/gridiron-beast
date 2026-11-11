@@ -1,0 +1,432 @@
+{
+  "candidateCommit": "f9e758119d9bd1bce9ef859b2cdb0d2fe6341fed",
+  "candidateTree": "e06cdd2c8923fdd6713dbdfbdf67e4cc8c7ef5a3",
+  "baseline": "43976f45fafbd3bb8322458b6b8eb317708818a0",
+  "minutes": 11.059233333333333,
+  "repeats": 15,
+  "warmup": 3,
+  "status": "PRELIMINARY: not quiet (competing CPU over 0.05 or steal over 0.05 CPU) in O1-pass-T (steal 0.061 CPU > 0.05); O2-run-M (steal 0.097 CPU > 0.05); O3-wide-mismatch (steal 0.060 CPU > 0.05); O4-redzone-cross (steal 0.085 CPU > 0.05); O5-legendary-plays (steal 0.084 CPU > 0.05); O6-rules-mix (steal 0.072 CPU > 0.05); O7-rules-pass-T (steal 0.086 CPU > 0.05); A1-overlapping-fields (steal 0.065 CPU > 0.05); A2-summons-constructs (steal 0.058 CPU > 0.05); A3-delayed-effects (steal 0.097 CPU > 0.05); A4-legendary-sequence (steal 0.090 CPU > 0.05); A5-full-contracts (steal 0.060 CPU > 0.05); X1-worst-case (steal 0.078 CPU > 0.05)",
+  "r0Failures": [],
+  "r1OverBudget": [
+    "A1-overlapping-fields",
+    "A2-summons-constructs",
+    "A3-delayed-effects",
+    "A4-legendary-sequence",
+    "A5-full-contracts"
+  ],
+  "r0": [
+    {
+      "scene": "O1-pass-T",
+      "kind": "ordinary",
+      "addition": false,
+      "ratio": 0.6547406322634387,
+      "ci95": [
+        0.5520610699501028,
+        0.6824615058078957
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.061 CPU > 0.05",
+        "noisy (IQR/median over 0.1)"
+      ],
+      "noisy": true,
+      "borderline": false,
+      "perStep": 0.6513936574922662,
+      "volume": 1.005138175253437
+    },
+    {
+      "scene": "O2-run-M",
+      "kind": "ordinary",
+      "addition": false,
+      "ratio": 0.6895743703662045,
+      "ci95": [
+        0.6515684952599732,
+        0.7524870125406319
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.097 CPU > 0.05",
+        "noisy (IQR/median over 0.1)"
+      ],
+      "noisy": true,
+      "borderline": false,
+      "perStep": 0.6897670965736853,
+      "volume": 0.9997205923442303
+    },
+    {
+      "scene": "O3-wide-mismatch",
+      "kind": "ordinary",
+      "addition": false,
+      "ratio": 1.0210533125566064,
+      "ci95": [
+        0.5599000773211206,
+        1.079813876465752
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.060 CPU > 0.05",
+        "noisy (IQR/median over 0.1)"
+      ],
+      "noisy": true,
+      "borderline": false,
+      "perStep": 1.0030347246879603,
+      "volume": 1.0179640718562875
+    },
+    {
+      "scene": "O4-redzone-cross",
+      "kind": "ordinary",
+      "addition": false,
+      "ratio": 0.5361717956865085,
+      "ci95": [
+        0.4196120655853756,
+        0.6480233850644447
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.085 CPU > 0.05",
+        "noisy (IQR/median over 0.1)"
+      ],
+      "noisy": true,
+      "borderline": false,
+      "perStep": 0.5167452813500408,
+      "volume": 1.037593984962406
+    },
+    {
+      "scene": "O5-legendary-plays",
+      "kind": "ordinary",
+      "addition": false,
+      "ratio": 0.7203931060628153,
+      "ci95": [
+        0.6846215918528423,
+        0.885446876851592
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.084 CPU > 0.05",
+        "noisy (IQR/median over 0.1)"
+      ],
+      "noisy": true,
+      "borderline": false,
+      "perStep": 0.6349722823953128,
+      "volume": 1.134526854219949
+    },
+    {
+      "scene": "O6-rules-mix",
+      "kind": "ordinary",
+      "addition": false,
+      "ratio": 0.57480401494615,
+      "ci95": [
+        0.48293546266905973,
+        0.6573351137643024
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.072 CPU > 0.05",
+        "noisy (IQR/median over 0.1)"
+      ],
+      "noisy": true,
+      "borderline": false,
+      "perStep": 0.5982039008283063,
+      "volume": 0.9608830937916728
+    },
+    {
+      "scene": "O7-rules-pass-T",
+      "kind": "ordinary",
+      "addition": false,
+      "ratio": 0.6666493303861657,
+      "ci95": [
+        0.6270207984371602,
+        0.733749708602067
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.086 CPU > 0.05",
+        "noisy (IQR/median over 0.1)"
+      ],
+      "noisy": true,
+      "borderline": false,
+      "perStep": 0.6728331189969746,
+      "volume": 0.9908093278463649
+    },
+    {
+      "scene": "A1-overlapping-fields",
+      "kind": "abilities-off twin",
+      "addition": false,
+      "ratio": 0.5882306048119896,
+      "ci95": [
+        0.5303941616621353,
+        1.0408079543123643
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.065 CPU > 0.05",
+        "noisy (IQR/median over 0.1)"
+      ],
+      "noisy": true,
+      "borderline": false,
+      "perStep": 0.5723203675008844,
+      "volume": 1.0277995301487861
+    },
+    {
+      "scene": "A2-summons-constructs",
+      "kind": "abilities-off twin",
+      "addition": false,
+      "ratio": 0.7117935634803391,
+      "ci95": [
+        0.7221178068172873,
+        0.8874751135841544
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.058 CPU > 0.05",
+        "noisy (IQR/median over 0.1)"
+      ],
+      "noisy": true,
+      "borderline": false,
+      "perStep": 0.6760244415508228,
+      "volume": 1.0529109892054505
+    },
+    {
+      "scene": "A3-delayed-effects",
+      "kind": "abilities-off twin",
+      "addition": false,
+      "ratio": 0.7112842181667358,
+      "ci95": [
+        0.4680432391558397,
+        1.1526322857910287
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.097 CPU > 0.05",
+        "noisy (IQR/median over 0.1)",
+        "borderline (95% interval straddles the limit)"
+      ],
+      "noisy": true,
+      "borderline": true,
+      "perStep": 0.7061390232523337,
+      "volume": 1.0072863766835947
+    },
+    {
+      "scene": "A4-legendary-sequence",
+      "kind": "abilities-off twin",
+      "addition": false,
+      "ratio": 0.6861158746357218,
+      "ci95": [
+        0.35906259066646284,
+        0.9060305225495825
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.090 CPU > 0.05",
+        "noisy (IQR/median over 0.1)"
+      ],
+      "noisy": true,
+      "borderline": false,
+      "perStep": 0.6669553993034898,
+      "volume": 1.0287282708142726
+    },
+    {
+      "scene": "A5-full-contracts",
+      "kind": "abilities-off twin",
+      "addition": false,
+      "ratio": 0.5712256706996318,
+      "ci95": [
+        0.5505058205931684,
+        0.6592896022207649
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.060 CPU > 0.05",
+        "noisy (IQR/median over 0.1)"
+      ],
+      "noisy": true,
+      "borderline": false,
+      "perStep": 0.5635378643078824,
+      "volume": 1.0136420405418387
+    },
+    {
+      "scene": "X1-worst-case",
+      "kind": "abilities-off twin",
+      "addition": true,
+      "ratio": 0.6068439781581692,
+      "ci95": [
+        0.5437419473587336,
+        0.8372099970128447
+      ],
+      "pass": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.078 CPU > 0.05",
+        "noisy (IQR/median over 0.1)"
+      ],
+      "noisy": true,
+      "borderline": false,
+      "perStep": 0.5913065123222894,
+      "volume": 1.0262765004478949
+    }
+  ],
+  "r1": [
+    {
+      "scene": "A1-overlapping-fields",
+      "addition": false,
+      "ratio": 1.5551972703667944,
+      "ci95": [
+        1.000781283909892,
+        1.8030547521185365
+      ],
+      "within": false,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.065 CPU > 0.05",
+        "noisy (IQR/median over 0.1)",
+        "borderline (95% interval straddles the limit)"
+      ],
+      "noisy": true,
+      "borderline": true,
+      "perStep": 1.5780412967579573,
+      "volume": 0.9855238095238095,
+      "ratioOfMedians": 1.5551972703667944,
+      "crossProcess": 1.4052785824397351,
+      "sameProcess": 1.5551972703667944,
+      "processState": 0.9036014975182531,
+      "r2": 0.8266278704778608
+    },
+    {
+      "scene": "A2-summons-constructs",
+      "addition": false,
+      "ratio": 1.3966594734570565,
+      "ci95": [
+        0.7032361807042247,
+        1.5143815441508461
+      ],
+      "within": false,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.058 CPU > 0.05",
+        "noisy (IQR/median over 0.1)",
+        "borderline (95% interval straddles the limit)"
+      ],
+      "noisy": true,
+      "borderline": true,
+      "perStep": 1.4183346232212906,
+      "volume": 0.984717887154862,
+      "ratioOfMedians": 1.1835428219759048,
+      "crossProcess": 1.2532601381264388,
+      "sameProcess": 1.1835428219759048,
+      "processState": 1.0589056136001416,
+      "r2": 0.8920624996848798
+    },
+    {
+      "scene": "A3-delayed-effects",
+      "addition": false,
+      "ratio": 1.3254840046133,
+      "ci95": [
+        0.9792336530591017,
+        1.5030969483979346
+      ],
+      "within": false,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.097 CPU > 0.05",
+        "noisy (IQR/median over 0.1)",
+        "borderline (95% interval straddles the limit)"
+      ],
+      "noisy": true,
+      "borderline": true,
+      "perStep": 1.3872122112975165,
+      "volume": 0.9555019728189391,
+      "ratioOfMedians": 1.503117614131111,
+      "crossProcess": 1.7615485540390325,
+      "sameProcess": 1.503117614131111,
+      "processState": 1.171929952439091,
+      "r2": 1.2529616860223973
+    },
+    {
+      "scene": "A4-legendary-sequence",
+      "addition": false,
+      "ratio": 1.264714857119294,
+      "ci95": [
+        0.8008807562355263,
+        1.6892894013066126
+      ],
+      "within": false,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.090 CPU > 0.05",
+        "noisy (IQR/median over 0.1)",
+        "borderline (95% interval straddles the limit)"
+      ],
+      "noisy": true,
+      "borderline": true,
+      "perStep": 1.2316346659838335,
+      "volume": 1.0268587691213091,
+      "ratioOfMedians": 1.312635503693986,
+      "crossProcess": 1.4575334273797842,
+      "sameProcess": 1.312635503693986,
+      "processState": 1.1103870215897942,
+      "r2": 1.000036822337482
+    },
+    {
+      "scene": "A5-full-contracts",
+      "addition": false,
+      "ratio": 1.2775438615311174,
+      "ci95": [
+        1.0797171125702019,
+        1.3652632570405954
+      ],
+      "within": false,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.060 CPU > 0.05",
+        "noisy (IQR/median over 0.1)",
+        "borderline (95% interval straddles the limit)"
+      ],
+      "noisy": true,
+      "borderline": true,
+      "perStep": 1.2270701213486408,
+      "volume": 1.041133541844375,
+      "ratioOfMedians": 1.3552452266872126,
+      "crossProcess": 1.5245526887428698,
+      "sameProcess": 1.3552452266872126,
+      "processState": 1.1249275472229594,
+      "r2": 0.8708636321440728
+    },
+    {
+      "scene": "X1-worst-case",
+      "addition": true,
+      "ratio": 1.217811510530558,
+      "ci95": [
+        1.1966246739599165,
+        1.6856498771082036
+      ],
+      "within": true,
+      "quality": "PROVISIONAL",
+      "reasons": [
+        "steal 0.078 CPU > 0.05",
+        "noisy (IQR/median over 0.1)",
+        "borderline (95% interval straddles the limit)"
+      ],
+      "noisy": true,
+      "borderline": true,
+      "perStep": 1.1925808829312396,
+      "volume": 1.021156324036743,
+      "ratioOfMedians": 1.2611330951803297,
+      "crossProcess": 1.5240649280402792,
+      "sameProcess": 1.2611330951803297,
+      "processState": 1.2084885678322104,
+      "r2": 0.9248696239033068
+    }
+  ]
+}

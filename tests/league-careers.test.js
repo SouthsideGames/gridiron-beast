@@ -74,7 +74,7 @@ test('AI–AI trades: uncommon, fair, within the cap and the roster limits, neve
 });
 
 test('compaction is forward-only and lossless: a slimmed winner row expands to the original from the book; kept fields never move; older saves are untouched', () => {
-  const { f } = two(); const h = f.history[0]; const year = h.year; const monsterOf = (id) => f.roster.find((m) => m.id === id) || f.league.monsters[id] || (f.league.waivers || []).find((m) => m.id === id) || null; // a winner may be on waivers by now: his book travels with him
+  const { f } = two(); const h = f.history[0]; const year = h.year; const monsterOf = (id) => f.roster.find((m) => m.id === id) || f.league.monsters[id] || (f.league.waivers || []).find((m) => m.id === id) || (f.league.legends?.[id] ? { stats: { seasons: f.league.legends[id].seasons || [] } } : null); // a winner may be on waivers by now, or retired to a legend stub (Duskyre since Task 8 retired Nature, N7c B14), as tools/compaction-check.mjs reads it: his book travels with him
   const winners = Object.entries(h.awards.league).filter(([k, w]) => w && k !== 'coy'); assert.ok(winners.length >= 3);
   for (const [, w] of winners) {
     const row = h.leagueStats[w.team][w.id]; assert.ok(row, 'the table row of the season');

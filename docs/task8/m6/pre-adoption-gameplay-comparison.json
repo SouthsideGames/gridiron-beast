@@ -1,0 +1,45 @@
+{
+ "root": "/workspace/scratch/cd212583d3d2/task8-baseline",
+ "games": 120,
+ "abilitiesOn": {
+  "attempts": 4310,
+  "completionPct": 56.7,
+  "intPct": 1.3,
+  "yardsPerAttempt": 7.67,
+  "sackPct": 2,
+  "explosivePassPct": 10.6,
+  "deepCompletionPct": 37.1,
+  "sepAtArrival": 4.815,
+  "sepOnCompletions": 4.88,
+  "yardsPerCarry": 6.65,
+  "explosiveRunPct": 21.5,
+  "pointsPerTeamGame": 13.8,
+  "topReceiverShare": 0.502,
+  "sameReceiverAsLastPassPct": 33.3,
+  "longestSameReceiverRun": 3.731,
+  "firstReadPct": 66.9,
+  "defAbilityPerGame": {
+   "undefined": 45.3,
+   "snowball": 2.2
+  }
+ },
+ "abilitiesOff": {
+  "attempts": 4215,
+  "completionPct": 59.5,
+  "intPct": 1.5,
+  "yardsPerAttempt": 8.04,
+  "sackPct": 2,
+  "explosivePassPct": 11.7,
+  "deepCompletionPct": 40.2,
+  "sepAtArrival": 4.65,
+  "sepOnCompletions": 4.777,
+  "yardsPerCarry": 6.07,
+  "explosiveRunPct": 19.4,
+  "pointsPerTeamGame": 13.3,
+  "topReceiverShare": 0.499,
+  "sameReceiverAsLastPassPct": 33.8,
+  "longestSameReceiverRun": 3.56,
+  "firstReadPct": 66.7,
+  "defAbilityPerGame": {}
+ }
+}

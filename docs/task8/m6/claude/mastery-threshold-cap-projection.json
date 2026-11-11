@@ -1,0 +1,171 @@
+{
+ "gamesPerSeason": 9.4,
+ "note": "projection from per-game execution histograms (3 seeds x 6 seasons); seasons = threshold / (mean credits per start under the cap x starts per season)",
+ "rows": [
+  {
+   "threshold": 60,
+   "capPerGame": "none",
+   "families": 60,
+   "under1": 2,
+   "1to3": 13,
+   "3to6": 12,
+   "6to12": 14,
+   "over12": 18,
+   "never": 1
+  },
+  {
+   "threshold": 60,
+   "capPerGame": 5,
+   "families": 60,
+   "under1": 0,
+   "1to3": 15,
+   "3to6": 12,
+   "6to12": 14,
+   "over12": 18,
+   "never": 1
+  },
+  {
+   "threshold": 60,
+   "capPerGame": 3,
+   "families": 60,
+   "under1": 0,
+   "1to3": 12,
+   "3to6": 13,
+   "6to12": 16,
+   "over12": 18,
+   "never": 1
+  },
+  {
+   "threshold": 60,
+   "capPerGame": 2,
+   "families": 60,
+   "under1": 0,
+   "1to3": 0,
+   "3to6": 20,
+   "6to12": 20,
+   "over12": 19,
+   "never": 1
+  },
+  {
+   "threshold": 60,
+   "capPerGame": 1,
+   "families": 60,
+   "under1": 0,
+   "1to3": 0,
+   "3to6": 0,
+   "6to12": 35,
+   "over12": 24,
+   "never": 1
+  },
+  {
+   "threshold": 90,
+   "capPerGame": "none",
+   "families": 60,
+   "under1": 1,
+   "1to3": 11,
+   "3to6": 7,
+   "6to12": 15,
+   "over12": 25,
+   "never": 1
+  },
+  {
+   "threshold": 90,
+   "capPerGame": 5,
+   "families": 60,
+   "under1": 0,
+   "1to3": 9,
+   "3to6": 10,
+   "6to12": 15,
+   "over12": 25,
+   "never": 1
+  },
+  {
+   "threshold": 90,
+   "capPerGame": 3,
+   "families": 60,
+   "under1": 0,
+   "1to3": 0,
+   "3to6": 18,
+   "6to12": 16,
+   "over12": 25,
+   "never": 1
+  },
+  {
+   "threshold": 90,
+   "capPerGame": 2,
+   "families": 60,
+   "under1": 0,
+   "1to3": 0,
+   "3to6": 12,
+   "6to12": 20,
+   "over12": 27,
+   "never": 1
+  },
+  {
+   "threshold": 90,
+   "capPerGame": 1,
+   "families": 60,
+   "under1": 0,
+   "1to3": 0,
+   "3to6": 0,
+   "6to12": 22,
+   "over12": 37,
+   "never": 1
+  },
+  {
+   "threshold": 120,
+   "capPerGame": "none",
+   "families": 60,
+   "under1": 1,
+   "1to3": 8,
+   "3to6": 6,
+   "6to12": 12,
+   "over12": 32,
+   "never": 1
+  },
+  {
+   "threshold": 120,
+   "capPerGame": 5,
+   "families": 60,
+   "under1": 0,
+   "1to3": 4,
+   "3to6": 11,
+   "6to12": 12,
+   "over12": 32,
+   "never": 1
+  },
+  {
+   "threshold": 120,
+   "capPerGame": 3,
+   "families": 60,
+   "under1": 0,
+   "1to3": 0,
+   "3to6": 12,
+   "6to12": 13,
+   "over12": 34,
+   "never": 1
+  },
+  {
+   "threshold": 120,
+   "capPerGame": 2,
+   "families": 60,
+   "under1": 0,
+   "1to3": 0,
+   "3to6": 0,
+   "6to12": 20,
+   "over12": 39,
+   "never": 1
+  },
+  {
+   "threshold": 120,
+   "capPerGame": 1,
+   "families": 60,
+   "under1": 0,
+   "1to3": 0,
+   "3to6": 0,
+   "6to12": 0,
+   "over12": 59,
+   "never": 1
+  }
+ ]
+}

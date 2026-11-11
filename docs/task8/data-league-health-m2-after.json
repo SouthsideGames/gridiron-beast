@@ -1,0 +1,924 @@
+{
+ "seasons": 10,
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "at": "2026-11-07T22:01:53.984Z",
+ "runs": [
+  {
+   "seed": 1,
+   "problems": [],
+   "problemCount": 0,
+   "series": [
+    {
+     "season": 1,
+     "gymOvr": 54.078947368421055,
+     "ordinaryOvr": 50.04511278195489,
+     "spread": [
+      48.89473684210526,
+      54.78947368421053
+     ],
+     "ownerOvr": 49.578947368421055,
+     "sizeMin": 36,
+     "sizeMax": 38,
+     "age": 24.257091301828144,
+     "level": 12.038045940677518,
+     "trained": 11.70537642906064,
+     "decline": 1.5648674990780256,
+     "bank": 0,
+     "lvl50": 21,
+     "basics": 102,
+     "apex": 4,
+     "legends": 1,
+     "modes": {
+      "compete": 4,
+      "contend": 7,
+      "rebuild": 3,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": null,
+     "upgrades": null
+    },
+    {
+     "season": 2,
+     "gymOvr": 56.50657894736842,
+     "ordinaryOvr": 52.42857142857143,
+     "spread": [
+      51.68421052631579,
+      57.63157894736842
+     ],
+     "ownerOvr": 49.611111111111114,
+     "sizeMin": 36,
+     "sizeMax": 38,
+     "age": 24.64178388915231,
+     "level": 13.938124967072335,
+     "trained": 13.554886465412782,
+     "decline": 2.5825219956798904,
+     "bank": 0,
+     "lvl50": 31,
+     "basics": 92,
+     "apex": 5,
+     "legends": 3,
+     "modes": {
+      "compete": 3,
+      "contend": 7,
+      "rebuild": 4,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 3,
+     "gymOvr": 58.164473684210535,
+     "ordinaryOvr": 54.330827067669176,
+     "spread": [
+      52.26315789473684,
+      59.31578947368421
+     ],
+     "ownerOvr": 53.388888888888886,
+     "sizeMin": 37,
+     "sizeMax": 38,
+     "age": 25.11484115694641,
+     "level": 15.823992413466097,
+     "trained": 15.472783309625415,
+     "decline": 3.702750118539592,
+     "bank": 0,
+     "lvl50": 49,
+     "basics": 89,
+     "apex": 5,
+     "legends": 10,
+     "modes": {
+      "compete": 7,
+      "rebuild": 2,
+      "contend": 6
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 4,
+     "gymOvr": 59.54605263157894,
+     "ordinaryOvr": 55.969924812030065,
+     "spread": [
+      54.89473684210526,
+      60.94736842105263
+     ],
+     "ownerOvr": 54.8421052631579,
+     "sizeMin": 36,
+     "sizeMax": 38,
+     "age": 25.438693957115007,
+     "level": 17.105165692007795,
+     "trained": 16.78664717348928,
+     "decline": 4.990643274853801,
+     "bank": 0,
+     "lvl50": 58,
+     "basics": 88,
+     "apex": 4,
+     "legends": 14,
+     "modes": {
+      "compete": 6,
+      "rebuild": 2,
+      "contend": 6,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 5,
+     "gymOvr": 60.526315789473685,
+     "ordinaryOvr": 57.15789473684212,
+     "spread": [
+      55.63157894736842,
+      61.526315789473685
+     ],
+     "ownerOvr": 54.78947368421053,
+     "sizeMin": 34,
+     "sizeMax": 38,
+     "age": 25.70097858141202,
+     "level": 17.913392357417123,
+     "trained": 17.74111442712062,
+     "decline": 6.240329923023422,
+     "bank": 0,
+     "lvl50": 58,
+     "basics": 76,
+     "apex": 6,
+     "legends": 24,
+     "modes": {
+      "compete": 4,
+      "rebuild": 4,
+      "contend": 6,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 6,
+     "gymOvr": 60.74342105263158,
+     "ordinaryOvr": 59.157894736842096,
+     "spread": [
+      56.68421052631579,
+      62.63157894736842
+     ],
+     "ownerOvr": 55.578947368421055,
+     "sizeMin": 36,
+     "sizeMax": 38,
+     "age": 25.875899583794318,
+     "level": 18.616237289921504,
+     "trained": 18.50110373531426,
+     "decline": 6.94427322058901,
+     "bank": 0,
+     "lvl50": 61,
+     "basics": 76,
+     "apex": 7,
+     "legends": 36,
+     "modes": {
+      "compete": 6,
+      "contend": 5,
+      "rebuild": 3,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 7,
+     "gymOvr": 61.36842105263158,
+     "ordinaryOvr": 60.74436090225564,
+     "spread": [
+      58.10526315789474,
+      63.421052631578945
+     ],
+     "ownerOvr": 54.8421052631579,
+     "sizeMin": 34,
+     "sizeMax": 38,
+     "age": 25.97465050632233,
+     "level": 19.222751158943108,
+     "trained": 19.009875465912618,
+     "decline": 7.505215830602826,
+     "bank": 0,
+     "lvl50": 74,
+     "basics": 74,
+     "apex": 7,
+     "legends": 54,
+     "modes": {
+      "compete": 7,
+      "contend": 4,
+      "rebuild": 4
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 8,
+     "gymOvr": 61.84210526315789,
+     "ordinaryOvr": 61.578947368421055,
+     "spread": [
+      57.8421052631579,
+      63.63157894736842
+     ],
+     "ownerOvr": 58.05263157894737,
+     "sizeMin": 32,
+     "sizeMax": 38,
+     "age": 26.078395999382835,
+     "level": 19.45955518488413,
+     "trained": 19.60345315240052,
+     "decline": 8.105092893645525,
+     "bank": 0,
+     "lvl50": 106,
+     "basics": 74,
+     "apex": 8,
+     "legends": 66,
+     "modes": {
+      "compete": 9,
+      "contend": 4,
+      "rebuild": 2
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 9,
+     "gymOvr": 60.30263157894737,
+     "ordinaryOvr": 61.39849624060151,
+     "spread": [
+      58.31578947368421,
+      62.526315789473685
+     ],
+     "ownerOvr": 57.10526315789474,
+     "sizeMin": 32,
+     "sizeMax": 38,
+     "age": 25.923288670691925,
+     "level": 18.30118805946592,
+     "trained": 19.15903593443067,
+     "decline": 6.593703609624662,
+     "bank": 0,
+     "lvl50": 99,
+     "basics": 89,
+     "apex": 8,
+     "legends": 96,
+     "modes": {
+      "contend": 5,
+      "rebuild": 3,
+      "compete": 7
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 10,
+     "gymOvr": 61.046052631578945,
+     "ordinaryOvr": 62.293233082706756,
+     "spread": [
+      59.578947368421055,
+      63.78947368421053
+     ],
+     "ownerOvr": 57,
+     "sizeMin": 35,
+     "sizeMax": 38,
+     "age": 26.14829190092348,
+     "level": 18.788853289379606,
+     "trained": 19.942362964468224,
+     "decline": 8.148907177854545,
+     "bank": 0,
+     "lvl50": 99,
+     "basics": 96,
+     "apex": 11,
+     "legends": 105,
+     "modes": {
+      "contend": 6,
+      "compete": 7,
+      "rebuild": 2
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    }
+   ]
+  },
+  {
+   "seed": 2,
+   "problems": [],
+   "problemCount": 0,
+   "series": [
+    {
+     "season": 1,
+     "gymOvr": 54.243421052631575,
+     "ordinaryOvr": 50.3984962406015,
+     "spread": [
+      47.31578947368421,
+      58.1578947368421
+     ],
+     "ownerOvr": 51.421052631578945,
+     "sizeMin": 34,
+     "sizeMax": 38,
+     "age": 24.308113996349288,
+     "level": 12.972879225975202,
+     "trained": 12.032949822887902,
+     "decline": 1.0042004853150364,
+     "bank": 0,
+     "lvl50": 22,
+     "basics": 104,
+     "apex": 3,
+     "legends": 0,
+     "modes": {
+      "compete": 8,
+      "contend": 4,
+      "rebuild": 2,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": null,
+     "upgrades": null
+    },
+    {
+     "season": 2,
+     "gymOvr": 57.28947368421053,
+     "ordinaryOvr": 53.421052631578945,
+     "spread": [
+      50.473684210526315,
+      59.89473684210526
+     ],
+     "ownerOvr": 53.421052631578945,
+     "sizeMin": 34,
+     "sizeMax": 38,
+     "age": 24.661227552187306,
+     "level": 14.52954381183483,
+     "trained": 13.597971160014502,
+     "decline": 1.830067059540744,
+     "bank": 0,
+     "lvl50": 35,
+     "basics": 77,
+     "apex": 3,
+     "legends": 1,
+     "modes": {
+      "compete": 8,
+      "contend": 4,
+      "rebuild": 2,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 3,
+     "gymOvr": 59.39473684210526,
+     "ordinaryOvr": 55.81203007518797,
+     "spread": [
+      54.1578947368421,
+      60.94736842105263
+     ],
+     "ownerOvr": 55.21052631578947,
+     "sizeMin": 37,
+     "sizeMax": 38,
+     "age": 25.178473210052154,
+     "level": 16.279042200094832,
+     "trained": 15.513229018492174,
+     "decline": 2.9879089615931718,
+     "bank": 0,
+     "lvl50": 47,
+     "basics": 70,
+     "apex": 3,
+     "legends": 6,
+     "modes": {
+      "compete": 7,
+      "contend": 4,
+      "rebuild": 3,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 4,
+     "gymOvr": 60.44736842105263,
+     "ordinaryOvr": 57.57142857142856,
+     "spread": [
+      54.68421052631579,
+      62.31578947368421
+     ],
+     "ownerOvr": 55.31578947368421,
+     "sizeMin": 37,
+     "sizeMax": 38,
+     "age": 25.482930298719776,
+     "level": 17.33959222380275,
+     "trained": 16.806685633001422,
+     "decline": 4.005737316263632,
+     "bank": 0,
+     "lvl50": 58,
+     "basics": 70,
+     "apex": 4,
+     "legends": 12,
+     "modes": {
+      "compete": 7,
+      "contend": 4,
+      "rebuild": 4
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 5,
+     "gymOvr": 61.506578947368425,
+     "ordinaryOvr": 58.43609022556391,
+     "spread": [
+      56.05263157894737,
+      64.10526315789474
+     ],
+     "ownerOvr": 56.1578947368421,
+     "sizeMin": 32,
+     "sizeMax": 38,
+     "age": 25.669162583636265,
+     "level": 18.46755384143542,
+     "trained": 17.881870291343976,
+     "decline": 5.620300234444971,
+     "bank": 0,
+     "lvl50": 61,
+     "basics": 58,
+     "apex": 4,
+     "legends": 16,
+     "modes": {
+      "compete": 7,
+      "contend": 5,
+      "retool": 1,
+      "rebuild": 2
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 6,
+     "gymOvr": 62.401315789473685,
+     "ordinaryOvr": 59.06015037593984,
+     "spread": [
+      56.78947368421053,
+      64.6842105263158
+     ],
+     "ownerOvr": 57.166666666666664,
+     "sizeMin": 32,
+     "sizeMax": 38,
+     "age": 26.01104931446263,
+     "level": 19.510550641309155,
+     "trained": 18.964920020639834,
+     "decline": 7.280042016806722,
+     "bank": 0,
+     "lvl50": 65,
+     "basics": 63,
+     "apex": 5,
+     "legends": 25,
+     "modes": {
+      "compete": 6,
+      "contend": 5,
+      "retool": 1,
+      "rebuild": 3
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 7,
+     "gymOvr": 61.072368421052644,
+     "ordinaryOvr": 60.015037593984964,
+     "spread": [
+      56.78947368421053,
+      63.73684210526316
+     ],
+     "ownerOvr": 57.473684210526315,
+     "sizeMin": 34,
+     "sizeMax": 38,
+     "age": 26.027951777518346,
+     "level": 19.354870691124564,
+     "trained": 19.117874938184535,
+     "decline": 7.460008606572075,
+     "bank": 0,
+     "lvl50": 79,
+     "basics": 71,
+     "apex": 5,
+     "legends": 46,
+     "modes": {
+      "compete": 7,
+      "contend": 5,
+      "rebuild": 2,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 8,
+     "gymOvr": 61.69736842105263,
+     "ordinaryOvr": 59.984962406015036,
+     "spread": [
+      58.36842105263158,
+      63.31578947368421
+     ],
+     "ownerOvr": 58.36842105263158,
+     "sizeMin": 33,
+     "sizeMax": 38,
+     "age": 26.150022942406846,
+     "level": 19.437947574046646,
+     "trained": 19.542559605160225,
+     "decline": 8.565692701667933,
+     "bank": 0,
+     "lvl50": 95,
+     "basics": 77,
+     "apex": 8,
+     "legends": 56,
+     "modes": {
+      "compete": 6,
+      "contend": 6,
+      "rebuild": 2,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 9,
+     "gymOvr": 61.54934210526316,
+     "ordinaryOvr": 60.774436090225564,
+     "spread": [
+      58.05263157894737,
+      64.47368421052632
+     ],
+     "ownerOvr": 56.526315789473685,
+     "sizeMin": 34,
+     "sizeMax": 38,
+     "age": 26.228151991000292,
+     "level": 19.047868301738273,
+     "trained": 19.75474747193014,
+     "decline": 9.113130467929231,
+     "bank": 0,
+     "lvl50": 108,
+     "basics": 82,
+     "apex": 8,
+     "legends": 72,
+     "modes": {
+      "compete": 6,
+      "contend": 5,
+      "rebuild": 3,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 10,
+     "gymOvr": 61.5328947368421,
+     "ordinaryOvr": 60.87218045112782,
+     "spread": [
+      57.68421052631579,
+      63.31578947368421
+     ],
+     "ownerOvr": 56.833333333333336,
+     "sizeMin": 34,
+     "sizeMax": 38,
+     "age": 26.32335345518008,
+     "level": 18.999861179180066,
+     "trained": 20.156179399213457,
+     "decline": 10.237644588418583,
+     "bank": 0,
+     "lvl50": 106,
+     "basics": 85,
+     "apex": 8,
+     "legends": 88,
+     "modes": {
+      "compete": 6,
+      "contend": 7,
+      "rebuild": 2
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    }
+   ]
+  },
+  {
+   "seed": 3,
+   "problems": [],
+   "problemCount": 0,
+   "series": [
+    {
+     "season": 1,
+     "gymOvr": 57.27631578947369,
+     "ordinaryOvr": 50.54135338345865,
+     "spread": [
+      46.94736842105263,
+      59.526315789473685
+     ],
+     "ownerOvr": 55.73684210526316,
+     "sizeMin": 33,
+     "sizeMax": 38,
+     "age": 24.194273699536854,
+     "level": 14.066025355499038,
+     "trained": 12.789477994741153,
+     "decline": 1.600867135077661,
+     "bank": 0,
+     "lvl50": 32,
+     "basics": 99,
+     "apex": 3,
+     "legends": 0,
+     "modes": {
+      "contend": 5,
+      "rebuild": 3,
+      "compete": 5,
+      "retool": 2
+     },
+     "nudge": null,
+     "trades": null,
+     "upgrades": null
+    },
+    {
+     "season": 2,
+     "gymOvr": 59.61184210526315,
+     "ordinaryOvr": 53.547201336675016,
+     "spread": [
+      52.05263157894737,
+      61.1578947368421
+     ],
+     "ownerOvr": 56.421052631578945,
+     "sizeMin": 36,
+     "sizeMax": 38,
+     "age": 24.67933723196881,
+     "level": 15.520175438596489,
+     "trained": 14.592690058479532,
+     "decline": 2.185477582846004,
+     "bank": 0,
+     "lvl50": 48,
+     "basics": 82,
+     "apex": 3,
+     "legends": 3,
+     "modes": {
+      "contend": 5,
+      "rebuild": 3,
+      "compete": 5,
+      "retool": 2
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 3,
+     "gymOvr": 61.03947368421053,
+     "ordinaryOvr": 56.05263157894738,
+     "spread": [
+      54.26315789473684,
+      61.526315789473685
+     ],
+     "ownerOvr": 57.89473684210526,
+     "sizeMin": 35,
+     "sizeMax": 38,
+     "age": 25.078789089841724,
+     "level": 16.998582115950537,
+     "trained": 16.16835218677324,
+     "decline": 3.0053528716686615,
+     "bank": 0,
+     "lvl50": 63,
+     "basics": 76,
+     "apex": 3,
+     "legends": 10,
+     "modes": {
+      "contend": 5,
+      "rebuild": 5,
+      "compete": 4,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 4,
+     "gymOvr": 62.03947368421053,
+     "ordinaryOvr": 56.57560568086884,
+     "spread": [
+      55.10526315789474,
+      63
+     ],
+     "ownerOvr": 57.8421052631579,
+     "sizeMin": 37,
+     "sizeMax": 38,
+     "age": 25.48122332859175,
+     "level": 18.007254623044094,
+     "trained": 17.566808914177333,
+     "decline": 5.074205784732101,
+     "bank": 0,
+     "lvl50": 81,
+     "basics": 77,
+     "apex": 3,
+     "legends": 12,
+     "modes": {
+      "contend": 5,
+      "rebuild": 4,
+      "compete": 5,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 5,
+     "gymOvr": 62.51315789473684,
+     "ordinaryOvr": 58.541353383458635,
+     "spread": [
+      57.526315789473685,
+      62.73684210526316
+     ],
+     "ownerOvr": 56.26315789473684,
+     "sizeMin": 35,
+     "sizeMax": 38,
+     "age": 25.67052714368504,
+     "level": 18.509215757110493,
+     "trained": 18.203847230689338,
+     "decline": 5.857718319823584,
+     "bank": 0,
+     "lvl50": 79,
+     "basics": 77,
+     "apex": 3,
+     "legends": 20,
+     "modes": {
+      "compete": 7,
+      "rebuild": 3,
+      "contend": 4,
+      "retool": 1
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 6,
+     "gymOvr": 62.11842105263158,
+     "ordinaryOvr": 59.67669172932331,
+     "spread": [
+      58.473684210526315,
+      63.526315789473685
+     ],
+     "ownerOvr": 56.21052631578947,
+     "sizeMin": 37,
+     "sizeMax": 38,
+     "age": 26.00493124703651,
+     "level": 19.137458511142718,
+     "trained": 19.043575154101468,
+     "decline": 7.713371266002844,
+     "bank": 0,
+     "lvl50": 77,
+     "basics": 77,
+     "apex": 3,
+     "legends": 25,
+     "modes": {
+      "compete": 8,
+      "rebuild": 2,
+      "retool": 1,
+      "contend": 4
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 7,
+     "gymOvr": 62.01973684210526,
+     "ordinaryOvr": 60.458646616541344,
+     "spread": [
+      57.68421052631579,
+      63.1578947368421
+     ],
+     "ownerOvr": 57.111111111111114,
+     "sizeMin": 35,
+     "sizeMax": 38,
+     "age": 26.100178373862587,
+     "level": 19.875161477266737,
+     "trained": 19.67719682088103,
+     "decline": 8.935278060014902,
+     "bank": 0,
+     "lvl50": 90,
+     "basics": 77,
+     "apex": 3,
+     "legends": 36,
+     "modes": {
+      "compete": 9,
+      "rebuild": 2,
+      "retool": 1,
+      "contend": 3
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 8,
+     "gymOvr": 61.63815789473685,
+     "ordinaryOvr": 59.89473684210527,
+     "spread": [
+      58.78947368421053,
+      62.526315789473685
+     ],
+     "ownerOvr": 56.166666666666664,
+     "sizeMin": 35,
+     "sizeMax": 38,
+     "age": 26.209372455161933,
+     "level": 19.54341657446921,
+     "trained": 19.811430528272634,
+     "decline": 9.464135112556166,
+     "bank": 0,
+     "lvl50": 108,
+     "basics": 87,
+     "apex": 3,
+     "legends": 57,
+     "modes": {
+      "compete": 9,
+      "rebuild": 2,
+      "contend": 4
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 9,
+     "gymOvr": 62.23026315789474,
+     "ordinaryOvr": 59.976190476190474,
+     "spread": [
+      57.833333333333336,
+      63.05263157894737
+     ],
+     "ownerOvr": 53.26315789473684,
+     "sizeMin": 34,
+     "sizeMax": 38,
+     "age": 26.238724770768112,
+     "level": 19.220844360503808,
+     "trained": 19.8580020356491,
+     "decline": 9.673387939022616,
+     "bank": 0,
+     "lvl50": 117,
+     "basics": 86,
+     "apex": 3,
+     "legends": 71,
+     "modes": {
+      "compete": 9,
+      "retool": 1,
+      "rebuild": 2,
+      "contend": 3
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    },
+    {
+     "season": 10,
+     "gymOvr": 61.855263157894726,
+     "ordinaryOvr": 58.68421052631579,
+     "spread": [
+      58.10526315789474,
+      62.26315789473684
+     ],
+     "ownerOvr": 54.526315789473685,
+     "sizeMin": 31,
+     "sizeMax": 38,
+     "age": 26.27284855884976,
+     "level": 18.835381315458214,
+     "trained": 19.9315670273575,
+     "decline": 9.98346710366185,
+     "bank": 0,
+     "lvl50": 114,
+     "basics": 91,
+     "apex": 3,
+     "legends": 86,
+     "modes": {
+      "compete": 7,
+      "retool": 1,
+      "rebuild": 3,
+      "contend": 4
+     },
+     "nudge": null,
+     "trades": 0,
+     "upgrades": 0
+    }
+   ]
+  }
+ ]
+}

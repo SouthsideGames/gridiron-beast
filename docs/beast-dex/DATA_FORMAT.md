@@ -1,0 +1,16 @@
+# Data format
+
+- `data/families.json`: 72 stable source family IDs, approved names, type, fixed position, current rarity, source rarity, Clash archetype, ability links, descriptive/appearance source data.
+- `data/forms.json`: 102 form IDs (`family:stage`), form names, source evolution levels, and complete 12-attribute starting/potential ranges. `referenceLevel: 1` is a reference profile, not a statement that an evolved monster must evolve at level 1. All arrays are inclusive `[minimum, maximum]` integers. `belowBandWeaknesses` records primary attributes allowed below rarity minimum. Potential origin records the approved earlier-form endpoint reductions and explicit table overrides.
+- `data/abilities.json`: 144 mode abilities with original registry IDs, triggers, mechanics, and detailed workbook rows. These source contracts are subject to later shared-rule overrides; no claim of production implementation.
+- Basic records (`rarity: "basic"`, 120 families and 120 forms) are built by `tools/build_basic.py` from `data/basic-authoring.json`, the human-edited source of each design: name, type, position, Clash archetype, its one positional strength and ceiling, a supporting good attribute, explicit weaknesses, art recipe, personality and review status. The tool expands those choices through a fixed tier table into complete 12-attribute ranges, written only to `data/forms.json`. A Basic family records `abilities: {"Football": null, "Beast Clash": null}` (no unique abilities), `standalone: true`, `positionalStrength`, `weaknesses`, `reviewStatus` and `art.spec`, the sprite recipe for the game's 16×16 builder. `belowBandWeaknesses` is empty because the Basic band starts at 1.
+- `data/original-baseline.json`: per-record SHA-256 hashes of the original 72 families, 102 forms and 144 abilities at commit 6e82f13. The validator reports any difference.
+- `art/basic/<id>.svg`, `art/basic-art.json`, `art/review/`: Basic sprites drawn by the game's own builder, their checks, and the review sheets (`tools/art_review.mjs`; see [art/REVIEW_GUIDE.md](art/REVIEW_GUIDE.md)).
+- `basic-manifest.json` and `BASIC_INDEX.md`: generated list of the new stable IDs, names, type, position, archetype, asset references and review status.
+- `data/rules.json`: approved profile/generation/evolution/rarity rules, positional primary attributes, Apex/Basic exceptions and explicit unresolved matters.
+- `manifest.json`: SHA-256 hashes of the data files. A final handoff must also pin the reviewed Git commit; this package is not yet that final handoff.
+- `tools/render_and_validate.py`: Python standard-library renderer/validator. Family pages and positional indexes derive from these JSON files. Do not edit generated Markdown rating tables independently.
+
+Names and stable IDs differ deliberately in places; for example `emberfox` is Flaroo's family ID, not permission to restore its legacy name. Form IDs are unique even when a standalone family and form have the same display name. Preserve case-sensitive position abbreviations. Missing values must never be interpreted as zero.
+
+This package is not wired into gameplay. Adapters for the actual target engine are Task 8 implementation work. Do not overwrite current monster generation, the live game, saves, contracts or release artifacts merely because these design files exist.

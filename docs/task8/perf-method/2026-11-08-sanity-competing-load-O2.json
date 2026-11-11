@@ -1,0 +1,335 @@
+{
+ "manifest": "1.0.0",
+ "runner": "run-scenes.mjs (methodology 2026-11-08 correction)",
+ "label": null,
+ "metric": "cpu",
+ "warmup": 1,
+ "repeats": 3,
+ "settle": 1,
+ "bootstrap": 2000,
+ "subRepeats": 3,
+ "noise": 0.1,
+ "schedule": "warm-up rounds identical to measured rounds; per worker turn: settle runs (discarded), then measured; ABBA counterbalanced (rounds 0,3 of 4: A first; 1,2: B first) for base/cand and offA/abil; subs rotate",
+ "base": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/base",
+ "cand": "/home/claude/gridiron-beast/.claude/worktrees/agent-a9d282a447cce35d3",
+ "when": "2026-11-09T00:54:47.756Z",
+ "minutes": 0.06533333333333333,
+ "machine": {
+  "cpus": 2,
+  "cpuModel": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "totalMemGB": 7.8,
+  "platform": "linux 6.18.44-fc-v310",
+  "node": "v22.22.0"
+ },
+ "runMachine": {
+  "seconds": 3.91,
+  "cpus": 2,
+  "available": true,
+  "busyCpus": 1.9325,
+  "ownCpus": 1.2168,
+  "competingCpus": 0.7157,
+  "competingRawCpus": 0.7157,
+  "stealCpus": 0.0153,
+  "iowaitCpus": 0,
+  "irqCpus": 0,
+  "systemCpus": 0.0486,
+  "quiet": false,
+  "loadavgStart": [
+   0.89,
+   0.61,
+   0.67
+  ],
+  "loadavgEnd": [
+   0.89,
+   0.61,
+   0.67
+  ]
+ },
+ "loads": [
+  {
+   "at": "2026-11-09T00:54:43.836Z",
+   "load1": 0.89,
+   "load5": 0.61,
+   "load15": 0.67
+  },
+  {
+   "at": "2026-11-09T00:54:43.837Z",
+   "load1": 0.89,
+   "load5": 0.61,
+   "load15": 0.67,
+   "scene": "O2-run-M",
+   "machine": {
+    "seconds": 3.9,
+    "cpus": 2,
+    "available": true,
+    "busyCpus": 1.9358,
+    "ownCpus": 1.2195,
+    "competingCpus": 0.7163,
+    "competingRawCpus": 0.7163,
+    "stealCpus": 0.0154,
+    "iowaitCpus": 0,
+    "irqCpus": 0,
+    "systemCpus": 0.0488,
+    "quiet": false,
+    "loadavgStart": [
+     0.89,
+     0.61,
+     0.67
+    ],
+    "loadavgEnd": [
+     0.89,
+     0.61,
+     0.67
+    ]
+   }
+  },
+  {
+   "at": "2026-11-09T00:54:47.748Z",
+   "load1": 0.89,
+   "load5": 0.61,
+   "load15": 0.67
+  }
+ ],
+ "summary": {
+  "status": "PRELIMINARY: not quiet (competing CPU over 0.05 or steal over 0.05 CPU) in O2-run-M (competing load 0.716 CPU > 0.05)",
+  "quietRule": {
+   "competingCpus": 0.05,
+   "stealCpus": 0.05,
+   "since": "2026-11-08",
+   "note": "quiet = competing CPU (total busy - the benchmark's own processes) at most 0.05 CPU and steal at most 0.05 CPU, averaged over the window (/proc/stat, /proc/<pid>/stat); load averages recorded, not the rule"
+  },
+  "engineLimit": 1.1,
+  "abilityBudget": 1.25,
+  "r0": [
+   {
+    "scene": "O2-run-M",
+    "kind": "ordinary",
+    "addition": false,
+    "ratio": 0.6154201769528503,
+    "ci95": [
+     0.6154201769528503,
+     0.8429497992645323
+    ],
+    "pass": true,
+    "quality": "PROVISIONAL",
+    "reasons": [
+     "competing load 0.716 CPU > 0.05",
+     "noisy (IQR/median or CV over 0.1)"
+    ],
+    "noisy": true,
+    "borderline": false,
+    "perStep": 0.6155921781202491,
+    "volume": 0.9997205923442303
+   }
+  ],
+  "r1": [],
+  "r0Failures": [],
+  "r1OverBudget": [],
+  "provisional": [
+   "O2-run-M R0"
+  ],
+  "noisy": [
+   "O2-run-M R0"
+  ],
+  "borderline": []
+ },
+ "results": [
+  {
+   "scene": "O2-run-M",
+   "kind": "ordinary",
+   "addition": false,
+   "tier": "engine",
+   "plays": 96,
+   "inputsHash": "51a29ecd30828b17",
+   "machine": {
+    "seconds": 3.9,
+    "cpus": 2,
+    "available": true,
+    "busyCpus": 1.9358,
+    "ownCpus": 1.2195,
+    "competingCpus": 0.7163,
+    "competingRawCpus": 0.7163,
+    "stealCpus": 0.0154,
+    "iowaitCpus": 0,
+    "irqCpus": 0,
+    "systemCpus": 0.0488,
+    "quiet": false,
+    "loadavgStart": [
+     0.89,
+     0.61,
+     0.67
+    ],
+    "loadavgEnd": [
+     0.89,
+     0.61,
+     0.67
+    ]
+   },
+   "base": {
+    "median": 203.331,
+    "min": 162.18,
+    "max": 237.128,
+    "q1": 182.75549999999998,
+    "q3": 220.22949999999997,
+    "iqrOverMedian": 0.1843004755792279,
+    "cv": 0.18684859696254635,
+    "noisy": true,
+    "msPerPlay": 2.11803125,
+    "ticksPerPlay": 37.28125,
+    "msPerTick": 0.05681223805532271,
+    "msPerActorTick": 0.004058017003951623,
+    "actorsPerTick": 14,
+    "plays": 96,
+    "ticks": 3579,
+    "actorTicks": 50106,
+    "pairTicks": 325689,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "d0acbb4d92076548",
+    "runs": [
+     237.128,
+     162.18,
+     203.331
+    ],
+    "wallMedian": 205.525748,
+    "wallRuns": [
+     218.656996,
+     151.028072,
+     205.525748
+    ],
+    "machineRuns": [
+     {
+      "busyTicks": 43,
+      "stealTicks": 1,
+      "cpu": 237.128
+     },
+     {
+      "busyTicks": 30,
+      "stealTicks": 0,
+      "cpu": 162.18
+     },
+     {
+      "busyTicks": 40,
+      "stealTicks": 1,
+      "cpu": 203.331
+     }
+    ],
+    "runCompetingCpusMedian": 0.9125455829165321
+   },
+   "cand": {
+    "median": 125.134,
+    "min": 101.222,
+    "max": 199.887,
+    "q1": 113.178,
+    "q3": 162.5105,
+    "iqrOverMedian": 0.3942373775312865,
+    "cv": 0.3622537222799425,
+    "noisy": true,
+    "msPerPlay": 1.3034791666666667,
+    "ticksPerPlay": 37.270833333333336,
+    "msPerTick": 0.034973169368362214,
+    "msPerActorTick": 0.0024980835263115867,
+    "actorsPerTick": 14,
+    "plays": 96,
+    "ticks": 3578,
+    "actorTicks": 50092,
+    "pairTicks": 325598,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "b49c170a6e21d8af",
+    "runs": [
+     199.887,
+     101.222,
+     125.134
+    ],
+    "wallMedian": 125.165128,
+    "wallRuns": [
+     156.698118,
+     92.240223,
+     125.165128
+    ],
+    "machineRuns": [
+     {
+      "busyTicks": 31,
+      "stealTicks": 0,
+      "cpu": 199.887
+     },
+     {
+      "busyTicks": 19,
+      "stealTicks": 0,
+      "cpu": 101.222
+     },
+     {
+      "busyTicks": 24,
+      "stealTicks": 1,
+      "cpu": 125.134
+     }
+    ],
+    "runCompetingCpusMedian": 0.9177156755673993
+   },
+   "R0": {
+    "ratio": 0.6154201769528503,
+    "gate": "ratioOfMedians",
+    "ratioOfMedians": 0.6154201769528503,
+    "wall": 0.6089997444018547,
+    "perTick": 0.6155921781202491,
+    "perPlay": 0.6154201769528503,
+    "pairedMedian": 0.6241336786286841,
+    "pairedQ1": 0.6197769277907672,
+    "pairedQ3": 0.7335417389466081,
+    "pairedIqrOverMedian": 0.1822763536904456,
+    "ci95": [
+     0.6154201769528503,
+     0.8429497992645323
+    ],
+    "pairedGeoMean": 0.686673604291272,
+    "paired": [
+     0.8429497992645323,
+     0.6241336786286841,
+     0.6154201769528503
+    ],
+    "limit": 1.1,
+    "pass": true,
+    "borderline": false,
+    "noisy": true,
+    "decomposition": {
+     "ticks": [
+      3578,
+      3579
+     ],
+     "actorTicks": [
+      50092,
+      50106
+     ],
+     "pairTicks": [
+      325598,
+      325689
+     ],
+     "volumeTicks": 0.9997205923442303,
+     "actorsPerTickRatio": 1,
+     "volume": 0.9997205923442303,
+     "perStep": 0.6155921781202491,
+     "perTickPart": 0.6155921781202491,
+     "perStepCi95": [
+      0.6155921781202491,
+      0.8431853917182115
+     ],
+     "arithmetic": "0.615 = per-step 0.616 x volume 1.000 (ticks 3578/3579 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+    },
+    "byOrder": {
+     "numFirst": 0.6197769277907672,
+     "denFirst": 0.8429497992645323,
+     "nNumFirst": 2,
+     "nDenFirst": 1
+    },
+    "quality": {
+     "label": "PROVISIONAL",
+     "reasons": [
+      "competing load 0.716 CPU > 0.05",
+      "noisy (IQR/median or CV over 0.1)"
+     ]
+    }
+   }
+  }
+ ]
+}

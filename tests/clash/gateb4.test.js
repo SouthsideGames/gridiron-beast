@@ -6,6 +6,7 @@ import { simulateClash as baseSimulateClash } from '../../src/clash/engine.js';
 import { CLASH_VALUES, battleConfig as baseBattleConfig, patchedMove } from '../../src/clash/values.js';
 import { CLASH_MOVES_V1_0_0 as CLASH_MOVES } from '../../src/data/clash-moves-v1.0.0.js';
 import { mon, byArch } from './helpers.js';
+import { legacyMonsters } from './legacy-monsters.js';
 import { createRng } from '../../src/core/rng.js';
 
 // Historical gate tests: these verify the Gate A-B.5 mechanisms exactly as they were measured, on the values 1.0.0 game (ruleset
@@ -48,7 +49,8 @@ test('breakCharge: breaking a shield charges Coglet\'s next strike, only under t
 
 test('shieldPierce: half of the hit skips the shield; without the key nothing changes', () => {
   // Same battle, Coglet with and without shieldPierce on top of the heavy strike: absorbed damage drops under the patch.
-  let absorbedOn = 0, absorbedOff = 0;
+  // Task 8 M1: the monsters this Gate B.4 measurement was made with, frozen at dd2245d (the generator has since changed).
+  const mon = legacyMonsters('dd2245d').mon; let absorbedOn = 0, absorbedOff = 0;
   for (let k = 0; k < 30; k++) {
     const a = [mon('gearwing', 800 + k), mon(byArch('Striker')[k % 12], 900 + k), mon(tanks[k % 9], 1000 + k)];
     const b = [mon(tanks[(k + 2) % 9], 1100 + k), mon('snowmoth', 1200 + k), mon(tanks[(k + 5) % 9], 1300 + k)];

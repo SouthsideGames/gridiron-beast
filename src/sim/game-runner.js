@@ -14,7 +14,8 @@ export function aiController(side) {
     side,
     offensePlay(state, team, available, tendencies, rng, opp) { return AI.chooseOffensePlay(rng, state, team, available, tendencies, opp); },
     defensePlay(state, team, available, oppTendencies, rng, opp, own) { return AI.chooseDefensePlay(rng, state, team, available, oppTendencies, opp, own); },
-    fourthDown(state, team) { return AI.fourthDownDecision(state, team); },
+    fourthDown(state, team, sig = null) { return AI.fourthDownDecision(state, team, sig); },
+    fgSignature(sig, ordinaryChance, state = null) { return AI.fgSignatureDecision(sig, ordinaryChance, state); }, // Task 8 M3: the AI's field-goal signature call (provisional policy)
     tryChoice(state) { return AI.tryDecision(state); },
     kickoff(state) { return AI.kickoffDecision(state); },
     tempo(state) { return AI.tempoDecision(state); },
@@ -33,7 +34,7 @@ function noteDefense(t, playId) { t.recentDefense.push(playId); if (t.recentDefe
  * Advance the game by exactly one event (kickoff, try, or scrimmage snap).
  * Returns a description of what happened, or null when the game is over.
  * `choices` lets the UI override the human side's decisions:
- *   { offensePlayId, defensePlayId, fourthDown, tryChoice, kickoff, tempo, timeout }
+ *   { offensePlayId, defensePlayId, fourthDown, fgSignature, tryChoice, kickoff, tempo, timeout }  (fgSignature: activate the kicker's field-goal signature, Task 8 M3)
  */
 export function step(state, teams, controllers, tendencies, choices = {}) {
   if (state.finished) return null;
@@ -48,8 +49,9 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
     const mode = choices.kickoff || ctrl(kicking).kickoff(state);
     done();
     const free = state.phase === 'free_kick';
-    const { text, res } = R.doKickoff(state, teams, { onside: mode === 'onside' && state.phase === 'kickoff' });
-    return { kind: 'kickoff', text, res, kicking, free, scored: res?.touchdown ? { team: R.opponent(kicking) } : null };
+    const { text, res, sim } = R.doKickoff(state, teams, { onside: mode === 'onside' && state.phase === 'kickoff' });
+    // A live kickoff (Task 8 M2) carries its engine play: frames in the scrimmage format, the return unit as the offense.
+    return { kind: 'kickoff', text, res, kicking, free, scored: res?.touchdown ? { team: R.opponent(kicking) } : res?.kickingTouchdown ? { team: kicking } : null, ...(sim ? { sim } : {}) };
   }
   if (state.phase === 'try') {
     const tryTeam = state.tryTeam;
@@ -69,6 +71,9 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
   }
   if (state.phase !== 'scrimmage') { done(); return null; }
 
+  // N9d: Watch and Skip share the same pre-choice boundary, including period-ending runoff and fourth-down choices.
+  R.preparePreChoice(state, teams);
+
   // Defensive timeout to stop the clock?
   const defSide = R.opponent(side);
   if ((choices.timeout === defSide) || (!choices.timeout && ctrl(defSide).timeoutOnDefense(state))) { R.timeout(state, defSide); }
@@ -85,9 +90,12 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
 
   // Fourth down, or an early field goal on any down (end of a half with no time to run a play).
   if (state.down === 4 || choices.fourthDown === 'fg') {
-    const decision = choices.fourthDown || ctrl(side).fourthDown(state, offTeam);
+    const sig = R.fieldGoalSignature(state, teams); // Task 8 M3: a field-goal signature the kicker may activate (Dragon Roar), or null
+    const decision = choices.fourthDown || ctrl(side).fourthDown(state, offTeam, sig?.available ? sig : null);
     if (decision === 'punt') { done(); const from = state.ballOn; const { text, res } = R.doPunt(state, teams); return { kind: 'punt', text, res, kicking: side, from }; }
-    if (decision === 'fg') { done(); const from = state.ballOn; const { text, scored, res } = R.doFieldGoal(state, teams); return { kind: 'field_goal', text, scored, res, kicking: side, from }; }
+    // The player's call comes in `choices`; an AI side decides with the same availability and chart (a player-selectable action is not player-exclusive)
+    const aiSig = !choices.fourthDown && !!ctrl(side).fgSignature?.(sig, R.fieldGoalInfo(state, teams).chance, state);
+    if (decision === 'fg') { done(); const from = state.ballOn; const { text, scored, res } = R.doFieldGoal(state, teams, { signature: !!choices.fgSignature || aiSig }); return { kind: 'field_goal', text, scored, res, kicking: side, from }; }
   }
 
   // Scrimmage play.
@@ -102,9 +110,9 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
 function goalLinePlays(ids) { const short = ids.filter((id) => PLAYS[id]?.tags.includes('short') || PLAYS[id]?.tags.includes('goalline') || PLAYS[id]?.tags.includes('redzone')); return short.length ? short : ids; }
 
 /** Play a complete game headless. Returns the final state. */
-export function playGame({ home, away, seed = 1, quarterLength = R.DEFAULT_QUARTER, maxSteps = 2000, onStep = null, comeback = null, coinWinner = null, choice = null, otPeriods = null, venue = null }) {
+export function playGame({ home, away, seed = 1, quarterLength = R.DEFAULT_QUARTER, maxSteps = 2000, onStep = null, comeback = null, coinWinner = null, choice = null, otPeriods = null, venue = null, statusCarry = null }) {
   const teams = { home, away };
-  const state = R.newGame({ home, away, seed, quarterLength, comeback, coinWinner, choice, otPeriods, venue });
+  const state = R.newGame({ home, away, seed, quarterLength, comeback, coinWinner, choice, otPeriods, venue, statusCarry }); // statusCarry: the opening contest's statuses, applied at kickoff (spec §10)
   const controllers = { home: aiController('home'), away: aiController('away') };
   const tendencies = { home: newTendencies(), away: newTendencies() };
   let steps = 0;

@@ -13,16 +13,31 @@ import { GYM_BY_CLUB } from '../src/data/gyms.js';
 import { SPECIES_DEX } from '../src/data/species.js';
 import { reservationFor } from '../src/franchise/fa-contracts.js';
 import { newFranchise } from '../tools/franchise-soak.mjs';
+import { releaseFromClub, POOL_WORTH } from '../src/franchise/league.js';
+import { capOf, committed, reservedBy } from '../src/franchise/fa-engine.js';
+
+/** Released and recorded, on no club and in no market, and an AI castoff the approved pool rule sends out of the league (owner 10:25:
+ *  "never disappears" means a valid recorded destination or disposition, not that every released monster stays available). */
+function leftUnderPoolRule(f, club, m) {
+  const recorded = (f.league?.events || []).some((e) => e.kind === 'release' && e.mid === m.id && e.club === club);
+  const nowhere = !leagueClubs(f).some((c) => clubRoster(f, c).some((x) => x.id === m.id)) && !E.marketList(f).some((x) => x.m.id === m.id);
+  const eligible = monsterOverall(m) < POOL_WORTH.ovr && (m.age || 99) > POOL_WORTH.age;
+  return recorded && nowhere && eligible;
+}
 
 function openMarket(seed = 31) { const f = newFranchise(seed); f.season.finished = true; f.offseason = null; const r = F.openFreeAgency(f); assert.ok(r.ok, r.reason); return f; }
 const mon = (o) => { const m = generateMonster(createRng(o.seed || 5), { position: o.pos || 'WR', quality: o.q || 60, age: o.age || 25, id: o.id || 'x' }); if (o.pot != null) m.potential = o.pot; return m; };
 
 test('R1 b: strategy value — Rebuild favours youth and potential, Contend readiness, Compete affordability; never overall alone', () => {
   const young = mon({ id: 'y', age: 22, q: 60, seed: 3 }); young.potential = monsterOverall(young) + 15;
-  const vet = mon({ id: 'v', age: 33, q: 60, seed: 3 }); vet.potential = monsterOverall(vet);
+  const vet = mon({ id: 'v', age: 33, q: 60, seed: 3 });
+  // Task 8 M1 (fixture drift): the 33-year-old's simulated prior career (B7) now lifts him to 57 against the level-1 youngster's 34;
+  // the scenario compares equals, so the veteran gets the youngster's ratings explicitly (same overall; only age and potential differ).
+  vet.attributes = { ...young.attributes }; vet.dev.current = { ...young.attributes }; vet.potential = monsterOverall(vet);
   assert.ok(ageingSeasons(vet) > 0 && ageingSeasons(young) === 0);
   assert.ok(strategyValue(young, { mode: 'rebuild' }) > strategyValue(vet, { mode: 'rebuild' }), 'Rebuild: the young prospect');
   const a = mon({ id: 'a', age: 27, q: 62, seed: 9 }); const b = mon({ id: 'b', age: 27, q: 62, seed: 9 });
+  b.attributes = { ...a.attributes }; b.dev.current = { ...a.attributes }; b.potential = a.potential; // two equals, explicitly (their ids now give different simulated prior careers, B7: 39 vs 40)
   assert.ok(strategyValue(a, { mode: 'compete', ask: 20000 }) > strategyValue(b, { mode: 'compete', ask: 50000 }), 'Compete: the cheaper of two equals');
   assert.equal(strategyValue(a, { mode: 'contend', ask: 20000 }), strategyValue(b, { mode: 'contend', ask: 50000 }), 'Contend: cost does not decide');
   assert.ok(strategyValue(a, { mode: 'contend', weakestStarter: monsterOverall(a) - 1 }) > strategyValue(a, { mode: 'contend', weakestStarter: monsterOverall(a) + 1 }), 'Contend: readiness');
@@ -41,8 +56,8 @@ test('R1 a: before the draft an AI club bids only for urgent lineup holes and it
   }
 });
 
-test('R1 c: an upgrade that needs a release is atomic — released only when the signing completes, zero dead cap, no return', () => {
-  const f = openMarket(34); const club = leagueClubs(f).slice().sort()[2];
+function atomicUpgradeCase(seed, { releasedSignedElsewhere = false } = {}) {
+  const f = openMarket(seed); const club = leagueClubs(f).slice().sort()[2];
   const roster = clubRoster(f, club); let i = 0; while (clubRoster(f, club).length < ROSTER_MAX) addToClub(f, club, Object.assign(mon({ id: `pad${i}`, pos: 'OL', q: 45, seed: 40 + i++ }), { contract: { signed: 1, ends: 3, years: 2 }, salary: 20000 }), { year: 1 });
   const spare = clubRoster(f, club).find((m) => m.id.startsWith('pad')) || clubRoster(f, club).filter((m) => !isProtected(m) && !m.legendary && clubRoster(f, club).filter((x) => x.position === m.position).length > 3).sort((a, b) => monsterOverall(a) - monsterOverall(b))[0]; assert.ok(spare);
   const target = E.marketList(f).map((x) => x.m).find((m) => !E.liveOffers(f, (o) => o.club === club && o.mid === m.id).length && !m.legendary && !m.injury); assert.ok(target, 'a free agent');
@@ -55,10 +70,67 @@ test('R1 c: an upgrade that needs a release is atomic — released only when the
   const signed = clubRoster(f, club).some((m) => m.id === target.id);
   if (signed) {
     assert.ok(!clubRoster(f, club).includes(spare), 'released with the signing'); assert.equal(clubRoster(f, club).length, ROSTER_MAX);
-    assert.ok(E.marketList(f).some((x) => x.m === spare), 'the released monster is on the market');
+    const elsewhere = leagueClubs(f).find((c) => c !== club && clubRoster(f, c).some((m) => m.id === spare.id));
+    if (releasedSignedElsewhere) assert.ok(elsewhere, 'the released monster was signed by another club in a later period');
+    else assert.ok(E.marketList(f).some((x) => x.m === spare), 'the released monster is on the market');
+    assert.ok(elsewhere || E.marketList(f).some((x) => x.m === spare) || leftUnderPoolRule(f, club, spare), 'the release has a valid recorded destination: the market, another club, or the league exit the pool rule allows');
     assert.equal(E.blocker(f, club, spare, null, { newSpot: false })?.code, 'lock', 'and cannot rejoin this league year');
     assert.ok(E.committed(f, club) <= before + reservationFor(terms), 'no charge left behind');
   } else assert.ok(clubRoster(f, club).includes(spare), 'no signing, no release');
+  assert.deepEqual(E.marketProblems(f), []);
+  return { signed };
+}
+
+test('R1 c: an upgrade that needs a release is atomic — released only when the signing completes, zero dead cap, no return', () => {
+  // M5 scouting changes the founding draft: seed 31 retains this atomic signing scenario (37 before B16).
+  assert.equal(atomicUpgradeCase(31).signed, true, 'the upgrade completes in this scenario');
+});
+
+test('R1 c: an intervening signing elsewhere never makes the release-and-sign partial (the released monster legally signs with another club)', () => {
+  // Constructed through the real free-agency code (owner ruling 2026-11-08 10:25), replacing a searched seed (34 -> 39 -> 40, each
+  // undone by an approved roster change; docs/task8/REMEDIATION_R1C_SEED.md). The spare is a legally generated monster that the
+  // market keeps (OVR 52-60 by the pool rule); a second club gets a genuine hole at his position, with the cap room to fill it, after
+  // the release and before the later periods. Nobody is assigned to anybody: the clubs bid, and the monster decides, as in play.
+  const f = openMarket(31); const clubs = leagueClubs(f).slice().sort(); const club = clubs[2], second = clubs[3]; const POS = 'TE'; const year = f.season.year;
+  const spare = Object.assign(generateMonster(createRng(968), { position: POS, quality: 68, age: 23, id: 'spare_te' }), { contract: { signed: 1, ends: 3, years: 2 }, salary: 20000 });
+  assert.ok(monsterOverall(spare) >= POOL_WORTH.ovr && monsterOverall(spare) <= POOL_WORTH.market, `the spare qualifies to stay in the market (${monsterOverall(spare)})`);
+  if (clubRoster(f, club).length >= ROSTER_MAX) { const low = clubRoster(f, club).filter((m) => !isProtected(m) && !m.legendary).sort((a, b) => monsterOverall(a) - monsterOverall(b))[0]; assert.ok(releaseFromClub(f, club, low.id, { year }).ok); }
+  addToClub(f, club, spare, { year: 1 }); let i = 0; while (clubRoster(f, club).length < ROSTER_MAX) addToClub(f, club, Object.assign(mon({ id: `pad${i}`, pos: 'OL', q: 45, seed: 40 + i++ }), { contract: { signed: 1, ends: 3, years: 2 }, salary: 20000 }), { year: 1 });
+  const target = E.marketList(f).map((x) => x.m).find((m) => m.position !== POS && !m.legendary && !m.injury && !E.blocker(f, club, m, null, { newSpot: false })); assert.ok(target, 'a free agent');
+  assert.equal(E.submitOffer(f, club, target.id, { salary: E.askOf(f, target).salary, years: 1 }).code, 'roster', 'no place without a release');
+  const terms = { salary: Math.ceil(E.askOf(f, target).salary * 1.4 / 100) * 100, years: E.askOf(f, target).years };
+  const r = E.submitOffer(f, club, target.id, terms, { release: spare.id }); assert.ok(r.ok, r.reason); assert.equal(r.offer.release, spare.id);
+  assert.ok(clubRoster(f, club).includes(spare), 'nobody released while the offer is pending');
+  const before = E.committed(f, club);
+  let p = 0; while (F.freeAgencyOpen(f) && !clubRoster(f, club).some((m) => m.id === target.id) && p++ < 6) F.advanceFreeAgency(f);
+  assert.ok(clubRoster(f, club).some((m) => m.id === target.id), 'the upgrade completes'); assert.ok(F.freeAgencyOpen(f), 'with periods still to come');
+  assert.ok(!clubRoster(f, club).includes(spare), 'released with the signing'); assert.equal(clubRoster(f, club).length, ROSTER_MAX);
+  assert.ok(E.marketList(f).some((x) => x.m === spare), 'the released monster is on the market');
+  // the second club's genuine need: its TEs leave the league (an ordinary exit, not to the market), so its lineup has a TE hole
+  for (const m of clubRoster(f, second).filter((x) => x.position === POS)) assert.ok(releaseFromClub(f, second, m.id, { year, silent: true }).ok);
+  assert.ok(clubNeeds(f, second).some(([pos, , urgent]) => pos === POS && urgent), 'the second club has an urgent hole at his position');
+  assert.ok(capOf(f, second) - committed(f, second) - reservedBy(f, second) >= E.askOf(f, spare).salary, 'and the cap room to sign him');
+  F.finishFreeAgency(f);
+  const elsewhere = leagueClubs(f).find((c) => c !== club && clubRoster(f, c).some((m) => m.id === spare.id));
+  assert.ok(elsewhere, 'the released monster was signed by another club in a later period');
+  assert.equal(E.blocker(f, club, spare, null, { newSpot: false })?.code, 'lock', 'and cannot rejoin this league year');
+  assert.ok(E.committed(f, club) <= before + reservationFor(terms), 'no charge left behind');
+  assert.ok(clubRoster(f, club).some((m) => m.id === target.id) && !clubRoster(f, club).includes(spare) && clubRoster(f, club).length <= ROSTER_MAX, 'the release-and-sign stayed whole');
+  assert.deepEqual(E.marketProblems(f), []);
+});
+
+test('R1 c / pool rule: an eligible low-rated AI release may leave the league, with a recorded release and no copy left anywhere', () => {
+  const f = openMarket(31); const club = leagueClubs(f).slice().sort()[2]; const year = f.season.year;
+  const low = Object.assign(mon({ id: 'castoff', pos: 'LB', q: 40, age: 27, seed: 12 }), { contract: { signed: 1, ends: 3, years: 2 }, salary: 20000 });
+  assert.ok(monsterOverall(low) < POOL_WORTH.ovr && low.age > POOL_WORTH.age, `eligible for the league exit (${monsterOverall(low)}, ${low.age})`);
+  if (clubRoster(f, club).length >= ROSTER_MAX) { const x = clubRoster(f, club).filter((m) => !isProtected(m) && !m.legendary).sort((a, b) => monsterOverall(a) - monsterOverall(b))[0]; assert.ok(releaseFromClub(f, club, x.id, { year }).ok); }
+  addToClub(f, club, low, { year: 1 });
+  const r = releaseFromClub(f, club, low.id, { year }); assert.ok(r.ok); assert.equal(r.where, 'gone', 'the pool rule sends him out of the league');
+  assert.ok(leftUnderPoolRule(f, club, low), 'a valid recorded disposition: released by the club, on no roster and in no market');
+  assert.ok(!f.league.monsters[low.id], 'no stale registry copy');
+  // and one the market keeps is not sent out
+  const keep = Object.assign(mon({ id: 'keeper', pos: 'LB', q: 68, age: 23, seed: 12 }), { contract: { signed: 1, ends: 3, years: 2 }, salary: 20000 });
+  if (monsterOverall(keep) >= POOL_WORTH.ovr && monsterOverall(keep) <= POOL_WORTH.market) { addToClub(f, club, keep, { year: 1 }); assert.equal(releaseFromClub(f, club, keep.id, { year }).where, 'pool'); assert.ok(!leftUnderPoolRule(f, club, keep)); }
   assert.deepEqual(E.marketProblems(f), []);
 });
 

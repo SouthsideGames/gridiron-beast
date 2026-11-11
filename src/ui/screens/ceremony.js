@@ -4,6 +4,8 @@
 // showcase (staggered, at most three bursts at a time), the trophy, and the summary. Skippable at any moment; reduced
 // motion opens on the summary. Revisit it from Franchise History.
 
+import { abilityInfo } from '../ability-info.js';
+const abName = (m) => abilityInfo(m.species, 'football')?.name || m.ability || null; // the Dex football ability's name (the stored legacy name is empty since Task 8)
 import { esc, delegate } from '../dom.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { elementFx } from '../ability-fx.js';
@@ -56,7 +58,7 @@ export function registerCeremony(Router, app) {
     render({ f, params }) {
       const c = params?.preview ? championshipRecord(f) : championshipFor(f, params?.year); if (!c) return '<div class="panel"><p>No championship to celebrate yet.</p><button class="btn block" data-action="cer-done">Back</button></div>';
       const env = ENVIRONMENTS[stadiumFor(c.final?.home || c.club, f.stadiums).env] || ENVIRONMENTS.grass; const P = env.palette;
-      const starters = c.starters.map((m, i) => { const fx = elementFx(m.type); return `<div class="cer-mon starter" data-i="${i}" style="--d:${(i * 70)}ms;--a:${fx.a};--b:${fx.b}"><div class="cer-burst ${esc(fx.style)}" aria-hidden="true">${Array.from({ length: 6 }, (_, k) => `<i style="--k:${k}">${fx.glyph}</i>`).join('')}</div>${monsterSprite(m, 40)}<span class="cer-tag">${esc(m.slot || m.position)}</span><span class="cer-ab">${esc(m.ability || m.name)}</span></div>`; }).join('');
+      const starters = c.starters.map((m, i) => { const fx = elementFx(m.type); return `<div class="cer-mon starter" data-i="${i}" style="--d:${(i * 70)}ms;--a:${fx.a};--b:${fx.b}"><div class="cer-burst ${esc(fx.style)}" aria-hidden="true">${Array.from({ length: 6 }, (_, k) => `<i style="--k:${k}">${fx.glyph}</i>`).join('')}</div>${monsterSprite(m, 40)}<span class="cer-tag">${esc(m.slot || m.position)}</span><span class="cer-ab">${esc(abName(m) || m.name)}</span></div>`; }).join('');
       const roster = c.roster.slice(0, 30).map((m, i) => `<div class="cer-mon bench" style="--d:${600 + i * 40}ms">${monsterSprite(m, 24)}</div>`).join('');
       const confetti = Array.from({ length: 36 }, (_, k) => `<i style="--x:${(k * 37) % 100}%;--r:${(k * 53) % 360}deg;--t:${(k % 7) * 160}ms;--c:${k % 3 === 0 ? c.color : k % 3 === 1 ? '#ffe08a' : '#ffffff'}"></i>`).join('');
       const fin = c.final; const cap = c.starters.find((m) => m.id === c.captain);
@@ -94,7 +96,7 @@ export function registerCeremony(Router, app) {
       c.starters.forEach((m, i) => timers.push(setTimeout(() => {
         const s = el.querySelector(`.cer-mon.starter[data-i="${i}"]`); s?.classList.add('go'); timers.push(setTimeout(() => s?.classList.remove('go'), 1300));
         // one caption at a time, centred: whose ability, in its element's colours (the burst itself stays on the monster)
-        if (cap) { cap.innerHTML = `<b>${esc(m.name)}</b> <span class="dim">${esc(m.slot || m.position)}</span> · <span class="cer-cap-ab" style="color:${s?.style.getPropertyValue('--a') || '#ffe08a'}">${esc(m.ability || 'Champion')}</span>`; cap.classList.remove('pop'); void cap.offsetWidth; cap.classList.add('pop'); }
+        if (cap) { cap.innerHTML = `<b>${esc(m.name)}</b> <span class="dim">${esc(m.slot || m.position)}</span> · <span class="cer-cap-ab" style="color:${s?.style.getPropertyValue('--a') || '#ffe08a'}">${esc(abName(m) || 'Champion')}</span>`; cap.classList.remove('pop'); void cap.offsetWidth; cap.classList.add('pop'); }
       }, T.starter(i))));
       timers.push(setTimeout(() => { if (cap) cap.innerHTML = ''; }, T.trophy));
       timers.push(setTimeout(() => scene('sc-trophy', 'The Beast Bowl trophy'), T.trophy));

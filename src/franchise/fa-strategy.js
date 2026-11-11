@@ -7,6 +7,7 @@
 //         − cost weight × his ask in tens of thousands of credits
 //         + readiness bonus (Contend: the AI draft's READY_BONUS) when he would start now
 //         + gym element bonus (R4) when he shares a gym's element, a tie-break that never outweighs a real difference
+//         + identity tilt (Task 8 D7, identities.js IDENTITY_TILT, PROVISIONAL): an identity position and a scheme fit, at most 1.5
 //
 //   Rebuild  young monsters, potential, long-term value: the largest potential and age weights.
 //   Retool   current play balanced with younger replacements: half the Rebuild age weight, some cost sense.
@@ -18,6 +19,7 @@
 import { monsterOverall } from '../data/monsters.js';
 import { POTENTIAL_WEIGHT, READY_BONUS } from './draft.js';
 import { horizonOf, PLAN } from './roster-plan.js';
+import { identityTilt } from '../data/identities.js';
 
 export const FA_STRATEGY = Object.freeze({
   age: { rebuild: 2, retool: 1, compete: 0.5, contend: 0 },
@@ -32,15 +34,17 @@ export const ageingSeasons = (m) => { const h = horizonOf(m); return Number.isFi
 
 /**
  * The club's value of `m` as a signing. `mode`: the club's Task 6 mode. `ask`: his asking salary (credits). `weakestStarter`: the overall of the
- * club's weakest starter at his position (readiness), or null. `element`: a gym's element (R4), or null.
+ * club's weakest starter at his position (readiness), or null. `element`: a gym's element (R4), or null. `identity`: the AI club's
+ * identity (identities.js clubIdentity), or null.
  */
-export function strategyValue(m, { mode = 'compete', ask = 0, weakestStarter = null, element = null, depth = false } = {}) {
+export function strategyValue(m, { mode = 'compete', ask = 0, weakestStarter = null, element = null, depth = false, identity = null } = {}) {
   const ovr = monsterOverall(m); const pw = POTENTIAL_WEIGHT[mode] ?? POTENTIAL_WEIGHT.compete;
   let v = ovr + pw * ((m.potential ?? ovr) - 70);
   v -= (FA_STRATEGY.age[mode] ?? 0) * ageingSeasons(m);
   v -= (FA_STRATEGY.cost[mode] ?? 0) * (ask / 10000);
   if (mode === 'contend' && weakestStarter != null && ovr >= weakestStarter) v += READY_BONUS;
   if (element && m.type === element) v += FA_STRATEGY.element;
+  if (identity) v += identityTilt(identity, m); // Task 8 D7: the club's identity, a tie-break on the same scale
   if (depth) v -= (FA_STRATEGY.depthAge[mode] ?? 0) * Math.max(0, (m.age ?? FA_STRATEGY.depthPrime) - FA_STRATEGY.depthPrime); // a younger developmental monster for a depth place; a clearly better or cheaper veteran still wins
   return v;
 }

@@ -1,0 +1,90 @@
+{
+ "root": "/workspace/scratch/cd212583d3d2/gridiron-beast",
+ "games": 24,
+ "variants": {
+  "enabled": {
+   "games": 24,
+   "attempts": 912,
+   "completionPct": 54.7,
+   "yardsPerAttempt": 7.17,
+   "intPct": 1,
+   "sackPctOfDropbacks": 2.1,
+   "deepAttempts": 69,
+   "deepCompletionPct": 36.2,
+   "yardsPerCarry": 6.22,
+   "pointsPerTeamGame": 12.4,
+   "abilityEventsPerGame": 91.8,
+   "playsWithAnAbilityPct": 78.6,
+   "completionByQbAccuracy": {
+    "acc<60": {
+     "attempts": 335,
+     "completionPct": 47.5
+    },
+    "acc70+": {
+     "attempts": 202,
+     "completionPct": 64.9
+    },
+    "acc60-69": {
+     "attempts": 375,
+     "completionPct": 55.7
+    }
+   }
+  },
+  "noAbilities": {
+   "games": 24,
+   "attempts": 926,
+   "completionPct": 57.7,
+   "yardsPerAttempt": 7.42,
+   "intPct": 0.9,
+   "sackPctOfDropbacks": 1.4,
+   "deepAttempts": 74,
+   "deepCompletionPct": 48.6,
+   "yardsPerCarry": 5.66,
+   "pointsPerTeamGame": 12,
+   "abilityEventsPerGame": 0,
+   "playsWithAnAbilityPct": 0,
+   "completionByQbAccuracy": {
+    "acc<60": {
+     "attempts": 314,
+     "completionPct": 56.1
+    },
+    "acc70+": {
+     "attempts": 233,
+     "completionPct": 61.8
+    },
+    "acc60-69": {
+     "attempts": 379,
+     "completionPct": 56.5
+    }
+   }
+  },
+  "noAbilitiesNoTypes": {
+   "games": 24,
+   "attempts": 942,
+   "completionPct": 55.2,
+   "yardsPerAttempt": 7.3,
+   "intPct": 1.6,
+   "sackPctOfDropbacks": 1.9,
+   "deepAttempts": 69,
+   "deepCompletionPct": 33.3,
+   "yardsPerCarry": 5.1,
+   "pointsPerTeamGame": 12.9,
+   "abilityEventsPerGame": 0,
+   "playsWithAnAbilityPct": 0,
+   "completionByQbAccuracy": {
+    "acc<60": {
+     "attempts": 330,
+     "completionPct": 48.8
+    },
+    "acc70+": {
+     "attempts": 227,
+     "completionPct": 59
+    },
+    "acc60-69": {
+     "attempts": 385,
+     "completionPct": 58.4
+    }
+   }
+  }
+ }
+}

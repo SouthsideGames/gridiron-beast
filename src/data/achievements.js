@@ -65,5 +65,15 @@ export const ACHIEVEMENTS = Object.freeze([
   { id: 'traded_up', title: 'The phone works', desc: 'Make your first trade.', speaker: 'rival', trigger: 'trade',
     when: (f) => (f.trades || []).length === 1,
     beats: ['Heard you made a trade. Cute. Half this league hasn’t figured out the phone exists.', 'Call me sometime. I’ll say no, but I’ll enjoy it.'] },
+  // Task 8 (owner ruling 2026-11-07): three separate collection achievements, counted by family. An evolved form counts once, as its family.
+  { id: 'dex_original', title: 'The original 72', desc: 'Discover all 72 original families in the Beast Dex.', speaker: 'commissioner', trigger: 'any',
+    when: (f, c) => c.dex.original.seen >= c.dex.original.total,
+    beats: ['All seventy-two original families, seen and filed. The league archive has asked for a copy of your Dex.', 'I told them to ask you nicely.'] },
+  { id: 'dex_basic', title: 'Every Basic', desc: 'Discover all 120 Basic families in the Beast Dex.', speaker: 'commissioner', trigger: 'any',
+    when: (f, c) => c.dex.basic.seen >= c.dex.basic.total,
+    beats: ['One hundred and twenty Basic families. Most clubs never look twice at a Basic.', 'You looked at every one of them. That is how good rosters get built.'] },
+  { id: 'dex_all', title: 'The complete Beast Dex', desc: 'Discover all 192 families in the Beast Dex.', speaker: 'board', trigger: 'any',
+    when: (f, c) => c.dex.all.seen >= c.dex.all.total,
+    beats: ['TO THE GENERAL MANAGER OF {CLUB}:', 'THE BOARD NOTES THAT YOUR BEAST DEX IS COMPLETE: ALL 192 FAMILIES.', 'NO GENERAL MANAGER HAS FILED A COMPLETE DEX BEFORE. THE BOARD HAS ORDERED A SECOND SHELF.', 'THE BOARD'] },
 ]);
 export const ACHIEVEMENT_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));

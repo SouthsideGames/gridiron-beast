@@ -1,0 +1,62 @@
+{
+  "codeCommit": "a536b2f78797c8e4543905d49c00101c52c96c95",
+  "codeTree": "1edc0e542c09ede078947a901b6858eb6d6c204d",
+  "regression": {
+    "command": "node --test \"tests/**/*.test.js\"",
+    "tests": 1963,
+    "pass": 1963,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "durationMs": 444546.688961,
+    "stdoutSha256": "6f2c86389accb5aa16304537a8938faac46cfd275151de2e20976aaf6771d52e"
+  },
+  "completion": {
+    "abilities": 144,
+    "variants": 816,
+    "footballPresentationComplete": 70,
+    "footballPresentationPartial": 2,
+    "clashPresentationComplete": 71,
+    "clashPresentationPartial": 1,
+    "clashAbilitiesWithOpenBehavior": 13,
+    "freshnessCheck": "passed"
+  },
+  "clashSpeedSmoke": {
+    "codeCommit": "a536b2f78797c8e4543905d49c00101c52c96c95",
+    "kind": "non-browser speed smoke; not the official Task 8 scene benchmark",
+    "node": "v24.22.1",
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "warmupBattles": 1000,
+    "lineupPairs": 50,
+    "abilities": "registered; normal nonprovisional gameplay",
+    "runs": [
+      {
+        "run": 1,
+        "battles": 10000,
+        "wallMs": 4064.186117,
+        "totalCpuMs": 5265.219,
+        "exchangeChecksum": 130616
+      },
+      {
+        "run": 2,
+        "battles": 10000,
+        "wallMs": 3594.547793999999,
+        "totalCpuMs": 3842.11,
+        "exchangeChecksum": 130616
+      },
+      {
+        "run": 3,
+        "battles": 10000,
+        "wallMs": 3481.0985839999994,
+        "totalCpuMs": 3570.414,
+        "exchangeChecksum": 130616
+      }
+    ]
+  },
+  "browser": "waived by owner; not performed",
+  "physicalMobile": "not verified",
+  "officialFinishedVisualPerformance": "not completed by this follow-up",
+  "deployment": "development branch only; main/live/preview unchanged"
+}

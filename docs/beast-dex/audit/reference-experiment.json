@@ -1,0 +1,1033 @@
+{
+ "model": "APPROVED-MODEL REFERENCE EXPERIMENT (not the game generator)",
+ "nearIdenticalDefinition": "Audit assumption: same family, and every primary attribute of the position (data/rules.json primaryAttributesByPosition) within \u00b12 in both starting rating and individual potential. Temper and Apex are ignored for near-identity. Not a gameplay rule.",
+ "exactDefinition": "Same family/form, all 12 starting ratings, all 12 individual potentials, Temper and Apex designation; name, ID, timestamp and seed excluded. All generated individuals are first forms, so the family-level canonical fingerprint equals the form fingerprint.",
+ "frozen": {
+  "draftClass": {
+   "QB": 4,
+   "RB": 5,
+   "WR": 8,
+   "TE": 4,
+   "OL": 7,
+   "DL": 7,
+   "LB": 5,
+   "CB": 6,
+   "S": 5,
+   "K": 2
+  },
+  "draftClassSize": 53,
+  "scoutingReportsPerSeason": 25,
+  "seasons": 20,
+  "careers": 20,
+  "familySelection": "uniform among eligible (nonlegendary) families of the slot position \u2014 audit assumption; Basic acquisition weights are not approved",
+  "rosterAttrition": "not modelled: every individual offered or seen is counted once"
+ },
+ "apex": {
+  "rolls": 10000,
+  "eligibleFamilies": 180,
+  "eligibleBasic": 120,
+  "eligibleOriginal": 60,
+  "apex": 97,
+  "rate": 0.0097,
+  "wilson95": [
+   0.00796,
+   0.01182
+  ],
+  "expected": 100,
+  "binomialSd": 9.95,
+  "byType": {
+   "Fire": 8,
+   "Nature": 11,
+   "Dragon": 6,
+   "Psychic": 9,
+   "Wind": 6,
+   "Earth": 5,
+   "Electric": 11,
+   "Light": 10,
+   "Water": 11,
+   "Ice": 5,
+   "Metal": 8,
+   "Dark": 7
+  },
+  "byPosition": {
+   "RB": 10,
+   "TE": 11,
+   "S": 4,
+   "DL": 11,
+   "OL": 11,
+   "QB": 7,
+   "K": 13,
+   "LB": 8,
+   "WR": 10,
+   "CB": 12
+  },
+  "byRarity": {
+   "basic": 72,
+   "uncommon": 10,
+   "common": 12,
+   "rare": 3
+  },
+  "familiesWithApex": 81,
+  "familiesWithMoreThanOneApex": 15,
+  "sameSeedRepeatsExactly": true,
+  "legendaryApex": 0,
+  "assumption": "family drawn uniformly from the 180 eligible families for each roll (generation-channel mix is not approved yet)"
+ },
+ "exposure": [
+  {
+   "pool": "all 180 eligible families (Basic included)",
+   "familiesByPosition": {
+    "RB": 18,
+    "LB": 18,
+    "QB": 17,
+    "DL": 18,
+    "CB": 19,
+    "OL": 18,
+    "WR": 18,
+    "TE": 18,
+    "S": 18,
+    "K": 18
+   },
+   "careers": 20,
+   "seasons": 20,
+   "seeds": [
+    1000,
+    1019
+   ],
+   "summary": {
+    "draft": {
+     "individuals": {
+      "mean": 1060.0,
+      "min": 1060,
+      "max": 1060
+     },
+     "distinctFamilies": {
+      "mean": 177.95,
+      "min": 175,
+      "max": 180
+     },
+     "maxFamilyAppearances": {
+      "mean": 14.55,
+      "min": 13,
+      "max": 19
+     },
+     "exactPairs": {
+      "mean": 0.0,
+      "min": 0,
+      "max": 0
+     },
+     "nearIdenticalPairs": {
+      "mean": 8.05,
+      "min": 1,
+      "max": 16
+     },
+     "apex": {
+      "mean": 11.45,
+      "min": 6,
+      "max": 19
+     }
+    },
+    "scout": {
+     "individuals": {
+      "mean": 500.0,
+      "min": 500,
+      "max": 500
+     },
+     "distinctFamilies": {
+      "mean": 169.75,
+      "min": 163,
+      "max": 176
+     },
+     "maxFamilyAppearances": {
+      "mean": 8.2,
+      "min": 6,
+      "max": 11
+     },
+     "exactPairs": {
+      "mean": 0.0,
+      "min": 0,
+      "max": 0
+     },
+     "nearIdenticalPairs": {
+      "mean": 12.6,
+      "min": 6,
+      "max": 22
+     },
+     "apex": {
+      "mean": 4.85,
+      "min": 0,
+      "max": 11
+     }
+    }
+   },
+   "perCareer": [
+    {
+     "seed": 1000,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 179,
+      "maxFamilyAppearances": 16,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 6,
+      "apex": 12
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 172,
+      "maxFamilyAppearances": 9,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 6,
+      "apex": 5
+     }
+    },
+    {
+     "seed": 1001,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 180,
+      "maxFamilyAppearances": 15,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 5,
+      "apex": 6
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 169,
+      "maxFamilyAppearances": 9,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 13,
+      "apex": 9
+     }
+    },
+    {
+     "seed": 1002,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 178,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 8,
+      "apex": 9
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 163,
+      "maxFamilyAppearances": 9,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 16,
+      "apex": 5
+     }
+    },
+    {
+     "seed": 1003,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 178,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 4,
+      "apex": 15
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 170,
+      "maxFamilyAppearances": 7,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 14,
+      "apex": 2
+     }
+    },
+    {
+     "seed": 1004,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 179,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 14,
+      "apex": 11
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 167,
+      "maxFamilyAppearances": 10,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 11,
+      "apex": 5
+     }
+    },
+    {
+     "seed": 1005,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 178,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 1,
+      "apex": 17
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 170,
+      "maxFamilyAppearances": 11,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 22,
+      "apex": 11
+     }
+    },
+    {
+     "seed": 1006,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 175,
+      "maxFamilyAppearances": 19,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 8,
+      "apex": 7
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 169,
+      "maxFamilyAppearances": 8,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 15,
+      "apex": 6
+     }
+    },
+    {
+     "seed": 1007,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 179,
+      "maxFamilyAppearances": 15,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 7,
+      "apex": 10
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 169,
+      "maxFamilyAppearances": 8,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 15,
+      "apex": 2
+     }
+    },
+    {
+     "seed": 1008,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 177,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 7,
+      "apex": 14
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 172,
+      "maxFamilyAppearances": 9,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 8,
+      "apex": 0
+     }
+    },
+    {
+     "seed": 1009,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 179,
+      "maxFamilyAppearances": 16,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 5,
+      "apex": 9
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 172,
+      "maxFamilyAppearances": 7,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 11,
+      "apex": 5
+     }
+    },
+    {
+     "seed": 1010,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 180,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 11,
+      "apex": 8
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 168,
+      "maxFamilyAppearances": 9,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 6,
+      "apex": 4
+     }
+    },
+    {
+     "seed": 1011,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 175,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 6,
+      "apex": 12
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 176,
+      "maxFamilyAppearances": 6,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 9,
+      "apex": 6
+     }
+    },
+    {
+     "seed": 1012,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 178,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 7,
+      "apex": 19
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 170,
+      "maxFamilyAppearances": 8,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 7,
+      "apex": 4
+     }
+    },
+    {
+     "seed": 1013,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 179,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 12,
+      "apex": 10
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 171,
+      "maxFamilyAppearances": 7,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 8,
+      "apex": 6
+     }
+    },
+    {
+     "seed": 1014,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 176,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 6,
+      "apex": 11
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 166,
+      "maxFamilyAppearances": 8,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 8,
+      "apex": 6
+     }
+    },
+    {
+     "seed": 1015,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 179,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 9,
+      "apex": 10
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 172,
+      "maxFamilyAppearances": 10,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 19,
+      "apex": 6
+     }
+    },
+    {
+     "seed": 1016,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 177,
+      "maxFamilyAppearances": 15,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 11,
+      "apex": 10
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 169,
+      "maxFamilyAppearances": 7,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 22,
+      "apex": 3
+     }
+    },
+    {
+     "seed": 1017,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 177,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 11,
+      "apex": 14
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 170,
+      "maxFamilyAppearances": 8,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 11,
+      "apex": 5
+     }
+    },
+    {
+     "seed": 1018,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 179,
+      "maxFamilyAppearances": 13,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 16,
+      "apex": 19
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 173,
+      "maxFamilyAppearances": 7,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 15,
+      "apex": 3
+     }
+    },
+    {
+     "seed": 1019,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 177,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 7,
+      "apex": 6
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 167,
+      "maxFamilyAppearances": 7,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 16,
+      "apex": 4
+     }
+    }
+   ]
+  },
+  {
+   "pool": "60 eligible original families only (Basic excluded, for contrast)",
+   "familiesByPosition": {
+    "RB": 6,
+    "LB": 6,
+    "QB": 5,
+    "DL": 6,
+    "CB": 7,
+    "OL": 6,
+    "WR": 6,
+    "TE": 6,
+    "S": 6,
+    "K": 6
+   },
+   "careers": 20,
+   "seasons": 20,
+   "seeds": [
+    1000,
+    1019
+   ],
+   "summary": {
+    "draft": {
+     "individuals": {
+      "mean": 1060.0,
+      "min": 1060,
+      "max": 1060
+     },
+     "distinctFamilies": {
+      "mean": 60.0,
+      "min": 60,
+      "max": 60
+     },
+     "maxFamilyAppearances": {
+      "mean": 34.9,
+      "min": 31,
+      "max": 43
+     },
+     "exactPairs": {
+      "mean": 0.0,
+      "min": 0,
+      "max": 0
+     },
+     "nearIdenticalPairs": {
+      "mean": 32.75,
+      "min": 24,
+      "max": 43
+     },
+     "apex": {
+      "mean": 10.5,
+      "min": 6,
+      "max": 16
+     }
+    },
+    "scout": {
+     "individuals": {
+      "mean": 500.0,
+      "min": 500,
+      "max": 500
+     },
+     "distinctFamilies": {
+      "mean": 60.0,
+      "min": 60,
+      "max": 60
+     },
+     "maxFamilyAppearances": {
+      "mean": 16.05,
+      "min": 14,
+      "max": 21
+     },
+     "exactPairs": {
+      "mean": 0.0,
+      "min": 0,
+      "max": 0
+     },
+     "nearIdenticalPairs": {
+      "mean": 52.65,
+      "min": 24,
+      "max": 99
+     },
+     "apex": {
+      "mean": 4.95,
+      "min": 1,
+      "max": 11
+     }
+    }
+   },
+   "perCareer": [
+    {
+     "seed": 1000,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 35,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 38,
+      "apex": 8
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 17,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 58,
+      "apex": 3
+     }
+    },
+    {
+     "seed": 1001,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 34,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 37,
+      "apex": 14
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 21,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 52,
+      "apex": 11
+     }
+    },
+    {
+     "seed": 1002,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 35,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 32,
+      "apex": 11
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 17,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 29,
+      "apex": 8
+     }
+    },
+    {
+     "seed": 1003,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 34,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 36,
+      "apex": 10
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 15,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 30,
+      "apex": 8
+     }
+    },
+    {
+     "seed": 1004,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 32,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 37,
+      "apex": 12
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 15,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 47,
+      "apex": 5
+     }
+    },
+    {
+     "seed": 1005,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 33,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 29,
+      "apex": 11
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 63,
+      "apex": 4
+     }
+    },
+    {
+     "seed": 1006,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 33,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 30,
+      "apex": 11
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 16,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 47,
+      "apex": 5
+     }
+    },
+    {
+     "seed": 1007,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 37,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 34,
+      "apex": 11
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 15,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 67,
+      "apex": 5
+     }
+    },
+    {
+     "seed": 1008,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 33,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 33,
+      "apex": 10
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 15,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 24,
+      "apex": 3
+     }
+    },
+    {
+     "seed": 1009,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 36,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 33,
+      "apex": 11
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 43,
+      "apex": 6
+     }
+    },
+    {
+     "seed": 1010,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 32,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 31,
+      "apex": 8
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 15,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 65,
+      "apex": 5
+     }
+    },
+    {
+     "seed": 1011,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 36,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 26,
+      "apex": 8
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 16,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 61,
+      "apex": 3
+     }
+    },
+    {
+     "seed": 1012,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 31,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 31,
+      "apex": 14
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 18,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 42,
+      "apex": 1
+     }
+    },
+    {
+     "seed": 1013,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 35,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 32,
+      "apex": 9
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 15,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 66,
+      "apex": 6
+     }
+    },
+    {
+     "seed": 1014,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 37,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 28,
+      "apex": 16
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 18,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 39,
+      "apex": 3
+     }
+    },
+    {
+     "seed": 1015,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 43,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 31,
+      "apex": 10
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 16,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 41,
+      "apex": 4
+     }
+    },
+    {
+     "seed": 1016,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 35,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 43,
+      "apex": 8
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 16,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 59,
+      "apex": 5
+     }
+    },
+    {
+     "seed": 1017,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 34,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 38,
+      "apex": 15
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 14,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 92,
+      "apex": 2
+     }
+    },
+    {
+     "seed": 1018,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 40,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 32,
+      "apex": 6
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 15,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 29,
+      "apex": 6
+     }
+    },
+    {
+     "seed": 1019,
+     "draft": {
+      "individuals": 1060,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 33,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 24,
+      "apex": 7
+     },
+     "scout": {
+      "individuals": 500,
+      "distinctFamilies": 60,
+      "maxFamilyAppearances": 19,
+      "exactPairs": 0,
+      "nearIdenticalPairs": 99,
+      "apex": 6
+     }
+    }
+   ]
+  }
+ ],
+ "scaling": [
+  {
+   "individuals": 570,
+   "exactPairs": 0,
+   "nearIdenticalPairs": 16
+  },
+  {
+   "individuals": 1000,
+   "exactPairs": 0,
+   "nearIdenticalPairs": 45
+  },
+  {
+   "individuals": 10000,
+   "exactPairs": 0,
+   "nearIdenticalPairs": 6028
+  }
+ ]
+}

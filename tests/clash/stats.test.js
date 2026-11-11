@@ -3,8 +3,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildCombatant } from '../../src/clash/stats.js';
 import { battleConfig, CLASH_VALUES } from '../../src/clash/values.js';
-import { effectiveAttributes, overall, tryEvolve, NATURES } from '../../src/data/monsters.js';
-import { mon, deepFrozen } from './helpers.js';
+import { effectiveAttributes, overall, tryEvolve, raiseToLevel, generateMonster, NATURES } from '../../src/data/monsters.js';
+import { createRng } from '../../src/core/rng.js';
+import { mon, deepFrozen, SP } from './helpers.js';
 
 const V = CLASH_VALUES;
 const build = (m, o = {}) => buildCombatant(m, { perSide: 3, config: battleConfig({}), ...o });
@@ -31,21 +32,27 @@ test('fatigue enters once, through the attributes, and lowers attack and HP by a
 });
 
 test('evolution enters once: an evolved form is stronger only through its stored attributes (no extra multiplier)', () => {
-  const m = mon('emberfox', 7); const before = build(m);
-  const copy = structuredClone(m); copy.level = 10; const ev = tryEvolve(copy); assert.ok(ev && copy.stage === 1);
+  // Task 8 M1: the level lives in the development record (m.dev.level, read by tryEvolve), and a generated monster may arrive with
+  // a prior career (mon('emberfox', 7) is now a level-45 final form). So this test makes a rookie (yearsPro 0: level 1, stage 0),
+  // raises it to its evolution level with raiseToLevel, and compares the evolved form with the unevolved one at that same level.
+  const rookie = () => generateMonster(createRng(7), { species: 'emberfox', position: SP.emberfox.position, quality: 65, yearsPro: 0 });
+  const m = rookie(); assert.equal(m.stage, 0); const leveled = structuredClone(m); raiseToLevel(leveled, 10); const before = build(leveled);
+  const copy = structuredClone(leveled); const ev = tryEvolve(copy); assert.ok(ev && copy.stage === 1);
   const after = build(copy);
   assert.ok(after.hp > before.hp && after.atk > before.atk, 'evolution lifted the battle stats');
   // The same stat step appears if we only copy the evolved attributes onto the unevolved record: the stage itself adds nothing.
-  const attrsOnly = { ...m, attributes: { ...copy.attributes }, potential: copy.potential };
+  const attrsOnly = { ...leveled, attributes: { ...copy.attributes }, potential: copy.potential };
   const viaAttrs = build(attrsOnly); assert.equal(viaAttrs.hp, after.hp); assert.equal(viaAttrs.atk, after.atk);
-  assert.deepEqual(m, mon('emberfox', 7), 'the original monster is unchanged');
+  assert.deepEqual(m, rookie(), 'the original monster is unchanged');
 });
 
-test('nature once: swapping the nature changes exactly the boosted and lowered attribute by x1.1 / x0.9', () => {
+test('nature retired (N7c B14): active play ignores Nature; only the historical values 1.0.0 ruleset re-applies x1.1 / x0.9 for exact replays', () => {
   const m = mon('ashkit', 9); m.nature = 'balanced'; const base = effectiveAttributes(m, {});
-  const n = Object.entries(NATURES).find(([, v]) => v.up && v.down); const [name, nat] = n; const m2 = { ...m, nature: name }; const e2 = effectiveAttributes(m2, {});
-  for (const k of Object.keys(base)) { const want = k === nat.up ? Math.round(base[k] * 1.1) : k === nat.down ? Math.round(base[k] * 0.9) : base[k]; assert.ok(Math.abs(e2[k] - want) <= 1, `${k}: ${e2[k]} vs ${want}`); }
-  assert.equal(build(m2).breakdown.attributes[nat.up], e2[nat.up]);
+  const [name, nat] = Object.entries(NATURES).find(([, v]) => v.up && v.down); const m2 = { ...m, nature: name };
+  assert.deepEqual(effectiveAttributes(m2, {}), base);
+  assert.equal(build(m2).breakdown.attributes[nat.up], base[nat.up]);
+  const hist = buildCombatant(m2, { perSide: 3, config: battleConfig({ ruleset: 'v1.0.0' }) }).breakdown.attributes;
+  assert.ok(Math.abs(hist[nat.up] - Math.round(base[nat.up] * 1.1)) <= 1); assert.ok(Math.abs(hist[nat.down] - Math.round(base[nat.down] * 0.9)) <= 1);
 });
 
 test('archetype once: removing the archetype multiplier divides the final stat by exactly that multiplier', () => {

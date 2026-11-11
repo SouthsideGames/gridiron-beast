@@ -1,0 +1,6611 @@
+{
+  "source": "f716b02c41c81211d80e7389dc0cefd4c16ae155",
+  "scope": "Descriptive production observation; exposure is not randomized or held equal. Medians among attainers must not be used as the retirement-inclusive acceptance median.",
+  "seasons": 20,
+  "errors": [],
+  "problems": [],
+  "mastery": {
+    "football/rare/Aura": {
+      "individuals": 46,
+      "mastered": 22,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 44,
+      "everObservedUsed": 45,
+      "maxObservedCredits": 146,
+      "medianElapsedAmongAttainers": 9,
+      "elapsedHistogram": {
+        "6": 1,
+        "7": 3,
+        "8": 4,
+        "9": 4,
+        "10": 4,
+        "11": 3,
+        "12": 1,
+        "13": 1,
+        "16": 1
+      }
+    },
+    "clash/rare/Signature action": {
+      "individuals": 42,
+      "mastered": 7,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 42,
+      "everObservedUsed": 24,
+      "maxObservedCredits": 138,
+      "medianElapsedAmongAttainers": 13,
+      "elapsedHistogram": {
+        "6": 1,
+        "12": 1,
+        "13": 2,
+        "14": 1,
+        "15": 2
+      }
+    },
+    "football/uncommon/Special action": {
+      "individuals": 160,
+      "mastered": 49,
+      "withinFirstObservedSeason": 1,
+      "zeroAtEntry": 152,
+      "everObservedUsed": 105,
+      "maxObservedCredits": 645,
+      "medianElapsedAmongAttainers": 4,
+      "elapsedHistogram": {
+        "1": 1,
+        "2": 8,
+        "3": 14,
+        "4": 4,
+        "5": 4,
+        "6": 5,
+        "7": 3,
+        "8": 2,
+        "9": 2,
+        "10": 1,
+        "11": 3,
+        "12": 1,
+        "13": 1
+      }
+    },
+    "clash/uncommon/Stun-response special": {
+      "individuals": 15,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 15,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "football/common/Zone": {
+      "individuals": 257,
+      "mastered": 31,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 257,
+      "everObservedUsed": 137,
+      "maxObservedCredits": 394,
+      "medianElapsedAmongAttainers": 8,
+      "elapsedHistogram": {
+        "2": 2,
+        "3": 6,
+        "4": 2,
+        "5": 1,
+        "6": 1,
+        "7": 1,
+        "8": 3,
+        "9": 2,
+        "10": 4,
+        "11": 2,
+        "12": 1,
+        "13": 1,
+        "14": 2,
+        "15": 3
+      }
+    },
+    "clash/common/Signature action": {
+      "individuals": 239,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 239,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "football/uncommon/Self enhancement": {
+      "individuals": 42,
+      "mastered": 38,
+      "withinFirstObservedSeason": 7,
+      "zeroAtEntry": 42,
+      "everObservedUsed": 40,
+      "maxObservedCredits": 1467,
+      "medianElapsedAmongAttainers": 2,
+      "elapsedHistogram": {
+        "1": 7,
+        "2": 14,
+        "3": 3,
+        "4": 7,
+        "5": 4,
+        "7": 1,
+        "8": 1,
+        "9": 1
+      }
+    },
+    "clash/uncommon/Shield bypass": {
+      "individuals": 21,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 21,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/common/Support": {
+      "individuals": 47,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 47,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/common/Reserve rotation support": {
+      "individuals": 43,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 43,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "football/common/Special action": {
+      "individuals": 106,
+      "mastered": 13,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 106,
+      "everObservedUsed": 46,
+      "maxObservedCredits": 296,
+      "medianElapsedAmongAttainers": 7,
+      "elapsedHistogram": {
+        "2": 2,
+        "3": 1,
+        "4": 1,
+        "6": 1,
+        "7": 3,
+        "9": 1,
+        "10": 3,
+        "11": 1
+      }
+    },
+    "clash/common/Status transfer": {
+      "individuals": 24,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 24,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/uncommon/Extra-attack denial": {
+      "individuals": 16,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 16,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/rare/Original shield rebuild": {
+      "individuals": 22,
+      "mastered": 12,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 22,
+      "everObservedUsed": 17,
+      "maxObservedCredits": 354,
+      "medianElapsedAmongAttainers": 5,
+      "elapsedHistogram": {
+        "4": 5,
+        "5": 3,
+        "6": 2,
+        "7": 1,
+        "9": 1
+      }
+    },
+    "clash/common/Lethal-hit interception": {
+      "individuals": 41,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 41,
+      "everObservedUsed": 6,
+      "maxObservedCredits": 45,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "football/uncommon/Targeted effect": {
+      "individuals": 190,
+      "mastered": 76,
+      "withinFirstObservedSeason": 16,
+      "zeroAtEntry": 187,
+      "everObservedUsed": 116,
+      "maxObservedCredits": 3171,
+      "medianElapsedAmongAttainers": 4,
+      "elapsedHistogram": {
+        "1": 16,
+        "2": 10,
+        "3": 10,
+        "4": 4,
+        "5": 8,
+        "6": 2,
+        "7": 1,
+        "8": 8,
+        "9": 4,
+        "10": 2,
+        "11": 2,
+        "12": 7,
+        "13": 2
+      }
+    },
+    "clash/uncommon/Retaliation mark": {
+      "individuals": 55,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 55,
+      "everObservedUsed": 5,
+      "maxObservedCredits": 10,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/common/Self Guarded preparation": {
+      "individuals": 26,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 26,
+      "everObservedUsed": 5,
+      "maxObservedCredits": 56,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/uncommon/Attack with defensive miss fallback": {
+      "individuals": 19,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 19,
+      "everObservedUsed": 1,
+      "maxObservedCredits": 2,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "football/common/Aura": {
+      "individuals": 88,
+      "mastered": 5,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 87,
+      "everObservedUsed": 34,
+      "maxObservedCredits": 93,
+      "medianElapsedAmongAttainers": 8,
+      "elapsedHistogram": {
+        "6": 1,
+        "7": 1,
+        "8": 2,
+        "10": 1
+      }
+    },
+    "clash/common/Rotation control": {
+      "individuals": 27,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 27,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/uncommon/Signature action": {
+      "individuals": 143,
+      "mastered": 12,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 142,
+      "everObservedUsed": 32,
+      "maxObservedCredits": 173,
+      "medianElapsedAmongAttainers": 8,
+      "elapsedHistogram": {
+        "3": 1,
+        "7": 4,
+        "8": 1,
+        "9": 2,
+        "10": 1,
+        "11": 1,
+        "15": 1,
+        "16": 1
+      }
+    },
+    "football/common/Targeted effect": {
+      "individuals": 50,
+      "mastered": 15,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 49,
+      "everObservedUsed": 30,
+      "maxObservedCredits": 352,
+      "medianElapsedAmongAttainers": 5,
+      "elapsedHistogram": {
+        "2": 2,
+        "3": 2,
+        "4": 1,
+        "5": 3,
+        "7": 2,
+        "8": 1,
+        "10": 2,
+        "12": 1,
+        "13": 1
+      }
+    },
+    "clash/common/Voluntary-entry disruption": {
+      "individuals": 15,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 15,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/common/Clash ability": {
+      "individuals": 41,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 41,
+      "everObservedUsed": 1,
+      "maxObservedCredits": 7,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "football/legendary/Special action": {
+      "individuals": 7,
+      "mastered": 5,
+      "withinFirstObservedSeason": 1,
+      "zeroAtEntry": 7,
+      "everObservedUsed": 7,
+      "maxObservedCredits": 1181,
+      "medianElapsedAmongAttainers": 2,
+      "elapsedHistogram": {
+        "1": 1,
+        "2": 2,
+        "11": 1,
+        "12": 1
+      }
+    },
+    "clash/legendary/Harmful-status countdown freeze": {
+      "individuals": 1,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 1,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/common/Ally cooldown support": {
+      "individuals": 10,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 10,
+      "everObservedUsed": 1,
+      "maxObservedCredits": 29,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "football/rare/Special action": {
+      "individuals": 44,
+      "mastered": 7,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 44,
+      "everObservedUsed": 38,
+      "maxObservedCredits": 113,
+      "medianElapsedAmongAttainers": 12,
+      "elapsedHistogram": {
+        "8": 1,
+        "9": 1,
+        "12": 2,
+        "15": 1,
+        "16": 1,
+        "18": 1
+      }
+    },
+    "clash/rare/Disruptor": {
+      "individuals": 38,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 38,
+      "everObservedUsed": 6,
+      "maxObservedCredits": 6,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/uncommon/Tank": {
+      "individuals": 57,
+      "mastered": 4,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 57,
+      "everObservedUsed": 21,
+      "maxObservedCredits": 91,
+      "medianElapsedAmongAttainers": 10,
+      "elapsedHistogram": {
+        "9": 1,
+        "10": 1,
+        "13": 1,
+        "15": 1
+      }
+    },
+    "football/common/Self enhancement": {
+      "individuals": 131,
+      "mastered": 46,
+      "withinFirstObservedSeason": 6,
+      "zeroAtEntry": 129,
+      "everObservedUsed": 78,
+      "maxObservedCredits": 823,
+      "medianElapsedAmongAttainers": 3,
+      "elapsedHistogram": {
+        "1": 6,
+        "2": 7,
+        "3": 10,
+        "4": 2,
+        "5": 5,
+        "6": 1,
+        "7": 1,
+        "8": 5,
+        "9": 2,
+        "10": 2,
+        "11": 2,
+        "12": 3
+      }
+    },
+    "clash/common/Tank": {
+      "individuals": 45,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 45,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/common/Balanced": {
+      "individuals": 22,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 22,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "football/rare/Targeted effect": {
+      "individuals": 23,
+      "mastered": 13,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 23,
+      "everObservedUsed": 19,
+      "maxObservedCredits": 178,
+      "medianElapsedAmongAttainers": 6,
+      "elapsedHistogram": {
+        "3": 1,
+        "4": 2,
+        "5": 3,
+        "6": 1,
+        "8": 3,
+        "9": 1,
+        "12": 2
+      }
+    },
+    "clash/rare/Knockout follow-up": {
+      "individuals": 17,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 17,
+      "everObservedUsed": 4,
+      "maxObservedCredits": 18,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "football/rare/Self enhancement": {
+      "individuals": 36,
+      "mastered": 11,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 36,
+      "everObservedUsed": 34,
+      "maxObservedCredits": 181,
+      "medianElapsedAmongAttainers": 10,
+      "elapsedHistogram": {
+        "4": 1,
+        "6": 1,
+        "7": 2,
+        "9": 1,
+        "10": 3,
+        "11": 2,
+        "12": 1
+      }
+    },
+    "clash/common/Healing-triggered reaction": {
+      "individuals": 25,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 25,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "football/uncommon/Zone": {
+      "individuals": 37,
+      "mastered": 24,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 37,
+      "everObservedUsed": 34,
+      "maxObservedCredits": 1124,
+      "medianElapsedAmongAttainers": 5,
+      "elapsedHistogram": {
+        "2": 5,
+        "3": 3,
+        "4": 3,
+        "5": 1,
+        "6": 2,
+        "7": 1,
+        "8": 1,
+        "9": 2,
+        "10": 2,
+        "11": 1,
+        "13": 1,
+        "14": 1,
+        "16": 1
+      }
+    },
+    "clash/uncommon/Delayed attack": {
+      "individuals": 24,
+      "mastered": 2,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 24,
+      "everObservedUsed": 4,
+      "maxObservedCredits": 70,
+      "medianElapsedAmongAttainers": 6,
+      "elapsedHistogram": {
+        "6": 1,
+        "7": 1
+      }
+    },
+    "clash/uncommon/Cooldown disruption": {
+      "individuals": 17,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 17,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/common/Retaliation": {
+      "individuals": 13,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 13,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "football/rare/Zone": {
+      "individuals": 40,
+      "mastered": 8,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 40,
+      "everObservedUsed": 31,
+      "maxObservedCredits": 178,
+      "medianElapsedAmongAttainers": 8,
+      "elapsedHistogram": {
+        "3": 1,
+        "6": 1,
+        "7": 1,
+        "8": 2,
+        "9": 1,
+        "12": 1,
+        "14": 1
+      }
+    },
+    "clash/legendary/Signature action": {
+      "individuals": 3,
+      "mastered": 3,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 3,
+      "everObservedUsed": 3,
+      "maxObservedCredits": 246,
+      "medianElapsedAmongAttainers": 6,
+      "elapsedHistogram": {
+        "5": 1,
+        "6": 1,
+        "7": 1
+      }
+    },
+    "clash/common/Miss redirection": {
+      "individuals": 14,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 14,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/uncommon/Clash ability": {
+      "individuals": 21,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 21,
+      "everObservedUsed": 1,
+      "maxObservedCredits": 4,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/uncommon/Enemy lineup disruption": {
+      "individuals": 22,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 22,
+      "everObservedUsed": 4,
+      "maxObservedCredits": 53,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/legendary/Team Guarded replacement": {
+      "individuals": 1,
+      "mastered": 1,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 1,
+      "everObservedUsed": 1,
+      "maxObservedCredits": 189,
+      "medianElapsedAmongAttainers": 6,
+      "elapsedHistogram": {
+        "6": 1
+      }
+    },
+    "clash/uncommon/Shield ricochet": {
+      "individuals": 14,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 13,
+      "everObservedUsed": 7,
+      "maxObservedCredits": 21,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/rare/Clash ability": {
+      "individuals": 21,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 21,
+      "everObservedUsed": 1,
+      "maxObservedCredits": 17,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/uncommon/Support": {
+      "individuals": 5,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 5,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/legendary/Setup constructs": {
+      "individuals": 1,
+      "mastered": 1,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 1,
+      "everObservedUsed": 1,
+      "maxObservedCredits": 236,
+      "medianElapsedAmongAttainers": 6,
+      "elapsedHistogram": {
+        "6": 1
+      }
+    },
+    "clash/rare/Tank": {
+      "individuals": 14,
+      "mastered": 2,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 14,
+      "everObservedUsed": 8,
+      "maxObservedCredits": 154,
+      "medianElapsedAmongAttainers": 7,
+      "elapsedHistogram": {
+        "7": 1,
+        "12": 1
+      }
+    },
+    "clash/legendary/Clash ability": {
+      "individuals": 1,
+      "mastered": 1,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 1,
+      "everObservedUsed": 1,
+      "maxObservedCredits": 64,
+      "medianElapsedAmongAttainers": 19,
+      "elapsedHistogram": {
+        "19": 1
+      }
+    },
+    "football/uncommon/Aura": {
+      "individuals": 23,
+      "mastered": 3,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 23,
+      "everObservedUsed": 11,
+      "maxObservedCredits": 137,
+      "medianElapsedAmongAttainers": 8,
+      "elapsedHistogram": {
+        "6": 1,
+        "8": 1,
+        "11": 1
+      }
+    },
+    "clash/uncommon/Balanced": {
+      "individuals": 23,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 23,
+      "everObservedUsed": 0,
+      "maxObservedCredits": 0,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "football/legendary/Zone": {
+      "individuals": 1,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 1,
+      "everObservedUsed": 1,
+      "maxObservedCredits": 9,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/legendary/Disruptor": {
+      "individuals": 1,
+      "mastered": 1,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 1,
+      "everObservedUsed": 1,
+      "maxObservedCredits": 139,
+      "medianElapsedAmongAttainers": 9,
+      "elapsedHistogram": {
+        "9": 1
+      }
+    },
+    "clash/rare/Entry defense": {
+      "individuals": 18,
+      "mastered": 0,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 18,
+      "everObservedUsed": 3,
+      "maxObservedCredits": 57,
+      "medianElapsedAmongAttainers": null,
+      "elapsedHistogram": {}
+    },
+    "clash/rare/Reserve priority support": {
+      "individuals": 17,
+      "mastered": 4,
+      "withinFirstObservedSeason": 0,
+      "zeroAtEntry": 17,
+      "everObservedUsed": 10,
+      "maxObservedCredits": 143,
+      "medianElapsedAmongAttainers": 12,
+      "elapsedHistogram": {
+        "10": 1,
+        "12": 1,
+        "13": 1,
+        "14": 1
+      }
+    }
+  },
+  "apex": [
+    {
+      "year": 1,
+      "apexObserved": 6,
+      "apexOnRosters": 6,
+      "apexUnrostered": 0,
+      "apexAll99": 0,
+      "apexLevel50": 1,
+      "apexMeanLevel": 10.833333333333334,
+      "byClub": {
+        "Ashford Hawks": 1,
+        "Bayou Stalkers": 1,
+        "Canyon Crushers": 1,
+        "Northstar Wolves": 1,
+        "Palmetto Vipers": 1,
+        "Sundown Drakes": 1
+      }
+    },
+    {
+      "year": 5,
+      "apexObserved": 8,
+      "apexOnRosters": 8,
+      "apexUnrostered": 0,
+      "apexAll99": 0,
+      "apexLevel50": 1,
+      "apexMeanLevel": 13.375,
+      "byClub": {
+        "Canyon Crushers": 1,
+        "Frostpeak Howlers": 1,
+        "Ironpeak Rams": 1,
+        "Palmetto Vipers": 1,
+        "Sundown Drakes": 2,
+        "Sunfire Lions": 2
+      }
+    },
+    {
+      "year": 10,
+      "apexObserved": 9,
+      "apexOnRosters": 9,
+      "apexUnrostered": 0,
+      "apexAll99": 0,
+      "apexLevel50": 1,
+      "apexMeanLevel": 17.77777777777778,
+      "byClub": {
+        "Ashford Hawks": 1,
+        "Canyon Crushers": 1,
+        "Ember City Beasts": 1,
+        "Ironpeak Rams": 1,
+        "Palmetto Vipers": 2,
+        "Sundown Drakes": 2,
+        "Sunfire Lions": 1
+      }
+    },
+    {
+      "year": 15,
+      "apexObserved": 15,
+      "apexOnRosters": 15,
+      "apexUnrostered": 0,
+      "apexAll99": 0,
+      "apexLevel50": 1,
+      "apexMeanLevel": 16.666666666666668,
+      "byClub": {
+        "Ashford Hawks": 1,
+        "Bayou Stalkers": 1,
+        "Canyon Crushers": 1,
+        "Eastport Phantoms": 2,
+        "Ironpeak Rams": 2,
+        "Northstar Wolves": 1,
+        "Palmetto Vipers": 4,
+        "Sundown Drakes": 1,
+        "Sunfire Lions": 1,
+        "Thunder Mesa": 1
+      }
+    },
+    {
+      "year": 20,
+      "apexObserved": 17,
+      "apexOnRosters": 17,
+      "apexUnrostered": 0,
+      "apexAll99": 0,
+      "apexLevel50": 4,
+      "apexMeanLevel": 24.41176470588235,
+      "byClub": {
+        "Bayou Stalkers": 1,
+        "Eastport Phantoms": 4,
+        "Glacier Guardians": 1,
+        "Harbor Sentinels": 2,
+        "Ironpeak Rams": 2,
+        "Palmetto Vipers": 4,
+        "Sundown Drakes": 1,
+        "Sunfire Lions": 1,
+        "Thunder Mesa": 1
+      }
+    }
+  ],
+  "rookies": {
+    "definition": "first observed at level 1 and yearsPro 0, ordinary, entry by season 13; missing observations count as nonattainment, not assumed retirement",
+    "count": 807,
+    "attainedBy8": 65,
+    "byPosition": {
+      "QB": {
+        "n": 59,
+        "attainedBy8": 1
+      },
+      "RB": {
+        "n": 67,
+        "attainedBy8": 6
+      },
+      "WR": {
+        "n": 121,
+        "attainedBy8": 10
+      },
+      "TE": {
+        "n": 63,
+        "attainedBy8": 9
+      },
+      "OL": {
+        "n": 108,
+        "attainedBy8": 13
+      },
+      "DL": {
+        "n": 109,
+        "attainedBy8": 6
+      },
+      "LB": {
+        "n": 81,
+        "attainedBy8": 6
+      },
+      "CB": {
+        "n": 86,
+        "attainedBy8": 5
+      },
+      "S": {
+        "n": 83,
+        "attainedBy8": 7
+      },
+      "K": {
+        "n": 30,
+        "attainedBy8": 2
+      }
+    },
+    "records": [
+      {
+        "id": "m_1a5gs4c",
+        "position": "QB",
+        "entry": 1,
+        "hit50": 13,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_3trgdb",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 2
+      },
+      {
+        "id": "m_1fxciu5",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1a0eqxy",
+        "position": "CB",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1k70d6v",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_1f3zjc7",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_18im3my",
+        "position": "QB",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1kmhdtv",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_197ymcf",
+        "position": "WR",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_cd5nxw",
+        "position": "TE",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_jm9gvq",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_1ei7i55",
+        "position": "DL",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_j0iiq3",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 6,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1uioziq",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_15ngu0m",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_q0q2x0",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_ncrs0z",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_1dx5fi4",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_4f3y8w",
+        "position": "WR",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_16pwa1u",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_9egik8",
+        "position": "WR",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_3jdv8p",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_1eviyyj",
+        "position": "TE",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_7cvnrk",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1dbewkd",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_1e4ilke",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_1xazgul",
+        "position": "S",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1dw804y",
+        "position": "K",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": null
+      },
+      {
+        "id": "m_1l9sl18",
+        "position": "QB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_17cgg9x",
+        "position": "WR",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_zpvq4s",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1l976rz",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 2
+      },
+      {
+        "id": "m_r6wlgk",
+        "position": "TE",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_bhs6by",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 2
+      },
+      {
+        "id": "m_qsp01k",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_ro53t5",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_1mt7rzw",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_dvzc18",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 10,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_sts4pd",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_166d0pw",
+        "position": "QB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_1tijtnb",
+        "position": "RB",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_qaoojn",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_ga38ej",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_bb4oqg",
+        "position": "TE",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_fku5xo",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 15,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_9ax95r",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 3
+      },
+      {
+        "id": "m_tt6p7f",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_q8i27w",
+        "position": "RB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_t43l63",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_12wkoqd",
+        "position": "TE",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 2
+      },
+      {
+        "id": "m_1f5xf58",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1nq05fa",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_1e9i8x2",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_anvtic",
+        "position": "DL",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_38m8eb",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_18god4t",
+        "position": "CB",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1kfyvtt",
+        "position": "K",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_16t9xud",
+        "position": "TE",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_fpa7r3",
+        "position": "TE",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_z416nb",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 3
+      },
+      {
+        "id": "m_b6499v",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 1
+      },
+      {
+        "id": "m_1gslqep",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 1
+      },
+      {
+        "id": "m_18vcp6e",
+        "position": "S",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1epp8bw",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_1xwlysq",
+        "position": "TE",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_1y5s9jc",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_1q8da4e",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1s8iu68",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_ygh5oi",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": null
+      },
+      {
+        "id": "m_emuqpy",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_1xsbcbe",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1b9z3z",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_x06y3l",
+        "position": "WR",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1dxkutx",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_94up0a",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_1x7tj95",
+        "position": "DL",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_ivw42w",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 1
+      },
+      {
+        "id": "m_119usrj",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1cnvnr4",
+        "position": "S",
+        "entry": 1,
+        "hit50": 11,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_13cst0s",
+        "position": "K",
+        "entry": 1,
+        "hit50": 6,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_s6es7l",
+        "position": "TE",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1wjo6z1",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1271k46",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 14,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1bksfr8",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_1fndpmm",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 1
+      },
+      {
+        "id": "m_pcg249",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_cgjz4f",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_18xijx2",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_oyu4ap",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_1kz9kai",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_m9d6k3",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_1041er2",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 1
+      },
+      {
+        "id": "m_ggt2o1",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_h43pjm",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_ykyx9w",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1v1dgl7",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1jas0y3",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1w8p5z0",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1i8qlvs",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_we34um",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_pdel4j",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_160shpc",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1rryyq6",
+        "position": "K",
+        "entry": 1,
+        "hit50": 11,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1odjw5a",
+        "position": "QB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 3
+      },
+      {
+        "id": "m_179mh45",
+        "position": "WR",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_8yg92u",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_cvkkbk",
+        "position": "WR",
+        "entry": 1,
+        "hit50": 11,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1m3pi41",
+        "position": "TE",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1ozkfe6",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_k2qe0b",
+        "position": "DL",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_11thwkm",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 10,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_q9iov5",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_a49ew",
+        "position": "CB",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_1gwee9r",
+        "position": "S",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1ep4ykx",
+        "position": "RB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_2ry9jl",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_oedwr2",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_y7wtnl",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 2
+      },
+      {
+        "id": "m_r5mxih",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 5,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1sso5kv",
+        "position": "S",
+        "entry": 1,
+        "hit50": 11,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_phc5za",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_1m2xqr9",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_9tobix",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_bn6evb",
+        "position": "TE",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_7np1ou",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 11,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1gkt75c",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_d2hu1u",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_kqxhdi",
+        "position": "DL",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_14u70z4",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 15,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_m8ili4",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_1toglnf",
+        "position": "CB",
+        "entry": 1,
+        "hit50": 13,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1rp71x3",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 1
+      },
+      {
+        "id": "m_1xv87nq",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 3
+      },
+      {
+        "id": "m_8uqu9u",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 3
+      },
+      {
+        "id": "m_1e3avny",
+        "position": "S",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_115w1mc",
+        "position": "K",
+        "entry": 1,
+        "hit50": 13,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_ptxbr7",
+        "position": "DL",
+        "entry": 1,
+        "hit50": 11,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1crg3sz",
+        "position": "TE",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_1w40t9q",
+        "position": "CB",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_19mlf8r",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_reb7ml",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1d31mpo",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_jyffql",
+        "position": "S",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_o26apt",
+        "position": "RB",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_gpvl4o",
+        "position": "CB",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1c5usu",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_erunrf",
+        "position": "WR",
+        "entry": 1,
+        "hit50": 15,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_ebd8qx",
+        "position": "CB",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_g588fl",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_720bo3",
+        "position": "TE",
+        "entry": 1,
+        "hit50": 5,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_ks4n56",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_19e80ok",
+        "position": "QB",
+        "entry": 1,
+        "hit50": 14,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_rbuczz",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_1kuywdp",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1si2sxl",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_vgrg59",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_cwz2kp",
+        "position": "RB",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_17odtez",
+        "position": "DL",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_v73xyc",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_sczrki",
+        "position": "TE",
+        "entry": 1,
+        "hit50": 6,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1o8vwgf",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_dgb6oc",
+        "position": "S",
+        "entry": 1,
+        "hit50": 13,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1kn0uu3",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_1b9m066",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_bx0tx1",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 1
+      },
+      {
+        "id": "m_1mkt3aw",
+        "position": "RB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_csucpr",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1xdjurv",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_19uzp5r",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_7ui22w",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_1gwwws4",
+        "position": "QB",
+        "entry": 1,
+        "hit50": 15,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_12ud2c3",
+        "position": "K",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_1by2p1j",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1h63mfo",
+        "position": "TE",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_lurn21",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1m5ygnh",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1vx7vjw",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_1brpyb0",
+        "position": "RB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_cvn1o4",
+        "position": "QB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1r23bd1",
+        "position": "RB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 2
+      },
+      {
+        "id": "m_f02his",
+        "position": "WR",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1nyesky",
+        "position": "TE",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_1hyvbnw",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_1pf1892",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1j0oixi",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1ds6a1c",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1ncpzq8",
+        "position": "S",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1ihhr0x",
+        "position": "QB",
+        "entry": 1,
+        "hit50": 12,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_14vxk8z",
+        "position": "DL",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_2oarsx",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1je05q6",
+        "position": "WR",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_a0xs1k",
+        "position": "DL",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_x5xvr7",
+        "position": "LB",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_lhmzqt",
+        "position": "S",
+        "entry": 1,
+        "hit50": 11,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_3t02k7",
+        "position": "QB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_p3qx4v",
+        "position": "DL",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_gatvx8",
+        "position": "WR",
+        "entry": 1,
+        "hit50": 10,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_11qyj5a",
+        "position": "K",
+        "entry": 1,
+        "hit50": 7,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_ta0vrr",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1y7jf11",
+        "position": "DL",
+        "entry": 1,
+        "hit50": 10,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1anujs7",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1pldha",
+        "position": "TE",
+        "entry": 1,
+        "hit50": 8,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_pq6g4g",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_1ayoxgs",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1209l2c",
+        "position": "RB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_318rkw",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_puo9zj",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_11dn6lf",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_nh1315",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_c4rg8r",
+        "position": "RB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_4nvjrb",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_1x8laz4",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_1kb7pub",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1nauf6m",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_bt49b4",
+        "position": "RB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_4khncc",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1qsoxa5",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_hxwjnn",
+        "position": "OL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_18xr4pi",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1jmdb95",
+        "position": "RB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_gsdqd7",
+        "position": "TE",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_8zzrvp",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_ibq5o3",
+        "position": "QB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_1se756m",
+        "position": "DL",
+        "entry": 1,
+        "hit50": 9,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_17i7uk5",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 2
+      },
+      {
+        "id": "m_d1gaew",
+        "position": "QB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_7exku3",
+        "position": "LB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_101qgig",
+        "position": "DL",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 2
+      },
+      {
+        "id": "m_10y1s0l",
+        "position": "K",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_zf62ku",
+        "position": "WR",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1icpbi5",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 2
+      },
+      {
+        "id": "m_1ekp3li",
+        "position": "CB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_wsuezp",
+        "position": "S",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 2
+      },
+      {
+        "id": "m_1xgacpn",
+        "position": "RB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 1
+      },
+      {
+        "id": "m_1rvg4le",
+        "position": "OL",
+        "entry": 1,
+        "hit50": 6,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_q58f6v",
+        "position": "QB",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_ab49rr",
+        "position": "TE",
+        "entry": 1,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_8hayj8",
+        "position": "CB",
+        "entry": 2,
+        "hit50": 9,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1supnvf",
+        "position": "QB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_19ry6ef",
+        "position": "DL",
+        "entry": 2,
+        "hit50": 12,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_7e2gff",
+        "position": "S",
+        "entry": 2,
+        "hit50": 9,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1cxmeif",
+        "position": "DL",
+        "entry": 2,
+        "hit50": 10,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1mbqbsu",
+        "position": "K",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1g2yqc4",
+        "position": "OL",
+        "entry": 2,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1bzmzz3",
+        "position": "S",
+        "entry": 2,
+        "hit50": 8,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_d58goc",
+        "position": "DL",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_9r97p5",
+        "position": "RB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1t6ycmo",
+        "position": "WR",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_aq1a8n",
+        "position": "LB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_wqcpl1",
+        "position": "CB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_q0v70y",
+        "position": "TE",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_4xwwrf",
+        "position": "CB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_15mcr2w",
+        "position": "WR",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_t222lk",
+        "position": "S",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_zz9hh3",
+        "position": "WR",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_cr3lm5",
+        "position": "LB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_160qzee",
+        "position": "DL",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 3
+      },
+      {
+        "id": "m_1mt8ppe",
+        "position": "WR",
+        "entry": 2,
+        "hit50": 11,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1n2fx6y",
+        "position": "OL",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1xwqm22",
+        "position": "K",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_11n63hm",
+        "position": "RB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_sfodhv",
+        "position": "WR",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_d6tj4u",
+        "position": "CB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_jjr55x",
+        "position": "TE",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1gfvh0w",
+        "position": "OL",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_1c4f00q",
+        "position": "OL",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_10a3mi7",
+        "position": "QB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_qeqd0x",
+        "position": "S",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_7goz5d",
+        "position": "LB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_12vluye",
+        "position": "RB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_a4l6ie",
+        "position": "WR",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_dkaxnw",
+        "position": "LB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_ks05k8",
+        "position": "DL",
+        "entry": 2,
+        "hit50": 16,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_5ofxkb",
+        "position": "DL",
+        "entry": 2,
+        "hit50": 12,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_2wlwy3",
+        "position": "LB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 2
+      },
+      {
+        "id": "m_1ypao26",
+        "position": "OL",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_k8ggtw",
+        "position": "RB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_10tib59",
+        "position": "DL",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 2
+      },
+      {
+        "id": "m_4a1qqx",
+        "position": "WR",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1d5o4b7",
+        "position": "TE",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 3
+      },
+      {
+        "id": "m_49mb5j",
+        "position": "OL",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_1lxq6uf",
+        "position": "QB",
+        "entry": 2,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_wrrh25",
+        "position": "TE",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_ygxrb8",
+        "position": "CB",
+        "entry": 3,
+        "hit50": 9,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_spzrgi",
+        "position": "CB",
+        "entry": 3,
+        "hit50": 10,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1jxn7k9",
+        "position": "TE",
+        "entry": 3,
+        "hit50": 9,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_l2nk6i",
+        "position": "QB",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_13s78wp",
+        "position": "OL",
+        "entry": 3,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_gkuy7t",
+        "position": "DL",
+        "entry": 3,
+        "hit50": 15,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_175o80b",
+        "position": "CB",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_11fzp5l",
+        "position": "TE",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_yank67",
+        "position": "S",
+        "entry": 3,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1swyik9",
+        "position": "QB",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_a4huak",
+        "position": "S",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_z384ac",
+        "position": "CB",
+        "entry": 3,
+        "hit50": 14,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1prfbnb",
+        "position": "WR",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1o0hd93",
+        "position": "WR",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_z3q5ag",
+        "position": "CB",
+        "entry": 3,
+        "hit50": 8,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1dczmaz",
+        "position": "LB",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1eaywbh",
+        "position": "K",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_f7lpzs",
+        "position": "CB",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_klvmlx",
+        "position": "S",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_jbdzd0",
+        "position": "WR",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_rhmrp1",
+        "position": "WR",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_copggm",
+        "position": "K",
+        "entry": 3,
+        "hit50": 12,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_nna262",
+        "position": "OL",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_1uhn2nl",
+        "position": "DL",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 4
+      },
+      {
+        "id": "m_14h99e6",
+        "position": "RB",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_vr9e1e",
+        "position": "WR",
+        "entry": 3,
+        "hit50": 10,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_1ukr0i2",
+        "position": "RB",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_e7x2tl",
+        "position": "OL",
+        "entry": 3,
+        "hit50": 14,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_pcmho8",
+        "position": "WR",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_aogk6d",
+        "position": "TE",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_kxtxa7",
+        "position": "OL",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_1c4xgb",
+        "position": "LB",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1ijsuyt",
+        "position": "OL",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1uviekv",
+        "position": "DL",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1ud1qge",
+        "position": "QB",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_yfpiry",
+        "position": "LB",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1oxrc4h",
+        "position": "S",
+        "entry": 3,
+        "hit50": 15,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_1063bbf",
+        "position": "RB",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 3
+      },
+      {
+        "id": "m_12i2hq8",
+        "position": "OL",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_l5xx3f",
+        "position": "TE",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_1ac7gpi",
+        "position": "DL",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_1ep1pz3",
+        "position": "RB",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_qrf6is",
+        "position": "DL",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1gxhlwo",
+        "position": "DL",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_bexvg9",
+        "position": "LB",
+        "entry": 3,
+        "hit50": 9,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_21kh0a",
+        "position": "WR",
+        "entry": 3,
+        "hit50": 10,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_17ajyic",
+        "position": "OL",
+        "entry": 3,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1kwisla",
+        "position": "QB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_u6ngm8",
+        "position": "QB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_21iomr",
+        "position": "WR",
+        "entry": 4,
+        "hit50": 9,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_yw620q",
+        "position": "CB",
+        "entry": 4,
+        "hit50": 9,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_1rv3ubm",
+        "position": "DL",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1r15oqw",
+        "position": "TE",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1jydbwo",
+        "position": "K",
+        "entry": 4,
+        "hit50": 12,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_eap5xg",
+        "position": "CB",
+        "entry": 4,
+        "hit50": 10,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_gi63im",
+        "position": "LB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1kv22kb",
+        "position": "K",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_rjl7db",
+        "position": "TE",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_lv9wre",
+        "position": "DL",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_vg7rrt",
+        "position": "CB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_fdhl3e",
+        "position": "S",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_19xd5qc",
+        "position": "WR",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1f6e2u4",
+        "position": "WR",
+        "entry": 4,
+        "hit50": 8,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_1mgeaqt",
+        "position": "RB",
+        "entry": 4,
+        "hit50": 11,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1hks30m",
+        "position": "WR",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1lmdv9t",
+        "position": "LB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1ffarhp",
+        "position": "OL",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_vnazpl",
+        "position": "CB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1hn055z",
+        "position": "OL",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_o7xvue",
+        "position": "QB",
+        "entry": 4,
+        "hit50": 15,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1fko3b3",
+        "position": "OL",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_9308m1",
+        "position": "WR",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_45msiv",
+        "position": "LB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1j4xso4",
+        "position": "DL",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1tefo0z",
+        "position": "LB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_16mwa6y",
+        "position": "S",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_r38u2f",
+        "position": "S",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1cceuhx",
+        "position": "S",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_z18qj7",
+        "position": "CB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1ytkw02",
+        "position": "DL",
+        "entry": 4,
+        "hit50": 10,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_14c7d13",
+        "position": "WR",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1jecw12",
+        "position": "RB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_3m2yl5",
+        "position": "RB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1cqhmt7",
+        "position": "OL",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_zk4rlo",
+        "position": "RB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1onmjen",
+        "position": "CB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1kl215l",
+        "position": "S",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_19qdds8",
+        "position": "RB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 6
+      },
+      {
+        "id": "m_e67abd",
+        "position": "OL",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1wfu85i",
+        "position": "TE",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_g9x8y9",
+        "position": "DL",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1hmv3jg",
+        "position": "QB",
+        "entry": 4,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_ba72ii",
+        "position": "OL",
+        "entry": 4,
+        "hit50": 7,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_18ldfj",
+        "position": "DL",
+        "entry": 4,
+        "hit50": 11,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_esywfi",
+        "position": "LB",
+        "entry": 5,
+        "hit50": 9,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_2zsyi8",
+        "position": "S",
+        "entry": 5,
+        "hit50": 8,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_bgcxf2",
+        "position": "TE",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_9ie0i5",
+        "position": "WR",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_zogh9q",
+        "position": "OL",
+        "entry": 5,
+        "hit50": 10,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_piuj6j",
+        "position": "S",
+        "entry": 5,
+        "hit50": 8,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_157vcd7",
+        "position": "QB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_cnsz1m",
+        "position": "DL",
+        "entry": 5,
+        "hit50": 12,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_8pl5xh",
+        "position": "LB",
+        "entry": 5,
+        "hit50": 12,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_17e4ydi",
+        "position": "TE",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1wc3615",
+        "position": "LB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_12nhao4",
+        "position": "S",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1sk786d",
+        "position": "WR",
+        "entry": 5,
+        "hit50": 9,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_1jnsj88",
+        "position": "OL",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_104fuac",
+        "position": "LB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_f86mfp",
+        "position": "WR",
+        "entry": 5,
+        "hit50": 7,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_kjnv6x",
+        "position": "RB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_zsh24w",
+        "position": "CB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1ts1vdx",
+        "position": "RB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1edl6x3",
+        "position": "RB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_cz8zxp",
+        "position": "OL",
+        "entry": 5,
+        "hit50": 15,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1iq7g4r",
+        "position": "RB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1tcm1o0",
+        "position": "WR",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_hkq3qn",
+        "position": "S",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_qbnw8d",
+        "position": "CB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_1bgerd4",
+        "position": "CB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_1fk6ypn",
+        "position": "K",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1hkeym5",
+        "position": "WR",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1u8n4os",
+        "position": "DL",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_xt3y82",
+        "position": "OL",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_127ufgb",
+        "position": "DL",
+        "entry": 5,
+        "hit50": 13,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1b4rvq5",
+        "position": "QB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1m8z5ij",
+        "position": "QB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_2q2g81",
+        "position": "CB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 9
+      },
+      {
+        "id": "m_uq25p7",
+        "position": "WR",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1a0bt1d",
+        "position": "RB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1rkfn7d",
+        "position": "TE",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1k622mf",
+        "position": "DL",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 7
+      },
+      {
+        "id": "m_fm1ul6",
+        "position": "OL",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_12gjc0m",
+        "position": "QB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 8
+      },
+      {
+        "id": "m_1ky1hn7",
+        "position": "WR",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1m81t1b",
+        "position": "DL",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_1ljn0z9",
+        "position": "CB",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 5
+      },
+      {
+        "id": "m_kk9oy0",
+        "position": "S",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_yq8j4b",
+        "position": "K",
+        "entry": 5,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_y5r3ao",
+        "position": "DL",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_hdnxo8",
+        "position": "OL",
+        "entry": 5,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_tc5w78",
+        "position": "LB",
+        "entry": 6,
+        "hit50": 14,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_ylm5yn",
+        "position": "WR",
+        "entry": 6,
+        "hit50": 9,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1vev8b5",
+        "position": "DL",
+        "entry": 6,
+        "hit50": 10,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_t3xchm",
+        "position": "S",
+        "entry": 6,
+        "hit50": 9,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_wd7qu6",
+        "position": "CB",
+        "entry": 6,
+        "hit50": 10,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_6rhsrb",
+        "position": "RB",
+        "entry": 6,
+        "hit50": 8,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1va4hmk",
+        "position": "DL",
+        "entry": 6,
+        "hit50": 11,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1g1k7ew",
+        "position": "S",
+        "entry": 6,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_y2zs8",
+        "position": "CB",
+        "entry": 6,
+        "hit50": 11,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_1b4ac9w",
+        "position": "CB",
+        "entry": 6,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_zo1d1i",
+        "position": "DL",
+        "entry": 6,
+        "hit50": 9,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_zg1l82",
+        "position": "K",
+        "entry": 6,
+        "hit50": 13,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_jdtxsn",
+        "position": "DL",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1fbytdw",
+        "position": "OL",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_sfopg3",
+        "position": "TE",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 10
+      },
+      {
+        "id": "m_2ka35f",
+        "position": "RB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_5e9b2v",
+        "position": "S",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1x54u89",
+        "position": "K",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_l9dj0z",
+        "position": "WR",
+        "entry": 6,
+        "hit50": 9,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1sw6q4v",
+        "position": "CB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_u4ns3z",
+        "position": "QB",
+        "entry": 6,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_pm49yb",
+        "position": "LB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1xmvpeo",
+        "position": "WR",
+        "entry": 6,
+        "hit50": 10,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_903fp1",
+        "position": "WR",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_pn9m5q",
+        "position": "OL",
+        "entry": 6,
+        "hit50": 14,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_e951qr",
+        "position": "TE",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_lcstjr",
+        "position": "QB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1y3i1e5",
+        "position": "RB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1xztr62",
+        "position": "CB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_16jvzqt",
+        "position": "DL",
+        "entry": 6,
+        "hit50": 13,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_tdpfkq",
+        "position": "OL",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_sb3eyd",
+        "position": "LB",
+        "entry": 6,
+        "hit50": 10,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_15mfe6a",
+        "position": "OL",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_1878k0a",
+        "position": "QB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1cgwzyc",
+        "position": "WR",
+        "entry": 6,
+        "hit50": 15,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_85vax1",
+        "position": "OL",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_1mwohim",
+        "position": "LB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_188gu21",
+        "position": "RB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_jqtwwh",
+        "position": "WR",
+        "entry": 6,
+        "hit50": 10,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_1t5xrmt",
+        "position": "QB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1rmql09",
+        "position": "S",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1g87wra",
+        "position": "WR",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_uszztc",
+        "position": "RB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1fadavy",
+        "position": "TE",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_cneckh",
+        "position": "CB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_11zpj57",
+        "position": "LB",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1bkt48u",
+        "position": "DL",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_11t3l7c",
+        "position": "TE",
+        "entry": 6,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_o2arxi",
+        "position": "S",
+        "entry": 6,
+        "hit50": 14,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1dx15fj",
+        "position": "S",
+        "entry": 7,
+        "hit50": 9,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1602eth",
+        "position": "RB",
+        "entry": 7,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_djzzjh",
+        "position": "WR",
+        "entry": 7,
+        "hit50": 9,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_r1k1gb",
+        "position": "CB",
+        "entry": 7,
+        "hit50": 10,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1v8tfzq",
+        "position": "WR",
+        "entry": 7,
+        "hit50": 10,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_5ngr6p",
+        "position": "QB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_ydgmaa",
+        "position": "S",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_gmbasf",
+        "position": "DL",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_18xt9sd",
+        "position": "TE",
+        "entry": 7,
+        "hit50": 14,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_m4h7pc",
+        "position": "OL",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_ub35vh",
+        "position": "TE",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1bfjy12",
+        "position": "RB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1qhjsro",
+        "position": "DL",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_ii1ngy",
+        "position": "LB",
+        "entry": 7,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_iot7y6",
+        "position": "CB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_ifa7tg",
+        "position": "QB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1nutc8o",
+        "position": "S",
+        "entry": 7,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_l5f58u",
+        "position": "RB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_g3jtlq",
+        "position": "WR",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_ajgmka",
+        "position": "K",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1pas9bv",
+        "position": "QB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_997o8",
+        "position": "OL",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_4wnr5r",
+        "position": "CB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_vcmeqg",
+        "position": "WR",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1x3w96v",
+        "position": "OL",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_utusuk",
+        "position": "OL",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_qcb1qx",
+        "position": "OL",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1aw6qvm",
+        "position": "TE",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1julrnt",
+        "position": "WR",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1xodsmk",
+        "position": "DL",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_qthtwe",
+        "position": "LB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_3vb3jb",
+        "position": "WR",
+        "entry": 7,
+        "hit50": 13,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_93xp6o",
+        "position": "QB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1xbqwk2",
+        "position": "DL",
+        "entry": 7,
+        "hit50": 11,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_m8axiq",
+        "position": "CB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1l3y02y",
+        "position": "RB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1m2j7e9",
+        "position": "WR",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_32b6o3",
+        "position": "RB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_spunfo",
+        "position": "S",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1ysy6pt",
+        "position": "CB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_xodwfe",
+        "position": "S",
+        "entry": 7,
+        "hit50": 14,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_131ir2p",
+        "position": "CB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1c77cub",
+        "position": "OL",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_qwrl90",
+        "position": "OL",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 11
+      },
+      {
+        "id": "m_1ryobql",
+        "position": "DL",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1lqhwpn",
+        "position": "LB",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1fz58f5",
+        "position": "TE",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1hnwqcr",
+        "position": "DL",
+        "entry": 7,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_vohmjh",
+        "position": "OL",
+        "entry": 8,
+        "hit50": 7,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_zdhwne",
+        "position": "CB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_rsaecd",
+        "position": "CB",
+        "entry": 8,
+        "hit50": 9,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_2of7s1",
+        "position": "CB",
+        "entry": 8,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1aq64kg",
+        "position": "LB",
+        "entry": 8,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_ma376n",
+        "position": "QB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_awf2w9",
+        "position": "S",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1w9b8ok",
+        "position": "LB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_7zb3is",
+        "position": "DL",
+        "entry": 8,
+        "hit50": 12,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1fpcezx",
+        "position": "CB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_njq133",
+        "position": "TE",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_15e9o80",
+        "position": "DL",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1k8nr2o",
+        "position": "RB",
+        "entry": 8,
+        "hit50": 10,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_bypdyy",
+        "position": "RB",
+        "entry": 8,
+        "hit50": 8,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_5b3tms",
+        "position": "TE",
+        "entry": 8,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_xzq5p5",
+        "position": "LB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_saj42r",
+        "position": "WR",
+        "entry": 8,
+        "hit50": 12,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1mywys7",
+        "position": "S",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_ig13ej",
+        "position": "OL",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_12azcx6",
+        "position": "QB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1oke8i9",
+        "position": "OL",
+        "entry": 8,
+        "hit50": 10,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_loe7x4",
+        "position": "OL",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_1ywi1tj",
+        "position": "RB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_4zyi5o",
+        "position": "WR",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_y9wvue",
+        "position": "WR",
+        "entry": 8,
+        "hit50": 11,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_15gviht",
+        "position": "WR",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1gnz076",
+        "position": "OL",
+        "entry": 8,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_zbx611",
+        "position": "QB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_uh8zhy",
+        "position": "OL",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_175mpo2",
+        "position": "S",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1xvqtnn",
+        "position": "QB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_1hyctqr",
+        "position": "DL",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_nqt9h0",
+        "position": "WR",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1u1laqt",
+        "position": "LB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_r1vb38",
+        "position": "RB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1yxa4rf",
+        "position": "DL",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_1sgfpeo",
+        "position": "CB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1vlbobt",
+        "position": "WR",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1kbovzn",
+        "position": "WR",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_aw2m1y",
+        "position": "WR",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_14x3wsj",
+        "position": "LB",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_tqu2dd",
+        "position": "DL",
+        "entry": 8,
+        "hit50": 9,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1jis0zd",
+        "position": "DL",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_ui76g3",
+        "position": "TE",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1nvro9r",
+        "position": "DL",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_xpzak8",
+        "position": "K",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_ycwzmz",
+        "position": "K",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_7qm9vq",
+        "position": "S",
+        "entry": 8,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1hlaz4t",
+        "position": "OL",
+        "entry": 9,
+        "hit50": 8,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1sh8cqs",
+        "position": "LB",
+        "entry": 9,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_4mlo8",
+        "position": "S",
+        "entry": 9,
+        "hit50": 8,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_oinuna",
+        "position": "RB",
+        "entry": 9,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_rvbslv",
+        "position": "WR",
+        "entry": 9,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_10l785i",
+        "position": "CB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1k3i70w",
+        "position": "CB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_12plfld",
+        "position": "DL",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1mj49r0",
+        "position": "QB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_50xkdq",
+        "position": "OL",
+        "entry": 9,
+        "hit50": 7,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_qx0bvq",
+        "position": "OL",
+        "entry": 9,
+        "hit50": 8,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_ka5q29",
+        "position": "LB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1bnvfdc",
+        "position": "DL",
+        "entry": 9,
+        "hit50": 10,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1iwjnr5",
+        "position": "RB",
+        "entry": 9,
+        "hit50": 8,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_fvvs6o",
+        "position": "LB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1szc96v",
+        "position": "DL",
+        "entry": 9,
+        "hit50": 8,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1jsioxa",
+        "position": "K",
+        "entry": 9,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_h3k6rj",
+        "position": "WR",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1p9b5pv",
+        "position": "QB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_pjnebh",
+        "position": "LB",
+        "entry": 9,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1qeiygz",
+        "position": "RB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1xcifbk",
+        "position": "LB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1wq43e8",
+        "position": "OL",
+        "entry": 9,
+        "hit50": 12,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_17imtd7",
+        "position": "RB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1inifsw",
+        "position": "RB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1ru7j65",
+        "position": "QB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_wv3rqe",
+        "position": "S",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_hmtu5y",
+        "position": "TE",
+        "entry": 9,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1drp38f",
+        "position": "WR",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_13t4yg",
+        "position": "OL",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_62bxob",
+        "position": "CB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1vzp1ra",
+        "position": "S",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_rh5aws",
+        "position": "WR",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_11le7pc",
+        "position": "QB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_114bjcj",
+        "position": "WR",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1pvidd6",
+        "position": "K",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_b2aaow",
+        "position": "S",
+        "entry": 9,
+        "hit50": 10,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_fsrjpc",
+        "position": "CB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_b09s2u",
+        "position": "WR",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 13
+      },
+      {
+        "id": "m_186pjzq",
+        "position": "CB",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1cyp228",
+        "position": "TE",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_12xeb0h",
+        "position": "OL",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_18cp1qw",
+        "position": "TE",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_16qh735",
+        "position": "DL",
+        "entry": 9,
+        "hit50": 8,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_2s7ilc",
+        "position": "OL",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1e4gb1k",
+        "position": "S",
+        "entry": 9,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_ay7h9k",
+        "position": "WR",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1k1fhw4",
+        "position": "TE",
+        "entry": 9,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_9fi143",
+        "position": "CB",
+        "entry": 10,
+        "hit50": 10,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_2kfj36",
+        "position": "OL",
+        "entry": 10,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_14o5zc0",
+        "position": "QB",
+        "entry": 10,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_q5tg1i",
+        "position": "S",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_yds2uv",
+        "position": "LB",
+        "entry": 10,
+        "hit50": 11,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_sf0djg",
+        "position": "DL",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_ut8d5h",
+        "position": "CB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_5hky3s",
+        "position": "RB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_w1ufi5",
+        "position": "DL",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_17ao9o4",
+        "position": "LB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_1wm8ima",
+        "position": "CB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1nfvwg7",
+        "position": "K",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1njg0li",
+        "position": "DL",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1rjtkvl",
+        "position": "S",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_50qqmt",
+        "position": "OL",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1qlj0re",
+        "position": "CB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_fatuft",
+        "position": "LB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_r4kopd",
+        "position": "WR",
+        "entry": 10,
+        "hit50": 10,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_f2s0k4",
+        "position": "DL",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1av49dg",
+        "position": "WR",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_10f57pu",
+        "position": "OL",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_11emuxg",
+        "position": "S",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_xykh95",
+        "position": "LB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_12xt3hf",
+        "position": "RB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_18wia8z",
+        "position": "WR",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1rhdqp8",
+        "position": "OL",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1yqqqhx",
+        "position": "WR",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_mdr0o6",
+        "position": "WR",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1zvbga",
+        "position": "QB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_53xp7m",
+        "position": "LB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_dvytpi",
+        "position": "DL",
+        "entry": 10,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1de9vaf",
+        "position": "RB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1r4bq08",
+        "position": "S",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_6nfmij",
+        "position": "WR",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_7g8tyg",
+        "position": "S",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_i2lkx4",
+        "position": "OL",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_r64j7s",
+        "position": "QB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_nguqyf",
+        "position": "CB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_pyomvy",
+        "position": "TE",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1j4bug8",
+        "position": "DL",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1chy15v",
+        "position": "WR",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_yhh5s1",
+        "position": "RB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_vqk3j7",
+        "position": "WR",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 14
+      },
+      {
+        "id": "m_1symmr",
+        "position": "TE",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_bn5m3s",
+        "position": "QB",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_6uipfe",
+        "position": "TE",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_19g2bvp",
+        "position": "TE",
+        "entry": 10,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_92xvqx",
+        "position": "QB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_82u7a4",
+        "position": "WR",
+        "entry": 11,
+        "hit50": 8,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_2v0fpl",
+        "position": "RB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_6yhvec",
+        "position": "WR",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 12
+      },
+      {
+        "id": "m_6exvov",
+        "position": "TE",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_ytjn84",
+        "position": "CB",
+        "entry": 11,
+        "hit50": 10,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1egb8j3",
+        "position": "S",
+        "entry": 11,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_6y6fy8",
+        "position": "QB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_vf1utp",
+        "position": "DL",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_yl5qxq",
+        "position": "OL",
+        "entry": 11,
+        "hit50": 10,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1o4tdps",
+        "position": "DL",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_90t2h2",
+        "position": "OL",
+        "entry": 11,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1hh531c",
+        "position": "CB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_shm810",
+        "position": "DL",
+        "entry": 11,
+        "hit50": 10,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_ed2fo0",
+        "position": "S",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_gkhcq5",
+        "position": "DL",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1nggodc",
+        "position": "LB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1tmr6pf",
+        "position": "WR",
+        "entry": 11,
+        "hit50": 10,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_f9aagt",
+        "position": "K",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_13925jc",
+        "position": "CB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1hvqpgs",
+        "position": "RB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1j2637o",
+        "position": "QB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_10e4n2p",
+        "position": "WR",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_137wy2l",
+        "position": "LB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_sp92tv",
+        "position": "RB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 15
+      },
+      {
+        "id": "m_1kx2nrx",
+        "position": "OL",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_pb32av",
+        "position": "CB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1fkysuu",
+        "position": "WR",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1bbc06y",
+        "position": "OL",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_rht4xj",
+        "position": "OL",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_ghcz50",
+        "position": "LB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_xiucmz",
+        "position": "DL",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1goahcg",
+        "position": "TE",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_vk2614",
+        "position": "DL",
+        "entry": 11,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_ewfren",
+        "position": "QB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1jpv58b",
+        "position": "WR",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1yrqw2e",
+        "position": "WR",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_hinro0",
+        "position": "LB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1j86od4",
+        "position": "S",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1p3cxpr",
+        "position": "S",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1fuxj6l",
+        "position": "OL",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_10iwqnd",
+        "position": "K",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1as01l7",
+        "position": "TE",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1gjkiwa",
+        "position": "TE",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_asppqb",
+        "position": "CB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1gwlgyd",
+        "position": "S",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1bzx78u",
+        "position": "DL",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_12vbhmv",
+        "position": "RB",
+        "entry": 11,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1jon0j0",
+        "position": "CB",
+        "entry": 12,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_tqscfd",
+        "position": "WR",
+        "entry": 12,
+        "hit50": 8,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_166k8bb",
+        "position": "DL",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1wijtqq",
+        "position": "WR",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_14zqu9f",
+        "position": "OL",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_x22vwl",
+        "position": "CB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_clzcyt",
+        "position": "DL",
+        "entry": 12,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_gv83fj",
+        "position": "DL",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_kj2euv",
+        "position": "OL",
+        "entry": 12,
+        "hit50": 9,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_5oa9rb",
+        "position": "RB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1rlzkgu",
+        "position": "LB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_16qj21p",
+        "position": "WR",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1szwao9",
+        "position": "DL",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_14v5c4q",
+        "position": "WR",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_76m4wp",
+        "position": "TE",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_1x9h4oc",
+        "position": "OL",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_14o92v7",
+        "position": "CB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_pmwtpp",
+        "position": "QB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_77ptyw",
+        "position": "LB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_12k7xzy",
+        "position": "RB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_fusqml",
+        "position": "QB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1oxs600",
+        "position": "K",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1bg1spc",
+        "position": "RB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_19x5h18",
+        "position": "LB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1lz1xeb",
+        "position": "S",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1ow27ou",
+        "position": "S",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1rjhb0k",
+        "position": "RB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_rhtfjw",
+        "position": "DL",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_j26rgs",
+        "position": "TE",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1u2zvjv",
+        "position": "OL",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1uojrwj",
+        "position": "OL",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_57z41o",
+        "position": "K",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_1btph2i",
+        "position": "S",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_bp6lkl",
+        "position": "S",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_1pc0f67",
+        "position": "WR",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1nbj4e6",
+        "position": "TE",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_15abuto",
+        "position": "WR",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1mh2bj8",
+        "position": "CB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1s5mq1u",
+        "position": "WR",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 16
+      },
+      {
+        "id": "m_1t4uhsu",
+        "position": "LB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1harx3s",
+        "position": "CB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1maxf44",
+        "position": "OL",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_6u4xbi",
+        "position": "LB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_m5krd4",
+        "position": "QB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_15ge3ep",
+        "position": "QB",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1nlikhi",
+        "position": "DL",
+        "entry": 12,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_4d8vur",
+        "position": "WR",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1iw2xda",
+        "position": "QB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_69ppit",
+        "position": "OL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1rq00jg",
+        "position": "OL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1gia35v",
+        "position": "OL",
+        "entry": 13,
+        "hit50": 7,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_7mhvtm",
+        "position": "S",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_3s3n6r",
+        "position": "K",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1k7c70r",
+        "position": "QB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1iwxkdm",
+        "position": "DL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1y717sz",
+        "position": "QB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_102xurs",
+        "position": "TE",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_130ljam",
+        "position": "TE",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_k82ggq",
+        "position": "DL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_yh522b",
+        "position": "CB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_9m4wtc",
+        "position": "WR",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_chuw5v",
+        "position": "RB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_7ovid0",
+        "position": "CB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1kevins",
+        "position": "CB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1m5xfsf",
+        "position": "OL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1gg9eje",
+        "position": "LB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_202jwk",
+        "position": "RB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1k90558",
+        "position": "CB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1me4c34",
+        "position": "RB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_oy8qxq",
+        "position": "WR",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_revnv9",
+        "position": "WR",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_pyvlwj",
+        "position": "OL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_bo4tcc",
+        "position": "TE",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_1hdpyjf",
+        "position": "DL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_qsxxlf",
+        "position": "QB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_1gn9s4r",
+        "position": "WR",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_18kpkne",
+        "position": "DL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_4vj1oe",
+        "position": "WR",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_fv3ovr",
+        "position": "TE",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1bvxg0k",
+        "position": "S",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_1cimlcp",
+        "position": "RB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1rzgw4t",
+        "position": "DL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_issv2k",
+        "position": "LB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_12n87cq",
+        "position": "RB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_16vxxkn",
+        "position": "S",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 19
+      },
+      {
+        "id": "m_1cf9n7r",
+        "position": "OL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_wl8j8d",
+        "position": "OL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_8cslfd",
+        "position": "S",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 17
+      },
+      {
+        "id": "m_1qj95kg",
+        "position": "LB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_kz76v1",
+        "position": "K",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_56oq4l",
+        "position": "DL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_ksj8vt",
+        "position": "DL",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 18
+      },
+      {
+        "id": "m_69yyh8",
+        "position": "LB",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_9atug7",
+        "position": "S",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      },
+      {
+        "id": "m_ij41xj",
+        "position": "WR",
+        "entry": 13,
+        "hit50": null,
+        "lastObserved": 20
+      }
+    ]
+  },
+  "limitations": [
+    "Mastery groups include censored late entrants and unequal play opportunities",
+    "Apex count includes registry and owner only, not unregistered unseen regional pools",
+    "Apex acquisition histories and exact eligible-roll denominators are not measured",
+    "No longer observed does not prove retirement",
+    "No tuning performed"
+  ]
+}

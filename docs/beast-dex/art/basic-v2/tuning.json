@@ -1,0 +1,262 @@
+{
+ "note": "Differences between the first authored recipe and the final recipe. Causes: (a) diagnostics: an invisible, unsupported or oversized choice replaced by the nearest visible one; (b) distinctness pass: pose, one proportion or a feature's shape variant changed when a silhouette came within 0.82 of another design (originals included); (c) visual review: redesigns listed in `reviewRedesigns` with the reason; (d) owner request: Pondskip contrast.",
+ "reviewRedesigns": {
+  "kettlump": "kettle-shelled tortoise read as a robot",
+  "washerling": "snail read as a flat ray",
+  "ingotusk": "square hog read as a figure",
+  "glarefly": "firefly read as a blob",
+  "fernflit": "fern-winged fly read as a blob",
+  "mindle": "too close to an original (Ashkit)",
+  "crestback": "too close to Lanternox",
+  "pondskip": "owner request: field contrast"
+ },
+ "changed": {
+  "kindlet": [
+   "feature ears: pointed \u2192 drooping"
+  ],
+  "charbun": [
+   "feature ears: pointed \u2192 rounded",
+   "pose: alert \u2192 braced",
+   "proportion limbLength: \u2014 \u2192 short"
+  ],
+  "coalump": [
+   "pose: braced \u2192 forward",
+   "proportion torsoWidth: wide \u2192 \u2014"
+  ],
+  "scorchub": [
+   "feature horns: short \u2192 swept",
+   "proportion limbLength: \u2014 \u2192 short"
+  ],
+  "ashpeck": [
+   "feature beak: short \u2192 hooked",
+   "pose: alert \u2192 forward",
+   "proportion wingSpan: \u2014 \u2192 wide"
+  ],
+  "fusebug": [
+   "proportion limbLength: \u2014 \u2192 short"
+  ],
+  "barnaclod": [
+   "pose: neutral \u2192 alert"
+  ],
+  "pondskip": [
+   "colors: \u2014 \u2192 #78b4ee,#e6fff8"
+  ],
+  "bubblop": [
+   "pose: neutral \u2192 forward"
+  ],
+  "acornet": [
+   "proportion headSize: \u2014 \u2192 small"
+  ],
+  "thistlehop": [
+   "proportion limbLength: \u2014 \u2192 long"
+  ],
+  "fernflit": [
+   "feature leaf_wings: spread \u2192 raised",
+   "pose: alert \u2192 forward",
+   "structure: insectoid \u2192 floating"
+  ],
+  "stumpkin": [
+   "markings: band \u2192 \u2014",
+   "proportion torsoWidth: wide \u2192 \u2014"
+  ],
+  "trunkle": [
+   "proportion limbLength: \u2014 \u2192 long"
+  ],
+  "barkbug": [
+   "pose: neutral \u2192 alert"
+  ],
+  "fawnleaf": [
+   "feature ears: pointed \u2192 drooping",
+   "proportion neckLength: \u2014 \u2192 short",
+   "proportion stanceWidth: \u2014 \u2192 narrow"
+  ],
+  "ivyowl": [
+   "proportion stanceWidth: \u2014 \u2192 narrow"
+  ],
+  "ampette": [
+   "proportion torsoLength: \u2014 \u2192 short"
+  ],
+  "wattram": [
+   "pose: alert \u2192 expressive"
+  ],
+  "capaclod": [
+   "pose: braced \u2192 expressive"
+  ],
+  "zaphog": [
+   "proportion headPlacement: \u2014 \u2192 high"
+  ],
+  "staticub": [
+   "feature ears: rounded \u2192 drooping",
+   "pose: alert \u2192 neutral"
+  ],
+  "buzzhawk": [
+   "proportion limbLength: \u2014 \u2192 long"
+  ],
+  "wattlet": [
+   "pose: alert \u2192 braced"
+  ],
+  "slatelet": [
+   "pose: alert \u2192 expressive",
+   "proportion headShape: flattened \u2192 \u2014"
+  ],
+  "mudlark": [
+   "feature beak: short \u2192 long"
+  ],
+  "clodhorn": [
+   "pose: neutral \u2192 expressive"
+  ],
+  "quarrox": [
+   "feature horns: swept \u2192 short"
+  ],
+  "diggit": [
+   "pose: alert \u2192 expressive"
+  ],
+  "skiddle": [
+   "pose: forward \u2192 alert"
+  ],
+  "walrump": [
+   "pose: neutral \u2192 expressive"
+  ],
+  "floebear": [
+   "pose: neutral \u2192 braced",
+   "proportion limbLength: \u2014 \u2192 short"
+  ],
+  "rimeboar": [
+   "pose: braced \u2192 expressive"
+  ],
+  "shiverkit": [
+   "proportion headPlacement: \u2014 \u2192 low"
+  ],
+  "cubeling": [
+   "pose: neutral \u2192 alert"
+  ],
+  "breezle": [
+   "feature insect_wings: raised \u2192 folded",
+   "proportion tailLength: \u2014 \u2192 short"
+  ],
+  "kitelet": [
+   "pose: expressive \u2192 forward",
+   "proportion limbLength: \u2014 \u2192 short"
+  ],
+  "sailmoth": [
+   "feature antennae: curled \u2192 clubbed",
+   "pose: neutral \u2192 braced"
+  ],
+  "galebuck": [
+   "proportion headPlacement: \u2014 \u2192 high"
+  ],
+  "windrook": [
+   "feature beak: short \u2192 long"
+  ],
+  "swallit": [
+   "feature beak: short \u2192 hooked",
+   "pose: alert \u2192 expressive"
+  ],
+  "gustpuff": [
+   "proportion limbLength: \u2014 \u2192 short"
+  ],
+  "murkit": [
+   "feature ears: pointed \u2192 rounded",
+   "pose: neutral \u2192 forward",
+   "proportion headPlacement: \u2014 \u2192 low",
+   "proportion limbLength: \u2014 \u2192 short"
+  ],
+  "batwhisk": [
+   "pose: alert \u2192 forward"
+  ],
+  "vexhound": [
+   "pose: forward \u2192 expressive"
+  ],
+  "gloomoth": [
+   "pose: neutral \u2192 braced"
+  ],
+  "dawnfinch": [
+   "feature beak: short \u2192 hooked"
+  ],
+  "lanternox": [
+   "proportion limbThickness: \u2014 \u2192 thin",
+   "proportion stanceWidth: \u2014 \u2192 wide"
+  ],
+  "solram": [
+   "feature horns: curled \u2192 short"
+  ],
+  "lumbear": [
+   "proportion limbLength: \u2014 \u2192 short"
+  ],
+  "glarefly": [
+   "feature insect_wings: folded \u2192 spread",
+   "feature light_orbs: \u2713 \u2192 \u2014",
+   "feature lure: \u2014 \u2192 \u2713",
+   "pose: braced \u2192 alert",
+   "structure: insectoid \u2192 floating"
+  ],
+  "dazzlet": [
+   "feature crest: spike \u2192 fan"
+  ],
+  "twinklet": [
+   "proportion torsoLength: \u2014 \u2192 short"
+  ],
+  "rivetto": [
+   "pose: neutral \u2192 alert",
+   "proportion limbLength: \u2014 \u2192 long"
+  ],
+  "anvilox": [
+   "pose: neutral \u2192 alert",
+   "proportion torsoLength: \u2014 \u2192 short"
+  ],
+  "kettlump": [
+   "feature metal_panels: \u2713 \u2192 \u2014",
+   "pose: braced \u2192 forward",
+   "proportion headSize: \u2014 \u2192 small",
+   "proportion shellShape: \u2014 \u2192 smooth",
+   "structure: construct \u2192 shelled"
+  ],
+  "ingotusk": [
+   "pose: forward \u2192 expressive",
+   "proportion headShape: \u2014 \u2192 flattened",
+   "proportion limbLength: \u2014 \u2192 short",
+   "structure: construct \u2192 heavy_quadruped"
+  ],
+  "clockcrow": [
+   "pose: neutral \u2192 expressive"
+  ],
+  "washerling": [
+   "feature shell: smooth \u2192 \u2014",
+   "proportion limbLength: \u2014 \u2192 short",
+   "proportion shellShape: \u2014 \u2192 smooth",
+   "structure: flat_bodied \u2192 shelled"
+  ],
+  "mindle": [
+   "proportion headSize: large \u2192 \u2014",
+   "structure: compact_upright \u2192 floating"
+  ],
+  "dreamhop": [
+   "markings: band \u2192 \u2014",
+   "pose: neutral \u2192 expressive"
+  ],
+  "thinkump": [
+   "pose: neutral \u2192 expressive"
+  ],
+  "riddlet": [
+   "feature ears: pointed \u2192 rounded"
+  ],
+  "gazeling": [
+   "feature horns: swept \u2192 curled"
+  ],
+  "orblet": [
+   "pose: alert \u2192 neutral"
+  ],
+  "scalekin": [
+   "feature membrane_wings: folded \u2192 raised",
+   "proportion limbLength: \u2014 \u2192 long"
+  ],
+  "crestback": [
+   "feature club_tail: \u2014 \u2192 \u2713",
+   "pose: neutral \u2192 braced",
+   "proportion limbLength: \u2014 \u2192 long"
+  ],
+  "gnashlet": [
+   "pose: forward \u2192 alert"
+  ]
+ }
+}

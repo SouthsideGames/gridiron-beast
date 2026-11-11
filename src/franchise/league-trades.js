@@ -14,6 +14,27 @@ import { modeOf } from './strategy.js';
 import { noteTraded, returnLock } from './fa-state.js';
 import { legendSide, legendCheck } from './fa-legendary.js';
 import { horizonOf, PLAN } from './roster-plan.js';
+import { GYM_BY_CLUB } from '../data/gyms.js';
+import { clubIdentity, identityTilt, IDENTITY_TILT } from '../data/identities.js';
+/**
+ * Owner ruling N8a (2026-11-08, D9): a gym prefers monsters of its element among similarly useful candidates. Legendary rules and legal
+ * rosters come first (judge() decides those unchanged); this is a tie-break, never a quota. In trades: an element match adds
+ * GYM_ELEMENT_TRADE_TIE to a target's ranking and an off-element spare is preferred as payment by the same amount. The value is a
+ * quarter of the minimum deal gain (DEAL_RULES.minGain 8 net units, about two overall points at an average slot), i.e. about half an
+ * overall point: the same "similarly useful" scale as the draft and free-agency tie-breaks (1.5 OVR-equivalent, R4).
+ */
+export const GYM_ELEMENT_TRADE_TIE = 2;
+const gymElement = (club) => GYM_BY_CLUB[club]?.element || null;
+const matches = (m, el) => !!el && (m.type === el);
+/** A trade target's ranking for club `club` (gain in net roster units plus the gym element tie-break). */
+export function gymTradeRank(club, m, gain) { return gain + (matches(m, gymElement(club)) ? GYM_ELEMENT_TRADE_TIE : 0); }
+/**
+ * Task 8 D7 (owner N8b): an AI club's identity tilts its trade-target ranking toward identity positions and scheme fits on the same
+ * "similarly useful" scale as the element tie-break: the full identity tilt (IDENTITY_TILT, 1.5 OVR-equivalent) is worth
+ * IDENTITY_TRADE_TIE net units (PROVISIONAL, equal to GYM_ELEMENT_TRADE_TIE). Ranking only: judge() and the deal rules are unchanged.
+ */
+export const IDENTITY_TRADE_TIE = GYM_ELEMENT_TRADE_TIE;
+export function identityTradeTie(f, club, m) { const id = clubIdentity(f, club); return id ? identityTilt(id, m) / (IDENTITY_TILT.position + IDENTITY_TILT.fit) * IDENTITY_TRADE_TIE : 0; }
 
 export const AI_TRADE_RULES = Object.freeze({
   upgrade: 2,          // the incoming monster must beat the club's weakest available starter at the position by this much
@@ -32,13 +53,15 @@ const slotsOf = (pos) => GROUP_SLOTS[pos]?.length || 1;
  *  got / gave and gave / got both lie in [0.85, 1.15]. Until the Task 6 fix (owner-approved 2026-11-01) only got / gave was checked,
  *  which let a deal at 0.85 one way stand at 1.176 the other. */
 export const inBand = (got, gave) => gave > 0 && got > 0 && got / gave >= AI_TRADE_RULES.band[0] && got / gave <= AI_TRADE_RULES.band[1] && gave / got >= AI_TRADE_RULES.band[0] && gave / got <= AI_TRADE_RULES.band[1];
-const starters = (roster, pos) => roster.filter((m) => m.position === pos).sort((a, b) => (isUnavailable(a) - isUnavailable(b)) || (ovr(b) - ovr(a)) || (a.id < b.id ? -1 : 1));
+// starters, floorAt and sparesOf are exported (pure, unchanged) for the R4 constructed scenario test (owner ruling N8b, D11).
+export const starters = (roster, pos) => roster.filter((m) => m.position === pos).sort((a, b) => (isUnavailable(a) - isUnavailable(b)) || (ovr(b) - ovr(a)) || (a.id < b.id ? -1 : 1));
 /** The rating the incoming monster has to beat: the club's weakest available starter at the position (0 when a starting slot is empty). */
-const floorAt = (roster, pos) => { const at = starters(roster, pos).filter((m) => !isUnavailable(m)); const n = slotsOf(pos); return at.length < n ? 0 : ovr(at[n - 1]); };
+export const floorAt = (roster, pos) => { const at = starters(roster, pos).filter((m) => !isUnavailable(m)); const n = slotsOf(pos); return at.length < n ? 0 : ovr(at[n - 1]); };
 /** A club's spares: the monsters beyond its starters (a long-injured starter counts as a spare until he is back). Only these are for sale between AI clubs. */
-const sparesOf = (roster) => Object.keys(GROUP_SLOTS).flatMap((pos) => starters(roster, pos).slice(slotsOf(pos)));
+export const sparesOf = (roster) => Object.keys(GROUP_SLOTS).flatMap((pos) => starters(roster, pos).slice(slotsOf(pos)));
 const salaryOf = (ms) => ms.reduce((s, m) => s + (m.salary || 0), 0);
-const ownedPicks = (f, club, y0) => { const out = []; for (let y = y0; y < y0 + AI_TRADE_RULES.picksAhead; y++) for (const p of picksOwnedBy(f, club, y, ALL_TEAMS)) if (!pickUsed(f, p)) out.push({ p, v: pickValue(p, { yearsAhead: y - y0 }) }); return out.sort((a, b) => a.v - b.v || (a.p.round - b.p.round) || (a.p.year - b.p.year) || (a.p.original < b.p.original ? -1 : 1)); };
+// ownedPicks and judge are exported (pure, unchanged) for the R4 constructed scenario test (D11): it computes every competing offer with them.
+export const ownedPicks = (f, club, y0) => { const out = []; for (let y = y0; y < y0 + AI_TRADE_RULES.picksAhead; y++) for (const p of picksOwnedBy(f, club, y, ALL_TEAMS)) if (!pickUsed(f, p)) out.push({ p, v: pickValue(p, { yearsAhead: y - y0 }) }); return out.sort((a, b) => a.v - b.v || (a.p.round - b.p.round) || (a.p.year - b.p.year) || (a.p.original < b.p.original ? -1 : 1)); };
 
 /** Mean overall of a club's starters (the best available at each position, as many as the position has slots). A record of what a deal did, never read by a decision. */
 const startersMean = (roster) => { let sum = 0, n = 0; for (const pos of Object.keys(GROUP_SLOTS)) for (const m of starters(roster, pos).filter((x) => !isUnavailable(x)).slice(0, slotsOf(pos))) { sum += ovr(m); n++; } return n ? Math.round(sum / n * 10) / 10 : 0; };
@@ -48,7 +71,7 @@ const startersMean = (roster) => { let sum = 0, n = 0; for (const pos of Object.
  * A must come out ahead by DEAL_RULES.minGain on its own measure (roster worth plus picks), B by sellerFloor; both rosters
  * stay legal, both clubs stay under the cap. Returns { na, nb } or null.
  */
-function judge(f, { A, B, rosterA, rosterB, m, ys, picks, year, roomA, roomB, minGain = DEAL_RULES.minGain }) {
+export function judge(f, { A, B, rosterA, rosterB, m, ys, picks, year, roomA, roomB, minGain = DEAL_RULES.minGain }) {
   if (returnLock(f, m, A) || ys.some((y) => returnLock(f, y, B))) return null; // Task 7 resolution 6: no return to the club that traded him this league year
   const afterA = rosterAfter(rosterA, { give: ys, get: [m] }), afterB = rosterAfter(rosterB, { give: [m], get: ys });
   if (legendSide(m) && !legendCheck(afterA.filter((x) => x !== m), m, { final: true }).ok) return null; // the legendary limit (Task 7)
@@ -78,7 +101,8 @@ function attempt(f, r, A, { year, cap, done, window }) {
     if (!tradable(f, m) || isProtected(m) || isUnavailable(m) || ovr(m) < floorAt(rosterA, m.position) + bar.upgrade) continue;
     targets.push({ B, m, rosterB, gain: rosterNet(rosterA, { get: [m] }, year) });
   } }
-  targets.sort((a, b) => b.gain - a.gain || (a.m.id < b.m.id ? -1 : 1));
+  const elA = gymElement(A); for (const t of targets) t.rank = gymTradeRank(A, t.m, t.gain) + identityTradeTie(f, A, t.m); // N8a: a gym's element tie-break; D7: the identity's
+  targets.sort((a, b) => b.rank - a.rank || (a.m.id < b.m.id ? -1 : 1));
   const mySpares = sparesOf(rosterA).filter((x) => tradable(f, x) && !isProtected(x) && !isUnavailable(x));
   const myPicks = ownedPicks(f, A, y0);
   for (const { B, m, rosterB } of targets.slice(0, AI_TRADE_RULES.targets)) {
@@ -92,7 +116,7 @@ function attempt(f, r, A, { year, cap, done, window }) {
     let best = null;
     for (const o of options) {
       const j = judge(f, { A, B, rosterA, rosterB, m, ys: o.ys, picks: o.picks, year, roomA, roomB, minGain: bar.minGain }); if (!j) continue;
-      const score = j.na + j.nb; if (!best || score > best.score + 1e-9) best = { ...o, ...j, score };
+      const score = j.na + j.nb - (elA ? o.ys.filter((y) => matches(y, elA)).length * GYM_ELEMENT_TRADE_TIE : 0); if (!best || score > best.score + 1e-9) best = { ...o, ...j, score }; // N8a: a gym pays with off-element spares first
     }
     if (best) return execute(f, { A, B, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb, fl: best.fl, sm: best.sm, got: vm, paid: best.ys.reduce((s, y) => s + marketValue(y, { year }), 0) + best.picks.reduce((s, x) => s + x.v, 0) });
   }
@@ -120,29 +144,43 @@ export function sellableStarters(f, roster) {
 }
 /** F4: the monster who would take the sold starter's slot (the next available at the position) is within STARTER_SALE.replacementWithin of him. */
 export function hasReplacement(roster, m) { const next = starters(roster, m.position).filter((x) => x !== m && !isUnavailable(x))[slotsOf(m.position) - 1]; return !!next && ovr(next) >= ovr(m) - STARTER_SALE.replacementWithin; }
+/**
+ * D11 measurement (owner ruling N8b, 2026-11-08): an opt-in tally of the R4 sale search for the franchise-health reports
+ * (tools/t8-league-health.mjs). Off (null) by default. Counting changes no decision, draws nothing from the generator and writes
+ * nothing to the save. Fields, summed over every sale search (a window in which no sale has happened yet):
+ *   searches, rebuildClubs (club-searches), sellable (sellable starters seen), withReplacement (F4 met), buyers (a non-rebuilding club
+ *   with a legitimate need), offers (fair-price payments in young players or picks), passed (offers judge() accepts), deals (sales made).
+ * The search stops at the first sale, so a window with a sale is counted up to that sale.
+ */
+let saleTally = null;
+export function measureSales(tally = null) { saleTally = tally; return tally; }
+const tally = (k, n = 1) => { if (saleTally) saleTally[k] = (saleTally[k] || 0) + n; };
 function starterSale(f, r, { year, cap, done, window }) {
   const bar = window === 'season' ? AI_TRADE_RULES.season : { upgrade: AI_TRADE_RULES.upgrade, minGain: DEAL_RULES.minGain };
-  const y0 = currentClassYear(f);
+  const y0 = currentClassYear(f); tally('searches');
   for (const S of order(f).filter((c) => !done.has(c) && modeOf(f, c) === 'rebuild')) {
-    const rosterS = clubRoster(f, S); const roomS = clubCapRoom(f, S, cap);
+    const rosterS = clubRoster(f, S); const roomS = clubCapRoom(f, S, cap); tally('rebuildClubs');
     for (const m of sellableStarters(f, rosterS)) {
+      tally('sellable');
       if (!hasReplacement(rosterS, m)) continue; // F4 (owner-approved 2026-11-03): only with a replacement within 4 behind him
+      tally('withReplacement');
       const vm = marketValue(m, { year }); let best = null;
       for (const B of order(f).filter((c) => c !== S && !done.has(c) && modeOf(f, c) !== 'rebuild')) {
         const rosterB = clubRoster(f, B); if (ovr(m) < floorAt(rosterB, m.position) + bar.upgrade) continue; // a legitimate need
+        tally('buyers');
         const young = sparesOf(rosterB).filter((y) => tradable(f, y) && !isProtected(y) && !isUnavailable(y) && (y.age || 99) <= STARTER_SALE.youngAge);
         const picks = ownedPicks(f, B, y0); const options = [];
         for (const y of young) if (inBand(marketValue(y, { year }), vm)) options.push({ ys: [y], picks: [] });
         const single = picks.find((x) => inBand(x.v, vm)); if (single) options.push({ ys: [], picks: [single] });
         if (!single) for (let i = 0; i < picks.length; i++) for (let j = i + 1; j < picks.length; j++) if (inBand(picks[i].v + picks[j].v, vm)) { options.push({ ys: [], picks: [picks[i], picks[j]] }); i = picks.length; break; }
         for (const y of young) { const vy = marketValue(y, { year }); if (vy >= vm * AI_TRADE_RULES.band[0]) continue; for (const x of picks) if (inBand(vy + x.v, vm)) { options.push({ ys: [y], picks: [x] }); break; } }
-        const roomB = clubCapRoom(f, B, cap);
+        const roomB = clubCapRoom(f, B, cap); tally('offers', options.length);
         for (const o of options) {
           const j = judge(f, { A: B, B: S, rosterA: rosterB, rosterB: rosterS, m, ys: o.ys, picks: o.picks, year, roomA: roomB, roomB: roomS, minGain: bar.minGain }); if (!j) continue;
-          const score = j.na + j.nb; if (!best || score > best.score + 1e-9) best = { B, ...o, ...j, score };
+          tally('passed'); const score = j.na + j.nb; if (!best || score > best.score + 1e-9) best = { B, ...o, ...j, score };
         }
       }
-      if (best) { const d = execute(f, { A: best.B, B: S, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb, fl: best.fl, sm: best.sm, got: vm, paid: best.ys.reduce((s2, y) => s2 + marketValue(y, { year }), 0) + best.picks.reduce((s2, x) => s2 + x.v, 0) }); return { ...d, sale: true, seller: S, age: m.age, horizon: horizonOf(m), buyerMode: modeOf(f, best.B), paidAges: best.ys.map((y) => y.age) }; }
+      if (best) { tally('deals'); const d = execute(f, { A: best.B, B: S, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb, fl: best.fl, sm: best.sm, got: vm, paid: best.ys.reduce((s2, y) => s2 + marketValue(y, { year }), 0) + best.picks.reduce((s2, x) => s2 + x.v, 0) }); return { ...d, sale: true, seller: S, age: m.age, horizon: horizonOf(m), buyerMode: modeOf(f, best.B), paidAges: best.ys.map((y) => y.age), inOvr: ovr(m), upgradeBar: bar.upgrade }; } // inOvr/upgradeBar: the need rule's inputs, recorded for audit
     }
   }
   return null;

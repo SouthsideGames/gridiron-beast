@@ -9,7 +9,7 @@ import * as A from '../src/franchise/assist.js';
 import * as Adv from '../src/franchise/assist-advice.js';
 
 const fresh = (seed = 7) => { const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed }); F.hireDefaultStaff(f); while (F.creationDraftPending(f) && F.onTheClock(f) === f.club) F.passDraftPick(f); return f; };
-const fixture = (name) => Save.importJson(fs.readFileSync(new URL(`./fixtures/save-v31-${name}.json`, import.meta.url), 'utf8'));
+const fixtureText = (name) => fs.readFileSync(new URL(`./fixtures/save-v31-${name}.json`, import.meta.url), 'utf8');
 // Every screen the UI registers (read from the source, so a renamed screen fails this test instead of losing its help).
 const SCREENS = new Set(fs.readdirSync(new URL('../src/ui/screens/', import.meta.url)).flatMap((file) => [...fs.readFileSync(new URL(`../src/ui/screens/${file}`, import.meta.url), 'utf8').matchAll(/registerScreen\('([a-z0-9-]+)'/g)].map((m) => m[1])));
 const COMPLEX = ['goals', 'welcome', 'hire', 'hq', 'scout', 'recruit', 'clash-battle', 'training', 'scoutopp', 'gameplan', 'lineup', 'pregame', 'match', 'roster', 'monster', 'offseason', 'contracts', 'draft', 'draftclass', 'playbook', 'league', 'staff'];
@@ -32,11 +32,11 @@ test('preferences are saved with the franchise and survive export/import', () =>
   assert.deepEqual(A.assistSettings(g), { mode: 'guided', hints: false, consequences: true }); assert.equal(g.tutorial.seen.week, true);
 });
 
-test('old saves (before Coach Assist) load with safe defaults; their old switches and dismissed tips carry over', () => {
-  for (const name of ['tuesday', 'sunday', 'season2']) {
-    const f = fixture(name); assert.ok(!f.settings.assist);
-    const a = A.assistSettings(f); assert.ok(A.ASSIST_MODES.includes(a.mode)); assert.equal(typeof a.hints, 'boolean'); assert.equal(a.consequences, true);
-  }
+test('a save without Coach Assist settings loads with safe defaults; old switches and dismissed tips carry over; pre-Task-8 saves are refused', () => {
+  // Task 8 fresh-save break (spec §15): the v31 saves (before Coach Assist) are refused with the Start New Franchise message, not loaded
+  for (const name of ['tuesday', 'sunday', 'season2']) assert.throws(() => Save.importJson(fixtureText(name)), (e) => e.code === 'incompatible' && e.message === Save.INCOMPATIBLE_MESSAGE);
+  { const raw = JSON.parse(Save.exportJson(fresh(8))); delete raw.franchise.settings.assist; const f = Save.importJson(JSON.stringify(raw)); assert.ok(!f.settings.assist);
+    const a = A.assistSettings(f); assert.ok(A.ASSIST_MODES.includes(a.mode)); assert.equal(typeof a.hints, 'boolean'); assert.equal(a.consequences, true); }
   const raw = JSON.parse(Save.exportJson(fresh())); delete raw.franchise.settings.assist; raw.franchise.settings.tutorial = false; raw.franchise.settings.hints = false; raw.franchise.tutorial = { seen: { hq: true, playbook: true, offseason: true } };
   const g = Save.importJson(JSON.stringify(raw));
   assert.deepEqual(A.assistSettings(g), { mode: 'expert', hints: false, consequences: true }, 'tips off → Expert; coaching hints off → hints off');

@@ -7,14 +7,11 @@ import { ORDINARY_SLOW_BAND, ORDINARY_RUNAWAY_BAND, BAND } from '../src/franchis
 import { monsterOverall } from '../src/data/monsters.js';
 import { createRng } from '../src/core/rng.js';
 
-test('D9: classes rise about +0.5 a season, capped at +10, with the same draws and mix', () => {
-  assert.equal(classQualityOffset(1), 0); assert.equal(classQualityOffset(2), 1); assert.equal(classQualityOffset(11), 5); assert.equal(classQualityOffset(21), 10); assert.equal(classQualityOffset(40), CLASS_GROWTH_CAP);
+test('D9 class growth is retired (owner N8b, D2): every season class is drawn alike, with the same draws and mix', () => {
+  for (const y of [1, 2, 11, 21, 40]) assert.equal(classQualityOffset(y), 0); assert.equal(CLASS_GROWTH_CAP, 0);
   const a = generateDraftClass(createRng(77), { year: 1 }), b = generateDraftClass(createRng(77), { year: 11 });
   assert.equal(a.length, b.length); assert.deepEqual(a.map((m) => m.position).sort(), b.map((m) => m.position).sort());
-  const mean = (c, k) => c.reduce((s, m) => s + k(m), 0) / c.length;
-  const dOvr = mean(b, monsterOverall) - mean(a, monsterOverall), dPot = mean(b, (m) => m.potential) - mean(a, (m) => m.potential);
-  assert.ok(dOvr > 3 && dOvr < 6, `class overall +${dOvr.toFixed(2)} at offset 5`); assert.ok(Math.abs(dPot - 5) < 0.6, `potential +${dPot.toFixed(2)}`);
-  assert.deepEqual(generateDraftClass(createRng(77), { year: 11 }).map((m) => m.id), b.map((m) => m.id), 'deterministic');
+  assert.deepEqual(a.map((m) => m.potential), b.map((m) => m.potential), 'the same seed draws the same class in any season');
 });
 
 test('D10a: gyms grow +1.5 a season through season 10, then +0.5', () => {

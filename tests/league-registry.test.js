@@ -1,5 +1,6 @@
 // The league registry (GDD §42.6, Phase 3): ids unique in the universe, one monster on one club, protected monsters bound to
-// their clubs with the permanent deal, the capture migration from today's generated rosters, and schema 8 round trips.
+// their clubs with the permanent deal, the capture migration from today's generated rosters, and schema 10 round trips (Task 8
+// fresh-save break: earlier schemas are refused, spec §15).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
@@ -16,9 +17,9 @@ import { ROSTER_MAX, monsterOverall } from '../src/data/monsters.js';
 
 const clubsOf = (f) => ALL_TEAMS.filter((t) => t !== f.club);
 
-test('a new franchise is a persistent universe: 15 clubs of 38, every id issued once, protected monsters listed on permanent deals, schema 9', () => {
+test('a new franchise is a persistent universe: 15 clubs of 38, every id issued once, protected monsters listed on permanent deals, schema 10', () => {
   const f = newFranchise(11, { difficulty: 'pro' });
-  assert.equal(f.schemaVersion, 9); assert.ok(F.hasLeague(f)); assert.ok(f.freeAgency?.v, 'schema 9: the Task 7 block');
+  assert.equal(f.schemaVersion, 10); assert.ok(F.hasLeague(f)); assert.ok(f.freeAgency?.v, 'the Task 7 block');
   assert.deepEqual(R.verifyLeague(f), []);
   const clubs = clubsOf(f); assert.equal(R.leagueClubs(f).length, 15);
   for (const c of clubs) assert.equal(R.clubRoster(f, c).length, 38, `${c} carries the full roster`);
@@ -82,9 +83,9 @@ test('the cap for AI clubs: protected salaries are exempt, the staff allowance i
   const prot = roster.find(R.isProtected); prot.salary = 10_000_000; assert.equal(R.clubPayroll(f, club), counted, 'a protected salary never counts');
 });
 
-test('migration: a v40-style save mid-season gets a registry built from the very rosters it was facing; nothing else changes; the season plays on', () => {
+test('migration: a v40-style universe (no registry) mid-season gets a registry built from the very rosters it was facing; nothing else changes; the season plays on', () => {
   const { f } = runFranchise(21, { seasons: 1, difficulty: 'pro', stopWeek: 5, legacy: true });
-  assert.ok(!F.hasLeague(f)); assert.equal(f.schemaVersion, 6); assert.ok(f.draftResults, 'the creation draft went to draftResults as in v40');
+  assert.ok(!F.hasLeague(f)); assert.equal(f.schemaVersion, 10, 'Task 8: every franchise is created at schema 10, the v40-style universe too'); assert.ok(f.draftResults, 'the creation draft went to draftResults as in v40');
   const year = f.season.year; const clubs = clubsOf(f);
   const before = Object.fromEntries(clubs.map((c) => [c, F.aiTeam(f, c, year)]));
   const opp = F.opponentName(f); const oppBefore = before[opp];
@@ -92,7 +93,7 @@ test('migration: a v40-style save mid-season gets a registry built from the very
   const victim = before[clubs[3]].roster[5]; f.roster[0].id = victim.id; f.season.leagueStats[clubs[3]] ||= {}; f.season.leagueStats[clubs[3]][victim.id] = { id: victim.id, name: victim.name, team: clubs[3], games: 2, tackles: 7 };
   const untouched = JSON.stringify({ roster: f.roster, pool: f.pool, history: f.history, season: { ...f.season, leagueStats: null }, draftResults: f.draftResults }); // the tables take re-keyed rows
   const r = F.ensureLeague(f);
-  assert.ok(r.ok && r.created, r.problems.join('; ')); assert.equal(f.schemaVersion, 9);
+  assert.ok(r.ok && r.created, r.problems.join('; ')); assert.equal(f.schemaVersion, 10, 'the capture keeps schema 10');
   assert.deepEqual(f.league.persistentFrom, { year, week: f.season.week });
   assert.equal(JSON.stringify({ roster: f.roster, pool: f.pool, history: f.history, season: { ...f.season, leagueStats: null }, draftResults: f.draftResults }), untouched, 'the owner\'s side is untouched');
   for (const c of clubs) {
@@ -132,16 +133,20 @@ test('migration never touches an archive, and a failed capture leaves the save e
   f.rivals = rivals; assert.equal(JSON.stringify(f), snap, 'nothing kept from the failed attempt');
 });
 
-test('schema 9 round trips through export and import; an 8 is upgraded; a damaged registry, an 8 without one or a later schema is refused', () => {
+test('schema 10 round trips through export and import; a damaged registry, an earlier schema (6, 8, 9) or a later one (11) is refused', () => {
   const f = newFranchise(15);
-  const back = Save.importJson(Save.exportJson(f)); assert.equal(back.schemaVersion, 9); assert.deepEqual(R.verifyLeague(back), []);
+  const back = Save.importJson(Save.exportJson(f)); assert.equal(back.schemaVersion, 10); assert.deepEqual(R.verifyLeague(back), []);
   assert.equal(JSON.stringify(back.league), JSON.stringify(f.league));
   const twice = JSON.parse(JSON.stringify(f)); const [a, b] = clubsOf(f); twice.league.clubs[b].roster.push(twice.league.clubs[a].roster[0]);
   assert.throws(() => Save.migrate(twice), (e) => e.code === 'league');
-  const bare = JSON.parse(JSON.stringify(f)); delete bare.league; assert.equal(Save.migrate(bare), null, 'an 8 without its registry is not a save this game wrote');
-  const six = JSON.parse(JSON.stringify(f)); delete six.league; six.schemaVersion = 6; assert.ok(Save.migrate(six), 'a 6 is still read (and gets its registry when opened by the game)');
-  const eight = JSON.parse(JSON.stringify(f)); delete eight.freeAgency; eight.schemaVersion = 8; const up = Save.migrate(eight); assert.equal(up?.schemaVersion, 9, 'an 8 is read and gets the Task 7 block'); assert.ok(up.freeAgency.v);
-  const later = JSON.parse(JSON.stringify(f)); later.schemaVersion = 10; assert.equal(Save.migrate(later), null, 'a save from a later build is refused');
+  // Task 8 fresh-save break (spec §15): a 6, an 8 or a 9 is identified as an earlier version and refused, never upgraded, never changed
+  for (const v of [6, 8, 9]) {
+    const old = JSON.parse(JSON.stringify(f)); old.schemaVersion = v; if (v === 6) delete old.league; if (v !== 9) delete old.freeAgency; const before = JSON.stringify(old);
+    assert.throws(() => Save.migrate(old), (e) => e.code === 'incompatible' && e.message === Save.INCOMPATIBLE_MESSAGE, `a ${v} is refused`);
+    assert.equal(JSON.stringify(old), before, `the refused ${v} is not changed`);
+  }
+  const noLeague = JSON.parse(JSON.stringify(f)); delete noLeague.league; assert.equal(Save.migrate(noLeague), null, 'a 10 without its registry is not a save this game wrote');
+  const later = JSON.parse(JSON.stringify(f)); later.schemaVersion = 11; assert.equal(Save.migrate(later), null, 'a save from a later build is refused');
 });
 
 test('the pools: an AI castoff nobody would want leaves the league at once; a decorated leaver keeps a legend stub; the pool cap holds', () => {

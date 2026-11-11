@@ -27,7 +27,11 @@ export function abilityFingerprint(sp) {
 }
 export function playFingerprint(id) { return hash(JSON.stringify(PLAYS[id])); }
 const FP = new Map(); // the data is frozen for the life of the page: hash each item once
-const fpOf = (ns, id) => { const k = ns + ':' + id; if (!FP.has(k)) FP.set(k, ns === 'ability' ? abilityFingerprint(REVIEWABLE_ABILITIES.find((s) => s.id === id)) : playFingerprint(id)); return FP.get(k); };
+/** Task 8 football reviewer (namespace 'fbability', keyed by Dex ability id): the approved contract text and values, and whether a contract is registered. */
+const fbFingerprints = new Map(); export function setFootballFingerprint(id, data) { fbFingerprints.set(id, hash(JSON.stringify(data))); }
+/** Task 8 M4 S15: the Clash reviewer's fingerprints (namespace 'clashability'), keyed apart from the football ones. */
+export function setClashFingerprint(id, data) { fbFingerprints.set(`clashability:${id}`, hash(JSON.stringify(data))); }
+const fpOf = (ns, id) => { if (ns === 'fbability' || ns === 'clashability') return fbFingerprints.get(`${ns}:${id}`) || fbFingerprints.get(id) || null; const k = ns + ':' + id; if (!FP.has(k)) FP.set(k, ns === 'ability' ? abilityFingerprint(REVIEWABLE_ABILITIES.find((s) => s.id === id)) : playFingerprint(id)); return FP.get(k); };
 
 /**
  * 'new' | 'changed' | 'updated' (all three need the owner) | 'approved' | 'needs_work' (waiting on the developer).

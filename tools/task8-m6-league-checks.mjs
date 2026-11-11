@@ -1,0 +1,21 @@
+import fs from 'node:fs'; import path from 'node:path';
+const ROOT = path.resolve(process.argv[2]); const B = await import(path.join(ROOT, 'src/data/beast-dex.js')); const { GYM_BY_CLUB } = await import(path.join(ROOT, 'src/data/gyms.js'));
+const out = { files: [] }; const OFF = new Set(['QB', 'RB', 'WR', 'TE', 'OL', 'K']);
+const legend = { clubSeasons: 0, overOffense: 0, overDefense: 0, maxOffense: 0, maxDefense: 0, kickerLegendsCounted: 0 }; const gym = {}; const base = {}; const apexByYear = {}; const apexClub = []; let apexRows = [];
+for (const file of process.argv.slice(3)) { const o = JSON.parse(fs.readFileSync(file, 'utf8')); out.files.push(path.basename(file));
+  const years = [...new Set(o.meta.seasons)].sort((a, b) => a - b);
+  // seeds share one file: split individuals into franchises by the set of clubs is not possible, so club-season counts are per file-year-club across both seeds; limits are checked on (file, year, club, seedGroup) using each individual's first year id prefix is unavailable -> use per-individual seed tag below
+  const bySeed = {}; for (const i of o.individuals) { if (!i.snap) continue; const g = i.seedTag ?? 'x'; (bySeed[g] ||= []).push(i); }
+  for (const inds of Object.values(bySeed)) for (const y of years) { const clubs = {}; for (const i of inds) { const s = i.snap[y]; if (!s?.club) continue; (clubs[s.club] ||= []).push(i); }
+    for (const [club, ms] of Object.entries(clubs)) { const fam = (i) => B.familyById(i.species); const lg = ms.filter((i) => i.legendary || fam(i)?.rarity === 'legendary'); const off = lg.filter((i) => OFF.has(i.position)).length, def = lg.length - off;
+      legend.clubSeasons++; legend.maxOffense = Math.max(legend.maxOffense, off); legend.maxDefense = Math.max(legend.maxDefense, def); if (off > 1) legend.overOffense++; if (def > 1) legend.overDefense++; legend.kickerLegendsCounted += lg.filter((i) => i.position === 'K').length;
+      const types = ms.map((i) => fam(i)?.type).filter(Boolean); const g = GYM_BY_CLUB[club];
+      for (const t of types) base[t] = (base[t] || 0) + 1; base._n = (base._n || 0) + types.length;
+      if (g) { const r = (gym[club] ||= { element: g.element, tier: g.tier, monsters: 0, matching: 0, seasons: 0 }); r.seasons++; r.monsters += types.length; r.matching += types.filter((t) => t === g.element).length; }
+      const ap = ms.filter((i) => i.apex).length; (apexByYear[y] ||= []).push(ap); if (ap >= 3) apexClub.push({ year: y, club, apex: ap }); } }
+  apexRows = apexRows.concat(o.individuals.filter((i) => i.apex && i.snap).map((i) => { const ys = Object.keys(i.snap).map(Number).sort((a, b) => a - b); const last = i.snap[ys[ys.length - 1]]; return { first: ys[0], seasonsSeen: ys.length, lastLevel: last.lv, starts: Object.values(i.seasons).reduce((n, s) => n + s.st, 0), clubs: new Set(ys.map((y) => i.snap[y].club).filter(Boolean)).size, unsignedSeasons: ys.filter((y) => !i.snap[y].club).length }; })); }
+out.legendaryLimit = { rule: 'at most one offensive and one defensive legendary per club; a legendary kicker counts as offensive (B19)', ...legend };
+out.gyms = Object.fromEntries(Object.entries(gym).map(([c, r]) => [c, { element: r.element, tier: r.tier, clubSeasons: r.seasons, matchingShare: +(r.matching / r.monsters).toFixed(3), leagueShareOfThatElement: +((base[r.element] || 0) / base._n).toFixed(3), ratio: +((r.matching / r.monsters) / ((base[r.element] || 0) / base._n)).toFixed(2) }]));
+const mean = (a) => a.reduce((s, v) => s + v, 0) / a.length;
+out.apex = { rosteredPerClubByYear: Object.fromEntries(Object.entries(apexByYear).filter(([y]) => [1, 5, 10, 15, 20].includes(Number(y))).map(([y, a]) => [y, { clubs: a.length, total: a.reduce((s, v) => s + v, 0), meanPerClub: +mean(a).toFixed(2), maxOnOneClub: Math.max(...a) }])), clubSeasonsWith3Plus: apexClub.length, individuals: apexRows.length, everStarted: apexRows.filter((r) => r.starts > 0).length, level50: apexRows.filter((r) => r.lastLevel >= 50).length, meanClubs: +mean(apexRows.map((r) => r.clubs)).toFixed(2), withUnsignedSeasons: apexRows.filter((r) => r.unsignedSeasons > 0).length };
+fs.writeFileSync(process.env.OUT, JSON.stringify(out, null, 1) + '\n'); console.log(JSON.stringify(out, null, 1));

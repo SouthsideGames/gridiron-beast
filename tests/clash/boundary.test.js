@@ -11,8 +11,12 @@ const imports = (f) => [...fs.readFileSync(path.join(ROOT, f), 'utf8').matchAll(
 
 // Franchise integration (owner authorization 2026-10-21, GDD §26): src/franchise/clash-link.js is the ONE franchise file that imports the
 // engine, and franchise.js imports only that adapter. The football sim, the core and the save/cloud code still never touch src/clash.
-test('boundary: src/clash imports only core/rng, data and itself; src/sim and src/core never import src/clash; in src/franchise only clash-link.js does', () => {
-  for (const f of files('src/clash')) for (const i of imports(f)) assert.ok(i.startsWith('src/clash/') || i === 'src/core/rng.js' || i.startsWith('src/data/'), `${f} imports ${i}`);
+// Task 8 M4 S2: the t8 engine shares the ONE status gate with football (spec §10). src/sim/t8/status.js is pure and imports nothing,
+// so it is whitelisted as the single src/sim file src/clash may import; the purity scan below covers it too.
+const SHARED_GATE = 'src/sim/t8/status.js';
+test('boundary: src/clash imports only core/rng, data, the shared status gate and itself; src/sim and src/core never import src/clash; in src/franchise only clash-link.js does', () => {
+  for (const f of files('src/clash')) for (const i of imports(f)) assert.ok(i.startsWith('src/clash/') || i === 'src/core/rng.js' || i.startsWith('src/data/') || i === SHARED_GATE, `${f} imports ${i}`);
+  assert.deepEqual(imports(SHARED_GATE), [], 'the shared status gate imports nothing');
   for (const dir of ['src/sim', 'src/core']) for (const f of files(dir)) for (const i of imports(f)) assert.ok(!i.startsWith('src/clash'), `${f} imports ${i}`);
   for (const f of files('src/franchise')) for (const i of imports(f)) if (f !== 'src/franchise/clash-link.js') assert.ok(!i.startsWith('src/clash'), `${f} imports ${i} (only clash-link.js may)`);
   assert.ok(imports('src/franchise/clash-link.js').includes('src/clash/index.js'), 'the adapter imports the public surface only');
@@ -22,7 +26,7 @@ test('boundary: src/clash imports only core/rng, data and itself; src/sim and sr
 });
 
 test('engine purity: no Math.random, Date, performance, DOM, storage, fetch or timers inside src/clash', () => {
-  for (const f of files('src/clash')) { const src = fs.readFileSync(path.join(ROOT, f), 'utf8');
+  for (const f of [...files('src/clash'), SHARED_GATE]) { const src = fs.readFileSync(path.join(ROOT, f), 'utf8');
     for (const bad of [/Math\.random/, /Date\.now|new Date/, /performance\.now/, /\bdocument\b/, /\bwindow\b/, /localStorage|sessionStorage|indexedDB/, /\bfetch\(/, /setTimeout|setInterval|requestAnimationFrame/, /Math\.(hypot|exp|pow|sin|cos|tan|log)\b/]) assert.ok(!bad.test(src), `${f} matches ${bad}`); }
 });
 

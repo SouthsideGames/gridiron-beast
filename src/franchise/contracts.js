@@ -33,8 +33,11 @@ export function withBankedPoints(m) {
   for (let i = 0; i < pts; i++) { const k = w.find(([a]) => attrs[a] < (m.potential || 99))?.[0]; if (!k) break; attrs[k] += 1; }
   return { ...m, attributes: attrs, points: 0 };
 }
-export function renewalAsk(m, { award = false, year = null } = {}) {
-  const base = salaryFor(withBankedPoints(m));
+export function renewalAsk(m, { award = false, year = null, apexKnown = true } = {}) {
+  const ordinary = salaryFor(withBankedPoints(m));
+  // B9 + M6: a known Apex asks half the remaining gap to the OVR-99 salary.
+  // Existing signed contracts remain fixed; unidentified offers use the ordinary ask.
+  const base = m.dev?.apex && apexKnown ? ordinary + (18000 + 280 * 99 - ordinary) / 2 : ordinary;
   const L = monsterLine(m, 'season', 'reg');
   const big = (L.passYds || 0) >= 1500 || ((L.rushYds || 0) + (L.recYds || 0)) >= 900 || ((L.tackles || 0) + (L.assists || 0)) >= 50 || (L.sacks || 0) >= 8 || (L.int || 0) >= 4 || (L.fgm || 0) >= 12;
   let premium = 1;
@@ -43,11 +46,11 @@ export function renewalAsk(m, { award = false, year = null } = {}) {
   return { ask: Math.round(base * premium / 100) * 100, base, premium, big, award, current: m.salary || base };
 }
 
-/** Will the monster take a counter at 85%? Nature and the club's season decide; deterministic from the rng given. */
+/** Will the monster take a counter at 85%? The club's season decides (the Nature term is retired, N7c B14); deterministic from the rng given. */
 export function acceptsCounter(m, { winningRecord = false, rng }) {
   const calm = ['calm', 'patient', 'disciplined', 'sturdy', 'balanced', 'secure', 'protective', 'resistant', 'focused', 'cerebral'];
   const fiery = ['powerful', 'ferocious', 'aggressive', 'explosive', 'gifted'];
-  let p = 0.5 + (winningRecord ? 0.2 : -0.1) + (calm.includes(m.nature) ? 0.15 : 0) - (fiery.includes(m.nature) ? 0.15 : 0);
+  void calm; void fiery; const p = 0.5 + (winningRecord ? 0.2 : -0.1);
   return rng.chance(Math.max(0.1, Math.min(0.9, p)));
 }
 

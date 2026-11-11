@@ -7,6 +7,11 @@ import * as Link from '../src/franchise/clash-link.js';
 import { logHash } from '../src/clash/engine.js';
 import { monsterOverall } from '../src/data/monsters.js';
 import { exportJson, importJson } from '../src/franchise/save.js';
+import { settleHeadless } from '../src/franchise/clash-link.js';
+// Task 8 M4 (D1): a Watch battle stops at the player's rotation prompt. These tests stand in for an owner who answers the first prompt
+// with "Auto for the rest of this battle" (an approved option), so the battle runs to its end; the assertions are unchanged.
+const AUTO = { headless: true };
+const settledBattle = (f) => settleHeadless(f.week.encounter, () => F.encounterBattle(f)); // the game's own Auto settlement (D1)
 
 const ready = (seed) => { const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed }); F.hireDefaultStaff(f); while (F.creationDraftPending(f) && F.onTheClock(f) === f.club) F.passDraftPick(f); f.settings.tutorial = false; f.welcomed = true; F.chooseGoal(f, 'wins'); F.scoutRegion(f, 'Coral Coast'); return f; };
 
@@ -16,7 +21,11 @@ test('the wild side is the scouted prospect, untouched, plus two companions that
   const S = F.clubBattleStrength(f); const R = F.COMPANION_RULE;
   for (const c of pv.wild.slice(1)) { assert.equal(c.companion, true); assert.match(c.id, /^wild_/); assert.ok(monsterOverall(c) <= Math.round(S) + 1, 'never above the club'); }
   const group = pv.wild.reduce((a, m) => a + monsterOverall(m), 0) / 3; const expected = Math.min(S - R.gap, (monsterOverall(p.monster) + 2 * Math.round(S)) / 3);
-  assert.ok(Math.abs(group - expected) <= R.spread + 1.5, `wild group ${group.toFixed(1)} vs ${expected.toFixed(1)}`);
+  // Owner 2026-11-07: matching is best-effort within legal development limits (Basic companions keep the 30% share); easier is
+  // acceptable, harder is not. Each companion either reaches the low edge of its target or stops at its development limit.
+  assert.ok(group <= expected + R.spread + 1.5, `wild group ${group.toFixed(1)} never above ${expected.toFixed(1)}`);
+  const base = (3 * (S - R.gap) - monsterOverall(p.monster)) / 2; const low = Math.max(R.floor, Math.min(R.ceiling, Math.round(S), Math.round(base - R.spread)));
+  for (const c of pv.wild.slice(1)) assert.ok(monsterOverall(c) >= low - 1 || c.dev.level >= 50 || c.yearsPro >= F.COMPANION_MAX_SEASONS, `${c.name} ${monsterOverall(c)} reaches ${low} or its limit`);
   assert.equal(JSON.stringify(p.monster), before, 'the scouted prospect keeps every rating');
   assert.ok(!f.week.prospects.some((x) => x.monster.companion), 'companions are not prospects');
 });
@@ -44,13 +53,17 @@ test('companions grow with the club and make up for the prospect: a stronger ros
   const cf = F.encounterPreview(f, 0).wild, cg = F.encounterPreview(g, 0).wild;
   assert.ok(F.clubBattleStrength(g) > F.clubBattleStrength(f) + 5);
   const avg = (xs) => xs.reduce((s, m) => s + monsterOverall(m), 0) / xs.length;
-  assert.ok(avg(cg.slice(1)) > avg(cf.slice(1)) + 5); assert.equal(monsterOverall(cg[0]), monsterOverall(cf[0]));
+  // Task 8: a companion grows by the approved prior-career history until it reaches its target; a Dex family cannot pass its own
+  // ceilings, so against a much stronger club a companion may stop at level 50 short of the target (reported to the owner, M1).
+  assert.ok(avg(cg.slice(1)) > avg(cf.slice(1)), 'a stronger roster meets stronger companions');
+  for (const c of cg.slice(1)) assert.ok(c.dev.level === 50 || c.dev.level > cf.find((x) => x.species === c.species)?.dev.level || monsterOverall(c) >= Math.round(F.clubBattleStrength(g)) - 1 - F.COMPANION_RULE.spread - F.COMPANION_RULE.gap, `${c.name} grew toward the stronger club or reached his level cap`);
+  assert.equal(monsterOverall(cg[0]), monsterOverall(cf[0]));
 });
 
 test('companions cannot be signed: a win offers the prospect only, and no wild monster ever joins the roster', () => {
   let offers = 0;
   for (let seed = 20; seed < 40 && offers < 3; seed++) {
-    const f = ready(seed); F.startEncounter(f, 0); const r = F.resolveEncounter(f); if (!r.ok || f.week.encounter.status !== 'offer') continue; offers++;
+    const f = ready(seed); F.startEncounter(f, 0); const r = F.resolveEncounter(f, AUTO); if (!r.ok || f.week.encounter.status !== 'offer') continue; offers++;
     const pid = f.week.prospects[0].monster.id; const rel = F.releaseCandidates(f, f.week.prospects[0]);
     const s = F.acceptOffer(f, { releaseId: rel.needed ? rel.list[0].id : null }); assert.ok(s.ok, s.reason); assert.equal(s.monster.id, pid);
     assert.ok(!f.roster.some((m) => m.companion || /^wild_/.test(m.id)));
@@ -64,14 +77,27 @@ test('a battle started before a roster change, or saved under the old companion 
   assert.equal(logHash(F.encounterBattle(f)), h);
   const old = JSON.parse(exportJson(f)); old.franchise.week.encounter.b = [old.franchise.week.encounter.b[0], ...old.franchise.week.prospects.slice(1, 3).map((p) => Link.snapMonster(p.monster))]; // a record made under the previous rule
   const g = importJson(JSON.stringify(old)); const r1 = F.encounterBattle(g), r2 = F.encounterBattle(importJson(JSON.stringify(old)));
-  assert.equal(logHash(r1), logHash(r2)); assert.deepEqual(r1.lines.b.map((x) => x.combatant.monsterId), g.week.encounter.b.map((m) => m.id));
+  // the same members as the stored lineup (`lines` is the end-of-battle line, whose order the battle's own rotations change)
+  assert.equal(logHash(r1), logHash(r2)); assert.deepEqual(r1.lines.b.map((x) => x.combatant.monsterId).sort(), g.week.encounter.b.map((m) => m.id).sort());
 });
 
 test('Play, Auto and Skip to Results still fight the same companions; Skip Encounter still costs nothing', () => {
   const f = ready(16); const g = JSON.parse(JSON.stringify(f)); const h = JSON.parse(JSON.stringify(f));
   F.startEncounter(f, 0, { mode: 'auto' }); F.startEncounter(g, 0, { mode: 'skip' }); F.startEncounter(h, 0, { mode: 'play' });
-  assert.equal(logHash(F.encounterBattle(f)), logHash(F.encounterBattle(g)));
-  assert.deepEqual(F.encounterBattle(h).lines.b.map((x) => x.combatant.monsterId).sort(), F.encounterBattle(f).lines.b.map((x) => x.combatant.monsterId).sort());
+  // Task 8 M4 (D1): 'auto' and 'play' are Watch, which prompts the player's rotations; the owner answering Auto at the first prompt plays the same battle as Skip.
+  // The Watch log carries one extra entry, the record of the owner's Auto answer (`rotation_decision`); every other entry and the
+  // final state are the same battle as Skip.
+  const wf = settledBattle(f), sg = F.encounterBattle(g); const fights = (r) => JSON.stringify(r.log.filter((e) => e.kind !== 'rotation_decision').map(({ seq, ...e }) => e));
+  assert.deepEqual([wf.winner, wf.by, wf.exchanges, wf.stateHash], [sg.winner, sg.by, sg.exchanges, sg.stateHash]);
+  assert.equal(fights(wf), fights(sg)); // every gameplay event, in order (owner 2026-11-09: only the Auto-selection entry may differ)
+  const extra = wf.log.filter((e) => e.kind === 'rotation_decision'); assert.equal(extra.length, wf.log.length - sg.log.length);
+  assert.ok(extra.length >= 1 && extra.every((e) => e.choice === 'auto' || /auto/i.test(JSON.stringify(e))), 'the only extra entries record the Auto answer');
+  // The Auto settlement draws nothing and decides nothing itself: the same number of RNG draws as Skip, the same final lines, and
+  // the record holds only 'auto' answers (the AI policy, the same one Skip uses, makes every rotation choice).
+  assert.equal(wf.rngDraws, sg.rngDraws);
+  assert.equal(JSON.stringify(wf.lines), JSON.stringify(sg.lines)); assert.deepEqual(wf.hpShare, sg.hpShare);
+  assert.ok(Object.values(f.week.encounter.decisions?.a || {}).every((c) => c === 'auto')); assert.ok(!Object.keys(g.week.encounter.decisions?.a || {}).length);
+  assert.deepEqual(settledBattle(h).lines.b.map((x) => x.combatant.monsterId).sort(), settledBattle(f).lines.b.map((x) => x.combatant.monsterId).sort());
   const k = ready(17); const before = JSON.stringify({ roster: k.roster, board: k.board, rng: k.rngState }); F.skipEncounter(k);
   assert.equal(k.season.day, 2); assert.equal(JSON.stringify({ roster: k.roster, board: k.board, rng: k.rngState }), before);
 });

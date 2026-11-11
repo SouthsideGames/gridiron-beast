@@ -9,7 +9,7 @@ import { yearOf } from '../../data/calendar.js';
 import * as Save from '../../franchise/save.js';
 import { savePanelHtml, fillStorageMeter, offerExport, importFile, openBackups } from '../storage-ui.js';
 import { buildLabel, devDisplaysAllowed } from '../../version.js';
-import { summary, hireDefaultStaff, DIFFICULTY, dexCounts } from '../../franchise/franchise.js';
+import { summary, hireDefaultStaff, DIFFICULTY, dexCounts, DEX_GROUPS } from '../../franchise/franchise.js';
 import * as F from '../../franchise/franchise.js';
 import { BACKGROUNDS } from '../../data/staff.js';
 import { GYM_BY_CLUB } from '../../data/gyms.js';
@@ -24,6 +24,8 @@ import { openStatGuide } from '../stat-guide.js';
 import { DIFFICULTY as DIFF } from '../../franchise/franchise.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { portraitSprite } from '../pixel-monster.js';
+import { applyFlashPref } from '../flash-pref.js';
+import { applyFrameRate, frameRateOf } from '../frame-rate.js';
 import { reviewQueue, queueText, devBadge, devNoticesOn, cardBadge, cardMismatches } from '../dev-review.js';
 
 export function registerMenuScreens(Router, app) {
@@ -55,7 +57,7 @@ export function registerMenuScreens(Router, app) {
         ${card}
         ${legacy && !f ? `<button class="btn block" style="margin-bottom:12px" data-action="import-legacy">Import ${esc(legacy.owner)}'s ${esc(legacy.club)} (previous version)</button>` : ''}
         <div class="menu-tiles ${hof ? 'three' : ''}">
-          ${tile('dex', '📖', 'Beast Dex', `${dexCounts(f).seen}/72`)}
+          ${tile('dex', '📖', 'Beast Dex', `${dexCounts(f).all.seen}/${dexCounts(f).all.total}`)}
           ${tile('achievements', '🏅', 'Achievements', `${Object.keys(achievementsData().earned).length}/${ACHIEVEMENTS.length}`)}
           ${hof ? tile('hof', '🏛️', 'Hall of Fame', hof) : ''}
         </div>
@@ -95,9 +97,12 @@ export function registerMenuScreens(Router, app) {
           <label class="field">Players on the field<select data-change="markers"><option value="sprites" ${s.fieldMarkers !== 'simple' ? 'selected' : ''}>Monster art</option><option value="simple" ${s.fieldMarkers === 'simple' ? 'selected' : ''}>Simple circles and squares</option></select></label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="replays" ${s.replays !== false ? 'checked' : ''}> Instant replays of big plays (touchdowns, turnovers, clutch plays; always skippable)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="typeicons" ${s.typeIcons !== false ? 'checked' : ''}> Type matchup icons before the snap (▲ advantage, ▼ disadvantage; tap one for details)</label>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="autopoints" ${s.autoPoints ? 'checked' : ''}> Trainer spends attribute points for me (off: you spend them on the monster card)</label>
+          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="autopoints" ${s.autoPoints ? 'checked' : ''}> Trainer invests training points for me (off: you invest them on the monster's page)</label>
           ${app.f ? assistSettingsHtml(app.f) : ''}
+          <label class="field">Frame rate<select data-change="framerate"><option value="60" ${frameRateOf(s) === 60 ? 'selected' : ''}>60 FPS (default)</option><option value="30" ${frameRateOf(s) === 30 ? 'selected' : ''}>30 FPS, battery saver</option></select></label>
+          <p class="dim" style="margin-top:0">30 FPS redraws effects less often to save battery. Results, clocks and battles are identical at both settings, and the game never switches by itself.</p>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reduced" ${s.reducedMotion ? 'checked' : ''}> Reduce motion (no play animation, no particles)</label>
+          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reducedflash" ${s.reducedFlash ? 'checked' : ''}> Reduce flashes (softer ability and score flashes, no strobing; nothing is hidden)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="shake" ${s.screenShake !== false ? 'checked' : ''}> Screen shake on big hits (and a short vibration on phones that allow it)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="evosound" ${s.evoSound ? 'checked' : ''}> Evolution sounds (off by default; the game has no other sound)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="devnotices" ${s.devNotices !== false ? 'checked' : ''}> Developer review notices (new or changed plays and abilities)</label>
@@ -109,11 +114,11 @@ export function registerMenuScreens(Router, app) {
     },
     mount(root, ctx) {
       fillStorageMeter(root, app);
-      const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; };
+      const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); };
       delegate(root, {
         quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), speed: (el) => set('speed', Number(el.value)),
         clashmode: (el) => set('clash', { ...clashSettings(app.settings), mode: el.value }), clashspeed: (el) => set('clash', { ...clashSettings(app.settings), speed: Number(el.value) }),
-        reduced: (el) => set('reducedMotion', el.checked), shake: (el) => set('screenShake', el.checked), evosound: (el) => set('evoSound', el.checked), qbreads: (el) => set('qbReads', el.checked), devnotices: (el) => set('devNotices', el.checked), markers: (el) => set('fieldMarkers', el.value), typeicons: (el) => set('typeIcons', el.checked), replays: (el) => set('replays', el.checked), autopoints: (el) => set('autoPoints', el.checked), 'assist-hints': (el) => { setAssist(app.f, { hints: el.checked }); app.save(); }, 'assist-consequences': (el) => { setAssist(app.f, { consequences: el.checked }); app.save(); }, 'assist-mode': (el) => { setAssist(app.f, { mode: el.dataset.v }); app.save(); toast(`Coach Assist: ${ASSIST_MODE_TEXT[el.dataset.v].label}.`, 'good'); Router.render(); }, liveclock: (el) => set('liveClock', el.checked),
+        reduced: (el) => set('reducedMotion', el.checked), reducedflash: (el) => set('reducedFlash', el.checked), framerate: (el) => set('frameRate', Number(el.value) === 30 ? 30 : 60), shake: (el) => set('screenShake', el.checked), evosound: (el) => set('evoSound', el.checked), qbreads: (el) => set('qbReads', el.checked), devnotices: (el) => set('devNotices', el.checked), markers: (el) => set('fieldMarkers', el.value), typeicons: (el) => set('typeIcons', el.checked), replays: (el) => set('replays', el.checked), autopoints: (el) => set('autoPoints', el.checked), 'assist-hints': (el) => { setAssist(app.f, { hints: el.checked }); app.save(); }, 'assist-consequences': (el) => { setAssist(app.f, { consequences: el.checked }); app.save(); }, 'assist-mode': (el) => { setAssist(app.f, { mode: el.dataset.v }); app.save(); toast(`Coach Assist: ${ASSIST_MODE_TEXT[el.dataset.v].label}.`, 'good'); Router.render(); }, liveclock: (el) => set('liveClock', el.checked),
         tutreset: () => { resetTutorial(app.f); if (assistSettings(app.f).mode === 'expert') setAssist(app.f, { mode: 'standard' }); app.save(); toast('Tips will show again on each screen.', 'good'); Router.render(); },
         primer: () => sheet(primerHtml(), { title: 'How football works' }),
         export: () => { if (app.f) offerExport(app.f); },
@@ -139,8 +144,10 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="go" data-screen="ai-lab">🧠 AI Testing Lab (QB decisions)</button>
         <button class="btn block" data-action="go" data-screen="attr-lab">📊 Attribute Testing Lab</button>
         <button class="btn block" data-action="go" data-screen="evo-preview">✨ Preview Evolution</button>
-        <button class="btn block badge-host" data-action="go" data-screen="ability-audit">✨ Ability Audit${devBadge(app.settings, q.abilities.length)}${cardBadge(app.settings)}</button>
+        <button class="btn block" data-action="go" data-screen="ability-reviewer">🧪 Ability Reviewer (Task 8 football, on the engine)</button>
+        <button class="btn block badge-host" data-action="go" data-screen="ability-audit">✨ Legacy Ability Audit (transitional)${devBadge(app.settings, q.abilities.length)}${cardBadge(app.settings)}</button>
         <button class="btn block" data-action="go" data-screen="ability-balance">⚖️ Ability Balance</button>
+        <button class="btn block" data-action="go" data-screen="clash-ability-reviewer">⚔️ Clash Ability Reviewer (Task 8 Beast Clash, on the engine, with the arena looks)</button>
         <button class="btn block" data-action="go" data-screen="clash-lab">🐾 Clash Lab (Beast Clash Phase 1)</button>
         ${app.f ? `<h3>Feature testing (this franchise)</h3><p class="dim" style="margin-top:0">For trying the new features without waiting seasons. Using these marks the franchise as developer-assisted.</p>
         <div class="row" style="gap:6px;flex-wrap:wrap">${['aurodrax', 'tempestra', 'titanolith', 'nyxshade', 'glacivern', 'elderoot'].map((sp) => `<button class="btn small" data-action="dev-legend" data-sp="${sp}">+ ${sp[0].toUpperCase() + sp.slice(1)}</button>`).join('')}</div>
@@ -186,7 +193,7 @@ export function registerMenuScreens(Router, app) {
       const cards = hallOfFame();
       if (!cards.length) return '<div class="panel"><p>No careers enshrined yet. Hit every mark on the Campaign checklist and retire.</p></div>';
       return `<div class="stack">${cards.map((c) => `<div class="panel hof-card"><div class="row">${portraitSprite(`${c.portrait}|${c.owner.split(' ')[0]}`, 48)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(c.owner)}</div><div class="muted">${esc(c.club)} · ${esc(DIFF[c.difficulty]?.label || c.difficulty)} · ${c.seasons} season${c.seasons === 1 ? '' : 's'}</div></div><span class="chip accent">🏛️</span></div>
-        <div class="kv" style="margin-top:8px"><b>Record</b><span class="mono">${c.record.w}-${c.record.l}</span><b>Beast Bowls</b><span>${c.titles}</span><b>Badges</b><span>${c.badges.length} / 8</span><b>League awards</b><span>${c.awards}</span><b>Species discovered</b><span>${c.dexSeen} / 72</span>${c.rival ? `<b>Rival</b><span>${esc(c.rival)} ${c.rivalRecord ? `(${c.rivalRecord.w}-${c.rivalRecord.l})` : ''}</span>` : ''}</div>
+        <div class="kv" style="margin-top:8px"><b>Record</b><span class="mono">${c.record.w}-${c.record.l}</span><b>Beast Bowls</b><span>${c.titles}</span><b>Badges</b><span>${c.badges.length} / 8</span><b>League awards</b><span>${c.awards}</span><b>Families discovered</b><span>${c.dexGroups ? `${c.dexGroups.all} / ${DEX_GROUPS.all.length} (original ${c.dexGroups.original} / ${DEX_GROUPS.original.length}, Basic ${c.dexGroups.basic} / ${DEX_GROUPS.basic.length})` : esc(String(c.dexSeen ?? '—'))}</span>${c.rival ? `<b>Rival</b><span>${esc(c.rival)} ${c.rivalRecord ? `(${c.rivalRecord.w}-${c.rivalRecord.l})` : ''}</span>` : ''}</div>
         ${c.bestMonsters?.length ? `<div class="muted" style="margin-top:8px;font-size:12px">BEST MONSTERS</div><div class="row" style="flex-wrap:wrap;gap:8px">${c.bestMonsters.map((m, i) => c.careers?.[i] ? `<button class="hof-mon" data-hof="${esc(c.id)}" data-i="${i}" aria-label="${esc(`${m.name}: open his career`)}">${monsterSprite({ id: c.careers[i].id || m.name, name: m.name, species: m.species, stage: c.careers[i].stage || 0 }, 28)}<span style="font-size:13px">${esc(m.name)} <span class="dim">${m.position} ${m.ovr}</span>${c.careers[i].honours?.titles || c.careers[i].honours?.awards ? ' 🏆' : ''}</span><span class="tl-go">›</span></button>` : `<button class="hof-mon legacy" data-hof="${esc(c.id)}" data-i="${i}" aria-label="${esc(`${m.name}: partial history`)}">${monsterSprite({ id: m.name, name: m.name, species: m.species }, 28)}<span style="font-size:13px">${esc(m.name)} <span class="dim">${m.position} ${m.ovr}</span></span><span class="tl-go">›</span></button>`).join('')}</div><div class="dim" style="font-size:12px;margin-top:4px">${c.careers ? 'Tap a monster for his career as it stood at retirement.' : 'Tap a monster for what this card recorded: careers were not kept on cards written before v39.0, so his history is partial.'}</div>` : ''}
         <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">Season by season</summary>${(c.seasonsList || []).map((h) => `<div class="row between sub"><span>${yearOf(h.year)}</span><span class="mono">${h.w}-${h.l}${h.champion ? ' 🏆' : h.playoffs ? ' · playoffs' : ''}</span></div>`).join('')}</details>
         <div class="dim" style="margin-top:6px;font-size:12px">Retired ${new Date(c.retiredAt).toLocaleDateString()}</div></div>`).join('')}</div>`;
@@ -223,7 +230,7 @@ export function registerMenuScreens(Router, app) {
     render({ f }) {
       return `<div class="stack">
         <button class="btn block" data-action="go" data-screen="office">🪪 My office <span class="dim">${esc(f.owner.first)} ${esc(f.owner.last)}</span></button>
-        <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
+        <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).all.seen}/${dexCounts(f).all.total}</span></button>
         <button class="btn block" data-action="statguide">📊 What the stats mean</button>
         <button class="btn block" data-action="typechart">🔺 Type Chart <span class="dim">strengths and weaknesses</span></button>
         <button class="btn block" data-action="stadiums">🏟 Stadiums <span class="dim">every club's field</span></button>

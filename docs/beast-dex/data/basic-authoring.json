@@ -1,0 +1,3914 @@
+{
+ "note": "Authored source for the 120 Basic families. tools/build_basic.py expands these choices into data/families.json and data/forms.json; edit an entry here and rebuild to revise one design.",
+ "families": [
+  {
+   "id": "kindlet",
+   "name": "Kindlet",
+   "type": "Fire",
+   "position": "QB",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "accuracy",
+    "good": "awareness",
+    "weaknesses": [
+     "arm",
+     "durability"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears",
+     "glow"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#d9542b",
+     "#ffcf6b"
+    ]
+   },
+   "personality": "A jittery little kindler who only calms down once the ball is in his paws.",
+   "buildIdentity": "Accurate short-area passer",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "charbun",
+   "name": "Charbun",
+   "type": "Fire",
+   "position": "RB",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "speed",
+    "good": "agility",
+    "weaknesses": [
+     "strength",
+     "catching"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears",
+     "tail"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#7a3426",
+     "#ff9a3c"
+    ]
+   },
+   "personality": "A coal-dark rabbit whose speckles glow when it hits the hole.",
+   "buildIdentity": "Quick-hitting hole runner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "sparkwick",
+   "name": "Sparkwick",
+   "type": "Fire",
+   "position": "WR",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "speed",
+    "good": "strength",
+    "weaknesses": [
+     "catching",
+     "awareness"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "wings",
+     "antennae"
+    ],
+    "pattern": null,
+    "colors": [
+     "#f07a2a",
+     "#ffe08a"
+    ]
+   },
+   "personality": "A wick-tailed fly that streaks downfield and forgets to look back for the ball.",
+   "buildIdentity": "Straight-line deep runner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "coalump",
+   "name": "Coalump",
+   "type": "Fire",
+   "position": "TE",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "strength",
+    "good": "blocking",
+    "weaknesses": [
+     "speed",
+     "awareness"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "blob",
+    "size": "medium",
+    "look": "cute",
+    "features": [
+     "plates"
+    ],
+    "pattern": null,
+    "colors": [
+     "#4a3a36",
+     "#ff7a3a"
+    ]
+   },
+   "personality": "A warm lump of coal that leans on defenders until they give up.",
+   "buildIdentity": "Strong in-line blocker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "kilnback",
+   "name": "Kilnback",
+   "type": "Fire",
+   "position": "OL",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "strength",
+    "good": "blocking",
+    "weaknesses": [
+     "awareness",
+     "agility"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "shelled",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "plates"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#a3482c",
+     "#f2b45a"
+    ]
+   },
+   "personality": "Carries a little brick kiln on its back and never stops grumbling about the heat.",
+   "buildIdentity": "Power drive blocker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "scorchub",
+   "name": "Scorchub",
+   "type": "Fire",
+   "position": "DL",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "speed",
+    "good": "strength",
+    "weaknesses": [
+     "awareness",
+     "durability"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "biped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "horns"
+    ],
+    "pattern": null,
+    "colors": [
+     "#c2402a",
+     "#ffb04a"
+    ]
+   },
+   "personality": "An impatient cub that bursts off the line and burns out by the third quarter.",
+   "buildIdentity": "Get-off pass rusher",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "embadger",
+   "name": "Embadger",
+   "type": "Fire",
+   "position": "LB",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "tackling",
+    "good": "strength",
+    "weaknesses": [
+     "coverage",
+     "awareness"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "ears",
+     "claws"
+    ],
+    "pattern": "stripes",
+    "colors": [
+     "#5a4038",
+     "#ff8a2a"
+    ]
+   },
+   "personality": "A smouldering badger who tackles everything, including the wrong thing.",
+   "buildIdentity": "Downhill run stuffer",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "singecat",
+   "name": "Singecat",
+   "type": "Fire",
+   "position": "CB",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "speed",
+    "good": "strength",
+    "weaknesses": [
+     "awareness",
+     "catching"
+    ],
+    "strengthCeiling": 55
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "ears",
+     "whiskers",
+     "flametail"
+    ],
+    "pattern": null,
+    "colors": [
+     "#e0602e",
+     "#fff0b0"
+    ]
+   },
+   "personality": "A scorched-whisker alley cat who can run with anyone but rarely turns for the ball.",
+   "buildIdentity": "Recovery-speed corner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "ashpeck",
+   "name": "Ashpeck",
+   "type": "Fire",
+   "position": "S",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "tackling",
+    "good": "strength",
+    "weaknesses": [
+     "coverage",
+     "catching"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "beak",
+     "crest"
+    ],
+    "pattern": null,
+    "colors": [
+     "#6b5a52",
+     "#ff6a3a"
+    ]
+   },
+   "personality": "A soot-grey bird that dives on ball carriers and drifts out of its zone.",
+   "buildIdentity": "Box-safety tackler",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "fusebug",
+   "name": "Fusebug",
+   "type": "Fire",
+   "position": "K",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "kicking",
+    "good": "awareness",
+    "weaknesses": [
+     "durability"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "antennae",
+     "glow"
+    ],
+    "pattern": null,
+    "colors": [
+     "#ff8a3a",
+     "#ffd84a"
+    ]
+   },
+   "personality": "A beetle with a fizzing fuse for antennae and a short, nervous temper.",
+   "buildIdentity": "Short-range kicker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "brookit",
+   "name": "Brookit",
+   "type": "Water",
+   "position": "QB",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "awareness",
+    "good": "agility",
+    "weaknesses": [
+     "arm",
+     "strength"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "serpent",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "fins",
+     "crest"
+    ],
+    "pattern": null,
+    "colors": [
+     "#3a86c8",
+     "#c8ecff"
+    ]
+   },
+   "personality": "A thoughtful little brook eel that reads the defense before it reads the playbook.",
+   "buildIdentity": "Heady game manager",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "ottrip",
+   "name": "Ottrip",
+   "type": "Water",
+   "position": "RB",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "agility",
+    "good": "catching",
+    "weaknesses": [
+     "strength",
+     "blocking"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears",
+     "whiskers",
+     "tail"
+    ],
+    "pattern": null,
+    "colors": [
+     "#7a5a3e",
+     "#9ed8f0"
+    ]
+   },
+   "personality": "A slippery otter that wriggles out of arm tackles and never picks up a blitz.",
+   "buildIdentity": "Elusive change-of-pace back",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "minnodart",
+   "name": "Minnodart",
+   "type": "Water",
+   "position": "WR",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "catching",
+    "good": "agility",
+    "weaknesses": [
+     "speed",
+     "strength"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "serpent",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "fins"
+    ],
+    "pattern": "stripes",
+    "colors": [
+     "#5ab0d8",
+     "#f0f8ff"
+    ]
+   },
+   "personality": "A darting minnow with soft hands and very little top speed.",
+   "buildIdentity": "Sure-handed slot receiver",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "kelpup",
+   "name": "Kelpup",
+   "type": "Water",
+   "position": "TE",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "catching",
+    "good": "awareness",
+    "weaknesses": [
+     "strength",
+     "blocking"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "serpent",
+    "size": "medium",
+    "look": "cute",
+    "features": [
+     "fins"
+    ],
+    "pattern": "backstripe",
+    "colors": [
+     "#2e7a6a",
+     "#a8e0a0"
+    ]
+   },
+   "personality": "A kelp-draped sea snake who finds the soft spot in a zone and sits down in it.",
+   "buildIdentity": "Reliable checkdown target",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "barnaclod",
+   "name": "Barnaclod",
+   "type": "Water",
+   "position": "OL",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "agility",
+    "good": "awareness",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "shelled",
+    "size": "medium",
+    "look": "cute",
+    "features": [
+     "plates"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#6a7a8a",
+     "#d8f0f8"
+    ]
+   },
+   "personality": "A barnacle-crusted tortoise that shuffles its feet well but gets pushed back by power.",
+   "buildIdentity": "Light-footed pass protector",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "sploshog",
+   "name": "Sploshog",
+   "type": "Water",
+   "position": "DL",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "agility",
+    "good": "awareness",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "shelled",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "tusks"
+    ],
+    "pattern": null,
+    "colors": [
+     "#4a7aa0",
+     "#e0f4ff"
+    ]
+   },
+   "personality": "A shell-backed river hog that slips blocks with a splash and bounces off ball carriers.",
+   "buildIdentity": "Slippery gap shooter",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "newtide",
+   "name": "Newtide",
+   "type": "Water",
+   "position": "LB",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "coverage",
+    "good": "agility",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "serpent",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "fins",
+     "crest"
+    ],
+    "pattern": null,
+    "colors": [
+     "#2a9a8a",
+     "#ffd06a"
+    ]
+   },
+   "personality": "A crested newt that drops into coverage gracefully and tackles like a wet towel.",
+   "buildIdentity": "Coverage linebacker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "pondskip",
+   "name": "Pondskip",
+   "type": "Water",
+   "position": "CB",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "agility",
+    "good": "coverage",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "wings"
+    ],
+    "pattern": null,
+    "colors": [
+     "#3a6ab0",
+     "#a0f0e0"
+    ]
+   },
+   "personality": "A water strider that mirrors every step and bounces off every block.",
+   "buildIdentity": "Sticky mirror corner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "wadelet",
+   "name": "Wadelet",
+   "type": "Water",
+   "position": "S",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "coverage",
+    "good": "agility",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "beak",
+     "crest"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#8ab0c8",
+     "#ffffff"
+    ]
+   },
+   "personality": "A long-legged wader that patrols the deep middle and hates contact.",
+   "buildIdentity": "Deep-zone patroller",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "bubblop",
+   "name": "Bubblop",
+   "type": "Water",
+   "position": "K",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "kicking",
+    "good": "durability",
+    "weaknesses": [
+     "awareness"
+    ],
+    "strengthCeiling": 55
+   },
+   "art": {
+    "body": "blob",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "glow"
+    ],
+    "pattern": null,
+    "colors": [
+     "#5ac0e8",
+     "#e8fbff"
+    ]
+   },
+   "personality": "A wobbling bubble who pops a kick straight through, then panics.",
+   "buildIdentity": "Steady extra-point kicker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "acornet",
+   "name": "Acornet",
+   "type": "Nature",
+   "position": "QB",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "durability",
+    "good": "awareness",
+    "weaknesses": [
+     "speed",
+     "arm"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "blob",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "crest"
+    ],
+    "pattern": null,
+    "colors": [
+     "#8a6a3a",
+     "#a8d870"
+    ]
+   },
+   "personality": "A stubborn acorn who stands in the pocket and takes the hit.",
+   "buildIdentity": "Tough pocket passer",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "thistlehop",
+   "name": "Thistlehop",
+   "type": "Nature",
+   "position": "RB",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "durability",
+    "good": "strength",
+    "weaknesses": [
+     "speed",
+     "catching"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears",
+     "spikes"
+    ],
+    "pattern": null,
+    "colors": [
+     "#7a9a4a",
+     "#d88ad8"
+    ]
+   },
+   "personality": "A prickly hare that carries the ball 25 times and never gets faster.",
+   "buildIdentity": "Durable short-yardage back",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "fernflit",
+   "name": "Fernflit",
+   "type": "Nature",
+   "position": "WR",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "blocking",
+    "good": "durability",
+    "weaknesses": [
+     "speed",
+     "agility"
+    ],
+    "strengthCeiling": 55
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "wings",
+     "antennae"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#4a8a3a",
+     "#e0f0a0"
+    ]
+   },
+   "personality": "A fern-winged fly that loves blocking downfield more than catching passes.",
+   "buildIdentity": "Blocking receiver",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "stumpkin",
+   "name": "Stumpkin",
+   "type": "Nature",
+   "position": "TE",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "blocking",
+    "good": "durability",
+    "weaknesses": [
+     "speed",
+     "catching"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "blob",
+    "size": "medium",
+    "look": "cute",
+    "features": [
+     "crest"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#7a5a3a",
+     "#8ac860"
+    ]
+   },
+   "personality": "A sprouting stump that plants itself and makes defenders go around.",
+   "buildIdentity": "In-line blocking tight end",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "trunkle",
+   "name": "Trunkle",
+   "type": "Nature",
+   "position": "OL",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "durability",
+    "good": "blocking",
+    "weaknesses": [
+     "speed",
+     "agility"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "tusks",
+     "ears"
+    ],
+    "pattern": null,
+    "colors": [
+     "#6a5a4a",
+     "#9ad86a"
+    ]
+   },
+   "personality": "A mossy little mammoth who blocks all game without tiring.",
+   "buildIdentity": "Iron-man interior lineman",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "briarhog",
+   "name": "Briarhog",
+   "type": "Nature",
+   "position": "DL",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "durability",
+    "good": "strength",
+    "weaknesses": [
+     "speed",
+     "agility"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "spikes"
+    ],
+    "pattern": null,
+    "colors": [
+     "#5a6a3a",
+     "#c8a0e0"
+    ]
+   },
+   "personality": "A bramble-backed hog that holds its gap all day and never chases.",
+   "buildIdentity": "Two-gap anchor",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "barkbug",
+   "name": "Barkbug",
+   "type": "Nature",
+   "position": "LB",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "durability",
+    "good": "tackling",
+    "weaknesses": [
+     "speed",
+     "coverage"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "antennae",
+     "plates"
+    ],
+    "pattern": null,
+    "colors": [
+     "#6a4a2a",
+     "#a0c860"
+    ]
+   },
+   "personality": "A bark-armoured beetle that grinds out tackles and loses every footrace.",
+   "buildIdentity": "Durable thumper",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "fawnleaf",
+   "name": "Fawnleaf",
+   "type": "Nature",
+   "position": "CB",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "tackling",
+    "good": "durability",
+    "weaknesses": [
+     "speed",
+     "catching"
+    ],
+    "strengthCeiling": 55
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#a07a4a",
+     "#d8f0a0"
+    ]
+   },
+   "personality": "A leaf-spotted fawn that comes up hard in run support and gets beaten deep.",
+   "buildIdentity": "Run-support corner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "ivyowl",
+   "name": "Ivyowl",
+   "type": "Nature",
+   "position": "S",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "durability",
+    "good": "tackling",
+    "weaknesses": [
+     "speed",
+     "catching"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "ears",
+     "beak"
+    ],
+    "pattern": null,
+    "colors": [
+     "#4a7a4a",
+     "#f0e080"
+    ]
+   },
+   "personality": "An ivy-wrapped owl that plays every snap and never quite catches up.",
+   "buildIdentity": "Every-down box safety",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "podling",
+   "name": "Podling",
+   "type": "Nature",
+   "position": "K",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "kicking",
+    "good": "durability",
+    "weaknesses": [
+     "speed"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "blob",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "bulb"
+    ],
+    "pattern": null,
+    "colors": [
+     "#6aa84a",
+     "#f0d86a"
+    ]
+   },
+   "personality": "A seed pod with a surprisingly strong leg and no interest in running.",
+   "buildIdentity": "Plant-and-boot kicker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "ampette",
+   "name": "Ampette",
+   "type": "Electric",
+   "position": "QB",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "speed",
+    "good": "agility",
+    "weaknesses": [
+     "accuracy",
+     "durability"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "antennae",
+     "glow"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#e8c22a",
+     "#5ae0ff"
+    ]
+   },
+   "personality": "A crackling beetle who scrambles first and aims later.",
+   "buildIdentity": "Scrambling quarterback",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "fuzzvolt",
+   "name": "Fuzzvolt",
+   "type": "Electric",
+   "position": "RB",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "speed",
+    "good": "agility",
+    "weaknesses": [
+     "strength",
+     "durability"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears",
+     "tail"
+    ],
+    "pattern": "stripes",
+    "colors": [
+     "#f0d040",
+     "#4a4a6a"
+    ]
+   },
+   "personality": "A static-fluffed mouse that zips outside on its hind legs and breaks on the first hit.",
+   "buildIdentity": "Outside-zone speed back",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "boltdart",
+   "name": "Boltdart",
+   "type": "Electric",
+   "position": "WR",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "speed",
+    "good": "agility",
+    "weaknesses": [
+     "strength",
+     "blocking"
+    ],
+    "strengthCeiling": 59
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "ears",
+     "tail"
+    ],
+    "pattern": null,
+    "colors": [
+     "#ffd83a",
+     "#3a6ad8"
+    ]
+   },
+   "personality": "A lightning-quick hound pup that wins with pure speed and never blocks.",
+   "buildIdentity": "Vertical speed threat",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "wattram",
+   "name": "Wattram",
+   "type": "Electric",
+   "position": "TE",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "speed",
+    "good": "catching",
+    "weaknesses": [
+     "blocking",
+     "strength"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "horn"
+    ],
+    "pattern": null,
+    "colors": [
+     "#c8a82a",
+     "#7af0ff"
+    ]
+   },
+   "personality": "A sparking ram who runs routes like a receiver and blocks like one too.",
+   "buildIdentity": "Move tight end",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "capaclod",
+   "name": "Capaclod",
+   "type": "Electric",
+   "position": "OL",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "speed",
+    "good": "agility",
+    "weaknesses": [
+     "strength",
+     "durability"
+    ],
+    "strengthCeiling": 55
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "bulb",
+     "plates"
+    ],
+    "pattern": null,
+    "colors": [
+     "#8a8a3a",
+     "#ffe85a"
+    ]
+   },
+   "personality": "A buzzing capacitor beetle that pulls fast and gets bowled over.",
+   "buildIdentity": "Pulling guard",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "zaphog",
+   "name": "Zaphog",
+   "type": "Electric",
+   "position": "DL",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "speed",
+    "good": "agility",
+    "weaknesses": [
+     "strength",
+     "durability"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "biped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "tusks",
+     "ears"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#d8b030",
+     "#5a5a8a"
+    ]
+   },
+   "personality": "A static-charged boar on two legs that shoots gaps and gets washed out by double teams.",
+   "buildIdentity": "Penetrating gap shooter",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "staticub",
+   "name": "Staticub",
+   "type": "Electric",
+   "position": "LB",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "speed",
+    "good": "tackling",
+    "weaknesses": [
+     "strength",
+     "coverage"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "ears",
+     "glow"
+    ],
+    "pattern": null,
+    "colors": [
+     "#e0c040",
+     "#a05ad8"
+    ]
+   },
+   "personality": "A twitchy cub who flies to the ball and bounces off big backs.",
+   "buildIdentity": "Sideline-to-sideline chaser",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "neonnewt",
+   "name": "Neonnewt",
+   "type": "Electric",
+   "position": "CB",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "speed",
+    "good": "agility",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "serpent",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "fins",
+     "glow"
+    ],
+    "pattern": null,
+    "colors": [
+     "#3ad8a0",
+     "#ffe84a"
+    ]
+   },
+   "personality": "A glowing newt that keeps pace with anyone and avoids every tackle.",
+   "buildIdentity": "Speed-matching corner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "buzzhawk",
+   "name": "Buzzhawk",
+   "type": "Electric",
+   "position": "S",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "speed",
+    "good": "coverage",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "beak",
+     "wings"
+    ],
+    "pattern": null,
+    "colors": [
+     "#c8a020",
+     "#e8f8ff"
+    ]
+   },
+   "personality": "A buzzing hawk that covers ground fast and pulls up before contact.",
+   "buildIdentity": "Range safety",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "wattlet",
+   "name": "Wattlet",
+   "type": "Electric",
+   "position": "K",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "kicking",
+    "good": "speed",
+    "weaknesses": [
+     "durability"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "antennae",
+     "bulb"
+    ],
+    "pattern": null,
+    "colors": [
+     "#f0e05a",
+     "#5ac8ff"
+    ]
+   },
+   "personality": "A firefly-bulbed bug that lights up on every make.",
+   "buildIdentity": "Quick-tempo kicker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "slatelet",
+   "name": "Slatelet",
+   "type": "Earth",
+   "position": "QB",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "strength",
+    "good": "durability",
+    "weaknesses": [
+     "speed",
+     "agility"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "plates"
+    ],
+    "pattern": null,
+    "colors": [
+     "#7a7068",
+     "#c8a878"
+    ]
+   },
+   "personality": "A flat-headed slate sprite who shrugs off sacks but cannot escape them.",
+   "buildIdentity": "Sturdy statue passer",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "gravelpup",
+   "name": "Gravelpup",
+   "type": "Earth",
+   "position": "RB",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "blocking",
+    "good": "strength",
+    "weaknesses": [
+     "speed",
+     "agility"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears",
+     "plates"
+    ],
+    "pattern": null,
+    "colors": [
+     "#8a7a6a",
+     "#e0c890"
+    ]
+   },
+   "personality": "A gravel-coated pup that loves picking up blitzers more than carrying the ball.",
+   "buildIdentity": "Pass-protecting back",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "mudlark",
+   "name": "Mudlark",
+   "type": "Earth",
+   "position": "WR",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "strength",
+    "good": "blocking",
+    "weaknesses": [
+     "speed",
+     "agility"
+    ],
+    "strengthCeiling": 55
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "beak",
+     "crest"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#7a6040",
+     "#d8c8a0"
+    ]
+   },
+   "personality": "A muddy lark built like a fullback with wings.",
+   "buildIdentity": "Physical possession receiver",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "clodhorn",
+   "name": "Clodhorn",
+   "type": "Earth",
+   "position": "TE",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "blocking",
+    "good": "strength",
+    "weaknesses": [
+     "agility",
+     "catching"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "horn"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#8a6a4a",
+     "#b8d870"
+    ]
+   },
+   "personality": "A clod-headed rhino calf that blocks well and catches nothing thrown above its horn.",
+   "buildIdentity": "Blocking tight end",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "cobblump",
+   "name": "Cobblump",
+   "type": "Earth",
+   "position": "OL",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "blocking",
+    "good": "strength",
+    "weaknesses": [
+     "speed",
+     "agility"
+    ],
+    "strengthCeiling": 59
+   },
+   "art": {
+    "body": "blob",
+    "size": "medium",
+    "look": "cute",
+    "features": [
+     "plates"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#9a8a78",
+     "#6a5a4a"
+    ]
+   },
+   "personality": "A heap of cobblestones that refuses to move once it sets.",
+   "buildIdentity": "Immovable pass blocker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "quarrox",
+   "name": "Quarrox",
+   "type": "Earth",
+   "position": "DL",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "strength",
+    "good": "awareness",
+    "weaknesses": [
+     "agility",
+     "tackling"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "horns",
+     "plates"
+    ],
+    "pattern": null,
+    "colors": [
+     "#6a6058",
+     "#e0a060"
+    ]
+   },
+   "personality": "A quarry ox that bull-rushes hard, reads the play late and misses tackles in space.",
+   "buildIdentity": "Bull-rush nose tackle",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "diggit",
+   "name": "Diggit",
+   "type": "Earth",
+   "position": "LB",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "strength",
+    "good": "durability",
+    "weaknesses": [
+     "speed",
+     "coverage"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "claws",
+     "whiskers"
+    ],
+    "pattern": null,
+    "colors": [
+     "#8a6a50",
+     "#f0d8b0"
+    ]
+   },
+   "personality": "A burrowing mole who pops up in the backfield and gets lost in coverage.",
+   "buildIdentity": "Gap-plugging linebacker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "pumicat",
+   "name": "Pumicat",
+   "type": "Earth",
+   "position": "CB",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "strength",
+    "good": "tackling",
+    "weaknesses": [
+     "speed",
+     "agility"
+    ],
+    "strengthCeiling": 55
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "ears",
+     "tail"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#b0a090",
+     "#5a4a40"
+    ]
+   },
+   "personality": "A pumice-coated cat that jams receivers hard and then trails them.",
+   "buildIdentity": "Press-jam corner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "siltadillo",
+   "name": "Siltadillo",
+   "type": "Earth",
+   "position": "S",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "strength",
+    "good": "tackling",
+    "weaknesses": [
+     "speed",
+     "coverage"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "shelled",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears"
+    ],
+    "pattern": null,
+    "colors": [
+     "#9a8060",
+     "#e8d0a0"
+    ]
+   },
+   "personality": "A silt-caked armadillo who hits hard and turns slowly.",
+   "buildIdentity": "Strong safety hitter",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "geodot",
+   "name": "Geodot",
+   "type": "Earth",
+   "position": "K",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "kicking",
+    "good": "strength",
+    "weaknesses": [
+     "awareness"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "glow"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#7a6a8a",
+     "#d890ff"
+    ]
+   },
+   "personality": "A crystal golem cub with a geode heart and a heavy, long leg.",
+   "buildIdentity": "Big-leg kickoff specialist",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "chillip",
+   "name": "Chillip",
+   "type": "Ice",
+   "position": "QB",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "accuracy",
+    "good": "awareness",
+    "weaknesses": [
+     "speed",
+     "strength"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "crest"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#9ad0f0",
+     "#3a6aa0"
+    ]
+   },
+   "personality": "A cool-headed chick who places short throws perfectly and never runs.",
+   "buildIdentity": "Precise rhythm passer",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "skiddle",
+   "name": "Skiddle",
+   "type": "Ice",
+   "position": "RB",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "awareness",
+    "good": "blocking",
+    "weaknesses": [
+     "speed",
+     "catching"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "blob",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears",
+     "tail"
+    ],
+    "pattern": null,
+    "colors": [
+     "#c8e8f8",
+     "#5a8ab8"
+    ]
+   },
+   "personality": "A sliding snowball critter that waits for the hole and slips on the cutback.",
+   "buildIdentity": "Patient one-cut runner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "snowdart",
+   "name": "Snowdart",
+   "type": "Ice",
+   "position": "WR",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "awareness",
+    "good": "catching",
+    "weaknesses": [
+     "speed",
+     "strength"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears",
+     "tail"
+    ],
+    "pattern": "stripes",
+    "colors": [
+     "#e8f4ff",
+     "#6aa8e0"
+    ]
+   },
+   "personality": "A snow-white ermine that finds the open spot and sits in it.",
+   "buildIdentity": "Zone-beating route sitter",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "walrump",
+   "name": "Walrump",
+   "type": "Ice",
+   "position": "TE",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "awareness",
+    "good": "blocking",
+    "weaknesses": [
+     "speed",
+     "agility"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "blob",
+    "size": "medium",
+    "look": "cute",
+    "features": [
+     "tusks",
+     "whiskers"
+    ],
+    "pattern": null,
+    "colors": [
+     "#8a7a70",
+     "#d8f0ff"
+    ]
+   },
+   "personality": "A walrus calf who knows every assignment and is slower than all of them.",
+   "buildIdentity": "Assignment-sound tight end",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "floebear",
+   "name": "Floebear",
+   "type": "Ice",
+   "position": "OL",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "awareness",
+    "good": "blocking",
+    "weaknesses": [
+     "speed",
+     "strength"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "biped",
+    "size": "medium",
+    "look": "cute",
+    "features": [
+     "ears"
+    ],
+    "pattern": null,
+    "colors": [
+     "#e0f0f8",
+     "#7ab0d8"
+    ]
+   },
+   "personality": "A floe-riding bear cub who reads stunts but gets bull-rushed.",
+   "buildIdentity": "Stunt-reading tackle",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "rimeboar",
+   "name": "Rimeboar",
+   "type": "Ice",
+   "position": "DL",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "tackling",
+    "good": "awareness",
+    "weaknesses": [
+     "speed",
+     "agility"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "tusks",
+     "spikes"
+    ],
+    "pattern": null,
+    "colors": [
+     "#a8c8e0",
+     "#ffffff"
+    ]
+   },
+   "personality": "A frosted boar that wraps up anything in its gap and cannot chase.",
+   "buildIdentity": "Sure-tackling run defender",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "hoarcub",
+   "name": "Hoarcub",
+   "type": "Ice",
+   "position": "LB",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "coverage",
+    "good": "awareness",
+    "weaknesses": [
+     "strength",
+     "speed"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "ears",
+     "fangs"
+    ],
+    "pattern": null,
+    "colors": [
+     "#b8d8f0",
+     "#4a6a9a"
+    ]
+   },
+   "personality": "A frost-furred cub that reads passes well and gets run over.",
+   "buildIdentity": "Pass-reading linebacker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "shiverkit",
+   "name": "Shiverkit",
+   "type": "Ice",
+   "position": "CB",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "coverage",
+    "good": "awareness",
+    "weaknesses": [
+     "speed",
+     "strength"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "ears",
+     "whiskers"
+    ],
+    "pattern": "backstripe",
+    "colors": [
+     "#90b8d8",
+     "#f0faff"
+    ]
+   },
+   "personality": "A shivering fox kit with textbook zone technique and a slow backpedal.",
+   "buildIdentity": "Disciplined zone corner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "ptarmilet",
+   "name": "Ptarmilet",
+   "type": "Ice",
+   "position": "S",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "awareness",
+    "good": "coverage",
+    "weaknesses": [
+     "speed",
+     "agility"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "crest"
+    ],
+    "pattern": "mask",
+    "colors": [
+     "#f4f8ff",
+     "#8a98a8"
+    ]
+   },
+   "personality": "A snow-white grouse that always lines up right and arrives late.",
+   "buildIdentity": "Quarterback-of-the-defense safety",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "cubeling",
+   "name": "Cubeling",
+   "type": "Ice",
+   "position": "K",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "kicking",
+    "good": "accuracy",
+    "weaknesses": [
+     "durability"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "blob",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "glow"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#c8f0ff",
+     "#5ab0e8"
+    ]
+   },
+   "personality": "An ice cube that keeps its cool and its kicks straight.",
+   "buildIdentity": "Ice-cool accuracy kicker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "breezle",
+   "name": "Breezle",
+   "type": "Wind",
+   "position": "QB",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "agility",
+    "good": "speed",
+    "weaknesses": [
+     "strength",
+     "durability"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "wings",
+     "crest"
+    ],
+    "pattern": null,
+    "colors": [
+     "#a8e0d0",
+     "#ffffff"
+    ]
+   },
+   "personality": "A breezy dragonfly that dances away from pressure and flinches at contact.",
+   "buildIdentity": "Nimble pocket escapist",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "whirlhare",
+   "name": "Whirlhare",
+   "type": "Wind",
+   "position": "RB",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "agility",
+    "good": "speed",
+    "weaknesses": [
+     "blocking",
+     "durability"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears",
+     "tail"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#8ad0c0",
+     "#f8fff8"
+    ]
+   },
+   "personality": "A whirlwind hare that spins out of tackles and folds when it has to block.",
+   "buildIdentity": "Spin-move scatback",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "kitelet",
+   "name": "Kitelet",
+   "type": "Wind",
+   "position": "WR",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "agility",
+    "good": "speed",
+    "weaknesses": [
+     "strength",
+     "durability"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "wings",
+     "crest"
+    ],
+    "pattern": "stripes",
+    "colors": [
+     "#7ad0e0",
+     "#ff8aa0"
+    ]
+   },
+   "personality": "A kite-tailed bird that cuts on a dime and gets blown off its route.",
+   "buildIdentity": "Sharp-cutting slot",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "sailmoth",
+   "name": "Sailmoth",
+   "type": "Wind",
+   "position": "TE",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "agility",
+    "good": "catching",
+    "weaknesses": [
+     "strength",
+     "durability"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "wings",
+     "antennae"
+    ],
+    "pattern": null,
+    "colors": [
+     "#c8f0e8",
+     "#5a9a8a"
+    ]
+   },
+   "personality": "A sail-winged moth that floats into soft spots and blocks like a curtain.",
+   "buildIdentity": "Flex receiving tight end",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "nimbulk",
+   "name": "Nimbulk",
+   "type": "Wind",
+   "position": "OL",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "agility",
+    "good": "speed",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 55
+   },
+   "art": {
+    "body": "blob",
+    "size": "medium",
+    "look": "cute",
+    "features": [
+     "glow"
+    ],
+    "pattern": null,
+    "colors": [
+     "#e8f4f8",
+     "#9ab8c8"
+    ]
+   },
+   "personality": "A puffy cloud that moves its feet nicely and gets pushed straight back.",
+   "buildIdentity": "Zone-step tackle",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "galebuck",
+   "name": "Galebuck",
+   "type": "Wind",
+   "position": "DL",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "agility",
+    "good": "speed",
+    "weaknesses": [
+     "strength",
+     "awareness"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "horns"
+    ],
+    "pattern": null,
+    "colors": [
+     "#9ab8a8",
+     "#f0fff0"
+    ]
+   },
+   "personality": "A gale-swift buck that loops around blockers and loses track of the ball.",
+   "buildIdentity": "Edge-looping rusher",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "windrook",
+   "name": "Windrook",
+   "type": "Wind",
+   "position": "LB",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "agility",
+    "good": "speed",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "avian",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "beak",
+     "crest"
+    ],
+    "pattern": null,
+    "colors": [
+     "#5a7a78",
+     "#c8f0e0"
+    ]
+   },
+   "personality": "A gusty rook that flits to the flat and misses tackles in traffic.",
+   "buildIdentity": "Flat-coverage linebacker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "swallit",
+   "name": "Swallit",
+   "type": "Wind",
+   "position": "CB",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "agility",
+    "good": "speed",
+    "weaknesses": [
+     "strength",
+     "durability"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "wings",
+     "beak"
+    ],
+    "pattern": "mask",
+    "colors": [
+     "#4a6a8a",
+     "#ffe0c0"
+    ]
+   },
+   "personality": "A fork-tailed swallow that mirrors routes and gets bodied by big receivers.",
+   "buildIdentity": "Quick-twitch slot corner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "pinwhirl",
+   "name": "Pinwhirl",
+   "type": "Wind",
+   "position": "S",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "agility",
+    "good": "speed",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "wings"
+    ],
+    "pattern": "stripes",
+    "colors": [
+     "#a8d8c8",
+     "#ff6a8a"
+    ]
+   },
+   "personality": "A pinwheel-winged bug that spins toward the ball and away from collisions.",
+   "buildIdentity": "Ball-hawking rover",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "gustpuff",
+   "name": "Gustpuff",
+   "type": "Wind",
+   "position": "K",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "kicking",
+    "good": "agility",
+    "weaknesses": [
+     "durability"
+    ],
+    "strengthCeiling": 55
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "crest"
+    ],
+    "pattern": null,
+    "colors": [
+     "#d8f8f0",
+     "#7ac8b8"
+    ]
+   },
+   "personality": "A puff-chested wind sparrow that can drift a kick but never powers one.",
+   "buildIdentity": "Wind-reading placekicker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "murkit",
+   "name": "Murkit",
+   "type": "Dark",
+   "position": "QB",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "awareness",
+    "good": "accuracy",
+    "weaknesses": [
+     "arm",
+     "speed"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "ears"
+    ],
+    "pattern": "mask",
+    "colors": [
+     "#3a3048",
+     "#c8a0ff"
+    ]
+   },
+   "personality": "A masked imp who reads defenses in the dark and cannot throw deep.",
+   "buildIdentity": "Sneaky timing passer",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "minkurk",
+   "name": "Minkurk",
+   "type": "Dark",
+   "position": "RB",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "awareness",
+    "good": "agility",
+    "weaknesses": [
+     "strength",
+     "catching"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "serpent",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "ears"
+    ],
+    "pattern": "mask",
+    "colors": [
+     "#2e2838",
+     "#e0d0ff"
+    ]
+   },
+   "personality": "A long shadow mink that slithers through creases it seems to see first.",
+   "buildIdentity": "Vision runner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "batwhisk",
+   "name": "Batwhisk",
+   "type": "Dark",
+   "position": "WR",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "agility",
+    "good": "awareness",
+    "weaknesses": [
+     "blocking",
+     "catching"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "ears",
+     "wings"
+    ],
+    "pattern": null,
+    "colors": [
+     "#4a3a5a",
+     "#ff8ad8"
+    ]
+   },
+   "personality": "A bat with a whiplash cut and unreliable hands.",
+   "buildIdentity": "Separation route runner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "gloamtoad",
+   "name": "Gloamtoad",
+   "type": "Dark",
+   "position": "TE",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "catching",
+    "good": "agility",
+    "weaknesses": [
+     "blocking",
+     "durability"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "blob",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "glow"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#3a4a3a",
+     "#a0ffb0"
+    ]
+   },
+   "personality": "A glowing-spotted toad who snatches passes and wilts in a block.",
+   "buildIdentity": "Soft-handed seam target",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "umbruin",
+   "name": "Umbruin",
+   "type": "Dark",
+   "position": "OL",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "awareness",
+    "good": "agility",
+    "weaknesses": [
+     "durability",
+     "strength"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "biped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "ears",
+     "claws"
+    ],
+    "pattern": null,
+    "colors": [
+     "#2a2430",
+     "#8a6aa8"
+    ]
+   },
+   "personality": "A shadowy bear cub that sees every twist coming and tires fast.",
+   "buildIdentity": "Heady interior blocker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "vexhound",
+   "name": "Vexhound",
+   "type": "Dark",
+   "position": "DL",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "awareness",
+    "good": "agility",
+    "weaknesses": [
+     "strength",
+     "durability"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "fierce",
+    "features": [
+     "ears",
+     "fangs"
+    ],
+    "pattern": null,
+    "colors": [
+     "#3a2a3a",
+     "#ff5a6a"
+    ]
+   },
+   "personality": "A vexing hound that reads the snap count and gets moved by power.",
+   "buildIdentity": "Snap-timing disruptor",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "crowlurk",
+   "name": "Crowlurk",
+   "type": "Dark",
+   "position": "LB",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "awareness",
+    "good": "coverage",
+    "weaknesses": [
+     "strength",
+     "durability"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "avian",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "beak",
+     "crest"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#2a2a38",
+     "#9ab0ff"
+    ]
+   },
+   "personality": "A lurking crow that drops into passing lanes and gets bowled over.",
+   "buildIdentity": "Lane-reading linebacker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "spindlet",
+   "name": "Spindlet",
+   "type": "Dark",
+   "position": "CB",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "awareness",
+    "good": "coverage",
+    "weaknesses": [
+     "speed",
+     "tackling"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "antennae"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#3a3040",
+     "#e0e080"
+    ]
+   },
+   "personality": "A spindly spider that baits throws into its web and gets beaten by speed.",
+   "buildIdentity": "Baiting zone corner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "gloomoth",
+   "name": "Gloomoth",
+   "type": "Dark",
+   "position": "S",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "catching",
+    "good": "awareness",
+    "weaknesses": [
+     "tackling",
+     "durability"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "wings",
+     "antennae"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#4a405a",
+     "#d8c0ff"
+    ]
+   },
+   "personality": "A dusk moth that drifts under deep balls and shies from contact.",
+   "buildIdentity": "Ballhawk free safety",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "inklet",
+   "name": "Inklet",
+   "type": "Dark",
+   "position": "K",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "kicking",
+    "good": "awareness",
+    "weaknesses": [
+     "speed"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "serpent",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "fins"
+    ],
+    "pattern": null,
+    "colors": [
+     "#2a2a40",
+     "#7a8aff"
+    ]
+   },
+   "personality": "An ink-black eel that splats a kick through and slinks away.",
+   "buildIdentity": "Calm late-game kicker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "beamlet",
+   "name": "Beamlet",
+   "type": "Light",
+   "position": "QB",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "accuracy",
+    "good": "arm",
+    "weaknesses": [
+     "agility",
+     "durability"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "blob",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "halo"
+    ],
+    "pattern": null,
+    "colors": [
+     "#f8e8a0",
+     "#ffb84a"
+    ]
+   },
+   "personality": "A beaming little sunbeam with a sharp eye and a glass jaw.",
+   "buildIdentity": "Accurate dropback passer",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "glowhare",
+   "name": "Glowhare",
+   "type": "Light",
+   "position": "RB",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "catching",
+    "good": "awareness",
+    "weaknesses": [
+     "strength",
+     "blocking"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "antennae",
+     "glow"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#fff0c0",
+     "#ffd04a"
+    ]
+   },
+   "personality": "A lantern beetle that glows brightest catching passes out of the backfield.",
+   "buildIdentity": "Receiving back",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "dawnfinch",
+   "name": "Dawnfinch",
+   "type": "Light",
+   "position": "WR",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "catching",
+    "good": "awareness",
+    "weaknesses": [
+     "strength",
+     "durability"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "crest",
+     "beak"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#ffd88a",
+     "#ff8a5a"
+    ]
+   },
+   "personality": "A dawn-feathered finch that catches anything and bruises easily.",
+   "buildIdentity": "Sure-handed possession target",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "lanternox",
+   "name": "Lanternox",
+   "type": "Light",
+   "position": "TE",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "awareness",
+    "good": "catching",
+    "weaknesses": [
+     "strength",
+     "speed"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "biped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "horn",
+     "glow"
+    ],
+    "pattern": null,
+    "colors": [
+     "#e8d8a0",
+     "#ffe85a"
+    ]
+   },
+   "personality": "A lantern-horned ox who walks upright, lights up open zones and lumbers into them.",
+   "buildIdentity": "Zone-finding tight end",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "waxwick",
+   "name": "Waxwick",
+   "type": "Light",
+   "position": "OL",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "awareness",
+    "good": "durability",
+    "weaknesses": [
+     "speed",
+     "tackling"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "blob",
+    "size": "medium",
+    "look": "cute",
+    "features": [
+     "glow",
+     "crest"
+    ],
+    "pattern": null,
+    "colors": [
+     "#f8f0d8",
+     "#ffa84a"
+    ]
+   },
+   "personality": "A candle with a calm flame and slow, careful feet.",
+   "buildIdentity": "Patient pass protector",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "solram",
+   "name": "Solram",
+   "type": "Light",
+   "position": "DL",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "awareness",
+    "good": "tackling",
+    "weaknesses": [
+     "speed",
+     "strength"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "biped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "horns"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#f0d878",
+     "#ffffff"
+    ]
+   },
+   "personality": "A sun-bright ram who stands tall, reads the run well and gets driven off the ball.",
+   "buildIdentity": "Read-and-react tackle",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "lumbear",
+   "name": "Lumbear",
+   "type": "Light",
+   "position": "LB",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "catching",
+    "good": "coverage",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 55
+   },
+   "art": {
+    "body": "biped",
+    "size": "medium",
+    "look": "cute",
+    "features": [
+     "ears",
+     "halo"
+    ],
+    "pattern": null,
+    "colors": [
+     "#f8e0b0",
+     "#f0c040"
+    ]
+   },
+   "personality": "A haloed bear cub with soft hands and soft tackles.",
+   "buildIdentity": "Ball-skills linebacker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "glarefly",
+   "name": "Glarefly",
+   "type": "Light",
+   "position": "CB",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "catching",
+    "good": "awareness",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "wings",
+     "glow"
+    ],
+    "pattern": null,
+    "colors": [
+     "#fff8c0",
+     "#ffb040"
+    ]
+   },
+   "personality": "A glaring firefly that breaks on throws and flutters off ball carriers.",
+   "buildIdentity": "Ball-skills corner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "dazzlet",
+   "name": "Dazzlet",
+   "type": "Light",
+   "position": "S",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "awareness",
+    "good": "catching",
+    "weaknesses": [
+     "strength",
+     "speed"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "crest",
+     "glow"
+    ],
+    "pattern": null,
+    "colors": [
+     "#ffe8a8",
+     "#ff7a9a"
+    ]
+   },
+   "personality": "A dazzling sprite who sees the throw early and gets there slowly.",
+   "buildIdentity": "Instinctive centerfielder",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "twinklet",
+   "name": "Twinklet",
+   "type": "Light",
+   "position": "K",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "kicking",
+    "good": "accuracy",
+    "weaknesses": [
+     "strength"
+    ],
+    "strengthCeiling": 59
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "crest",
+     "halo"
+    ],
+    "pattern": null,
+    "colors": [
+     "#fff8e0",
+     "#ffd860"
+    ]
+   },
+   "personality": "A star-speckled songbird that kicks true when the lights are brightest.",
+   "buildIdentity": "Clutch-accuracy kicker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "rivetto",
+   "name": "Rivetto",
+   "type": "Metal",
+   "position": "QB",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "durability",
+    "good": "strength",
+    "weaknesses": [
+     "agility",
+     "speed"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "shelled",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "antennae"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#8a98a8",
+     "#e85a3a"
+    ]
+   },
+   "personality": "A riveted tin turtle that takes every sack and rattles back up.",
+   "buildIdentity": "Durable pocket passer",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "tinhare",
+   "name": "Tinhare",
+   "type": "Metal",
+   "position": "RB",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "durability",
+    "good": "blocking",
+    "weaknesses": [
+     "agility",
+     "catching"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "shelled",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "ears",
+     "plates"
+    ],
+    "pattern": null,
+    "colors": [
+     "#a8b0b8",
+     "#5a7a9a"
+    ]
+   },
+   "personality": "A tin-plated hare in a riveted shell, built to take hits, not make people miss.",
+   "buildIdentity": "Workhorse grinder",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "springlet",
+   "name": "Springlet",
+   "type": "Metal",
+   "position": "WR",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "durability",
+    "good": "catching",
+    "weaknesses": [
+     "agility",
+     "speed"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "antennae",
+     "wings"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#b8c0c8",
+     "#d8a03a"
+    ]
+   },
+   "personality": "A coiled spring bug that catches over the middle and bounces up every time.",
+   "buildIdentity": "Tough middle receiver",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "anvilox",
+   "name": "Anvilox",
+   "type": "Metal",
+   "position": "TE",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "durability",
+    "good": "blocking",
+    "weaknesses": [
+     "speed",
+     "agility"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "horn",
+     "plates"
+    ],
+    "pattern": null,
+    "colors": [
+     "#5a6068",
+     "#c8d0d8"
+    ]
+   },
+   "personality": "An anvil-headed ox calf that blocks all day and lumbers on routes.",
+   "buildIdentity": "Iron in-line tight end",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "kettlump",
+   "name": "Kettlump",
+   "type": "Metal",
+   "position": "OL",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "durability",
+    "good": "strength",
+    "weaknesses": [
+     "awareness",
+     "agility"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "shelled",
+    "size": "medium",
+    "look": "cute",
+    "features": [
+     "plates",
+     "collar"
+    ],
+    "pattern": null,
+    "colors": [
+     "#7a8088",
+     "#e8b860"
+    ]
+   },
+   "personality": "A dented kettle-shelled tortoise that whistles when pushed, which is rarely.",
+   "buildIdentity": "Sturdy road-grader",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "ingotusk",
+   "name": "Ingotusk",
+   "type": "Metal",
+   "position": "DL",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "strength",
+    "good": "tackling",
+    "weaknesses": [
+     "agility",
+     "speed"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "blob",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "tusks",
+     "plates"
+    ],
+    "pattern": null,
+    "colors": [
+     "#9a8a6a",
+     "#e0e0e8"
+    ]
+   },
+   "personality": "A nearly square ingot of a hog that holds the point and never chases.",
+   "buildIdentity": "Point-of-attack anchor",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "brasshound",
+   "name": "Brasshound",
+   "type": "Metal",
+   "position": "LB",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "durability",
+    "good": "strength",
+    "weaknesses": [
+     "agility",
+     "catching"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "ears",
+     "collar"
+    ],
+    "pattern": null,
+    "colors": [
+     "#b89048",
+     "#5a5a68"
+    ]
+   },
+   "personality": "A brass-collared hound that plays every down and drops easy picks.",
+   "buildIdentity": "Iron-man linebacker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "gyroflit",
+   "name": "Gyroflit",
+   "type": "Metal",
+   "position": "CB",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "durability",
+    "good": "strength",
+    "weaknesses": [
+     "agility",
+     "catching"
+    ],
+    "strengthCeiling": 55
+   },
+   "art": {
+    "body": "insectoid",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "wings",
+     "antennae"
+    ],
+    "pattern": "stripes",
+    "colors": [
+     "#9aa8b8",
+     "#5ae8d8"
+    ]
+   },
+   "personality": "A gyroscope-winged bug that never wobbles and never quite turns fast.",
+   "buildIdentity": "Physical press corner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "clockcrow",
+   "name": "Clockcrow",
+   "type": "Metal",
+   "position": "S",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "durability",
+    "good": "tackling",
+    "weaknesses": [
+     "agility",
+     "catching"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "beak",
+     "crest"
+    ],
+    "pattern": "backstripe",
+    "colors": [
+     "#6a7078",
+     "#d8b048"
+    ]
+   },
+   "personality": "A clockwork crow that walks upright, keeps perfect time and has stiff hips.",
+   "buildIdentity": "Durable box safety",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "washerling",
+   "name": "Washerling",
+   "type": "Metal",
+   "position": "K",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "kicking",
+    "good": "accuracy",
+    "weaknesses": [
+     "agility"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "shelled",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "plates"
+    ],
+    "pattern": null,
+    "colors": [
+     "#a0a8b0",
+     "#8ad0f0"
+    ]
+   },
+   "personality": "A washer-shelled snail that kicks steadily and moves slowly.",
+   "buildIdentity": "Reliable mid-range kicker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "mindle",
+   "name": "Mindle",
+   "type": "Psychic",
+   "position": "QB",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "awareness",
+    "good": "arm",
+    "weaknesses": [
+     "durability",
+     "strength"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "antennae",
+     "glow"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#c88ad8",
+     "#fff0ff"
+    ]
+   },
+   "personality": "A tiny sprite with a big forehead that sees the blitz and crumples under it.",
+   "buildIdentity": "Pre-snap reader",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "dreamhop",
+   "name": "Dreamhop",
+   "type": "Psychic",
+   "position": "RB",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "catching",
+    "good": "agility",
+    "weaknesses": [
+     "durability",
+     "strength"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "blob",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears",
+     "glow"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#b07ad0",
+     "#ffd8f0"
+    ]
+   },
+   "personality": "A dreamy cloud-puff that floats out for screens and dozes through contact.",
+   "buildIdentity": "Screen-game back",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "trancefin",
+   "name": "Trancefin",
+   "type": "Psychic",
+   "position": "WR",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "awareness",
+    "good": "agility",
+    "weaknesses": [
+     "strength",
+     "blocking"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "serpent",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "fins",
+     "glow"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#8a5ac8",
+     "#80f0e0"
+    ]
+   },
+   "personality": "A hypnotic fish that drifts into open space and avoids all contact.",
+   "buildIdentity": "Option-route receiver",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "pondermoose",
+   "name": "Pondermoose",
+   "type": "Psychic",
+   "position": "TE",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "catching",
+    "good": "awareness",
+    "weaknesses": [
+     "durability",
+     "strength"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "horns"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#7a5a90",
+     "#f0c0ff"
+    ]
+   },
+   "personality": "A pensive moose calf who always seems to be thinking about something else.",
+   "buildIdentity": "Thinking receiving tight end",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "thinkump",
+   "name": "Thinkump",
+   "type": "Psychic",
+   "position": "OL",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "awareness",
+    "good": "speed",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "blob",
+    "size": "medium",
+    "look": "cute",
+    "features": [
+     "bulb",
+     "glow"
+    ],
+    "pattern": null,
+    "colors": [
+     "#d8a8e8",
+     "#7a4aa0"
+    ]
+   },
+   "personality": "A brainy blob that calls every protection and gets pushed around executing it.",
+   "buildIdentity": "Protection-calling center",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "omenox",
+   "name": "Omenox",
+   "type": "Psychic",
+   "position": "DL",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "awareness",
+    "good": "speed",
+    "weaknesses": [
+     "strength",
+     "tackling"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "serpent",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "horn",
+     "glow"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#6a4a80",
+     "#ffd0ff"
+    ]
+   },
+   "personality": "A horned river serpent that senses the snap and slips off the tackle.",
+   "buildIdentity": "Snap-anticipating rusher",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "seerling",
+   "name": "Seerling",
+   "type": "Psychic",
+   "position": "LB",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "awareness",
+    "good": "catching",
+    "weaknesses": [
+     "strength",
+     "speed"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "crest",
+     "halo"
+    ],
+    "pattern": null,
+    "colors": [
+     "#a080c0",
+     "#e8e0ff"
+    ]
+   },
+   "personality": "A haloed seer who knows where the play goes and gets there late.",
+   "buildIdentity": "Play-diagnosing linebacker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "riddlet",
+   "name": "Riddlet",
+   "type": "Psychic",
+   "position": "CB",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "coverage",
+    "good": "catching",
+    "weaknesses": [
+     "strength",
+     "durability"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears",
+     "tail"
+    ],
+    "pattern": "mask",
+    "colors": [
+     "#9a6ab0",
+     "#f8e8a0"
+    ]
+   },
+   "personality": "A masked fox kit that seems to know every route and wears down quickly.",
+   "buildIdentity": "Route-anticipating corner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "gazeling",
+   "name": "Gazeling",
+   "type": "Psychic",
+   "position": "S",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "coverage",
+    "good": "awareness",
+    "weaknesses": [
+     "strength",
+     "durability"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "ears",
+     "horns"
+    ],
+    "pattern": null,
+    "colors": [
+     "#d0b0e8",
+     "#6a3a8a"
+    ]
+   },
+   "personality": "A wide-eyed little gazelle that stares down the quarterback and wilts against power.",
+   "buildIdentity": "Mind-reading deep safety",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "orblet",
+   "name": "Orblet",
+   "type": "Psychic",
+   "position": "K",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "kicking",
+    "good": "awareness",
+    "weaknesses": [
+     "strength"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "blob",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "glow",
+     "halo"
+    ],
+    "pattern": null,
+    "colors": [
+     "#e0b8f8",
+     "#a050d8"
+    ]
+   },
+   "personality": "A floating orb that lines up every kick with eerie focus.",
+   "buildIdentity": "Focused accuracy kicker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "scalekin",
+   "name": "Scalekin",
+   "type": "Dragon",
+   "position": "QB",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "arm",
+    "good": "durability",
+    "weaknesses": [
+     "agility",
+     "accuracy"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "horns",
+     "wings"
+    ],
+    "pattern": null,
+    "colors": [
+     "#a83a3a",
+     "#f0c060"
+    ]
+   },
+   "personality": "A young scaled drake with a cannon arm and no idea where it is going.",
+   "buildIdentity": "Raw big-arm passer",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "raptlet",
+   "name": "Raptlet",
+   "type": "Dragon",
+   "position": "RB",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "speed",
+    "good": "strength",
+    "weaknesses": [
+     "awareness",
+     "catching"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "biped",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "horns",
+     "tail"
+    ],
+    "pattern": "backstripe",
+    "colors": [
+     "#5a8a4a",
+     "#f0e070"
+    ]
+   },
+   "personality": "A sprinting raptor hatchling that runs hard and runs the wrong way.",
+   "buildIdentity": "Hard-charging runner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "glidrake",
+   "name": "Glidrake",
+   "type": "Dragon",
+   "position": "WR",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "speed",
+    "good": "catching",
+    "weaknesses": [
+     "awareness",
+     "durability"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "wings",
+     "crest"
+    ],
+    "pattern": "band",
+    "colors": [
+     "#3a6a9a",
+     "#ffb050"
+    ]
+   },
+   "personality": "A gliding drake that outruns coverage and freezes when the play breaks down.",
+   "buildIdentity": "Deep glide receiver",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "crestback",
+   "name": "Crestback",
+   "type": "Dragon",
+   "position": "TE",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "strength",
+    "good": "speed",
+    "weaknesses": [
+     "awareness",
+     "catching"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "biped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "crest",
+     "ridge"
+    ],
+    "pattern": null,
+    "colors": [
+     "#8a3a4a",
+     "#e0d0a0"
+    ]
+   },
+   "personality": "A crested lizard that stands up like a fullback and has stone hands.",
+   "buildIdentity": "Power move blocker",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "bulwyrm",
+   "name": "Bulwyrm",
+   "type": "Dragon",
+   "position": "OL",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "strength",
+    "good": "tackling",
+    "weaknesses": [
+     "awareness",
+     "speed"
+    ],
+    "strengthCeiling": 58
+   },
+   "art": {
+    "body": "serpent",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "horns"
+    ],
+    "pattern": null,
+    "colors": [
+     "#4a5a3a",
+     "#d8c070"
+    ]
+   },
+   "personality": "A thick-coiled wyrm that walls off rushers and loses track of stunts.",
+   "buildIdentity": "Power drive tackle",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "gnashlet",
+   "name": "Gnashlet",
+   "type": "Dragon",
+   "position": "DL",
+   "clashArchetype": "Striker",
+   "profile": {
+    "strength": "tackling",
+    "good": "strength",
+    "weaknesses": [
+     "agility",
+     "awareness"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "biped",
+    "size": "medium",
+    "look": "fierce",
+    "features": [
+     "horns",
+     "fangs"
+    ],
+    "pattern": null,
+    "colors": [
+     "#7a2a2a",
+     "#f0d880"
+    ]
+   },
+   "personality": "A gnashing hatchling that bites down on ball carriers and bites on every fake.",
+   "buildIdentity": "Violent run stuffer",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "drakhound",
+   "name": "Drakhound",
+   "type": "Dragon",
+   "position": "LB",
+   "clashArchetype": "Tank",
+   "profile": {
+    "strength": "tackling",
+    "good": "speed",
+    "weaknesses": [
+     "coverage",
+     "catching"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "quadruped",
+    "size": "medium",
+    "look": "cool",
+    "features": [
+     "horns",
+     "ears"
+    ],
+    "pattern": null,
+    "colors": [
+     "#6a3a5a",
+     "#ffa060"
+    ]
+   },
+   "personality": "A scaled hound that runs downhill and forgets about the pass.",
+   "buildIdentity": "Downhill thumper",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "wyvlet",
+   "name": "Wyvlet",
+   "type": "Dragon",
+   "position": "CB",
+   "clashArchetype": "Disruptor",
+   "profile": {
+    "strength": "tackling",
+    "good": "speed",
+    "weaknesses": [
+     "coverage",
+     "catching"
+    ],
+    "strengthCeiling": 55
+   },
+   "art": {
+    "body": "avian",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "wings",
+     "horns"
+    ],
+    "pattern": null,
+    "colors": [
+     "#3a5a6a",
+     "#ff7a5a"
+    ]
+   },
+   "personality": "A little wyvern that hits like a safety and covers like one too.",
+   "buildIdentity": "Tackling nickel corner",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "skinklet",
+   "name": "Skinklet",
+   "type": "Dragon",
+   "position": "S",
+   "clashArchetype": "Support",
+   "profile": {
+    "strength": "speed",
+    "good": "tackling",
+    "weaknesses": [
+     "awareness",
+     "catching"
+    ],
+    "strengthCeiling": 57
+   },
+   "art": {
+    "body": "serpent",
+    "size": "small",
+    "look": "cool",
+    "features": [
+     "crest"
+    ],
+    "pattern": "stripes",
+    "colors": [
+     "#2a7a7a",
+     "#f0e0a0"
+    ]
+   },
+   "personality": "A striped skink that flies to the ball and overruns the angle.",
+   "buildIdentity": "Fast-flow safety",
+   "reviewStatus": "pending owner art/content review"
+  },
+  {
+   "id": "eggling",
+   "name": "Eggling",
+   "type": "Dragon",
+   "position": "K",
+   "clashArchetype": "Balanced",
+   "profile": {
+    "strength": "kicking",
+    "good": "durability",
+    "weaknesses": [
+     "accuracy"
+    ],
+    "strengthCeiling": 56
+   },
+   "art": {
+    "body": "blob",
+    "size": "small",
+    "look": "cute",
+    "features": [
+     "horns"
+    ],
+    "pattern": "spots",
+    "colors": [
+     "#f0e0c8",
+     "#c84a4a"
+    ]
+   },
+   "personality": "A dragon egg with little horns poking through and a hard-shelled leg.",
+   "buildIdentity": "Hard-leg kicker",
+   "reviewStatus": "pending owner art/content review"
+  }
+ ]
+}

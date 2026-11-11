@@ -1,0 +1,1927 @@
+{
+ "cell": 16,
+ "cols": 12,
+ "rows": 10,
+ "sprites": [
+  {
+   "file": "kindlet.png",
+   "name": "Kindlet",
+   "species": "kindlet",
+   "form": "base",
+   "level": null,
+   "element": "Fire",
+   "rarity": "basic",
+   "position": "QB",
+   "sheet": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "charbun.png",
+   "name": "Charbun",
+   "species": "charbun",
+   "form": "base",
+   "level": null,
+   "element": "Fire",
+   "rarity": "basic",
+   "position": "RB",
+   "sheet": {
+    "x": 16,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "sparkwick.png",
+   "name": "Sparkwick",
+   "species": "sparkwick",
+   "form": "base",
+   "level": null,
+   "element": "Fire",
+   "rarity": "basic",
+   "position": "WR",
+   "sheet": {
+    "x": 32,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "coalump.png",
+   "name": "Coalump",
+   "species": "coalump",
+   "form": "base",
+   "level": null,
+   "element": "Fire",
+   "rarity": "basic",
+   "position": "TE",
+   "sheet": {
+    "x": 48,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "kilnback.png",
+   "name": "Kilnback",
+   "species": "kilnback",
+   "form": "base",
+   "level": null,
+   "element": "Fire",
+   "rarity": "basic",
+   "position": "OL",
+   "sheet": {
+    "x": 64,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "scorchub.png",
+   "name": "Scorchub",
+   "species": "scorchub",
+   "form": "base",
+   "level": null,
+   "element": "Fire",
+   "rarity": "basic",
+   "position": "DL",
+   "sheet": {
+    "x": 80,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "embadger.png",
+   "name": "Embadger",
+   "species": "embadger",
+   "form": "base",
+   "level": null,
+   "element": "Fire",
+   "rarity": "basic",
+   "position": "LB",
+   "sheet": {
+    "x": 96,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "singecat.png",
+   "name": "Singecat",
+   "species": "singecat",
+   "form": "base",
+   "level": null,
+   "element": "Fire",
+   "rarity": "basic",
+   "position": "CB",
+   "sheet": {
+    "x": 112,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "ashpeck.png",
+   "name": "Ashpeck",
+   "species": "ashpeck",
+   "form": "base",
+   "level": null,
+   "element": "Fire",
+   "rarity": "basic",
+   "position": "S",
+   "sheet": {
+    "x": 128,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "fusebug.png",
+   "name": "Fusebug",
+   "species": "fusebug",
+   "form": "base",
+   "level": null,
+   "element": "Fire",
+   "rarity": "basic",
+   "position": "K",
+   "sheet": {
+    "x": 144,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "brookit.png",
+   "name": "Brookit",
+   "species": "brookit",
+   "form": "base",
+   "level": null,
+   "element": "Water",
+   "rarity": "basic",
+   "position": "QB",
+   "sheet": {
+    "x": 160,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "ottrip.png",
+   "name": "Ottrip",
+   "species": "ottrip",
+   "form": "base",
+   "level": null,
+   "element": "Water",
+   "rarity": "basic",
+   "position": "RB",
+   "sheet": {
+    "x": 176,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "minnodart.png",
+   "name": "Minnodart",
+   "species": "minnodart",
+   "form": "base",
+   "level": null,
+   "element": "Water",
+   "rarity": "basic",
+   "position": "WR",
+   "sheet": {
+    "x": 0,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "kelpup.png",
+   "name": "Kelpup",
+   "species": "kelpup",
+   "form": "base",
+   "level": null,
+   "element": "Water",
+   "rarity": "basic",
+   "position": "TE",
+   "sheet": {
+    "x": 16,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "barnaclod.png",
+   "name": "Barnaclod",
+   "species": "barnaclod",
+   "form": "base",
+   "level": null,
+   "element": "Water",
+   "rarity": "basic",
+   "position": "OL",
+   "sheet": {
+    "x": 32,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "sploshog.png",
+   "name": "Sploshog",
+   "species": "sploshog",
+   "form": "base",
+   "level": null,
+   "element": "Water",
+   "rarity": "basic",
+   "position": "DL",
+   "sheet": {
+    "x": 48,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "newtide.png",
+   "name": "Newtide",
+   "species": "newtide",
+   "form": "base",
+   "level": null,
+   "element": "Water",
+   "rarity": "basic",
+   "position": "LB",
+   "sheet": {
+    "x": 64,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "pondskip.png",
+   "name": "Pondskip",
+   "species": "pondskip",
+   "form": "base",
+   "level": null,
+   "element": "Water",
+   "rarity": "basic",
+   "position": "CB",
+   "sheet": {
+    "x": 80,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "wadelet.png",
+   "name": "Wadelet",
+   "species": "wadelet",
+   "form": "base",
+   "level": null,
+   "element": "Water",
+   "rarity": "basic",
+   "position": "S",
+   "sheet": {
+    "x": 96,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "bubblop.png",
+   "name": "Bubblop",
+   "species": "bubblop",
+   "form": "base",
+   "level": null,
+   "element": "Water",
+   "rarity": "basic",
+   "position": "K",
+   "sheet": {
+    "x": 112,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "acornet.png",
+   "name": "Acornet",
+   "species": "acornet",
+   "form": "base",
+   "level": null,
+   "element": "Nature",
+   "rarity": "basic",
+   "position": "QB",
+   "sheet": {
+    "x": 128,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "thistlehop.png",
+   "name": "Thistlehop",
+   "species": "thistlehop",
+   "form": "base",
+   "level": null,
+   "element": "Nature",
+   "rarity": "basic",
+   "position": "RB",
+   "sheet": {
+    "x": 144,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "fernflit.png",
+   "name": "Fernflit",
+   "species": "fernflit",
+   "form": "base",
+   "level": null,
+   "element": "Nature",
+   "rarity": "basic",
+   "position": "WR",
+   "sheet": {
+    "x": 160,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "stumpkin.png",
+   "name": "Stumpkin",
+   "species": "stumpkin",
+   "form": "base",
+   "level": null,
+   "element": "Nature",
+   "rarity": "basic",
+   "position": "TE",
+   "sheet": {
+    "x": 176,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "trunkle.png",
+   "name": "Trunkle",
+   "species": "trunkle",
+   "form": "base",
+   "level": null,
+   "element": "Nature",
+   "rarity": "basic",
+   "position": "OL",
+   "sheet": {
+    "x": 0,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "briarhog.png",
+   "name": "Briarhog",
+   "species": "briarhog",
+   "form": "base",
+   "level": null,
+   "element": "Nature",
+   "rarity": "basic",
+   "position": "DL",
+   "sheet": {
+    "x": 16,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "barkbug.png",
+   "name": "Barkbug",
+   "species": "barkbug",
+   "form": "base",
+   "level": null,
+   "element": "Nature",
+   "rarity": "basic",
+   "position": "LB",
+   "sheet": {
+    "x": 32,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "fawnleaf.png",
+   "name": "Fawnleaf",
+   "species": "fawnleaf",
+   "form": "base",
+   "level": null,
+   "element": "Nature",
+   "rarity": "basic",
+   "position": "CB",
+   "sheet": {
+    "x": 48,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "ivyowl.png",
+   "name": "Ivyowl",
+   "species": "ivyowl",
+   "form": "base",
+   "level": null,
+   "element": "Nature",
+   "rarity": "basic",
+   "position": "S",
+   "sheet": {
+    "x": 64,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "podling.png",
+   "name": "Podling",
+   "species": "podling",
+   "form": "base",
+   "level": null,
+   "element": "Nature",
+   "rarity": "basic",
+   "position": "K",
+   "sheet": {
+    "x": 80,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "ampette.png",
+   "name": "Ampette",
+   "species": "ampette",
+   "form": "base",
+   "level": null,
+   "element": "Electric",
+   "rarity": "basic",
+   "position": "QB",
+   "sheet": {
+    "x": 96,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "fuzzvolt.png",
+   "name": "Fuzzvolt",
+   "species": "fuzzvolt",
+   "form": "base",
+   "level": null,
+   "element": "Electric",
+   "rarity": "basic",
+   "position": "RB",
+   "sheet": {
+    "x": 112,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "boltdart.png",
+   "name": "Boltdart",
+   "species": "boltdart",
+   "form": "base",
+   "level": null,
+   "element": "Electric",
+   "rarity": "basic",
+   "position": "WR",
+   "sheet": {
+    "x": 128,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "wattram.png",
+   "name": "Wattram",
+   "species": "wattram",
+   "form": "base",
+   "level": null,
+   "element": "Electric",
+   "rarity": "basic",
+   "position": "TE",
+   "sheet": {
+    "x": 144,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "capaclod.png",
+   "name": "Capaclod",
+   "species": "capaclod",
+   "form": "base",
+   "level": null,
+   "element": "Electric",
+   "rarity": "basic",
+   "position": "OL",
+   "sheet": {
+    "x": 160,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "zaphog.png",
+   "name": "Zaphog",
+   "species": "zaphog",
+   "form": "base",
+   "level": null,
+   "element": "Electric",
+   "rarity": "basic",
+   "position": "DL",
+   "sheet": {
+    "x": 176,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "staticub.png",
+   "name": "Staticub",
+   "species": "staticub",
+   "form": "base",
+   "level": null,
+   "element": "Electric",
+   "rarity": "basic",
+   "position": "LB",
+   "sheet": {
+    "x": 0,
+    "y": 48,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "neonnewt.png",
+   "name": "Neonnewt",
+   "species": "neonnewt",
+   "form": "base",
+   "level": null,
+   "element": "Electric",
+   "rarity": "basic",
+   "position": "CB",
+   "sheet": {
+    "x": 16,
+    "y": 48,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "buzzhawk.png",
+   "name": "Buzzhawk",
+   "species": "buzzhawk",
+   "form": "base",
+   "level": null,
+   "element": "Electric",
+   "rarity": "basic",
+   "position": "S",
+   "sheet": {
+    "x": 32,
+    "y": 48,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "wattlet.png",
+   "name": "Wattlet",
+   "species": "wattlet",
+   "form": "base",
+   "level": null,
+   "element": "Electric",
+   "rarity": "basic",
+   "position": "K",
+   "sheet": {
+    "x": 48,
+    "y": 48,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "slatelet.png",
+   "name": "Slatelet",
+   "species": "slatelet",
+   "form": "base",
+   "level": null,
+   "element": "Earth",
+   "rarity": "basic",
+   "position": "QB",
+   "sheet": {
+    "x": 64,
+    "y": 48,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "gravelpup.png",
+   "name": "Gravelpup",
+   "species": "gravelpup",
+   "form": "base",
+   "level": null,
+   "element": "Earth",
+   "rarity": "basic",
+   "position": "RB",
+   "sheet": {
+    "x": 80,
+    "y": 48,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "mudlark.png",
+   "name": "Mudlark",
+   "species": "mudlark",
+   "form": "base",
+   "level": null,
+   "element": "Earth",
+   "rarity": "basic",
+   "position": "WR",
+   "sheet": {
+    "x": 96,
+    "y": 48,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "clodhorn.png",
+   "name": "Clodhorn",
+   "species": "clodhorn",
+   "form": "base",
+   "level": null,
+   "element": "Earth",
+   "rarity": "basic",
+   "position": "TE",
+   "sheet": {
+    "x": 112,
+    "y": 48,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "cobblump.png",
+   "name": "Cobblump",
+   "species": "cobblump",
+   "form": "base",
+   "level": null,
+   "element": "Earth",
+   "rarity": "basic",
+   "position": "OL",
+   "sheet": {
+    "x": 128,
+    "y": 48,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "quarrox.png",
+   "name": "Quarrox",
+   "species": "quarrox",
+   "form": "base",
+   "level": null,
+   "element": "Earth",
+   "rarity": "basic",
+   "position": "DL",
+   "sheet": {
+    "x": 144,
+    "y": 48,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "diggit.png",
+   "name": "Diggit",
+   "species": "diggit",
+   "form": "base",
+   "level": null,
+   "element": "Earth",
+   "rarity": "basic",
+   "position": "LB",
+   "sheet": {
+    "x": 160,
+    "y": 48,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "pumicat.png",
+   "name": "Pumicat",
+   "species": "pumicat",
+   "form": "base",
+   "level": null,
+   "element": "Earth",
+   "rarity": "basic",
+   "position": "CB",
+   "sheet": {
+    "x": 176,
+    "y": 48,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "siltadillo.png",
+   "name": "Siltadillo",
+   "species": "siltadillo",
+   "form": "base",
+   "level": null,
+   "element": "Earth",
+   "rarity": "basic",
+   "position": "S",
+   "sheet": {
+    "x": 0,
+    "y": 64,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "geodot.png",
+   "name": "Geodot",
+   "species": "geodot",
+   "form": "base",
+   "level": null,
+   "element": "Earth",
+   "rarity": "basic",
+   "position": "K",
+   "sheet": {
+    "x": 16,
+    "y": 64,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "chillip.png",
+   "name": "Chillip",
+   "species": "chillip",
+   "form": "base",
+   "level": null,
+   "element": "Ice",
+   "rarity": "basic",
+   "position": "QB",
+   "sheet": {
+    "x": 32,
+    "y": 64,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "skiddle.png",
+   "name": "Skiddle",
+   "species": "skiddle",
+   "form": "base",
+   "level": null,
+   "element": "Ice",
+   "rarity": "basic",
+   "position": "RB",
+   "sheet": {
+    "x": 48,
+    "y": 64,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "snowdart.png",
+   "name": "Snowdart",
+   "species": "snowdart",
+   "form": "base",
+   "level": null,
+   "element": "Ice",
+   "rarity": "basic",
+   "position": "WR",
+   "sheet": {
+    "x": 64,
+    "y": 64,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "walrump.png",
+   "name": "Walrump",
+   "species": "walrump",
+   "form": "base",
+   "level": null,
+   "element": "Ice",
+   "rarity": "basic",
+   "position": "TE",
+   "sheet": {
+    "x": 80,
+    "y": 64,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "floebear.png",
+   "name": "Floebear",
+   "species": "floebear",
+   "form": "base",
+   "level": null,
+   "element": "Ice",
+   "rarity": "basic",
+   "position": "OL",
+   "sheet": {
+    "x": 96,
+    "y": 64,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "rimeboar.png",
+   "name": "Rimeboar",
+   "species": "rimeboar",
+   "form": "base",
+   "level": null,
+   "element": "Ice",
+   "rarity": "basic",
+   "position": "DL",
+   "sheet": {
+    "x": 112,
+    "y": 64,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "hoarcub.png",
+   "name": "Hoarcub",
+   "species": "hoarcub",
+   "form": "base",
+   "level": null,
+   "element": "Ice",
+   "rarity": "basic",
+   "position": "LB",
+   "sheet": {
+    "x": 128,
+    "y": 64,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "shiverkit.png",
+   "name": "Shiverkit",
+   "species": "shiverkit",
+   "form": "base",
+   "level": null,
+   "element": "Ice",
+   "rarity": "basic",
+   "position": "CB",
+   "sheet": {
+    "x": 144,
+    "y": 64,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "ptarmilet.png",
+   "name": "Ptarmilet",
+   "species": "ptarmilet",
+   "form": "base",
+   "level": null,
+   "element": "Ice",
+   "rarity": "basic",
+   "position": "S",
+   "sheet": {
+    "x": 160,
+    "y": 64,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "cubeling.png",
+   "name": "Cubeling",
+   "species": "cubeling",
+   "form": "base",
+   "level": null,
+   "element": "Ice",
+   "rarity": "basic",
+   "position": "K",
+   "sheet": {
+    "x": 176,
+    "y": 64,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "breezle.png",
+   "name": "Breezle",
+   "species": "breezle",
+   "form": "base",
+   "level": null,
+   "element": "Wind",
+   "rarity": "basic",
+   "position": "QB",
+   "sheet": {
+    "x": 0,
+    "y": 80,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "whirlhare.png",
+   "name": "Whirlhare",
+   "species": "whirlhare",
+   "form": "base",
+   "level": null,
+   "element": "Wind",
+   "rarity": "basic",
+   "position": "RB",
+   "sheet": {
+    "x": 16,
+    "y": 80,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "kitelet.png",
+   "name": "Kitelet",
+   "species": "kitelet",
+   "form": "base",
+   "level": null,
+   "element": "Wind",
+   "rarity": "basic",
+   "position": "WR",
+   "sheet": {
+    "x": 32,
+    "y": 80,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "sailmoth.png",
+   "name": "Sailmoth",
+   "species": "sailmoth",
+   "form": "base",
+   "level": null,
+   "element": "Wind",
+   "rarity": "basic",
+   "position": "TE",
+   "sheet": {
+    "x": 48,
+    "y": 80,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "nimbulk.png",
+   "name": "Nimbulk",
+   "species": "nimbulk",
+   "form": "base",
+   "level": null,
+   "element": "Wind",
+   "rarity": "basic",
+   "position": "OL",
+   "sheet": {
+    "x": 64,
+    "y": 80,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "galebuck.png",
+   "name": "Galebuck",
+   "species": "galebuck",
+   "form": "base",
+   "level": null,
+   "element": "Wind",
+   "rarity": "basic",
+   "position": "DL",
+   "sheet": {
+    "x": 80,
+    "y": 80,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "windrook.png",
+   "name": "Windrook",
+   "species": "windrook",
+   "form": "base",
+   "level": null,
+   "element": "Wind",
+   "rarity": "basic",
+   "position": "LB",
+   "sheet": {
+    "x": 96,
+    "y": 80,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "swallit.png",
+   "name": "Swallit",
+   "species": "swallit",
+   "form": "base",
+   "level": null,
+   "element": "Wind",
+   "rarity": "basic",
+   "position": "CB",
+   "sheet": {
+    "x": 112,
+    "y": 80,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "pinwhirl.png",
+   "name": "Pinwhirl",
+   "species": "pinwhirl",
+   "form": "base",
+   "level": null,
+   "element": "Wind",
+   "rarity": "basic",
+   "position": "S",
+   "sheet": {
+    "x": 128,
+    "y": 80,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "gustpuff.png",
+   "name": "Gustpuff",
+   "species": "gustpuff",
+   "form": "base",
+   "level": null,
+   "element": "Wind",
+   "rarity": "basic",
+   "position": "K",
+   "sheet": {
+    "x": 144,
+    "y": 80,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "murkit.png",
+   "name": "Murkit",
+   "species": "murkit",
+   "form": "base",
+   "level": null,
+   "element": "Dark",
+   "rarity": "basic",
+   "position": "QB",
+   "sheet": {
+    "x": 160,
+    "y": 80,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "minkurk.png",
+   "name": "Minkurk",
+   "species": "minkurk",
+   "form": "base",
+   "level": null,
+   "element": "Dark",
+   "rarity": "basic",
+   "position": "RB",
+   "sheet": {
+    "x": 176,
+    "y": 80,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "batwhisk.png",
+   "name": "Batwhisk",
+   "species": "batwhisk",
+   "form": "base",
+   "level": null,
+   "element": "Dark",
+   "rarity": "basic",
+   "position": "WR",
+   "sheet": {
+    "x": 0,
+    "y": 96,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "gloamtoad.png",
+   "name": "Gloamtoad",
+   "species": "gloamtoad",
+   "form": "base",
+   "level": null,
+   "element": "Dark",
+   "rarity": "basic",
+   "position": "TE",
+   "sheet": {
+    "x": 16,
+    "y": 96,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "umbruin.png",
+   "name": "Umbruin",
+   "species": "umbruin",
+   "form": "base",
+   "level": null,
+   "element": "Dark",
+   "rarity": "basic",
+   "position": "OL",
+   "sheet": {
+    "x": 32,
+    "y": 96,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "vexhound.png",
+   "name": "Vexhound",
+   "species": "vexhound",
+   "form": "base",
+   "level": null,
+   "element": "Dark",
+   "rarity": "basic",
+   "position": "DL",
+   "sheet": {
+    "x": 48,
+    "y": 96,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "crowlurk.png",
+   "name": "Crowlurk",
+   "species": "crowlurk",
+   "form": "base",
+   "level": null,
+   "element": "Dark",
+   "rarity": "basic",
+   "position": "LB",
+   "sheet": {
+    "x": 64,
+    "y": 96,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "spindlet.png",
+   "name": "Spindlet",
+   "species": "spindlet",
+   "form": "base",
+   "level": null,
+   "element": "Dark",
+   "rarity": "basic",
+   "position": "CB",
+   "sheet": {
+    "x": 80,
+    "y": 96,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "gloomoth.png",
+   "name": "Gloomoth",
+   "species": "gloomoth",
+   "form": "base",
+   "level": null,
+   "element": "Dark",
+   "rarity": "basic",
+   "position": "S",
+   "sheet": {
+    "x": 96,
+    "y": 96,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "inklet.png",
+   "name": "Inklet",
+   "species": "inklet",
+   "form": "base",
+   "level": null,
+   "element": "Dark",
+   "rarity": "basic",
+   "position": "K",
+   "sheet": {
+    "x": 112,
+    "y": 96,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "beamlet.png",
+   "name": "Beamlet",
+   "species": "beamlet",
+   "form": "base",
+   "level": null,
+   "element": "Light",
+   "rarity": "basic",
+   "position": "QB",
+   "sheet": {
+    "x": 128,
+    "y": 96,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "glowhare.png",
+   "name": "Glowhare",
+   "species": "glowhare",
+   "form": "base",
+   "level": null,
+   "element": "Light",
+   "rarity": "basic",
+   "position": "RB",
+   "sheet": {
+    "x": 144,
+    "y": 96,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "dawnfinch.png",
+   "name": "Dawnfinch",
+   "species": "dawnfinch",
+   "form": "base",
+   "level": null,
+   "element": "Light",
+   "rarity": "basic",
+   "position": "WR",
+   "sheet": {
+    "x": 160,
+    "y": 96,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "lanternox.png",
+   "name": "Lanternox",
+   "species": "lanternox",
+   "form": "base",
+   "level": null,
+   "element": "Light",
+   "rarity": "basic",
+   "position": "TE",
+   "sheet": {
+    "x": 176,
+    "y": 96,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "waxwick.png",
+   "name": "Waxwick",
+   "species": "waxwick",
+   "form": "base",
+   "level": null,
+   "element": "Light",
+   "rarity": "basic",
+   "position": "OL",
+   "sheet": {
+    "x": 0,
+    "y": 112,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "solram.png",
+   "name": "Solram",
+   "species": "solram",
+   "form": "base",
+   "level": null,
+   "element": "Light",
+   "rarity": "basic",
+   "position": "DL",
+   "sheet": {
+    "x": 16,
+    "y": 112,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "lumbear.png",
+   "name": "Lumbear",
+   "species": "lumbear",
+   "form": "base",
+   "level": null,
+   "element": "Light",
+   "rarity": "basic",
+   "position": "LB",
+   "sheet": {
+    "x": 32,
+    "y": 112,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "glarefly.png",
+   "name": "Glarefly",
+   "species": "glarefly",
+   "form": "base",
+   "level": null,
+   "element": "Light",
+   "rarity": "basic",
+   "position": "CB",
+   "sheet": {
+    "x": 48,
+    "y": 112,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "dazzlet.png",
+   "name": "Dazzlet",
+   "species": "dazzlet",
+   "form": "base",
+   "level": null,
+   "element": "Light",
+   "rarity": "basic",
+   "position": "S",
+   "sheet": {
+    "x": 64,
+    "y": 112,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "twinklet.png",
+   "name": "Twinklet",
+   "species": "twinklet",
+   "form": "base",
+   "level": null,
+   "element": "Light",
+   "rarity": "basic",
+   "position": "K",
+   "sheet": {
+    "x": 80,
+    "y": 112,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "rivetto.png",
+   "name": "Rivetto",
+   "species": "rivetto",
+   "form": "base",
+   "level": null,
+   "element": "Metal",
+   "rarity": "basic",
+   "position": "QB",
+   "sheet": {
+    "x": 96,
+    "y": 112,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "tinhare.png",
+   "name": "Tinhare",
+   "species": "tinhare",
+   "form": "base",
+   "level": null,
+   "element": "Metal",
+   "rarity": "basic",
+   "position": "RB",
+   "sheet": {
+    "x": 112,
+    "y": 112,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "springlet.png",
+   "name": "Springlet",
+   "species": "springlet",
+   "form": "base",
+   "level": null,
+   "element": "Metal",
+   "rarity": "basic",
+   "position": "WR",
+   "sheet": {
+    "x": 128,
+    "y": 112,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "anvilox.png",
+   "name": "Anvilox",
+   "species": "anvilox",
+   "form": "base",
+   "level": null,
+   "element": "Metal",
+   "rarity": "basic",
+   "position": "TE",
+   "sheet": {
+    "x": 144,
+    "y": 112,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "kettlump.png",
+   "name": "Kettlump",
+   "species": "kettlump",
+   "form": "base",
+   "level": null,
+   "element": "Metal",
+   "rarity": "basic",
+   "position": "OL",
+   "sheet": {
+    "x": 160,
+    "y": 112,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "ingotusk.png",
+   "name": "Ingotusk",
+   "species": "ingotusk",
+   "form": "base",
+   "level": null,
+   "element": "Metal",
+   "rarity": "basic",
+   "position": "DL",
+   "sheet": {
+    "x": 176,
+    "y": 112,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "brasshound.png",
+   "name": "Brasshound",
+   "species": "brasshound",
+   "form": "base",
+   "level": null,
+   "element": "Metal",
+   "rarity": "basic",
+   "position": "LB",
+   "sheet": {
+    "x": 0,
+    "y": 128,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "gyroflit.png",
+   "name": "Gyroflit",
+   "species": "gyroflit",
+   "form": "base",
+   "level": null,
+   "element": "Metal",
+   "rarity": "basic",
+   "position": "CB",
+   "sheet": {
+    "x": 16,
+    "y": 128,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "clockcrow.png",
+   "name": "Clockcrow",
+   "species": "clockcrow",
+   "form": "base",
+   "level": null,
+   "element": "Metal",
+   "rarity": "basic",
+   "position": "S",
+   "sheet": {
+    "x": 32,
+    "y": 128,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "washerling.png",
+   "name": "Washerling",
+   "species": "washerling",
+   "form": "base",
+   "level": null,
+   "element": "Metal",
+   "rarity": "basic",
+   "position": "K",
+   "sheet": {
+    "x": 48,
+    "y": 128,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "mindle.png",
+   "name": "Mindle",
+   "species": "mindle",
+   "form": "base",
+   "level": null,
+   "element": "Psychic",
+   "rarity": "basic",
+   "position": "QB",
+   "sheet": {
+    "x": 64,
+    "y": 128,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "dreamhop.png",
+   "name": "Dreamhop",
+   "species": "dreamhop",
+   "form": "base",
+   "level": null,
+   "element": "Psychic",
+   "rarity": "basic",
+   "position": "RB",
+   "sheet": {
+    "x": 80,
+    "y": 128,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "trancefin.png",
+   "name": "Trancefin",
+   "species": "trancefin",
+   "form": "base",
+   "level": null,
+   "element": "Psychic",
+   "rarity": "basic",
+   "position": "WR",
+   "sheet": {
+    "x": 96,
+    "y": 128,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "pondermoose.png",
+   "name": "Pondermoose",
+   "species": "pondermoose",
+   "form": "base",
+   "level": null,
+   "element": "Psychic",
+   "rarity": "basic",
+   "position": "TE",
+   "sheet": {
+    "x": 112,
+    "y": 128,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "thinkump.png",
+   "name": "Thinkump",
+   "species": "thinkump",
+   "form": "base",
+   "level": null,
+   "element": "Psychic",
+   "rarity": "basic",
+   "position": "OL",
+   "sheet": {
+    "x": 128,
+    "y": 128,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "omenox.png",
+   "name": "Omenox",
+   "species": "omenox",
+   "form": "base",
+   "level": null,
+   "element": "Psychic",
+   "rarity": "basic",
+   "position": "DL",
+   "sheet": {
+    "x": 144,
+    "y": 128,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "seerling.png",
+   "name": "Seerling",
+   "species": "seerling",
+   "form": "base",
+   "level": null,
+   "element": "Psychic",
+   "rarity": "basic",
+   "position": "LB",
+   "sheet": {
+    "x": 160,
+    "y": 128,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "riddlet.png",
+   "name": "Riddlet",
+   "species": "riddlet",
+   "form": "base",
+   "level": null,
+   "element": "Psychic",
+   "rarity": "basic",
+   "position": "CB",
+   "sheet": {
+    "x": 176,
+    "y": 128,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "gazeling.png",
+   "name": "Gazeling",
+   "species": "gazeling",
+   "form": "base",
+   "level": null,
+   "element": "Psychic",
+   "rarity": "basic",
+   "position": "S",
+   "sheet": {
+    "x": 0,
+    "y": 144,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "orblet.png",
+   "name": "Orblet",
+   "species": "orblet",
+   "form": "base",
+   "level": null,
+   "element": "Psychic",
+   "rarity": "basic",
+   "position": "K",
+   "sheet": {
+    "x": 16,
+    "y": 144,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "scalekin.png",
+   "name": "Scalekin",
+   "species": "scalekin",
+   "form": "base",
+   "level": null,
+   "element": "Dragon",
+   "rarity": "basic",
+   "position": "QB",
+   "sheet": {
+    "x": 32,
+    "y": 144,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "raptlet.png",
+   "name": "Raptlet",
+   "species": "raptlet",
+   "form": "base",
+   "level": null,
+   "element": "Dragon",
+   "rarity": "basic",
+   "position": "RB",
+   "sheet": {
+    "x": 48,
+    "y": 144,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "glidrake.png",
+   "name": "Glidrake",
+   "species": "glidrake",
+   "form": "base",
+   "level": null,
+   "element": "Dragon",
+   "rarity": "basic",
+   "position": "WR",
+   "sheet": {
+    "x": 64,
+    "y": 144,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "crestback.png",
+   "name": "Crestback",
+   "species": "crestback",
+   "form": "base",
+   "level": null,
+   "element": "Dragon",
+   "rarity": "basic",
+   "position": "TE",
+   "sheet": {
+    "x": 80,
+    "y": 144,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "bulwyrm.png",
+   "name": "Bulwyrm",
+   "species": "bulwyrm",
+   "form": "base",
+   "level": null,
+   "element": "Dragon",
+   "rarity": "basic",
+   "position": "OL",
+   "sheet": {
+    "x": 96,
+    "y": 144,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "gnashlet.png",
+   "name": "Gnashlet",
+   "species": "gnashlet",
+   "form": "base",
+   "level": null,
+   "element": "Dragon",
+   "rarity": "basic",
+   "position": "DL",
+   "sheet": {
+    "x": 112,
+    "y": 144,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "drakhound.png",
+   "name": "Drakhound",
+   "species": "drakhound",
+   "form": "base",
+   "level": null,
+   "element": "Dragon",
+   "rarity": "basic",
+   "position": "LB",
+   "sheet": {
+    "x": 128,
+    "y": 144,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "wyvlet.png",
+   "name": "Wyvlet",
+   "species": "wyvlet",
+   "form": "base",
+   "level": null,
+   "element": "Dragon",
+   "rarity": "basic",
+   "position": "CB",
+   "sheet": {
+    "x": 144,
+    "y": 144,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "skinklet.png",
+   "name": "Skinklet",
+   "species": "skinklet",
+   "form": "base",
+   "level": null,
+   "element": "Dragon",
+   "rarity": "basic",
+   "position": "S",
+   "sheet": {
+    "x": 160,
+    "y": 144,
+    "w": 16,
+    "h": 16
+   }
+  },
+  {
+   "file": "eggling.png",
+   "name": "Eggling",
+   "species": "eggling",
+   "form": "base",
+   "level": null,
+   "element": "Dragon",
+   "rarity": "basic",
+   "position": "K",
+   "sheet": {
+    "x": 176,
+    "y": 144,
+    "w": 16,
+    "h": 16
+   }
+  }
+ ]
+}

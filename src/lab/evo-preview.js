@@ -5,7 +5,7 @@
 // roster's Evolve button hands the scene, minus `franchise.evolveMonster`'s bookkeeping (Career Timeline, Dex, news). Pure: no
 // franchise, roster, save, collection, achievement or resource is read or written, and the returned objects are fresh each call.
 import { SPECIES_DEX } from '../data/species.js';
-import { generateMonster, tryEvolve, resolveSpecies } from '../data/monsters.js';
+import { generateMonster, tryEvolve, resolveSpecies, raiseToLevel } from '../data/monsters.js';
 import { evolutionSnapshot, evolutionReport } from '../franchise/evolution-report.js';
 import { createRng, hashString } from '../core/rng.js';
 
@@ -35,8 +35,9 @@ export function isValidTransition(speciesId, fromStage) { return previewTransiti
  */
 export function buildPreview(speciesId, fromStage = 0, { seed = 1, when = {} } = {}) {
   const t = previewTransitions().find((x) => x.species === speciesId && x.fromStage === fromStage); if (!t) return null;
-  const m = generateMonster(createRng(hashString(`evo-preview|${speciesId}|${fromStage}|${seed}`)), { species: speciesId, quality: 62, id: `preview_${speciesId}_${fromStage}` });
-  m.stage = fromStage; m.name = t.fromName; m.level = t.level; m.xp = 0; m.potential = m.potential ?? 72; m.salary = m.salary ?? null; m.fatigue = 0; m.injury = null;
+  const m = generateMonster(createRng(hashString(`evo-preview|${speciesId}|${fromStage}|${seed}`)), { species: speciesId, quality: 62, id: `preview_${speciesId}_${fromStage}`, age: 20, yearsPro: 0 }); // a level-1 individual (no prior career, which could already have evolved him)
+  { const sp = resolveSpecies(speciesId); for (let i = 0; i < fromStage; i++) { raiseToLevel(m, sp.evolution[i].level); tryEvolve(m); } } // Task 8: earlier stages through the real evolution rule
+  raiseToLevel(m, t.level); m.name = t.fromName; m.xp = 0; m.potential = m.potential ?? 72; m.salary = m.salary ?? null; m.fatigue = 0; m.injury = null;
   const before = evolutionSnapshot(m);
   const beforeMon = structuredClone(m);
   const afterMon = structuredClone(m);

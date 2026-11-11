@@ -1,0 +1,21 @@
+✔ R2 raw mode: Contend, Compete, Retool and Rebuild from results, quality, age, commitments and draft capital (1.912333ms)
+✔ R2 stability: two consecutive evaluations, immediate on a major shift, a rebuild lasts two seasons, gyms never below Compete (0.379262ms)
+✔ R2 evaluation on a real league: every club has a mode, gyms are Compete or Contend, deterministic, stored additively (4059.732734ms)
+✔ R3 by mode: contenders sign veterans past onset for one season; rebuilders commit long only to youth (1.133379ms)
+✔ R3 by mode on a league (F2/F3, owner-approved 2026-11-03): veterans past onset go only to a ready successor; a rebuilder also once 2+ past onset (6012.846142ms)
+✔ R2 F1 (owner-approved 2026-11-03): a club already rebuilding stays "ageing" only at or above the league median share; entry keeps 0.35 (934.653681ms)
+✔ R5 by mode: Contend may make two upgrades, every other mode one; the pools and the existing rules are unchanged (1602.676009ms)
+✔ R7 by mode: potential weighted 0.35 by rebuilders, 0.20 by Compete and Retool, 0.10 plus readiness by contenders (1.713428ms)
+✔ R4 sellable starters: ageing or past onset, older than 26, never protected, never a rookie on his first deal (3.256705ms)
+✔ R4 F4 (owner-approved 2026-11-03): a starter is sold only with a replacement within 4 behind him (1.142833ms)
+✔ R4 one sale per window: the offseason window and the season window are counted apart (0.236961ms)
+✔ R4 constructed scenario: every prerequisite holds, so the real offseason window sells the ageing starter by the approved rules (1292.214005ms)
+✔ R4 constructed scenario, one prerequisite removed: the replacement 5 behind (F4 fails), no sale (1250.015181ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15583.108042

@@ -42,7 +42,7 @@ case('the import map names a module nothing imports -> refused',
      lambda r: (write(r, 'src/ui/orphan.js', 'export const x = 1;\n'), edit(r, 'index.html', lambda t: t.replace('{"imports":{', '{"imports":{"./src/ui/orphan.js":"./src/ui/orphan.js?v=1",'))) and None, False, r'import map lists src/ui/orphan\.js')
 case('a stylesheet url() to a missing image -> refused', lambda r: edit(r, 'styles/app.css', lambda t: t + '\n.x{background:url("../img/field.png")}\n'), False, r'references img/field\.png, which does not exist')
 case('a deliberately published extra file was deleted -> refused', lambda r: os.remove(os.path.join(r, 'src/clash/level1.js')), False, r'manifest extra src/clash/level1\.js .* no longer exists')
-case('an extra dropped from the manifest without investigation -> REMOVAL', lambda r: manifest_without(r, 'extra', 'src/clash/reference-teams.js'), False, r'REMOVAL: src/clash/reference-teams\.js .*still referenced in: src/clash/level1\.js')
+case('an extra dropped from the manifest without investigation -> REMOVAL', lambda r: manifest_without(r, 'extra', 'src/clash/reference-teams.js'), False, r'REMOVAL: src/clash/reference-teams\.js .*still referenced in: .*src/clash/level1\.js')
 case('a removal acknowledged with --allow-removal but no --reason -> refused',
      lambda r: manifest_without(r, 'extra', 'src/clash/reference-teams.js'), False, r'needs its own --reason', extra=('--allow-removal', 'src/clash/reference-teams.js'))
 case('a removal acknowledged with --allow-removal and --reason -> passes, reason recorded',
@@ -51,6 +51,12 @@ case('a removal acknowledged with --allow-removal and --reason -> passes, reason
 case('--allow-removal for a file that is not removed -> refused', None, False, r'is not a removal', extra=('--allow-removal', 'src/main.js', '--reason', 'x'))
 case('no previous manifest -> refused', None, False, r'no previous published manifest', manifest=os.path.join(REL, 'does-not-exist.json'))
 case('the word "import" in a comment or in markup is not an import', lambda r: edit(r, 'src/main.js', lambda t: t + "\n// ---- import (validation)\nconst h = '<button data-action=\"lab-import\" style=\"x\">';\n"), True)
+case('a wildcard in a line comment cannot swallow the following imports',
+     lambda r: edit(r, 'src/main.js', lambda t: '// Generated looks live in looks/*.js; this is a line comment.\n' + t),
+     True, files_has='src/ui/screens/menu.js')
+case('line-comment markers inside a block cannot hide following imports',
+     lambda r: edit(r, 'src/main.js', lambda t: '/* a note containing // ends here */\n' + t),
+     True, files_has='src/ui/screens/menu.js')
 for ok, name, why in results: print(('ok: ' if ok else 'FAIL: ') + name + (f'\n    {why}' if why else ''))
 bad = [r for r in results if not r[0]]
 print(f'RELEASE FILES CHECK {"PASSED" if not bad else "FAILED"} ({len(results) - len(bad)}/{len(results)})'); sys.exit(1 if bad else 0)

@@ -60,7 +60,7 @@ test('the weekly loop: scout, recruit, train, scout opponent, plan, lineup', () 
   // Tuesday is a Beast Clash encounter (GDD §26.1): a pitch is only possible after a lost battle.
   assert.equal(F.recruit(f, 0, 'playing_time').ok, false, 'no pitch before the battle');
   let signed = false;
-  const st = F.startEncounter(f, 0); assert.ok(st.ok, st.reason); const b = F.resolveEncounter(f); assert.ok(b.ok);
+  const st = F.startEncounter(f, 0); assert.ok(st.ok, st.reason); const b = F.resolveEncounter(f, { headless: true }); assert.ok(b.ok); // Task 8 M4 (D1): the owner answers the rotation prompt with Auto
   if (b.won) { const r = F.acceptOffer(f); assert.ok(r.ok, r.reason); signed = true; }
   else { const r = F.recruit(f, 0, 'playing_time'); assert.ok(r.ok, r.reason); if (r.success) signed = true; }
   assert.equal(f.season.day, 2);
@@ -231,7 +231,7 @@ test('training: odds shown match the rule, the third straight week of one focus 
   assert.equal(f.week.trainingFocus, r.success ? 'coverage' : null);
 });
 
-test('media day: 250 nature questions (ten per nature), answers lift the monsters who share that nature, no repeats in a season', async () => {
+test('media day: 250 questions (ten per legacy nature tag), no nature boost (N7c B14), only hype and star lifts, no repeats in a season', async () => {
   const M = await import('../src/data/media.js'); const { NATURE_IDS, NATURES } = await import('../src/data/monsters.js');
   for (const n of NATURE_IDS) assert.equal(M.questionCount(n), 10, `${n} has ten questions`);
   for (const q of M.QUESTIONS) { assert.equal(q.a.length, 3); for (const a of q.a) assert.ok(NATURE_IDS.includes(a.t), `${a.t} is a nature`); if (!M.isSituational(q)) assert.equal(q.a[0].t, q.nature, 'the first answer speaks the question’s own nature'); }
@@ -241,13 +241,11 @@ test('media day: 250 nature questions (ten per nature), answers lift the monster
   for (const q of qs) for (const a of q.a) { assert.ok(a.reach && typeof a.reach.total === 'number', 'every answer says how many monsters it reaches'); assert.ok(!/\{(opp|star|record|rival|club|week)\}/.test(a.text + q.q), 'placeholders are filled'); }
   const before = F.playerTeam(f);
   const t = qs[0].a[0].t;
-  const r = F.answerMedia(f, [0, 0, 0]); assert.equal(f.season.day, 6); assert.equal(r.boosts[t], Math.min(F.MEDIA_CAP ?? Infinity, F.MEDIA_BOOST * qs.filter((q) => q.a[0].t === t).length), 'each answer of that nature adds its boost (up to the cap)');
+  // Task 8 (N7c B14): the nature-targeted boost is retired; answers are flavour plus the hype and star boosts, which remain.
+  const r = F.answerMedia(f, [0, 0, 0]); assert.equal(f.season.day, 6); assert.deepEqual(r.boosts, {}, 'no nature boosts');
   const after = F.playerTeam(f);
-  const onField = (team) => [...Object.values(team.offense), ...Object.values(team.defense)];
-  const m = f.roster.find((x) => x.nature === t && onField(after).some((p) => p.id === x.id));
-  if (m) { const slotOf = (team) => onField(team).find((p) => p.id === m.id); const up = NATURES[t].up || 'awareness'; assert.ok(slotOf(after).attrs[up] > slotOf(before).attrs[up], `${t} monster lifted on ${up}`); assert.equal(after.boosts[m.id].media.amount, r.boosts[t]); }
-  const other = f.roster.find((x) => x.nature !== t && !qs.some((q) => q.a[0].t === x.nature) && onField(after).some((p) => p.id === x.id));
-  if (other) assert.ok(!after.boosts[other.id]?.media, 'a nature nobody spoke for gets nothing');
+  const starId = r.star; for (const [id, b] of Object.entries(after.boosts)) if (b.media) assert.ok(r.hype || id === starId, 'only hype or the star is lifted');
+  void before; void t;
   // Asked questions are not asked again this season; a rival week leads with the rival question.
   assert.deepEqual(f.season.mediaAsked, qs.map((q) => q.id));
   f.week.mediaQs = null; f.week.media = null; f.season.day = 5; const qs2 = F.mediaQuestions(f); assert.ok(!qs2.some((q) => qs.some((p) => p.id === q.id)), 'no repeats');
@@ -348,10 +346,10 @@ test('founding roster: about a third are on one-year deals (never a cornerstone)
 test('notices and manual evolution: a monster at its evolution level is a roster notice; Evolve is by hand and does not reprice the contract', async () => {
   const M = await import('../src/data/monsters.js');
   const f = newFranchise(7); while (f.draft && !f.draft.done) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
-  const m = f.roster.find((x) => M.resolveSpecies(x).evolution.length); assert.ok(m);
-  const level = M.resolveSpecies(m).evolution[0].level; m.level = level - 1;
+  const m = f.roster.find((x) => M.resolveSpecies(x).evolution.length && !(x.stage || 0) && x.level < M.resolveSpecies(x).evolution[0].level - 1); assert.ok(m); // a base form below its evolution level
+  const level = M.resolveSpecies(m).evolution[0].level; M.raiseToLevel(m, level - 1); // Task 8: the level lives on m.dev (raiseToLevel, never m.level)
   assert.equal(F.evolveMonster(f, m.id).ok, false, 'not yet'); assert.ok(!F.notices(f).some((n) => n.kind === 'evolve' && n.id === m.id));
-  m.level = level; const sal = m.salary;
+  M.raiseToLevel(m, level); const sal = m.salary;
   assert.ok(F.notices(f).some((n) => n.kind === 'evolve' && n.id === m.id), 'ready = notice'); assert.ok(F.noticesFor(f, 'roster').length >= 1);
   const pref = M.schemePreferences(m); assert.ok(pref && pref.schemes.length >= 2 && pref.best, 'scheme preferences list every scheme on the side');
   const r = F.evolveMonster(f, m.id); assert.equal(r.ok, true); assert.equal(m.stage, 1); assert.equal(m.salary, sal, 'evolution does not change the contract');
@@ -449,7 +447,10 @@ test('training and media boosts reach the Sunday lineup (not just the UI)', () =
   const m2 = F.sundayMatchup(f); const mine = m2.playerSide === 'home' ? m2.home : m2.away;
   assert.ok(qb(m2).attrs.accuracy > base, 'training boost applied to the QB on Sunday');
   assert.ok(Object.values(mine.boosts).every((b) => b.training?.includes('accuracy')), 'ledger marks every starter');
-  f.season.day = 5; const qs = F.mediaQuestions(f); F.answerMedia(f, qs.map(() => 0));
+  // Task 8 (N7c B14): only the star and hype boosts remain, so pick the star answer where one is offered, else force the star.
+  f.season.day = 5; const qs = F.mediaQuestions(f); F.answerMedia(f, qs.map((q) => Math.max(0, q.a.findIndex((x) => x.star))));
+  // M5's scouting changes can make a kicker the highest-OVR media choice. This fixture tests the existing offensive star boost.
+  if (!Object.values(mine.offense).some((p) => p.id === f.week.media.star)) f.week.media.star = f.roster.find((x) => Object.values(mine.offense).some((p) => p.id === x.id))?.id;
   const m3 = F.sundayMatchup(f); const mine3 = m3.playerSide === 'home' ? m3.home : m3.away;
   assert.ok(Object.values(mine3.boosts).some((b) => b.media), 'media boosts marked on some starters');
 });
@@ -510,7 +511,7 @@ test('campaign: an ordinary club meets four gyms a season (all eight over two), 
     assert.ok(Object.values(team.chart).includes(leg.id), 'the legendary starts');
     const share = team.roster.filter((m) => SPECIES_BY_ID[m.species].element === g.element).length / team.roster.length;
     assert.ok(share >= 0.2, `${club} leans ${g.element} (${Math.round(share * 100)}%)`); // Task 7 D6: one position per species leaves each element 4–5 positions, so the lean fell from 40%+ to 21–55%; ordinary clubs hold about 8% (at most 16%) of any one element
-    assert.ok(F.clubQuality(f, club, 3) > F.clubQuality(f, club, 1), 'gym clubs grow by season');
+    assert.equal(F.clubQuality(f, club, 3), F.clubQuality(f, club, 1), 'N7f: no seasonal growth; a gym keeps its fixed natural level'); // was: gym clubs grow by season (retired)
   }
   // One legendary in the league: no other club rolls one.
   for (const t of ALL_TEAMS.filter((x) => !GYM_CLUBS.includes(x) && x !== f.club)) assert.ok(F.aiTeam(f, t).roster.every((m) => SPECIES_BY_ID[m.species].rarity !== 'legendary'), t);
@@ -543,10 +544,12 @@ test('campaign: the other coach speaks before the game and remembers the result'
   // Week 2 is a badge game: the gym coach speaks and a reply is allowed.
   { const g = F.simulatePlayerGame(f); F.finishSunday(f, g); F.autoRunToSunday(f); }
   const t2 = F.pregameTalk(f); assert.equal(t2.kind, 'gym'); assert.equal(t2.state, 'first');
+  const boostsBefore = JSON.stringify(F.playerTeam(f).boosts);
   assert.equal(F.replyToCoach(f, 'confident').ok, true);
   assert.equal(F.replyToCoach(f, 'respectful').ok, false, 'one reply per game');
   const team = F.playerTeam(f);
-  assert.ok(Object.values(team.boosts).some((b) => b.media?.amount >= 1), 'the reply boosts the physical natures');
+  // B14: the reply's nature-group point is retired with Nature; the reply is flavour plus the rattle below, no rating boost.
+  assert.equal(JSON.stringify(team.boosts), boostsBefore, 'the reply boosts nobody (B14)');
   const m = F.sundayMatchup(f); const side = m.playerSide; const other = side === 'home' ? 'away' : 'home';
   const score = { home: 0, away: 0 }; score[other] = 14;
   F.finishSunday(f, { winner: other, score, stats: { home: { players: {} }, away: { players: {} } }, ot: false });
@@ -558,7 +561,7 @@ test('commissioner: signing over the cap is allowed with a warning; Saturday nam
   const f = newFranchise(12);
   // Push the club over the cap with an expensive signing.
   const cap = F.salarySummary(f);
-  const star = { ...f.roster[0], id: 'm_big', name: 'Big Signing', salary: cap.remaining + 40000, cornerstone: false };
+  const star = { ...f.roster[0], id: 'm_big', name: 'Big Signing', salary: cap.remaining + 35000, cornerstone: false }; // 35,000 over (40,000 before Task 8 retired Nature, which lowered OVR-based salaries)
   f.roster.push(star);
   assert.ok(F.salarySummary(f).over);
   assert.equal(F.canPlayGames(f), true, 'the cap alone does not lock games');
@@ -598,13 +601,13 @@ test('Legend Tracks: a champion chooses a track; three unlock the legendary in i
     for (const p of r.prospects) if (p.monster.species === 'pyroclast') { if (i % 2) found++; else elsewhere++; }
   }
   assert.ok(found >= 20, `an unlocked legendary turns up the first time its home region is scouted each season (${found})`); assert.equal(elsewhere, 0);
-  // Rival signature monster: same species each season, stronger later.
+  // Rival signature monster: same species each season (N7f: no longer automatically stronger later).
   const rival = f.rivals[f.tier].team;
   const t1 = F.aiTeam(f, rival); const sig1 = t1.roster.find((m) => m.signature); assert.ok(sig1);
   const l1 = F.legacyAiTeam(f, rival, 1).roster.find((m) => m.signature);
   f.season.year = 3; const t3 = F.aiTeam(f, rival); const sig3 = t3.roster.find((m) => m.signature);
   assert.equal(sig1.id, sig3.id, 'persistent rosters (GDD §42.6): the signature monster is one individual for the life of the franchise'); assert.ok(F.isProtected(sig3));
-  { const l3 = F.legacyAiTeam(f, rival, 3).roster.find((m) => m.signature); assert.equal(l1.species, l3.species); assert.ok(l3.level > l1.level, 'the generated signature grew with the seasons (v40 saves)'); }
+  { const l3 = F.legacyAiTeam(f, rival, 3).roster.find((m) => m.signature); assert.equal(l1.species, l3.species); assert.ok(l3.signature && F.isProtected(l3)); /* N7f: the signature's per-season level formula is retired, so a later generated season no longer means a higher level */ }
   // Rematch scouting: a second meeting reveals one play from the other side.
   f.season.year = 1; f.campaign.h2h = { [F.opponentName(f)]: { w: 1, l: 0, last: 'w', streakL: 0 } };
   while (f.season.day < 3) { if (f.season.day === 0) F.scoutRegion(f, 'Coral Coast'); else if (f.season.day === 1) F.skipRecruit(f); else F.setTraining(f, 'coverage'); }
@@ -628,7 +631,7 @@ test('Hall of Fame: eligibility follows the checklist; retiring writes a career 
 });
 
 test('cornerstone offers: three monsters of different positions and elements, each with an ability; the pick leads the roster', async () => {
-  const { cornerstoneOffers } = await import('../src/data/monsters.js');
+  const { cornerstoneOffers, SPECIES_BY_ID } = await import('../src/data/monsters.js');
   for (const seed of [1, 2, 3, 99]) {
     const o = cornerstoneOffers(seed);
     assert.equal(o.length, 3);
@@ -641,7 +644,12 @@ test('cornerstone offers: three monsters of different positions and elements, ea
   const star = f.roster.find((m) => m.cornerstone);
   assert.ok(star && star.species === offer.species && star.position === offer.position);
   assert.equal(f.roster.filter((m) => m.cornerstone).length, 1, 'one cornerstone, no hidden second one');
-  assert.ok(monsterOverall(star) >= 64);
+  assert.equal(SPECIES_BY_ID[star.species].ability?.name, offer.abilityName, 'the cornerstone carries the offered ability');
+  // N7f / B15 (CLUB_STRENGTH_SELECTION.md): a cornerstone is the 95th-percentile pick (best of nine Dex candidates) of its own
+  // form at level 1, not a fixed OVR 64+ (positional OVR of a Dex form can be low, e.g. Boulderox as RB: 49 here).
+  const { percentileOf, METRICS } = await import('../src/franchise/t8/selection.js');
+  const p = percentileOf(star.dev.form, 'current', METRICS.current({ current: star.dev.ref }, star.position));
+  assert.ok(p >= 0.75, `cornerstone at the ${Math.round(p * 100)}th percentile of its form`);
 });
 
 test('owner backgrounds carry a perk: cap, training odds, scouting reveal, analyst play', () => {
@@ -686,19 +694,16 @@ test('playtest round 2: fatigue shows all week and recovers Saturday; bye weeks 
   assert.equal(F.scoutOpponent(f, 'offense').ok, false);
 });
 
-test('playtest round 3: comeback mode lifts the trailing side in the fourth on Pro/All-Star only; scheme lock needs every starter; a badge win is remembered', () => {
+test('playtest round 3: comeback mode is retired (owner N8a); scheme lock needs every starter; a badge win is remembered', () => {
   const f = newFranchise(71);
-  assert.deepEqual(F.comebackRule(f), { margin: 10, edge: 5 });
+  assert.equal(F.comebackRule(f), null, 'Pro: no comeback rule'); const allstar = newFranchise(73); allstar.settings.difficulty = 'allstar'; assert.equal(F.comebackRule(allstar), null, 'All-Star: none');
   const rookie = newFranchise(72); rookie.settings.difficulty = 'rookie'; assert.equal(F.comebackRule(rookie), null);
   const m = F.sundayMatchup(f); const R = awaitRules;
   const st = R.newGame({ home: m.home, away: m.away, seed: 1, comeback: F.comebackRule(f) });
-  assert.equal(R.comebackSide(st), null, 'first quarter: nothing');
   st.quarter = 4; st.score.home = 3; st.score.away = 20;
-  assert.equal(R.comebackSide(st), 'home', 'home trails by 17 in the fourth');
-  st.possession = 'home'; let e = R.edgesFor(st, { home: m.home, away: m.away }); assert.equal(e.off, 5); assert.equal(e.def, 0);
-  st.possession = 'away'; e = R.edgesFor(st, { home: m.home, away: m.away }); assert.equal(e.def, 5, 'the trailing defense gets it too');
-  st.score.home = 12; assert.equal(R.comebackSide(st), null, 'inside the margin: off');
-  st.score.home = 3; st.ot = { period: 1 }; assert.equal(R.comebackSide(st), null, 'never in overtime');
+  assert.equal(R.comebackSide(st), null, 'trailing by 17 in the fourth: no lift');
+  const old = R.newGame({ home: m.home, away: m.away, seed: 1, comeback: { margin: 10, edge: 5 } }); old.quarter = 4; old.score.home = 3; old.score.away = 20; assert.equal(R.comebackSide(old), null, 'a live game saved with the old rule is not lifted either');
+  st.possession = 'home'; let e = R.edgesFor(st, { home: m.home, away: m.away }); assert.equal(e.off, 0); assert.equal(e.def, 0);
   // Scheme lock: zero unless every starter fits; when it is on the Sunday team carries it.
   const lock = F.schemeLock(f); const rf = F.rosterFit(f);
   assert.equal(lock.offense, rf.offense.fit === rf.offense.total && rf.offense.total > 0 ? 3 : 0); assert.equal(lock.defense, rf.defense.fit === rf.defense.total && rf.defense.total > 0 ? 3 : 0);
@@ -766,18 +771,22 @@ test('package rule: one position per monster (Task 7 D6): only the slot’s own 
   const team = F.playerTeam(f); assert.equal(team.forfeit, true); assert.ok(/LB2/.test(team.forfeitReason), team.forfeitReason);
 });
 
-test('attribute points: level-ups bank 2 points, spent by hand up to potential, or by the trainer when the setting is on', async () => {
-  const { levelUp, spendPoint, autoSpendPoints, POINTS_PER_LEVEL } = await import('../src/data/monsters.js');
+test('attribute points: level-ups bank none (B6); banked offseason points are spent by hand up to potential, or by the trainer when the setting is on', async () => {
+  const { levelUp, spendPoint, autoSpendPoints, POINTS_PER_LEVEL, bankedPoints, effectiveCost, syncFromDev } = await import('../src/data/monsters.js');
+  const { addBankedPoints } = await import('../src/franchise/t8/progression.js'); const { OFFSEASON_POINTS } = await import('../src/franchise/t8/awards.js');
+  const FR = await import('../src/core/fraction.js');
   const { createRng } = await import('../src/core/rng.js');
-  const f = newFranchise(71); const m = f.roster[0]; const rng = createRng(3);
-  levelUp(m, rng); assert.equal(m.points, POINTS_PER_LEVEL);
+  const f = newFranchise(71); const m = f.roster[0]; const rng = createRng(3); const bank0 = bankedPoints(m);
+  levelUp(m, rng); assert.equal(POINTS_PER_LEVEL, 0); assert.ok(FR.eq(bankedPoints(m), bank0), 'B6: a level-up banks no points (natural growth only)');
+  addBankedPoints(m.dev, OFFSEASON_POINTS); assert.equal(OFFSEASON_POINTS, 2); syncFromDev(m); // the offseason award (spec §6)
   const { attributeHelps } = await import('../src/data/stat-guide.js');
-  const k = Object.keys(m.attributes).find((a) => m.attributes[a] < m.potential && attributeHelps(m.position, a)); const before = m.attributes[k];
-  assert.equal(F.spendAttributePoint(f, m.id, k).ok, true); assert.equal(m.attributes[k], before + 1); assert.equal(m.points, 1);
-  m.attributes[k] = m.potential; assert.equal(spendPoint(m, k).ok, false, 'capped at potential');
-  autoSpendPoints(m, rng); assert.equal(m.points, 0);
+  const k = Object.keys(m.attributes).find((a) => m.dev.current[a] < m.dev.potential[a] && attributeHelps(m.position, a) && FR.cmp(FR.sub(effectiveCost(m, a), m.dev.invest[a]), 1) <= 0); assert.ok(k, 'an attribute one point completes');
+  const before = m.attributes[k];
+  assert.equal(F.spendAttributePoint(f, m.id, k).ok, true); assert.ok(m.attributes[k] > before && m.attributes[k] <= m.dev.potential[k]); assert.ok(FR.eq(bankedPoints(m), FR.add(bank0, 1)), 'one point spent');
+  const left = bankedPoints(m); m.dev.current[k] = m.dev.potential[k]; syncFromDev(m); assert.equal(spendPoint(m, k).ok, false, 'capped at potential'); assert.ok(FR.eq(bankedPoints(m), left), 'nothing spent on a refusal');
+  autoSpendPoints(m, rng); assert.ok(FR.eq(bankedPoints(m), 0)); assert.equal(m.points, 0);
   assert.equal(F.unspentPoints(f).length, 0);
-  levelUp(m, rng, { autoSpend: true }); assert.equal(m.points, 0, 'auto-spent');
+  addBankedPoints(m.dev, OFFSEASON_POINTS); levelUp(m, rng, { autoSpend: true }); assert.ok(FR.eq(bankedPoints(m), 0)); assert.equal(m.points, 0, 'auto-spent');
 });
 
 test('board goals: three scaled offers, one commitment per season, settled at season end into confidence, hot seat, firing and the scouting bonus', async () => {
@@ -849,7 +858,8 @@ test('contracts: two-year deals from signing, salaries frozen until renewal, the
   F.finishFreeAgency(f);
   for (let g = 0; f.roster.length < F.ROSTER_MIN && g < 60; g++) { const e = F.freeAgentMarket(f).sort((a, b) => a.ask.salary - b.ask.salary)[g]; if (!e) break; let r = F.negotiateFreeAgent(f, e.monster.id, e.ask); if (r.outcome === 'countered') r = F.negotiateFreeAgent(f, e.monster.id, r.counter); }
   assert.ok(f.roster.length >= F.ROSTER_MIN, 'the floor is reachable from the market');
-  holdDraft(f); const r3 = F.startNextSeason(f); assert.equal(r3.ok, true, r3.reason); assert.equal(f.season.year, 3); assert.equal(f.offseason, null);
+  // This fixture checks contracts and the roster floor; the separate lineup-gate suite checks missing positions.
+  holdDraft(f); const r3 = F.startNextSeason(f, { acceptForfeits: true }); assert.equal(r3.ok, true, r3.reason); assert.equal(f.season.year, 3); assert.equal(f.offseason, null);
 });
 
 test('contracts: a renewal may be one season or two, never more', async () => {
@@ -889,7 +899,13 @@ test('the draft: class opens in the final week, Mondays scout it and Tuesdays re
   const team = aiPicks[0].team; const got = aiPicks.filter((pk) => pk.team === team).map((pk) => F.findInLeague(f, pk.id)?.m).filter(Boolean);
   assert.ok(got.length && got.every((m) => m.contract?.rookie && m.drafted?.club === team), 'the club holds its draftees on rookie deals');
   while (f.roster.length < F.ROSTER_MIN) F.signFreeAgent(f, F.offseasonMarket(f)[0].monster.id);
-  const sn = F.startNextSeason(f); assert.ok(sn.ok, sn.reason);
+  let sn = F.startNextSeason(f);
+  // the lineup safeguard (task7-lineup-gate.test.js): when the offseason left a position without a legal starter, sign one of its fixes
+  if (!sn.ok && sn.code === 'lineup') {
+    for (const list of Object.values(sn.gate.fixes)) for (const x of list) { let r = F.negotiateFreeAgent(f, x.id, { salary: x.ask, years: 1 }); if (r.ok && r.outcome === 'countered') r = F.negotiateFreeAgent(f, x.id, r.counter); if (r.ok && r.outcome === 'signed') break; }
+    sn = F.startNextSeason(f);
+  }
+  assert.ok(sn.ok, sn.reason);
   assert.ok(got.every((m) => m.yearsPro === 0), 'drafted rookies enter their first season');
   assert.equal(p.monster.yearsPro, 0); assert.ok(F.aiTeam(f, team).roster.some((m) => m.id === got[0].id), 'the AI draftee is on its club');
   assert.equal(f.draft, null);

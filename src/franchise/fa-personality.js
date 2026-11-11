@@ -34,8 +34,7 @@ const STAGE = Object.freeze({
 export function personaOf(m) {
   const h = hashString(`persona|${m?.id || m?.name || 'x'}`);
   const base = {}; PRIORITIES.forEach((k, i) => { base[k] = 25 + ((h >>> (i * 5)) % 51); }); // 25–75, a different slice of the hash each
-  if (CALM.has(m?.nature)) { base.patience += 12; base.timing -= 5; }
-  if (FIERY.has(m?.nature)) { base.patience -= 12; base.money += 8; }
+  // Nature's calm/fiery terms are retired (N7c B14); hash priorities and career stage remain.
   const stage = careerStage(m); for (const [k, v] of Object.entries(STAGE[stage])) base[k] += v;
   const p = Object.fromEntries(PRIORITIES.map((k) => [k, clamp(base[k])]));
   const strongest = ['money', 'security', 'role', 'winning'].sort((a, b) => p[b] - p[a] || (a < b ? -1 : 1))[0]; // a want, not a temperament

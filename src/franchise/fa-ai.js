@@ -23,6 +23,7 @@ import { monsterOverall } from '../data/monsters.js';
 import { ALL_TEAMS } from '../data/league.js';
 import { tierById } from '../data/league.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
+import { clubIdentity } from '../data/identities.js';
 import { leagueClubs, isProtected } from './league-registry.js';
 import { clubNeeds, bestUpgrade, upgradesAllowed, contractLength, modeLength, leagueBenchOf } from './league-season.js';
 import { modeOf } from './strategy.js';
@@ -51,7 +52,7 @@ export function aiYears(f, club, m, bench) {
   return modeLength(pref, m, mode) === pref ? pref : len; // the mode's own rule (Contend: one season past onset; Rebuild: one season near onset) still decides
 }
 /** Terms an AI club offers first: his ask, the club's term for him, no bonus. */
-export function aiTerms(f, club, m, bench) { const ask = askOf(f, m); return { salary: ask.salary, years: aiYears(f, club, m, bench), bonus: 0 }; }
+export function aiTerms(f, club, m, bench) { const ask = askOf(f, m, club); return { salary: ask.salary, years: aiYears(f, club, m, bench), bonus: 0 }; }
 /** Can the club carry these terms next league year too (long-run budget, decision 28)? */
 export function futureOk(f, club, terms) { if (terms.years < 2) return true; const ly = leagueYear(f) + 1; return committed(f, club, ly) + terms.salary + allocateBonus(terms.bonus || 0, terms.years)[1] <= capOf(f, club) * AI_MARKET.futureCap; }
 /**
@@ -76,7 +77,7 @@ const wants = (f, club, m) => { if (isProtected(m) || m.injury) return false; if
 
 /** One AI club's turn in the current period. Returns the number of offers made or revised. */
 export function aiClubTurn(f, club, { bench }) {
-  let acted = 0; const mode = modeOf(f, club); const element = GYM_BY_CLUB[club]?.element || null;
+  let acted = 0; const mode = modeOf(f, club); const element = GYM_BY_CLUB[club]?.element || null; const identity = clubIdentity(f, club);
   // 1-2: its open offers
   for (const o of liveOffers(f, (x) => x.club === club)) {
     const u = unsigned(f, o.mid); if (!u) continue;
@@ -84,7 +85,7 @@ export function aiClubTurn(f, club, { bench }) {
     if (o.state !== 'pending') continue;
     const rivals = liveOffers(f, (x) => x.mid === o.mid);
     if (rivals.length > 1 && rankOffers(f, u.m, rivals)[0].o !== o) {
-      const ask = askOf(f, u.m).salary; const next = Math.ceil(o.salary * (1 + AI_MARKET.raise) / 100) * 100;
+      const ask = askOf(f, u.m, club).salary; const next = Math.ceil(o.salary * (1 + AI_MARKET.raise) / 100) * 100;
       if (next <= ask * AI_MARKET.raiseCap) { let t = { salary: next, years: o.years, bonus: o.bonus }; if (!futureOk(f, club, t)) t = bonusTerms(f, u.m, t); if (futureOk(f, club, t) && reviseOffer(f, o.id, t).ok) acted++; }
     }
   }
@@ -94,7 +95,7 @@ export function aiClubTurn(f, club, { bench }) {
   const roster = rosterOf(f, club);
   const market = marketList(f).map((x) => x.m).filter((m) => wants(f, club, m) && !liveOffers(f, (o) => o.club === club && o.mid === m.id).length);
   const weakAt = {}; const vcache = new Map(); // computed once per turn (the sort compares many times)
-  const valueOf = (m) => { if (vcache.has(m)) return vcache.get(m); if (!(m.position in weakAt)) weakAt[m.position] = weakestStarter(roster, m.position); const v = strategyValue(m, { mode, ask: askOf(f, m).salary, weakestStarter: weakAt[m.position], element }); vcache.set(m, v); return v; };
+  const valueOf = (m) => { if (vcache.has(m)) return vcache.get(m); if (!(m.position in weakAt)) weakAt[m.position] = weakestStarter(roster, m.position); const v = strategyValue(m, { mode, ask: askOf(f, m, club).salary, weakestStarter: weakAt[m.position], element, identity }); vcache.set(m, v); return v; };
   /** Offer on `m`: the club's terms, improved for a priority target when the mode says he is worth it, a bonus only where it saves cap. */
   const tryOffer = (m, { tag = null, priority = false, release = null } = {}) => {
     let t = aiTerms(f, club, m, bench);
@@ -151,7 +152,7 @@ export function extensionCandidates(f, club, bench) {
 export const AI_NEG = Object.freeze({ target: Object.freeze({ contend: 1.0, compete: 0.96, retool: 0.94, rebuild: 0.92 }), ceiling: Object.freeze({ core: 1.12, other: 1.03 }), contendCeiling: 0.04, near: 0.02 });
 export function aiBargain(f, club, m, neg, { core = false, fits, years = null, bonus = true }) {
   if (!neg || neg.state !== 'active') return neg?.state === 'agreed' ? neg.agreed : null;
-  const mode = modeOf(f, club); const ask = askOf(f, m).salary;
+  const mode = modeOf(f, club); const ask = askOf(f, m, club).salary;
   const target = step(ask * (AI_NEG.target[mode] ?? 0.96)); const ceiling = step(ask * ((core ? AI_NEG.ceiling.core : AI_NEG.ceiling.other) + (mode === 'contend' ? AI_NEG.contendCeiling : 0)));
   const ok = (t) => { if (fits(t)) return t; if (!bonus) return null; const b = bonusTerms(f, m, t); return b !== t && fits(b) ? b : null; };
   const term = years ?? neg.demand.years; // the club's own term (Task 6 R3 by mode and onset, moved to his preference when one season apart and the mode allows: aiYears): its roster planning

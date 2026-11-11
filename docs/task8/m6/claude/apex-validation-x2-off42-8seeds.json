@@ -1,0 +1,930 @@
+{
+ "definition": "docs/task8/m6/claude/APEX_GOAL_DEFINITION.md",
+ "dir": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/b6/apex42",
+ "meta": {
+  "games": 1501,
+  "clash": 3163,
+  "seasons": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20
+  ],
+  "boost": 0.1,
+  "boostYears": 5,
+  "candidate": true,
+  "policy": true
+ },
+ "games": 12126,
+ "clashSettlements": 25380,
+ "franchises": 8,
+ "result": {
+  "apexSeen": 630,
+  "exclusions": {
+   "aboveLevel1AtFirstSight": 358,
+   "enteredAfterSeason5": 97
+  },
+  "entrants": 175,
+  "schedules": {
+   "F": {
+    "name": "Football only",
+    "sustainedStarters": {
+     "n": 30,
+     "all99ByEndOfSeason": {
+      "10": {
+       "k": 0,
+       "n": 30,
+       "pct": 0,
+       "ci95": [
+        0,
+        11.4
+       ]
+      },
+      "12": {
+       "k": 0,
+       "n": 30,
+       "pct": 0,
+       "ci95": [
+        0,
+        11.4
+       ]
+      },
+      "13": {
+       "k": 1,
+       "n": 30,
+       "pct": 3.3,
+       "ci95": [
+        0.6,
+        16.7
+       ]
+      },
+      "14": {
+       "k": 7,
+       "n": 30,
+       "pct": 23.3,
+       "ci95": [
+        11.8,
+        40.9
+       ]
+      },
+      "15": {
+       "k": 30,
+       "n": 30,
+       "pct": 100,
+       "ci95": [
+        88.6,
+        100
+       ]
+      }
+     },
+     "all99AtStartOfSeason16_looser": {
+      "k": 30,
+      "n": 30,
+      "pct": 100,
+      "ci95": [
+       88.6,
+       100
+      ]
+     },
+     "seasonOfAll99": {
+      "13": 1,
+      "14": 6,
+      "15": 23
+     },
+     "participation": {
+      "startsPerSeason": 8.19,
+      "clashesPerSeason": 0,
+      "starterSeasons": 12.37,
+      "seasonsMostlyInjured": 0,
+      "clubs": 1.2,
+      "outOfLeagueAtEnd15": 0,
+      "medianLevel50Season": 10
+     },
+     "failures": {
+      "n": 0,
+      "pointsShort": []
+     }
+    },
+    "allEntrants": {
+     "n": 66,
+     "all99ByEndOfSeason": {
+      "10": {
+       "k": 0,
+       "n": 66,
+       "pct": 0,
+       "ci95": [
+        0,
+        5.5
+       ]
+      },
+      "12": {
+       "k": 0,
+       "n": 66,
+       "pct": 0,
+       "ci95": [
+        0,
+        5.5
+       ]
+      },
+      "13": {
+       "k": 1,
+       "n": 66,
+       "pct": 1.5,
+       "ci95": [
+        0.3,
+        8.1
+       ]
+      },
+      "14": {
+       "k": 8,
+       "n": 66,
+       "pct": 12.1,
+       "ci95": [
+        6.3,
+        22.1
+       ]
+      },
+      "15": {
+       "k": 47,
+       "n": 66,
+       "pct": 71.2,
+       "ci95": [
+        59.4,
+        80.7
+       ]
+      }
+     },
+     "all99AtStartOfSeason16_looser": {
+      "k": 62,
+      "n": 66,
+      "pct": 93.9,
+      "ci95": [
+       85.4,
+       97.6
+      ]
+     },
+     "seasonOfAll99": {
+      "13": 1,
+      "14": 7,
+      "15": 39,
+      "not by 15": 19
+     },
+     "participation": {
+      "startsPerSeason": 7.17,
+      "clashesPerSeason": 0,
+      "starterSeasons": 10.8,
+      "seasonsMostlyInjured": 0.02,
+      "clubs": 1.36,
+      "outOfLeagueAtEnd15": 2,
+      "medianLevel50Season": 11
+     },
+     "failures": {
+      "n": 19,
+      "pointsShort": [
+       7,
+       9,
+       10,
+       10,
+       17,
+       18,
+       21,
+       27,
+       27,
+       28,
+       29,
+       30,
+       30,
+       32,
+       38,
+       50,
+       81,
+       1188,
+       1188
+      ]
+     }
+    },
+    "notSustained": {
+     "n": 36,
+     "mainCause": {
+      "benched or part-time": 34,
+      "out of the league": 2
+     },
+     "starterSeasonsHistogram": {
+      "0": 2,
+      "7": 1,
+      "8": 2,
+      "9": 6,
+      "10": 10,
+      "11": 15
+     }
+    },
+    "sensitivity": {
+     "atLeast10of15": {
+      "k": 46,
+      "n": 55,
+      "pct": 83.6,
+      "ci95": [
+       71.7,
+       91.1
+      ]
+     },
+     "all15": {
+      "k": 1,
+      "n": 1,
+      "pct": 100,
+      "ci95": [
+       20.7,
+       100
+      ]
+     },
+     "atLeast14of15": {
+      "k": 2,
+      "n": 2,
+      "pct": 100,
+      "ci95": [
+       34.2,
+       100
+      ]
+     }
+    }
+   },
+   "M": {
+    "name": "Mixed",
+    "sustainedStarters": {
+     "n": 30,
+     "all99ByEndOfSeason": {
+      "10": {
+       "k": 0,
+       "n": 30,
+       "pct": 0,
+       "ci95": [
+        0,
+        11.4
+       ]
+      },
+      "12": {
+       "k": 0,
+       "n": 30,
+       "pct": 0,
+       "ci95": [
+        0,
+        11.4
+       ]
+      },
+      "13": {
+       "k": 4,
+       "n": 30,
+       "pct": 13.3,
+       "ci95": [
+        5.3,
+        29.7
+       ]
+      },
+      "14": {
+       "k": 25,
+       "n": 30,
+       "pct": 83.3,
+       "ci95": [
+        66.4,
+        92.7
+       ]
+      },
+      "15": {
+       "k": 30,
+       "n": 30,
+       "pct": 100,
+       "ci95": [
+        88.6,
+        100
+       ]
+      }
+     },
+     "all99AtStartOfSeason16_looser": {
+      "k": 30,
+      "n": 30,
+      "pct": 100,
+      "ci95": [
+       88.6,
+       100
+      ]
+     },
+     "seasonOfAll99": {
+      "13": 4,
+      "14": 21,
+      "15": 5
+     },
+     "participation": {
+      "startsPerSeason": 8.28,
+      "clashesPerSeason": 3.7,
+      "starterSeasons": 12.6,
+      "seasonsMostlyInjured": 0.03,
+      "clubs": 1.23,
+      "outOfLeagueAtEnd15": 0,
+      "medianLevel50Season": 8
+     },
+     "failures": {
+      "n": 0,
+      "pointsShort": []
+     }
+    },
+    "allEntrants": {
+     "n": 57,
+     "all99ByEndOfSeason": {
+      "10": {
+       "k": 0,
+       "n": 57,
+       "pct": 0,
+       "ci95": [
+        0,
+        6.3
+       ]
+      },
+      "12": {
+       "k": 0,
+       "n": 57,
+       "pct": 0,
+       "ci95": [
+        0,
+        6.3
+       ]
+      },
+      "13": {
+       "k": 4,
+       "n": 57,
+       "pct": 7,
+       "ci95": [
+        2.8,
+        16.7
+       ]
+      },
+      "14": {
+       "k": 31,
+       "n": 57,
+       "pct": 54.4,
+       "ci95": [
+        41.6,
+        66.6
+       ]
+      },
+      "15": {
+       "k": 52,
+       "n": 57,
+       "pct": 91.2,
+       "ci95": [
+        81.1,
+        96.2
+       ]
+      }
+     },
+     "all99AtStartOfSeason16_looser": {
+      "k": 56,
+      "n": 57,
+      "pct": 98.2,
+      "ci95": [
+       90.7,
+       99.7
+      ]
+     },
+     "seasonOfAll99": {
+      "13": 4,
+      "14": 27,
+      "15": 21,
+      "not by 15": 5
+     },
+     "participation": {
+      "startsPerSeason": 7.52,
+      "clashesPerSeason": 3.37,
+      "starterSeasons": 11.25,
+      "seasonsMostlyInjured": 0.02,
+      "clubs": 1.39,
+      "outOfLeagueAtEnd15": 1,
+      "medianLevel50Season": 9
+     },
+     "failures": {
+      "n": 5,
+      "pointsShort": [
+       1,
+       8,
+       27,
+       38,
+       1188
+      ]
+     }
+    },
+    "notSustained": {
+     "n": 27,
+     "mainCause": {
+      "out of the league": 2,
+      "benched or part-time": 25
+     },
+     "starterSeasonsHistogram": {
+      "0": 1,
+      "5": 1,
+      "7": 1,
+      "8": 1,
+      "9": 1,
+      "10": 8,
+      "11": 14
+     }
+    },
+    "sensitivity": {
+     "atLeast10of15": {
+      "k": 50,
+      "n": 52,
+      "pct": 96.2,
+      "ci95": [
+       87,
+       98.9
+      ]
+     },
+     "all15": {
+      "k": 1,
+      "n": 1,
+      "pct": 100,
+      "ci95": [
+       20.7,
+       100
+      ]
+     },
+     "atLeast14of15": {
+      "k": 4,
+      "n": 4,
+      "pct": 100,
+      "ci95": [
+       51,
+       100
+      ]
+     }
+    }
+   },
+   "X": {
+    "name": "Maximum",
+    "sustainedStarters": {
+     "n": 36,
+     "all99ByEndOfSeason": {
+      "10": {
+       "k": 0,
+       "n": 36,
+       "pct": 0,
+       "ci95": [
+        0,
+        9.6
+       ]
+      },
+      "12": {
+       "k": 4,
+       "n": 36,
+       "pct": 11.1,
+       "ci95": [
+        4.4,
+        25.3
+       ]
+      },
+      "13": {
+       "k": 30,
+       "n": 36,
+       "pct": 83.3,
+       "ci95": [
+        68.1,
+        92.1
+       ]
+      },
+      "14": {
+       "k": 33,
+       "n": 36,
+       "pct": 91.7,
+       "ci95": [
+        78.2,
+        97.1
+       ]
+      },
+      "15": {
+       "k": 36,
+       "n": 36,
+       "pct": 100,
+       "ci95": [
+        90.4,
+        100
+       ]
+      }
+     },
+     "all99AtStartOfSeason16_looser": {
+      "k": 36,
+      "n": 36,
+      "pct": 100,
+      "ci95": [
+       90.4,
+       100
+      ]
+     },
+     "seasonOfAll99": {
+      "12": 4,
+      "13": 26,
+      "14": 3,
+      "15": 3
+     },
+     "participation": {
+      "startsPerSeason": 8.16,
+      "clashesPerSeason": 8.43,
+      "starterSeasons": 12.44,
+      "seasonsMostlyInjured": 0,
+      "clubs": 1.22,
+      "outOfLeagueAtEnd15": 0,
+      "medianLevel50Season": 7
+     },
+     "failures": {
+      "n": 0,
+      "pointsShort": []
+     }
+    },
+    "allEntrants": {
+     "n": 52,
+     "all99ByEndOfSeason": {
+      "10": {
+       "k": 0,
+       "n": 52,
+       "pct": 0,
+       "ci95": [
+        0,
+        6.9
+       ]
+      },
+      "12": {
+       "k": 4,
+       "n": 52,
+       "pct": 7.7,
+       "ci95": [
+        3,
+        18.2
+       ]
+      },
+      "13": {
+       "k": 33,
+       "n": 52,
+       "pct": 63.5,
+       "ci95": [
+        49.9,
+        75.2
+       ]
+      },
+      "14": {
+       "k": 41,
+       "n": 52,
+       "pct": 78.8,
+       "ci95": [
+        66,
+        87.8
+       ]
+      },
+      "15": {
+       "k": 45,
+       "n": 52,
+       "pct": 86.5,
+       "ci95": [
+        74.7,
+        93.3
+       ]
+      }
+     },
+     "all99AtStartOfSeason16_looser": {
+      "k": 46,
+      "n": 52,
+      "pct": 88.5,
+      "ci95": [
+       77,
+       94.6
+      ]
+     },
+     "seasonOfAll99": {
+      "12": 4,
+      "13": 29,
+      "14": 8,
+      "15": 4,
+      "not by 15": 7
+     },
+     "participation": {
+      "startsPerSeason": 6.99,
+      "clashesPerSeason": 7.42,
+      "starterSeasons": 10.6,
+      "seasonsMostlyInjured": 0.02,
+      "clubs": 1.25,
+      "outOfLeagueAtEnd15": 6,
+      "medianLevel50Season": 7
+     },
+     "failures": {
+      "n": 7,
+      "pointsShort": [
+       14,
+       1188,
+       1188,
+       1188,
+       1188,
+       1188,
+       1188
+      ]
+     }
+    },
+    "notSustained": {
+     "n": 16,
+     "mainCause": {
+      "benched or part-time": 10,
+      "out of the league": 6
+     },
+     "starterSeasonsHistogram": {
+      "0": 6,
+      "9": 1,
+      "10": 5,
+      "11": 4
+     }
+    },
+    "sensitivity": {
+     "atLeast10of15": {
+      "k": 45,
+      "n": 45,
+      "pct": 100,
+      "ci95": [
+       92.1,
+       100
+      ]
+     },
+     "all15": {
+      "k": 0,
+      "n": 0,
+      "pct": null,
+      "ci95": null
+     },
+     "atLeast14of15": {
+      "k": 2,
+      "n": 2,
+      "pct": 100,
+      "ci95": [
+       34.2,
+       100
+      ]
+     }
+    }
+   }
+  },
+  "allSchedules": {
+   "sustainedStarters": {
+    "n": 96,
+    "all99ByEndOfSeason": {
+     "10": {
+      "k": 0,
+      "n": 96,
+      "pct": 0,
+      "ci95": [
+       0,
+       3.8
+      ]
+     },
+     "12": {
+      "k": 4,
+      "n": 96,
+      "pct": 4.2,
+      "ci95": [
+       1.6,
+       10.2
+      ]
+     },
+     "13": {
+      "k": 35,
+      "n": 96,
+      "pct": 36.5,
+      "ci95": [
+       27.5,
+       46.4
+      ]
+     },
+     "14": {
+      "k": 65,
+      "n": 96,
+      "pct": 67.7,
+      "ci95": [
+       57.8,
+       76.2
+      ]
+     },
+     "15": {
+      "k": 96,
+      "n": 96,
+      "pct": 100,
+      "ci95": [
+       96.2,
+       100
+      ]
+     }
+    },
+    "all99AtStartOfSeason16_looser": {
+     "k": 96,
+     "n": 96,
+     "pct": 100,
+     "ci95": [
+      96.2,
+      100
+     ]
+    },
+    "seasonOfAll99": {
+     "12": 4,
+     "13": 31,
+     "14": 30,
+     "15": 31
+    },
+    "participation": {
+     "startsPerSeason": 8.21,
+     "clashesPerSeason": 4.32,
+     "starterSeasons": 12.47,
+     "seasonsMostlyInjured": 0.01,
+     "clubs": 1.22,
+     "outOfLeagueAtEnd15": 0,
+     "medianLevel50Season": 8
+    },
+    "failures": {
+     "n": 0,
+     "pointsShort": []
+    }
+   },
+   "allEntrants": {
+    "n": 175,
+    "all99ByEndOfSeason": {
+     "10": {
+      "k": 0,
+      "n": 175,
+      "pct": 0,
+      "ci95": [
+       0,
+       2.1
+      ]
+     },
+     "12": {
+      "k": 4,
+      "n": 175,
+      "pct": 2.3,
+      "ci95": [
+       0.9,
+       5.7
+      ]
+     },
+     "13": {
+      "k": 38,
+      "n": 175,
+      "pct": 21.7,
+      "ci95": [
+       16.2,
+       28.4
+      ]
+     },
+     "14": {
+      "k": 80,
+      "n": 175,
+      "pct": 45.7,
+      "ci95": [
+       38.5,
+       53.1
+      ]
+     },
+     "15": {
+      "k": 144,
+      "n": 175,
+      "pct": 82.3,
+      "ci95": [
+       76,
+       87.2
+      ]
+     }
+    },
+    "all99AtStartOfSeason16_looser": {
+     "k": 164,
+     "n": 175,
+     "pct": 93.7,
+     "ci95": [
+      89.1,
+      96.5
+     ]
+    },
+    "seasonOfAll99": {
+     "12": 4,
+     "13": 34,
+     "14": 42,
+     "15": 64,
+     "not by 15": 31
+    },
+    "participation": {
+     "startsPerSeason": 7.23,
+     "clashesPerSeason": 3.3,
+     "starterSeasons": 10.89,
+     "seasonsMostlyInjured": 0.02,
+     "clubs": 1.34,
+     "outOfLeagueAtEnd15": 9,
+     "medianLevel50Season": 9
+    },
+    "failures": {
+     "n": 31,
+     "pointsShort": [
+      1,
+      7,
+      8,
+      9,
+      10,
+      10,
+      14,
+      17,
+      18,
+      21,
+      27,
+      27,
+      27,
+      28,
+      29,
+      30,
+      30,
+      32,
+      38,
+      38,
+      50,
+      81,
+      1188,
+      1188,
+      1188,
+      1188,
+      1188,
+      1188,
+      1188,
+      1188,
+      1188
+     ]
+    }
+   }
+  }
+ },
+ "matched": {
+  "against": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/b6/apexrun",
+  "entrantsHere": 175,
+  "entrantsThere": 170,
+  "matched": 68,
+  "apexHereNotApexThere": 107,
+  "bySchedule": {
+   "F": {
+    "n": 31,
+    "sameClubAtEntry": 20,
+    "sameEntryYear": 31,
+    "bothLoose": 0,
+    "onlyHereLoose": 29,
+    "onlyThereLoose": 0,
+    "neitherLoose": 2,
+    "starterSeasonsHere": 11.03,
+    "starterSeasonsThere": 9,
+    "sustainedBoth": 9,
+    "sustainedOnlyHere": 7,
+    "sustainedOnlyThere": 2,
+    "neither": 13
+   },
+   "X": {
+    "n": 21,
+    "sameClubAtEntry": 8,
+    "sameEntryYear": 21,
+    "bothLoose": 17,
+    "onlyHereLoose": 2,
+    "onlyThereLoose": 1,
+    "neitherLoose": 1,
+    "starterSeasonsHere": 10.67,
+    "starterSeasonsThere": 10.9,
+    "sustainedBoth": 8,
+    "sustainedOnlyHere": 4,
+    "sustainedOnlyThere": 3,
+    "neither": 6
+   },
+   "M": {
+    "n": 16,
+    "sameClubAtEntry": 6,
+    "sameEntryYear": 16,
+    "bothLoose": 5,
+    "onlyHereLoose": 11,
+    "onlyThereLoose": 0,
+    "neitherLoose": 0,
+    "starterSeasonsHere": 11.56,
+    "starterSeasonsThere": 9.94,
+    "sustainedBoth": 6,
+    "sustainedOnlyHere": 4,
+    "sustainedOnlyThere": 0,
+    "neither": 6
+   }
+  }
+ }
+}

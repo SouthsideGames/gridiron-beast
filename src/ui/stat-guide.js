@@ -6,7 +6,7 @@ import { POSITIONS, POSITION_NAME, ATTR_ORDER, ATTR_NAME, STAT_GUIDE, attributeH
 export function statGuideHtml(position) {
   const helps = ATTR_ORDER.filter((a) => attributeHelps(position, a)), not = ATTR_ORDER.filter((a) => !attributeHelps(position, a));
   return `<div class="chips" style="margin-bottom:8px;flex-wrap:wrap">${POSITIONS.map((p) => `<button class="chip ${p === position ? 'on accent' : ''}" data-guide-pos="${p}">${p}</button>`).join('')}</div>
-    <p class="muted" style="margin:0 0 6px"><b>${esc(POSITION_NAME[position])}</b>: what each attribute does on the field. Attribute points can only be spent on the ones listed first.</p>
+    <p class="muted" style="margin:0 0 6px"><b>${esc(POSITION_NAME[position])}</b>: what each attribute does on the field. The ones listed first are the ones this position uses. Training points can be invested in any attribute, up to that attribute's own ceiling.</p>
     <div class="list">${helps.map((a) => `<div class="item static" style="min-height:0;padding:6px 8px;display:block"><b>${esc(ATTR_NAME[a])}</b> <span class="dim">· ${esc(STAT_GUIDE[a].summary)}</span><div style="font-size:13px;margin-top:2px">${esc(statMeaning(position, a))}</div></div>`).join('')}</div>
     ${not.length ? `<p class="dim" style="margin:8px 0 2px">No effect for a ${esc(POSITION_NAME[position].toLowerCase())} (points cannot go here): ${not.map((a) => esc(ATTR_NAME[a])).join(', ')}.</p>` : ''}
     <p class="dim" style="margin-top:6px">In Beast Clash every attribute feeds the overall rating it fights at; durability also tilts battle health, strength attack, and speed initiative.</p>`;
