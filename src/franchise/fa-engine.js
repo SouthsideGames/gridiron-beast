@@ -96,8 +96,19 @@ export function entryOf(f, m) {
 // ------------------------------------------------------------ what he wants
 export const preferredYears = (p) => (p.security >= 66 ? 3 : p.security >= 40 ? 2 : 1);
 /** His expectation now: salary (in 100s), preferred years. Falls while he stays unsigned, by personality (decision 16). */
-export function askOf(f, m) {
-  const p = personaOf(m); const base = toStep(renewalAsk(m).ask || salaryFor(m));
+export function clubKnowsApex(f, m, club = f.club) {
+  if (!m.dev?.apex) return false;
+  if (rosterOf(f, club)?.some((x) => x.id === m.id)) return true;
+  if ((m.history || []).some((h) => h.club === club)) return true;
+  // Free-agent cards are fully public for every club. Regional/draft prospects are not.
+  if (marketList(f).some((x) => x.m.id === m.id)) return true;
+  if (club === f.club) return !!(f.discovery?.potential?.[m.id] || f.discovery?.apex?.[m.id]
+    || (f.draft?.revealed?.[m.id] || 0) >= 6
+    || f.week?.prospects?.some((p) => p.monster?.id === m.id && p.potentialKnown));
+  return (f.draft?.aiScouting?.[club]?.revealed?.[m.id] || 0) >= 6;
+}
+export function askOf(f, m, club = f.club) {
+  const p = personaOf(m); const base = toStep(renewalAsk(m, { apexKnown: clubKnowsApex(f, m, club) }).ask || salaryFor(m));
   const e = f.freeAgency?.market?.[m.id]; const t = e?.unsigned || 0;
   const rate = FA_RULES.flex[0] + (FA_RULES.flex[1] - FA_RULES.flex[0]) * (1 - p.money / 100);
   const salary = Math.max(OFFER_STEP, toStep(base * Math.max(FA_RULES.flexFloor, 1 - rate * t)));
@@ -174,7 +185,7 @@ export function homeFor(f, m, club) {
  * ask from an ordinary club would earn: at or above it he accepts; within FA_RULES.counterBand he counters.
  */
 export function rateOffer(f, m, club, terms, { guaranteed = false } = {}) {
-  const p = personaOf(m); const ask = askOf(f, m); const years = clampYears(terms.years);
+  const p = personaOf(m); const ask = askOf(f, m, club); const years = clampYears(terms.years);
   const bonus = Math.max(0, terms.bonus || 0);
   const moneyEq = terms.salary + (bonus * (1 + p.money / 200)) / years; // up-front money counts a little more to the money-minded
   const moneyRatio = moneyEq / Math.max(1, ask.salary);
@@ -194,7 +205,7 @@ export function rateOffer(f, m, club, terms, { guaranteed = false } = {}) {
 }
 /** The terms that would satisfy him at this club: his preferred years and the salary that closes the gap (in 100s). */
 export function counterTerms(f, m, club, terms) {
-  const ask = askOf(f, m); const p = personaOf(m); const t = { salary: terms.salary, years: ask.years, bonus: terms.bonus || 0 };
+  const ask = askOf(f, m, club); const p = personaOf(m); const t = { salary: terms.salary, years: ask.years, bonus: terms.bonus || 0 };
   const r = rateOffer(f, m, club, t); if (r.score >= r.need) return t;
   const tot = Object.values(r.weights).reduce((x, y) => x + y, 0) || 1; const wm = r.weights.money / tot;
   const mood = moodOf(f.seed, leagueYear(f), m.id, club); const others = r.score / mood - wm * r.parts.money; const moneyNeed = (r.need / mood - others) / (wm || 1e-9); // the money part that closes the gap (his mood and any home value included)
@@ -360,7 +371,7 @@ export function negotiateNow(f, club, mid, terms, { guaranteed = false, via = 'f
   const u = unsigned(f, mid); if (!u) return { ok: false, code: 'gone', reason: 'He is no longer available.' };
   const m = u.m; terms = { salary: toStep(terms.salary), years: clampYears(terms.years), bonus: toStep(terms.bonus || 0) };
   const b = blocker(f, club, m, terms, { final: true }); if (b) return { ok: false, ...b };
-  const e = entryOf(f, m); const r = rateOffer(f, m, club, terms, { guaranteed: guaranteed && terms.salary >= askOf(f, m).salary });
+  const e = entryOf(f, m); const r = rateOffer(f, m, club, terms, { guaranteed: guaranteed && terms.salary >= askOf(f, m, club).salary });
   if (r.low && !guaranteed) lowball(f, m, e, club);
   if (r.score >= r.need) { const s = sign(f, club, mid, terms, { via }); return s.ok ? { ok: true, outcome: 'signed', monster: s.monster, contract: s.contract } : s; }
   { const c = r.score >= r.need * FA_RULES.counterBand ? counterTerms(f, m, club, terms) : null; if (c) return { ok: true, outcome: 'countered', counter: c }; }
@@ -415,7 +426,7 @@ export const NEG = Object.freeze({
 export const extWindow = (f) => (f.season && !f.season.finished && (f.season.week || 1) >= NEG.midWeek && (f.freeAgency?.leagueYear ?? f.season.year) === f.season.year ? 'ext-mid' : 'ext-pre');
 /** The lowest salary (at `years`, with `bonus`) at which `club`'s offer satisfies him now, or null when money cannot. */
 export function reservationAt(f, m, club, years, bonus = 0) {
-  const t = { salary: OFFER_STEP, years: clampYears(years), bonus }; const r = rateOffer(f, m, club, t); const p = personaOf(m); const ask = askOf(f, m);
+  const t = { salary: OFFER_STEP, years: clampYears(years), bonus }; const r = rateOffer(f, m, club, t); const p = personaOf(m); const ask = askOf(f, m, club);
   const tot = Object.values(r.weights).reduce((x, y) => x + y, 0) || 1; const wm = r.weights.money / tot; if (!(wm > 0)) return null;
   const mood = moodOf(f.seed, leagueYear(f), m.id, club); const others = r.score / mood - wm * r.parts.money; const moneyNeed = (r.need / mood - others) / wm;
   if (moneyNeed > NEG.unreachable) return null; const bonusEq = (bonus * (1 + p.money / 200)) / t.years;
@@ -428,7 +439,7 @@ const negStore = (f) => (f.freeAgency.talks ||= {});
 export function negotiation(f, m, club, window, { peek = false } = {}) {
   if (!f.freeAgency) return null;
   const key = `${m.id}|${club}|${m.contract?.ends ?? leagueYear(f)}|${window}`; const S = peek ? (f.freeAgency.talks || {}) : negStore(f); if (S[key]) return S[key];
-  const t = talksOpen(f, m, club, { window }); const ask = askOf(f, m); const amb = ambitionOf(m); const R = reservationAt(f, m, club, ask.years, 0);
+  const t = talksOpen(f, m, club, { window }); const ask = askOf(f, m, club); const amb = ambitionOf(m); const R = reservationAt(f, m, club, ask.years, 0);
   // anchored on his market ask; the circumstances (his reservation at this club against an ordinary club's, 0.9 of the ask) move it
   const c = R == null ? NEG.unreachable : R / ask.salary; const share = Math.max(NEG.openRange[0], Math.min(NEG.openRange[1], 1 + NEG.margin + (NEG.gap[amb] || 0) + NEG.circumstance * (c - FA_RULES.tolerance)));
   const salary = toStep(ask.salary * share);
@@ -467,7 +478,7 @@ export function negotiate(f, m, neg, terms, { accept = false } = {}) {
   if (answer === 'end') { neg.state = 'ended'; neg.testsMarket = neg.window === 'renew'; return { outcome: 'ended', reason: neg.window === 'renew' ? `${m.name} ends the talks and will test free agency.` : `${m.name} ends the talks for now; he may listen again in a later window.` }; }
   // his counter: between the offer and his demand, never below his reservation at his term (with the offered bonus)
   const Rp = reservationAt(f, m, neg.club, neg.demand.years, terms.bonus); const prev = neg.demand.salary;
-  let sal = prev - (NEG.concede[amb] ?? 0.5) * Math.max(0, prev - terms.salary); sal = Math.max(sal, Rp ?? 0, askOf(f, m).salary * FA_RULES.lowball);
+  let sal = prev - (NEG.concede[amb] ?? 0.5) * Math.max(0, prev - terms.salary); sal = Math.max(sal, Rp ?? 0, askOf(f, m, neg.club).salary * FA_RULES.lowball);
   sal = Math.min(prev, toStep(sal)); neg.demand = { salary: Math.max(OFFER_STEP, sal), years: neg.demand.years, bonus: terms.bonus }; rec.counter = { ...neg.demand };
   return { outcome: 'countered', counter: { ...neg.demand } };
 }

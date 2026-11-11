@@ -58,3 +58,10 @@ test('N9d Prism: an activation-play flag cannot leak through a benched snap and 
  state.playCount++;state.possession='away';R.preparePreChoice(state,teams);
  assert.equal(st.noCharge,false,'clear the old activation restriction before the no-specialist fast path');
 });
+
+test('M6 Foresight uses the dominant public formation rather than the first plan entry',()=>{
+ const {state,teams}=setup();teams.away.defensePlays=['cover_3','mug_zero','mug_zero'];
+ const before=state.rngState;const pc=R.preparePreChoice(state,teams);
+ assert.equal(pc.defense,'mug_zero');assert.equal(pc.foresight.length,1);
+ assert.equal(state.rngState,before);assert.strictEqual(R.preparePreChoice(state,teams,{defense:'cover_3'}),pc);
+});

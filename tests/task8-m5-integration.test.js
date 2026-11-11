@@ -10,9 +10,9 @@ const mk = () => generateMonster(createRng(42), { position: 'QB', age: 20, years
 test('football mastery settles once alongside rewards, including after JSON reload', () => {
   let m = mk(), ledger = createRewardLedger();
   const settle = () => afterGame([m], { QB: m.id }, { QB: { snapsOff: 10 } }, createRng(1), { ledger, activityId: 'fb:1:w1:r:test', mastery: { [m.id]: { executions: 3, passiveCredited: false } } });
-  settle(); assert.equal(m.dev.mastery.football, 3); assert.equal(m.dev.mastery.clash, 0);
+  settle(); assert.equal(m.dev.mastery.football, 2); assert.equal(m.dev.mastery.clash, 0);
   ({ m, ledger } = JSON.parse(JSON.stringify({ m, ledger })));
-  settle(); assert.equal(m.dev.mastery.football, 3);
+  settle(); assert.equal(m.dev.mastery.football, 2);
 });
 test('Clash passive cap persists across opening/OT while valid active uses still count', () => {
   const m = mk(), ledger = createRewardLedger();

@@ -31,7 +31,16 @@ export function applyMastery(m, mode, execution, { scope } = {}) {
   if (passive && (!scope || n < 1)) throw new Error('passive mastery requires a scope and execution');
   const stamps = (m.dev.masteryPassiveScopes ||= {});
   const scopes = Array.isArray(stamps[mode]) ? stamps[mode] : stamps[mode] ? [stamps[mode]] : [];
-  const credits = n - passive + (passive && !scopes.includes(scope) ? 1 : 0);
+  // Active football mastery: at most two credits per game, across repeated settlements.
+  let active = n - passive;
+  if (mode === 'football' && active > 0) {
+    if (!scope) throw new Error('football mastery requires a game scope');
+    const caps = (m.dev.masteryActiveScopes ||= {});
+    const used = caps[scope] || 0;
+    active = Math.min(active, Math.max(0, 2 - used));
+    caps[scope] = used + active;
+  }
+  const credits = active + (passive && !scopes.includes(scope) ? 1 : 0);
   if (passive && !scopes.includes(scope)) scopes.push(scope);
   if (passive) stamps[mode] = scopes;
   (m.dev.mastery ||= { football: 0, clash: 0 })[mode] += credits;

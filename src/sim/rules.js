@@ -313,8 +313,17 @@ export function previewPendingFields(state, teams, offensePlayId, defensePlayId,
   return out;
 }
 /** N9d: authoritative pre-choice boundary. Saved once per snap; never reads a selected play or its assignments.
- * The first visible personnel look is locked. Headless callers use each club's first available formation.
+ * The first visible personnel look is locked. The defensive look uses the plan's most represented formation.
  * AI retains its approved play-choice policy; no unapproved blitz-weight adjustment is introduced. */
+export function predominantDefenseLook(plays = []) {
+  // Count the formations represented in the public plan. Ties keep plan order;
+  // never inspect the selected call, its assignments or future RNG.
+  const counts = new Map();
+  for (const id of plays) { const formation = getPlay(id).formation; counts.set(formation, (counts.get(formation) || 0) + 1); }
+  let best = null, count = 0;
+  for (const id of plays) { const n = counts.get(getPlay(id).formation); if (n > count) { best = id; count = n; } }
+  return best || 'cover_3';
+}
 export function preparePreChoice(state, teams, looks = {}) {
   if (state.phase !== 'scrimmage' || state.finished) return null;
   const t8 = (state.t8 ||= { status: {} });
@@ -324,7 +333,7 @@ export function preparePreChoice(state, teams, looks = {}) {
   const off = teams[state.possession], def = teams[opponent(state.possession)];
   if (!Object.values(off.offense || {}).some((m) => m?.species === 'cerebrix') && !Object.values(def.defense || {}).some((m) => m?.species === 'prism')) { delete t8.preChoice; return null; }
   const offId = looks.offense || off.offensePlays?.[0] || 'inside_zone';
-  const defId = looks.defense || def.defensePlays?.[0] || 'cover_3';
+  const defId = looks.defense || predominantDefenseLook(def.defensePlays);
   const look = (id) => { const p = getPlay(id), f = (p.side === 'defense' ? DEFENSE_FORMATIONS : OFFENSE_FORMATIONS)[p.formation]; return { ...p, align: Object.fromEntries(p.onField.map((slot) => [slot, f?.align?.[slot] || p.align[slot]])) }; };
   const op = look(offId), dp = look(defId);
   const os = pickSlots(off.offense, op.onField, off, op), ds = pickSlots(def.defense, dp.onField, def, dp);

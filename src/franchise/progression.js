@@ -2,7 +2,7 @@
 
 import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolve, autoSpendPoints, syncFromDev } from '../data/monsters.js';
 import { addBankedPoints, addTrainingProgress, MAX_LEVEL } from './t8/progression.js';
-import { OFFSEASON_POINTS, footballAward } from './t8/awards.js';
+import { offseasonPoints, activityTraining, footballAward } from './t8/awards.js';
 import { applyActivity } from './reward-ledger.js';
 import { applyMastery } from './t8/mastery.js';
 import { footballGrade } from './t8/grading.js';
@@ -36,6 +36,7 @@ export function applyAward(m, { xp, training }, rng, { autoSpend = false, autoEv
     }
     if (m.level >= MAX_LEVEL) m.xp = 0;
   }
+  training = activityTraining(d, training);
   const points = addTrainingProgress(d, training); syncFromDev(m);
   if (autoSpend && FR.floor(d.bank) > 0) autoSpendPoints(m, rng, { first: train?.[m.position] || null });
   return { xp: xpGain, training, points, levelsGained: m.level - startLevel, events };
@@ -130,7 +131,7 @@ export function offseason(roster, rng, { s = null, severeOf = null, autoAllocate
     m.yearsPro = (m.yearsPro ?? Math.max(0, m.age - 23)) + 1; m.fatigue = 0; m.injury = null;
     // Task 8: the eligible offseason award, 2 banked training points (replaces the old direct maturation increases, spec §6).
     // AI and pool monsters allocate it with the approved policy; the owner's club passes autoAllocate: false and decides.
-    if (m.dev) { addBankedPoints(m.dev, OFFSEASON_POINTS); if (autoAllocate) autoSpendPoints(m, rng, { first: train?.[m.position] || null }); }
+    if (m.dev) { addBankedPoints(m.dev, offseasonPoints(m.dev)); if (autoAllocate) autoSpendPoints(m, rng, { first: train?.[m.position] || null }); }
     if (ageless) { if (m.dev) syncFromDev(m); if (marketPriced(m)) m.salary = salaryFor(m); continue; } // ageless: banked points still mirror to m.points
     const cur = m.dev ? m.dev.current : m.attributes;
     if (m.durPeak == null && m.age >= peakWindowAge(m.position)) m.durPeak = cur.durability;

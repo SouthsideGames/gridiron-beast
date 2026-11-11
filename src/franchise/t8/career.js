@@ -1,6 +1,7 @@
 // Task 8 M1 (WP2-WP3): AI training allocation, age-related decline on the development record, and the simulated prior-career
 // history used to generate veterans (N7c B7). Pure functions over the record from progression.js; not yet wired.
 import * as F from '../../core/fraction.js';
+import { activityTraining, offseasonPoints } from './awards.js';
 import { ATTRIBUTES, RULES } from '../../data/beast-dex.js';
 import { POSITION_WEIGHTS } from '../../data/personnel.js';
 import { CURVE, trueOnset, technicalOffset, isPhysical, physLoss, techLoss, drawLoss, ATTRIBUTE_FLOOR, peakWindowAge } from '../../data/aging.js';
@@ -105,12 +106,12 @@ export function simulateHistory(rng, d, m, { seasons, profile = 'starter', xpMul
     const part = F.frac(Math.round(share * 20), 20); // participation as an exact twentieth
     for (let g = 0; g < games; g++) {
       addLevelXp(d, Math.round(50 * xpMultiplier * F.toNumber(part)));
-      addTrainingProgress(d, F.mul(F.frac(1, 4), part));
+      addTrainingProgress(d, activityTraining(d, F.mul(F.frac(1, 4), part)));
       evolve(d);
     }
-    for (let c = 0; c < clashes; c++) { addLevelXp(d, Math.round(25 * xpMultiplier)); addTrainingProgress(d, F.frac(1, 4)); evolve(d); }
+    for (let c = 0; c < clashes; c++) { addLevelXp(d, Math.round(25 * xpMultiplier)); addTrainingProgress(d, activityTraining(d, F.frac(1, 4))); evolve(d); }
     allocateTraining(d, m);
-    addBankedPoints(d, 2); allocateTraining(d, m);
+    addBankedPoints(d, offseasonPoints(d)); allocateTraining(d, m);
     if (!d.apex) m.age += 1;
     m.yearsPro = (m.yearsPro || 0) + 1;
     applyDecline(d, m, rng);

@@ -7,6 +7,11 @@ import { POSITION_WEIGHTS } from '../../data/personnel.js';
 export const STANDARD_TRAINING_SHARE = F.frac(1, 4); // 25% (tunable 20-50% in 5-point steps, equal for both modes)
 export const FOOTBALL_BASE_XP = 50, CLASH_BASE_XP = 25, RESERVE_XP = F.frac(25, 2); // reserve 12.5 (R1 item 9)
 export const OFFSEASON_POINTS = 2;
+// Owner-approved M6 Apex exception: ordinary awards and level XP are unchanged.
+export const APEX_ACTIVITY_MULTIPLIER = 2;
+export const APEX_OFFSEASON_POINTS = 42;
+export const activityTraining = (d, training) => d.apex ? F.mul(training, APEX_ACTIVITY_MULTIPLIER) : training;
+export const offseasonPoints = (d) => d.apex ? APEX_OFFSEASON_POINTS : OFFSEASON_POINTS;
 
 /** Participation factor: non-kickers min(1, live snaps / 10); kickers 1 with at least one actual kick, else 0. Formula-only special-teams participation counts as snaps for the foundation (B5). */
 export function participation({ position, liveSnaps = 0, kicks = 0 }) {

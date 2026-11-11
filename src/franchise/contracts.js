@@ -33,8 +33,11 @@ export function withBankedPoints(m) {
   for (let i = 0; i < pts; i++) { const k = w.find(([a]) => attrs[a] < (m.potential || 99))?.[0]; if (!k) break; attrs[k] += 1; }
   return { ...m, attributes: attrs, points: 0 };
 }
-export function renewalAsk(m, { award = false, year = null } = {}) {
-  const base = salaryFor(withBankedPoints(m));
+export function renewalAsk(m, { award = false, year = null, apexKnown = true } = {}) {
+  const ordinary = salaryFor(withBankedPoints(m));
+  // B9 + M6: a known Apex asks half the remaining gap to the OVR-99 salary.
+  // Existing signed contracts remain fixed; unidentified offers use the ordinary ask.
+  const base = m.dev?.apex && apexKnown ? ordinary + (18000 + 280 * 99 - ordinary) / 2 : ordinary;
   const L = monsterLine(m, 'season', 'reg');
   const big = (L.passYds || 0) >= 1500 || ((L.rushYds || 0) + (L.recYds || 0)) >= 900 || ((L.tackles || 0) + (L.assists || 0)) >= 50 || (L.sacks || 0) >= 8 || (L.int || 0) >= 4 || (L.fgm || 0) >= 12;
   let premium = 1;

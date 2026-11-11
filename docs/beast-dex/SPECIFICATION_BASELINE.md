@@ -1,3 +1,5 @@
+> M6 adoption update (2026-11-11): [owner decisions and remaining review limits](../task8/m6/OWNER_ADOPTION_2026-11-11.md) supersede conflicting historical rules, including Apex rewards, football active mastery cap, Foresight look selection and known-Apex contract pricing.
+
 > Historical consolidated specification, November 5. Later approvals in APPROVED_RULES.md and data/forms.json override conflicting profile, rarity and evolution statements below. This snapshot is retained for the shared engine requirements, not a second active profile source.
 
 # Gridiron Beast Task 8 Implementation Specification
@@ -133,7 +135,7 @@ Apex is exceptional individual potential, not species rarity or an additional ab
 
 An Apex independently starts each of its 12 attributes at 10-15 inclusive, at level 1 in the development benchmark. Every underlying attribute ceiling is 99, including Kicking. Apex retains species position, type, abilities and evolution family. It receives a neutral Temper. Exact sampling among the three neutral Tempers and the 10-15 start range must be specified before handoff; equal selection is the natural proposal but was not separately finalized.
 
-Apex does not receive an extra training multiplier. It is ageless and exempt from age-related decline and retirement, making eventual all-99 development genuinely possible. It remains subject to fatigue, injuries, ordinary recovery and temporary gameplay effects. Injury does not remove Apex or its underlying all-99 ceilings; Apex does not automatically heal or restore lost current ratings.
+Owner-approved M6 exception (2026-11-11): Apex receives ×2 activity training and 42 total banked training points each eligible offseason; ordinary individuals retain their existing awards. It is ageless and exempt from age-related decline and retirement, making eventual all-99 development genuinely possible. It remains subject to fatigue, injuries, ordinary recovery and temporary gameplay effects. Injury does not remove Apex or its underlying all-99 ceilings; Apex does not automatically heal or restore lost current ratings.
 
 Apex can use reserve-development slots under normal slot and participation limits, with exemption from age and potential-headroom restrictions that would incorrectly exclude it. It remains subject to other eligibility, such as injury. Contract valuation must reflect current ability, exceptional potential and agelessness; an undeveloped Apex is less expensive than a developed one but is not valued as an ordinary weak prospect. Exact valuation rules remain a release dependency coordinated with Task 7.
 
@@ -172,7 +174,7 @@ Evolution preserves trained progress, ceilings appropriate to the new form and m
 | Kicker football participation | One eligible actual kick qualifies for base participation; category sample protections still apply |
 | Clash selected lineup member | 25 level XP before archetype adjustment; 25% training bar, including unused reserves |
 | Reserve development after football | Training progress 25% of standard participation award: initially 6.25% of a bar; no double starter/reserve reward |
-| Eligible offseason | 2 banked training points per individual; replaces separate direct maturation increases |
+| Eligible offseason | 2 banked training points per ordinary individual; 42 total for Apex (M6); replaces separate direct maturation increases |
 
 A monster on the field under immobilization still participates in a live snap. Mere depth-chart listing is insufficient. Kicker zero-kick eligibility and detailed eligible-snap definitions must be frozen in the release specification. Ordinary reserve development retains existing slot limits (inspected baseline: six total, at most two per position) and its non-Apex eligibility unless explicitly revised. Its new level-XP award remains to be fixed; do not silently choose between the old 24-based reserve formula and the new football base.
 

@@ -1,26 +1,25 @@
-# iPhone 17 Pro Max testing checklist for the final Task 8 preview
+# iPhone 17 Pro Max testing checklist for the main Task 8 review build
 
 **Phone performance is not verified.** No Task 8 build has been measured on a phone. The CPU figures are from a cloud server and
 the frame-time figures from a headless desktop browser. This list is how to produce the phone result; until you send it back,
 the §14 gates (60 FPS target, selectable 30 FPS mode) stay open.
 
-**Link:** https://claude.ai/artifact/3qW6dbFAZ4yCc8i1SnAVq6 (private; the same testing link as before)
-**Build:** v43.5.1-t8-m6-preview · 2026-11-11 (commit d544fec, published as version 10)
+**Link:** https://claude.ai/artifact/GJG2k6eqG3qfeteJEbXvFq (existing main game link; use only after its build label is updated)
+**Required build:** v43.6.0-task8-review · 2026-11-11. Publication is a separate step; a merge alone does not update this link.
 
 About 35 minutes. Parts A to D need only the phone. Part E needs a Mac and a cable and gives numbers.
 
 ## A. Set up (3 minutes)
 
 - [ ] Note the iOS version (Settings → General → About).
-- [ ] **Low Power Mode off** (Settings → Battery). When it is on, Safari draws at 30 FPS and every result is wrong.
+- [ ] **Low Power Mode off** (Settings → Battery). It can reduce frame rate; record it separately from the primary test.
 - [ ] Battery above 50%, unplugged, phone cool, other apps closed.
-- [ ] Open the private preview **in Safari**, not inside the Claude app: Part E can only inspect Safari.
-- [ ] Main menu: the build label reads **v43.5.1-t8-m6-preview · 2026-11-11**. If it shows v43.5.0, close the tab and reopen the link.
-- [ ] Continue your existing preview franchise (this also checks the save carried over).
+- [ ] Open the main game link **in Safari**, not inside the Claude app: Part E can only inspect Safari.
+- [ ] Main menu: the build label reads **v43.6.0-task8-review · 2026-11-11**. If it shows an older label, publication/cache refresh is not confirmed; do not report it as this build.
+- [ ] Continue your existing current-format franchise (this also checks the save carried over).
 - [ ] Settings: Frame rate 60, Reduce flashes off, Reduce motion off.
 
-One thing to know: on this phone Safari normally draws web pages at up to 60 FPS even though the screen can do 120. So 60 is the
-most the game can show, and "smooth" below means no visible stepping at 60.
+Use the game’s 60 FPS target for this test. Actual refresh behavior depends on Safari and device settings; record measured frame times when available.
 
 ## B. Twelve scenes (20 minutes)
 
@@ -83,3 +82,7 @@ Auto, no freeze over a quarter of a second.
   four-year-old phone or a mid-range Android.
 - Battery use per hour at 60 against 30.
 - Graphics-quality presets: none exist for players (deferred by your ruling).
+
+## Owner ability decisions
+
+Main Menu → Developer Tools → Ability Reviewer (football), then Clash Ability Reviewer (Beast Clash). Mark Good or Needs work and add a note with the ability, form/mastery, scenario, expected result and observed result. Send the review text/export or screenshots back. These decisions are pending until the owner makes them.
