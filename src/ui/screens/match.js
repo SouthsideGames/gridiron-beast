@@ -89,7 +89,7 @@ export function registerMatchScreens(Router, app) {
   startSundayGame = (f) => {
     F.ensureCaptains(f); // Captain Partnerships (GDD §27.4B): an initial selection still open is settled with the suggestion now
     const m = F.sundayMatchup(f); const toss = F.pregamePossession(f);
-    const state = R.newGame({ home: m.home, away: m.away, venue: F.gameVenue(f, m.home.name), seed: rngFromState(f.rngState).seed(), quarterLength: f.settings.quarterLength, coinWinner: toss.coinWinner, choice: toss.choice, comeback: F.comebackRule(f), otPeriods: F.OT_PERIODS });
+    const state = R.newGame({ home: m.home, away: m.away, venue: F.gameVenue(f, m.home.name, m.away.name), seed: rngFromState(f.rngState).seed(), quarterLength: f.settings.quarterLength, coinWinner: toss.coinWinner, choice: toss.choice, comeback: F.comebackRule(f), otPeriods: F.OT_PERIODS });
     f.rngState = rngFromState(f.rngState).state;
     f.game = { state, playerSide: m.playerSide, tendencies: { home: newTendencies(), away: newTendencies() }, selected: { offense: null, defense: null }, mode: f.settings.mode, lastEvent: null, simmed: [], event: m.rival ? 'rival' : m.playoff ? 'playoff' : null, tag: m.tag };
     app.save();

@@ -19,7 +19,7 @@ test('every club has one permanent stadium in a known environment; gym clubs sit
   const names = new Set();
   for (const club of ALL_TEAMS) { const s = stadiumFor(club); assert.ok(ENVIRONMENTS[s.env], club); assert.ok(!names.has(s.name), `unique name ${s.name}`); names.add(s.name); assert.equal(stadiumFor(club).env, s.env, 'permanent'); }
   for (const g of GYMS) { const env = Object.values(ENVIRONMENTS).find((e) => e.type === g.element); if (env) assert.equal(stadiumFor(g.club).type, g.element, `${g.club} plays in the ${env.name}`); }
-  assert.deepEqual(Object.values(ENVIRONMENTS).map((e) => e.type), [null, 'Ice', 'Fire', 'Nature', 'Electric', 'Earth', 'Metal']);
+  assert.deepEqual(Object.values(ENVIRONMENTS).map((e) => e.type), [null, 'Ice', 'Fire', 'Nature', 'Electric', 'Earth', 'Metal', 'Water', 'Light', 'Dark', null]); // the last is Dragon's Den: a look only
   assert.equal(stadiumFor('Ember City Beasts').env, 'volcanic'); assert.equal(stadiumFor('Ironpeak Rams').indoor, true);
   assert.equal(stadiumFor('Ember City Beasts', { 'Ember City Beasts': { name: 'New Pit', env: 'dome' } }).env, 'dome', 'a future stadium-management override replaces the default');
 });
@@ -69,7 +69,7 @@ test('games carry their venue: newGame records it, older saved games without one
   old.phase = 'scrimmage'; assert.doesNotThrow(() => R.runScrimmagePlay(old, { home: team('Ember City Beasts'), away: team('Bayou Stalkers') }, OFFENSE_IDS[0], DEFENSE_IDS[0]), 'a game saved before venues still plays (no field bonus)');
   const f = newFranchise(31); F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); F.autoRunToSunday(f); }
   const v = F.sundayVenue(f); const m = F.sundayMatchup(f); assert.equal(v.home, m.home.name);
-  const g = F.simulatePlayerGame(f); assert.deepEqual({ ...g.venue }, { club: v.club, name: v.name, env: v.env, type: v.type, indoor: v.indoor, weather: v.weather }, 'the game is played where and in the weather the preview said');
+  const g = F.simulatePlayerGame(f); { const { home: _h, away: _a, ...shown } = v; assert.deepEqual({ ...g.venue }, shown, 'the game is played where, on the field and in the weather the preview said'); }
   const back = Save.importJson(Save.exportJson(f)); assert.ok(back); assert.equal(stadiumFor(back.club).env, stadiumFor(f.club).env);
 });
 

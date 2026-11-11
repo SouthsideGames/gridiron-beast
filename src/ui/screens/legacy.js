@@ -28,7 +28,7 @@ const setTab = (t) => { tab = t; try { localStorage.setItem(TAB_KEY, t); } catch
 
 function headerHtml(f) {
   const lg = f.lifecycle.legacy; const fired = f.lifecycle.status === 'fired'; const n = lg.seasonsCompleted ?? (f.history || []).length;
-  return `<div class="panel legacy-head"><div class="row">${lg.owner ? `<span>${portraitSprite(`${lg.owner.portrait}|${lg.owner.first}`, 48)}</span>` : ''}<div class="grow">
+  return `<div class="panel legacy-head"><div class="row">${lg.owner ? `<span>${portraitSprite(`${lg.owner.portrait}|${lg.owner.first}`, 48, { teamColor: lg.color || null })}</span>` : ''}<div class="grow">
     <div style="font-size:18px;font-weight:800">${esc(f.club)}</div>
     <div class="muted">${lg.owner ? `${esc(lg.owner.first)} ${esc(lg.owner.last)} · ` : ''}${fired ? 'Dismissed' : 'Retired'} after ${n} season${n === 1 ? '' : 's'}${n >= SEASON_CAP ? ' · a complete career' : ''}</div>
     <div class="dim" style="font-size:12px">${fired ? 'Dismissed' : 'Retired'} ${esc(date(lg.archivedAt))} · read-only archive${lg.division ? ` · ${esc(lg.division)} Division` : ''}${lg.tier?.name ? ` · ${esc(lg.tier.name)}` : ''}</div></div></div></div>`;

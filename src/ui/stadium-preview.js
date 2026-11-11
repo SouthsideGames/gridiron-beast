@@ -28,6 +28,7 @@ export function venueHtml(venue, ctx = {}) {
   return `<div class="panel tight venue-card env-${env.id}">
     <div class="row" style="gap:10px;align-items:center">${envSwatch(env.id)}<div class="grow"><div class="venue-name">${esc(venue.name)}</div><div class="dim" style="font-size:12px">Home of the ${esc(venue.club || venue.home || '')}</div></div><div class="venue-weather" title="Weather">${w.icon} ${esc(w.label)}</div></div>
     <div class="venue-env"><b>${env.icon} ${esc(env.name)}</b> <span class="dim">· ${esc(env.blurb)}</span></div>
+    ${venue.fieldBy === 'boss' ? `<div class="dim venue-why" style="font-size:12px">👑 Gym leader's field: every game against the ${esc(venue.boss)} is played on their element${venue.boss !== (venue.club || venue.home) ? `, here at ${esc(venue.name)} too` : ''}.</div>` : venue.fieldBy === 'boss-unmapped' ? `<div class="dim venue-why" style="font-size:12px">👑 Boss game: the ${esc(venue.boss)}' element has no field of its own, so this one is on grass.</div>` : venue.fieldBy === 'draw' ? `<div class="dim venue-why" style="font-size:12px">This week's field conditions${env.id === 'grass' ? ': ordinary grass' : ''}.</div>` : venue.fieldBy === 'home' ? `<div class="dim venue-why" style="font-size:12px">The home club's permanent field.</div>` : ''}
     <div class="venue-bonus">${envBonusHtml(env.id)}</div>${counts}
     <div class="dim" style="font-size:11px;margin-top:4px">${env.indoor ? 'Indoors: weather never reaches the field.' : 'Weather is for atmosphere only: it changes no result.'} Field bonuses are situational, never ratings.</div>
   </div>`;
@@ -35,7 +36,7 @@ export function venueHtml(venue, ctx = {}) {
 /** Every club's stadium (More → Stadiums), the owner's own first. */
 export function stadiumListHtml(f) {
   const clubs = Object.keys(STADIUMS).sort((a, b) => (a === f?.club ? -1 : b === f?.club ? 1 : a.localeCompare(b)));
-  return `<p class="dim">Every club plays its home games in its own stadium. The field's environment gives monsters of its type ${pct(FOOTBALL_TYPE_VALUES.envMatch)} in direct contests, whichever team they play for; with a type advantage the total is capped at ${pct(FOOTBALL_TYPE_VALUES.positiveCap)}.</p>
+  return `<p class="dim">Every club plays its home games in its own stadium. A game against a gym leader is always played on that gym's field, wherever it is held; clubs with an ordinary grass stadium get the week's field conditions (usually grass). The pregame screen shows the field actually in use. A field's environment gives monsters of its type ${pct(FOOTBALL_TYPE_VALUES.envMatch)} in direct contests, whichever team they play for; with a type advantage the total is capped at ${pct(FOOTBALL_TYPE_VALUES.positiveCap)}.</p>
     <div class="list">${clubs.map((c) => { const s = stadiumFor(c, f?.stadiums); const env = ENVIRONMENTS[s.env];
       return `<div class="item static ${c === f?.club ? 'me' : ''}">${envSwatch(s.env)}<div class="grow"><div class="name">${esc(s.name)} ${c === f?.club ? '<span class="chip accent">HOME</span>' : ''}</div><div class="sub"><span style="color:${TEAM_META[c]?.color || '#ccc'}">${esc(c)}</span> · ${env.icon} ${esc(env.name)}${env.indoor ? ' · indoor' : ''}</div></div><div>${env.type ? typeChip(env.type) : '<span class="dim">Neutral</span>'}</div></div>`; }).join('')}</div>`;
 }

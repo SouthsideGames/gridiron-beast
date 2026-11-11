@@ -40,7 +40,7 @@ import { registerClashBattle } from './ui/screens/clash-battle.js';
 import { registerAiLab } from './ui/screens/ai-lab.js';
 import { registerAttrLab } from './ui/screens/attr-lab.js';
 import { registerEvoPreview } from './ui/screens/evo-preview.js';
-import { reviewQueue, devNoticesOn, freshAnnouncement, cardMismatches } from './ui/dev-review.js';
+import { reviewQueue, devNoticesOn, freshAnnouncement } from './ui/dev-review.js';
 import { syncReviews, onReviews } from './franchise/review-store.js';
 import { registerDexScreens } from './ui/screens/dex.js';
 import { installCareerLinks } from './ui/career-ui.js';
@@ -200,7 +200,7 @@ function tabs(ctx, screenName) {
   if (!app.f || !ctx.inFranchise || isArchived(app.f)) return null; // an archive shows the Legacy shell, not the weekly tabs
   const items = [['hq', 'HQ', '🏠'], ['roster', 'Roster', '🐾'], ['playbook', 'Plays', '📋'], ['league', 'League', '🏆'], ['more', 'More', '☰']];
   const counts = {}; for (const n of F.notices(app.f)) counts[n.screen] = (counts[n.screen] || 0) + 1;
-  if (devNoticesOn(app.settings)) counts.more = (counts.more || 0) + reviewQueue().total + cardMismatches().length; // developer reviews (GDD §23.7)
+  if (devNoticesOn(app.settings)) counts.more = (counts.more || 0) + reviewQueue().total; // developer reviews (GDD §23.7)
   return items.map(([screen, label, icon]) => ({ screen, label, icon, badge: counts[screen] || 0, active: screenName === screen || (ctx.tabOf?.[screenName] === screen) }));
 }
 
@@ -223,7 +223,7 @@ export function start() {
   registerCaptainScreens(Router, app); // Captain Partnerships (GDD §27.4B)
   registerMatchScreens(Router, app);
   registerPracticeScreens(Router, app);
-  registerAbilityAudit(Router, app);
+  registerAbilityAudit(Router, app); // the Legacy Ability Audit: no longer on the Developer menu (owner 2026-11-11); kept registered because Ability Balance and the ability preview live in the same module
   registerAbilityReviewer(Router, app);
   registerClashLab(Router, app); // Beast Clash developer tools
   registerClashAbilityReviewer(Router, app); // Task 8 M4 S15 + fx: Developer → Clash Ability Reviewer (72 Clash abilities on the t8 engine, played with their arena looks; the fx presentation check folded in)
@@ -253,7 +253,7 @@ export function start() {
   cloudLoadHof().then((remote) => { if (remote) mergeHof(remote); if (hallOfFame().length) cloudSaveHof(hallOfFame()); });
   boot();
   // Developer reviews (GDD §23.7): pull both review sets, then announce anything new once.
-  Promise.all([syncReviews('ability'), syncReviews('play')]).finally(() => setTimeout(() => { const msg = freshAnnouncement(app.settings); if (msg) toast(msg, 'good', 5000); Router.render(); }, 1200));
+  Promise.all([syncReviews('ability'), syncReviews('play'), syncReviews('fbability'), syncReviews('clashability')]).finally(() => setTimeout(() => { const msg = freshAnnouncement(app.settings); if (msg) toast(msg, 'good', 5000); Router.render(); }, 1200));
   onReviews(() => { const scr = Router.currentScreen()?.name; if (scr === 'menu' || scr === 'developer' || scr === 'more') Router.render(); });
   // Leaving the page: the queued save starts at once, and a copy of what it still has to write goes to the unload journal
   // (localStorage, synchronous) in case the page is gone before the database commits.

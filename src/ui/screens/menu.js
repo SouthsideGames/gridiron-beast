@@ -12,6 +12,9 @@ import { buildLabel, devDisplaysAllowed } from '../../version.js';
 import { summary, hireDefaultStaff, DIFFICULTY, dexCounts, DEX_GROUPS } from '../../franchise/franchise.js';
 import * as F from '../../franchise/franchise.js';
 import { BACKGROUNDS } from '../../data/staff.js';
+import { TEAM_META } from '../../data/league.js';
+import { coachEditorHtml, coachEditorActions, specOf } from '../coach-editor.js';
+import { parseCoach, lookFromLegacy } from '../coach-portrait.js';
 import { GYM_BY_CLUB } from '../../data/gyms.js';
 import { resetDex } from '../../franchise/dex-store.js';
 import { clashSettings } from '../../franchise/clash-link.js';
@@ -26,7 +29,7 @@ import { monsterSprite } from '../pixel-monster.js';
 import { portraitSprite } from '../pixel-monster.js';
 import { applyFlashPref } from '../flash-pref.js';
 import { applyFrameRate, frameRateOf } from '../frame-rate.js';
-import { reviewQueue, queueText, devBadge, devNoticesOn, cardBadge, cardMismatches } from '../dev-review.js';
+import { reviewQueue, queueText, devBadge, devNoticesOn, abilityQueueText, focusReviewer } from '../dev-review.js';
 
 export function registerMenuScreens(Router, app) {
   Router.registerScreen('menu', {
@@ -40,7 +43,7 @@ export function registerMenuScreens(Router, app) {
       // quiet link (the Franchises screen holds the three slots and their New / Import actions). The League Hub is inside the
       // franchise (HQ), not here.
       const card = f ? `<div class="panel menu-franchise">
-          <div class="row" style="gap:12px">${portraitSprite(f.owner.portrait + '|' + f.owner.first, 52)}<div class="grow" style="min-width:0">
+          <div class="row" style="gap:12px">${portraitSprite(f.owner.portrait + '|' + f.owner.first, 52, { teamColor: TEAM_META[f.club]?.color })}<div class="grow" style="min-width:0">
             <div class="mf-club">${esc(s.club)}</div>
             <div class="muted">GM ${esc(f.owner.first)} ${esc(f.owner.last)}</div>
             <div class="mf-meta"><span class="chip">${yearOf(s.year)}</span>${archived ? '<span class="chip">Legacy</span>' : `<span class="chip">Week ${s.week}</span><span class="chip accent">${s.record}</span>`}</div></div></div>
@@ -61,7 +64,7 @@ export function registerMenuScreens(Router, app) {
           ${tile('achievements', '🏅', 'Achievements', `${Object.keys(achievementsData().earned).length}/${ACHIEVEMENTS.length}`)}
           ${hof ? tile('hof', '🏛️', 'Hall of Fame', hof) : ''}
         </div>
-        <div class="grid2" style="margin-top:12px"><button class="btn block menu-util" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block badge-host menu-util" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}${cardBadge(app.settings)}</button></div>
+        <div class="grid2" style="margin-top:12px"><button class="btn block menu-util" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block badge-host menu-util" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}</button></div>
         <p class="center dim" style="margin-top:16px;font-size:12px">Gridiron Beast · build ${esc(buildLabel())} · Southside Games</p>`;
     },
     mount(root, ctx) {
@@ -136,18 +139,19 @@ export function registerMenuScreens(Router, app) {
     render() {
       const q = reviewQueue();
       return `<p class="muted">Inspection tools that work without a franchise.</p>
-        ${q.total ? `<div class="panel tight dev-queue"><b>🔔 Waiting for your review</b><div class="muted" style="margin-top:2px">${esc(queueText(q))}: new, or changed since you last looked.</div></div>` : '<div class="panel tight dim">✓ Nothing waiting for review.</div>'}
-        ${cardMismatches().length ? `<div class="panel tight card-queue"><b>⚠ ${cardMismatches().length} abilities don't do what their card says</b><div class="muted" style="margin-top:2px">Found by checking every card against the game code, plus any you flag. On the developer's list; each one clears when the ability really does what it says. Ability Audit → ⚠ Card mismatch.</div></div>` : ''}
+        ${q.plays.length ? `<div class="panel tight dev-queue"><b>🔔 Waiting for your review</b><div class="muted" style="margin-top:2px">${esc(queueText(q))}: new, or changed since you last looked.</div></div>` : ''}
+        ${[q.football, q.clash].filter((r) => r.outstanding).map((r) => `<div class="panel tight dev-queue" data-review-notice="${r.ns}"><button class="dev-notice" data-action="reviewer" data-ns="${r.ns}" data-status="outstanding"><b>🔔 ${esc(abilityQueueText(r))}</b><span class="muted" style="display:block;margin-top:2px">${r.approved.length} of ${r.total} approved. Tap to open the ${esc(r.title)}.</span></button>
+          ${r.revision.length ? `<div class="chips" style="margin-top:6px">${r.revision.slice(0, 8).map((x) => `<button class="chip warn" data-action="reviewer" data-ns="${r.ns}" data-status="revision" data-id="${esc(x.id)}">✎ ${esc(x.name)}</button>`).join('')}${r.revision.length > 8 ? `<span class="dim">+${r.revision.length - 8} more</span>` : ''}</div>` : ''}</div>`).join('')}
+        ${q.total ? '' : '<div class="panel tight dim">✓ Nothing waiting for review.</div>'}
         <div class="stack">
         <button class="btn block badge-host" data-action="go" data-screen="audit">🔎 Playbook Audit${devBadge(app.settings, q.plays.length)}</button>
         <button class="btn block" data-action="go" data-screen="practice">🎯 Practice Field</button>
         <button class="btn block" data-action="go" data-screen="ai-lab">🧠 AI Testing Lab (QB decisions)</button>
         <button class="btn block" data-action="go" data-screen="attr-lab">📊 Attribute Testing Lab</button>
         <button class="btn block" data-action="go" data-screen="evo-preview">✨ Preview Evolution</button>
-        <button class="btn block" data-action="go" data-screen="ability-reviewer">🧪 Ability Reviewer (Task 8 football, on the engine)</button>
-        <button class="btn block badge-host" data-action="go" data-screen="ability-audit">✨ Legacy Ability Audit (transitional)${devBadge(app.settings, q.abilities.length)}${cardBadge(app.settings)}</button>
+        <button class="btn block badge-host" data-action="go" data-screen="ability-reviewer">🧪 Ability Reviewer${devBadge(app.settings, q.football.outstanding)}</button>
         <button class="btn block" data-action="go" data-screen="ability-balance">⚖️ Ability Balance</button>
-        <button class="btn block" data-action="go" data-screen="clash-ability-reviewer">⚔️ Clash Ability Reviewer (Task 8 Beast Clash, on the engine, with the arena looks)</button>
+        <button class="btn block badge-host" data-action="go" data-screen="clash-ability-reviewer">⚔️ Clash Ability Reviewer${devBadge(app.settings, q.clash.outstanding)}</button>
         <button class="btn block" data-action="go" data-screen="clash-lab">🐾 Clash Lab (Beast Clash Phase 1)</button>
         ${app.f ? `<h3>Feature testing (this franchise)</h3><p class="dim" style="margin-top:0">For trying the new features without waiting seasons. Using these marks the franchise as developer-assisted.</p>
         <div class="row" style="gap:6px;flex-wrap:wrap">${['aurodrax', 'tempestra', 'titanolith', 'nyxshade', 'glacivern', 'elderoot'].map((sp) => `<button class="btn small" data-action="dev-legend" data-sp="${sp}">+ ${sp[0].toUpperCase() + sp.slice(1)}</button>`).join('')}</div>
@@ -165,7 +169,9 @@ export function registerMenuScreens(Router, app) {
         'dev-legend': async (el) => { if (!(await confirmSheet('Add this Legendary to your roster for testing? The franchise is marked as developer-assisted.', { title: 'Developer test', okLabel: 'Add' }))) return; const r = F.devGrantLegendary(app.f, el.dataset.sp); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${r.monster.name} joined. Legendary Play discovered.`, 'good'); },
         devqbreads: (el) => { if (app.f) { app.f.settings.devQbReads = el.checked; app.save(); } else app.defaultSettings.devQbReads = el.checked; },
         qbreads: (el) => { if (app.f) { app.f.settings.qbReads = el.checked; app.save(); } else app.defaultSettings.qbReads = el.checked; },
-        'dev-ceremony': () => Router.go('ceremony', { preview: true }), go: (el) => Router.go(el.dataset.screen), dexall: () => Router.go('dex', { all: true }), dexreset: async () => { if (await confirmSheet('Wipe every species you have discovered, across all franchises?', { title: 'Reset Beast Dex', okLabel: 'Reset', danger: true })) { resetDex(); toast('Beast Dex reset.'); } } }); },
+        'dev-ceremony': () => Router.go('ceremony', { preview: true }), go: (el) => Router.go(el.dataset.screen),
+        reviewer: (el) => { const r = reviewQueue()[el.dataset.ns === 'clashability' ? 'clash' : 'football']; focusReviewer(r.ns, { status: el.dataset.status || 'outstanding', id: el.dataset.id || null }); Router.go(r.screen); }, // a review notification opens its own reviewer, on what is outstanding
+        dexall: () => Router.go('dex', { all: true }), dexreset: async () => { if (await confirmSheet('Wipe every species you have discovered, across all franchises?', { title: 'Reset Beast Dex', okLabel: 'Reset', danger: true })) { resetDex(); toast('Beast Dex reset.'); } } }); },
   });
 
   // ---------------------------------------------------------------- Achievements (GDD §21.4): the player's, across every franchise
@@ -214,7 +220,7 @@ export function registerMenuScreens(Router, app) {
       const seasons = f.history.length; const wins = f.history.reduce((a, h) => a + h.record.w, 0) + F.record(f).w, losses = f.history.reduce((a, h) => a + h.record.l, 0) + F.record(f).l;
       const badges = Object.entries(f.campaign?.badges || {});
       const bg = BACKGROUNDS[f.owner.background];
-      return `<div class="panel"><div class="row" style="gap:12px">${portraitSprite(f.owner.portrait, 72)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(f.owner.first)} ${esc(f.owner.last)}</div><div class="muted">General manager, ${esc(f.club)} · ${yearOf(f.season.year)} · ${esc(diff.label)}</div>${bg ? `<div class="dim">${esc(bg.label)} · ${esc(bg.text)}</div>` : ''}</div></div></div>
+      return `<div class="panel"><div class="row" style="gap:12px">${portraitSprite(f.owner.portrait, 72, { teamColor: TEAM_META[f.club]?.color })}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(f.owner.first)} ${esc(f.owner.last)}</div><div class="muted">General manager, ${esc(f.club)} · ${yearOf(f.season.year)} · ${esc(diff.label)}</div>${bg ? `<div class="dim">${esc(bg.label)} · ${esc(bg.text)}</div>` : ''}<button class="btn small" data-action="editlook" style="margin-top:6px">✏️ Edit appearance</button></div></div></div>
         <div class="panel ${F.onHotSeat(f) ? 'hotseat' : ''}"><div class="row between"><b>Board</b><span class="chip ${F.onHotSeat(f) ? 'bad' : b.confidence > 0 ? 'good' : ''}">${F.confidenceLabel(b.confidence)} (${b.confidence >= 0 ? '+' : ''}${b.confidence})</span></div>
           ${g ? `<div style="margin-top:6px">🎯 This season: <b>${esc(g.label)}</b>${p ? ` · ${esc(p.text)}` : ''}</div><div class="bar" style="margin:6px 0 0"><i style="width:${Math.round((p?.pct || 0) * 100)}%"></i></div>` : '<div class="dim" style="margin-top:6px">No goal committed yet.</div>'}
           ${b.history.length ? `<div class="dim" style="margin-top:6px">Past: ${b.history.map((h) => `${yearOf(h.year)} ${h.met ? '✅' : '❌'} ${esc(h.label)}`).join(' · ')}</div>` : ''}</div>
@@ -224,6 +230,20 @@ export function registerMenuScreens(Router, app) {
           <div class="panel"><b>Hall of Fame</b> <span class="dim">${esc(diff.hof)}</span><div class="hof" style="margin-top:6px">${hof.rows.map((r) => `<div class="row between ${r.done ? 'done' : ''}"><span>${r.done ? '✓' : '○'} ${r.key}</span><span class="mono">${r.have} / ${r.goal}</span></div>`).join('')}</div>${hof.eligible ? '<p class="muted">Eligible: retire from HQ whenever you choose.</p>' : ''}</div>
         <div class="panel"><b>Franchises</b><div class="dim">Selling this club and starting another is coming (GDD §18.7). Sold franchises will sit here as cards; facing an old club will be a big day.</div></div>`;
     },
+    mount(root) { delegate(root, { editlook: () => { lookState = null; Router.go('coach-look'); } }); },
+  });
+  // ---------------------------------------------------------------- Coach appearance (coach creation expansion): edit any time
+  // Saving replaces f.owner.portrait and nothing else: the record, the career, achievements and every other field are untouched.
+  let lookState = null;
+  Router.registerScreen('coach-look', {
+    title: 'Coach appearance',
+    render({ f }) {
+      lookState ||= { look: parseCoach(f.owner.portrait) || lookFromLegacy(f.owner.portrait), tab: 'face' };
+      return `${coachEditorHtml(lookState.look, { tab: lookState.tab, teamColor: TEAM_META[f.club]?.color, teamNote: `Team colours are the ${f.club}'.` })}
+        <div class="grid2" style="margin-top:12px"><button class="btn block" data-action="cancel">Cancel</button><button class="btn primary block" data-action="savelook">Save appearance</button></div>`;
+    },
+    mount(root) { delegate(root, { ...coachEditorActions(lookState, () => Router.render()), cancel: () => { lookState = null; Router.back(); },
+      savelook: () => { app.f.owner.portrait = specOf(lookState); lookState = null; app.save(); toast('Appearance saved.'); Router.back(); } }); },
   });
   Router.registerScreen('more', {
     title: 'More',
@@ -235,7 +255,7 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="typechart">🔺 Type Chart <span class="dim">strengths and weaknesses</span></button>
         <button class="btn block" data-action="stadiums">🏟 Stadiums <span class="dim">every club's field</span></button>
         <button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button>
-        ${devNoticesOn(app.settings) && (reviewQueue().total || cardMismatches().length) ? `<button class="btn block badge-host" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}${cardBadge(app.settings)}</button>` : ''}
+        ${devNoticesOn(app.settings) && reviewQueue().total ? `<button class="btn block badge-host" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}</button>` : ''}
         <button class="btn block" data-action="menu">🏠 Main Menu</button></div>`;
     },
     mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), menu: () => Router.go('menu', {}, { reset: true }), statguide: () => openStatGuide('QB'), typechart: () => openTypeChart(app.f?.roster?.[0]?.type || 'Fire'), stadiums: () => sheet(stadiumListHtml(app.f), { title: 'Stadiums' }) }); },

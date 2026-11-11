@@ -6,6 +6,7 @@
 import { createRng, hashString } from '../core/rng.js';
 import { TYPES, formOf } from '../data/monsters.js';
 import { sprite16, sprite16Symbol, spriteGrid, palette } from './sprite16.js';
+import { isCoachSpec, coachPortrait } from './coach-portrait.js';
 
 function hsl(h, s, l) { return `hsl(${h} ${s}% ${l}%)`; }
 
@@ -49,7 +50,8 @@ export function parsePortrait(seed) {
   const n = (v, d) => (Number.isFinite(+v) && v !== '' && v != null ? +v : d);
   return { skin: n(p[1], 0), hair: n(p[2], 0), style: p[3] || 'short', accessory: p[4] || 'none', hue: n(p[5], 210) }; // hue 0 is red, not 'unset'
 }
-export function portraitSprite(seed, size = 44, { hue = null } = {}) {
+export function portraitSprite(seed, size = 44, { hue = null, teamColor = null } = {}) {
+  if (isCoachSpec(seed)) return coachPortrait(String(seed), size, { teamColor }); // version-2 coach portraits (coach-portrait.js); older specs draw below, unchanged
   const custom = parsePortrait(seed);
   const rng = createRng(hashString(String(seed)));
   const skin = custom ? SKIN_TONES[custom.skin % SKIN_TONES.length] : ['#f1c9a5', '#d9a376', '#b07a4c', '#8a5a36', '#f5d6bd'][rng.int(5)];

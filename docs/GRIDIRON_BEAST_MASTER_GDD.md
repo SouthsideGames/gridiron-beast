@@ -543,3 +543,17 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Outstanding:** Actual eleven-player kickoff and kick coverage, specialist skill attributes, touchbacks and out-of-bounds rules, special-teams tackles and returns, blocked kicks, penalty handling, precise end-of-quarter try rules, weather, real opponent roster data and simulated AI records remain incomplete. Browser/mobile Safari end-to-end tests have not been completed. These mechanics are prototype features, not production-certified NFL rule implementations.
 
 **Unity handoff:** Carry over awareness-based RB lane evaluation, one contextual back button, league-record derivation, six-point touchdown state, explicit try state, kickoff transition state and rendered special-teams sequences. Replace provisional return calculations with real kick/return simulation before final port signoff.
+
+## 46. Franchise quality-of-life and personality update — v43.7.0 (2026-11-11)
+
+Detail: `docs/FRANCHISE_QOL_UPDATE.md`. Amends §8 and §15.
+
+**Skip Wednesday:** Wednesday may be skipped. A skip is neutral: no training bonus, fatigue, injury roll or training-history entry, and it cannot be combined with training in the same week. This is the explicit consequence §8 requires for a missed action.
+
+**Fields:** Ten elemental fields: Frozen, Volcanic, Forest, Storm, Desert, Metallic Dome, Tidal Arena (Water), Radiant Coliseum (Light), Shadow Grounds (Dark) and Dragon's Den (Dragon). Dragon's Den is a look only and favours no type. Field selection, in order: a game against a gym leader uses that gym's field, home or away (the home gym when two meet); else a saved stadium override; else the home club's permanent elemental stadium; else a draw of 65% grass and 35% elemental (split evenly), fixed by the save's seed, year and week. Stadium names never change.
+
+**Media Day:** Saturday is a three-question press conference with three recurring reporters and four response styles (Professional, Trash Talk, Comedy, Unhinged), followed by a headline in THE BEAST TIMES. Questions about the club's events are asked only when saved data shows the event. Response style has no gameplay effect; rival hype and the monster spotlight are unchanged.
+
+**Coach appearance:** The coach portrait is built from modular layers (hair, face, outfit, extras, build), chosen in an editor at creation and editable later from My office without affecting the save.
+
+**Ability reviews:** Every Football Ability and every Clash Ability has a review status (Pending Review, Approved, Needs Revision) in its own reviewer, with separate records. Inventories come from the ability registries. Outstanding reviews are counted by the same notification system as play reviews. Review status never changes gameplay. The Legacy Ability Audit is no longer on the Developer menu.
