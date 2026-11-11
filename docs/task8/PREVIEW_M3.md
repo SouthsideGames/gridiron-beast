@@ -116,3 +116,17 @@ No file under `src/sim/`, `src/data/`, `src/clash/` or `src/franchise/` differs 
   A carried-over franchise with an Apex on its roster plays his first-discovery panel once.
 - **Files sent:** 36 changed files, 9 of them new; 419 in all.
 - **Not in this build:** results of the long-term career, economy and performance benchmarks (run separately on f716b02).
+
+## 9. Preview version 10 (2026-11-11): field-cost pass
+
+- **Build:** branch task8-m1-preview at 51113e2, labelled v43.5.1-t8-m6-preview. It merges `task8-m6-integration` at d544fec.
+- **Tested runtime:** d544fec, full suite 2,014 of 2,014 on a frozen copy; outcome identity (19 scene variants, 12 full games)
+  and the one-season franchise hashes equal to the version 9 runtime.
+- **Difference from version 9 under `src/` and `styles/`:** `src/sim/t8/field-effects.js` and `src/sim/t8/fields.js` (the
+  outcome-identical field-cost pass). Nothing else. The packaging edits of section 2 are unchanged apart from the label and date.
+- **Checks on the staged build:** build label and Developer button shown; all 412 module requests carry `?v=43.5.1`; 0 page
+  errors (headless, phone size). The published `field-effects.js` and `fields.js` have the same SHA-256 as d544fec. No full
+  regression on 51113e2.
+- **Saves:** schema 10 and the storage keys are unchanged; the two changed files are simulation code with identical outcomes.
+- **Files sent:** 4 (`index.html`, `src/version.js`, the two field files); 419 in all.
+- **Not in this build:** any tuning or rule change. Phone performance is unmeasured.
