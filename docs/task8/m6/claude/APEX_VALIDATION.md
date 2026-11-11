@@ -67,11 +67,31 @@ For sustained starters the gap is about 1 to 3 more points a season. For all ent
 1. **The goal needs a population.** The specification's wording is "sustained legal participation and equal investment". If
    that means sustained starters, the candidate is close on mixed and maximum and well short on football-only. If it means
    every Apex generated, no training adjustment can meet it.
-2. **For sustained starters, the offseason award is the lever.** Roughly 38 to 42 offseason points with the ×2 looks like
-   the range. I have started both in the same harness on four seeds as an indicative follow-up (not requested; about half the
-   sample). I will report them when they finish.
+2. **For sustained starters, the offseason award is the lever.** In the indicative follow-up below, 42 offseason points with
+   the ×2 gets every sustained starter there; 38 is close.
 3. **Or address the cause:** AI clubs benching and releasing a known Apex. That is AI behaviour and is tied to the Apex
    knowledge and contract rules (decision 8), so it would be its own proposal.
+
+## Indicative follow-up: larger offseason awards (four seeds each, not requested)
+
+Same harness, seeds 31–34 only, activity ×2 throughout. All 99s by season 15:
+
+| Offseason points | Football only: all / sustained | Mixed: all / sustained | Maximum: all / sustained |
+| --- | --- | --- | --- |
+| 34 (the candidate, same four seeds) | 0% (42) / 0% (13) | 48.1% (27) / 75.0% (16) | 77.3% (22) / 90.0% (10) |
+| 38 | 56.1% (41) / 88.2% (17) | 85.7% (21) / 100% (9) | 90.0% (20) / 100% (10) |
+| **42** | **93.2% (44) / 100% (18)** | **100% (30) / 100% (15)** | **84.6% (26) / 100% (18)** |
+
+Career counts are in brackets.
+
+- **42 is the first setting where sustained starters reach 100% on all three schedules,** and all entrants pass on football-only
+  and mixed.
+- **The 84.6% at 42 on the maximum schedule is releases, not pace:** 4 of those 26 Apex were on no club at season 15. Every
+  one still in the league was all-99.
+- **38 is close for sustained starters** (88% / 100% / 100%) and short for all entrants.
+- **At 42 the fastest are quick:** on the maximum schedule 58% of entrants are all-99 by season 12.
+- **Small samples.** 9 to 44 careers a cell, and each setting plays out a different league. Treat this as where to look, not as
+  a result. A choice from this table should be rerun on the full eight seeds.
 
 ## Checks
 

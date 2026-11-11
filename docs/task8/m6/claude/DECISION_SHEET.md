@@ -57,8 +57,9 @@ adds a rule and needs a ruling before any code.
 - **Recommendation:** do not adopt (a) as it stands. Decide two things:
   1. **Who the goal covers.** I recommend sustained starters, the specification's "sustained legal participation". No
      training rate gets every generated Apex there, because some never play.
-  2. **A larger offseason award**, in the range of 38 to 42 with the ×2. Both are running in the same real-career harness as
-     an indicative follow-up; I would choose from those results, then validate the choice on the full eight seeds.
+  2. **A larger offseason award.** In an indicative four-seed follow-up, ×2 with **42** offseason points put every sustained
+     starter at all 99s by season 15 on all three schedules (all entrants: 93% / 100% / 85%, the last limited by releases);
+     ×2 with 38 gave 88% / 100% / 100% for sustained starters. I would validate 42 on the full eight seeds before any adoption.
 - **For the player:** an Apex he keeps in the lineup gains ratings about seven times faster than now and can be complete in
   about 14 or 15 seasons instead of never. One he benches still will not get there. Ordinary monsters, Temper and level XP do not change.
 - **Kind:** new. Candidate testing is authorized; adoption is not.
