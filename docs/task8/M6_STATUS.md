@@ -84,7 +84,7 @@ status badge, charge bar and battery cycle, the inspect sheet, scouting visibili
 | Outcome identity against f716b02 | f9e7581 | IDENTICAL |
 | One-seed, one-season AI benchmark hash against f716b02 | f9e7581 | identical |
 | Release stamp, completion matrix, generated Dex freshness | this branch | pass |
-| Full regression `node --test "tests/**/*.test.js"` on a frozen copy | f9e7581 | see the final report |
+| Full regression `node --test "tests/**/*.test.js"` on a frozen copy | f9e7581 | 2,013 of 2,013, no failures, skips or cancellations (58 minutes) |
 | Saves made on preview versions 7 and 8 | preview build | 8 of 8 load, round-trip and play on |
 
 An Apex cannot retire: every generated Apex has a fixed age of 20 to 22, and the retirement chance at that age is zero in the

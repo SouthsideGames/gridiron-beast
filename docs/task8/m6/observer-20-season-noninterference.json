@@ -1,0 +1,8 @@
+{
+  "source": "f716b02",
+  "seasons": 20,
+  "sameFinalState": true,
+  "sameRows": true,
+  "baseline": "08ec74829e09cfabfdc02cd07230330eb7fc176e62d265f234caecf2217aa5b1",
+  "observed": "08ec74829e09cfabfdc02cd07230330eb7fc176e62d265f234caecf2217aa5b1"
+}

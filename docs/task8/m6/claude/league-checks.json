@@ -1,0 +1,121 @@
+{
+ "files": [
+  "career-11-12.json",
+  "career-13-14.json"
+ ],
+ "legendaryLimit": {
+  "rule": "at most one offensive and one defensive legendary per club; a legendary kicker counts as offensive (B19)",
+  "clubSeasons": 1220,
+  "overOffense": 0,
+  "overDefense": 0,
+  "maxOffense": 1,
+  "maxDefense": 1,
+  "kickerLegendsCounted": 76
+ },
+ "gyms": {
+  "Harbor Sentinels": {
+   "element": "Water",
+   "tier": "early",
+   "clubSeasons": 76,
+   "matchingShare": 0.366,
+   "leagueShareOfThatElement": 0.121,
+   "ratio": 3.04
+  },
+  "Palmetto Vipers": {
+   "element": "Dragon",
+   "tier": "late",
+   "clubSeasons": 76,
+   "matchingShare": 0.277,
+   "leagueShareOfThatElement": 0.086,
+   "ratio": 3.23
+  },
+  "Sunfire Lions": {
+   "element": "Light",
+   "tier": "early",
+   "clubSeasons": 76,
+   "matchingShare": 0.266,
+   "leagueShareOfThatElement": 0.086,
+   "ratio": 3.11
+  },
+  "Ironpeak Rams": {
+   "element": "Metal",
+   "tier": "late",
+   "clubSeasons": 76,
+   "matchingShare": 0.222,
+   "leagueShareOfThatElement": 0.083,
+   "ratio": 2.69
+  },
+  "Thunder Mesa": {
+   "element": "Electric",
+   "tier": "mid",
+   "clubSeasons": 76,
+   "matchingShare": 0.281,
+   "leagueShareOfThatElement": 0.081,
+   "ratio": 3.45
+  },
+  "Frostpeak Howlers": {
+   "element": "Ice",
+   "tier": "mid",
+   "clubSeasons": 76,
+   "matchingShare": 0.264,
+   "leagueShareOfThatElement": 0.068,
+   "ratio": 3.91
+  },
+  "Canyon Crushers": {
+   "element": "Earth",
+   "tier": "mid",
+   "clubSeasons": 76,
+   "matchingShare": 0.317,
+   "leagueShareOfThatElement": 0.084,
+   "ratio": 3.76
+  },
+  "Eastport Phantoms": {
+   "element": "Dark",
+   "tier": "mid",
+   "clubSeasons": 76,
+   "matchingShare": 0.287,
+   "leagueShareOfThatElement": 0.073,
+   "ratio": 3.96
+  }
+ },
+ "apex": {
+  "rosteredPerClubByYear": {
+   "1": {
+    "clubs": 4,
+    "total": 1,
+    "meanPerClub": 0.25,
+    "maxOnOneClub": 1
+   },
+   "5": {
+    "clubs": 64,
+    "total": 13,
+    "meanPerClub": 0.2,
+    "maxOnOneClub": 2
+   },
+   "10": {
+    "clubs": 64,
+    "total": 25,
+    "meanPerClub": 0.39,
+    "maxOnOneClub": 3
+   },
+   "15": {
+    "clubs": 64,
+    "total": 42,
+    "meanPerClub": 0.66,
+    "maxOnOneClub": 3
+   },
+   "20": {
+    "clubs": 64,
+    "total": 53,
+    "meanPerClub": 0.83,
+    "maxOnOneClub": 4
+   }
+  },
+  "clubSeasonsWith3Plus": 25,
+  "individuals": 58,
+  "everStarted": 33,
+  "level50": 10,
+  "meanClubs": 1.62,
+  "withUnsignedSeasons": 0
+ }
+}

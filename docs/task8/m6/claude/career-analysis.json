@@ -1,0 +1,3020 @@
+{
+ "meta": {
+  "files": 2,
+  "games": 5985,
+  "clashSettlements": 12558,
+  "individuals": 6936
+ },
+ "football": {
+  "definition": "ordinary (non-legendary, non-Basic) individuals from their first season with at least 7 football starts and no earlier credits, followed while they keep at least 7 starts a season; nonattainers (run ended or window closed) stay in every denominator",
+  "families": [
+   {
+    "species": "leafhorn",
+    "rarity": "uncommon",
+    "position": "S",
+    "ability": "Surefoot Canopy",
+    "category": "Targeted effect",
+    "n": 32,
+    "meanRunSeasons": 7.6,
+    "perGame": 18.96,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 32,
+      "attainedShare": 1,
+      "medianAmongAttainers": 1,
+      "in3to6": 0,
+      "before3": 32,
+      "after6": 0,
+      "observed6": 32,
+      "observed6By6": 32,
+      "medianAllCensored": 1
+     },
+     "0/15/45/90": {
+      "attained": 32,
+      "attainedShare": 1,
+      "medianAmongAttainers": 1,
+      "in3to6": 0,
+      "before3": 32,
+      "after6": 0,
+      "observed6": 32,
+      "observed6By6": 32,
+      "medianAllCensored": 1
+     },
+     "0/20/60/120": {
+      "attained": 32,
+      "attainedShare": 1,
+      "medianAmongAttainers": 1,
+      "in3to6": 0,
+      "before3": 32,
+      "after6": 0,
+      "observed6": 32,
+      "observed6By6": 32,
+      "medianAllCensored": 1
+     }
+    }
+   },
+   {
+    "species": "rootram",
+    "rarity": "uncommon",
+    "position": "OL",
+    "ability": "Deep Roots",
+    "category": "Self enhancement",
+    "n": 60,
+    "meanRunSeasons": 8,
+    "perGame": 6.92,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 55,
+      "attainedShare": 0.917,
+      "medianAmongAttainers": 2,
+      "in3to6": 16,
+      "before3": 39,
+      "after6": 0,
+      "observed6": 55,
+      "observed6By6": 55,
+      "medianAllCensored": 2
+     },
+     "0/15/45/90": {
+      "attained": 52,
+      "attainedShare": 0.867,
+      "medianAmongAttainers": 2,
+      "in3to6": 21,
+      "before3": 31,
+      "after6": 0,
+      "observed6": 52,
+      "observed6By6": 52,
+      "medianAllCensored": 2
+     },
+     "0/20/60/120": {
+      "attained": 49,
+      "attainedShare": 0.817,
+      "medianAmongAttainers": 2,
+      "in3to6": 24,
+      "before3": 25,
+      "after6": 0,
+      "observed6": 49,
+      "observed6By6": 49,
+      "medianAllCensored": 3
+     }
+    }
+   },
+   {
+    "species": "stormlynx",
+    "rarity": "uncommon",
+    "position": "S",
+    "ability": "Static Field",
+    "category": "Zone",
+    "n": 45,
+    "meanRunSeasons": 6.7,
+    "perGame": 6.4,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 37,
+      "attainedShare": 0.822,
+      "medianAmongAttainers": 2,
+      "in3to6": 3,
+      "before3": 34,
+      "after6": 0,
+      "observed6": 37,
+      "observed6By6": 37,
+      "medianAllCensored": 2
+     },
+     "0/15/45/90": {
+      "attained": 35,
+      "attainedShare": 0.778,
+      "medianAmongAttainers": 2,
+      "in3to6": 10,
+      "before3": 25,
+      "after6": 0,
+      "observed6": 35,
+      "observed6By6": 35,
+      "medianAllCensored": 2
+     },
+     "0/20/60/120": {
+      "attained": 33,
+      "attainedShare": 0.733,
+      "medianAmongAttainers": 3,
+      "in3to6": 21,
+      "before3": 12,
+      "after6": 0,
+      "observed6": 33,
+      "observed6By6": 33,
+      "medianAllCensored": 3
+     }
+    }
+   },
+   {
+    "species": "hailfang",
+    "rarity": "common",
+    "position": "CB",
+    "ability": "Frost Nip",
+    "category": "Targeted effect",
+    "n": 18,
+    "meanRunSeasons": 5.8,
+    "perGame": 5.58,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 15,
+      "attainedShare": 0.833,
+      "medianAmongAttainers": 2,
+      "in3to6": 1,
+      "before3": 14,
+      "after6": 0,
+      "observed6": 15,
+      "observed6By6": 15,
+      "medianAllCensored": 2
+     },
+     "0/15/45/90": {
+      "attained": 14,
+      "attainedShare": 0.778,
+      "medianAmongAttainers": 2,
+      "in3to6": 7,
+      "before3": 7,
+      "after6": 0,
+      "observed6": 14,
+      "observed6By6": 14,
+      "medianAllCensored": 3
+     },
+     "0/20/60/120": {
+      "attained": 13,
+      "attainedShare": 0.722,
+      "medianAmongAttainers": 3,
+      "in3to6": 11,
+      "before3": 2,
+      "after6": 0,
+      "observed6": 13,
+      "observed6By6": 13,
+      "medianAllCensored": 3
+     }
+    }
+   },
+   {
+    "species": "cinderclaw",
+    "rarity": "uncommon",
+    "position": "DL",
+    "ability": "Ember Grip — Scorch Mark",
+    "category": "Targeted effect",
+    "n": 116,
+    "meanRunSeasons": 7,
+    "perGame": 5.32,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 93,
+      "attainedShare": 0.802,
+      "medianAmongAttainers": 2,
+      "in3to6": 33,
+      "before3": 60,
+      "after6": 0,
+      "observed6": 93,
+      "observed6By6": 93,
+      "medianAllCensored": 2
+     },
+     "0/15/45/90": {
+      "attained": 89,
+      "attainedShare": 0.767,
+      "medianAmongAttainers": 3,
+      "in3to6": 45,
+      "before3": 43,
+      "after6": 1,
+      "observed6": 89,
+      "observed6By6": 88,
+      "medianAllCensored": 3
+     },
+     "0/20/60/120": {
+      "attained": 86,
+      "attainedShare": 0.741,
+      "medianAmongAttainers": 3,
+      "in3to6": 64,
+      "before3": 18,
+      "after6": 4,
+      "observed6": 87,
+      "observed6By6": 82,
+      "medianAllCensored": 4
+     }
+    }
+   },
+   {
+    "species": "voltfang",
+    "rarity": "uncommon",
+    "position": "WR",
+    "ability": "Phase Release",
+    "category": "Self enhancement",
+    "n": 78,
+    "meanRunSeasons": 7.1,
+    "perGame": 5.26,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 66,
+      "attainedShare": 0.846,
+      "medianAmongAttainers": 2,
+      "in3to6": 24,
+      "before3": 42,
+      "after6": 0,
+      "observed6": 66,
+      "observed6By6": 66,
+      "medianAllCensored": 2
+     },
+     "0/15/45/90": {
+      "attained": 65,
+      "attainedShare": 0.833,
+      "medianAmongAttainers": 3,
+      "in3to6": 38,
+      "before3": 27,
+      "after6": 0,
+      "observed6": 66,
+      "observed6By6": 65,
+      "medianAllCensored": 3
+     },
+     "0/20/60/120": {
+      "attained": 63,
+      "attainedShare": 0.808,
+      "medianAmongAttainers": 3,
+      "in3to6": 50,
+      "before3": 10,
+      "after6": 3,
+      "observed6": 64,
+      "observed6By6": 60,
+      "medianAllCensored": 4
+     }
+    }
+   },
+   {
+    "species": "boulderox",
+    "rarity": "uncommon",
+    "position": "RB",
+    "ability": "Stone Charge",
+    "category": "Special action",
+    "n": 28,
+    "meanRunSeasons": 6,
+    "perGame": 4.93,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 23,
+      "attainedShare": 0.821,
+      "medianAmongAttainers": 2,
+      "in3to6": 6,
+      "before3": 17,
+      "after6": 0,
+      "observed6": 23,
+      "observed6By6": 23,
+      "medianAllCensored": 2
+     },
+     "0/15/45/90": {
+      "attained": 20,
+      "attainedShare": 0.714,
+      "medianAmongAttainers": 2,
+      "in3to6": 10,
+      "before3": 10,
+      "after6": 0,
+      "observed6": 20,
+      "observed6By6": 20,
+      "medianAllCensored": 3
+     },
+     "0/20/60/120": {
+      "attained": 18,
+      "attainedShare": 0.643,
+      "medianAmongAttainers": 3,
+      "in3to6": 14,
+      "before3": 4,
+      "after6": 0,
+      "observed6": 18,
+      "observed6By6": 18,
+      "medianAllCensored": 4
+     }
+    }
+   },
+   {
+    "species": "mudcub",
+    "rarity": "common",
+    "position": "OL",
+    "ability": "Divided Guard",
+    "category": "Self enhancement",
+    "n": 66,
+    "meanRunSeasons": 5.6,
+    "perGame": 4.46,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 53,
+      "attainedShare": 0.803,
+      "medianAmongAttainers": 2,
+      "in3to6": 19,
+      "before3": 34,
+      "after6": 0,
+      "observed6": 53,
+      "observed6By6": 53,
+      "medianAllCensored": 2
+     },
+     "0/15/45/90": {
+      "attained": 46,
+      "attainedShare": 0.697,
+      "medianAmongAttainers": 3,
+      "in3to6": 28,
+      "before3": 18,
+      "after6": 0,
+      "observed6": 46,
+      "observed6By6": 46,
+      "medianAllCensored": 4
+     },
+     "0/20/60/120": {
+      "attained": 41,
+      "attainedShare": 0.621,
+      "medianAmongAttainers": 3,
+      "in3to6": 30,
+      "before3": 10,
+      "after6": 1,
+      "observed6": 41,
+      "observed6By6": 40,
+      "medianAllCensored": 5
+     }
+    }
+   },
+   {
+    "species": "reefclaw",
+    "rarity": "uncommon",
+    "position": "DL",
+    "ability": "Pressure Drain",
+    "category": "Targeted effect",
+    "n": 69,
+    "meanRunSeasons": 6.4,
+    "perGame": 4.44,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 50,
+      "attainedShare": 0.725,
+      "medianAmongAttainers": 2,
+      "in3to6": 16,
+      "before3": 31,
+      "after6": 3,
+      "observed6": 50,
+      "observed6By6": 47,
+      "medianAllCensored": 3
+     },
+     "0/15/45/90": {
+      "attained": 47,
+      "attainedShare": 0.681,
+      "medianAmongAttainers": 3,
+      "in3to6": 22,
+      "before3": 21,
+      "after6": 4,
+      "observed6": 47,
+      "observed6By6": 43,
+      "medianAllCensored": 4
+     },
+     "0/20/60/120": {
+      "attained": 45,
+      "attainedShare": 0.652,
+      "medianAmongAttainers": 3,
+      "in3to6": 28,
+      "before3": 11,
+      "after6": 6,
+      "observed6": 45,
+      "observed6By6": 39,
+      "medianAllCensored": 5
+     }
+    }
+   },
+   {
+    "species": "ironcub",
+    "rarity": "common",
+    "position": "OL",
+    "ability": "Anchor Plate",
+    "category": "Self enhancement",
+    "n": 36,
+    "meanRunSeasons": 3.8,
+    "perGame": 4.24,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 23,
+      "attainedShare": 0.639,
+      "medianAmongAttainers": 2,
+      "in3to6": 8,
+      "before3": 15,
+      "after6": 0,
+      "observed6": 23,
+      "observed6By6": 23,
+      "medianAllCensored": 3
+     },
+     "0/15/45/90": {
+      "attained": 19,
+      "attainedShare": 0.528,
+      "medianAmongAttainers": 2,
+      "in3to6": 6,
+      "before3": 12,
+      "after6": 1,
+      "observed6": 19,
+      "observed6By6": 18,
+      "medianAllCensored": 4
+     },
+     "0/20/60/120": {
+      "attained": 17,
+      "attainedShare": 0.472,
+      "medianAmongAttainers": 3,
+      "in3to6": 11,
+      "before3": 5,
+      "after6": 1,
+      "observed6": 17,
+      "observed6By6": 16,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "mossclaw",
+    "rarity": "common",
+    "position": "DL",
+    "ability": "Vine Vault",
+    "category": "Special action",
+    "n": 19,
+    "meanRunSeasons": 3.6,
+    "perGame": 3.1,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 9,
+      "attainedShare": 0.474,
+      "medianAmongAttainers": 2,
+      "in3to6": 2,
+      "before3": 7,
+      "after6": 0,
+      "observed6": 10,
+      "observed6By6": 9,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 7,
+      "attainedShare": 0.368,
+      "medianAmongAttainers": 2,
+      "in3to6": 3,
+      "before3": 4,
+      "after6": 0,
+      "observed6": 8,
+      "observed6By6": 7,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 6,
+      "attainedShare": 0.316,
+      "medianAmongAttainers": 2,
+      "in3to6": 3,
+      "before3": 3,
+      "after6": 0,
+      "observed6": 7,
+      "observed6By6": 6,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "gustling",
+    "rarity": "common",
+    "position": "WR",
+    "ability": "Runway",
+    "category": "Zone",
+    "n": 76,
+    "meanRunSeasons": 4.4,
+    "perGame": 2.99,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 45,
+      "attainedShare": 0.592,
+      "medianAmongAttainers": 3,
+      "in3to6": 28,
+      "before3": 16,
+      "after6": 1,
+      "observed6": 46,
+      "observed6By6": 44,
+      "medianAllCensored": 5
+     },
+     "0/15/45/90": {
+      "attained": 35,
+      "attainedShare": 0.461,
+      "medianAmongAttainers": 3,
+      "in3to6": 26,
+      "before3": 8,
+      "after6": 1,
+      "observed6": 37,
+      "observed6By6": 34,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 29,
+      "attainedShare": 0.382,
+      "medianAmongAttainers": 4,
+      "in3to6": 25,
+      "before3": 2,
+      "after6": 2,
+      "observed6": 31,
+      "observed6By6": 27,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "scaleguard",
+    "rarity": "uncommon",
+    "position": "OL",
+    "ability": "Dragon Stomp",
+    "category": "Special action",
+    "n": 111,
+    "meanRunSeasons": 7.4,
+    "perGame": 2.89,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 95,
+      "attainedShare": 0.856,
+      "medianAmongAttainers": 3,
+      "in3to6": 52,
+      "before3": 35,
+      "after6": 8,
+      "observed6": 97,
+      "observed6By6": 87,
+      "medianAllCensored": 3
+     },
+     "0/15/45/90": {
+      "attained": 83,
+      "attainedShare": 0.748,
+      "medianAmongAttainers": 4,
+      "in3to6": 75,
+      "before3": 2,
+      "after6": 6,
+      "observed6": 88,
+      "observed6By6": 77,
+      "medianAllCensored": 4
+     },
+     "0/20/60/120": {
+      "attained": 77,
+      "attainedShare": 0.694,
+      "medianAmongAttainers": 5,
+      "in3to6": 68,
+      "before3": 0,
+      "after6": 9,
+      "observed6": 82,
+      "observed6By6": 68,
+      "medianAllCensored": 6
+     }
+    }
+   },
+   {
+    "species": "shadewisp",
+    "rarity": "common",
+    "position": "CB",
+    "ability": "Mirror Step",
+    "category": "Self enhancement",
+    "n": 35,
+    "meanRunSeasons": 5.6,
+    "perGame": 2.89,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 23,
+      "attainedShare": 0.657,
+      "medianAmongAttainers": 3,
+      "in3to6": 20,
+      "before3": 3,
+      "after6": 0,
+      "observed6": 23,
+      "observed6By6": 23,
+      "medianAllCensored": 4
+     },
+     "0/15/45/90": {
+      "attained": 20,
+      "attainedShare": 0.571,
+      "medianAmongAttainers": 4,
+      "in3to6": 20,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 20,
+      "observed6By6": 20,
+      "medianAllCensored": 5
+     },
+     "0/20/60/120": {
+      "attained": 18,
+      "attainedShare": 0.514,
+      "medianAmongAttainers": 5,
+      "in3to6": 18,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 18,
+      "observed6By6": 18,
+      "medianAllCensored": 6
+     }
+    }
+   },
+   {
+    "species": "frostclaw",
+    "rarity": "uncommon",
+    "position": "LB",
+    "ability": "Snowfall Slam",
+    "category": "Special action",
+    "n": 55,
+    "meanRunSeasons": 7.2,
+    "perGame": 2.44,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 43,
+      "attainedShare": 0.782,
+      "medianAmongAttainers": 3,
+      "in3to6": 33,
+      "before3": 9,
+      "after6": 1,
+      "observed6": 43,
+      "observed6By6": 42,
+      "medianAllCensored": 4
+     },
+     "0/15/45/90": {
+      "attained": 37,
+      "attainedShare": 0.673,
+      "medianAmongAttainers": 4,
+      "in3to6": 29,
+      "before3": 1,
+      "after6": 7,
+      "observed6": 39,
+      "observed6By6": 30,
+      "medianAllCensored": 6
+     },
+     "0/20/60/120": {
+      "attained": 33,
+      "attainedShare": 0.6,
+      "medianAmongAttainers": 5,
+      "in3to6": 22,
+      "before3": 0,
+      "after6": 11,
+      "observed6": 36,
+      "observed6By6": 22,
+      "medianAllCensored": 8
+     }
+    }
+   },
+   {
+    "species": "mireclaw",
+    "rarity": "uncommon",
+    "position": "LB",
+    "ability": "Ambush Tag",
+    "category": "Targeted effect",
+    "n": 65,
+    "meanRunSeasons": 7.2,
+    "perGame": 2.1,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 42,
+      "attainedShare": 0.646,
+      "medianAmongAttainers": 4,
+      "in3to6": 26,
+      "before3": 9,
+      "after6": 7,
+      "observed6": 43,
+      "observed6By6": 35,
+      "medianAllCensored": 6
+     },
+     "0/15/45/90": {
+      "attained": 39,
+      "attainedShare": 0.6,
+      "medianAmongAttainers": 5,
+      "in3to6": 23,
+      "before3": 2,
+      "after6": 14,
+      "observed6": 42,
+      "observed6By6": 25,
+      "medianAllCensored": 8
+     },
+     "0/20/60/120": {
+      "attained": 32,
+      "attainedShare": 0.492,
+      "medianAmongAttainers": 6,
+      "in3to6": 17,
+      "before3": 0,
+      "after6": 15,
+      "observed6": 40,
+      "observed6By6": 17,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "rockram",
+    "rarity": "common",
+    "position": "LB",
+    "ability": "Stonewall Swat",
+    "category": "Targeted effect",
+    "n": 45,
+    "meanRunSeasons": 6.8,
+    "perGame": 1.93,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 31,
+      "attainedShare": 0.689,
+      "medianAmongAttainers": 4,
+      "in3to6": 23,
+      "before3": 5,
+      "after6": 3,
+      "observed6": 32,
+      "observed6By6": 28,
+      "medianAllCensored": 5
+     },
+     "0/15/45/90": {
+      "attained": 26,
+      "attainedShare": 0.578,
+      "medianAmongAttainers": 5,
+      "in3to6": 20,
+      "before3": 1,
+      "after6": 5,
+      "observed6": 29,
+      "observed6By6": 21,
+      "medianAllCensored": 7
+     },
+     "0/20/60/120": {
+      "attained": 20,
+      "attainedShare": 0.444,
+      "medianAmongAttainers": 7,
+      "in3to6": 9,
+      "before3": 0,
+      "after6": 11,
+      "observed6": 25,
+      "observed6By6": 9,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "nocturne",
+    "rarity": "rare",
+    "position": "QB",
+    "ability": "Blackout Pocket",
+    "category": "Zone",
+    "n": 14,
+    "meanRunSeasons": 6.1,
+    "perGame": 1.89,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 7,
+      "attainedShare": 0.5,
+      "medianAmongAttainers": 4,
+      "in3to6": 6,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 7,
+      "observed6By6": 6,
+      "medianAllCensored": 7
+     },
+     "0/15/45/90": {
+      "attained": 7,
+      "attainedShare": 0.5,
+      "medianAmongAttainers": 5,
+      "in3to6": 5,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 7,
+      "observed6By6": 5,
+      "medianAllCensored": 9
+     },
+     "0/20/60/120": {
+      "attained": 6,
+      "attainedShare": 0.429,
+      "medianAmongAttainers": 6,
+      "in3to6": 3,
+      "before3": 0,
+      "after6": 3,
+      "observed6": 7,
+      "observed6By6": 3,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "firestorm",
+    "rarity": "uncommon",
+    "position": "QB",
+    "ability": "Meteor Impact",
+    "category": "Special action",
+    "n": 35,
+    "meanRunSeasons": 5,
+    "perGame": 1.69,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 21,
+      "attainedShare": 0.6,
+      "medianAmongAttainers": 3,
+      "in3to6": 14,
+      "before3": 4,
+      "after6": 3,
+      "observed6": 22,
+      "observed6By6": 18,
+      "medianAllCensored": 6
+     },
+     "0/15/45/90": {
+      "attained": 16,
+      "attainedShare": 0.457,
+      "medianAmongAttainers": 5,
+      "in3to6": 9,
+      "before3": 0,
+      "after6": 7,
+      "observed6": 17,
+      "observed6By6": 9,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 5,
+      "attainedShare": 0.143,
+      "medianAmongAttainers": 7,
+      "in3to6": 2,
+      "before3": 0,
+      "after6": 3,
+      "observed6": 12,
+      "observed6By6": 2,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "thornkit",
+    "rarity": "common",
+    "position": "WR",
+    "ability": "Bloom Break",
+    "category": "Zone",
+    "n": 27,
+    "meanRunSeasons": 4.6,
+    "perGame": 1.49,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 13,
+      "attainedShare": 0.481,
+      "medianAmongAttainers": 4,
+      "in3to6": 12,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 14,
+      "observed6By6": 12,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 10,
+      "attainedShare": 0.37,
+      "medianAmongAttainers": 5,
+      "in3to6": 8,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 13,
+      "observed6By6": 8,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 5,
+      "attainedShare": 0.185,
+      "medianAmongAttainers": 6,
+      "in3to6": 4,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 12,
+      "observed6By6": 4,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "flicker",
+    "rarity": "common",
+    "position": "WR",
+    "ability": "Crossed Wires",
+    "category": "Special action",
+    "n": 72,
+    "meanRunSeasons": 5.2,
+    "perGame": 1.38,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 29,
+      "attainedShare": 0.403,
+      "medianAmongAttainers": 4,
+      "in3to6": 21,
+      "before3": 3,
+      "after6": 5,
+      "observed6": 37,
+      "observed6By6": 24,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 22,
+      "attainedShare": 0.306,
+      "medianAmongAttainers": 6,
+      "in3to6": 14,
+      "before3": 0,
+      "after6": 8,
+      "observed6": 34,
+      "observed6By6": 14,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 15,
+      "attainedShare": 0.208,
+      "medianAmongAttainers": 7,
+      "in3to6": 6,
+      "before3": 0,
+      "after6": 9,
+      "observed6": 32,
+      "observed6By6": 6,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "drakeling",
+    "rarity": "common",
+    "position": "RB",
+    "ability": "Dragon Pounce",
+    "category": "Self enhancement",
+    "n": 27,
+    "meanRunSeasons": 3.5,
+    "perGame": 1.31,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 4,
+      "attainedShare": 0.148,
+      "medianAmongAttainers": 4,
+      "in3to6": 4,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 5,
+      "observed6By6": 4,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 4,
+      "attainedShare": 0.148,
+      "medianAmongAttainers": 6,
+      "in3to6": 3,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 5,
+      "observed6By6": 3,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 2,
+      "attainedShare": 0.074,
+      "medianAmongAttainers": 5,
+      "in3to6": 1,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 5,
+      "observed6By6": 1,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "voltfin",
+    "rarity": "common",
+    "position": "RB",
+    "ability": "Charge Strip",
+    "category": "Zone",
+    "n": 28,
+    "meanRunSeasons": 5.8,
+    "perGame": 1.29,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 11,
+      "attainedShare": 0.393,
+      "medianAmongAttainers": 4,
+      "in3to6": 9,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 16,
+      "observed6By6": 9,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 7,
+      "attainedShare": 0.25,
+      "medianAmongAttainers": 5,
+      "in3to6": 6,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 15,
+      "observed6By6": 6,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 4,
+      "attainedShare": 0.143,
+      "medianAmongAttainers": 6,
+      "in3to6": 2,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 13,
+      "observed6By6": 2,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "sunwhistle",
+    "rarity": "common",
+    "position": "K",
+    "ability": "Dawn Signal",
+    "category": "Targeted effect",
+    "n": 14,
+    "meanRunSeasons": 6.3,
+    "perGame": 1.23,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 8,
+      "attainedShare": 0.571,
+      "medianAmongAttainers": 5,
+      "in3to6": 7,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 8,
+      "observed6By6": 7,
+      "medianAllCensored": 6
+     },
+     "0/15/45/90": {
+      "attained": 5,
+      "attainedShare": 0.357,
+      "medianAmongAttainers": 7,
+      "in3to6": 1,
+      "before3": 0,
+      "after6": 4,
+      "observed6": 7,
+      "observed6By6": 1,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 3,
+      "attainedShare": 0.214,
+      "medianAmongAttainers": 8,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 3,
+      "observed6": 7,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "joltrex",
+    "rarity": "rare",
+    "position": "DL",
+    "ability": "Chain Break",
+    "category": "Targeted effect",
+    "n": 61,
+    "meanRunSeasons": 8,
+    "perGame": 1.17,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 43,
+      "attainedShare": 0.705,
+      "medianAmongAttainers": 6,
+      "in3to6": 28,
+      "before3": 0,
+      "after6": 15,
+      "observed6": 47,
+      "observed6By6": 28,
+      "medianAllCensored": 7
+     },
+     "0/15/45/90": {
+      "attained": 31,
+      "attainedShare": 0.508,
+      "medianAmongAttainers": 8,
+      "in3to6": 8,
+      "before3": 0,
+      "after6": 23,
+      "observed6": 43,
+      "observed6By6": 8,
+      "medianAllCensored": 13
+     },
+     "0/20/60/120": {
+      "attained": 15,
+      "attainedShare": 0.246,
+      "medianAmongAttainers": 10,
+      "in3to6": 2,
+      "before3": 0,
+      "after6": 13,
+      "observed6": 43,
+      "observed6By6": 2,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "echolot",
+    "rarity": "uncommon",
+    "position": "K",
+    "ability": "Echo Landing",
+    "category": "Zone",
+    "n": 22,
+    "meanRunSeasons": 5.1,
+    "perGame": 1.02,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 6,
+      "attainedShare": 0.273,
+      "medianAmongAttainers": 6,
+      "in3to6": 4,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 9,
+      "observed6By6": 4,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 4,
+      "attainedShare": 0.182,
+      "medianAmongAttainers": 7,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 4,
+      "observed6": 9,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 2,
+      "attainedShare": 0.091,
+      "medianAmongAttainers": 10,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 9,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "wyrmkit",
+    "rarity": "common",
+    "position": "TE",
+    "ability": "Dragon Call",
+    "category": "Aura",
+    "n": 21,
+    "meanRunSeasons": 4.3,
+    "perGame": 1,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 6,
+      "attainedShare": 0.286,
+      "medianAmongAttainers": 7,
+      "in3to6": 2,
+      "before3": 0,
+      "after6": 4,
+      "observed6": 7,
+      "observed6By6": 2,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 2,
+      "attainedShare": 0.095,
+      "medianAmongAttainers": 9,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 7,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 7,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "wavehorn",
+    "rarity": "uncommon",
+    "position": "TE",
+    "ability": "Breakwater",
+    "category": "Aura",
+    "n": 48,
+    "meanRunSeasons": 6.2,
+    "perGame": 1,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 25,
+      "attainedShare": 0.521,
+      "medianAmongAttainers": 7,
+      "in3to6": 8,
+      "before3": 0,
+      "after6": 17,
+      "observed6": 27,
+      "observed6By6": 8,
+      "medianAllCensored": 7
+     },
+     "0/15/45/90": {
+      "attained": 9,
+      "attainedShare": 0.188,
+      "medianAmongAttainers": 10,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 9,
+      "observed6": 27,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 4,
+      "attainedShare": 0.083,
+      "medianAmongAttainers": 13,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 4,
+      "observed6": 27,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "pyrelynx",
+    "rarity": "rare",
+    "position": "CB",
+    "ability": "Heat Haze",
+    "category": "Aura",
+    "n": 45,
+    "meanRunSeasons": 8.4,
+    "perGame": 1,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 29,
+      "attainedShare": 0.644,
+      "medianAmongAttainers": 7,
+      "in3to6": 9,
+      "before3": 0,
+      "after6": 20,
+      "observed6": 31,
+      "observed6By6": 9,
+      "medianAllCensored": 7
+     },
+     "0/15/45/90": {
+      "attained": 16,
+      "attainedShare": 0.356,
+      "medianAmongAttainers": 10,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 16,
+      "observed6": 31,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 11,
+      "attainedShare": 0.244,
+      "medianAmongAttainers": 13,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 11,
+      "observed6": 31,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "steelpaw",
+    "rarity": "common",
+    "position": "LB",
+    "ability": "Iron Lungs",
+    "category": "Aura",
+    "n": 35,
+    "meanRunSeasons": 5.2,
+    "perGame": 0.99,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 12,
+      "attainedShare": 0.343,
+      "medianAmongAttainers": 7,
+      "in3to6": 2,
+      "before3": 0,
+      "after6": 10,
+      "observed6": 16,
+      "observed6By6": 2,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 5,
+      "attainedShare": 0.143,
+      "medianAmongAttainers": 10,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 5,
+      "observed6": 16,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 3,
+      "attainedShare": 0.086,
+      "medianAmongAttainers": 12,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 3,
+      "observed6": 16,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "mindwing",
+    "rarity": "common",
+    "position": "S",
+    "ability": "Mind Bend",
+    "category": "Zone",
+    "n": 47,
+    "meanRunSeasons": 3.9,
+    "perGame": 0.98,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 7,
+      "attainedShare": 0.149,
+      "medianAmongAttainers": 6,
+      "in3to6": 7,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 14,
+      "observed6By6": 7,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 6,
+      "attainedShare": 0.128,
+      "medianAmongAttainers": 8,
+      "in3to6": 1,
+      "before3": 0,
+      "after6": 5,
+      "observed6": 14,
+      "observed6By6": 1,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 3,
+      "attainedShare": 0.064,
+      "medianAmongAttainers": 10,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 3,
+      "observed6": 14,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "emberfox",
+    "rarity": "common",
+    "position": "RB",
+    "ability": "Blazing Resolve",
+    "category": "Self enhancement",
+    "n": 22,
+    "meanRunSeasons": 3,
+    "perGame": 0.96,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 1,
+      "attainedShare": 0.045,
+      "medianAmongAttainers": 5,
+      "in3to6": 1,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 3,
+      "observed6By6": 1,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 1,
+      "attainedShare": 0.045,
+      "medianAmongAttainers": 6,
+      "in3to6": 1,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 3,
+      "observed6By6": 1,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 1,
+      "attainedShare": 0.045,
+      "medianAmongAttainers": 7,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 3,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "metalhorn",
+    "rarity": "rare",
+    "position": "TE",
+    "ability": "Bulwark Grid",
+    "category": "Zone",
+    "n": 17,
+    "meanRunSeasons": 6.2,
+    "perGame": 0.96,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 6,
+      "attainedShare": 0.353,
+      "medianAmongAttainers": 6,
+      "in3to6": 3,
+      "before3": 0,
+      "after6": 3,
+      "observed6": 10,
+      "observed6By6": 3,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 3,
+      "attainedShare": 0.176,
+      "medianAmongAttainers": 7,
+      "in3to6": 1,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 10,
+      "observed6By6": 1,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 2,
+      "attainedShare": 0.118,
+      "medianAmongAttainers": 8,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 10,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "zephyr",
+    "rarity": "rare",
+    "position": "QB",
+    "ability": "Tailwind Huddle",
+    "category": "Aura",
+    "n": 15,
+    "meanRunSeasons": 10.6,
+    "perGame": 0.91,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 10,
+      "attainedShare": 0.667,
+      "medianAmongAttainers": 7,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 10,
+      "observed6": 12,
+      "observed6By6": 0,
+      "medianAllCensored": 7
+     },
+     "0/15/45/90": {
+      "attained": 8,
+      "attainedShare": 0.533,
+      "medianAmongAttainers": 10,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 8,
+      "observed6": 12,
+      "observed6By6": 0,
+      "medianAllCensored": 11
+     },
+     "0/20/60/120": {
+      "attained": 5,
+      "attainedShare": 0.333,
+      "medianAmongAttainers": 13,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 5,
+      "observed6": 12,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "terrabull",
+    "rarity": "uncommon",
+    "position": "TE",
+    "ability": "Stone Screen",
+    "category": "Special action",
+    "n": 29,
+    "meanRunSeasons": 5.7,
+    "perGame": 0.75,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 9,
+      "attainedShare": 0.31,
+      "medianAmongAttainers": 5,
+      "in3to6": 8,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 16,
+      "observed6By6": 8,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 3,
+      "attainedShare": 0.103,
+      "medianAmongAttainers": 7,
+      "in3to6": 1,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 15,
+      "observed6By6": 1,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 1,
+      "attainedShare": 0.034,
+      "medianAmongAttainers": 5,
+      "in3to6": 1,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 15,
+      "observed6By6": 1,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "halofang",
+    "rarity": "rare",
+    "position": "LB",
+    "ability": "Radiant Pursuit",
+    "category": "Self enhancement",
+    "n": 58,
+    "meanRunSeasons": 7.5,
+    "perGame": 0.74,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 20,
+      "attainedShare": 0.345,
+      "medianAmongAttainers": 8,
+      "in3to6": 7,
+      "before3": 0,
+      "after6": 13,
+      "observed6": 41,
+      "observed6By6": 7,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 17,
+      "attainedShare": 0.293,
+      "medianAmongAttainers": 10,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 17,
+      "observed6": 41,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 6,
+      "attainedShare": 0.103,
+      "medianAmongAttainers": 13,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 6,
+      "observed6": 41,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "gearwing",
+    "rarity": "uncommon",
+    "position": "K",
+    "ability": "Gear Grid",
+    "category": "Zone",
+    "n": 29,
+    "meanRunSeasons": 9.2,
+    "perGame": 0.71,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 15,
+      "attainedShare": 0.517,
+      "medianAmongAttainers": 8,
+      "in3to6": 1,
+      "before3": 0,
+      "after6": 14,
+      "observed6": 24,
+      "observed6By6": 1,
+      "medianAllCensored": 11
+     },
+     "0/15/45/90": {
+      "attained": 8,
+      "attainedShare": 0.276,
+      "medianAmongAttainers": 13,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 8,
+      "observed6": 24,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 1,
+      "attainedShare": 0.034,
+      "medianAmongAttainers": 14,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 24,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "vyrnax",
+    "rarity": "rare",
+    "position": "K",
+    "ability": "Dragon Roar",
+    "category": "Special action",
+    "n": 23,
+    "meanRunSeasons": 8.2,
+    "perGame": 0.68,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 10,
+      "attainedShare": 0.435,
+      "medianAmongAttainers": 9,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 10,
+      "observed6": 13,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 5,
+      "attainedShare": 0.217,
+      "medianAmongAttainers": 14,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 5,
+      "observed6": 13,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 4,
+      "attainedShare": 0.174,
+      "medianAmongAttainers": 18,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 4,
+      "observed6": 13,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "glaciron",
+    "rarity": "rare",
+    "position": "OL",
+    "ability": "Cold Snap",
+    "category": "Aura",
+    "n": 64,
+    "meanRunSeasons": 8.7,
+    "perGame": 0.66,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 29,
+      "attainedShare": 0.453,
+      "medianAmongAttainers": 10,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 29,
+      "observed6": 45,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 11,
+      "attainedShare": 0.172,
+      "medianAmongAttainers": 14,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 11,
+      "observed6": 45,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 45,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "enigmane",
+    "rarity": "rare",
+    "position": "TE",
+    "ability": "Mind Game",
+    "category": "Targeted effect",
+    "n": 15,
+    "meanRunSeasons": 5.3,
+    "perGame": 0.66,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 3,
+      "attainedShare": 0.2,
+      "medianAmongAttainers": 9,
+      "in3to6": 1,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 7,
+      "observed6By6": 1,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 1,
+      "attainedShare": 0.067,
+      "medianAmongAttainers": 11,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 6,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 6,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "duskrunner",
+    "rarity": "rare",
+    "position": "RB",
+    "ability": "Vanishing Cut",
+    "category": "Self enhancement",
+    "n": 47,
+    "meanRunSeasons": 6.2,
+    "perGame": 0.57,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 9,
+      "attainedShare": 0.191,
+      "medianAmongAttainers": 7,
+      "in3to6": 4,
+      "before3": 0,
+      "after6": 5,
+      "observed6": 28,
+      "observed6By6": 4,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 3,
+      "attainedShare": 0.064,
+      "medianAmongAttainers": 8,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 3,
+      "observed6": 27,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 27,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "glimmer",
+    "rarity": "common",
+    "position": "WR",
+    "ability": "Beacon Lane",
+    "category": "Zone",
+    "n": 80,
+    "meanRunSeasons": 5,
+    "perGame": 0.55,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 9,
+      "attainedShare": 0.113,
+      "medianAmongAttainers": 7,
+      "in3to6": 4,
+      "before3": 0,
+      "after6": 5,
+      "observed6": 28,
+      "observed6By6": 4,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 4,
+      "attainedShare": 0.05,
+      "medianAmongAttainers": 5,
+      "in3to6": 2,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 28,
+      "observed6By6": 2,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 2,
+      "attainedShare": 0.025,
+      "medianAmongAttainers": 6,
+      "in3to6": 1,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 28,
+      "observed6By6": 1,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "thornback",
+    "rarity": "rare",
+    "position": "TE",
+    "ability": "Bramble Trap",
+    "category": "Zone",
+    "n": 25,
+    "meanRunSeasons": 5.9,
+    "perGame": 0.5,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 5,
+      "attainedShare": 0.2,
+      "medianAmongAttainers": 8,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 5,
+      "observed6": 10,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 10,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 10,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "lumen",
+    "rarity": "common",
+    "position": "QB",
+    "ability": "Guiding Halo",
+    "category": "Aura",
+    "n": 31,
+    "meanRunSeasons": 4.6,
+    "perGame": 0.49,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 3,
+      "attainedShare": 0.097,
+      "medianAmongAttainers": 9,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 3,
+      "observed6": 10,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 10,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 10,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "tidefin",
+    "rarity": "rare",
+    "position": "WR",
+    "ability": "Second Touch",
+    "category": "Special action",
+    "n": 152,
+    "meanRunSeasons": 7.3,
+    "perGame": 0.41,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 14,
+      "attainedShare": 0.092,
+      "medianAmongAttainers": 8,
+      "in3to6": 2,
+      "before3": 0,
+      "after6": 12,
+      "observed6": 97,
+      "observed6By6": 2,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 2,
+      "attainedShare": 0.013,
+      "medianAmongAttainers": 9,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 2,
+      "observed6": 97,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 1,
+      "attainedShare": 0.007,
+      "medianAmongAttainers": 13,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 97,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "stoneguard",
+    "rarity": "uncommon",
+    "position": "K",
+    "ability": "Stone Cradle",
+    "category": "Special action",
+    "n": 31,
+    "meanRunSeasons": 7.3,
+    "perGame": 0.41,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 3,
+      "attainedShare": 0.097,
+      "medianAmongAttainers": 13,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 3,
+      "observed6": 16,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 1,
+      "attainedShare": 0.032,
+      "medianAmongAttainers": 17,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 16,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 16,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "snowmoth",
+    "rarity": "common",
+    "position": "K",
+    "ability": "Frostmark",
+    "category": "Zone",
+    "n": 11,
+    "meanRunSeasons": 7.5,
+    "perGame": 0.33,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 8,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 8,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 8,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "tidepaw",
+    "rarity": "common",
+    "position": "CB",
+    "ability": "Splashdown",
+    "category": "Zone",
+    "n": 37,
+    "meanRunSeasons": 5.3,
+    "perGame": 0.29,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 14,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 14,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 14,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "shadowkit",
+    "rarity": "common",
+    "position": "CB",
+    "ability": "Shadow Patch",
+    "category": "Zone",
+    "n": 40,
+    "meanRunSeasons": 5.9,
+    "perGame": 0.26,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 19,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 19,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 19,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "ashkit",
+    "rarity": "common",
+    "position": "LB",
+    "ability": "Impact Pyre",
+    "category": "Zone",
+    "n": 44,
+    "meanRunSeasons": 4,
+    "perGame": 0.25,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 2,
+      "attainedShare": 0.045,
+      "medianAmongAttainers": 6,
+      "in3to6": 1,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 12,
+      "observed6By6": 1,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 12,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 12,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "pebble",
+    "rarity": "common",
+    "position": "OL",
+    "ability": "Clean Sweep",
+    "category": "Special action",
+    "n": 46,
+    "meanRunSeasons": 5.3,
+    "perGame": 0.2,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 20,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 20,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 20,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "prism",
+    "rarity": "uncommon",
+    "position": "S",
+    "ability": "Prism Break",
+    "category": "Special action",
+    "n": 71,
+    "meanRunSeasons": 6.2,
+    "perGame": 0.19,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 1,
+      "attainedShare": 0.014,
+      "medianAmongAttainers": 14,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 1,
+      "observed6": 33,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 33,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 33,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "icehorn",
+    "rarity": "common",
+    "position": "DL",
+    "ability": "Permafrost",
+    "category": "Zone",
+    "n": 52,
+    "meanRunSeasons": 4.8,
+    "perGame": 0.16,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 21,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 21,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 21,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "breezefang",
+    "rarity": "common",
+    "position": "RB",
+    "ability": "Slipstream Step",
+    "category": "Special action",
+    "n": 39,
+    "meanRunSeasons": 5.9,
+    "perGame": 0.12,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 21,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 21,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 21,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "nightowl",
+    "rarity": "common",
+    "position": "S",
+    "ability": "Night Watch",
+    "category": "Aura",
+    "n": 39,
+    "meanRunSeasons": 4.9,
+    "perGame": 0.02,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 16,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 16,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 16,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "sablewing",
+    "rarity": "uncommon",
+    "position": "CB",
+    "ability": "Hoard Flight",
+    "category": "Special action",
+    "n": 64,
+    "meanRunSeasons": 5.5,
+    "perGame": 0.02,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 27,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 27,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 27,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "windlynx",
+    "rarity": "rare",
+    "position": "S",
+    "ability": "Crosswind Rescue",
+    "category": "Zone",
+    "n": 72,
+    "meanRunSeasons": 7.8,
+    "perGame": 0.02,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 44,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 44,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 44,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "skywarden",
+    "rarity": "uncommon",
+    "position": "CB",
+    "ability": "Air Brake",
+    "category": "Targeted effect",
+    "n": 80,
+    "meanRunSeasons": 7.6,
+    "perGame": 0.01,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 48,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 48,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 48,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "ironjaw",
+    "rarity": "uncommon",
+    "position": "DL",
+    "ability": "Ball Clamp",
+    "category": "Targeted effect",
+    "n": 122,
+    "meanRunSeasons": 6.5,
+    "perGame": 0.01,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 72,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 72,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 72,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   },
+   {
+    "species": "cerebrix",
+    "rarity": "uncommon",
+    "position": "QB",
+    "ability": "Foresight",
+    "category": "Targeted effect",
+    "n": 54,
+    "meanRunSeasons": 5.6,
+    "perGame": 0,
+    "sets": {
+     "0/10/30/60": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 26,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/15/45/90": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 26,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     },
+     "0/20/60/120": {
+      "attained": 0,
+      "attainedShare": 0,
+      "medianAmongAttainers": null,
+      "in3to6": 0,
+      "before3": 0,
+      "after6": 0,
+      "observed6": 26,
+      "observed6By6": 0,
+      "medianAllCensored": null
+     }
+    }
+   }
+  ]
+ },
+ "footballAggregate": {
+  "0/10/30/60": {
+   "individuals": 2859,
+   "attained": 1105,
+   "before3": 409,
+   "in3to6": 475,
+   "after6": 221,
+   "nonattainers": 1754,
+   "firstSeason": 112,
+   "observedForSixSeasonsOrAttainedBySix": 1742,
+   "ofThoseBy6": 884,
+   "ofThoseIn3to6": 475,
+   "familiesWith5plus": 60,
+   "familyMedianBefore3": 8,
+   "familyMedian3to6": 10,
+   "familyMedianAfter6": 6,
+   "familyMedianNever": 36
+  },
+  "0/15/45/90": {
+   "individuals": 2859,
+   "attained": 877,
+   "before3": 244,
+   "in3to6": 443,
+   "after6": 190,
+   "nonattainers": 1982,
+   "firstSeason": 33,
+   "observedForSixSeasonsOrAttainedBySix": 1666,
+   "ofThoseBy6": 687,
+   "ofThoseIn3to6": 443,
+   "familiesWith5plus": 60,
+   "familyMedianBefore3": 3,
+   "familyMedian3to6": 10,
+   "familyMedianAfter6": 5,
+   "familyMedianNever": 42
+  },
+  "0/20/60/120": {
+   "individuals": 2859,
+   "attained": 713,
+   "before3": 134,
+   "in3to6": 437,
+   "after6": 142,
+   "nonattainers": 2146,
+   "firstSeason": 30,
+   "observedForSixSeasonsOrAttainedBySix": 1611,
+   "ofThoseBy6": 571,
+   "ofThoseIn3to6": 437,
+   "familiesWith5plus": 60,
+   "familyMedianBefore3": 1,
+   "familyMedian3to6": 10,
+   "familyMedianAfter6": 1,
+   "familyMedianNever": 48
+  }
+ },
+ "clash": {
+  "ordinaryAbilityHolders": 4714,
+  "everInAClashLineup": 778,
+  "sustainedFootballStarters": 3217,
+  "ofThoseEverInAClashLineup": 754,
+  "basicsEverInLineup": 2,
+  "basics": 2136,
+  "sustained": {
+   "definition": "at least 6 Clash lineups in a season, from zero credits, followed while that continues",
+   "individuals": 477,
+   "lineupsPerSeason": 9.8,
+   "executionsPerLineup": 0.96,
+   "meanRunSeasons": 5.1,
+   "sets": {
+    "0/10/30/60": {
+     "attained": 123,
+     "before3": 0,
+     "in3to6": 74,
+     "after6": 49,
+     "nonattainers": 354
+    },
+    "0/15/45/90": {
+     "attained": 80,
+     "before3": 0,
+     "in3to6": 43,
+     "after6": 37,
+     "nonattainers": 397
+    },
+    "0/20/60/120": {
+     "attained": 55,
+     "before3": 0,
+     "in3to6": 12,
+     "after6": 43,
+     "nonattainers": 422
+    }
+   }
+  }
+ },
+ "starters": {
+  "definition": "ordinary individuals first seen at a season start as level 5 or lower with no pro seasons, entry season 12 or earlier; level read at each following season start; anyone no longer in the league (retired, released out) counts as not reaching 50",
+  "gate": "at least 75% of ordinary mixed-mode starters reach level 50 within 8 seasons",
+  "cohorts": [
+   {
+    "cohort": "all entrants",
+    "n": 2239,
+    "reached50Within8": 230,
+    "share": 0.103,
+    "medianSeason": null,
+    "goneBefore8": 958,
+    "stillThereBelow50": 1051,
+    "meanStartsIn8": 21,
+    "meanClashLineupsIn8": 1.5,
+    "meanLevelAt8OfSurvivors": 26.5
+   },
+   {
+    "cohort": "starter from the first season (7+ starts)",
+    "n": 412,
+    "reached50Within8": 213,
+    "share": 0.517,
+    "medianSeason": 8,
+    "goneBefore8": 32,
+    "stillThereBelow50": 167,
+    "meanStartsIn8": 65.4,
+    "meanClashLineupsIn8": 6.1,
+    "meanLevelAt8OfSurvivors": 45
+   },
+   {
+    "cohort": "starter in at least 4 of the 8 seasons",
+    "n": 627,
+    "reached50Within8": 230,
+    "share": 0.367,
+    "medianSeason": null,
+    "goneBefore8": 26,
+    "stillThereBelow50": 371,
+    "meanStartsIn8": 62.5,
+    "meanClashLineupsIn8": 4.8,
+    "meanLevelAt8OfSurvivors": 43.3
+   },
+   {
+    "cohort": "starter in at least 6 of the 8 seasons",
+    "n": 437,
+    "reached50Within8": 226,
+    "share": 0.517,
+    "medianSeason": 8,
+    "goneBefore8": 14,
+    "stillThereBelow50": 197,
+    "meanStartsIn8": 70.9,
+    "meanClashLineupsIn8": 5.8,
+    "meanLevelAt8OfSurvivors": 47.4
+   },
+   {
+    "cohort": "starter in all 8 seasons",
+    "n": 268,
+    "reached50Within8": 188,
+    "share": 0.701,
+    "medianSeason": 8,
+    "goneBefore8": 4,
+    "stillThereBelow50": 76,
+    "meanStartsIn8": 75.2,
+    "meanClashLineupsIn8": 8,
+    "meanLevelAt8OfSurvivors": 49
+   },
+   {
+    "cohort": "starter in all 8 seasons and in a Clash lineup at least 4 times a season on average (mixed)",
+    "n": 26,
+    "reached50Within8": 26,
+    "share": 1,
+    "medianSeason": 7,
+    "goneBefore8": 0,
+    "stillThereBelow50": 0,
+    "meanStartsIn8": 73.5,
+    "meanClashLineupsIn8": 50.8,
+    "meanLevelAt8OfSurvivors": 50
+   },
+   {
+    "cohort": "never a starter",
+    "n": 1253,
+    "reached50Within8": 0,
+    "share": 0,
+    "medianSeason": null,
+    "goneBefore8": 857,
+    "stillThereBelow50": 396,
+    "meanStartsIn8": 0.7,
+    "meanClashLineupsIn8": 0,
+    "meanLevelAt8OfSurvivors": 5.8
+   }
+  ],
+  "byPosition": {
+   "QB": {
+    "cohort": "QB",
+    "n": 9,
+    "reached50Within8": 4,
+    "share": 0.444,
+    "medianSeason": null,
+    "goneBefore8": 0,
+    "stillThereBelow50": 5,
+    "meanStartsIn8": 64.4,
+    "meanClashLineupsIn8": 5,
+    "meanLevelAt8OfSurvivors": 47.2
+   },
+   "RB": {
+    "cohort": "RB",
+    "n": 33,
+    "reached50Within8": 20,
+    "share": 0.606,
+    "medianSeason": 8,
+    "goneBefore8": 3,
+    "stillThereBelow50": 10,
+    "meanStartsIn8": 69.3,
+    "meanClashLineupsIn8": 1,
+    "meanLevelAt8OfSurvivors": 47.8
+   },
+   "WR": {
+    "cohort": "WR",
+    "n": 92,
+    "reached50Within8": 50,
+    "share": 0.543,
+    "medianSeason": 8,
+    "goneBefore8": 3,
+    "stillThereBelow50": 39,
+    "meanStartsIn8": 71.6,
+    "meanClashLineupsIn8": 1.8,
+    "meanLevelAt8OfSurvivors": 47
+   },
+   "TE": {
+    "cohort": "TE",
+    "n": 22,
+    "reached50Within8": 9,
+    "share": 0.409,
+    "medianSeason": null,
+    "goneBefore8": 1,
+    "stillThereBelow50": 12,
+    "meanStartsIn8": 67.9,
+    "meanClashLineupsIn8": 6,
+    "meanLevelAt8OfSurvivors": 46.8
+   },
+   "OL": {
+    "cohort": "OL",
+    "n": 60,
+    "reached50Within8": 47,
+    "share": 0.783,
+    "medianSeason": 8,
+    "goneBefore8": 1,
+    "stillThereBelow50": 12,
+    "meanStartsIn8": 70.7,
+    "meanClashLineupsIn8": 17.7,
+    "meanLevelAt8OfSurvivors": 48.8
+   },
+   "DL": {
+    "cohort": "DL",
+    "n": 59,
+    "reached50Within8": 21,
+    "share": 0.356,
+    "medianSeason": null,
+    "goneBefore8": 1,
+    "stillThereBelow50": 37,
+    "meanStartsIn8": 69.9,
+    "meanClashLineupsIn8": 2.2,
+    "meanLevelAt8OfSurvivors": 46.2
+   },
+   "LB": {
+    "cohort": "LB",
+    "n": 48,
+    "reached50Within8": 24,
+    "share": 0.5,
+    "medianSeason": 8,
+    "goneBefore8": 0,
+    "stillThereBelow50": 24,
+    "meanStartsIn8": 71.5,
+    "meanClashLineupsIn8": 5.5,
+    "meanLevelAt8OfSurvivors": 47.5
+   },
+   "CB": {
+    "cohort": "CB",
+    "n": 65,
+    "reached50Within8": 22,
+    "share": 0.338,
+    "medianSeason": null,
+    "goneBefore8": 4,
+    "stillThereBelow50": 39,
+    "meanStartsIn8": 72.8,
+    "meanClashLineupsIn8": 0.6,
+    "meanLevelAt8OfSurvivors": 47.2
+   },
+   "S": {
+    "cohort": "S",
+    "n": 45,
+    "reached50Within8": 25,
+    "share": 0.556,
+    "medianSeason": 8,
+    "goneBefore8": 1,
+    "stillThereBelow50": 19,
+    "meanStartsIn8": 71.3,
+    "meanClashLineupsIn8": 11.4,
+    "meanLevelAt8OfSurvivors": 47.5
+   },
+   "K": {
+    "cohort": "K",
+    "n": 4,
+    "reached50Within8": 4,
+    "share": 1,
+    "medianSeason": 7,
+    "goneBefore8": 0,
+    "stillThereBelow50": 0,
+    "meanStartsIn8": 72.8,
+    "meanClashLineupsIn8": 42.3,
+    "meanLevelAt8OfSurvivors": 50
+   }
+  }
+ },
+ "apex": {
+  "individuals": 58,
+  "everStarters": 25
+ }
+}

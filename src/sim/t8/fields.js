@@ -40,7 +40,14 @@ const recipeFor = (a, b) => RECIPES.find((r) => r.parents.includes(a) && r.paren
  * - Inside a hybrid the parents' base effects are replaced; unpaired base effects still apply; parent types are exempt from the hybrid.
  * - A base field never affects monsters of its own type (same-type neutrality). Dragon has no base field.
  */
-export function effectsAt(fields, yard, lat, monsterType) {
+export function effectsAt(fields, yard, lat, monsterType) { return effectsFor(effectsCore(fields, yard, lat), monsterType); }
+/**
+ * effectsAt in two steps (perf, outcome-identical: the same statements in the same order). effectsCore is everything that does not
+ * depend on the monster's type (the strongest field of each base type at the point and the one hybrid that forms there);
+ * effectsFor applies one monster type to it (own-type and parent immunity). A caller that resolves the same point for several types
+ * (field-effects.js, once per play and set of containing fields) computes the first step once.
+ */
+export function effectsCore(fields, yard, lat) {
   const here = fields.filter((f) => f.type !== 'Dragon' && contains(f, yard, lat));
   const byType = new Map();
   for (const f of here) { const cur = byType.get(f.type); if (!cur || (f.strength ?? 0) > (cur.strength ?? 0) || ((f.strength ?? 0) === (cur.strength ?? 0) && f.createdAt < cur.createdAt)) byType.set(f.type, f); }
@@ -53,8 +60,11 @@ export function effectsAt(fields, yard, lat, monsterType) {
     const formed = Math.max(a.createdAt, b.createdAt); const key = [a.id, b.id].map(String).sort().join('|');
     if (!pick || formed < pick.formed || (formed === pick.formed && key < pick.key)) pick = { r, formed, key };
   }
-  const replaced = new Set(pick ? pick.r.parents : []);
-  const base = [...byType.values()].filter((f) => !replaced.has(f.type) && f.type !== monsterType).map((f) => ({ type: f.type, strength: f.strength, fieldId: f.id }));
+  return { strongest: [...byType.values()], pick, replaced: new Set(pick ? pick.r.parents : []) };
+}
+export function effectsFor(core, monsterType) {
+  const { strongest, pick, replaced } = core;
+  const base = strongest.filter((f) => !replaced.has(f.type) && f.type !== monsterType).map((f) => ({ type: f.type, strength: f.strength, fieldId: f.id }));
   const hybrid = pick && !pick.r.parents.includes(monsterType) ? { name: pick.r.hybrid, parents: [...pick.r.parents] } : null;
   return { base, hybrid };
 }

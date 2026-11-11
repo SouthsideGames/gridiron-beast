@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+import fs from 'node:fs';
+import { abilitiesOf,POSITIONS } from '../src/data/beast-dex.js';
+const FILE='docs/task8/m6/observed-20-season-seed-1.json',r=JSON.parse(fs.readFileSync(FILE)).runs[0],t=r.t8;
+const categories={};for(const m of Object.values(t.initial))for(const mode of ['football','clash']){
+ const a=abilitiesOf(m.species)?.[mode];if(!a)continue;
+ const key=[mode,m.rarity,a.category].join('/'),g=(categories[key]||={individuals:0,mastered:0,withinFirstObservedSeason:0,elapsedSeasons:[],zeroAtEntry:0,everObservedUsed:0,maxObservedCredits:0});g.individuals++;g.zeroAtEntry+=Number(m[mode]===0);
+ const seen=[m[mode],...t.seasons.flatMap(s=>s.rows.filter(r=>r.id===m.id).map(r=>r[mode]))];const used=seen.some(v=>v>0);g.everObservedUsed+=Number(used);g.maxObservedCredits=Math.max(g.maxObservedCredits,...seen);
+ const hit=t.firstMastered[m.id+'|'+mode];if(hit){g.mastered++;const elapsed=hit.year-m.year+1;g.elapsedSeasons.push(elapsed);if(elapsed===1)g.withinFirstObservedSeason++;}
+}
+const median=a=>{if(!a.length)return null;const s=[...a].sort((a,b)=>a-b);return s[Math.ceil(s.length/2)-1];};
+for(const g of Object.values(categories)){g.medianElapsedAmongAttainers=median(g.elapsedSeasons);g.elapsedHistogram=Object.fromEntries([...new Set(g.elapsedSeasons)].sort((a,b)=>a-b).map(v=>[v,g.elapsedSeasons.filter(x=>x===v).length]));delete g.elapsedSeasons;}
+const checkpoints=t.seasons.filter(s=>[1,5,10,15,20].includes(s.year)).map(s=>{const a=s.rows.filter(m=>m.apex),owned=a.filter(m=>m.club!==null);return {year:s.year,apexObserved:a.length,apexOnRosters:owned.length,apexUnrostered:a.length-owned.length,apexAll99:a.filter(m=>m.allCeil).length,apexLevel50:a.filter(m=>m.level===50).length,apexMeanLevel:a.length?a.reduce((n,m)=>n+m.level,0)/a.length:null,byClub:Object.fromEntries([...new Set(owned.map(m=>m.club))].sort().map(c=>[c,owned.filter(m=>m.club===c).length]))};});
+const rookies=Object.values(t.initial).filter(m=>!m.apex&&m.rarity!=='legendary'&&m.level===1&&m.yearsPro===0&&m.year<=13);
+const rookieRecord=rookies.map(m=>{const observations=t.seasons.flatMap(s=>s.rows.filter(x=>x.id===m.id).map(x=>({...x,year:s.year})));const hit=observations.find(x=>x.level>=50);return {id:m.id,position:m.position,entry:m.year,hit50:hit?hit.year-m.year+1:null,lastObserved:observations.at(-1)?.year??null};});
+const out={source:'f716b02c41c81211d80e7389dc0cefd4c16ae155',scope:'Descriptive production observation; exposure is not randomized or held equal. Medians among attainers must not be used as the retirement-inclusive acceptance median.',seasons:r.seasons,errors:r.error?[r.error]:[],problems:r.problems,mastery:categories,apex:checkpoints,rookies:{definition:'first observed at level 1 and yearsPro 0, ordinary, entry by season 13; missing observations count as nonattainment, not assumed retirement',count:rookies.length,attainedBy8:rookieRecord.filter(m=>m.hit50!==null&&m.hit50<=8).length,byPosition:Object.fromEntries(POSITIONS.map(p=>{const a=rookieRecord.filter(m=>m.position===p);return [p,{n:a.length,attainedBy8:a.filter(m=>m.hit50!==null&&m.hit50<=8).length}];})),records:rookieRecord},limitations:['Mastery groups include censored late entrants and unequal play opportunities','Apex count includes registry and owner only, not unregistered unseen regional pools','Apex acquisition histories and exact eligible-roll denominators are not measured','No longer observed does not prove retirement','No tuning performed']};
+fs.writeFileSync('docs/task8/m6/observed-summary.json',JSON.stringify(out,null,2)+'\n');
+console.log(JSON.stringify({...out,rookies:{...out.rookies,records:undefined}},null,2));

@@ -1,0 +1,53 @@
+{
+  "source": "f716b02c41c81211d80e7389dc0cefd4c16ae155",
+  "kind": "controlled career diagnostic; not fully played careers or mastery pacing",
+  "positions": [
+    "QB",
+    "RB",
+    "WR",
+    "TE",
+    "OL",
+    "DL",
+    "LB",
+    "CB",
+    "S",
+    "K"
+  ],
+  "seeds": [
+    1,
+    100
+  ],
+  "creationAge": 21,
+  "seasons": 20,
+  "grade": 0,
+  "injuries": false,
+  "selection": "full participation in every scheduled activity; no playoff advancement simulated",
+  "schedules": {
+    "footballOnly": {
+      "football": 9,
+      "clash": 0
+    },
+    "mixed": {
+      "football": 9,
+      "clash": 4
+    },
+    "maximum": {
+      "football": 12,
+      "clash": 33
+    }
+  },
+  "maximumExplanation": "nine regular games plus three playoffs; nine Tuesday encounters, opening and OT in all twelve games; assumes all conditional opportunities occur, no extra activity invented",
+  "ordinaryGeneration": "production generateMonster, roster channel family share, quality 56, age 21, yearsPro 0, Apex rolls disabled for ordinary cohort",
+  "apexGeneration": "100 per position, uniform nonlegendary stage-0 forms, forced Apex only; independent 10–15 ratings and neutral Temper from production generator",
+  "policies": {
+    "positionFocused": "highest positional OVR weight with headroom, attribute-order tie; never train unused attributes",
+    "even": "one banked point at a time to the open attribute with least cumulative investment, attribute-order tie; persistent lifetime investment ledger, includes fractional points",
+    "ai": "production allocateTraining without club-identity preference"
+  },
+  "retirement": "production chanceFor before offseason aging, native save, signed starter, real peak OVR, no injury history; all generated individuals retained in denominators",
+  "median": "50th-percentile nearest rank over whole cohort; retirement/nonattainment = Infinity, reported as null when median not reached",
+  "ceilings": "all twelve current ratings simultaneously at their own individual ceilings, observation window seasons 1–8 and 1–20, retired individuals remain in denominator",
+  "rng": "generation hashString(m6-cohort|position|seed), decline hashString(decline|position|seed|year), retirement hashString(retire|position|seed|year); matched across all policies/schedules",
+  "apexSchedule": "mixed; additional maximum schedule as sensitivity",
+  "settingsChanged": false
+}
