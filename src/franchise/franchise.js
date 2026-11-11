@@ -5,6 +5,7 @@
 import { migrationDue, migratePositions, migrateAmbitions } from './position-migration.js';
 import { staffDemand, staffOptions, staffAnswer, noteStaffPreseason, noteStaffSeason, noteStaffTraining, noteStaffDraft, STAFF_BANDS } from './staff-negotiation.js';
 import { venueFor } from '../data/stadiums.js';
+import { generatedVenue } from '../data/field-generator.js';
 import { noteJoin, markCareerFresh, noteEvolution, careerAfterGame, careerSeasonEnd, noteHallOfFame, backfillCareer, careerTimeline, careerSummary, CAREER_MILESTONES, addEvent } from './career.js';
 import * as CP from './partnerships.js';
 import * as IH from './injury-history.js';
@@ -1468,13 +1469,16 @@ export function devGrantLegendary(f, speciesId) {
   news(f, `Developer test: ${m.name} joins the roster.`, 'info');
   return { ok: true, monster: m, discovered: res.discovered };
 }
-/** The venue of this week's game at `home` (GDD §33): the club's stadium (or an owner's future override) and the weather. */
-export function gameVenue(f, home) { return venueFor(home, `${f.seed}|${f.season.year}|${f.season.week}`, f.stadiums || null); }
+/**
+ * The venue of this week's game at `home` against `away` (GDD §33; field generator, QoL update): the home club's stadium, the
+ * field the generator gives this game (a boss's element, or the 65% grass / 35% elemental draw) and that field's weather.
+ */
+export function gameVenue(f, home, away = null) { return generatedVenue(home, away, `${f.seed}|${f.season.year}|${f.season.week}`, f.stadiums || null); }
 /** This week's game venue for the player, or null on a bye or when there is no game. */
 export function sundayVenue(f) {
-  const po = playoffFixture(f); if (po) return { ...gameVenue(f, po.home), home: po.home, away: po.away };
+  const po = playoffFixture(f); if (po) return { ...gameVenue(f, po.home, po.away), home: po.home, away: po.away };
   const fx = currentFixture(f); if (!fx || fx.bye) return null;
-  const home = fx.home ? f.club : fx.opponent; return { ...gameVenue(f, home), home, away: fx.home ? fx.opponent : f.club };
+  const home = fx.home ? f.club : fx.opponent; const away = fx.home ? fx.opponent : f.club; return { ...gameVenue(f, home, away), home, away };
 }
 export function leagueStandings(f) { return standings(f.season.records); }
 
@@ -1645,7 +1649,7 @@ function simulateLeagueWeek(f) {
       const ig = { home: g.home, away: g.away, week: f.season.week }; const it = [[g.home, home.roster, g.away, home.chart], [g.away, away.roster, g.home, away.chart]];
       injuriesBeforeGame(f, it, ig); // Injury History (GDD §50): who misses this game
       const toss = leaguePregame(f, r, home, away);
-      const game = playGame({ home, away, venue: gameVenue(f, home.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
+      const game = playGame({ home, away, venue: gameVenue(f, home.name, away.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
       leagueTiebreak(f, r, home, away, game);
       aiAfterGame(f, home, game, 'home', r); aiAfterGame(f, away, game, 'away', r); // persistent rosters develop as they play (GDD §42.6, decision B)
       injuriesAfterGame(f, it, ig);
@@ -2028,6 +2032,17 @@ export function setTraining(f, focus, intensity = 'normal') {
   f.week.training = { focus, intensity, success, injury, amount: odds.amount, fatigue: (INTENSITIES[intensity] || INTENSITIES.normal).fatigue }; f.rattled = false;
   f.season.day = 3; skipToByeIfIdle(f);
   return { ok: true, success, injury, amount: odds.amount, streak: odds.streak };
+}
+/**
+ * Skip Wednesday (QoL update): straight to Thursday with nothing gained and nothing lost. No practice is run, so there is no boost,
+ * no fatigue, no injury roll, no random draw at all, no entry in the training history (a skipped week neither extends nor counts
+ * toward a "same focus" streak) and no staff record. Only once: after it the day is no longer Wednesday.
+ */
+export function skipTraining(f) {
+  if (f.season.day !== 2) return { ok: false, reason: 'Not Wednesday.' };
+  f.week.trainingFocus = null; f.week.trainingFactor = null; f.week.training = null; f.week.trainingSkipped = true;
+  f.season.day = 3; skipToByeIfIdle(f);
+  return { ok: true, skipped: true };
 }
 export function scoutOpponent(f, side) {
   if (f.season.day !== 3) return { ok: false, reason: 'Not Thursday.' };
@@ -2419,7 +2434,7 @@ function simulatePlayoffWeek(f) {
     const ig = { home: g.home, away: g.away, week: f.season.week, playoff: true, round: p.round }; const it = [[g.home, home.roster, g.away, home.chart], [g.away, away.roster, g.home, away.chart]];
     injuriesBeforeGame(f, it, ig);
     const toss = leaguePregame(f, r, home, away);
-    const game = playGame({ home, away, venue: gameVenue(f, home.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
+    const game = playGame({ home, away, venue: gameVenue(f, home.name, away.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
     leagueTiebreak(f, r, home, away, game, { playoff: true });
     aiAfterGame(f, home, game, 'home', r); aiAfterGame(f, away, game, 'away', r);
     injuriesAfterGame(f, it, ig);
@@ -2737,7 +2752,7 @@ export function simulatePlayerGame(f) {
   const m = sundayMatchup(f); if (!m) return null;
   const toss = pregamePossession(f); // the pregame Clash decides possession (headless: Auto, and the AI's choice when it wins)
   const { r, save } = frng(f);
-  const game = playGame({ home: m.home, away: m.away, venue: gameVenue(f, m.home.name), seed: r.seed(), quarterLength: f.settings.quarterLength, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
+  const game = playGame({ home: m.home, away: m.away, venue: gameVenue(f, m.home.name, m.away.name), seed: r.seed(), quarterLength: f.settings.quarterLength, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
   save();
   settleTiebreak(f, game); // still tied after the overtime quarter: the overtime Clash decides (headless: Auto)
   return game;

@@ -28,6 +28,7 @@ export function venueHtml(venue, ctx = {}) {
   return `<div class="panel tight venue-card env-${env.id}">
     <div class="row" style="gap:10px;align-items:center">${envSwatch(env.id)}<div class="grow"><div class="venue-name">${esc(venue.name)}</div><div class="dim" style="font-size:12px">Home of the ${esc(venue.club || venue.home || '')}</div></div><div class="venue-weather" title="Weather">${w.icon} ${esc(w.label)}</div></div>
     <div class="venue-env"><b>${env.icon} ${esc(env.name)}</b> <span class="dim">· ${esc(env.blurb)}</span></div>
+    ${venue.fieldBy === 'boss' ? `<div class="dim venue-why" style="font-size:12px">👑 Boss field: the ${esc(venue.boss)} always play on their element.</div>` : venue.fieldBy === 'boss-unmapped' ? `<div class="dim venue-why" style="font-size:12px">👑 Boss game: the ${esc(venue.boss)}' element has no field of its own, so this one is on grass.</div>` : venue.fieldBy === 'draw' ? `<div class="dim venue-why" style="font-size:12px">This week's field conditions${env.type ? '' : ': ordinary grass'}.</div>` : ''}
     <div class="venue-bonus">${envBonusHtml(env.id)}</div>${counts}
     <div class="dim" style="font-size:11px;margin-top:4px">${env.indoor ? 'Indoors: weather never reaches the field.' : 'Weather is for atmosphere only: it changes no result.'} Field bonuses are situational, never ratings.</div>
   </div>`;

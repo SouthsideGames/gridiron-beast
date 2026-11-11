@@ -69,7 +69,7 @@ test('games carry their venue: newGame records it, older saved games without one
   old.phase = 'scrimmage'; assert.doesNotThrow(() => R.runScrimmagePlay(old, { home: team('Ember City Beasts'), away: team('Bayou Stalkers') }, OFFENSE_IDS[0], DEFENSE_IDS[0]), 'a game saved before venues still plays (no field bonus)');
   const f = newFranchise(31); F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); F.autoRunToSunday(f); }
   const v = F.sundayVenue(f); const m = F.sundayMatchup(f); assert.equal(v.home, m.home.name);
-  const g = F.simulatePlayerGame(f); assert.deepEqual({ ...g.venue }, { club: v.club, name: v.name, env: v.env, type: v.type, indoor: v.indoor, weather: v.weather }, 'the game is played where and in the weather the preview said');
+  const g = F.simulatePlayerGame(f); { const { home: _h, away: _a, ...shown } = v; assert.deepEqual({ ...g.venue }, shown, 'the game is played where, on the field and in the weather the preview said'); }
   const back = Save.importJson(Save.exportJson(f)); assert.ok(back); assert.equal(stadiumFor(back.club).env, stadiumFor(f.club).env);
 });
 
