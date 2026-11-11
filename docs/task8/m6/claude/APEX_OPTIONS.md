@@ -1,5 +1,9 @@
 # M6-01 Apex progression: proposed Apex-only training adjustment (2026-11-11)
 
+> **Update, later the same day:** the owner chose activity ×2 with 34 offseason points as the candidate to validate. In real club
+> careers it does **not** meet the goal (1.4% / 40.0% / 79.6% by season 15). See `APEX_VALIDATION.md`. The tables below are the
+> controlled cohort and overstate what real clubs achieve.
+
 **Status: proposal for owner review. Nothing here is implemented.** The goal is kept as it stands: at least 90% of Apex reach all
 99s by season 15. Every alternative was applied inside the harness only
 (`node tools/task8-m6-apex-alternatives.mjs --seasons=120`, raw results in `../apex-alternatives.json`). Simulation f716b02.

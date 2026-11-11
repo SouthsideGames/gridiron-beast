@@ -32,7 +32,7 @@ diff -ru a/src/franchise/franchise.js b/src/franchise/franchise.js
    const lastRecords = f.season?.records || null;
 diff -ru a/src/franchise/progression.js b/src/franchise/progression.js
 --- a/src/franchise/progression.js	2026-11-11 00:09:05.000000000 -0500
-+++ b/src/franchise/progression.js	2026-11-11 03:16:21.645045849 -0500
++++ b/src/franchise/progression.js	2026-11-11 03:51:24.594178022 -0500
 @@ -36,7 +36,7 @@
      }
      if (m.level >= MAX_LEVEL) m.xp = 0;
@@ -47,7 +47,7 @@ diff -ru a/src/franchise/progression.js b/src/franchise/progression.js
      // Task 8: the eligible offseason award, 2 banked training points (replaces the old direct maturation increases, spec §6).
      // AI and pool monsters allocate it with the approved policy; the owner's club passes autoAllocate: false and decides.
 -    if (m.dev) { addBankedPoints(m.dev, OFFSEASON_POINTS); if (autoAllocate) autoSpendPoints(m, rng, { first: train?.[m.position] || null }); }
-+    if (m.dev) { addBankedPoints(m.dev, m.dev.apex && process.env.M6_APEX_CAND ? 34 : OFFSEASON_POINTS); /* CANDIDATE, measurement copy only: Apex offseason 34 */ if (autoAllocate) autoSpendPoints(m, rng, { first: train?.[m.position] || null }); }
++    if (m.dev) { addBankedPoints(m.dev, m.dev.apex && process.env.M6_APEX_CAND ? Number(process.env.M6_APEX_OFF || 34) : OFFSEASON_POINTS); /* CANDIDATE, measurement copy only: Apex offseason 34 */ if (autoAllocate) autoSpendPoints(m, rng, { first: train?.[m.position] || null }); }
      if (ageless) { if (m.dev) syncFromDev(m); if (marketPriced(m)) m.salary = salaryFor(m); continue; } // ageless: banked points still mirror to m.points
      const cur = m.dev ? m.dev.current : m.attributes;
      if (m.durPeak == null && m.age >= peakWindowAge(m.position)) m.durPeak = cur.durability;

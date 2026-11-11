@@ -1,52 +1,65 @@
-# M6 open items and next preview build (2026-11-11)
+# M6 status: what is done, what fails, what is provisional, what waits for the owner (2026-11-11)
 
-**M6 is open. Task 8 is not complete. Nothing is merged.** Branch `task8-m6-integration`; runtime commit d544fec.
+**M6 is open. Task 8 is not complete. Nothing is merged into main and no public release was made.**
 
-## Acceptance gates
+- Branch `task8-m6-integration`; runtime commit **d544fec** (M6 screens plus the outcome-identical field-cost pass).
+- Private testing link: **v43.5.1-t8-m6-preview**, version 10, built from d544fec (preview branch 51113e2).
+- Decisions are collected in `DECISION_SHEET.md`.
 
-| Gate | State | What closes it |
+## 1. Completed checks
+
+| Check | On | Result |
 | --- | --- | --- |
-| Engine CPU, at most 10% slower than main in every scene | Passes in all 13 scenes in three runs; every row provisional under the noise rule | Owner accepts the conditions, or a steadier machine |
-| Ability overhead, provisional budget 1.25 | **A1 and X1 over.** A2–A5 not resolved on this host. No scene confirmed inside | Garbage-collection investigation; steadier measurements; then a ruling on the budget |
-| Desktop frame time, live Auto and saves | Measured: 60 FPS, one 50 ms hitch in a minute of Auto | Nothing more on desktop |
-| Phone performance (60 FPS target, 30 FPS mode) | **Not measured** | Owner's iPhone 17 Pro Max checklist; other phones remain uncovered |
-| Apex: 90% all-99 by season 15 | **Cannot be met under current rules** | Owner decision on the proposal in `APEX_OPTIONS.md`, then implementation and a rerun |
-| Mastery in 3–6 seasons of sustained use | **Not met**; authorized thresholds cannot meet it | Owner decisions 1–4 in `MASTERY_FINDINGS.md` |
-| Ordinary pancake targets | Not met at defaults; qmax 0.10 with b 0.30 meets all three | Owner approval, then its own simulation commit |
-| Played starters: 75% reach level 50 in 8 seasons | Met for mixed-mode starters (26 of 26); 70.1% for all eight-season starters | Owner's reading of the gate |
-| Legendary limit, gym preference, roster coverage | Met | — |
-| Economy recalibration (item 30) | Reported; no change recommended | Owner picks option A or B in `ECONOMY_FINDINGS.md` |
-| Apex contract ask (B9) | Approved but not implemented: it would reveal a hidden Apex | Owner ruling on concealment |
-| Owner visual review; wording | Not done | `OWNER_REVIEW_CHECKLIST.md` |
+| Full regression | d544fec, frozen copy | 2,014 of 2,014; no failures, skips or cancellations |
+| Outcome identity of the field pass | d544fec against 9421635 | 19 scene variants and 12 full games identical |
+| Franchise hash, seed 1, one season | d544fec | Equal to f716b02 and f9e7581 |
+| Published build equals the commit | preview version 10 | Label v43.5.1; the two changed files have d544fec's SHA-256; 412 modules stamped; 0 page errors |
+| Engine CPU against the fixed pre-Task 8 baseline (main 43976f4) | three protocol runs | Under 1.10 in all 13 scenes each time (provisional, see section 3) |
+| Desktop frame time and live Auto/save | f9e7581, headless desktop | 60 FPS in every scene; one 50 ms hitch in a minute of Auto |
+| Legendary limit, kickers counted offensive | 1,220 club-seasons | 0 violations |
+| Gym acquisition prefers its element | 8 gyms | 2.7 to 4.0 times the league share |
+| Roster position coverage before kickoff | 8,505 club-weeks | 0 flags; the two "missing kicker" rosters were a snapshot-timing artifact |
+| Market integrity | 60 free-agency markets | 0 problems |
+| M6 screens: tests and headless browser check | f9e7581 | 11 of 11 tests; 34 browser checks; saves from earlier previews load |
 
-## Owner decisions waiting (none implemented, none assumed)
+## 2. Remaining failures
 
-1. **Apex training:** activity ×2 and offseason 2 + 32 for Apex only (or the single-number alternative, offseason 2 + 35).
-2. **Pancakes:** qmax 0.10, b 0.30.
-3. **Mastery:** football pacing (keep, or at most 2 credits a game); Foresight's condition; AI Clash lineup rotation; rare triggers.
-4. **Economy:** cap room A or B; Apex ask against concealment.
-5. **Played-starter gate:** whether "mixed-mode starters" is the population that counts.
-6. **Apex generation rate:** whether one Apex per club after 20 seasons is excessive (the rate comparison runs only if so).
-7. **Presentation:** interrupted Apex panel; all attributes trainable; free-agent cards discover an Apex; achievement wording;
-   Clash summary wording; "Full rules" visibility. Graphics presets stay deferred.
-8. **CPU conditions:** whether the quiet-host runs are accepted as the official measurement.
+| Gate | Measured | Next step |
+| --- | --- | --- |
+| Apex: 90% all-99 by season 15 | Current rules: 0%. Candidate (×2 and 34 offseason) in real club careers: 1.4% football-only, 40.0% mixed, 79.6% maximum (sustained starters 4.2% / 70.8% / 95.7%) | Owner decision 1 |
+| Mastery in 3–6 seasons of sustained use | 475 of 2,859 sustained starters; 1,754 never | Owner decisions 3, 4, 5 |
+| Ordinary pancake targets at defaults | 0.861 a game, 51.4% success (targets 0.2–0.6, 30–50%) | Owner decision 2 (qmax 0.10, b 0.30 meets all three) |
+| Ability overhead within 1.25: overlapping fields (A1) | 1.36–1.40 after the pass (was 1.60) | Garbage-collection diagnosis, `GC_DIAGNOSIS.md` |
+| Ability overhead within 1.25: worst case (X1) | 1.44–1.50 | Same; expected to stay over even if that work succeeds |
+| Apex contract ask (B9) | Approved, not implemented | Owner decision 8 |
+| Foresight | 0 executions in 563 starts | Owner decision 4 |
 
-## Not verified
+## 3. Provisional measurements
 
-- Any physical phone.
+| Measurement | Why provisional | Reading |
+| --- | --- | --- |
+| Every CPU ratio (engine and ability) | Spread above 10% of the median on the shared host, under the existing noise rule | Engine: comfortably under the limit. Ability: see next rows |
+| Ability overhead A2, A3, A4, A5 | Moved by up to 0.27 between runs of the same code | Not resolved: neither passing nor failing |
+| The 1.25 ability budget itself | Provisional by ruling | Unchanged |
+| Played-starter gate | Met for 26 of 26 mixed-mode starters (small sample); 70.1% for all eight-season starters | Depends on owner decision 9 |
+| Mastery under a 2-credit limit | Projection from measured counts, not a simulated rule | Confirm after implementation if chosen |
+| Apex candidate, controlled cohort | Harness, every activity played, no injuries | Superseded by the real-career validation |
+
+## 4. Not measured
+
+- **Any physical phone.** The iPhone 17 Pro Max checklist is `PHONE_TEST_CHECKLIST_IPHONE17PM.md`. Other phones stay uncovered.
 - A human-played mixed-mode cohort (all long runs are hands-off).
-- Apex season counts on an implemented rule (the proposal is measured in a harness).
-- The cause of the longer garbage collections with abilities on.
+- A CPU-throttled browser run; battery use.
+- What exactly survives the engine's minor collections with abilities on.
 
-## The build to publish next to the private testing link
+## 5. Owner reviews
 
-**`task8-m6-integration` at d544fec, labelled v43.5.1-t8-m6-preview**, packaged the same way as version 9.
+- **Decisions:** 17 on `DECISION_SHEET.md`.
+- **Visual and wording review:** `OWNER_REVIEW_CHECKLIST.md` on the private link.
+- **Phone test:** the iPhone checklist on the private link.
 
-- It is the published build (v43.5.0-t8-m6-preview, runtime f9e7581) plus the field-cost pass. Play outcomes are identical;
-  saves from version 9 load unchanged (schema 10).
-- **Why publish it although nothing looks different:** the iPhone test should run the code that would ship. Scene 3 of the
-  checklist (overlapping fields) exercises exactly what this pass changed.
-- **Condition:** the full regression on d544fec passes. **It does: 2,014 of 2,014, no failures, skips or cancellations**.
-- **Not included:** any tuning or rule change. Pancakes, Apex training, mastery and the Apex ask all wait for decisions; each
-  would be a later simulation commit and a later build.
-- It is published only on the owner's instruction. The live game link and the other private link are not touched.
+## 6. Work I can continue without a decision
+
+- Finishing the garbage-collection diagnosis (no production change), if you approve its scope.
+- Further Apex candidates in the real-career harness, if you name them.
+- Nothing else in M6 is unblocked: every remaining item needs a ruling, a review or the phone.

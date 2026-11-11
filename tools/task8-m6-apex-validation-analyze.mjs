@@ -5,7 +5,7 @@ const NAME = { F: 'football-only (never in a Clash lineup)', M: 'mixed (first 4 
 const med = (a) => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return s[Math.floor((s.length - 1) / 2)]; };
 const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
 const out = { files: files.length, apexSeen: all.length, meta: meta[0], cohorts: {} };
-const rookies = all.filter((r) => r.entry <= 5 && (r.seasons[r.entry]?.level ?? 99) <= 5);
+const LV = Number(process.env.MAXLV || 1); const rookies = all.filter((r) => r.entry <= 5 && (r.seasons[r.entry]?.level ?? 99) <= LV);
 out.rookiesEnteringBySeason5 = rookies.length; out.excludedPreDeveloped = all.filter((r) => r.entry <= 5).length - rookies.length;
 function row(list) {
   const res = { n: list.length }; if (!list.length) return res;
@@ -22,6 +22,8 @@ function row(list) {
   res.clubs = +mean(list.map((r) => new Set(span(r).map((s) => s.club).filter(Boolean)).size)).toFixed(2);
   res.sumAtSeason15 = { p10: null, median: med(list.map((r) => r.seasons[r.entry + 15]?.sum ?? 0)) };
   const s15 = list.map((r) => r.seasons[r.entry + 15]?.sum ?? 0).sort((a, b) => a - b); res.sumAtSeason15.p10 = s15[Math.floor(s15.length * 0.1)];
+  res.notInLeagueAtSeason15 = list.filter((r) => !r.seasons[r.entry + 15]).length;
+  res.pointsShortAtSeason15 = { median: 1188 - res.sumAtSeason15.median, p10: 1188 - res.sumAtSeason15.p10 };
   res.medianLevel50Season = med(list.map((r) => { for (let k = 1; r.entry + k <= 20; k++) if ((r.seasons[r.entry + k]?.level || 0) >= 50) return k; return 99; }));
   return res;
 }
