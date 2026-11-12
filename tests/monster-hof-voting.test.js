@@ -43,3 +43,20 @@ test('records only retired monsters with preserved evidence, never a generic lea
   assert.equal(f.monsterHallOfFame.candidates[0].games, 8);
   assert.equal(monsterHofBallot(f.monsterHallOfFame.candidates, 8).length, 1);
 });
+
+test('historical elections survive JSON save and reload unchanged', () => {
+  const f = { monsterHallOfFame: { v: 1, candidates: [star, peer], elections: [] } };
+  const first = electMonsterHallOfFame(f.monsterHallOfFame.candidates, 8);
+  f.monsterHallOfFame.elections = first.history;
+  const loaded = JSON.parse(JSON.stringify(f));
+  assert.deepEqual(loaded.monsterHallOfFame, f.monsterHallOfFame);
+  const repeated = electMonsterHallOfFame(loaded.monsterHallOfFame.candidates, 8, loaded.monsterHallOfFame.elections);
+  assert.equal(repeated.created, false);
+  assert.deepEqual(repeated.history, first.history);
+});
+test('missing or malformed candidate arrays are repaired without inventing candidates', () => {
+  const f = { league: { legends: {} }, monsterHallOfFame: { candidates: null, elections: null } };
+  recordRetiredMonsterCandidates(f, { owner: [], league: [] }, 8);
+  assert.deepEqual(f.monsterHallOfFame.candidates, []);
+  assert.deepEqual(f.monsterHallOfFame.elections, []);
+});
