@@ -146,7 +146,7 @@ test('timeline filters and folds are per section state that survives a redraw; d
   timelineView.filter = 'highlights'; let html = timelineSectionHtml(items, { id: 'x', animate: false });
   assert.equal((html.match(/<li /g) || []).length, 5); assert.equal((html.match(/data-action="tl-open"/g) || []).length, 5, 'only events with a record are buttons');
   timelineView.open.x = true; timelineView.filter = 'all'; html = timelineSectionHtml(items, { id: 'x', animate: false });
-  assert.equal((html.match(/<li /g) || []).length, 10); assert.match(html, /Show less/);
+  assert.equal((html.match(/<li /g) || []).length, 10); assert.match(html, /Show Less/);
   timelineView.filter = 'all'; timelineView.open = {};
 });
 
