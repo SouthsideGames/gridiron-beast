@@ -56,14 +56,14 @@ function bindings(app, Router) {
         const m = p?.monster || f.roster.find((x) => x.id === e.wild?.[0]) || e.b?.[0] || null;
         if (!m) return '<div class="panel"><button class="btn primary block" data-action="done">Continue to Wednesday</button></div>';
         const won = e.result?.winner === 'a';
-        if (e.status === 'offer') { const cap = F.salarySummary(f, m.salary); return `<div class="panel"><p><b>${esc(m.name)}</b> is impressed and wants to join ${esc(f.club)}.</p><p class="muted">${esc(m.position)} · ${monsterOverall(m)} OVR · ${fmtMoney(m.salary)}/yr · roster ${f.roster.length + 1}/${F.ROSTER_MAX}${cap.over ? ` · <span style="color:var(--bad)">over the cap by ${fmtMoney(-cap.remaining)}</span>` : ` · cap room after ${fmtMoney(cap.remaining)}`}</p>${(() => { const c = consequence(f, 'sign', { salary: m.salary }); return c ? `<p class="assist-note">${esc(c)}</p>` : ''; })()}<div class="row"><button class="btn primary grow" data-action="accept">Sign ${esc(m.name)}</button><button class="btn" data-action="decline">Let them go</button></div></div>`; }
-        if (e.status === 'pitch') return `<div class="panel"><p>${esc(m.name)} won the battle, but will still hear <b>one</b> pitch. Pick your approach.</p><div class="grid3">${F.RECRUIT_APPROACHES.map((a) => `<button class="btn small" data-action="pitch" data-v="${a.id}" title="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div><p class="dim">The usual odds apply: development suits young monsters, facilities impress strong ones, playing time matters when you are short at their position.</p><button class="btn block" data-action="decline">Let them go</button></div>`;
+        if (e.status === 'offer') { const cap = F.salarySummary(f, m.salary); return `<div class="panel"><p><b>${esc(m.name)}</b> is impressed and wants to join ${esc(f.club)}.</p><p class="muted">${esc(m.position)} · ${monsterOverall(m)} OVR · ${fmtMoney(m.salary)}/yr · roster ${f.roster.length + 1}/${F.ROSTER_MAX}${cap.over ? ` · <span style="color:var(--bad)">over the cap by ${fmtMoney(-cap.remaining)}</span>` : ` · cap room after ${fmtMoney(cap.remaining)}`}</p>${(() => { const c = consequence(f, 'sign', { salary: m.salary }); return c ? `<p class="assist-note">${esc(c)}</p>` : ''; })()}<div class="row"><button class="btn primary grow" data-action="accept">Sign ${esc(m.name)}</button><button class="btn" data-action="decline">Let Them Go</button></div></div>`; }
+        if (e.status === 'pitch') return `<div class="panel"><p>${esc(m.name)} won the battle, but will still hear <b>one</b> pitch. Pick your approach.</p><div class="grid3">${F.RECRUIT_APPROACHES.map((a) => `<button class="btn small" data-action="pitch" data-v="${a.id}" title="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div><p class="dim">The usual odds apply: development suits young monsters, facilities impress strong ones, playing time matters when you are short at their position.</p><button class="btn block" data-action="decline">Let Them Go</button></div>`;
         return `<div class="panel"><p>${e.status === 'signed' ? `<b>${esc(m.name)}</b> signed!` : e.status === 'walked' ? `${esc(m.name)} turned you down.` : `You let ${esc(m.name)} go.`}${won ? '' : ''}</p><button class="btn primary block" data-action="done">Continue to Wednesday</button></div>`;
       },
       actions(root, rerender) {
         return {
           accept: async () => { const f = app.f; const e = f.week.encounter; const p = f.week.prospects[e.prospectIndex]; const rc = F.releaseCandidates(f, p);
-            if (rc.needed) { const { el: sh, close } = sheet(`<p>${esc(rc.reason)} Choose who leaves so <b>${esc(p.monster.name)}</b> can sign.</p><div class="list">${rc.list.map((c) => `<button class="item" data-rel="${c.id}"><div class="grow"><div class="name">${esc(c.name)}</div><div class="sub">${c.position} · ${c.ovr} OVR · ${fmtMoney(c.salary)}/yr${c.capOk ? '' : ' · still over the cap after this'}</div></div><span class="chip ${c.position === p.monster.position ? 'accent' : ''}">${c.position === p.monster.position ? 'same position' : 'release'}</span></button>`).join('')}</div>`, { title: 'Make room' });
+            if (rc.needed) { const { el: sh, close } = sheet(`<p>${esc(rc.reason)} Choose who leaves so <b>${esc(p.monster.name)}</b> can sign.</p><div class="list">${rc.list.map((c) => `<button class="item" data-rel="${c.id}"><div class="grow"><div class="name">${esc(c.name)}</div><div class="sub">${c.position} · ${c.ovr} OVR · ${fmtMoney(c.salary)}/yr${c.capOk ? '' : ' · still over the cap after this'}</div></div><span class="chip ${c.position === p.monster.position ? 'accent' : ''}">${c.position === p.monster.position ? 'same position' : 'release'}</span></button>`).join('')}</div>`, { title: 'Make Room' });
               sh.addEventListener('click', (ev) => { const id = ev.target.closest('[data-rel]')?.dataset.rel; if (!id) return; close(); const r = F.acceptOffer(f, { releaseId: id }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(r.overCap ? `${r.monster.name} signed. You are over the cap: the commissioner reviews the books on Saturday.` : `${r.monster.name} signed!`, r.overCap ? 'bad' : 'good'); rerender(); }); return; }
             const r = F.acceptOffer(f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(r.overCap ? `${r.monster.name} signed. You are over the cap: the commissioner reviews the books on Saturday.` : `${r.monster.name} signed!`, r.overCap ? 'bad' : 'good'); rerender(); },
           decline: () => { const r = F.declineOffer(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); rerender(); },
@@ -72,14 +72,14 @@ function bindings(app, Router) {
             const rc = p ? F.releaseCandidates(f, p) : { needed: false };
             if (!rc.needed) { send(); return; }
             // A full roster: choose who would leave if the pitch works (found by the combined-build walkthrough: the pitch used to fail with no way to choose).
-            const { el: sh, close } = sheet(`<p>${esc(rc.reason)} If ${esc(p.monster.name)} says yes, who leaves?</p><div class="list">${rc.list.map((c) => `<button class="item" data-rel="${c.id}"><div class="grow"><div class="name">${esc(c.name)}</div><div class="sub">${c.position} · ${c.ovr} OVR · ${fmtMoney(c.salary)}/yr</div></div><span class="chip">release</span></button>`).join('')}</div>`, { title: 'Make room' });
+            const { el: sh, close } = sheet(`<p>${esc(rc.reason)} If ${esc(p.monster.name)} says yes, who leaves?</p><div class="list">${rc.list.map((c) => `<button class="item" data-rel="${c.id}"><div class="grow"><div class="name">${esc(c.name)}</div><div class="sub">${c.position} · ${c.ovr} OVR · ${fmtMoney(c.salary)}/yr</div></div><span class="chip">release</span></button>`).join('')}</div>`, { title: 'Make Room' });
             sh.addEventListener('click', (ev) => { const id = ev.target.closest('[data-rel]')?.dataset.rel; if (!id) return; close(); send(id); }); },
           done: () => Router.go('hq', {}, { reset: true }),
         };
       },
     },
     pregame: {
-      title: 'Sunday · Beast Clash for possession',
+      title: 'Sunday · Beast Clash for Possession',
       record: (f) => f.week.pregame,
       preview: (f) => F.pregamePreview(f),
       start: (f, i, opts) => F.startPregameClash(f, opts),
@@ -90,9 +90,9 @@ function bindings(app, Router) {
       introText: (f) => { const pv = F.pregamePreview(f); return `Before kickoff against <b>${esc(pv.opponent || 'the opponent')}</b>, three of your monsters battle three of theirs. The winner chooses who gets the ball first.`; },
       resultHtml(f, e) {
         const opp = e.opponent || 'The opponent';
-        if (e.status === 'choose') return `<div class="panel"><p><b>You choose the opening possession.</b></p><div class="stack"><button class="btn primary" data-action="choose" data-v="receive">Receive the opening kickoff</button><button class="btn" data-action="choose" data-v="defer">Defer to the second half</button><button class="btn" data-action="choose" data-v="kick">Kick off</button></div><p class="dim">Receive: you start with the ball. Defer: they start, you get it after halftime. Kick: they start and you kick off again after halftime.</p></div>`;
+        if (e.status === 'choose') return `<div class="panel"><p><b>You choose the opening possession.</b></p><div class="stack"><button class="btn primary" data-action="choose" data-v="receive">Receive the Opening Kickoff</button><button class="btn" data-action="choose" data-v="defer">Defer to the Second Half</button><button class="btn" data-action="choose" data-v="kick">Kick Off</button></div><p class="dim">Receive: you start with the ball. Defer: they start, you get it after halftime. Kick: they start and you kick off again after halftime.</p></div>`;
         const theirs = e.result?.winner !== 'a';
-        return `<div class="panel"><p>${theirs ? `<b>${esc(opp)}</b> won the Clash and chose to <b>${esc(e.choice === 'defer' ? 'defer to the second half' : 'receive the opening kickoff')}</b>.` : `You chose to <b>${esc(e.choice === 'receive' ? 'receive the opening kickoff' : e.choice === 'defer' ? 'defer to the second half' : 'kick off')}</b>.`}</p><button class="btn primary big block" data-action="kickoff">🏈 Kick off</button></div>`;
+        return `<div class="panel"><p>${theirs ? `<b>${esc(opp)}</b> won the Clash and chose to <b>${esc(e.choice === 'defer' ? 'defer to the second half' : 'receive the opening kickoff')}</b>.` : `You chose to <b>${esc(e.choice === 'receive' ? 'receive the opening kickoff' : e.choice === 'defer' ? 'defer to the second half' : 'kick off')}</b>.`}</p><button class="btn primary big block" data-action="kickoff">🏈 Kick Off</button></div>`;
       },
       actions() {
         return {
@@ -113,7 +113,7 @@ function bindings(app, Router) {
       introText: (f) => { const pv = F.overtimePreview(f); const s = f.game?.state; return `Still tied${s ? ` at ${s.score.home}-${s.score.away}` : ''} after overtime against <b>${esc(pv.opponent || 'the opponent')}</b>. A <b>${pv.size}v${pv.size}</b> Beast Clash decides the game${pv.playoff ? ' (playoffs: five a side)' : ''}. The football score stays as it is.`; },
       resultHtml(f, e) {
         const s = f.game?.state; const won = e.result?.winner === 'a';
-        return `<div class="panel"><p>${won ? `<b>You win the game</b> ${s ? `${s.score.home}-${s.score.away}` : ''} on the overtime Beast Clash.` : `<b>${esc(e.opponent)}</b> win the game ${s ? `${s.score.home}-${s.score.away}` : ''} on the overtime Beast Clash.`}</p><p class="dim">The record shows the football score and notes the Clash tiebreaker.</p><button class="btn primary big block" data-action="final">Continue to the final →</button></div>`;
+        return `<div class="panel"><p>${won ? `<b>You win the game</b> ${s ? `${s.score.home}-${s.score.away}` : ''} on the overtime Beast Clash.` : `<b>${esc(e.opponent)}</b> win the game ${s ? `${s.score.home}-${s.score.away}` : ''} on the overtime Beast Clash.`}</p><p class="dim">The record shows the football score and notes the Clash tiebreaker.</p><button class="btn primary big block" data-action="final">Continue to the Final →</button></div>`;
       },
       actions() {
         return {
@@ -151,7 +151,7 @@ export function registerClashBattle(Router, app) {
     return `<p class="muted">${b.introText ? b.introText(f) : `You met <b>${esc(pv.wild[0].name)}</b> in the wild${pv.wild.length > 1 ? ` with ${pv.wild.length - 1} wild companion${pv.wild.length > 2 ? 's' : ''} (matched to your club, cannot be signed)` : ''}. Win the ${pv.size}v${pv.size} and ${esc(pv.wild[0].name)} will want to join you; lose and you still get one pitch.`} <button class="btn small ghost" data-action="help">Help</button></p>${pv.basicBonus?.active ? `<p class="panel tight" style="margin:6px 0"><b>✨ ${esc(pv.basicBonus.label)}</b><span class="dim"> for every battler if you win, even if you don't sign ${esc(pv.wild[0].name)}. Training and mastery are not boosted.</span></p>` : ''}
       <div class="panel cl-setup"><div class="row between"><b>Your lineup</b><span class="dim">${mine.length} of ${pv.size} · in order of entry</span></div>
         <div class="list" style="margin-top:6px">${mine.map((m, i) => card(m, i, 'a', mine.length)).join('')}${!mine.length ? `<p class="dim" style="margin:4px 0">No monsters picked. Add up to ${pv.size} below, or tap Auto lineup.</p>` : mine.length < pv.size ? `<p class="dim" style="margin:4px 0">${pv.size - mine.length} slot${pv.size - mine.length === 1 ? '' : 's'} open: add more, or enter with ${mine.length} (the battle shrinks to ${mine.length}v${mine.length}).</p>` : ''}</div>
-        <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small" data-action="edit">${st.editing ? 'Done' : 'Change a monster'}</button><button class="btn small ghost" data-action="autol">Auto lineup</button></div>${picker}
+        <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small" data-action="edit">${st.editing ? 'Done' : 'Change a Monster'}</button><button class="btn small ghost" data-action="autol">Auto Lineup</button></div>${picker}
         <p class="dim" style="margin:6px 0 0">The first monster fights until it is knocked out, then the next steps up. ▲ hits their front monster harder, ▼ softer.</p></div>
       <div class="panel cl-setup theirs"><div class="row between"><b>${esc(b.theirName?.(f) || 'Their team')}</b><span class="dim">${theirs.length} · in order of entry</span></div><div class="list" style="margin-top:6px">${theirs.map((m, i) => card(m, i, 'b', theirs.length)).join('')}</div></div>
       <div class="panel" style="margin-top:8px"><div class="row between" style="flex-wrap:wrap;gap:6px"><b>Speed</b><span class="chips">${CLASH_SPEEDS.map((x) => `<button class="chip ${s.speed === x ? 'on accent' : ''}" data-action="speed" data-v="${x}">${SPEED_LABEL[x]}</button>`).join('')}</span></div>
@@ -163,7 +163,7 @@ export function registerClashBattle(Router, app) {
   // ---------- the battle itself: continuous; in Watch the t8 engine stops at the player's legal rotation phases (D1) and the prompt below answers them
   function battleHtml(f, e) {
     const pend = isT8Record(e) && st.result?.pending ? pendingDecision(st.result) : null;
-    return `<div class="row between" style="margin-bottom:4px"><span class="muted">${e.size}v${e.size} · ${esc(B().title.split('·').pop().trim())}</span><span class="row" style="gap:6px">${pend ? '<button class="btn small primary" data-action="rotprompt">⇄ Rotation: your call</button>' : ''}<button class="btn small ghost" data-action="help">Help</button></span></div>
+    return `<div class="row between" style="margin-bottom:4px"><span class="muted">${e.size}v${e.size} · ${esc(B().title.split('·').pop().trim())}</span><span class="row" style="gap:6px">${pend ? '<button class="btn small primary" data-action="rotprompt">⇄ Rotation: Your Call</button>' : ''}<button class="btn small ghost" data-action="help">Help</button></span></div>
       <div id="fb-arena"></div>`;
   }
   function teamNames(f, e) { const theirs = st.kind === 'encounter' ? 'The wild' : (e.opponent || 'The opponent'); return { a: f.club.split(' ').pop(), b: theirs }; }
@@ -199,8 +199,8 @@ export function registerClashBattle(Router, app) {
     const row = (x, label, rot) => `<button class="item" data-rot="${rot}" style="min-height:0;padding:8px"><div class="grow" style="min-width:0"><div><b>${esc(x.name)}</b>${edge(x)} <span class="dim">${ARCH_GLYPH[x.archetype] || ''} ${esc(x.archetype)} · ${esc(x.type)}</span></div><div class="dim" style="font-size:12px">HP ${x.hp}/${x.maxHp}${stat(x)}</div></div><span class="chip ${rot === 'stay' ? 'accent' : ''}">${label}</span></button>`;
     const html = `<p class="muted" style="margin:0 0 6px">Exchange ${p.ex}: after both fighters acted, you may rotate. A reserve that comes in by choice acts at <b>half strength</b> on its first turn (the next rotation is four exchanges away). ${foe ? `Their active: <b>${esc(foe.name)}</b> (${esc(foe.type)}, HP ${foe.hp}/${foe.maxHp}).` : ''}</p>
       <div class="list">${act ? row(act, 'Stay in', 'stay') : ''}${p.reserves.map((o) => row(st.result.lines[p.side].find((x) => x.id === o.id) || { ...o, status: o.status ? { id: o.status, remaining: '?' } : null }, 'Bring in', o.id)).join('')}</div>
-      <button class="btn block" data-rot="auto" style="margin-top:8px">⚙ Auto for the rest of this battle</button><p class="dim" style="margin:4px 0 0">Auto hands your rotations to the game's own policy (the one the other side uses) and never asks again in this battle.</p>`;
-    const { el, close } = sheet(html, { title: 'Rotation: your call' });
+      <button class="btn block" data-rot="auto" style="margin-top:8px">⚙ Auto for the Rest of This Battle</button><p class="dim" style="margin:4px 0 0">Auto hands your rotations to the game's own policy (the one the other side uses) and never asks again in this battle.</p>`;
+    const { el, close } = sheet(html, { title: 'Rotation: Your Call' });
     el.addEventListener('click', (ev) => {
       const b = ev.target.closest('[data-rot]'); if (!b) return; const choice = b.dataset.rot; close();
       const r = B().decide(f, p.ex, choice); if (!r.ok) { toast(r.reason, 'bad'); return; }
@@ -230,7 +230,7 @@ export function registerClashBattle(Router, app) {
     return `<div class="panel cl-result ${won ? 'won' : 'lost'}"><div class="cl-result-head">${headline}</div><div class="muted">${how} · ${r.exchanges} exchange${r.exchanges === 1 ? '' : 's'} · knockouts ${kos('b')}–${kos('a')}</div>
       <div class="cl-result-teams">${roster(mine, 'a')}${roster(theirs, 'b')}</div>
       ${xpRows(e)}
-      <div class="row" style="justify-content:center;gap:6px;margin-top:8px"><button class="btn small ghost" data-action="replay">Watch the replay</button></div></div>
+      <div class="row" style="justify-content:center;gap:6px;margin-top:8px"><button class="btn small ghost" data-action="replay">Watch the Replay</button></div></div>
       ${B().resultHtml(f, e)}`;
   }
 
@@ -245,7 +245,7 @@ export function registerClashBattle(Router, app) {
       if (!e || e.status === 'ready' || e.status === 'skipped') return setupHtml(f);
       if (!f.week || (st.kind === 'pregame' && f.game) || (st.kind === 'overtime' && !f.game)) { setTimeout(() => Router.go(f.game ? 'match' : 'hq', {}, { reset: true }), 0); return '<p class="muted">Opening the game…</p>'; }
       if (e.status === 'battle') { if (e.mode === 'skip' && !st.replaying) { setTimeout(() => finish(f), 0); return '<p class="muted">Playing the battle…</p>'; } return battleHtml(f, e); }
-      if (st.replaying) return `${battleHtml(f, e)}<button class="btn block" data-action="endreplay" style="margin-top:8px">Back to the result</button>`;
+      if (st.replaying) return `${battleHtml(f, e)}<button class="btn block" data-action="endreplay" style="margin-top:8px">Back to the Result</button>`;
       return resultHtml(f, e);
     },
     mount(root) {
@@ -253,7 +253,7 @@ export function registerClashBattle(Router, app) {
       const rerender = () => Router.render();
       delegate(root, {
         back: () => Router.back(),
-        help: () => sheet(HELP_HTML, { title: 'How Beast Clash works' }),
+        help: () => sheet(HELP_HTML, { title: 'How Beast Clash Works' }),
         rotprompt: () => atEnd(f),
         edit: () => { st.editing = !st.editing; Router.render(); },
         autol: () => { st.lineup = null; st.editing = false; Router.render(); },

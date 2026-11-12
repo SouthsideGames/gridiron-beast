@@ -43,9 +43,9 @@ export function registerPracticeScreens(Router, app) {
         <div class="field-wrap" id="fieldwrap"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Practice field">${field}</svg>${result}</div>
         <div class="grid2">${sel(prac.offense, T.offensePlays, 'Offense')}${sel(prac.defense, T.defensePlays, 'Defense')}</div>
         <div class="row between"><label class="row muted" style="gap:4px"><input type="checkbox" data-change="art" ${prac.showArt ? 'checked' : ''} style="width:auto;min-height:0;margin:0"> Show play art</label><label class="row muted" style="gap:4px">Ball on <input type="number" min="1" max="99" value="${prac.ballOn}" data-change="spot" style="width:64px;min-height:36px;margin:0"></label></div>
-        <div class="grid2" style="margin-top:8px"><button class="btn primary big" data-action="run">▶ Run play</button><button class="btn big" data-action="again" ${prac.sim ? '' : 'disabled'}>↻ Same seed</button></div>
-        <div class="grid2" style="margin-top:8px"><button class="btn" data-action="detail" data-id="${prac.offense}">Offense details</button><button class="btn" data-action="detail" data-id="${prac.defense}">Defense details</button></div>
-        ${lessonHtml(prac.lessonSide === 'defense' ? prac.defense : prac.offense)}<div class="row" style="justify-content:center"><button class="btn small ${prac.lessonSide !== 'defense' ? 'primary' : ''}" data-action="lesson" data-v="offense">Offense lesson</button><button class="btn small ${prac.lessonSide === 'defense' ? 'primary' : ''}" data-action="lesson" data-v="defense">Defense lesson</button></div>
+        <div class="grid2" style="margin-top:8px"><button class="btn primary big" data-action="run">▶ Run Play</button><button class="btn big" data-action="again" ${prac.sim ? '' : 'disabled'}>↻ Same Seed</button></div>
+        <div class="grid2" style="margin-top:8px"><button class="btn" data-action="detail" data-id="${prac.offense}">Offense Details</button><button class="btn" data-action="detail" data-id="${prac.defense}">Defense Details</button></div>
+        ${lessonHtml(prac.lessonSide === 'defense' ? prac.defense : prac.offense)}<div class="row" style="justify-content:center"><button class="btn small ${prac.lessonSide !== 'defense' ? 'primary' : ''}" data-action="lesson" data-v="offense">Offense Lesson</button><button class="btn small ${prac.lessonSide === 'defense' ? 'primary' : ''}" data-action="lesson" data-v="defense">Defense Lesson</button></div>
         ${prac.sim?.qb && qbReadsShown(app.f?.settings || app.settings) ? qbReadPanelHtml(prac.sim, (slot, side) => `${prac.sim.names?.[side === 'def' ? 'def' : 'off']?.[slot] || slot} (${slot})`) : ''}
         ${prac.sim ? `<h3>Events</h3><div class="log">${prac.sim.events.map((e) => `<div class="entry"><span class="t">${e.t.toFixed(1)}s</span><span>${esc(e.text)}</span></div>`).join('')}</div><p class="dim">Seed ${prac.sim.seed} · ${prac.sim.frames.length} frames · ${prac.sim.elapsed}s</p>` : ''}`;
     },
@@ -87,7 +87,7 @@ export function registerPracticeScreens(Router, app) {
   const listFor = (side, which) => (which === 'live' ? live(side) : which === 'reserve' ? reserve(side) : [...live(side), ...reserve(side)]);
   const otherSide = () => (audit.side === 'offense' ? 'defense' : 'offense');
   const pair = () => (audit.side === 'offense' ? [audit.play, audit.opponent] : [audit.opponent, audit.play]);
-  const modeLabel = () => (audit.mode === 'live' ? 'Live play' : audit.side === 'offense' ? 'Routes only' : 'Drops only');
+  const modeLabel = () => (audit.mode === 'live' ? 'Live play' : audit.side === 'offense' ? 'Routes Only' : 'Drops Only');
   function auditRun() {
     const [o, d] = pair(); const T = teamsForPractice(app.f);
     const dryRun = audit.mode === 'walk' ? (audit.side === 'offense' ? { noDefense: true } : {}) : null;
@@ -159,23 +159,23 @@ export function registerPracticeScreens(Router, app) {
       const isReservePlay = !!PLAYS[audit.play].reserve;
       return `<p class="muted">Every play with its art, assignments and a run you can watch. ${approved}/${shown.length} approved in this list · 🔔 ${shown.filter((id) => NEEDS_OWNER.has(states[id])).length} to review. In the list: ✓ good, ✎ waiting on dev, • new, 🔔 changed since your review.</p>
         <div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px"><button class="btn small ${audit.side === 'offense' ? 'primary' : ''}" data-action="side" data-v="offense">Offense (${count('offense', 'all')})${devBadge(app.settings, due('offense'))}</button><button class="btn small ${audit.side === 'defense' ? 'primary' : ''}" data-action="side" data-v="defense">Defense (${count('defense', 'all')})${devBadge(app.settings, due('defense'))}</button></div>
-        <div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px"><span class="muted" style="font-size:12px">Show</span>${chip('list', 'all', `All ${count(audit.side, 'all')}`)}${chip('list', 'live', `In the game ${count(audit.side, 'live')}`)}${chip('list', 'reserve', `Reserve ${count(audit.side, 'reserve')}`)}</div>
+        <div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px"><span class="muted" style="font-size:12px">Show</span>${chip('list', 'all', `All ${count(audit.side, 'all')}`)}${chip('list', 'live', `In the Game ${count(audit.side, 'live')}`)}${chip('list', 'reserve', `Reserve ${count(audit.side, 'reserve')}`)}</div>
         <div class="grid2">${sel('Play', 'play', audit.side, shown, audit.play, mark)}${sel('Against', 'opp', otherSide(), other, audit.opponent)}</div>
         ${isReservePlay ? '<p class="dim" style="font-size:12px;margin:4px 0 0">Reserve play: built and reviewable here, but no coach, AI club or practice field can call it yet.</p>' : ''}
         <div class="panel" style="margin-top:10px">
           <div class="field-wrap"><svg id="auditfield" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Play animation">${auditField()}</svg></div>${run && audit.i >= n - 1 ? `<p style="margin:6px 0 0"><b>${esc(runResult(run))}</b></p>` : ''}
-          <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px"><span class="muted" style="font-size:12px">Mode</span>${chip('mode', 'walk', audit.side === 'offense' ? 'Routes only' : 'Drops only')}${chip('mode', 'live', 'Live vs ' + esc(PLAYS[audit.opponent].name))}</div>
-          <div class="grid2" style="margin-top:8px"><button class="btn primary big" data-action="a-run">▶ Run the play</button><button class="btn big" data-action="a-pause" ${run ? '' : 'disabled'}>${audit.playing ? '⏸ Pause' : run && audit.i >= n - 1 ? '↻ Replay' : '▶ Resume'}</button></div>
+          <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px"><span class="muted" style="font-size:12px">Mode</span>${chip('mode', 'walk', audit.side === 'offense' ? 'Routes Only' : 'Drops Only')}${chip('mode', 'live', 'Live vs ' + esc(PLAYS[audit.opponent].name))}</div>
+          <div class="grid2" style="margin-top:8px"><button class="btn primary big" data-action="a-run">▶ Run the Play</button><button class="btn big" data-action="a-pause" ${run ? '' : 'disabled'}>${audit.playing ? '⏸ Pause' : run && audit.i >= n - 1 ? '↻ Replay' : '▶ Resume'}</button></div>
           ${run ? `<div class="row" style="gap:8px;margin-top:8px;align-items:center"><input id="auditscrub" type="range" min="0" max="${n - 1}" value="${Math.min(audit.i, n - 1)}" style="flex:1;min-height:0;margin:0" aria-label="Scrub through the play"><span id="audittime" class="dim" style="font-size:12px;min-width:76px;text-align:right">${timeText()}</span></div>` : ''}
           <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px"><span class="muted" style="font-size:12px">Speed</span>${chip('speed', 1, '1×')}${chip('speed', 0.5, '½×')}${chip('speed', 0.25, '¼×')}</div>
           <div class="row" style="flex-wrap:wrap;gap:14px;margin-top:8px"><label class="row muted" style="gap:4px"><input type="checkbox" data-change="a-art" ${audit.art ? 'checked' : ''} style="width:auto;min-height:0;margin:0"> Show drawn routes</label><label class="row muted" style="gap:4px"><input type="checkbox" data-change="a-trails" ${audit.trails ? 'checked' : ''} style="width:auto;min-height:0;margin:0"> Show where they ran</label>${audit.mode === 'live' ? `<label class="row muted" style="gap:4px">Seed <input type="number" value="${audit.seed}" data-change="seed" style="width:72px;min-height:32px;margin:0"></label>` : ''}</div>
-          ${run ? `<div class="row" style="margin-top:10px"><button class="btn small" data-action="a-flag">🚩 Flag this moment</button><span class="dim" style="font-size:11px">Marks the play Needs work and notes the time, mode and opponent.</span></div>` : ''}
+          ${run ? `<div class="row" style="margin-top:10px"><button class="btn small" data-action="a-flag">🚩 Flag This Moment</button><span class="dim" style="font-size:11px">Marks the play Needs work and notes the time, mode and opponent.</span></div>` : ''}
           ${run && audit.mode === 'live' ? `<details style="margin-top:8px"><summary class="muted">Play log</summary><div class="log">${run.events.map((e) => `<div class="entry"><span class="t">${e.t.toFixed(1)}s</span><span>${esc(e.text)}</span></div>`).join('')}</div></details>` : ''}
         </div>
         ${playDetailHtml(audit.play, null, { practiceButton: false })}
         ${lessonHtml(audit.play)}
         <div class="panel"><div class="row between"><b>Your review</b>${STATE_BADGE[reviewState('play', audit.play)] || ''}</div>${reviewHtml('play', audit.play, { open: auditOpen.has('play:' + audit.play) })}
-          <div class="row between" style="margin-top:10px"><button class="btn small ghost" data-action="rv-copy">Copy notes</button>${queue.length ? `<button class="btn small primary" data-action="nextreview">Next to review ▸ <span class="dim">${queue.length} left</span></button>` : '<span class="dim">Nothing left to review in this list.</span>'}</div></div>`;
+          <div class="row between" style="margin-top:10px"><button class="btn small ghost" data-action="rv-copy">Copy Notes</button>${queue.length ? `<button class="btn small primary" data-action="nextreview">Next to Review ▸ <span class="dim">${queue.length} left</span></button>` : '<span class="dim">Nothing left to review in this list.</span>'}</div></div>`;
     },
     mount(root) {
       if (!auditSynced) { auditSynced = true; syncReviews('play').then((ok) => { if (ok) Router.render(); }); }
@@ -202,7 +202,7 @@ export function registerPracticeScreens(Router, app) {
         },
         ...reviewHandlers(() => Router.render(), auditOpen, () => toast('Saved on this device; the cloud copy did not save.', 'bad')),
         nextreview: () => { const mine = listFor(audit.side, audit.list); const i = mine.indexOf(audit.play); const order = [...mine.slice(i + 1), ...mine.slice(0, i)]; const nx = order.find((id) => NEEDS_OWNER.has(reviewState('play', id))); if (nx) { audit.play = nx; reset(); Router.render(); window.scrollTo(0, 0); } },
-        'rv-copy': async () => { const txt = reviewsText(); if (!txt) { toast('No reviews yet.'); return; } try { await navigator.clipboard.writeText(txt); toast('Notes copied.', 'good'); } catch { sheet(`<textarea class="review-note" rows="12" readonly>${esc(txt)}</textarea>`, { title: 'Your notes' }); } },
+        'rv-copy': async () => { const txt = reviewsText(); if (!txt) { toast('No reviews yet.'); return; } try { await navigator.clipboard.writeText(txt); toast('Notes copied.', 'good'); } catch { sheet(`<textarea class="review-note" rows="12" readonly>${esc(txt)}</textarea>`, { title: 'Your Notes' }); } },
       });
     },
     unmount() { stopAnim(); },

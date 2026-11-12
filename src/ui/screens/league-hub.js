@@ -58,10 +58,10 @@ function rivalsTab(f) {
   const rv = f.rivals?.[f.tier]; const prot = protectedMonsters(f); const sig = prot.find((p) => p.kind === 'signature');
   const h2h = rv ? headToHead(f, rv.team) : null;
   const rivalPanel = rv ? `<div class="panel" style="border-color:#a855f7"><b>⚔️ ${esc(rv.team)}</b> <span class="dim">GM ${esc(rv.gm)}</span><div class="muted" style="margin-top:4px">All-time against you: <b>${h2h.w}-${h2h.l}</b>${h2h.last ? ` · last meeting ${h2h.last.won ? 'W' : 'L'} ${esc(h2h.last.score)} (${yearOf(h2h.last.year)}, week ${h2h.last.week})` : ''}</div>
-    ${sig ? `<div class="row" style="gap:10px;margin-top:8px;align-items:center">${monsterSprite(sig, 44)}<div class="grow"><div class="name">${careerLink(sig.id, sig.name)} ${badge('signature')}</div><div class="sub">${esc(sig.position)} · OVR ${sig.ovr} · ${sig.games} games · ${sig.honours} honour${sig.honours === 1 ? '' : 's'} · with the club every season</div></div></div>` : '<p class="dim">The rival\'s signature monster is on his roster once the persistent league is built.</p>'}
-    <div class="grid2" style="margin-top:8px"><button class="btn small" data-action="club" data-club="${esc(rv.team)}">Their roster</button></div></div>` : '<p class="dim">No rival yet.</p>';
+    ${sig ? `<div class="row" style="gap:10px;margin-top:8px;align-items:center">${monsterSprite(sig, 44)}<div class="grow"><div class="name">${careerLink(sig.id, sig.name)} ${badge('signature')}</div><div class="sub">${esc(sig.position)} · OVR ${sig.ovr} · ${sig.games} games · ${sig.honours} honor${sig.honours === 1 ? '' : 's'} · with the club every season</div></div></div>` : '<p class="dim">The rival\'s signature monster is on his roster once the persistent league is built.</p>'}
+    <div class="grid2" style="margin-top:8px"><button class="btn small" data-action="club" data-club="${esc(rv.team)}">Their Roster</button></div></div>` : '<p class="dim">No rival yet.</p>';
   const legends = prot.filter((p) => p.kind === 'legendary');
-  return `${rivalPanel}<h3>Gym legendaries</h3><p class="muted">Each gym's legendary belongs to its club for the life of the franchise: same monster, same id, every season.</p><div class="list">${legends.map((p) => `<div class="item static">${monsterSprite(p, 36)}<div class="grow"><div class="name">${careerLink(p.id, p.name)} ${badge('legendary')}</div><div class="sub">${esc(p.club)}${p.gym ? ` · the ${esc(p.gym)}` : ''} · ${esc(p.position)} · OVR ${p.ovr} · ${p.games} games · ${p.honours} honour${p.honours === 1 ? '' : 's'}</div></div><button class="btn small" data-action="club" data-club="${esc(p.club)}">Club</button></div>`).join('') || '<p class="dim">No gym legendaries on record yet.</p>'}</div>`;
+  return `${rivalPanel}<h3>Gym legendaries</h3><p class="muted">Each gym's legendary belongs to its club for the life of the franchise: same monster, same id, every season.</p><div class="list">${legends.map((p) => `<div class="item static">${monsterSprite(p, 36)}<div class="grow"><div class="name">${careerLink(p.id, p.name)} ${badge('legendary')}</div><div class="sub">${esc(p.club)}${p.gym ? ` · the ${esc(p.gym)}` : ''} · ${esc(p.position)} · OVR ${p.ovr} · ${p.games} games · ${p.honours} honor${p.honours === 1 ? '' : 's'}</div></div><button class="btn small" data-action="club" data-club="${esc(p.club)}">Club</button></div>`).join('') || '<p class="dim">No gym legendaries on record yet.</p>'}</div>`;
 }
 
 export function registerLeagueHubScreens(Router, app) {
@@ -69,7 +69,7 @@ export function registerLeagueHubScreens(Router, app) {
   Router.registerScreen('league', {
     title: 'League Hub',
     render({ f }) {
-      if (!f) return '<div class="panel"><p>No franchise is open.</p><button class="btn block" data-action="go" data-screen="menu">Main menu</button></div>';
+      if (!f) return '<div class="panel"><p>No franchise is open.</p><button class="btn block" data-action="go" data-screen="menu">Main Menu</button></div>';
       const tab = TABS.some(([k]) => k === get(TAB_KEY)) ? get(TAB_KEY) : 'clubs';
       const body = tab === 'clubs' ? clubsTab(f) : tab === 'leaders' ? leadersTab(f, scope === 'mine') : tab === 'moves' ? movesTab(f) : tab === 'races' ? racesTab(f) : rivalsTab(f);
       return `<div class="seg wrap" role="tablist" style="margin-bottom:8px">${TABS.map(([k, l]) => `<button class="btn small ${tab === k ? 'primary' : ''}" role="tab" aria-selected="${tab === k}" data-action="tab" data-tab="${k}">${l}</button>`).join('')}</div>${body}`;

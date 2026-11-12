@@ -1988,7 +1988,7 @@ const scaledBonus = (b, k) => b && Object.fromEntries(Object.entries(b).map(([a,
 export const INTENSITIES = Object.freeze({
   light: { label: 'Light', factor: 0.5, risk: 0.01, success: 0.06, fatigue: 4, text: 'Walk-through. Small boost, almost no risk, +4% fatigue.' },
   normal: { label: 'Normal', factor: 1, risk: 0.04, success: 0, fatigue: 8, text: 'A regular practice. +8% fatigue.' },
-  full: { label: 'Full pads', factor: 1.6, risk: 0.09, success: -0.05, fatigue: 14, text: 'Big boost, real injury risk, +14% fatigue.' },
+  full: { label: 'Full Pads', factor: 1.6, risk: 0.09, success: -0.05, fatigue: 14, text: 'Big boost, real injury risk, +14% fatigue.' },
 });
 /** Practice tires the healthy roster; Saturday recovery (−28) takes a game plus a normal practice back to rested. */
 export function practiceFatigue(roster, intensity = 'normal') {
@@ -2258,7 +2258,7 @@ export function ownerDevSlots(f, { notify = false } = {}) {
     f.devSlots = { manual: (st.manual || []).filter((id) => !res.dropped.some((d) => d.id === id)), excluded: st.excluded || [] };
     for (const d of res.dropped) {
       const m = f.roster.find((x) => x.id === d.id); const repl = f.roster.find((x) => res.auto.has(x.id) && !(st.manual || []).includes(x.id));
-      news(f, `Development slots: ${m ? m.name : 'a monster'} ${DEV_REASON[d.reason] || 'is no longer eligible'}, so he leaves his slot.${repl ? ` Suggested replacement: ${repl.name} (${repl.position}, ${monsterOverall(repl)} OVR, potential ${repl.potential}), now practising in it; change it on the Roster.` : ''}`, 'roster', m ? { mid: m.id, mname: m.name } : undefined);
+      news(f, `Development slots: ${m ? m.name : 'a monster'} ${DEV_REASON[d.reason] || 'is no longer eligible'}, so he leaves his slot.${repl ? ` Suggested replacement: ${repl.name} (${repl.position}, ${monsterOverall(repl)} OVR, potential ${repl.potential}), now practicing in it; change it on the Roster.` : ''}`, 'roster', m ? { mid: m.id, mname: m.name } : undefined);
     }
   }
   return res;

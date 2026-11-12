@@ -33,7 +33,7 @@ export function summaryHtml(p, { reduced = false } = {}) {
     p.honours.records ? `<span class="cs-hon">📜 ${p.honours.records} record${p.honours.records === 1 ? '' : 's'}</span>` : '',
   ].filter(Boolean).join('');
   const statGrid = p.kind === 'prospect' ? '' : stats?.length && (p.stats.games || 0) > 0
-    ? `<div class="cs-stats-head"><span class="cs-label">${scope === 'season' ? `${yearOf(p.stats.seasonYear)} season` : 'Career'} · regular season · ${scope === 'season' ? p.stats.seasonGames ?? p.stats.season.games ?? 0 : p.stats.games} game${(scope === 'season' ? p.stats.seasonGames ?? p.stats.season.games : p.stats.games) === 1 ? '' : 's'}</span>${p.stats.seasonFocus ? `<span class="cs-scope" role="group" aria-label="Totals"><button class="chip ${scope === 'career' ? 'on' : ''}" data-action="cs-scope" data-v="career" aria-pressed="${scope === 'career'}">Career</button><button class="chip ${scope === 'season' ? 'on' : ''}" data-action="cs-scope" data-v="season" aria-pressed="${scope === 'season'}">This season</button></span>` : ''}</div>
+    ? `<div class="cs-stats-head"><span class="cs-label">${scope === 'season' ? `${yearOf(p.stats.seasonYear)} season` : 'Career'} · regular season · ${scope === 'season' ? p.stats.seasonGames ?? p.stats.season.games ?? 0 : p.stats.games} game${(scope === 'season' ? p.stats.seasonGames ?? p.stats.season.games : p.stats.games) === 1 ? '' : 's'}</span>${p.stats.seasonFocus ? `<span class="cs-scope" role="group" aria-label="Totals"><button class="chip ${scope === 'career' ? 'on' : ''}" data-action="cs-scope" data-v="career" aria-pressed="${scope === 'career'}">Career</button><button class="chip ${scope === 'season' ? 'on' : ''}" data-action="cs-scope" data-v="season" aria-pressed="${scope === 'season'}">This Season</button></span>` : ''}</div>
        <div class="cs-stats">${stats.map((s) => `<div class="cs-stat"><b class="mono">${esc(s.text)}</b><span>${esc(s.label)}</span></div>`).join('')}</div>
        ${(() => { const po = scope === 'season' ? p.stats.seasonPostLine : p.stats.post; return po ? `<div class="cs-post"><b>Playoffs${scope === 'season' ? ` ${yearOf(p.stats.seasonYear)}` : ', career'}</b> · ${po.games} game${po.games === 1 ? '' : 's'}${po.text ? ` · ${esc(po.text)}` : ''}</div>` : ''; })()}`
     : `<div class="cs-nogames">${p.legacy ? 'His statistics were not kept on cards written before v39.0.' : p.kind === 'snapshot' ? 'No games on record.' : (p.yearsPro || 0) > 0 || p.seasons > 1 ? 'No games on record in this franchise: his earlier seasons were played before it kept his stats.' : 'No professional games yet: his numbers start with his first snap.'}</div>`;
@@ -58,16 +58,16 @@ export function summaryHtml(p, { reduced = false } = {}) {
 export function trophyCaseHtml(p, { reduced = false, interactive = true } = {}) {
   if (p.kind === 'prospect') return '';
   const t = p.trophies || [];
-  if (!t.length) return `<div class="tc"><div class="tc-head"><b>Trophy case</b></div><div class="tc-empty"><span aria-hidden="true">🏆</span><span>${p.kind === 'league' ? 'No league honours on record.' : `Empty for now. Beast Bowl titles, league awards and league records ${esc(p.name)} earns are kept here.`}</span></div></div>`;
+  if (!t.length) return `<div class="tc"><div class="tc-head"><b>Trophy case</b></div><div class="tc-empty"><span aria-hidden="true">🏆</span><span>${p.kind === 'league' ? 'No league honors on record.' : `Empty for now. Beast Bowl titles, league awards and league records ${esc(p.name)} earns are kept here.`}</span></div></div>`;
   const total = t.reduce((a, x) => a + x.count, 0);
-  return `<div class="tc ${reduced ? '' : 'anim'}"><div class="tc-head"><b>Trophy case</b><span class="dim">${total} honour${total === 1 ? '' : 's'}</span></div>
+  return `<div class="tc ${reduced ? '' : 'anim'}"><div class="tc-head"><b>Trophy case</b><span class="dim">${total} honor${total === 1 ? '' : 's'}</span></div>
     <div class="tc-grid">${t.map((x, i) => { const tag = interactive ? 'button' : 'div'; return `<${tag} class="tc-tile ${esc(x.tier)} k-${esc(x.kind)}"${interactive ? ` data-action="tc-open" data-kind="${esc(x.kind)}" aria-label="${esc(`${x.label}${x.count > 1 ? `, ${x.count} times` : ''}: open`)}"` : ''} style="--i:${i}"><span class="tc-icon" aria-hidden="true">${x.icon}</span>${x.count > 1 ? `<span class="tc-count">×${x.count}</span>` : ''}<span class="tc-label">${esc(x.short || x.label)}</span><span class="tc-years">${esc(years(x.entries.map((e) => e.year)))}</span></${tag}>`; }).join('')}</div></div>`;
 }
 
 /** Summary + trophies + the card button + the timeline, as one section (the monster card and every sheet). */
 export function careerSectionHtml(f, p, { animate = true, domId = null, interactive = true, cardButton = true } = {}) {
   const reduced = !!f?.settings?.reducedMotion || !animate;
-  const head = `${summaryHtml(p, { reduced })}${trophyCaseHtml(p, { reduced, interactive: interactive && p.kind !== 'snapshot' })}${cardButton && !p.legacy && (p.kind === 'full' || p.kind === 'snapshot') ? `<button class="btn block cc-btn" data-action="cc-open">📸 Career card</button>` : ''}`;
+  const head = `${summaryHtml(p, { reduced })}${trophyCaseHtml(p, { reduced, interactive: interactive && p.kind !== 'snapshot' })}${cardButton && !p.legacy && (p.kind === 'full' || p.kind === 'snapshot') ? `<button class="btn block cc-btn" data-action="cc-open">📸 Career Card</button>` : ''}`;
   if (p.kind === 'prospect') return `<section class="panel timeline career-only" data-mid="${esc(p.id)}"${domId ? ` id="${esc(domId)}"` : ''}>${head}</section>`;
   if (p.kind === 'league') return `<section class="panel timeline career-only" data-mid="${esc(p.id)}"${domId ? ` id="${esc(domId)}"` : ''}>${head}${seasonLinesHtml(p)}</section>`;
   return timelineSectionHtml(p.timeline, { name: p.name, id: p.id, domId, head, animate, reduced: !!f?.settings?.reducedMotion, interactive: interactive && p.kind !== 'snapshot', emptyText: p.emptyText || null, seasonLinks: p.kind === 'full' ? new Set((p.books || []).map((b) => b.year)) : null });
@@ -87,7 +87,7 @@ export function detailHtml(f, m, d, p) {
   switch (d.kind) {
     case 'title': return `<div class="dt-hero gold"><span class="dt-icon">🏆</span><div><div class="dt-title">Beast Bowl champion</div><div class="dt-sub">${yearOf(d.year)} · ${club(d.club)}</div></div></div>
       <div class="kv">${d.opp ? `<b>Final</b><span>Beat the ${esc(d.opp)}${d.score ? ` <b class="mono">${esc(d.score)}</b>` : ''}${d.ot ? ' (OT)' : ''}${d.venue ? ` · ${esc(d.venue)}` : ''}</span>` : ''}${d.record ? `<b>Season</b><span class="mono">${d.record.w}-${d.record.l}${d.record.t ? `-${d.record.t}` : ''}${d.playoffs ? ` · playoffs ${d.playoffs.w}-${d.playoffs.l}` : ''}</span>` : ''}<b>His part</b><span>${esc(d.role)}</span>${d.line ? `<b>Playoffs</b><span>${d.line.games} game${d.line.games === 1 ? '' : 's'}${d.line.text ? ` · ${esc(d.line.text)}` : ''}</span>` : ''}</div>${missing}
-      ${d.ceremony && f && p?.where === 'roster' ? `<button class="btn block" data-action="dt-ceremony" data-year="${d.year}" style="margin-top:8px">🎉 Watch the ceremony again</button>` : ''}`;
+      ${d.ceremony && f && p?.where === 'roster' ? `<button class="btn block" data-action="dt-ceremony" data-year="${d.year}" style="margin-top:8px">🎉 Watch the Ceremony Again</button>` : ''}`;
     case 'award': return `<div class="dt-hero gold"><span class="dt-icon">${TROPHY_META[d.key]?.icon || '🏅'}</span><div><div class="dt-title">${esc(d.label)}</div><div class="dt-sub">${yearOf(d.year)} · ${club(d.club)}${d.record ? ` <span class="dim">${esc(d.record)} club</span>` : ''}</div></div></div>
       ${d.why ? `<p class="dt-why">${esc(d.why.split(' · ')[0])}</p>` : ''}${d.line ? `<div class="kv"><b>Season</b><span>${d.line.games ? `${d.line.games} games · ` : ''}${esc(d.line.text || '')}</span></div>` : ''}${missing}`;
     case 'record': return `<div class="dt-hero"><span class="dt-icon">📜</span><div><div class="dt-title">League record: ${d.scope === 'game' ? 'one game' : 'one season'}</div><div class="dt-sub">${yearOf(d.year)}${d.week ? `, week ${d.week}` : ''} · ${club(d.club)}</div></div></div>
@@ -134,7 +134,7 @@ export function careerActions(ctx) {
   return {
     ...timelineActions({ render, open: (k) => { const e = ctx.profile().timeline.find((x) => x.k === k); if (e?.ref) openDetail(e.ref); }, openSeason: (y) => openDetail({ kind: 'season', year: y }) }),
     'cs-scope': (el) => { const s = el.closest('section.timeline'); statScope[ctx.profile().id] = el.dataset.v; if (s) redrawKeepingPlace(s, render()); },
-    'tc-open': (el) => { const p = ctx.profile(); const kind = el.dataset.kind; const { el: sh } = sheet(trophySheetHtml(ctx.f(), ctx.monster(), p, kind), { title: 'Trophy case' });
+    'tc-open': (el) => { const p = ctx.profile(); const kind = el.dataset.kind; const { el: sh } = sheet(trophySheetHtml(ctx.f(), ctx.monster(), p, kind), { title: 'Trophy Case' });
       sh.addEventListener('click', (ev) => { const b = ev.target.closest('[data-action="tc-entry"]'); if (!b) return; const t = p.trophies.find((x) => x.kind === b.dataset.kind); const e = t?.entries[Number(b.dataset.i)]; const ref = e && refForTrophy(b.dataset.kind, e); if (ref) openDetail(ref); }); },
     'cc-open': () => openCareerCard(ctx.profile(), { reduced: !!ctx.f()?.settings?.reducedMotion }),
   };
@@ -163,7 +163,7 @@ export function withVisibility(f, p) {
 export function careerBlockHtml(f, id, { link = true } = {}) {
   const p = withVisibility(f, careerProfile(f, id)); if (!p) return '';
   const total = (p.trophies || []).reduce((a, t) => a + t.count, 0);
-  return `<div class="career-block">${summaryHtml(p, { reduced: true })}${total ? `<div class="dim" style="font-size:12px;margin:-4px 0 6px">${total} honour${total === 1 ? '' : 's'} in his trophy case</div>` : ''}${link && p.kind !== 'prospect' ? `<button class="btn block small" data-career="${esc(id)}">Full career ›</button>` : ''}</div>`;
+  return `<div class="career-block">${summaryHtml(p, { reduced: true })}${total ? `<div class="dim" style="font-size:12px;margin:-4px 0 6px">${total} honor${total === 1 ? '' : 's'} in his trophy case</div>` : ''}${link && p.kind !== 'prospect' ? `<button class="btn block small" data-career="${esc(id)}">Full Career ›</button>` : ''}</div>`;
 }
 
 // ------------------------------------------------------------ the career sheet (from anywhere)
@@ -177,7 +177,7 @@ export function openCareerSheet(f, id, { go = null } = {}) {
   const p = withVisibility(f, careerProfile(f, id));
   if (!p) { sheet('<p>No career on record for this monster in this franchise.</p>', { title: 'Career' }); return null; }
   const ctx = { f: () => f, profile: () => withVisibility(f, careerProfile(f, id)), monster: () => findMonster(f, id)?.m || null, go };
-  const extra = p.where === 'roster' && go ? `<button class="btn block" data-action="cs-card" style="margin-top:8px">Open ${esc(p.name)}'s monster card ›</button>` : '';
+  const extra = p.where === 'roster' && go ? `<button class="btn block" data-action="cs-card" style="margin-top:8px">Open ${esc(p.name)}'s Monster Card ›</button>` : '';
   const { el, close } = sheet(`<div class="career-sheet">${careerSectionHtml(f, p, { animate: true })}${extra}</div>`, { title: p.kind === 'prospect' ? 'Prospect' : `${p.name} · career` });
   delegateIn(el, { ...careerActions(ctx), 'cs-card': () => { close(); go('monster', { id }); } });
   return { el, close, profile: p };

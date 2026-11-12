@@ -367,7 +367,7 @@ export function legacyHofProfile(card, i) {
   const stage = sp ? (sp.evolution || []).findIndex((e) => e.name === base) + 1 : 0;
   const years = (card.seasonsList || []).map((s) => s.year).filter((y) => y != null);
   const last = years.length ? Math.max(...years) : null; const titles = (card.seasonsList || []).filter((s) => s.champion).map((s) => s.year);
-  const notes = ['Partial history: this Hall of Fame card was written before careers were kept (v39.0). It records his name, position, rating and level at retirement; his games, honours and earlier clubs were not saved.'];
+  const notes = ['Partial history: this Hall of Fame card was written before careers were kept (v39.0). It records his name, position, rating and level at retirement; his games, honors and earlier clubs were not saved.'];
   notes.push(`${card.club} under ${card.owner}: ${card.seasons} season${card.seasons === 1 ? '' : 's'}, ${card.record?.w ?? 0}-${card.record?.l ?? 0}${titles.length ? `. The club won the Beast Bowl in ${titles.map((y) => yearOf(y)).join(', ')}; the card does not record which games he played` : ''}.`);
   return { v: PROFILE_VERSION, kind: 'snapshot', legacy: true, where: 'hof', id: `${card.id}:${i}`, name: b.name, species: b.species, stage: Math.max(0, stage), speciesName: stage > 0 ? base : sp?.name || b.species, type: sp?.element || null, position: b.position, level: b.level ?? null, ovr: b.ovr ?? null, yearsPro: null,
     club: card.club, clubs: [{ club: card.club, from: null, to: null }], seasons: null, onRecord: 0, complete: false,

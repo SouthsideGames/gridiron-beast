@@ -46,7 +46,7 @@ function summaryHtml(f, c, fromGame) {
     <div class="kv cer-kv"><b>Season record</b><span>${c.record.w}-${c.record.l}${c.record.t ? '-' + c.record.t : ''}</span><b>Playoffs</b><span>${c.playoffs.w}-${c.playoffs.l}</span><b>Beast Bowl</b><span>${fin ? `Won ${fin.us}-${fin.them}` : 'Won'}</span>${c.captain ? `<b>Captain</b><span>${esc((c.starters.find((m) => m.id === c.captain) || {}).name || '')}</span>` : ''}</div>
     <h3 style="margin:10px 0 4px">League awards</h3>
     ${c.awards.length ? `<div class="list">${c.awards.map((a) => `<div class="item static"><div class="grow"><div class="name">🏅 ${esc(a.label)}</div><div class="sub">${esc(a.name)}</div></div></div>`).join('')}</div>` : '<p class="dim" style="margin:0">None of your monsters won a league award this season.</p>'}
-    <div class="row" style="gap:8px;margin-top:12px"><button class="btn" data-action="cer-replay">↻ Replay ceremony</button><button class="btn primary grow" data-action="cer-done">${fromGame ? 'Continue' : 'Back'}</button></div>
+    <div class="row" style="gap:8px;margin-top:12px"><button class="btn" data-action="cer-replay">↻ Replay Ceremony</button><button class="btn primary grow" data-action="cer-done">${fromGame ? 'Continue' : 'Back'}</button></div>
   </div>`;
 }
 

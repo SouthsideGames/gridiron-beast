@@ -49,7 +49,7 @@ export function leagueNewsPanel(f, { clubLog = [] } = {}) {
   const club = clubLog.slice(0, 10);
   return `<div class="panel league-news"><div class="row between"><h3 style="margin:0">League News</h3>${latest ? `<span class="dim">${esc(groupTitle(latest))}</span>` : ''}</div>
     ${latest ? weekHtml(latest, f, { max: 4, raceRows: 3 }) : '<p class="dim" style="margin:6px 0 0">Scores, upsets, award races and records from around the league appear here after each week\'s games.</p>'}
-    ${weeks.length ? `<button class="btn block small" data-action="leaguenews" style="margin-top:8px">All league news</button>` : ''}
+    ${weeks.length ? `<button class="btn block small" data-action="leaguenews" style="margin-top:8px">All League News</button>` : ''}
     <details class="clublog"><summary>Club notes${club.length ? ` <span class="dim">(${club.length})</span>` : ''}</summary>
       <ul class="news" style="padding-left:18px;margin:6px 0 0">${club.map((n) => `<li class="${esc(n.kind)}">${clubText(f, n.text, n)}</li>`).join('') || '<li class="dim">Nothing yet.</li>'}</ul></details></div>`;
 }

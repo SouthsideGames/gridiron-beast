@@ -80,7 +80,7 @@ const contractEvents = (sim, fam, abilityId, slot, side) => (sim?.events || []).
  */
 export function reviewAbility({ family, form = null, mastery = 0, primed = true, seed = 1, games = 3, quarterLength = R.DEFAULT_QUARTER } = {}) {
   const fam = FAMILIES.find((f) => f.id === family); if (!fam?.abilities?.football) return { found: false, plays: 0, reason: 'no football ability' };
-  const contract = contractOf(family); if (!contract) return { found: false, plays: 0, reason: 'no registered contract (legacy behaviour is not reviewed here)' };
+  const contract = contractOf(family); if (!contract) return { found: false, plays: 0, reason: 'no registered contract (legacy behavior is not reviewed here)' };
   form ||= `${family}:0`;
   games = Math.max(games, contract.review?.games || 0); // a rare trigger (e.g. a fumble recovery) declares a longer search
   let plays = 0;
@@ -147,7 +147,7 @@ export const scenarioOf = (family) => SCENARIOS[family] || null;
  */
 export function reviewScenario({ family, form = null, mastery = 0, seeds = null, snaps = null } = {}) {
   const fam = FAMILIES.find((f) => f.id === family); if (!fam?.abilities?.football) return { found: false, executed: false, mode: 'scenario', plays: 0, reason: 'no football ability' };
-  const contract = contractOf(family); if (!contract) return { found: false, executed: false, mode: 'scenario', plays: 0, reason: 'no registered contract (legacy behaviour is not reviewed here)' };
+  const contract = contractOf(family); if (!contract) return { found: false, executed: false, mode: 'scenario', plays: 0, reason: 'no registered contract (legacy behavior is not reviewed here)' };
   const sc = SCENARIOS[family]; if (!sc) return { found: false, executed: false, mode: 'scenario', plays: 0, reason: 'no scenario for this family' };
   form ||= `${family}:0`; const nSeeds = seeds ?? sc.seeds ?? 12; const nSnaps = snaps ?? sc.snaps ?? 12;
   const note = typeof sc.staged === 'function' ? sc.staged(form, mastery) : sc.staged || null;

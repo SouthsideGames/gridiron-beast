@@ -32,7 +32,7 @@ export function catalogueProblems(cat = buildCatalogue()) {
     if (fams.size !== list.length) p.push(`${mode}: a family has more than one ability`);
     for (const f of FAMILIES) {
       const has = fams.has(f.id); const expected = !!(mode === 'football' ? f.abilities.football : f.abilities.clash);
-      if (has !== expected) p.push(`${mode}: family ${f.id} ${expected ? 'missing from' : 'unexpectedly in'} the catalogue`);
+      if (has !== expected) p.push(`${mode}: family ${f.id} ${expected ? 'missing from' : 'unexpectedly in'} the catalog`);
     }
   }
   const ids = cat.entries.flatMap((e) => e.variants.map((v) => v.id));

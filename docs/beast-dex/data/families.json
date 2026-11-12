@@ -1605,7 +1605,7 @@
       "features": "horns, tail, plates",
       "colors": "#2a6a4a, #e8c84a"
     },
-    "description": "Armoured in scales; protects his quarterback like treasure.",
+    "description": "Armored in scales; protects his quarterback like treasure.",
     "profileStatus": "owner-approved ranges; see validation and unresolved items",
     "buildIdentity": "Balanced physical blocker"
   },
@@ -1971,7 +1971,7 @@
         "pattern": "stripes"
       }
     },
-    "description": "A smouldering badger who tackles everything, including the wrong thing.",
+    "description": "A smoldering badger who tackles everything, including the wrong thing.",
     "positionalStrength": "tackling",
     "weaknesses": [
       "coverage",
@@ -2064,7 +2064,7 @@
         ]
       }
     },
-    "description": "A soot-grey bird that dives on ball carriers and drifts out of its zone.",
+    "description": "A soot-gray bird that dives on ball carriers and drifts out of its zone.",
     "positionalStrength": "tackling",
     "weaknesses": [
       "coverage",
@@ -2894,7 +2894,7 @@
         ]
       }
     },
-    "description": "A bark-armoured beetle that grinds out tackles and loses every footrace.",
+    "description": "A bark-armored beetle that grinds out tackles and loses every footrace.",
     "positionalStrength": "durability",
     "weaknesses": [
       "speed",

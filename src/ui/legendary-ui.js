@@ -25,7 +25,7 @@ export function legendaryCardHtml(f, id, { selected = false, mode = 'plan', side
 export function legendarySheetHtml(f, id) {
   const p = PLAYS[id]; const L = p.legendary; const st = legendaryStatus(f, id); const les = LESSONS[id] || {};
   return `<div class="lp-sheet">
-    <div class="lp-head"><span class="lp-badge">★ LEGENDARY PLAY</span><h2>${esc(p.name)}</h2><div class="dim">${p.side === 'offense' ? 'Offense' : 'Defense'} · ${esc(p.type === 'run' ? 'run' : p.side === 'offense' ? 'pass' : (p.tags.includes('blitz') ? 'pressure' : p.tags.includes('run') ? 'run defence' : 'coverage'))}</div></div>
+    <div class="lp-head"><span class="lp-badge">★ LEGENDARY PLAY</span><h2>${esc(p.name)}</h2><div class="dim">${p.side === 'offense' ? 'Offense' : 'Defense'} · ${esc(p.type === 'run' ? 'run' : p.side === 'offense' ? 'pass' : (p.tags.includes('blitz') ? 'pressure' : p.tags.includes('run') ? 'run defense' : 'coverage'))}</div></div>
     <div class="lp-art">${playCardSvg(id)}</div>
     <div class="lp-need">${portrait(st, L)}<div><b>Requires ${esc(speciesName(L.species))}</b> at <b>${esc(L.slot)}</b>. He takes that spot whenever the play is called.</div></div>
     <p>${esc(p.desc)}</p>
@@ -42,7 +42,7 @@ export function announceLegendary(f, ids, { onPlan = null, save = null } = {}) {
   if (!ids.length) return null;
   const items = ids.map((id) => { const p = PLAYS[id]; const d = f.legendaryPlays.discovered[id]; return `<div class="lp-found"><div class="lp-art small">${playCardSvg(id)}</div><div><div class="lp-found-name">${esc(p.name)}</div><div class="dim">Unlocked through your new Legendary, ${esc(d?.monster || speciesName(p.legendary.species))}.</div></div></div>`; }).join('');
   markAnnounced(f, ids); save?.();
-  const s = sheet(`<div class="lp-discovered"><div class="lp-burst">★</div><div class="lp-disc-title">LEGENDARY PLAY DISCOVERED!</div>${items}<p class="dim">It is now available for your game plan. Nothing in your plan changes until you choose it.</p><div class="row" style="gap:8px">${onPlan ? '<button class="btn primary grow" data-action="lp-plan">Open the game plan</button>' : ''}<button class="btn grow" data-action="sheet-close">Later</button></div></div>`, { title: 'Legendary Play' });
+  const s = sheet(`<div class="lp-discovered"><div class="lp-burst">★</div><div class="lp-disc-title">LEGENDARY PLAY DISCOVERED!</div>${items}<p class="dim">It is now available for your game plan. Nothing in your plan changes until you choose it.</p><div class="row" style="gap:8px">${onPlan ? '<button class="btn primary grow" data-action="lp-plan">Open the Game Plan</button>' : ''}<button class="btn grow" data-action="sheet-close">Later</button></div></div>`, { title: 'Legendary Play' });
   s.el.addEventListener('click', (e) => { if (e.target.closest('[data-action="lp-plan"]')) { s.close(); onPlan?.(); } });
   return s;
 }

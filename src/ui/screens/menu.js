@@ -58,7 +58,7 @@ export function registerMenuScreens(Router, app) {
       return `
         <div class="hero"><div class="logo">GRIDIRON BEAST</div><div class="muted">Monster football franchise · 7-on-7</div></div>
         ${card}
-        ${legacy && !f ? `<button class="btn block" style="margin-bottom:12px" data-action="import-legacy">Import ${esc(legacy.owner)}'s ${esc(legacy.club)} (previous version)</button>` : ''}
+        ${legacy && !f ? `<button class="btn block" style="margin-bottom:12px" data-action="import-legacy">Import ${esc(legacy.owner)}'s ${esc(legacy.club)} (Previous Version)</button>` : ''}
         <div class="menu-tiles ${hof ? 'three' : ''}">
           ${tile('dex', '📖', 'Beast Dex', `${dexCounts(f).all.seen}/${dexCounts(f).all.total}`)}
           ${tile('achievements', '🏅', 'Achievements', `${Object.keys(achievementsData().earned).length}/${ACHIEVEMENTS.length}`)}
@@ -74,7 +74,7 @@ export function registerMenuScreens(Router, app) {
         // storage) the single-save behaviour of v39.1 remains, with its warning.
         new: async () => {
           if (app.slots && app.storage.store) { const { empty } = await app.slots.slotFor(); if (!app.f && empty.includes(app.slot)) { Router.go('onboarding', { fresh: true }); return; } if (empty.length === 1 && !app.f) { await app.createIn(empty[0]); return; } Router.go('franchises'); if (!empty.length) toast('All three slots are full. Delete or export a franchise to free one.', 'info', 5000); return; }
-          if (app.f && !(await confirmSheet('Starting a new franchise replaces your current save. Export it first from Settings if you want to keep it.', { title: 'New franchise', okLabel: 'Start new', danger: true }))) return; Router.go('onboarding', { fresh: true });
+          if (app.f && !(await confirmSheet('Starting a new franchise replaces your current save. Export it first from Settings if you want to keep it.', { title: 'New Franchise', okLabel: 'Start New', danger: true }))) return; Router.go('onboarding', { fresh: true });
         },
         'import-legacy': async () => { try { const f = Save.importLegacy(Save.readLegacy()); const r = await app.setFranchise(f); if (!r.ok) { toast(`Import failed: ${r.error?.message}. Nothing was changed.`, 'bad', 6000); return; } toast('Imported your previous franchise. Your old save is untouched.', 'good'); if (Object.keys(f.staff).length < 5) hireDefaultStaff(f); app.save(); Router.go('hq', {}, { reset: true }); } catch (e) { toast(e.message, 'bad'); } },
         soon: (el) => toast(`${el.dataset.what} is planned for a later release.`),
@@ -123,13 +123,13 @@ export function registerMenuScreens(Router, app) {
         clashmode: (el) => set('clash', { ...clashSettings(app.settings), mode: el.value }), clashspeed: (el) => set('clash', { ...clashSettings(app.settings), speed: Number(el.value) }),
         reduced: (el) => set('reducedMotion', el.checked), reducedflash: (el) => set('reducedFlash', el.checked), framerate: (el) => set('frameRate', Number(el.value) === 30 ? 30 : 60), shake: (el) => set('screenShake', el.checked), evosound: (el) => set('evoSound', el.checked), qbreads: (el) => set('qbReads', el.checked), devnotices: (el) => set('devNotices', el.checked), markers: (el) => set('fieldMarkers', el.value), typeicons: (el) => set('typeIcons', el.checked), replays: (el) => set('replays', el.checked), autopoints: (el) => set('autoPoints', el.checked), 'assist-hints': (el) => { setAssist(app.f, { hints: el.checked }); app.save(); }, 'assist-consequences': (el) => { setAssist(app.f, { consequences: el.checked }); app.save(); }, 'assist-mode': (el) => { setAssist(app.f, { mode: el.dataset.v }); app.save(); toast(`Coach Assist: ${ASSIST_MODE_TEXT[el.dataset.v].label}.`, 'good'); Router.render(); }, liveclock: (el) => set('liveClock', el.checked),
         tutreset: () => { resetTutorial(app.f); if (assistSettings(app.f).mode === 'expert') setAssist(app.f, { mode: 'standard' }); app.save(); toast('Tips will show again on each screen.', 'good'); Router.render(); },
-        primer: () => sheet(primerHtml(), { title: 'How football works' }),
+        primer: () => sheet(primerHtml(), { title: 'How Football Works' }),
         export: () => { if (app.f) offerExport(app.f); },
         import: async (el) => { const file = el.files?.[0]; if (!file) return; try { if (await importFile(app, file)) Router.go('hq', {}, { reset: true }); } catch (e) { toast('Import failed: ' + e.message, 'bad'); } el.value = ''; },
         backups: () => openBackups(app, { onRestored: () => Router.go('hq', {}, { reset: true }) }),
-        'restore-legacy': async () => { const b = Save.loadBackup(); if (!b) return; if (await confirmSheet(`Roll back to ${yearOf(b.season.year)}, Week ${b.season.week} (saved after last Sunday)? Anything since then is lost.`, { title: 'Restore backup', okLabel: 'Restore' })) { const r = await app.replaceFranchise(b, { copyKind: 'pre-restore' }); if (!r.ok) { toast(`Restore failed: ${r.error?.message}. Nothing was changed.`, 'bad', 6000); return; } toast('Backup restored and saved.', 'good'); Router.go('hq', {}, { reset: true }); } },
+        'restore-legacy': async () => { const b = Save.loadBackup(); if (!b) return; if (await confirmSheet(`Roll back to ${yearOf(b.season.year)}, Week ${b.season.week} (saved after last Sunday)? Anything since then is lost.`, { title: 'Restore Backup', okLabel: 'Restore' })) { const r = await app.replaceFranchise(b, { copyKind: 'pre-restore' }); if (!r.ok) { toast(`Restore failed: ${r.error?.message}. Nothing was changed.`, 'bad', 6000); return; } toast('Backup restored and saved.', 'good'); Router.go('hq', {}, { reset: true }); } },
         persist: async () => { let ok = false; try { ok = await navigator.storage.persist(); } catch { ok = false; } toast(ok ? 'The browser will keep this data.' : 'The browser declined for now. Your saves still work; export regularly.', ok ? 'good' : 'info', 4000); fillStorageMeter(root, app); },
-        reset: async () => { if (await confirmSheet(app.storage.store ? 'Delete this franchise? It leaves your game, but a copy stays on this device under Restore a backup (the three most recently deleted franchises are kept). Export first if you want a file.' : 'Delete this franchise permanently? Export first if you want a backup.', { title: 'Delete franchise', okLabel: 'Delete', danger: true })) { if (!(await app.reset()).ok) return; toast('Franchise deleted.'); Router.go('menu', {}, { reset: true }); } },
+        reset: async () => { if (await confirmSheet(app.storage.store ? 'Delete this franchise? It leaves your game, but a copy stays on this device under Restore a backup (the three most recently deleted franchises are kept). Export first if you want a file.' : 'Delete this franchise permanently? Export first if you want a backup.', { title: 'Delete Franchise', okLabel: 'Delete', danger: true })) { if (!(await app.reset()).ok) return; toast('Franchise deleted.'); Router.go('menu', {}, { reset: true }); } },
       });
     },
   });
@@ -146,7 +146,7 @@ export function registerMenuScreens(Router, app) {
         <div class="stack">
         <button class="btn block badge-host" data-action="go" data-screen="audit">🔎 Playbook Audit${devBadge(app.settings, q.plays.length)}</button>
         <button class="btn block" data-action="go" data-screen="practice">🎯 Practice Field</button>
-        <button class="btn block" data-action="go" data-screen="ai-lab">🧠 AI Testing Lab (QB decisions)</button>
+        <button class="btn block" data-action="go" data-screen="ai-lab">🧠 AI Testing Lab (QB Decisions)</button>
         <button class="btn block" data-action="go" data-screen="attr-lab">📊 Attribute Testing Lab</button>
         <button class="btn block" data-action="go" data-screen="evo-preview">✨ Preview Evolution</button>
         <button class="btn block badge-host" data-action="go" data-screen="ability-reviewer">🧪 Ability Reviewer${devBadge(app.settings, q.football.outstanding)}</button>
@@ -155,18 +155,18 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="go" data-screen="clash-lab">🐾 Clash Lab (Beast Clash Phase 1)</button>
         ${app.f ? `<h3>Feature testing (this franchise)</h3><p class="dim" style="margin-top:0">For trying the new features without waiting seasons. Using these marks the franchise as developer-assisted.</p>
         <div class="row" style="gap:6px;flex-wrap:wrap">${['aurodrax', 'tempestra', 'titanolith', 'nyxshade', 'glacivern', 'elderoot'].map((sp) => `<button class="btn small" data-action="dev-legend" data-sp="${sp}">+ ${sp[0].toUpperCase() + sp.slice(1)}</button>`).join('')}</div>
-        <button class="btn block" data-action="dev-ceremony" style="margin-top:6px">🏆 Preview the Beast Bowl ceremony (nothing is saved)</button>` : ''}
+        <button class="btn block" data-action="dev-ceremony" style="margin-top:6px">🏆 Preview the Beast Bowl Ceremony (Nothing Is Saved)</button>` : ''}
         ${devDisplaysAllowed() ? `<h3>Development displays</h3><p class="dim" style="margin-top:0">Shown only while the game is in development; the released game never shows them.</p>
         <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="devqbreads" ${app.settings?.devQbReads !== false ? 'checked' : ''}> QB reads in games (the read list and ring in replays, and on the Practice Field)</label>
         <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="qbreads" ${app.settings?.qbReads ? 'checked' : ''}> Live QB read ring during plays</label>` : ''}
-        <button class="btn block" data-action="dexall">📖 Beast Dex (everything revealed)</button>
-        <button class="btn block danger" data-action="dexreset">Reset my Beast Dex</button>
-        <button class="btn block" data-action="go" data-screen="about">ℹ️ About this build</button>
-        ${shortcutsEnabled() ? `<div class="panel tight" style="border-color:var(--warn)"><b>⏩ Test build shortcut</b><div class="muted">Plays whole seasons headlessly in the current franchise so a Season-${SEASON_CAP} retirement can be reached quickly. Only in this private test build.</div><div class="grid2" style="margin-top:6px"><button class="btn block" data-action="ff" data-n="1" ${app.f ? '' : 'disabled'}>Finish this season</button><button class="btn block" data-action="ff" data-n="5" ${app.f ? '' : 'disabled'}>Play 5 seasons</button></div></div>` : ''}</div>`;
+        <button class="btn block" data-action="dexall">📖 Beast Dex (Everything Revealed)</button>
+        <button class="btn block danger" data-action="dexreset">Reset My Beast Dex</button>
+        <button class="btn block" data-action="go" data-screen="about">ℹ️ About This Build</button>
+        ${shortcutsEnabled() ? `<div class="panel tight" style="border-color:var(--warn)"><b>⏩ Test build shortcut</b><div class="muted">Plays whole seasons headlessly in the current franchise so a Season-${SEASON_CAP} retirement can be reached quickly. Only in this private test build.</div><div class="grid2" style="margin-top:6px"><button class="btn block" data-action="ff" data-n="1" ${app.f ? '' : 'disabled'}>Finish This Season</button><button class="btn block" data-action="ff" data-n="5" ${app.f ? '' : 'disabled'}>Play 5 Seasons</button></div></div>` : ''}</div>`;
     },
     mount(root) { delegate(root, {
         ff: async (el) => { if (!app.f || !shortcutsEnabled()) return; const n = Number(el.dataset.n) || 1; el.disabled = true; el.textContent = 'Playing…'; await new Promise((r) => setTimeout(r, 30)); const r = n === 1 ? fastForwardSeason(app.f) : fastForwardSeasons(app.f, n - 1); const saved = await app.save({ immediate: true }); toast(r.ok ? `${r.played ?? 1} season${(r.played ?? 1) === 1 ? '' : 's'} played${r.stoppedBecause === 'cap' ? `: Season ${SEASON_CAP} complete, retirement is due` : r.stoppedBecause === 'fired' ? ': the board let you go' : ''}${saved.ok ? '' : ' (not saved!)'}` : `Stopped: ${r.reason}`, r.ok ? 'good' : 'bad', 6000); Router.render(); },
-        'dev-legend': async (el) => { if (!(await confirmSheet('Add this Legendary to your roster for testing? The franchise is marked as developer-assisted.', { title: 'Developer test', okLabel: 'Add' }))) return; const r = F.devGrantLegendary(app.f, el.dataset.sp); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${r.monster.name} joined. Legendary Play discovered.`, 'good'); },
+        'dev-legend': async (el) => { if (!(await confirmSheet('Add this Legendary to your roster for testing? The franchise is marked as developer-assisted.', { title: 'Developer Test', okLabel: 'Add' }))) return; const r = F.devGrantLegendary(app.f, el.dataset.sp); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${r.monster.name} joined. Legendary Play discovered.`, 'good'); },
         devqbreads: (el) => { if (app.f) { app.f.settings.devQbReads = el.checked; app.save(); } else app.defaultSettings.devQbReads = el.checked; },
         qbreads: (el) => { if (app.f) { app.f.settings.qbReads = el.checked; app.save(); } else app.defaultSettings.qbReads = el.checked; },
         'dev-ceremony': () => Router.go('ceremony', { preview: true }), go: (el) => Router.go(el.dataset.screen),
@@ -182,7 +182,7 @@ export function registerMenuScreens(Router, app) {
       const who = (sp) => sp === 'board' ? '📜 A letter from the Board' : sp === 'rival' ? '📞 The rival GM' : '🏛️ The commissioner';
       const diff = (d) => ({ rookie: 'Rookie', pro: 'Pro', allstar: 'All-Star' })[d] || d;
       return `<div class="panel"><div class="row between"><b>${got} of ${ACHIEVEMENTS.length} earned</b><span class="dim">across every franchise</span></div><div class="bar" style="margin-top:6px"><i style="width:${Math.round(got / ACHIEVEMENTS.length * 100)}%"></i></div><p class="dim" style="margin:6px 0 0">Each one arrives in your franchise as a scene. Earned scenes can be replayed here.</p></div>
-        <div class="stack">${ACHIEVEMENTS.map((a) => { const e = earned[a.id]; return e ? `<div class="panel ach-card earned"><div class="row between"><b>🏅 ${esc(e.scene?.title || a.title.replace(/\{\w+\}/g, 'your rival'))}</b><span class="dim">${yearOf(e.year)}</span></div><div class="muted">${esc(a.desc || '')}</div><div class="dim" style="font-size:12px;margin-top:2px">${who(a.speaker)} · first earned with ${esc(e.club || '')} (${esc(diff(e.difficulty))})${e.count > 1 ? ` · ${e.count} franchises` : ''}</div>${e.scene ? `<button class="btn small" data-action="replay" data-id="${a.id}" style="margin-top:6px">▶ Replay the scene</button>` : ''}</div>`
+        <div class="stack">${ACHIEVEMENTS.map((a) => { const e = earned[a.id]; return e ? `<div class="panel ach-card earned"><div class="row between"><b>🏅 ${esc(e.scene?.title || a.title.replace(/\{\w+\}/g, 'your rival'))}</b><span class="dim">${yearOf(e.year)}</span></div><div class="muted">${esc(a.desc || '')}</div><div class="dim" style="font-size:12px;margin-top:2px">${who(a.speaker)} · first earned with ${esc(e.club || '')} (${esc(diff(e.difficulty))})${e.count > 1 ? ` · ${e.count} franchises` : ''}</div>${e.scene ? `<button class="btn small" data-action="replay" data-id="${a.id}" style="margin-top:6px">▶ Replay the Scene</button>` : ''}</div>`
           : `<div class="panel ach-card locked"><div class="row between"><b>🔒 ${esc(a.title.includes('{') ? 'A word from your rival' : a.title)}</b><span class="dim">·</span></div><div class="muted">${esc(a.desc || '')}</div><div class="dim" style="font-size:12px;margin-top:2px">${who(a.speaker)}</div></div>`; }).join('')}</div>`;
     },
     mount(root) {
@@ -213,14 +213,14 @@ export function registerMenuScreens(Router, app) {
 
   // ---------------------------------------------------------------- My office (GDD §18.6): the GM's own page
   Router.registerScreen('office', {
-    title: 'My office',
+    title: 'My Office',
     render({ f }) {
       const b = f.board || { confidence: 0, goal: null, history: [] }; const g = b.goal; const p = g ? F.goalProgress(f) : null;
       const hof = F.hallOfFameProgress(f); const diff = DIFFICULTY[f.settings.difficulty] || DIFFICULTY.pro;
       const seasons = f.history.length; const wins = f.history.reduce((a, h) => a + h.record.w, 0) + F.record(f).w, losses = f.history.reduce((a, h) => a + h.record.l, 0) + F.record(f).l;
       const badges = Object.entries(f.campaign?.badges || {});
       const bg = BACKGROUNDS[f.owner.background];
-      return `<div class="panel"><div class="row" style="gap:12px">${portraitSprite(f.owner.portrait, 72, { teamColor: TEAM_META[f.club]?.color })}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(f.owner.first)} ${esc(f.owner.last)}</div><div class="muted">General manager, ${esc(f.club)} · ${yearOf(f.season.year)} · ${esc(diff.label)}</div>${bg ? `<div class="dim">${esc(bg.label)} · ${esc(bg.text)}</div>` : ''}<button class="btn small" data-action="editlook" style="margin-top:6px">✏️ Edit appearance</button></div></div></div>
+      return `<div class="panel"><div class="row" style="gap:12px">${portraitSprite(f.owner.portrait, 72, { teamColor: TEAM_META[f.club]?.color })}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(f.owner.first)} ${esc(f.owner.last)}</div><div class="muted">General manager, ${esc(f.club)} · ${yearOf(f.season.year)} · ${esc(diff.label)}</div>${bg ? `<div class="dim">${esc(bg.label)} · ${esc(bg.text)}</div>` : ''}<button class="btn small" data-action="editlook" style="margin-top:6px">✏️ Edit Appearance</button></div></div></div>
         <div class="panel ${F.onHotSeat(f) ? 'hotseat' : ''}"><div class="row between"><b>Board</b><span class="chip ${F.onHotSeat(f) ? 'bad' : b.confidence > 0 ? 'good' : ''}">${F.confidenceLabel(b.confidence)} (${b.confidence >= 0 ? '+' : ''}${b.confidence})</span></div>
           ${g ? `<div style="margin-top:6px">🎯 This season: <b>${esc(g.label)}</b>${p ? ` · ${esc(p.text)}` : ''}</div><div class="bar" style="margin:6px 0 0"><i style="width:${Math.round((p?.pct || 0) * 100)}%"></i></div>` : '<div class="dim" style="margin-top:6px">No goal committed yet.</div>'}
           ${b.history.length ? `<div class="dim" style="margin-top:6px">Past: ${b.history.map((h) => `${yearOf(h.year)} ${h.met ? '✅' : '❌'} ${esc(h.label)}`).join(' · ')}</div>` : ''}</div>
@@ -236,11 +236,11 @@ export function registerMenuScreens(Router, app) {
   // Saving replaces f.owner.portrait and nothing else: the record, the career, achievements and every other field are untouched.
   let lookState = null;
   Router.registerScreen('coach-look', {
-    title: 'Coach appearance',
+    title: 'Coach Appearance',
     render({ f }) {
       lookState ||= { look: parseCoach(f.owner.portrait) || lookFromLegacy(f.owner.portrait), tab: 'face' };
-      return `${coachEditorHtml(lookState.look, { tab: lookState.tab, teamColor: TEAM_META[f.club]?.color, teamNote: `Team colours are the ${f.club}'.` })}
-        <div class="grid2" style="margin-top:12px"><button class="btn block" data-action="cancel">Cancel</button><button class="btn primary block" data-action="savelook">Save appearance</button></div>`;
+      return `${coachEditorHtml(lookState.look, { tab: lookState.tab, teamColor: TEAM_META[f.club]?.color, teamNote: `Team colors are the ${f.club}'.` })}
+        <div class="grid2" style="margin-top:12px"><button class="btn block" data-action="cancel">Cancel</button><button class="btn primary block" data-action="savelook">Save Appearance</button></div>`;
     },
     mount(root) { delegate(root, { ...coachEditorActions(lookState, () => Router.render()), cancel: () => { lookState = null; Router.back(); },
       savelook: () => { app.f.owner.portrait = specOf(lookState); lookState = null; app.save(); toast('Appearance saved.'); Router.back(); } }); },
@@ -249,9 +249,9 @@ export function registerMenuScreens(Router, app) {
     title: 'More',
     render({ f }) {
       return `<div class="stack">
-        <button class="btn block" data-action="go" data-screen="office">🪪 My office <span class="dim">${esc(f.owner.first)} ${esc(f.owner.last)}</span></button>
+        <button class="btn block" data-action="go" data-screen="office">🪪 My Office <span class="dim">${esc(f.owner.first)} ${esc(f.owner.last)}</span></button>
         <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).all.seen}/${dexCounts(f).all.total}</span></button>
-        <button class="btn block" data-action="statguide">📊 What the stats mean</button>
+        <button class="btn block" data-action="statguide">📊 What the Stats Mean</button>
         <button class="btn block" data-action="typechart">🔺 Type Chart <span class="dim">strengths and weaknesses</span></button>
         <button class="btn block" data-action="stadiums">🏟 Stadiums <span class="dim">every club's field</span></button>
         <button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button>

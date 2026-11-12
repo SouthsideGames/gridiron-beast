@@ -21,9 +21,9 @@ import { GYM_BY_CLUB } from './gyms.js';
 // `passStyle` / `runStyle`: the playbook tags a gym's (or club's) approved strategy leans to; `positions`: where its acquisition tilt applies.
 export const IDENTITIES = Object.freeze({
   // ---- gyms (AI_IDENTITIES.md §3). Schemes follow the approved strategy column; where the column names no side, the gym coach's scheme (gyms.js).
-  'Harbor Sentinels': { offense: 'balanced', defense: 'coverage', label: 'Ball-hawk zone defence, ball-control offence', runStyle: 'inside', positions: ['CB', 'S'] },
+  'Harbor Sentinels': { offense: 'balanced', defense: 'coverage', label: 'Ball-hawk zone defense, ball-control offense', runStyle: 'inside', positions: ['CB', 'S'] },
   'Sunfire Lions': { offense: 'pass', defense: 'coverage', label: 'Air Raid with Light cooldown fields', passStyle: 'vertical', positions: ['QB', 'WR'] },
-  'Thunder Mesa': { offense: 'pass', defense: 'pressure', label: 'Quick passing behind extra protection, blitzing defence', passStyle: 'quick', positions: ['QB', 'WR', 'OL', 'DL', 'LB'] },
+  'Thunder Mesa': { offense: 'pass', defense: 'pressure', label: 'Quick passing behind extra protection, blitzing defense', passStyle: 'quick', positions: ['QB', 'WR', 'OL', 'DL', 'LB'] },
   'Canyon Crushers': { offense: 'run', defense: 'pressure', label: 'Ground attack, physical run front', runStyle: 'inside', runFront: true, positions: ['RB', 'OL', 'TE', 'DL'] },
   'Eastport Phantoms': { offense: 'pass', defense: 'man', label: 'Man-coverage tricks, Dark fields', positions: ['CB', 'S'] },
   'Frostpeak Howlers': { offense: 'balanced', defense: 'coverage', label: 'Field position: bend-don\'t-break zone, reliable kicking', positions: ['K', 'CB', 'S'] },

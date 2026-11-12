@@ -35,7 +35,7 @@ export const PRESS_QUESTIONS = Object.freeze([
   Q('g_i_01', 'instigator', null, 'Coach, somebody in the {opp} building says your club is "a bye week with uniforms". Care to respond?',
     'I don’t respond to anonymous quotes. We’ll play the game Sunday.', 'Tell "somebody" to say it on the fifty-yard line. We’ll be there at kickoff.', 'A bye week with uniforms still shows up better dressed than their defense.', 'I AM the bye week. I am rest. I am inevitable. Next question.', { predict: ['trash'] }),
   Q('g_i_02', 'instigator', null, 'Is it true you and the {opp} coach don’t shake hands, or did I make that up to get a quote?',
-    'We have a professional relationship and I respect their staff.', 'I’ll shake their hand after the game. It’ll be the only thing they catch all day.', 'You made it up. But it’s a good rumour, so I’m keeping it.', 'We don’t shake hands. We headbutt. It’s in the bylaws.', { insult: ['comedy'] }),
+    'We have a professional relationship and I respect their staff.', 'I’ll shake their hand after the game. It’ll be the only thing they catch all day.', 'You made it up. But it’s a good rumor, so I’m keeping it.', 'We don’t shake hands. We headbutt. It’s in the bylaws.', { insult: ['comedy'] }),
   Q('g_i_03', 'instigator', null, 'Scale of one to ten, how overrated are the {opp}?',
     'They’re a good club. I’m not putting a number on anybody.', 'Ten. And I’m rounding down.', 'I’d say a strong seven, which is also how many yards I expect them to gain.', 'Numbers are a prison. I rate them "purple".', { predict: ['trash', 'comedy'] }),
   Q('g_i_04', 'instigator', null, 'Which club in this league would you least like to have dinner with?',
@@ -68,7 +68,7 @@ export const PRESS_QUESTIONS = Object.freeze([
   Q('g_a_05', 'analyst', null, 'What is the single most important measurable when you evaluate a monster? Please be specific.',
     'Awareness. A monster who knows where to be makes everyone better.', 'Whether the other club is afraid of him.', 'Whether he fits through the locker room door.', 'Wingspan divided by vibes.'),
   Q('g_a_06', 'analyst', null, 'There is a theory that Ice types perform worse in warm stadiums. Does the data in your building support it?',
-    'We prepare our monsters to play anywhere.', 'Our Ice types make the stadium cold. That’s the data.', 'The only data I have is a puddle where a linebacker used to be.', 'Temperature is a rumour started by thermometers.'),
+    'We prepare our monsters to play anywhere.', 'Our Ice types make the stadium cold. That’s the data.', 'The only data I have is a puddle where a linebacker used to be.', 'Temperature is a rumor started by thermometers.'),
   Q('g_a_07', 'analyst', null, 'Clock management: walk me through your decision tree with ninety seconds and two timeouts.',
     'We’ve rehearsed it. Sideline first, then the middle, save one for the kick.', 'My decision tree is: we’re already winning.', 'It’s less of a tree and more of a nervous shrub.', 'I throw the clock into the crowd. No clock, no problem.'),
   Q('g_a_08', 'analyst', null, 'Is roster chemistry quantifiable, in your professional opinion?',
@@ -92,8 +92,8 @@ export const PRESS_QUESTIONS = Object.freeze([
     'Both. You need all three phases to win.', 'Whichever one is on the field when the {opp} are crying.', 'Parking. Have you seen our lot on game day?', 'Neither. The answer is weather.'),
   Q('g_r_05', 'rookie', null, 'Do the monsters know the rules, or do you just tell them where to run?',
     'They know the rules. They study as hard as any athlete.', 'They know one rule: don’t let the other team have nice things.', 'About sixty percent of them. It’s a strong sixty.', 'I don’t tell them anything. They tell me. I’m a hostage.'),
-  Q('g_r_06', 'rookie', null, 'What’s your favourite play? Is it the one where you get the points?',
-    'Any play that’s executed the way we practised it.', 'The one where the {opp} coach throws his headset.', 'Kneeling at the end. It means we got away with it.', 'The one where everybody runs left and I run home.'),
+  Q('g_r_06', 'rookie', null, 'What’s your favorite play? Is it the one where you get the points?',
+    'Any play that’s executed the way we practiced it.', 'The one where the {opp} coach throws his headset.', 'Kneeling at the end. It means we got away with it.', 'The one where everybody runs left and I run home.'),
   Q('g_r_07', 'rookie', null, 'When you say "we need to execute", who is being executed? Is everyone okay?',
     'It just means doing your job on each play. Everyone’s fine.', 'The other team’s hopes. Not okay. Thanks for asking.', 'Mostly my patience.', 'Nobody is okay. Welcome to football.'),
   Q('g_r_08', 'rookie', null, 'Why is it called a "down" if the goal is to go up the field?',
@@ -103,8 +103,8 @@ export const PRESS_QUESTIONS = Object.freeze([
   Q('g_r_10', 'rookie', null, 'Sorry, I got lost on the way in. Which one of you is the coach?',
     'That’s me. Take your time, you’re doing fine.', 'I’m the one the {opp} have nightmares about.', 'I’m the one who looks tired. Narrow it down from there.', 'There is no coach. There is only the whistle.', { insult: ['comedy'] }),
 
-  Q('g_r_11', 'rookie', null, 'Is {star} your best one? He’s the only one I recognise.',
-    'He’s our leader, and he’s earned it. But it takes all of them.', 'He’s the best one. The {opp} will recognise him too, from behind.', 'He’s the best one. The others know. We don’t discuss it.', 'They are all {star}. Look closer.', { star: ['pro', 'trash', 'comedy'] }),
+  Q('g_r_11', 'rookie', null, 'Is {star} your best one? He’s the only one I recognize.',
+    'He’s our leader, and he’s earned it. But it takes all of them.', 'He’s the best one. The {opp} will recognize him too, from behind.', 'He’s the best one. The others know. We don’t discuss it.', 'They are all {star}. Look closer.', { star: ['pro', 'trash', 'comedy'] }),
 
   // ============================================================ SITUATIONAL (real saved data only)
   // ---- winning streak (n straight wins)
@@ -146,7 +146,7 @@ export const PRESS_QUESTIONS = Object.freeze([
     'No, it’s ours to keep. But we want another one.', 'No. And the {opp} aren’t getting near it.', 'No, but they do make you dust it.', 'The trophy and I are legally married.'),
   // ---- the quarterback threw {ints} interceptions last game
   Q('s_qbInts_1', 'instigator', 'qbInts', '{name} threw {ints} interceptions against {lastOpp}. Has your quarterback considered throwing to his own team?',
-    'He knows he has to be better. We’ve looked at every one of them on tape.', 'He was being generous. That ends Sunday.', 'We’ve colour-coded the jerseys for him. Fingers crossed.', 'He wasn’t throwing interceptions. He was making friends.'),
+    'He knows he has to be better. We’ve looked at every one of them on tape.', 'He was being generous. That ends Sunday.', 'We’ve color-coded the jerseys for him. Fingers crossed.', 'He wasn’t throwing interceptions. He was making friends.'),
   Q('s_qbInts_2', 'analyst', 'qbInts', '{ints} interceptions for {name} last week. Is this a decision-making issue or a mechanical one?',
     'A bit of both. We’ve addressed it and I expect a cleaner game.', 'It’s a "their defense got lucky" issue.', 'It’s mechanical. The mechanism is his arm, and it’s pointing the wrong way.', 'It is a spiritual issue. The ball has lost faith in him.'),
   Q('s_qbInts_3', 'rookie', 'qbInts', 'When {name} threw it to the other team {ints} times, was that part of a trick play?',
@@ -164,7 +164,7 @@ export const PRESS_QUESTIONS = Object.freeze([
     'He had a great day. The {opp} will have a plan for him, and we’ll need answers.', 'They can stay on the bus. He’ll catch passes over that too.', 'They should at least keep the engine running.', 'There is no bus. There is only {name}.', { star: ['pro', 'trash', 'unhinged'] }),
   // ---- a defender dominated last game
   Q('s_def_1', 'analyst', 'defBig', '{name} was everywhere against {lastOpp}. How do you quantify that kind of defensive performance?',
-    'Effort and film study. He’s earned everything he’s getting.', 'You count the quarterbacks who ask to go home.', 'We count the number of times the other coach says "who is that?"', 'You cannot quantify a thunderstorm. You can only apologise to it.', { star: ['pro', 'trash'] }),
+    'Effort and film study. He’s earned everything he’s getting.', 'You count the quarterbacks who ask to go home.', 'We count the number of times the other coach says "who is that?"', 'You cannot quantify a thunderstorm. You can only apologize to it.', { star: ['pro', 'trash'] }),
   // ---- a starter is injured
   Q('s_injury_1', 'analyst', 'injury', '{name} is out for {weeks}. What is the adjustment at {pos}, structurally?',
     'Next monster up. We adjust the plan around who we have.', 'The adjustment is we’re still better than the {opp}.', 'Structurally, we’re holding it together with tape and optimism.', 'I have replaced him with a very convincing shrub.'),
@@ -213,7 +213,7 @@ export const PRESS_QUESTIONS = Object.freeze([
   // ============================================================ RUNNING JOKES AND STORYLINES (the club's own press history)
   // ---- a reporter you insulted remembers ({reporter} is this reporter)
   Q('m_insulted_i', 'instigator', 'insulted:instigator', 'Before I start: you took a shot at me from that podium a while back. My readers noticed. Anything you’d like to take back?',
-    'That was uncalled for. I apologise. Ask your question.', 'I take back nothing. I’d like to add to it.', 'I’d take it back, but it got a bigger laugh than our offense.', 'I said what the prophecy required.', { insult: ['trash'] }),
+    'That was uncalled for. I apologize. Ask your question.', 'I take back nothing. I’d like to add to it.', 'I’d take it back, but it got a bigger laugh than our offense.', 'I said what the prophecy required.', { insult: ['trash'] }),
   Q('m_insulted_r', 'rookie', 'insulted:rookie', 'Um. Last time I asked a question you made fun of me, and my mum saw it. Can I still ask one?',
     'Of course. That was on me, and I’m sorry. Go ahead.', 'You can ask. I can’t promise your mum will like this one either.', 'Tell your mum I said hello, and that you’re doing great.', 'Your mother and I have been in correspondence. Proceed.'),
   Q('m_insulted_a', 'analyst', 'insulted:analyst', 'For the record, your previous remark about my methodology has been noted in my methodology. Shall we proceed?',
@@ -226,7 +226,7 @@ export const PRESS_QUESTIONS = Object.freeze([
     'I said it and we didn’t back it up. That’s on me.', 'Play it. I’ll say it again about the {opp}, and this time I’m right.', 'No thank you. I’ve seen it. My whole family sent it to me.', 'That was a different me. He has been dealt with.', { predict: ['trash'] }),
   // ---- the rival answers your trash talk (you talked trash before the rival game; you won / lost)
   Q('m_rivalWon', 'instigator', 'rivalAnswered:won', '{rivalGm} says your trash talk before the {rival} game was "noise" and the win was "luck". Your reply?',
-    'We played well that day. I’ll leave it there.', 'Tell {rivalGm} the noise has a scoreboard attached.', 'It was luck. We’ve been practising luck all year.', 'The noise is coming from inside {rivalGm}’s house.'),
+    'We played well that day. I’ll leave it there.', 'Tell {rivalGm} the noise has a scoreboard attached.', 'It was luck. We’ve been practicing luck all year.', 'The noise is coming from inside {rivalGm}’s house.'),
   Q('m_rivalLost', 'instigator', 'rivalAnswered:lost', '{rivalGm} had your quotes pinned to the {rival} locker room wall, and then they beat you. Any regrets?',
     'Yes. They earned it, and I gave them the motivation.', 'No regrets. I’ll write them a new wall next time.', 'Only that I didn’t charge them for the decorating.', 'I regret nothing. The wall and I are in talks.'),
   // ---- one of your unhinged quotes resurfaces
@@ -235,8 +235,8 @@ export const PRESS_QUESTIONS = Object.freeze([
   Q('m_quote_2', 'rookie', 'quote', 'My editor made me write down something you said: "{quote}" I’ve read it nine times. What does it mean?',
     'It was a joke. Don’t lose sleep over it.', 'It means the {opp} are in trouble.', 'Nobody knows. It was on a mug in my office.', 'Read it a tenth time. Then come find me.'),
   // ---- a monster the press keeps hearing about
-  Q('m_fav_1', 'rookie', 'mediaFav', 'You talk about {name} at basically every press conference. Is he your favourite? Are coaches allowed favourites?',
-    'I’m proud of the whole roster. He’s earned the attention.', 'He’s everybody’s favourite except the {opp}’.', 'I don’t have favourites. I have {name}, and then the others.', 'I am not allowed to say. {name} is listening.', { star: ['pro', 'comedy'] }),
+  Q('m_fav_1', 'rookie', 'mediaFav', 'You talk about {name} at basically every press conference. Is he your favorite? Are coaches allowed favorites?',
+    'I’m proud of the whole roster. He’s earned the attention.', 'He’s everybody’s favorite except the {opp}’.', 'I don’t have favorites. I have {name}, and then the others.', 'I am not allowed to say. {name} is listening.', { star: ['pro', 'comedy'] }),
   Q('m_fav_2', 'instigator', 'mediaFav', 'The {name} fan club wants to know: is it true the other monsters are jealous of all the coverage he gets from this podium?',
     'Not at all. That locker room pulls for each other.', 'They should be jealous. They should also block better.', 'One of them asked for "at least a mention". So: hello, the others.', 'There are no other monsters. There never were.', { star: ['pro'] }),
 ]);
@@ -248,9 +248,9 @@ export const SITUATION_ORDER = Object.freeze(['predictionHit', 'predictionMiss',
 /** Headlines by the tone of the press conference (the style used most; `mixed` when no style was used twice). */
 export const HEADLINES = Object.freeze({
   pro: ['COACH {COACH} SAYS NOTHING, AT LENGTH', '"ONE GAME AT A TIME," SAYS COACH, FOR THE 400TH TIME', '{CLUB} COACH CONFIRMS TEAM WILL "TRY TO SCORE POINTS"', 'PRESS CONFERENCE ENDS; NO NEWS REPORTED', 'COACH {COACH} RESPECTS OPPONENT, PROCESS, FURNITURE', '{CLUB} "FOCUSED ON SUNDAY," SOURCES INSIDE COACH’S MOUTH SAY', 'COACH GIVES 110 PERCENT OF AN ANSWER', 'REPORTERS ASLEEP BY SECOND QUESTION'],
-  trash: ['COACH {COACH} DECLARES WAR ON {OPP}, DIGNITY', '"WRITE IT IN PEN": {CLUB} COACH WON’T STOP TALKING', '{OPP} BULLETIN BOARD RUNS OUT OF SPACE', 'COACH {COACH} GUARANTEES EVERYTHING', '{CLUB} COACH PICKS FIGHT WITH ENTIRE LEAGUE BEFORE LUNCH', 'BULLETIN: COACH {COACH} SAID THAT OUT LOUD', '{OPP} COACH "CAN’T WAIT FOR SUNDAY" AFTER {CLUB} PRESSER', 'COACH CASHES CHEQUE; TEAM TO FIND OUT SUNDAY IF IT CLEARS'],
+  trash: ['COACH {COACH} DECLARES WAR ON {OPP}, DIGNITY', '"WRITE IT IN PEN": {CLUB} COACH WON’T STOP TALKING', '{OPP} BULLETIN BOARD RUNS OUT OF SPACE', 'COACH {COACH} GUARANTEES EVERYTHING', '{CLUB} COACH PICKS FIGHT WITH ENTIRE LEAGUE BEFORE LUNCH', 'BULLETIN: COACH {COACH} SAID THAT OUT LOUD', '{OPP} COACH "CAN’T WAIT FOR SUNDAY" AFTER {CLUB} PRESSER', 'COACH CASHES CHECK; TEAM TO FIND OUT SUNDAY IF IT CLEARS'],
   comedy: ['COACH {COACH} WORKSHOPS NEW MATERIAL AT PODIUM', '{CLUB} COACH FUNNIER THAN {CLUB} OFFENSE, CRITICS SAY', 'PRESS ROOM LAUGHS; COACH UNSURE IF WITH OR AT', 'COACH {COACH} "HERE ALL WEEK," CONTRACT PERMITTING', '{CLUB} COACH ANSWERS QUESTION WITH BETTER QUESTION', 'COACH REQUESTS TWO-DRINK MINIMUM FOR NEXT PRESSER', 'SARCASM LEADS {CLUB} IN SACKS', 'COACH {COACH} DEFLECTS; LEADS LEAGUE IN PASSES DEFENDED'],
-  unhinged: ['COACH {COACH}: "THE MOON KNOWS WHAT IT DID"', '{CLUB} COACH ESCORTED GENTLY FROM PODIUM', 'LEAGUE OFFICE "MONITORING" COACH {COACH}', 'COACH SPEAKS FOR TEN MINUTES; NO WORDS RECOGNISED', '{CLUB} COACH CLAIMS TO BE "THE WEATHER NOW"', 'REPORTERS FILE STORIES, THEN CHECK ON EACH OTHER', 'COACH {COACH} ANSWERS QUESTION NOBODY ASKED, IN RHYME', 'WELLNESS CHECK REQUESTED AT {CLUB} FACILITY'],
+  unhinged: ['COACH {COACH}: "THE MOON KNOWS WHAT IT DID"', '{CLUB} COACH ESCORTED GENTLY FROM PODIUM', 'LEAGUE OFFICE "MONITORING" COACH {COACH}', 'COACH SPEAKS FOR TEN MINUTES; NO WORDS RECOGNIZED', '{CLUB} COACH CLAIMS TO BE "THE WEATHER NOW"', 'REPORTERS FILE STORIES, THEN CHECK ON EACH OTHER', 'COACH {COACH} ANSWERS QUESTION NOBODY ASKED, IN RHYME', 'WELLNESS CHECK REQUESTED AT {CLUB} FACILITY'],
   mixed: ['COACH {COACH} TRIES EVERY TONE, COMMITS TO NONE', '{CLUB} PRESSER DESCRIBED AS "A JOURNEY"', 'COACH STARTS CALM, ENDS SOMEWHERE ELSE ENTIRELY', 'THREE QUESTIONS, THREE COACHES: WHICH {COACH} SHOWS UP SUNDAY?', '{CLUB} COACH GIVES ANSWERS; REPORTERS GIVEN WHIPLASH', 'ANALYSTS UNABLE TO DETERMINE COACH {COACH}’S MOOD'],
 });
 
@@ -262,7 +262,7 @@ export const SUBHEADS = Object.freeze({
   streakW: ['Team has won {n} straight. Rest of league files complaint.', '{n} wins in a row. Bandwagon reports it is "full, try the next one".', 'Winning streak hits {n}. Humility not expected to recover.'],
   blowoutLoss: ['Follows {them}-{us} loss to {lastOpp} that witnesses describe as "long".', 'Scoreboard operator from the {lastOpp} game still icing wrist.'],
   upsetWin: ['Comes days after shock {us}-{them} win over {lastOpp}. Experts "re-evaluating careers".', 'Nobody saw the {lastOpp} result coming, including {club}.'],
-  blowoutWin: ['{us}-{them} rout of {lastOpp} has club "insufferable", neighbours say.'],
+  blowoutWin: ['{us}-{them} rout of {lastOpp} has club "insufferable", neighbors say.'],
   rival: ['{rival} week. Both fan bases already hoarse.', '{rival} arrive Sunday. Stadium security "has a plan, probably".', 'Rivalry game Sunday. Local hospitals request everyone calm down.'],
   playoffs: ['Win or go home. {club} have not packed.', 'Playoff football Sunday. Nails across the city in danger.'],
   hotseat: ['Board "watching closely", which is never good.', 'Owner’s box described as "quiet, in a loud way".'],
@@ -282,7 +282,7 @@ export const SUBHEADS = Object.freeze({
 });
 export const TONE_KICKERS = Object.freeze({
   pro: ['Full transcript available to anyone having trouble sleeping.', 'Coach thanked reporters. Reporters unsure what for.'],
-  trash: ['The {opp} have printed the quotes. In colour.', 'League reminds coaches that microphones are "always on".'],
+  trash: ['The {opp} have printed the quotes. In color.', 'League reminds coaches that microphones are "always on".'],
   comedy: ['Tour dates to be announced.', 'One reporter laughed so hard he missed deadline.'],
   unhinged: ['A league spokesman said only: "We’re aware."', 'Team doctor has asked to "just have a quick chat".'],
   mixed: ['Body-language experts gave up at the second answer.', 'Next week: possibly the same coach.'],

@@ -27,14 +27,14 @@ export function slotCardHtml(s, { active = false, undo = null } = {}) {
     return `<div class="panel slot-card" data-slot="${s.slot}">${title}
       <p class="muted">Empty slot.${undo ? ` <b>${esc(undo.club || 'A franchise')}</b> was deleted from this slot a moment ago.` : ''}</p>
       <div class="stack">
-        ${undo ? '<button class="btn primary block" data-action="undo">↩ Undo delete</button>' : ''}
-        <div class="grid2"><button class="btn primary block" data-action="new" data-slot="${s.slot}">🏆 New franchise</button><label class="btn block" style="cursor:pointer">Import a file<input type="file" accept=".gbfranchise,application/json,.json" data-change="import" data-slot="${s.slot}" class="sr-only"></label></div>
-        ${s.backups ? `<button class="btn ghost block" data-action="backups" data-slot="${s.slot}">Restore a backup kept in this slot</button>` : ''}
+        ${undo ? '<button class="btn primary block" data-action="undo">↩ Undo Delete</button>' : ''}
+        <div class="grid2"><button class="btn primary block" data-action="new" data-slot="${s.slot}">🏆 New Franchise</button><label class="btn block" style="cursor:pointer">Import a file<input type="file" accept=".gbfranchise,application/json,.json" data-change="import" data-slot="${s.slot}" class="sr-only"></label></div>
+        ${s.backups ? `<button class="btn ghost block" data-action="backups" data-slot="${s.slot}">Restore a Backup Kept in This Slot</button>` : ''}
       </div></div>`;
   }
   if (s.state === 'damaged' || s.state === 'migrating') {
     return `<div class="panel slot-card" data-slot="${s.slot}">${title}<p class="muted">${s.state === 'damaged' ? 'The save in this slot could not be read. Nothing has been changed or deleted; its backups are kept.' : 'This slot\'s save is still moving to the new storage. Open it to finish.'}</p>
-      <div class="stack"><button class="btn primary block" data-action="open" data-slot="${s.slot}">${s.state === 'damaged' ? 'Open recovery' : 'Open'}</button></div></div>`;
+      <div class="stack"><button class="btn primary block" data-action="open" data-slot="${s.slot}">${s.state === 'damaged' ? 'Open Recovery' : 'Open'}</button></div></div>`;
   }
   const archived = s.state === 'retired' || s.state === 'fired';
   const seasonLine = archived ? `${head?.reason === 'fired' ? 'Dismissed' : 'Retired'} after ${head?.seasons ?? m.seasons ?? '?'} season${(head?.seasons ?? m.seasons) === 1 ? '' : 's'}` : `Season ${(m.seasons ?? 0) + 1} of ${SEASON_CAP} · ${m.year != null ? yearOf(m.year) : '—'}${m.week != null ? ` · Week ${m.week}` : ''}${m.finished ? ' · offseason' : ''}`;
@@ -45,7 +45,7 @@ export function slotCardHtml(s, { active = false, undo = null } = {}) {
       <div class="muted">Record <span class="mono">${archived ? esc(head?.record || recordText(m.record)) : recordText(m.record)}</span>${m.titles ? ` · 🏆 ${m.titles} Beast Bowl${m.titles === 1 ? '' : 's'}` : ''}${tier ? ` · ${esc(tier)}` : ''}</div>
       <div class="dim" style="font-size:12px">Last saved ${esc(when(s.savedAt))} · ${kb(s.bytes)} stored</div></div></div>
     <div class="stack" style="margin-top:10px">
-      ${archived ? `<button class="btn primary block" data-action="legacy" data-slot="${s.slot}">🏛️ View Franchise Legacy</button>` : active ? '<button class="btn primary block" data-action="continue">▶ Continue Franchise</button>' : `<button class="btn primary block" data-action="switch" data-slot="${s.slot}">▶ Play this franchise</button>`}
+      ${archived ? `<button class="btn primary block" data-action="legacy" data-slot="${s.slot}">🏛️ View Franchise Legacy</button>` : active ? '<button class="btn primary block" data-action="continue">▶ Continue Franchise</button>' : `<button class="btn primary block" data-action="switch" data-slot="${s.slot}">▶ Play This Franchise</button>`}
       <div class="grid2"><button class="btn block" data-action="export" data-slot="${s.slot}">Export</button><button class="btn danger block" data-action="delete" data-slot="${s.slot}">Delete</button></div>
     </div></div>`;
 }
@@ -69,7 +69,7 @@ export function registerFranchisesScreens(Router, app) {
         const list = await cloudFranchises(); const held = new Set((cache || []).map((s) => s.uid).filter(Boolean)); const empty = app.slots?.emptySlots(cache || []) || [];
         const offers = list.filter((c) => c.uid && !held.has(c.uid));
         const host = root.querySelector('#cloud-offers'); if (!host || !offers.length) return;
-        host.innerHTML = `<div class="panel" style="margin-top:10px"><b>☁️ In your cloud save, not on this device</b><p class="muted">${empty.length ? 'Restore one into an empty slot.' : 'Free a slot to restore one here.'}</p><div class="stack">${offers.map((c, i) => { const m = c.meta || {}; return `<div class="row between"><div><b>${esc(m.club || 'Franchise')}</b>${m.owner ? ` · ${esc(m.owner)}` : ''}<div class="dim" style="font-size:12px">${m.status && m.status !== 'active' ? (m.status === 'fired' ? 'Dismissed' : 'Retired') + ' archive · ' : ''}${m.seasons != null ? `${m.seasons} season${m.seasons === 1 ? '' : 's'} · ` : ''}saved ${esc(when(c.savedAt))}</div></div>${empty.length ? `<button class="btn small" data-action="cloud" data-i="${i}" data-slot="${empty[0]}">Restore into slot ${empty[0]}</button>` : ''}</div>`; }).join('')}</div></div>`;
+        host.innerHTML = `<div class="panel" style="margin-top:10px"><b>☁️ In your cloud save, not on this device</b><p class="muted">${empty.length ? 'Restore one into an empty slot.' : 'Free a slot to restore one here.'}</p><div class="stack">${offers.map((c, i) => { const m = c.meta || {}; return `<div class="row between"><div><b>${esc(m.club || 'Franchise')}</b>${m.owner ? ` · ${esc(m.owner)}` : ''}<div class="dim" style="font-size:12px">${m.status && m.status !== 'active' ? (m.status === 'fired' ? 'Dismissed' : 'Retired') + ' archive · ' : ''}${m.seasons != null ? `${m.seasons} season${m.seasons === 1 ? '' : 's'} · ` : ''}saved ${esc(when(c.savedAt))}</div></div>${empty.length ? `<button class="btn small" data-action="cloud" data-i="${i}" data-slot="${empty[0]}">Restore Into Slot ${empty[0]}</button>` : ''}</div>`; }).join('')}</div></div>`;
         host.addEventListener('click', async (e) => {
           const b = e.target.closest('[data-action="cloud"]'); if (!b) return; const c = offers[Number(b.dataset.i)]; const slot = Number(b.dataset.slot); if (!c) return;
           b.disabled = true; b.textContent = 'Restoring…';
@@ -106,11 +106,11 @@ export async function deleteFlow(app, { slot, f, bytes = 0, onDone = null }) {
   const name = f.club || 'this franchise'; const seasons = (f.history || []).length;
   const body = `<p>Delete <b>${esc(name)}</b> (${esc(`${f.owner?.first || ''} ${f.owner?.last || ''}`.trim())}, ${seasons} season${seasons === 1 ? '' : 's'}, ${kb(bytes)} stored) from slot ${slot}?</p>
     <p class="muted">Export a copy first so you can bring it back later. The deleted copy is also kept among this slot's backups, and you can undo the deletion until you close the game.</p>
-    <div class="stack"><button class="btn primary block" data-action="export">⬇ Export first</button><div class="dim" id="del-export" style="font-size:12px;min-height:1em"></div>
+    <div class="stack"><button class="btn primary block" data-action="export">⬇ Export First</button><div class="dim" id="del-export" style="font-size:12px;min-height:1em"></div>
     <label class="muted">Type <b>${esc(name)}</b> or <b>DELETE</b> to confirm<input id="del-confirm" class="input block" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${esc(name)}"></label>
-    <div class="row"><button class="btn" data-action="cancel">Cancel</button><button class="btn danger" data-action="delete" disabled>Delete forever</button></div></div>`;
+    <div class="row"><button class="btn" data-action="cancel">Cancel</button><button class="btn danger" data-action="delete" disabled>Delete Forever</button></div></div>`;
   return new Promise((resolve) => {
-    const { el, close } = sheet(body, { title: 'Delete franchise', onClose: () => resolve(false) });
+    const { el, close } = sheet(body, { title: 'Delete Franchise', onClose: () => resolve(false) });
     const input = el.querySelector('#del-confirm'); const btn = el.querySelector('[data-action="delete"]');
     const matches = () => { const v = input.value.trim(); return v === 'DELETE' || (v.length > 0 && v.toLowerCase() === String(name).toLowerCase()); };
     input.addEventListener('input', () => { btn.disabled = !matches(); });
@@ -139,14 +139,14 @@ export async function importFlow(app, Router, { file, preferredSlot = null, onDo
   const f = v.franchise; const m = v.meta || {}; const { list, empty, same } = await app.slots.slotFor({ uid: f.uid });
   const status = f.lifecycle?.legacy ? (f.lifecycle.status === 'fired' ? 'Dismissed archive' : 'Retired archive') : 'Active';
   const preview = `<div class="panel tight"><div><b>${esc(m.club || f.club || 'Franchise')}</b>${m.owner ? ` · ${esc(m.owner)}` : ''}</div><div class="muted">${m.year != null ? yearOf(m.year) : ''}${m.week != null ? ` · Week ${m.week}` : ''} · ${esc(status)} · ${kb(text.length)} in the file</div><div class="dim mono" style="font-size:11px;overflow-wrap:anywhere">id ${esc(f.uid || 'none')}</div>${v.warnings?.length ? `<div class="warn-text">${esc(v.warnings[0])}</div>` : ''}</div>`;
-  const slotButtons = (slots, label) => slots.map((n) => `<button class="btn block" data-action="into" data-slot="${n}">${label} slot ${n}</button>`).join('');
+  const slotButtons = (slots, label) => slots.map((n) => `<button class="btn block" data-action="into" data-slot="${n}">${label} Slot ${n}</button>`).join('');
   const sameNote = same ? `<p class="warn-text">This franchise is already in slot ${same}. Replace it (the delete flow runs first) or import this file as a separate copy.</p>` : '';
   const body = `${preview}${sameNote}<div class="stack" style="margin-top:10px">
-    ${same ? `<button class="btn danger block" data-action="replace" data-slot="${same}">Replace slot ${same}</button><button class="btn block" data-action="copy">Import as a copy${empty.length ? '' : ' (no empty slot)'}</button>` : ''}
+    ${same ? `<button class="btn danger block" data-action="replace" data-slot="${same}">Replace Slot ${same}</button><button class="btn block" data-action="copy">Import as a Copy${empty.length ? '' : ' (No Empty Slot)'}</button>` : ''}
     ${!same ? (empty.length ? `<p class="muted">Choose an empty slot:</p>${slotButtons(empty, 'Import into')}` : '<p class="warn-text">All three slots are full. Delete or export a franchise first, then import again.</p>') : ''}
     <button class="btn ghost block" data-action="cancel">Cancel</button></div>`;
   return new Promise((resolve) => {
-    const { el } = sheet(body, { title: 'Import franchise', onClose: () => resolve(false) });
+    const { el } = sheet(body, { title: 'Import Franchise', onClose: () => resolve(false) });
     let asCopy = false;
     const into = async (slot) => {
       const g = asCopy ? { ...f, uid: newUid() } : f;

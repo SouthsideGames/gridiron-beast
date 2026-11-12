@@ -52,7 +52,7 @@ export function registerCaptainScreens(Router, app) {
   }
 
   Router.registerScreen('captains', {
-    title: 'Team captains',
+    title: 'Team Captains',
     render({ f }) {
       if (!f?.season) return '<p>No franchise.</p>';
       const mode = modeOf(f);
@@ -62,10 +62,10 @@ export function registerCaptainScreens(Router, app) {
       const when = mode === 'initial' ? `<div class="panel tight cap-note"><b>One-time pick.</b> Your franchise is getting team captains for the first time, so you can choose them now, in the middle of the ${yearOf(f.season.year)} season. After this, captains change only in the offseason. If you don't choose before your next game, the suggested captains are used.</div>`
         : `<div class="panel tight cap-note"><b>Captains for ${yearOf(f.season.year + 1)}.</b> You can change this until the season starts. If you don't choose, the suggested captains are used.${f.partnerships?.pick?.year === f.season.year + 1 ? ' <span class="chip good">Saved</span>' : ''}</div>`;
       return `${intro}${when}
-        <button class="btn block" data-action="cap-suggest" style="margin-bottom:var(--s3)">✨ Use suggested captains</button>
+        <button class="btn block" data-action="cap-suggest" style="margin-bottom:var(--s3)">✨ Use Suggested Captains</button>
         ${SIDES.map((side) => sideHtml(f, cands, side, d[side], sugg)).join('')}
         <p class="dim">Captains stay the same all season, even in the playoffs. They can still be released; their partnership then stops until they return.</p>
-        <button class="btn primary big block" data-action="cap-confirm">${mode === 'initial' ? 'Confirm captains' : 'Save captains for next season'}</button>`;
+        <button class="btn primary big block" data-action="cap-confirm">${mode === 'initial' ? 'Confirm Captains' : 'Save Captains for Next Season'}</button>`;
     },
     mount(root) {
       delegate(root, {
@@ -79,7 +79,7 @@ export function registerCaptainScreens(Router, app) {
           const list = cands.filter((c) => allowed.includes(c.position) && c.id !== other?.id && !taken.has(c.id)).sort((p, q) => (q.role === 'base') - (p.role === 'base') || q.ovr - p.ovr);
           const row = (c) => { const pair = other ? CP.orderPair(other, c) : null; const prog = pair ? CP.progressOf(pair.type, CP.chemistryCount(f, pair.a, pair.b)) : null; const m = monsterOf(f, c.id);
             return `<button class="item cap-pick" data-id="${c.id}">${m ? monsterSprite(m, 32) : ''}<div class="grow"><div class="name">${esc(c.name)} <span class="dim">${c.position} · ${c.ovr} OVR · ${ROLE_WORD[c.role]}</span></div>${prog ? `<div class="sub">${chemMeterHtml(prog, { compact: true })}${CP.SLOW_TYPES.includes(pair.type) ? ' <span class="chip warn">Slow to build</span>' : ''}</div>` : ''}</div></button>`; };
-          const { close } = sheet(`<p class="dim" style="margin-top:0">${other ? `Partners for ${esc(other.name)} (${other.position}).` : `Choose a ${allowed.join(', ')}.`} Starters play the most, so they build chemistry fastest.</p><div class="list">${list.map(row).join('') || '<p class="dim">Nobody eligible.</p>'}</div>`, { title: `${SIDE_WORD[side]} captain ${i + 1}` });
+          const { close } = sheet(`<p class="dim" style="margin-top:0">${other ? `Partners for ${esc(other.name)} (${other.position}).` : `Choose a ${allowed.join(', ')}.`} Starters play the most, so they build chemistry fastest.</p><div class="list">${list.map(row).join('') || '<p class="dim">Nobody eligible.</p>'}</div>`, { title: `${SIDE_WORD[side]} Captain ${i + 1}` });
           document.querySelectorAll('.sheet .cap-pick').forEach((b) => b.addEventListener('click', () => {
             const id = b.dataset.id; d[side][i] = id;
             const a = cands.find((c) => c.id === d[side][0]), z = cands.find((c) => c.id === d[side][1]);

@@ -12,7 +12,7 @@
 export const ENVIRONMENTS = Object.freeze({
   grass: { id: 'grass', name: 'Traditional Grass', short: 'Grass', type: null, indoor: false, icon: '🌱', texture: 'grass',
     palette: { a: '#236b49', b: '#28734d', c: '#216444', end: '#1a4b3b', apron: '#18402f', tint: null, decor: '#2f8a5c' },
-    blurb: 'Classic natural grass. No type is favoured.', weather: { clear: 5, rain: 2, wind: 2, overcast: 1 } },
+    blurb: 'Classic natural grass. No type is favored.', weather: { clear: 5, rain: 2, wind: 2, overcast: 1 } },
   frozen: { id: 'frozen', name: 'Frozen Stadium', short: 'Frozen', type: 'Ice', indoor: false, icon: '❄', texture: 'ice',
     palette: { a: '#3d6e7e', b: '#447787', c: '#3a6877', end: '#2b5664', apron: '#d9eef5', tint: 'rgba(200,235,255,0.07)', decor: '#e8f7ff' },
     blurb: 'Frost-glazed turf, snowbanks along the sidelines.', weather: { clear: 3, snow: 4, wind: 2, overcast: 1 } },
@@ -45,7 +45,7 @@ export const ENVIRONMENTS = Object.freeze({
     blurb: 'Deep purple turf under low mist. The lines stay bright.', weather: { overcast: 5, clear: 2, rain: 2, wind: 1 } },
   dragon: { id: 'dragon', name: 'Dragon\'s Den', short: 'Den', type: null, element: 'Dragon', indoor: false, icon: '🐉', texture: 'scales',
     palette: { a: '#4a4651', b: '#514c58', c: '#44404b', end: '#5a1f2c', apron: '#2b2130', tint: 'rgba(170,60,90,0.05)', decor: '#c0394b' },
-    blurb: 'Ancient stone, crimson and purple banners, dragon statues on guard. A look only: no type is favoured.', weather: { clear: 4, overcast: 3, wind: 2, storm: 1 } },
+    blurb: 'Ancient stone, crimson and purple banners, dragon statues on guard. A look only: no type is favored.', weather: { clear: 4, overcast: 3, wind: 2, storm: 1 } },
 });
 /** The element a field belongs to (null for grass): its favoured type, or for a look-only field its `element`. */
 export const fieldElement = (envId) => { const e = ENVIRONMENTS[envId]; return e ? e.element || e.type || null : null; };

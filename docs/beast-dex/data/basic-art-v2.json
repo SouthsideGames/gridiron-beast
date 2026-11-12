@@ -1,5 +1,5 @@
 {
- "note": "Generator v2 art recipes for the 120 Basic families (pending owner final review). Keyed by family id; name, type, position, size, colours and gameplay data come from basic-authoring.json / families.json and are unchanged. A recipe's own `colors` overrides the family palette only where noted (Pondskip, for field contrast). The game does not read this file yet; the current Basic art (commit 6abcf3b baseline) is unchanged.",
+ "note": "Generator v2 art recipes for the 120 Basic families (pending owner final review). Keyed by family id; name, type, position, size, colors and gameplay data come from basic-authoring.json / families.json and are unchanged. A recipe's own `colors` overrides the family palette only where noted (Pondskip, for field contrast). The game does not read this file yet; the current Basic art (commit 6abcf3b baseline) is unchanged.",
  "generator": "v2",
  "recipes": [
   {

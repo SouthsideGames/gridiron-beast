@@ -15,7 +15,7 @@ export function coachEditorHtml(look, { tab = 'face', teamColor = null, teamNote
   };
   return `<div class="coach-editor">
     <div class="ce-top"><div class="ce-preview">${coachPortrait(L, 128, { teamColor })}</div>
-      <div class="ce-side"><button class="btn small" data-action="ce-random">🎲 Surprise me</button>${teamNote ? `<div class="dim" style="font-size:11px;margin-top:6px">${esc(teamNote)}</div>` : ''}</div></div>
+      <div class="ce-side"><button class="btn small" data-action="ce-random">🎲 Surprise Me</button>${teamNote ? `<div class="dim" style="font-size:11px;margin-top:6px">${esc(teamNote)}</div>` : ''}</div></div>
     <div class="ce-tabs" role="tablist">${COACH_CATEGORIES.map((c) => `<button class="ce-tab ${c.id === cat.id ? 'on' : ''}" role="tab" aria-selected="${c.id === cat.id}" data-action="ce-tab" data-v="${c.id}"><span aria-hidden="true">${c.icon}</span> ${esc(c.label)}</button>`).join('')}</div>
     <div class="ce-body">${cat.options.map(option).join('')}</div>
   </div>`;

@@ -14,7 +14,7 @@ export default function batch(b) {
 
   add(O('trips_spacing', 'Trips Spacing', 'spread_trips_rt', { QB: PASS(), WR1: R('hitch'), WR2: R('sit'), WR3: R('arrow'), RB: R('drift'), LG: BLOCK, RG: BLOCK },
     P('WR2', ['WR2', 'WR3', 'WR1', 'RB'], 'quick', ['quick', 'short', 'zone_beater'], 'Three receivers right stretch the flat at three spots; the back drifts into the middle as an outlet.')),
-  'Against a defence with two defenders over three receivers.', 'Count the defenders over trips: three receivers against two means someone is open.', 'Cover 2 Zone and Cover 3.', 'Cover 6 rotated to trips.');
+  'Against a defense with two defenders over three receivers.', 'Count the defenders over trips: three receivers against two means someone is open.', 'Cover 2 Zone and Cover 3.', 'Cover 6 rotated to trips.');
 
   add(O('empty_sit', 'Empty Sit', 'empty_2x2', { QB: PASS(), WR1: R('hitch'), WR3: R('sit'), RB: R('sit'), WR2: R('hitch'), LG: BLOCK, RG: BLOCK },
     P('WR3', ['WR3', 'RB', 'WR1', 'WR2'], 'quick', ['quick', 'short'], 'Empty set, four quick sit and hitch routes: the ball is out before any rush arrives.')),
@@ -37,7 +37,7 @@ export default function batch(b) {
   'When the corners play off and give up the cushion.', 'Throw on time to the receiver whose corner is deepest.', 'Cover 3, Cover 4 and Prevent.', 'Man Press and Cover 2 Zone corners squatting.');
 
   add(O('quick_outs', 'Quick Outs', 'empty_2x2', { QB: PASS(), WR1: R('speed_out'), WR3: R('slant'), RB: R('slant'), WR2: R('speed_out'), LG: BLOCK, RG: BLOCK },
-    P('WR2', ['WR2', 'RB', 'WR1', 'WR3'], 'quick', ['quick', 'short', 'two_minute'], 'Outs outside, slants inside on both sides: a quick answer whichever way the defence leans.')),
+    P('WR2', ['WR2', 'RB', 'WR1', 'WR3'], 'quick', ['quick', 'short', 'two_minute'], 'Outs outside, slants inside on both sides: a quick answer whichever way the defense leans.')),
   'Two-minute drill: completions that stop the clock.', 'The outside out is the clock-stopper; the slant is there if the corner jumps the out.', 'Cover 3 and Cover 4.', 'Cover 2 Zone with corners sitting in the flats.');
 
   add(O('twins_speed_out', 'Twins Speed Out', 'gun_twins_rt', { QB: PASS(), WR2: R('speed_out'), WR1: R('seam'), TE: R('sit'), RB: BLOCK, LG: BLOCK, RG: BLOCK },
@@ -50,7 +50,7 @@ export default function batch(b) {
 
   add(O('tight_slant_flat', 'Tight Slant Flat', 'tight_twins', { QB: PASS(), WR1: R('slant'), TE: R('arrow'), RB: R('swing'), LG: BLOCK, RG: BLOCK },
     P('WR1', ['WR1', 'TE', 'RB'], 'quick', ['quick', 'short'], 'From a three-lineman set, the receiver slants while the tight end releases to the flat underneath.')),
-  'When the defence crowds the box against your tight personnel.', 'The tight end clears the flat defender out; the slant comes open behind him.', 'Run Wall and Bear Front.', 'Robber and Cover 2 Zone.');
+  'When the defense crowds the box against your tight personnel.', 'The tight end clears the flat defender out; the slant comes open behind him.', 'Run Wall and Bear Front.', 'Robber and Cover 2 Zone.');
 
   add(O('hitch_seam', 'Hitch Seam', 'spread_left', { QB: PASS(), WR1: R('hitch'), WR3: R('seam'), WR2: R('hitch'), RB: R('flat'), LG: BLOCK, RG: BLOCK },
     P('WR3', ['WR3', 'WR1', 'WR2', 'RB'], 'three', ['short', 'medium', 'zone_beater'], 'Outside hitches hold the corners while the left slot attacks the seam.')),
@@ -69,8 +69,8 @@ export default function batch(b) {
   'Against a pressed corner on the outside.', 'If the corner sinks with the fade, throw the out; if he sits, throw the fade over him.', 'Man Press and Cover 2 Zone.', 'Cover 3, the corner has deep help.');
 
   add(O('twins_fade_out', 'Twins Fade Out', 'ace_twins', { QB: PASS(), WR1: R('fade'), WR2: R('speed_out'), TE: R('flat'), RB: BLOCK, LG: BLOCK, RG: BLOCK },
-    P('WR1', ['WR1', 'WR2', 'TE'], 'quick', ['short', 'deep', 'man_beater'], 'Under centre with twins left: fade outside, out from the slot, tight end to the flat on the other side.')),
-  'When the defence leaves the twins side one-on-one.', 'The quarterback picks the twins side pre-snap and throws on rhythm.', 'Cover 1 and Man Press.', 'Cover 2 Zone and Cover 6.');
+    P('WR1', ['WR1', 'WR2', 'TE'], 'quick', ['short', 'deep', 'man_beater'], 'Under center with twins left: fade outside, out from the slot, tight end to the flat on the other side.')),
+  'When the defense leaves the twins side one-on-one.', 'The quarterback picks the twins side pre-snap and throws on rhythm.', 'Cover 1 and Man Press.', 'Cover 2 Zone and Cover 6.');
 
   add(O('bunch_whip', 'Bunch Whip', 'trips_bunch', { QB: PASS(), WR1: R('whip'), WR3: R('go'), WR2: R('arrow'), RB: BLOCK, LG: BLOCK, RG: BLOCK },
     P('WR1', ['WR1', 'WR2', 'WR3'], 'quick', ['quick', 'short', 'man_beater'], 'From a bunch: the inside receiver steps in and whips back out under a vertical and an arrow.')),
@@ -106,15 +106,15 @@ export default function batch(b) {
 
   add(O('slant_seam', 'Slant Seam', 'spread_left', { QB: PASS(), WR1: R('slant'), WR3: R('seam'), WR2: R('slant'), RB: R('swing'), LG: BLOCK, RG: BLOCK },
     P('WR1', ['WR1', 'WR3', 'WR2', 'RB'], 'quick', ['quick', 'short', 'medium'], 'Twin slants outside with the left slot running a seam between them.')),
-  'Against single-high defences that sit underneath.', 'The seam holds the linebacker deep; the slant comes open under him.', 'Cover 1 and Cover 3.', 'Robber.');
+  'Against single-high defenses that sit underneath.', 'The seam holds the linebacker deep; the slant comes open under him.', 'Cover 1 and Cover 3.', 'Robber.');
 
   add(O('pistol_smash', 'Pistol Smash', 'pistol_twins', { QB: PASS(), WR1: R('hitch'), WR3: R('corner'), WR2: R('slant'), RB: BLOCK, LG: BLOCK, RG: BLOCK },
     P('WR3', ['WR3', 'WR1', 'WR2'], 'three', ['medium', 'zone_beater'], 'Smash to the twins side from the pistol: slot corner over an outside hitch; backside slant.')),
   'Against Cover 2 shells.', 'The corner defender cannot cover the hitch and the corner route at once.', 'Cover 2 Zone and Tampa 2.', 'Cover 4.');
 
   add(O('tight_stick_flat', 'Tight Stick Flat', 'tight_i', { QB: PASS(), TE: R('stick'), RB: R('flat'), WR1: R('slant'), LG: BLOCK, RG: BLOCK },
-    P('TE', ['TE', 'RB', 'WR1'], 'quick', ['quick', 'short'], 'Under centre with three linemen: tight end stick, back to the flat, receiver slant.')),
-  'Play-action looks without the fake: quick throws from a run formation.', 'The defence expects a run; the tight end is free for a step.', 'Run Wall and Goal Line Stand.', 'Cover 2 Zone.');
+    P('TE', ['TE', 'RB', 'WR1'], 'quick', ['quick', 'short'], 'Under center with three linemen: tight end stick, back to the flat, receiver slant.')),
+  'Play-action looks without the fake: quick throws from a run formation.', 'The defense expects a run; the tight end is free for a step.', 'Run Wall and Goal Line Stand.', 'Cover 2 Zone.');
 
   add(O('angle_stick', 'Angle Stick', 'gun_pro_lt', { QB: PASS(), RB: R('angle'), TE: R('stick'), WR1: R('hitch'), WR2: R('slant'), LG: BLOCK, RG: BLOCK },
     P('RB', ['RB', 'TE', 'WR2', 'WR1'], 'three', ['short', 'man_beater'], 'The back runs an angle route inside while the tight end sits at the sticks.')),
@@ -151,7 +151,7 @@ export default function batch(b) {
 
   add(O('jailbreak', 'Jailbreak Screen', 'spread_left', { QB: PASS(1.4), WR2: R('tunnel'), LG: RELEASE([0.5, 8]), RG: RELEASE([1.5, 12]), RB: BLOCK, WR1: R('go'), WR3: R('go'), },
     P('WR2', ['WR2', 'WR3'], 'three', ['screen', 'short', 'blitz_beater'], 'Both guards release to the right; the receiver comes inside behind them for a convoy.')),
-  'When the defence brings pressure: let it in and throw behind it.', 'The quarterback waits a beat, then throws as both guards get out in front.', 'All-Out Pressure, Fire Zone and Cover 0.', 'QB Spy and Max Drop.');
+  'When the defense brings pressure: let it in and throw behind it.', 'The quarterback waits a beat, then throws as both guards get out in front.', 'All-Out Pressure, Fire Zone and Cover 0.', 'QB Spy and Max Drop.');
 
   add(O('te_screen', 'TE Screen', 'gun_pro', { QB: PASS(1.5), TE: R('screen'), LG: RELEASE([1, 4]), RG: RELEASE([2, 7]), WR1: R('go'), WR2: R('go'), RB: BLOCK },
     P('TE', ['TE'], 'five', ['screen', 'long', 'blitz_beater'], 'The tight end blocks for a count, slips into the right flat and catches it behind two releasing guards.')),
@@ -159,11 +159,11 @@ export default function batch(b) {
 
   add(O('swing_screen', 'Swing Screen', 'pro_trips', { QB: PASS(1.2), RB: R('swing'), LG: RELEASE([0, -6]), WR1: R('go'), WR2: R('go'), TE: BLOCK, RG: BLOCK },
     P('RB', ['RB'], 'three', ['screen', 'short'], 'Trips right pulls the coverage over; the back swings to the empty left side behind a releasing guard.')),
-  'When the defence overloads the trips side.', 'Throw it once the guard is out in front of the back.', 'Cover 3 and Cover 6 rolled to trips.', 'Edge Contain.');
+  'When the defense overloads the trips side.', 'Throw it once the guard is out in front of the back.', 'Cover 3 and Cover 6 rolled to trips.', 'Edge Contain.');
 
   add(O('middle_screen', 'Middle Screen', 'gun_spread', { QB: PASS(1.6), RB: R('drift'), LG: RELEASE([1, -1]), RG: RELEASE([1, 1.5]), WR1: R('go'), WR2: R('go'), WR3: R('go') },
     P('RB', ['RB'], 'five', ['screen', 'long'], 'Three verticals take the coverage deep; both guards release inside and the back catches it in the middle behind them.')),
-  '3rd-and-long when the defence rushes upfield and drops deep.', 'The back sets up as if to block, then drifts into the middle.', 'Max Drop, Prevent and Fire Zone.', 'QB Spy and Run Wall.');
+  '3rd-and-long when the defense rushes upfield and drops deep.', 'The back sets up as if to block, then drifts into the middle.', 'Max Drop, Prevent and Fire Zone.', 'QB Spy and Run Wall.');
 
   add(O('slot_screen', 'Slot Screen', 'empty_trips', { QB: PASS(0.7), WR3: R('screen'), WR2: STALK([1, 17]), RB: STALK([2, 12]), LG: RELEASE([0, 5]), WR1: R('go'), RG: BLOCK },
     P('WR3', ['WR3'], 'quick', ['screen', 'quick', 'short'], 'The inside trips receiver steps back for the ball; the other two block and the left guard leads.')),
@@ -171,7 +171,7 @@ export default function batch(b) {
 
   add(O('flex_slip', 'Flex Slip Screen', 'tight_flex', { QB: PASS(1.2), TE: R('screen'), LG: RELEASE([1, 11]), WR1: R('go'), RB: BLOCK, RG: BLOCK },
     P('TE', ['TE'], 'three', ['screen', 'short'], 'The flexed tight end sells a block for a beat, then slips back and out toward the sideline behind the releasing left guard.')),
-  'When the defence treats the flexed tight end as a receiver.', 'He catches it drifting outside, then turns up behind the guard.', 'Cover 3 and Cover 4.', 'Robber.');
+  'When the defense treats the flexed tight end as a receiver.', 'He catches it drifting outside, then turns up behind the guard.', 'Cover 3 and Cover 4.', 'Robber.');
 
   // ---- short-yardage and goal line
   add(O('goal_fade', 'Goal Line Fade', 'goal_jumbo', { QB: PASS(), WR1: R('fade'), TE: R('flat'), RB: BLOCK, LG: BLOCK, RG: BLOCK },
@@ -184,7 +184,7 @@ export default function batch(b) {
 
   add(O('te_pop', 'Tight End Pop', 'goal_jumbo', { QB: PA([[-1.6, 0], [-3.5, 0], [-5, 0]]), RB: FAKE, TE: R('seam'), WR1: STALK([2, -7]), LG: BLOCK, RG: BLOCK },
     P('TE', ['TE'], 'pa', ['short', 'redzone', 'play_action'], 'Jumbo play-action: the tight end blocks for a step, then pops straight up the seam.')),
-  'Goal line, after the defence has stuffed two runs.', 'One read: the tight end behind the linebackers who bit on the fake.', 'Goal Line Stand and Run Wall.', 'Goal Line Man.');
+  'Goal line, after the defense has stuffed two runs.', 'One read: the tight end behind the linebackers who bit on the fake.', 'Goal Line Stand and Run Wall.', 'Goal Line Man.');
 
   return { plays, lessons };
 }

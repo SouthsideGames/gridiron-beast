@@ -13,12 +13,12 @@ export function statGuideHtml(position) {
 }
 /** Open the guide as a sheet, starting at `position`; the position chips switch it in place. */
 export function openStatGuide(position = 'QB') {
-  const { el } = sheet(`<div data-guide>${statGuideHtml(position)}</div>`, { title: 'What the stats mean' });
+  const { el } = sheet(`<div data-guide>${statGuideHtml(position)}</div>`, { title: 'What the Stats Mean' });
   el.addEventListener('click', (e) => { const p = e.target.closest('[data-guide-pos]')?.dataset.guidePos; if (!p) return; el.querySelector('[data-guide]').innerHTML = statGuideHtml(p); });
 }
 /** One attribute for one position, as a small sheet (tapped from the monster card). */
 export function openStatMeaning(position, attr, name = null) {
   const helps = attributeHelps(position, attr);
-  sheet(`<p><b>${esc(ATTR_NAME[attr])}</b> · ${esc(STAT_GUIDE[attr].summary)}</p><p>${name ? `For ${esc(name)} (${esc(POSITION_NAME[position].toLowerCase())}): ` : ''}${esc(statMeaning(position, attr))}</p>${helps ? '' : '<p class="dim">Attribute points cannot be spent here.</p>'}<button class="btn small" data-guide-all="${position}">All twelve for a ${esc(POSITION_NAME[position].toLowerCase())}</button>`, { title: ATTR_NAME[attr] })
+  sheet(`<p><b>${esc(ATTR_NAME[attr])}</b> · ${esc(STAT_GUIDE[attr].summary)}</p><p>${name ? `For ${esc(name)} (${esc(POSITION_NAME[position].toLowerCase())}): ` : ''}${esc(statMeaning(position, attr))}</p>${helps ? '' : '<p class="dim">Attribute points cannot be spent here.</p>'}<button class="btn small" data-guide-all="${position}">All Twelve for a ${esc(POSITION_NAME[position].toLowerCase())}</button>`, { title: ATTR_NAME[attr] })
     .el.addEventListener('click', (e) => { const p = e.target.closest('[data-guide-all]')?.dataset.guideAll; if (!p) return; e.target.closest('.sheet-backdrop')?.remove(); openStatGuide(p); });
 }

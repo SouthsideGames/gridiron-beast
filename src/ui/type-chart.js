@@ -75,7 +75,7 @@ export function matchupPanelHtml(x, me = 'off') {
     <p class="tm-reason">${esc(mine.reason)}</p>
     ${theirRows}
     <p class="dim tm-foot">These are situational modifiers, not permanent stat increases. This is the expected matchup before the snap: the edge only counts if these two actually meet. Once the play starts, every contest uses the monster really in it.</p>
-    <div class="row" style="gap:8px;margin-top:8px"><button class="btn small" data-action="tm-chart" data-type="${esc(mine.type || 'Fire')}">Type Chart</button><button class="btn small primary" data-action="sheet-close">Got it</button></div>
+    <div class="row" style="gap:8px;margin-top:8px"><button class="btn small" data-action="tm-chart" data-type="${esc(mine.type || 'Fire')}">Type Chart</button><button class="btn small primary" data-action="sheet-close">Got It</button></div>
   </div>`;
 }
 export function openMatchupPanel(x, me = 'off') {

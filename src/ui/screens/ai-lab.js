@@ -136,7 +136,7 @@ export function registerAiLab(Router, app) {
       <table class="lab-table"><tr><th></th><th>You</th><th>AI</th></tr><tr><th>Yards</th><td class="mono">${ex.human?.yards ?? '—'}</td><td class="mono">${ex.ai.yards}</td></tr><tr><th>Completion</th><td class="mono">${pct(ex.human?.complete)}</td><td class="mono">${pct(ex.ai.complete)}</td></tr><tr><th>Interception</th><td class="mono">${pct(ex.human?.int)}</td><td class="mono">${pct(ex.ai.int)}</td></tr><tr><th>Sack</th><td class="mono">${pct(ex.human?.sack)}</td><td class="mono">${pct(ex.ai.sack)}</td></tr></table>
       ${better == null ? '' : `<p class="dim">${Math.abs(better) < 0.5 ? 'About even in expected yards.' : better > 0 ? `Your decision averaged ${better.toFixed(1)} more yards.` : `The AI's decision averaged ${(-better).toFixed(1)} more yards.`}</p>`}
       ${qbReadPanelHtml(L.ai, name, { title: "The AI's reads" })}
-      <div class="grid2" style="margin-top:8px"><button class="btn" data-action="lab-again">↻ Same situation</button><button class="btn" data-action="lab-watch">▶ Watch the AI's play</button></div></div>`;
+      <div class="grid2" style="margin-top:8px"><button class="btn" data-action="lab-again">↻ Same Situation</button><button class="btn" data-action="lab-watch">▶ Watch the AI's Play</button></div></div>`;
   }
   function progressHtml() {
     if (!L.sit || !L.rot) return '';
@@ -155,7 +155,7 @@ export function registerAiLab(Router, app) {
       ${s ? `<div class="field-wrap${canAct ? ' lab-live' : ''}" id="labwrap"><svg id="labfield" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Lab field: tap a receiver to throw, your quarterback to scramble"></svg>${['live', 'frozen'].includes(L.phase) ? `<div class="lab-clock" id="labclock">${L.phase === 'frozen' ? `${L.pauseAt.toFixed(1)} s ⏸` : '0.0 s'}</div>` : ''}</div>` : ''}
       <p class="lab-status ${canAct ? 'go' : ''}" role="status">${esc(status)}</p>
       ${s && L.phase === 'ready' ? '<button class="btn primary big block" data-action="lab-snap">▶ Snap</button>' : ''}
-      ${L.phase === 'after' ? '<button class="btn primary big block" data-action="lab-next">Next situation ▶</button>' : ''}
+      ${L.phase === 'after' ? '<button class="btn primary big block" data-action="lab-next">Next Situation ▶</button>' : ''}
       ${L.phase === 'after' && L.humanSim ? compareHtml() : ''}
       ${!s ? '<button class="btn primary big block" data-action="lab-next">Start</button>' : ''}`;
   }
@@ -172,8 +172,8 @@ export function registerAiLab(Router, app) {
       <h3>Missed open receivers and forced throws</h3><p>AI left an open receiver ${A.missedOpen.aiMissed} times; you threw to him ${A.missedOpen.youTookIt} times. Forced throws (quality under 0.25): AI ${A.forced.ai}, you ${A.forced.you}.</p>
       <h3>Scrambles and sacks</h3><p>Scrambles: AI ${ta.aiScrambles}, you ${ta.youScrambled}. You held the ball until the play ended ${recs.filter((r) => r.human.action === 'hold').length} times.${ta.aiThrowAways || ta.youThrewAway ? ` Older records include throw-aways (AI ${ta.aiThrowAways}, you ${ta.youThrewAway}), no longer an option.` : ''}</p>
       <h3>By offensive play</h3>${tbl(A.byOffense)}<h3>By coverage</h3>${tbl(A.byCoverage)}<h3>By QB Awareness</h3>${tbl(A.byAwareness)}` : '<p class="dim">No decisions yet.</p>'}
-      <div class="grid2" style="margin-top:10px"><button class="btn" data-action="lab-export" ${recs.length ? '' : 'disabled'}>⬇ Export data</button><label class="btn" style="text-align:center">⬆ Import<input type="file" accept=".json,application/json" data-change="lab-import" style="display:none"></label></div>
-      <button class="btn block danger" data-action="lab-clear" style="margin-top:6px" ${recs.length ? '' : 'disabled'}>Clear all Lab data</button>
+      <div class="grid2" style="margin-top:10px"><button class="btn" data-action="lab-export" ${recs.length ? '' : 'disabled'}>⬇ Export Data</button><label class="btn" style="text-align:center">⬆ Import<input type="file" accept=".json,application/json" data-change="lab-import" style="display:none"></label></div>
+      <button class="btn block danger" data-action="lab-clear" style="margin-top:6px" ${recs.length ? '' : 'disabled'}>Clear All Lab Data</button>
       <p class="dim" id="labusage"></p>`;
   }
 
@@ -204,7 +204,7 @@ export function registerAiLab(Router, app) {
         'lab-next': () => newSituation(), 'lab-again': () => newSituation({ same: true }), 'lab-snap': () => snap(), 'lab-watch': () => watchAI(),
         'lab-export': async () => { const r = await offerFile({ name: `gridiron-beast-qb-decisions-${new Date().toISOString().slice(0, 10)}.json`, text: JSON.stringify(Lab.exportPayload(L.records || []), null, 1) }); if (r.ok === false) toast('Export was not completed.', 'bad'); },
         'lab-import': async (el) => { const file = el.files?.[0]; if (!file) return; let data = null; try { data = JSON.parse(await file.text()); } catch { toast('That file is not JSON.', 'bad'); return; } const v = Lab.validateRecords(data); if (!v.ok) { toast(`Nothing imported: ${v.rejected[0] || 'no valid records'}.`, 'bad'); return; } await labPut(v.records); await loadRecords(); toast(`Imported ${v.records.length} decisions${v.rejected.length ? `, skipped ${v.rejected.length}` : ''}.`, 'good'); Router.render(); },
-        'lab-clear': async () => { if (!(await confirmSheet('Delete every decision and the defensive rotation progress stored in the AI Testing Lab on this device? Franchises are not affected. Export first if you want to keep them.', { title: 'Clear Lab data', okLabel: 'Delete', danger: true }))) return; await labClear(); L.rot = {}; await labMetaPut(ROT_KEY, {}); await loadRecords(); toast('Lab data cleared.'); Router.render(); },
+        'lab-clear': async () => { if (!(await confirmSheet('Delete every decision and the defensive rotation progress stored in the AI Testing Lab on this device? Franchises are not affected. Export first if you want to keep them.', { title: 'Clear Lab Data', okLabel: 'Delete', danger: true }))) return; await labClear(); L.rot = {}; await labMetaPut(ROT_KEY, {}); await loadRecords(); toast('Lab data cleared.'); Router.render(); },
       });
     },
     unmount() { stop(); if (['live', 'frozen'].includes(L.phase)) { L.phase = 'ready'; L.i = 0; } },

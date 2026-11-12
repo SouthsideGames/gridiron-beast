@@ -36,7 +36,7 @@ export const GYM_LINES = Object.freeze({
   'Sunfire Lions': {
     first: ['Bright day for it. We throw the ball and we smile while we do it.', 'Keep up if you can. Most clubs can’t.'],
     theyWon: ['Last time you squinted at the sun all afternoon. Bring sunglasses.', 'Aurelion is faster than your corners. That hasn’t changed.'],
-    youWon: ['You found a way to cloud us up. Clever. We practised in the rain all week.', 'Round two. The Lions are rested.'],
+    youWon: ['You found a way to cloud us up. Clever. We practiced in the rain all week.', 'Round two. The Lions are rested.'],
     badgeHeld: ['The Dawn Badge in your pocket. It suits you. It would suit my trophy case better.', 'Let’s light it up.'],
     beaten: ['You didn’t squint once. Fine. The Dawn Badge is yours; wear it where I can see it.', 'Nobody out-shines the Lions twice. Enjoy the day.'],
   },
@@ -133,6 +133,6 @@ export function pregameDialogue({ kind, club, speaker, state, vars = {}, seed = 
 export const RIVAL_WEEKLY = Object.freeze({
   ahead: ['Enjoy the view from up there. It never lasts for your lot.', 'Nice start. My scouts say your secondary is held together with tape.', 'The division runs through us. It always has.'],
   behind: ['We are coming. The Board will hear about it before you do.', 'A game back is nothing. Ask anyone who has lost to us in December.', 'Your schedule gets harder. Ours gets us.'],
-  level: ['Dead even. One of us is lying to their fans.', 'Same record, different futures.', 'Tiebreakers favour the club that wants it. That is us.'],
+  level: ['Dead even. One of us is lying to their fans.', 'Same record, different futures.', 'Tiebreakers favor the club that wants it. That is us.'],
   gameWeek: ['Rivalry week. I have cleared my calendar for your excuses.', 'Sunday. Bring the real playbook this time.', 'My monsters have been talking about this one since the schedule came out.'],
 });

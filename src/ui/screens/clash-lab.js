@@ -58,13 +58,13 @@ export function registerClashLab(Router, app) {
   function lineupView() {
     const side = (key) => { const ids = st[key]; const ms = monstersFor(ids, key); const cs = ms.map((m, i) => { try { return Clash.buildCombatant(m, { perSide: Math.max(st.a.length, st.b.length), config: Clash.battleConfig(st.config), slot: i, side: key }); } catch { return null; } });
       return `<div class="panel"><div class="row between"><b>Side ${key.toUpperCase()}</b><span class="dim">${ids.length} of 5</span></div><div class="list" style="margin-top:6px">${ms.map((m, i) => { const c = cs[i]; return `<div class="item static" style="min-height:0;padding:6px 8px">${monsterSprite(m, 34)}<div class="grow" style="font-size:12px"><div><b>${esc(m.name)}</b> <span class="dim">${esc(c?.speciesName || m.species)} · ${ARCH_GLYPH[c?.archetype]} ${esc(c?.archetype)} · ${esc(c?.type)}</span></div><div class="dim">HP ${c?.hp} · ATK ${c?.atk} · SPD ${c?.spd} · OVR ${c?.overall} · <i>${esc(c?.move.name)}</i></div></div><button class="btn small" data-action="stats" data-side="${key}" data-i="${i}">Stats</button><button class="btn small ghost" data-action="remove" data-side="${key}" data-i="${i}">✕</button></div>`; }).join('')}</div>
-        <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">${ids.length < 5 ? `<button class="btn small" data-action="pick" data-side="${key}">+ Add species</button>` : ''}<button class="btn small" data-action="auto" data-side="${key}">Auto lineup</button><button class="btn small ghost" data-action="clear" data-side="${key}">Clear</button></div></div>`; };
+        <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">${ids.length < 5 ? `<button class="btn small" data-action="pick" data-side="${key}">+ Add Species</button>` : ''}<button class="btn small" data-action="auto" data-side="${key}">Auto Lineup</button><button class="btn small ghost" data-action="clear" data-side="${key}">Clear</button></div></div>`; };
     return `<p class="muted">Pick 1–5 species per side, an overall and a seed, then run. Monsters are generated from species data; nothing is loaded from a save.</p>
       <div class="grid2"><label class="field">Overall<input type="number" min="40" max="90" value="${st.overall}" data-change="overall" style="min-height:36px"></label><label class="field">Seed<input type="number" value="${st.seed}" data-change="seed" style="min-height:36px"></label></div>
       ${side('a')}${side('b')}
       ${st.pickFor ? picker() : ''}
-      <button class="btn primary big block" data-action="run" style="margin-top:8px">▶ Run the battle</button>
-      <div class="row" style="gap:6px;margin-top:6px"><button class="btn small" data-action="paste">Paste a replay key</button><button class="btn small" data-action="swapSides">Swap sides</button></div>
+      <button class="btn primary big block" data-action="run" style="margin-top:8px">▶ Run the Battle</button>
+      <div class="row" style="gap:6px;margin-top:6px"><button class="btn small" data-action="paste">Paste a Replay Key</button><button class="btn small" data-action="swapSides">Swap Sides</button></div>
       ${settings()}`;
   }
   function picker() {
@@ -88,7 +88,7 @@ export function registerClashLab(Router, app) {
     const r = st.result; if (!r) return `<p class="muted">No battle yet. Set a lineup and press Run.</p>${lineupView()}`;
     return `<div id="cl-arena-host"></div>
       <details class="panel tight" style="margin-top:8px"><summary class="muted">Result and replay key</summary><div style="font-size:12px;margin-top:4px"><b>${esc(r.log[r.log.length - 1].text)}</b> Decided by ${r.by === 'knockout' ? 'knockout' : r.by === 'hp' ? `HP share (${pct(r.hpShare.a)} v ${pct(r.hpShare.b)})` : 'a seeded coin flip after an exact HP tie'}.${r.capped ? ' Reached the exchange cap.' : ''}</div>
-        <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small" data-action="copyKey">Copy replay key</button><button class="btn small" data-action="copyLog">Copy log</button><button class="btn small" data-action="xp">XP for this battle</button><button class="btn small ghost" data-action="view" data-v="lineup">Back to lineup</button></div>${st.xpOpen ? xpPanel() : ''}</details>
+        <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small" data-action="copyKey">Copy Replay Key</button><button class="btn small" data-action="copyLog">Copy Log</button><button class="btn small" data-action="xp">XP for This Battle</button><button class="btn small ghost" data-action="view" data-v="lineup">Back to Lineup</button></div>${st.xpOpen ? xpPanel() : ''}</details>
       <details class="panel tight" style="margin-top:6px"><summary class="muted">Full log (${r.log.length} events)</summary><div style="font-size:11px;max-height:300px;overflow:auto;margin-top:4px">${r.log.map((ev) => `<div><span class="dim">${ev.ex}</span> ${esc(ev.text)}</div>`).join('')}</div></details>
       <details class="panel tight" style="margin-top:6px"><summary class="muted">Stats and settings</summary><div style="margin-top:6px">${settingsInForce(Clash.activeExperiments(st.config))}</div>${r.lines.a.concat(r.lines.b).map((x) => `<div class="row between" style="font-size:12px"><span>${esc(x.name)} <span class="dim">${esc(x.archetype)} · ${esc(x.type)}</span></span><span class="mono">HP ${x.maxHp} · ATK ${x.combatant.atk} · SPD ${x.combatant.spd}</span></div>`).join('')}${settings()}</details>`;
   }
@@ -99,7 +99,7 @@ export function registerClashLab(Router, app) {
     const B = st.batch; const fams = batchFamilies();
     return `<p class="muted">Runs many seeded battles with the settings in force and shows win rates with 95% intervals. Same seeds, lineups and settings give the same numbers as <code>npm run clash:balance</code>.</p>
       <label class="field">Family<select data-change="family">${fams.map((f) => `<option value="${f.label}" ${B.family === f.label ? 'selected' : ''}>${esc(f.label)}</option>`).join('')}</select></label>
-      <div class="grid2"><label class="field">Battles<input type="number" min="20" max="5000" value="${B.n}" data-change="batchN" style="min-height:36px"></label><button class="btn primary big" data-action="runBatch" ${B.running ? 'disabled' : ''}>${B.running ? `Running… ${B.progress}%` : '▶ Run batch'}</button></div>
+      <div class="grid2"><label class="field">Battles<input type="number" min="20" max="5000" value="${B.n}" data-change="batchN" style="min-height:36px"></label><button class="btn primary big" data-action="runBatch" ${B.running ? 'disabled' : ''}>${B.running ? `Running… ${B.progress}%` : '▶ Run Batch'}</button></div>
       ${settings()}
       ${B.rows.map((r) => batchRow(r)).join('')}`;
   }

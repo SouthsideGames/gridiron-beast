@@ -115,7 +115,7 @@ export function registerAttrLab(Router, app) {
       <p class="dim" style="margin-top:0">${esc(r.label)}. Measured by the engine; everyone else is a plain 65, same seeds for both.</p>
       <table class="lab-table"><tr><th>Measure</th><th class="mono">${S.low}</th><th class="mono">${S.high}</th><th>Diff</th></tr>${keys.map((k) => `<tr><th>${esc(MET[k]?.[0] || k)}</th><td class="mono">${fmt(k, lo[k], MET)}</td><td class="mono">${fmt(k, hi[k], MET)}</td><td class="mono dim">${esc(delta(k, lo[k], hi[k], MET))}</td></tr>`).join('')}</table>
       <p class="dim">A rate at ${r.n} trials is accurate to about ±${Math.round(100 / Math.sqrt(r.n))} points; smaller changes may be noise.</p>
-      ${r.play ? `<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn" data-action="attr-watch" data-seed="${r.seed}">▶ Watch one play side by side</button><button class="btn small" data-action="attr-watch" data-seed="${r.seed + 1 + Math.floor(Math.random() * (r.n - 1))}">Another seed</button></div>` : ''}
+      ${r.play ? `<div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn" data-action="attr-watch" data-seed="${r.seed}">▶ Watch One Play Side by Side</button><button class="btn small" data-action="attr-watch" data-seed="${r.seed + 1 + Math.floor(Math.random() * (r.n - 1))}">Another Seed</button></div>` : ''}
       ${S.watch ? watchHtml() : ''}</div>`;
   }
   function watchHtml() {
@@ -153,7 +153,7 @@ export function registerAttrLab(Router, app) {
         ${sc.qb === 'throw' ? `<label class="field" style="flex:1;min-width:70px">Receiver<select data-change="def-target">${recv.map((x) => `<option ${sc.target === x ? 'selected' : ''}>${x}</option>`).join('')}</select></label><label class="field" style="flex:1;min-width:60px">At (s)<input type="number" min="0.5" max="4" step="0.1" value="${sc.at}" data-change="def-at" inputmode="decimal"></label>` : ''}</div>
       <p class="dim" style="margin:0">${esc(scenarioLabel())}. Everyone is a plain 65 with no ability or type; only the tested ${D.carrierOf(sc.subject) ? 'ball carrier' : 'defenders'}' ${esc(ATTR_NAME[sc.attr])} changes.</p>
       <div class="row" style="gap:6px;align-items:flex-end"><label class="field" style="flex:1">Low<input type="number" min="1" max="99" value="${S.low}" data-change="attr-low" inputmode="numeric"></label><label class="field" style="flex:1">High<input type="number" min="1" max="99" value="${S.high}" data-change="attr-high" inputmode="numeric"></label><label class="field" style="flex:1">Plays<select data-change="attr-n">${COUNTS.map((c) => `<option value="${c}" ${S.n === c ? 'selected' : ''}>${c}</option>`).join('')}</select></label></div>
-      <button class="btn primary big block" data-action="attr-run" ${S.busy ? 'disabled' : ''}>${S.busy ? `Running… <span id="attrprog">${Math.round(S.progress * 100)}%</span>` : '▶ Run the scenario'}</button>
+      <button class="btn primary big block" data-action="attr-run" ${S.busy ? 'disabled' : ''}>${S.busy ? `Running… <span id="attrprog">${Math.round(S.progress * 100)}%</span>` : '▶ Run the Scenario'}</button>
     </div>`;
   }
   const scChange = (patch) => { S.sc = { ...S.sc, id: '', ...patch }; S.result = null; S.watch = null; stop(); Router.render(); };
@@ -161,7 +161,7 @@ export function registerAttrLab(Router, app) {
     title: 'Attribute Testing Lab', tabs: false,
     render() {
       const t = current(); const trials = trialsFor(S.attr);
-      const modeSeg = `<div class="seg" role="radiogroup" aria-label="Lab mode"><button class="btn small ${S.mode === 'attr' ? 'primary' : ''}" data-action="lab-mode" data-v="attr" role="radio" aria-checked="${S.mode === 'attr'}">Attribute trials</button><button class="btn small ${S.mode === 'def' ? 'primary' : ''}" data-action="lab-mode" data-v="def" role="radio" aria-checked="${S.mode === 'def'}">🛡 Defensive scenario</button></div>`;
+      const modeSeg = `<div class="seg" role="radiogroup" aria-label="Lab mode"><button class="btn small ${S.mode === 'attr' ? 'primary' : ''}" data-action="lab-mode" data-v="attr" role="radio" aria-checked="${S.mode === 'attr'}">Attribute Trials</button><button class="btn small ${S.mode === 'def' ? 'primary' : ''}" data-action="lab-mode" data-v="def" role="radio" aria-checked="${S.mode === 'def'}">🛡 Defensive Scenario</button></div>`;
       if (S.mode === 'def') return `<p class="muted">Test the defensive AI on any play against any call, two ratings side by side, with the defenders' assignments and decisions drawn on the field. Nothing here touches a save.</p>${modeSeg}${defSetupHtml()}${resultsHtml()}`;
       return `<p class="muted">Compare two ratings of one attribute on the real football engine, everything else equal. Separate from your franchises: nothing here touches a save.</p>
         ${modeSeg}
@@ -170,7 +170,7 @@ export function registerAttrLab(Router, app) {
           ${isPlay(S.attr) ? `<label class="field">Trial (position · situation)<select data-change="attr-trial">${trials.map((x) => `<option value="${x.id}" ${t?.id === x.id ? 'selected' : ''}>${esc(POSITION_NAME[x.pos] || x.pos)} · ${esc(x.label.split(':')[0])}</option>`).join('')}</select></label>` : `<p class="dim" style="margin:0">${S.attr === 'durability' ? 'One game at fatigue 30: injury rate and fatigue gained (progression.js).' : 'Field goals, punts and kickoffs (special-teams.js).'}</p>`}
           ${t && isPlay(S.attr) ? `<p class="dim" style="margin:0">${esc(t.label)}</p>` : ''}
           <div class="row" style="gap:6px;align-items:flex-end"><label class="field" style="flex:1">Low<input type="number" min="1" max="99" value="${S.low}" data-change="attr-low" inputmode="numeric"></label><label class="field" style="flex:1">High<input type="number" min="1" max="99" value="${S.high}" data-change="attr-high" inputmode="numeric"></label><label class="field" style="flex:1">${isPlay(S.attr) ? 'Plays' : 'Trials'}<select data-change="attr-n">${COUNTS.map((c) => `<option value="${c}" ${S.n === c ? 'selected' : ''}>${c}</option>`).join('')}</select></label></div>
-          <button class="btn primary big block" data-action="attr-run" ${S.busy ? 'disabled' : ''}>${S.busy ? `Running… <span id="attrprog">${Math.round(S.progress * 100)}%</span>` : '▶ Run the comparison'}</button>
+          <button class="btn primary big block" data-action="attr-run" ${S.busy ? 'disabled' : ''}>${S.busy ? `Running… <span id="attrprog">${Math.round(S.progress * 100)}%</span>` : '▶ Run the Comparison'}</button>
         </div>
         ${resultsHtml()}`;
     },

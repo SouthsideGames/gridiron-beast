@@ -13,19 +13,19 @@ export default function batch(b) {
   // ================================================================ nickel: three-deep
   add(D('cover_3_sky', 'Cover 3 Sky', 'nickel', { ...TWO, LB1: ZONE('hook_L'), SS: ZONE('curl_flat_R'), CB1: ZONE('deep_third_L'), CB2: ZONE('deep_third_R'), FS: ZONE('deep_third_M') },
     T(['pass', 'zone', 'balanced'], 'Three deep thirds; the strong safety rolls down to the right curl-flat, the linebacker takes the left hook.', { SS: [6, 10] })),
-  'A sound base call against balanced offences.', 'The safety in the curl-flat must widen with the first receiver to the flat.', 'Deep Post, Three Verticals and Curl Flat to the right.', 'Flood and Levels to the left, where the hook is alone.');
+  'A sound base call against balanced offenses.', 'The safety in the curl-flat must widen with the first receiver to the flat.', 'Deep Post, Three Verticals and Curl Flat to the right.', 'Flood and Levels to the left, where the hook is alone.');
 
   add(D('cover_3_cloud', 'Cover 3 Cloud', 'nickel', { ...TWO, LB1: ZONE('hook_M'), CB2: ZONE('flat_R'), SS: ZONE('deep_third_R'), CB1: ZONE('deep_third_L'), FS: ZONE('deep_third_M') },
     T(['pass', 'zone'], 'The right corner squats in the flat and the strong safety rotates over the top of him.', { CB2: [3, 16], SS: [11, 10] })),
-  'Against offences that love quick throws to the right flat.', 'The corner jams and sits; the safety must get deep in time.', 'Bubble Screen, Quick Slants and Curl Flat to the right.', 'Smash and Deep Corner to the right.');
+  'Against offenses that love quick throws to the right flat.', 'The corner jams and sits; the safety must get deep in time.', 'Bubble Screen, Quick Slants and Curl Flat to the right.', 'Smash and Deep Corner to the right.');
 
   add(D('cover_3_buzz', 'Cover 3 Buzz', 'nickel_buzz', { ...TWO, SS: ZONE('buzz_R'), LB1: ZONE('hook_L'), CB1: ZONE('deep_third_L'), CB2: ZONE('deep_third_R'), FS: ZONE('deep_third_M') },
     T(['pass', 'zone'], 'Three deep with the strong safety buzzing down into the right hook-curl window.')),
-  'When the offence keeps hitting digs and curls to the right.', 'The buzz safety drops under the dig from the slot.', 'Dagger, Levels and Y Cross.', 'Flood and Sail to the right flat.');
+  'When the offense keeps hitting digs and curls to the right.', 'The buzz safety drops under the dig from the slot.', 'Dagger, Levels and Y Cross.', 'Flood and Sail to the right flat.');
 
   add(D('cover_3_seam', 'Cover 3 Seam', 'nickel', { ...TWO, LB1: ZONE('seam_L'), SS: ZONE('seam_R'), CB1: ZONE('deep_third_L'), CB2: ZONE('deep_third_R'), FS: ZONE('deep_third_M') },
     T(['pass', 'zone', 'deep'], 'Three deep with two seam defenders who carry any vertical up the hashes.')),
-  'Against four-vertical teams and seam-heavy offences.', 'The seam defenders run with verticals so the deep thirds are never outnumbered.', 'Three Verticals, TE Seam and Dagger.', 'Bubble Screen and Stick, the flats are empty.');
+  'Against four-vertical teams and seam-heavy offenses.', 'The seam defenders run with verticals so the deep thirds are never outnumbered.', 'Three Verticals, TE Seam and Dagger.', 'Bubble Screen and Stick, the flats are empty.');
 
   add(D('cover_3_rotate', 'Cover 3 Rotate', 'nickel_2high', { ...TWO, CB1: ZONE('flat_L'), FS: ZONE('deep_third_L'), SS: ZONE('deep_third_M'), CB2: ZONE('deep_third_R'), LB1: ZONE('hook_R') },
     T(['pass', 'zone', 'disguise'], 'Shows two high safeties, then rotates: the left corner squats, the free safety spins to the left third.')),
@@ -46,15 +46,15 @@ export default function batch(b) {
 
   add(D('cover_2_sink', 'Cover 2 Sink', 'nickel_2high', { ...TWO, CB1: ZONE('sink_L'), CB2: ZONE('sink_R'), FS: ZONE('deep_two_L'), SS: ZONE('deep_two_R'), LB1: ZONE('hook_M') },
     T(['pass', 'zone', 'deep'], 'Corners sink to eight yards under the sideline routes; safeties play deep halves.')),
-  'Late in halves when the offence must throw outside.', 'The sinking corner closes the window for the corner route.', 'Smash, Deep Corner and Double Bench.', 'Bubble Screen and Stick underneath.');
+  'Late in halves when the offense must throw outside.', 'The sinking corner closes the window for the corner route.', 'Smash, Deep Corner and Double Bench.', 'Bubble Screen and Stick underneath.');
 
   add(D('cover_2_hole', 'Cover 2 Hole', 'nickel', { ...TWO, CB1: ZONE('flat_L'), CB2: ZONE('flat_R'), FS: ZONE('deep_half_L'), SS: ZONE('deep_half_R'), LB1: ZONE('hole') },
     T(['pass', 'zone'], 'Cover 2 with the linebacker sitting deeper, in the hole between the safeties.')),
-  'Against offences that throw the deep dig and the seam.', 'The linebacker sits at ten yards in the middle: anything inside meets him.', 'Dagger, TE Seam and Levels.', 'Stick and Quick Slants in front of him.');
+  'Against offenses that throw the deep dig and the seam.', 'The linebacker sits at ten yards in the middle: anything inside meets him.', 'Dagger, TE Seam and Levels.', 'Stick and Quick Slants in front of him.');
 
   add(D('cover_2_jam', 'Cover 2 Jam', 'nickel_press', { ...TWO, CB1: ZONE('flat_L'), CB2: ZONE('flat_R'), FS: ZONE('deep_half_L'), SS: ZONE('deep_half_R'), LB1: ZONE('hook_M') },
     T(['pass', 'zone', 'press'], 'Cover 2 with the corners jamming the receivers at the line before sitting in the flats.')),
-  'Against timing offences and quick passing.', 'The jam throws off the route; the safeties are over the top.', 'Quick Slants, Bubble Screen and Curl Flat.', 'Smash and Slot Fade.');
+  'Against timing offenses and quick passing.', 'The jam throws off the route; the safeties are over the top.', 'Quick Slants, Bubble Screen and Curl Flat.', 'Smash and Slot Fade.');
 
   add(D('wide_tampa', 'Wide Tampa', 'nickel_wide', { DL1: RUSH('edge_L'), DL2: RUSH('edge_R'), LB1: ZONE('deep_middle'), CB1: ZONE('flat_L'), CB2: ZONE('flat_R'), FS: ZONE('deep_half_L'), SS: ZONE('deep_half_R') },
     T(['pass', 'zone'], 'Tampa 2 behind a wide edge rush: the linebacker runs the deep middle.')),
@@ -70,16 +70,16 @@ export default function batch(b) {
 
   add(D('double_bracket', 'Double Bracket', 'nickel', { ...TWO, CB1: MAN('wideL', 'under'), CB2: MAN('wideR', 'under'), FS: BRACKET('wideL', 'deep_quarter_LL'), SS: BRACKET('wideR', 'deep_quarter_RR'), LB1: MAN('inside') },
     T(['pass', 'man', 'bracket'], 'Both outside receivers get a corner underneath and a safety over the top; the linebacker takes the slot.', { FS: [12, -14], SS: [12, 14] })),
-  'Against offences with two dangerous outside receivers.', 'The middle of the field is wide open: the slot and the back are the outlets.', 'Deep Post, Deep Corner and Double Move.', 'TE Seam, Mesh and inside runs.');
+  'Against offenses with two dangerous outside receivers.', 'The middle of the field is wide open: the slot and the back are the outlets.', 'Deep Post, Deep Corner and Double Move.', 'TE Seam, Mesh and inside runs.');
 
   // ================================================================ nickel: quarters
   add(D('quarters_press', 'Quarters Press', 'nickel_press', { ...TWO, LB1: ZONE('hook_M'), CB1: ZONE('deep_quarter_LL'), CB2: ZONE('deep_quarter_RR'), FS: ZONE('deep_quarter_L'), SS: ZONE('deep_quarter_R') },
     T(['pass', 'zone', 'deep', 'press'], 'Four deep quarters from a press alignment: the corners jam, then run.')),
-  'Against vertical offences with fast receivers.', 'Jam to disrupt the timing, then carry everything deep.', 'Three Verticals, Four Verticals and Deep Post.', 'Stick, Curl Flat and the run.');
+  'Against vertical offenses with fast receivers.', 'Jam to disrupt the timing, then carry everything deep.', 'Three Verticals, Four Verticals and Deep Post.', 'Stick, Curl Flat and the run.');
 
   add(D('cover_7', 'Cover 7', 'nickel', { ...TWO, LB1: MAN('inside'), CB1: ZONE('deep_quarter_LL'), CB2: ZONE('deep_quarter_RR'), FS: ZONE('deep_quarter_L'), SS: ZONE('deep_quarter_R') },
     T(['pass', 'zone', 'man', 'deep'], 'Quarters behind, with the linebacker locked on the inside receiver underneath.')),
-  'Against offences that attack quarters with the slot.', 'Four deep and a man on the slot: the outside flats are the only soft spots.', 'TE Seam, Dagger and Slot Fade.', 'Bubble Screen and Curl Flat.');
+  'Against offenses that attack quarters with the slot.', 'Four deep and a man on the slot: the outside flats are the only soft spots.', 'TE Seam, Dagger and Slot Fade.', 'Bubble Screen and Curl Flat.');
 
   add(D('drop_quarters', 'Drop Quarters', 'nickel', { DL1: ZONE('hook_L'), DL2: RUSH('A_M'), LB1: ZONE('hook_R'), CB1: ZONE('deep_quarter_LL'), CB2: ZONE('deep_quarter_RR'), FS: ZONE('deep_quarter_L'), SS: ZONE('deep_quarter_R') },
     T(['pass', 'zone', 'deep', 'long'], 'One rusher, two hook defenders and four deep quarters.')),
@@ -137,11 +137,11 @@ export default function batch(b) {
   // ================================================================ base
   add(D('base_cover_3', 'Base Cover 3', 'base', { ...TWO, LB1: ZONE('curl_flat_L'), LB2: ZONE('curl_flat_R'), CB1: ZONE('deep_third_L'), CB2: ZONE('deep_third_R'), FS: ZONE('deep_third_M') },
     T(['pass', 'zone', 'balanced'], 'Two linebackers widen to the curl-flat zones; three deep behind them.')),
-  'Base personnel against a balanced offence.', 'Linebackers must get width; the middle hook is open.', 'Curl Flat, Flood and outside runs.', 'Stick, Dagger and the middle of the field.');
+  'Base personnel against a balanced offense.', 'Linebackers must get width; the middle hook is open.', 'Curl Flat, Flood and outside runs.', 'Stick, Dagger and the middle of the field.');
 
   add(D('stack_cover_3', 'Stack Cover 3', 'base_stack', { ...TWO, LB1: ZONE('hook_L'), LB2: ZONE('hook_R'), CB1: ZONE('deep_third_L'), CB2: ZONE('deep_third_R'), FS: ZONE('deep_third_M') },
     T(['pass', 'zone'], 'Linebackers stacked behind the linemen drop to the hooks; three deep.')),
-  'Against offences that attack the middle.', 'Two hook defenders and a middle safety close the inside.', 'Stick, Dagger and Levels.', 'Curl Flat and Bubble Screen.');
+  'Against offenses that attack the middle.', 'Two hook defenders and a middle safety close the inside.', 'Stick, Dagger and Levels.', 'Curl Flat and Bubble Screen.');
 
   add(D('walk_cover_3', 'Walk Cover 3', 'base_walk', { ...TWO, LB1: ZONE('curl_flat_L'), LB2: ZONE('hook_R'), CB1: ZONE('deep_third_L'), CB2: ZONE('deep_third_R'), FS: ZONE('deep_third_M') },
     T(['pass', 'zone'], 'The left linebacker walks out over the slot and plays the curl-flat; the other takes the right hook.')),
@@ -157,7 +157,7 @@ export default function batch(b) {
 
   add(D('cover_3_robber', 'Cover 3 Robber', 'base', { ...TWO, LB1: ZONE('hook_L'), LB2: ZONE('robber'), CB1: ZONE('deep_third_L'), CB2: ZONE('deep_third_R'), FS: ZONE('deep_third_M') },
     T(['pass', 'zone', 'trap'], 'Three deep with one linebacker sitting at eight yards in the middle to rob in-breaking routes.')),
-  'Against offences that live on digs and slants.', 'The robber reads the quarterback’s eyes and jumps the middle throw.', 'Quick Slants, Levels and Dagger.', 'Flood and Curl Flat outside.');
+  'Against offenses that live on digs and slants.', 'The robber reads the quarterback’s eyes and jumps the middle throw.', 'Quick Slants, Levels and Dagger.', 'Flood and Curl Flat outside.');
 
   add(D('base_cloud', 'Base Cloud', 'base', { ...TWO, CB1: ZONE('flat_L'), FS: ZONE('deep_half_L'), CB2: ZONE('deep_half_R'), LB1: ZONE('hook_M'), LB2: ZONE('curl_flat_R') },
     T(['pass', 'zone'], 'Two deep from base: the free safety and the right corner split the field while the left corner squats.')),
@@ -177,7 +177,7 @@ export default function batch(b) {
 
   add(D('cover_1_hooks', 'Cover 1 Hooks', 'base', { ...TWO, LB1: ZONE('hook_L'), LB2: ZONE('hook_R'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('deep_middle') },
     T(['pass', 'man', 'zone'], 'Man on the outside receivers, zone hooks inside, a deep safety: a combination coverage.')),
-  'Against offences that win inside with tight ends and slots.', 'Outside is man; the inside receivers run into zone defenders.', 'Stick, Mesh and Y Cross.', 'Wheel and Texas, the back gets out free.');
+  'Against offenses that win inside with tight ends and slots.', 'Outside is man; the inside receivers run into zone defenders.', 'Stick, Mesh and Y Cross.', 'Wheel and Texas, the back gets out free.');
 
   add(D('press_spy', 'Press Spy', 'base_press', { ...TWO, LB1: SPY, LB2: MAN('inside'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('deep_middle') },
     T(['pass', 'man', 'press', 'anti_scramble'], 'Corners press, a linebacker spies the quarterback, the other takes the inside receiver.')),
@@ -185,7 +185,7 @@ export default function batch(b) {
 
   add(D('stack_cover_1', 'Stack Cover 1', 'base_stack', { ...TWO, LB1: MAN('inside'), LB2: MAN('back'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('deep_middle') },
     T(['pass', 'man'], 'Cover 1 with the linebackers stacked behind the linemen, playing off before they pick up their man.')),
-  'When the offence mixes run and pass from the same set.', 'Stacked linebackers see the run first, then find their man.', 'Inside runs and Y Cross.', 'Mesh, Slot Fade and quick throws.');
+  'When the offense mixes run and pass from the same set.', 'Stacked linebackers see the run first, then find their man.', 'Inside runs and Y Cross.', 'Mesh, Slot Fade and quick throws.');
 
   add(D('wide_cover_1', 'Wide Cover 1', 'base_wide', { DL1: RUSH('edge_L'), DL2: RUSH('edge_R'), LB1: MAN('inside'), LB2: MAN('back'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('deep_middle') },
     T(['pass', 'man'], 'Cover 1 with both rushers attacking the edges from wide alignments.')),
@@ -193,7 +193,7 @@ export default function batch(b) {
 
   add(D('cover_0_robber', 'Cover 0 Robber', 'base_stack', { ...TWO, LB1: MAN('inside'), LB2: MAN('back'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('robber') },
     T(['pass', 'man', 'risky', 'trap'], 'Man on everyone with no deep safety: the free safety comes down to rob the middle.')),
-  'When the offence keeps throwing slants and digs.', 'No deep help: one double move is a touchdown.', 'Quick Slants, Levels and Mesh.', 'Deep Post, Double Move and Sluggo Seam.');
+  'When the offense keeps throwing slants and digs.', 'No deep help: one double move is a touchdown.', 'Quick Slants, Levels and Mesh.', 'Deep Post, Double Move and Sluggo Seam.');
 
   // ================================================================ heavy (three linemen, two linebackers, two corners)
   add(D('heavy_two_deep', 'Heavy Two Deep', 'heavy', { ...THREE, LB1: ZONE('curl_flat_L'), LB2: ZONE('curl_flat_R'), CB1: ZONE('deep_half_L'), CB2: ZONE('deep_half_R') },
@@ -231,7 +231,7 @@ export default function batch(b) {
 
   add(D('mug_drop_3', 'Mug Drop 3', 'pressure_mug', { ...THREE, LB1: ZONE('hook_M'), CB1: ZONE('deep_third_L'), CB2: ZONE('deep_third_R'), FS: ZONE('deep_third_M') },
     T(['pass', 'zone', 'disguise'], 'The linebacker shows a blitz in the A gap, then drops to the hook; three deep behind.')),
-  'To make the offence change its protection for a blitz that never comes.', 'The quarterback sees pressure and throws hot into the dropping linebacker.', 'Quick Slants and Stick thrown hot.', 'Flood and the flats.');
+  'To make the offense change its protection for a blitz that never comes.', 'The quarterback sees pressure and throws hot into the dropping linebacker.', 'Quick Slants and Stick thrown hot.', 'Flood and the flats.');
 
   add(D('pressure_spy', 'Pressure Spy', 'pressure', { ...THREE, LB1: SPY, CB1: MAN('wideL'), CB2: MAN('wideR'), FS: MAN('inside') },
     T(['pass', 'man', 'anti_scramble', 'risky'], 'Three linemen rush, a spy on the quarterback, man on three receivers and no deep safety.')),

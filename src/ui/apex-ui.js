@@ -26,7 +26,7 @@ const VIA_TEXT = { roster: 'when he joined your club', scouting: 'by your scout\
 export function apexFactsHtml(f, m, { replay = false } = {}) {
   const r = apexRecord(f, m); if (!r) return '';
   const when = r.year != null ? ` in ${yearOf(r.year)}${r.week ? `, week ${r.week}` : ''}` : '';
-  return `<div class="panel apex-panel" data-apex="${esc(m.id)}"><div class="row between" style="gap:6px"><b><span class="apex-emblem">◆ APEX</span> individual</b>${replay ? '<button class="btn small" data-action="apex-replay">↺ Replay discovery</button>' : ''}</div>
+  return `<div class="panel apex-panel" data-apex="${esc(m.id)}"><div class="row between" style="gap:6px"><b><span class="apex-emblem">◆ APEX</span> individual</b>${replay ? '<button class="btn small" data-action="apex-replay">↺ Replay Discovery</button>' : ''}</div>
     <ul class="apex-facts">${APEX_FACTS.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
     <div class="dim">Current overall <b>${monsterOverall(m)}</b>: the ratings below are what he is today. Discovered${when} ${VIA_TEXT[r.via] || ''}.</div></div>`;
 }

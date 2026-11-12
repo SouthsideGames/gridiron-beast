@@ -305,7 +305,7 @@
     {
       "id": "clash-immediate-ko",
       "ruling": "N7c B3",
-      "rule": "A monster at 0 HP on any damage path is knocked out immediately; its pending reactions, constructs, remaining hits and later turn are cancelled except contract-verified post-KO exceptions (Falling Star, Faultline, Molten Brand lethal eruption, Shared Burden current split, Mountain Shelter, Astral Strike continuation, Cinder Clamp release, Second Spring). The replacement enters right after the current hit finishes resolving."
+      "rule": "A monster at 0 HP on any damage path is knocked out immediately; its pending reactions, constructs, remaining hits and later turn are canceled except contract-verified post-KO exceptions (Falling Star, Faultline, Molten Brand lethal eruption, Shared Burden current split, Mountain Shelter, Astral Strike continuation, Cinder Clamp release, Second Spring). The replacement enters right after the current hit finishes resolving."
     },
     {
       "id": "special-teams-units",
@@ -349,12 +349,12 @@
     {
       "id": "test-acceptance",
       "ruling": "N7c B12",
-      "rule": "Contract-based cases; freeze tolerance and sample size per probability before testing; guaranteed behaviour must succeed in every case."
+      "rule": "Contract-based cases; freeze tolerance and sample size per probability before testing; guaranteed behavior must succeed in every case."
     },
     {
       "id": "retirements",
       "ruling": "N7c B13-B15",
-      "rule": "Retire the ten legacy common traits, Nature side effects (preserve legitimate Ambition behaviour) and the fixed legacy cornerstone list; keep no-K cornerstone eligibility."
+      "rule": "Retire the ten legacy common traits, Nature side effects (preserve legitimate Ambition behavior) and the fixed legacy cornerstone list; keep no-K cornerstone eligibility."
     },
     {
       "id": "ai-information",

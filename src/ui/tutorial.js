@@ -18,7 +18,7 @@ const stepsHtml = (steps) => steps?.length ? `<ol class="assist-steps">${steps.m
 export function tipHtml(f, screen) {
   const t = autoTip(f, screen); if (!t || t.sheet) return '';
   const p = tipProgress(f);
-  return `<div class="tip" role="note" data-tip="${t.key}"><div class="row between"><b>${t.guided ? '🧭' : '📘'} ${esc(t.title)}</b><span class="dim" style="font-size:11px">${t.guided ? 'Guided' : `tip ${Math.min(p.done + 1, p.total)}/${p.total}`}</span></div><p>${para(t.text)}</p>${stepsHtml(t.steps)}<div class="row" style="flex-wrap:wrap"><button class="btn small primary" data-action="tut-ok" data-k="${t.key}">Got it</button>${t.primer ? '<button class="btn small" data-action="tut-primer">How football works</button>' : ''}<button class="btn small ghost" data-action="tut-expert">Turn tips off</button></div></div>`;
+  return `<div class="tip" role="note" data-tip="${t.key}"><div class="row between"><b>${t.guided ? '🧭' : '📘'} ${esc(t.title)}</b><span class="dim" style="font-size:11px">${t.guided ? 'Guided' : `tip ${Math.min(p.done + 1, p.total)}/${p.total}`}</span></div><p>${para(t.text)}</p>${stepsHtml(t.steps)}<div class="row" style="flex-wrap:wrap"><button class="btn small primary" data-action="tut-ok" data-k="${t.key}">Got It</button>${t.primer ? '<button class="btn small" data-action="tut-primer">How Football Works</button>' : ''}<button class="btn small ghost" data-action="tut-expert">Turn Tips Off</button></div></div>`;
 }
 
 /** Sheet-style tips (the match screen, moments such as the clock): open once, then remembered. */
@@ -32,7 +32,7 @@ export function momentSheet(f, key, save) {
 }
 function openTipSheet(f, t, save) {
   dismissTip(f, t.key); save?.();
-  sheet(`<p>${para(t.text)}</p>${stepsHtml(t.steps)}<div class="row" style="flex-wrap:wrap">${t.primer ? '<button class="btn small" data-action="tut-primer">How football works</button>' : ''}<button class="btn small ghost" data-action="tut-expert">Turn tips off</button></div>`, { title: `${t.guided ? '🧭' : '📘'} ${t.title}` });
+  sheet(`<p>${para(t.text)}</p>${stepsHtml(t.steps)}<div class="row" style="flex-wrap:wrap">${t.primer ? '<button class="btn small" data-action="tut-primer">How Football Works</button>' : ''}<button class="btn small ghost" data-action="tut-expert">Turn Tips Off</button></div>`, { title: `${t.guided ? '🧭' : '📘'} ${t.title}` });
 }
 
 /** Roster and cap warnings as short notes: critical ones always, the rest when contextual hints are on. `max` keeps HQ short. */
@@ -49,7 +49,7 @@ export function helpButtonHtml(screen) { return hasHelp(screen) ? `<button class
 
 function topicHtml(k, open = false) {
   const t = TOPICS[k];
-  return `<details class="assist-topic" ${open ? 'open' : ''}><summary><b>${esc(t.title)}</b></summary><p>${para(t.brief)}</p>${stepsHtml(t.steps)}${t.primer ? '<button class="btn small" data-action="tut-primer">How football works</button>' : ''}</details>`;
+  return `<details class="assist-topic" ${open ? 'open' : ''}><summary><b>${esc(t.title)}</b></summary><p>${para(t.brief)}</p>${stepsHtml(t.steps)}${t.primer ? '<button class="btn small" data-action="tut-primer">How Football Works</button>' : ''}</details>`;
 }
 /** The help sheet: this screen's topics first, the Coach Assist mode switch, then everything else by area. */
 export function helpHtml(f, screen) {
@@ -58,7 +58,7 @@ export function helpHtml(f, screen) {
   return `${here.length ? `<h3 style="margin-top:0">On this screen</h3>${here.map((k, i) => topicHtml(k, i === 0)).join('')}` : ''}
     ${a ? `<h3>Coach Assist</h3><div class="chips" role="radiogroup" aria-label="Coach Assist mode">${ASSIST_MODES.map((m) => `<button class="chip ${a.mode === m ? 'on accent' : ''}" role="radio" aria-checked="${a.mode === m}" data-action="assist-mode" data-v="${m}">${ASSIST_MODE_TEXT[m].label}</button>`).join('')}</div><p class="dim" style="margin:4px 0 0">${esc(ASSIST_MODE_TEXT[a.mode].text)} Change it any time here or in Settings.</p>` : ''}
     <h3>All topics</h3>${AREAS.map((area) => { const ks = rest.filter((k) => TOPICS[k].area === area); return ks.length ? `<div class="dim" style="margin:8px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:.04em">${esc(area)}</div>${ks.map((k) => topicHtml(k)).join('')}` : ''; }).join('')}
-    <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn small" data-action="tut-primer">How football works</button><button class="btn small" data-action="assist-stats">What the stats mean</button></div>`;
+    <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn small" data-action="tut-primer">How Football Works</button><button class="btn small" data-action="assist-stats">What the Stats Mean</button></div>`;
 }
 export function openHelp(app, screen, onChange) {
   const { el, close } = sheet(helpHtml(app.f, screen), { title: 'Help' });
@@ -71,11 +71,11 @@ export function openHelp(app, screen, onChange) {
 /** Coach Assist settings block (Settings screen). */
 export function assistSettingsHtml(f) {
   const a = assistSettings(f);
-  return `<div class="field"><span>Coach Assist</span><div class="seg" role="radiogroup" aria-label="Coach Assist mode" style="display:flex;gap:6px;flex-wrap:wrap">${ASSIST_MODES.map((m) => `<button class="btn small ${a.mode === m ? 'primary' : ''}" role="radio" aria-checked="${a.mode === m}" data-action="assist-mode" data-v="${m}">${ASSIST_MODE_TEXT[m].label}${m === 'standard' ? ' (default)' : ''}</button>`).join('')}</div><div class="dim" style="margin-top:4px">${esc(ASSIST_MODE_TEXT[a.mode].text)}</div></div>
+  return `<div class="field"><span>Coach Assist</span><div class="seg" role="radiogroup" aria-label="Coach Assist mode" style="display:flex;gap:6px;flex-wrap:wrap">${ASSIST_MODES.map((m) => `<button class="btn small ${a.mode === m ? 'primary' : ''}" role="radio" aria-checked="${a.mode === m}" data-action="assist-mode" data-v="${m}">${ASSIST_MODE_TEXT[m].label}${m === 'standard' ? ' (Default)' : ''}</button>`).join('')}</div><div class="dim" style="margin-top:4px">${esc(ASSIST_MODE_TEXT[a.mode].text)}</div></div>
     <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="assist-hints" ${a.hints ? 'checked' : ''}> Contextual hints (counter plays, upgrades, roster warnings)</label>
     <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="assist-consequences" ${a.consequences ? 'checked' : ''}> Explain what routine choices will do (cap room after a signing, and so on)</label>
     <p class="dim">Confirmations for choices you cannot undo, and warnings about the cap or an illegal lineup, always show.</p>
-    <div class="row" style="flex-wrap:wrap"><button class="btn small" data-action="tutreset">Show all tips again</button><button class="btn small" data-action="primer">How football works</button></div>`;
+    <div class="row" style="flex-wrap:wrap"><button class="btn small" data-action="tutreset">Show All Tips Again</button><button class="btn small" data-action="primer">How Football Works</button></div>`;
 }
 
 /** The football primer, as a sheet. */
@@ -95,7 +95,7 @@ export function initTutorial({ app, Router, openStats }) {
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-action^="tut-"], [data-action="assist-help"], [data-action="assist-stats"]'); if (!b) return;
     const a = b.dataset.action;
-    if (a === 'tut-primer') { sheet(primerHtml(), { title: 'How football works' }); return; }
+    if (a === 'tut-primer') { sheet(primerHtml(), { title: 'How Football Works' }); return; }
     if (a === 'assist-stats') { openStats?.(); return; }
     if (a === 'assist-help') { openHelp(app, b.dataset.screen, () => Router.render()); return; }
     if (!app.f) return;
