@@ -60,3 +60,17 @@ test('missing or malformed candidate arrays are repaired without inventing candi
   assert.deepEqual(f.monsterHallOfFame.candidates, []);
   assert.deepEqual(f.monsterHallOfFame.elections, []);
 });
+
+test('decorated unsigned retirees are captured only when retirement pass verifies their IDs', () => {
+  const f = { league: { legends: {
+    'unsigned-1': { name: 'Veteran', position: 'WR', seasons: [{ reg: { games: 12 } }],
+      ev: [{ t: 'award' }] },
+    'released-1': { name: 'Released', position: 'WR', seasons: [], ev: [] },
+  } } };
+  recordRetiredMonsterCandidates(f, {
+    owner: [], league: [], unsigned: 1, unsignedIds: [{ id: 'unsigned-1' }],
+  }, 10);
+  assert.deepEqual(f.monsterHallOfFame.candidates.map((c) => c.id), ['unsigned-1']);
+  assert.equal(f.monsterHallOfFame.candidates[0].games, 12);
+  assert.equal(f.monsterHallOfFame.candidates[0].honours.awards, 1);
+});
