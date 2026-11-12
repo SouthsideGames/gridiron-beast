@@ -8,6 +8,7 @@
 // Strength (S12). Mastery execution: the swap.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const WEAK = 15; const TURNS = 2; const COOLDOWN = [6, 5, 4, 3];
 
@@ -19,8 +20,8 @@ export default registerClashAbility({
     chooseAction(api, self, { foeId }) {
       if (!foeId || !api.ready(self)) return null; const foe = api.get(foeId);
       if (!api.enemyReserves(self).length) return null;
-      const L = api.forcedLegality(foe.side); if (!L.legal) return unmet(...L.unmet.map((u) => ({ ...u, detail: `${u.detail ? `${u.detail}; ` : ''}ordinary attack, use kept` })));
-      api.activate(self, `downdraft: ${foe.name} swaps with the first reserve`, { targetId: foeId }); api.cooldown(self, byTier(COOLDOWN, self.tier)); api.executed(self);
+      const L = api.forcedLegality(foe.side); if (!L.legal) return unmet(...L.unmet.map((u) => ({ ...u, detail: `${u.detail ? `${u.detail}; ` : ''}${$E('clashlog.ordinary_attack_use_kept_2')}` })));
+      api.activate(self, `${$E('clashlog.downdraft_swaps_with_the_first_reserve', { name: foe.name })}`, { targetId: foeId }); api.cooldown(self, byTier(COOLDOWN, self.tier)); api.executed(self);
       if (api.forcedRotation(self, foe.side, { incoming: 'firstReserve' })) { const inc = api.activeOf(foe.side); api.applyStatus(self, inc.id, { id: 'weakened', strength: WEAK, duration: TURNS }); }
       return { kind: 'done' };
     },

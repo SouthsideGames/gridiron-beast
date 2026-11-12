@@ -37,6 +37,7 @@ import { awarenessProfile, acceptBar, throwOdds, rejectReason, QB_MODEL_VERSION 
 // (maxSpeedFactor no longer used here: one aggregation in refreshMaxSpeed)
 import { createFieldPlay, LIVING_TERRAIN } from './t8/field-effects.js';
 import { drainPoints as drainStaminaPoints } from './t8/stamina-runtime.js'; // M3 hook: ctx.drainStamina
+import { E as $E, lineOf as $lineOf, resetLines } from '../core/english.js';
 
 const DT = 0.05;
 const DEFAULT_ATTRS = { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 60 };
@@ -132,6 +133,7 @@ function actorRecord(v) {
   return a;
 }
 export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense = {}, ballOn = 25, ballLat = 0, seed = 1, options = {} }) {
+  resetLines();   // a log entry never picks up a line read before this play
   let rng = createRng(seed); // `let`: options.fork re-seeds the physics after a decision point (AI Testing Lab rollouts)
   // The quarterback's perception has its own stream, so how he reads the field never shifts the physics of the play, and the AI
   // Testing Lab can replay an identical play with a different decision (GDD §53).
@@ -150,10 +152,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const dryMax = dry ? (dry.maxTime ?? 7) : 0;
   let dryDoneAt = null;
   const events = [];
-  const log = (text, data = {}) => events.push({ t: +t.toFixed(2), text, ...data });
+  const log = (text, data = {}) => events.push({ t: +t.toFixed(2), text, ...$lineOf(text), ...data });   // text is English always; tk / tv / tp say which lines it is, for a screen to show in the player's language
   /** Signature ability fired (logged once per monster per play, for the box score). */
   /** `key` names the effect that fired (burst, shedStrength, ...): presentation only, picks the effect family (ability-fx.js). */
-  const abilityUsed = (a, key = null) => { if (!a?.abilityName || a.abilityLogged) return; a.abilityLogged = true; log(`${a.name}'s ${a.abilityName} kicks in`, { kind: 'ability', by: a.slot, side: a.team, trait: a.abilityKind === 'trait', key, x: +a.x.toFixed(2), y: +a.y.toFixed(2) }); };
+  const abilityUsed = (a, key = null) => { if (!a?.abilityName || a.abilityLogged) return; a.abilityLogged = true; log(`${$E('sim.s_kicks_in', { name: a.name, abilityName: a.abilityName })}`, { kind: 'ability', by: a.slot, side: a.team, trait: a.abilityKind === 'trait', key, x: +a.x.toFixed(2), y: +a.y.toFixed(2) }); };
   /** Presentation flag for outcome events: did the actor's ability fire this play (cosmetic, never changes the sim). */
   const fired = (a, ...keys) => !!a?.abilityLogged && a.abilityKind !== 'trait' && keys.some((k) => a.ability?.[k]);
   /** An outcome a signature ability caused on its own (Blink, Whiteout, Sack denied...): always an ability outcome. */
@@ -554,7 +556,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       log(`${blocker.name} pancakes ${d.name}`, { kind: 'pancake', by: blocker.slot, side: blocker.team, victim: d.slot, ...(res.guaranteed ? { guaranteed: true } : {}) }); // M3 hook: guaranteed flag
     } else if (res.outcome === 'lostBlock') {
       blocker.engaged = null; d.engaged = null; t8Apply(blocker, { id: 'stumbled', strength: 1, duration: 0, restOfPlay: true, source: d }, { quiet: true }); // Stumbled via the gate: current speed only, no timer, no lock
-      bk.lost += 1; log(`${blocker.name} loses ${d.name} on a failed pancake`, { kind: 'stumble', by: blocker.slot, side: blocker.team, victim: d.slot });
+      bk.lost += 1; log(`${$E('sim.loses_on_a_failed_pancake', { name: blocker.name, name2: d.name })}`, { kind: 'stumble', by: blocker.slot, side: blocker.team, victim: d.slot });
     }
   }
   function resolveEngagement(blocker) { // M3 hook: each of his engagements (a second one: engaged2) resolves on its own
@@ -586,7 +588,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (runFit && be.riptide && (d.riptideDragged || 0) < be.riptide) {
       const toward = (d.y - B.left) < (B.right - d.y) ? -1 : 1; const step = Math.min(1.1 * DT, be.riptide - (d.riptideDragged || 0));
       d.y += toward * step; d.riptideDragged = (d.riptideDragged || 0) + step; abilityUsed(blocker, 'riptide');
-      if (d.riptideDragged >= be.riptide - 1e-6) abilityOutcome('dragged', blocker, `${blocker.name} drags ${d.name} toward the sideline`, { victim: d.slot });
+      if (d.riptideDragged >= be.riptide - 1e-6) abilityOutcome('dragged', blocker, `${$E('sim.drags_toward_the_sideline', { name: blocker.name, name2: d.name })}`, { victim: d.slot });
     }
     // Landslide: he never loses a pass-block engagement.
     const holdsForever = !runFit && be.landslide;
@@ -601,7 +603,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (!holdsForever && rng.chance(shedPerSec * DT) && !hook('shedAttempt', blocker, d)?.prevent) { // M3 hook: the blocker's contract may prevent this ordinary shed
       if (blocker.engaged2 === d) blocker.engaged2 = null; else { blocker.engaged = blocker.engaged2 || null; blocker.engaged2 = null; } d.engaged = null; blocker.stun = be.rebound ? 0.1 : (0.45 + (d.ability?.blockerStun || 0)) * (be.dragonhide || 1); d.noEngage = runFit ? 0.5 : 0.85; // a beaten pass blocker cannot recover at once (M3 hook: his other engagement, engaged2, holds)
       if (be.dragonhide) abilityUsed(blocker, 'dragonhide'); // Dragonhide: recovers twice as fast
-      if (d.ability?.pincer) { blocker.stun = Math.max(blocker.stun, d.ability.pincer); setStatus(blocker, 'pinched', d.ability.pincer); abilityUsed(d, 'pincer'); abilityOutcome('pinched', d, `${d.name}'s Pincer Hold keeps ${blocker.name} from getting free`, { victim: blocker.slot }); } // Pincer Hold: a full second late to the next block
+      if (d.ability?.pincer) { blocker.stun = Math.max(blocker.stun, d.ability.pincer); setStatus(blocker, 'pinched', d.ability.pincer); abilityUsed(d, 'pincer'); abilityOutcome('pinched', d, `${$E('sim.s_pincer_hold_keeps_from_getting', { name: d.name, name2: blocker.name })}`, { victim: blocker.slot }); } // Pincer Hold: a full second late to the next block
       if (be.rebound) abilityUsed(blocker, 'rebound');
       d.lastBeat = { blocker: blocker.slot, t }; (stats.blockers[blocker.slot] ||= {}).shedBy = d.slot; (stats.blockers[blocker.slot] ||= { pass: 0, run: 0, lost: 0 }).lost += 1;
       if (d.ability?.shedStrength || d.ability?.runStuff) abilityUsed(d, d.ability.shedStrength ? 'shedStrength' : 'runStuff'); log(`${d.name} sheds ${blocker.name}`, { kind: 'shed', by: d.slot, side: d.team, blocker: blocker.slot, ability: fired(d, 'shedStrength', 'runStuff') });
@@ -765,7 +767,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     a.laneDecided = true; a.cutUntil = t + 0.3; const off = best.off; // he plants to bend the run
     const pts = path.map((p, i) => (i < a.wp ? p : [p[0], clamp(p[1] + off * (i === a.wp ? 0.6 : 1), B.left + 1.5, B.right - 1.5)]));
     a.assignment = { ...a.assignment, points: pts }; // his own copy: the playbook's drawn path is never changed
-    log(`${a.name} cuts it back`, { kind: 'cutback', by: a.slot, side: a.team, off, at: +((gate[0] - a.x) * dir).toFixed(1) });
+    log(`${$E('sim.cuts_it_back', { name: a.name })}`, { kind: 'cutback', by: a.slot, side: a.team, off, at: +((gate[0] - a.x) * dir).toFixed(1) });
   }
   /**
    * Reading the lead block (Phase C1, F5). When the guard (or tight end) pulling ahead of him engages a defender near the hole,
@@ -791,9 +793,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       .map((o) => { const sp = Math.hypot(o.vx, o.vy), toMe = Math.hypot(a.x - o.x, a.y - o.y) || 1; const chasing = sp > 1.5 && (o.vx * (a.x - o.x) + o.vy * (a.y - o.y)) / (sp * toMe) > 0.8;
         return o.y + (chasing ? 0 : o.vy * 0.3 * aw) + (hash01(`${hk}|${o.slot}|j`) * 2 - 1) * jitter; }); // where he is heading now (an aware back reads a scraping linebacker's flow), placed less exactly by a poor reader
     const crowd = (ly) => free.reduce((sum, y) => sum + Math.max(0, 1.8 - Math.abs(y - ly)), 0);
-    if (crowd(gate[1] + off) > crowd(gate[1]) + 0.6) { log(`${a.name} stays on the design: the lane beside ${lead.name} is closing`, { kind: 'lead_pass', by: a.slot, side: a.team, blocker: lead.slot, off: +off.toFixed(1) }); return; }
+    if (crowd(gate[1] + off) > crowd(gate[1]) + 0.6) { log(`${$E('sim.stays_on_the_design_the_lane', { name: a.name, name2: lead.name })}`, { kind: 'lead_pass', by: a.slot, side: a.team, blocker: lead.slot, off: +off.toFixed(1) }); return; }
     a.assignment = { ...a.assignment, points: path.map((p, i) => (i < a.wp ? p : [p[0], clamp(p[1] + off * (i === a.wp ? 0.6 : 1), B.left + 1.5, B.right - 1.5)])) }; // his own copy: the drawn path is never changed
-    log(`${a.name} follows ${lead.name}'s block`, { kind: 'lead_read', by: a.slot, side: a.team, blocker: lead.slot, off: +off.toFixed(1) });
+    log(`${$E('sim.follows_s_block', { name: a.name, name2: lead.name })}`, { kind: 'lead_read', by: a.slot, side: a.team, blocker: lead.slot, off: +off.toFixed(1) });
   }
   function carrierMove(a) {
     const dir = a.team === 'off' ? 1 : -1;
@@ -815,7 +817,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         nearest.stun = Math.max(nearest.stun, 0.3);
         a.vx *= 0.65; a.vy *= 0.65; // a cut costs the runner speed too
         if (a.ability?.quakeStep) quake(a);
-        if (a.ability?.vanishing && !a.vanished) { a.vanished = true; nearest.stun = Math.max(nearest.stun, a.ability.vanishing); setStatus(nearest, 'lost', a.ability.vanishing); abilityUsed(a, 'vanishing'); abilityOutcome('vanished', a, `${a.name} vanishes; ${nearest.name} is left frozen`, { victim: nearest.slot }); }
+        if (a.ability?.vanishing && !a.vanished) { a.vanished = true; nearest.stun = Math.max(nearest.stun, a.ability.vanishing); setStatus(nearest, 'lost', a.ability.vanishing); abilityUsed(a, 'vanishing'); abilityOutcome('vanished', a, `${$E('sim.vanishes_is_left_frozen', { name: a.name, name2: nearest.name })}`, { victim: nearest.slot }); }
         if (a.ability?.elusiveFirst) abilityUsed(a, 'elusiveFirst'); log(`${a.name} jukes ${nearest.name}`, { kind: 'juke', by: a.slot, side: a.team, victim: nearest.slot, ability: fired(a, 'elusive', 'elusiveFirst') });
         hook('juke', a, nearest); // M3 hook: a successful ordinary juke (after it is logged)
       }
@@ -912,7 +914,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     ball.holder = r; r.x = L.x; r.y = L.y; r.laneTimer = 0; r.jukeCooldown = 0; phase = 'carry';
     stats.carrier = r.slot; stats.kickCatchX = L.x;
     for (const d of defs) d.recognised = true; // nothing to read: everyone sees the ball in his hands
-    log(`${r.name} fields the kickoff`, { kind: 'kick_catch', by: r.slot, side: 'off' });
+    log(`${$E('sim.fields_the_kickoff', { name: r.name })}`, { kind: 'kick_catch', by: r.slot, side: 'off' });
   }
   /** M3 hook: what a movement override may do this tick (steer toward a point; his own steering limits apply). */
   const moveApi = (a) => ({ steer: (tx, ty, scale = 1, arrive = 0.3) => steer(a, tx, ty, scale, arrive), t });
@@ -958,18 +960,18 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         if (a.ability?.cyclone && !a.cycloneDone && a.wp >= 2) {
           a.cycloneDone = true; const spun = coveringDefs(a);
           for (const d of spun) { d.stun = Math.max(d.stun, a.ability.cyclone); setStatus(d, 'spin', a.ability.cyclone); }
-          if (spun.length) { abilityUsed(a, 'cyclone'); abilityOutcome('spun', a, `${a.name}'s Cyclone spins ${spun[0].name} around`, { victim: spun[0].slot }); }
+          if (spun.length) { abilityUsed(a, 'cyclone'); abilityOutcome('spun', a, `${$E('sim.s_cyclone_spins_around', { name: a.name, name2: spun[0].name })}`, { victim: spun[0].slot }); }
         }
         // Mind Game: on his first fake, his man defender bites half the time and loses a step.
         if (a.ability?.mindGame && !a.mindDone && a.wp >= 2) {
           a.mindDone = true; const man = coveringDefs(a).find((d) => d.assignment?.a === 'man');
-          if (man && rng.chance(a.ability.mindGame)) { man.stun = Math.max(man.stun, 0.4); setStatus(man, 'confused', 0.8); abilityUsed(a, 'mindGame'); abilityOutcome('bit_fake', a, `${man.name} bites on ${a.name}'s fake`, { victim: man.slot }); }
+          if (man && rng.chance(a.ability.mindGame)) { man.stun = Math.max(man.stun, 0.4); setStatus(man, 'confused', 0.8); abilityUsed(a, 'mindGame'); abilityOutcome('bit_fake', a, `${$E('sim.bites_on_s_fake', { name: man.name, name2: a.name })}`, { victim: man.slot }); }
         }
         // Eclipse Route: on a deep route his defender loses track of him for half a second.
         if (a.ability?.eclipse && !a.eclipseDone && deepRoute(a) && a.x >= 10) {
           a.eclipseDone = true; const lost = coveringDefs(a);
           for (const d of lost) { d.stun = Math.max(d.stun, a.ability.eclipse); setStatus(d, 'lost', a.ability.eclipse); }
-          if (lost.length) { abilityUsed(a, 'eclipse'); abilityOutcome('lost_track', a, `${lost[0].name} loses ${a.name} in the Eclipse`, { victim: lost[0].slot }); }
+          if (lost.length) { abilityUsed(a, 'eclipse'); abilityOutcome('lost_track', a, `${$E('sim.loses_in_the_eclipse', { name: lost[0].name, name2: a.name })}`, { victim: lost[0].slot }); }
         }
         return;
       }
@@ -1002,7 +1004,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     a.released = true;
     if (a.engaged) { const d = a.engaged; d.engaged = null; a.engaged = null; d.vx = 0; d.vy = 0; a.letGo = d; }
     if (a.engaged2) { a.engaged2.engaged = null; a.engaged2 = null; } // M3 hook: engaged2
-    log(`${a.name} releases to block downfield`, { kind: 'screen_release', by: a.slot });
+    log(`${$E('sim.releases_to_block_downfield', { name: a.name })}`, { kind: 'screen_release', by: a.slot });
   }
   function screenBlock(a) {
     if (a.engaged) { resolveEngagement(a); return; }
@@ -1064,7 +1066,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         const slip = 0.5 * norm(nearby.attrs.agility * scaleVs(nearby, a, 'shed')) + 0.5 * norm(nearby.attrs.awareness); // he sees it coming (Awareness) and gets around it (Agility)
         const bk = blockAttrs(a, nearby).blocking; // M3 hook: pair-specific engagement attributes
         const p = clamp(0.25 + 0.5 * norm(bk * scaleVs(a, nearby, 'block')) + 1.0 * (norm(bk) - slip), 0.25, 0.9); // between equals, the open-field block's own landing rate (0.58 at 65)
-        if (!rng.chance(p)) { (a.whiffed ||= {})[nearby.slot] = true; log(`${nearby.name} slips ${a.name}'s block`, { kind: 'whiff', by: nearby.slot, side: nearby.team, blocker: a.slot }); return; }
+        if (!rng.chance(p)) { (a.whiffed ||= {})[nearby.slot] = true; log(`${$E('sim.slips_s_block', { name: nearby.name, name2: a.name })}`, { kind: 'whiff', by: nearby.slot, side: nearby.team, blocker: a.slot }); return; }
       }
       tryEngage(a, nearby, soft); return;
     }
@@ -1079,7 +1081,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function giveBall(to) {
     ball.holder = to; handoffDone = true; phase = 'carry'; stats.carrier = to.slot; handoffAt = t;
     to.laneTimer = 0; to.jukeCooldown = 0;
-    log(`Handoff to ${to.name}`, { kind: 'handoff', to: to.slot, reach: qb ? +dist(qb, to).toFixed(2) : null }); // reach: how far apart the two were (Phase C1, F1)
+    log(`${$E('sim.handoff_to', { name: to.name })}`, { kind: 'handoff', to: to.slot, reach: qb ? +dist(qb, to).toFixed(2) : null }); // reach: how far apart the two were (Phase C1, F1)
   }
   // The handoff: the quarterback steps to a meeting point just off the runner's drawn path (owner review,
   // 2026-10-20) instead of chasing him, so the two never collide and the runner keeps his line.
@@ -1110,7 +1112,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // the keep the way it reads an option keep.
   function missedMesh(a, rb) {
     ball.holder = a; handoffDone = true; phase = 'carry'; stats.carrier = a.slot; keepAt = t; a.laneTimer = 0; a.jukeCooldown = 0;
-    log(`${a.name} and ${rb.name} miss the mesh; ${a.name} keeps it`, { kind: 'mesh_missed', by: a.slot, to: rb.slot });
+    log(`${$E('sim.and_miss_the_mesh_keeps_it', { name: a.name, name2: rb.name, name3: a.name })}`, { kind: 'mesh_missed', by: a.slot, to: rb.slot });
   }
   function qbPitch(a) {
     const rb = offs.find((o) => o.assignment.a === 'carry');
@@ -1142,8 +1144,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
           a.optionRead = { key, give: attacking };
           const pitchWord = Math.abs(rb.assignment.points[rb.assignment.points.length - 1][1]) > Math.abs(a.assignment.points[a.assignment.points.length - 1][1]) ? 'pitch' : 'give';
           a.optionRead.word = pitchWord;
-          if (!attacking) { ball.holder = a; handoffDone = true; phase = 'carry'; stats.carrier = a.slot; a.wp = 2; keepAt = t; log(`${a.name} reads ${key ? key.name : 'nobody'} and keeps`, { kind: 'keep', read: key?.slot || null }); return; }
-          log(key ? `${a.name} reads ${key.name} coming and holds to ${pitchWord}` : `${a.name} reads nobody and will ${pitchWord}`, { kind: 'option_read', read: key?.slot || null });
+          if (!attacking) { ball.holder = a; handoffDone = true; phase = 'carry'; stats.carrier = a.slot; a.wp = 2; keepAt = t; log(`${$E('sim.reads_and_keeps', { name: a.name, key: key ? key.name : 'nobody' })}`, { kind: 'keep', read: key?.slot || null }); return; }
+          log(key ? `${$E('sim.reads_coming_and_holds_to', { name: a.name, name2: key.name, pitchWord })}` : `${$E('sim.reads_nobody_and_will', { name: a.name, pitchWord })}`, { kind: 'option_read', read: key?.slot || null });
         }
         const { key } = a.optionRead;
         // Hold the ball until the read defender commits (or the timing runs out), then get rid of it.
@@ -1223,7 +1225,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (candidate && ready(candidate) && openness(candidate) >= threshold) {
       // Whiteout: once per half, the quarterback's first read freezes and he has to move on to the second.
       const frost = readIndex === 0 && progression.length > 1 && !options.forcedTarget ? defs.find((d) => d.ability?.whiteout && available(d, 'whiteout', 'drive')) : null;
-      if (frost) { spend(frost, 'whiteout', 'drive'); readIndex = 1; readClock = scanPace; candidate.vx = 0; candidate.vy = 0; candidate.stun = Math.max(candidate.stun, 0.8); setStatus(candidate, 'frozen', 0.8); abilityUsed(frost, 'whiteout'); abilityOutcome('read_frozen', frost, `${frost.name}'s Whiteout freezes ${a.name}'s first read`, { victim: a.slot }); return; }
+      if (frost) { spend(frost, 'whiteout', 'drive'); readIndex = 1; readClock = scanPace; candidate.vx = 0; candidate.vy = 0; candidate.stun = Math.max(candidate.stun, 0.8); setStatus(candidate, 'frozen', 0.8); abilityUsed(frost, 'whiteout'); abilityOutcome('read_frozen', frost, `${$E('sim.s_whiteout_freezes_s_first_read', { name: frost.name, name2: a.name })}`, { victim: a.slot }); return; }
       a.throwRead = readIndex; throwTo(a, candidate, pressured); return;
     }
     if (readClock <= 0) { readClock = scanPace; readIndex += 1; }
@@ -1339,12 +1341,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const seen = oddsFor(a, r, w, pm1, pm2, physPressure); const truth = oddsFor(a, r, w, w.m1, w.m2, physPressure);
     return { r, slot: r.slot, w, ready, pm1, pm2, seen, truth, at: t };
   }
-  const QR_WORD = { open: 'open', double: 'double coverage', lane: 'throwing lane blocked', covered: 'covered', tight: 'window too tight', not_ready: 'route not developed', out_of_range: 'out of range', noticed: 'spotted open' };
+  const QR_WORD = { open: 'open', double: 'double coverage', lane: 'throwing lane blocked', covered: 'covered', tight: 'window too tight', not_ready: $E('sim.route_not_developed'), out_of_range: $E('sim.out_of_range'), noticed: 'spotted open' };
   function qrLog(kind, data) {
     const e = { t: +t.toFixed(2), kind, ...data }; qr.log.push(e);
     const nm = (sl, team = 'off') => (team === 'off' ? bySlot.off[sl] : bySlot.def[sl])?.name || sl;
-    const text = kind === 'read' ? `${qb?.name || 'QB'} reads ${nm(e.slot)}: ${QR_WORD[e.reason] || e.reason}` : kind === 'pressure' ? `${nm(e.by, 'def')} is closing on ${qb?.name || 'the QB'}`
-      : kind === 'decision' ? `${qb?.name || 'QB'} decides: ${e.action === 'throw' ? `throw to ${nm(e.slot)}` : e.action === 'scramble' ? 'scramble' : 'throw it away'}` : '';
+    const text = kind === 'read' ? `${$E('sim.reads', { name: qb?.name || 'QB', nm: nm(e.slot), qrWord: QR_WORD[e.reason] || e.reason })}` : kind === 'pressure' ? `${$E('sim.is_closing_on', { nm: nm(e.by, 'def'), name: qb?.name || $E('sim.the_qb') })}`
+      : kind === 'decision' ? `${qb?.name || 'QB'} decides: ${e.action === 'throw' ? `${$E('sim.throw_to', { nm: nm(e.slot) })}` : e.action === 'scramble' ? 'scramble' : $E('sim.throw_it_away')}` : '';
     events.push({ t: e.t, text, ...e, kind: `qb_${kind}` }); return e;
   }
   function buildOrder() {
@@ -1442,7 +1444,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (ok) {
         // Whiteout: once per half, the quarterback's first read freezes and he has to move on to the second.
         const frost = qr.i === 0 && qr.order.length > 1 ? defs.find((d) => d.ability?.whiteout && available(d, 'whiteout', 'drive')) : null;
-        if (frost && !(options.qb && options.qb.mode !== 'ai')) { spend(frost, 'whiteout', 'drive'); r.vx = 0; r.vy = 0; r.stun = Math.max(r.stun, 0.8); setStatus(r, 'frozen', 0.8); abilityUsed(frost, 'whiteout'); abilityOutcome('read_frozen', frost, `${frost.name}'s Whiteout freezes ${a.name}'s first read`, { victim: a.slot }); startLook(a, 1); return; }
+        if (frost && !(options.qb && options.qb.mode !== 'ai')) { spend(frost, 'whiteout', 'drive'); r.vx = 0; r.vy = 0; r.stun = Math.max(r.stun, 0.8); setStatus(r, 'frozen', 0.8); abilityUsed(frost, 'whiteout'); abilityOutcome('read_frozen', frost, `${$E('sim.s_whiteout_freezes_s_first_read', { name: frost.name, name2: a.name })}`, { victim: a.slot }); startLook(a, 1); return; }
         if (commit(a, { action: 'throw', r, slot: r.slot, reason: qr.i === 0 && qr.cur.why === 'progression' ? 'first_read' : qr.cur.why === 'noticed' ? 'noticed' : qr.cur.why === 'revisit' ? 'revisit' : 'progression', look, read: qr.i, pressured })) return;
       }
       // Locked on: a lesser passer keeps staring at his first read.
@@ -1525,13 +1527,13 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     ball.undertow = airD >= 15 ? defs.find((d) => d.ability?.undertow && (Math.abs(d.y) < 1 || Math.sign(d.y) === Math.sign(landing.y))) || null : null;
     phase = 'air'; stats.passer = passer.slot; stats.target = r.slot; stats.airYards = Math.round(landing.x);
     for (const def of defs) def.recognisedPass = true;
-    log(`${passer.name} throws to ${r.name}${pressured ? ' under pressure' : ''}`, { kind: 'throw', target: r.slot, pressured });
+    log(`${$E('sim.throws_to', { name: passer.name, name2: r.name, pressured: pressured ? ' under pressure' : '' })}`, { kind: 'throw', target: r.slot, pressured });
     // M3 hook: the release. Defenders' contracts first, in lineup order: the first {breakup} ends it as an ordinary incompletion, no catch
     // made (Stonewall Swat); otherwise every contract observes the release (ball.target, ball.landing set).
     const rel = { ball, passer, receiver: r }; let brokeUp = false;
     for (const d of defs) if (d.contract?.hooks?.passRelease && hook('passRelease', d, rel)?.breakup) {
       ball.inAir = false; stats.pbuBy = d.slot; stats.unavoidableOverride = true; endPlay('incomplete', passer.x, passer.y); brokeUp = true;
-      log(`Pass broken up by ${d.name}`, { kind: 'incomplete', dropped: false, pbu: true, by: d.slot, side: 'def', contract: d.family }); break;
+      log(`${$E('sim.pass_broken_up_by', { name: d.name })}`, { kind: 'incomplete', dropped: false, pbu: true, by: d.slot, side: 'def', contract: d.family }); break;
     }
     if (!brokeUp) for (const a of actors) if (a.contract?.hooks?.passRelease && !defs.includes(a)) hook('passRelease', a, rel);
   }
@@ -1922,14 +1924,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (c.entering) why.push('entering'); if (c.leaving) { sc -= 0.35; why.push('leaving'); }
       if (role === 'deep') {
         const depth = clamp((o.x - (zx - 8)) / 10, 0, 1.2) + (o.vx > 3 ? 0.4 : 0); sc += 1.2 * depth;
-        if (deepThreat && o.x < zx - 8 && o.vx <= 3) { sc -= 1.5; why.push('underneath, not his'); }
-        if (someAlone && c.alone) { sc += 0.15 + 0.55 * aw; why.push('his alone'); }
+        if (deepThreat && o.x < zx - 8 && o.vx <= 3) { sc -= 1.5; why.push($E('sim.underneath_not_his')); }
+        if (someAlone && c.alone) { sc += 0.15 + 0.55 * aw; why.push($E('sim.his_alone')); }
         // Already carried: another deep defender, closer to him, is playing this receiver. Doubling him leaves this defender's own
         // deep area empty (the post or seam behind him), so he weighs it heavily against it, the more so the more aware he is.
-        if (defs.some((x) => x !== d && !x.engaged && x.assignment?.a === 'zone' && x.assignment.role === 'deep' && x.zoneTgt === c.slot && dist(x, o) < dist(d, o))) { sc -= 0.4 + 0.8 * aw; c.carried = true; why.push('carried by a teammate'); }
+        if (defs.some((x) => x !== d && !x.engaged && x.assignment?.a === 'zone' && x.assignment.role === 'deep' && x.zoneTgt === c.slot && dist(x, o) < dist(d, o))) { sc -= 0.4 + 0.8 * aw; c.carried = true; why.push($E('sim.carried_by_a_teammate')); }
       } else {
         sc += 0.6 * (1 - Math.min(1, Math.abs(o.x - (zx + 2)) / 8));
-        if (deepHelp && o.x > zx + 5 + 3 * (1 - aw) && Math.min(o.vx, o.vxLast) > 2) { sc -= 0.6 + 0.5 * aw; why.push('past him, deep help'); } // an aware defender passes a clear-out (still running upfield) to the deep help sooner instead of carrying the decoy; a curl or hitch that has settled is still his
+        if (deepHelp && o.x > zx + 5 + 3 * (1 - aw) && Math.min(o.vx, o.vxLast) > 2) { sc -= 0.6 + 0.5 * aw; why.push($E('sim.past_him_deep_help')); } // an aware defender passes a clear-out (still running upfield) to the deep help sooner instead of carrying the decoy; a curl or hitch that has settled is still his
       }
       sc -= 0.04 * Math.hypot(o.x - d.x, o.y - d.y);
       let other = 99, mate = false; const mine = Math.hypot(o.x - d.x, o.y - d.y);
@@ -1943,8 +1945,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       // His eyes: an unaware defender bites on every look; an aware one trusts only a look the quarterback holds (half a second
       // for full weight), so a glance on the way through his progression does not move him, and a deep defender weighs eyes
       // less against the depth he is there to protect. The throwing motion is real information, read better with Awareness.
-      if (c.cue > 0 && !windupSeen) { const trust = clamp(1 - aw + aw * seen.held / 0.5, 0, 1); const w = (role === 'deep' ? 0.4 * (1 - 0.5 * aw) : 0.4) * trust * c.cue; if (w > 0.02) { sc += w; why.push('QB eyes'); } }
-      if (windupSeen && c.cue > 0) { sc += (0.3 + 0.5 * aw) * c.cue; why.push('QB winding up'); }
+      if (c.cue > 0 && !windupSeen) { const trust = clamp(1 - aw + aw * seen.held / 0.5, 0, 1); const w = (role === 'deep' ? 0.4 * (1 - 0.5 * aw) : 0.4) * trust * c.cue; if (w > 0.02) { sc += w; why.push($E('sim.qb_eyes')); } }
+      if (windupSeen && c.cue > 0) { sc += (0.3 + 0.5 * aw) * c.cue; why.push($E('sim.qb_winding_up')); }
       if (d.zoneTgt === c.slot) sc += 0.12 + 0.18 * aw; // discipline: no switch for a marginal gain
       sc += (hash01(`${d.slot}|${c.slot}|${bucket}`) - 0.5) * 1.4 * Math.pow(1 - aw, 1.2); // misjudgement, larger for a low-Awareness defender
       c.score = sc; c.why = why;
@@ -1964,7 +1966,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const deepT = (c) => c.obs.x >= zx - 8 || c.obs.vx > 3; const deep2 = role === 'deep' && !windupSeen ? cands.find((c) => c !== pick && c.isIn && deepT(c)) : null;
     const split = role !== 'deep' ? overload && pick.isIn && second && pick.score - second.score < 0.2 : !!(deep2 && pick.isIn && deepT(pick) && pick.score - deep2.score < 0.1 + 0.4 * aw);
     const sec = role === 'deep' ? deep2 : second;
-    const why = split ? (role === 'deep' ? 'two deep, splitting' : 'overload, splitting') : role === 'deep' && !pick.why.length ? 'deepest threat' : pick.why.length ? pick.why[pick.why.length - 1] : overload ? 'bigger threat' : 'in his zone';
+    const why = split ? (role === 'deep' ? $E('sim.two_deep_splitting') : $E('sim.overload_splitting')) : role === 'deep' && !pick.why.length ? 'deepest threat' : pick.why.length ? pick.why[pick.why.length - 1] : overload ? 'bigger threat' : $E('sim.in_his_zone');
     const verticalNear = role === 'deep' && cands.some((c) => Math.min(c.obs.vx, c.obs.vxLast) > 2.5);
     return { pick, second: sec, split, verticalNear, splitWeight: split ? clamp(0.5 + (pick.score - sec.score) * 1.5, 0.5, 0.8) : 1, inZone, overload, switched, why };
   }
@@ -2029,7 +2031,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (!runLive && ball.holder === qb && phase !== 'carry' && !['rush', 'contain', 'man'].includes(asg.a) && R) {
       const deepDefender = asg.a === 'zone' && asg.role === 'deep';
       if (deepDefender) { if (R.b > 0.45) { const sp = snapPos.get(d); mark('read', 'hold'); steer(d, clamp(d.x, sp.x - 0.5, sp.x), d.y, 0.6, 0.3); return; } }
-      else if (!isDB(d) && d.recognised) { const f = readFit(d); mark('run-fit', 'before the handoff'); steer(d, f.x, f.y, 1, 0.3); return; }
+      else if (!isDB(d) && d.recognised) { const f = readFit(d); mark('run-fit', $E('sim.before_the_handoff')); steer(d, f.x, f.y, 1, 0.3); return; }
     }
     switch (asg.a) {
       case 'rush': {
@@ -2066,7 +2068,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         // he sees.
         if (!target && RUN_CALL && R && !ball.inAir && ball.holder?.team === 'off' && !(ball.holder === qb && passShown(d))) {
           const sp = snapPos.get(d), lean = readLean(d), f = readFit(d);
-          mark('man', `none · run support ${Math.round(lean * 100)}%`); steer(d, sp.x + (f.x - sp.x) * lean, sp.y + (f.y - sp.y) * lean, 0.9, 0.3); return;
+          mark('man', `${$E('sim.none_run_support', { n: Math.round(lean * 100) })}`); steer(d, sp.x + (f.x - sp.x) * lean, sp.y + (f.y - sp.y) * lean, 0.9, 0.3); return;
         }
         if (!target) { mark('man', 'none'); steer(d, 6, d.y * 0.6, 0.8, 0.3); return; } // nobody to cover (three-receiver set): sit in the short middle
         // A back who stays in to block frees his man: "green dog", add to the rush.
@@ -2107,16 +2109,16 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
           // He has read the direction, so he anticipates along it by Coverage even while the receiver is still gathering out of
           // his cut (the general lead shrinks to almost nothing then, which left him standing on a dig's break).
           const leadL = Math.min(3.5, ovs * (0.12 + 0.3 * norm(d.attrs.coverage)));
-          mark('man', `${target.slot}: mirror across`); steer(d, Math.max(p.x + ux * leadL + 1.0, 1.0), p.y + uy * leadL, 1, 0.3); return;
+          mark('man', `${$E('sim.mirror_across', { slot: target.slot })}`); steer(d, Math.max(p.x + ux * leadL + 1.0, 1.0), p.y + uy * leadL, 1, 0.3); return;
         }
         if (!turnedBack && !settled) {
-          if (onTop >= d.x) { mark('man', slowing ? `${target.slot}: gearing down` : under ? `${target.slot}: under, inside` : `${target.slot}: on top`); steer(d, onTop, ty, slowing ? Math.max(0.3, ovs / Math.max(1, d.peakSeen)) : 1, 0.3); return; }
-          if (slowing) { mark('man', `${target.slot}: turn with him`); steer(d, d.x, ty, 0.3, 0.3); return; } // past him as he gathers: stop and turn with him
+          if (onTop >= d.x) { mark('man', slowing ? `${$E('sim.gearing_down', { slot: target.slot })}` : under ? `${$E('sim.under_inside', { slot: target.slot })}` : `${$E('sim.on_top', { slot: target.slot })}`); steer(d, onTop, ty, slowing ? Math.max(0.3, ovs / Math.max(1, d.peakSeen)) : 1, 0.3); return; }
+          if (slowing) { mark('man', `${$E('sim.turn_with_him', { slot: target.slot })}`); steer(d, d.x, ty, 0.3, 0.3); return; } // past him as he gathers: stop and turn with him
           // Receiver still in front of him (the release, or running at him): shuffle, backpedal only as he closes.
           const closing = d.x - p.x < 3.5; mark('man', `${target.slot}: ${closing ? 'backpedal' : 'shuffle'}`); steer(d, closing ? d.x - 0.6 : d.x, ty, closing ? 0.55 : 0.35, 0.3); return;
         }
         // He broke back or sat down: drive downhill to where he is seen, inside shoulder (Speed closes, Agility turns him).
-        mark('man', `${target.slot}: drive on the break`); steer(d, p.x + ux * lead, p.y + uy * lead + inside * 0.5, 1, 0.3); return;
+        mark('man', `${$E('sim.drive_on_the_break', { slot: target.slot })}`); steer(d, p.x + ux * lead, p.y + uy * lead + inside * 0.5, 1, 0.3); return;
       }
       case 'zone': {
         // Zone coverage (v42.12, zone intelligence): the defender reads the receivers around his zone from what he can SEE
@@ -2137,13 +2139,13 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
           d.zoneTgt = null; if (TRACE) d.zoneInfo = null;
           if (threats.length && dist(d, { x: zx, y: zy }) < radius + 1) {
             const r = threats.sort((p, q) => q.x - p.x)[0]; const p = trailPosition(d, r); const ov = observedVelocity(d, r); const antic = 0.15 + 0.25 * norm(d.attrs.coverage);
-            mark('zone', `${r.slot} · no pass shown, deepest (${threats.length} in zone)`);
+            mark('zone', `${$E('sim.no_pass_shown_deepest_in_zone', { slot: r.slot, n: threats.length })}`);
             if (role === 'deep') { const inward = Math.sign(zy - r.y) || (zy >= 0 ? 1 : -1); const ty = clamp(p.y + ov.vy * antic + inward * 1.2, zy - 10, zy + 10); steer(d, Math.max(p.x + ov.vx * antic + 2.0, zx - 3), ty, 0.98, 0.3); }
             // Reading, he does not come up to a receiver near the line: he keeps his depth, a step and a half closer when he leans run.
             else { const hold = snapPos.get(d).x - 1.5 * lean; gsteer(Math.max(hold, p.x + ov.vx * antic * 0.6 + 0.3), p.y + ov.vy * antic * 0.6, 0.95, 0.3); }
             return;
           }
-          mark('zone', lean > 0.05 ? `spot · reading run ${Math.round(lean * 100)}%` : 'spot'); gsteer(zx, zy, 0.95, 0.5); return;
+          mark('zone', lean > 0.05 ? `${$E('sim.spot_reading_run', { n: Math.round(lean * 100) })}` : 'spot'); gsteer(zx, zy, 0.95, 0.5); return;
         }
         const center = { x: zx, y: zy };
         // Bracket (Phase B fix 4): the deep defender over the top and outside of one receiver, the man defender underneath and inside.
@@ -2163,7 +2165,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
               const ty = clamp(o.y + o.vy * antic + out, B.left + 1, B.right - 1);
               const tx = Math.max(cushionDepth(d, o), holdDepth(d, o), vUp > 2.5 ? zx - 1 : o.x + 1.5);
               d.zoneTgt = r.slot; if (TRACE) d.zoneInfo = { in: [r.slot], tgt: r.slot, why: 'bracket over', overload: false, switched: false, split: null };
-              mark('zone', `${r.slot} · bracket over${inward ? ', squeezing inside' : ''}`); deepSteer(d, tx, ty, o); return;
+              mark('zone', `${$E('sim.bracket_over', { slot: r.slot, inward: inward ? $E('sim.squeezing_inside') : '' })}`); deepSteer(d, tx, ty, o); return;
             }
             skip = r.slot; // no vertical threat: the man defender underneath has him
           }
@@ -2211,9 +2213,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
           let tx = zx; for (const sl of receivers) { const r = bySlot.off[sl]; if (!r || r.engaged || r.x <= 0) continue; const o = zoneObserve(d, r);
             if (Math.min(o.vx, o.vxLast) > 2.5 && Math.abs(o.y - zy) < radius + 12) tx = Math.max(tx, cushionDepth(d, o), holdDepth(d, o)); }
           tx = Math.min(tx, zx + 10);
-          mark('zone', tx > zx + 0.5 ? 'spot · keeping it in front' : shade ? 'spot · reading the QB' : 'spot'); steer(d, tx, zy + shade, 0.95, 0.5); return;
+          mark('zone', tx > zx + 0.5 ? $E('sim.spot_keeping_it_in_front') : shade ? $E('sim.spot_reading_the_qb') : 'spot'); steer(d, tx, zy + shade, 0.95, 0.5); return;
         }
-        mark('zone', shade ? 'spot · reading the QB' : 'spot'); steer(d, zx, zy + shade, 0.95, 0.5); return;
+        mark('zone', shade ? $E('sim.spot_reading_the_qb') : 'spot'); steer(d, zx, zy + shade, 0.95, 0.5); return;
       }
       case 'spy': {
         if (c === qb && qb.x > 0) { mark('spy', 'pursue'); pursue(d); return; }
@@ -2232,15 +2234,15 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const p = sigmoid((tackleScore - carryScore + 18) / 16) * (0.15 + 0.35 * norm(d.attrs.awareness)); // 0.33 of a clean tackle at 65 Awareness
     if (!rng.chance(p)) return false;
     const dir = c.team === 'off' ? 1 : -1; c.x += dir * Math.min(1.2, Math.hypot(c.vx, c.vy) * 0.14);
-    if (c.team === 'off' && c.x >= B.goal) { stats.tackler = d.slot; endPlay('touchdown', Math.max(c.x, B.goal), c.y); log(`${c.name} is dragged down past the goal line. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
+    if (c.team === 'off' && c.x >= B.goal) { stats.tackler = d.slot; endPlay('touchdown', Math.max(c.x, B.goal), c.y); log(`${$E('sim.is_dragged_down_past_the_goal', { name: c.name })}`, { kind: 'touchdown' }); return true; }
     stats.tackler = d.slot;
     if (c.team === 'off' && c.x <= B.ownGoal) { downedInEndZone(d, c); return true; }
-    endPlay('tackle', c.x, c.y); log(`${d.name} reaches off his block and drags ${c.name} down`, { kind: 'tackle', by: d.slot, side: d.team, victim: c.slot, offBlock: true });
+    endPlay('tackle', c.x, c.y); log(`${$E('sim.reaches_off_his_block_and_drags', { name: d.name, name2: c.name })}`, { kind: 'tackle', by: d.slot, side: d.team, victim: c.slot, offBlock: true });
     return true;
   }
   /** Task 8 (B3): after a fumble is determined, a Shielded carrier's save prevents it and consumes the whole episode; then contracts. */
   function fumbleSaved(c) {
-    const st = t8g.status?.[c.mid]; if (st?.id === 'shielded') { delete t8g.status[c.mid]; log(`${c.name}'s shield holds the ball`, { kind: 'ability', by: c.slot, side: c.team, status: 'shielded' }); return true; }
+    const st = t8g.status?.[c.mid]; if (st?.id === 'shielded') { delete t8g.status[c.mid]; log(`${$E('sim.s_shield_holds_the_ball', { name: c.name })}`, { kind: 'ability', by: c.slot, side: c.team, status: 'shielded' }); return true; }
     return !!hook('fumble', c)?.prevent;
   }
   function tryTackle(d, c) {
@@ -2257,7 +2259,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (d.contract) hook('tackling', d, c); // M3 hook: the tackler's contract sees his attempt begin
     const fwd = c.team === 'off' ? 1 : -1;
     // Task 8 M3 (P6 pre-resolution): a carrier's contract may break this attempt before it is decided (normal strips still apply later)
-    if (pre?.prevent) { d.stun = Math.max(d.stun, 0.45); d.noEngage = Math.max(d.noEngage, 0.3); c.brokeTackle = (c.brokeTackle || 0) + 1; stats.brokenTackles += 1; log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, contract: c.family }); hook('tackleBroken', c, d); return false; } // M3 hook: tackleBroken on a contract-prevented attempt too
+    if (pre?.prevent) { d.stun = Math.max(d.stun, 0.45); d.noEngage = Math.max(d.noEngage, 0.3); c.brokeTackle = (c.brokeTackle || 0) + 1; stats.brokenTackles += 1; log(`${$E('sim.breaks_s_tackle', { name: c.name, name2: d.name })}`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, contract: c.family }); hook('tackleBroken', c, d); return false; } // M3 hook: tackleBroken on a contract-prevented attempt too
     if (dist(d, c) > 1.25) return false; // M3 hook: a contract's contact displacement moved the tackler out of reach (no attempt, no break)
     // Daybreak: nobody can bring him down from behind.
     if (c.daybreak && (d.x - c.x) * fwd < -0.2) return false;
@@ -2269,7 +2271,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (!d.temp && !c.temp && d.team === 'def' && c.team === 'off') (stats.tackleAttempts ||= {})[d.slot] = true;
     // Permafrost: a run that meets him at his gap loses a yard on contact.
     if (d.ability?.permafrost && !c.permafrosted && handoffDone && !stats.receiver) { // v42.14: a handed-off (or kept) ball, not the play type
-      c.permafrosted = true; c.x -= fwd * d.ability.permafrost; c.vx = 0; c.vy = 0; c.stun = Math.max(c.stun, 0.35); setStatus(c, 'frozen', 0.5); abilityUsed(d, 'permafrost'); abilityOutcome('stuffed', d, `${d.name} freezes ${c.name} in place`, { victim: c.slot });
+      c.permafrosted = true; c.x -= fwd * d.ability.permafrost; c.vx = 0; c.vy = 0; c.stun = Math.max(c.stun, 0.35); setStatus(c, 'frozen', 0.5); abilityUsed(d, 'permafrost'); abilityOutcome('stuffed', d, `${$E('sim.freezes_in_place', { name: d.name, name2: c.name })}`, { victim: c.slot });
     }
     // Eruption: once per drive, the first defender to hit him is flattened (a guaranteed broken tackle).
     if (c.ability?.eruption && available(c, 'eruption', 'drive')) {
@@ -2307,15 +2309,15 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const dir = c.team === 'off' ? 1 : -1;
       c.x += dir * forward;
       // Landslide: a run that went through his gap falls forward two more yards.
-      if (c.landslide && !c.landslideApplied) { c.landslideApplied = true; c.x += dir * c.landslide.ability.landslide; abilityUsed(c.landslide, 'landslide'); abilityOutcome('falls_forward', c.landslide, `${c.name} rides the Landslide two more yards`, { victim: d.slot }); }
+      if (c.landslide && !c.landslideApplied) { c.landslideApplied = true; c.x += dir * c.landslide.ability.landslide; abilityUsed(c.landslide, 'landslide'); abilityOutcome('falls_forward', c.landslide, `${$E('sim.rides_the_landslide_two_more_yards', { name: c.name })}`, { victim: d.slot }); }
       // Forward progress across the goal line is a score, not a tackle at the 1.
-      if (c.team === 'off' && c.x >= B.goal) { stats.tackler = d.slot; endPlay('touchdown', Math.max(c.x, B.goal), c.y); log(`${c.name} is dragged down past the goal line. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
-      if (c.team === 'def' && c.x <= B.ownGoal) { stats.tackler = d.slot; endPlay('touchdown', Math.min(c.x, B.ownGoal), c.y, { defensiveScore: true }); log(`${c.name} falls into the end zone. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
+      if (c.team === 'off' && c.x >= B.goal) { stats.tackler = d.slot; endPlay('touchdown', Math.max(c.x, B.goal), c.y); log(`${$E('sim.is_dragged_down_past_the_goal', { name: c.name })}`, { kind: 'touchdown' }); return true; }
+      if (c.team === 'def' && c.x <= B.ownGoal) { stats.tackler = d.slot; endPlay('touchdown', Math.min(c.x, B.ownGoal), c.y, { defensiveScore: true }); log(`${$E('sim.falls_into_the_end_zone_touchdown', { name: c.name })}`, { kind: 'touchdown' }); return true; }
       if ((rng.chance(fumbleP) || (d.contract && !!hook('tackleMade', d, c, { fumbleP })?.fumble)) && !fumbleSaved(c)) { // M3 hook: a tackler's contract may add a fumble check after the first did not fumble
         const near = actors.filter((a) => dist(a, c) < 2.5 && !a.noBall); // M3 hook: noBall
         const recoverer = near.length ? rng.pick(near) : d;
         stats.forcedBy = d.slot; stats.tackler = d.slot; stats.fumbledBy = c.slot; stats.recoveredSlot = recoverer.slot; stats.recoveredTeam = recoverer.team;
-        if (d.ability?.forceFumble) abilityUsed(d, 'forceFumble'); log(`${d.name} forces a fumble by ${c.name}; ${recoverer.name} recovers`, { kind: 'fumble', by: d.slot, side: d.team, victim: c.slot, recoveredBy: recoverer.slot, team: recoverer.team, ability: fired(d, 'forceFumble') });
+        if (d.ability?.forceFumble) abilityUsed(d, 'forceFumble'); log(`${$E('sim.forces_a_fumble_by_recovers', { name: d.name, name2: c.name, name3: recoverer.name })}`, { kind: 'fumble', by: d.slot, side: d.team, victim: c.slot, recoveredBy: recoverer.slot, team: recoverer.team, ability: fired(d, 'forceFumble') });
         if (recoverer.team !== c.team) { endPlay('fumble', c.x, c.y, { recoveredBy: recoverer.team }); } else { endPlay('tackle', c.x, c.y, { fumbleRecovered: true }); }
         return true;
       }
@@ -2328,17 +2330,17 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     if (!d.temp && !c.temp && !stats.tackleOverride?.[d.slot] && d.team === 'def' && c.team === 'off') (stats.missedTackles ||= {})[d.slot] = true;
     d.stun = 0.45; d.noEngage = 0.3; c.brokeTackle = (c.brokeTackle || 0) + 1; stats.brokenTackles += 1;
-    if (ce.bramble) { d.slowUntil = t + ce.bramble; abilityUsed(c, 'bramble'); abilityOutcome('thorned', c, `${d.name} is caught in ${c.name}'s Bramble Shell`, { victim: d.slot }); }
-    if (c.ability?.carryStrength || ce.elusive || ce.elusiveFirst || ce.noFumble) abilityUsed(c, ce.carryStrength ? 'carryStrength' : ce.noFumble ? 'noFumble' : ce.elusive ? 'elusive' : 'elusiveFirst'); log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken', by: c.slot, side: c.team, victim: d.slot, ability: fired(c, 'carryStrength', 'elusive', 'elusiveFirst', 'noFumble') });
+    if (ce.bramble) { d.slowUntil = t + ce.bramble; abilityUsed(c, 'bramble'); abilityOutcome('thorned', c, `${$E('sim.is_caught_in_s_bramble_shell', { name: d.name, name2: c.name })}`, { victim: d.slot }); }
+    if (c.ability?.carryStrength || ce.elusive || ce.elusiveFirst || ce.noFumble) abilityUsed(c, ce.carryStrength ? 'carryStrength' : ce.noFumble ? 'noFumble' : ce.elusive ? 'elusive' : 'elusiveFirst'); log(`${$E('sim.breaks_s_tackle', { name: c.name, name2: d.name })}`, { kind: 'broken', by: c.slot, side: c.team, victim: d.slot, ability: fired(c, 'carryStrength', 'elusive', 'elusiveFirst', 'noFumble') });
     c.vx *= 0.55; c.vy *= 0.55; // the arm tackle still slows him down
-    log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, ability: fired(c, 'carryStrength', 'elusive', 'elusiveFirst', 'noFumble') });
+    log(`${$E('sim.breaks_s_tackle', { name: c.name, name2: d.name })}`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, ability: fired(c, 'carryStrength', 'elusive', 'elusiveFirst', 'noFumble') });
     hook('tackleBroken', c, d); // M3 hook: the carrier's contract sees a successfully broken tackle
     return false;
   }
   /** Tackled behind his own goal line: a safety, except on a kickoff, where the kick put the ball there (a touchback). */
   function downedInEndZone(d, c) {
-    if (KO) { endPlay('touchback', c.x, c.y); log(`${d.name} downs ${c.name} in the end zone. Touchback`, { kind: 'touchback' }); return; }
-    endPlay('safety', c.x, c.y); log(`${d.name} tackles ${c.name} in the end zone. SAFETY`, { kind: 'safety' });
+    if (KO) { endPlay('touchback', c.x, c.y); log(`${$E('sim.downs_in_the_end_zone_touchback', { name: d.name, name2: c.name })}`, { kind: 'touchback' }); return; }
+    endPlay('safety', c.x, c.y); log(`${$E('sim.tackles_in_the_end_zone_safety', { name: d.name, name2: c.name })}`, { kind: 'safety' });
   }
   function trySack(d) {
     if (d.noContact || d.noTackle || d.stun > 0 || d.engaged || dist(d, qb) > 0.95) return false; // M3 hook: noContact (a per-play override), noTackle
@@ -2348,14 +2350,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       // Glacier Wall: sacks coming from his side of the line fail 30% of the time.
       const wall = offs.find((o) => o.ability?.glacierWall);
       if (wall && (Math.abs(wall.y) < 1 ? Math.abs(d.y) < 3 : Math.sign(d.y) === Math.sign(wall.y)) && rng.chance(wall.ability.glacierWall)) {
-        d.stun = 0.7; d.noEngage = 0.3; abilityUsed(wall, 'glacierWall'); abilityOutcome('sack_denied', wall, `${wall.name}'s Glacier Wall stops ${d.name} short`, { victim: d.slot });
+        d.stun = 0.7; d.noEngage = 0.3; abilityUsed(wall, 'glacierWall'); abilityOutcome('sack_denied', wall, `${$E('sim.s_glacier_wall_stops_short', { name: wall.name, name2: d.name })}`, { victim: d.slot });
         return false;
       }
       stats.tackler = d.slot; recordPressure(qb, d);
       if (qb.windup && (rng.chance(0.25) || (d.contract && !!hook('tackleMade', d, qb, { fumbleP: 0.25, sack: true })?.fumble)) && !fumbleSaved(qb)) { // M3 hook: as on a tackle // strip sack on the wind-up (Task 8 B3: a Shielded QB's save first)
         const near = actors.filter((x) => dist(x, qb) < 2.5 && !x.noBall); const rec = near.length ? rng.pick(near) : d;
         qb.windup = null; stats.forcedBy = d.slot; stats.fumbledBy = qb.slot; stats.recoveredSlot = rec.slot; stats.recoveredTeam = rec.team;
-        log(`${d.name} strips ${qb.name} as he throws; ${rec.name} recovers`, { kind: 'fumble', by: d.slot, recoveredBy: rec.slot, team: rec.team });
+        log(`${$E('sim.strips_as_he_throws_recovers', { name: d.name, name2: qb.name, name3: rec.name })}`, { kind: 'fumble', by: d.slot, recoveredBy: rec.slot, team: rec.team });
         if (rec.team === 'def') endPlay('fumble', qb.x, qb.y, { recoveredBy: 'def' }); else endPlay('sack', qb.x, qb.y, { fumbleRecovered: true });
         return true;
       }
@@ -2393,7 +2395,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     ball.t8 = {}; hook('catchPoint', r, ball, nearest?.d || null); if (nearest) hook('catchPoint', nearest.d, ball, r);
     { const passer = bySlot.off[stats.passer]; if (passer && passer !== r) hook('catchPoint', passer, ball, nearest?.d || null); } // M3 hook: the passer's contract too
     if (ball.t8.noContest) { contested = false; stats.unavoidableOverride = true; }
-    if (thunderShield) { contested = false; abilityOutcome('no_breakup', qb, `${qb.name}'s Thunderclap beats ${nearest.d.name} to the spot`, { victim: nearest.d.slot }); }
+    if (thunderShield) { contested = false; abilityOutcome('no_breakup', qb, `${$E('sim.s_thunderclap_beats_to_the_spot', { name: qb.name, name2: nearest.d.name })}`, { victim: nearest.d.slot }); }
     // Coverage responsibility: the man defender assigned to this receiver; in zone, only a defender close enough to have had him (within 2.5 yards); otherwise nobody, the zone was open.
     stats.gradeCoverBy = defs.find((d) => !d.temp && d.assignment?.a === 'man' && bySlot.off[manKeys[d.assignment.key]] === r)?.slot
       || defs.filter((d) => !d.temp && d.assignment?.a === 'zone' && inZoneArea(d.assignment, r)).sort((a, b) => dist(a, r) - dist(b, r))[0]?.slot || '';
@@ -2411,7 +2413,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (sf) { catchP *= 1 - sf.ability.staticField; abilityUsed(sf, 'staticField'); } } // Static Field: catches in his zone are 10% harder
     // Night Veil: a ball that arrives with him within a yard of it is never caught (it can still be picked).
     const veil = defs.find((d) => d.ability?.nightVeil && !d.engaged && !(d.stun > 0) && dist(d, L) <= 1.0);
-    if (veil && catchP > 0 && !thunderShield) { catchP = 0; abilityUsed(veil, 'nightVeil'); abilityOutcome('veiled', veil, `${veil.name}'s Night Veil: ${r.name} never sees the ball`, { victim: r.slot }); }
+    if (veil && catchP > 0 && !thunderShield) { catchP = 0; abilityUsed(veil, 'nightVeil'); abilityOutcome('veiled', veil, `${$E('sim.s_night_veil_never_sees_the', { name: veil.name, name2: r.name })}`, { victim: r.slot }); }
     if (contested) {
       const dCover = nearest.d.attrs.coverage + (nearest.d.ability?.contest || 0) + (nearest.d.assignment?.a === 'man' && dist(nearest.d, r) <= STEP ? (nearest.d.ability?.manCoverage || 0) : 0); // Sticky: within a step (Phase B fix 7)
       const rCatch = r.attrs.catching + (r.ability?.catchContest || 0);
@@ -2428,17 +2430,17 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (ball.undertow) { pickP *= ball.undertow.ability.undertow; abilityUsed(ball.undertow, 'undertow'); } // Undertow: 25% more likely
       const picked = rng.chance(pickP) || reviewPick;
       if (picked && ball.t8?.noInterception) { // M3 hook: a would-be interception falls incomplete; the denied defender is recorded for the contract
-        ball.t8.denied = nearest.d; log(`${nearest.d.name} cannot hold it`, { kind: 'ability', by: r.slot, side: r.team, contract: true, victim: nearest.d.slot });
-        ball.inAir = false; endPlay('incomplete', L.x, L.y); log('Pass falls incomplete', { kind: 'incomplete', denied: nearest.d.slot }); return;
+        ball.t8.denied = nearest.d; log(`${$E('sim.cannot_hold_it', { name: nearest.d.name })}`, { kind: 'ability', by: r.slot, side: r.team, contract: true, victim: nearest.d.slot });
+        ball.inAir = false; endPlay('incomplete', L.x, L.y); log($E('sim.pass_falls_incomplete'), { kind: 'incomplete', denied: nearest.d.slot }); return;
       }
-      else if (picked && ball.sovereign) { abilityUsed(qb, 'sovereign'); abilityOutcome('pick_denied', qb, `${qb.name}'s Sovereign Arm: ${nearest.d.name} cannot hold it`, { victim: nearest.d.slot }); }
+      else if (picked && ball.sovereign) { abilityUsed(qb, 'sovereign'); abilityOutcome('pick_denied', qb, `${$E('sim.s_sovereign_arm_cannot_hold_it', { name: qb.name, name2: nearest.d.name })}`, { victim: nearest.d.slot }); }
       else if (picked) {
         ball.inAir = false; ball.holder = nearest.d; stats.interceptor = nearest.d.slot; nearest.d.x = L.x; nearest.d.y = L.y;
         nearest.d.laneTimer = 0; nearest.d.jukeCooldown = 0;
-        if (nearest.d.ability?.pickCatching) abilityUsed(nearest.d, 'pickCatching'); log(`${nearest.d.name} intercepts the pass!`, { kind: 'interception', by: nearest.d.slot, side: 'def', ability: fired(nearest.d, 'pickCatching', 'breakRadius', 'closeSpeed', 'zoneRange', 'manCoverage', 'contest') });
+        if (nearest.d.ability?.pickCatching) abilityUsed(nearest.d, 'pickCatching'); log(`${$E('sim.intercepts_the_pass', { name: nearest.d.name })}`, { kind: 'interception', by: nearest.d.slot, side: 'def', ability: fired(nearest.d, 'pickCatching', 'breakRadius', 'closeSpeed', 'zoneRange', 'manCoverage', 'contest') });
         if (L.x >= B.goal) { endPlay('touchback_return', L.x, L.y, { interception: true }); return; }
         // M3 hook: a temporary actor's possession ends the play at once, after the normal touchdown / touchback rulings
-        if (nearest.d.possessionEndsPlay) { if (L.x <= B.ownGoal) endPlay('touchdown', L.x, L.y, { defensiveScore: true }); else endPlay('tackle', L.x, L.y); log(`${nearest.d.name}'s possession ends the play`, { kind: 'temp_possession', by: nearest.d.slot, side: 'def' }); return; }
+        if (nearest.d.possessionEndsPlay) { if (L.x <= B.ownGoal) endPlay('touchdown', L.x, L.y, { defensiveScore: true }); else endPlay('tackle', L.x, L.y); log(`${$E('sim.s_possession_ends_the_play', { name: nearest.d.name })}`, { kind: 'temp_possession', by: nearest.d.slot, side: 'def' }); return; }
         phase = 'carry'; for (const o of offs) { o.engaged = null; o.engaged2 = null; } return; // M3 hook: engaged2
       }
     }
@@ -2449,7 +2451,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (r.ability?.daybreak) { r.daybreak = true; abilityUsed(r, 'daybreak'); }
       stats.receiver = r.slot; stats.carrier = r.slot; stats.catchX = L.x;
       for (const def of defs) def.recognised = true;
-      if (r.ability?.routeAgility) abilityUsed(r, 'routeAgility'); log(`${r.name} catches it${contested ? ' in traffic' : ''}`, { kind: 'catch', by: r.slot, side: 'off', contested: !!contested, ability: fired(r, 'catchContest', 'routeAgility', 'afterCatch') });
+      if (r.ability?.routeAgility) abilityUsed(r, 'routeAgility'); log(`${$E('sim.catches_it', { name: r.name, contested: contested ? $E('sim.in_traffic') : '' })}`, { kind: 'catch', by: r.slot, side: 'off', contested: !!contested, ability: fired(r, 'catchContest', 'routeAgility', 'afterCatch') });
       if (L.x >= B.goal) { endPlay('touchdown', L.x, L.y); log('TOUCHDOWN', { kind: 'touchdown' }); }
       if (L.y <= B.left || L.y >= B.right) { endPlay('out_of_bounds', L.x, clamp(L.y, B.left, B.right)); }
       for (const a of actors) if (a.contract) hook('catchMade', a, r); // M3 hook: a completed catch, once (after any score / out of bounds at the catch: ctx.result; still before any contact)
@@ -2462,7 +2464,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     ball.inAir = false;
     endPlay('incomplete', L.x, L.y);
     if (contested && nearest) stats.pbuBy = nearest.d.slot; else if (dr <= catchRadius) stats.dropped = true;
-    log(contested && nearest ? `Pass broken up by ${nearest.d.name}` : dr > catchRadius ? 'Pass falls incomplete, out of reach' : `${r.name} drops it`, { kind: 'incomplete', dropped: dr <= catchRadius, pbu: !!(contested && nearest), by: contested && nearest ? nearest.d.slot : null, side: contested && nearest ? 'def' : null, ability: contested && nearest ? fired(nearest.d, 'contest', 'manCoverage', 'breakRadius', 'closeSpeed') : false });
+    log(contested && nearest ? `${$E('sim.pass_broken_up_by', { name: nearest.d.name })}` : dr > catchRadius ? $E('sim.pass_falls_incomplete_out_of_reach') : `${$E('sim.drops_it', { name: r.name })}`, { kind: 'incomplete', dropped: dr <= catchRadius, pbu: !!(contested && nearest), by: contested && nearest ? nearest.d.slot : null, side: contested && nearest ? 'def' : null, ability: contested && nearest ? fired(nearest.d, 'contest', 'manCoverage', 'breakRadius', 'closeSpeed') : false });
   }
 
   // ------------------------------------------------------------ main loop
@@ -2509,7 +2511,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Dragon's Roar: at the snap, the lineman across from him is slow to engage.
     if (tick === 1) for (const d of defs) if (d.ability?.roar) {
       const across = offs.filter((o) => ['block', 'release', 'fake', 'run_block', 'pull'].includes(o.assignment?.a)).sort((p, q) => Math.abs(p.y - d.y) - Math.abs(q.y - d.y))[0];
-      if (across) { across.roarUntil = d.ability.roar; setStatus(across, 'cower', d.ability.roar); abilityUsed(d, 'roar'); abilityOutcome('roared', d, `${d.name} roars; ${across.name} flinches`, { victim: across.slot }); }
+      if (across) { across.roarUntil = d.ability.roar; setStatus(across, 'cower', d.ability.roar); abilityUsed(d, 'roar'); abilityOutcome('roared', d, `${$E('sim.roars_flinches', { name: d.name, name2: across.name })}`, { victim: across.slot }); }
     }
     // Ancient Grove: defenders within 5 yards of him get +5 Awareness, recomputed as they move (and never bite: groveGuards).
     for (const g of actors) if (g.ability?.grove) {
@@ -2587,10 +2589,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Boundaries and scores for the carrier.
     if (!result && ball.holder) {
       const h = ball.holder;
-      if (h.y <= B.left || h.y >= B.right) { const yy = h.y <= B.left ? B.left : B.right; endPlay('out_of_bounds', h.x, yy); log(`${h.name} steps out of bounds`, { kind: 'oob' }); }
-      else if (h.team === 'off' && h.x >= B.goal && (h !== qb || scrambled || phase === 'carry')) { endPlay('touchdown', h.x, h.y); log(`${h.name} reaches the end zone. TOUCHDOWN`, { kind: 'touchdown' }); }
-      else if (h.team === 'def' && h.x <= B.ownGoal) { endPlay('touchdown', h.x, h.y, { defensiveScore: true }); log(`${h.name} returns it all the way. TOUCHDOWN`, { kind: 'touchdown' }); }
-      else if (h.team === 'off' && h.x <= B.ownEndLine + 0.2) { if (KO) { endPlay('touchback', h.x, h.y); log('Returner runs out of the back of the end zone. Touchback', { kind: 'touchback' }); } else { endPlay('safety', h.x, h.y); log('Carrier runs out of the back of the end zone. SAFETY', { kind: 'safety' }); } }
+      if (h.y <= B.left || h.y >= B.right) { const yy = h.y <= B.left ? B.left : B.right; endPlay('out_of_bounds', h.x, yy); log(`${$E('sim.steps_out_of_bounds', { name: h.name })}`, { kind: 'oob' }); }
+      else if (h.team === 'off' && h.x >= B.goal && (h !== qb || scrambled || phase === 'carry')) { endPlay('touchdown', h.x, h.y); log(`${$E('sim.reaches_the_end_zone_touchdown', { name: h.name })}`, { kind: 'touchdown' }); }
+      else if (h.team === 'def' && h.x <= B.ownGoal) { endPlay('touchdown', h.x, h.y, { defensiveScore: true }); log(`${$E('sim.returns_it_all_the_way_touchdown', { name: h.name })}`, { kind: 'touchdown' }); }
+      else if (h.team === 'off' && h.x <= B.ownEndLine + 0.2) { if (KO) { endPlay('touchback', h.x, h.y); log($E('sim.returner_runs_out_of_the_back'), { kind: 'touchback' }); } else { endPlay('safety', h.x, h.y); log($E('sim.carrier_runs_out_of_the_back'), { kind: 'safety' }); } }
     }
     if (options.debugSlot) { const d = actors.find((a) => a.slot === options.debugSlot); if (d) log(`dbg ${d.slot} x=${d.x.toFixed(2)} y=${d.y.toFixed(2)} v=${Math.hypot(d.vx, d.vy).toFixed(2)} stun=${d.stun.toFixed(2)} eng=${d.engaged ? d.engaged.slot : '-'} st=${d.state} ne=${d.noEngage.toFixed(2)}`, { kind: 'debug' }); }
     if (dry && !result) {
@@ -2604,11 +2606,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const runner = (a) => ['carry', 'keep', 'option'].includes(a.assignment.a);
       const moving = offs.some((a) => unfinished(a) && (a.assignment.a === 'route' || (ball.holder === a && runner(a)) || (!handoffDone && a.assignment.a === 'carry')));
       if (!moving && t >= 1.5) dryDoneAt ??= t;
-      if ((dryDoneAt != null && t - dryDoneAt >= 0.6) || t >= dryMax) { result = 'dry_run'; log('Walk-through complete', { kind: 'dry_run' }); }
+      if ((dryDoneAt != null && t - dryDoneAt >= 0.6) || t >= dryMax) { result = 'dry_run'; log($E('sim.walk_through_complete'), { kind: 'dry_run' }); }
     }
     if (tick % frameEvery === 0 || result) recordFrame();
   }
-  if (!result) { result = 'guard'; log('Simulation guard reached', { kind: 'guard' }); }
+  if (!result) { result = 'guard'; log($E('sim.simulation_guard_reached'), { kind: 'guard' }); }
   if (stats.interceptor && ['tackle', 'out_of_bounds'].includes(result)) result = 'interception';
 
   // Task 8 M3: the whistle for every contract on the field (charges, clocks, field creation)

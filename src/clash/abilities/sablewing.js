@@ -7,6 +7,7 @@
 // execution: the heal.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const HEAL = [4, 6, 8, 10]; const LINE = 20; const COOLDOWN = 3;
 
@@ -20,8 +21,8 @@ export default registerClashAbility({
       const att = api.get(info.attackerId); if (!att || att.side === self.side || info.tag === 'dot') return;
       const lost = info.hits.reduce((s, h) => s + (h.transferred?.includes(self.id) ? 0 : h.losses?.[self.id] ?? 0), 0);
       if (lost * 100 < LINE * me.maxHp) return;
-      api.trigger(self, `survived an attack that took ${lost} HP (at least ${LINE}%)`); api.executed(self);
-      api.activate(self, `restore ${byTier(HEAL, self.tier)}% max HP`);
+      api.trigger(self, `${$E('clashlog.survived_an_attack_that_took_hp', { lost, line: LINE })}`); api.executed(self);
+      api.activate(self, `${$E('clashlog.restore_max_hp', { byTier: byTier(HEAL, self.tier) })}`);
       api.heal(self, self.id, { pctMaxHp: byTier(HEAL, self.tier) });
       api.cooldown(self, COOLDOWN);
     },

@@ -7,17 +7,18 @@
 //                  engine and nothing draws a random number.
 // The franchise side (who the captains are, thresholds, levels, the ledger) lives in src/franchise/partnerships.js.
 import { clampAttr } from '../data/monsters.js';
+import { E as $E } from '../core/english.js';
 
 /** The eight approved pairing types (owner decision, 2026-10-24). Roles are primary positions; `a` is listed first. */
 export const PAIR_TYPES = Object.freeze({
-  'QB-RB': { side: 'offense', a: 'QB', b: 'RB', label: 'QB + RB' },
-  'QB-WR': { side: 'offense', a: 'QB', b: 'WR', label: 'QB + WR' },
-  'QB-TE': { side: 'offense', a: 'QB', b: 'TE', label: 'QB + TE' },
-  'RB-OL': { side: 'offense', a: 'RB', b: 'OL', label: 'RB + OL' },
-  'OL-OL': { side: 'offense', a: 'OL', b: 'OL', label: 'OL + OL' },
-  'DL-DL': { side: 'defense', a: 'DL', b: 'DL', label: 'DL + DL' },
-  'DL-LB': { side: 'defense', a: 'DL', b: 'LB', label: 'DL + LB' },
-  'DL-CB': { side: 'defense', a: 'DL', b: 'CB', label: 'DL + CB' },
+  'QB-RB': { side: 'offense', a: 'QB', b: 'RB', label: $E('sim.qb_rb') },
+  'QB-WR': { side: 'offense', a: 'QB', b: 'WR', label: $E('sim.qb_wr') },
+  'QB-TE': { side: 'offense', a: 'QB', b: 'TE', label: $E('sim.qb_te') },
+  'RB-OL': { side: 'offense', a: 'RB', b: 'OL', label: $E('sim.rb_ol') },
+  'OL-OL': { side: 'offense', a: 'OL', b: 'OL', label: $E('sim.ol_ol') },
+  'DL-DL': { side: 'defense', a: 'DL', b: 'DL', label: $E('sim.dl_dl') },
+  'DL-LB': { side: 'defense', a: 'DL', b: 'LB', label: $E('sim.dl_lb') },
+  'DL-CB': { side: 'defense', a: 'DL', b: 'CB', label: $E('sim.dl_cb') },
 });
 
 /** The attributes the bonus touches, by the captain's role in the pair. Speed is never one of them. */

@@ -13,6 +13,7 @@
 import { effectsAt, effectsCore, effectsFor, maxSpeedFactor, contains } from './fields.js';
 import { applyStatus } from './status-runtime.js';
 import { createRng } from '../../core/rng.js';
+import { E as $E } from '../../core/english.js';
 
 export const STUMBLE_SPEED_LOSS = 0.4; // §11 Water / STA-03: Stumbled loses 40% of current speed, maximum speed unchanged
 export const PSYCHIC_DEADBAND = 1; // the approved "standard Psychic field" centre deadband (PSY-04-F, PSY-01-F: 1 yard)
@@ -60,17 +61,17 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   function electric(a, b) {
     if (b.strength == null || a.sitsOut || !rng.chance(pct(b.strength))) return;
     const r = inflict(a, 'stunned', b);
-    if (!r.accepted) { ev(a, 'field_status_blocked', `${a.name} resists the Electric field's Stunned (${r.reason})`, { field: b.field.id, status: 'stunned' }); return; }
+    if (!r.accepted) { ev(a, 'field_status_blocked', `${$E('sim.resists_the_electric_fields_stunned', { name: a.name, reason: r.reason })}`, { field: b.field.id, status: 'stunned' }); return; }
     unpair(a); a.vx = 0; a.vy = 0; a.stun = 1e6; a.noEngage = 1e6; setStatus(a, 'stun', 1e6);
-    ev(a, 'field_stun', `${a.name} is Stunned in the Electric field`, { field: b.field.id, element: 'Electric' });
+    ev(a, 'field_stun', `${$E('sim.is_stunned_in_the_electric_field', { name: a.name })}`, { field: b.field.id, element: 'Electric' });
   }
   /** Water: a distinct sharp cut or stop (the engine's plant) rolls the slip chance; success attempts Stumbled; one success a play. */
   function water(a, b) {
     if (a.fx.slipped || b.strength == null || !rng.chance(pct(b.strength))) return;
     const r = inflict(a, 'stumbled', b);
-    if (!r.accepted) { ev(a, 'field_status_blocked', `${a.name} keeps his feet (${r.reason})`, { field: b.field.id, status: 'stumbled' }); return; }
+    if (!r.accepted) { ev(a, 'field_status_blocked', `${$E('sim.keeps_his_feet', { name: a.name, reason: r.reason })}`, { field: b.field.id, status: 'stumbled' }); return; }
     a.fx.slipped = true; unpair(a); a.vx *= 1 - STUMBLE_SPEED_LOSS; a.vy *= 1 - STUMBLE_SPEED_LOSS; a.stumbled = true; setStatus(a, 'stumble', 0.4);
-    ev(a, 'field_slip', `${a.name} slips in the Water field`, { field: b.field.id, element: 'Water' });
+    ev(a, 'field_slip', `${$E('sim.slips_in_the_water_field', { name: a.name })}`, { field: b.field.id, element: 'Water' });
   }
   /** Effective-attribute layer (Dark Awareness, Steam Catching/Blocking): replaces its own previous delta, so it never compounds. */
   function layer(a, k, r) {
@@ -128,7 +129,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   }
   function tick(now) {
     t = now;
-    if (!placed) { placed = true; clumps = placeClumps(fields, actors, rng); if (clumps.length) log(`Living Terrain raises ${clumps.length} vine clump${clumps.length > 1 ? 's' : ''}`, { kind: 'field_clumps', clumps: clumps.map((c) => [c.x, c.y]) }); }
+    if (!placed) { placed = true; clumps = placeClumps(fields, actors, rng); if (clumps.length) log(`${$E('sim.living_terrain_raises_vine_clump', { n: clumps.length, clumps: clumps.length > 1 ? 's' : '' })}`, { kind: 'field_clumps', clumps: clumps.map((c) => [c.x, c.y]) }); }
     // Perf (outcome-identical, fourth pass). The loop does what it did, in the same order, with the per-lookup values read from the
     // lookup (effectsHere) instead of being derived again for every monster on every tick:
     //  - base and hybrid are stored only when his lookup changed (the same lookup would store the same two values);
@@ -147,7 +148,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
       if (m !== st.m) {
         st.m = m; st.base = m.base; st.hybrid = m.hybrid; if (m.hybrid === 'Magnetic Storm') magEver = true;
         for (const b of m.e.base) if (!st.seen.has(b.fieldId)) {
-          st.seen.add(b.fieldId); ev(a, 'field_enter', `${a.name} enters a ${b.type} field`, { field: b.fieldId, element: b.type });
+          st.seen.add(b.fieldId); ev(a, 'field_enter', `${$E('sim.enters_a_field', { name: a.name, type: b.type })}`, { field: b.fieldId, element: b.type });
           if (b.type === 'Electric') electric(a, st.base.Electric);
         }
         if (st.hybrid && !st.seen.has(st.hybrid)) { st.seen.add(st.hybrid); ev(a, 'field_enter', `${a.name} enters ${st.hybrid}`, { hybrid: st.hybrid }); }
@@ -162,7 +163,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
       layer(a, 'awareness', a.ignoreFieldAwareness ? 0 : m.dark); // M3 hook: a.ignoreFieldAwareness (set by a contract's tick) ignores only the Dark base field's Awareness term
       if (m.steam || st.attr.catching || st.attr.blocking) { layer(a, 'catching', m.steam ? STEAM.catching : 0); layer(a, 'blocking', m.steam ? STEAM.blocking : 0); }
       if (m.mind || st.echo) {
-        if (m.mind && !st.echo) { st.echo = { of: a, x: a.x, y: a.y, live: true }; echoes.push(st.echo); placeEcho(st.echo); ev(a, 'field_echo', `A Mindstorm echo trails ${a.name}`, { hybrid: 'Mindstorm', x: +st.echo.x.toFixed(2), y: +st.echo.y.toFixed(2) }); }
+        if (m.mind && !st.echo) { st.echo = { of: a, x: a.x, y: a.y, live: true }; echoes.push(st.echo); placeEcho(st.echo); ev(a, 'field_echo', `${$E('sim.a_mindstorm_echo_trails', { name: a.name })}`, { hybrid: 'Mindstorm', x: +st.echo.x.toFixed(2), y: +st.echo.y.toFixed(2) }); }
         else if (st.echo?.live) { if (m.mind) placeEcho(st.echo); else st.echo.live = false; }
       }
     }
@@ -175,7 +176,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   }
   /** Magnetic Storm: once a play, nearest eligible nonparent pairs within 3 yd bond (one partner each); break at 6 yd, exit or whistle. */
   function magnetic() {
-    for (const b of bonds) if (b.live && (hyp(b.a, b.b) > MAGNETIC_STORM.breakAt || b.a.fx.hybrid !== 'Magnetic Storm' || b.b.fx.hybrid !== 'Magnetic Storm')) { b.live = false; ev(b.a, 'field_unbond', `${b.a.name} and ${b.b.name} break the Magnetic Storm's hold`, { partner: b.b.slot, partnerSide: b.b.team }); }
+    for (const b of bonds) if (b.live && (hyp(b.a, b.b) > MAGNETIC_STORM.breakAt || b.a.fx.hybrid !== 'Magnetic Storm' || b.b.fx.hybrid !== 'Magnetic Storm')) { b.live = false; ev(b.a, 'field_unbond', `${$E('sim.and_break_the_magnetic_storms_hold', { name: b.a.name, name2: b.b.name })}`, { partner: b.b.slot, partnerSide: b.b.team }); }
     // Perf (outcome-identical, fourth pass): a monster's hybrid is written only by tick(), which notes the first Magnetic Storm
     // lookup; until then no monster can pass the filter below, so the candidate list is empty and the function returns here anyway.
     if (!magEver) return;
@@ -185,7 +186,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
     pairs.sort((p, q) => p[0] - q[0] || `${p[1].team}${p[1].slot}`.localeCompare(`${q[1].team}${q[1].slot}`));
     for (const [, a, b] of pairs) if (!a.fx.bonded && !b.fx.bonded) {
       a.fx.bonded = b.fx.bonded = true; bonds.push({ a, b, live: true });
-      ev(a, 'field_bond', `The Magnetic Storm binds ${a.name} to ${b.name}`, { partner: b.slot, partnerSide: b.team });
+      ev(a, 'field_bond', `${$E('sim.the_magnetic_storm_binds_to', { name: a.name, name2: b.name })}`, { partner: b.slot, partnerSide: b.team });
     }
   }
 
@@ -237,7 +238,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
     if (st.pend) { if (st.pend.key !== key) return value; if (t + 1e-9 >= st.pend.until || value === st.pend.from) { st.pend = null; return value; } return st.pend.from; }
     if (st.metalUsed || !st.base?.Metal || value === prev) return value;
     st.metalUsed = true; st.pend = { key, from: prev, until };
-    ev(a, 'field_defer', `${a.name}'s ${key} decision is held a beat in the Metal field`, { field: st.base.Metal.field.id, element: 'Metal', decision: key });
+    ev(a, 'field_defer', `${$E('sim.s_decision_is_held_a_beat', { name: a.name, key })}`, { field: st.base.Metal.field.id, element: 'Metal', decision: key });
     return prev;
   }
   /** Mindstorm: an opposing AI pursuer of a monster with a live echo may chase the echo for one decision update. */
@@ -245,13 +246,13 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
     const e = c.fx?.echo; if (!e?.live || d.team === c.team) return null;
     const st = (d.fx ||= fxState(undefined)); st.lured ||= new Map();
     const l = st.lured.get(e);
-    if (l == null) { if (!rng.chance(MINDSTORM.followChance)) { st.lured.set(e, -1); return null; } st.lured.set(e, until); ev(d, 'field_lured', `${d.name} chases ${c.name}'s Mindstorm echo`, { victim: c.slot }); return e; }
+    if (l == null) { if (!rng.chance(MINDSTORM.followChance)) { st.lured.set(e, -1); return null; } st.lured.set(e, until); ev(d, 'field_lured', `${$E('sim.chases_s_mindstorm_echo', { name: d.name, name2: c.name })}`, { victim: c.slot }); return e; }
     return l > t ? e : null;
   }
   /** Eclipse: an active signature cannot start inside (the contract spends nothing on a blocked start). */
   function canStart(a) {
     const h = effectsHere(a).e.hybrid?.name; if (h !== 'Eclipse') return true;
-    ev(a, 'field_blocked_start', `${a.name}'s signature cannot start inside the Eclipse`, { hybrid: 'Eclipse' }); return false;
+    ev(a, 'field_blocked_start', `${$E('sim.s_signature_cannot_start_inside_the', { name: a.name })}`, { hybrid: 'Eclipse' }); return false;
   }
   // M3 hook: a field's Prism Break removed footprints (holes) go out with it
   const output = () => ({ fields: fields.map((f) => ({ id: f.id, type: f.type, strength: f.strength, owner: f.owner, ability: f.ability, yard: [...f.yard], lat: [...f.lat], ...(f.fresh ? { fresh: true } : {}), /* Task 8 presentation: created at this snap (the reveal) */ ...(f.holes?.length ? { holes: f.holes.map((h) => ({ yard: [...h.yard], lat: [...h.lat] })) } : {}) })), clumps: clumps.map((c) => ({ x: +c.x.toFixed(2), y: +c.y.toFixed(2), d: LIVING_TERRAIN.diameter })) });

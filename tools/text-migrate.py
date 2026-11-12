@@ -147,13 +147,16 @@ def param_name(src, used):
     used.add(name); return name
 
 # ------------------------------------------------------------------ the rewrite
+ENGINE = '--engine' in sys.argv   # game engines: E('key') from src/core/english.js, always English (docs/text/README.md)
+READER = '$E' if ENGINE else '$t'
+UNTIL = next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--until=')), None)
 DEV_ONLY = re.compile(r'(throw new \w*Error|(problems|errors|issues|bad|fails|failures)\.push|console\.\w+|assert(\.\w+)?)\(\s*$')   # messages only a developer reads
 class Rewriter:
     def __init__(self, s, keys, data=False): self.s = s; self.keys = keys; self.left = []; self.count = 0; self.data = data; self.name_arg = next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--name-arg=')), None); self.fields = next((set(a.split('=', 1)[1].split('|')) for a in sys.argv if a.startswith('--fields=')), None); self.also = set(next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--also=')), '').split('|')) - {''}
     def call(self, text, params=None):
         key = self.keys.key_for(text); self.count += 1
-        if params: return f"$t('{key}', {{ {', '.join(f'{n}: {src}' if n != src.strip() else n for n, src in params)} }})"
-        return f"$t('{key}')"
+        if params: return f"{READER}('{key}', {{ {', '.join(f'{n}: {src}' if n != src.strip() else n for n, src in params)} }})"
+        return f"{READER}('{key}')"
     def split_ws(self, text):
         m = re.match(r'^(\s*)(.*?)(\s*)$', text, re.S); return m.group(1), m.group(2), m.group(3)
     # -- code regions: copy, rewriting the literals inside
@@ -340,11 +343,15 @@ def main():
     if area not in [h[1] for h in heads]: heads.append((title or area, area))
     report = []
     for rel in files:
-        p = os.path.join(ROOT, rel); s = open(p, encoding='utf8').read(); kids, _ = parse_code(s, 0)
-        rw = Rewriter(s, keys, data='--data' in sys.argv); new = rw.code(0, len(s), kids)
-        if rw.count and not re.search(r"import \{ t as \$t \} from '[./]*text/index\.js'", new):
-            # the reader is imported as $t: plain `t` is a common local name (time, team, tab), and $t cannot collide
-            depth = rel.count('/') - 1; imp = f"import {{ t as $t }} from '{'../' * depth if depth else './'}text/index.js';\n"
+        p = os.path.join(ROOT, rel); s = open(p, encoding='utf8').read(); tail = ''
+        if UNTIL and UNTIL in s: cut = s.index(UNTIL); s, tail = s[:cut], s[cut:]       # --until: the rest of the file is left exactly as it is
+        kids, _ = parse_code(s, 0)
+        rw = Rewriter(s, keys, data='--data' in sys.argv); new = rw.code(0, len(s), kids) + tail
+        depth = rel.count('/') - 1; up = '../' * depth if depth else './'
+        have = r"import \{ E as \$E \} from '[./]*core/english\.js'" if ENGINE else r"import \{ t as \$t \} from '[./]*text/index\.js'"
+        if rw.count and not re.search(have, new):
+            # screens: the reader is imported as $t (plain `t` is a common local name). engines (--engine): E, the always-English reader
+            imp = f"import {{ E as $E }} from '{up}core/english.js';\n" if ENGINE else f"import {{ t as $t }} from '{up}text/index.js';\n"
             ims = [m for m in re.finditer(r'^import [^\n]*\n', new, re.M)]
             if ims: new = new[:ims[-1].end()] + imp + new[ims[-1].end():]
             else: mm = re.match(r'(?:\s*//[^\n]*\n)*', new); new = new[:mm.end()] + imp + new[mm.end():]

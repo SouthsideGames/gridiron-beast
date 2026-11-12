@@ -6,6 +6,7 @@
 // (explicit: tag special, no perk question). Normal evasion / defence. Mastery execution: the boosted attack.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [130, 145, 160, 175]; const HP_MIN = 75;
 
@@ -14,13 +15,13 @@ export default registerClashAbility({
   initBattle: () => ({ entered: false, armed: false, spent: false }),
   values: (form, tier) => ({ powerPct: byTier(POWER, tier), hpMinPct: HP_MIN }),
   hooks: {
-    onEntry(api, self) { const st = self.state; if (st.entered) return; st.entered = true; st.armed = true; api.trigger(self, 'first active entry of the Clash: the next performed normal attack is armed'); },
+    onEntry(api, self) { const st = self.state; if (st.entered) return; st.entered = true; st.armed = true; api.trigger(self, $E('clashlog.first_active_entry_of_the_clash')); },
     chooseAction(api, self, { foeId }) {
       const st = self.state; if (!st.armed || st.spent || !foeId) return null;
       const me = api.me(self);
-      if (me.hp * 100 < HP_MIN * me.maxHp) return unmet({ condition: `HP at least ${HP_MIN}% at commit`, detail: `${me.hp} / ${me.maxHp}: ordinary attack, the ambush stays armed` });
+      if (me.hp * 100 < HP_MIN * me.maxHp) return unmet({ condition: `${$E('clashlog.hp_at_least_at_commit', { hpMin: HP_MIN })}`, detail: `${$E('clashlog.ordinary_attack_the_ambush_stays_armed', { hp: me.hp, maxHp: me.maxHp })}` });
       st.armed = false; st.spent = true;
-      api.activate(self, `ambush at ${byTier(POWER, self.tier)}%`, { targetId: foeId }); api.executed(self);
+      api.activate(self, `${$E('clashlog.ambush_at', { byTier: byTier(POWER, self.tier) })}`, { targetId: foeId }); api.executed(self);
       return { kind: 'attack', tag: 'special', mult: byTier(POWER, self.tier) / 100, strikeKey: 'boost', label: 'Ambush' };
     },
   },

@@ -16,6 +16,7 @@
 import { registerAbility } from './registry.js';
 import { tryApply } from '../t8/status.js';
 import { scrimmage } from './earth-ice-util.js';
+import { E as $E } from '../../core/english.js';
 
 const kdBlocked = (ctx, d) => d.knockedDown || !tryApply(ctx.statusOf(d), { id: 'knockedDown', strength: 1, duration: 0, mode: 'football', restOfPlay: true }).accepted;
 
@@ -27,17 +28,17 @@ export default registerAbility({
     pancakeOpportunity(ctx, self, d) {
       const st = ctx.state(self);
       if (!st.banked || self.team !== 'off' || !scrimmage(ctx)) return undefined;
-      if (kdBlocked(ctx, d)) { ctx.log(`${d.name} cannot be knocked down; ${self.name} keeps his Clean Sweep`, { kind: 'ability_skip', by: self.slot, side: self.team, victim: d.slot, ability: 'EAR-01-F' }); return undefined; }
+      if (kdBlocked(ctx, d)) { ctx.log(`${$E('sim.cannot_be_knocked_down_keeps_his', { name: d.name, name2: self.name })}`, { kind: 'ability_skip', by: self.slot, side: self.team, victim: d.slot, ability: 'EAR-01-F' }); return undefined; }
       if (!ctx.canStartSignature(self)) return undefined;
       st.banked = false; self.cs.used = true; ctx.executed(self);
-      ctx.log(`${self.name}'s Clean Sweep: a stone-fist slam`, { kind: 'ability', by: self.slot, side: self.team, victim: d.slot, ability: 'EAR-01-F' });
+      ctx.log(`${$E('sim.s_clean_sweep_a_stone_fist', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, victim: d.slot, ability: 'EAR-01-F' });
       return { guarantee: true };
     },
     playEnd(ctx, self, s) {
       if (self.team !== 'off' || s.kickoff || s.twoPoint || self.cs?.used) return; // a guaranteed pancake never earns another
       const st = ctx.state(self);
       if (!st.banked && (ctx.stats.blockers?.[self.slot]?.pancakes || 0) > 0 && ctx.canGainCharge(self)) {
-        st.banked = true; ctx.log(`${self.name} banks a Clean Sweep`, { kind: 'ability_ready', by: self.slot, side: self.team, ability: 'EAR-01-F' });
+        st.banked = true; ctx.log(`${$E('sim.banks_a_clean_sweep', { name: self.name })}`, { kind: 'ability_ready', by: self.slot, side: self.team, ability: 'EAR-01-F' });
       }
     },
   },

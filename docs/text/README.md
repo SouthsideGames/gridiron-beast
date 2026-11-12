@@ -15,7 +15,7 @@
 - The code reads a line with `$t('key', { values })` (the reader from `src/text/index.js`, imported as `$t` so it can never clash with a local `t`; the stage 1 files import it as `t`). English is the fallback for any line another language has not translated.
 - Text never decides anything: no rule, id or saved value comes from this file, and the game engines do not read it.
 
-### How much has moved (stages 1 to 5 of 7)
+### How much has moved (stages 1 to 6 of 7)
 
 | Stage | Area | Lines | Status |
 | --- | --- | ---: | --- |
@@ -24,7 +24,7 @@
 | 3 | Franchise: news, notices, reasons and rules text; the club log and League News are saved as lines that follow the language | 1,031 | done |
 | 4 | Data: dialogue, achievements, staff, stat guide, leagues, gyms, club identities, tempers, offseason meetings, the playbook, monster natures and scheme fit, rarities, coach appearance | 1,041 | done |
 | 5 | Beast Dex: 1,584 shown lines under translator keys (see "The Beast Dex" below) | 1,584 | done |
-| 6 | Game logs: football play-by-play and the Beast Clash log; ability banners in the effect files | about 2,300 | approved (decision 3) |
+| 6 | Game logs: football play-by-play and ability log (316), the Beast Clash battle log (404), ability names and banners in the effect files (260) | 980 | done |
 | 7 | Translator round trip (export a language, import it back) and a language setting | | on hold until the owner is ready to translate |
 
 `docs/text/GAME_TEXT.csv` lists every line, moved or not. A row with a `key` is in `en.js`; a row without one still lives in the source file named on the row.
@@ -56,6 +56,19 @@ Saved this way now: award citations and stat lines (season, finals, history), a 
 
 `tests/fixtures/saved-wording.json` is the inventory of the places where a finished sentence is still saved: after this work, only plain fragments inside some club-log lines (parts of the staff's week summary, a Media Day headline). `tests/text-never-decides.test.js` fails if a new place appears.
 
+### Game logs (the engines)
+
+The football and Beast Clash engines write their logs from the central text too, but an engine must resolve the same for every player, so it never reads the chosen language. `src/core/english.js` gives it:
+
+- `$E(key, values)`: the **English** line, always. A log entry's `text` is therefore the same English as before, in every language. Every reference battle, replay and test reads exactly as it did, and nothing had to be re-recorded.
+- `lineOf(text)`: which lines a finished log sentence was built from (the same matching as saved sentences, `src/text/lines.js`). The log keeps `tk` / `tv` / `tp` beside `text`, and the match feed and the Clash caption show the entry with `lineText(entry)` in the player's language.
+
+Code that reads a log's wording (the Clash choreographer, the reviewers, the tallies) keeps reading `text`, which is English whatever is shown.
+
+Checked: 920 football log lines over 12 games and 63,170 Beast Clash log entries over 400 battles are identical to before, with the same log and state hashes. 99% of entries carry their lines; the rest are plain values.
+
+Not moved: the original Clash engine (`src/clash/engine.js`, `handlers.js`, `values.js`: old replays and the Lab only), the reviewers' scenario text (developer), and short reason codes that engines pass around.
+
 ### Wording never decides anything
 
 `tests/text-never-decides.test.js` plays one franchise season and 120 Beast Clash battles twice: in English, and with every central line replaced by a made-up translation. Results, rosters, ratings, money, ids and random draws must be identical. Stage 3 added four more it or the review found: Media Day read the club log's wording to spot an evolution, trade or signing; the Board's final warning was read off the reason's first word; the commissioner's welcome compared the difficulty's label; and the migration tool had moved 77 non-wording strings (random-number seeds, record ids, CSS transforms) into the text file, which are back in the code and now refused by the tool. It found one real case in stage 4: the coaching hints matched play names inside the lesson sentences. They now match in English whatever language is shown (`english()` in `src/data/playbook.js`).
@@ -78,7 +91,7 @@ The tool gives each piece of wording a key, writes it to `en.js`, and replaces i
 
 1. **Names stay in English in every language:** club, stadium, species and reporter names, and the reporters' outlets. `src/text/names.js` lists their keys; a translation cannot replace them.
 2. **Saved text follows the language:** news items and headlines will be saved as a key plus its values (stage 3), so old news shows in whatever language is chosen. Text already saved as sentences in existing franchises stays as written.
-3. **Game logs move too** (stage 6): the engines will record keys and values, and the Clash reference battles will be re-recorded once more, with the same proof as before that no battle changed.
+3. **Game logs move too** (stage 6): done. The engines keep writing English and record which lines each entry is, so the Clash reference battles did not need re-recording after all: their hashes are unchanged.
 4. **Developer Tools stay in English** (owner, 2026-11-12): they are for the developer only, so their wording stays in the code and is not given to translators.
 
 ### Still open

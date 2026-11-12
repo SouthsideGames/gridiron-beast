@@ -12,6 +12,7 @@
 // play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { approvedValues } from '../../data/beast-dex.js';
+import { E as $E } from '../../core/english.js';
 
 const LIFETIME = approvedValues('LIG-01-F').lifetimePlaysByMastery; // [1, 1, 2, 2]
 const COOLDOWN = [6, 5, 4, 3]; // Dex "Recharge / frequency": creator cooldown by mastery
@@ -29,7 +30,7 @@ export default registerAbility({
       if (st.cd === 0 && !st.banked && s.receiver === self.slot && s.firstDown && ctx.canGainCharge(self)) {
         st.banked = true; ctx.executed(self);
         ctx.queueField({ owner: self.mid, ownerTeam: ctx.teamSide, type: 'Light', ability: 'LIG-01-F', lifetime: LIFETIME[self.mastery] ?? LIFETIME[0], clock: 'creatorOffense', width: BEACON.width, length: BEACON.length, lbDepth: BEACON.lbDepth, offenseOnly: true });
-        ctx.log(`${self.name} banks a Beacon Lane`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-01-F' });
+        ctx.log(`${$E('sim.banks_a_beacon_lane', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-01-F' });
       }
     },
   },

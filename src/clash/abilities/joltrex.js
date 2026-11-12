@@ -8,6 +8,7 @@
 // not restore the use. Mastery execution: the follow-up.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [60, 70, 80, 90];
 
@@ -19,12 +20,12 @@ export default registerClashAbility({
     followUp(api, self, info) {
       const st = self.state; if (st.used || info.attackerId !== self.id || info.tag !== 'ordinary' || !info.inAction) return;
       if (!info.kos.includes(info.targetId) || api.get(info.targetId).side === self.side) return;
-      st.used = true; api.trigger(self, `${api.get(info.targetId).name} knocked out by an ordinary attack`);
+      st.used = true; api.trigger(self, `${$E('clashlog.knocked_out_by_an_ordinary_attack', { name: api.get(info.targetId).name })}`);
       const me = api.me(self); const rep = api.foe(self);
-      if (!rep) { api.cleanup(self, 'no living replacement: no follow-up'); return; }
-      if (me.koed || me.stunned) { api.cleanup(self, 'the replacement\'s entry left Joltrex unable: the surge is lost'); return; }
-      api.activate(self, `follow-up at ${byTier(POWER, self.tier)}% on ${rep.name}`, { targetId: rep.id }); api.executed(self);
-      api.strike(self, rep.id, { tag: 'followUp', mult: byTier(POWER, self.tier) / 100, strikeKey: 'follow-up', label: 'Victory Surge' });
+      if (!rep) { api.cleanup(self, $E('clashlog.no_living_replacement_no_follow_up')); return; }
+      if (me.koed || me.stunned) { api.cleanup(self, $E('clashlog.the_replacements_entry_left_joltrex_unable')); return; }
+      api.activate(self, `${$E('clashlog.follow_up_at_on', { byTier: byTier(POWER, self.tier), name: rep.name })}`, { targetId: rep.id }); api.executed(self);
+      api.strike(self, rep.id, { tag: 'followUp', mult: byTier(POWER, self.tier) / 100, strikeKey: 'follow-up', label: $E('clashlog.victory_surge') });
     },
   },
   review: {

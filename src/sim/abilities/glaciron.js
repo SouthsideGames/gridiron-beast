@@ -20,6 +20,7 @@
 // own; not gated (an Eclipse does not switch it off; no contract or ruling says otherwise).
 import { registerAbility } from './registry.js';
 import { scrimmage, disabled, tier, countDown } from './earth-ice-util.js';
+import { E as $E } from '../../core/english.js';
 
 const COOLDOWN = [5, 4, 3, 2];
 export const COLD_SNAP = Object.freeze({ radius: 3, jobs: Object.freeze(['block', 'run_block', 'pull']) });
@@ -35,7 +36,7 @@ export default registerAbility({
       if (self.cold.fired || st.cd > 0 || self.team !== 'off' || !scrimmage(ctx)) return undefined;
       if (!self.engaged || !COLD_SNAP.jobs.includes(self.assignment?.a) || disabled(ctx, self) || ctx.dist(self, att) > COLD_SNAP.radius) return undefined;
       self.cold.fired = true; st.cd = tier(COOLDOWN, self.mastery); st.fresh = true; ctx.executed(self, { passive: true });
-      ctx.log(`${self.name}'s Cold Snap freezes ${att.name}'s ability`, { kind: 'ability', by: self.slot, side: self.team, victim: att.slot, victimSide: att.team, ability: 'ICE-05-F', suppressed: att.family || null });
+      ctx.log(`${$E('sim.s_cold_snap_freezes_s_ability', { name: self.name, name2: att.name })}`, { kind: 'ability', by: self.slot, side: self.team, victim: att.slot, victimSide: att.team, ability: 'ICE-05-F', suppressed: att.family || null });
       return { suppress: true };
     },
     playEnd(ctx, self, s) { if (self.team === 'off' && !s.kickoff && !s.twoPoint) countDown(ctx.state(self)); },

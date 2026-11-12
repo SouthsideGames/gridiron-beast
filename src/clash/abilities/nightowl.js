@@ -9,6 +9,7 @@
 import { registerClashAbility } from '../t8/registry.js';
 import { perkTag } from '../t8/flags.js';
 import { byTier, byStage, able, perkGate } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [110, 120], MASTERY = [0, 5, 10, 15];
 const SHIELD = { id: 'shielded', strength: 999, duration: 2 };
@@ -28,10 +29,10 @@ export default registerClashAbility({
       const g = perkGate(api, self, foeId, perkTag('DAR-02-C')); if (!g.ok) return null;
       self.state.used = true;
       const mult = (byStage(POWER, self.stage) + byTier(MASTERY, self.tier)) / 100;
-      api.trigger(self, 'first performed normal attack of the Clash', { targetId: foeId });
-      api.activate(self, `swoop at ${Math.round(mult * 100)}%, scheduled before the opponent`, { targetId: foeId });
+      api.trigger(self, $E('clashlog.first_performed_normal_attack_of_the'), { targetId: foeId });
+      api.activate(self, `${$E('clashlog.swoop_at_scheduled_before_the_opponent', { n: Math.round(mult * 100) })}`, { targetId: foeId });
       api.executed(self);
-      return { kind: 'attack', tag: g.tag, mult, strikeKey: 'first normal attack', label: 'Night Swoop' };
+      return { kind: 'attack', tag: g.tag, mult, strikeKey: 'first normal attack', label: $E('clashlog.night_swoop') };
     },
   },
   review: {

@@ -8,6 +8,7 @@
 // own slot keeps the use. No mastery scaling. Mastery execution: the transfer.
 import { registerClashAbility } from '../t8/registry.js';
 import { removableHarmful, lowestHpPct } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 export default registerClashAbility({
   family: 'flicker', abilityId: 'ELE-01-C',
@@ -18,10 +19,10 @@ export default registerClashAbility({
       const st = self.state; if (st.used) return; const me = api.me(self); if (!me.active || me.status) return;
       const t = lowestHpPct(api.reserves(self).filter((v) => removableHarmful(v.status))); if (!t) return;
       st.used = true; api.trigger(self, `${t.name} holds ${t.status.id}`, { targetId: t.id }); api.executed(self);
-      api.activate(self, `transfer ${t.status.id} to itself and shorten it by one turn`, { targetId: t.id });
+      api.activate(self, `${$E('clashlog.transfer_to_itself_and_shorten_it', { id: t.status.id })}`, { targetId: t.id });
       api.transferStatus(self, t.id, self.id);
       const left = api.decrementStatus(self, self.id);
-      if (left) api.holdStatusTick(self, self.id); else api.cleanup(self, 'the transferred status expired before the attack');
+      if (left) api.holdStatusTick(self, self.id); else api.cleanup(self, $E('clashlog.the_transferred_status_expired_before_the'));
     },
   },
   review: {

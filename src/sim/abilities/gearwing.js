@@ -18,6 +18,7 @@
 // (a formula kick) banks the field and the field is created at the opposing snap (both out of play); not gated.
 import { registerAbility } from './registry.js';
 import { byMastery } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const GEAR_GRID = Object.freeze({ minNet: 35, width: 10, length: 6, lbDepth: 5, life: [1, 2, 2, 3] });
 
@@ -30,7 +31,7 @@ export default registerAbility({
       if ((g.t8.fields?.pending || []).some((p) => p.owner === self.mid && p.ability === 'MET-03-F')) return; // one pending token
       g.queueField({ owner: self.mid, ownerTeam: side, type: 'Metal', ability: 'MET-03-F', lifetime: byMastery(GEAR_GRID.life, self.mastery), clock: 'ownerDefense', createOn: 'ownerDefense', offField: true, maxOwn: true, width: GEAR_GRID.width, length: GEAR_GRID.length, lbDepth: GEAR_GRID.lbDepth });
       g.state(self).banked += 1; g.executed(self);
-      g.log(`${self.name} banks a Gear Grid (${netYards} net yards)`, { by: self.mid, ability: 'MET-03-F', netYards });
+      g.log(`${$E('sim.banks_a_gear_grid_net_yards', { name: self.name, netYards })}`, { by: self.mid, ability: 'MET-03-F', netYards });
     },
   },
 });

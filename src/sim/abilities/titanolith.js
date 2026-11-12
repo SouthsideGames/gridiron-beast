@@ -19,6 +19,7 @@
 // first eligible snap is the live activation (gated; the use is kept for a later snap); no charge.
 import { registerAbility } from './registry.js';
 import { scrimmage, disabled, tier, BODY } from './earth-ice-util.js';
+import { E as $E } from '../../core/english.js';
 
 const PUSH = [2, 2.5, 3, 3.5];
 export const LANDSLIDE = Object.freeze({ front: 2, speed: 8 });
@@ -37,7 +38,7 @@ export default registerAbility({
       const targets = ctx.opponents(self.team).filter((d) => d.x > 0 && d.x <= LANDSLIDE.front).map((d) => ({ d, x0: d.x, stopped: false }));
       const ys = targets.map((p) => p.d.y);
       self.ls = { t0: ctx.t, push: tier(PUSH, self.mastery), targets };
-      ctx.log(`${self.name}'s Landslide: a stone wall erupts across the front`, { kind: 'ability', by: self.slot, side: self.team, ability: 'EAR-06-F', victims: targets.map((p) => p.d.slot), wall: ys.length ? { y0: +Math.min(...ys).toFixed(2), y1: +Math.max(...ys).toFixed(2) } : null, push: self.ls.push });
+      ctx.log(`${$E('sim.s_landslide_a_stone_wall_erupts', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'EAR-06-F', victims: targets.map((p) => p.d.slot), wall: ys.length ? { y0: +Math.min(...ys).toFixed(2), y1: +Math.max(...ys).toFixed(2) } : null, push: self.ls.push });
     },
     tick(ctx, self) {
       const ls = self.ls; if (!ls || ls.done) return;
@@ -49,7 +50,7 @@ export default registerAbility({
         if (blocked(ctx, want, d.y)) { p.stopped = true; continue; }
         d.x = want; if (d.vx < 0) d.vx = 0;
       }
-      if (adv >= ls.push) { ls.done = true; ctx.log(`${self.name}'s Landslide crumbles`, { kind: 'ability_end', by: self.slot, side: self.team, ability: 'EAR-06-F' }); }
+      if (adv >= ls.push) { ls.done = true; ctx.log(`${$E('sim.s_landslide_crumbles', { name: self.name })}`, { kind: 'ability_end', by: self.slot, side: self.team, ability: 'EAR-06-F' }); }
     },
   },
 });

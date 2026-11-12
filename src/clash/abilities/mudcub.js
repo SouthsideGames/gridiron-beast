@@ -12,6 +12,7 @@
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, byStage, unmet, enemyOf } from './util.js';
 import { decisionsPlan } from '../t8/review.js';
+import { E as $E } from '../../core/english.js';
 
 const SHARE = [[30, 32, 34, 36], [40, 42, 44, 46]];
 
@@ -23,10 +24,10 @@ export default registerClashAbility({
     chooseAction(api, self) {
       const st = self.state; if (st.used) return null;
       const others = api.allies(self).filter((v) => v.id !== self.id);
-      if (!others.length) return unmet({ condition: 'another living ally', detail: 'last survivor: attacks normally, use preserved' });
-      api.trigger(self, 'first able normal turn with another living ally');
+      if (!others.length) return unmet({ condition: 'another living ally', detail: $E('clashlog.last_survivor_attacks_normally_use_preserved') });
+      api.trigger(self, $E('clashlog.first_able_normal_turn_with_another'));
       st.used = true; st.link = { since: api.ex(), turnsLeft: 3 };
-      api.activate(self, 'link created instead of the attack: the current active ally is protected while the owner is in reserve');
+      api.activate(self, $E('clashlog.link_created_instead_of_the_attack'));
       api.executed(self);
       return { kind: 'done' };
     },
@@ -45,7 +46,7 @@ export default registerClashAbility({
       st.link.turnsLeft -= 1;
       if (st.link.turnsLeft <= 0) { st.link = null; api.cleanup(self, 'link expires after three protected normal turns'); }
     },
-    onKO(api, self) { if (self.state.link) { self.state.link = null; api.cleanup(self, 'link ends at the owner\'s knockout'); } },
+    onKO(api, self) { if (self.state.link) { self.state.link = null; api.cleanup(self, $E('clashlog.link_ends_at_the_owners_knockout')); } },
   },
   review: {
     scenarios: [

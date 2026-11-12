@@ -6,6 +6,7 @@
 // The partial count carries through reserve and clears at the Clash end. Mastery execution: the leap.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, SPAR } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const PER_HIT = [60, 65, 70, 75]; const EVERY = 3;
 
@@ -16,14 +17,14 @@ export default registerClashAbility({
   hooks: {
     chooseAction(api, self, { foeId }) {
       if (!foeId || self.state.count < EVERY - 1) return null;
-      api.trigger(self, `third performed normal attack (${self.state.count} performed)`, { targetId: foeId }); api.activate(self, `two-hit leap at ${byTier(PER_HIT, self.tier)}% each`, { targetId: foeId }); api.executed(self);
+      api.trigger(self, `${$E('clashlog.third_performed_normal_attack_performed', { count: self.state.count })}`, { targetId: foeId }); api.activate(self, `${$E('clashlog.two_hit_leap_at_each', { byTier: byTier(PER_HIT, self.tier) })}`, { targetId: foeId }); api.executed(self);
       self.state.count = -1; // the leap itself is the third performed attack; the count restarts after it
-      return { kind: 'attack', tag: 'special', mult: byTier(PER_HIT, self.tier) / 100, hits: 2, strikeKey: 'two-hit leap', label: 'Gust Hop' };
+      return { kind: 'attack', tag: 'special', mult: byTier(PER_HIT, self.tier) / 100, hits: 2, strikeKey: 'two-hit leap', label: $E('clashlog.gust_hop') };
     },
     afterWholeAttack(api, self, info) {
       if (info.attackerId !== self.id || !info.normal || !info.inAction) return;
       self.state.count += 1;
-      if (info.abilityId === 'WIN-02-C') api.cleanup(self, `leap resolved (${info.hits.length} hit${info.hits.length === 1 ? '' : 's'}); count restarts`);
+      if (info.abilityId === 'WIN-02-C') api.cleanup(self, `${$E('clashlog.leap_resolved_hits_count_restarts', { n: info.hits.length })}`);
     },
   },
   review: {

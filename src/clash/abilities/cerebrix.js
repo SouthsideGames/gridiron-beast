@@ -9,6 +9,7 @@
 // clears the mirror; it clears after one interception, expiry or the Clash end. Mastery execution: the preparation.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, BENEFICIAL } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const TURNS = [2, 2, 3, 3]; const CLOCK = 'PSY-03-C:mirror';
 
@@ -19,7 +20,7 @@ export default registerClashAbility({
   hooks: {
     chooseAction(api, self) {
       if (self.state.used) return null;
-      self.state.used = true; self.state.mirror = true; api.activate(self, `psychic mirror for ${byTier(TURNS, self.tier)} owner turns`); api.executed(self);
+      self.state.used = true; self.state.mirror = true; api.activate(self, `${$E('clashlog.psychic_mirror_for_owner_turns', { byTier: byTier(TURNS, self.tier) })}`); api.executed(self);
       api.durationClock(self, self.id, byTier(TURNS, self.tier), CLOCK);
       return { kind: 'done' };
     },
@@ -29,11 +30,11 @@ export default registerClashAbility({
       if (BENEFICIAL.includes(attempt.id) || attempt.reflected || !attempt.abilityId) return null;
       const src = attempt.sourceId ? api.get(attempt.sourceId) : null; if (!src || src.side === self.side) return null;
       if (!me.active || me.koed || (me.stunned && !me.stunProtected)) return null; // must be able to reflect
-      st.mirror = false; api.activate(self, `mirror: ${attempt.id} is turned back on ${src.name}`, { targetId: src.id });
+      st.mirror = false; api.activate(self, `${$E('clashlog.mirror_is_turned_back_on', { id: attempt.id, name: src.name })}`, { targetId: src.id });
       if (!src.koed) api.applyStatus(self, src.id, { id: attempt.id, strength: attempt.strength, duration: attempt.duration, ...(attempt.payload ? { payload: attempt.payload } : {}), reflected: true });
-      return { block: true, reason: 'Foresight mirror' };
+      return { block: true, reason: $E('clashlog.foresight_mirror') };
     },
-    onDeparture(api, self) { if (self.state.mirror) { self.state.mirror = false; api.cleanup(self, 'rotation clears the mirror'); } },
+    onDeparture(api, self) { if (self.state.mirror) { self.state.mirror = false; api.cleanup(self, $E('clashlog.rotation_clears_the_mirror')); } },
     onKO(api, self) { self.state.mirror = false; },
   },
   review: {

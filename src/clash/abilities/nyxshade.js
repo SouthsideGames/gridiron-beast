@@ -7,6 +7,7 @@
 // uses, riders or flags (Glacier Wall rebuild ownership, Tempered Guard cap, Fortress storage, Dragonhide conversion stay behind). The
 // transfer is not shield depletion. No damage or extra attack. Mastery execution: the steal.
 import { registerClashAbility } from '../t8/registry.js';
+import { E as $E } from '../../core/english.js';
 
 const STEALABLE = ['shielded', 'guarded', 'empowered', 'quickened'];
 
@@ -18,7 +19,7 @@ export default registerClashAbility({
     chooseAction(api, self, { foeId }) {
       if (self.state.used || !foeId) return null; const me = api.me(self); const f = api.get(foeId);
       if (me.status || !f.status || !STEALABLE.includes(f.status.id)) return null;
-      api.activate(self, `steal ${f.name}'s ${f.status.id}`, { targetId: foeId });
+      api.activate(self, `${$E('clashlog.steal_s', { name: f.name, id: f.status.id })}`, { targetId: foeId });
       if (!api.transferStatus(self, foeId, self.id, { reason: 'stolen', stripRiders: true })) return null;
       self.state.used = true; api.executed(self);
       return { kind: 'done' };

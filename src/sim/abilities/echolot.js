@@ -16,6 +16,7 @@
 // created at the opposing offensive snap, even benched (out of play: not gated); banking it from the live kickoff's result is an in-
 // play charge gain (gated).
 import { registerAbility } from './registry.js';
+import { E as $E } from '../../core/english.js';
 
 export const ECHO_LANDING = Object.freeze({ width: 6, length: 8, span: [-8, 0], pull: 20, cooldown: 6 });
 const LIFETIME = [1, 2, 2, 3];
@@ -35,7 +36,7 @@ export default registerAbility({
       st.readyAt = ctx.teamPlays(team).def + 1 + ECHO_LANDING.cooldown; ctx.executed(self); // created at the next opposing offensive snap, then six
       ctx.queueField({ owner: self.mid, ownerTeam: team, side: 'defense', benchOk: true, type: 'Psychic', ability: 'PSY-04-F', strength: ECHO_LANDING.pull,
         lifetime: LIFETIME[self.mastery] ?? LIFETIME[0], clock: 'ownerDefense', width: ECHO_LANDING.width, length: ECHO_LANDING.length, span: ECHO_LANDING.span, centerOn: 'QB' });
-      ctx.log(`${self.name} banks an Echo Landing`, { kind: 'ability', by: self.slot, side: self.team, ability: 'PSY-04-F' });
+      ctx.log(`${$E('sim.banks_an_echo_landing', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'PSY-04-F' });
     },
   },
 });

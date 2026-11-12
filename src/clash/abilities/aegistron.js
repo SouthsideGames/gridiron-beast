@@ -9,6 +9,7 @@
 // ('fortress-storage-cap') in normal gameplay (reported, no heal). Mastery execution: the cast.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const GUARD = 50; const TURNS = 2; const CORE_CAP = 20; const LADDER = [10, 15, 20, 25]; const HP_LINE = 60;
 
@@ -20,26 +21,26 @@ export default registerClashAbility({
     chooseAction(api, self) {
       const st = self.state; if (st.used) return null; const me = api.me(self);
       if (me.hp * 100 >= HP_LINE * me.maxHp) return null;
-      if (me.status) return unmet({ condition: 'no status', detail: `${me.status.id}: ordinary attack, use kept` });
-      st.used = true; api.activate(self, 'Fortress: Guarded 50%, storing prevented damage'); api.executed(self);
+      if (me.status) return unmet({ condition: $E('clashlog.no_status'), detail: `${$E('clashlog.ordinary_attack_use_kept', { id: me.status.id })}` });
+      st.used = true; api.activate(self, $E('clashlog.fortress_guarded_50_storing_prevented_damage')); api.executed(self);
       const r = api.applyStatus(self, self.id, { id: 'guarded', strength: GUARD, duration: TURNS, payload: { pct: GUARD, fortress: self.id } });
       st.live = !!r.accepted; st.stored = 0;
       return { kind: 'done' };
     },
     afterWholeHit(api, self, info) {
       const st = self.state; if (!st.live) return; const l = info.landed.find((x) => x.id === self.id); if (!l?.prevented) return;
-      st.stored += l.prevented; api.log(self, 'ability_progress', `${self.name}: Fortress stores ${l.prevented} prevented HP (${st.stored} total)`, { stored: st.stored, stage: 'trigger' });
+      st.stored += l.prevented; api.log(self, 'ability_progress', `${$E('clashlog.fortress_stores_prevented_hp_total', { name: self.name, prevented: l.prevented, stored: st.stored })}`, { stored: st.stored, stage: 'trigger' });
     },
     statusEnded(api, self, { id, reason }) {
       const st = self.state; if (!st.live || id !== 'guarded') return; st.live = false;
-      if (reason !== 'expired') { api.cleanup(self, `episode ${reason}: no payout`); st.stored = 0; return; }
+      if (reason !== 'expired') { api.cleanup(self, `${$E('clashlog.episode_no_payout', { reason })}`); st.stored = 0; return; }
       const me = api.me(self); const coreCap = Math.floor((me.maxHp * CORE_CAP) / 100); const ladderCap = Math.floor((me.maxHp * byTier(LADDER, self.tier)) / 100);
       let amount = Math.min(st.stored, coreCap, ladderCap);
       if (st.stored > Math.min(coreCap, ladderCap) && coreCap !== ladderCap) {
-        if (!api.provisional(self, 'fortress-storage-cap', `${st.stored} stored; Core cap ${coreCap}, Progression cap ${ladderCap}`)) { api.cleanup(self, 'payout awaits the storage-cap ruling'); st.stored = 0; return; }
+        if (!api.provisional(self, 'fortress-storage-cap', `${$E('clashlog.stored_core_cap_progression_cap', { stored: st.stored, coreCap, ladderCap })}`)) { api.cleanup(self, $E('clashlog.payout_awaits_the_storage_cap_ruling')); st.stored = 0; return; }
         amount = Math.min(st.stored, api.flags.coreVsProgression.value === 'core' ? coreCap : ladderCap);
       }
-      api.activate(self, `natural expiry: heal the ${amount} stored HP`);
+      api.activate(self, `${$E('clashlog.natural_expiry_heal_the_stored_hp', { amount })}`);
       if (amount > 0) api.heal(self, self.id, { base: amount, kind: 'fortress' });
       st.stored = 0;
     },

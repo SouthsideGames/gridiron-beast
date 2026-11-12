@@ -35,7 +35,7 @@ import { replayReason, replayPlan, replayPosition, REPLAY } from '../replay.js';
 import { qbReadPanelHtml, qbReadsShown } from '../qb-read-ui.js';
 import { openMatchupPanel } from '../type-chart.js';
 import { postGameHtml } from '../captains-ui.js';
-import { t as $t } from '../../text/index.js';
+import { t as $t, lineText } from '../../text/index.js';
 
 /** Start Sunday's game from the settled pregame Clash (set by registerMatchScreens; the battle screen calls it). */
 export let startSundayGame = null;
@@ -816,7 +816,7 @@ export function registerMatchScreens(Router, app) {
 
   function showLog(f) {
     const s = f.game?.state; if (!s) return;
-    sheet(`<div class="log">${s.log.slice().reverse().map((e) => `<div class="entry ${e.important ? 'important' : ''}"><span class="t">${R.quarterText({ quarter: e.q })} ${fmtClock(e.clock)}</span><span>${esc(e.text)}${e.repro ? `<br><small class="dim mono">repro ${esc(e.repro)}</small>` : ''}</span></div>`).join('')}</div><p class="dim">${$t('match.a_repro_code_replays_that_exact')} <span class="mono">node tests/tools/replay.js CODE</span>.</p>`, { title: $t('match.play_by_play') });
+    sheet(`<div class="log">${s.log.slice().reverse().map((e) => `<div class="entry ${e.important ? 'important' : ''}"><span class="t">${R.quarterText({ quarter: e.q })} ${fmtClock(e.clock)}</span><span>${esc(lineText(e))}${e.repro ? `<br><small class="dim mono">repro ${esc(e.repro)}</small>` : ''}</span></div>`).join('')}</div><p class="dim">${$t('match.a_repro_code_replays_that_exact')} <span class="mono">node tests/tools/replay.js CODE</span>.</p>`, { title: $t('match.play_by_play') });
   }
 
   function finishGame(f) {

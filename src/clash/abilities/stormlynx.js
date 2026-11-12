@@ -10,6 +10,7 @@
 import { registerClashAbility } from '../t8/registry.js';
 import { perkTag } from '../t8/flags.js';
 import { byTier, perkGate } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [100, 110, 120, 130]; const EXTEND = 2;
 
@@ -22,8 +23,8 @@ export default registerClashAbility({
       if (self.state.used || !foeId) return null;
       if (!api.cooldownsOf(foeId).length) return null;
       const g = perkGate(api, self, foeId, perkTag('ELE-04-C')); if (!g.ok) return null;
-      self.state.used = true; self.state.pending = true; api.activate(self, `circuit breaker at ${byTier(POWER, self.tier)}%`, { targetId: foeId }); api.executed(self);
-      return { kind: 'attack', tag: g.tag, mult: byTier(POWER, self.tier) / 100, strikeKey: 'attack', label: 'Circuit Breaker' };
+      self.state.used = true; self.state.pending = true; api.activate(self, `${$E('clashlog.circuit_breaker_at', { byTier: byTier(POWER, self.tier) })}`, { targetId: foeId }); api.executed(self);
+      return { kind: 'attack', tag: g.tag, mult: byTier(POWER, self.tier) / 100, strikeKey: 'attack', label: $E('clashlog.circuit_breaker') };
     },
     attached(api, self, info) {
       if (info.attacker !== self.id || info.strikeKey !== 'attack' || !self.state.pending) return null; self.state.pending = false;

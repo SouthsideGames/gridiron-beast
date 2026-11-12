@@ -2,6 +2,7 @@
 // (GDD §3 and §5). Returns describe what happened; rules.js applies it.
 
 import { FIELD, fieldGoalDistance, clamp } from '../core/field.js';
+import { E as $E } from '../core/english.js';
 
 const norm = (v) => clamp(v ?? 60, 1, 99) / 99;
 
@@ -25,14 +26,14 @@ export function attemptFieldGoal(rng, ballOn, kicker) {
   const distance = fieldGoalDistance(ballOn);
   const p = fieldGoalChance(distance, Math.min(99, (kicker?.attrs?.kicking ?? 60) + (distance >= 40 ? kicker?.longKick || 0 : 0)));
   const good = rng.chance(p);
-  return { distance, good, chance: p, text: good ? `Field goal is GOOD from ${distance} yards.` : distance > 60 ? `Field goal from ${distance} falls short.` : `Field goal from ${distance} is no good.` };
+  return { distance, good, chance: p, text: good ? `${$E('sim.field_goal_is_good_from_yards', { distance })}` : distance > 60 ? `${$E('sim.field_goal_from_falls_short', { distance })}` : `${$E('sim.field_goal_from_is_no_good', { distance })}` };
 }
 
 export function attemptExtraPoint(rng, kicker) {
   const distance = FIELD.length - (FIELD.length - FIELD.patSpot) + FIELD.fgAddedYards; // 32-33 yards
   const p = clamp(fieldGoalChance(distance, kicker?.attrs?.kicking) + 0.03, 0.5, 0.99);
   const good = rng.chance(p);
-  return { good, chance: p, text: good ? 'Extra point is good.' : 'Extra point is NO GOOD.' };
+  return { good, chance: p, text: good ? $E('sim.extra_point_is_good') : $E('sim.extra_point_is_no_good') };
 }
 
 /**
@@ -59,11 +60,11 @@ export function kickoff(rng, { kicker, returner, onside = false }) {
     const recovered = rng.chance(0.18 + 0.12 * k);
     const spot = FIELD.kickoffSpot + 10 + rng.int(6);
     return recovered
-      ? { onside: true, recovered: true, ballOn: 100 - spot, text: `ONSIDE KICK recovered by the kicking team at the ${100 - spot > 50 ? 'opponent ' + (100 - (100 - spot)) : (100 - spot)}!` }
-      : { onside: true, recovered: false, ballOn: spot, text: `Onside kick recovered by the receiving team at the ${spot > 50 ? 'opponent ' + (100 - spot) : spot}.` };
+      ? { onside: true, recovered: true, ballOn: 100 - spot, text: `${$E('sim.onside_kick_recovered_by_the_kicking', { spot: 100 - spot > 50 ? 'opponent ' + (100 - (100 - spot)) : (100 - spot) })}` }
+      : { onside: true, recovered: false, ballOn: spot, text: `${$E('sim.onside_kick_recovered_by_the_receiving', { spot: spot > 50 ? 'opponent ' + (100 - spot) : spot })}` };
   }
   const { landingFromGoal, touchback } = kickoffFlight(rng, { kicker });
-  if (touchback) return { touchback: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, text: 'Kickoff sails into the end zone. Touchback.' };
+  if (touchback) return { touchback: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, text: $E('sim.kickoff_sails_into_the_end_zone') };
   const r = returner?.attrs || {};
   const returnYards = Math.max(4, 16 + 10 * norm(r.speed) + 6 * norm(r.agility) + rng.normal() * 7);
   const start = Math.max(-9, landingFromGoal);
@@ -71,9 +72,9 @@ export function kickoff(rng, { kicker, returner, onside = false }) {
   const big = rng.chance(0.012 + 0.02 * norm(r.speed));
   if (big) ballOn = Math.round(Math.max(ballOn + 25, 55 + rng.int(30)));
   const touchdown = ballOn >= 100 || rng.chance(0.006);
-  if (touchdown) return { touchdown: true, ballOn: 100, returnYards: 100 - start, text: 'KICKOFF RETURN TOUCHDOWN!' };
+  if (touchdown) return { touchdown: true, ballOn: 100, returnYards: 100 - start, text: $E('sim.kickoff_return_touchdown') };
   ballOn = clamp(ballOn, 5, 95);
-  return { touchback: false, ballOn, returnYards: Math.round(ballOn - start), text: `Kickoff returned ${Math.round(ballOn - start)} yards to the ${ballOn <= 50 ? ballOn : 'opponent ' + (100 - ballOn)}.` };
+  return { touchback: false, ballOn, returnYards: Math.round(ballOn - start), text: `${$E('sim.kickoff_returned_yards_to_the', { n: Math.round(ballOn - start), ballOn: ballOn <= 50 ? ballOn : 'opponent ' + (100 - ballOn) })}` };
 }
 
 /**
@@ -83,7 +84,7 @@ export function kickoff(rng, { kicker, returner, onside = false }) {
 export function punt(rng, { ballOn, kicker, returner, rushPressure = 0.05 }) {
   const k = norm(kicker?.attrs?.kicking);
   if (rng.chance(rushPressure * 0.4)) {
-    return { blocked: true, ballOn: 100 - Math.max(1, ballOn - 8 - rng.int(6)), text: 'PUNT BLOCKED! Recovered by the defense.' };
+    return { blocked: true, ballOn: 100 - Math.max(1, ballOn - 8 - rng.int(6)), text: $E('sim.punt_blocked_recovered_by_the_defense') };
   }
   let distance = 34 + 16 * k + rng.normal() * 6;
   if (rng.chance(0.06)) distance *= 0.55; // shank
@@ -93,17 +94,17 @@ export function punt(rng, { ballOn, kicker, returner, rushPressure = 0.05 }) {
     // Coffin-corner attempt: a good punter pins it inside the 10 sometimes.
     if (ballOn >= 55 && rng.chance(0.35 + 0.4 * k)) {
       const pin = 2 + rng.int(8);
-      return { ballOn: pin, distance: Math.round(100 - pin - ballOn), text: `Punt downed at the ${pin}.` };
+      return { ballOn: pin, distance: Math.round(100 - pin - ballOn), text: `${$E('sim.punt_downed_at_the', { pin })}` };
     }
-    return { touchback: true, ballOn: FIELD.touchbackOther, distance: Math.round(100 - ballOn), text: 'Punt into the end zone. Touchback.' };
+    return { touchback: true, ballOn: FIELD.touchbackOther, distance: Math.round(100 - ballOn), text: $E('sim.punt_into_the_end_zone_touchback') };
   }
   const receiverBallOn = 100 - landing;
   const r = returner?.attrs || {};
   const fairCatch = rng.chance(0.45) || receiverBallOn < 8;
-  if (fairCatch) return { ballOn: Math.round(receiverBallOn), distance: Math.round(distance), fairCatch: true, text: `Punt of ${Math.round(distance)} yards, fair catch at the ${Math.round(receiverBallOn)}.` };
+  if (fairCatch) return { ballOn: Math.round(receiverBallOn), distance: Math.round(distance), fairCatch: true, text: `${$E('sim.punt_of_yards_fair_catch_at', { n: Math.round(distance), n2: Math.round(receiverBallOn) })}` };
   const ret = Math.max(0, 5 + 8 * norm(r.speed) + 5 * norm(r.agility) + rng.normal() * 6);
   let newBallOn = Math.round(receiverBallOn + ret);
-  if (rng.chance(0.008)) return { touchdown: true, ballOn: 100, distance: Math.round(distance), catchAt: Math.round(receiverBallOn), text: 'PUNT RETURN TOUCHDOWN!' }; // M3 hook: catchAt (the catch spot, for kicker contracts)
+  if (rng.chance(0.008)) return { touchdown: true, ballOn: 100, distance: Math.round(distance), catchAt: Math.round(receiverBallOn), text: $E('sim.punt_return_touchdown') }; // M3 hook: catchAt (the catch spot, for kicker contracts)
   newBallOn = clamp(newBallOn, 1, 95);
-  return { ballOn: newBallOn, distance: Math.round(distance), returnYards: Math.round(ret), catchAt: Math.round(receiverBallOn), text: `Punt of ${Math.round(distance)} yards, returned ${Math.round(ret)} to the ${newBallOn <= 50 ? newBallOn : 'opponent ' + (100 - newBallOn)}.` };
+  return { ballOn: newBallOn, distance: Math.round(distance), returnYards: Math.round(ret), catchAt: Math.round(receiverBallOn), text: `${$E('sim.punt_of_yards_returned_to_the', { n: Math.round(distance), n2: Math.round(ret), newBallOn: newBallOn <= 50 ? newBallOn : 'opponent ' + (100 - newBallOn) })}` };
 }

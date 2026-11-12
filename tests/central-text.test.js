@@ -14,7 +14,7 @@ const en = englishText();
 /** Every t('key' ...) call in the code: { key, file, args } where args is the source of the values object, if any. */
 function calls() {
   const out = [];
-  for (const [rel, src] of files) { if (!/text\/index\.js'/.test(src)) continue; for (const m of src.matchAll(/(?:(?<![\w.])\$?t|\$L)\('([a-z][\w]*\.[\w.]+)'(\s*,\s*\{)?/g)) { // $L('key', …) is a line that is saved (src/text/index.js)
+  for (const [rel, src] of files) { if (!/text\/index\.js'|core\/english\.js'/.test(src)) continue; for (const m of src.matchAll(/(?:(?<![\w.])\$?t|\$L|\$E)\('([a-z][\w]*\.[\w.]+)'(\s*,\s*\{)?/g)) { // $L('key', …) is a line that is saved (src/text/index.js)
     let args = null;
     if (m[2]) { let i = m.index + m[0].length, d = 1; const a = i; while (i < src.length && d) { const c = src[i]; if (c === '{') d++; else if (c === '}') d--; i++; } args = src.slice(a, i - 1); }
     out.push({ key: m[1], file: rel, args });
@@ -94,6 +94,8 @@ test('buttons and titles that now read from en.js are still Title Case', () => {
   assert.deepEqual([...new Set(bad)], []);
 });
 
+// The engines take their log wording from en.js through src/core/english.js, which is English always (never the chosen language),
+// so a battle or a game reads and resolves the same for every player. The reader of the chosen language stays out of them.
 test('text never decides anything: the engines and the save code do not read the central text', () => {
   for (const [rel, s] of files) if (/^src\/(sim|clash|core)\//.test(rel) || /^src\/franchise\/(save|store|slots|cloud-save)\.js$/.test(rel)) assert.ok(!/text\/index\.js/.test(s), `${rel} imports the text module`);
 });

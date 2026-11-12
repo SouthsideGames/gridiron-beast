@@ -10,6 +10,7 @@
 import { registerClashAbility } from '../t8/registry.js';
 import { perkTag } from '../t8/flags.js';
 import { byTier, perkGate } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const LADDER = [145, 160, 175, 190]; const CORE = 160;
 
@@ -21,11 +22,11 @@ export default registerClashAbility({
     chooseAction(api, self, { foeId }) {
       if (self.state.used || !foeId) return null;
       const agree = byTier(LADDER, self.tier) === CORE; // at Practiced both texts give 160%: no precedence decision is needed
-      if (!agree && !api.provisional(self, 'd13-values', `Core ${CORE}% against Progression ${byTier(LADDER, self.tier)}% at this tier`)) return null;
+      if (!agree && !api.provisional(self, 'd13-values', `${$E('clashlog.core_against_progression_at_this_tier', { core: CORE, byTier: byTier(LADDER, self.tier) })}`)) return null;
       const g = perkGate(api, self, foeId, perkTag('LIG-06-C')); if (!g.ok) return null;
       const pctV = api.flags.d13ValuePrecedence.value === 'core' ? CORE : byTier(LADDER, self.tier);
-      self.state.used = true; api.activate(self, `lance at ${pctV}%: attack retaliation suppressed`, { targetId: foeId }); api.executed(self);
-      return { kind: 'attack', tag: g.tag, mult: pctV / 100, strikeKey: 'lance', label: 'Daybreak Lance', suppressRetaliation: true };
+      self.state.used = true; api.activate(self, `${$E('clashlog.lance_at_attack_retaliation_suppressed', { pctV })}`, { targetId: foeId }); api.executed(self);
+      return { kind: 'attack', tag: g.tag, mult: pctV / 100, strikeKey: 'lance', label: $E('clashlog.daybreak_lance'), suppressRetaliation: true };
     },
   },
   review: {

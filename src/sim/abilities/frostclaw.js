@@ -20,6 +20,7 @@
 // the live activation (gated); the low-yardage bar is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { scrimmage, disabled, tier, allowedGain, BODY } from './earth-ice-util.js';
+import { E as $E } from '../../core/english.js';
 
 const STUN = [20, 25, 30, 35]; // % by mastery
 export const SNOWFALL = Object.freeze({ maxGain: 3, full: 3, land: 0.6, radius: 1, backfield: 5 });
@@ -45,7 +46,7 @@ export default registerAbility({
       st.bar = 0; ctx.executed(self);
       self.sf = { at: ctx.t + SNOWFALL.land, balls: footprints(ctx), landed: false };
       self.stun = Math.max(self.stun, SNOWFALL.land); self.noEngage = Math.max(self.noEngage, SNOWFALL.land); self.vx = 0; self.vy = 0;
-      ctx.log(`${self.name} slams the ground: two snowballs fall`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ICE-03-F', markers: self.sf.balls.map((b) => [+b.x.toFixed(2), +b.y.toFixed(2)]), radius: SNOWFALL.radius });
+      ctx.log(`${$E('sim.slams_the_ground_two_snowballs_fall', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ICE-03-F', markers: self.sf.balls.map((b) => [+b.x.toFixed(2), +b.y.toFixed(2)]), radius: SNOWFALL.radius });
     },
     tick(ctx, self) {
       const sf = self.sf; if (!sf || sf.landed || ctx.t + 1e-9 < sf.at) return;
@@ -58,11 +59,11 @@ export default registerAbility({
           for (const a of offense) {
             const roll = ctx.rng.chance(pct / 100);
             if (roll) ctx.applyStatus(a, { id: 'stunned', strength: pct, duration: 0, restOfPlay: true, source: self, abilityId: 'ICE-03-F' });
-            else ctx.log(`${a.name} shrugs off the snowball`, { kind: 'ability_miss', by: self.slot, side: self.team, victim: a.slot, ability: 'ICE-03-F' });
+            else ctx.log(`${$E('sim.shrugs_off_the_snowball', { name: a.name })}`, { kind: 'ability_miss', by: self.slot, side: self.team, victim: a.slot, ability: 'ICE-03-F' });
           }
         } else if (inside.length) b.result = 'crumbled';
         else { b.result = 'obstacle'; b.obstacle = ctx.addObstacle({ kind: 'circle', x: b.x, y: b.y, r: SNOWFALL.radius, owner: self.slot, ability: 'ICE-03-F' }); }
-        ctx.log(`A snowball lands: ${b.result}`, { kind: 'snowball', by: self.slot, side: self.team, ability: 'ICE-03-F', result: b.result, x: +b.x.toFixed(2), y: +b.y.toFixed(2), victims: offense.map((a) => a.slot) });
+        ctx.log(`${$E('sim.a_snowball_lands', { result: b.result })}`, { kind: 'snowball', by: self.slot, side: self.team, ability: 'ICE-03-F', result: b.result, x: +b.x.toFixed(2), y: +b.y.toFixed(2), victims: offense.map((a) => a.slot) });
       }
     },
     playEnd(ctx, self, s) {

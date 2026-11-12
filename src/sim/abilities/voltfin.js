@@ -16,6 +16,7 @@
 // created in the pre-snap step (out of play: not gated); the rushing first down's token is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, stageOf, scrimmage, ready, spend, countPlay, bandInField } from './nature-electric-common.js';
+import { E as $E } from '../../core/english.js';
 
 export const STUN = [20, 30]; // % by form
 export const STRIP = Object.freeze({ width: 8, from: 0, to: 5 });
@@ -34,7 +35,7 @@ export default registerAbility({
       const st = ctx.state(self);
       if (self.team === 'off' && scrimmage(ctx) && ready(st) && s.carrier === self.slot && !s.receiver && s.firstDown && s.result !== 'touchdown' && ctx.canGainCharge(self)) {
         st.token = true; ctx.executed(self);
-        ctx.log(`${self.name} charges a Charge Strip`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ELE-02-F' });
+        ctx.log(`${$E('sim.charges_a_charge_strip', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ELE-02-F' });
       }
       countPlay(ctx, self, st, 'off');
     },

@@ -12,6 +12,7 @@
 // ('delayed-slot'), as for Falling Star. Mastery execution: the launch.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [150, 160, 170, 180]; const HR_TURNS = 2;
 
@@ -22,22 +23,22 @@ export default registerClashAbility({
   hooks: {
     chooseAction(api, self, { foeId }) {
       if (self.state.used) return null; if (!foeId) return unmet('opposing active fighter');
-      self.state.used = true; api.trigger(self, 'normal action with an opposing active', { targetId: foeId });
+      self.state.used = true; api.trigger(self, $E('clashlog.normal_action_with_an_opposing_active'), { targetId: foeId });
       api.delay(self, { targetSide: api.get(foeId).side, targetId: foeId, after: 1 });
-      api.activate(self, 'fissure created in place of the normal attack', { targetId: foeId }); api.executed(self);
+      api.activate(self, $E('clashlog.fissure_created_in_place_of_the'), { targetId: foeId }); api.executed(self);
       return { kind: 'done' };
     },
     delayedImpact(api, self, item) {
       const f = item.frozen; let target = f.occupantId;
       if (f.disputed) {
-        if (!api.provisional(self, 'delayed-slot', `the launch target ${api.get(f.launchTargetId).name} is no longer the active fighter`)) { api.cleanup(self, 'the eruption target is disputed: awaiting ruling, no eruption'); return; }
+        if (!api.provisional(self, 'delayed-slot', `${$E('clashlog.the_launch_target_is_no_longer', { name: api.get(f.launchTargetId).name })}`)) { api.cleanup(self, $E('clashlog.the_eruption_target_is_disputed_awaiting')); return; }
         target = api.flags.delayedSlot.value === 'active-position' ? f.occupantId : f.launchTargetAlive ? f.launchTargetId : null;
       }
-      if (!target) { api.cleanup(self, 'empty marked slot: no damage, no status'); return; }
+      if (!target) { api.cleanup(self, $E('clashlog.empty_marked_slot_no_damage_no')); return; }
       const exception = api.me(self).koed ? 'FIR-06-C' : undefined;
-      const r = api.strike(self, target, { tag: 'delayed', mult: byTier(POWER, self.tier) / 100, strikeKey: 'eruption', label: 'Faultline eruption', exception, normalAction: false });
+      const r = api.strike(self, target, { tag: 'delayed', mult: byTier(POWER, self.tier) / 100, strikeKey: 'eruption', label: $E('clashlog.faultline_eruption'), exception, normalAction: false });
       if (r.landed && !api.get(target).koed) api.applyStatus(self, target, { id: 'healingReduced', strength: 100, duration: HR_TURNS, payload: { pct: 100, uncleansable: true } });
-      api.cleanup(self, 'the fissure resolved');
+      api.cleanup(self, $E('clashlog.the_fissure_resolved'));
     },
   },
   review: {

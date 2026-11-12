@@ -8,6 +8,7 @@
 // Text never decides anything: no rule, id or saved value is taken from here.
 import en from './en.js';
 import { KEEP_ENGLISH } from './names.js';
+import { sentenceOf } from './lines.js';
 
 let table = en; let code = 'en'; let plural = null;
 let LABEL_KEYS = null;   // wording -> key, for labels read from tables that were filled when the game loaded (captured, below)
@@ -49,30 +50,7 @@ export function lineText(x) { return typeof x === 'string' ? x : !x ? '' : x.tk 
 // A line used as a value of another line is kept inside it. Anything that cannot be matched stays plain text, so the sentence
 // is always exactly what the builder produced; captured() never changes wording, it only remembers where it came from.
 const labelKey = (v) => { if (!LABEL_KEYS) { LABEL_KEYS = new Map(); for (const k of Object.keys(en)) { const e = table[k]; if (typeof e === 'string' && typeof en[k] === 'string' && en[k].length >= 3 && !/[{<]/.test(en[k]) && !KEEP_ENGLISH.has(k) && !LABEL_KEYS.has(e)) LABEL_KEYS.set(e, k); } } return LABEL_KEYS.get(v) ?? null; };   // in the language shown now (the tables were filled in it)
-function split(s, calls, upTo) {
-  const parts = []; let at = 0; const open = []; for (let i = 0; i < upTo; i++) { const c = calls[i]; if (!c.used && c.out && c.out.trim()) open.push(c); }
-  for (;;) {   // the next line to appear in the sentence, wherever in the builder it was read (the longest, when two start together)
-    let best = null, where = -1;
-    for (const c of open) { if (c.used) continue; const j = s.indexOf(c.out, at); if (j >= 0 && (best === null || j < where || (j === where && c.out.length > best.out.length))) { best = c; where = j; } }
-    if (!best) break;
-    if (where > at) parts.push(s.slice(at, where)); parts.push(best.saved ||= { tk: best.key, ...(best.tv ? { tv: best.tv } : {}) }); best.used = true; at = where + best.out.length;
-  }
-  if (at < s.length) parts.push(s.slice(at));
-  return parts;
-}
-const sentence = (s, calls, outer) => {
-  if (s && typeof s === 'object') return s;   // already a saved line
-  s = String(s ?? '');
-  calls.forEach((c, i) => { if (!c.vars) return; c.tv = {};
-    for (const [k, v] of Object.entries(c.vars)) { if (typeof v !== 'string' || !v) { c.tv[k] = v && typeof v === 'object' ? slim(v) : v; continue; }
-      const ps = split(v, calls, i); const lk = ps.length === 1 && typeof ps[0] === 'string' ? labelKey(v) : null;
-      c.tv[k] = lk ? { tk: lk } : ps.length === 1 ? ps[0] : ps.some((x) => typeof x === 'object') ? { tp: ps } : v; } });
-  const tp = split(s, calls, calls.length);
-  if (outer) outer.push({ key: null, vars: null, out: '' });   // an outer capture sees this sentence as plain text
-  if (tp.length === 1 && typeof tp[0] === 'object') return { text: s, ...tp[0] };   // the sentence is one line
-  if (!tp.some((x) => typeof x === 'object')) { const lk = labelKey(s); return lk ? { text: s, tk: lk } : { text: s }; }   // a line read from a table filled at load
-  return { text: s, tp };
-};
+const sentence = (s, calls, outer) => { const l = sentenceOf(s, calls, { labelKey, slim }); if (outer) outer.push({ key: null, vars: null, out: '' }); return l; };   // an outer capture sees this sentence as plain text (src/text/lines.js does the matching)
 export function captured(build) {
   const outer = REC; const calls = REC = []; let s;
   try { s = build(); } finally { REC = outer; }

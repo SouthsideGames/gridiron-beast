@@ -12,6 +12,7 @@
 // Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): a player-chosen
 // formula field goal (rules.js doFieldGoal), out of play; not gated.
 import { registerAbility } from './registry.js';
+import { E as $E } from '../../core/english.js';
 
 export const CHART = Object.freeze([[65, 1], [70, 0.55], [75, 0.5], [80, 0.45], [85, 0.4], [90, 0.3]]); // [distance, chance]
 /** The activated success chance at `distance` yards (null above 90). */
@@ -26,7 +27,7 @@ export default registerAbility({
   initGame: () => ({ used: false }),
   review: { choices: (state) => (state.phase === 'scrimmage' && state.possession === 'home' && state.down === 4 ? { fourthDown: 'fg', fgSignature: true } : null) }, // reviewer staging: the player's Dragon Roar call (the AI never activates it)
   fieldGoal: Object.freeze({
-    label: 'Dragon Roar',
+    label: $E('sim.dragon_roar'),
     chance: (distance) => roarChance(distance),
     available: (st, distance) => !st.used && roarChance(distance) != null,
     spend: (st) => { st.used = true; },

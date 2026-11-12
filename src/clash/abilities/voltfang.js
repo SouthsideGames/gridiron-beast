@@ -6,6 +6,7 @@
 // apply and a miss spends the use. Mastery execution: the launch.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [100, 110, 120, 130];
 const SHIELD = { id: 'shielded', strength: 80, duration: 5 };
@@ -17,9 +18,9 @@ export default registerClashAbility({
   hooks: {
     chooseAction(api, self, { foeId }) {
       if (self.state.used || !foeId) return null; const f = api.get(foeId);
-      if (f.status?.id !== 'shielded') return unmet({ condition: 'active enemy Shielded', detail: 'ordinary attack, use kept' });
-      self.state.used = true; api.activate(self, `phase strike at ${byTier(POWER, self.tier)}% through the shield`, { targetId: foeId }); api.executed(self);
-      return { kind: 'attack', tag: 'special', mult: byTier(POWER, self.tier) / 100, strikeKey: 'special', label: 'Phase Strike' };
+      if (f.status?.id !== 'shielded') return unmet({ condition: $E('clashlog.active_enemy_shielded'), detail: $E('clashlog.ordinary_attack_use_kept_2') });
+      self.state.used = true; api.activate(self, `${$E('clashlog.phase_strike_at_through_the_shield', { byTier: byTier(POWER, self.tier) })}`, { targetId: foeId }); api.executed(self);
+      return { kind: 'attack', tag: 'special', mult: byTier(POWER, self.tier) / 100, strikeKey: 'special', label: $E('clashlog.phase_strike') };
     },
     shieldRule(api, self, info) { return info.abilityId === 'ELE-03-C' ? { bypass: true } : null; },
   },

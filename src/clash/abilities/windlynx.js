@@ -7,6 +7,7 @@
 // already-resolving action. "Resolve simultaneous priority with ordinary stable initiative / ties": an explicit INTERRUPT tier on the
 // opponent is not overtaken (reading; T8_PROVISIONAL 'second-wind-vs-interrupt'). No mastery scaling. Mastery execution: the advance.
 import { registerClashAbility } from '../t8/registry.js';
+import { E as $E } from '../../core/english.js';
 
 export default registerClashAbility({
   family: 'windlynx', abilityId: 'WIN-04-C',
@@ -16,9 +17,9 @@ export default registerClashAbility({
     preInitiative(api, self, { activeId, by }) {
       const st = self.state; const me = api.me(self); const act = api.get(activeId);
       if (st.used || me.active || me.koed || me.stunned || act.side !== self.side) return null;
-      if (act.stunned && !act.stunProtected) { api.cleanup(self, `${act.name} would skip (Stunned): use kept`); return null; }
+      if (act.stunned && !act.stunProtected) { api.cleanup(self, `${$E('clashlog.would_skip_stunned_use_kept', { name: act.name })}`); return null; }
       if (by === 'interrupt') return null;
-      st.used = true; api.trigger(self, `${act.name} would act second`, { targetId: activeId }); api.activate(self, `advance ${act.name}'s action before the opponent`, { targetId: activeId }); api.executed(self);
+      st.used = true; api.trigger(self, `${act.name} would act second`, { targetId: activeId }); api.activate(self, `${$E('clashlog.advance_s_action_before_the_opponent', { name: act.name })}`, { targetId: activeId }); api.executed(self);
       return { advance: activeId };
     },
   },

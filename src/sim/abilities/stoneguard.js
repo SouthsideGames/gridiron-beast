@@ -12,6 +12,7 @@
 // Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): a formula punt
 // (rules.js puntReturn): the kicker is not an engine actor and no field or Cold Snap reaches it; not gated.
 import { registerAbility } from './registry.js';
+import { E as $E } from '../../core/english.js';
 
 const spot = (y) => (y <= 50 ? `${y}` : `opponent ${100 - y}`);
 
@@ -24,7 +25,7 @@ export default registerAbility({
       st.used = true; ctx.executed(self);
       const ballOn = Math.max(1, Math.min(99, res.catchAt));
       return { ...res, touchdown: false, ballOn, returnYards: 0, cradled: true, ability: 'EAR-04-F',
-        text: `Punt of ${res.distance} yards. ${self.name}'s Stone Cradle cuffs the returner at the catch: no return, ball at the ${spot(ballOn)}.` };
+        text: `${$E('sim.punt_of_yards_s_stone_cradle', { distance: res.distance, name: self.name, spot: spot(ballOn) })}` };
     },
   },
 });

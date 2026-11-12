@@ -8,6 +8,7 @@
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, byStage } from './util.js';
 import { decisionsPlan } from '../t8/review.js';
+import { E as $E } from '../../core/english.js';
 
 const SLOW = [15, 20]; const TURNS = 2; const COOLDOWN = [5, 4, 3, 2];
 
@@ -18,10 +19,10 @@ export default registerClashAbility({
   hooks: {
     arrival(api, self, { side, in: inId, reason }) {
       const me = api.me(self); if (!me.active || me.koed || side === self.side || !api.ready(self)) return null;
-      if (reason === 'relay' && !api.provisional(self, 'feather-relay-voluntary', 'a Feather Relay rotation')) return null;
+      if (reason === 'relay' && !api.provisional(self, 'feather-relay-voluntary', $E('clashlog.a_feather_relay_rotation'))) return null;
       if (reason !== 'voluntary' && reason !== 'relay') return null;
-      if (me.stunned) { api.cleanup(self, 'Stunned: readiness kept'); return null; }
-      api.trigger(self, `${api.get(inId).name} arrived by a voluntary rotation`, { targetId: inId }); api.activate(self, `Slowed ${byStage(SLOW, self.stage)}% attempt`, { targetId: inId });
+      if (me.stunned) { api.cleanup(self, $E('clashlog.stunned_readiness_kept')); return null; }
+      api.trigger(self, `${$E('clashlog.arrived_by_a_voluntary_rotation', { name: api.get(inId).name })}`, { targetId: inId }); api.activate(self, `${$E('clashlog.slowed_attempt', { byStage: byStage(SLOW, self.stage) })}`, { targetId: inId });
       api.cooldown(self, byTier(COOLDOWN, self.tier)); api.executed(self);
       api.applyStatus(self, inId, { id: 'slowed', strength: byStage(SLOW, self.stage), duration: TURNS });
       return null;

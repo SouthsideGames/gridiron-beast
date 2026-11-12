@@ -6,6 +6,7 @@
 // subsequent owner normal turns from the setup; protection fixed; reserve pauses status and cooldown. Mastery execution: the setup.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const GUARD = 50; const COOLDOWN = [5, 4, 3, 2]; const HP_LINE = 50;
 
@@ -17,8 +18,8 @@ export default registerClashAbility({
     chooseAction(api, self) {
       if (!api.ready(self)) return null; const me = api.me(self);
       if (me.hp * 100 > HP_LINE * me.maxHp) return null;
-      if (me.status) return unmet({ condition: 'own status slot empty', detail: `${me.status.id}: ordinary attack, readiness kept` });
-      api.activate(self, 'shelter: Guarded 50% through the next own normal turn'); api.cooldown(self, byTier(COOLDOWN, self.tier)); api.executed(self);
+      if (me.status) return unmet({ condition: 'own status slot empty', detail: `${$E('clashlog.ordinary_attack_readiness_kept', { id: me.status.id })}` });
+      api.activate(self, $E('clashlog.shelter_guarded_50_through_the_next')); api.cooldown(self, byTier(COOLDOWN, self.tier)); api.executed(self);
       api.applyStatus(self, self.id, { id: 'guarded', strength: GUARD, duration: 1 });
       return { kind: 'done' };
     },

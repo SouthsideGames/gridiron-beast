@@ -11,6 +11,7 @@
 import { chartEdge, BEATS } from '../data/type-chart.js';
 import { manKeyTargets, eligibleReceivers } from '../data/playbook.js';
 import { positionOf } from '../data/personnel.js';
+import { E as $E } from '../core/english.js';
 
 /** Football strengths (initial values from the owner's brief, 2026-10-22). Separate from the Clash's 1.05 / 0.952. */
 export const FOOTBALL_TYPE_VALUES = Object.freeze({ version: 'f1.1', strong: 0.04, weak: -0.04, dragonNeutral: 0.02, envMatch: 0.02, positiveCap: 0.06 });
@@ -54,26 +55,26 @@ export function contestMod(a, b, envType = null) {
 /** One line explaining why the relationship applies. */
 export function edgeReason(a, b) {
   const e = footballEdge(a, b);
-  if (e === 'strong') return `${a} is strong against ${b}.`;
-  if (e === 'weak') return `${a} is weak against ${b}.`;
-  if (e === 'wild') return `Dragon is the wildcard: a small edge against any type the chart lists as neutral.`;
-  if (!a || !b) return 'No type relationship.';
-  return a === b ? `${a} against ${b}: an even matchup.` : `${a} and ${b} are neutral.`;
+  if (e === 'strong') return `${$E('sim.is_strong_against', { a, b })}`;
+  if (e === 'weak') return `${$E('sim.is_weak_against', { a, b })}`;
+  if (e === 'wild') return `${$E('sim.dragon_is_the_wildcard_a_small')}`;
+  if (!a || !b) return $E('sim.no_type_relationship');
+  return a === b ? `${$E('sim.against_an_even_matchup', { a, b })}` : `${$E('sim.and_are_neutral', { a, b })}`;
 }
 
 // ------------------------------------------------------------ contests
 /** The contests a modifier can touch, by id, with the label the info panel shows. */
 export const CONTESTS = Object.freeze({
-  separation: 'Route separation',
-  coverage: 'Coverage (staying with the receiver)',
-  catch: 'Contested catch',
-  breakup: 'Contested catch (breaking it up)',
+  separation: $E('sim.route_separation'),
+  coverage: $E('sim.coverage_staying_with_the_receiver'),
+  catch: $E('sim.contested_catch'),
+  breakup: $E('sim.contested_catch_breaking_it_up'),
   block: 'Blocking',
-  shed: 'Shedding blocks',
+  shed: $E('sim.shedding_blocks'),
   tackle: 'Tackling',
-  breakTackle: 'Breaking tackles',
-  sack: 'Sack attempt',
-  escape: 'Escaping the rush',
+  breakTackle: $E('sim.breaking_tackles'),
+  sack: $E('sim.sack_attempt'),
+  escape: $E('sim.escaping_the_rush'),
 });
 /** Contests in play for a matchup kind, from each side's point of view. */
 const KIND_CONTESTS = {

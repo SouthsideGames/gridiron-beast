@@ -6,6 +6,7 @@
 // Mastery: passive, one credit per cap scope when it actually raises a roll.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, SPAR } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const FLOOR = [0.95, 1.00, 1.05, 1.10];
 
@@ -16,7 +17,7 @@ export default registerClashAbility({
   hooks: {
     variance(api, self, { tag, spread }) {
       if (tag !== 'ordinary') return null; const fl = byTier(FLOOR, self.tier);
-      if (spread < fl) { self.state.raised += 1; api.log(self, 'ability', `${self.name}: Gear Shot raises the variance roll ${spread.toFixed(3)} to ${fl.toFixed(2)}`, { stage: 'activation', spread, floor: fl }); api.executed(self, { passive: true }); }
+      if (spread < fl) { self.state.raised += 1; api.log(self, 'ability', `${$E('clashlog.gear_shot_raises_the_variance_roll', { name: self.name, toFixed: spread.toFixed(3), toFixed2: fl.toFixed(2) })}`, { stage: 'activation', spread, floor: fl }); api.executed(self, { passive: true }); }
       return { floor: fl };
     },
   },

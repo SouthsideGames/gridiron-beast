@@ -16,6 +16,7 @@
 import { registerAbility } from './registry.js';
 import { scrimmage, byMastery, cooldownStep } from './fw-util.js';
 import * as F from '../../core/fraction.js';
+import { E as $E } from '../../core/english.js';
 
 export const DRAIN = Object.freeze({ pointsByMastery: [5, 10, 15, 20], cooldown: 3 });
 
@@ -30,7 +31,7 @@ export default registerAbility({
       if (ctx.state(self).cd > 0 || !ctx.canStartSignature(self)) return;
       const pts = byMastery(DRAIN.pointsByMastery, self.mastery); const rec = ctx.drainStamina(blocker, pts);
       ctx.state(self).cd = DRAIN.cooldown; self.drain.fired = true; ctx.executed(self);
-      ctx.log(`${self.name}'s Pressure Drain saps ${blocker.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-03-F', victim: blocker.slot, victimSide: blocker.team, points: pts,
+      ctx.log(`${$E('sim.s_pressure_drain_saps', { name: self.name, name2: blocker.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-03-F', victim: blocker.slot, victimSide: blocker.team, points: pts,
         stamina: rec ? F.toNumber(rec.stamina) : null, exhausted: !!rec?.exhausted });
     },
     playEnd(ctx, self) { if (self.team !== 'def' || !scrimmage(ctx)) return; cooldownStep(ctx.state(self), !!self.drain?.fired); },

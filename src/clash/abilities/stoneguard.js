@@ -8,6 +8,7 @@
 // Striker perks" (explicit). The ricochet is a contested Stone Divide target (PROVISIONAL_POINTS['stone-divide-scope']).
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const RICOCHET = [50, 60, 70, 80];
 const SHIELD = { id: 'shielded', strength: 40, duration: 5 };
@@ -19,18 +20,18 @@ export default registerClashAbility({
   hooks: {
     chooseAction(api, self, { foeId }) {
       if (self.state.used || !foeId) return null; const f = api.get(foeId);
-      const conds = []; if (f.status?.id !== 'shielded') conds.push('enemy active Shielded'); if (!api.enemyReserves(self).length) conds.push('a living enemy reserve');
-      if (conds.length) return unmet(...conds.map((c) => ({ condition: c, detail: 'ordinary attack, use kept' })));
-      self.state.used = true; api.activate(self, 'bank shot: primary into the shield', { targetId: foeId }); api.executed(self);
+      const conds = []; if (f.status?.id !== 'shielded') conds.push($E('clashlog.enemy_active_shielded')); if (!api.enemyReserves(self).length) conds.push($E('clashlog.a_living_enemy_reserve'));
+      if (conds.length) return unmet(...conds.map((c) => ({ condition: c, detail: $E('clashlog.ordinary_attack_use_kept_2') })));
+      self.state.used = true; api.activate(self, $E('clashlog.bank_shot_primary_into_the_shield'), { targetId: foeId }); api.executed(self);
       return { kind: 'run', run: (a, s) => {
-        const p = a.strike(s, foeId, { tag: 'special', mult: 1, strikeKey: 'primary', label: 'Bank Shot primary' });
+        const p = a.strike(s, foeId, { tag: 'special', mult: 1, strikeKey: 'primary', label: $E('clashlog.bank_shot_primary') });
         if (p.decided) return true;
         const me = a.me(s);
-        if (!(p.shieldDamage >= 1)) { a.cleanup(s, 'no ricochet: the primary removed no shield HP'); return false; }
-        if (me.koed || (me.stunned && !me.stunProtected)) { a.cleanup(s, 'ricochet canceled: the source is knocked out or Stunned'); return false; }
-        const last = a.enemyReserves(s).slice(-1)[0]; if (!last) { a.cleanup(s, 'no ricochet: no living enemy reserve'); return false; }
-        a.activate(s, `ricochet ${byTier(RICOCHET, s.tier)}% at the last enemy reserve ${last.name}`, { targetId: last.id });
-        return a.strike(s, last.id, { tag: 'followUp', mult: byTier(RICOCHET, s.tier) / 100, strikeKey: 'ricochet', label: 'Bank Shot ricochet' }).decided;
+        if (!(p.shieldDamage >= 1)) { a.cleanup(s, $E('clashlog.no_ricochet_the_primary_removed_no')); return false; }
+        if (me.koed || (me.stunned && !me.stunProtected)) { a.cleanup(s, $E('clashlog.ricochet_canceled_the_source_is_knocked')); return false; }
+        const last = a.enemyReserves(s).slice(-1)[0]; if (!last) { a.cleanup(s, $E('clashlog.no_ricochet_no_living_enemy_reserve')); return false; }
+        a.activate(s, `${$E('clashlog.ricochet_at_the_last_enemy_reserve', { byTier: byTier(RICOCHET, s.tier), name: last.name })}`, { targetId: last.id });
+        return a.strike(s, last.id, { tag: 'followUp', mult: byTier(RICOCHET, s.tier) / 100, strikeKey: 'ricochet', label: $E('clashlog.bank_shot_ricochet') }).decided;
       } };
     },
   },

@@ -21,6 +21,7 @@
 // on a selected passing play is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { byMastery, scrimmage, ready, spend, countPlay, disabled, nearestClear, positionOf } from './nature-electric-common.js';
+import { E as $E } from '../../core/english.js';
 
 export const GUARD_PCT = [60, 65, 70, 75];
 export const STORMGUARD = Object.freeze({ cooldown: 5, spacing: 1.7, clearance: 1.0, attrs: ['strength', 'blocking', 'speed', 'agility', 'awareness'] });
@@ -40,13 +41,13 @@ export default registerAbility({
         return nearestClear(ctx, cands.filter((p) => p.x < 0 && (p.y - end) * side >= 0.9), ix, iy, STORMGUARD.clearance);
       };
       const L = spotFor(-1), R = spotFor(1);
-      if (!L || !R || Math.hypot(L.x - R.x, L.y - R.y) < STORMGUARD.clearance) { ctx.log(`${self.name} has no room for Stormguard`, { kind: 'ability_blocked', by: self.slot, side: self.team, ability: 'ELE-06-F' }); return; }
+      if (!L || !R || Math.hypot(L.x - R.x, L.y - R.y) < STORMGUARD.clearance) { ctx.log(`${$E('sim.has_no_room_for_stormguard', { name: self.name })}`, { kind: 'ability_blocked', by: self.slot, side: self.team, ability: 'ELE-06-F' }); return; }
       const pct = byMastery(GUARD_PCT, self.mastery) / 100; const base = self.baseAttrs || self.attrs; const attrs = {};
       for (const k of STORMGUARD.attrs) attrs[k] = Math.max(1, Math.round((base[k] ?? 60) * pct));
-      const guards = [['GDL', L], ['GDR', R]].map(([slot, p]) => ctx.spawn({ team: 'off', slot, mid: `${self.mid}~${slot}`, name: `${self.name}'s Stormguard`, attrs, x: p.x, y: p.y,
+      const guards = [['GDL', L], ['GDR', R]].map(([slot, p]) => ctx.spawn({ team: 'off', slot, mid: `${self.mid}~${slot}`, name: `${$E('sim.s_stormguard', { name: self.name })}`, attrs, x: p.x, y: p.y,
         assignment: { a: 'block', points: [[p.x, p.y], [p.x - 1.2, p.y]] }, credit: null, immune: new Set(['*']), envImmune: true, noTackle: true, noBall: true, fixedJob: true, guardOf: self.mid }));
       spend(st, STORMGUARD.cooldown); ctx.executed(self);
-      ctx.log(`${self.name} summons Stormguard`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ELE-06-F', guards: guards.map((g) => [g.slot, +g.x.toFixed(2), +g.y.toFixed(2)]) });
+      ctx.log(`${$E('sim.summons_stormguard', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ELE-06-F', guards: guards.map((g) => [g.slot, +g.x.toFixed(2), +g.y.toFixed(2)]) });
     },
     playEnd(ctx, self) { countPlay(ctx, self, ctx.state(self), 'off'); },
   },

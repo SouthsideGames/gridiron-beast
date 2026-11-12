@@ -5,6 +5,7 @@
 // normally. A use not spent before a KO by an uncovered mechanism stays unused on revival; revival does not refresh a spent use. Same at
 // every mastery. The B3 8e pre-KO hook on every damage path. Mastery execution: the survival.
 import { registerClashAbility } from '../t8/registry.js';
+import { E as $E } from '../../core/english.js';
 
 export default registerClashAbility({
   family: 'rootram', abilityId: 'NAT-03-C',
@@ -13,7 +14,7 @@ export default registerClashAbility({
   hooks: {
     preKO(api, self) {
       if (self.state.used) return null;
-      self.state.used = true; api.trigger(self, 'a damage event would knock Bramblet out'); api.executed(self);
+      self.state.used = true; api.trigger(self, $E('clashlog.a_damage_event_would_knock_bramblet')); api.executed(self);
       return { survive: true, abilityId: 'NAT-03-C' };
     },
   },

@@ -17,6 +17,7 @@
 // play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { stageOf, scrimmage, byMastery } from './fw-util.js';
+import { E as $E } from '../../core/english.js';
 
 export const PYRE = Object.freeze({ width: 6, length: 4, charges: 3, slowByStage: [15, 20], lifetimeByMastery: [1, 2, 3, 4] });
 
@@ -34,7 +35,7 @@ export default registerAbility({
       const st = ctx.state(self); self.pyre = { spawn: false };
       if (self.team === 'def' && st.queued && ctx.createdFor(self.mid)) {
         st.queued = false; st.bar = 0; self.pyre.spawn = true; ctx.executed(self);
-        ctx.log(`${self.name}'s Impact Pyre blooms`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-02-F', x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
+        ctx.log(`${$E('sim.s_impact_pyre_blooms', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-02-F', x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
       }
     },
     playEnd(ctx, self, s) {
@@ -43,7 +44,7 @@ export default registerAbility({
       if (self.pyre?.spawn || st.queued || st.bar >= PYRE.charges) return; // the spawn play earns nothing; no charging while full
       if (!credited({ ...ctx.stats, result: s.result }, self.slot) || !ctx.canGainCharge(self)) return;
       st.bar += 1; // at most one charge a play
-      ctx.log(`${self.name}'s Impact Pyre charges (${st.bar}/${PYRE.charges})`, { kind: 'ability_charge', by: self.slot, side: self.team, ability: 'FIR-02-F', charges: st.bar });
+      ctx.log(`${$E('sim.s_impact_pyre_charges', { name: self.name, bar: st.bar, charges: PYRE.charges })}`, { kind: 'ability_charge', by: self.slot, side: self.team, ability: 'FIR-02-F', charges: st.bar });
       if (st.bar >= PYRE.charges) {
         st.queued = true;
         ctx.queueField({ owner: self.mid, ownerTeam: ctx.sideOf(self), side: 'def', type: 'Fire', ability: 'FIR-02-F', strength: PYRE.slowByStage[stageOf(self.form)] ?? PYRE.slowByStage[0],

@@ -10,6 +10,7 @@
 // (D10). Mastery execution: the roll.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const CHANCE = [60, 70, 80, 90]; const TURNS = 2; const REDIRECT = 25;
 
@@ -23,9 +24,9 @@ export default registerClashAbility({
       const foe = api.foe(self); if (!foe) return;
       const ok = !foe.status || (foe.status.id === 'confused' && foe.status.applications < 3);
       if (!ok) return;
-      st.used = true; api.trigger(self, `${foe.name} can accept Confused`, { targetId: foe.id }); api.executed(self);
-      if (api.rng.chance(byTier(CHANCE, self.tier) / 100, self, 'Eclipse Call application')) { api.activate(self, 'Confused application', { targetId: foe.id }); api.applyStatus(self, foe.id, { id: 'confused', strength: REDIRECT, duration: TURNS, payload: { redirectPct: REDIRECT } }); }
-      else api.cleanup(self, 'the application roll failed: the use is spent');
+      st.used = true; api.trigger(self, `${$E('clashlog.can_accept_confused', { name: foe.name })}`, { targetId: foe.id }); api.executed(self);
+      if (api.rng.chance(byTier(CHANCE, self.tier) / 100, self, $E('clashlog.eclipse_call_application'))) { api.activate(self, $E('clashlog.confused_application'), { targetId: foe.id }); api.applyStatus(self, foe.id, { id: 'confused', strength: REDIRECT, duration: TURNS, payload: { redirectPct: REDIRECT } }); }
+      else api.cleanup(self, $E('clashlog.the_application_roll_failed_the_use'));
     },
   },
   review: {

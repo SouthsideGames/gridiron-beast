@@ -12,6 +12,7 @@
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, byStage, isNormal } from './util.js';
 import { decisionsPlan } from '../t8/review.js';
+import { E as $E } from '../../core/english.js';
 
 const GRIP = [[3, 4, 5, 6], [4, 5, 6, 7]]; const COOLDOWN = 3;
 
@@ -25,25 +26,25 @@ export default registerClashAbility({
       const l = info.landed.find((x) => x.id === info.target); const t = api.get(info.target);
       if (!l || (l.loss <= 0 && l.poolLoss <= 0) || t.koed || t.side === self.side) return null;
       st.markId = t.id; st.gripLeft = byTier(byStage(GRIP, self.stage), self.tier); api.cooldown(self, COOLDOWN); api.executed(self);
-      api.activate(self, `${t.name} is gripped (${st.gripLeft} of its turns)`, { targetId: t.id });
+      api.activate(self, `${$E('clashlog.is_gripped_of_its_turns', { name: t.name, gripLeft: st.gripLeft })}`, { targetId: t.id });
       return null;
     },
     anyEndOfTurn(api, self, { id }) {
       const st = self.state;
       if (st.pending && id === st.pending.targetId && api.get(id).turns > st.pending.waitFor) { const p = st.pending; st.pending = null; api.queueRotation(self, p.side, p.outId, p.inId); }
-      if (st.markId && id === st.markId) { st.gripLeft -= 1; if (st.gripLeft <= 0) { st.markId = null; api.cleanup(self, 'the unused grip expires'); } }
+      if (st.markId && id === st.markId) { st.gripLeft -= 1; if (st.gripLeft <= 0) { st.markId = null; api.cleanup(self, $E('clashlog.the_unused_grip_expires')); } }
     },
     rotationDelay(api, self, { side, out, in: inId, reason }) {
       const st = self.state; if (!st.markId || out !== st.markId) return null;
-      if (reason === 'relay' && !api.provisional(self, 'feather-relay-voluntary', 'a Feather Relay rotation of the gripped monster')) return null;
+      if (reason === 'relay' && !api.provisional(self, 'feather-relay-voluntary', $E('clashlog.a_feather_relay_rotation_of_the'))) return null;
       st.pending = { side, outId: out, inId, targetId: out, waitFor: api.get(out).turns }; st.markId = null;
-      api.activate(self, `the grip delays ${api.get(out).name}'s rotation until after its next normal turn`, { targetId: out });
+      api.activate(self, `${$E('clashlog.the_grip_delays_s_rotation_until', { name: api.get(out).name })}`, { targetId: out });
       return { delay: true, abilityId: 'FIR-02-C' };
     },
     anyDeparture(api, self, { id, reason }) {
       const st = self.state; if (reason !== 'forced') return;
-      if (st.markId === id) { st.markId = null; api.cleanup(self, 'a forced swap removes the grip'); }
-      if (st.pending?.outId === id) { st.pending = null; api.cleanup(self, 'a forced swap cancels the pending rotation'); }
+      if (st.markId === id) { st.markId = null; api.cleanup(self, $E('clashlog.a_forced_swap_removes_the_grip')); }
+      if (st.pending?.outId === id) { st.pending = null; api.cleanup(self, $E('clashlog.a_forced_swap_cancels_the_pending')); }
     },
     onKO(api, self) { const st = self.state; st.markId = null; if (st.pending) { const p = st.pending; st.pending = null; api.queueRotation(self, p.side, p.outId, p.inId); } },
   },

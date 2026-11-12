@@ -16,6 +16,7 @@
 // Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the zone is
 // created at the next defensive snap (out of play: not gated); banking it is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
+import { E as $E } from '../../core/english.js';
 
 export const MIND_BEND = Object.freeze({ width: 8, length: 6, span: [-9, -3], pull: 20 });
 const LIFETIME = [1, 1, 2, 2];
@@ -28,7 +29,7 @@ export default registerAbility({
   hooks: {
     playStart(ctx, self) {
       const st = ctx.state(self);
-      if (ctx.createdFor(self.mid)) { st.banked = false; st.cd = COOLDOWN[self.mastery] ?? COOLDOWN[0]; st.fresh = true; ctx.log(`${self.name}'s Mind Bend folds the backfield`, { kind: 'ability', by: self.slot, side: self.team, ability: 'PSY-01-F', field: 'Psychic' }); }
+      if (ctx.createdFor(self.mid)) { st.banked = false; st.cd = COOLDOWN[self.mastery] ?? COOLDOWN[0]; st.fresh = true; ctx.log(`${$E('sim.s_mind_bend_folds_the_backfield', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'PSY-01-F', field: 'Psychic' }); }
     },
     playEnd(ctx, self, s) {
       const st = ctx.state(self); if (self.team !== 'def' || !scrimmage(ctx)) return;
@@ -39,7 +40,7 @@ export default registerAbility({
         st.banked = true; ctx.executed(self);
         ctx.queueField({ requireAble: true, owner: self.mid, ownerTeam: ctx.teamSide === 'home' ? 'away' : ctx.teamSide === 'away' ? 'home' : null, side: 'defense', type: 'Psychic', ability: 'PSY-01-F', strength: MIND_BEND.pull,
           lifetime: LIFETIME[self.mastery] ?? LIFETIME[0], clock: 'ownerDefense', width: MIND_BEND.width, length: MIND_BEND.length, span: MIND_BEND.span, centerOn: 'ball' });
-        ctx.log(`${self.name} banks a Mind Bend`, { kind: 'ability', by: self.slot, side: self.team, ability: 'PSY-01-F' });
+        ctx.log(`${$E('sim.banks_a_mind_bend', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'PSY-01-F' });
       }
     },
   },

@@ -9,6 +9,7 @@
 // prompt is the D1 battle-screen work, S13/S14). Mastery execution: the charged attack.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, isNormal, SPAR } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [130, 135, 140, 145];
 
@@ -19,14 +20,14 @@ export default registerClashAbility({
   hooks: {
     chooseAction(api, self, { foeId }) {
       if (!foeId || self.state.count % 2 !== 1) return null;
-      api.activate(self, `charged attack at ${byTier(POWER, self.tier)}%`, { targetId: foeId }); api.executed(self);
+      api.activate(self, `${$E('clashlog.charged_attack_at', { byTier: byTier(POWER, self.tier) })}`, { targetId: foeId }); api.executed(self);
       return { kind: 'run', run: (a, s) => {
-        const r = a.strike(s, foeId, { tag: 'special', mult: byTier(POWER, s.tier) / 100, strikeKey: 'charged', label: 'Riptide Charge' });
+        const r = a.strike(s, foeId, { tag: 'special', mult: byTier(POWER, s.tier) / 100, strikeKey: 'charged', label: $E('clashlog.riptide_charge') });
         if (r.decided) return true;
         const t = a.get(foeId);
-        if (!r.landed) { a.cleanup(s, 'evaded: no rotation, the charge is spent'); return false; }
+        if (!r.landed) { a.cleanup(s, $E('clashlog.evaded_no_rotation_the_charge_is')); return false; }
         if (t.koed) return false; // ordinary KO replacement already happened
-        if (!a.enemyReserves(s).length) { a.cleanup(s, 'no living reserve: damage only'); return false; }
+        if (!a.enemyReserves(s).length) { a.cleanup(s, $E('clashlog.no_living_reserve_damage_only')); return false; }
         a.forcedRotation(s, t.side, { incoming: 'firstReserve' });
         return false;
       } };

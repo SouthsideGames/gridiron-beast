@@ -14,6 +14,7 @@
 // next tackle contest is the live activation (gated: denied, no pounce on that attempt and nothing spent); per-play preparation, no
 // game-scope charge.
 import { registerAbility } from './registry.js';
+import { E as $E } from '../../core/english.js';
 
 export const POUNCE = Object.freeze({ form: [5, 10, 15], mastery: [0, 3, 6, 9], cap: 0.8 });
 const stageOf = (form) => Number(String(form).split(':')[1] || 0);
@@ -32,7 +33,7 @@ export default registerAbility({
       pc.tried = true; ctx.executed(self);
       const bonus = ((POUNCE.form[stageOf(self.form)] ?? POUNCE.form[0]) + (POUNCE.mastery[self.mastery] ?? 0)) / 100;
       const brk = Math.min(POUNCE.cap, (1 - p) + bonus);
-      ctx.log(`${self.name} pounces at ${tackler.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DRA-01-F', victim: tackler.slot, breakChance: +brk.toFixed(3), ordinary: +(1 - p).toFixed(3) });
+      ctx.log(`${$E('sim.pounces_at', { name: self.name, name2: tackler.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DRA-01-F', victim: tackler.slot, breakChance: +brk.toFixed(3), ordinary: +(1 - p).toFixed(3) });
       return 1 - brk;
     },
   },

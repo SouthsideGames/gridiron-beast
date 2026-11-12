@@ -14,8 +14,11 @@ const imports = (f) => [...fs.readFileSync(path.join(ROOT, f), 'utf8').matchAll(
 // Task 8 M4 S2: the t8 engine shares the ONE status gate with football (spec §10). src/sim/t8/status.js is pure and imports nothing,
 // so it is whitelisted as the single src/sim file src/clash may import; the purity scan below covers it too.
 const SHARED_GATE = 'src/sim/t8/status.js';
-test('boundary: src/clash imports only core/rng, data, the shared status gate and itself; src/sim and src/core never import src/clash; in src/franchise only clash-link.js does', () => {
-  for (const f of files('src/clash')) for (const i of imports(f)) assert.ok(i.startsWith('src/clash/') || i === 'src/core/rng.js' || i.startsWith('src/data/') || i === SHARED_GATE, `${f} imports ${i}`);
+const ENGLISH = 'src/core/english.js';
+test('boundary: src/clash imports only core/rng, the English log reader, data, the shared status gate and itself; src/sim and src/core never import src/clash; in src/franchise only clash-link.js does', () => {
+  for (const f of files('src/clash')) for (const i of imports(f)) assert.ok(i.startsWith('src/clash/') || i === 'src/core/rng.js' || i === ENGLISH || i.startsWith('src/data/') || i === SHARED_GATE, `${f} imports ${i}`);
+  // the battle log's wording (central text, stage 6): the always-English reader, which reaches the English text file and nothing else
+  assert.deepEqual(imports(ENGLISH).sort(), ['src/text/en.js', 'src/text/lines.js']); assert.deepEqual(imports('src/text/lines.js'), []); assert.deepEqual(imports('src/text/en.js'), []);
   assert.deepEqual(imports(SHARED_GATE), [], 'the shared status gate imports nothing');
   for (const dir of ['src/sim', 'src/core']) for (const f of files(dir)) for (const i of imports(f)) assert.ok(!i.startsWith('src/clash'), `${f} imports ${i}`);
   for (const f of files('src/franchise')) for (const i of imports(f)) if (f !== 'src/franchise/clash-link.js') assert.ok(!i.startsWith('src/clash'), `${f} imports ${i} (only clash-link.js may)`);

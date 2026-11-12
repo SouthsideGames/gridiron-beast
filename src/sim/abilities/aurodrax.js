@@ -18,6 +18,7 @@
 // throw is the live activation (gated: the charged throw is kept); streak progress is an in-play charge gain (gated: a suppressed play
 // adds no progress; the ordinary reset rules still apply).
 import { registerAbility } from './registry.js';
+import { E as $E } from '../../core/english.js';
 
 export const SOVEREIGN = Object.freeze({ yards: [12, 10, 8, 6], streak: 3 });
 const COMPLETE = (r) => !['incomplete', 'interception', 'fumble', 'throwaway', 'sack', 'touchback_return'].includes(r);
@@ -31,18 +32,18 @@ export default registerAbility({
       const st = ctx.state(self); if (self.team !== 'off' || ctx.kickoff || ctx.stats.passer !== self.slot || !st.charged || st.used) return;
       if (!ctx.canStartSignature(self)) return; // denied: the charged throw is kept (nothing spent)
       st.charged = false; st.used = true; self.sov.protected = true; ball.t8.noInterception = true; ctx.executed(self);
-      ctx.log(`${self.name}'s Sovereign Arm guards the throw`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DRA-06-F' });
+      ctx.log(`${$E('sim.s_sovereign_arm_guards_the_throw', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DRA-06-F' });
     },
     playEnd(ctx, self, s) {
       if (self.team !== 'off' || ctx.kickoff || ctx.twoPoint) return;
       const st = ctx.state(self); const denied = self.sov?.protected ? ctx.ball.t8?.denied : null;
       if (denied) {
         ctx.queueAbsence({ mid: denied.mid, serveOn: ctx.teamSide, ability: 'DRA-06-F', by: self.mid });
-        ctx.log(`A spectral dragon swallows ${denied.name}`, { kind: 'dragon_swallow', by: self.slot, side: self.team, ability: 'DRA-06-F', victim: denied.slot });
+        ctx.log(`${$E('sim.a_spectral_dragon_swallows', { name: denied.name })}`, { kind: 'dragon_swallow', by: self.slot, side: self.team, ability: 'DRA-06-F', victim: denied.slot });
       }
       const qualifying = s.receiver && ctx.stats.passer === self.slot && COMPLETE(s.result) && s.gain >= (SOVEREIGN.yards[self.mastery] ?? SOVEREIGN.yards[0]);
       st.streak = qualifying ? st.streak + (ctx.canGainCharge(self) ? 1 : 0) : 0; // a suppressed play adds no charge progress
-      if (st.streak >= SOVEREIGN.streak) { st.streak = 0; if (!st.used && !st.charged) { st.charged = true; ctx.log(`${self.name}'s Sovereign Arm is charged`, { kind: 'ability_ready', by: self.slot, side: self.team, ability: 'DRA-06-F' }); } }
+      if (st.streak >= SOVEREIGN.streak) { st.streak = 0; if (!st.used && !st.charged) { st.charged = true; ctx.log(`${$E('sim.s_sovereign_arm_is_charged', { name: self.name })}`, { kind: 'ability_ready', by: self.slot, side: self.team, ability: 'DRA-06-F' }); } }
     },
   },
 });

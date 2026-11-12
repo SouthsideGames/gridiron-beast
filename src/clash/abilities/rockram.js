@@ -9,6 +9,7 @@
 // consumption, ordinary-only perks or retaliation chain (reaction). A contested Stone Divide target. Mastery execution: the rock.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, byStage } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [[60, 65, 70, 75], [70, 75, 80, 85]]; const COOLDOWN = [5, 4, 3, 2];
 
@@ -20,14 +21,14 @@ export default registerClashAbility({
     healed(api, self, { targetId, amount, kind }) {
       const st = self.state; const me = api.me(self); const t = api.get(targetId);
       if (st.pending || amount <= 0 || !me.active || me.koed || !t.active || t.side === self.side || !api.ready(self)) return;
-      st.pending = true; api.trigger(self, `${t.name} restored ${amount} HP (${kind})`, { targetId });
+      st.pending = true; api.trigger(self, `${$E('clashlog.restored_hp', { name: t.name, amount, kind })}`, { targetId });
       api.defer(self, (a, s) => {
         s.state.pending = false; const m = a.me(s); const tt = a.get(targetId);
-        if (!a.ready(s) || m.koed || !m.active || m.stunned) { a.cleanup(s, 'the source cannot act now: readiness kept'); return; }
-        if (tt.koed || !tt.active) { a.cleanup(s, 'the healed enemy is no longer active: readiness kept'); return; }
+        if (!a.ready(s) || m.koed || !m.active || m.stunned) { a.cleanup(s, $E('clashlog.the_source_cannot_act_now_readiness')); return; }
+        if (tt.koed || !tt.active) { a.cleanup(s, $E('clashlog.the_healed_enemy_is_no_longer')); return; }
         const pctV = byTier(byStage(POWER, s.stage), s.tier);
-        a.activate(s, `rock at ${pctV}%`, { targetId }); a.cooldown(s, byTier(COOLDOWN, s.tier)); a.executed(s);
-        a.strike(s, targetId, { tag: 'reaction', mult: pctV / 100, strikeKey: 'rock', label: 'Rubble Reprisal' });
+        a.activate(s, `${$E('clashlog.rock_at', { pctV })}`, { targetId }); a.cooldown(s, byTier(COOLDOWN, s.tier)); a.executed(s);
+        a.strike(s, targetId, { tag: 'reaction', mult: pctV / 100, strikeKey: 'rock', label: $E('clashlog.rubble_reprisal') });
       });
     },
   },

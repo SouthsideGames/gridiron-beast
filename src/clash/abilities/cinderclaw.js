@@ -9,6 +9,7 @@
 // the winner. Owner KO otherwise removes the brand. The eruption is a contested Stone Divide target. Mastery execution: the branding.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, isNormal, SPAR } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const ERUPT = [20, 25, 30, 35]; const TURNS = 4; const CHARGES = 2;
 const COUNTED = new Set(['ordinary', 'special', 'followUp', 'delayed', 'commanded', 'assist']);
@@ -22,12 +23,12 @@ export default registerClashAbility({
       const st = self.state; if (st.used || info.attacker !== self.id || !isNormal(info.tag)) return null;
       const l = info.landed.find((x) => x.id === info.target); if (!l || (l.loss <= 0 && l.poolLoss <= 0) || api.get(info.target).koed) return null;
       st.used = true; st.markId = info.target; st.charges = CHARGES; st.turnsLeft = TURNS;
-      api.activate(self, `${api.get(info.target).name} is branded (2 eruptions, 4 of its turns)`, { targetId: info.target }); api.executed(self);
+      api.activate(self, `${$E('clashlog.is_branded_2_eruptions_4_of', { name: api.get(info.target).name })}`, { targetId: info.target }); api.executed(self);
       return null;
     },
     anyEndOfTurn(api, self, { id }) {
       const st = self.state; if (!st.markId || id !== st.markId) return;
-      st.turnsLeft -= 1; if (st.turnsLeft <= 0) { st.markId = null; st.charges = 0; api.cleanup(self, 'the brand expires'); }
+      st.turnsLeft -= 1; if (st.turnsLeft <= 0) { st.markId = null; st.charges = 0; api.cleanup(self, $E('clashlog.the_brand_expires')); }
     },
     // The per-hit reaction step runs before the hit's knockouts are settled (B3 rule 6), so a lethal hit still erupts (rule 3) and both
     // knockouts settle before the winner. One eruption per attack (a multi-hit counts once).
@@ -36,10 +37,10 @@ export default registerClashAbility({
       const seq = api.curAttack()?.seq; if (st.lastSeq === seq) return null;
       const l = info.landed.find((x) => x.id === self.id); if (!l || (l.loss <= 0 && l.poolLoss <= 0)) return null;
       st.lastSeq = seq; const me = api.me(self); const mark = st.markId; st.charges -= 1;
-      api.activate(self, `eruption on ${api.get(mark).name}${me.koed ? ' (lethal hit: it still erupts)' : ''}`, { targetId: mark });
+      api.activate(self, `${$E('clashlog.eruption_on', { name: api.get(mark).name, koed: me.koed ? $E('clashlog.lethal_hit_it_still_erupts') : '' })}`, { targetId: mark });
       if (me.koed || st.charges <= 0) { st.markId = null; st.charges = 0; }
-      api.strike(self, mark, { tag: 'reaction', mult: byTier(ERUPT, self.tier) / 100, strikeKey: 'eruption', label: 'Molten Brand eruption', ...(me.koed ? { exception: 'FIR-04-C' } : {}) });
-      if (!st.markId) api.cleanup(self, me.koed ? 'the remaining charge disappears with the owner' : 'both charges used');
+      api.strike(self, mark, { tag: 'reaction', mult: byTier(ERUPT, self.tier) / 100, strikeKey: 'eruption', label: $E('clashlog.molten_brand_eruption'), ...(me.koed ? { exception: 'FIR-04-C' } : {}) });
+      if (!st.markId) api.cleanup(self, me.koed ? $E('clashlog.the_remaining_charge_disappears_with_the') : 'both charges used');
       return null;
     },
     anyKO(api, self, { id }) { if (self.state.markId === id) { self.state.markId = null; self.state.charges = 0; } },

@@ -6,6 +6,7 @@
 // arrives, and how close each defender can get to that spot by then (reaction + closing speed, not a straight-line guess).
 // The quarterback sees that window through his Awareness (noise, fixation, missed defenders), turns it into odds with
 // `throwOdds`, and compares the throw's quality with a bar that falls as the play goes on and when pressure arrives.
+import { E as $E } from '../core/english.js';
 
 export const QB_MODEL_VERSION = 1;
 const norm = (v) => Math.max(1, Math.min(99, v)) / 99;
@@ -76,4 +77,4 @@ export function rejectReason({ ready, reachable, m1, m2, lane, quality, bar }) {
   if (quality < bar) return 'tight';
   return 'open';
 }
-export const REASON_TEXT = Object.freeze({ open: 'Open', double: 'Double coverage', lane: 'Throwing lane blocked', covered: 'Covered', tight: 'Window too tight', not_ready: 'Route not developed', out_of_range: 'Out of range', noticed: 'Spotted open', pressure: 'Pressure arriving', fixed: 'Locked on' });
+export const REASON_TEXT = Object.freeze({ open: 'Open', double: $E('sim.double_coverage'), lane: $E('sim.throwing_lane_blocked'), covered: 'Covered', tight: $E('sim.window_too_tight'), not_ready: $E('sim.route_not_developed_2'), out_of_range: $E('sim.out_of_range_2'), noticed: $E('sim.spotted_open'), pressure: $E('sim.pressure_arriving'), fixed: $E('sim.locked_on') });

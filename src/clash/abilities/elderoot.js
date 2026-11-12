@@ -8,6 +8,7 @@
 // healing is LOST and is not redistributed. Once per Clash; same at every mastery. Mastery execution: the redistribution.
 import { registerClashAbility } from '../t8/registry.js';
 import { apportionHp } from '../t8/apportion.js';
+import { E as $E } from '../../core/english.js';
 
 const LINE = 25;
 
@@ -23,9 +24,9 @@ export default registerClashAbility({
       if (!low.length) return null;
       const plan = apportionHp(allies.map((v) => ({ id: v.id, hp: v.hp, maxHp: v.maxHp, healFactor: api.healFactor(v.id) })));
       if (!low.some((v) => plan.find((p) => p.id === v.id).after > v.hp)) return null;
-      self.state.used = true; api.trigger(self, `${low.map((v) => v.name).join(', ')} at or below ${LINE}% max HP`); api.executed(self);
-      api.activate(self, 'redistribute current HP toward the common percentage');
-      for (const p of plan) if (p.after !== p.before) api.setHp(self, p.id, p.after, p.lost ? `apportioned; ${p.lost} healing lost to Healing Reduced` : 'apportioned');
+      self.state.used = true; api.trigger(self, `${low.map((v) => v.name).join(', ')} ${$E('clashlog.at_or_below_max_hp', { line: LINE })}`); api.executed(self);
+      api.activate(self, $E('clashlog.redistribute_current_hp_toward_the_common'));
+      for (const p of plan) if (p.after !== p.before) api.setHp(self, p.id, p.after, p.lost ? `${$E('clashlog.apportioned_healing_lost_to_healing_reduced', { lost: p.lost })}` : 'apportioned');
       return { kind: 'done' };
     },
   },

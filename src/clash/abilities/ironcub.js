@@ -7,6 +7,7 @@
 // RULING ('forge-swipe-duration') in normal gameplay (the count still resets, as for a blocked attempt). Mastery execution: the attempt.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, byStage, SPAR } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const EMP = [10, 15]; const LADDER = [1, 2, 2, 3]; const CORE = 2; const EVERY = 3;
 
@@ -23,8 +24,8 @@ export default registerClashAbility({
       api.trigger(self, 'third performed normal attack resolved');
       const ladder = byTier(LADDER, self.tier);
       let turns = ladder;
-      if (ladder !== CORE) { if (!api.provisional(self, 'forge-swipe-duration', `Core ${CORE} turns against Progression ${ladder} at this tier`)) { api.cleanup(self, 'count reset; the Empowered attempt awaits the duration ruling'); return; } turns = api.flags.coreVsProgression.value === 'core' ? CORE : ladder; }
-      api.executed(self); api.activate(self, `self Empowered +${byStage(EMP, self.stage)}% for ${turns} owner turn${turns === 1 ? '' : 's'}`);
+      if (ladder !== CORE) { if (!api.provisional(self, 'forge-swipe-duration', `${$E('clashlog.core_turns_against_progression_at_this', { core: CORE, ladder })}`)) { api.cleanup(self, $E('clashlog.count_reset_the_empowered_attempt_awaits')); return; } turns = api.flags.coreVsProgression.value === 'core' ? CORE : ladder; }
+      api.executed(self); api.activate(self, `${$E('clashlog.self_empowered_for_owner_turns', { byStage: byStage(EMP, self.stage), turns, n: turns })}`);
       api.applyStatus(self, self.id, { id: 'empowered', strength: byStage(EMP, self.stage), duration: turns });
     },
   },

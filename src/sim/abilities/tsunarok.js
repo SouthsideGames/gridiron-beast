@@ -20,6 +20,7 @@
 import { registerAbility } from './registry.js';
 import { FIELD } from '../../core/field.js';
 import { scrimmage, byMastery, cooldownStep } from './fw-util.js';
+import { E as $E } from '../../core/english.js';
 
 export const TSUNAMI = Object.freeze({ safetyDepth: 12, length: 5, lifetime: 2, cooldown: 5, slipByMastery: [30, 32, 34, 36] });
 
@@ -35,7 +36,7 @@ export default registerAbility({
       st.cd = TSUNAMI.cooldown; ctx.executed(self); // set after this play's step: the interception play is excluded
       ctx.queueField({ owner: self.mid, ownerTeam: ctx.sideOf(self), offField: true, type: 'Water', ability: 'WAT-06-F', strength: byMastery(TSUNAMI.slipByMastery, self.mastery),
         lifetime: TSUNAMI.lifetime, clock: 'scrimmageAny', width: FIELD.width, length: TSUNAMI.length, lbDepth: TSUNAMI.safetyDepth, clearsAtHalftime: false });
-      ctx.log(`${self.name} calls down a Tsunami Line`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-06-F', phase: 'earned' });
+      ctx.log(`${$E('sim.calls_down_a_tsunami_line', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-06-F', phase: 'earned' });
     },
   },
 });

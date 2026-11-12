@@ -12,6 +12,7 @@
 // commanded attacks are contested Stone Divide targets. Mastery execution: the first commanded launch.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [50, 60, 70, 80];
 
@@ -27,13 +28,13 @@ export default registerClashAbility({
       return { kind: 'run', run: (a, s) => {
         const initial = foeId; let first = true;
         for (const v of cmd) {
-          if (a.get(initial).koed || !a.get(initial).active) { a.cleanup(s, 'the initial enemy active is gone: the remaining commands are canceled'); break; }
-          if (first) { s.state.used = true; a.activate(s, `${cmd.length} enemy reserve(s) commanded at ${byTier(POWER, s.tier)}%`); a.executed(s); first = false; }
-          const r = a.commandStrike(s, v.id, initial, { tag: 'commanded', mult: byTier(POWER, s.tier) / 100, confusable: true, strikeKey: 'commanded', label: 'Astral command' });
+          if (a.get(initial).koed || !a.get(initial).active) { a.cleanup(s, $E('clashlog.the_initial_enemy_active_is_gone')); break; }
+          if (first) { s.state.used = true; a.activate(s, `${$E('clashlog.enemy_reserve_s_commanded_at', { n: cmd.length, byTier: byTier(POWER, s.tier) })}`); a.executed(s); first = false; }
+          const r = a.commandStrike(s, v.id, initial, { tag: 'commanded', mult: byTier(POWER, s.tier) / 100, confusable: true, strikeKey: 'commanded', label: $E('clashlog.astral_command') });
           if (r.decided) return true;
         }
         const tgt = a.foe(s); if (!tgt) return true;
-        return a.strike(s, tgt.id, { tag: 'ordinary', mult: 1, strikeKey: 'own attack', label: 'Astralux attack', exception: 'PSY-06-C' }).decided;
+        return a.strike(s, tgt.id, { tag: 'ordinary', mult: 1, strikeKey: 'own attack', label: $E('clashlog.astralux_attack'), exception: 'PSY-06-C' }).decided;
       } };
     },
   },

@@ -20,6 +20,7 @@
 // gain (gated).
 import { registerAbility } from './registry.js';
 import { able, scrimmage, byMastery } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const FORTRESS = Object.freeze({ width: [1.5, 2, 2.5, 3], thickness: 0.5, gap: 1, plays: 3, maxGain: 3, body: 0.35 });
 
@@ -64,11 +65,11 @@ export default registerAbility({
       const st = ctx.state(self); if (!st.armed || !able(ctx, self)) return;
       if (ctx.drive != null && st.usedDrive === ctx.drive) return; // once per defensive possession
       const { panels, refusal: why } = safePanels(self.x, self.y, self.mastery, ctx.bounds, ctx.actors.filter((a) => a !== self)); // N8b: longest safe panels
-      if (why) { ctx.log(`${self.name}'s Fortress Gate finds no safe ground (${why})`, { kind: 'ability_blocked', by: self.slot, side: self.team, ability: 'MET-06-F', reason: why }); return; } // bar and use kept
+      if (why) { ctx.log(`${$E('sim.s_fortress_gate_finds_no_safe', { name: self.name, why })}`, { kind: 'ability_blocked', by: self.slot, side: self.team, ability: 'MET-06-F', reason: why }); return; } // bar and use kept
       if (!ctx.canStartSignature(self)) return; // denied: bar and use kept
       for (const p of panels) ctx.addObstacle({ ...p, owner: self.mid, ability: 'MET-06-F', kind: 'gate' });
       st.armed = false; st.count = 0; st.usedDrive = ctx.drive; self.gate.activated = true; ctx.executed(self);
-      ctx.log(`${self.name} raises the Fortress Gate`, { kind: 'ability', by: self.slot, side: self.team, ability: 'MET-06-F', panels: panels.map((p) => [p.x0, p.x1, p.y0, p.y1].map((v) => +v.toFixed(2))) });
+      ctx.log(`${$E('sim.raises_the_fortress_gate', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'MET-06-F', panels: panels.map((p) => [p.x0, p.x1, p.y0, p.y1].map((v) => +v.toFixed(2))) });
     },
     playEnd(ctx, self, s) {
       if (self.team !== 'def' || !scrimmage(ctx) || self.gate?.activated) return; // the activation play cannot charge

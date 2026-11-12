@@ -17,6 +17,7 @@
 // launch is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { scrimmage, disabled, tier, stageOf, countDown } from './earth-ice-util.js';
+import { E as $E } from '../../core/english.js';
 
 const SLOW = [15, 20]; // % by form
 const COOLDOWN = [5, 4, 3, 2];
@@ -33,10 +34,10 @@ export default registerAbility({
       const fn = self.fn;
       if (fn.ball) {
         const b = fn.ball;
-        if (!preRelease(ctx)) { fn.ball = null; ctx.log('The pass beats the snowball', { kind: 'ability_cancel', by: self.slot, side: self.team, victim: b.r.slot, ability: 'ICE-02-F' }); return; }
+        if (!preRelease(ctx)) { fn.ball = null; ctx.log($E('sim.the_pass_beats_the_snowball'), { kind: 'ability_cancel', by: self.slot, side: self.team, victim: b.r.slot, ability: 'ICE-02-F' }); return; }
         if (ctx.t + 1e-9 < b.impact) return;
         fn.ball = null;
-        if (!eligible(ctx, self, b.r)) { ctx.log(`${self.name}'s snowball misses its moment`, { kind: 'ability_cancel', by: self.slot, side: self.team, victim: b.r.slot, ability: 'ICE-02-F' }); return; }
+        if (!eligible(ctx, self, b.r)) { ctx.log(`${$E('sim.s_snowball_misses_its_moment', { name: self.name })}`, { kind: 'ability_cancel', by: self.slot, side: self.team, victim: b.r.slot, ability: 'ICE-02-F' }); return; }
         const pct = tier(SLOW, stageOf(self.form));
         ctx.applyStatus(b.r, { id: 'slowed', strength: pct, duration: 0, restOfPlay: true, source: self, abilityId: 'ICE-02-F', payload: { pct } });
         return;
@@ -48,10 +49,10 @@ export default registerAbility({
       if (!ctx.canStartSignature(self)) return;
       st.cd = tier(COOLDOWN, self.mastery); st.fresh = true; ctx.executed(self);
       fn.ball = { r, impact: ctx.t + ctx.dist(r, self) / FROST_NIP.snowballSpeed };
-      ctx.log(`${self.name} fires a snowball at ${r.name}`, { kind: 'ability', by: self.slot, side: self.team, victim: r.slot, ability: 'ICE-02-F', key: 'snowball', fromX: +self.x.toFixed(2), fromY: +self.y.toFixed(2), x: +r.x.toFixed(2), y: +r.y.toFixed(2) });
+      ctx.log(`${$E('sim.fires_a_snowball_at', { name: self.name, name2: r.name })}`, { kind: 'ability', by: self.slot, side: self.team, victim: r.slot, ability: 'ICE-02-F', key: 'snowball', fromX: +self.x.toFixed(2), fromY: +self.y.toFixed(2), x: +r.x.toFixed(2), y: +r.y.toFixed(2) });
     },
     playEnd(ctx, self, s) {
-      if (self.fn?.ball) { self.fn.ball = null; ctx.log('The whistle cancels the snowball', { kind: 'ability_cancel', by: self.slot, side: self.team, ability: 'ICE-02-F' }); }
+      if (self.fn?.ball) { self.fn.ball = null; ctx.log($E('sim.the_whistle_cancels_the_snowball'), { kind: 'ability_cancel', by: self.slot, side: self.team, ability: 'ICE-02-F' }); }
       if (self.team === 'def' && !s.kickoff && !s.twoPoint) countDown(ctx.state(self));
     },
   },

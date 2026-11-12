@@ -20,6 +20,7 @@
 // defender ahead is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { scrimmage, tier, countDown } from './earth-ice-util.js';
+import { E as $E } from '../../core/english.js';
 
 const COOLDOWN = [5, 4, 3, 2];
 export const STONE_CHARGE = Object.freeze({ range: 3, travel: 3, cone: Math.SQRT1_2, push: 1, scale: 16 });
@@ -57,7 +58,7 @@ export default registerAbility({
       st.cd = tier(COOLDOWN, self.mastery); st.fresh = true; ctx.executed(self);
       Object.assign(sc, { phase: 'committed', from: { x: self.x, y: self.y }, u });
       self.forcedAim = { x: self.x + u.x * 60, y: self.y + u.y * 60 }; self.jukeCooldown = 99; // holds his heading: no cut, no juke
-      ctx.log(`${self.name}'s Stone Charge: a boulder shell rolls forward`, { kind: 'ability', by: self.slot, side: self.team, ability: 'EAR-03-F', key: 'boulderShell', x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
+      ctx.log(`${$E('sim.s_stone_charge_a_boulder_shell', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'EAR-03-F', key: 'boulderShell', x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
     },
     tackleAttempt(ctx, self, d) {
       const sc = self.sc; if (sc?.phase !== 'committed') return undefined;
@@ -65,7 +66,7 @@ export default registerAbility({
       const p = 1 / (1 + Math.exp(-((self.attrs.strength - d.attrs.strength) / STONE_CHARGE.scale)));
       const won = ctx.rng.chance(p); const to = won ? sideStep(ctx, self, d) : null;
       if (to) { d.x = to.x; d.y = to.y; }
-      ctx.log(won ? (to ? `${self.name} shoulders ${d.name} aside` : `${self.name} wins the push but ${d.name} has nowhere to go`) : `${d.name} holds against ${self.name}'s Stone Charge`, { kind: 'stone_charge', by: self.slot, side: self.team, victim: d.slot, won, moved: !!to, ability: 'EAR-03-F' });
+      ctx.log(won ? (to ? `${$E('sim.shoulders_aside', { name: self.name, name2: d.name })}` : `${$E('sim.wins_the_push_but_has_nowhere', { name: self.name, name2: d.name })}`) : `${$E('sim.holds_against_s_stone_charge', { name: d.name, name2: self.name })}`, { kind: 'stone_charge', by: self.slot, side: self.team, victim: d.slot, won, moved: !!to, ability: 'EAR-03-F' });
       return undefined; // ordinary tackle resolution (the engine re-checks reach after a displacement)
     },
     playEnd(ctx, self, s) { if (self.team === 'off' && !s.kickoff && !s.twoPoint) countDown(ctx.state(self)); },

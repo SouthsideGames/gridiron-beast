@@ -19,6 +19,7 @@
 // (gated).
 import { registerAbility } from './registry.js';
 import { stageOf, byMastery, scrimmage, able, pushSafely } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const THRESHOLD = [3, 2]; // by form
 export const PUSH = [1, 1.5, 2, 2.5]; // yards by mastery
@@ -41,7 +42,7 @@ export default registerAbility({
       const movers = ctx.actors.filter((a) => a !== self);
       const moves = pushSafely({ actors: ctx.actors, movers, ux, uy, distance: byMastery(PUSH, self.mastery), bounds: ctx.bounds, obstacles: ctx.obstacles() });
       ctx.state(self).charges = 0; ss.fired = true; ctx.executed(self);
-      ctx.log(`${self.name}'s Slipstream Step blasts everyone back`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WIN-02-F', x: +self.x.toFixed(2), y: +self.y.toFixed(2), dir: [+ux.toFixed(3), +uy.toFixed(3)],
+      ctx.log(`${$E('sim.s_slipstream_step_blasts_everyone_back', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WIN-02-F', x: +self.x.toFixed(2), y: +self.y.toFixed(2), dir: [+ux.toFixed(3), +uy.toFixed(3)],
         moves: moves.map((m) => ({ slot: m.a.slot, side: m.a.team, from: m.from.map((v) => +v.toFixed(2)), to: m.to.map((v) => +v.toFixed(2)) })) });
     },
     playEnd(ctx, self) {

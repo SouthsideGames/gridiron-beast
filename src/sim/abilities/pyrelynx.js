@@ -13,6 +13,7 @@
 // activations; not gated.
 import { registerAbility } from './registry.js';
 import { auraLayer, byMastery } from './fw-util.js';
+import { E as $E } from '../../core/english.js';
 
 export const HAZE = Object.freeze({ radius: 3, pctByMastery: [10, 12, 14, 16] });
 
@@ -27,7 +28,7 @@ export default registerAbility({
         auraLayer(o, 'catching', 'heatHaze', self.mid, inside ? r : 0);
         if (inside && !self.haze.seen.has(o.mid)) {
           self.haze.seen.add(o.mid); ctx.executed(self, { passive: true });
-          ctx.log(`${o.name} is caught in ${self.name}'s Heat Haze`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-05-F', victim: o.slot, victimSide: o.team });
+          ctx.log(`${$E('sim.is_caught_in_s_heat_haze', { name: o.name, name2: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-05-F', victim: o.slot, victimSide: o.team });
         }
       }
     },

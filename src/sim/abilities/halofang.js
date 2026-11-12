@@ -17,6 +17,7 @@
 // activation is the live activation (gated: the bar is kept); tackle charges are in-play charge gains (gated).
 import { registerAbility } from './registry.js';
 import { able, scrimmage, byMastery } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const RADIANT = Object.freeze({ required: [3, 3, 2, 2] });
 const carrying = (ctx, c) => !!c && ctx.stats.carrier === c.slot;
@@ -31,7 +32,7 @@ export default registerAbility({
       const st = ctx.state(self); if (!st.armed || !able(ctx, self)) return; // Stunned / Knocked Down keeps the bar
       if (!ctx.canStartSignature(self)) return; // denied: the bar is kept
       st.armed = false; st.tackles = 0; self.rp.active = true; self.rp.activated = true; ctx.executed(self);
-      ctx.log(`${self.name}'s Radiant Pursuit lights up`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-05-F' });
+      ctx.log(`${$E('sim.s_radiant_pursuit_lights_up', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-05-F' });
     },
     tick(ctx, self) {
       if (!self.rp?.active) { self.passAllies = false; return; }
@@ -40,7 +41,7 @@ export default registerAbility({
     tackling(ctx, self, carrier) {
       if (!self.rp?.active || carrier !== ctx.ball.holder) return;
       self.rp.active = false; self.passAllies = false; // ends before the tackle contest
-      ctx.log(`${self.name}'s Radiant Pursuit fades into the tackle`, { kind: 'ability_end', by: self.slot, side: self.team, ability: 'LIG-05-F' });
+      ctx.log(`${$E('sim.s_radiant_pursuit_fades_into_the', { name: self.name })}`, { kind: 'ability_end', by: self.slot, side: self.team, ability: 'LIG-05-F' });
     },
     playEnd(ctx, self, s) {
       self.passAllies = false; if (self.rp) self.rp.active = false; // expires at the whistle

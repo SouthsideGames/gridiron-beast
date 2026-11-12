@@ -7,6 +7,7 @@
 // turns (setup turn excluded; reserve pauses; Stunned skips count). Mastery execution: the reduction.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, byStage, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const CUT = [1, 2]; const COOLDOWN = [5, 4, 3, 2];
 
@@ -21,7 +22,7 @@ export default registerClashAbility({
       if (!cands.length) return null;
       const best = cands.reduce((b, c) => (!b || c.k.left > b.k.left ? c : b), null); // allies are in lineup order; first wins ties
       const cut = byStage(CUT, self.stage);
-      api.activate(self, `remove ${cut} turn${cut === 1 ? '' : 's'} from ${best.v.name}'s ${best.k.id} cooldown`, { targetId: best.v.id }); api.cooldown(self, byTier(COOLDOWN, self.tier)); api.executed(self);
+      api.activate(self, `${$E('clashlog.remove_turns_from_s_cooldown', { cut, name: best.v.name, id: best.k.id, n: cut })}`, { targetId: best.v.id }); api.cooldown(self, byTier(COOLDOWN, self.tier)); api.executed(self);
       api.adjustCooldown(self, best.v.id, best.k.id, -cut);
       return { kind: 'done' };
     },

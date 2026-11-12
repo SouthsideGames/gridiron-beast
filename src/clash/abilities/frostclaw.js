@@ -8,6 +8,7 @@
 // attack-charge consumption. Mastery changes the cooldown only. Mastery execution: the launch.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const ACCURACY = 80; const POWER = 130; const FALLBACK = 20; const TURNS = 2; const COOLDOWN = [5, 4, 3, 2];
 
@@ -20,16 +21,16 @@ export default registerClashAbility({
       if (!foeId || !api.ready(self)) return null;
       api.activate(self, 'snowball launched', { targetId: foeId }); api.cooldown(self, byTier(COOLDOWN, self.tier)); api.executed(self);
       return { kind: 'run', run: (a, s) => {
-        const r = a.strike(s, foeId, { tag: 'special', mult: POWER / 100, strikeKey: 'snowball', label: 'Snowbank Shot' });
+        const r = a.strike(s, foeId, { tag: 'special', mult: POWER / 100, strikeKey: 'snowball', label: $E('clashlog.snowbank_shot') });
         if (r.decided) return true;
-        if (r.cancelled || r.missed) { a.cleanup(s, r.cancelled ? 'launch miss: fallback shield attempt' : 'evaded: fallback shield attempt'); a.shield(s, s.id, { pctMaxHp: FALLBACK, duration: TURNS }); }
+        if (r.cancelled || r.missed) { a.cleanup(s, r.cancelled ? $E('clashlog.launch_miss_fallback_shield_attempt') : $E('clashlog.evaded_fallback_shield_attempt')); a.shield(s, s.id, { pctMaxHp: FALLBACK, duration: TURNS }); }
         return false;
       } };
     },
     launch(api, self, info) {
       if (info.abilityId !== 'ICE-03-C') return null;
-      if (api.rng.chance(ACCURACY / 100, self, 'Snowbank Shot launch accuracy')) return null;
-      return { cancel: true, reason: 'launch accuracy (80%) failed', abilityId: 'ICE-03-C' };
+      if (api.rng.chance(ACCURACY / 100, self, $E('clashlog.snowbank_shot_launch_accuracy'))) return null;
+      return { cancel: true, reason: $E('clashlog.launch_accuracy_80_failed'), abilityId: 'ICE-03-C' };
     },
   },
   review: {

@@ -9,6 +9,7 @@
 import { registerClashAbility } from '../t8/registry.js';
 import { perkTag } from '../t8/flags.js';
 import { byTier, perkGate, SPAR } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const THIRD = [140, 150, 160, 170];
 const SHIELD = { id: 'shielded', strength: 999, duration: 2 };
@@ -22,22 +23,22 @@ export default registerClashAbility({
       const st = self.state; if (!foeId || st.streak < 2 || st.targetId !== foeId) return null;
       const g = perkGate(api, self, foeId, perkTag('DAR-03-C')); if (!g.ok) return null;
       const mult = byTier(THIRD, self.tier) / 100; st.armed = true;
-      api.trigger(self, `two consecutive HP-damaging attacks on ${api.get(foeId).name}`, { targetId: foeId });
-      api.activate(self, `third strike at ${Math.round(mult * 100)}%`, { targetId: foeId });
+      api.trigger(self, `${$E('clashlog.two_consecutive_hp_damaging_attacks_on', { name: api.get(foeId).name })}`, { targetId: foeId });
+      api.activate(self, `${$E('clashlog.third_strike_at', { n: Math.round(mult * 100) })}`, { targetId: foeId });
       api.executed(self);
-      return { kind: 'attack', tag: g.tag, mult, strikeKey: 'third strike', label: 'Predator Rhythm' };
+      return { kind: 'attack', tag: g.tag, mult, strikeKey: 'third strike', label: $E('clashlog.predator_rhythm') };
     },
     afterWholeAttack(api, self, info) {
       if (info.attackerId !== self.id || !info.normal) return;
       const st = self.state;
-      if (st.armed) { st.armed = false; st.streak = 0; st.targetId = null; api.cleanup(self, 'sequence cycles to zero after the enhanced attempt'); return; }
+      if (st.armed) { st.armed = false; st.streak = 0; st.targetId = null; api.cleanup(self, $E('clashlog.sequence_cycles_to_zero_after_the')); return; }
       const enemyHp = info.redirected ? 0 : info.hits.reduce((s, hit) => s + (hit.losses?.[info.targetId] ?? 0), 0);
       if (enemyHp > 0) {
         if (st.targetId === info.targetId) st.streak = Math.min(2, st.streak + 1); else { st.targetId = info.targetId; st.streak = 1; }
-        api.log(self, 'ability_progress', `${self.name}: Predator Rhythm ${st.streak} / 2 on ${api.get(info.targetId).name}`, { streak: st.streak, targetId: info.targetId, stage: 'trigger' });
-      } else if (st.streak) { st.streak = 0; st.targetId = null; api.cleanup(self, info.redirected ? 'sequence reset (Confused redirect)' : info.allMissed ? 'sequence reset (miss)' : 'sequence reset (no HP damage)'); }
+        api.log(self, 'ability_progress', `${$E('clashlog.predator_rhythm_2_on', { name: self.name, streak: st.streak, name2: api.get(info.targetId).name })}`, { streak: st.streak, targetId: info.targetId, stage: 'trigger' });
+      } else if (st.streak) { st.streak = 0; st.targetId = null; api.cleanup(self, info.redirected ? $E('clashlog.sequence_reset_confused_redirect') : info.allMissed ? $E('clashlog.sequence_reset_miss') : $E('clashlog.sequence_reset_no_hp_damage')); }
     },
-    anyDeparture(api, self, { id }) { if (self.state.targetId === id && self.state.streak) { self.state.streak = 0; self.state.targetId = null; api.cleanup(self, 'sequence destroyed: the target left the active position'); } },
+    anyDeparture(api, self, { id }) { if (self.state.targetId === id && self.state.streak) { self.state.streak = 0; self.state.targetId = null; api.cleanup(self, $E('clashlog.sequence_destroyed_the_target_left_the')); } },
     anyKO(api, self, { id }) { if (self.state.targetId === id) { self.state.streak = 0; self.state.targetId = null; } },
   },
   review: {

@@ -12,6 +12,7 @@
 // validated fumble recovery is the live activation (gated at the whistle, where the recovery is known: denied, the ordinary recovery
 // spot stands); no readiness or charge.
 import { registerAbility } from './registry.js';
+import { E as $E } from '../../core/english.js';
 
 export const HOARD_FLIGHT = Object.freeze({ spot: 65 }); // the opponent 35, in the new offense's own-goal yards
 
@@ -26,7 +27,7 @@ export default registerAbility({
       const recovery = 100 - Math.max(0, Math.min(100, ctx.ballOn + ctx.ball.x)); // where the recovery leaves his team's offense
       const spot = Math.max(HOARD_FLIGHT.spot, Math.round(recovery));
       ctx.turnoverSpot(Math.min(99, spot)); ctx.executed(self);
-      ctx.log(`${self.name}'s Hoard Flight carries the ball to the opponent ${100 - spot}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DRA-03-F', spot, recovery: Math.round(recovery), x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
+      ctx.log(`${$E('sim.s_hoard_flight_carries_the_ball', { name: self.name, spot: 100 - spot })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DRA-03-F', spot, recovery: Math.round(recovery), x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
     },
   },
 });

@@ -6,6 +6,7 @@
 // approved mode carry (S12; G09: never refilled). Mastery execution: the cast.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, lowestHpPct, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POOL = [12, 15, 18, 21]; const TURNS = 3; const COOLDOWN = 5;
 
@@ -18,8 +19,8 @@ export default registerClashAbility({
       if (!api.ready(self)) return null;
       const reserves = api.reserves(self); if (!reserves.length) return null;
       const t = lowestHpPct(reserves.filter((v) => !v.status));
-      if (!t) return unmet({ condition: 'a living reserve ally with an empty status slot', detail: 'ordinary attack, readiness kept' });
-      api.activate(self, `Shielded ${byTier(POOL, self.tier)}% on ${t.name}`, { targetId: t.id }); api.cooldown(self, COOLDOWN); api.executed(self);
+      if (!t) return unmet({ condition: $E('clashlog.a_living_reserve_ally_with_an'), detail: $E('clashlog.ordinary_attack_readiness_kept_2') });
+      api.activate(self, `${$E('clashlog.shielded_on', { byTier: byTier(POOL, self.tier), name: t.name })}`, { targetId: t.id }); api.cooldown(self, COOLDOWN); api.executed(self);
       api.shield(self, t.id, { pctMaxHp: byTier(POOL, self.tier), duration: TURNS });
       return { kind: 'done' };
     },

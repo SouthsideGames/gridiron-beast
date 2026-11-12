@@ -14,6 +14,7 @@
 // Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the mirror at the
 // first cut is the live activation (gated: readiness kept); cooldown only.
 import { registerAbility } from './registry.js';
+import { E as $E } from '../../core/english.js';
 
 export const RANGE = [3, 4]; // by form
 const COOLDOWN = [5, 4, 3, 2];
@@ -36,7 +37,7 @@ export default registerAbility({
       const dx = pts[2][0] - pts[1][0], dy = pts[2][1] - pts[1][1], L = Math.hypot(dx, dy) || 1; const sp = Math.hypot(self.vx, self.vy);
       self.vx = (dx / L) * sp; self.vy = (dy / L) * sp; ms.fired = true;
       st.cd = COOLDOWN[self.mastery] ?? COOLDOWN[0]; st.fresh = true; ctx.executed(self);
-      ctx.log(`${self.name} mirrors ${r.name}'s cut`, { kind: 'ability', by: self.slot, side: self.team, ability: 'PSY-02-F', victim: r.slot, mirror: [+(dx / L).toFixed(3), +(dy / L).toFixed(3)], speed: +sp.toFixed(2), x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
+      ctx.log(`${$E('sim.mirrors_s_cut', { name: self.name, name2: r.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'PSY-02-F', victim: r.slot, mirror: [+(dx / L).toFixed(3), +(dy / L).toFixed(3)], speed: +sp.toFixed(2), x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
     },
     playEnd(ctx, self) {
       const st = ctx.state(self); if (self.team !== 'def' || ctx.kickoff || ctx.twoPoint) return;

@@ -18,6 +18,7 @@
 // charge gain (gated).
 import { registerAbility } from './registry.js';
 import { stageOf, byMastery, scrimmage, sideOf } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const STRENGTH = [15, 20]; // Awareness reduction % by form
 export const COOLDOWN = 5;
@@ -37,7 +38,7 @@ export default registerAbility({
       st.banked = true; ctx.executed(self);
       ctx.queueField({ owner: self.mid, ownerTeam: side, side: 'def', type: 'Dark', ability: 'DAR-01-F', strength: STRENGTH[Math.min(1, stageOf(self.form))], lifetime: byMastery(LIFETIME, self.mastery),
         clock: 'teamDefense', width: PATCH.width, length: PATCH.length, lbDepth: PATCH.lbDepth, latHome: ctx.teamSide ? (ctx.teamSide === 'home' ? latOff : -latOff) : undefined });
-      ctx.log(`${self.name} banks a Shadow Patch`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DAR-01-F', x: +ctx.ball.x.toFixed(2), y: +ctx.ball.y.toFixed(2) });
+      ctx.log(`${$E('sim.banks_a_shadow_patch', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DAR-01-F', x: +ctx.ball.x.toFixed(2), y: +ctx.ball.y.toFixed(2) });
     },
   },
 });

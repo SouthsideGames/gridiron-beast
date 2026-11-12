@@ -10,6 +10,7 @@
 // is kept); the rushing charge earned at the whistle is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { approvedValues } from '../../data/beast-dex.js';
+import { E as $E } from '../../core/english.js';
 
 const THRESHOLD = approvedValues('FIR-01-F').minWholeYardsByStage; // [8, 5, 1]
 export const REACH = 1.25; // the engine's tackling reach (engine.js tryTackle)
@@ -29,7 +30,7 @@ export default registerAbility({
       if (!ctx.canStartSignature(self)) return undefined; // a denied start is not an eligible tackle: the ignition is kept
       br.encounter = new Set(ctx.opponents(self.team).filter((d) => !(d.stun > 0) && ctx.dist(d, self) <= REACH).map((d) => d.mid));
       br.encounter.add(tackler.mid); st.ignited = false; br.spent = true; ctx.executed(self);
-      ctx.log(`${self.name}'s Blazing Resolve ignites`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-01-F' });
+      ctx.log(`${$E('sim.s_blazing_resolve_ignites', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-01-F' });
       return { prevent: true };
     },
     playEnd(ctx, self, s) {

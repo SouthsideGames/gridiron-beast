@@ -7,6 +7,7 @@
 // reserve. A skipped action preserves HP and readiness. Mastery execution: the launch.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, byStage, unmet, SPAR } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [[140, 145, 150, 155], [155, 160, 165, 170], [170, 175, 180, 185]]; const COST_PCT = 10; const COOLDOWN = 3;
 
@@ -18,11 +19,11 @@ export default registerClashAbility({
     chooseAction(api, self, { foeId }) {
       if (!foeId || !api.ready(self)) return null;
       const me = api.me(self); const cost = Math.ceil((me.maxHp * COST_PCT) / 100);
-      if (me.hp - cost < 1) return unmet({ condition: 'full HP cost payable keeping 1 HP', detail: `${me.hp} HP, cost ${cost}` });
+      if (me.hp - cost < 1) return unmet({ condition: $E('clashlog.full_hp_cost_payable_keeping_1'), detail: `${$E('clashlog.hp_cost', { hp: me.hp, cost })}` });
       const pctV = byTier(byStage(POWER, self.stage), self.tier);
-      api.activate(self, `pounce at ${pctV}% for ${cost} HP`, { targetId: foeId });
+      api.activate(self, `${$E('clashlog.pounce_at_for_hp', { pctV, cost })}`, { targetId: foeId });
       api.hpCost(self, cost); api.cooldown(self, COOLDOWN); api.executed(self);
-      return { kind: 'attack', tag: 'special', mult: pctV / 100, strikeKey: 'enhanced attack', label: 'Dragon Pounce' };
+      return { kind: 'attack', tag: 'special', mult: pctV / 100, strikeKey: 'enhanced attack', label: $E('clashlog.dragon_pounce') };
     },
   },
   review: {

@@ -9,6 +9,7 @@
 // and resolves normally. The assist is a contested Stone Divide target. Mastery execution: the assist.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, SPAR } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [75, 80, 85, 90];
 const outgoing = (st) => (st?.id === 'weakened' ? 1 - (st.payload?.pct ?? st.strength) / 100 : st?.id === 'empowered' ? 1 + (st.payload?.pct ?? st.strength) / 100 : 1);
@@ -24,9 +25,9 @@ export default registerClashAbility({
       if (!cands.length) return null;
       const exp = (v) => v.atk * outgoing(v.status) * api.typeFactor(v.id, foeId);
       const helper = cands.reduce((b, v) => (!b || exp(v) > exp(b) ? v : b), null);
-      self.state.used = true; api.trigger(self, `${helper.name} has the highest expected attack damage (${exp(helper).toFixed(2)})`, { targetId: helper.id });
-      api.activate(self, `${helper.name} assists at ${byTier(POWER, self.tier)}% from reserve`, { targetId: foeId }); api.executed(self);
-      return { kind: 'run', run: (a, s) => a.commandStrike(s, helper.id, foeId, { tag: 'assist', mult: byTier(POWER, s.tier) / 100, strikeKey: 'assist', label: 'Canopy Assist' }).decided };
+      self.state.used = true; api.trigger(self, `${$E('clashlog.has_the_highest_expected_attack_damage', { name: helper.name, helper: exp(helper).toFixed(2) })}`, { targetId: helper.id });
+      api.activate(self, `${$E('clashlog.assists_at_from_reserve', { name: helper.name, byTier: byTier(POWER, self.tier) })}`, { targetId: foeId }); api.executed(self);
+      return { kind: 'run', run: (a, s) => a.commandStrike(s, helper.id, foeId, { tag: 'assist', mult: byTier(POWER, s.tier) / 100, strikeKey: 'assist', label: $E('clashlog.canopy_assist') }).decided };
     },
   },
   review: {

@@ -8,6 +8,7 @@
 // 2 turns fixed; no mastery power growth. Mastery execution: the cast.
 import { registerClashAbility } from '../t8/registry.js';
 import { restrictable } from '../t8/ability-kinds.js';
+import { E as $E } from '../../core/english.js';
 
 const TURNS = 2;
 
@@ -19,7 +20,7 @@ export default registerClashAbility({
     chooseAction(api, self, { foeId }) {
       if (self.state.used || !foeId) return null; const f = api.get(foeId);
       if (!f.abilityId || !restrictable(f.abilityId) || f.clocks.some((k) => k.kind === 'cooldown' && k.id === f.abilityId) || f.sigRestrict) return null;
-      self.state.used = true; api.activate(self, `${f.name}'s ${f.abilityId} is restricted for ${TURNS} of its turns`, { targetId: foeId }); api.executed(self);
+      self.state.used = true; api.activate(self, `${$E('clashlog.s_is_restricted_for_of_its', { name: f.name, abilityId: f.abilityId, turns: TURNS })}`, { targetId: foeId }); api.executed(self);
       api.restrictSignature(self, foeId, TURNS);
       return { kind: 'done' };
     },
