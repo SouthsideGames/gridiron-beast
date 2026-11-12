@@ -41,9 +41,9 @@ export const STARTER_CLUBS = Object.freeze([
 export const RIVAL_GMS = Object.freeze({ 'Glacier Guardians': 'Morgan Vale', 'Northstar Wolves': 'Cameron Frost', 'Ironpeak Rams': 'Jules Stone', 'Canyon Crushers': 'Alex Calder', 'Sundown Drakes': 'Riley Ash', 'Thunder Mesa': 'Blake Storm', 'Eastport Phantoms': 'Taylor Voss', 'Harbor Sentinels': 'Jordan Shore', 'Ashford Hawks': 'Casey Finch', 'Bayou Stalkers': 'Drew Marsh', 'Sunfire Lions': 'Avery Sol', 'Palmetto Vipers': 'Quinn Reed', 'Frostpeak Howlers': 'Sam Rime', 'Stormport Bolts': 'Devon Gale', 'Stonehaven Titans': 'Harper Flint', 'Ember City Beasts': 'Rowan Blaze' });
 
 export const TIERS = Object.freeze([
-  { id: 'challenger', name: 'Challenger League', rank: 3, cap: 1800000, badgeGoal: 4, next: 'vanguard' },
-  { id: 'vanguard', name: 'Vanguard League', rank: 2, cap: 2600000, badgeGoal: 6, next: 'sovereign' },
-  { id: 'sovereign', name: 'Sovereign League', rank: 1, cap: 3600000, badgeGoal: null, next: null },
+  { id: 'challenger', name: $t('data.challenger_league'), rank: 3, cap: 1800000, badgeGoal: 4, next: 'vanguard' },
+  { id: 'vanguard', name: $t('data.vanguard_league'), rank: 2, cap: 2600000, badgeGoal: 6, next: 'sovereign' },
+  { id: 'sovereign', name: $t('data.sovereign_league'), rank: 1, cap: 3600000, badgeGoal: null, next: null },
 ]);
 export const tierById = (id) => TIERS.find((t) => t.id === id) || TIERS[0];
 
@@ -55,6 +55,7 @@ export const tierById = (id) => TIERS.find((t) => t.id === id) || TIERS[0];
 // week 1. Nine games and a bye in ten weeks. Within a group the five games
 // come from a seven-round round robin that rotates by season.
 import { GYM_CLUBS } from './gyms.js';
+import { t as $t } from '../text/index.js';
 
 const GYM_ORDER = ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers']; // early → late
 const ORDINARY_ORDER = ['Ember City Beasts', 'Stonehaven Titans', 'Glacier Guardians', 'Stormport Bolts', 'Northstar Wolves', 'Sundown Drakes', 'Ashford Hawks', 'Bayou Stalkers']; // starters first

@@ -5,16 +5,17 @@
 // clubs and two ordinary clubs; players choose from the ordinary ones.
 //
 // Coach names and lines are drafts for the owner's review page.
+import { t as $t } from '../text/index.js';
 
 export const GYMS = Object.freeze([
-  { club: 'Harbor Sentinels', element: 'Water', legendary: 'tsunarok', tier: 'early', coach: { name: 'Nadia Reyes', style: 'Patient', offense: 'balanced', defense: 'coverage', aggression: 0.4, passBias: 0.55, portrait: 'gym_water' }, badge: 'Tide Badge' },
-  { club: 'Sunfire Lions', element: 'Light', legendary: 'aurelion', tier: 'early', coach: { name: 'Elias Dawn', style: 'Radiant', offense: 'pass', defense: 'coverage', aggression: 0.45, passBias: 0.68, portrait: 'gym_light' }, badge: 'Dawn Badge' },
-  { club: 'Thunder Mesa', element: 'Electric', legendary: 'stormcrown', tier: 'mid', coach: { name: 'Lena Volkov', style: 'Tempo', offense: 'pass', defense: 'pressure', aggression: 0.62, passBias: 0.7, portrait: 'gym_electric' }, badge: 'Storm Badge' },
-  { club: 'Canyon Crushers', element: 'Earth', legendary: 'titanolith', tier: 'mid', coach: { name: 'Dolores Crag', style: 'Grinder', offense: 'run', defense: 'pressure', aggression: 0.55, passBias: 0.36, portrait: 'gym_earth' }, badge: 'Quake Badge' },
-  { club: 'Eastport Phantoms', element: 'Dark', legendary: 'nyxshade', tier: 'mid', coach: { name: 'Silas Mourne', style: 'Trickster', offense: 'pass', defense: 'man', aggression: 0.68, passBias: 0.6, portrait: 'gym_dark' }, badge: 'Dusk Badge' },
-  { club: 'Frostpeak Howlers', element: 'Ice', legendary: 'glacivern', tier: 'mid', coach: { name: 'Sigrid Hale', style: 'Disciplined', offense: 'balanced', defense: 'coverage', aggression: 0.38, passBias: 0.5, portrait: 'gym_ice' }, badge: 'Frost Badge' },
-  { club: 'Ironpeak Rams', element: 'Metal', legendary: 'aegistron', tier: 'late', coach: { name: 'Brock Ferris', style: 'Hammer', offense: 'run', defense: 'pressure', aggression: 0.7, passBias: 0.4, portrait: 'gym_metal' }, badge: 'Forge Badge' },
-  { club: 'Palmetto Vipers', element: 'Dragon', legendary: 'aurodrax', tier: 'late', coach: { name: 'Marcus Vane', style: 'Sovereign', offense: 'balanced', defense: 'man', aggression: 0.6, passBias: 0.58, portrait: 'gym_dragon' }, badge: 'Wyrm Badge' },
+  { club: 'Harbor Sentinels', element: 'Water', legendary: 'tsunarok', tier: 'early', coach: { name: 'Nadia Reyes', style: $t('data.patient'), offense: 'balanced', defense: 'coverage', aggression: 0.4, passBias: 0.55, portrait: 'gym_water' }, badge: 'Tide Badge' },
+  { club: 'Sunfire Lions', element: 'Light', legendary: 'aurelion', tier: 'early', coach: { name: 'Elias Dawn', style: $t('data.radiant'), offense: 'pass', defense: 'coverage', aggression: 0.45, passBias: 0.68, portrait: 'gym_light' }, badge: 'Dawn Badge' },
+  { club: 'Thunder Mesa', element: 'Electric', legendary: 'stormcrown', tier: 'mid', coach: { name: 'Lena Volkov', style: $t('data.tempo'), offense: 'pass', defense: 'pressure', aggression: 0.62, passBias: 0.7, portrait: 'gym_electric' }, badge: 'Storm Badge' },
+  { club: 'Canyon Crushers', element: 'Earth', legendary: 'titanolith', tier: 'mid', coach: { name: 'Dolores Crag', style: $t('data.grinder'), offense: 'run', defense: 'pressure', aggression: 0.55, passBias: 0.36, portrait: 'gym_earth' }, badge: 'Quake Badge' },
+  { club: 'Eastport Phantoms', element: 'Dark', legendary: 'nyxshade', tier: 'mid', coach: { name: 'Silas Mourne', style: $t('data.trickster'), offense: 'pass', defense: 'man', aggression: 0.68, passBias: 0.6, portrait: 'gym_dark' }, badge: 'Dusk Badge' },
+  { club: 'Frostpeak Howlers', element: 'Ice', legendary: 'glacivern', tier: 'mid', coach: { name: 'Sigrid Hale', style: $t('data.disciplined'), offense: 'balanced', defense: 'coverage', aggression: 0.38, passBias: 0.5, portrait: 'gym_ice' }, badge: 'Frost Badge' },
+  { club: 'Ironpeak Rams', element: 'Metal', legendary: 'aegistron', tier: 'late', coach: { name: 'Brock Ferris', style: $t('data.hammer'), offense: 'run', defense: 'pressure', aggression: 0.7, passBias: 0.4, portrait: 'gym_metal' }, badge: 'Forge Badge' },
+  { club: 'Palmetto Vipers', element: 'Dragon', legendary: 'aurodrax', tier: 'late', coach: { name: 'Marcus Vane', style: $t('data.sovereign'), offense: 'balanced', defense: 'man', aggression: 0.6, passBias: 0.58, portrait: 'gym_dragon' }, badge: 'Wyrm Badge' },
 ]);
 
 export const GYM_BY_CLUB = Object.freeze(Object.fromEntries(GYMS.map((g) => [g.club, g])));

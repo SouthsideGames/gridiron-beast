@@ -11,7 +11,7 @@ import { t as $t } from '../text/index.js';
 
 export const MODES = Object.freeze(['football', 'clash']);
 export const MODE_LABEL = Object.freeze({ football: $t('shared.football'), clash: $t('shared.beast_clash') });
-const SHOWN_SECTIONS = [$t('shared.trigger_eligibility'), $t('shared.targets_placement'), $t('shared.core_resolution'), $t('shared.recharge_frequency'), $t('shared.lifetime_persistence'), $t('shared.exceptions_counterplay'), 'Progression / notes'];
+const SHOWN_SECTIONS = ['Trigger / eligibility', 'Targets / placement', 'Core resolution', 'Recharge / frequency', 'Lifetime / persistence', 'Exceptions / counterplay', 'Progression / notes']; // the Dex's section ids, never shown: SECTION_LABEL holds the wording
 const SECTION_LABEL = { 'Trigger / eligibility': $t('shared.when_it_happens'), 'Targets / placement': $t('shared.who_or_where'), 'Core resolution': $t('shared.what_it_does'), 'Recharge / frequency': $t('shared.how_often'), 'Lifetime / persistence': $t('shared.how_long_it_lasts'), 'Exceptions / counterplay': $t('shared.limits_and_counterplay'), 'Progression / notes': $t('shared.forms_and_mastery') };
 const familyIdOf = (x) => (typeof x === 'string' ? x : x?.species || x?.familyId || x?.id || null);
 /** The Dex mechanic line without the "ID: Name;" prefix some records carry. */
