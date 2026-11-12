@@ -15,7 +15,7 @@ const rule = () => (plural ||= (() => { try { return new Intl.PluralRules(code);
 /** Use another language's table (same keys as en.js; missing keys fall back to English). */
 export function setLanguage(lang, strings) {
   code = lang || 'en'; plural = null;
-  table = strings ? { ...en, ...Object.fromEntries(Object.entries(strings).filter(([k]) => k in en && !KEEP_ENGLISH.has(k))) } : en; // names stay English; unknown keys are ignored
+  table = strings ? { ...en, ...Object.fromEntries(Object.entries(strings).filter(([k]) => (k in en || k.startsWith('dex.')) && !KEEP_ENGLISH.has(k))) } : en; // names stay English; unknown keys are ignored (dex.* keys belong to the Beast Dex: ./dex.js)
 }
 export const language = () => code;
 
@@ -25,5 +25,7 @@ export function t(key, vars = null) {
   if (typeof s === 'object') { const n = vars?.n; s = s[n === undefined ? 'other' : rule().select(Number(n))] ?? s.other ?? ''; }
   return vars ? s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : s;
 }
+/** A line whose English lives elsewhere (the Beast Dex): the chosen language's line for `key`, or `english` as given. */
+export const tOr = (key, english) => { const s = table[key]; return typeof s === 'string' ? s : english; };
 /** Every key and its English line (tools and tests). */
 export const englishText = () => en;

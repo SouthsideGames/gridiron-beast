@@ -60,7 +60,7 @@ test('every {value} a line needs is supplied where the line is used', () => {
     const v = en[c.key]; if (v === undefined) continue; const need = new Set(lines(v).flatMap(holes));
     if (typeof v === 'object') need.add('n');
     if (!need.size) continue;
-    if (/^(press)\./.test(c.key) && !c.args) continue; // Media Day lines keep their {tokens}: src/franchise/press.js fills them later from the save
+    if (c.file.startsWith('src/data/') && !c.args) continue; // a data line keeps its {tokens}: the game fills them later (Media Day, dialogue, achievements, offseason meetings)
     const given = new Set(c.args ? props(c.args) : []);
     for (const h of need) if (!given.has(h)) problems.push(`${c.key} in ${c.file}: {${h}} is not supplied`);
   }

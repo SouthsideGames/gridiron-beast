@@ -7,7 +7,12 @@
 import { OFFENSE_PACKAGES, DEFENSE_PACKAGES, offenseOnField, defenseOnField, LINEMEN, BASE_LINEMEN } from './personnel.js';
 import { routePoints, ALTERNATE_ROUTES, ZONES, GAPS } from './routes.js';
 import { reservePlays } from './playbook-reserve.js';
-import { t as $t } from '../text/index.js';
+import { t as $text, englishText } from '../text/index.js';
+// Wording comes from the central text. The coaching hints below (counterPlays) match play names inside the lesson lines, and a
+// rule must never depend on the language shown, so each line read here also remembers its English: english(line).
+const EN = englishText(); const ENGLISH = new Map();
+const $t = (key, vars) => { const v = $text(key, vars); if (!vars) ENGLISH.set(v, EN[key]); return v; };
+const english = (line) => ENGLISH.get(line) ?? line;
 
 // ---------------------------------------------------------------- formations
 const OL = { LG: [-0.6, -1.7], RG: [-0.6, 1.7] };
@@ -573,8 +578,8 @@ export const LESSONS = Object.freeze({
  * scores +1, under "loses to" −1). Returns ids with a positive score, best first.
  */
 export function counterPlays(candidates, opponentIds) {
-  const names = opponentIds.map((id) => PLAYS[id]?.name).filter(Boolean);
-  const mentions = (text) => names.filter((n) => text.includes(n)).length;
-  return candidates.map((id) => { const L = LESSONS[id]; return L ? { id, score: mentions(L.beats) - mentions(L.loses), beats: names.filter((n) => L.beats.includes(n)) } : { id, score: 0, beats: [] }; })
+  const names = opponentIds.map((id) => PLAYS[id]?.name).filter(Boolean);   // as shown; matched in English so the hints are the same in every language
+  const mentions = (text) => names.filter((n) => english(text).includes(english(n))).length;
+  return candidates.map((id) => { const L = LESSONS[id]; return L ? { id, score: mentions(L.beats) - mentions(L.loses), beats: names.filter((n) => english(L.beats).includes(english(n))) } : { id, score: 0, beats: [] }; })
     .filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
 }

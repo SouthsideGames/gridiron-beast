@@ -13,6 +13,7 @@
 // to let the default cue play. The hook never changes the record, the cursor or the engine.
 import { abilityById, abilitiesOf } from '../../data/beast-dex.js';
 import { t as $t } from '../../text/index.js';
+import { dexLine, dexKey } from '../../text/dex.js';
 
 const STATUS_NAME = Object.freeze({ stunned: $t('clash.stunned'), slowed: $t('clash.slowed'), stumbled: $t('clash.stumbled'), knockedDown: $t('clash.knocked_down'), afflicted: $t('clash.afflicted'), weakened: $t('clash.weakened'), confused: $t('clash.confused'), healingReduced: $t('clash.healing_reduced'), shielded: $t('clash.shielded'), empowered: $t('clash.empowered'), quickened: $t('clash.quickened'), guarded: $t('clash.guarded') });
 /** Shared-status glyphs (functional cues only; the badge pass is M6). */
@@ -55,7 +56,7 @@ function orderOf(ids, activeId) { return activeId && ids.includes(activeId) ? [a
 
 function lineOut(x) {
   const ab = x.abilityId ? abilityById(x.abilityId) : null; const fam = abilitiesOf(x.species);
-  const move = ab ? { name: ab.name, text: ab.mechanic || ab.details || '', trigger: { kind: 'contract' } } : { name: $t('clash.strike'), text: `${$t('clash.ordinary_attack_with_the_perks', { archetype: x.archetype, basic: x.basic ? ' (Basic)' : '', fam: fam?.clash ? '' : '' })}`, trigger: { kind: 'normal' } };
+  const move = ab ? { name: dexLine(dexKey.abilityName(ab.id), ab.name), text: ab.mechanic ? dexLine(dexKey.abilityMechanic(ab.id), ab.mechanic) : ab.details || '', trigger: { kind: 'contract' } } : { name: $t('clash.strike'), text: `${$t('clash.ordinary_attack_with_the_perks', { archetype: x.archetype, basic: x.basic ? ' (Basic)' : '', fam: fam?.clash ? '' : '' })}`, trigger: { kind: 'normal' } };
   return { ...x, combatant: { ...x.combatant, move } };
 }
 

@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+// Runs a season of franchise play and a set of Beast Clash battles and prints a digest of everything that is NOT wording:
+// results, rosters, ratings, money, ids. With --pseudo, every line of the central text is first replaced by a made-up
+// "translation" (letters changed, {values} and markup kept). The two digests must match: wording never decides anything
+// (tests/text-never-decides.test.js). A difference means some rule, id or saved value is being read from the text.
+import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+const pseudo = process.argv.includes('--pseudo'); const seasons = Number(process.argv.find((a) => a.startsWith('--seasons='))?.split('=')[1] || 1);
+const twist = (v) => v.split(/(\{\w+\}|<[^>]+>)/).map((p, i) => (i % 2 ? p : p.replace(/[A-Za-z]/g, (c) => (c === c.toLowerCase() ? c.toUpperCase() : c.toLowerCase())) + (p.trim() ? '~' : ''))).join('');
+const { setLanguage, englishText } = await import('../src/text/index.js');
+// a saved value that is itself a line of wording (a coach's style kept in a meeting record) is wording, not state: left out of both digests
+const wording = new Set(Object.values(englishText()).flatMap((v) => (typeof v === 'string' ? [v] : Object.values(v))).flatMap((v) => [v, twist(v)]));
+if (pseudo) {
+  const only = process.argv.find((a) => a.startsWith('--only='))?.split('=')[1].split(',');   // --only=area,area: narrow a failure down
+  const table = Object.fromEntries(Object.entries(englishText()).filter(([k]) => !only || only.includes(k.split('.')[0])).map(([k, v]) => [k, typeof v === 'string' ? twist(v) : Object.fromEntries(Object.entries(v).map(([f, x]) => [f, twist(x)]))]));
+  const dex = JSON.parse(execFileSync(process.execPath, [fileURLToPath(new URL('./dex-text.mjs', import.meta.url))], { encoding: 'utf8', maxBuffer: 1 << 26 }));
+  if (!only || only.includes('dex')) for (const [k, v] of Object.entries(dex)) table[k] = twist(v);
+  setLanguage('zz', table);   // before anything else loads: data modules read their text when they load
+}
+// only what is not wording: numbers, flags, and strings that are ids (no spaces). Club and monster names are ids too and stay English.
+const plain = (v, key = '') => {
+  if (typeof v === 'number' || typeof v === 'boolean' || v === null) return v;
+  if (typeof v === 'string') return /^[\w:#|.+\-/]*$/.test(v) && !wording.has(v) ? v : undefined;
+  if (Array.isArray(v)) return v.map((x) => plain(x) ?? null);
+  if (v && typeof v === 'object') { const o = {}; for (const k of Object.keys(v)) { if (k === 'createdAt' || k === 'uid') continue; const x = plain(v[k], k); if (x !== undefined) o[k] = x; } return o; }
+  return undefined;
+};
+const sha = (x) => createHash('sha256').update(JSON.stringify(x)).digest('hex');
+const out = {};
+const T = await import('./franchise-soak.mjs');
+const r = T.runFranchise(11, { seasons, difficulty: 'rookie' });
+out.problems = r.problems.length;
+const f = plain(r.f);
+for (const k of Object.keys(f)) out[`franchise.${k}`] = sha(f[k]);
+const { simulateClashT8 } = await import('../src/clash/t8/index.js'); const { createRng } = await import('../src/core/rng.js'); const H = await import('../tests/clash/helpers.js');
+const rng = createRng(77); const clash = [];
+for (let i = 0; i < 120; i++) { const k = 1 + (i % 5); const a = H.randomLineup(rng, k), b = H.randomLineup(rng, k); const res = simulateClashT8({ a, b, seed: i + 1 }); clash.push([res.winner, res.by, res.exchanges, res.rngDraws, res.stateHash]); }
+out.clash = sha(clash);
+process.stdout.write(JSON.stringify(out, null, 1) + '\n');
