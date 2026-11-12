@@ -4,8 +4,8 @@ import { franchiseLegacyIndex, franchiseSeasonHistory, historicalAwards, histori
 
 test('history index is derived without mutating save or retaining detailed logs', () => {
   const f = { club: 'A', history: [
-    { year: 2, club: 'A', champion: 'B', record: { w: 5, l: 4 }, leagueStats: { giant: { secret: 1 } }, awards: { mvp: [{ id: 'm2', name: 'Two', team: 'B' }] } },
-    { year: 1, club: 'A', champion: 'A', record: { w: 7, l: 2 }, schedule: [{ id: 'g' }], awards: { mvp: [{ id: 'm1', name: 'One', team: 'A' }] } },
+    { year: 2, club: 'A', champion: 'B', record: { w: 5, l: 4 }, leagueStats: { giant: { secret: 1 } }, awards: { league: { mvp: { id: 'm2', name: 'Two', team: 'B' } } } },
+    { year: 1, club: 'A', champion: 'A', record: { w: 7, l: 2 }, schedule: [{ id: 'g' }], awards: { league: { mvp: { id: 'm1', name: 'One', team: 'A' } } } },
   ], monsterHallOfFame: { elections: [{ year: 4, ballot: [{ id: 'm1' }], inductees: [{ id: 'm1', name: 'One' }] }] } };
   const original = JSON.stringify(f);
   const index = franchiseLegacyIndex(f);
