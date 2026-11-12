@@ -14,7 +14,7 @@ import { hasLeague, clubPayroll } from '../../franchise/league-registry.js';
 import { clubDirectory, clubRosterView, universeCareerLeaders, protectedMonsters, headToHead } from '../../franchise/league-careers.js';
 import { TRANSACTION_KINDS } from '../../franchise/league-news.js';
 import * as F from '../../franchise/franchise.js';
-import { t as $t } from '../../text/index.js';
+import { t as $t, lineText } from '../../text/index.js';
 
 const TAB_KEY = 'gridiron-beast-v7-league-tab';
 const TABS = [['clubs', $t('league.clubs')], ['leaders', $t('league.leaders')], ['moves', $t('league.moves')], ['races', $t('league.races')], ['rivals', $t('league.rivals')]];
@@ -47,7 +47,7 @@ function movesTab(f) {
   return `<p class="muted">${$t('league.the_leagues_moves_worth_a_line')}</p>${byWeek.map((g) => `<h3>${yearOf(g.year)} · ${label(g.week)}</h3><div class="list">${g.items.map((it) => `<div class="item static"><span>${it.icon || '📰'}</span><div class="grow"><div class="sub" style="font-size:14px">${linkText(it)}</div>${it.lines?.length ? `<div class="dim" style="font-size:12px;margin-top:4px">${it.lines.map((l) => linkText(l)).join(`<br>`)}</div>` : ''}</div></div>`).join('')}</div>`).join('')}`;
 }
 /** An item's text with its monster's name linked (the News UI's rule). */
-function linkText(it) { let t = esc(it.text || ''); if (it.mid && it.mname) { const n = esc(it.mname); const i = t.indexOf(n); if (i >= 0) t = t.slice(0, i) + careerLink(it.mid, it.mname) + t.slice(i + n.length); } return t; }
+function linkText(it) { let t = esc(lineText(it)); if (it.mid && it.mname) { const n = esc(it.mname); const i = t.indexOf(n); if (i >= 0) t = t.slice(0, i) + careerLink(it.mid, it.mname) + t.slice(i + n.length); } return t; }
 
 function racesTab(f) {
   if (!f.season || f.season.week <= 1 && !f.season.awardsFinal) return `<p class="dim">${$t('league.races_start_after_the_first_sunday')}</p>`;

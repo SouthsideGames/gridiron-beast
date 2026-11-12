@@ -22,6 +22,7 @@ import { hashString } from '../core/rng.js';
 import { newContract } from './contracts.js';
 import { bonusCharge } from './fa-contracts.js';
 import { rolloverMonster, addInto } from './stats.js';
+import { t as $t } from '../text/index.js';
 
 export const LEAGUE_VERSION = 1;
 export const PERMANENT_CONTRACT = Object.freeze({ permanent: true });
@@ -118,7 +119,7 @@ export function takeEvents(f, year, week) {
 export function removeFromClub(f, club, id, { year, reason = 'released', why = null, quiet = false } = {}) {
   const c = clubRecord(f, club); if (!c) return null;
   const m = f.league.monsters[id]; if (!m || !c.roster.includes(id)) return null;
-  if (isProtected(m)) throw Object.assign(new Error(`${m.name} is bound to ${club} for the life of this franchise.`), { code: 'protected' });
+  if (isProtected(m)) throw Object.assign(new Error(`${$t('franchise.is_bound_to_for_the_life', { name: m.name, club })}`), { code: 'protected' });
   c.roster = c.roster.filter((x) => x !== id); delete f.league.monsters[id];
   const last = (m.history ||= [])[m.history.length - 1]; if (last && last.club === club && last.to == null) { last.to = year; last.reason = reason; } else m.history.push({ club, from: year, to: year, reason });
   m.contract = null;
@@ -167,22 +168,22 @@ export function verifyLeague(f, { clubs = null, rosterMin = 1, rosterMax = 38 } 
   const L = f.league; const seen = new Map();
   const names = clubs || Object.keys(L.clubs);
   for (const club of names) {
-    const c = L.clubs[club]; if (!c) { p.push(`${club}: no club record`); continue; }
-    if (c.roster.length < rosterMin || c.roster.length > rosterMax) p.push(`${club}: ${c.roster.length} monsters`);
+    const c = L.clubs[club]; if (!c) { p.push(`${$t('franchise.no_club_record', { club })}`); continue; }
+    if (c.roster.length < rosterMin || c.roster.length > rosterMax) p.push(`${$t('franchise.monsters', { club, n: c.roster.length })}`);
     for (const id of c.roster) {
-      const m = L.monsters[id]; if (!m) { p.push(`${club}: roster id ${id} resolves to nothing`); continue; }
-      if (m.id !== id) p.push(`${club}: ${id} holds a monster whose id is ${m.id}`);
-      if (seen.has(id)) p.push(`${id} is on ${seen.get(id)} and ${club}`); seen.set(id, club);
-      if (!idIssued(f, id)) p.push(`${club}: ${id} was never issued`);
-      if (isProtected(m) && !c.protected.includes(id)) p.push(`${club}: ${m.name} is protected but not listed`);
-      if (isProtected(m) && !m.contract?.permanent) p.push(`${club}: ${m.name} is protected without the permanent contract`);
-      if (!isProtected(m) && !(m.contract?.ends >= 1)) p.push(`${club}: ${m.name} has no contract`);
-      if (!(m.salary > 0)) p.push(`${club}: ${m.name} salary ${m.salary}`);
+      const m = L.monsters[id]; if (!m) { p.push(`${$t('franchise.roster_id_resolves_to_nothing', { club, id })}`); continue; }
+      if (m.id !== id) p.push(`${$t('franchise.holds_a_monster_whose_id_is', { club, id, id2: m.id })}`);
+      if (seen.has(id)) p.push(`${$t('franchise.is_on_and', { id, get: seen.get(id), club })}`); seen.set(id, club);
+      if (!idIssued(f, id)) p.push(`${$t('franchise.was_never_issued', { club, id })}`);
+      if (isProtected(m) && !c.protected.includes(id)) p.push(`${$t('franchise.is_protected_but_not_listed', { club, name: m.name })}`);
+      if (isProtected(m) && !m.contract?.permanent) p.push(`${$t('franchise.is_protected_without_the_permanent_contract', { club, name: m.name })}`);
+      if (!isProtected(m) && !(m.contract?.ends >= 1)) p.push(`${$t('franchise.has_no_contract', { club, name: m.name })}`);
+      if (!(m.salary > 0)) p.push(`${$t('franchise.salary', { club, name: m.name, salary: m.salary })}`);
     }
-    for (const id of c.protected) if (!c.roster.includes(id)) p.push(`${club}: protected ${id} is not on the roster`);
+    for (const id of c.protected) if (!c.roster.includes(id)) p.push(`${$t('franchise.protected_is_not_on_the_roster', { club, id })}`);
   }
-  for (const id of Object.keys(L.monsters)) if (!seen.has(id)) p.push(`${id} is in the registry but on no club`);
-  for (const w of L.waivers || []) { if (seen.has(w.id)) p.push(`${w.id} is on waivers and on ${seen.get(w.id)}`); if (!idIssued(f, w.id)) p.push(`waived ${w.id} was never issued`); }
+  for (const id of Object.keys(L.monsters)) if (!seen.has(id)) p.push(`${$t('franchise.is_in_the_registry_but_on', { id })}`);
+  for (const w of L.waivers || []) { if (seen.has(w.id)) p.push(`${$t('franchise.is_on_waivers_and_on', { id: w.id, get: seen.get(w.id) })}`); if (!idIssued(f, w.id)) p.push(`${$t('franchise.waived_was_never_issued', { id: w.id })}`); }
   return p;
 }
 

@@ -12,6 +12,7 @@ import { draftNeedBonus } from './roster-plan.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
 import { clubIdentity, identityTilt } from '../data/identities.js';
 import { createRng, hashString } from '../core/rng.js';
+import { t as $t } from '../text/index.js';
 /** R7 (owner 2026-11-05): a prospect's first-season charge on his rookie deal (70% of market, as the owner's and the AI's picks are paid). */
 export const rookieCharge = (m) => Math.round(salaryFor(m) * ROOKIE_SCALE / 100) * 100;
 /** R4 (owner 2026-11-05): a gym's tie-break for prospects of its element (Task 7 franchises only); as small as the market's. */
@@ -58,7 +59,7 @@ export function openDraftClass(f, rng, { uniqueName }) {
 
 /** Monday in the final week or the playoffs: the scout studies prospects, a few fully (focus position first), a few partially. */
 export function scoutDraftClass(f, rng, { skill = 50, focus = null, bonus = 0 } = {}) {
-  const d = f.draft; if (!d) return { ok: false, reason: 'No draft class yet.' };
+  const d = f.draft; if (!d) return { ok: false, reason: $t('franchise.no_draft_class_yet') };
   const full = (skill >= 80 ? 3 : skill >= 45 ? 2 : 1) + bonus, partial = 3;
   const unseen = d.class.filter((m) => (d.revealed[m.id] || 0) < 6);
   const pri = (m) => (focus && m.position === focus ? 0 : 1) + (d.revealed[m.id] || 0) / 10 + m.boardRank / 1000;
@@ -78,7 +79,7 @@ export function draftOrder(standingsBestFirst, rounds = DRAFT_ROUNDS) {
 }
 
 export function startDraft(f, standingsBestFirst, { ownerOf = null } = {}) {
-  const d = f.draft; if (!d) return { ok: false, reason: 'No draft class.' };
+  const d = f.draft; if (!d) return { ok: false, reason: $t('franchise.no_draft_class') };
   if (d.started) return { ok: true, draft: d };
   // Each slot remembers the club whose record earned it (`original`) and the club that holds it now (`team`), traded picks differ (GDD §19.6).
   d.order = draftOrder(standingsBestFirst).map((o) => ({ round: o.round, original: o.team, team: ownerOf ? ownerOf({ round: o.round, original: o.team }) : o.team }));
@@ -103,7 +104,7 @@ export function aiDraftKnowledge(f, team) {
   const weeks = Math.max(d.scoutWeeks || 0, Math.max(0, (f.season?.week || 0) - 9));
   while (k.weeks < weeks) {
     const shadow = { draft: { ...d, revealed: k.revealed, scoutWeeks: k.weeks } };
-    scoutDraftClass(shadow, createRng(hashString(`${f.seed}|${d.year}|${team}|scout:${k.weeks}`)), { skill: k.skill });
+    scoutDraftClass(shadow, createRng(hashString(`${`${f.seed}|${d.year}|${team}|scout:${k.weeks}`}`)), { skill: k.skill });
     k.weeks += 1;
   }
   return k;
@@ -145,7 +146,7 @@ export function advanceDraft(f, rng, { playerClub, onAiPick = null, persist = tr
     let m = aiDraftPick(f, team, rng, { plan: planOf ? planOf(team) : null, afford });
     // R7: nobody affordable — the club makes room by its own roster management (a release, zero dead cap), else passes, recorded and explained
     if (!m && afford && d.available.length) { if (makeRoom?.(team)) m = aiDraftPick(f, team, rng, { plan: planOf ? planOf(team) : null, afford: affordOf(team) });
-      if (!m) { const why = 'no prospect fits its salary cap'; d.picks.push({ round: d.order[d.index].round, overall: d.index + 1, team, id: null, name: '(passed)', position: '', ovr: 0, mine: false, passed: true, why }); d.index += 1; d.round = d.order[d.index]?.round || d.round; if (d.index >= d.order.length) d.done = true; onAiPass?.(team, why); continue; } }
+      if (!m) { const why = $t('franchise.no_prospect_fits_its_salary_cap'); d.picks.push({ round: d.order[d.index].round, overall: d.index + 1, team, id: null, name: '(passed)', position: '', ovr: 0, mine: false, passed: true, why }); d.index += 1; d.round = d.order[d.index]?.round || d.round; if (d.index >= d.order.length) d.done = true; onAiPass?.(team, why); continue; } }
     if (!m) { d.done = true; break; }
     recordPick(f, team, m, { mine: false }); { const pk = d.picks[d.picks.length - 1]; m.drafted = { year: d.year, round: pk.round, overall: pk.overall, club: team }; } made.push({ team, m });
     if (persist) { (f.draftResults ||= {}); (f.draftResults[f.draft.year] ||= {}); (f.draftResults[f.draft.year][team] ||= []).push(m); }
@@ -156,17 +157,17 @@ export function advanceDraft(f, rng, { playerClub, onAiPick = null, persist = tr
 
 /** The owner's pick: a rookie deal at 70% of market, two seasons. */
 export function playerPick(f, id, { playerClub, nextYear }) {
-  const d = f.draft; if (!d?.started || d.done) return { ok: false, reason: 'The draft is not on.' };
-  if (d.order[d.index].team !== playerClub) return { ok: false, reason: 'Not your pick.' };
-  if (f.roster.length >= ROSTER_MAX) return { ok: false, reason: `Roster full (${ROSTER_MAX}). Pass, or release someone first.` };
-  const m = d.class.find((x) => x.id === id && d.available.includes(x.id)); if (!m) return { ok: false, reason: 'Already taken.' };
+  const d = f.draft; if (!d?.started || d.done) return { ok: false, reason: $t('franchise.the_draft_is_not_on') };
+  if (d.order[d.index].team !== playerClub) return { ok: false, reason: $t('franchise.not_your_pick') };
+  if (f.roster.length >= ROSTER_MAX) return { ok: false, reason: `${$t('franchise.roster_full_pass_or_release_someone', { rosterMax: ROSTER_MAX })}` };
+  const m = d.class.find((x) => x.id === id && d.available.includes(x.id)); if (!m) return { ok: false, reason: $t('franchise.already_taken') };
   m.salary = Math.round(salaryFor(m) * ROOKIE_SCALE / 100) * 100; m.contract = newContract(nextYear, 2); m.contract.rookie = true;
   m.joined = nextYear; f.roster.push(m); recordPick(f, playerClub, m, { mine: true }); const pk = d.picks[d.picks.length - 1]; m.drafted = { year: d.year, round: pk.round, overall: pk.overall, club: playerClub };
   noteJoin({ club: playerClub, season: { year: nextYear } }, m, 'draft', { round: pk.round, overall: pk.overall }); markCareerFresh(m); // Career Timeline (GDD §38)
   return { ok: true, monster: m };
 }
 export function passPick(f, { playerClub }) {
-  const d = f.draft; if (!d?.started || d.done || d.order[d.index].team !== playerClub) return { ok: false, reason: 'Not your pick.' };
+  const d = f.draft; if (!d?.started || d.done || d.order[d.index].team !== playerClub) return { ok: false, reason: $t('franchise.not_your_pick') };
   d.picks.push({ round: d.order[d.index].round, overall: d.index + 1, team: playerClub, id: null, name: '(passed)', position: '', ovr: 0, mine: true, passed: true });
   d.index += 1; d.round = d.order[d.index]?.round || d.round; if (d.index >= d.order.length) d.done = true;
   return { ok: true };

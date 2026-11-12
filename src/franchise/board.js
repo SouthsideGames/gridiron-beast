@@ -4,6 +4,7 @@
 // Revised 2026-10-22 (owner authorization): the forecast compares the club with the league instead of a fixed number, the safe
 // goal is the rounded forecast, a narrow miss on the hot seat is a final warning rather than a dismissal, and three
 // missed seasons in a row end the franchise however narrow the misses. Nothing else in the game can end a franchise.
+import { t as $t } from '../text/index.js';
 
 export const CONFIDENCE_MAX = 2;
 export const HOT_SEAT = -1;
@@ -35,20 +36,20 @@ export function goalOffers(f, { expectedWinPct = 0.5, gamesInSeason = 9, gymsThi
   // A rebuilding club's medium goal is one badge from a gym on its schedule that it does not hold yet (a badge is won once, so
   // gyms already beaten do not count); with none left to win, the playoffs.
   const medium = expectedWinPct >= 0.45 || gymsThisSeason < 1
-    ? { id: 'playoffs', label: 'Make the playoffs', text: 'Finish in a playoff spot. Standings only, no replays.', weight: 1 }
-    : { id: 'badges', label: 'Win a gym badge', target: 1, text: `Take a badge off one of the ${gymsThisSeason} gym club${gymsThisSeason === 1 ? '' : 's'} on your schedule whose badge you do not hold.`, weight: 1 };
+    ? { id: 'playoffs', label: $t('franchise.make_the_playoffs'), text: $t('franchise.finish_in_a_playoff_spot_standings'), weight: 1 }
+    : { id: 'badges', label: $t('franchise.win_a_gym_badge'), target: 1, text: `${$t('franchise.take_a_badge_off_one_of', { gymsThisSeason, n: gymsThisSeason })}`, weight: 1 };
   return [
-    { id: 'wins', label: `Win ${safeWins} games`, target: safeWins, forecastWins: +exp.toFixed(1), text: `The forecast says ${exp.toFixed(1)}. Match it.`, weight: 1, tier: 'safe' },
+    { id: 'wins', label: `${$t('franchise.win_games', { safeWins })}`, target: safeWins, forecastWins: +exp.toFixed(1), text: `${$t('franchise.the_forecast_says_match_it', { toFixed: exp.toFixed(1) })}`, weight: 1, tier: 'safe' },
     { ...medium, forecastWins: +exp.toFixed(1), tier: 'medium' },
-    { id: 'title', label: 'Win the Beast Bowl', forecastWins: +exp.toFixed(1), text: 'Everything. Hit this and the board remembers it twice over.', weight: 2, tier: 'stretch' },
+    { id: 'title', label: $t('franchise.win_the_beast_bowl'), forecastWins: +exp.toFixed(1), text: $t('franchise.everything_hit_this_and_the_board'), weight: 2, tier: 'stretch' },
   ];
 }
 
 export function needsGoal(f) { const b = ensureBoard(f); return !b.fired && !b.goal && f.season && f.season.week === 1 && !f.season.finished; }
 
 export function chooseGoal(f, id, offers) {
-  const b = ensureBoard(f); if (b.goal && b.goal.year === f.season.year) return { ok: false, reason: 'Goal already set this season.' };
-  const o = offers.find((x) => x.id === id); if (!o) return { ok: false, reason: 'Unknown goal.' };
+  const b = ensureBoard(f); if (b.goal && b.goal.year === f.season.year) return { ok: false, reason: $t('franchise.goal_already_set_this_season') };
+  const o = offers.find((x) => x.id === id); if (!o) return { ok: false, reason: $t('franchise.unknown_goal') };
   b.goal = { ...o, year: f.season.year, result: null };
   return { ok: true, goal: b.goal };
 }
@@ -82,11 +83,11 @@ export function settleConfidence(b, goal, facts, R = BOARD_RULES) {
   const miss = met ? null : missKind(goal, facts, R);
   let next = met ? Math.max(0, b.confidence) + goal.weight : b.confidence - 1;
   next = Math.max(FIRED, Math.min(CONFIDENCE_MAX, next));
-  let fired = false, reason = null;
-  if (!met && b.misses >= R.strikes) { fired = true; reason = `${R.strikes} missed seasons in a row`; next = FIRED; }
-  else if (next <= FIRED) { if (miss === 'narrow') { next = HOT_SEAT; reason = 'narrow miss on the hot seat: final warning'; } else { fired = true; reason = 'a clear miss on the hot seat'; } }
+  let fired = false, reason = null, warning = false;
+  if (!met && b.misses >= R.strikes) { fired = true; reason = `${$t('franchise.missed_seasons_in_a_row', { strikes: R.strikes })}`; next = FIRED; }
+  else if (next <= FIRED) { if (miss === 'narrow') { next = HOT_SEAT; warning = true; reason = $t('franchise.narrow_miss_on_the_hot_seat'); } else { fired = true; reason = $t('franchise.a_clear_miss_on_the_hot'); } }
   const delta = next - b.confidence; b.confidence = next;
-  return { met, miss, delta, confidence: next, fired, reason };
+  return { met, miss, delta, confidence: next, fired, reason, warning }; // warning: a narrow miss held on the hot seat (was read off the reason's wording)
 }
 /**
  * Season over: settle the goal. Returns {met, miss, delta, confidence, status, reason} where status is 'ok' | 'hot_seat' |
@@ -101,11 +102,11 @@ export function settleGoal(f, facts) {
   if (v.met) b.scoutBonusYear = f.season.year + 1;
   if (v.fired) b.fired = true;
   b.goal = null;
-  return { ...v, status: b.fired ? 'fired' : v.reason && v.reason.startsWith('narrow') ? 'warning' : b.confidence <= HOT_SEAT ? 'hot_seat' : 'ok', goal };
+  return { ...v, status: b.fired ? 'fired' : v.warning ? 'warning' : b.confidence <= HOT_SEAT ? 'hot_seat' : 'ok', goal };
 }
 
 export const onHotSeat = (f) => (f.board?.confidence ?? 0) <= HOT_SEAT && !f.board?.fired;
 export const isFired = (f) => !!f.board?.fired;
 export const scoutBonusActive = (f) => f.board?.scoutBonusYear === f.season?.year;
 
-export function confidenceLabel(c) { return c >= 2 ? 'Secure' : c === 1 ? 'Trusted' : c === 0 ? 'Neutral' : c === -1 ? 'Hot seat' : 'Fired'; }
+export function confidenceLabel(c) { return c >= 2 ? 'Secure' : c === 1 ? 'Trusted' : c === 0 ? 'Neutral' : c === -1 ? $t('franchise.hot_seat') : 'Fired'; }

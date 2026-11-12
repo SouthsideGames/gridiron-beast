@@ -24,6 +24,7 @@ import { hasFreeAgency } from './fa-state.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
 import { clubIdentity, identityTilt, trainingPriority } from '../data/identities.js';
 import { SPECIES_DEX } from '../data/species.js';
+import { t as $t } from '../text/index.js';
 
 export const BAND = 4;                 // the nudge acts beyond ±4 of the club's target (decision C)
 /** Task 6 Phase A-2 (D10b, owner 2026-10-30): the ordinary clubs' slowdown band and runaway-veteran band, separate from the gyms'
@@ -316,7 +317,7 @@ export function generateArrival(f, r, { club, position, quality, room, floor = f
     if (salaryFor(m) <= room || (floor && q <= MIN_QUALITY)) break; m = null; q = Math.max(MIN_QUALITY, q - 3); if (q === MIN_QUALITY && !floor && i > 6) break;
   }
   if (!m) return null;
-  if (m.apex && salaryFor(m) > room && !floor) { m.origin = regionName; claimMonster(f, m, `${club}|arrival-apex`); (f.pool ||= {}); (f.pool[regionName] ||= []).push(m); return null; } // unaffordable: he enters the market instead
+  if (m.apex && salaryFor(m) > room && !floor) { m.origin = regionName; claimMonster(f, m, `${`${club}|arrival-apex`}`); (f.pool ||= {}); (f.pool[regionName] ||= []).push(m); return null; } // unaffordable: he enters the market instead
   m.origin = regionName; m.salary = salaryFor(m); claimMonster(f, m, `${club}|arrival`);
   clubUniqueName(f, club, m);
   return m;
@@ -420,11 +421,11 @@ export function validateClubs(f, { cap, clubs = null } = {}) {
   const p = []; if (!hasLeague(f)) return p;
   for (const club of clubs || order(f)) {
     const roster = clubRoster(f, club); const c = clubRecord(f, club);
-    if (roster.length < ROSTER_MIN || roster.length > ROSTER_MAX) p.push(`${club}: ${roster.length} monsters`);
-    const problems = lineupProblems(roster, buildDepthChart(roster)); if (problems.length) p.push(`${club}: no legal monster for ${problems.join(', ')}`);
-    if (cap != null && clubCapRoom(f, club, cap) < 0) p.push(`${club}: ${clubPayroll(f, club)} payroll over the cap`);
-    for (const id of c.protected) if (!roster.some((m) => m.id === id)) p.push(`${club}: protected ${id} missing`);
-    for (const m of roster) { if (isProtected(m) && !m.contract?.permanent) p.push(`${club}: ${m.name} lost the permanent deal`); if (!isProtected(m) && !(m.contract?.ends >= 1)) p.push(`${club}: ${m.name} has no contract`); }
+    if (roster.length < ROSTER_MIN || roster.length > ROSTER_MAX) p.push(`${$t('franchise.monsters', { club, n: roster.length })}`);
+    const problems = lineupProblems(roster, buildDepthChart(roster)); if (problems.length) p.push(`${$t('franchise.no_legal_monster_for_2', { club })} ${problems.join(', ')}`);
+    if (cap != null && clubCapRoom(f, club, cap) < 0) p.push(`${$t('franchise.payroll_over_the_cap', { club, clubPayroll: clubPayroll(f, club) })}`);
+    for (const id of c.protected) if (!roster.some((m) => m.id === id)) p.push(`${$t('franchise.protected_missing', { club, id })}`);
+    for (const m of roster) { if (isProtected(m) && !m.contract?.permanent) p.push(`${$t('franchise.lost_the_permanent_deal', { club, name: m.name })}`); if (!isProtected(m) && !(m.contract?.ends >= 1)) p.push(`${$t('franchise.has_no_contract', { club, name: m.name })}`); }
   }
   return p;
 }

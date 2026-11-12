@@ -169,7 +169,7 @@ export function careerCardBlob(p, format = 'portrait') {
   const canvas = document.createElement('canvas'); const report = drawCareerCard(canvas, p, format);
   return new Promise((resolve, reject) => canvas.toBlob((blob) => { canvas.width = canvas.height = 0; blob ? resolve({ blob, report }) : reject(new Error($t('career.the_card_could_not_be_drawn'))); }, 'image/png'));
 }
-export const cardFileName = (p, format) => `${$t('career.career_png', { name: String(p.name || 'monster').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), format })}`;
+export const cardFileName = (p, format) => `${`${String(p.name || 'monster').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-career-${format}.png`}`;
 
 /**
  * Where this page can hand a file over (GDD §41.6). What the page can know: the PNG was drawn (always confirmed), the share

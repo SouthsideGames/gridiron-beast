@@ -23,13 +23,14 @@
 //    floor leaves. Two rounds at most, one seeded draw per member, season and round: a repeated offer never draws a new answer.
 import { hashString } from '../core/rng.js';
 import { staffById, STAFF } from '../data/staff.js';
+import { t as $t } from '../text/index.js';
 
 export const STAFF_BANDS = Object.freeze([
   { id: 'excellent', label: 'Excellent', min: 0.45, max: 1, lo: 0.06, hi: 0.08, flex: 0 },
   { id: 'good', label: 'Good', min: 0.15, max: 0.45, lo: 0.03, hi: 0.05, flex: 0.02 },
   { id: 'average', label: 'Average', min: -0.15, max: 0.15, lo: 0, hi: 0.02, flex: 0.04 },
   { id: 'poor', label: 'Poor', min: -0.45, max: -0.15, lo: -0.04, hi: 0, flex: 0.08 },
-  { id: 'very_poor', label: 'Very poor', min: -1, max: -0.45, lo: -0.08, hi: -0.04, flex: 0.12 },
+  { id: 'very_poor', label: $t('franchise.very_poor'), min: -1, max: -0.45, lo: -0.08, hi: -0.04, flex: 0.12 },
 ]);
 export const STAFF_NEG = Object.freeze({
   playoffs: 0.15, title: 0.3, shrink: Object.freeze({ head_scout: 0.6, monster_trainer: 0.6 }),
@@ -81,11 +82,11 @@ export function seasonScore(r, role) {
   return null;
 }
 const ROLE_WHY = {
-  head_coach: (r) => `win rank ${r.res.win} of ${r.res.n} with the ${ord(r.pre.team)}-strongest roster${r.res.champion ? ', champions' : r.res.playoffs ? ', playoffs' : ''}`,
-  offensive_coordinator: (r) => `scoring rank ${r.res.pf} of ${r.res.n} with the ${ord(r.pre.off)}-strongest offense`,
-  defensive_coordinator: (r) => `points-allowed rank ${r.res.pa} of ${r.res.n} with the ${ord(r.pre.def)}-strongest defense`,
-  head_scout: (r) => `draft picks ${r.draft.gap >= 0 ? '+' : ''}${r.draft.gap.toFixed(1)} against the picks around them`,
-  monster_trainer: (r) => `training delivered ${Math.round(100 * r.train.got / r.train.ref)}% of an average trainer's`,
+  head_coach: (r) => `${$t('franchise.win_rank_of_with_the_strongest', { win: r.res.win, n: r.res.n, ordinal: ord(r.pre.team), champion: r.res.champion ? $t('franchise.champions') : r.res.playoffs ? $t('franchise.playoffs') : '' })}`,
+  offensive_coordinator: (r) => `${$t('franchise.scoring_rank_of_with_the_strongest', { pf: r.res.pf, n: r.res.n, ordinal: ord(r.pre.off) })}`,
+  defensive_coordinator: (r) => `${$t('franchise.points_allowed_rank_of_with_the', { pa: r.res.pa, n: r.res.n, ordinal: ord(r.pre.def) })}`,
+  head_scout: (r) => `${$t('franchise.draft_picks_against_the_picks_around', { gap: r.draft.gap >= 0 ? '+' : '', toFixed: r.draft.gap.toFixed(1) })}`,
+  monster_trainer: (r) => `${$t('franchise.training_delivered_of_an_average_trainers', { n: Math.round(100 * r.train.got / r.train.ref) })}`,
 };
 function ord(n) { const s = ['th', 'st', 'nd', 'rd']; const v = n % 100; return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`; }
 /** The contract-period evaluation: { P, band, seasons: [{ year, score, why }] } for the member now in `role`. */
@@ -114,7 +115,7 @@ export function staffReservation(f, item) {
   let flex = b.flex - ((m?.overall ?? 0) >= STAFF_NEG.leverageOvr ? STAFF_NEG.leverageFlex : 0);
   const comparable = STAFF.some((c) => c.role === item.role && c.id !== id && c.overall >= (m?.overall ?? 0) - 2 && c.salary <= item.ask); // job security: someone comparable would do it for less
   if (comparable) flex += STAFF_NEG.replaceableFlex;
-  flex += STAFF_NEG.pride * (2 * draw(`staffpride|${f.seed ?? 0}|${item.year}|${item.role}|${id}`) - 1);
+  flex += STAFF_NEG.pride * (2 * draw(`${`staffpride|${f.seed ?? 0}|${item.year}|${item.role}|${id}`}`) - 1);
   return r100(item.ask * (1 - Math.max(0, flex)));
 }
 /**
@@ -123,7 +124,7 @@ export function staffReservation(f, item) {
  */
 export function staffAnswer(f, item, salary, round) {
   const demand = item.ask; if (salary >= demand) return { answer: 'accept' };
-  const res = staffReservation(f, item); const u = draw(`staffans|${f.seed ?? 0}|${item.year}|${item.role}|${f.staff?.[item.role]}|${round}`);
+  const res = staffReservation(f, item); const u = draw(`${`staffans|${f.seed ?? 0}|${item.year}|${item.role}|${f.staff?.[item.role]}|${round}`}`);
   if (round >= 2) { if (item.counter && salary >= item.counter) return { answer: 'accept' }; return salary >= res && u < STAFF_NEG.acceptFloor ? { answer: 'accept' } : { answer: 'leave' }; }
   if (salary >= res) { const p = STAFF_NEG.acceptFloor + (1 - STAFF_NEG.acceptFloor) * (salary - res) / Math.max(100, demand - res); return u < p ? { answer: 'accept' } : { answer: 'counter', counter: Math.max(res, r100((salary + demand) / 2)) }; }
   if (item.eval?.band === 'very_poor') return { answer: 'leave' };

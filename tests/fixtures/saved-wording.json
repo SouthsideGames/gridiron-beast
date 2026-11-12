@@ -1,0 +1,30 @@
+{
+ "about": "Places in a saved franchise that hold wording as a finished sentence (it keeps the language it was written in). Recorded by tests/text-never-decides.test.js from one season. News and League News are saved lines (src/text/index.js) and follow the language; what is listed for them here is only the fragments inside a line that are still plain text. Do not add a place to make the test pass: save a line (line / lineParts) instead, or ask the owner.",
+ "recorded": "2026-11-12",
+ "places": [
+  "board.history[].label",
+  "freeAgency.offers.*.closed.why",
+  "freeAgency.talks.*.clue",
+  "history[].awards.league.<award>.line",
+  "history[].awards.league.<award>.why",
+  "lastGame.tag",
+  "league.clubs.*.strategy.modeWhy",
+  "league.monsters.*.career.ev[].x.line",
+  "leagueNews[].tp[]",
+  "news[].text",
+  "news[].tp[]",
+  "news[].tv.clue",
+  "news[].tv.fillScene",
+  "news[].tv.label",
+  "news[].tv.text",
+  "offseason.items[].clue",
+  "postseason.vars.scheme",
+  "scenes[].ctx.awardLine",
+  "season.awards.league.<award>.line",
+  "season.awards.league.<award>.why",
+  "season.awardsFinal.races.<award>[].why",
+  "season.awardsFinal.winners.<award>.why",
+  "season.boardVerdict.goal.label",
+  "season.boardVerdict.goal.text"
+ ]
+}

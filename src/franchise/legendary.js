@@ -9,6 +9,7 @@
 import { PLAYS, LEGENDARY_IDS } from '../data/playbook.js';
 import { SPECIES_BY_ID } from '../data/monsters.js';
 import { canPlay } from '../data/personnel.js';
+import { t as $t, line as $L, lineParts as $P } from '../text/index.js';
 
 export { LEGENDARY_IDS };
 export const legendOf = (id) => PLAYS[id]?.legendary || null;
@@ -20,12 +21,12 @@ export function holderOf(roster, id) { const L = legendOf(id); return L ? (roste
 
 /** Discovery and availability of one Legendary Play for a franchise: { discovered, available, monster, reason }. */
 export function legendaryStatus(f, id) {
-  const L = legendOf(id); if (!L) return { discovered: false, available: false, monster: null, reason: 'Not a Legendary Play.' };
+  const L = legendOf(id); if (!L) return { discovered: false, available: false, monster: null, reason: $t('franchise.not_a_legendary_play') };
   const discovered = !!f.legendaryPlays?.discovered?.[id]; const m = holderOf(f.roster, id);
   let reason = null;
-  if (!m) reason = discovered ? `${speciesName(L.species)} is no longer on your roster.` : `Sign the Legendary ${speciesName(L.species)} to discover this play.`;
-  else if (m.injury) reason = `${m.name} is injured (${m.injury.weeks} wk). The play returns when ${m.name} is healthy.`;
-  else if (!canPlay(m.position, L.slot)) reason = `${m.name} cannot play ${L.slot}.`;
+  if (!m) reason = discovered ? `${$t('franchise.is_no_longer_on_your_roster', { species: speciesName(L.species) })}` : `${$t('franchise.sign_the_legendary_to_discover_this', { species: speciesName(L.species) })}`;
+  else if (m.injury) reason = `${$t('franchise.is_injured_wk_the_play_returns', { name: m.name, weeks: m.injury.weeks, name2: m.name })}`;
+  else if (!canPlay(m.position, L.slot)) reason = `${$t('franchise.cannot_play', { name: m.name, slot: L.slot })}`;
   return { discovered: discovered || !!m, available: !reason, monster: m, reason, slot: L.slot, species: L.species };
 }
 /** Legendary Plays this franchise can put in its plan right now, for one side. */
@@ -41,7 +42,7 @@ export function syncLegendaryPlays(f, { refill = null, news = null } = {}) {
   const out = { discovered: [], removed: [] };
   for (const id of LEGENDARY_IDS) {
     const m = holderOf(f.roster, id);
-    if (m && !rec.discovered[id]) { rec.discovered[id] = { year: f.season?.year ?? 1, week: f.season?.week ?? 1, monster: m.name }; out.discovered.push(id); news?.(`LEGENDARY PLAY DISCOVERED: ${PLAYS[id].name}, unlocked by ${m.name}. Add it to your game plan on Friday.`, 'win'); }
+    if (m && !rec.discovered[id]) { rec.discovered[id] = { year: f.season?.year ?? 1, week: f.season?.week ?? 1, monster: m.name }; out.discovered.push(id); news?.($L('franchise.legendary_play_discovered_unlocked_by_add', { name: PLAYS[id].name, name2: m.name }), 'win'); }
   }
   for (const holder of [f.week?.plan, f.lastPlan]) {
     if (!holder) continue;
@@ -50,7 +51,7 @@ export function syncLegendaryPlays(f, { refill = null, news = null } = {}) {
       const bad = plan.filter((id) => legendOf(id) && !legendaryStatus(f, id).available); if (!bad.length) continue;
       const kept = plan.filter((id) => !bad.includes(id));
       holder[side] = refill ? refill(side, kept) : kept;
-      for (const id of bad) if (!out.removed.includes(id)) { out.removed.push(id); if (holder === f.week?.plan) news?.(`${PLAYS[id].name} is out of the game plan: ${legendaryStatus(f, id).reason}`, 'info'); }
+      for (const id of bad) if (!out.removed.includes(id)) { out.removed.push(id); if (holder === f.week?.plan) news?.($L('franchise.is_out_of_the_game_plan', { name: PLAYS[id].name, reason: legendaryStatus(f, id).reason }), 'info'); }
     }
   }
   return out;

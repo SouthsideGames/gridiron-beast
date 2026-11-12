@@ -11,9 +11,10 @@
 
 import { withDerived } from './stats.js';
 import { monsterOverall, SPECIES_BY_ID } from '../data/monsters.js';
+import { t as $t } from '../text/index.js';
 
 export const CAREER_VERSION = 1;
-const PAIR_LABEL = { 'QB-RB': 'QB + RB', 'QB-WR': 'QB + WR', 'QB-TE': 'QB + TE', 'RB-OL': 'RB + OL', 'OL-OL': 'OL + OL', 'DL-DL': 'DL + DL', 'DL-LB': 'DL + LB', 'DL-CB': 'DL + CB' };
+const PAIR_LABEL = { 'QB-RB': $t('franchise.qb_rb'), 'QB-WR': $t('franchise.qb_wr'), 'QB-TE': $t('franchise.qb_te'), 'RB-OL': $t('franchise.rb_ol'), 'OL-OL': $t('franchise.ol_ol'), 'DL-DL': $t('franchise.dl_dl'), 'DL-LB': $t('franchise.dl_lb'), 'DL-CB': $t('franchise.dl_cb') };
 const CHEM_LABEL = ['New', 'Developing', 'Established', 'Strong', 'Elite'];
 export const TIER = Object.freeze({ award: 'major', champion: 'major', record: 'major', hof: 'major', evolve: 'notable', first: 'notable', milestone: 'notable', season: 'notable', playoff: 'notable', bowl: 'notable', level: 'notable', growth: 'notable', star: 'notable', rival: 'notable', debut: 'notable', join: 'career', drafted: 'career', left: 'career', signed: 'career', captain: 'career', chemistry: 'notable', injury: 'career', 'injury-return': 'notable', 'injury-free': 'notable', retired: 'notable' });
 
@@ -31,7 +32,7 @@ export const CAREER_MILESTONES = Object.freeze([
   { key: 'int', at: [5, 10, 20], unit: 'interceptions' }, { key: 'tacklesTotal', at: [100, 200, 400], unit: 'tackles' },
 ]);
 export const SEASON_MARKS = Object.freeze([
-  { key: 'passYds', at: 1500, label: '1,500-yard passing season' }, { key: 'passTd', at: 15, label: '15 touchdown passes in a season' },
+  { key: 'passYds', at: 1500, label: $t('franchise.1_500_yard_passing_season') }, { key: 'passTd', at: 15, label: $t('franchise.15_touchdown_passes_in_a_season') },
   { key: 'rushYds', at: 800, label: '800-yard rushing season' }, { key: 'recYds', at: 600, label: '600-yard receiving season' },
   { key: 'tdTotal', at: 10, label: '10-touchdown season' }, { key: 'sacks', at: 4, label: '4-sack season' },
   { key: 'int', at: 3, label: '3-interception season' }, { key: 'tacklesTotal', at: 40, label: '40-tackle season' },
@@ -43,7 +44,7 @@ export const RECORDS_FROM_SEASON = 2;
 /** A single game worth remembering (playoffs and rivalry games only). */
 export function bigGame(l) {
   const d = withDerived(l); const bits = [];
-  if ((d.passTd || 0) >= 3) bits.push(`${d.passTd} TD passes`); else if ((d.passYds || 0) >= 250) bits.push(`${d.passYds} passing yards`);
+  if ((d.passTd || 0) >= 3) bits.push(`${$t('franchise.td_passes', { passTd: d.passTd })}`); else if ((d.passYds || 0) >= 250) bits.push(`${d.passYds} passing yards`);
   if ((d.tdTotal || 0) >= 2) bits.push(`${d.tdTotal} touchdowns`);
   if ((d.rushYds || 0) >= 100) bits.push(`${d.rushYds} rushing yards`); if ((d.recYds || 0) >= 100) bits.push(`${d.recYds} receiving yards`);
   if ((d.sacks || 0) >= 2) bits.push(`${d.sacks} sacks`); if ((d.int || 0) >= 1) bits.push(`${d.int} interception${d.int > 1 ? 's' : ''}`);
@@ -73,7 +74,7 @@ export function noteJoin(f, m, via, x = {}) {
   const y = via === 'founding' ? 1 : (m.joined ?? f.season?.year ?? 1);
   const returning = (m.history || []).some((h) => h.club === f.club);
   const g = (m.stats?.career?.reg?.games || 0) + (m.stats?.career?.post?.games || 0); // games on record when he arrives
-  return addEvent(m, { k: `join:${y}:${f.club}:${(m.history || []).length}`, t: 'join', y, c: f.club, x: { via, ...(returning ? { back: 1 } : {}), ...(g ? { g } : {}), ...x } });
+  return addEvent(m, { k: `${`join:${y}:${f.club}:${(m.history || []).length}`}`, t: 'join', y, c: f.club, x: { via, ...(returning ? { back: 1 } : {}), ...(g ? { g } : {}), ...x } });
 }
 
 // ------------------------------------------------------------ after each game
@@ -116,18 +117,18 @@ export function careerAfterGame(roster, ctx, { lineOf = null } = {}) {
     }
     for (const M of CAREER_MILESTONES) for (const at of M.at) {
       const before = (total[M.key] || 0) - (line[M.key] || 0);
-      if (before < at && (total[M.key] || 0) >= at) added += addEvent(m, { k: `mile:${M.key}:${at}`, t: 'milestone', y: year, w: week, c: club, x: { key: M.key, at, ...(full ? {} : { club: 1 }) } });
+      if (before < at && (total[M.key] || 0) >= at) added += addEvent(m, { k: `${`mile:${M.key}:${at}`}`, t: 'milestone', y: year, w: week, c: club, x: { key: M.key, at, ...(full ? {} : { club: 1 }) } });
     }
     if (log.playoff) {
       added += addEvent(m, { k: 'po:first', t: 'playoff', y: year, w: week, c: club, x: { opp: log.opp } });
-      const big = bigGame(log.line); if (big.length) added += addEvent(m, { k: `star:${year}:${week}`, t: 'star', y: year, w: week, c: club, x: { opp: log.opp, line: big.join(', '), won: log.won ? 1 : 0, round: ctx.playoffRound || null } });
+      const big = bigGame(log.line); if (big.length) added += addEvent(m, { k: `${`star:${year}:${week}`}`, t: 'star', y: year, w: week, c: club, x: { opp: log.opp, line: big.join(', '), won: log.won ? 1 : 0, round: ctx.playoffRound || null } });
       if (ctx.playoffRound === 3) added += addEvent(m, log.won ? { k: `champ:${year}`, t: 'champion', y: year, w: week, c: club, x: { opp: log.opp, score: log.score, played: 1 } } : { k: `bowl:${year}`, t: 'bowl', y: year, w: week, c: club, x: { opp: log.opp, score: log.score } });
     } else if (ctx.rival && log.won) {
-      const big = bigGame(log.line); if (big.length) added += addEvent(m, { k: `rival:${year}:${week}`, t: 'rival', y: year, w: week, c: club, x: { opp: log.opp, line: big.join(', ') } });
+      const big = bigGame(log.line); if (big.length) added += addEvent(m, { k: `${`rival:${year}:${week}`}`, t: 'rival', y: year, w: week, c: club, x: { opp: log.opp, line: big.join(', ') } });
     }
     // single-game league records set in this very game (the records book keeps names, so match name, club, season, week and value)
     for (const [cat, r] of Object.entries(ctx.records?.game || {})) {
-      if (year >= RECORDS_FROM_SEASON && r && r.year === year && r.week === week && r.team === club && (r.id ? r.id === m.id : r.name === m.name) && (line[cat] ?? line[cat === 'tacklesTotal' ? 'tacklesTotal' : cat]) === r.value) added += addEvent(m, { k: `rec:game:${cat}:${year}:${week}`, t: 'record', y: year, w: week, c: club, x: { scope: 'game', cat, value: r.value } });
+      if (year >= RECORDS_FROM_SEASON && r && r.year === year && r.week === week && r.team === club && (r.id ? r.id === m.id : r.name === m.name) && (line[cat] ?? line[cat === 'tacklesTotal' ? 'tacklesTotal' : cat]) === r.value) added += addEvent(m, { k: `${`rec:game:${cat}:${year}:${week}`}`, t: 'record', y: year, w: week, c: club, x: { scope: 'game', cat, value: r.value } });
     }
   }
   return added;
@@ -149,16 +150,16 @@ export function careerSeasonEnd(roster, ctx) {
   for (const m of roster) {
     const b = book(m); const s = m.stats; const bookY = s?.season?.year === year ? s.season : (s?.seasons || []).find((x) => x.year === year);
     const reg = withDerived(bookY?.reg || {}), post = bookY?.post || {};
-    for (const [key, w] of Object.entries(ctx.awards?.league || {})) if (w && w.id === m.id && w.team === club && key !== 'coy') added += addEvent(m, { k: `award:${key}:${year}`, t: 'award', y: year, c: club, x: { key } });
-    for (const [cat, r] of Object.entries(ctx.records?.season || {})) if (year >= RECORDS_FROM_SEASON && r && r.year === year && r.team === club && (r.id ? r.id === m.id : r.name === m.name) && (reg[cat] || 0) === r.value) added += addEvent(m, { k: `rec:season:${cat}:${year}`, t: 'record', y: year, c: club, x: { scope: 'season', cat, value: r.value } });
-    for (const S of SEASON_MARKS) if ((reg[S.key] || 0) >= S.at) added += addEvent(m, { k: `season:${S.key}:${year}`, t: 'season', y: year, c: club, x: { key: S.key, value: reg[S.key], at: S.at } });
+    for (const [key, w] of Object.entries(ctx.awards?.league || {})) if (w && w.id === m.id && w.team === club && key !== 'coy') added += addEvent(m, { k: `${`award:${key}:${year}`}`, t: 'award', y: year, c: club, x: { key } });
+    for (const [cat, r] of Object.entries(ctx.records?.season || {})) if (year >= RECORDS_FROM_SEASON && r && r.year === year && r.team === club && (r.id ? r.id === m.id : r.name === m.name) && (reg[cat] || 0) === r.value) added += addEvent(m, { k: `${`rec:season:${cat}:${year}`}`, t: 'record', y: year, c: club, x: { scope: 'season', cat, value: r.value } });
+    for (const S of SEASON_MARKS) if ((reg[S.key] || 0) >= S.at) added += addEvent(m, { k: `${`season:${S.key}:${year}`}`, t: 'season', y: year, c: club, x: { key: S.key, value: reg[S.key], at: S.at } });
     if (ctx.champion === club && (post.games || 0) > 0) added += addEvent(m, { k: `champ:${year}`, t: 'champion', y: year, c: club, x: { run: 1 } });
     if (b.o0?.y === year) { const gain = monsterOverall(m) - b.o0.ovr; if (gain >= GROWTH_MARK) added += addEvent(m, { k: `grow:${year}`, t: 'growth', y: year, c: club, x: { from: b.o0.ovr, to: b.o0.ovr + gain } }); }
   }
   return added;
 }
 /** The owner retires: the monsters on his Hall of Fame card. */
-export function noteHallOfFame(roster, ids, { year, club, owner }) { let n = 0; for (const m of roster) if (ids.includes(m.id)) n += addEvent(m, { k: `hof:${year}:${club}`, t: 'hof', y: year, c: club, x: { owner } }); return n; }
+export function noteHallOfFame(roster, ids, { year, club, owner }) { let n = 0; for (const m of roster) if (ids.includes(m.id)) n += addEvent(m, { k: `${`hof:${year}:${club}`}`, t: 'hof', y: year, c: club, x: { owner } }); return n; }
 
 // ------------------------------------------------------------ older saves
 /**
@@ -177,13 +178,13 @@ export function backfillCareer(f, m) {
     const line = withDerived(sum(bk.reg, bk.post)); const club = bk.team || f.club;
     if ((line.games || 0) > 0 && (m.yearsPro || 0) - ((f.season?.year ?? bk.year) - bk.year) === 0) added += addEvent(m, { k: 'debut', t: 'debut', y: bk.year, c: club });
     for (const F of FIRSTS) { if (F.pos && !F.pos.includes(m.position)) continue; if ((line[F.key] || 0) > 0 && !(run[F.key] > 0)) added += addEvent(m, { k: `first:${F.id}`, t: 'first', y: bk.year, c: club, x: { id: F.id, ...(full ? {} : { club: 1 }) } }); }
-    for (const M of CAREER_MILESTONES) { const before = run[M.key] || 0, after = before + (line[M.key] || 0); for (const at of M.at) if (before < at && after >= at) added += addEvent(m, { k: `mile:${M.key}:${at}`, t: 'milestone', y: bk.year, c: club, x: { key: M.key, at, ...(full ? {} : { club: 1 }) } }); }
+    for (const M of CAREER_MILESTONES) { const before = run[M.key] || 0, after = before + (line[M.key] || 0); for (const at of M.at) if (before < at && after >= at) added += addEvent(m, { k: `${`mile:${M.key}:${at}`}`, t: 'milestone', y: bk.year, c: club, x: { key: M.key, at, ...(full ? {} : { club: 1 }) } }); }
     for (const [k, v] of Object.entries(line)) if (typeof v === 'number') run[k] = (run[k] || 0) + v;
     if ((bk.post?.games || 0) > 0) added += addEvent(m, { k: 'po:first', t: 'playoff', y: bk.year, c: club });
-    if (bk.year !== f.season?.year || f.season?.finished) { const reg = withDerived(bk.reg || {}); for (const S of SEASON_MARKS) if ((reg[S.key] || 0) >= S.at) added += addEvent(m, { k: `season:${S.key}:${bk.year}`, t: 'season', y: bk.year, c: club, x: { key: S.key, value: reg[S.key], at: S.at } }); }
+    if (bk.year !== f.season?.year || f.season?.finished) { const reg = withDerived(bk.reg || {}); for (const S of SEASON_MARKS) if ((reg[S.key] || 0) >= S.at) added += addEvent(m, { k: `${`season:${S.key}:${bk.year}`}`, t: 'season', y: bk.year, c: club, x: { key: S.key, value: reg[S.key], at: S.at } }); }
   }
   for (const h of f.history || []) {
-    for (const [key, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && w.team === h.club && key !== 'coy') added += addEvent(m, { k: `award:${key}:${h.year}`, t: 'award', y: h.year, c: h.club, x: { key } });
+    for (const [key, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && w.team === h.club && key !== 'coy') added += addEvent(m, { k: `${`award:${key}:${h.year}`}`, t: 'award', y: h.year, c: h.club, x: { key } });
     const bk = seasons.find((x) => x.year === h.year);
     if (h.champion && h.champion === h.club && (bk?.post?.games || 0) > 0) added += addEvent(m, { k: `champ:${h.year}`, t: 'champion', y: h.year, c: h.club, x: { run: 1 } });
   }
@@ -194,46 +195,46 @@ export function backfillCareer(f, m) {
 
 // ------------------------------------------------------------ the timeline
 const TD_LABEL = Object.fromEntries(FIRSTS.map((x) => [x.id, x.label]));
-const AWARD = { mvp: ['Most Valuable Monster', 'Named the league\'s Most Valuable Monster.'], opoy: ['Offensive Monster of the Year', 'The league\'s best offensive monster this season.'], dpoy: ['Defensive Monster of the Year', 'The league\'s best defensive monster this season.'], oroy: ['Offensive Rookie of the Year', 'The best offensive rookie in the league.'], droy: ['Defensive Rookie of the Year', 'The best defensive rookie in the league.'], smoy: ['Signature Monster of the Year', 'No signature ability made a bigger difference.'] };
+const AWARD = { mvp: [$t('franchise.most_valuable_monster'), 'Named the league\'s Most Valuable Monster.'], opoy: [$t('franchise.offensive_monster_of_the_year'), 'The league\'s best offensive monster this season.'], dpoy: [$t('franchise.defensive_monster_of_the_year'), 'The league\'s best defensive monster this season.'], oroy: [$t('franchise.offensive_rookie_of_the_year'), 'The best offensive rookie in the league.'], droy: [$t('franchise.defensive_rookie_of_the_year'), 'The best defensive rookie in the league.'], smoy: [$t('franchise.signature_monster_of_the_year'), 'No signature ability made a bigger difference.'] };
 const STAT_LABEL = { passYds: 'passing yards', passTd: 'touchdown passes', rushYds: 'rushing yards', rushTd: 'rushing touchdowns', recYds: 'receiving yards', rec: 'receptions', recTd: 'receiving touchdowns', tacklesTotal: 'tackles', sacks: 'sacks', int: 'interceptions', pd: 'passes defended', fgLong: 'longest field goal' };
 const fmt = (n) => Number(n).toLocaleString('en-US');
 const ord = (n) => `${n}${['th', 'st', 'nd', 'rd'][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10] || 'th'}`;
 
 /** Title, description, icon and weight for an event. */
 export function describeEvent(e, m) {
-  const x = e.x || {}; const c = e.c || 'the club'; const at = (s) => (x.club ? `${s} with the ${c}` : s);
+  const x = e.x || {}; const c = e.c || $t('franchise.the_club'); const at = (s) => (x.club ? `${$t('franchise.with_the_2', { s, c })}` : s);
   switch (e.t) {
     case 'join': {
-      const v = x.via; const back = x.back ? 'Returned to' : 'Joined';
-      const how = v === 'founding' ? (x.cornerstone ? `Chosen as a cornerstone of the founding ${c} roster.` : `On the founding ${c} roster.`) : v === 'draft' ? `Drafted${x.round ? ` in round ${x.round} (pick ${x.overall})` : ''} by the ${c}.` : v === 'encounter' ? `Recruited after a Tuesday Beast Clash encounter${x.region ? ` in ${x.region}` : ''}.` : v === 'free_agent' ? `Signed as a free agent${x.region ? ` from the ${x.region} pool` : ''}.` : v === 'trade' ? `Acquired in a trade${x.from ? ` with the ${x.from}` : ''}.` : v === 'developer' ? 'Added with the developer tools.' : `${back} the ${c}.`;
-      return { icon: x.back ? '↩' : v === 'draft' ? '📋' : v === 'encounter' ? '⚔️' : v === 'trade' ? '🔁' : v === 'free_agent' ? '✍️' : '🏟', title: v === 'draft' ? 'Drafted' : v === 'encounter' ? 'Recruited' : v === 'trade' ? 'Traded in' : v === 'free_agent' ? (x.back ? 'Returned home' : 'Free-agent signing') : v === 'founding' ? (x.cornerstone ? 'Founding cornerstone' : 'Founding roster') : `${back} the ${c}`, desc: how };
+      const v = x.via; const back = x.back ? $t('franchise.returned_to') : 'Joined';
+      const how = v === 'founding' ? (x.cornerstone ? `${$t('franchise.chosen_as_a_cornerstone_of_the', { c })}` : `${$t('franchise.on_the_founding_roster', { c })}`) : v === 'draft' ? `${$t('franchise.drafted')}${x.round ? ` ${$t('franchise.in_round_pick', { round: x.round, overall: x.overall })}` : ''} ${$t('franchise.by_the_2', { c })}` : v === 'encounter' ? `${$t('franchise.recruited_after_a_tuesday_beast_clash')}${x.region ? ` in ${x.region}` : ''}.` : v === 'free_agent' ? `${$t('franchise.signed_as_a_free_agent')}${x.region ? ` ${$t('franchise.from_the_pool', { region: x.region })}` : ''}.` : v === 'trade' ? `${$t('franchise.acquired_in_a_trade')}${x.from ? ` ${$t('franchise.with_the_3', { from: x.from })}` : ''}.` : v === 'developer' ? $t('franchise.added_with_the_developer_tools') : `${$t('franchise.the', { back, c })}`;
+      return { icon: x.back ? '↩' : v === 'draft' ? '📋' : v === 'encounter' ? '⚔️' : v === 'trade' ? '🔁' : v === 'free_agent' ? '✍️' : '🏟', title: v === 'draft' ? 'Drafted' : v === 'encounter' ? 'Recruited' : v === 'trade' ? $t('franchise.traded_in') : v === 'free_agent' ? (x.back ? $t('franchise.returned_home') : $t('franchise.free_agent_signing')) : v === 'founding' ? (x.cornerstone ? $t('franchise.founding_cornerstone') : $t('franchise.founding_roster')) : `${back} the ${c}`, desc: how };
     }
-    case 'retired': return { icon: '🌅', title: 'Retired', desc: `Retired${x.age ? ` at ${x.age}` : ''} after his last season with the ${c}. The decision is final.` };
-    case 'drafted': return { icon: '📋', title: 'Drafted', desc: `Selected in round ${x.round} (pick ${x.overall}) by the ${c}.` };
-    case 'signed': return { icon: '✍️', title: `Signed with the ${c}`, desc: 'Signed out of a regional pool.' };
-    case 'left': return { icon: x.reason === 'traded' ? '🔁' : '🚪', title: x.reason === 'walked' ? 'Left as a free agent' : x.reason === 'commissioner' ? 'Cut by the commissioner' : x.reason === 'traded' ? `Traded by the ${c}` : `Released by the ${c}`, desc: x.reason === 'walked' ? `His contract ran out and he left the ${c}.` : x.reason === 'commissioner' ? `Let go to bring the ${c} under the cap.` : x.reason === 'traded' ? `Moved on from the ${c}.` : `Back to the regional pool, his stats and history with him.` };
-    case 'debut': return x.club ? { icon: '🆕', title: `First game for the ${c}`, desc: x.opp ? `Debuted for his new club against the ${x.opp}.` : 'His first game for his new club.' } : { icon: '🆕', title: 'First professional game', desc: x.opp ? `Took the field for the first time, against the ${x.opp}.` : 'His first season in the league.' };
-    case 'first': return { icon: x.id === 'sack' ? '💥' : x.id === 'int' ? '🧤' : '🏈', title: at(`First ${x.club ? '' : 'career '}${TD_LABEL[x.id] || x.id}`).replace('  ', ' '), desc: x.opp ? `Against the ${x.opp}.` : 'The first of his career in the record books.' };
-    case 'milestone': return { icon: '📈', title: `${fmt(x.at)} career ${STAT_LABEL[x.key] || x.key}`, desc: x.club ? `Counting his games with the ${c} (earlier seasons are not on record).` : 'A career milestone.' };
-    case 'season': return { icon: '⭐', title: (SEASON_MARKS.find((s) => s.key === x.key)?.label || 'Big season').replace(/^./, (a) => a.toUpperCase()), desc: `${fmt(x.value)} ${STAT_LABEL[x.key] || x.key} in the regular season.` };
-    case 'level': return { icon: '⬆️', title: `Reached level ${x.level}`, desc: x.level >= 30 ? 'Among the most experienced monsters in the league.' : x.level >= 20 ? 'A seasoned veteran now.' : 'Ten levels of hard-won experience.' };
-    case 'growth': return { icon: '💪', title: `+${x.to - x.from} overall`, desc: `From ${x.from} to ${x.to} OVR in one season.` };
-    case 'evolve': return { icon: '✨', title: x.before ? 'Evolved' : `Evolved into ${x.to || 'a new form'}`, desc: x.before ? `${x.from ? `${x.from} → ` : ''}${x.to || 'its next form'}, before the timeline began.` : `${x.from || 'He'} evolved into ${x.to || 'its next form'}${x.lvl ? ` at level ${x.lvl}` : ''}${x.ovr && x.ovr[1] > x.ovr[0] ? ` (overall ${x.ovr[0]} → ${x.ovr[1]})` : ''}.` };
-    case 'playoff': return { icon: '🎟', title: 'First playoff game', desc: x.opp ? `Played in the postseason against the ${x.opp}.` : 'Played in the postseason.' };
-    case 'star': return { icon: '🔥', title: x.round === 3 ? 'Beast Bowl star' : 'Playoff performance', desc: `${x.line} against the ${x.opp}${x.won ? ', in a win' : ''}.` };
-    case 'rival': return { icon: '⚔️', title: 'Rivalry hero', desc: `${x.line} in a win over the rival ${x.opp}.` };
-    case 'bowl': return { icon: '🏟', title: 'Played in the Beast Bowl', desc: `Lost the final to the ${x.opp}${x.score ? `, ${x.score}` : ''}.` };
-    case 'champion': return { icon: '🏆', title: 'Beast Bowl champion', desc: x.played ? `Helped the ${c} win the title${x.opp ? ` against the ${x.opp}` : ''}${x.score ? `, ${x.score}` : ''}.` : `Played in the ${c}'s title run.` };
-    case 'award': return { icon: '🏅', title: AWARD[x.key]?.[0] || x.key, desc: AWARD[x.key]?.[1] || 'A league award.' };
-    case 'record': return { icon: '📜', title: x.scope === 'game' ? 'League record: one game' : 'League record: one season', desc: `${fmt(x.value)} ${STAT_LABEL[x.cat] || x.cat}${x.scope === 'game' ? ' in one game' : ' in one season'}: the most since league records began.` };
-    case 'hof': return { icon: '🏛', title: 'Hall of Fame', desc: `Named on ${x.owner || 'the owner'}'s Hall of Fame card.` };
+    case 'retired': return { icon: '🌅', title: $t('franchise.retired'), desc: `${$t('franchise.retired')}${x.age ? ` at ${x.age}` : ''} ${$t('franchise.after_his_last_season_with_the', { c })}` };
+    case 'drafted': return { icon: '📋', title: $t('franchise.drafted'), desc: `${$t('franchise.selected_in_round_pick_by_the', { round: x.round, overall: x.overall, c })}` };
+    case 'signed': return { icon: '✍️', title: `${$t('franchise.signed_with_the', { c })}`, desc: $t('franchise.signed_out_of_a_regional_pool') };
+    case 'left': return { icon: x.reason === 'traded' ? '🔁' : '🚪', title: x.reason === 'walked' ? $t('franchise.left_as_a_free_agent') : x.reason === 'commissioner' ? $t('franchise.cut_by_the_commissioner') : x.reason === 'traded' ? `${$t('franchise.traded_by_the', { c })}` : `${$t('franchise.released_by_the', { c })}`, desc: x.reason === 'walked' ? `${$t('franchise.his_contract_ran_out_and_he', { c })}` : x.reason === 'commissioner' ? `${$t('franchise.let_go_to_bring_the_under', { c })}` : x.reason === 'traded' ? `${$t('franchise.moved_on_from_the', { c })}` : `${$t('franchise.back_to_the_regional_pool_his')}` };
+    case 'debut': return x.club ? { icon: '🆕', title: `${$t('franchise.first_game_for_the', { c })}`, desc: x.opp ? `${$t('franchise.debuted_for_his_new_club_against', { opp: x.opp })}` : $t('franchise.his_first_game_for_his_new') } : { icon: '🆕', title: $t('franchise.first_professional_game'), desc: x.opp ? `${$t('franchise.took_the_field_for_the_first', { opp: x.opp })}` : $t('franchise.his_first_season_in_the_league') };
+    case 'first': return { icon: x.id === 'sack' ? '💥' : x.id === 'int' ? '🧤' : '🏈', title: at(`${$t('franchise.first', { club: x.club ? '' : 'career ', tdLabel: TD_LABEL[x.id] || x.id })}`).replace('  ', ' '), desc: x.opp ? `${$t('franchise.against_the', { opp: x.opp })}` : $t('franchise.the_first_of_his_career_in') };
+    case 'milestone': return { icon: '📈', title: `${fmt(x.at)} career ${STAT_LABEL[x.key] || x.key}`, desc: x.club ? `${$t('franchise.counting_his_games_with_the_earlier', { c })}` : $t('franchise.a_career_milestone') };
+    case 'season': return { icon: '⭐', title: (SEASON_MARKS.find((s) => s.key === x.key)?.label || $t('franchise.big_season')).replace(/^./, (a) => a.toUpperCase()), desc: `${$t('franchise.in_the_regular_season', { amount: fmt(x.value), statLabel: STAT_LABEL[x.key] || x.key })}` };
+    case 'level': return { icon: '⬆️', title: `${$t('franchise.reached_level', { level: x.level })}`, desc: x.level >= 30 ? $t('franchise.among_the_most_experienced_monsters_in') : x.level >= 20 ? $t('franchise.a_seasoned_veteran_now') : $t('franchise.ten_levels_of_hard_won_experience') };
+    case 'growth': return { icon: '💪', title: `${$t('franchise.overall', { from: x.to - x.from })}`, desc: `${$t('franchise.from_to_ovr_in_one_season', { from: x.from, to: x.to })}` };
+    case 'evolve': return { icon: '✨', title: x.before ? 'Evolved' : `${$t('franchise.evolved_into', { to: x.to || $t('franchise.a_new_form') })}`, desc: x.before ? `${x.from ? `${x.from} → ` : ''}${$t('franchise.before_the_timeline_began', { to: x.to || 'its next form' })}` : `${x.from || 'He'} evolved into ${x.to || 'its next form'}${x.lvl ? ` ${$t('franchise.at_level', { lvl: x.lvl })}` : ''}${x.ovr && x.ovr[1] > x.ovr[0] ? ` ${$t('franchise.overall_2', { ovr: x.ovr[0], ovr2: x.ovr[1] })}` : ''}.` };
+    case 'playoff': return { icon: '🎟', title: $t('franchise.first_playoff_game'), desc: x.opp ? `${$t('franchise.played_in_the_postseason_against_the', { opp: x.opp })}` : $t('franchise.played_in_the_postseason') };
+    case 'star': return { icon: '🔥', title: x.round === 3 ? $t('franchise.beast_bowl_star') : $t('franchise.playoff_performance'), desc: `${$t('franchise.against_the_2', { line: x.line, opp: x.opp, won: x.won ? $t('franchise.in_a_win') : '' })}` };
+    case 'rival': return { icon: '⚔️', title: $t('franchise.rivalry_hero'), desc: `${$t('franchise.in_a_win_over_the_rival', { line: x.line, opp: x.opp })}` };
+    case 'bowl': return { icon: '🏟', title: $t('franchise.played_in_the_beast_bowl'), desc: `${$t('franchise.lost_the_final_to_the', { opp: x.opp })}${x.score ? `, ${x.score}` : ''}.` };
+    case 'champion': return { icon: '🏆', title: $t('franchise.beast_bowl_champion_2'), desc: x.played ? `${$t('franchise.helped_the_win_the_title', { c })}${x.opp ? ` ${$t('franchise.against_the_3', { opp: x.opp })}` : ''}${x.score ? `, ${x.score}` : ''}.` : `${$t('franchise.played_in_the_s_title_run', { c })}` };
+    case 'award': return { icon: '🏅', title: AWARD[x.key]?.[0] || x.key, desc: AWARD[x.key]?.[1] || $t('franchise.a_league_award') };
+    case 'record': return { icon: '📜', title: x.scope === 'game' ? $t('franchise.league_record_one_game') : $t('franchise.league_record_one_season'), desc: `${$t('franchise.the_most_since_league_records_began', { amount: fmt(x.value), statLabel: STAT_LABEL[x.cat] || x.cat, scope: x.scope === 'game' ? $t('franchise.in_one_game') : $t('franchise.in_one_season') })}` };
+    case 'hof': return { icon: '🏛', title: $t('franchise.hall_of_fame'), desc: `${$t('franchise.named_on_s_hall_of_fame', { owner: x.owner || $t('franchise.the_owner') })}` };
     // Injury History (GDD §50): the game's own injury words (severity, body part); never a diagnosis
-    case 'injury': return { icon: '🩹', title: 'First career injury', desc: `${[x.sev, x.type].filter(Boolean).join(' ') || 'Injured'}${x.vs ? ` in the game against the ${x.vs}` : ''}.` };
-    case 'injury-return': return { icon: '💪', title: `Returned after missing ${x.missed} games`, desc: `Back from his ${x.type || 'injury'}.` };
-    case 'injury-free': return { icon: '🛡️', title: 'Played every game of a season', desc: `All ${x.games} regular-season games, none missed to injury.` };
+    case 'injury': return { icon: '🩹', title: $t('franchise.first_career_injury'), desc: `${[x.sev, x.type].filter(Boolean).join(' ') || $t('franchise.injured')}${x.vs ? ` ${$t('franchise.in_the_game_against_the', { vs: x.vs })}` : ''}.` };
+    case 'injury-return': return { icon: '💪', title: `${$t('franchise.returned_after_missing_games', { missed: x.missed })}`, desc: `${$t('franchise.back_from_his', { type: x.type || 'injury' })}` };
+    case 'injury-free': return { icon: '🛡️', title: $t('franchise.played_every_game_of_a_season'), desc: `${$t('franchise.all_regular_season_games_none_missed', { games: x.games })}` };
     // Captain Partnerships (GDD §27.4B)
-    case 'captain': return { icon: '©', title: `Named ${x.side === 'defense' ? 'defensive' : 'offensive'} captain`, desc: `Paired with ${x.pname || 'a teammate'} (${PAIR_LABEL[x.type] || 'captain pair'}) for the ${c}'s season.` };
-    case 'chemistry': return { icon: '🤝', title: `${CHEM_LABEL[x.level] || 'New'} chemistry with ${x.pname || 'his partner'}`, desc: `Their captain partnership reached ${CHEM_LABEL[x.level] || 'a new level'}: +${x.level}% when both are on the field.` };
+    case 'captain': return { icon: '©', title: `${$t('franchise.named_captain', { side: x.side === 'defense' ? 'defensive' : 'offensive' })}`, desc: `${$t('franchise.paired_with_for_the_s_season', { pname: x.pname || $t('franchise.a_teammate'), pairLabel: PAIR_LABEL[x.type] || 'captain pair', c })}` };
+    case 'chemistry': return { icon: '🤝', title: `${$t('franchise.chemistry_with', { chemLabel: CHEM_LABEL[x.level] || $t('franchise.new'), pname: x.pname || $t('franchise.his_partner') })}`, desc: `${$t('franchise.their_captain_partnership_reached_when_both', { chemLabel: CHEM_LABEL[x.level] || $t('franchise.a_new_level'), level: x.level })}` };
     default: return { icon: '•', title: e.t, desc: '' };
   }
 }
@@ -261,9 +262,9 @@ export function careerTimeline(m, { club = null } = {}) {
   }
   const annotate = (e, d) => {
     const n = nth[e.k];
-    if (e.t === 'champion') return { ...d, title: n === 1 ? 'Beast Bowl champion' : `Beast Bowl champion ×${n}`, desc: `${n === 1 ? 'His first title. ' : `Title number ${n}. `}${d.desc}` };
+    if (e.t === 'champion') return { ...d, title: n === 1 ? $t('franchise.beast_bowl_champion_2') : `${$t('franchise.beast_bowl_champion_3', { n })}`, desc: `${n === 1 ? $t('franchise.his_first_title') : `${$t('franchise.title_number', { n })} `}${d.desc}` };
     if (e.t === 'award' && n > 1) return { ...d, title: `${d.title} ×${n}`, desc: `${ord(n)} time. ${d.desc}` };
-    if (e.t === 'bowl' && nth[`app:${e.k}`] === 1) return { ...d, title: 'First Beast Bowl appearance', desc: d.desc };
+    if (e.t === 'bowl' && nth[`app:${e.k}`] === 1) return { ...d, title: $t('franchise.first_beast_bowl_appearance'), desc: d.desc };
     return d;
   };
   return ev.map((e) => ({ ...e, tier: TIER[e.t] || 'career', ...annotate(e, describeEvent(e, m)) }))

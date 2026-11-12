@@ -17,6 +17,7 @@ import { applyActivity } from './reward-ledger.js';
 import * as FR from '../core/fraction.js';
 import { successorsAt } from './roster-plan.js';
 import { GROUP_SLOTS } from './roster.js';
+import { t as $t } from '../text/index.js';
 
 export const DEV = Object.freeze({ slots: 6, perPosition: 2, maxAge: 25, minHeadroom: 3, share: 0.35, baseXp: 24 });
 
@@ -30,7 +31,7 @@ export function devIneligibility(m, starters) {
   if (m.dev ? !reserveEligible(m.dev, m.position) : (m.potential || 0) < monsterOverall(m) + DEV.minHeadroom) return 'ceiling'; // R1 item 10: a position-relevant attribute at least 3 below its ceiling
   return null;
 }
-export const DEV_REASON = Object.freeze({ gone: 'is no longer on the roster', starter: 'is now a starter and develops by playing', age: 'is past 25', injured: 'is injured', ceiling: 'has no position attribute 3 or more below its ceiling' });
+export const DEV_REASON = Object.freeze({ gone: $t('franchise.is_no_longer_on_the_roster'), starter: $t('franchise.is_now_a_starter_and_develops'), age: $t('franchise.is_past_25'), injured: $t('franchise.is_injured'), ceiling: $t('franchise.has_no_position_attribute_3_or') });
 
 /** Eligible monsters in priority order: successors first (most urgent first), then potential minus overall. */
 export function devPriority(roster, starters) {

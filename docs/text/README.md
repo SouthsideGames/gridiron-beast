@@ -15,13 +15,13 @@
 - The code reads a line with `$t('key', { values })` (the reader from `src/text/index.js`, imported as `$t` so it can never clash with a local `t`; the stage 1 files import it as `t`). English is the fallback for any line another language has not translated.
 - Text never decides anything: no rule, id or saved value comes from this file, and the game engines do not read it.
 
-### How much has moved (stages 1, 2, 4 and 5 of 7)
+### How much has moved (stages 1 to 5 of 7)
 
 | Stage | Area | Lines | Status |
 | --- | --- | ---: | --- |
 | 1 | Foundation; menus, settings, office, Developer Tools; new-franchise flow; stadiums and weather; Media Day | 808 | done |
 | 2 | Remaining player-facing screens: headquarters and week, match day, roster, Beast Clash screens, careers, league, franchise slots, free agency and trades, shared cards and sheets | 2,827 | done |
-| 3 | Franchise news, notices and rules text; values saved as wording (list below) | about 1,300 | |
+| 3 | Franchise: news, notices, reasons and rules text; the club log and League News are saved as lines that follow the language | 1,074 | done |
 | 4 | Data: dialogue, achievements, staff, stat guide, leagues, gyms, club identities, tempers, offseason meetings, the playbook, monster natures and scheme fit, rarities, coach appearance | 1,041 | done |
 | 5 | Beast Dex: 1,584 shown lines under translator keys (see "The Beast Dex" below) | 1,584 | done |
 | 6 | Game logs: football play-by-play and the Beast Clash log; ability banners in the effect files | about 2,300 | approved (decision 3) |
@@ -35,9 +35,20 @@ The Dex is governed data: `docs/beast-dex/data` is its one source, built into `s
 
 For translation, each Dex line a screen shows has a key (`dex.family.<id>.description`, `dex.ability.<ID>.name`, `.mechanic`, `.trigger`, `.targets`, `.core`, `.recharge`, `.lifetime`, `.exceptions`, `.progression`, `.story`, and `dex.summary.<family>`). A screen asks `dexLine(key, english)` (`src/text/dex.js`): in English it gets the Dex's own line; in another language, that language's line for the key. `node tools/dex-text.mjs` lists every key with its English, and `GAME_TEXT.csv` carries the same rows. Nothing is duplicated in the game's download.
 
+### Saved lines (news follows the language)
+
+A sentence that is kept in the save used to be saved as finished English. The club log (`f.news`) and League News (`f.leagueNews`) now save a **line**: the key and its values beside the sentence (`src/text/index.js`).
+
+- `line(key, values)` gives `{ text, tk, tv }`; `lineParts(a, b, …)` gives `{ text, tp }` for several lines and plain values in a row. A value inside a line may itself be a line. In the franchise code they are imported as `$L` and `$P`.
+- `lineText(saved)` is the sentence to show now, in the language chosen now. A plain string, or an item saved before lines existed, shows as written.
+- `text` is still saved (the English at the time), so nothing that reads `text` breaks and an older build can open the save.
+- `lineEnglish(saved)` is the English whatever is shown; Media Day uses it to recognise a recent evolution, trade or signing in the club log.
+
+`tests/fixtures/saved-wording.json` is the inventory of the places where a finished sentence is still saved (award citations, a free agent's clue, the Board goal's label, and the plain fragments inside some news lines). `tests/text-never-decides.test.js` fails if a new place appears. To take a place off the list, save a line there and show it with `lineText`.
+
 ### Wording never decides anything
 
-`tests/text-never-decides.test.js` plays one franchise season and 120 Beast Clash battles twice: in English, and with every central line replaced by a made-up translation. Results, rosters, ratings, money, ids and random draws must be identical. It found one real case in stage 4: the coaching hints matched play names inside the lesson sentences. They now match in English whatever language is shown (`english()` in `src/data/playbook.js`).
+`tests/text-never-decides.test.js` plays one franchise season and 120 Beast Clash battles twice: in English, and with every central line replaced by a made-up translation. Results, rosters, ratings, money, ids and random draws must be identical. Stage 3 added four more it or the review found: Media Day read the club log's wording to spot an evolution, trade or signing; the Board's final warning was read off the reason's first word; the commissioner's welcome compared the difficulty's label; and the migration tool had moved 77 non-wording strings (random-number seeds, record ids, CSS transforms) into the text file, which are back in the code and now refused by the tool. It found one real case in stage 4: the coaching hints matched play names inside the lesson sentences. They now match in English whatever language is shown (`english()` in `src/data/playbook.js`).
 
 ### Moving more text
 
@@ -69,8 +80,10 @@ The tool gives each piece of wording a key, writes it to `en.js`, and replaces i
    - The original Clash move table (`src/data/clash-moves.js`) and the original 72 species cards (`src/data/species-legacy.js` personalities and ability cards): retired from display; the Dex lines replace them.
    - Ability banners in the effect files and the Clash animation captions read off the battle log: they belong to game events and move with the logs in stage 6.
    - People's names (coaches, general managers) and club names: names stay English (decision 1), so they need no key.
-3. **Values saved as wording** (stage 3 separates the saved value from what is shown): playoff round tags ("Aurora Semifinal", "Beast Bowl"), schedule categories ("Division"), monster archetype labels ("Workhorse"), gym badge names, scouting region names, the coach style kept in an offseason meeting record, Media Day headlines, and element and conference names used as ids.
-4. **Value names** in a few lines are machine-chosen (`{b}`, `{played2}`). They work; renaming them for translators is a tidy-up.
+3. **Values saved as wording, still in the code:** playoff round tags ("Aurora Semifinal", "Beast Bowl", which also decides the title game), schedule categories ("Division"), monster archetype labels ("Workhorse"), gym badge names, scouting region names, and element and conference names used as ids. Each needs its saved value separated from what is shown.
+4. **Save and storage messages** (`src/franchise/store.js`, `save.js`, `slots.js`, `cloud-save.js`, about 60 lines) stay in the code: the save path must never depend on the text file (a test holds this).
+5. **Media Day's headline** is kept only for the week it is printed, as a finished sentence.
+6. **Value names** in a few lines are machine-chosen (`{b}`, `{played2}`). They work; renaming them for translators is a tidy-up.
 
 ## The full listing
 

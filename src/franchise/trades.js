@@ -17,6 +17,7 @@ import { tradeLock, noteTraded } from './fa-state.js';
 import { DRAFT_ROUNDS } from './draft.js';
 import { hasLeague, isProtected, removeFromClub } from './league-registry.js';
 import { marketValue, successorPremium } from './trade-value.js';
+import { t as $t } from '../text/index.js';
 
 export const TRADE_YEARS_AHEAD = 3;
 export const ASKS_PER_PICK = 2;
@@ -160,7 +161,7 @@ export function askForPicks(f, { give, year, round, count = 1, teams, rosterOf, 
   for (const team of teams) {
     const roster = rosterOf(team); const needs = positionNeeds(roster);
     const offered = give.reduce((s, p) => s + pickValueFor(f, team, p, needs, { available }), 0);
-    const r = teamRng(f, team, give[0], `picks:${year}:${round}:${count}`);
+    const r = teamRng(f, team, give[0], `${`picks:${year}:${round}:${count}`}`);
     if (r.next() > (IN_THE_MARKET[difficulty] ?? 0.32) + 0.1) continue; // picks-for-picks is an easier phone call than a player
     const budget = offered * gen * (0.9 + r.next() * 0.2);
     const owned = (y) => picksOwnedBy(f, team, y, allTeams).filter((p) => !pickUsed(f, p) && !give.some((g) => samePick(g, p)));
@@ -194,7 +195,7 @@ export function executeTrade(f, offer, { club, year, nextYear }) {
     const src = offer.get.player; let m;
     if (hasLeague(f) && f.league.monsters[src.id] === src) {
       // Persistent rosters (GDD §42.6): the very monster moves, career intact; the registry refuses a protected one.
-      if (isProtected(src)) throw Object.assign(new Error(`${src.name} is bound to ${offer.team}.`), { code: 'protected' });
+      if (isProtected(src)) throw Object.assign(new Error(`${$t('franchise.is_bound_to_2', { name: src.name, team: offer.team })}`), { code: 'protected' });
       const kept = src.contract ? { ...src.contract } : null; /* removeFromClub clears the contract: keep his copy first */
       m = removeFromClub(f, offer.team, src.id, { year, reason: 'traded' });
       m.salary = m.salary || salaryFor(m); m.contract = f.freeAgency && kept && !kept.permanent ? kept : newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: offer.team, year }; noteTraded(f, m, offer.team); // Task 7: a trade keeps the contract and its schedule
@@ -229,7 +230,7 @@ export const CALL_PREMIUM = 1.1;
  * `myPicks`: the owner's tradable picks (year, round, original, overall?). `key` makes the roll steady.
  */
 export function buildTradeCall(f, { teams, rosterOf, difficulty = 'pro', myRoster, myPicks, key }) {
-  const r = createRng(hashString(`call|${f.seed}|${key}`));
+  const r = createRng(hashString(`${`call|${f.seed}|${key}`}`));
   if (r.next() > (CALL_CHANCE[difficulty] ?? 0.26) || !myPicks?.length) return null;
   const gen = GENEROSITY[difficulty] ?? 1;
   const needs = positionNeeds(myRoster);

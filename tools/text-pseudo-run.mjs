@@ -29,10 +29,25 @@ const plain = (v, key = '') => {
 const sha = (x) => createHash('sha256').update(JSON.stringify(x)).digest('hex');
 const out = {};
 const T = await import('./franchise-soak.mjs');
-const r = T.runFranchise(11, { seasons, difficulty: 'rookie' });
+const stopWeek = Number(process.argv.find((a) => a.startsWith('--stop='))?.split('=')[1] || 0) || null;   // --stop=N: stop at week N (to find where a difference starts)
+const r = T.runFranchise(11, { seasons, difficulty: 'rookie', stopWeek });
 out.problems = r.problems.length;
+if (process.argv.includes('--full')) { const { createdAt, uid, ...rest } = r.f; for (const k of Object.keys(rest)) out[`full.${k}`] = sha(rest[k]); const dump = process.argv.find((a) => a.startsWith('--dump='))?.split('=')[1]; if (dump) (await import('node:fs')).writeFileSync(dump, JSON.stringify(rest)); }   // --full: wording included (English before and after a change must match exactly)
 const f = plain(r.f);
 for (const k of Object.keys(f)) out[`franchise.${k}`] = sha(f[k]);
+// where wording is SAVED in the franchise (a sentence kept in the save keeps the language it was written in, unless it is a saved
+// line: src/text/index.js). One entry per place, ids and positions folded: "news[].text". The test compares the two runs to list
+// the places whose saved wording follows the language at the time, and holds that list to a recorded inventory.
+const places = {};
+const fold = (k) => (/^(mvp|opoy|dpoy|oroy|droy|coy|smoy)$/.test(k) ? '<award>' : /\s|^m_|^o\d+$|^\d+$|^[a-z]+_[0-9a-z]{5,}$/.test(k) || k.length > 27 ? '*' : k);
+const note = (v, path) => {
+  if (typeof v === 'string') { if (!(/^[\w:#|.+\-/]*$/.test(v) && !wording.has(v))) (places[path] ||= createHash('sha256')).update(v + '\u0001'); return; }
+  if (Array.isArray(v)) { for (const x of v) note(x, `${path}[]`); return; }
+  if (v && typeof v === 'object') for (const k of Object.keys(v)) { if (k === 'createdAt' || k === 'uid' || (k === 'text' && (v.tk || v.tp))) continue; note(v[k], path ? `${path}.${fold(k)}` : fold(k)); }   // a saved line's `text` is only its English copy
+};
+note(r.f, '');
+out.saved = Object.fromEntries(Object.entries(places).map(([k, h]) => [k, h.digest('hex').slice(0, 16)]));
+if (stopWeek) { process.stdout.write(JSON.stringify(out, null, 1) + '\n'); process.exit(0); }
 const { simulateClashT8 } = await import('../src/clash/t8/index.js'); const { createRng } = await import('../src/core/rng.js'); const H = await import('../tests/clash/helpers.js');
 const rng = createRng(77); const clash = [];
 for (let i = 0; i < 120; i++) { const k = 1 + (i % 5); const a = H.randomLineup(rng, k), b = H.randomLineup(rng, k); const res = simulateClashT8({ a, b, seed: i + 1 }); clash.push([res.winner, res.by, res.exchanges, res.rngDraws, res.stateHash]); }

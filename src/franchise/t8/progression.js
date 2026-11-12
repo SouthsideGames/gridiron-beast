@@ -16,6 +16,7 @@ import * as F from '../../core/fraction.js';
 import { formById, formsOf, ATTRIBUTES } from '../../data/beast-dex.js';
 import { TEMPER_IDS, NEUTRAL_TEMPERS, temperEfficiency } from '../../data/temper.js';
 import { attributeCost } from '../../data/aging.js';
+import { t as $t } from '../../text/index.js';
 
 export const DEV_VERSION = 1;
 export const MAX_LEVEL = 50;
@@ -155,9 +156,9 @@ export function evolve(d) {
 export function devProblems(d) {
   const p = [];
   for (const a of ATTRIBUTES) {
-    if (!(d.current[a] >= 1 && d.current[a] <= d.potential[a] && d.potential[a] <= 99)) p.push(`${a}: current ${d.current[a]} outside 1..${d.potential[a]}`);
-    if (d.entitled[a] > allowance(d, a)) p.push(`${a}: entitlement above allowance`);
-    if (!F.isFraction(d.invest[a]) || F.cmp(d.invest[a], F.ZERO) < 0) p.push(`${a}: bad investment`);
+    if (!(d.current[a] >= 1 && d.current[a] <= d.potential[a] && d.potential[a] <= 99)) p.push(`${$t('franchise.current_outside_1', { a, current: d.current[a], potential: d.potential[a] })}`);
+    if (d.entitled[a] > allowance(d, a)) p.push(`${$t('franchise.entitlement_above_allowance', { a })}`);
+    if (!F.isFraction(d.invest[a]) || F.cmp(d.invest[a], F.ZERO) < 0) p.push(`${$t('franchise.bad_investment', { a })}`);
   }
   if (!F.isFraction(d.bank) || F.cmp(d.bank, F.ZERO) < 0) p.push('bad bank');
   if (!F.isFraction(d.bar) || F.cmp(d.bar, F.ZERO) < 0 || F.cmp(d.bar, F.ONE) >= 0) p.push('bad bar');

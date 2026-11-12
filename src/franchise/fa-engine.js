@@ -28,6 +28,7 @@ import { personaOf, responseWindow } from './fa-personality.js';
 import { leagueYear, hasFreeAgency, noteSigned, returnLock } from './fa-state.js';
 import { ambitionOf, AMBITION, moodOf, talkChance, isHomeClub, draw, clueFor } from './ambition.js';
 import { OFFENSE_GROUPS, DEFENSE_GROUPS } from './roster.js';
+import { t as $t, line as $L, lineParts as $P } from '../text/index.js';
 
 export const FA_RULES = Object.freeze({
   periods: 5,               // free-agency periods before the draft (decisions 12, 27)
@@ -224,17 +225,17 @@ export function counterTerms(f, m, club, terms) {
 export function blocker(f, club, m, terms, { final = false, own = null, newSpot = true, relief = null } = {}) {
   const roster = rosterOf(f, club);
   if (relief && !(roster.includes(relief) && !isProtected(relief))) relief = null; // R1 c: a release planned with the signing, re-checked here
-  if (roster.some((x) => x.id === m.id)) return { code: 'already', reason: `${m.name} is already on the roster.` };
-  if (newSpot) { const spots = ROSTER_MAX - roster.length + (relief ? 1 : 0) - liveOffers(f, (o) => o.club === club && o !== own).length; if (spots <= 0) return { code: 'roster', reason: `No open roster place (${ROSTER_MAX} maximum, counting offers already out). Release a monster or withdraw an offer first.` }; }
+  if (roster.some((x) => x.id === m.id)) return { code: 'already', reason: `${$t('franchise.is_already_on_the_roster', { name: m.name })}` };
+  if (newSpot) { const spots = ROSTER_MAX - roster.length + (relief ? 1 : 0) - liveOffers(f, (o) => o.club === club && o !== own).length; if (spots <= 0) return { code: 'roster', reason: `${$t('franchise.no_open_roster_place_maximum_counting', { rosterMax: ROSTER_MAX })}` }; }
   const lc = legendCheck(roster, m, { final }); if (!lc.ok) return { code: 'legendary', reason: lc.reason, replace: lc.replace };
   const lock = returnLock(f, m, club); if (lock) return { code: 'lock', reason: lock };
-  const e = f.freeAgency?.market?.[m.id]; if (e?.refuse?.[club] === leagueYear(f)) return { code: 'refused', reason: `${m.name} will not negotiate with ${club} again this league year after repeated low offers.` };
+  const e = f.freeAgency?.market?.[m.id]; if (e?.refuse?.[club] === leagueYear(f)) return { code: 'refused', reason: `${$t('franchise.will_not_negotiate_with_again_this', { name: m.name, club })}` };
   if (terms) {
-    if (terms.salary % OFFER_STEP || (terms.bonus || 0) % OFFER_STEP) return { code: 'step', reason: `Salary and bonus move in ${OFFER_STEP}-credit steps.` };
-    if ((terms.bonus || 0) > FA_RULES.bonusMax * (terms.salary * clampYears(terms.years) + (terms.bonus || 0))) return { code: 'bonus', reason: 'A signing bonus may be at most half of the contract.' };
+    if (terms.salary % OFFER_STEP || (terms.bonus || 0) % OFFER_STEP) return { code: 'step', reason: `${$t('franchise.salary_and_bonus_move_in_credit', { offerStep: OFFER_STEP })}` };
+    if ((terms.bonus || 0) > FA_RULES.bonusMax * (terms.salary * clampYears(terms.years) + (terms.bonus || 0))) return { code: 'bonus', reason: $t('franchise.a_signing_bonus_may_be_at') };
     const need = reservationFor({ ...terms, years: clampYears(terms.years) }); const credit = own && LIVE.has(own.state) ? own.reserved : 0;
     const usable = usableCap(f, club) + credit + (relief ? capCharge(relief, leagueYear(f), { current: true, exemptProtected: !isOwner(f, club) }) : 0); // R1 c: his charge leaves with him (zero dead cap)
-    if (need > usable) return { code: 'cap', reason: `Needs ${need.toLocaleString('en-US')} cr. of usable cap; ${club === f.club ? 'you have' : `${club} has`} ${Math.max(0, usable).toLocaleString('en-US')} cr.` };
+    if (need > usable) return { code: 'cap', reason: `${$t('franchise.needs_cr_of_usable_cap', { toLocaleString: need.toLocaleString('en-US') })} ${club === f.club ? $t('franchise.you_have') : `${club} has`} ${Math.max(0, usable).toLocaleString('en-US')} cr.` };
   }
   return null;
 }
@@ -254,17 +255,17 @@ function close(f, o, state, why = null) { if (!LIVE.has(o.state)) return false; 
 export const reliefOf = (f, o) => { if (!o?.release) return null; const m = rosterOf(f, o.club).find((x) => x.id === o.release); return m && !isProtected(m) ? m : null; };
 /** Submit an offer during a free-agency period. Returns { ok, offer } or { ok: false, code, reason }. */
 export function submitOffer(f, club, mid, terms, { release = null } = {}) { // `release`: an AI upgrade's expendable monster, released only when the signing completes (R1 c)
-  if (!hasFreeAgency(f) || !periodNow(f)) return { ok: false, code: 'closed', reason: 'Offers are made during the free-agency periods.' };
-  const u = unsigned(f, mid); if (!u) return { ok: false, code: 'gone', reason: 'He is no longer on the market.' };
+  if (!hasFreeAgency(f) || !periodNow(f)) return { ok: false, code: 'closed', reason: $t('franchise.offers_are_made_during_the_free') };
+  const u = unsigned(f, mid); if (!u) return { ok: false, code: 'gone', reason: $t('franchise.he_is_no_longer_on_the') };
   const m = u.m; terms = { salary: toStep(terms.salary), years: clampYears(terms.years), bonus: toStep(terms.bonus || 0) };
-  if (liveOffers(f, (o) => o.club === club && o.mid === mid).length) return { ok: false, code: 'dup', reason: 'You already have an offer out to him: revise it instead.' };
-  const rel = release ? rosterOf(f, club).find((x) => x.id === release && !isProtected(x)) || null : null; if (release && !rel) return { ok: false, code: 'release', reason: 'That monster cannot be released.' };
+  if (liveOffers(f, (o) => o.club === club && o.mid === mid).length) return { ok: false, code: 'dup', reason: $t('franchise.you_already_have_an_offer_out') };
+  const rel = release ? rosterOf(f, club).find((x) => x.id === release && !isProtected(x)) || null : null; if (release && !rel) return { ok: false, code: 'release', reason: $t('franchise.that_monster_cannot_be_released') };
   const b = blocker(f, club, m, terms, { relief: rel }); if (b) return { ok: false, ...b };
   const e = entryOf(f, m); const r = rateOffer(f, m, club, terms); if (r.low) lowball(f, m, e, club);
   const o = { id: nextId(f), ...(rel ? { release: rel.id } : {}), v: 1, club, mid, ...terms, reserved: reservationFor(terms), state: 'pending', period: periodNow(f), expires: deadlineFor(f, m), round: 1, tie: tieOf(f, club, mid), revisions: {}, counter: null, history: [{ p: periodNow(f), ...terms, act: 'submit' }], ly: leagueYear(f) };
   if (legendSide(m)) { const lc = legendCheck(rosterOf(f, club), m); if (lc.conditional) o.replace = lc.replace; }
   fa(f).offers[o.id] = o; e.first ??= periodNow(f); logTx(f, { kind: 'offer', club, mid, id: o.id });
-  if (legendSide(m) && liveOffers(f, (x) => x.mid === mid).length === 1) HOOKS.news?.(f, `🌟 Bidding opens for the legendary ${m.name}: ${club} has made an offer.`, 'info'); // decision 18, cosmetic
+  if (legendSide(m) && liveOffers(f, (x) => x.mid === mid).length === 1) HOOKS.news?.(f, $L('franchise.bidding_opens_for_the_legendary_has', { name: m.name, club }), 'info'); // decision 18, cosmetic
   return { ok: true, offer: o };
 }
 function lowball(f, m, e, club) {
@@ -273,10 +274,10 @@ function lowball(f, m, e, club) {
 }
 /** Revise a live offer: a new version, the same deadline, at most two a period (resolution 4); patience is never restored. */
 export function reviseOffer(f, id, terms) {
-  const o = fa(f)?.offers?.[id]; if (!o || !['pending', 'countered'].includes(o.state)) return { ok: false, code: 'state', reason: 'That offer is no longer open.' };
-  const p = periodNow(f); if (!p) return { ok: false, code: 'closed', reason: 'The market is closed.' };
-  if ((o.revisions[p] || 0) >= FA_RULES.revisionsPerPeriod) return { ok: false, code: 'revisions', reason: `${FA_RULES.revisionsPerPeriod} revisions a period at most.` };
-  const u = unsigned(f, o.mid); if (!u) return { ok: false, code: 'gone', reason: 'He is no longer on the market.' };
+  const o = fa(f)?.offers?.[id]; if (!o || !['pending', 'countered'].includes(o.state)) return { ok: false, code: 'state', reason: $t('franchise.that_offer_is_no_longer_open') };
+  const p = periodNow(f); if (!p) return { ok: false, code: 'closed', reason: $t('franchise.the_market_is_closed') };
+  if ((o.revisions[p] || 0) >= FA_RULES.revisionsPerPeriod) return { ok: false, code: 'revisions', reason: `${$t('franchise.revisions_a_period_at_most', { revisionsPerPeriod: FA_RULES.revisionsPerPeriod })}` };
+  const u = unsigned(f, o.mid); if (!u) return { ok: false, code: 'gone', reason: $t('franchise.he_is_no_longer_on_the') };
   terms = { salary: toStep(terms.salary), years: clampYears(terms.years), bonus: toStep(terms.bonus || 0) };
   const b = blocker(f, o.club, u.m, terms, { own: o, relief: reliefOf(f, o) }); if (b) return { ok: false, ...b };
   const e = entryOf(f, u.m); if (rateOffer(f, u.m, o.club, terms).low) lowball(f, u.m, e, o.club);
@@ -285,8 +286,8 @@ export function reviseOffer(f, id, terms) {
   return { ok: true, offer: o };
 }
 /** Accept his counter: the offer takes the countered terms (a revision, at the same deadline). */
-export const acceptCounter = (f, id) => { const o = fa(f)?.offers?.[id]; if (!o?.counter || o.state !== 'countered') return { ok: false, code: 'state', reason: 'There is no counter to accept.' }; return reviseOffer(f, id, o.counter); };
-export function withdrawOffer(f, id) { const o = fa(f)?.offers?.[id]; if (!o || !close(f, o, 'withdrawn', 'withdrawn')) return { ok: false, reason: 'That offer is no longer open.' }; o.history.push({ p: periodNow(f), act: 'withdraw' }); logTx(f, { kind: 'withdraw', club: o.club, mid: o.mid, id }); return { ok: true }; }
+export const acceptCounter = (f, id) => { const o = fa(f)?.offers?.[id]; if (!o?.counter || o.state !== 'countered') return { ok: false, code: 'state', reason: $t('franchise.there_is_no_counter_to_accept') }; return reviseOffer(f, id, o.counter); };
+export function withdrawOffer(f, id) { const o = fa(f)?.offers?.[id]; if (!o || !close(f, o, 'withdrawn', 'withdrawn')) return { ok: false, reason: $t('franchise.that_offer_is_no_longer_open') }; o.history.push({ p: periodNow(f), act: 'withdraw' }); logTx(f, { kind: 'withdraw', club: o.club, mid: o.mid, id }); return { ok: true }; }
 /** The offers on a monster other clubs can see (decision 11): club, terms, state; grounded in real offers only. */
 export const competingOffers = (f, mid) => liveOffers(f, (o) => o.mid === mid).map((o) => ({ club: o.club, salary: o.salary, years: o.years, bonus: o.bonus, state: o.state, expires: o.expires }));
 
@@ -307,7 +308,7 @@ export const decidesAt = (m) => 1 + Math.floor(personaOf(m).timing / 34);
  * offer this signing settles (its reservation turns into the cap charge).
  */
 export function sign(f, club, mid, terms, { offer = null, via = 'free_agent', start = leagueYear(f), kind = 'fa' } = {}) {
-  const u = unsigned(f, mid); if (!u) return { ok: false, code: 'gone', reason: 'He is no longer on the market.' };
+  const u = unsigned(f, mid); if (!u) return { ok: false, code: 'gone', reason: $t('franchise.he_is_no_longer_on_the') };
   const m = u.m; let relief = reliefOf(f, offer);
   if (relief && !blocker(f, club, m, terms, { final: true, own: offer })) relief = null; // room after all: nobody is released
   const b = blocker(f, club, m, terms, { final: true, own: offer, relief }); if (b) return { ok: false, ...b };
@@ -315,12 +316,12 @@ export function sign(f, club, mid, terms, { offer = null, via = 'free_agent', st
   contract.bonusPaid = { by: club, ly: start }; // paid once; no refund on any departure (resolution 6)
   takeUnsigned(f, mid);
   if (offer) { offer.state = 'signed'; offer.reserved = 0; offer.closed = { p: periodNow(f), why: 'signed' }; }
-  for (const o of liveOffers(f, (x) => x.mid === mid)) close(f, o, 'rejected', `signed with ${club}`);
+  for (const o of liveOffers(f, (x) => x.mid === mid)) close(f, o, 'rejected', `${$t('franchise.signed_with', { club })}`);
   m.salary = contract.salary;
   if (isOwner(f, club)) { m.contract = contract; HOOKS.joinOwner?.(f, m, via, start); }
   else { if (relief) HOOKS.releaseAi?.(f, club, relief.id); addToClub(f, club, m, { year: start, via: 'signed', contract, salary: contract.salary, source: u.where === 'extra' ? 'pool' : u.where }); } // R1 c: validated together above, released and signed together here
   noteSigned(f, m); delete f.freeAgency.market[mid];
-  if (legendSide(m)) HOOKS.news?.(f, `🌟 Legendary signing: ${m.name} joins ${club}${contract.years > 1 ? ` for ${contract.years} seasons` : ''}.`, isOwner(f, club) ? 'win' : 'info'); // decision 18, cosmetic: no competitive rule depends on it
+  if (legendSide(m)) HOOKS.news?.(f, $P($L('franchise.legendary_signing_joins', { name: m.name, club }), (contract.years > 1 ? $P(` `, $L('franchise.for_seasons', { years: contract.years })) : ''), `.`), isOwner(f, club) ? 'win' : 'info'); // decision 18, cosmetic: no competitive rule depends on it
   logTx(f, { kind: 'sign', club, mid, salary: contract.salary, years: contract.years, bonus: contract.bonus });
   return { ok: true, monster: m, contract };
 }
@@ -368,14 +369,14 @@ export function ageMarket(f, by = 1) { for (const { m } of marketList(f)) entryO
  * same evaluation and the same signing as the periods. `guaranteed`: a Beast Clash recruit (D5) accepts an offer at his ask.
  */
 export function negotiateNow(f, club, mid, terms, { guaranteed = false, via = 'free_agent' } = {}) {
-  const u = unsigned(f, mid); if (!u) return { ok: false, code: 'gone', reason: 'He is no longer available.' };
+  const u = unsigned(f, mid); if (!u) return { ok: false, code: 'gone', reason: $t('franchise.he_is_no_longer_available') };
   const m = u.m; terms = { salary: toStep(terms.salary), years: clampYears(terms.years), bonus: toStep(terms.bonus || 0) };
   const b = blocker(f, club, m, terms, { final: true }); if (b) return { ok: false, ...b };
   const e = entryOf(f, m); const r = rateOffer(f, m, club, terms, { guaranteed: guaranteed && terms.salary >= askOf(f, m, club).salary });
   if (r.low && !guaranteed) lowball(f, m, e, club);
   if (r.score >= r.need) { const s = sign(f, club, mid, terms, { via }); return s.ok ? { ok: true, outcome: 'signed', monster: s.monster, contract: s.contract } : s; }
   { const c = r.score >= r.need * FA_RULES.counterBand ? counterTerms(f, m, club, terms) : null; if (c) return { ok: true, outcome: 'countered', counter: c }; }
-  return { ok: true, outcome: 'rejected', reason: `${m.name} is looking for more${r.low ? ', and low offers try his patience' : ''}.` };
+  return { ok: true, outcome: 'rejected', reason: `${$t('franchise.is_looking_for_more', { name: m.name, low: r.low ? $t('franchise.and_low_offers_try_his_patience') : '' })}` };
 }
 
 // ------------------------------------------------------------ extensions (decision 23)
@@ -455,14 +456,14 @@ export const countersLeft = (neg) => (neg?.state === 'active' ? Math.max(0, NEG.
  * checks the cap before calling and seals an agreement into the contract.
  */
 export function negotiate(f, m, neg, terms, { accept = false } = {}) {
-  if (!neg) return { outcome: 'ended', reason: 'There is no negotiation.' };
-  if (neg.state === 'no-talks') return { outcome: 'no-talks', reason: `${m.name} does not want to negotiate now. ${neg.clue}` };
-  if (neg.state !== 'active') return { outcome: neg.state === 'agreed' ? 'agreed' : 'ended', terms: neg.agreed, reason: neg.state === 'agreed' ? 'Already agreed.' : `Talks with ${m.name} have ended for now.` };
+  if (!neg) return { outcome: 'ended', reason: $t('franchise.there_is_no_negotiation') };
+  if (neg.state === 'no-talks') return { outcome: 'no-talks', reason: `${$t('franchise.does_not_want_to_negotiate_now', { name: m.name, clue: neg.clue })}` };
+  if (neg.state !== 'active') return { outcome: neg.state === 'agreed' ? 'agreed' : 'ended', terms: neg.agreed, reason: neg.state === 'agreed' ? $t('franchise.already_agreed') : `${$t('franchise.talks_with_have_ended_for_now', { name: m.name })}` };
   if (accept) { neg.state = 'agreed'; neg.agreed = { ...neg.demand }; return { outcome: 'agreed', terms: neg.agreed }; }
   terms = { salary: toStep(terms.salary), years: clampYears(terms.years), bonus: toStep(terms.bonus || 0) };
   const rO = rateOffer(f, m, neg.club, terms); const rD = rateOffer(f, m, neg.club, neg.demand);
   if (rO.score >= rD.score) { neg.offers.push({ ...terms, answer: 'accept', free: true }); neg.state = 'agreed'; neg.agreed = terms; return { outcome: 'agreed', terms }; } // at or above his demand: no attempt used
-  if (countersLeft(neg) <= 0) return { outcome: 'ended', reason: 'No counteroffers left in this window.' };
+  if (countersLeft(neg) <= 0) return { outcome: 'ended', reason: $t('franchise.no_counteroffers_left_in_this_window') };
   if (rO.low && f.freeAgency) lowball(f, m, entryOf(f, m), neg.club); // a lowball still costs patience (decision 4)
   const round = neg.offers.length + 1; const final = round >= NEG.counters; const amb = ambitionOf(m);
   const u = draw(`neg|${f.seed ?? 0}|${neg.key}|${round}`); const u2 = draw(`neg2|${f.seed ?? 0}|${neg.key}|${round}`);
@@ -475,7 +476,7 @@ export function negotiate(f, m, neg, terms, { accept = false } = {}) {
   else answer = u < NEG.lateAccept * Math.max(0, Math.min(1, (q - 0.9) / 0.1)) ? 'accept' : 'end';
   const rec = { ...terms, answer }; neg.offers.push(rec);
   if (answer === 'accept') { neg.state = 'agreed'; neg.agreed = terms; return { outcome: 'agreed', terms }; }
-  if (answer === 'end') { neg.state = 'ended'; neg.testsMarket = neg.window === 'renew'; return { outcome: 'ended', reason: neg.window === 'renew' ? `${m.name} ends the talks and will test free agency.` : `${m.name} ends the talks for now; he may listen again in a later window.` }; }
+  if (answer === 'end') { neg.state = 'ended'; neg.testsMarket = neg.window === 'renew'; return { outcome: 'ended', reason: neg.window === 'renew' ? `${$t('franchise.ends_the_talks_and_will_test', { name: m.name })}` : `${$t('franchise.ends_the_talks_for_now_he', { name: m.name })}` }; }
   // his counter: between the offer and his demand, never below his reservation at his term (with the offered bonus)
   const Rp = reservationAt(f, m, neg.club, neg.demand.years, terms.bonus); const prev = neg.demand.salary;
   let sal = prev - (NEG.concede[amb] ?? 0.5) * Math.max(0, prev - terms.salary); sal = Math.max(sal, Rp ?? 0, askOf(f, m, neg.club).salary * FA_RULES.lowball);
@@ -490,15 +491,15 @@ export function pruneTalks(f, ly = leagueYear(f)) { const S = f.freeAgency?.talk
  * an extension never touches the running contract.
  */
 export function extend(f, club, m, terms, { accept = false } = {}) {
-  if (!rosterOf(f, club).some((x) => x.id === m.id)) return { ok: false, code: 'roster', reason: 'He is not on the roster.' };
-  if (!extensionEligible(f, m)) return { ok: false, code: 'eligible', reason: 'Extensions are offered in a contract’s final season.' };
+  if (!rosterOf(f, club).some((x) => x.id === m.id)) return { ok: false, code: 'roster', reason: $t('franchise.he_is_not_on_the_roster') };
+  if (!extensionEligible(f, m)) return { ok: false, code: 'eligible', reason: $t('franchise.extensions_are_offered_in_a_contracts') };
   const neg = negotiation(f, m, club, extWindow(f));
-  if (neg.state === 'no-talks') return { ok: true, outcome: 'declined', reason: `${m.name} is not ready to discuss an extension. ${neg.clue}`, clue: neg.clue, neg };
-  if (neg.state !== 'active') return { ok: false, code: 'ended', reason: `Talks with ${m.name} have ended for this window.`, neg };
+  if (neg.state === 'no-talks') return { ok: true, outcome: 'declined', reason: `${$t('franchise.is_not_ready_to_discuss_an', { name: m.name, clue: neg.clue })}`, clue: neg.clue, neg };
+  if (neg.state !== 'active') return { ok: false, code: 'ended', reason: `${$t('franchise.talks_with_have_ended_for_this', { name: m.name })}`, neg };
   terms = accept ? { ...neg.demand } : { salary: toStep(terms.salary), years: clampYears(terms.years), bonus: toStep(terms.bonus || 0) };
   const start = m.contract.ends + 1; const charge = terms.salary + allocateBonus(terms.bonus, terms.years)[0];
   const room = capOf(f, club) - committed(f, club, start);
-  if (charge > room) return { ok: false, code: 'cap', reason: `The extension's first season needs ${charge.toLocaleString('en-US')} cr.; ${start} has ${Math.max(0, room).toLocaleString('en-US')} cr. free.` }; // checked before the offer counts
+  if (charge > room) return { ok: false, code: 'cap', reason: `${$t('franchise.the_extensions_first_season_needs_cr', { toLocaleString: charge.toLocaleString('en-US'), start, toLocaleString2: Math.max(0, room).toLocaleString('en-US') })}` }; // checked before the offer counts
   const res = negotiate(f, m, neg, terms, { accept });
   if (res.outcome === 'agreed') return { ok: true, outcome: 'signed', contract: sealExtension(f, club, m, res.terms), neg };
   if (res.outcome === 'countered') return { ok: true, outcome: 'countered', counter: res.counter, left: countersLeft(neg), neg };
@@ -518,15 +519,15 @@ export function promoteExtensions(f, ly) {
 /** Problems with the market's books: reservations, double contracts, duplicate assignment, negative usable cap for new terms. */
 export function marketProblems(f) {
   const p = []; if (!hasFreeAgency(f)) return p;
-  const held = new Map(); const note = (id, where) => { if (held.has(id)) p.push(`${id} on ${held.get(id)} and ${where}`); else held.set(id, where); };
+  const held = new Map(); const note = (id, where) => { if (held.has(id)) p.push(`${$t('franchise.on_and', { id, get: held.get(id), where })}`); else held.set(id, where); };
   for (const m of f.roster) note(m.id, f.club);
   if (hasLeague(f)) for (const c of leagueClubs(f)) for (const m of clubRoster(f, c)) note(m.id, c);
-  for (const { m, where } of marketList(f)) { if (held.has(m.id)) p.push(`${m.name} is unsigned (${where}) and on ${held.get(m.id)}`); }
+  for (const { m, where } of marketList(f)) { if (held.has(m.id)) p.push(`${$t('franchise.is_unsigned_and_on', { name: m.name, where, get: held.get(m.id) })}`); }
   for (const o of offersOf(f)) {
-    if (LIVE.has(o.state) && o.reserved !== reservationFor(o)) p.push(`offer ${o.id}: reservation ${o.reserved} ≠ ${reservationFor(o)}`);
-    if (!LIVE.has(o.state) && o.reserved) p.push(`offer ${o.id} (${o.state}) still holds ${o.reserved}`);
-    if (LIVE.has(o.state) && !unsigned(f, o.mid)) p.push(`offer ${o.id} is live but ${o.mid} is not on the market`);
+    if (LIVE.has(o.state) && o.reserved !== reservationFor(o)) p.push(`${$t('franchise.offer_reservation', { id: o.id, reserved: o.reserved, reservation: reservationFor(o) })}`);
+    if (!LIVE.has(o.state) && o.reserved) p.push(`${$t('franchise.offer_still_holds', { id: o.id, state: o.state, reserved: o.reserved })}`);
+    if (LIVE.has(o.state) && !unsigned(f, o.mid)) p.push(`${$t('franchise.offer_is_live_but_is_not', { id: o.id, mid: o.mid })}`);
   }
-  for (const club of allClubs(f)) if (liveOffers(f, (o) => o.club === club).length && usableCap(f, club) < 0 && committed(f, club) <= capOf(f, club)) p.push(`${club}: offers overcommit the cap`);
+  for (const club of allClubs(f)) if (liveOffers(f, (o) => o.club === club).length && usableCap(f, club) < 0 && committed(f, club) <= capOf(f, club)) p.push(`${$t('franchise.offers_overcommit_the_cap', { club })}`);
   return p;
 }
