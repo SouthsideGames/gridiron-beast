@@ -78,7 +78,7 @@ const startersOf = (roster, manual, depth) => new Set(Object.values(buildDepthCh
 export function retirementPass(f, r, { year, news = null }) {
   ensureAging(f, year); notePeaks(f);
   const s = transitionSeason(f, year); const capShare = transitionClubCap(s);
-  const out = { year, owner: [], league: [], unsigned: 0, transition: s };
+  const out = { year, owner: [], league: [], unsigned: 0, unsignedIds: [], transition: s };
   let leaders = null; const leaderIds = () => { if (leaders) return leaders; leaders = new Set(); for (const rows of Object.values(universeCareerLeaders(f, { n: 10 }))) for (const x of rows) leaders.add(x.id); return leaders; };
   const roll = (m, ctx) => { const p = chanceFor(f, m, { year, s, ...ctx }); return p > 0 && r.next() < p; };
 
@@ -124,7 +124,7 @@ export function retirementPass(f, r, { year, news = null }) {
   }
 
   // unsigned monsters: the regional pools and the league's waivers (twice the odds)
-  const leave = (m) => { m.retired = year; const last = m.history?.[m.history.length - 1]?.club || null; if (hasLeague(f) && (isDecorated(f, m) || leaderIds().has(m.id) || (m.history || []).some((h) => h.club === f.club))) f.league.legends[m.id] = legendStub(m, { year, club: last }); out.unsigned++; };
+  const leave = (m) => { m.retired = year; const last = m.history?.[m.history.length - 1]?.club || null; if (hasLeague(f) && (isDecorated(f, m) || leaderIds().has(m.id) || (m.history || []).some((h) => h.club === f.club))) f.league.legends[m.id] = legendStub(m, { year, club: last }); out.unsigned++; if (f.league?.legends?.[m.id]) out.unsignedIds.push({ id: m.id }); };
   for (const region of Object.keys(f.pool || {}).sort()) { const list = f.pool[region]; for (const m of list.slice().sort(byId)) { if (isAgeless(m) || !roll(m, { starter: false, unsigned: true })) continue; list.splice(list.indexOf(m), 1); leave(m); } }
   if (hasLeague(f)) { const w = f.league.waivers || []; for (const m of w.slice().sort(byId)) { if (isAgeless(m) || !roll(m, { starter: false, unsigned: true })) continue; w.splice(w.indexOf(m), 1); leave(m); } }
 
