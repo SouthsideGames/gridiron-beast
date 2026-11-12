@@ -82,3 +82,15 @@ test('history screens use consistent current record holder IDs', () => {
   assert.equal(view.records.find((s) => s.scope === 'season')
     .rows.find((r) => r.category === 'passYds').record.id, 'retired-1');
 });
+
+test('an inducted monster stays accessible when the candidate pool is unavailable', () => {
+  const f = { monsterHallOfFame: { candidates: [], elections: [
+    { year: 18, ballot: [], inductees: [{ id: 'legend-1',
+      name: 'Legend', position: 'RB', retiredYear: 14, inductedYear: 18 }] },
+  ] } };
+  const p = careerProfile(f, 'legend-1');
+  assert.equal(p.id, 'legend-1');
+  assert.equal(p.kind, 'snapshot');
+  assert.equal(p.honours.hof, true);
+  assert.equal(p.complete, false);
+});
