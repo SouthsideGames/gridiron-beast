@@ -11,9 +11,12 @@ export function franchiseSeasonHistory(f) {
   return (f?.history || []).map((h) => ({
     year: h.year, club: h.club, tier: h.tier, record: h.record ? { ...h.record } : null,
     place: h.place ?? null, champion: h.champion ?? null, playoffs: h.playoffs ?? null,
-    awards: Object.fromEntries(Object.entries(safe(h.awards)).map(([kind, winners]) =>
-      [kind, (Array.isArray(winners) ? winners : winners ? [winners] : []).map((w) =>
-        ({ id: winnerId(w), name: w?.name ?? null, team: w?.team ?? null }))])),
+    // League award winners live under awards.league; other fields are
+    // statistical leaders or season metadata, not additional league awards.
+    awards: Object.fromEntries(Object.entries(safe(h.awards?.league)).map(([kind, winner]) =>
+      [kind, winner && (winner.id != null || winner.name) ? [{
+        id: winnerId(winner), name: winner.name ?? null, team: winner.team ?? null,
+      }] : []])),
   })).sort(yearSort);
 }
 
