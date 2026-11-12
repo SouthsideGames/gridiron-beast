@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { monsterHofBallot, electMonsterHallOfFame, monsterHofInductees, WAIT_SEASONS } from '../src/franchise/monster-hof-voting.js';
+import { monsterHofBallot, electMonsterHallOfFame, monsterHofInductees, recordRetiredMonsterCandidates, WAIT_SEASONS } from '../src/franchise/monster-hof-voting.js';
 
 const star = { id: 'retired-1', name: 'Star', position: 'QB', retiredYear: 5, seasons: 12, games: 110, honours: { titles: 3, awards: 4, records: 2 } };
 const peer = { id: 'retired-2', name: 'Peer', position: 'LB', retiredYear: 5, seasons: 11, games: 90, honours: { titles: 2, awards: 3, records: 1 } };
@@ -28,4 +28,18 @@ test('elections are idempotent and past inductees cannot be inducted twice', () 
 test('never invents candidates or inducts active monsters', () => {
   assert.equal(monsterHofBallot([], 20).length, 0);
   assert.equal(monsterHofBallot([{ ...star, retiredYear: undefined }], 20).length, 0);
+});
+
+test('records only retired monsters with preserved evidence, never a generic leaver', () => {
+  const f = { league: { legends: {
+    'retired-1': { name: 'Star', position: 'QB', left: 5, seasons: [{ year: 5, reg: { games: 8 } }], ev: [{ t: 'award' }] },
+    'released': { name: 'Released', position: 'WR', left: 5, seasons: [] },
+  } } };
+  recordRetiredMonsterCandidates(f, { owner: [{ id: 'retired-1' }], league: [] }, 5);
+  recordRetiredMonsterCandidates(f, { owner: [{ id: 'retired-1' }], league: [] }, 5);
+  assert.equal(f.monsterHallOfFame.candidates.length, 1);
+  assert.equal(f.monsterHallOfFame.candidates[0].retiredYear, 5);
+  assert.equal(f.monsterHallOfFame.candidates[0].honours.awards, 1);
+  assert.equal(f.monsterHallOfFame.candidates[0].games, 8);
+  assert.equal(monsterHofBallot(f.monsterHallOfFame.candidates, 8).length, 1);
 });
