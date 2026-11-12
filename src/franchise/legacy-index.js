@@ -40,10 +40,22 @@ export function historicalAwards(f, kind = null) {
 /** Annual Hall of Fame elections and inductees are read from the franchise save. */
 export function historicalHallOfFame(f) {
   const elections = f?.monsterHallOfFame?.elections || [];
-  return { elections: elections.map((e) => ({
-    year: e.year, candidates: e.ballot?.length || 0,
-    inductees: (e.inductees || []).map((c) => ({ ...c })),
-  })).sort(yearSort), inductees: monsterHofInductees(elections) };
+  const inductees = monsterHofInductees(elections);
+  const inductedIds = new Set(inductees.map((c) => String(c.id)));
+  const candidates = (f?.monsterHallOfFame?.candidates || []).map((c) => ({
+    id: c.id, name: c.name, position: c.position,
+    retiredYear: c.retiredYear, seasons: c.seasons, games: c.games,
+    honours: c.honours ? { ...c.honours } : null,
+    inducted: inductedIds.has(String(c.id)),
+  }));
+  return {
+    elections: elections.map((e) => ({
+      year: e.year, candidates: e.ballot?.length || 0,
+      ballot: (e.ballot || []).map((b) => ({ ...b })),
+      inductees: (e.inductees || []).map((c) => ({ ...c })),
+    })).sort(yearSort),
+    inductees, candidates,
+  };
 }
 
 /** Cross-system view for the franchise history screen. */
