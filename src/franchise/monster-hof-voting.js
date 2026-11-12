@@ -87,3 +87,32 @@ export function monsterHofInductees(history = []) {
   }
   return out;
 }
+
+/**
+ * Preserve only actual retired monster identities and their already recorded
+ * career evidence. A legend stub's 'left' date is NOT itself proof of retirement:
+ * monsters may also leave the league for other reasons.
+ */
+export function recordRetiredMonsterCandidates(f, retired, year) {
+  const hof = (f.monsterHallOfFame ||= { v: MONSTER_HOF_VERSION, candidates: [], elections: [] });
+  const known = new Set(hof.candidates.map((c) => String(c.id)));
+  const retiredIds = [...(retired?.owner || []), ...(retired?.league || [])];
+  for (const item of retiredIds) {
+    const id = String(item?.id ?? '');
+    if (!id || known.has(id)) continue;
+    const stub = f.league?.legends?.[id];
+    if (!stub) continue; // no preserved career evidence: do not manufacture it
+    hof.candidates.push({
+      id, name: stub.name, position: stub.position,
+      retiredYear: year, seasons: Array.isArray(stub.seasons) ? stub.seasons.length : 0,
+      games: (stub.seasons || []).reduce((n, b) => n + (b?.reg?.games || 0) + (b?.post?.games || 0), 0),
+      honours: {
+        titles: (stub.ev || []).filter((e) => e.t === 'champion').length,
+        awards: (stub.ev || []).filter((e) => e.t === 'award').length,
+        records: (stub.ev || []).filter((e) => e.t === 'record').length,
+      },
+    });
+    known.add(id);
+  }
+  return hof.candidates.length;
+}
