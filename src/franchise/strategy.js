@@ -25,6 +25,7 @@ import { DRAFT_ROUNDS } from './draft.js';
 import { ALL_TEAMS } from '../data/league.js';
 import { isGymClub } from '../data/gyms.js';
 import { salaryFor } from '../data/monsters.js';
+import { t as $t } from '../text/index.js';
 
 export const MODES = Object.freeze(['rebuild', 'retool', 'compete', 'contend']); // weakest ambition first: the index is the scale
 export const MODE_LABEL = Object.freeze({ contend: 'Contend', compete: 'Compete', retool: 'Retool', rebuild: 'Rebuild' });
@@ -59,14 +60,14 @@ export function strategyInputs(f, club, { year, cap, teamOf, aiMean }) {
 /** The mode the facts point to, before the stability rules. Returns { mode, why }. */
 export function rawMode(x, { ageingBar = STRATEGY.ageingShare } = {}) {
   const losing = x.recent <= STRATEGY.losing, winning = x.recent >= STRATEGY.winning;
-  if ((winning && x.quality >= 0) || (!losing && x.quality >= STRATEGY.contendQuality)) return { mode: 'contend', why: winning ? 'winning with a strong roster' : 'a roster well above the league' };
+  if ((winning && x.quality >= 0) || (!losing && x.quality >= STRATEGY.contendQuality)) return { mode: 'contend', why: winning ? $t('franchise.winning_with_a_strong_roster') : $t('franchise.a_roster_well_above_the_league') };
   if (losing) {
-    if (x.ageingShare >= ageingBar) return { mode: 'rebuild', why: 'losing with an aging roster' };
-    if (x.committedShare >= STRATEGY.cappedShare) return { mode: 'rebuild', why: 'losing and capped out' };
-    if (x.extraPicks >= STRATEGY.extraPicks) return { mode: 'rebuild', why: 'losing with extra draft picks' };
-    return { mode: 'retool', why: 'losing with a young roster' };
+    if (x.ageingShare >= ageingBar) return { mode: 'rebuild', why: $t('franchise.losing_with_an_aging_roster') };
+    if (x.committedShare >= STRATEGY.cappedShare) return { mode: 'rebuild', why: $t('franchise.losing_and_capped_out') };
+    if (x.extraPicks >= STRATEGY.extraPicks) return { mode: 'rebuild', why: $t('franchise.losing_with_extra_draft_picks') };
+    return { mode: 'retool', why: $t('franchise.losing_with_a_young_roster') };
   }
-  return { mode: 'compete', why: 'between the two' };
+  return { mode: 'compete', why: $t('franchise.between_the_two') };
 }
 /**
  * The stability rules. `cur` the stored state ({ mode, modeSince, modePending }), `raw` the raw mode, `year` the season just played.

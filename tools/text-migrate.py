@@ -68,6 +68,10 @@ WORD = re.compile(r"[A-Za-z][A-Za-z'’]+")
 def is_wording(t):
     core = re.sub(r'\{\w+\}', ' ', re.sub(r'</?(?:b|i|em|strong|u)>|<br ?/?>', ' ', t)).strip()
     if len(core) < 2: return False
+    # never wording: CSS functions and media queries, and ids or random-number seeds built from parts ("award:{key}:{year}", "coach|{team}|{seed}")
+    if re.match(r'(translate|scale|rotate|brightness|sepia|drop-shadow|saturate|hue-rotate|contrast)\(|\((prefers-|orientation|min-|max-)', t.strip()): return False
+    bare = re.sub(r'\{\w+\}', '', t).strip()
+    if (':' in bare or '|' in bare) and re.fullmatch(r'[a-z0-9_:|.\-]*', bare): return False
     words = WORD.findall(core)
     if not words: return False
     if re.search(r'=>|===|!==|&&|\|\||\$\{|</?\w|^\s*[.#][\w-]+\b|rgba?\(|hsl\(|\burl\(|^https?:|\.js\b|\.css\b|\w="', core): return False

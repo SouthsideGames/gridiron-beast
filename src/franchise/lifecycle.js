@@ -12,6 +12,7 @@ import { monsterOverall } from '../data/monsters.js';
 import { divisionOf, TIERS } from '../data/league.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
 import { careerSnapshot } from './career-profile.js';
+import { t as $t } from '../text/index.js';
 
 export const SEASON_CAP = 20;
 export const ARCHIVE_STATUSES = Object.freeze(['retired', 'fired']);
@@ -31,7 +32,7 @@ export const isRetired = (f) => isArchived(f) && f.lifecycle.status === 'retired
 /** The error every mutating function returns for an archive. `code: 'read-only'`, worded for the player. */
 export function readOnlyError(f) {
   const fired = lifecycleStatus(f) === 'fired';
-  return Object.assign(new Error(fired ? 'This franchise ended when the board let you go: it is a read-only archive.' : 'This franchise is retired: it is a read-only archive.'), { code: 'read-only', status: lifecycleStatus(f) });
+  return Object.assign(new Error(fired ? $t('franchise.this_franchise_ended_when_the_board') : $t('franchise.this_franchise_is_retired_it_is')), { code: 'read-only', status: lifecycleStatus(f) });
 }
 export function assertActive(f) { if (f && typeof f === 'object' && isArchived(f)) throw readOnlyError(f); }
 /** Wrap a mutating function whose first argument is the franchise: an archive gets the read-only error instead. */
@@ -54,7 +55,7 @@ export const seasonsLeft = (f) => Math.max(0, SEASON_CAP - seasonsCompleted(f));
 /** Can a new season start, as far as the lifecycle is concerned? {ok, reason} */
 export function mayStartSeason(f) {
   if (isArchived(f)) return { ok: false, reason: readOnlyError(f).message };
-  if (seasonsCompleted(f) >= SEASON_CAP) return { ok: false, reason: `This franchise has completed its ${SEASON_CAP} seasons. Retire it to the Hall of Fame and the Franchise Legacy; a new franchise can begin in another slot.`, cap: true };
+  if (seasonsCompleted(f) >= SEASON_CAP) return { ok: false, reason: `${$t('franchise.this_franchise_has_completed_its_seasons', { seasonCap: SEASON_CAP })}`, cap: true };
   return { ok: true };
 }
 
@@ -67,15 +68,15 @@ export function cancelRetirement(f) { assertActive(f); if (f.lifecycle) { delete
 export function retirementChecklist(f) {
   const s = f?.season || {}; const last = f?.history?.[f.history.length - 1];
   const rows = [
-    { key: 'finished', label: 'The season is complete', ok: !!s.finished },
-    { key: 'champion', label: 'The Beast Bowl has a champion', ok: !!s.playoffs?.champion },
-    { key: 'awards', label: 'The season awards are written', ok: !!s.awards && !!last?.awards },
-    { key: 'history', label: 'The season is in the history', ok: !!last && last.year === s.year },
-    { key: 'tables', label: 'The league tables are archived', ok: !!last?.leagueStats },
-    { key: 'records', label: 'The records book is written', ok: !!f?.records },
-    { key: 'news', label: 'League News is written', ok: Array.isArray(f?.leagueNews) },
-    { key: 'noGame', label: 'No game is in progress', ok: !f?.game || !!f.game.state?.finished },
-    { key: 'noScene', label: 'No scene is waiting', ok: !(f?.scenes?.length) },
+    { key: 'finished', label: $t('franchise.the_season_is_complete'), ok: !!s.finished },
+    { key: 'champion', label: $t('franchise.the_beast_bowl_has_a_champion'), ok: !!s.playoffs?.champion },
+    { key: 'awards', label: $t('franchise.the_season_awards_are_written'), ok: !!s.awards && !!last?.awards },
+    { key: 'history', label: $t('franchise.the_season_is_in_the_history'), ok: !!last && last.year === s.year },
+    { key: 'tables', label: $t('franchise.the_league_tables_are_archived'), ok: !!last?.leagueStats },
+    { key: 'records', label: $t('franchise.the_records_book_is_written'), ok: !!f?.records },
+    { key: 'news', label: $t('franchise.league_news_is_written'), ok: Array.isArray(f?.leagueNews) },
+    { key: 'noGame', label: $t('franchise.no_game_is_in_progress'), ok: !f?.game || !!f.game.state?.finished },
+    { key: 'noScene', label: $t('franchise.no_scene_is_waiting'), ok: !(f?.scenes?.length) },
   ];
   return { rows, ready: rows.every((r) => r.ok), missing: rows.filter((r) => !r.ok).map((r) => r.label) };
 }
@@ -131,8 +132,8 @@ export function compactForArchive(f) {
  */
 export function finalizeArchive(f, { reason, hofCard = null, now = Date.now() } = {}) {
   if (isArchived(f)) return { ok: false, reason: 'already archived', legacy: f.lifecycle?.legacy || null };
-  const why = reason || retirementDue(f); if (!why) return { ok: false, reason: 'Retirement is not due.' };
-  const check = retirementChecklist(f); if (!check.ready) return { ok: false, reason: `The season must be settled first: ${check.missing.join('; ')}.`, missing: check.missing };
+  const why = reason || retirementDue(f); if (!why) return { ok: false, reason: $t('franchise.retirement_is_not_due') };
+  const check = retirementChecklist(f); if (!check.ready) return { ok: false, reason: `${$t('franchise.the_season_must_be_settled_first')} ${check.missing.join('; ')}.`, missing: check.missing };
   const legacy = buildLegacy(f, { now, reason: why === 'fired' ? 'fired' : 'retired' });
   if (hofCard?.id) legacy.hallOfFame = hofCard.id;
   compactForArchive(f);

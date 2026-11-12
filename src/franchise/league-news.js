@@ -10,6 +10,7 @@
 import { AWARDS } from './awards.js';
 import { RECORD_CATEGORIES, TEAM_RECORDS } from './stats.js';
 import { yearOf } from '../data/calendar.js';
+import { t as $t, line as $L, lineParts as $P, lineText } from '../text/index.js';
 
 export const LEAGUE_NEWS_VERSION = 1;
 export const LEAGUE_NEWS_KEEP = 200;        // items kept at most (this season and the last)
@@ -26,15 +27,17 @@ export const NEWS_RULES = Object.freeze({
 export const RACE_AWARDS = Object.freeze(['mvp', 'opoy', 'dpoy', 'oroy', 'droy', 'smoy', 'coy']);
 const PRIORITY = { record: 0, champion: 0, award: 1, playoffs: 1, race_lead: 2, upset: 3, unbeaten: 4, streak: 5, overtime: 6, shutout: 7, blowout: 8 };
 
-export const ROUND_LABEL = Object.freeze({ 1: 'Wild Card round', 2: 'Conference finals', 3: 'Beast Bowl' });
+export const ROUND_LABEL = Object.freeze({ 1: $t('franchise.wild_card_round'), 2: $t('franchise.conference_finals'), 3: $t('franchise.beast_bowl') });
+const ROUND_LINE = Object.freeze({ 1: $L('franchise.wild_card_round'), 2: $L('franchise.conference_finals'), 3: $L('franchise.beast_bowl') });   // the same names as saved lines, for the items below
 const winnerOf = (g) => g.winner || (g.homeScore > g.awayScore ? g.home : g.awayScore > g.homeScore ? g.away : null);
 const loserOf = (g) => { const w = winnerOf(g); return w ? (w === g.home ? g.away : g.home) : null; };
 const scoreLine = (g) => { const w = winnerOf(g); const hi = Math.max(g.homeScore, g.awayScore), lo = Math.min(g.homeScore, g.awayScore); return w ? `${hi}-${lo}` : `${g.homeScore}-${g.awayScore}`; };
 /** "Thunder Mesa's", "Ironpeak Rams'". */
 export const poss = (team) => (/s$/.test(team) ? `${team}'` : `${team}'s`);
 /** The score as a sentence ends it: a tie settled by the Beast Clash says so instead of "beat 16-16". */
-const resultTail = (g) => (g.clash && g.homeScore === g.awayScore ? ` after a ${g.homeScore}-${g.awayScore} tie, in a ${g.clash.size}v${g.clash.size} Beast Clash` : ` ${scoreLine(g)}${otTag(g)}`);
-const otTag = (g) => (g.clash ? ` (OT, decided by a ${g.clash.size}v${g.clash.size} Beast Clash)` : g.ot ? ' (OT)' : '');
+// a saved line when it has wording in it: every use is a value inside a saved line
+const resultTail = (g) => (g.clash && g.homeScore === g.awayScore ? $P(' ', $L('franchise.after_a_tie_in_a_v', { homeScore: g.homeScore, awayScore: g.awayScore, size: g.clash.size, size2: g.clash.size })) : ` ${scoreLine(g)}${otTag(g)}`);
+const otTag = (g) => (g.clash ? ` ${$t('franchise.ot_decided_by_a_v_beast', { size: g.clash.size, size2: g.clash.size })}` : g.ot ? ' (OT)' : '');
 
 export function ensureLeagueNews(f) { if (!Array.isArray(f.leagueNews)) f.leagueNews = []; f.leagueNewsMeta ||= { v: LEAGUE_NEWS_VERSION, leaders: {} }; return f.leagueNews; }
 /** Add items (deduplicated by id), newest first, trimmed to LEAGUE_NEWS_KEEP. Returns how many were added. */
@@ -79,22 +82,22 @@ export function resultsNews({ year, week, results, club = null, rival = null, la
   if (!thisWeek.length) return [];
   const before = recordsFrom(results.filter((g) => g.week < week)); const after = recordsFrom(results.filter((g) => g.week <= week));
   const id = (k, extra = '') => `${year}|${week}|${k}${extra ? `|${extra}` : ''}`;
-  const out = [{ id: id('scores'), year, week, kind: 'scores', tier: 'info', icon: '🏈', text: `Week ${week} scores`, games: thisWeek.map((g) => ({ home: g.home, away: g.away, hs: g.homeScore, as: g.awayScore, ot: !!g.ot, clash: !!g.clash, w: winnerOf(g), mine: g.home === club || g.away === club, rival: !!rival && (g.home === rival || g.away === rival) })) }];
+  const out = [{ id: id('scores'), year, week, kind: 'scores', tier: 'info', icon: '🏈', ...$L('franchise.week_scores', { week }), games: thisWeek.map((g) => ({ home: g.home, away: g.away, hs: g.homeScore, as: g.awayScore, ot: !!g.ot, clash: !!g.clash, w: winnerOf(g), mine: g.home === club || g.away === club, rival: !!rival && (g.home === rival || g.away === rival) })) }];
   const heads = [];
   for (const g of thisWeek) {
     const w = winnerOf(g), l = loserOf(g); const margin = Math.abs(g.homeScore - g.awayScore);
-    if (!w) { heads.push({ id: id('tie', g.home), kind: 'overtime', tier: 'info', icon: '🤝', text: `${g.home} and ${g.away} tie ${g.homeScore}-${g.awayScore}.` }); continue; }
+    if (!w) { heads.push({ id: id('tie', g.home), kind: 'overtime', tier: 'info', icon: '🤝', ...$L('franchise.and_tie', { home: g.home, away: g.away, homeScore: g.homeScore, awayScore: g.awayScore })}); continue; }
     const bw = before[w], bl = before[l];
-    if (games(bw) >= NEWS_RULES.upsetMinGames && games(bl) >= NEWS_RULES.upsetMinGames && rate(bl) - rate(bw) >= NEWS_RULES.upsetGap) heads.push({ id: id('upset', w), kind: 'upset', tier: 'notable', icon: '😱', text: `Upset: ${w} (${recStr(bw)}) stun ${l} (${recStr(bl)})${resultTail(g)}.` });
+    if (games(bw) >= NEWS_RULES.upsetMinGames && games(bl) >= NEWS_RULES.upsetMinGames && rate(bl) - rate(bw) >= NEWS_RULES.upsetGap) heads.push({ id: id('upset', w), kind: 'upset', tier: 'notable', icon: '😱', ...$L('franchise.upset_stun', { w, wRecord: recStr(bw), l, lRecord: recStr(bl), resultTail: resultTail(g) }) });
     const perfect = after[w].l === 0 && after[w].t === 0;
-    if (bl && bl.l === 0 && bl.t === 0 && bl.w >= NEWS_RULES.unbeatenMarks[0] - 1) heads.push({ id: id('firstloss', l), kind: 'unbeaten', tier: 'notable', icon: '💥', text: `${poss(l)} perfect start ends at ${bl.w}-0: ${w} win${resultTail(g)}.` });
-    else if (perfect && week === lastWeek && after[w].w >= NEWS_RULES.unbeatenMarks[0]) heads.push({ id: id('unbeaten', w), kind: 'unbeaten', tier: 'notable', icon: '🔥', text: `${w} finish the regular season unbeaten at ${after[w].w}-0.` });
-    else if (perfect && NEWS_RULES.unbeatenMarks.includes(after[w].w)) heads.push({ id: id('unbeaten', w), kind: 'unbeaten', tier: 'notable', icon: '🔥', text: `${w} stay perfect at ${after[w].w}-0 after beating ${l}${resultTail(g)}.` });
-    else if (!perfect && NEWS_RULES.streakMarks.includes(after[w].streak)) heads.push({ id: id('streak', w), kind: 'streak', tier: 'info', icon: '📈', text: `${w} have won ${after[w].streak} straight (${recStr(after[w])}).` });
-    if (NEWS_RULES.streakMarks.includes(-after[l].streak)) heads.push({ id: id('slide', l), kind: 'streak', tier: 'info', icon: '📉', text: `${l} have lost ${-after[l].streak} in a row (${recStr(after[l])}).` });
-    if (g.clash || g.ot) heads.push({ id: id('ot', w), kind: 'overtime', tier: 'info', icon: '⏱️', text: g.clash && g.homeScore === g.awayScore ? `${w} beat ${l} in a ${g.clash.size}v${g.clash.size} Beast Clash after a ${g.homeScore}-${g.awayScore} tie.` : `${w} edge ${l} ${scoreLine(g)} in overtime.` });
-    else if (Math.min(g.homeScore, g.awayScore) === 0) heads.push({ id: id('shutout', w), kind: 'shutout', tier: 'info', icon: '🧱', text: `${poss(w)} defense shuts out ${l}, ${scoreLine(g)}.` });
-    else if (margin >= NEWS_RULES.blowout) heads.push({ id: id('blowout', w), kind: 'blowout', tier: 'info', icon: '💪', text: `${w} rout ${l} ${scoreLine(g)}.` });
+    if (bl && bl.l === 0 && bl.t === 0 && bl.w >= NEWS_RULES.unbeatenMarks[0] - 1) heads.push({ id: id('firstloss', l), kind: 'unbeaten', tier: 'notable', icon: '💥', ...$L('franchise.perfect_start_ends_at_0_win', { poss: poss(l), w: bl.w, w2: w, resultTail: resultTail(g) })});
+    else if (perfect && week === lastWeek && after[w].w >= NEWS_RULES.unbeatenMarks[0]) heads.push({ id: id('unbeaten', w), kind: 'unbeaten', tier: 'notable', icon: '🔥', ...$L('franchise.finish_the_regular_season_unbeaten_at', { w, w2: after[w].w })});
+    else if (perfect && NEWS_RULES.unbeatenMarks.includes(after[w].w)) heads.push({ id: id('unbeaten', w), kind: 'unbeaten', tier: 'notable', icon: '🔥', ...$L('franchise.stay_perfect_at_0_after_beating', { w, w2: after[w].w, l, resultTail: resultTail(g) })});
+    else if (!perfect && NEWS_RULES.streakMarks.includes(after[w].streak)) heads.push({ id: id('streak', w), kind: 'streak', tier: 'info', icon: '📈', ...$L('franchise.have_won_straight', { w, streak: after[w].streak, recStr: recStr(after[w]) })});
+    if (NEWS_RULES.streakMarks.includes(-after[l].streak)) heads.push({ id: id('slide', l), kind: 'streak', tier: 'info', icon: '📉', ...$L('franchise.have_lost_in_a_row', { l, streak: -after[l].streak, recStr: recStr(after[l]) })});
+    if (g.clash || g.ot) heads.push({ id: id('ot', w), kind: 'overtime', tier: 'info', icon: '⏱️', ...g.clash && g.homeScore === g.awayScore ? $L('franchise.beat_in_a_v_beast_clash', { w, l, size: g.clash.size, size2: g.clash.size, homeScore: g.homeScore, awayScore: g.awayScore }) : $L('franchise.edge_in_overtime', { w, l, scoreLine: scoreLine(g) })});
+    else if (Math.min(g.homeScore, g.awayScore) === 0) heads.push({ id: id('shutout', w), kind: 'shutout', tier: 'info', icon: '🧱', ...$L('franchise.defense_shuts_out', { poss: poss(w), l, scoreLine: scoreLine(g) })});
+    else if (margin >= NEWS_RULES.blowout) heads.push({ id: id('blowout', w), kind: 'blowout', tier: 'info', icon: '💪', ...$L('franchise.rout', { w, l, scoreLine: scoreLine(g) })});
   }
   return [...out, ...pickHeadlines(heads).map((h) => ({ year, week, ...h }))];
 }
@@ -109,20 +112,20 @@ function pickHeadlines(heads) {
 /** Playoff results of one round: a scoreboard and a line per winner. */
 export function playoffNews({ year, week, round, results, club = null, rival = null }) {
   const games = results.filter((g) => g.round === round); if (!games.length) return [];
-  const label = ROUND_LABEL[round] || `Round ${round}`; const id = (k) => `${year}|${week}|${k}`;
-  const out = [{ id: id(`pscores${round}`), year, week, round, kind: 'scores', tier: 'info', icon: '🏟️', text: `${label} scores`, games: games.map((g) => ({ home: g.home, away: g.away, hs: g.homeScore, as: g.awayScore, ot: !!g.ot, clash: !!g.clash, w: winnerOf(g), mine: g.home === club || g.away === club, rival: !!rival && (g.home === rival || g.away === rival) })) }];
-  if (round < 3) for (const g of games) { const w = winnerOf(g); out.push({ id: id(`adv${round}|${w}`), year, week, round, kind: 'playoffs', tier: 'notable', icon: '🎟️', text: `${w} beat ${loserOf(g)}${resultTail(g)} and advance to the ${ROUND_LABEL[round + 1]}.` }); }
+  const label = ROUND_LABEL[round] || `${$t('franchise.round', { round })}`; const id = (k) => `${year}|${week}|${k}`;
+  const out = [{ id: id(`pscores${round}`), year, week, round, kind: 'scores', tier: 'info', icon: '🏟️', ...$L('franchise.scores', { label: ROUND_LINE[round] || label }), games: games.map((g) => ({ home: g.home, away: g.away, hs: g.homeScore, as: g.awayScore, ot: !!g.ot, clash: !!g.clash, w: winnerOf(g), mine: g.home === club || g.away === club, rival: !!rival && (g.home === rival || g.away === rival) })) }];
+  if (round < 3) for (const g of games) { const w = winnerOf(g); out.push({ id: id(`${`adv${round}|${w}`}`), year, week, round, kind: 'playoffs', tier: 'notable', icon: '🎟️', ...$L('franchise.beat_and_advance_to_the', { w, loser: loserOf(g), resultTail: resultTail(g), roundLabel: ROUND_LINE[round + 1] })}); }
   return out;
 }
 export function championNews({ year, week, final }) {
   if (!final) return [];
   const w = winnerOf(final);
-  return [{ id: `${year}|${week}|champion`, year, week, kind: 'champion', tier: 'major', icon: '🏆', text: `${w} win the Beast Bowl, beating ${loserOf(final)}${resultTail(final)}.` }];
+  return [{ id: `${`${year}|${week}|champion`}`, year, week, kind: 'champion', tier: 'major', icon: '🏆', ...$L('franchise.win_the_beast_bowl_beating', { w, loser: loserOf(final), resultTail: resultTail(final) })}];
 }
 /** The playoff field, drawn after week 10. `seeds` = { conf: [team, ...] }, `records` the season's standings records. */
 export function playoffFieldNews({ year, week, seeds, records }) {
   const parts = Object.entries(seeds).map(([conf, s]) => `${conf}: ${s.map((t, i) => `${i + 1}. ${t} (${recStr(records?.[t])})`).join(', ')}`);
-  return [{ id: `${year}|${week}|field`, year, week, kind: 'playoffs', tier: 'notable', icon: '📋', text: `The playoff field is set. ${parts.join(' · ')}.` }];
+  return [{ id: `${`${year}|${week}|field`}`, year, week, kind: 'playoffs', tier: 'notable', icon: '📋', ...$P($L('franchise.the_playoff_field_is_set'), ` `, parts.join(' · '), `.`)}];
 }
 
 /**
@@ -137,17 +140,17 @@ export function raceNews({ year, week, races, meta }) {
     const who = k === 'coy' ? top.coach || top.name : top.name; const key = k === 'coy' ? top.team : top.id;
     now[k] = { key, name: who, team: top.team };
     leaders.push({ award: k, short: AWARDS[k]?.short || k, name: who, team: top.team, mid: k === 'coy' ? null : top.id || null, second: races[k]?.[1] ? (k === 'coy' ? races[k][1].coach || races[k][1].name : races[k][1].name) : null, secondId: k === 'coy' ? null : races[k]?.[1]?.id || null });
-    if (prev[k] && prev[k].key !== key && ['mvp', 'opoy', 'dpoy'].includes(k)) out.push({ id: `${year}|${week}|lead|${k}`, year, week, kind: 'race_lead', tier: 'notable', icon: '🔀', mid: top.id || null, mname: who, text: `${AWARDS[k].short} race: ${who} (${top.team}) takes the lead from ${prev[k].name}.` });
+    if (prev[k] && prev[k].key !== key && ['mvp', 'opoy', 'dpoy'].includes(k)) out.push({ id: `${`${year}|${week}|lead|${k}`}`, year, week, kind: 'race_lead', tier: 'notable', icon: '🔀', mid: top.id || null, mname: who, ...$L('franchise.race_takes_the_lead_from', { short: AWARDS[k].short, who, team: top.team, name: prev[k].name })});
   }
   (meta.leaders ||= {})[year] = now; for (const y of Object.keys(meta.leaders)) if (Number(y) < year - 1) delete meta.leaders[y];
-  if (leaders.length) out.unshift({ id: `${year}|${week}|race`, year, week, kind: 'race', tier: 'info', icon: '🏅', text: 'Award races', leaders });
+  if (leaders.length) out.unshift({ id: `${`${year}|${week}|race`}`, year, week, kind: 'race', tier: 'info', icon: '🏅', ...$L('franchise.award_races'), leaders });
   return out;
 }
 /** Award winners (regular-season awards, frozen when the playoffs are drawn). `winners` = { key: finalist | null }. */
 /** `priorOf(id, key)`: how many times this monster won this award before (persistent careers, GDD §46): repeat winners are recognised. */
 export function awardNews({ year, week, winners, priorOf = null }) {
   const nth = ['', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth'];
-  return Object.entries(winners || {}).filter(([, w]) => w).map(([k, w]) => { const prior = k !== 'coy' && w.id && priorOf ? priorOf(w.id, k) : 0; return { id: `${year}|award|${k}`, year, week, kind: 'award', tier: 'major', icon: '🏆', mid: k === 'coy' ? null : w.id || null, mname: k === 'coy' ? null : w.name, text: `${AWARDS[k]?.label || k}: ${k === 'coy' ? (w.coach || w.name) : w.name} (${w.team}${w.position ? `, ${w.position}` : ''})${w.record ? `, ${w.record} club` : ''}${prior ? `, his ${nth[prior] || `${prior + 1}th`}` : ''}.` }; });
+  return Object.entries(winners || {}).filter(([, w]) => w).map(([k, w]) => { const prior = k !== 'coy' && w.id && priorOf ? priorOf(w.id, k) : 0; return { id: `${year}|award|${k}`, year, week, kind: 'award', tier: 'major', icon: '🏆', mid: k === 'coy' ? null : w.id || null, mname: k === 'coy' ? null : w.name, ...$P(AWARDS[k]?.label || k, `: `, k === 'coy' ? (w.coach || w.name) : w.name, ` (`, w.team, w.position ? `, ${w.position}` : '', `)`, (w.record ? $L('franchise.club', { record: w.record }) : ''), (prior ? $P($L('franchise.his'), ` `, nth[prior] || `${prior + 1}th`) : ''), `.`)}; });
 }
 
 /**
@@ -158,10 +161,10 @@ export function recordNews({ year, week, records, seasonsInBook, scope = 'game' 
   if (!records || seasonsInBook < NEWS_RULES.recordsAfterSeasons) return [];
   const out = []; const fmt = (v) => (Number.isInteger(v) ? v : Number(v).toFixed(1));
   if (scope === 'game') {
-    for (const c of RECORD_CATEGORIES) { const r = records.game?.[c.id]; if (!r || r.year !== year || r.week !== week || !r.prev) continue; out.push({ id: `${year}|${week}|rec|g|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', mid: r.id || null, mname: r.name, text: `League record: ${r.name} (${r.team}) sets the single-game mark for ${c.label.toLowerCase()} with ${fmt(r.value)} against ${r.opp}. ${r.prev.id && r.prev.id === r.id ? 'He breaks his own mark' : 'The old mark'}: ${fmt(r.prev.value)}${r.prev.id && r.prev.id === r.id ? '' : ` by ${r.prev.name}`}${r.prev.year != null ? ` (${yearOf(r.prev.year)})` : ''}.` }); }
-    for (const c of TEAM_RECORDS) { const r = records.team?.[c.id]; if (!r || r.year !== year || r.week !== week || !r.prev) continue; out.push({ id: `${year}|${week}|rec|t|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', text: `League record: ${r.team} set the mark for ${c.label.toLowerCase()} (${fmt(r.value)}) in a ${r.score} game against ${r.opp}. The old mark: ${fmt(r.prev.value)} by ${r.prev.team}.` }); }
+    for (const c of RECORD_CATEGORIES) { const r = records.game?.[c.id]; if (!r || r.year !== year || r.week !== week || !r.prev) continue; out.push({ id: `${`${year}|${week}|rec|g|${c.id}`}`, year, week, kind: 'record', tier: 'major', icon: '📜', mid: r.id || null, mname: r.name, ...$P($L('franchise.league_record_sets_the_single_game', { name: r.name, team: r.team, toLowerCase: c.label.toLowerCase(), amount: fmt(r.value), opp: r.opp, id: r.prev.id && r.prev.id === r.id ? $L('franchise.he_breaks_his_own_mark') : $L('franchise.the_old_mark'), amount2: fmt(r.prev.value) }), r.prev.id && r.prev.id === r.id ? '' : ` by ${r.prev.name}`, r.prev.year != null ? ` (${yearOf(r.prev.year)})` : '', `.`)}); }
+    for (const c of TEAM_RECORDS) { const r = records.team?.[c.id]; if (!r || r.year !== year || r.week !== week || !r.prev) continue; out.push({ id: `${`${year}|${week}|rec|t|${c.id}`}`, year, week, kind: 'record', tier: 'major', icon: '📜', ...$L('franchise.league_record_set_the_mark_for', { team: r.team, toLowerCase: c.label.toLowerCase(), amount: fmt(r.value), score: r.score, opp: r.opp, amount2: fmt(r.prev.value), team2: r.prev.team })}); }
   } else {
-    for (const c of RECORD_CATEGORIES) { const r = records.season?.[c.id]; if (!r || r.year !== year || !r.prev) continue; out.push({ id: `${year}|rec|s|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', mid: r.id || null, mname: r.name, text: `Season record: ${r.name} (${r.team}) finishes with ${fmt(r.value)} ${c.label.toLowerCase()}, the most in league history. ${r.prev.id && r.prev.id === r.id ? 'He breaks his own mark' : 'The old mark'}: ${fmt(r.prev.value)}${r.prev.id && r.prev.id === r.id ? '' : ` by ${r.prev.name}`}${r.prev.year != null ? ` (${yearOf(r.prev.year)})` : ''}.` }); }
+    for (const c of RECORD_CATEGORIES) { const r = records.season?.[c.id]; if (!r || r.year !== year || !r.prev) continue; out.push({ id: `${year}|rec|s|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', mid: r.id || null, mname: r.name, ...$P($L('franchise.season_record_finishes_with_the_most', { name: r.name, team: r.team, amount: fmt(r.value), toLowerCase: c.label.toLowerCase(), id: r.prev.id && r.prev.id === r.id ? $L('franchise.he_breaks_his_own_mark') : $L('franchise.the_old_mark'), amount2: fmt(r.prev.value) }), r.prev.id && r.prev.id === r.id ? '' : ` by ${r.prev.name}`, r.prev.year != null ? ` (${yearOf(r.prev.year)})` : '', `.`)}); }
   }
   return out;
 }
@@ -172,7 +175,7 @@ export function newsByWeek(list) {
   for (const it of list || []) { if (!cur || cur.year !== it.year || cur.week !== it.week) { cur = { year: it.year, week: it.week, items: [] }; out.push(cur); } cur.items.push(it); }
   return out;
 }
-export const weekLabel = (week) => (week > 10 ? ROUND_LABEL[week - 10] || 'Playoffs' : week === 0 ? 'Preseason' : `Week ${week}`);
+export const weekLabel = (week) => (week > 10 ? ROUND_LABEL[week - 10] || 'Playoffs' : week === 0 ? 'Preseason' : `${$t('franchise.week_2', { week })}`);
 
 /**
  * Backfill for a save made before League News: the current season's scoreboards and results headlines, rebuilt from the
@@ -217,18 +220,20 @@ export function moveWeight(e, { rival, division = [] }) {
 }
 const ageOf = (e) => (e.age ? `, ${e.age}` : '');
 /** One line of text for a move; the monster's name is linked by the UI through mid/mname. */
-export function moveText(e) {
-  const who = `${e.mname} (${e.position}${e.ovr ? `, ${e.ovr} OVR` : ''}${ageOf(e)})`;
+export function moveLine(e) {
+  const who = $P(e.mname, ' (', e.position, e.ovr ? $L('franchise.ovr_2', { ovr: e.ovr }) : '', ageOf(e), ')');   // a saved line itself: it is a value inside the lines below
   switch (e.kind) {
-    case 'signing': return e.via === 'waivers' ? `${e.club} claim ${who} off waivers${e.from ? `, late of ${e.from}` : ''}.` : e.generated ? `${e.club} sign ${who}, a veteran out of ${e.region || 'the regions'}.` : `${e.club} sign free agent ${who}${e.from ? `, formerly of ${e.from}` : ''}.`;
-    case 'release': return e.reason === 'walked' ? `${who} leaves ${e.club} as a free agent; his deal was not renewed.` : `${e.club} release ${who}${e.why === 'cap' ? ' to get under the cap' : e.why === 'room' ? ' to make room' : ''}.`;
-    case 'trade': return e.toOwner ? `${e.from} trade ${who} to ${e.to} for ${e.consideration || 'picks'}.` : `Trade: ${who} goes from ${e.from} to ${e.to}${e.consideration ? ` for ${e.consideration}` : ''}.`;
-    case 'draft': return `${e.club} draft ${who} at #${e.overall} (round ${e.round}).`;
-    case 'retire': return `${e.mname} retires at ${e.age || 'the end of a long career'}${e.honours ? `: ${e.honours}` : ''}. ${e.club ? `He played his last season with ${e.club}.` : ''}`.trim();
-    case 'milestone': return `${e.mname} (${e.club}) reaches ${e.milestone}.`;
-    default: return `${e.mname}: ${e.kind}.`;
+    case 'signing': return (e.via === 'waivers' ? $P($L('franchise.claim_off_waivers', { club: e.club, who }), (e.from ? $L('franchise.late_of', { from: e.from }) : ''), `.`) : (e.generated ? $L('franchise.sign_a_veteran_out_of', { club: e.club, who, region: e.region || $t('franchise.the_regions') }) : $P(e.club, ` sign free agent `, who, (e.from ? $L('franchise.formerly_of', { from: e.from }) : ''), `.`)));
+    case 'release': return e.reason === 'walked' ? $L('franchise.leaves_as_a_free_agent_his', { who, club: e.club }) : $L('franchise.release', { club: e.club, who, why: (e.why === 'cap' ? $L('franchise.to_get_under_the_cap') : (e.why === 'room' ? $L('franchise.to_make_room') : ''))});
+    case 'trade': return (e.toOwner ? $L('franchise.trade_to_for', { from: e.from, who, to: e.to, consideration: e.consideration || 'picks' }) : $P($L('franchise.trade_goes_from_to', { who, from: e.from, to: e.to }), e.consideration ? ` for ${e.consideration}` : '', `.`));
+    case 'draft': return $L('franchise.draft_at_round', { club: e.club, who, overall: e.overall, e: e.round });
+    case 'retire': return $P($L('franchise.retires_at', { mname: e.mname, age: e.age || $t('franchise.the_end_of_a_long_career') }), e.honours ? `: ${e.honours}` : '', '.', e.club ? $P(' ', $L('franchise.he_played_his_last_season_with', { club: e.club })) : '');
+    case 'milestone': return $L('franchise.reaches', { mname: e.mname, club: e.club, milestone: e.milestone });
+    default: return { text: `${e.mname}: ${e.kind}.` };
   }
 }
+/** The sentence for a move (English or the chosen language). */
+export const moveText = (e) => lineText(moveLine(e));
 /**
  * In-season moves for one week: the meaningful ones, the best TRANSACTIONS_PER_WEEK as separate lines. `events` are this
  * week's queued moves; returns News items.
@@ -236,7 +241,7 @@ export function moveText(e) {
 export function movesNews({ year, week, events, club, rival, division }) {
   const ctx = { club, rival, division };
   const keep = latestPerMonster(events).filter((e) => meaningfulMove(e, ctx)).sort((a, b) => moveWeight(b, ctx) - moveWeight(a, ctx)).slice(0, TRANSACTIONS_PER_WEEK);
-  return keep.map((e, i) => ({ id: `${year}|${week}|move|${e.kind}|${e.mid || i}`, year, week, kind: e.kind, tier: e.kind === 'retire' ? 'notable' : 'info', icon: ICON[e.kind] || '📰', mid: e.mid || null, mname: e.mname || null, text: moveText(e) }));
+  return keep.map((e, i) => ({ id: `${year}|${week}|move|${e.kind}|${e.mid || i}`, year, week, kind: e.kind, tier: e.kind === 'retire' ? 'notable' : 'info', icon: ICON[e.kind] || '📰', mid: e.mid || null, mname: e.mname || null, ...moveLine(e) }));
 }
 /** One line per monster per window: a walk followed by a claim reads as the claim ("late of …"); a retirement always stands. */
 export function latestPerMonster(events) { const last = new Map(); for (const e of events || []) { const cur = last.get(e.mid || Symbol()); if (!cur || cur.kind !== 'retire') last.set(e.mid || Symbol(), e); } return [...last.values()]; }
@@ -247,13 +252,13 @@ export function offseasonDigest({ year, events, club, rival, division }) {
   const keep = latestPerMonster(events).filter((e) => meaningfulMove(e, ctx)).sort((a, b) => moveWeight(b, ctx) - moveWeight(a, ctx)).slice(0, OFFSEASON_DIGEST);
   if (!keep.length) return [];
   const total = (events || []).length;
-  return [{ id: `${year}|0|moves`, year, week: 0, kind: 'moves', tier: 'notable', icon: ICON.moves, text: `Offseason moves: ${total} transaction${total === 1 ? '' : 's'} across the league; the ones that matter:`, lines: keep.map((e) => ({ mid: e.mid || null, mname: e.mname || null, text: moveText(e) })) }];
+  return [{ id: `${year}|0|moves`, year, week: 0, kind: 'moves', tier: 'notable', icon: ICON.moves, ...$L('franchise.offseason_moves_transactions_across_the_league', { total, n: total }), lines: keep.map((e) => ({ mid: e.mid || null, mname: e.mname || null, ...moveLine(e) })) }];
 }
 /** The draft as one digest: the owner's picks, the top MOVE_RULES.draftTop, and AI picks of prospects the owner had scouted. */
 export function draftDigest({ year, picks, club, scouted = new Set() }) {
   const made = (picks || []).filter((p) => p.id && !p.passed); if (!made.length) return [];
   const mine = made.filter((p) => p.team === club); const top = made.slice(0, MOVE_RULES.draftTop); const known = made.filter((p) => p.team !== club && scouted.has(p.id) && !top.includes(p));
-  const line = (p) => ({ mid: p.id, mname: p.name, text: `#${p.overall} ${p.team}: ${p.name} (${p.position}, ${p.ovr} OVR)${p.team === club ? ' — yours' : ''}` });
+  const line = (p) => ({ mid: p.id, mname: p.name, ...$P(`#`, p.overall, ` `, p.team, `: `, p.name, ` (`, p.position, `, `, p.ovr, ` OVR)`, (p.team === club ? $L('franchise.yours') : ''))});
   const lines = [...new Set([...mine, ...top, ...known])].sort((a, b) => a.overall - b.overall).slice(0, OFFSEASON_DIGEST + 2).map(line);
-  return [{ id: `${year}|0|draft`, year, week: 0, kind: 'draft', tier: 'notable', icon: ICON.draft, text: `The draft: ${made.length} picks. ${mine.length ? `You took ${mine.map((p) => p.name).join(', ')}.` : 'You made no pick.'}`, lines }];
+  return [{ id: `${year}|0|draft`, year, week: 0, kind: 'draft', tier: 'notable', icon: ICON.draft, ...$P($L('franchise.the_draft_picks', { n: made.length }), ` `, (mine.length ? $P($L('franchise.you_took'), ` `, mine.map((p) => p.name).join(', '), `.`) : $L('franchise.you_made_no_pick'))), lines }];
 }

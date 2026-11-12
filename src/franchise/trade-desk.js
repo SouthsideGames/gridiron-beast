@@ -20,6 +20,7 @@ const MINE = Object.freeze({ succession: false }); // Task 6 Phase B (R6): the o
 import { isProtected } from './league-registry.js';
 import { returnLock, tradeLock } from './fa-state.js';
 import { legendSide, legendCheck } from './fa-legendary.js';
+import { t as $t } from '../text/index.js';
 
 export const DESK_RULES = Object.freeze({
   perClub: 3,                                       // proposals to one club in a window
@@ -50,11 +51,11 @@ export const justArrived = (f, m) => !!m.traded && m.traded.year === (f.season?.
 // ---------------------------------------------------------------- who can move
 /** Why a monster cannot be traded, or null. `side` is 'mine' or 'theirs'. */
 export function immovable(f, m, side) {
-  if (isProtected(m)) return m.legendary ? 'A gym legendary is bound to his club for good.' : 'A rival GM’s signature monster stays with his club.';
-  if (m.cornerstone) return 'A cornerstone is the face of a club and is never traded.';
+  if (isProtected(m)) return m.legendary ? $t('franchise.a_gym_legendary_is_bound_to') : $t('franchise.a_rival_gms_signature_monster_stays');
+  if (m.cornerstone) return $t('franchise.a_cornerstone_is_the_face_of');
   { const lock = tradeLock(f, m); if (lock) return lock; } // Task 7 resolution 6
-  if (!tradable(f, m)) return m.contract?.rookie || m.drafted || m.rookie ? 'Rookies stay with the club that signed them for their first two seasons.' : 'He cannot be traded.';
-  if (justArrived(f, m)) return side === 'mine' ? 'He just arrived in a trade; he cannot be moved again this season.' : 'He just arrived in a trade; his club will not move him again this season.';
+  if (!tradable(f, m)) return m.contract?.rookie || m.drafted || m.rookie ? $t('franchise.rookies_stay_with_the_club_that') : $t('franchise.he_cannot_be_traded');
+  if (justArrived(f, m)) return side === 'mine' ? $t('franchise.he_just_arrived_in_a_trade') : $t('franchise.he_just_arrived_in_a_trade_2');
   return null;
 }
 /** Task 7 resolution 6 and the legendary limit for a proposal: a monster may not return to the club that traded him away this
@@ -64,8 +65,8 @@ export function task7TradeBlock(f, { give, get, team, ownerRoster, theirRoster }
   for (const m of give) { const r = returnLock(f, m, team); if (r) return r; }
   const after = (roster, out, inn) => [...roster.filter((x) => !out.includes(x)), ...inn];
   const ownerAfter = after(ownerRoster, give, get), theirsAfter = after(theirRoster, get, give);
-  for (const m of get) if (legendSide(m) && !legendCheck(ownerAfter.filter((x) => x !== m), m, { final: true }).ok) return `${m.name}: one ${legendSide(m) === 'offense' ? 'offensive' : 'defensive'} legendary per club, and you would have two.`;
-  for (const m of give) if (legendSide(m) && !legendCheck(theirsAfter.filter((x) => x !== m), m, { final: true }).ok) return `${m.name}: the ${team} already hold a ${legendSide(m) === 'offense' ? 'n offensive' : ' defensive'} legendary.`.replace('a n ', 'an ').replace('a  ', 'a ');
+  for (const m of get) if (legendSide(m) && !legendCheck(ownerAfter.filter((x) => x !== m), m, { final: true }).ok) return `${$t('franchise.one_legendary_per_club_and_you', { name: m.name, legendSide: legendSide(m) === 'offense' ? 'offensive' : 'defensive' })}`;
+  for (const m of give) if (legendSide(m) && !legendCheck(theirsAfter.filter((x) => x !== m), m, { final: true }).ok) return `${$t('franchise.the_already_hold_a_legendary', { name: m.name, team, legendSide: legendSide(m) === 'offense' ? 'n offensive' : ' defensive' })}`.replace('a n ', 'an ').replace('a  ', 'a ');
   return null;
 }
 /** Is a starter at this club for sale? Only if the man behind him is within a few points. */
@@ -77,7 +78,7 @@ export function readyReplacement(roster, m) {
 }
 
 // ---------------------------------------------------------------- the decision
-const moodOf = (f, prop, stamp) => { const key = [prop.team, stamp, ...[...prop.giveMonsters].sort(), '>', ...[...prop.getMonsters].sort(), ...(prop.givePicks || []).map(pickKey).sort(), '>', ...(prop.getPicks || []).map(pickKey).sort()].join('|'); return 1 + (createRng(hashString(`desk|${f.seed}|${key}`)).next() - 0.5) * 2 * DESK_RULES.mood; };
+const moodOf = (f, prop, stamp) => { const key = [prop.team, stamp, ...[...prop.giveMonsters].sort(), '>', ...[...prop.getMonsters].sort(), ...(prop.givePicks || []).map(pickKey).sort(), '>', ...(prop.getPicks || []).map(pickKey).sort()].join('|'); return 1 + (createRng(hashString(`${`desk|${f.seed}|${key}`}`)).next() - 0.5) * 2 * DESK_RULES.mood; };
 const money = (n) => Math.round(Math.abs(n)).toLocaleString('en-US');
 /**
  * Judge a proposal: { team, giveMonsters: [ids from the owner's roster], givePicks: [picks the owner holds], getMonsters: [ids
@@ -91,41 +92,41 @@ function evaluateProposalNow(f, prop, env) {
   const give = (prop.giveMonsters || []).map((id) => mine.find((m) => m.id === id)), get = (prop.getMonsters || []).map((id) => theirs.find((m) => m.id === id));
   const givePicks = prop.givePicks || [], getPicks = prop.getPicks || []; const reasons = []; const block = (code, text) => reasons.push({ code, text, blocking: true });
   const fail = (code, text) => ({ ok: false, legal: false, accept: false, reasons: [{ code, text, blocking: true }], detail: null, counter: null });
-  if (give.some((m) => !m) || get.some((m) => !m)) return fail('gone', 'One of those monsters is no longer where the proposal says.');
-  if (new Set(prop.giveMonsters).size !== give.length || new Set(prop.getMonsters).size !== get.length) return fail('duplicate', 'The same monster is listed twice.');
-  if (!give.length && !givePicks.length) return fail('empty', 'Offer something: a monster or a pick.');
-  if (!get.length && !getPicks.length) return fail('empty', 'Ask for something: a monster or a pick.');
-  if (give.length > DESK_RULES.maxMonsters || get.length > DESK_RULES.maxMonsters || givePicks.length > DESK_RULES.maxPicks || getPicks.length > DESK_RULES.maxPicks) return fail('size', `A proposal carries at most ${DESK_RULES.maxMonsters} monsters and ${DESK_RULES.maxPicks} picks on each side.`);
-  if (!env.windowOpen) return fail('window', 'Trades are open on the draft clock and in the offseason.');
+  if (give.some((m) => !m) || get.some((m) => !m)) return fail('gone', $t('franchise.one_of_those_monsters_is_no'));
+  if (new Set(prop.giveMonsters).size !== give.length || new Set(prop.getMonsters).size !== get.length) return fail('duplicate', $t('franchise.the_same_monster_is_listed_twice'));
+  if (!give.length && !givePicks.length) return fail('empty', $t('franchise.offer_something_a_monster_or_a'));
+  if (!get.length && !getPicks.length) return fail('empty', $t('franchise.ask_for_something_a_monster_or'));
+  if (give.length > DESK_RULES.maxMonsters || get.length > DESK_RULES.maxMonsters || givePicks.length > DESK_RULES.maxPicks || getPicks.length > DESK_RULES.maxPicks) return fail('size', `${$t('franchise.a_proposal_carries_at_most_monsters', { maxMonsters: DESK_RULES.maxMonsters, maxPicks: DESK_RULES.maxPicks })}`);
+  if (!env.windowOpen) return fail('window', $t('franchise.trades_are_open_on_the_draft'));
   const use = deskUsage(f, team);
-  if (!env.noLimit && use.clubLeft <= 0) return fail('limit', `You have made ${DESK_RULES.perClub} proposals to the ${team} this offseason. Try another club, or wait for the next window.`);
-  if (!env.noLimit && use.totalLeft <= 0) return fail('limit', `You have made ${DESK_RULES.perWindow} proposals this offseason. The league is tired of your calls until the next window.`);
+  if (!env.noLimit && use.clubLeft <= 0) return fail('limit', `${$t('franchise.you_have_made_proposals_to_the', { perClub: DESK_RULES.perClub, team })}`);
+  if (!env.noLimit && use.totalLeft <= 0) return fail('limit', `${$t('franchise.you_have_made_proposals_this_offseason', { perWindow: DESK_RULES.perWindow })}`);
   // 1. who can move
   for (const m of give) { const why = immovable(f, m, 'mine'); if (why) block('immovable', `${m.name}: ${why}`); }
   for (const m of get) { const why = immovable(f, m, 'theirs'); if (why) block('immovable', `${m.name}: ${why}`); }
   { const why = task7TradeBlock(f, { give, get, team, ownerRoster: env.ownerRoster, theirRoster: env.roster ? env.roster(team) : [] }); if (why) block('task7', why); }
-  for (const p of givePicks) if (!env.ownerPicks.some((x) => samePick(x, p))) block('pick', 'You no longer hold one of those picks.');
+  for (const p of givePicks) if (!env.ownerPicks.some((x) => samePick(x, p))) block('pick', $t('franchise.you_no_longer_hold_one_of'));
   const clubPicks = (y) => picksOwnedBy(f, team, y, env.allTeams).filter((p) => !pickUsed(f, p));
-  for (const p of getPicks) if (!clubPicks(p.year).some((x) => samePick(x, p))) block('pick', `The ${team} no longer hold one of those picks.`);
-  if (givePicks.some((p) => !tradableYears(f).includes(p.year)) || getPicks.some((p) => !tradableYears(f).includes(p.year))) block('pick', `Picks can be traded up to three classes ahead.`);
+  for (const p of getPicks) if (!clubPicks(p.year).some((x) => samePick(x, p))) block('pick', `${$t('franchise.the_no_longer_hold_one_of', { team })}`);
+  if (givePicks.some((p) => !tradableYears(f).includes(p.year)) || getPicks.some((p) => !tradableYears(f).includes(p.year))) block('pick', `${$t('franchise.picks_can_be_traded_up_to_2')}`);
   // 3. the roster
   const myAfter = rosterAfter(mine, { give, get }), theirAfter = rosterAfter(theirs, { give: get, get: give });
-  if (myAfter.length > ROSTER_MAX) block('rosterFull', `That leaves you ${myAfter.length} monsters; the roster holds ${ROSTER_MAX}. Include a monster to send back or release one first.`);
-  if (myAfter.length < ROSTER_MIN && myAfter.length < mine.length) block('rosterShort', `That leaves you ${myAfter.length} monsters; a club needs ${ROSTER_MIN} to play.`);
+  if (myAfter.length > ROSTER_MAX) block('rosterFull', `${$t('franchise.that_leaves_you_monsters_the_roster', { n: myAfter.length, rosterMax: ROSTER_MAX })}`);
+  if (myAfter.length < ROSTER_MIN && myAfter.length < mine.length) block('rosterShort', `${$t('franchise.that_leaves_you_monsters_a_club', { n: myAfter.length, rosterMin: ROSTER_MIN })}`);
   const mc = countsAt(mine), ma = countsAt(myAfter);
-  for (const pos of Object.keys(GROUP_SLOTS)) if ((mc[pos] || 0) >= 1 && !(ma[pos] || 0) && pos !== 'TE') { block('onlyOne', `${give.find((m) => m.position === pos)?.name || 'That monster'} is your only ${pos}.`); break; }
+  for (const pos of Object.keys(GROUP_SLOTS)) if ((mc[pos] || 0) >= 1 && !(ma[pos] || 0) && pos !== 'TE') { block('onlyOne', `${give.find((m) => m.position === pos)?.name || $t('franchise.that_monster')} ${$t('franchise.is_your_only_2', { pos })}`); break; }
   const tp = rosterProblems(theirs, theirAfter);
-  if (tp.includes('rosterFull')) block('rosterFull', `That leaves the ${team} ${theirAfter.length} monsters; they hold ${ROSTER_MAX}. They will not take more bodies than they send.`);
-  if (tp.includes('rosterShort')) block('rosterShort', `That leaves the ${team} ${theirAfter.length} monsters; they need ${ROSTER_MIN} to play.`);
-  const short = tp.find((c) => c.startsWith('short:')); if (short) block('position', `The ${team} would be short of starters at ${short.slice(6)}.`);
+  if (tp.includes('rosterFull')) block('rosterFull', `${$t('franchise.that_leaves_the_monsters_they_hold', { team, n: theirAfter.length, rosterMax: ROSTER_MAX })}`);
+  if (tp.includes('rosterShort')) block('rosterShort', `${$t('franchise.that_leaves_the_monsters_they_need', { team, n: theirAfter.length, rosterMin: ROSTER_MIN })}`);
+  const short = tp.find((c) => c.startsWith('short:')); if (short) block('position', `${$t('franchise.the_would_be_short_of_starters', { team, slice: short.slice(6) })}`);
   const roomT = env.room(team), roomAfter = roomT + get.reduce((s, m) => s + (m.salary || 0), 0) - give.reduce((s, m) => s + (m.salary || 0), 0);
-  if (roomAfter < Math.min(0, roomT)) block('cap', `The ${team} cannot fit the salary: ${money(-roomAfter)} cr over their cap.`);
+  if (roomAfter < Math.min(0, roomT)) block('cap', `${$t('franchise.the_cannot_fit_the_salary_cr', { team, money: money(-roomAfter) })}`);
   // 4. their lineup
   // A starter leaves only if the man who takes his place is within the gap — and what you send them in the same proposal counts: a like-for-like swap or an upgrade at the position is a replacement, not a hole.
   for (const m of get) {
     if (roleIn(theirs, m) !== 0) continue; // a backup or a spare: nothing to cover
     const n = slotsOf(m.position); const next = ordered(theirAfter.filter((x) => x.position === m.position))[n - 1];
-    if (!next || ovr(next) < ovr(m) - DESK_RULES.replacementGap) block('noReplacement', `The ${team} have no ready replacement for ${m.name}; a starter is only for sale when the man behind him (or the one you send) is within ${DESK_RULES.replacementGap} points.`);
+    if (!next || ovr(next) < ovr(m) - DESK_RULES.replacementGap) block('noReplacement', `${$t('franchise.the_have_no_ready_replacement_for', { team, name: m.name, replacementGap: DESK_RULES.replacementGap })}`);
   }
   // 5. the price
   const margin = DESK_RULES.margin[env.difficulty] ?? DESK_RULES.margin.pro; const stamp = deskStamp(f); const mood = moodOf(f, prop, stamp);
@@ -139,8 +140,8 @@ function evaluateProposalNow(f, prop, env) {
   const blocking = reasons.some((r) => r.blocking);
   if (!blocking && !priceOk) {
     const ratio = worthIn / need; const gap = ratio >= 0.9 ? 'close' : ratio >= 0.6 ? 'short' : 'far';
-    if (give.length && marketIn > 0 && useful < 0.35 && !givePicks.length) reasons.push({ code: 'noNeed', text: `The ${team} are deep where you are offering: ${give.map((m) => m.name).join(', ')} would sit on their bench, so they value ${give.length === 1 ? 'him' : 'them'} at little.`, blocking: false });
-    reasons.push({ code: 'value', text: gap === 'close' ? `Close, but the ${team} want a little more for ${get.map((m) => m.name).concat(getPicks.map((p) => `a ${p.year} R${p.round}`)).join(' and ')}.` : gap === 'short' ? `The ${team} value what they give above what you offer.` : `The ${team} are far apart: what you offer is worth well under what you ask.`, blocking: false, gap });
+    if (give.length && marketIn > 0 && useful < 0.35 && !givePicks.length) reasons.push({ code: 'noNeed', text: `${$t('franchise.the_are_deep_where_you_are', { team })} ${give.map((m) => m.name).join(', ')} ${$t('franchise.would_sit_on_their_bench_so', { give: give.length === 1 ? 'him' : 'them' })}`, blocking: false });
+    reasons.push({ code: 'value', text: gap === 'close' ? `${$t('franchise.close_but_the_want_a_little', { team })} ${get.map((m) => m.name).concat(getPicks.map((p) => `a ${p.year} R${p.round}`)).join(' and ')}.` : gap === 'short' ? `${$t('franchise.the_value_what_they_give_above', { team })}` : `${$t('franchise.the_are_far_apart_what_you', { team })}`, blocking: false, gap });
   }
   const legal = !blocking; const accept = legal && priceOk;
   const detail = {
@@ -168,8 +169,8 @@ function findCounter(f, prop, env, { give, get }) {
   if (prop.giveMonsters.length < DESK_RULES.maxMonsters) for (const m of spares) adds.push({ kind: 'monster', monster: m, cost: marketValue(m, { year: env.year }), prop: { ...base, giveMonsters: [...prop.giveMonsters, m.id] } });
   adds.sort((a, b) => a.cost - b.cost || (a.kind < b.kind ? -1 : 1));
   let tries = 0;
-  for (const a of adds) { if (tries++ >= DESK_RULES.counterTries * 3) break; if (asks(a.prop)) return a.kind === 'pick' ? { kind: 'addPick', pick: a.pick, text: `They would do it if you add your ${a.pick.year} round-${a.pick.round} pick.` } : { kind: 'addMonster', monsterId: a.monster.id, text: `They would do it if you add ${a.monster.name} (${a.monster.position}, ${ovr(a.monster)} OVR).` }; }
-  if (get.length + (prop.getPicks || []).length > 1) for (const m of get) { const p = { ...base, getMonsters: prop.getMonsters.filter((id) => id !== m.id) }; if ((p.getMonsters.length || (p.getPicks || []).length) && asks(p)) return { kind: 'dropAsk', monsterId: m.id, text: `They would do it without ${m.name} in the ask.` }; }
+  for (const a of adds) { if (tries++ >= DESK_RULES.counterTries * 3) break; if (asks(a.prop)) return a.kind === 'pick' ? { kind: 'addPick', pick: a.pick, text: `${$t('franchise.they_would_do_it_if_you', { year: a.pick.year, pick: a.pick.round })}` } : { kind: 'addMonster', monsterId: a.monster.id, text: `${$t('franchise.they_would_do_it_if_you_2', { name: a.monster.name, position: a.monster.position, ovr: ovr(a.monster) })}` }; }
+  if (get.length + (prop.getPicks || []).length > 1) for (const m of get) { const p = { ...base, getMonsters: prop.getMonsters.filter((id) => id !== m.id) }; if ((p.getMonsters.length || (p.getPicks || []).length) && asks(p)) return { kind: 'dropAsk', monsterId: m.id, text: `${$t('franchise.they_would_do_it_without_in', { name: m.name })}` }; }
   return null;
 }
 
@@ -194,7 +195,7 @@ export function deskAssets(f, team, env) {
  */
 export function buildIncomingOffer(f, env, opts) { return scoped(() => buildIncomingOfferNow(f, env, opts)); }
 function buildIncomingOfferNow(f, env, { key, chance }) {
-  const r = createRng(hashString(`call2|${f.seed}|${key}`));
+  const r = createRng(hashString(`${`call2|${f.seed}|${key}`}`));
   if (r.next() > chance) return null;
   const mine = env.ownerRoster; const year = env.year; const myPicks = env.ownerPicks.slice().sort((a, b) => pickWorth(f, a) - pickWorth(f, b));
   const clubs = env.clubs.slice().sort().sort(() => r.next() - 0.5);

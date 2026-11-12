@@ -7,6 +7,7 @@
 //   - Another club's knowledge is separate (src/franchise/draft.js aiDraftKnowledge); nothing here reveals anything to the AI.
 // Pure bookkeeping: no random draws, no rewards, nothing a simulation reads. Optional save fields (schema 10 unchanged):
 //   f.discovery = { potential: { [monsterId]: { year, week, via } }, apex: { [monsterId]: { year, week, via, name, shown } } }
+import { t as $t } from '../../text/index.js';
 const VIA = Object.freeze(['roster', 'scouting', 'draft-report', 'free-agent-report']);
 export const DISCOVERY_VIA = VIA;
 const book = (f) => { const d = (f.discovery ||= {}); d.potential ||= {}; d.apex ||= {}; return d; };
@@ -51,4 +52,4 @@ export function pendingApexPanels(f) { return Object.entries(f?.discovery?.apex 
 export function markApexPanelShown(f, id) { const r = f?.discovery?.apex?.[id]; if (!r || r.shown) return false; r.shown = true; return true; }
 
 /** What the profile and the panel state about a discovered Apex (spec §5). */
-export const APEX_FACTS = Object.freeze(['Potential 99 in every attribute', 'Starts undeveloped', 'Ageless', 'Neutral Temper']);
+export const APEX_FACTS = Object.freeze([$t('franchise.potential_99_in_every_attribute'), $t('franchise.starts_undeveloped'), 'Ageless', 'Neutral Temper']);

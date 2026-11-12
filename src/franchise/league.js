@@ -10,6 +10,7 @@ import { ROOKIE_SCALE } from './draft.js';
 import { addToClub, removeFromClub, clubRoster, isProtected, legendStub, hasLeague, leagueEvent, moveIdentity } from './league-registry.js';
 import { GROUP_SLOTS } from './roster.js';
 import { noteReleased } from './fa-state.js';
+import { t as $t } from '../text/index.js';
 
 export const POOL_CAP = 12;            // monsters a regional pool holds (GDD §18.3), the oldest leaving first
 export const POOL_WORTH = Object.freeze({ ovr: 52, age: 24, market: 60 }); // an AI club's castoff enters a pool only if someone might want him, and only at the owner's market grade (≤ 60): better ones go through the league's waivers
@@ -53,10 +54,10 @@ export function honoursLine(f, m) {
   const ev = m.career?.ev || []; const parts = [];
   const awards = {}; for (const e of ev) if (e.t === 'award') awards[e.x?.key] = (awards[e.x?.key] || 0) + 1;
   for (const h of f.history || []) for (const [k, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && !ev.some((e) => e.t === 'award' && e.y === h.year && e.x?.key === k)) awards[k] = (awards[k] || 0) + 1;
-  const label = { mvp: 'MVP', opoy: 'Offensive Monster of the Year', dpoy: 'Defensive Monster of the Year', smoy: 'Signature Monster of the Year', oroy: 'Offensive Rookie of the Year', droy: 'Defensive Rookie of the Year' };
+  const label = { mvp: 'MVP', opoy: $t('franchise.offensive_monster_of_the_year'), dpoy: $t('franchise.defensive_monster_of_the_year'), smoy: $t('franchise.signature_monster_of_the_year'), oroy: $t('franchise.offensive_rookie_of_the_year'), droy: $t('franchise.defensive_rookie_of_the_year') };
   for (const [k, n] of Object.entries(awards)) if (label[k]) parts.push(`${n > 1 ? `${['', 'two', 'three', 'four', 'five'][n] || n}-time ` : ''}${label[k]}`);
-  const titles = ev.filter((e) => e.t === 'champion').length; if (titles) parts.push(titles === 1 ? 'a Beast Bowl champion' : `${titles}-time Beast Bowl champion`);
-  const recs = ev.filter((e) => e.t === 'record').length; if (recs) parts.push(recs === 1 ? 'a league record' : `${recs} league records`);
+  const titles = ev.filter((e) => e.t === 'champion').length; if (titles) parts.push(titles === 1 ? $t('franchise.a_beast_bowl_champion') : `${$t('franchise.time_beast_bowl_champion', { titles })}`);
+  const recs = ev.filter((e) => e.t === 'record').length; if (recs) parts.push(recs === 1 ? $t('franchise.a_league_record') : `${recs} league records`);
   return parts.join(', ');
 }
 
@@ -96,8 +97,8 @@ export function takeFromPool(f, id) {
  * registry refuses, and so does this. Returns { ok, where } or { ok: false, reason }.
  */
 export function releaseFromClub(f, club, id, { year, reason = 'released', silent = false, why = null } = {}) {
-  const m = f.league?.monsters?.[id]; if (!m) return { ok: false, reason: 'Not on a league roster.' };
-  if (isProtected(m)) return { ok: false, reason: `${m.name} is bound to ${club}.`, code: 'protected' };
+  const m = f.league?.monsters?.[id]; if (!m) return { ok: false, reason: $t('franchise.not_on_a_league_roster') };
+  if (isProtected(m)) return { ok: false, reason: `${$t('franchise.is_bound_to', { name: m.name, club })}`, code: 'protected' };
   removeFromClub(f, club, id, { year, reason, why, quiet: silent }); if (reason === 'released') noteReleased(f, m, club); // Task 7 resolution 6 (owner and AI alike)
   const where = silent ? leaveLeague(f, m, { year, club }) : enterPool(f, m, { year, club, from: 'ai' });
   return { ok: true, where, monster: m };
@@ -125,7 +126,7 @@ export function weakestSpare(f, club, { position = null, exclude = new Set() } =
 export function joinAsDraftee(f, club, m, { year, silent = false } = {}) {
   let released = null;
   if (clubRoster(f, club).length >= ROSTER_MAX) {
-    const out = weakestSpare(f, club, { position: m.position }); if (!out) return { ok: false, reason: `${club} cannot make room.` };
+    const out = weakestSpare(f, club, { position: m.position }); if (!out) return { ok: false, reason: `${$t('franchise.cannot_make_room', { club })}` };
     released = releaseFromClub(f, club, out.id, { year, reason: 'released', silent, why: 'room' });
   }
   const salary = Math.round(salaryFor(m) * ROOKIE_SCALE / 100) * 100;

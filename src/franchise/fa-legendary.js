@@ -8,6 +8,7 @@
 // the season that follows the first complete Task 7 offseason (fa-state.js holds that deadline).
 import { SPECIES_BY_ID, resolveSpecies } from '../data/monsters.js';
 import { OFFENSE_GROUPS, DEFENSE_GROUPS } from './roster.js';
+import { t as $t } from '../text/index.js';
 
 export const LEGEND_LIMIT = Object.freeze({ offense: 1, defense: 1 });
 
@@ -40,11 +41,11 @@ export function overLimit(roster) { const b = legendsBySide(roster); return { of
 export function legendCheck(roster, m, { final = false } = {}) {
   const side = legendSide(m); if (!side) return { ok: true, side: null, replace: [] };
   const held = legendsBySide(roster)[side].filter((x) => x.id !== m.id);
-  if (final) return held.length + 1 <= LEGEND_LIMIT[side] ? { ok: true, side, replace: [] } : { ok: false, side, replace: held.map((x) => x.id), reason: `The club already holds ${side === 'offense' ? 'an offensive' : 'a defensive'} legendary (${held.map((x) => x.name).join(', ')}). He must leave before this signing becomes official.` };
+  if (final) return held.length + 1 <= LEGEND_LIMIT[side] ? { ok: true, side, replace: [] } : { ok: false, side, replace: held.map((x) => x.id), reason: `${$t('franchise.the_club_already_holds_legendary', { side: side === 'offense' ? $t('franchise.an_offensive') : $t('franchise.a_defensive') })}${held.map((x) => x.name).join(', ')}${$t('franchise.he_must_leave_before_this_signing')}` };
   if (held.length + 1 <= LEGEND_LIMIT[side]) return { ok: true, side, replace: [] };
   const protectedHeld = held.filter((x) => x.legendary || x.signature);
-  if (protectedHeld.length) return { ok: false, side, replace: [], reason: `${protectedHeld[0].name} is bound to the club for good, so it cannot take another ${side === 'offense' ? 'offensive' : 'defensive'} legendary.` };
-  if (held.length > LEGEND_LIMIT[side]) return { ok: false, side, replace: held.map((x) => x.id), overLimit: true, reason: `The club is over the limit of one ${side === 'offense' ? 'offensive' : 'defensive'} legendary (${held.map((x) => x.name).join(', ')}): no further ${side} legendary can join until it complies.` };
+  if (protectedHeld.length) return { ok: false, side, replace: [], reason: `${$t('franchise.is_bound_to_the_club_for', { name: protectedHeld[0].name, side: side === 'offense' ? 'offensive' : 'defensive' })}` };
+  if (held.length > LEGEND_LIMIT[side]) return { ok: false, side, replace: held.map((x) => x.id), overLimit: true, reason: `${$t('franchise.the_club_is_over_the_limit', { side: side === 'offense' ? 'offensive' : 'defensive' })}${held.map((x) => x.name).join(', ')}${$t('franchise.no_further_legendary_can_join_until', { side })}` };
   // a club exactly at the limit may negotiate a replacement; the signing is official only once the other has left (`final`)
   return { ok: true, side, replace: held.map((x) => x.id), conditional: true };
 }

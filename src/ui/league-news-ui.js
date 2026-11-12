@@ -6,7 +6,7 @@ import { TEAM_META } from '../data/league.js';
 import { yearOf } from '../data/calendar.js';
 import { esc } from './dom.js';
 import { careerLink } from './career-ui.js';
-import { t as $t } from '../text/index.js';
+import { t as $t, lineText } from '../text/index.js';
 
 const abbr = (t) => TEAM_META[t]?.abbr || String(t).slice(0, 3).toUpperCase();
 const color = (t) => TEAM_META[t]?.color || 'var(--ink-2)';
@@ -24,7 +24,7 @@ function raceHtml(item, n = 7) {
   return `<div class="ln-race">${item.leaders.slice(0, n).map((l) => `<div class="ln-race-row"><b class="ln-award">${esc(l.short)}</b><span class="grow">${l.mid ? careerLink(l.mid, l.name) : esc(l.name)} <span class="dim">${esc(abbr(l.team))}</span></span>${l.second ? `<span class="dim ln-second">2nd ${l.secondId ? careerLink(l.secondId, l.second) : esc(l.second)}</span>` : ''}</div>`).join('')}</div>`;
 }
 function headlineHtml(it, f) {
-  const rival = f.rivals?.[f.tier]?.team; let t = esc(it.text);
+  const rival = f.rivals?.[f.tier]?.team; let t = esc(lineText(it)); // a saved line shows in the language chosen now
   // Your club in bold, the rival in its colour: the same marks the club log uses.
   if (f.club) t = t.split(esc(f.club)).join(`<b>${esc(f.club)}</b>`);
   if (rival) t = t.split(esc(rival)).join(`<b class="rival-name">${esc(rival)}</b>`);
@@ -39,7 +39,7 @@ export function weekHtml(group, f, { max = 99, race = true, board = true, raceRo
   const shown = sorted.slice(0, max); const more = sorted.length - shown.length;
   const scores = group.items.filter((x) => x.kind === 'scores'); const rc = group.items.find((x) => x.kind === 'race');
   return `${shown.length ? `<ul class="ln-heads">${shown.map((h) => headlineHtml(h, f)).join('')}</ul>${more > 0 ? `<div class="dim" style="font-size:12px;margin:2px 0 6px">${$t('league.more_in_all_league_news', { more })}</div>` : ''}` : ''}
-    ${board ? scores.map((s) => `${scores.length > 1 || s.round ? `<div class="ln-sub">${esc(s.text)}</div>` : ''}${scoreboardHtml(s)}`).join('') : ''}
+    ${board ? scores.map((s) => `${scores.length > 1 || s.round ? `<div class="ln-sub">${esc(lineText(s))}</div>` : ''}${scoreboardHtml(s)}`).join('') : ''}
     ${race && rc ? `<div class="ln-sub">${$t('league.award_races')}</div>${raceHtml(rc, raceRows)}` : ''}`;
 }
 const groupTitle = (g) => `${weekLabel(g.week)} · ${yearOf(g.year)}`;
@@ -52,7 +52,7 @@ export function leagueNewsPanel(f, { clubLog = [] } = {}) {
     ${latest ? weekHtml(latest, f, { max: 4, raceRows: 3 }) : `<p class="dim" style="margin:6px 0 0">${$t('league.scores_upsets_award_races_and_records')}</p>`}
     ${weeks.length ? `<button class="btn block small" data-action="leaguenews" style="margin-top:8px">${$t('league.all_league_news')}</button>` : ''}
     <details class="clublog"><summary>${$t('league.club_notes')}${club.length ? ` <span class="dim">(${club.length})</span>` : ''}</summary>
-      <ul class="news" style="padding-left:18px;margin:6px 0 0">${club.map((n) => `<li class="${esc(n.kind)}">${clubText(f, n.text, n)}</li>`).join('') || `<li class="dim">${$t('league.nothing_yet')}</li>`}</ul></details></div>`;
+      <ul class="news" style="padding-left:18px;margin:6px 0 0">${club.map((n) => `<li class="${esc(n.kind)}">${clubText(f, lineText(n), n)}</li>`).join('') || `<li class="dim">${$t('league.nothing_yet')}</li>`}</ul></details></div>`;
 }
 /** Every week kept, newest first. */
 export function leagueNewsSheetHtml(f) {

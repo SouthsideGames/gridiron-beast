@@ -9,6 +9,7 @@
 
 import { OFFENSE_BASE, DEFENSE_BASE } from '../data/personnel.js';
 import { TEAM_META } from '../data/league.js';
+import { t as $t } from '../text/index.js';
 
 export const STATS_VERSION = 2;
 
@@ -17,18 +18,18 @@ export const MAX_KEYS = new Set(['longPass', 'longRec', 'longRush', 'fgLong', 'k
 
 /** Human labels for every counting key the sim records. */
 export const STAT_LABEL = Object.freeze({
-  games: 'GP', starts: 'GS', snapsOff: 'Off snaps', snapsDef: 'Def snaps',
-  att: 'Att', comp: 'Comp', passYds: 'Pass yds', passTd: 'Pass TD', intThrown: 'INT', sacked: 'Sacked', sackYds: 'Sack yds', passFd: 'Pass 1st', longPass: 'Long', pressured: 'Pressured',
-  rush: 'Car', rushYds: 'Rush yds', rushTd: 'Rush TD', rushFd: 'Rush 1st', longRush: 'Long',
-  targets: 'Tgt', rec: 'Rec', recYds: 'Rec yds', recTd: 'Rec TD', recFd: 'Rec 1st', longRec: 'Long', yac: 'YAC', drops: 'Drops',
+  games: 'GP', starts: 'GS', snapsOff: $t('franchise.off_snaps'), snapsDef: $t('franchise.def_snaps'),
+  att: 'Att', comp: 'Comp', passYds: $t('franchise.pass_yds'), passTd: $t('franchise.pass_td'), intThrown: 'INT', sacked: 'Sacked', sackYds: $t('franchise.sack_yds'), passFd: $t('franchise.pass_1st'), longPass: 'Long', pressured: 'Pressured',
+  rush: 'Car', rushYds: $t('franchise.rush_yds'), rushTd: $t('franchise.rush_td'), rushFd: $t('franchise.rush_1st'), longRush: 'Long',
+  targets: 'Tgt', rec: 'Rec', recYds: $t('franchise.rec_yds'), recTd: $t('franchise.rec_td'), recFd: $t('franchise.rec_1st'), longRec: 'Long', yac: 'YAC', drops: 'Drops',
   td: 'TD', fum: 'Fum', fumLost: 'Lost', twoPt: '2-pt', twoPtAtt: '2-pt att',
-  pbSnaps: 'Pass blk', rbSnaps: 'Run blk', blocksLost: 'Beaten', pancakes: 'Pancakes', sacksAllowed: 'Sacks alw', pressuresAllowed: 'Press alw',
-  tackles: 'Solo', assists: 'Ast', tfl: 'TFL', sacks: 'Sacks', pressures: 'Press', ff: 'FF', fr: 'FR', pd: 'PD', int: 'INT', defTd: 'Def TD',
-  covTargets: 'Tgt vs', recAllowed: 'Rec alw', ydsAllowed: 'Yds alw', tdAllowed: 'TD alw',
+  pbSnaps: $t('franchise.pass_blk'), rbSnaps: $t('franchise.run_blk'), blocksLost: 'Beaten', pancakes: 'Pancakes', sacksAllowed: $t('franchise.sacks_alw'), pressuresAllowed: $t('franchise.press_alw'),
+  tackles: 'Solo', assists: 'Ast', tfl: 'TFL', sacks: 'Sacks', pressures: 'Press', ff: 'FF', fr: 'FR', pd: 'PD', int: 'INT', defTd: $t('franchise.def_td'),
+  covTargets: $t('franchise.tgt_vs'), recAllowed: $t('franchise.rec_alw'), ydsAllowed: $t('franchise.yds_alw'), tdAllowed: $t('franchise.td_alw'),
   fga: 'FGA', fgm: 'FGM', fgLong: 'Long', xpa: 'XPA', xpm: 'XPM', fg0a: '<30 A', fg0m: '<30 M', fg30a: '30s A', fg30m: '30s M', fg40a: '40s A', fg40m: '40s M', fg50a: '50+ A', fg50m: '50+ M',
   // Task 8 M2 live kickoffs: special-teams snaps, the kick, the return and its coverage (never receptions, defensive snaps or scrimmage tackles, B20).
-  stSnaps: 'ST snaps', kickoffs: 'Kickoffs', koTouchbacks: 'KO TB', krAtt: 'KR', krYds: 'KR yds', krLong: 'KR long', krTd: 'KR TD', stTackles: 'ST tkl', stAssists: 'ST ast', stTd: 'ST TD',
-  jukes: 'Jukes', broken: 'Broken tkl', sheds: 'Sheds', abilities: 'Abilities', abilityPlays: 'Ability plays', abilityImpact: 'Ability impact', traitPlays: 'Trait plays',
+  stSnaps: $t('franchise.st_snaps'), kickoffs: 'Kickoffs', koTouchbacks: $t('franchise.ko_tb'), krAtt: 'KR', krYds: $t('franchise.kr_yds'), krLong: $t('franchise.kr_long'), krTd: $t('franchise.kr_td'), stTackles: $t('franchise.st_tkl'), stAssists: $t('franchise.st_ast'), stTd: $t('franchise.st_td'),
+  jukes: 'Jukes', broken: $t('franchise.broken_tkl'), sheds: 'Sheds', abilities: 'Abilities', abilityPlays: $t('franchise.ability_plays'), abilityImpact: $t('franchise.ability_impact'), traitPlays: $t('franchise.trait_plays'),
 });
 
 export const OFFENSE_POSITIONS = new Set(['QB', 'RB', 'WR', 'TE', 'OL']);
@@ -265,14 +266,14 @@ export function leagueRows(table) { return Object.values(table || {}).flatMap((T
 
 /** League leaders: top n by a key or derived key, with a minimum opportunity for rates. */
 export const LEADER_CATEGORIES = Object.freeze([
-  { id: 'passYds', label: 'Passing yards', key: 'passYds' }, { id: 'passTd', label: 'Passing TD', key: 'passTd' }, { id: 'rating', label: 'Passer rating', key: 'rating', min: ['att', 10] },
-  { id: 'rushYds', label: 'Rushing yards', key: 'rushYds' }, { id: 'rushTd', label: 'Rushing TD', key: 'rushTd' }, { id: 'ypc', label: 'Yards per carry', key: 'ypc', min: ['rush', 8] },
-  { id: 'recYds', label: 'Receiving yards', key: 'recYds' }, { id: 'rec', label: 'Receptions', key: 'rec' }, { id: 'recTd', label: 'Receiving TD', key: 'recTd' },
-  { id: 'scrimmage', label: 'Scrimmage yards', key: 'scrimmage' }, { id: 'tdTotal', label: 'Touchdowns', key: 'tdTotal' },
-  { id: 'tacklesTotal', label: 'Tackles', key: 'tacklesTotal' }, { id: 'tfl', label: 'Tackles for loss', key: 'tfl' }, { id: 'sacks', label: 'Sacks', key: 'sacks' }, { id: 'pressures', label: 'Pressures', key: 'pressures' },
-  { id: 'int', label: 'Interceptions', key: 'int' }, { id: 'pd', label: 'Passes defended', key: 'pd' }, { id: 'ff', label: 'Forced fumbles', key: 'ff' }, { id: 'ydsPerTarget', label: 'Yards allowed per target', key: 'ydsPerTarget', min: ['covTargets', 8], asc: true },
-  { id: 'blockWinPct', label: 'Block win rate', key: 'blockWinPct', min: ['pbSnaps', 20] }, { id: 'kickPts', label: 'Kicking points', key: 'kickPts' }, { id: 'fgPct', label: 'Field goal %', key: 'fgPct', min: ['fga', 4] },
-  { id: 'abilityPlays', label: 'Ability plays', key: 'abilityPlays' }, { id: 'abilityImpact', label: 'Ability impact', key: 'abilityImpact' },
+  { id: 'passYds', label: $t('franchise.passing_yards'), key: 'passYds' }, { id: 'passTd', label: $t('franchise.passing_td'), key: 'passTd' }, { id: 'rating', label: $t('franchise.passer_rating'), key: 'rating', min: ['att', 10] },
+  { id: 'rushYds', label: $t('franchise.rushing_yards'), key: 'rushYds' }, { id: 'rushTd', label: $t('franchise.rushing_td'), key: 'rushTd' }, { id: 'ypc', label: $t('franchise.yards_per_carry'), key: 'ypc', min: ['rush', 8] },
+  { id: 'recYds', label: $t('franchise.receiving_yards'), key: 'recYds' }, { id: 'rec', label: 'Receptions', key: 'rec' }, { id: 'recTd', label: $t('franchise.receiving_td'), key: 'recTd' },
+  { id: 'scrimmage', label: $t('franchise.scrimmage_yards'), key: 'scrimmage' }, { id: 'tdTotal', label: 'Touchdowns', key: 'tdTotal' },
+  { id: 'tacklesTotal', label: 'Tackles', key: 'tacklesTotal' }, { id: 'tfl', label: $t('franchise.tackles_for_loss'), key: 'tfl' }, { id: 'sacks', label: 'Sacks', key: 'sacks' }, { id: 'pressures', label: 'Pressures', key: 'pressures' },
+  { id: 'int', label: 'Interceptions', key: 'int' }, { id: 'pd', label: $t('franchise.passes_defended'), key: 'pd' }, { id: 'ff', label: $t('franchise.forced_fumbles'), key: 'ff' }, { id: 'ydsPerTarget', label: $t('franchise.yards_allowed_per_target'), key: 'ydsPerTarget', min: ['covTargets', 8], asc: true },
+  { id: 'blockWinPct', label: $t('franchise.block_win_rate'), key: 'blockWinPct', min: ['pbSnaps', 20] }, { id: 'kickPts', label: $t('franchise.kicking_points'), key: 'kickPts' }, { id: 'fgPct', label: $t('franchise.field_goal'), key: 'fgPct', min: ['fga', 4] },
+  { id: 'abilityPlays', label: $t('franchise.ability_plays'), key: 'abilityPlays' }, { id: 'abilityImpact', label: $t('franchise.ability_impact'), key: 'abilityImpact' },
 ]);
 export function leaders(table, catId, { n = 10, teams = null } = {}) {
   const cat = LEADER_CATEGORIES.find((c) => c.id === catId); if (!cat) return [];
@@ -290,14 +291,14 @@ export function leadersSnapshot(table) {
 /** Short stat line for a row, position-aware (used by award sheets and leaders). */
 export function statLine(r) {
   const d = withDerived(r); const b = [];
-  if (d.att) b.push(`${d.comp || 0}/${d.att}, ${d.passYds || 0} yds, ${d.passTd || 0} TD, ${d.intThrown || 0} INT${d.rating != null ? `, ${d.rating} rtg` : ''}`);
-  if (d.rush) b.push(`${d.rush} car, ${d.rushYds || 0} yds${d.rushTd ? `, ${d.rushTd} TD` : ''}`);
-  if (d.rec || d.targets) b.push(`${d.rec || 0}/${d.targets || 0} rec, ${d.recYds || 0} yds${d.recTd ? `, ${d.recTd} TD` : ''}`);
-  if (d.pbSnaps && !d.att && !d.rush && !d.rec) b.push(`${d.blockWinPct ?? '·'}% blocks won, ${d.sacksAllowed || 0} sacks allowed`);
-  if (d.tacklesTotal) b.push(`${d.tacklesTotal} tkl${d.tfl ? `, ${d.tfl} TFL` : ''}`);
+  if (d.att) b.push(`${d.comp || 0}/${d.att}, ${d.passYds || 0} yds, ${d.passTd || 0} TD, ${d.intThrown || 0} INT${d.rating != null ? `${$t('franchise.rtg', { rating: d.rating })}` : ''}`);
+  if (d.rush) b.push(`${$t('franchise.car_yds', { rush: d.rush, rushYds: d.rushYds || 0 })}${d.rushTd ? `, ${d.rushTd} TD` : ''}`);
+  if (d.rec || d.targets) b.push(`${$t('franchise.rec_yds_2', { rec: d.rec || 0, targets: d.targets || 0, recYds: d.recYds || 0 })}${d.recTd ? `, ${d.recTd} TD` : ''}`);
+  if (d.pbSnaps && !d.att && !d.rush && !d.rec) b.push(`${$t('franchise.blocks_won_sacks_allowed', { blockWinPct: d.blockWinPct ?? '·', sacksAllowed: d.sacksAllowed || 0 })}`);
+  if (d.tacklesTotal) b.push(`${d.tacklesTotal} tkl${d.tfl ? `${$t('franchise.tfl', { tfl: d.tfl })}` : ''}`);
   if (d.sacks) b.push(`${d.sacks} sacks`); if (d.pressures) b.push(`${d.pressures} press`);
-  if (d.int) b.push(`${d.int} INT`); if (d.pd) b.push(`${d.pd} PD`); if (d.ff) b.push(`${d.ff} FF`);
-  if (d.covTargets) b.push(`${d.recAllowed || 0}/${d.covTargets} allowed, ${d.ydsAllowed || 0} yds`);
+  if (d.int) b.push(`${$t('franchise.int', { int: d.int })}`); if (d.pd) b.push(`${d.pd} PD`); if (d.ff) b.push(`${d.ff} FF`);
+  if (d.covTargets) b.push(`${$t('franchise.allowed_yds', { recAllowed: d.recAllowed || 0, covTargets: d.covTargets, ydsAllowed: d.ydsAllowed || 0 })}`);
   if (d.fga || d.xpa) b.push(`${d.fgm || 0}/${d.fga || 0} FG, ${d.xpm || 0}/${d.xpa || 0} XP`);
   if (d.fumLost) b.push(`${d.fumLost} FL`);
   return b.join(' · ');
@@ -305,11 +306,11 @@ export function statLine(r) {
 
 // ------------------------------------------------------------ records book (GDD §17.8)
 export const RECORD_CATEGORIES = Object.freeze([
-  { id: 'passYds', label: 'Passing yards', key: 'passYds' }, { id: 'passTd', label: 'Passing TD', key: 'passTd' }, { id: 'rushYds', label: 'Rushing yards', key: 'rushYds' }, { id: 'rushTd', label: 'Rushing TD', key: 'rushTd' },
-  { id: 'recYds', label: 'Receiving yards', key: 'recYds' }, { id: 'rec', label: 'Receptions', key: 'rec' }, { id: 'recTd', label: 'Receiving TD', key: 'recTd' }, { id: 'tacklesTotal', label: 'Tackles', key: 'tacklesTotal' },
-  { id: 'sacks', label: 'Sacks', key: 'sacks' }, { id: 'int', label: 'Interceptions', key: 'int' }, { id: 'pd', label: 'Passes defended', key: 'pd' }, { id: 'fgLong', label: 'Longest field goal', key: 'fgLong' },
+  { id: 'passYds', label: $t('franchise.passing_yards'), key: 'passYds' }, { id: 'passTd', label: $t('franchise.passing_td'), key: 'passTd' }, { id: 'rushYds', label: $t('franchise.rushing_yards'), key: 'rushYds' }, { id: 'rushTd', label: $t('franchise.rushing_td'), key: 'rushTd' },
+  { id: 'recYds', label: $t('franchise.receiving_yards'), key: 'recYds' }, { id: 'rec', label: 'Receptions', key: 'rec' }, { id: 'recTd', label: $t('franchise.receiving_td'), key: 'recTd' }, { id: 'tacklesTotal', label: 'Tackles', key: 'tacklesTotal' },
+  { id: 'sacks', label: 'Sacks', key: 'sacks' }, { id: 'int', label: 'Interceptions', key: 'int' }, { id: 'pd', label: $t('franchise.passes_defended'), key: 'pd' }, { id: 'fgLong', label: $t('franchise.longest_field_goal'), key: 'fgLong' },
 ]);
-export const TEAM_RECORDS = Object.freeze([{ id: 'points', label: 'Points in a game' }, { id: 'margin', label: 'Margin of victory' }, { id: 'yards', label: 'Total yards in a game' }]);
+export const TEAM_RECORDS = Object.freeze([{ id: 'points', label: $t('franchise.points_in_a_game') }, { id: 'margin', label: $t('franchise.margin_of_victory') }, { id: 'yards', label: $t('franchise.total_yards_in_a_game') }]);
 export function ensureRecords(f) { return (f.records ||= { game: {}, season: {}, team: {} }); }
 function better(cur, value) { return value > 0 && (!cur || value > cur.value); }
 /**

@@ -8,6 +8,7 @@ import { withDerived, addInto, POSITION_COLUMNS, STAT_GROUPS, GROUP_LABEL, group
 import { SPECIES_BY_ID } from '../data/monsters.js';
 import { hasLeague } from './league-registry.js';
 import { isArchived } from './lifecycle.js';
+import { t as $t } from '../text/index.js';
 
 export const PAGE_TABS = Object.freeze([['overview', 'Overview'], ['timeline', 'Timeline'], ['stats', 'Stats'], ['awards', 'Awards'], ['teams', 'Teams']]);
 const MOVE_TYPES = new Set(['join', 'drafted', 'signed', 'left']);
@@ -17,24 +18,24 @@ const AWARD_KINDS = ['mvp', 'opoy', 'dpoy', 'smoy', 'oroy', 'droy'];
 
 /** Where the monster stands today, from where the save finds him (never guessed). */
 export function careerStatus(f, found, p) {
-  if (p.kind === 'snapshot') return { key: 'retired', label: p.honours?.hof ? 'Hall of Famer' : 'Retired', detail: p.legacy ? 'From an older Hall of Fame card' : 'Career as it stood at retirement' };
-  if (p.kind === 'prospect') return { key: 'prospect', label: 'Draft prospect', detail: 'No professional games yet' };
-  if (p.kind === 'league') return { key: 'gone', label: 'Not on a current roster', detail: hasLeague(f) ? 'His season lines remain in the league tables' : 'Known from the league tables' };
+  if (p.kind === 'snapshot') return { key: 'retired', label: p.honours?.hof ? $t('franchise.hall_of_famer') : 'Retired', detail: p.legacy ? $t('franchise.from_an_older_hall_of_fame') : $t('franchise.career_as_it_stood_at_retirement') };
+  if (p.kind === 'prospect') return { key: 'prospect', label: $t('franchise.draft_prospect'), detail: $t('franchise.no_professional_games_yet') };
+  if (p.kind === 'league') return { key: 'gone', label: $t('franchise.not_on_a_current_roster'), detail: hasLeague(f) ? $t('franchise.his_season_lines_remain_in_the') : $t('franchise.known_from_the_league_tables') };
   switch (found?.where) {
-    case 'roster': return isArchived(f) ? { key: 'archived', label: 'Final roster', detail: 'Archived franchise' } : { key: 'active', label: 'Active', detail: 'Your club' };
-    case 'league': return { key: 'active', label: 'Active', detail: found.team ? `With the ${found.team}` : 'In the league' };
-    case 'waivers': return { key: 'free', label: 'On waivers', detail: 'Waiting for a claim' };
-    case 'pool': case 'market': return { key: 'free', label: 'Free agent', detail: 'In a regional pool' };
-    case 'legend': return { key: 'retired', label: 'Retired', detail: found.m?.retired != null ? `Left the league after season ${found.m.retired}` : 'Left the league' };
-    case 'drafted': return { key: 'active', label: 'Drafted', detail: found.team ? `By the ${found.team}` : 'This year\'s class' };
-    default: return { key: 'unknown', label: 'On record', detail: '' };
+    case 'roster': return isArchived(f) ? { key: 'archived', label: $t('franchise.final_roster'), detail: $t('franchise.archived_franchise') } : { key: 'active', label: 'Active', detail: $t('franchise.your_club') };
+    case 'league': return { key: 'active', label: 'Active', detail: found.team ? `${$t('franchise.with_the', { team: found.team })}` : $t('franchise.in_the_league') };
+    case 'waivers': return { key: 'free', label: $t('franchise.on_waivers'), detail: $t('franchise.waiting_for_a_claim') };
+    case 'pool': case 'market': return { key: 'free', label: $t('franchise.free_agent'), detail: $t('franchise.in_a_regional_pool') };
+    case 'legend': return { key: 'retired', label: 'Retired', detail: found.m?.retired != null ? `${$t('franchise.left_the_league_after_season', { retired: found.m.retired })}` : $t('franchise.left_the_league') };
+    case 'drafted': return { key: 'active', label: 'Drafted', detail: found.team ? `${$t('franchise.by_the', { team: found.team })}` : $t('franchise.this_years_class') };
+    default: return { key: 'unknown', label: $t('franchise.on_record'), detail: '' };
   }
 }
 
 /** Gym legendary, rival signature or a legendary species (the owner's own legendaries). */
 export function designationOf(m, p) {
-  if (m?.signature) return { kind: 'signature', label: 'Rival signature' };
-  if (m?.legendary) return { kind: 'legendary', label: 'Gym legendary' };
+  if (m?.signature) return { kind: 'signature', label: $t('franchise.rival_signature') };
+  if (m?.legendary) return { kind: 'legendary', label: $t('franchise.gym_legendary') };
   if (SPECIES_BY_ID[p?.species]?.rarity === 'legendary') return { kind: 'legendary-species', label: 'Legendary' };
   return null;
 }

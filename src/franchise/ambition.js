@@ -20,6 +20,7 @@
 //      at the time of asking, so a club that starts winning can reopen talks. Declining talks never refuses the club's later offers in
 //      free agency.
 import { hashString } from '../core/rng.js';
+import { t as $t } from '../text/index.js';
 
 export const AMBITIONS = Object.freeze(['money', 'loyalty', 'championship', 'opportunity']);
 
@@ -84,12 +85,12 @@ const rank = (r) => (r === 'starter' ? 2 : r === 'backup' ? 1 : 0);
 
 /** Observations a player may read (never the Ambition itself). */
 export const CLUES = Object.freeze({
-  direction: 'He appears concerned about the team’s competitive direction.',
-  money: 'He is looking for a stronger financial offer.',
+  direction: $t('franchise.he_appears_concerned_about_the_teams'),
+  money: $t('franchise.he_is_looking_for_a_stronger'),
   role: 'He would like a clearer path to a starting role.',
-  home: 'He appears interested in remaining with the organization.',
-  market: 'He seems curious about what the market would offer.',
-  open: 'He seems open to talking.',
+  home: $t('franchise.he_appears_interested_in_remaining_with'),
+  market: $t('franchise.he_seems_curious_about_what_the'),
+  open: $t('franchise.he_seems_open_to_talking'),
 });
 /**
  * One observation for the outlook: an applicable circumstance, chosen with a seeded draw that favours what matters to him (an

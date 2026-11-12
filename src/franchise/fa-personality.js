@@ -8,9 +8,10 @@
 // same age always has the same priorities, so negotiations are reproducible and old saves need no migration.
 import { hashString } from '../core/rng.js';
 import { publicOnset } from '../data/aging.js';
+import { t as $t } from '../text/index.js';
 
 export const PRIORITIES = Object.freeze(['money', 'security', 'role', 'winning', 'patience', 'timing']);
-export const PRIORITY_LABEL = Object.freeze({ money: 'Money', security: 'Security', role: 'Playing time', winning: 'Winning', patience: 'Patience', timing: 'Takes his time' });
+export const PRIORITY_LABEL = Object.freeze({ money: 'Money', security: 'Security', role: 'Playing time', winning: 'Winning', patience: 'Patience', timing: $t('franchise.takes_his_time') });
 const CALM = new Set(['calm', 'patient', 'disciplined', 'sturdy', 'balanced', 'secure', 'protective', 'resistant', 'focused', 'cerebral']); // contracts.js acceptsCounter groups
 const FIERY = new Set(['powerful', 'ferocious', 'aggressive', 'explosive', 'gifted']);
 const clamp = (v) => Math.max(0, Math.min(100, Math.round(v)));

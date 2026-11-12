@@ -32,7 +32,7 @@ export function apexFactsHtml(f, m, { replay = false } = {}) {
     <div class="dim">${$t('roster.current_overall_b_b_the_ratings', { monsterOverall: monsterOverall(m), when, viaText: VIA_TEXT[r.via] || '' })}</div></div>`;
 }
 
-const steady = (settings) => !!(settings?.reducedFlash || settings?.reducedMotion) || (typeof matchMedia === 'function' && matchMedia($t('roster.prefers_reduced_motion_reduce')).matches);
+const steady = (settings) => !!(settings?.reducedFlash || settings?.reducedMotion) || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
 
 /**
  * Open the first-discovery panel for monster `m`. `onClose()` runs once when the player continues. Returns a controller

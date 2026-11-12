@@ -7,6 +7,7 @@
 // a release or retirement ends every future charge (no dead cap, no refund). Pre-Task-7 contracts ({signed, ends, years}, salary on the
 // monster) read as bonus-free contracts and keep their salary exactly. Protected permanent deals (gym legendaries, the rival's
 // signature) keep their existing treatment (owner decision D1): exempt from an AI club's cap.
+import { t as $t } from '../text/index.js';
 const isProtected = (m) => !!(m && (m.legendary || m.signature)); // league-registry.js isProtected (kept local: the registry imports this file)
 
 export const OFFER_STEP = 100;
@@ -67,12 +68,12 @@ export function contractSchedule(m, fromYear) {
 export function scheduleProblems(c) {
   if (!c || c.permanent || !c.t7) return [];
   const p = [];
-  if (c.alloc.length !== c.years) p.push('allocation count differs from years');
-  if (c.alloc.reduce((s, x) => s + x, 0) !== c.bonus) p.push('allocations do not sum to the bonus');
-  if (c.ends - c.signed + 1 !== c.years) p.push('years do not match the term');
+  if (c.alloc.length !== c.years) p.push($t('franchise.allocation_count_differs_from_years'));
+  if (c.alloc.reduce((s, x) => s + x, 0) !== c.bonus) p.push($t('franchise.allocations_do_not_sum_to_the'));
+  if (c.ends - c.signed + 1 !== c.years) p.push($t('franchise.years_do_not_match_the_term'));
   if (c.alloc.some((x) => !Number.isInteger(x) || x < 0)) p.push('non-integer allocation');
-  for (let i = 1; i < c.alloc.length; i++) if (c.alloc[i] > c.alloc[i - 1]) p.push('remainder not on the earliest years');
-  if (c.next) { if (c.next.signed !== c.ends + 1) p.push('extension overlaps or leaves a gap'); p.push(...scheduleProblems(c.next)); }
+  for (let i = 1; i < c.alloc.length; i++) if (c.alloc[i] > c.alloc[i - 1]) p.push($t('franchise.remainder_not_on_the_earliest_years'));
+  if (c.next) { if (c.next.signed !== c.ends + 1) p.push($t('franchise.extension_overlaps_or_leaves_a_gap')); p.push(...scheduleProblems(c.next)); }
   return p;
 }
 /** First-year cap charge of an offer, reserved while it is pending (resolution: salary + first-year allocation). */

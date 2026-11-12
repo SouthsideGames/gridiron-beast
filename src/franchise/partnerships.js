@@ -8,6 +8,7 @@
 // The field side (the bonus and which plays qualify) is src/sim/partnership-play.js.
 import { PAIR_TYPES, MAX_LEVEL } from '../sim/partnership-play.js';
 import { overall } from '../data/monsters.js';
+import { t as $t } from '../text/index.js';
 
 export { PAIR_TYPES };
 export const LEVEL_NAMES = Object.freeze(['New', 'Developing', 'Established', 'Strong', 'Elite']);
@@ -100,7 +101,7 @@ export function suggestCaptains(cands, { count = () => 0, exclude = [] } = {}) {
       if (best) break;
     }
     if (best) { res[side] = best; used.add(best.a); used.add(best.b); }
-    else res.reason[side] = side === 'offense' ? 'No eligible pair on offense: it needs a QB with an RB, WR or TE, an RB with an OL, or two OLs.' : 'No eligible pair on defense: it needs a DL with another DL, an LB or a CB.';
+    else res.reason[side] = side === 'offense' ? $t('franchise.no_eligible_pair_on_offense_it') : $t('franchise.no_eligible_pair_on_defense_it');
   }
   return res;
 }
@@ -109,14 +110,14 @@ export function suggestCaptains(cands, { count = () => 0, exclude = [] } = {}) {
  * { ok: false, reason }. Primary positions decide; the type is fixed here; the other side's captains cannot be reused.
  */
 export function checkPick(cands, side, pick, { other = [] } = {}) {
-  if (!Array.isArray(pick) || pick.length !== 2) return { ok: false, reason: 'Choose two captains.' };
+  if (!Array.isArray(pick) || pick.length !== 2) return { ok: false, reason: $t('franchise.choose_two_captains') };
   const [x, y] = pick.map((id) => cands.find((c) => c.id === id));
-  if (!x || !y) return { ok: false, reason: 'Both captains must be on your roster.' };
-  if (x.id === y.id) return { ok: false, reason: 'Choose two different monsters.' };
-  if (other.includes(x.id) || other.includes(y.id)) return { ok: false, reason: 'A monster can hold only one captaincy.' };
+  if (!x || !y) return { ok: false, reason: $t('franchise.both_captains_must_be_on_your') };
+  if (x.id === y.id) return { ok: false, reason: $t('franchise.choose_two_different_monsters') };
+  if (other.includes(x.id) || other.includes(y.id)) return { ok: false, reason: $t('franchise.a_monster_can_hold_only_one') };
   const p = orderPair(x, y);
-  if (!p) return { ok: false, reason: `${x.position} + ${y.position} is not a captain pairing.` };
-  if (sideOf(p.type) !== side) return { ok: false, reason: `${PAIR_TYPES[p.type].label} is a${side === 'offense' ? ' defensive' : 'n offensive'} pairing.` };
+  if (!p) return { ok: false, reason: `${$t('franchise.is_not_a_captain_pairing', { position: x.position, position2: y.position })}` };
+  if (sideOf(p.type) !== side) return { ok: false, reason: `${$t('franchise.is_a_pairing', { label: PAIR_TYPES[p.type].label, side: side === 'offense' ? ' defensive' : 'n offensive' })}` };
   return { ok: true, pair: p };
 }
 
@@ -187,7 +188,7 @@ export function pruneLedger(f, year) { const L = f?.partnerships?.credited; if (
  */
 export function sideStatus(f, club, side, { rosterIds = [], lineupIds = [], injured = [], year = f?.season?.year } = {}) {
   const c = captainsOf(f, club, year); if (!c) return null;
-  const p = c[side]; if (!p) return { side, pair: null, reason: c.reason?.[side] || 'No partnership this season.' };
+  const p = c[side]; if (!p) return { side, pair: null, reason: c.reason?.[side] || $t('franchise.no_partnership_this_season') };
   const prog = progressOf(p.type, chemistryCount(f, p.a, p.b));
   const R = new Set(rosterIds), L = new Set(lineupIds), I = new Set(injured);
   const why = (id) => (!R.has(id) ? 'gone' : I.has(id) ? 'injured' : !L.has(id) ? 'benched' : null);
@@ -207,9 +208,9 @@ export function partnershipProblems(f) {
   if (P.v !== 1) say(`version ${P.v}`);
   for (const [y, byClub] of Object.entries(P.captains || {})) for (const [club, e] of Object.entries(byClub || {})) {
     const ids = [];
-    for (const side of SIDES) { const p = e[side]; if (!p) continue; if (!PAIR_TYPES[p.type]) say(`${y} ${club} ${side}: unknown type ${p.type}`); else if (PAIR_TYPES[p.type].side !== side) say(`${y} ${club} ${side}: ${p.type} is not a ${side} pair`); if (!p.a || !p.b || p.a === p.b) say(`${y} ${club} ${side}: bad pair`); ids.push(p.a, p.b); if (!P.pairs?.[pairKey(p.a, p.b)]) say(`${y} ${club} ${side}: no pair record`); }
-    if (new Set(ids).size !== ids.length) say(`${y} ${club}: a monster holds two captaincies`);
+    for (const side of SIDES) { const p = e[side]; if (!p) continue; if (!PAIR_TYPES[p.type]) say(`${$t('franchise.unknown_type', { y, club, side, type: p.type })}`); else if (PAIR_TYPES[p.type].side !== side) say(`${$t('franchise.is_not_a_pair', { y, club, side, type: p.type, side2: side })}`); if (!p.a || !p.b || p.a === p.b) say(`${$t('franchise.bad_pair', { y, club, side })}`); ids.push(p.a, p.b); if (!P.pairs?.[pairKey(p.a, p.b)]) say(`${$t('franchise.no_pair_record', { y, club, side })}`); }
+    if (new Set(ids).size !== ids.length) say(`${$t('franchise.a_monster_holds_two_captaincies', { y, club })}`);
   }
-  for (const [k, r] of Object.entries(P.pairs || {})) { if (pairKey(r.a, r.b) !== k) say(`pair key ${k}`); if (!Number.isInteger(r.n) || r.n < 0) say(`pair ${k} count ${r.n}`); if (!PAIR_TYPES[r.type]) say(`pair ${k} type ${r.type}`); }
+  for (const [k, r] of Object.entries(P.pairs || {})) { if (pairKey(r.a, r.b) !== k) say(`pair key ${k}`); if (!Number.isInteger(r.n) || r.n < 0) say(`${$t('franchise.pair_count', { k, n: r.n })}`); if (!PAIR_TYPES[r.type]) say(`${$t('franchise.pair_type', { k, type: r.type })}`); }
   return out;
 }

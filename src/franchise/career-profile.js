@@ -14,6 +14,7 @@ import { findInLeague } from './league-registry.js';
 import { AWARDS } from './awards.js';
 import { monsterOverall, SPECIES_BY_ID } from '../data/monsters.js';
 import { yearOf } from '../data/calendar.js';
+import { t as $t } from '../text/index.js';
 
 export const PROFILE_VERSION = 1;
 
@@ -38,15 +39,15 @@ const RATE_MIN = { compPct: ['att', 10], ypc: ['rush', 8], ypr: ['rec', 5], bloc
 /** Trophy kinds, most prestigious first. `award` expands to one shelf per award key. */
 export const TROPHY_ORDER = Object.freeze(['hof', 'champion', 'mvp', 'opoy', 'dpoy', 'smoy', 'oroy', 'droy', 'record']);
 export const TROPHY_META = Object.freeze({
-  hof: { icon: '🏛', label: 'Hall of Fame', tier: 'legend' },
-  champion: { icon: '🏆', label: 'Beast Bowl Champion', tier: 'gold' },
+  hof: { icon: '🏛', label: $t('franchise.hall_of_fame'), tier: 'legend' },
+  champion: { icon: '🏆', label: $t('franchise.beast_bowl_champion'), tier: 'gold' },
   mvp: { icon: '👑', label: AWARDS.mvp.label, short: 'MVP', tier: 'gold' },
   opoy: { icon: '🏅', label: AWARDS.opoy.label, short: 'OPOY', tier: 'gold' },
   dpoy: { icon: '🛡️', label: AWARDS.dpoy.label, short: 'DPOY', tier: 'gold' },
   smoy: { icon: '✨', label: AWARDS.smoy.label, short: 'SMOY', tier: 'silver' },
   oroy: { icon: '🌟', label: AWARDS.oroy.label, short: 'OROY', tier: 'silver' },
   droy: { icon: '🌟', label: AWARDS.droy.label, short: 'DROY', tier: 'silver' },
-  record: { icon: '📜', label: 'League record', tier: 'silver' },
+  record: { icon: '📜', label: $t('franchise.league_record'), tier: 'silver' },
 });
 
 /** A legend's career split into regular season and playoffs: from his season books when he has them (the stub's `career` is
@@ -122,7 +123,7 @@ export function careerTier({ titles = 0, awards = 0, hof = false, seasons = 1, r
   if (seasons <= 1) return 'rookie';
   return 'established';
 }
-export const TIER_LABEL = Object.freeze({ hof: 'Hall of Famer', dynasty: 'Dynasty', champion: 'Champion', decorated: 'Decorated', veteran: 'Veteran', established: 'Established', rookie: 'Rookie', prospect: 'Prospect' });
+export const TIER_LABEL = Object.freeze({ hof: $t('franchise.hall_of_famer'), dynasty: 'Dynasty', champion: 'Champion', decorated: 'Decorated', veteran: 'Veteran', established: 'Established', rookie: 'Rookie', prospect: 'Prospect' });
 
 /** The record behind a game event, if the save still has it: the current season's game log, else the season's schedule. */
 export function gameRecord(f, m, year, week, club = null) {
@@ -158,15 +159,15 @@ export function trophyCase(f, m, events = careerEvents(m)) {
   const shelves = {}; const put = (kind, entry) => { const s = (shelves[kind] ||= { kind, ...TROPHY_META[kind], entries: [] }); if (!s.entries.some((x) => x.key === entry.key)) s.entries.push(entry); };
   for (const e of events) {
     if (e.t === 'champion') put('champion', { key: `champ:${e.y}`, year: e.y, club: e.c, opp: e.x?.opp || null, score: e.x?.score || null, played: !!e.x?.played });
-    if (e.t === 'award' && TROPHY_META[e.x?.key]) put(e.x.key, { key: `award:${e.x.key}:${e.y}`, year: e.y, club: e.c });
+    if (e.t === 'award' && TROPHY_META[e.x?.key]) put(e.x.key, { key: `${`award:${e.x.key}:${e.y}`}`, year: e.y, club: e.c });
     if (e.t === 'record') put('record', { key: e.k, year: e.y, week: e.w ?? null, club: e.c, scope: e.x?.scope, cat: e.x?.cat, value: e.x?.value });
     if (e.t === 'hof') put('hof', { key: e.k, year: e.y, club: e.c, owner: e.x?.owner || null });
   }
   // Awards on the franchise's history that name this monster's id (the same awards; the key dedupes them).
-  for (const h of f?.history || []) for (const [k, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && TROPHY_META[k] && k !== 'coy') put(k, { key: `award:${k}:${h.year}`, year: h.year, club: w.team });
+  for (const h of f?.history || []) for (const [k, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && TROPHY_META[k] && k !== 'coy') put(k, { key: `${`award:${k}:${h.year}`}`, year: h.year, club: w.team });
   // The current season's awards, frozen when the regular season ends and announced in League News, count from that moment: the
   // Career Timeline entry and the season archive only arrive when the season closes after the playoffs (same key, so no double).
-  const af = f?.season?.awardsFinal; if (af) for (const [k, w] of Object.entries(af.winners || {})) if (w && w.id === m.id && TROPHY_META[k] && k !== 'coy') put(k, { key: `award:${k}:${af.year ?? f.season.year}`, year: af.year ?? f.season.year, club: w.team });
+  const af = f?.season?.awardsFinal; if (af) for (const [k, w] of Object.entries(af.winners || {})) if (w && w.id === m.id && TROPHY_META[k] && k !== 'coy') put(k, { key: `${`award:${k}:${af.year ?? f.season.year}`}`, year: af.year ?? f.season.year, club: w.team });
   const out = TROPHY_ORDER.filter((k) => shelves[k]).map((k) => { const s = shelves[k]; s.entries.sort((a, b) => (a.year ?? 0) - (b.year ?? 0)); s.count = s.entries.length; return s; });
   return out;
 }
@@ -222,8 +223,8 @@ export function fullProfile(f, m, where = 'roster', team = null) {
 }
 function careerNotes({ where, complete, onRecord, seasons }) {
   const n = [];
-  if (!complete && seasons > onRecord) n.push(`Career totals count the ${onRecord} season${onRecord === 1 ? '' : 's'} on record; earlier seasons were played before this franchise kept his stats.`);
-  if (where === 'pool' || where === 'market') n.push('A free agent: his record runs to the day he left his last club.');
+  if (!complete && seasons > onRecord) n.push(`${$t('franchise.career_totals_count_the_seasons_on', { onRecord, n: onRecord })}`);
+  if (where === 'pool' || where === 'market') n.push($t('franchise.a_free_agent_his_record_runs'));
   return n;
 }
 
@@ -238,7 +239,7 @@ function leagueProfile(f, id, rows) {
   const career = sumLines(...rows.map((r) => r.reg)); const careerPost = sumLines(...rows.map((r) => r.post));
   const trophies = trophyCase(f, { id }, []);
   // The current season's frozen award winners, before the season is archived.
-  for (const [k, w] of Object.entries(f.season?.awardsFinal?.winners || {})) if (w && w.id === id && TROPHY_META[k] && k !== 'coy') { let s = trophies.find((t) => t.kind === k); if (!s) { s = { kind: k, ...TROPHY_META[k], entries: [], count: 0 }; trophies.push(s); } if (!s.entries.some((e) => e.year === f.season.year)) { s.entries.push({ key: `award:${k}:${f.season.year}`, year: f.season.year, club: w.team }); s.count = s.entries.length; } }
+  for (const [k, w] of Object.entries(f.season?.awardsFinal?.winners || {})) if (w && w.id === id && TROPHY_META[k] && k !== 'coy') { let s = trophies.find((t) => t.kind === k); if (!s) { s = { kind: k, ...TROPHY_META[k], entries: [], count: 0 }; trophies.push(s); } if (!s.entries.some((e) => e.year === f.season.year)) { s.entries.push({ key: `${`award:${k}:${f.season.year}`}`, year: f.season.year, club: w.team }); s.count = s.entries.length; } }
   trophies.sort((a, b) => TROPHY_ORDER.indexOf(a.kind) - TROPHY_ORDER.indexOf(b.kind));
   const awards = trophies.filter((t) => t.kind !== 'champion' && t.kind !== 'record' && t.kind !== 'hof').reduce((a, t) => a + t.count, 0);
   const clubs = []; for (const r of rows.slice().reverse()) if (!clubs.length || clubs[clubs.length - 1].club !== r.team) clubs.push({ club: r.team, from: r.year, to: r.year, how: 'league' }); else clubs[clubs.length - 1].to = r.year;
@@ -248,7 +249,7 @@ function leagueProfile(f, id, rows) {
     stats: { career, careerReg: career, careerPost, season: rows[0].year === f.season?.year ? sumLines(rows[0].reg) : {}, seasonYear: rows[0].year === f.season?.year ? rows[0].year : null, games: career.games || 0, seasonGames: 0, postGames: careerPost.games || 0, focus: focusStats(r0.position, career), seasonFocus: null, post: (careerPost.games || 0) > 0 ? { games: careerPost.games, text: statLine(careerPost) } : null },
     books: rows.map((r) => ({ year: r.year, team: r.team, games: (r.reg.games || 0) + (r.post.games || 0), line: statLine(sumLines(r.reg, r.post)) })).sort((a, b) => a.year - b.year),
     honours: { titles: 0, awards, records: 0, hof: false }, trophies, timeline: [], tier: careerTier({ awards, seasons: rows.length }),
-    notes: [`Another club's player: the league keeps his season lines (${rows.length} season${rows.length === 1 ? '' : 's'} on record), not a full career.`],
+    notes: [`${$t('franchise.another_clubs_player_the_league_keeps', { n: rows.length })}`],
   };
 }
 
@@ -267,13 +268,13 @@ export function eventDetail(f, m, ref) {
       const ch = h?.championship; const fin = ch?.final; const starter = ch?.starters?.find((s) => s.id === m.id); const onRoster = !starter && ch?.roster?.some((s) => s.id === m.id);
       const post = book(ref.year)?.post || null; const ev = careerEvents(m).find((e) => e.k === `champ:${ref.year}`);
       return { kind: 'title', year: ref.year, club: ref.club, opp: fin?.opponent || ev?.x?.opp || null, score: fin ? `${fin.us}-${fin.them}` : ev?.x?.score || null, ot: !!fin?.ot, venue: fin?.venue || null, record: ch?.record || h?.record || null, playoffs: ch?.playoffs || null,
-        role: starter ? `Started at ${starter.slot}` : onRoster ? 'On the title roster' : ev?.x?.played ? 'Played in the Beast Bowl' : 'Played in the title run',
-        line: post && (post.games || 0) > 0 ? { games: post.games, text: statLine(post) } : null, ceremony: !!ch, missing: fin ? null : 'The final\'s full result was not kept for this season.' };
+        role: starter ? `${$t('franchise.started_at', { slot: starter.slot })}` : onRoster ? $t('franchise.on_the_title_roster') : ev?.x?.played ? $t('franchise.played_in_the_beast_bowl') : $t('franchise.played_in_the_title_run'),
+        line: post && (post.games || 0) > 0 ? { games: post.games, text: statLine(post) } : null, ceremony: !!ch, missing: fin ? null : $t('franchise.the_finals_full_result_was_not') };
     }
     case 'award': {
       const h = (f.history || []).find((x) => x.year === ref.year); const w = h?.awards?.league?.[ref.key] || (f.season?.awardsFinal?.year === ref.year ? f.season.awardsFinal.winners?.[ref.key] : null);
       const mine = w && w.id === m.id ? w : null; const reg = book(ref.year)?.reg || null;
-      return { kind: 'award', key: ref.key, label: TROPHY_META[ref.key]?.label || ref.key, year: ref.year, club: ref.club || mine?.team || null, why: mine?.why || null, record: mine?.record || null, line: reg && (reg.games || 0) > 0 ? { games: reg.games, text: statLine(reg) } : mine ? { games: mine.games || null, text: statLine(mine) } : null, missing: mine || reg ? null : 'The season\'s award sheet was not kept.' };
+      return { kind: 'award', key: ref.key, label: TROPHY_META[ref.key]?.label || ref.key, year: ref.year, club: ref.club || mine?.team || null, why: mine?.why || null, record: mine?.record || null, line: reg && (reg.games || 0) > 0 ? { games: reg.games, text: statLine(reg) } : mine ? { games: mine.games || null, text: statLine(mine) } : null, missing: mine || reg ? null : $t('franchise.the_seasons_award_sheet_was_not') };
     }
     case 'record': {
       const R = f.records || {}; const cur = ref.scope === 'game' ? R.game?.[ref.cat] : R.season?.[ref.cat];
@@ -284,11 +285,11 @@ export function eventDetail(f, m, ref) {
         standing: !!standing, brokenBy: !standing && cur ? { name: cur.name, team: cur.team, value: cur.value, year: cur.year } : null, prev: standing && cur.prev ? cur.prev : null, game: g };
     }
     case 'evolve': return { kind: 'evolve', stage: ref.stage, from: ref.from, to: ref.to, year: ref.year, week: ref.week, before: ref.before, fromStage: ref.stage - 1, species: m.species, lvl: ref.lvl ?? null, ovr: ref.ovr || null };
-    case 'game': { const g = gameRecord(f, m, ref.year, ref.week, ref.club); return g ? { kind: 'game', ...g, club: g.club || ref.club, lineText: g.line && Object.keys(g.line).length ? statLine(g.line) : null, missing: g.source === 'log' || g.source === 'archive' ? null : 'His own line from this game was not kept (seasons before v39.1 keep the club\'s result only).' } : null; }
+    case 'game': { const g = gameRecord(f, m, ref.year, ref.week, ref.club); return g ? { kind: 'game', ...g, club: g.club || ref.club, lineText: g.line && Object.keys(g.line).length ? statLine(g.line) : null, missing: g.source === 'log' || g.source === 'archive' ? null : $t('franchise.his_own_line_from_this_game') } : null; }
     case 'season': {
       const b = book(ref.year); if (!b) return null; const games = seasonGames(m, ref.year);
       return { kind: 'season', year: ref.year, club: b.team || ref.club, reg: { games: b.reg?.games || 0, text: statLine(b.reg || {}) }, post: (b.post?.games || 0) > 0 ? { games: b.post.games, text: statLine(b.post) } : null,
-        games: games ? games.map((g) => ({ week: g.week, opp: g.opp, home: g.home, won: g.won, score: g.score, playoff: !!g.playoff || g.week > 10, text: statLine(g.line || {}) })) : null, missing: games ? null : 'Game-by-game lines are kept from v39.1 on: this season keeps its totals.' };
+        games: games ? games.map((g) => ({ week: g.week, opp: g.opp, home: g.home, won: g.won, score: g.score, playoff: !!g.playoff || g.week > 10, text: statLine(g.line || {}) })) : null, missing: games ? null : $t('franchise.game_by_game_lines_are_kept') };
     }
     case 'hof': return { kind: 'hof', year: ref.year, club: ref.club, owner: ref.owner };
     default: return null;
@@ -368,10 +369,10 @@ export function legacyHofProfile(card, i) {
   const years = (card.seasonsList || []).map((s) => s.year).filter((y) => y != null);
   const last = years.length ? Math.max(...years) : null; const titles = (card.seasonsList || []).filter((s) => s.champion).map((s) => s.year);
   const notes = ['Partial history: this Hall of Fame card was written before careers were kept (v39.0). It records his name, position, rating and level at retirement; his games, honors and earlier clubs were not saved.'];
-  notes.push(`${card.club} under ${card.owner}: ${card.seasons} season${card.seasons === 1 ? '' : 's'}, ${card.record?.w ?? 0}-${card.record?.l ?? 0}${titles.length ? `. The club won the Beast Bowl in ${titles.map((y) => yearOf(y)).join(', ')}; the card does not record which games he played` : ''}.`);
+  notes.push(`${$t('franchise.under_seasons', { club: card.club, owner: card.owner, seasons: card.seasons, w: card.record?.w ?? 0, l: card.record?.l ?? 0, n: card.seasons })}${titles.length ? `${$t('franchise.the_club_won_the_beast_bowl')} ${titles.map((y) => yearOf(y)).join(', ')}${$t('franchise.the_card_does_not_record_which')}` : ''}.`);
   return { v: PROFILE_VERSION, kind: 'snapshot', legacy: true, where: 'hof', id: `${card.id}:${i}`, name: b.name, species: b.species, stage: Math.max(0, stage), speciesName: stage > 0 ? base : sp?.name || b.species, type: sp?.element || null, position: b.position, level: b.level ?? null, ovr: b.ovr ?? null, yearsPro: null,
     club: card.club, clubs: [{ club: card.club, from: null, to: null }], seasons: null, onRecord: 0, complete: false,
     stats: { career: {}, season: {}, games: 0, focus: [], seasonFocus: null }, books: [], honours: { titles: 0, awards: 0, records: 0, hof: true }, tier: 'hof',
     trophies: [{ kind: 'hof', ...TROPHY_META.hof, count: 1, entries: [{ key: 'hof:card', year: last, club: card.club, owner: card.owner }] }],
-    timeline: [], emptyText: 'No timeline was kept on Hall of Fame cards written before v39.0.', notes };
+    timeline: [], emptyText: $t('franchise.no_timeline_was_kept_on_hall'), notes };
 }

@@ -14,7 +14,7 @@ const en = englishText();
 /** Every t('key' ...) call in the code: { key, file, args } where args is the source of the values object, if any. */
 function calls() {
   const out = [];
-  for (const [rel, src] of files) { if (!/text\/index\.js'/.test(src)) continue; for (const m of src.matchAll(/(?<![\w.])\$?t\('([a-z][\w]*\.[\w.]+)'(\s*,\s*\{)?/g)) {
+  for (const [rel, src] of files) { if (!/text\/index\.js'/.test(src)) continue; for (const m of src.matchAll(/(?:(?<![\w.])\$?t|\$L)\('([a-z][\w]*\.[\w.]+)'(\s*,\s*\{)?/g)) { // $L('key', …) is a line that is saved (src/text/index.js)
     let args = null;
     if (m[2]) { let i = m.index + m[0].length, d = 1; const a = i; while (i < src.length && d) { const c = src[i]; if (c === '{') d++; else if (c === '}') d--; i++; } args = src.slice(a, i - 1); }
     out.push({ key: m[1], file: rel, args });

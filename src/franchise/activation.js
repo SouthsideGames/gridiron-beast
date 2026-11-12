@@ -4,6 +4,7 @@
 // franchise stays active, saveable and mirrored as it was. Kept free of the DOM so it is tested directly.
 
 import { classify } from './store.js';
+import { t as $t } from '../text/index.js';
 
 const fail = (e) => ({ ok: false, error: e?.code && e?.message ? e : classify(e) });
 
@@ -30,7 +31,7 @@ export async function replaceThenAdopt({ store, current, franchise, copyKind = '
 export function legacyReplaceThenAdopt({ write, franchise, adopt, mirror = () => {} }) {
   const before = franchise.savedAt;
   let ok = false; try { ok = write(franchise); } catch { ok = false; }
-  if (!ok) { franchise.savedAt = before; return { ok: false, error: { code: 'legacy', message: 'Saving to this device failed (browser storage is full or blocked). Nothing was changed.' } }; }
+  if (!ok) { franchise.savedAt = before; return { ok: false, error: { code: 'legacy', message: $t('franchise.saving_to_this_device_failed_browser') } }; }
   const json = JSON.stringify(franchise); // the state just written, fixed now for the mirror
   const snapshot = { savedAt: franchise.savedAt, uid: franchise.uid ?? null, schemaVersion: franchise.schemaVersion ?? null, json: () => json };
   adopt(franchise); mirror(snapshot); return { ok: true, franchise, savedAt: franchise.savedAt, snapshot };

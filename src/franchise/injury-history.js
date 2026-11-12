@@ -11,6 +11,7 @@
 //
 // A new injury object is stamped with its incident key (`m.injury.rec`), so the same injury is never opened twice and a fresh
 // one is never merged into an older one, even across reloads. Nothing here draws a random number or reads by the engine.
+import { t as $t } from '../text/index.js';
 export const MIN_OPPORTUNITY = 9; // games of opportunity (in the lineup or missed to injury) before the history is classified
 /**
  * Injury History classification, by two rates since tracking began, over opportunity (games in the lineup + games missed to
@@ -19,7 +20,7 @@ export const MIN_OPPORTUNITY = 9; // games of opportunity (in the lineup or miss
  * games): 84% Low, 12% Moderate, 4% High; 29% of them had no injury at all. A record of the past, not a forecast.
  */
 export const INDICATOR = Object.freeze({ missedRate: { moderate: 0.05, high: 0.10 }, perSeason: { moderate: 0.6, high: 1.0 } });
-export const INDICATOR_LABEL = Object.freeze({ low: 'Low Injury History', moderate: 'Moderate Injury History', high: 'High Injury History', early: 'Not enough history yet' });
+export const INDICATOR_LABEL = Object.freeze({ low: $t('franchise.low_injury_history'), moderate: $t('franchise.moderate_injury_history'), high: $t('franchise.high_injury_history'), early: $t('franchise.not_enough_history_yet') });
 const KEEP_SEASONS = 1; // the pre-game ledger keeps this season only (a game of an earlier season can no longer be played)
 
 export const isTracking = (f) => !!f?.injuryHistory?.v;
@@ -115,8 +116,8 @@ export function injurySummary(f, id, { firstSeason = null } = {}) {
 /** Structural checks for the soak and the tests. */
 export function injuryProblems(f) {
   const H = f?.injuryHistory; if (!H) return []; const out = [];
-  for (const [id, rec] of Object.entries(H.open)) { if (new Set(rec.g).size !== rec.g.length) out.push(`injury: ${id} open record counts a game twice`); if (rec.back) out.push(`injury: ${id} open record has a return`); }
-  for (const [id, list] of Object.entries(H.log)) for (const r of list) { if (!Number.isInteger(r.missed) || r.missed < 0) out.push(`injury: ${id} bad missed ${r.missed}`); if (!r.back) out.push(`injury: ${id} closed record without a return`); }
-  const keys = Object.values(H.open).map((r) => r.k); if (new Set(keys).size !== keys.length) out.push('injury: an open record appears twice');
+  for (const [id, rec] of Object.entries(H.open)) { if (new Set(rec.g).size !== rec.g.length) out.push(`${$t('franchise.injury_open_record_counts_a_game', { id })}`); if (rec.back) out.push(`${$t('franchise.injury_open_record_has_a_return', { id })}`); }
+  for (const [id, list] of Object.entries(H.log)) for (const r of list) { if (!Number.isInteger(r.missed) || r.missed < 0) out.push(`${$t('franchise.injury_bad_missed', { id, missed: r.missed })}`); if (!r.back) out.push(`${$t('franchise.injury_closed_record_without_a_return', { id })}`); }
+  const keys = Object.values(H.open).map((r) => r.k); if (new Set(keys).size !== keys.length) out.push($t('franchise.injury_an_open_record_appears_twice'));
   return out;
 }

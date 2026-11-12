@@ -8,6 +8,7 @@
 // Nothing here uses the franchise dice: every choice comes from a hash of the save's seed, year and week, so the same save always
 // gets the same press conference and holding one moves no other random number.
 import { PRESS_QUESTIONS, REPORTERS, STYLES, SITUATION_ORDER, HEADLINES, SUBHEADS, TONE_KICKERS } from '../data/press.js';
+import { t as $t, lineEnglish } from '../text/index.js';
 
 const BY_ID = Object.freeze(Object.fromEntries(PRESS_QUESTIONS.map((q) => [q.id, q])));
 export const pressQuestion = (id) => BY_ID[id] || null;
@@ -29,7 +30,7 @@ function lastGameLines(f) {
   return out;
 }
 const best = (rows, key) => rows.reduce((a, b) => ((b.line[key] || 0) > (a?.line[key] || 0) ? b : a), null);
-const weeksText = (n) => `${n} week${n === 1 ? '' : 's'}`;
+const weeksText = (n) => `${$t('franchise.weeks', { n })}`;
 
 /**
  * Everything that is true about the club this Saturday. `h` (from franchise.js): { matchup, record, streak, hotseat, star,
@@ -38,7 +39,7 @@ const weeksText = (n) => `${n} week${n === 1 ? '' : 's'}`;
  */
 export function pressFacts(f, h) {
   const mem = pressMemory(f); const live = {}; const rec = h.record || { w: 0, l: 0 }; const rv = f.rivals?.[f.tier] || {};
-  const tokens = { club: f.club, coach: f.owner?.last || f.owner?.first || 'Coach', opp: h.matchup?.opponent || 'our opponent', rival: rv.team || 'your rival', rivalGm: rv.gm || 'their GM', star: h.star?.name || 'your star', record: `${rec.w}-${rec.l}` };
+  const tokens = { club: f.club, coach: f.owner?.last || f.owner?.first || 'Coach', opp: h.matchup?.opponent || 'our opponent', rival: rv.team || $t('franchise.your_rival'), rivalGm: rv.gm || $t('franchise.their_gm'), star: h.star?.name || $t('franchise.your_star'), record: `${rec.w}-${rec.l}` };
   const g = f.lastGame && f.lastGame.player && f.lastGame.year === f.season.year ? f.lastGame : null;
   if (g) Object.assign(tokens, { lastOpp: g.opponent, us: g.playerScore, them: g.oppScore, margin: Math.abs(g.playerScore - g.oppScore) });
 
@@ -71,9 +72,9 @@ export function pressFacts(f, h) {
   // roster news of this week and last, for monsters still here (the club's own news log is the record)
   const recent = (f.news || []).filter((n) => n.mid && n.year === f.season.year && f.season.week - n.week <= 1 && f.roster.some((m) => m.id === n.mid));
   const news = (test) => { const n = recent.find(test); if (!n) return null; const m = f.roster.find((x) => x.id === n.mid); return { name: m.name, pos: m.position, type: m.type, mid: m.id }; };
-  const evo = news((n) => n.text.startsWith('EVOLUTION:')); if (evo) live.evolved = evo;
-  const tr = news((n) => n.text.startsWith('Trade')); if (tr) live.trade = tr;
-  const sg = news((n) => n.text.includes('signed as a free agent') || /\bsigned: /.test(n.text)); if (sg) live.signing = sg;
+  const evo = news((n) => lineEnglish(n).startsWith('EVOLUTION:')); if (evo) live.evolved = evo;
+  const tr = news((n) => lineEnglish(n).startsWith('Trade')); if (tr) live.trade = tr;
+  const sg = news((n) => { const e = lineEnglish(n); return e.includes('signed as a free agent') || /\bsigned: /.test(e); }); if (sg) live.signing = sg;
   // the press's own memory
   for (const id of Object.keys(REPORTERS)) if (mem.insulted[id] && weeksSince(f, mem.insulted[id]) >= 1) live[`insulted:${id}`] = {};
   const oldQuote = mem.quotes.find((q) => weeksSince(f, q) >= 2 && !q.used); if (oldQuote) live.quote = { quote: oldQuote.t };
@@ -89,7 +90,7 @@ export function pickQuestions(f, facts, asked = []) {
   for (const k of SITUATION_ORDER) {
     if (picks.length >= MAX_SITUATIONAL) break; if (!facts.live[k]) continue;
     const own = PRESS_QUESTIONS.filter((q) => q.when === k); const pool = own.filter((q) => !used.has(q.id)); // a situation's questions are not repeated in a season
-    const q = pick(pool, `sit|${key}|${k}`); if (q) picks.push(q);
+    const q = pick(pool, `${`sit|${key}|${k}`}`); if (q) picks.push(q);
   }
   const generic = PRESS_QUESTIONS.filter((q) => !q.when);
   for (let n = 0; picks.length < PRESS_PER_WEEK && n < 6; n++) {
@@ -122,7 +123,7 @@ export function headlineFor(f, facts, styles) {
   const sit = Object.keys(SUBHEADS).find((k) => k !== 'generic' && facts.live[k]); const subKey = sit || 'generic';
   const sub = fillText(pick(SUBHEADS[subKey], `sub|${key}`), { ...facts.tokens, ...(sit ? facts.live[sit] : {}) });
   const kicker = fillText(pick(TONE_KICKERS[tone], `kick|${key}`), facts.tokens);
-  return { paper: 'THE BEAST TIMES', title, sub, kicker, tone };
+  return { paper: $t('franchise.the_beast_times'), title, sub, kicker, tone };
 }
 
 /**

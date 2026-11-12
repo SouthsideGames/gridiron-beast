@@ -72,7 +72,7 @@ export function evolutionResultsHtml(r, { beforeSprite, afterSprite }) {
  * `onClose()` runs once when the owner continues. Returns a controller (used by the UI check).
  */
 export function openEvolutionScene({ report: r, beforeMon, afterMon, settings = {}, onSound = null, onClose = null }) {
-  const sysReduced = typeof matchMedia === 'function' && matchMedia($t('shared.prefers_reduced_motion_reduce')).matches;
+  const sysReduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const reduced = !!settings.reducedMotion || sysReduced; const shake = !reduced && settings.screenShake !== false;
   let sound = !!settings.evoSound; const T = reduced ? TIMING.reduced : TIMING.full; const th = themeFor(r.type);
   if (sound) unlockSound(); // the scene opens inside the Evolve tap: start audio now, or iPhone Safari blocks the later cues

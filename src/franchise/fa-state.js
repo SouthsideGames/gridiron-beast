@@ -14,6 +14,7 @@
 import { hasLeague, leagueClubs, clubRoster } from './league-registry.js';
 import { positionOf } from '../data/personnel.js';
 import { overLimit } from './fa-legendary.js';
+import { t as $t } from '../text/index.js';
 
 export const FA_VERSION = 1;
 
@@ -82,15 +83,15 @@ export function noteTraded(f, m, from) { if (hasFreeAgency(f)) L(f).traded[m.id]
 /** Why `m` cannot be traded now, or null. */
 export function tradeLock(f, m) {
   if (!hasFreeAgency(f) || !m) return null; const s = L(f).signed[m.id];
-  return s != null && !signingUnlocked(f, s) ? `${m.name} signed as a free agent and cannot be traded until the next offseason.` : null;
+  return s != null && !signingUnlocked(f, s) ? `${$t('franchise.signed_as_a_free_agent_and', { name: m.name })}` : null;
 }
 /** A signing in league year `ly` unlocks when the offseason after season `ly` opens (the season closes). */
 const signingUnlocked = (f, ly) => { const y = f.season?.year ?? 0; return y > ly || (y === ly && !!f.season?.finished); };
 /** Why `club` cannot take `m` now (release-and-re-sign, or a return to the club that traded him), or null. */
 export function returnLock(f, m, club) {
   if (!hasFreeAgency(f) || !m) return null; const ly = leagueYear(f);
-  const r = L(f).released[m.id]; if (r && r.club === club && r.ly === ly) return `${club} released ${m.name} this league year and cannot sign him again until the next one.`;
-  const t = L(f).traded[m.id]; if (t && t.from === club && t.ly === ly) return `${m.name} was traded away by ${club} this league year and cannot return until the next one.`;
+  const r = L(f).released[m.id]; if (r && r.club === club && r.ly === ly) return `${$t('franchise.released_this_league_year_and_cannot', { club, name: m.name })}`;
+  const t = L(f).traded[m.id]; if (t && t.from === club && t.ly === ly) return `${$t('franchise.was_traded_away_by_this_league', { name: m.name, club })}`;
   return null;
 }
 /** Drop locks from finished league years (kept small; called when a league year turns over). */

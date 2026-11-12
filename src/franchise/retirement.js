@@ -16,6 +16,7 @@ import * as IH from './injury-history.js';
 import { universeCareerLeaders } from './league-careers.js';
 import { addEvent } from './career.js';
 import { personaOf } from './fa-personality.js';
+import { t as $t, line as $L, lineParts as $P } from '../text/index.js';
 
 export const AGING_VERSION = 1;
 /** A franchise born under these rules: no transition. */
@@ -118,7 +119,7 @@ export function retirementPass(f, r, { year, news = null }) {
       addEvent(m, { k: `retired:${year}`, t: 'retired', y: year, c: f.club, x: { age, owner: 1 } });
       if (hasLeague(f)) { f.league.legends[m.id] = legendStub(m, { year, club: f.club, honours: [] }); leagueEvent(f, { kind: 'retire', club: f.club, honours: honoursLine(f, m), starter: st.has(m.id), ...moveIdentity(f, m), age, ovr, formerMine: true }); }
       out.owner.push({ id: m.id, name: m.name, position: m.position, age, ovr, seasons, starter: st.has(m.id) });
-      news?.(`${m.name} (${m.position}, ${ovr} OVR) retires at ${age}${seasons ? ` after ${seasons} season${seasons === 1 ? '' : 's'}` : ''}. Retirement is final: plan the draft and free agency around it.`, 'roster');
+      news?.($P($L('franchise.ovr_retires_at', { name: m.name, position: m.position, ovr, age }), (seasons ? $P(` `, $L('franchise.after_seasons', { seasons, n: seasons })) : ''), $L('franchise.retirement_is_final_plan_the_draft')), 'roster');
     }
   }
 
@@ -130,6 +131,6 @@ export function retirementPass(f, r, { year, news = null }) {
   const notable = out.league.slice().sort((a, b) => b.ovr - a.ovr).slice(0, 3);
   f.retirementsLast = { year, owner: out.owner, league: out.league.length, unsigned: out.unsigned, notable, transition: s };
   const total = out.league.length + out.owner.length + out.unsigned;
-  if (total) news?.(`Retirements: ${total} monster${total === 1 ? '' : 's'} retired this offseason${notable.length ? `, among them ${notable.map((x) => `${x.name} (${x.club}, ${x.age})`).join(', ')}` : ''}.`, 'info');
+  if (total) news?.($P($L('franchise.retirements_monsters_retired_this_offseason', { total, n: total }), (notable.length ? $P($L('franchise.among_them'), ` `, notable.map((x) => `${x.name} (${x.club}, ${x.age})`).join(', ')) : ''), `.`), 'info');
   return out;
 }

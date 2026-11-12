@@ -16,6 +16,7 @@ import { legendSide, legendCheck } from './fa-legendary.js';
 import { horizonOf, PLAN } from './roster-plan.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
 import { clubIdentity, identityTilt, IDENTITY_TILT } from '../data/identities.js';
+import { t as $t } from '../text/index.js';
 /**
  * Owner ruling N8a (2026-11-08, D9): a gym prefers monsters of its element among similarly useful candidates. Legendary rules and legal
  * rosters come first (judge() decides those unchanged); this is a tie-break, never a quota. In trades: an element match adds
@@ -194,7 +195,7 @@ function moveMonster(f, from, to, m, year) {
 /** Carry out a deal: monsters both ways, picks to B, one League News event naming what A paid. */
 function execute(f, { A, B, m, ys, picks, year, na, nb, fl, sm, got, paid }) {
   moveMonster(f, B, A, m, year); for (const y of ys) moveMonster(f, A, B, y, year); for (const p of picks) setPickOwner(f, p, B);
-  const label = [...ys.map((y) => `${y.name} (${y.position}, ${ovr(y)} OVR)`), ...picks.map((p) => `a round-${p.round} pick (${p.year})`)].join(' and ');
+  const label = [...ys.map((y) => `${y.name} (${y.position}, ${ovr(y)} OVR)`), ...picks.map((p) => `${$t('franchise.a_round_pick', { round: p.round, year: p.year })}`)].join(' and ');
   leagueEvent(f, { kind: 'trade', from: B, to: A, consideration: label, ...moveIdentity(f, m) });
   const kind = ys.length && picks.length ? 'swap+picks' : ys.length ? 'swap' : 'picks';
   return { kind, A, B, toA: m.id, ...(ys.length ? { toB: ys[0].id, toBAll: ys.map((y) => y.id) } : {}), ...(picks.length ? { picks } : {}), pos: m.position, na: Math.round(na), nb: Math.round(nb), mv: [Math.round(got * 10) / 10, Math.round(paid * 10) / 10], fl, sm }; // mv: market value received and given, as the clubs saw it when they dealt (ratings move a little afterwards)

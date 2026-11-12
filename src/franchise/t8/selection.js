@@ -7,6 +7,7 @@ import { createRng, hashString } from '../../core/rng.js';
 import { simulateHistory } from './career.js';
 import { NEUTRAL_TEMPERS } from '../../data/temper.js';
 import { HISTORY_REFERENCE } from '../../data/t8-history-reference.generated.js';
+import { t as $t } from '../../text/index.js';
 
 export const CANDIDATES = 9;
 export const REFERENCE_SIZE = 400;
@@ -78,11 +79,11 @@ export const formFingerprint = (formId) => { const f = formById(formId); return 
  */
 export function computeHistoryBand(formId, startAge, profile, seasons = BAND_SEASONS) {
   const form = formById(formId); if (!form) throw new Error(`unknown form ${formId}`);
-  const key = bandKey(formId, startAge, profile); const rng = createRng(hashString(`reference|history|${key}|${seasons}`));
+  const key = bandKey(formId, startAge, profile); const rng = createRng(hashString(`${`reference|history|${key}|${seasons}`}`));
   const out = Array.from({ length: seasons }, () => []);
   for (let i = 0; i < REFERENCE_SIZE; i++) {
     const d = { ...generateIndividual(rng, formId, { apex: false }), temper: EVALUATION_TEMPER };
-    const probe = { id: `ref|${key}|${i}`, position: form.position, age: startAge, yearsPro: 0 };
+    const probe = { id: `${`ref|${key}|${i}`}`, position: form.position, age: startAge, yearsPro: 0 };
     for (let s = 0; s < seasons; s++) { simulateHistory(rng, d, probe, { seasons: 1, profile }); out[s].push(METRICS.current(d, form.position)); }
   }
   for (const v of out) v.sort((a, b) => a - b);
