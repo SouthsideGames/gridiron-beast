@@ -2,6 +2,7 @@
 // with no DOM, so they are tested headless. A replay only ever re-draws the frames the engine recorded for the play that
 // was just played (sim.frames): it never runs the simulation, the rules or the game runner, so it cannot change a score,
 // a stat, the clock, XP, fatigue, an injury or possession.
+import { t as $t } from '../text/index.js';
 
 const FRAME_DT = 0.1; // the engine records 10 frames a second (frameEvery 2 at a 0.05 s tick)
 export const REPLAY = Object.freeze({ lead: 2.6, tail: 0.9, maxSpan: 7.5, slowBefore: 0.6, slowAfter: 0.5, slow: 0.4, msPerFrame: 100, transitionMs: 450, zoom: 1.35 });
@@ -20,22 +21,22 @@ export function replayReason(ev, state, me) {
     if (!ev.scored || !state) return null;
     const k = ev.kicking; const diff = state.score[k] - state.score[k === 'home' ? 'away' : 'home'];
     const late = state.finished || (state.quarter >= 4 && state.clock <= 30) || !!state.ot;
-    return late && diff > 0 && diff <= 3 ? { kind: 'winning_fg', label: state.finished ? 'GAME-WINNING FIELD GOAL' : 'GO-AHEAD FIELD GOAL', priority: 3 } : null;
+    return late && diff > 0 && diff <= 3 ? { kind: 'winning_fg', label: state.finished ? $t('match.game_winning_field_goal') : $t('match.go_ahead_field_goal'), priority: 3 } : null;
   }
   if (ev.kind !== 'play' && ev.kind !== 'try') return null;
   const r = sim.result;
-  if (r === 'touchdown') return { kind: 'touchdown', label: sim.stats?.defensiveScore ? 'DEFENSIVE TOUCHDOWN' : 'TOUCHDOWN', priority: 3 };
+  if (r === 'touchdown') return { kind: 'touchdown', label: sim.stats?.defensiveScore ? $t('match.defensive_touchdown') : 'TOUCHDOWN', priority: 3 };
   if (r === 'interception' || sim.stats?.interceptor) return { kind: 'interception', label: 'INTERCEPTION', priority: 3 };
-  if (r === 'fumble' || r === 'touchback_return' || (sim.turnover && r !== 'touchdown')) return { kind: 'turnover', label: r === 'fumble' ? 'FUMBLE RECOVERED' : 'TURNOVER', priority: 3 };
+  if (r === 'fumble' || r === 'touchback_return' || (sim.turnover && r !== 'touchdown')) return { kind: 'turnover', label: r === 'fumble' ? $t('match.fumble_recovered') : 'TURNOVER', priority: 3 };
   if (r === 'safety') return { kind: 'safety', label: 'SAFETY', priority: 3 };
   if (ev.kind === 'try') return null;
   const gained = sim.yards ?? 0; const firstDown = ev.toGo != null && gained >= ev.toGo;
-  if (ev.down === 4 && firstDown && (ev.toGo >= 3 || (state?.quarter ?? 1) >= 4)) return { kind: 'fourth_down', label: 'FOURTH-DOWN CONVERSION', priority: 2 };
+  if (ev.down === 4 && firstDown && (ev.toGo >= 3 || (state?.quarter ?? 1) >= 4)) return { kind: 'fourth_down', label: $t('match.fourth_down_conversion'), priority: 2 };
   const clutch = state && (state.quarter >= 4 || state.ot) && state.clock <= 120 && Math.abs(state.score.home - state.score.away) <= 8;
-  if (clutch && (gained >= 15 || r === 'sack')) return { kind: 'clutch', label: r === 'sack' ? 'CLUTCH SACK' : 'CLUTCH PLAY', priority: 2 };
+  if (clutch && (gained >= 15 || r === 'sack')) return { kind: 'clutch', label: r === 'sack' ? $t('match.clutch_sack') : $t('match.clutch_play'), priority: 2 };
   const ab = abilityOutcomes(sim);
   // Only abilities that decide a big play: a 20+ yard gain, or a denied interception, a blink past the tackler, a flattening.
-  if (ab.length && (gained >= 20 || ab.some((e) => ['pick_denied', 'blink', 'flattened'].includes(e.kind)))) return { kind: 'ability', label: 'ABILITY PLAY', priority: 1 };
+  if (ab.length && (gained >= 20 || ab.some((e) => ['pick_denied', 'blink', 'flattened'].includes(e.kind)))) return { kind: 'ability', label: $t('match.ability_play'), priority: 1 };
   return null;
 }
 

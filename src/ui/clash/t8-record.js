@@ -12,8 +12,9 @@
 // It returns a Promise to take the cue over (the arena then skips its own default presentation for that event), or a falsy value
 // to let the default cue play. The hook never changes the record, the cursor or the engine.
 import { abilityById, abilitiesOf } from '../../data/beast-dex.js';
+import { t as $t } from '../../text/index.js';
 
-const STATUS_NAME = Object.freeze({ stunned: 'Stunned', slowed: 'Slowed', stumbled: 'Stumbled', knockedDown: 'Knocked Down', afflicted: 'Afflicted', weakened: 'Weakened', confused: 'Confused', healingReduced: 'Healing Reduced', shielded: 'Shielded', empowered: 'Empowered', quickened: 'Quickened', guarded: 'Guarded' });
+const STATUS_NAME = Object.freeze({ stunned: $t('clash.stunned'), slowed: $t('clash.slowed'), stumbled: $t('clash.stumbled'), knockedDown: $t('clash.knocked_down'), afflicted: $t('clash.afflicted'), weakened: $t('clash.weakened'), confused: $t('clash.confused'), healingReduced: $t('clash.healing_reduced'), shielded: $t('clash.shielded'), empowered: $t('clash.empowered'), quickened: $t('clash.quickened'), guarded: $t('clash.guarded') });
 /** Shared-status glyphs (functional cues only; the badge pass is M6). */
 export const T8_STATUS_ICON = Object.freeze({ stunned: '💫', slowed: '🐢', afflicted: '☠️', weakened: '🔻', confused: '❓', healingReduced: '🩹', shielded: '🛡', empowered: '🔺', quickened: '💨', guarded: '🧱', stumbled: '〰️', knockedDown: '⬇️' });
 export const T8_STATUS_COLOR = Object.freeze({ stunned: '#e9a3ff', slowed: '#8ac6ff', afflicted: '#a3e635', weakened: '#f87171', confused: '#f0abfc', healingReduced: '#fb923c', shielded: '#93c5fd', empowered: '#fbbf24', quickened: '#5eead4', guarded: '#d6d3d1', stumbled: '#fde68a', knockedDown: '#fca5a5' });
@@ -43,7 +44,7 @@ export function toArenaRecord(result) {
     const ev = translate(e, byId, lines);
     // Order: the active fighter first, then the rest in lineup order (the arena's front slot is order[0]); emitted when it changes.
     if (e.active) { const order = { a: orderOf(lineIds.a, e.active.a), b: orderOf(lineIds.b, e.active.b) }; const key = `${order.a.join()}|${order.b.join()}`; if (key !== lastOrder) { lastOrder = key; ev.order = order; } }
-    if (ev.kind === 'sudden_death') { if (!sdBegun) { sdBegun = true; ev.text = `Sudden death begins: damage x${(e.ramp || 1).toFixed(2)}`; } }
+    if (ev.kind === 'sudden_death') { if (!sdBegun) { sdBegun = true; ev.text = `${$t('clash.sudden_death_begins_damage_x', { ramp: (e.ramp || 1).toFixed(2) })}`; } }
     ev.actorState = snapState(e.actorState); ev.targetState = snapState(e.targetState);
     log.push(ev);
   }
@@ -54,7 +55,7 @@ function orderOf(ids, activeId) { return activeId && ids.includes(activeId) ? [a
 
 function lineOut(x) {
   const ab = x.abilityId ? abilityById(x.abilityId) : null; const fam = abilitiesOf(x.species);
-  const move = ab ? { name: ab.name, text: ab.mechanic || ab.details || '', trigger: { kind: 'contract' } } : { name: 'Strike', text: `Ordinary attack with the ${x.archetype} perks${x.basic ? ' (Basic)' : ''}${fam?.clash ? '' : ''}`, trigger: { kind: 'normal' } };
+  const move = ab ? { name: ab.name, text: ab.mechanic || ab.details || '', trigger: { kind: 'contract' } } : { name: $t('clash.strike'), text: `${$t('clash.ordinary_attack_with_the_perks', { archetype: x.archetype, basic: x.basic ? ' (Basic)' : '', fam: fam?.clash ? '' : '' })}`, trigger: { kind: 'normal' } };
   return { ...x, combatant: { ...x.combatant, move } };
 }
 

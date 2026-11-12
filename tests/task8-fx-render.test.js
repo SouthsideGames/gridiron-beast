@@ -230,7 +230,7 @@ test('in-snap fields: before a play is chosen, the formation on screen already s
 import { conditionalNotes } from '../src/ui/fx/match-fx.js';
 const N9C = (id) => IN_SNAP.find((x) => x.id === id);
 
-test('N9c: a play that leaves the creator out creates nothing and keeps his readiness; the play-call screen says so', () => {
+test('N9c: a play that leaves the creator out creates nothing and keeps his readiness; the play-call screen says so', async () => {
   // the receivers at WR2 (power_right has no WR2), the safety at FS (goal_line has no FS)
   for (const [id, slot, without, withHim] of [['WIN-01-F', 'WR2', ['power_right', 'cover_3'], ['quick_slants', 'cover_3']], ['NAT-01-F', 'WR2', ['power_right', 'cover_3'], ['quick_slants', 'cover_3']], ['WIN-04-F', 'FS', ['quick_slants', 'goal_line'], ['quick_slants', 'cover_3']]]) {
     const { g, teams, m } = inSnapGame({ ...N9C(id), slot }, 5); const ready0 = JSON.stringify(g.t8.ability?.[m.id] ?? null);
@@ -248,7 +248,9 @@ test('N9c: a play that leaves the creator out creates nothing and keeps his read
       assert.notEqual(JSON.stringify(g.t8.ability?.[m.id] ?? null), ready0, `${id}: spent then`);
     }
   }
-  assert.match(MATCH_SRC, /conditionalNotes\(s, teams, list, calls\)/); assert.match(MATCH_SRC, /class="t8-conditional"/); assert.match(MATCH_SRC, /is created at the snap only if/); assert.match(MATCH_SRC, /it stays ready/);
+  assert.match(MATCH_SRC, /conditionalNotes\(s, teams, list, calls\)/); assert.match(MATCH_SRC, /class="t8-conditional"/); { const en = (await import('../src/text/index.js')).englishText();   // the two notes are lines in src/text/en.js, read by key
+    assert.match(en['match.is_created_at_the_snap_only'], /is created at the snap only if/); assert.match(en['match.is_not_created_is_not_on'], /it stays ready/);
+    assert.ok(MATCH_SRC.includes("$t('match.is_created_at_the_snap_only'") && MATCH_SRC.includes("$t('match.is_not_created_is_not_on'")); }
 });
 
 test('N9c: Bloom Break is never rerolled: the choices fixed when it was earned are re-applied to the line of scrimmage of the spawn snap', () => {

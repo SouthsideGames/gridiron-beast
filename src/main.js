@@ -46,6 +46,7 @@ import { registerDexScreens } from './ui/screens/dex.js';
 import { installCareerLinks } from './ui/career-ui.js';
 import { applyFlashPref } from './ui/flash-pref.js';
 import { applyFrameRate } from './ui/frame-rate.js';
+import { t as $t } from './text/index.js';
 
 const app = {
   f: null, // the franchise state (null before creation)
@@ -62,16 +63,16 @@ const app = {
    * that only need "save soon" can ignore it, as before: the store queues and orders every request.
    */
   save({ immediate = false, archive = false } = {}) {
-    if (!this.f) return Promise.resolve({ ok: false, error: { code: 'none', message: 'No franchise.' } });
+    if (!this.f) return Promise.resolve({ ok: false, error: { code: 'none', message: $t('franchises.no_franchise') } });
     const f = this.f;
-    if (isArchived(f) && !archive) return Promise.resolve({ ok: false, error: { code: 'read-only', message: 'This franchise is a read-only archive.' } }); // GDD §42.4 step 7
+    if (isArchived(f) && !archive) return Promise.resolve({ ok: false, error: { code: 'read-only', message: $t('franchises.this_franchise_is_a_read_only') } }); // GDD §42.4 step 7
     // A finished game or a new day is written at once; everything else is batched.
     const sig = `${f.season?.year}|${f.season?.week}|${f.season?.day}|${f.game ? (f.game.state?.finished ? 'done' : 'live') : 'none'}|${f.roster?.length}`;
     const important = sig !== this.lastSig; this.lastSig = sig;
     let p;
     if (this.storage.store) p = this.storage.store.save(f, { immediate: immediate || important });
-    else if (this.storage.mode === 'legacy') { const ok = Save.save(f); const json = ok ? JSON.stringify(f) : null; p = Promise.resolve(ok ? { ok: true, savedAt: f.savedAt, snapshot: { savedAt: f.savedAt, uid: f.uid ?? null, schemaVersion: f.schemaVersion, json: () => json } } : { ok: false, error: { code: 'legacy', message: 'Saving to this device failed (browser storage is full or blocked).' } }); }
-    else p = Promise.resolve({ ok: false, error: { code: 'starting', message: 'Storage is still starting.' } });
+    else if (this.storage.mode === 'legacy') { const ok = Save.save(f); const json = ok ? JSON.stringify(f) : null; p = Promise.resolve(ok ? { ok: true, savedAt: f.savedAt, snapshot: { savedAt: f.savedAt, uid: f.uid ?? null, schemaVersion: f.schemaVersion, json: () => json } } : { ok: false, error: { code: 'legacy', message: $t('franchises.saving_to_this_device_failed_browser') } }); }
+    else p = Promise.resolve({ ok: false, error: { code: 'starting', message: $t('franchises.storage_is_still_starting') } });
     // Invariant A: the cloud receives only what was committed locally: the committed snapshot, never the live object.
     return p.then((r) => { saveOutcome(r); if (shouldMirror(r) && r.snapshot) cloudSave(r.snapshot, { immediate: important || archive, createdAt: f.createdAt, archive, meta: cloudMeta(f) }); return r; });
   },
@@ -86,8 +87,8 @@ const app = {
    * adopted and mirrored to the cloud. On failure nothing changes: { ok: false, error }.
    */
   async restoreBackup(id) {
-    if (id === 'cloud') { const f = this.cloudCandidate; if (!f) return { ok: false, error: { code: 'invalid', message: 'The cloud copy is no longer available.' } }; const r = await this.replaceFranchise(f, { copyKind: 'pre-restore', mirror: false }); if (r.ok) this.cloudCandidate = null; return r; }
-    if (!this.storage.store) return { ok: false, error: { code: 'legacy', message: 'Backups need the game database, which this browser did not open.' } };
+    if (id === 'cloud') { const f = this.cloudCandidate; if (!f) return { ok: false, error: { code: 'invalid', message: $t('franchises.the_cloud_copy_is_no_longer') } }; const r = await this.replaceFranchise(f, { copyKind: 'pre-restore', mirror: false }); if (r.ok) this.cloudCandidate = null; return r; }
+    if (!this.storage.store) return { ok: false, error: { code: 'legacy', message: $t('franchises.backups_need_the_game_database_which') } };
     return restoreThenAdopt({ store: this.storage.store, current: this.f, id, adopt, mirror: (snap) => cloudSave(snap, { immediate: true, createdAt: this.f?.createdAt, meta: cloudMeta(this.f) }) });
   },
   /**
@@ -98,14 +99,14 @@ const app = {
     const mirrorFn = mirror ? (snap) => cloudSave(snap, { immediate: true, createdAt: this.f?.createdAt, meta: cloudMeta(this.f) }) : () => {}; // runs after adopt: this.f is the new franchise
     if (this.storage.store) return replaceThenAdopt({ store: this.storage.store, current: this.f, franchise: f, copyKind, guard, adopt, mirror: mirrorFn });
     if (this.storage.mode === 'legacy') return legacyReplaceThenAdopt({ write: (g) => Save.save(g), franchise: f, adopt, mirror: mirrorFn });
-    return { ok: false, error: { code: 'starting', message: 'Storage is still starting.' } };
+    return { ok: false, error: { code: 'starting', message: $t('franchises.storage_is_still_starting') } };
   },
   /** The weekly safety copy taken after each Sunday (v39.1 kept it in localStorage). */
   backup(f = this.f) { if (!f) return; if (this.storage.store) this.storage.store.keepCopy(f, 'weekly').catch(() => {}); else Save.backup(f); },
   /** Delete the live franchise (kept as a 'deleted' backup). Resolves { ok }; on failure nothing is deleted, locally or in the cloud. */
   async reset() {
     const f = this.f;
-    if (this.storage.store) { try { await this.storage.store.remove(f); } catch (e) { const err = classify(e); toast(`The franchise was not deleted: ${err.message}`, 'bad', 6000); return { ok: false, error: err }; } }
+    if (this.storage.store) { try { await this.storage.store.remove(f); } catch (e) { const err = classify(e); toast(`${$t('franchises.the_franchise_was_not_deleted', { message: err.message })}`, 'bad', 6000); return { ok: false, error: err }; } }
     else Save.clear();
     this.f = null; this.lastSig = null;
     if (this.storage.store && f) { try { const del = (await this.storage.store.listBackups()).find((b) => b.kind === 'deleted' && b.ok && (b.meta?.club === f.club)); if (del) this.slots?.noteDeletion({ slot: this.slot, backupId: del.id, uid: f.uid, club: f.club, meta: del.meta }); } catch { /* no undo offer, the backup itself stays */ } }
@@ -119,7 +120,7 @@ const app = {
    * (or recovery, or nothing) becomes current. Returns the open result.
    */
   async switchSlot(slot) {
-    if (!this.slots) return { ok: false, error: { code: 'starting', message: 'Storage is still starting.' } };
+    if (!this.slots) return { ok: false, error: { code: 'starting', message: $t('franchises.storage_is_still_starting') } };
     if (this.f) { await this.save({ immediate: true }); await cloudFlush(); }
     if (this.storage.store) { await this.storage.store.flush?.(); unsubscribeStore?.(); unsubscribeStore = null; }
     this.f = null; this.lastSig = null; this.recovery = null; this.cloudCandidate = null; staleShown = false;
@@ -136,14 +137,14 @@ const app = {
   /** Start a new franchise in an empty slot: the slot becomes current and onboarding runs there (GDD §42.5 Creating). */
   async createIn(slot) {
     const { list } = await this.slots.slotFor(); const s = list.find((x) => x.slot === slot);
-    if (!s || s.state !== 'empty') return { ok: false, error: { code: 'occupied', message: `Slot ${slot} is not empty. Delete or export its franchise first.` } };
+    if (!s || s.state !== 'empty') return { ok: false, error: { code: 'occupied', message: `${$t('franchises.slot_is_not_empty_delete_or', { slot })}` } };
     const r = await this.switchSlot(slot); if (!r.ok) return r;
     Router.go('onboarding', { fresh: true }, { reset: true }); return { ok: true };
   },
   /** Import a validated franchise into an empty slot (GDD §42.5 Importing); the slot becomes current. */
   async importInto(slot, franchise) {
     const { list } = await this.slots.slotFor(); const s = list.find((x) => x.slot === slot);
-    if (!s || s.state !== 'empty') return { ok: false, error: { code: 'occupied', message: `Slot ${slot} is not empty.` } };
+    if (!s || s.state !== 'empty') return { ok: false, error: { code: 'occupied', message: `${$t('franchises.slot_is_not_empty', { slot })}` } };
     const r = await this.switchSlot(slot); if (!r.ok) return r;
     return this.replaceFranchise(franchise, { copyKind: 'replaced' });
   },
@@ -151,7 +152,7 @@ const app = {
   async deleteSlot(slot) {
     if (slot === this.slot) return this.reset();
     const store = this.slots.store(slot); const res = await store.open();
-    const f = res.franchise; if (!f) return { ok: false, error: { code: 'empty', message: 'That slot holds no readable franchise.' } };
+    const f = res.franchise; if (!f) return { ok: false, error: { code: 'empty', message: $t('franchises.that_slot_holds_no_readable_franchise') } };
     try { await store.remove(f); } catch (e) { return { ok: false, error: classify(e) }; }
     try { const del = (await store.listBackups()).find((b) => b.kind === 'deleted' && b.ok); if (del) this.slots.noteDeletion({ slot, backupId: del.id, uid: f.uid, club: f.club, meta: del.meta }); } catch { /* ignore */ }
     await cloudClear(f);
@@ -159,7 +160,7 @@ const app = {
   },
   /** Undo the deletion made in this launch (decision N): the deleted copy goes back into its slot. */
   async undoDelete() {
-    const u = this.slots.pendingUndo(); if (!u) return { ok: false, error: { code: 'none', message: 'Nothing to undo.' } };
+    const u = this.slots.pendingUndo(); if (!u) return { ok: false, error: { code: 'none', message: $t('franchises.nothing_to_undo') } };
     const r = await this.switchSlot(u.slot); if (!r.ok) return r;
     const back = await restoreThenAdopt({ store: this.storage.store, current: this.f, id: u.backupId, adopt, mirror: (snap) => cloudSave(snap, { immediate: true, createdAt: this.f?.createdAt, meta: cloudMeta(this.f) }) });
     if (back.ok) this.slots.clearUndo();
@@ -170,15 +171,15 @@ const app = {
    * A Hall of Fame card is written when the checklist is met (decision L). The archive is committed once, then mirrored.
    */
   async archive({ reason } = {}) {
-    const f = this.f; if (!f) return { ok: false, error: { code: 'none', message: 'No franchise.' } };
-    const why = reason || retirementDue(f); if (!why) return { ok: false, error: { code: 'not-due', message: 'Retirement is not due: the season must be complete first.' } };
-    const check = retirementChecklist(f); if (!check.ready) return { ok: false, error: { code: 'unsettled', message: `Finish the season first: ${check.missing.join('; ')}.` } };
+    const f = this.f; if (!f) return { ok: false, error: { code: 'none', message: $t('franchises.no_franchise') } };
+    const why = reason || retirementDue(f); if (!why) return { ok: false, error: { code: 'not-due', message: $t('franchises.retirement_is_not_due_the_season') } };
+    const check = retirementChecklist(f); if (!check.ready) return { ok: false, error: { code: 'unsettled', message: `${$t('franchises.finish_the_season_first')} ${check.missing.join('; ')}.` } };
     const before = structuredClone(f); // the archive must be stored before anything else happens; if it cannot, nothing changes
     let card = null; try { const r = F.retire(f); if (r.ok) card = r.card; } catch { card = null; }
     const r = finalizeArchive(f, { reason: why, hofCard: card });
     if (!r.ok) { Object.assign(f, before); return { ok: false, error: { code: 'unsettled', message: r.reason } }; }
     const saved = await this.save({ immediate: true, archive: true });
-    if (!saved.ok) { for (const k of Object.keys(f)) if (!(k in before)) delete f[k]; Object.assign(f, before); this.lastSig = null; return { ok: false, error: saved.error || { code: 'save', message: 'The archive could not be saved.' }, saveFailed: true }; }
+    if (!saved.ok) { for (const k of Object.keys(f)) if (!(k in before)) delete f[k]; Object.assign(f, before); this.lastSig = null; return { ok: false, error: saved.error || { code: 'save', message: $t('franchises.the_archive_could_not_be_saved') }, saveFailed: true }; }
     if (card) addHofCard(card);
     this.lastSig = null;
     return { ok: true, status: r.status, legacy: r.legacy, card };
@@ -198,7 +199,7 @@ function applySettings() { document.documentElement.dataset.reducedMotion = app.
 
 function tabs(ctx, screenName) {
   if (!app.f || !ctx.inFranchise || isArchived(app.f)) return null; // an archive shows the Legacy shell, not the weekly tabs
-  const items = [['hq', 'HQ', '🏠'], ['roster', 'Roster', '🐾'], ['playbook', 'Plays', '📋'], ['league', 'League', '🏆'], ['more', 'More', '☰']];
+  const items = [['hq', 'HQ', '🏠'], ['roster', $t('franchises.roster'), '🐾'], ['playbook', $t('franchises.plays'), '📋'], ['league', $t('franchises.league'), '🏆'], ['more', $t('franchises.more'), '☰']];
   const counts = {}; for (const n of F.notices(app.f)) counts[n.screen] = (counts[n.screen] || 0) + 1;
   if (devNoticesOn(app.settings)) counts.more = (counts.more || 0) + reviewQueue().total; // developer reviews (GDD §23.7)
   return items.map(([screen, label, icon]) => ({ screen, label, icon, badge: counts[screen] || 0, active: screenName === screen || (ctx.tabOf?.[screenName] === screen) }));
@@ -287,12 +288,12 @@ let unsubscribeStore = null;
  */
 async function keepPreLeagueCopy(f, store) {
   if (!f || F.hasLeague(f) || isArchived(f) || !store) return;
-  try { await store.keepCopy(structuredClone(f), 'pre-league'); } catch (e) { app.bootInfo?.notes?.push(`pre-league copy not kept: ${e.message}`); }
+  try { await store.keepCopy(structuredClone(f), 'pre-league'); } catch (e) { app.bootInfo?.notes?.push(`${$t('franchises.pre_league_copy_not_kept', { message: e.message })}`); }
 }
 function migrateLeague(f) {
   if (!f || F.hasLeague(f) || isArchived(f)) return;
   let r; try { r = F.ensureLeague(f); } catch (e) { r = { ok: false, problems: [e?.message || String(e)] }; } // never in the way of opening the franchise
-  (app.bootInfo?.notes || []).push(r.ok ? `league registry built (${r.rekeyed.length} re-keyed)` : `league registry not built: ${r.problems[0]}`);
+  (app.bootInfo?.notes || []).push(r.ok ? `${$t('franchises.league_registry_built_re_keyed', { n: r.rekeyed.length })}` : `${$t('franchises.league_registry_not_built', { problems: r.problems[0] })}`);
   if (r.ok && !holdLeagueSave) queueMicrotask(() => { if (app.f === f) app.save({ immediate: true }); });
   else if (r.ok) heldLeagueSave = f; // a migration boot: saved once the cloud has been compared (reconcileCloud), GDD §47.4
 }
@@ -316,7 +317,7 @@ async function boot() {
     else { app.storage = { mode: 'indexeddb', store, error: null }; unsubscribeStore = store.onStatus(onStoreStatus); }
   } catch (e) {
     app.storage = { mode: 'legacy', store: null, error: classify(e) };
-    res = { mode: 'legacy', franchise: Save.load(), notes: [`indexeddb unavailable: ${e.message}`] };
+    res = { mode: 'legacy', franchise: Save.load(), notes: [`${$t('franchises.indexeddb_unavailable', { message: e.message })}`] };
   }
   app.bootInfo = { ms: Math.round(performance.now() - t0), source: res.source || res.mode, notes: res.notes || [] };
   // A save migrated on this boot is compared with the cloud by the time it was last really saved (in v39), not by the stamp
@@ -325,9 +326,9 @@ async function boot() {
   if (res.mode === 'recovery') { app.recovery = res; Router.go('recovery', {}, { reset: true }); }
   else { if (res.franchise) adopt(res.franchise); Router.go('menu', {}, { reset: true }); }
   app.slotCount = (await app.slotSummaries().catch(() => [])).filter((s) => s.state !== 'empty').length;
-  if (res.source === 'migrated') toast('Your franchise moved to the new save storage. Your previous save is kept untouched.', 'good', 4500);
-  else if (res.notes?.includes('legacy-newer kept')) toast('An older copy of the game saved progress on this device after the update. Your franchise was kept; the other save is under Settings → Save data → Restore a backup.', 'info', 6500);
-  else if (app.storage.mode === 'legacy' && app.storage.error) toast('Saving in fallback mode on this browser (see Settings → Save data).', 'info', 4500);
+  if (res.source === 'migrated') toast($t('franchises.your_franchise_moved_to_the_new'), 'good', 4500);
+  else if (res.notes?.includes('legacy-newer kept')) toast($t('franchises.an_older_copy_of_the_game'), 'info', 6500);
+  else if (app.storage.mode === 'legacy' && app.storage.error) toast($t('franchises.saving_in_fallback_mode_on_this'), 'info', 4500);
   reconcileCloud({ playedAt });
 }
 
@@ -360,7 +361,7 @@ async function reconcileCloudInner({ playedAt = null } = {}) {
   if (!app.f || (f.savedAt || 0) > mineAt) {
     const st = app.storage.store; const local = app.f; const localAt = local?.savedAt;
     if (local && !st) { // fallback storage has no backups: the player chooses, the device's copy is never replaced silently
-      if (!(await confirmSheet(`Your cloud save (${f.club}, saved ${new Date(f.savedAt).toLocaleString()}) is newer than the franchise on this device. Load the cloud save? This device's copy will be replaced; export it first from Settings if you want to keep it.`, { title: 'Newer Cloud Save', okLabel: 'Load Cloud Save' }))) return;
+      if (!(await confirmSheet(`${$t('franchises.your_cloud_save_saved_is_newer', { club: f.club, toLocaleString: new Date(f.savedAt).toLocaleString() })}`, { title: $t('franchises.newer_cloud_save'), okLabel: $t('franchises.load_cloud_save') }))) return;
     }
     if (st && !f.uid && local?.uid && local.createdAt === f.createdAt) f.uid = local.uid;
     // Committed locally first (with the device's copy kept as 'pre-cloud'), adopted only after that commit succeeded.
@@ -372,11 +373,11 @@ async function reconcileCloudInner({ playedAt = null } = {}) {
     // copy before learning the uid another device gave it. The cloud's uid is kept, and this device's records follow it.
     if (r.ok && local?.uid && f.uid && local.uid !== f.uid && local.createdAt === f.createdAt && local.seed === f.seed) { relinkAchievements({ from: local.uid, to: f.uid }); relinkHofCards({ from: local.uid, to: f.uid }); }
     if (r.ok && heldLeagueSave !== app.f) heldLeagueSave = null; // the migrated copy was replaced (kept as 'pre-cloud'): its held save is dropped; a v39-layout cloud copy just adopted keeps its own, saved below
-    if (!r.ok && r.error?.code === 'superseded') { toast('You kept playing on this device, so its newer progress was kept instead of the cloud copy.', 'info', 4500); if (app.f) { await app.save({ immediate: true }); await mirrorCommitted(); } return; }
-    if (!r.ok) { toast(`Your cloud save is newer, but it could not be stored on this device (${r.error?.message || 'unknown error'}). This device's franchise is unchanged.`, 'bad', 6000); return; }
+    if (!r.ok && r.error?.code === 'superseded') { toast($t('franchises.you_kept_playing_on_this_device'), 'info', 4500); if (app.f) { await app.save({ immediate: true }); await mirrorCommitted(); } return; }
+    if (!r.ok) { toast(`${$t('franchises.your_cloud_save_is_newer_but', { message: r.error?.message || 'unknown error' })}`, 'bad', 6000); return; }
     const scr = Router.currentScreen()?.name;
     if (!scr || scr === 'menu') Router.go('menu', {}, { reset: true });
-    toast('Restored your franchise from your cloud save (this device\'s copy is kept under Restore a backup).', 'good', 4500);
+    toast($t('franchises.restored_your_franchise_from_your_cloud'), 'good', 4500);
   } else if ((f.savedAt || 0) < mineAt) { await flushHeldLeagueSave(); await mirrorCommitted(); } // this device is newer: the cloud catches up
 }
 

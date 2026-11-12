@@ -11,9 +11,10 @@
 // presentation, reserved for the moments that deserve it (a battle-ending strike, a knockout that empties a side, a revive); silent =
 // bookkeeping with nothing to show (BOOKKEEPING).
 import { DURATION } from '../choreographer.js';
+import { t as $t } from '../../../text/index.js';
 
 export { DURATION };
-export const STATUS_NAME = Object.freeze({ stunned: 'Stunned', slowed: 'Slowed', stumbled: 'Stumbled', knockedDown: 'Knocked Down', afflicted: 'Afflicted', weakened: 'Weakened', confused: 'Confused', healingReduced: 'Healing Reduced', shielded: 'Shielded', empowered: 'Empowered', quickened: 'Quickened', guarded: 'Guarded' });
+export const STATUS_NAME = Object.freeze({ stunned: $t('clash.stunned'), slowed: $t('clash.slowed'), stumbled: $t('clash.stumbled'), knockedDown: $t('clash.knocked_down'), afflicted: $t('clash.afflicted'), weakened: $t('clash.weakened'), confused: $t('clash.confused'), healingReduced: $t('clash.healing_reduced'), shielded: $t('clash.shielded'), empowered: $t('clash.empowered'), quickened: $t('clash.quickened'), guarded: $t('clash.guarded') });
 export const HARMFUL = new Set(['stunned', 'slowed', 'stumbled', 'knockedDown', 'afflicted', 'weakened', 'confused', 'healingReduced']);
 
 /** Events that are bookkeeping only (no visible beat of their own): they take a tick so the caption can be read while stepping. */
@@ -88,18 +89,18 @@ export function t8CuesFor(result) {
       case 'hp_cost': tier = 'tick'; move = 'hp-cost'; number = { kind: 'cost', value: e.amount || 0 }; camera = cam([e.actor]); break;
       case 'status': tier = HARMFUL.has(e.status) && e.status === 'stunned' ? 'power' : 'routine'; move = 'afflict'; label = STATUS_NAME[e.status] || e.status; camera = cam([e.target], e.status === 'stunned' ? 1.06 : 1); break;
       case 'status_end': tier = 'routine'; move = 'clear'; label = e.reason === 'expired' ? `${STATUS_NAME[e.status] || e.status} ends` : e.reason === 'broken' ? 'shield broken' : e.reason === 'cleansed' ? 'cleansed' : e.reason === 'end of a standalone battle' ? null : e.reason; camera = cam([e.target]); if (e.reason === 'broken') move = 'shatter'; break;
-      case 'status_blocked': case 'cleanse_refused': tier = 'tick'; move = 'resist'; label = e.kind === 'status_blocked' ? 'no effect' : 'nothing to cleanse'; camera = cam([e.target]); break;
+      case 'status_blocked': case 'cleanse_refused': tier = 'tick'; move = 'resist'; label = e.kind === 'status_blocked' ? $t('clash.no_effect') : $t('clash.nothing_to_cleanse'); camera = cam([e.target]); break;
       case 'status_freeze': tier = 'routine'; move = 'freeze'; label = 'countdown frozen'; camera = cam([e.target]); break;
       case 'miss': tier = 'routine'; move = 'dodge'; label = 'miss'; camera = cam([e.actor, e.target]); break;
       case 'intercepted': tier = 'power'; move = 'intercept'; label = 'intercepted'; camera = cam([e.actor, e.target], 1.06, 3); break;
       case 'redirect': tier = 'power'; move = 'cover'; label = 'covers'; camera = cam([e.actor, e.target], 1.06); break;
-      case 'survive': tier = 'power'; move = 'survive'; label = 'holds on at 1 HP'; camera = cam([e.actor], 1.08, 3); break;
+      case 'survive': tier = 'power'; move = 'survive'; label = $t('clash.holds_on_at_1_hp'); camera = cam([e.actor], 1.08, 3); break;
       case 'raw_split': tier = 'routine'; move = 'split'; label = `shares ${e.sourceShare}`; camera = cam([e.actor, e.target]); break;
-      case 'skip': tier = 'power'; move = 'skip'; label = e.cause === 'stunned' ? 'Stunned!' : 'passes'; camera = cam([e.actor], e.cause === 'stunned' ? 1.06 : 1); if (e.cause !== 'stunned') tier = 'tick'; break;
-      case 'stun_safeguard': tier = 'routine'; move = 'shake-off'; label = 'shakes it off'; camera = cam([e.actor]); break;
+      case 'skip': tier = 'power'; move = 'skip'; label = e.cause === 'stunned' ? $t('clash.stunned_2') : 'passes'; camera = cam([e.actor], e.cause === 'stunned' ? 1.06 : 1); if (e.cause !== 'stunned') tier = 'tick'; break;
+      case 'stun_safeguard': tier = 'routine'; move = 'shake-off'; label = $t('clash.shakes_it_off'); camera = cam([e.actor]); break;
       case 'rotation': tier = e.forced ? 'power' : 'routine'; move = e.forced ? 'yank' : 'walk'; camera = cam([e.out, e.in]); break;
       case 'rotation_delayed': tier = 'routine'; move = 'held'; label = 'rotation delayed'; camera = cam([e.actor]); break;
-      case 'rotation_refused': case 'rotation_cancelled': tier = 'tick'; move = 'resist'; label = 'no rotation'; break;
+      case 'rotation_refused': case 'rotation_cancelled': tier = 'tick'; move = 'resist'; label = $t('clash.no_rotation'); break;
       case 'enter': tier = e.ex === 0 ? 'tick' : 'routine'; move = 'enter'; camera = cam([e.actor]); break;
       case 'depart': tier = 'tick'; move = 'walk-back'; break;
       case 'ko': { const side = e.target ? e.target[0] : 'a'; const st = t8StateAt(result, k); const left = st.order[side].filter((id) => !st.S[id].ko).length; tier = left <= 0 ? 'major' : 'power'; move = 'ko'; camera = cam([e.target], left <= 0 ? 1.14 : 1.08, left <= 0 ? 6 : 3, left <= 0); break; }
@@ -111,7 +112,7 @@ export function t8CuesFor(result) {
       case 'signature_restriction_end': tier = 'tick'; move = 'clear'; label = 'signature restored'; camera = cam([e.target]); break;
       case 'clock_adjust': tier = 'routine'; move = 'clock'; label = `${e.before} → ${e.after}`; camera = cam([e.target]); break;
       case 'sudden_death': tier = 'tick'; move = null; break;
-      case 'cap': tier = 'major'; move = e.coin ? 'coin' : 'cap'; label = e.coin ? 'Coin flip' : 'Exchange cap'; camera = cam([]); break;
+      case 'cap': tier = 'major'; move = e.coin ? 'coin' : 'cap'; label = e.coin ? $t('clash.coin_flip') : $t('clash.exchange_cap'); camera = cam([]); break;
       case 'end': tier = 'major'; move = 'victory'; label = e.text; camera = cam([]); break;
       case 'initiative': tier = 'tick'; move = 'order'; break;
       case 'team_action': tier = 'tick'; move = null; break;

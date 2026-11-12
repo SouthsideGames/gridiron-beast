@@ -34,11 +34,13 @@ test('American spelling: no British spellings in the game\'s wording', () => {
 
 test('Title Case on buttons and screen titles: the labels the owner flagged, and the week\'s main button', async () => {
   const src = Object.fromEntries(files);
-  const hq = src['src/ui/screens/hq.js'];
-  assert.match(hq, />Choose Captains/); assert.ok(!/>Choose captains/.test(hq));
-  for (const label of ['Monday · Scout a Region', 'Tuesday · Monster Encounter', 'Wednesday · Training Focus', 'Thursday · Scout Opponent', 'Friday · Set Game Plan', 'Saturday · Media Day', 'Play Sunday Game', 'Take the Bye Week']) assert.ok(hq.includes(`'${label}'`), label);
-  assert.match(hq, /Let the Staff Run the Week → Sunday/); assert.match(hq, /Finish and Read the Headline/);
-  assert.ok(Object.values((await import('../src/text/index.js')).englishText()).includes('✏️ Edit Appearance'), 'menu labels now live in src/text/en.js'); assert.match(src['src/ui/screens/match.js'], /Receive the Kick/);
+  // the labels live in src/text/en.js now: the screen reads each by key, and the key's line is the Title Case label
+  const hq = src['src/ui/screens/hq.js']; const en = (await import('../src/text/index.js')).englishText(); const lines = Object.values(en).flatMap((v) => (typeof v === 'string' ? [v] : Object.values(v)));
+  const shown = (label, file = hq) => { const k = Object.keys(en).find((key) => en[key] === label || (typeof en[key] === 'string' && en[key].replace(/^[^A-Za-z]+/, '') === label)); assert.ok(k, `${label} is a line in en.js`); assert.ok(file.includes(`'${k}'`), `${label} (${k}) is used by the screen`); };
+  shown('Choose Captains'); assert.ok(!lines.includes('Choose captains'));
+  for (const label of ['Monday · Scout a Region', 'Tuesday · Monster Encounter', 'Wednesday · Training Focus', 'Thursday · Scout Opponent', 'Friday · Set Game Plan', 'Saturday · Media Day', 'Play Sunday Game', 'Take the Bye Week']) shown(label);
+  shown('Let the Staff Run the Week → Sunday'); shown('Finish and Read the Headline');
+  assert.ok(lines.includes('✏️ Edit Appearance'), 'menu labels live in src/text/en.js'); shown('Receive the Kick', src['src/ui/screens/match.js']);
   // screen titles and dialog buttons: `title: '...'` and `okLabel: '...'` in the interface code are Title Case
   const minor = new Set('a an the and but or nor for as at by in of on to via vs per'.split(' '));
   const offenders = [];

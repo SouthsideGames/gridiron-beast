@@ -5,6 +5,7 @@ import { careerLink } from './career-ui.js';
 
 import { esc, fmtClock } from './dom.js';
 import { monsterSprite } from './pixel-monster.js';
+import { t as $t } from '../text/index.js';
 
 const who = (team, slot) => team?.offense?.[slot] || team?.defense?.[slot] || team?.kicker || { name: slot };
 
@@ -24,32 +25,32 @@ export function playersOfGame(state) {
 
 function line(p) {
   const bits = [];
-  if (p.att) bits.push(`${p.comp || 0}/${p.att}, ${p.passYds || 0} yds${p.passTd ? `, ${p.passTd} TD` : ''}${p.intThrown ? `, ${p.intThrown} INT` : ''}`);
-  if (p.rush) bits.push(`${p.rush} car, ${p.rushYds || 0} yds`);
-  if (p.rec) bits.push(`${p.rec} rec, ${p.recYds || 0} yds`);
+  if (p.att) bits.push(`${p.comp || 0}/${p.att}, ${p.passYds || 0} yds${p.passTd ? `, ${p.passTd} TD` : ''}${p.intThrown ? `${$t('match.int', { intThrown: p.intThrown })}` : ''}`);
+  if (p.rush) bits.push(`${$t('match.car_yds', { rush: p.rush, rushYds: p.rushYds || 0 })}`);
+  if (p.rec) bits.push(`${$t('match.rec_yds', { rec: p.rec, recYds: p.recYds || 0 })}`);
   if (p.td) bits.push(`${p.td} TD`);
   if (p.tackles) bits.push(`${p.tackles} tkl`);
-  if (p.sacks) bits.push(`${p.sacks} sack${p.sacks === 1 ? '' : 's'}`);
-  if (p.int) bits.push(`${p.int} INT`);
+  if (p.sacks) bits.push(`${$t('match.sacks', { sacks: p.sacks, n: p.sacks })}`);
+  if (p.int) bits.push(`${$t('match.int_2', { int: p.int })}`);
   if (p.ff) bits.push(`${p.ff} FF`);
   if (p.broken) bits.push(`${p.broken} broken tkl`);
-  if (p.abilities) bits.push(`ability ×${p.abilities}`);
+  if (p.abilities) bits.push(`${$t('match.ability', { abilities: p.abilities })}`);
   return bits.join(' · ');
 }
 
 const CATS = [
-  { label: 'Passing yards', key: 'passYds', sub: (p) => `${p.comp || 0}/${p.att || 0}` },
-  { label: 'Rushing yards', key: 'rushYds', sub: (p) => `${p.rush || 0} car` },
-  { label: 'Receiving yards', key: 'recYds', sub: (p) => `${p.rec || 0} rec` },
-  { label: 'Sacks', key: 'sacks', sub: () => '' },
-  { label: 'Tackles', key: 'tackles', sub: () => '' },
-  { label: 'Broken tackles', key: 'broken', sub: (p) => (p.jukes ? `${p.jukes} jukes` : '') },
-  { label: 'Abilities fired', key: 'abilities', sub: () => '' },
+  { label: $t('match.passing_yards'), key: 'passYds', sub: (p) => `${p.comp || 0}/${p.att || 0}` },
+  { label: $t('match.rushing_yards'), key: 'rushYds', sub: (p) => `${p.rush || 0} car` },
+  { label: $t('match.receiving_yards'), key: 'recYds', sub: (p) => `${p.rec || 0} rec` },
+  { label: $t('match.sacks_2'), key: 'sacks', sub: () => '' },
+  { label: $t('match.tackles'), key: 'tackles', sub: () => '' },
+  { label: $t('match.broken_tackles'), key: 'broken', sub: (p) => (p.jukes ? `${p.jukes} jukes` : '') },
+  { label: $t('match.abilities_fired'), key: 'abilities', sub: () => '' },
 ];
 
 function leader(state, side, key) { return rows(state, side).filter((p) => (p[key] || 0) > 0).sort((a, b) => (b[key] || 0) - (a[key] || 0))[0] || null; }
 
-export function boxScoreHtml(state, teams, { title = 'Box score' } = {}) {
+export function boxScoreHtml(state, teams, { title = $t('match.box_score') } = {}) {
   const A = state.away, H = state.home;
   const cell = (side, cat) => {
     const p = leader(state, side, cat.key); if (!p) return `<div class="bs-cell ${side}"><span class="dim">·</span></div>`;
@@ -59,9 +60,9 @@ export function boxScoreHtml(state, teams, { title = 'Box score' } = {}) {
   const leaders = CATS.map((c) => `<div class="bs-row">${cell('away', c)}<div class="bs-label">${c.label}</div>${cell('home', c)}</div>`).join('');
   const S = (side) => state.stats[side];
   const tot = [
-    ['Total yards', (s) => s.passYards + s.rushYards], ['Passing', (s) => s.passYards], ['Rushing', (s) => s.rushYards],
-    ['Completions', (s) => `${s.passComp}/${s.passAtt}`], ['First downs', (s) => s.firstDowns], ['Sacks taken', (s) => s.sacks],
-    ['Turnovers', (s) => s.turnovers], ['Possession', (s) => fmtClock(Math.round(s.timeOfPossession || 0))],
+    [$t('match.total_yards'), (s) => s.passYards + s.rushYards], [$t('match.passing'), (s) => s.passYards], [$t('match.rushing'), (s) => s.rushYards],
+    [$t('match.completions'), (s) => `${s.passComp}/${s.passAtt}`], [$t('match.first_downs'), (s) => s.firstDowns], [$t('match.sacks_taken'), (s) => s.sacks],
+    [$t('match.turnovers'), (s) => s.turnovers], [$t('match.possession'), (s) => fmtClock(Math.round(s.timeOfPossession || 0))],
   ];
   const totals = `<table class="bs-totals"><thead><tr><th style="color:${A.color}">${esc(A.abbr)}</th><th></th><th style="color:${H.color}">${esc(H.abbr)}</th></tr></thead><tbody>${tot.map(([l, fn]) => `<tr><td>${fn(S('away'))}</td><td class="dim">${l}</td><td>${fn(S('home'))}</td></tr>`).join('')}</tbody></table>`;
   const pog = playersOfGame(state);
@@ -69,8 +70,8 @@ export function boxScoreHtml(state, teams, { title = 'Box score' } = {}) {
   return `<div class="box-score">
     <div class="bs-head"><span style="color:${A.color}">${esc(A.name)}</span><b class="bs-score">${state.score.away}-${state.score.home}</b><span style="color:${H.color}">${esc(H.name)}</span></div>
     <div class="center dim" style="margin-bottom:8px">${esc(title)}</div>
-    ${pog.offense || pog.defense ? `<h3>Players of the game</h3><div class="pog-wrap">${pogCard(pog.offense, 'OFFENSE')}${pogCard(pog.defense, 'DEFENSE')}</div>` : ''}
-    <h3>Leaders</h3><div class="bs-leaders">${leaders}</div>
-    <h3>Team stats</h3>${totals}
+    ${pog.offense || pog.defense ? `<h3>${$t('match.players_of_the_game')}</h3><div class="pog-wrap">${pogCard(pog.offense, 'OFFENSE')}${pogCard(pog.defense, 'DEFENSE')}</div>` : ''}
+    <h3>${$t('match.leaders')}</h3><div class="bs-leaders">${leaders}</div>
+    <h3>${$t('match.team_stats')}</h3>${totals}
   </div>`;
 }

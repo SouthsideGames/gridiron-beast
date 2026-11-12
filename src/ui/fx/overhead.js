@@ -4,10 +4,11 @@
 // the status comes from the engine's `status` events (accepted applications, with the remaining count the engine logged) and from
 // the host's HUD snapshot at the snap (state.hud), charges and the battery from that snapshot and the in-play charge events.
 import { f2, op, clamp01, ring, rect, text, star, ELEMENT } from './prims.js';
+import { t as $t } from '../../text/index.js';
 
 /** Dark neutral symbols for the twelve shared statuses (spec §10). */
 export const STATUS_GLYPH = Object.freeze({ stunned: '✶', slowed: '▼', stumbled: '≈', knockedDown: '▬', afflicted: '✚', weakened: '↓', confused: '?', healingReduced: '⊘', shielded: '◈', empowered: '↑', quickened: '»', guarded: '▣' });
-export const STATUS_LABEL = Object.freeze({ stunned: 'Stunned', slowed: 'Slowed', stumbled: 'Stumbled', knockedDown: 'Knocked Down', afflicted: 'Afflicted', weakened: 'Weakened', confused: 'Confused', shielded: 'Shielded', empowered: 'Empowered', quickened: 'Quickened' });
+export const STATUS_LABEL = Object.freeze({ stunned: $t('match.stunned'), slowed: $t('match.slowed'), stumbled: $t('match.stumbled'), knockedDown: $t('match.knocked_down'), afflicted: $t('match.afflicted'), weakened: $t('match.weakened'), confused: $t('match.confused'), shielded: $t('match.shielded'), empowered: $t('match.empowered'), quickened: $t('match.quickened') });
 const CYCLE = 1.6, XFADE = 0.3, TOP = 4.35;
 
 /** The status badge at (x, y): grey disc, dark glyph, duration number (plays left; none for rest-of-play statuses). */

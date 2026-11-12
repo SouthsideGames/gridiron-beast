@@ -24,6 +24,7 @@ import { assignmentLines } from './play-art.js';
 import { PLAYS, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
 import { fxSvg, movementSvg, statusMarks } from './ability-fx.js';
 import { turfSvg } from './stadium-art.js';
+import { t as $t } from '../text/index.js';
 
 const SPAN = 46; // visible yards
 const HW = FIELD.halfWidth + 0.33;
@@ -179,7 +180,7 @@ export function fieldLayers(o) {
       const cx = X(ballLat + at[1]) + (at[1] > 0 ? -1.3 : 1.3), cy = Y(ballOn + at[0]) - 3.35; // over the inside shoulder, clear of the head and a straight stem
       const up = dir === 'up'; const col = up ? '#22c55e' : '#f5a524';
       const arrow = up ? `M${cx - 0.48} ${cy + 0.22} L${cx} ${cy - 0.42} L${cx + 0.48} ${cy + 0.22}` : `M${cx - 0.48} ${cy - 0.22} L${cx} ${cy + 0.42} L${cx + 0.48} ${cy - 0.22}`;
-      tmIcons += `<g class="tm-icon" data-tm="${team}:${slot}" role="button" tabindex="0" aria-label="${up ? 'Type advantage' : 'Type disadvantage'} for ${slot}"><circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="2.1" fill="transparent"/><circle class="tm-dot" cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="0.85" fill="${col}" stroke="#0b1a14" stroke-width="0.2"/><path d="${arrow}" fill="none" stroke="#0b1a14" stroke-width="0.28" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+      tmIcons += `<g class="tm-icon" data-tm="${team}:${slot}" role="button" tabindex="0" aria-label="${up ? $t('match.type_advantage_for', { slot }) : $t('match.type_disadvantage_for', { slot })}"><circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="2.1" fill="transparent"/><circle class="tm-dot" cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="0.85" fill="${col}" stroke="#0b1a14" stroke-width="0.2"/><path d="${arrow}" fill="none" stroke="#0b1a14" stroke-width="0.28" stroke-linecap="round" stroke-linejoin="round"/></g>`;
     }
     if (preFx) s += preFx.over;
     s += tmIcons; // the tappable matchup badges stay on top

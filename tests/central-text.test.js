@@ -14,7 +14,7 @@ const en = englishText();
 /** Every t('key' ...) call in the code: { key, file, args } where args is the source of the values object, if any. */
 function calls() {
   const out = [];
-  for (const [rel, src] of files) { if (!/text\/index\.js'/.test(src)) continue; for (const m of src.matchAll(/(?<![\w$.])t\('([a-z][\w]*\.[\w.]+)'(\s*,\s*\{)?/g)) {
+  for (const [rel, src] of files) { if (!/text\/index\.js'/.test(src)) continue; for (const m of src.matchAll(/(?<![\w.])\$?t\('([a-z][\w]*\.[\w.]+)'(\s*,\s*\{)?/g)) {
     let args = null;
     if (m[2]) { let i = m.index + m[0].length, d = 1; const a = i; while (i < src.length && d) { const c = src[i]; if (c === '{') d++; else if (c === '}') d--; i++; } args = src.slice(a, i - 1); }
     out.push({ key: m[1], file: rel, args });
@@ -85,12 +85,12 @@ test('t(): values, plurals, missing keys, and another language falling back to E
 test('buttons and titles that now read from en.js are still Title Case', () => {
   const minor = new Set('a an the and but or nor for as at by in of on to via vs per'.split(' ')); const keys = new Set();
   for (const [rel, s] of files) { if (!rel.startsWith('src/ui/')) continue;
-    for (const m of s.matchAll(/<button class="(?:btn|chip)\b[^>]*>\$\{t\('([\w.]+)'[^}]*\}<\/button>/g)) keys.add(m[1]);
-    for (const m of s.matchAll(/\b(?:title|okLabel|cancelLabel):\s*t\('([\w.]+)'\)/g)) keys.add(m[1]); }
+    for (const m of s.matchAll(/<button class="(?:btn|chip)\b[^>]*>\$\{\$?t\('([\w.]+)'[^}]*\}<\/button>/g)) keys.add(m[1]);
+    for (const m of s.matchAll(/\b(?:title|okLabel|cancelLabel):\s*\$?t\('([\w.]+)'\)/g)) keys.add(m[1]); }
   assert.ok(keys.size > 30, `${keys.size} button and title keys found`);
   const bad = [];
-  for (const k of keys) for (const line of lines(en[k])) { const words = line.replace(/\{\w+\}/g, ' ').split(/\s+/).filter((w) => /^[A-Za-z][a-z'’]+$/.test(w));
-    words.forEach((w, i) => { if (/^[a-z]/.test(w) && (i === 0 || i === words.length - 1 || !minor.has(w)) && !['yd', 'yr', 'wk'].includes(w)) bad.push(`${k}: ${line}`); }); }
+  for (const k of keys) for (const line of lines(en[k])) { const words = line.replace(/\{\w+\}/g, ' ').split(/\s+/).filter((w) => /[A-Za-z]/.test(w));   // every word keeps its place, so "Back to HQ" ends on HQ
+    words.forEach((w, i) => { if (/^[a-z][a-z'’]+$/.test(w) && (i === 0 || i === words.length - 1 || !minor.has(w)) && !['yd', 'yr', 'wk'].includes(w)) bad.push(`${k}: ${line}`); }); }
   assert.deepEqual([...new Set(bad)], []);
 });
 

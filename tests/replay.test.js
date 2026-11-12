@@ -59,8 +59,9 @@ test('safety: replaying a play reads its frames and nothing else; the game state
     assert.equal(JSON.stringify(s), snapState, 'score, clock, possession, stats untouched'); assert.equal(JSON.stringify(ev.sim), snapSim, 'the play itself untouched'); replays++;
   }
   assert.ok(replays >= 2, `${replays} replays in one game`);
-  // The replay module cannot reach the game: it imports nothing.
-  const src = fs.readFileSync(new URL('../src/ui/replay.js', import.meta.url), 'utf8'); assert.ok(!/^import /m.test(src), 'replay.js imports nothing');
+  // The replay module cannot reach the game: it imports nothing but the central text, which is wording only.
+  const src = fs.readFileSync(new URL('../src/ui/replay.js', import.meta.url), 'utf8'); assert.deepEqual(src.match(/^import .*$/gm), ["import { t as $t } from '../text/index.js';"], 'replay.js imports nothing but the wording');
+  for (const f of ['index.js', 'names.js', 'en.js']) assert.ok((fs.readFileSync(new URL('../src/text/' + f, import.meta.url), 'utf8').match(/^import .*$/gm) || []).every((l) => /from '\.\/(en|names)\.js'/.test(l)), `src/text/${f} reaches nothing but the text`);
   const match = fs.readFileSync(new URL('../src/ui/screens/match.js', import.meta.url), 'utf8'); const body = match.slice(match.indexOf('function startReplay'), match.indexOf('function endReplay'));
   for (const bad of ['step(', 'act(', 'runScrimmagePlay', 'simulatePlay', 'app.save', 'finishSunday', 'afterStep']) assert.ok(!body.includes(bad), `startReplay never calls ${bad}`);
 });

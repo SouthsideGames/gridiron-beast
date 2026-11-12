@@ -5,14 +5,15 @@
 import { PLAYS, artRole, artEnd, manKeyTargets } from '../data/playbook.js';
 import { OFFENSE_FORMATIONS } from '../data/playbook.js';
 import { ZONES } from '../data/routes.js';
+import { t as $t } from '../text/index.js';
 
 export const ART_COLORS = Object.freeze({
   primary: '#FACC15', secondary: '#EF4444', alternate: '#22C55E', block: '#FFFFFF',
   deep: '#3B82F6', middle: '#FACC15', flat: '#A855F7', rush: '#EF4444', man: '#FACC15',
 });
 export const ART_LEGEND = Object.freeze({
-  offense: [['primary', 'Primary route'], ['secondary', 'Secondary route'], ['alternate', 'Alternate / special'], ['block', 'Block (T-bar)']],
-  defense: [['deep', 'Deep zone'], ['middle', 'Middle zone'], ['flat', 'Flat / sideline zone'], ['rush', 'Blitz / rush'], ['man', 'Man coverage (dotted)']],
+  offense: [['primary', $t('hq.primary_route')], ['secondary', $t('hq.secondary_route')], ['alternate', $t('hq.alternate_special')], ['block', $t('hq.block_t_bar')]],
+  defense: [['deep', $t('hq.deep_zone')], ['middle', $t('hq.middle_zone')], ['flat', $t('hq.flat_sideline_zone')], ['rush', $t('hq.blitz_rush')], ['man', $t('hq.man_coverage_dotted')]],
 });
 
 /** Map play-relative yards (x upfield, y lateral) to SVG units in a vertical box. */

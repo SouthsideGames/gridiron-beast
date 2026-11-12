@@ -4,7 +4,8 @@
   python3 tools/text-migrate.py AREA FILE [FILE...] [--dry]
 
 AREA is the key prefix for these files (menu, onboarding, ...). For each file the tool finds every piece of wording in its
-template and string literals, gives it a key in src/text/en.js, and replaces it in the code with t('key', { values }).
+template and string literals, gives it a key in src/text/en.js, and replaces it in the code with $t('key', { values }). ($t is the central text reader, imported under that name so it can
+never clash with a local `t`.)
 A sentence that has values inside it (a name, a number) becomes ONE line with {placeholders}, so a translator sees the
 whole sentence. Markup, CSS classes, ids, data attributes and comparisons are left alone.
 What it will not touch is listed at the end (single words used as values, plural suffixes) for a person to look at.
@@ -146,8 +147,8 @@ class Rewriter:
     def __init__(self, s, keys, data=False): self.s = s; self.keys = keys; self.left = []; self.count = 0; self.data = data; self.also = set(next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--also=')), '').split('|')) - {''}
     def call(self, text, params=None):
         key = self.keys.key_for(text); self.count += 1
-        if params: return f"t('{key}', {{ {', '.join(f'{n}: {src}' if n != src.strip() else n for n, src in params)} }})"
-        return f"t('{key}')"
+        if params: return f"$t('{key}', {{ {', '.join(f'{n}: {src}' if n != src.strip() else n for n, src in params)} }})"
+        return f"$t('{key}')"
     def split_ws(self, text):
         m = re.match(r'^(\s*)(.*?)(\s*)$', text, re.S); return m.group(1), m.group(2), m.group(3)
     # -- code regions: copy, rewriting the literals inside
@@ -171,7 +172,8 @@ class Rewriter:
         before, after = self.context(a, b)
         if re.search(r'(===?|!==?|\bcase|startsWith\(|endsWith\(|includes\(|indexOf\(|\.has\(|\.get\(|\.test\(|\bfrom|\bimport|typeof [\w.]+ ===?)\s*$', before): return raw
         if re.search(r'[\w$)\]]\s*\[\s*$', before): return raw                       # x['key']: an index, not an array of lines
-        if re.match(r'(===?|!==?|\]|\s*:(?!:))', after) and not re.search(r'[?]\s*$', before): return raw   # compared, indexed or an object key
+        listed = unescape(body, q) in self.also and after.startswith(']') and re.search(r'[,\[]\s*$', before)   # a named label closing a list: ['id', 'Label']
+        if re.match(r'(===?|!==?|\]|\s*:(?!:))', after) and not re.search(r'[?]\s*$', before) and not listed: return raw   # compared, indexed or an object key
         if re.search(r"\b(data-[\w-]+|class|className|action|screen|kind|id|key|type|role|icon|ns|side|mode|status)\s*[:=]\s*$", before): return raw
         text = unescape(body, q)
         if '<' in text and re.search(r'<[a-zA-Z/][^<>]*>', text):
@@ -254,7 +256,7 @@ class Rewriter:
                 # "{n} season{s}" where s is (count === 1 ? '' : 's'): a real plural, one line per form
                 for name, src in list(params):
                     pm = re.fullmatch(r"(.+?)\s*===?\s*1\s*\?\s*''\s*:\s*'s'", src.strip())
-                    if pm and re.search(r'[A-Za-z]\{' + name + r'\}', text) and not isinstance(text, dict):
+                    if pm and not isinstance(text, dict) and re.search(r'[A-Za-z]\{' + name + r'\}', text):
                         params = [(n2, s2) for n2, s2 in params if n2 != name]
                         if not any(n2 == 'n' for n2, _ in params): params.append(('n', pm.group(1)))
                         text = {'one': text.replace('{' + name + '}', ''), 'other': text.replace('{' + name + '}', 's')}
@@ -309,17 +311,21 @@ def main():
     area, files = args[0], args[1:]
     table, heads = read_en(); keys = Keys(area, table)
     if area not in [h[1] for h in heads]: heads.append((title or area, area))
+    report = []
     for rel in files:
         p = os.path.join(ROOT, rel); s = open(p, encoding='utf8').read(); kids, _ = parse_code(s, 0)
         rw = Rewriter(s, keys, data='--data' in sys.argv); new = rw.code(0, len(s), kids)
-        if rw.count and not re.search(r"import \{[^}]*\bt\b[^}]*\} from '[./]*text/index\.js'", new):
-            depth = rel.count('/') - 1; imp = f"import {{ t }} from '{'../' * depth if depth else './'}text/index.js';\n"
+        if rw.count and not re.search(r"import \{ t as \$t \} from '[./]*text/index\.js'", new):
+            # the reader is imported as $t: plain `t` is a common local name (time, team, tab), and $t cannot collide
+            depth = rel.count('/') - 1; imp = f"import {{ t as $t }} from '{'../' * depth if depth else './'}text/index.js';\n"
             ims = [m for m in re.finditer(r'^import [^\n]*\n', new, re.M)]
             if ims: new = new[:ims[-1].end()] + imp + new[ims[-1].end():]
             else: mm = re.match(r'(?:\s*//[^\n]*\n)*', new); new = new[:mm.end()] + imp + new[mm.end():]
-        print(f'{rel}: {rw.count} lines of wording moved; {len(rw.left)} single words left for review')
-        if rw.left: print('   left:', sorted(set(rw.left))[:40])
         if not dry: open(p, 'w', encoding='utf8').write(new)
+        report.append(f'{rel}: {rw.count} lines of wording moved; {len(rw.left)} single words left for review')
+        if rw.left: report.append('   left: ' + ' | '.join(sorted(set(x for x in rw.left if not re.fullmatch(r'[a-z]+\.[a-z0-9_]+', x)))[:60]))
     if not dry: write_en(keys.table, heads)
-    print(f'{len(keys.added)} new keys; {len(keys.table)} in src/text/en.js')
+    report.append(f'{len(keys.added)} new keys; {len(keys.table)} in src/text/en.js')
+    try: print('\n'.join(report))
+    except BrokenPipeError: pass
 if __name__ == '__main__': main()

@@ -26,6 +26,7 @@ import { LOOKS } from './looks/index.js';
 import { setFlashSoft } from './looks/common.js';
 import { t8StateAt, HARMFUL, STATUS_NAME } from './timeline.js';
 import { clashStatusBadge, abilityIcon, pips, turnMarker } from './badges.js';
+import { t as $t } from '../../../text/index.js';
 export { clashStatusBadge, abilityIcon, pips, turnMarker };
 
 export const T8C_REVISION = 1; // bump when the drawing of a look changes (the reviewer's fingerprint includes it)
@@ -109,7 +110,7 @@ export function drawClashT8(state, t, geom, { quality = 'full', reduced = false,
   for (const id of Object.keys(st.S)) {
     const s = st.S[id]; if (s.ko) continue; const p = gm(id); if (!p) continue; const hu = Math.max(p.size / 16, 4.5);
     const headY = Math.max(1.6 * hu, p.top - 1.7 * hu);
-    if (s.clocks?.['tank-bruise']) hud += `<text x="${p.x}" y="${headY - 2.3 * hu}" text-anchor="middle" font-size="${1.05 * hu}" fill="#e9b4ff" stroke="#0b1a14" stroke-width="${0.15 * hu}" paint-order="stroke">Bruised −25% heal · ${s.clocks['tank-bruise'].left}</text>`;
+    if (s.clocks?.['tank-bruise']) hud += `<text x="${p.x}" y="${headY - 2.3 * hu}" text-anchor="middle" font-size="${1.05 * hu}" fill="#e9b4ff" stroke="#0b1a14" stroke-width="${0.15 * hu}" paint-order="stroke">${$t('clash.bruised_25_heal', { left: s.clocks['tank-bruise'].left })}</text>`;
     if (s.status) { const pop = state.pops.find((x) => x.id === id && !x.end && t >= x.t0 && t < x.t0 + 0.35); const sc = pop ? 0.6 + 0.4 * ease((t - pop.t0) / 0.35) : 1; hud += clashStatusBadge(p.x, headY, hu * 1.25, s.status, { pop: sc, frozen: s.frozen, t }); }
     else { const gone = state.pops.find((x) => x.id === id && x.end && t >= x.t0 && t < x.t0 + 0.5); if (gone && gone.reason !== 'end of a standalone battle') { const kk = (t - gone.t0) / 0.5; hud += clashStatusBadge(p.x, headY - kk * 6, hu, { id: gone.status, remaining: null }, { pop: 1 + kk * 0.6, o: 1 - kk }); } }
     if (s.abilityId) {

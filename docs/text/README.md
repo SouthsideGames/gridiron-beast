@@ -12,15 +12,15 @@
 - Change wording freely. Never change a key.
 - `{name}` marks a value the game inserts. It can move within the line, but it has to stay.
 - Simple tags such as `<b>` inside a line are formatting; keep them around the same words.
-- The code reads a line with `t('key', { values })` from `src/text/index.js`. English is the fallback for any line another language has not translated.
+- The code reads a line with `$t('key', { values })` (the reader from `src/text/index.js`, imported as `$t` so it can never clash with a local `t`; the stage 1 files import it as `t`). English is the fallback for any line another language has not translated.
 - Text never decides anything: no rule, id or saved value comes from this file, and the game engines do not read it.
 
-### How much has moved (stage 1 of 7)
+### How much has moved (stage 2 of 7)
 
 | Stage | Area | Lines | Status |
 | --- | --- | ---: | --- |
 | 1 | Foundation; menus, settings, office, Developer Tools; new-franchise flow; stadiums and weather; Media Day | 808 | done |
-| 2 | Remaining screens: headquarters and week, match day, roster, Beast Clash screens, shared cards and sheets | about 3,500 | next |
+| 2 | Remaining player-facing screens: headquarters and week, match day, roster, Beast Clash screens, careers, league, franchise slots, free agency and trades, shared cards and sheets | 2,827 | done |
 | 3 | Franchise news, notices and rules text | about 1,300 | |
 | 4 | Data: dialogue, achievements, staff, stat guide, league, gyms, playbook | about 3,300 | |
 | 5 | Beast Dex (generated from `docs/beast-dex/data`) | about 2,100 | |
@@ -35,11 +35,12 @@
 python3 tools/text-migrate.py AREA FILE [FILE...] --title="Section title" [--data] [--also="Word|Word"]
 ```
 
-The tool gives each piece of wording a key, writes it to `en.js`, and replaces it in the code with `t('key', { values })`. A sentence with values inside it becomes one line. It reports the single words it left alone. After each run:
+The tool gives each piece of wording a key, writes it to `en.js`, and replaces it in the code with `$t('key', { values })`. A sentence with values inside it becomes one line. It reports the single words it left alone. After each run:
 
 1. `node --test tests/central-text.test.js tests/text-style.test.js`
 2. For data files, confirm the module's exports are identical before and after.
-3. For screens, render them before and after and compare the HTML. Stage 1: 333 renders across 64 screens and the new-franchise flow were byte-identical, apart from the browser's own storage estimate.
+3. For screens, render them before and after and compare the HTML. Stage 1: 333 renders across 64 screens and the new-franchise flow were byte-identical, apart from the browser's own storage estimate. Stage 2: 1,229 renders (every screen in seven franchise states, plus one press of each control on each screen) were byte-identical, with the same exception.
+4. `--also="Word|Word"` moves single-word labels the tool would otherwise leave alone (it cannot tell a label from an id). Read each one in context first.
 
 ### Decisions (owner, 2026-11-11)
 
@@ -50,7 +51,13 @@ The tool gives each piece of wording a key, writes it to `en.js`, and replaces i
 ### Still open
 
 1. **Words that are both a saved value and a label** (for example the owner's gender, "Female" and "Male") are still in the code. Translating them needs a small code change to separate the value from the label.
-2. **Value names** in a few lines are machine-chosen (`{b}`, `{played2}`). They work; renaming them for translators is a tidy-up.
+2. **Left in the screen files after stage 2, on purpose** (about 700 lines, all listed without a key in `GAME_TEXT.csv`):
+   - Developer Tools screens (Clash Lab, AI Testing Lab, Attribute Lab, the two ability reviewers, Practice, evolution preview): about 690 lines only the developer sees. Say if translators should get them.
+   - Ability names and banners in the effect files (`src/ui/fx/looks`, `src/ui/clash/t8/looks`, `src/ui/fx/match-fx.js`, `kick-fx.js`): they repeat the ability data, so they move with the abilities in stage 4.
+   - Coach appearance options (`src/ui/coach-portrait.js`, 81 words such as "Braids" and "Visor"): each word is also the saved value's label source; they move with the data in stage 4.
+   - The Clash animation captions that are read off the battle log (`src/ui/clash/choreographer.js`): they move with the log in stage 6.
+   - Element names (Fire, Water, …) and the conference names (Aurora, Titan) are ids shown as written; element names move with the type data in stage 4, conference names stay English.
+3. **Value names** in a few lines are machine-chosen (`{b}`, `{played2}`). They work; renaming them for translators is a tidy-up.
 
 ## The full listing
 

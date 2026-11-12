@@ -18,6 +18,7 @@ import { PLAYBOOKS } from '../../data/staff.js';
 import { PLAYS } from '../../data/playbook.js';
 import { fmtMoney } from '../dom.js';
 import { t } from '../../text/index.js';
+import { t as $t } from '../../text/index.js';
 
 const STEPS = ['name', 'look', 'background', 'club', 'difficulty', 'offense'];
 const LINES = {
@@ -129,7 +130,7 @@ export function registerOnboardingScreens(Router, app) {
       if (!role) return `<div class="panel center"><h2>${t('onboarding.staff_complete')}</h2><p class="muted">${t('onboarding.your_front_office_is_ready')}</p><button class="btn primary big block" data-action="hq">${t('onboarding.go_to_headquarters')}</button></div>`;
       const cap = salarySummary(f);
       const idx = STAFF_ROLES.indexOf(role);
-      return `<p class="muted">Hire ${idx + 1} of 5 · <b>${esc(ROLE_LABEL[role])}</b>. Cap room: <b>${fmtMoney(cap.remaining)}</b>.</p>
+      return `<p class="muted">${$t('onboarding.hire_of_5_b_b_cap', { hire: idx + 1, role: esc(ROLE_LABEL[role]), room: fmtMoney(cap.remaining) })}</p>
         <div class="stack">${STAFF.filter((c) => c.role === role).map((c) => candidateCard(f, c)).join('')}</div>`;
     },
     mount(root, ctx) {
