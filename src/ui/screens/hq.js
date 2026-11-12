@@ -7,7 +7,6 @@ import { discover } from '../../franchise/t8/discovery.js';
 import { venueHtml } from '../stadium-preview.js';
 import { leagueNewsPanel, leagueNewsSheetHtml } from '../league-news-ui.js';
 import { careerLink, careerBlockHtml } from '../career-ui.js';
-import { resolveRecordHolder } from '../../franchise/career-profile.js';
 import { legendaryCardHtml, openLegendarySheet, announceLegendary } from '../legendary-ui.js';
 import { LEGENDARY_IDS, unannouncedLegendary } from '../../franchise/legendary.js';
 import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
@@ -33,8 +32,7 @@ import { playCardSvg, legendHtml } from '../play-art.js';
 import { teamOverall, buildDepthChart } from '../../franchise/roster.js';
 import { AWARD_RULES } from '../../franchise/awards.js';
 import { RIVAL_WEEKLY } from '../../data/dialogue.js';
-import { LEADER_CATEGORIES, leaders, statLine, RECORD_CATEGORIES, TEAM_RECORDS, ensureRecords, leagueSeasons, seasonTables, combinedTable, ARCHIVE_SEASONS } from '../../franchise/stats.js';
-import { universeCareerLeaders } from '../../franchise/league-careers.js';
+import { LEADER_CATEGORIES, leaders, statLine, leagueSeasons, seasonTables, combinedTable, ARCHIVE_SEASONS } from '../../franchise/stats.js';
 import { HELP_HTML as CLASH_HELP } from './clash-battle.js';
 import { warningsHtml, noteHtml } from '../tutorial.js';
 import { suggestProspect, suggestDraftPick, suggestContract, suggestGoal, consequence } from '../../franchise/assist-advice.js';
@@ -684,7 +682,7 @@ export function registerHqScreens(Router, app) {
       const watch = `<h3>${$t('hq.award_watch')}</h3>${anyRace ? '' : `<p class="dim">${$t('hq.races_start_after_the_first_sunday')}</p>`}<div class="list">${Object.entries(F.AWARDS).map(([k, a]) => { const top = races[k]; return `<button class="item" style="display:block" data-action="award" data-k="${k}"><div class="row between"><div class="name">${esc(a.label)} <span class="dim">${a.short}</span></div><span class="dim">${$t('hq.top_5')}</span></div>${top.length ? top.map((r, i) => { const me = r.team === f.club; return k === 'coy' ? `<div class="row between sub ${me ? 'mine' : ''}"><span>${i + 1}. ${esc(r.coach)} <span class="dim">${esc(r.team)}</span></span><span class="mono">${r.w}-${r.l}</span></div>` : `<div class="row sub ${me ? 'mine' : ''}" style="gap:6px"><span class="dim">${i + 1}.</span>${monsterSprite(r, 20)}<span class="grow">${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}</span></span><span class="mono">${raceLine(r)}</span></div>`; }).join('') : `<div class="sub dim">${$t('hq.no_contenders_yet')}</div>`}</button>`; }).join('')}</div>`;
       return `<div class="panel">${$t('hq.b_beast_league_b_16_clubs', { year: yearOf(f.season.year) })}<div class="muted">${$t('hq.beast_bowl_titles', { titles })}${f.season.week >= 5 && !f.season.finished ? ` · ${esc(F.playoffPicture(f).text)}` : ''}</div>
         ${rival ? `<div class="muted">${$t('hq.rival_b_b_gm_all_time', { team: esc(rival.team), gm: esc(rival.gm), w: rival.headToHead.w, l: rival.headToHead.l })}</div>` : ''}</div>
-        <div class="grid2"><button class="btn block" data-action="go" data-screen="schedule">${$t('hq.schedule')}</button><button class="btn block" data-action="go" data-screen="standings">${$t('hq.standings')}</button><button class="btn block" data-action="go" data-screen="history">${$t('hq.history')}</button><button class="btn block" data-action="go" data-screen="playoffs">${$t('hq.playoffs')}</button><button class="btn block" data-action="go" data-screen="leaders">${$t('hq.stats')}</button><button class="btn block" data-action="go" data-screen="awardhistory">${$t('hq.award_history')}</button><button class="btn block" data-action="go" data-screen="records">${$t('hq.records_book')}</button></div>${watch}`;
+        <div class="grid2"><button class="btn block" data-action="go" data-screen="schedule">${$t('hq.schedule')}</button><button class="btn block" data-action="go" data-screen="standings">${$t('hq.standings')}</button><button class="btn block" data-action="go" data-screen="history">${$t('hq.history')}</button><button class="btn block" data-action="go" data-screen="playoffs">${$t('hq.playoffs')}</button><button class="btn block" data-action="go" data-screen="leaders">${$t('hq.stats')}</button><button class="btn block" data-action="go" data-screen="awardhistory">${$t('hq.award_history')}</button><button class="btn block" data-action="go" data-screen="records">${$t('hq.records_book')}</button><button class="btn block" data-action="go" data-screen="monsterhof">${$t('hq.monster_hall_of_fame')}</button></div>${watch}`;
     },
     mount(root) { delegate(root, {
         award: (el) => sheet(awardRaceHtml(app.f, el.dataset.k), { title: F.AWARDS[el.dataset.k].label }), go: (el) => Router.go(el.dataset.screen) }); },
@@ -822,38 +820,7 @@ export function registerHqScreens(Router, app) {
       root.querySelector('[data-action="cat"]')?.addEventListener('change', (e) => { leaderCat = e.target.value; Router.render(); });
     },
   });
-  let recordsTab = 'game';
-  Router.registerScreen('records', {
-    title: $t('hq.records_book_2'),
-    render({ f }) {
-      const R = ensureRecords(f); const tab = recordsTab;
-      const tabs = [['game', $t('hq.single_game')], ['season', $t('hq.season_3')], ['career', $t('hq.your_careers')], ['team', $t('hq.team')]];
-      let body = '';
-      const row = (label, r, sub, cat = null) => `<div class="item static ${r?.team === f.club ? 'mine' : ''}">${r?.species ? monsterSprite(r, 30) : ''}<div class="grow"><div class="name">${esc(label)}</div><div class="sub">${r ? `<b>${(() => { const id = r.name ? (r.id || resolveRecordHolder(f, r, { scope: recordsTab === 'season' ? 'season' : 'game', cat }).id) : null; return id ? careerLink(id, r.name) : esc(r.name || r.team); })()}</b>${r.position ? ` (${esc(r.position)})` : ''} · ${esc(sub(r))}` : $t('hq.no_record_yet')}</div></div><span class="chip accent">${r ? r.value : '·'}</span></div>`;
-      if (tab === 'game') body = RECORD_CATEGORIES.map((c) => row(c.label, R.game[c.id], (r) => `${r.team} vs ${r.opp} · ${yearOf(r.year)} wk ${r.week}${r.playoff ? ' (playoffs)' : ''}`, c.id)).join('');
-      else if (tab === 'season') body = RECORD_CATEGORIES.map((c) => row(c.label, R.season[c.id], (r) => `${r.team} · ${yearOf(r.year)}`, c.id)).join('') + `<p class="dim">${$t('hq.season_records_are_written_when_a')}</p>`;
-      else if (tab === 'career') { const L = universeCareerLeaders(f, { n: 1 }); body = RECORD_CATEGORIES.map((c) => { const r = L[c.id]?.[0]; return row(c.label, r ? { ...r, team: r.club || '' } : null, (x) => `${$t('hq.regular_season_games', { club: x.club ? esc(x.club) : x.where === 'legend' ? 'retired' : 'free agent', games: x.games })}`, c.id); }).join('') + `<p class="dim">${$t('hq.career_totals_across_every_monster_the')}</p>`; }
-      else body = TEAM_RECORDS.map((c) => row(c.label, R.team[c.id], (r) => `${r.score} vs ${r.opp} · ${yearOf(r.year)} wk ${r.week}${r.playoff ? ' (playoffs)' : ''}`)).join('');
-      return `<div class="seg" style="margin-bottom:8px">${tabs.map(([k, l]) => `<button class="btn small ${tab === k ? 'primary' : ''}" data-action="rtab" data-v="${k}">${l}</button>`).join('')}</div><div class="list">${body}</div>`;
-    },
-    mount(root) { delegate(root, { rtab: (el) => { recordsTab = el.dataset.v; Router.render(); } }); },
-  });
-  Router.registerScreen('awardhistory', {
-    title: $t('hq.award_history_2'),
-    render({ f }) {
-      const seasons = [...f.history.filter((h) => h.awards?.league).map((h) => ({ year: h.year, league: h.awards.league })), ...(f.season.awardsFinal && !f.season.finished ? [{ year: f.season.year, league: f.season.awardsFinal.winners, live: true }] : [])].sort((a, b) => b.year - a.year);
-      if (!seasons.length) return `<p class="dim">${$t('hq.award_winners_are_named_when_the')}</p>`;
-      return seasons.map((s) => `<h3>${yearOf(s.year)}${s.live ? ` <span class="chip">${$t('hq.this_season_2')}</span>` : ''}</h3><div class="list">${Object.entries(F.AWARDS).map(([k, a]) => { const w = s.league[k]; if (!w) return ''; return `<div class="item static ${w.team === f.club ? 'mine' : ''}">${k === 'coy' ? '' : monsterSprite(w, 32)}<div class="grow"><div class="name">${esc(a.short)} · ${k === 'coy' ? esc(w.coach) : careerLink(w.id, w.name)}</div><div class="sub">${esc(w.team)}${w.record ? ' · ' + w.record : ''}${fieldText(w, 'why') ? ' · ' + esc(fieldText(w, 'why')) : ''}</div></div></div>`; }).join('')}</div>`).join('');
-    },
-  });
-  Router.registerScreen('history', {
-    title: $t('hq.franchise_history'),
-    render({ f }) {
-      return `<div class="panel"><div class="kv">${$t('hq.b_owner_b')}<span>${esc(f.owner.first)} ${esc(f.owner.last)}${f.owner.hometown ? ' · ' + esc(f.owner.hometown) : ''}</span>${$t('hq.b_titles_b')}<span>${$t('hq.challenger_vanguard_sovereign', { challenger: f.badges.challenger, vanguard: f.badges.vanguard, sovereign: f.badges.sovereign })}</span></div></div>
-        ${f.history.length ? `<div class="list">${f.history.slice().reverse().map((h) => `<div class="item static"><div class="grow"><div class="name">${yearOf(h.year)} · ${esc(h.club)}</div><div class="sub">${h.record.w}-${h.record.l}${h.place ? ` ${$t('hq.overall', { place: h.place, n: ['st', 'nd', 'rd'][h.place - 1] || 'th' })}` : ''}${h.playoffs ? $t('hq.playoffs_3') : ''}${h.champion === h.club ? $t('hq.champions') : h.champion ? ` ${$t('hq.champion_2', { champion: esc(h.champion) })}` : ''}${h.legacy ? $t('hq.imported') : ''}</div>${h.awards ? `<div class="sub">${h.awards.mvp ? `${$t('hq.mvp', { name: esc(h.awards.mvp.name) })}` : ''}${h.awards.rivalry ? ` · ⚔️ ${h.awards.rivalry.swept ? 'swept' : h.awards.rivalry.wins + '-' + (h.awards.rivalry.games - h.awards.rivalry.wins) + ' vs'} ${esc(h.awards.rivalry.team)}` : ''}</div>` : ''}</div><div class="row" style="gap:4px;flex-wrap:wrap;justify-content:flex-end">${h.championship ? `<button class="btn small good" data-action="ceremony" data-year="${h.year}" title="${$t('hq.the_beast_bowl_ceremony_and_summary')}">${$t('hq.ceremony')}</button>` : ''}${h.awards ? `<button class="btn small" data-action="awards" data-year="${h.year}">${$t('hq.awards')}</button>` : ''}</div></div>`).join('')}</div>` : `<p class="muted">${$t('hq.no_completed_seasons_yet')}</p>`}`;
-    },
-    mount(root) { delegate(root, { ceremony: (el) => Router.go('ceremony', { year: Number(el.dataset.year) }), awards: (el) => { const h = app.f.history.find((x) => x.year === Number(el.dataset.year)); if (h?.awards) sheet(awardsHtml(h.awards), { title: `${$t('hq.awards_2', { year: yearOf(h.year) })}` }); } }); },
-  });
+  // The history screens (Franchise History, Award History, Records, Monster Hall of Fame) live in ./history.js (Task 9).
 }
 
 export function playDetailHtml(id, f = null, { practiceButton = true } = {}) {

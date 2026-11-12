@@ -16,6 +16,7 @@ import { registerFranchisesScreens } from './ui/screens/franchises.js';
 import { registerLegacyScreens } from './ui/screens/legacy.js';
 import { registerLeagueHubScreens } from './ui/screens/league-hub.js';
 import { registerCareerScreens } from './ui/screens/career.js';
+import { registerHistoryScreens } from './ui/screens/history.js';
 import { registerCaptainScreens } from './ui/screens/captains.js';
 import { tipHtml, maybeSheetTip, initTutorial, helpButtonHtml } from './ui/tutorial.js';
 import { openStatGuide } from './ui/stat-guide.js';
@@ -243,6 +244,7 @@ export function start() {
   registerFranchisesScreens(Router, app); // the three-slot manager (GDD §42.5)
   registerLeagueHubScreens(Router, app); // the League Hub (GDD §46)
   registerCareerScreens(Router, app); // full-screen career profiles (GDD §48)
+  registerHistoryScreens(Router, app); // Franchise History, Award History, Records, Monster Hall of Fame (Task 9)
   registerLegacyScreens(Router, app); // the read-only archive shell (GDD §42.7)
   // The player's dex lives outside the franchise and is mirrored to the cloud like the save.
   setDexMirror((d) => cloudSaveDex(d));
