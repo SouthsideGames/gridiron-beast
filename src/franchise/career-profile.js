@@ -197,6 +197,15 @@ export function careerProfile(f, id) {
   const candidate = (f?.monsterHallOfFame?.candidates || [])
     .find((c) => String(c.id) === String(id));
   if (candidate) return retiredCandidateProfile(f, candidate);
+  // An elected monster must remain reachable even if the candidate pool is
+  // absent in an older or partially migrated save. The election is permanent.
+  const induction = (f?.monsterHallOfFame?.elections || [])
+    .flatMap((e) => e?.inductees || [])
+    .find((c) => String(c.id) === String(id));
+  if (induction) return retiredCandidateProfile(f, {
+    id: induction.id, name: induction.name, position: induction.position,
+    retiredYear: induction.retiredYear,
+  });
   return null;
 }
 
