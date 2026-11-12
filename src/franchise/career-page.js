@@ -113,15 +113,17 @@ export function careerPage(f, id, { profile = null } = {}) {
   const careerAll = sum(lines.career.reg, lines.career.post);
   const teams = teamHistory(p, lines);
   const timeline = p.timeline || [];
+  const historicalAwardsForMonster = historicalAwards(f).filter((a) => a.id != null && String(a.id) === String(p.id));
+  const induction = historicalHallOfFame(f).inductees.find((c) => String(c.id) === String(p.id)) || null;
   return {
     p, found: found ? { where: found.where, team: found.team || null } : null,
     // Task 9: independent historical recognition; do not rewrite a saved career timeline.
     historicalRecognition: {
-      awards: historicalAwards(f).filter((a) => a.id != null && String(a.id) === String(p.id)),
-      induction: historicalHallOfFame(f).inductees.find((c) => String(c.id) === String(p.id)) || null,
+      awards: historicalAwardsForMonster,
+      induction,
     },
     status: careerStatus(f, found, p), designation: designationOf(found?.m, p), span,
-    facts: { seasons: p.seasons ?? null, onRecord: p.onRecord ?? lines.seasons.length, games: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0) + (lines.career.post.games || 0), regGames: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0), postGames: lines.career.post.games || 0, teams: teams.length, titles: count('champion'), awards: AWARD_KINDS.reduce((a, k) => a + count(k), 0), records: count('record'), hof: count('hof') > 0 },
+    facts: { seasons: p.seasons ?? null, onRecord: p.onRecord ?? lines.seasons.length, games: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0) + (lines.career.post.games || 0), regGames: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0), postGames: lines.career.post.games || 0, teams: teams.length, titles: count('champion'), awards: AWARD_KINDS.reduce((a, k) => a + count(k), 0), records: count('record'), hof: count('hof') > 0 || !!induction },
     lines, groups: statGroups(p.position, careerAll), teams,
     milestones: timeline.filter((e) => MILESTONE_TYPES.has(e.t)).slice().reverse(),
     moments: timeline.filter((e) => e.tier !== 'career').slice(0, 5),
