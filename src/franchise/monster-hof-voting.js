@@ -95,6 +95,8 @@ export function monsterHofInductees(history = []) {
  */
 export function recordRetiredMonsterCandidates(f, retired, year) {
   const hof = (f.monsterHallOfFame ||= { v: MONSTER_HOF_VERSION, candidates: [], elections: [] });
+  if (!Array.isArray(hof.candidates)) hof.candidates = [];
+  if (!Array.isArray(hof.elections)) hof.elections = [];
   const known = new Set(hof.candidates.map((c) => String(c.id)));
   const retiredIds = [...(retired?.owner || []), ...(retired?.league || [])];
   for (const item of retiredIds) {
@@ -102,6 +104,9 @@ export function recordRetiredMonsterCandidates(f, retired, year) {
     if (!id || known.has(id)) continue;
     const stub = f.league?.legends?.[id];
     if (!stub) continue; // no preserved career evidence: do not manufacture it
+    // A current-season retirement can only be recorded from the retirement
+    // pass itself; a legend stub alone also represents non-retirement exits.
+    if (item?.id == null || !Number.isInteger(year)) continue;
     hof.candidates.push({
       id, name: stub.name, position: stub.position,
       retiredYear: year, seasons: Array.isArray(stub.seasons) ? stub.seasons.length : 0,
