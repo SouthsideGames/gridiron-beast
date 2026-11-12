@@ -41,7 +41,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'terrabull', overall: 99 }], b: [{ species: 'charbun' }], seed: 1, stopAt: { exchange: 2 } }),
         expect: (r, h) => { h.check('no interception (use kept)', !h.has('intercepted') && h.state('a0')?.used === false); } },
       { id: 'reserve-source', kind: 'blocked', title: 'Terrabull in reserve: no interception (the source must be active)',
-        explain: () => 'Terrabull waits in reserve while its active ally is countered (controlled miss, labelled): the wall needs an active, able source, so nothing is intercepted.',
+        explain: () => 'Terrabull waits in reserve while its active ally is countered (controlled miss, labeled): the wall needs an active, able source, so nothing is intercepted.',
         setup: () => ({ a: [{ species: 'tidepaw' }, { species: 'terrabull' }], b: [{ species: 'shadowkit', sparring: true }], seed: 1, stopAt: { exchange: 1 }, probes: [{ missCheck: (v, id, info) => (id === 'b0' && info.attacker === 'a0' ? { miss: true, source: 'controlled reviewer miss' } : null) }] }),
         expect: (r, h) => { h.check('no interception from reserve (use kept)', !h.has('intercepted') && h.state('a1')?.used === false); } },
       { id: 'contested-awaiting-active', kind: 'interaction', title: 'Active Terrabull intercepts the attack-triggered Molten Brand eruption',

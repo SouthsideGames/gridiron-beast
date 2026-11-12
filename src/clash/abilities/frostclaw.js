@@ -35,11 +35,11 @@ export default registerClashAbility({
   review: {
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'The launch check passes: 130% snowball, then the cooldown',
-        explain: (c) => `Controlled seed selection (labelled) until the 80% launch check passes: the snowball deals 130%; the cooldown is ${c.values.cooldown} owner turns.`,
+        explain: (c) => `Controlled seed selection (labeled) until the 80% launch check passes: the snowball deals 130%; the cooldown is ${c.values.cooldown} owner turns.`,
         setup: () => ({ a: [{ species: 'frostclaw' }], b: [{ species: 'gravelpup', overall: 99 }], seed: 1, stopAt: { exchange: 1 }, seedSearch: { until: (r) => r.log.some((e) => e.kind === 'damage' && e.abilityId === 'ICE-03-C'), why: 'the 80% launch accuracy check passes' } }),
         expect: (r, h) => { const d = h.ab('damage')[0]; h.check('130% special', d && d.mult === 1.3 && d.tag === 'special'); const k = h.ev('clock_start', (e) => e.clock === 'ICE-03-C')[0]; h.check(`cooldown ${h.values.cooldown}`, k && k.left === h.values.cooldown); h.executed(1); } },
       { id: 'launch-miss-shield', kind: 'miss', title: 'The launch check fails: no hit, and a fallback Shielded of 20% source max HP for two owner turns',
-        explain: () => 'Controlled seed selection (labelled) until the 80% launch check fails: the shot does not launch at the target, Cryolynx attempts its fallback shield.',
+        explain: () => 'Controlled seed selection (labeled) until the 80% launch check fails: the shot does not launch at the target, Cryolynx attempts its fallback shield.',
         setup: () => ({ a: [{ species: 'frostclaw' }], b: [{ species: 'gravelpup', overall: 99 }], seed: 1, stopAt: { exchange: 1 }, seedSearch: { until: (r) => r.log.some((e) => e.kind === 'launch_cancelled' && e.actor === 'a0'), why: 'the 80% launch accuracy check fails' } }),
         expect: (r, h) => { h.check('no damage from the shot', h.ab('damage').length === 0); const s = h.ev('status', (e) => e.target === 'a0' && e.abilityId === 'ICE-03-C')[0]; h.check('fallback shield 20% of source max HP, 2 turns, own turn excluded', s && s.slot.pool === Math.floor(h.line('a0').maxHp * 0.2 + 0.5) && s.slot.remaining === 2 && s.excluded); } },
       { id: 'fallback-blocked', kind: 'blocked', title: 'A launch miss with an occupied slot: the fallback shield is blocked by the gate',

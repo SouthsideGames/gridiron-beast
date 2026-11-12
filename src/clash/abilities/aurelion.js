@@ -42,7 +42,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'aurelion' }], b: [{ species: 'gravelpup', overall: 99 }], seed: 1, stopAt: { exchange: 3 } }),
         expect: (r, h) => { h.rulingUsed('d13-values'); const d = h.ab('damage'); h.check('one lance at the ladder value', d.length === 1 && d[0].mult === h.values.progressionPct / 100); h.executed(1); } },
       { id: 'provisional-miss-spends', kind: 'miss', title: 'APPROVED N9d: a missed lance is still spent (controlled miss)',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe supplies an explicit miss. "Once per Clash, spent on launch even miss": no second lance follows. Provisional because the lance never fires in normal gameplay until D13 is ruled.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe supplies an explicit miss. "Once per Clash, spent on launch even miss": no second lance follows. Provisional because the lance never fires in normal gameplay until D13 is ruled.',
         setup: () => ({ a: [{ species: 'aurelion' }], b: [{ species: 'gravelpup', overall: 99 }], seed: 1, stopAt: { exchange: 3 }, probes: [{ missCheck: (v, id, info) => (id === 'b0' && info.abilityId === 'LIG-06-C' ? { miss: true, source: 'controlled reviewer miss' } : null) }] }),
         expect: (r, h) => { h.check('the lance missed', h.has('miss', (e) => e.actor === 'a0' && e.ex === 1)); h.check('spent: ordinary attacks afterwards', h.state('a0')?.used === true && h.ev('damage', (e) => e.actor === 'a0').every((e) => e.tag === 'ordinary')); } },
     ],

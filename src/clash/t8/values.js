@@ -32,7 +32,7 @@ export const T8_VALUES = deepFreeze({
  */
 export const T8_PROVISIONAL = deepFreeze([
   { id: 'ko-replacement-line-order', waitsOn: 'owner (D1/D2 rule on rotation and the AI; neither names the KO replacement choice)',
-    rule: 'A knocked-out active monster is replaced by the first living reserve in stable lineup order (the legacy behaviour, M4_PLAN §5c), for both the AI and the player. The replacement enters right after the hit (B3 rule 4) and does not take the knocked-out monster\'s cancelled turn this exchange (B3 rule 2).' },
+    rule: 'A knocked-out active monster is replaced by the first living reserve in stable lineup order (the legacy behavior, M4_PLAN §5c), for both the AI and the player. The replacement enters right after the hit (B3 rule 4) and does not take the knocked-out monster\'s canceled turn this exchange (B3 rule 2).' },
   { id: 'sudden-death-scope', waitsOn: 'none (N9d approved)',
     rule: 'The values 1.1.0 sudden-death ramp (Model E for 1-3 per side, Model F for 4-5, from exchange 12) multiplies the 8a raw damage of every direct strike (ordinary, special, reaction, counter, follow-up). It does not touch the Afflicted tick, heals or shields.' },
   { id: 'stalemate-c6-scope', waitsOn: 'none (N9d approved)',
@@ -64,7 +64,7 @@ export const T8_PROVISIONAL = deepFreeze([
     rule: 'In Clash a Shielded strength is its original pool in whole HP. Carried to football, its strength is that pool as a percentage of the recipient\'s max Clash HP, the same unit as the football Guiding Halo strength (15). Carried back, the pool is that percentage of max Clash HP and the remaining pool is the pool times its remaining fraction, rounded half up. A football-origin shield has original strength 15% of max Clash HP (D11). Nothing is refilled.' },
   // ---- S3: the damage pipeline
   { id: 'multi-hit-target-ko', waitsOn: 'the multi-hit contracts (S6-S11)',
-    rule: 'B3 rule 2 cancels the remaining hits of a monster that is knocked out. When the TARGET of a multi-hit strike is knocked out, the remaining hits are cancelled too (nothing retargets) unless a contract says otherwise.' },
+    rule: 'B3 rule 2 cancels the remaining hits of a monster that is knocked out. When the TARGET of a multi-hit strike is knocked out, the remaining hits are canceled too (nothing retargets) unless a contract says otherwise.' },
   { id: 'reaction-order', waitsOn: 'none (reading of §9 "established event order ... stable sourceID", flagged)',
     rule: 'Reactions, after-whole-hit effects and follow-ups to one hit run by owner: the hit\'s recipients first in recipient order, then every other monster by stable ID.' },
   { id: 'reaction-chains', waitsOn: 'none (B3 / P6 "no chains"; reading flagged)',

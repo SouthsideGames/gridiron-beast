@@ -27,7 +27,7 @@ export default registerClashAbility({
       return { kind: 'run', run: (a, s) => {
         const initial = foeId; let first = true;
         for (const v of cmd) {
-          if (a.get(initial).koed || !a.get(initial).active) { a.cleanup(s, 'the initial enemy active is gone: the remaining commands are cancelled'); break; }
+          if (a.get(initial).koed || !a.get(initial).active) { a.cleanup(s, 'the initial enemy active is gone: the remaining commands are canceled'); break; }
           if (first) { s.state.used = true; a.activate(s, `${cmd.length} enemy reserve(s) commanded at ${byTier(POWER, s.tier)}%`); a.executed(s); first = false; }
           const r = a.commandStrike(s, v.id, initial, { tag: 'commanded', mult: byTier(POWER, s.tier) / 100, confusable: true, strikeKey: 'commanded', label: 'Astral command' });
           if (r.decided) return true;
@@ -47,10 +47,10 @@ export default registerClashAbility({
         explain: () => 'A lone opponent: nobody to command.',
         setup: () => ({ a: [{ species: 'astralux' }], b: [{ species: 'gravelpup' }], seed: 1, stopAt: { exchange: 1 } }),
         expect: (r, h) => { h.check('no command (use kept)', h.state('a0')?.used === false); } },
-      { id: 'early-ko', kind: 'sourceKO', title: 'The initial active falls to the first command: the rest are cancelled; Astralux attacks the replacement',
-        explain: () => 'The enemy active is staged at 1 HP: the first commanded hit knocks it out, the remaining command is cancelled, the replacement enters, and Astralux attacks it.',
+      { id: 'early-ko', kind: 'sourceKO', title: 'The initial active falls to the first command: the rest are canceled; Astralux attacks the replacement',
+        explain: () => 'The enemy active is staged at 1 HP: the first commanded hit knocks it out, the remaining command is canceled, the replacement enters, and Astralux attacks it.',
         setup: () => ({ a: [{ species: 'astralux' }], b: [{ species: 'gravelpup', hp: 1 }, { species: 'charbun' }, { species: 'kindlet' }], seed: 1, stopAt: { exchange: 1, turn: 1 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
-        expect: (r, h) => { h.check('one commanded hit', h.ev('damage', (e) => e.tag === 'commanded').length === 1); h.check('remaining commands cancelled', h.has('cleanup', (e) => e.abilityId === 'PSY-06-C')); h.check('Astralux attacks the replacement b1', h.has('damage', (e) => e.actor === 'a0' && e.target === 'b1')); } },
+        expect: (r, h) => { h.check('one commanded hit', h.ev('damage', (e) => e.tag === 'commanded').length === 1); h.check('remaining commands canceled', h.has('cleanup', (e) => e.abilityId === 'PSY-06-C')); h.check('Astralux attacks the replacement b1', h.has('damage', (e) => e.actor === 'a0' && e.target === 'b1')); } },
     ],
   },
 });

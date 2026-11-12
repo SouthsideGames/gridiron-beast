@@ -34,7 +34,7 @@ export default registerClashAbility({
   review: {
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'A remembered hit returns as a bonus on the next ready attack (capped at 15% of the target max HP)',
-        explain: (c) => `Echolot remembers the last HP damage it took; its next attack adds ${c.values.factorPct}% of it (capped at 15% of the target's max HP) to the raw budget before the target's defences.`,
+        explain: (c) => `Echolot remembers the last HP damage it took; its next attack adds ${c.values.factorPct}% of it (capped at 15% of the target's max HP) to the raw budget before the target's defenses.`,
         setup: () => ({ a: [{ species: 'echolot', overall: 60 }], b: [{ species: 'charbun', overall: 99 }], seed: 1, stopAt: { exchange: 3 } }),
         expect: (r, h) => {
           const act = h.ab('ability').find((e) => e.bonus != null); h.check('activated with a memory', !!act);

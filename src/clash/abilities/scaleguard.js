@@ -45,7 +45,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'scaleguard', status: { id: 'slowed', strength: 15, duration: 1 } }], b: [{ species: 'gravelpup', overall: 99 }], seed: 1, stopAt: { exchange: 4 } }),
         expect: (r, h) => { h.check('blocked by the gate', h.has('status_blocked', (e) => e.abilityId === 'DRA-04-C')); h.check('no conversion', h.ab('damage').length === 0); h.check('no second attempt', h.ev('status_blocked', (e) => e.abilityId === 'DRA-04-C').length === 1); } },
       { id: 'replaced-loses', kind: 'cleanup', title: 'The Guarded is replaced before the final turn: the conversion is lost',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe replaces Scalor\'s Guarded on exchange 1. Only the original episode is eligible; no conversion follows.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe replaces Scalor\'s Guarded on exchange 1. Only the original episode is eligible; no conversion follows.',
         setup: () => ({ a: [{ species: 'scaleguard' }], b: [{ species: 'gravelpup', overall: 99 }], seed: 1, stopAt: { exchange: 3 }, probes: [{ turnStart: (v, id) => { if (id === 'b0' && v.ex === 1) v.replaceStatus('a0', { id: 'quickened', strength: 10, duration: 3 }); } }] }),
         expect: (r, h) => { h.check('no conversion', h.ab('damage').length === 0); } },
     ],

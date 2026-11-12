@@ -36,7 +36,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'skywarden' }], b: [{ species: 'gravelpup' }], seed: 1, stopAt: { exchange: 1 } }),
         expect: (r, h) => { h.check('no swap (use kept)', !h.has('rotation') && !h.has('clock_start', (e) => e.clock === 'WIN-03-C')); } },
       { id: 'illegal-swap', kind: 'blocked', title: 'An illegal forced exchange (pacing / just-entered protection): ordinary attack, use kept',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe makes the opponent force-rotate its own side on exchange 1 before Aeralis acts. The new active just entered and the side-wide pacing is running, so Downdraft is illegal: reported, ordinary attack, no cooldown.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe makes the opponent force-rotate its own side on exchange 1 before Aeralis acts. The new active just entered and the side-wide pacing is running, so Downdraft is illegal: reported, ordinary attack, no cooldown.',
         setup: () => ({ a: [{ species: 'skywarden' }], b: [{ species: 'gravelpup', overall: 99 }, { species: 'tinhare', overall: 99 }, { species: 'mudlark', overall: 99 }], seed: 1, stopAt: { exchange: 1 }, probes: [{ initiative: (v, id) => (id === 'b0' ? { priority: 1 } : null) }, { chooseAction: (v, id) => (id === 'b0' ? { kind: 'forcedRotation', side: 'own', abilityId: 'TEST-FORCE' } : null) }] }),
         expect: (r, h) => { h.unmetReported((e) => e.unmet.some((u) => /pacing|just-entered/.test(u.condition))); h.check('no Downdraft swap, no cooldown', !h.has('rotation', (e) => e.abilityId === 'WIN-03-C') && !h.has('clock_start', (e) => e.clock === 'WIN-03-C')); } },
     ],

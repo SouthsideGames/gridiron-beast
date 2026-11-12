@@ -1,0 +1,59 @@
+{
+ "note": "American-spelling pass (owner-approved 2026-11-11): the log hash covers each line's wording, so these seeds' hashes moved. The battles did not: every state hash is unchanged, and the logs are identical once the wording is left out (40 of 40 runs).",
+ "seeds": {
+  "4": {
+   "layer": "n9c",
+   "wordingBefore": "xt6f2q",
+   "wordingAfter": "1gg4mkc",
+   "state": "d6vxx0"
+  },
+  "6": {
+   "layer": "stored",
+   "wordingBefore": "162rnfn",
+   "wordingAfter": "1g87jfr",
+   "state": "1ya9z5c"
+  },
+  "7": {
+   "layer": "n9d",
+   "wordingBefore": "1wrfigy",
+   "wordingAfter": "yjhbio",
+   "state": "11biqrz"
+  },
+  "9": {
+   "layer": "n9d",
+   "wordingBefore": "1i00zdv",
+   "wordingAfter": "1mez2np",
+   "state": "18df4or"
+  },
+  "11": {
+   "layer": "n9d",
+   "wordingBefore": "12ctzfg",
+   "wordingAfter": "id5t6g",
+   "state": "9begmm"
+  },
+  "13": {
+   "layer": "n9d",
+   "wordingBefore": "1ifg8tu",
+   "wordingAfter": "fzynlo",
+   "state": "1tkvi6o"
+  },
+  "14": {
+   "layer": "n9d",
+   "wordingBefore": "k5yuon",
+   "wordingAfter": "17uof8n",
+   "state": "9ykt8s"
+  },
+  "17": {
+   "layer": "stored",
+   "wordingBefore": "1p3zb70",
+   "wordingAfter": "1bbgce6",
+   "state": "n4o1au"
+  },
+  "19": {
+   "layer": "n9d",
+   "wordingBefore": "t76tk0",
+   "wordingAfter": "1unj7hu",
+   "state": "1qh7976"
+  }
+ }
+}

@@ -38,15 +38,15 @@ export default registerClashAbility({
   review: {
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'Opening decoy; the first attack rolls once and is diverted (controlled seed selection)',
-        explain: (c) => `Flarynx opens with a decoy; the opponent's first attack rolls the ${c.values.diversionPct}% diversion; controlled seed selection (labelled) until it diverts. The decoy is consumed either way.`,
+        explain: (c) => `Flarynx opens with a decoy; the opponent's first attack rolls the ${c.values.diversionPct}% diversion; controlled seed selection (labeled) until it diverts. The decoy is consumed either way.`,
         setup: () => ({ a: [{ species: 'pyrelynx', sparring: true }], b: [{ species: 'kindlet', overall: 40 }], seed: 1, stopAt: { exchange: 1 }, seedSearch: { until: (r) => r.log.some((e) => e.kind === 'miss' && e.abilityId === 'FIR-05-C'), why: 'the diversion roll succeeds' } }),
         expect: (r, h) => { h.check('decoy on opening entry', h.ab('ability').some((e) => e.ex === 0)); h.check('one roll for the attack', h.ev('roll', (e) => e.abilityId === 'FIR-05-C').length === 1); h.check('diverted: no damage', h.has('miss', (e) => e.abilityId === 'FIR-05-C') && !h.has('damage', (e) => e.target === 'a0')); h.executed(1); } },
       { id: 'roll-fails', kind: 'miss', title: 'The diversion roll fails: the attack resolves normally and the decoy is still consumed',
-        explain: () => 'Controlled seed selection (labelled) until the roll fails: the hit lands and the next attack does not roll.',
+        explain: () => 'Controlled seed selection (labeled) until the roll fails: the hit lands and the next attack does not roll.',
         setup: () => ({ a: [{ species: 'pyrelynx', overall: 99, sparring: true }], b: [{ species: 'kindlet', overall: 40 }], seed: 1, stopAt: { exchange: 2 }, seedSearch: { until: (r) => r.log.some((e) => e.kind === 'roll' && e.abilityId === 'FIR-05-C' && !e.success), why: 'the diversion roll fails' } }),
         expect: (r, h) => { h.check('one roll only over two attacks', h.ev('roll', (e) => e.abilityId === 'FIR-05-C').length === 1); h.check('both attacks landed', h.ev('damage', (e) => e.target === 'a0').length === 2); } },
       { id: 'reactions-no-roll', kind: 'blocked', title: 'Undodgeable / reaction strikes neither roll nor consume the decoy',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe makes the opponent\'s attack undodgeable: no roll, the decoy stays.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe makes the opponent\'s attack undodgeable: no roll, the decoy stays.',
         setup: () => ({ a: [{ species: 'pyrelynx', overall: 99, sparring: true }], b: [{ species: 'kindlet', overall: 40 }], seed: 1, stopAt: { exchange: 1 }, probes: [{ chooseAction: (v, id) => (id === 'b0' ? { kind: 'attack', abilityId: 'TEST-UNDODGEABLE', undodgeable: true, mult: 1 } : null) }] }),
         expect: (r, h) => { h.check('no roll (decoy kept)', !h.has('roll', (e) => e.abilityId === 'FIR-05-C') && h.state('a0')?.decoy === true); } },
       { id: 'no-auto-recreate', kind: 'depletion', title: 'The cooldown expiring while active does not create a new decoy',

@@ -26,7 +26,7 @@ export default registerClashAbility({
   review: {
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'Weakened lands on the active Crustank: it is shed at once; a second one stays (once per Clash)',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe makes the opponent\'s first two hits attach Weakened. The first is shed immediately; the second stays because the use is spent.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe makes the opponent\'s first two hits attach Weakened. The first is shed immediately; the second stays because the use is spent.',
         setup: () => ({ a: [{ species: 'reefclaw' }], b: [{ species: 'gravelpup', overall: 99 }], seed: 1, stopAt: { exchange: 3 }, probes: [{ attached: (v, id, info) => (id === 'b0' && v.ex <= 2 ? { kind: 'status', targetId: info.target, id: 'weakened', strength: 10, duration: 5, abilityId: 'TEST-WEAKEN' } : null) }] }),
         expect: (r, h) => { const ends = h.ev('status_end', (e) => e.target === 'a0' && e.abilityId === 'WAT-03-C'); h.check('shed once', ends.length === 1); h.check('the second Weakened stays', h.ev('status', (e) => e.target === 'a0' && e.status === 'weakened').length === 2 && h.ev('status_end', (e) => e.target === 'a0').length >= 1); h.executed(1); h.stages('trigger', 'resolution', 'activation'); } },
       { id: 'enter-harmful', kind: 'rotation', title: 'Entering active already harmful triggers the shed',

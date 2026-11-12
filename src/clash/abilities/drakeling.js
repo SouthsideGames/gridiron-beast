@@ -36,7 +36,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'drakeling', hp: 3 }], b: [{ species: 'gravelpup', overall: 50 }], seed: 1, stopAt: { exchange: 1, turn: 2 } }),
         expect: (r, h) => { h.unmetReported((e) => e.unmet.some((u) => /HP cost/.test(u.condition))); h.check('no HP paid', h.ab('hp_cost').length === 0); h.check('ordinary attack', h.has('damage', (e) => e.actor === 'a0' && e.tag === 'ordinary')); } },
       { id: 'miss-still-pays', kind: 'miss', title: 'An explicit miss still spends the cost and starts the cooldown',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe supplies an explicit miss on the pounce (the outcome of a miss source, not Dragon Pounce\'s own result). The cost is paid and the cooldown runs anyway.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe supplies an explicit miss on the pounce (the outcome of a miss source, not Dragon Pounce\'s own result). The cost is paid and the cooldown runs anyway.',
         setup: () => ({ a: [{ species: 'drakeling' }], b: [{ species: 'gravelpup', overall: 99 }], seed: 1, stopAt: { exchange: 1 }, probes: [{ missCheck: (v, id, info) => (id === 'b0' && info.abilityId === 'DRA-01-C' ? { miss: true, source: 'controlled reviewer miss' } : null) }] }),
         expect: (r, h) => { h.check('the pounce missed', h.has('miss', (e) => e.actor === 'a0')); h.check('cost paid', h.ab('hp_cost').length === 1); h.check('cooldown started', h.has('clock_start', (e) => e.actor === 'a0' && e.clock === 'DRA-01-C')); } },
     ],

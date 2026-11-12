@@ -47,7 +47,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'cerebrix' }], b: [{ species: 'gravelpup', sparring: true }], seed: 1, stopAt: { exchange: 5 } }),
         expect: (r, h) => { h.check('the mirror clock ended', h.has('clock_end', (e) => e.clock === 'PSY-03-C:mirror')); } },
       { id: 'beneficial-ignored', kind: 'blocked', title: 'A beneficial or non-ability status is not intercepted',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe (no ability id) applies Weakened to Cerebrix: environmental / non-ability statuses are not mirrored.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe (no ability id) applies Weakened to Cerebrix: environmental / non-ability statuses are not mirrored.',
         setup: () => ({ a: [{ species: 'cerebrix' }], b: [{ species: 'gravelpup', sparring: true }], seed: 1, stopAt: { exchange: 2 }, probes: [{ turnStart: (v, id) => { if (id === 'b0' && v.ex === 2) v.applyStatus('a0', { id: 'weakened', strength: 10, duration: 2 }); } }] }),
         expect: (r, h) => { h.check('not mirrored (no interception)', !h.has('status_blocked', (e) => /Foresight/.test(e.reason || ''))); } },
     ],

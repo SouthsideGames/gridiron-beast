@@ -778,3 +778,7 @@ perf gate stays on the legacy test until S16.
 - **Hook descriptors exist** for `strike`, `status`, `heal`, `shield` and `forcedRotation`, and any hook can report `unmet`. S5 adds
   delayed impacts, constructs, links, heal schedules, revive, HP transfer and the ledgers.
 - **Before S6:** the ability-kind table for owner review (D16), and the owner's answers on D3, D6, D8, D13 and D14.
+
+## Golden t8 wording re-record (2026-11-11, owner-approved)
+
+The American-spelling pass changed log wording ("cancelled" to "canceled", "defences" to "defenses"). `t8LogHash` covers each line's text, so the expected hash of nine golden seeds (4, 6, 7, 9, 11, 13, 14, 17, 19) was re-recorded in the layer that holds each seed's current value. No rule changed: all twenty state hashes are unchanged, and all forty reference runs (golden and S1, key config and default) produce identical logs once the wording is left out. Old and new hashes are in `tests/clash/fixtures/golden-t8-wording-2026-11-11.json`.

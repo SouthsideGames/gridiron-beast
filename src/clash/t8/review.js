@@ -117,7 +117,7 @@ function helpers(r, ctx, checks, abilityId) {
     rulingUsed: (point) => provisionalPoint(point).approved
       ? h.check(`Approved reading ${point} is not gated or provisional`, !ev('unmet', (e) => e.abilityId === abilityId && e.unmet?.some((u) => u.point === point)).length && !ev('provisional', (e) => e.abilityId === abilityId && e.point === point).length)
       : h.provisionalUsed(point),
-    provisionalUsed: (point) => h.check(`PROVISIONAL reading ${point} is labelled`, ev('provisional', (e) => e.abilityId === abilityId && e.point === point).length > 0),
+    provisionalUsed: (point) => h.check(`PROVISIONAL reading ${point} is labeled`, ev('provisional', (e) => e.abilityId === abilityId && e.point === point).length > 0),
   };
   return h;
 }

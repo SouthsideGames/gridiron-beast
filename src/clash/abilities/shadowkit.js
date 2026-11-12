@@ -41,11 +41,11 @@ export default registerClashAbility({
   review: {
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'A dodged attack (controlled seed selection) earns the one counter; the dodge then ends',
-        explain: (c) => `The opponent's attack rolls the ${c.values.dodgePct}% dodge and misses (controlled seed selection, labelled); Umbrikit counters at ${c.values.counterPct + c.values.masteryBonusPts}% and loses its dodge.`,
+        explain: (c) => `The opponent's attack rolls the ${c.values.dodgePct}% dodge and misses (controlled seed selection, labeled); Umbrikit counters at ${c.values.counterPct + c.values.masteryBonusPts}% and loses its dodge.`,
         setup: () => ({ a: [{ species: 'shadowkit', overall: 99, sparring: true }], b: [{ species: 'kindlet', overall: 40 }], seed: 1, stopAt: { exchange: 4 }, seedSearch: { until: (r) => r.log.some((e) => e.kind === 'damage' && e.abilityId === 'DAR-01-C'), max: 200, why: 'a dodge roll succeeds so the counter triggers' } }),
         expect: (r, h) => { const d = h.ab('damage'); h.check('one counter, tagged counter', d.length === 1 && d[0].tag === 'counter' && d[0].mult === (h.values.counterPct + h.values.masteryBonusPts) / 100); h.check('no dodge rolls after the counter', !h.has('roll', (e) => e.abilityId === 'DAR-01-C' && e.seq > d[0].seq)); h.executed(1); } },
       { id: 'undodgeable', kind: 'blocked', title: 'An undodgeable attack bypasses the dodge without a roll',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe makes the opponent\'s attacks undodgeable: no roll is made.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe makes the opponent\'s attacks undodgeable: no roll is made.',
         setup: () => ({ a: [{ species: 'shadowkit', overall: 99, sparring: true }], b: [{ species: 'kindlet', overall: 40 }], seed: 1, stopAt: { exchange: 2 }, probes: [{ chooseAction: (v, id) => (id === 'b0' ? { kind: 'attack', abilityId: 'TEST-UNDODGEABLE', undodgeable: true, mult: 1 } : null) }] }),
         expect: (r, h) => { h.check('no roll', !h.has('roll', (e) => e.abilityId === 'DAR-01-C')); } },
       { id: 'reserve-no-dodge', kind: 'blocked', title: 'In reserve: no dodge roll (active and able only)',

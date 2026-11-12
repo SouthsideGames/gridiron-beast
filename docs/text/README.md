@@ -21,7 +21,7 @@ It is a listing for proofreading, not the place the game reads its text from. Wo
 
 ## Known exceptions
 
-- **Beast Clash battle log and the original 72 species' text** (`src/clash/`, `src/data/species-legacy.js`) still contain British spellings: 54 lines, mostly "cancelled", "labelled", "defences". The Clash reference battles hash every log line and the species text is part of a stored fingerprint, so changing a word there means re-recording those references. That needs the owner's go-ahead.
+- **Beast Clash battle log and the original 72 species' text** were converted on 2026-11-11 with the owner's go-ahead. Nine of the twenty Clash reference battles had their wording hash re-recorded (`tests/clash/fixtures/golden-t8-wording-2026-11-11.json`); every battle's state hash is unchanged and the logs are identical once wording is left out. One stored species fingerprint (Refraction: "judgment") was updated.
 - **Clash Lab** (Developer Tools) shows raw option ids on some chips; they are not Title Case.
 - **Section headings inside screens** were not changed; the Title Case rule was applied to buttons and titles only.
 - **Review verdicts:** twelve plays had wording changes. `src/data/review-fp-aliases.js` keeps their earlier Playbook Audit verdicts valid.

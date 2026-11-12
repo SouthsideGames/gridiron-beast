@@ -48,7 +48,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'sunwhistle', hp: 20 }], b: [{ species: 'gravelpup', sparring: true }], seed: 1, stopAt: { exchange: 3 } }),
         expect: (r, h) => { h.rulingUsed('d14-dawn-song-target'); const hs = h.ev('heal', (e) => e.abilityId === 'LIG-02-C'); h.check('three heals on exchanges 1, 2, 3', hs.map((e) => e.ex).join(',') === '1,2,3', hs.map((e) => e.ex)); h.check('no status used', !h.has('status', (e) => e.abilityId === 'LIG-02-C')); h.check('schedule counted for P9', r.diagnostics.overflow.length === 0); } },
       { id: 'provisional-ko-cancels', kind: 'sourceKO', title: 'APPROVED N9c: a knockout cancels the pending pulses',
-        explain: () => 'Approved reading: Solchirp casts, then is knocked out before its next turn ends: the pulses are cancelled.',
+        explain: () => 'Approved reading: Solchirp casts, then is knocked out before its next turn ends: the pulses are canceled.',
         setup: () => ({ a: [{ species: 'sunwhistle', hp: 3 }, { species: 'tidepaw' }], b: [{ species: 'charbun', overall: 99 }], seed: 1, stopAt: { exchange: 3 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
         expect: (r, h) => { h.check('knocked out with pulses pending', h.has('cleanup', (e) => e.abilityId === 'LIG-02-C' && /cancels/.test(e.text))); } },
     ],

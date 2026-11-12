@@ -56,7 +56,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'aegistron', hp: 40, status: { id: 'slowed', strength: 15, duration: 5 } }], b: [{ species: 'gravelpup' }], seed: 1, stopAt: { exchange: 1 } }),
         expect: (r, h) => { h.unmetReported(); h.check('use kept', h.state('a0')?.used === false); } },
       { id: 'removed-no-payout', kind: 'cleanup', title: 'The episode is removed early (controlled cleanse-type removal): no payout',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe replaces the Guarded episode before it expires. "No healing if removed / replaced": the stored amount is discarded.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe replaces the Guarded episode before it expires. "No healing if removed / replaced": the stored amount is discarded.',
         setup: () => ({ a: [{ species: 'aegistron', hp: 40 }], b: [{ species: 'kindlet', overall: 30 }], seed: 1, stopAt: { exchange: 3 }, probes: [{ turnStart: (v, id) => { if (id === 'b0' && v.ex === 2) v.replaceStatus('a0', { id: 'quickened', strength: 10, duration: 2 }); } }] }),
         expect: (r, h) => { h.check('no payout', !h.has('heal', (e) => e.abilityId === 'MET-06-C')); h.check('cleanup names it', h.has('cleanup', (e) => e.abilityId === 'MET-06-C' && /no payout/.test(e.text))); } },
     ],

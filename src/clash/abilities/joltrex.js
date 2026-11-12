@@ -38,7 +38,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'joltrex' }], b: [{ species: 'gravelpup', hp: 1 }], seed: 1, stopAt: { exchange: 1 } }),
         expect: (r, h) => { h.check('no follow-up', h.ab('damage').length === 0); } },
       { id: 'special-ko', kind: 'blocked', title: 'A knockout by a special (controlled) does not qualify',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe makes Joltrex\'s attack a special: the knockout does not qualify.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe makes Joltrex\'s attack a special: the knockout does not qualify.',
         setup: () => ({ a: [{ species: 'joltrex' }], b: [{ species: 'gravelpup', hp: 1 }, { species: 'tinhare' }], seed: 1, stopAt: { exchange: 1 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }, { chooseAction: (v, id) => (id === 'a0' ? { kind: 'attack', abilityId: 'TEST-SPECIAL', mult: 1 } : null) }] }),
         expect: (r, h) => { h.check('no follow-up (use kept)', h.ab('damage').length === 0 && h.state('a0')?.used === false); } },
     ],

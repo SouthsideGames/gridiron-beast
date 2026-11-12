@@ -36,10 +36,10 @@ export default registerClashAbility({
         explain: () => 'Zephyroo starts Stunned (staged): its skipped turn does not count; the leap comes on the third PERFORMED attack (exchange 4).',
         setup: () => ({ a: [{ species: 'breezefang', status: { id: 'stunned', strength: 1, duration: 1 } }], b: [{ species: 'gravelpup', overall: 99 }], seed: 1, stopAt: { exchange: 4 } }),
         expect: (r, h) => { h.check('skipped exchange 1 (no count)', h.has('skip', (e) => e.actor === 'a0' && e.ex === 1)); h.check('the leap on exchange 4', h.ab('damage').every((e) => e.ex === 4) && h.ab('damage').length === 2); } },
-      { id: 'first-hit-ko', kind: 'multiTarget', title: 'The first hit knocks the target out: the second hit is cancelled (no retarget)',
+      { id: 'first-hit-ko', kind: 'multiTarget', title: 'The first hit knocks the target out: the second hit is canceled (no retarget)',
         explain: () => 'Staged (controlled prerequisite): the count is at two and the target at 1 HP. The first hit knocks it out; the second hit does not move to the replacement.',
         setup: () => ({ a: [{ species: 'breezefang', ability: { count: 2 } }], b: [{ species: 'gravelpup', hp: 1 }, { species: 'tinhare' }], seed: 1, stopAt: { exchange: 1 } }),
-        expect: (r, h) => { h.check('one hit landed', h.ab('damage').length === 1); h.check('the remaining hit is cancelled', h.has('hits_cancelled', (e) => e.actor === 'a0')); h.check('the replacement was not hit by the leap', !h.has('damage', (e) => e.abilityId === 'WIN-02-C' && e.target === 'b1')); } },
+        expect: (r, h) => { h.check('one hit landed', h.ab('damage').length === 1); h.check('the remaining hit is canceled', h.has('hits_cancelled', (e) => e.actor === 'a0')); h.check('the replacement was not hit by the leap', !h.has('damage', (e) => e.abilityId === 'WIN-02-C' && e.target === 'b1')); } },
     ],
   },
 });

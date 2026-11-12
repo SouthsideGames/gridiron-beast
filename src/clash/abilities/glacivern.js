@@ -37,7 +37,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'glacivern' }], b: [{ species: 'gravelpup' }], seed: 1, stopAt: { exchange: 1 } }),
         expect: (r, h) => { h.check('no freeze (use kept)', h.state('a0')?.used === false); } },
       { id: 'reapply-ends-freeze', kind: 'interaction', title: 'An accepted same-status application ends the freeze (controlled reapplication)',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): after the freeze, a reviewer probe reapplies an equal Weakened to the opponent; the freeze ends and the ordinary countdown resumes.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): after the freeze, a reviewer probe reapplies an equal Weakened to the opponent; the freeze ends and the ordinary countdown resumes.',
         setup: () => ({ a: [{ species: 'glacivern', overall: 40 }], b: [{ species: 'gravelpup', overall: 99, status: { id: 'weakened', strength: 10, duration: 2 } }], seed: 1, stopAt: { exchange: 3 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }, { turnStart: (v, id) => { if (id === 'a0' && v.ex === 2) v.applyStatus('b0', { id: 'weakened', strength: 10, duration: 1 }); } }] }),
         expect: (r, h) => { const st = h.line('b0').status; h.check('freeze cleared by the accepted application', !st || !st.freeze); } },
     ],

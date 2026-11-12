@@ -13,10 +13,8 @@ const files = walk(path.join(ROOT, 'src')).map((p) => [path.relative(ROOT, p), f
 /** Source with comments removed (good enough for a wording scan: strings holding // are URLs, which this game has none of). */
 const code = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1');
 
-// Held back on purpose, and reported to the owner: the Beast Clash engine's log text is part of the recorded reference battles
-// (tests/clash/fixtures/golden-t8*.json hash every log line) and the original 72 species' text is part of a stored fingerprint
-// snapshot (tests/clash/fixtures/football-abilities.json). Changing a word there means re-recording those references.
-const HELD_BACK = [/^src\/clash\//, /^src\/data\/species-legacy\.js$/, /^src\/data\/media\.js$/, /^src\/data\/clash-moves/];
+// Not checked: the retired 250-question media library and the historical Clash move set are kept as records and never shown.
+const HELD_BACK = [/^src\/data\/media\.js$/, /^src\/data\/clash-moves-v1\.0\.0\.js$/];
 const BRITISH = ['colou?red|colours?', 'favou?rs?|favou?rites?|favou?red|favou?rable', 'honou?rs?|honou?red', 'rumou?rs?', 'behaviou?rs?', 'neighbou?rs?', 'armou?r(ed)?', 'defences?', 'offences?', 'centres?|centred', 'programmes?', 'judgements?', 'ageing', 'grey(ed)?', 'catalogues?', 'practis(e|ed|ing)', 'cancelled|cancelling', 'labelled|labelling', 'totalled', 'travelled|travelling', 'recogni[s](e|ed|es|ing)', 'apologi[s](e|ed|es|ing)', 'prioriti[s](e|ed|es|ing)', 'organi[s](e|ed|es|ing|ation)', 'reali[s](e|ed|es|ing)', 'cheques?', 'whilst', 'amongst']
   .map((w) => w.replace(/ou\?r/g, 'our'));
 test('American spelling: no British spellings in the game\'s wording', () => {
