@@ -1,6 +1,7 @@
 // Task 9: compact, read-only historical index from existing franchise facts.
 // No gameplay mutations, speculative rosters, or fabricated historical outcomes.
 import { monsterHofInductees } from './monster-hof-voting.js';
+import { historicalRecords } from './records-history.js';
 
 const yearSort = (a, b) => (a.year ?? 0) - (b.year ?? 0);
 const safe = (v) => v && typeof v === 'object' ? v : {};
@@ -50,7 +51,7 @@ export function franchiseLegacyIndex(f) {
   const seasons = franchiseSeasonHistory(f);
   return {
     seasons, championships: championshipHistory(f), awards: historicalAwards(f),
-    hallOfFame: historicalHallOfFame(f),
+    hallOfFame: historicalHallOfFame(f), records: historicalRecords(f),
     completedSeasons: seasons.length,
     ownerTitles: seasons.filter((s) => s.champion != null && s.champion === s.club).length,
   };
