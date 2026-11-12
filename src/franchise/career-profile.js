@@ -15,6 +15,7 @@ import { AWARDS } from './awards.js';
 import { monsterOverall, SPECIES_BY_ID } from '../data/monsters.js';
 import { yearOf } from '../data/calendar.js';
 import { t as $t } from '../text/index.js';
+import { monsterHofInductees } from './monster-hof-voting.js';
 
 export const PROFILE_VERSION = 1;
 
@@ -168,6 +169,14 @@ export function trophyCase(f, m, events = careerEvents(m)) {
   // The current season's awards, frozen when the regular season ends and announced in League News, count from that moment: the
   // Career Timeline entry and the season archive only arrive when the season closes after the playoffs (same key, so no double).
   const af = f?.season?.awardsFinal; if (af) for (const [k, w] of Object.entries(af.winners || {})) if (w && w.id === m.id && TROPHY_META[k] && k !== 'coy') put(k, { key: `${`award:${k}:${af.year ?? f.season.year}`}`, year: af.year ?? f.season.year, club: w.team });
+  // Task 9 Monster Hall of Fame is separate from the legacy GM Hall of Fame.
+  // An induction is derived from the saved election; no career mutation is needed.
+  const induction = monsterHofInductees(f?.monsterHallOfFame?.elections || [])
+    .find((c) => String(c.id) === String(m.id));
+  if (induction) put('hof', {
+    key: `monster-hof:${induction.inductedYear}`,
+    year: induction.inductedYear, club: null, source: 'monster',
+  });
   const out = TROPHY_ORDER.filter((k) => shelves[k]).map((k) => { const s = shelves[k]; s.entries.sort((a, b) => (a.year ?? 0) - (b.year ?? 0)); s.count = s.entries.length; return s; });
   return out;
 }
