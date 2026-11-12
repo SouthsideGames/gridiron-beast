@@ -11,8 +11,8 @@ import { chemMeterHtml, inactiveText, monsterOf } from '../captains-ui.js';
 import { t as $t } from '../../text/index.js';
 
 const SIDES = ['offense', 'defense'];
-const SIDE_WORD = { offense: 'Offense', defense: 'Defense' };
-const ROLE_WORD = { base: 'Starter', package: 'Package', bench: 'Bench' };
+const SIDE_WORD = { offense: $t('roster.offense'), defense: $t('roster.defense') };
+const ROLE_WORD = { base: $t('roster.starter'), package: $t('roster.package'), bench: $t('roster.bench') };
 const rolesOf = (side) => [...new Set(Object.values(CP.PAIR_TYPES).filter((d) => d.side === side).flatMap((d) => [d.a, d.b]))];
 const partnersOf = (pos, side) => [...new Set(Object.values(CP.PAIR_TYPES).filter((d) => d.side === side && (d.a === pos || d.b === pos)).map((d) => (d.a === pos ? d.b : d.a)))];
 
@@ -30,7 +30,7 @@ export function registerCaptainScreens(Router, app) {
   }
   function slotHtml(f, cands, side, i, ids) {
     const c = cands.find((x) => x.id === ids[i]); const m = c ? monsterOf(f, c.id) : null;
-    return `<button class="cap-slot ${c ? '' : 'empty'}" data-action="cap-slot" data-side="${side}" data-i="${i}" aria-label="${esc(`${SIDE_WORD[side]} captain ${i + 1}: ${c ? c.name : 'choose'}`)}">${m ? monsterSprite(m, 44) : '<span class="cap-plus">+</span>'}<span class="cap-slot-name">${c ? esc(c.name) : $t('roster.choose')}</span><span class="dim">${c ? `${$t('roster.ovr', { position: c.position, ovr: c.ovr })}` : `${$t('roster.captain', { i: i + 1 })}`}</span></button>`;
+    return `<button class="cap-slot ${c ? '' : 'empty'}" data-action="cap-slot" data-side="${side}" data-i="${i}" aria-label="${esc($t('roster.captain_4', { side: SIDE_WORD[side], number: i + 1, name: c ? c.name : $t('roster.choose_2') }))}">${m ? monsterSprite(m, 44) : '<span class="cap-plus">+</span>'}<span class="cap-slot-name">${c ? esc(c.name) : $t('roster.choose')}</span><span class="dim">${c ? `${$t('roster.ovr', { position: c.position, ovr: c.ovr })}` : `${$t('roster.captain', { i: i + 1 })}`}</span></button>`;
   }
   function sideHtml(f, cands, side, ids, sugg) {
     const [x, y] = ids.map((id) => cands.find((c) => c.id === id));

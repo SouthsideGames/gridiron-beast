@@ -16,11 +16,11 @@ export const timelineView = view;
 
 function itemHtml(e, i, animate, interactive) {
   const col = TEAM_META[e.c]?.color || null;
-  const meta = [e.w != null ? (e.w > 10 ? (ROUND_NAMES[e.w - 10] || 'Playoffs') : `${$t('career.week_3', { w: e.w })}`) : null, e.c ? `<span class="tl-club"${col ? ` style="--club:${col}"` : ''}>${esc(e.c)}</span>` : null].filter(Boolean).join(' · ');
+  const meta = [e.w != null ? (e.w > 10 ? (ROUND_NAMES[e.w - 10] || $t('career.playoffs')) : `${$t('career.week_3', { w: e.w })}`) : null, e.c ? `<span class="tl-club"${col ? ` style="--club:${col}"` : ''}>${esc(e.c)}</span>` : null].filter(Boolean).join(' · ');
   const link = interactive && e.ref;
   const inner = `<span class="tl-icon" aria-hidden="true">${e.icon}</span>
     <div class="tl-body"><div class="tl-title">${esc(e.title)}${e.tier === 'major' ? ' <span class="tl-badge">★</span>' : ''}</div>${meta ? `<div class="tl-meta">${meta}</div>` : ''}<div class="tl-desc">${esc(e.desc)}</div></div>${link ? '<span class="tl-go" aria-hidden="true">›</span>' : ''}`;
-  return `<li class="tl-item ${e.tier} t-${e.t} ${link ? 'link' : ''}"${animate ? ` style="--i:${Math.min(i, 10)}"` : ''}>${link ? `<button class="tl-open" data-action="tl-open" data-k="${esc(e.k)}" aria-label="${esc(`${e.title}${e.y != null ? `, ${yearOf(e.y)}` : ''}: open the details`)}">${inner}</button>` : inner}</li>`;
+  return `<li class="tl-item ${e.tier} t-${e.t} ${link ? 'link' : ''}"${animate ? ` style="--i:${Math.min(i, 10)}"` : ''}>${link ? `<button class="tl-open" data-action="tl-open" data-k="${esc(e.k)}" aria-label="${esc($t('career.open_the_details', { title: `${e.title}${e.y != null ? `, ${yearOf(e.y)}` : ''}` }))}">${inner}</button>` : inner}</li>`;
 }
 
 /**
@@ -39,7 +39,7 @@ export function timelineSectionHtml(all, { name = $t('career.this_monster'), id 
       if (started) html += '</ol>'; started = true;
       const n = list.filter((x) => x.y === e.y).length; const hasMajor = list.some((x) => x.y === e.y && x.tier === 'major');
       const sl = interactive && e.y != null && seasonLinks?.has(e.y);
-      html += sl ? `<button class="tl-season link ${hasMajor ? 'has-major' : ''}" data-action="tl-season" data-y="${e.y}" aria-label="${esc(`Season ${yearOf(e.y)}: open the season`)}"><span>${$t('career.season_2', { year: esc(yearOf(e.y)) })}</span><span class="dim">${$t('career.moments', { n })}</span></button><ol class="tl-list">` : `<div class="tl-season ${hasMajor ? 'has-major' : ''}"><span>${e.y == null ? $t('career.before_the_timeline') : `${$t('career.season_2', { year: esc(yearOf(e.y)) })}`}</span><span class="dim">${$t('career.moments_2', { n })}</span></div><ol class="tl-list">`;
+      html += sl ? `<button class="tl-season link ${hasMajor ? 'has-major' : ''}" data-action="tl-season" data-y="${e.y}" aria-label="${esc($t('career.season_open_the_season', { year: yearOf(e.y) }))}"><span>${$t('career.season_2', { year: esc(yearOf(e.y)) })}</span><span class="dim">${$t('career.moments', { n })}</span></button><ol class="tl-list">` : `<div class="tl-season ${hasMajor ? 'has-major' : ''}"><span>${e.y == null ? $t('career.before_the_timeline') : `${$t('career.season_2', { year: esc(yearOf(e.y)) })}`}</span><span class="dim">${$t('career.moments_2', { n })}</span></div><ol class="tl-list">`;
       lastY = e.y;
     }
     html += itemHtml(e, i++, anim, interactive);

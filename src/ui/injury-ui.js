@@ -8,7 +8,7 @@ import { findMonster } from '../franchise/career-profile.js';
 import { t as $t } from '../text/index.js';
 
 const weekText = (r) => (r.po ? `${$t('roster.week_playoffs', { w: r.w })}` : `${$t('roster.week_2', { w: r.w })}`);
-const what = (r) => [r.sev, r.type].filter(Boolean).join(' ').replace(/^./, (c) => c.toUpperCase()) || 'Injury';
+const what = (r) => [r.sev, r.type].filter(Boolean).join(' ').replace(/^./, (c) => c.toUpperCase()) || $t('roster.injury');
 function entry(r) {
   const how = r.src === 'game' ? (r.vs ? `${$t('roster.in_the_game_against_the', { vs: r.vs })}` : $t('roster.in_a_game')) : r.src === 'practice' ? $t('roster.in_practice') : r.src === 'before' ? $t('roster.already_injured_when_tracking_began') : $t('roster.away_from_a_game');
   const est = r.est ? ` ${$t('roster.expected_out_weeks', { est: r.est, n: r.est })}` : '';
@@ -25,8 +25,8 @@ export function careerInjuryHtml(f, id, { firstSeason = null } = {}) {
     <div class="cp-facts inj-facts"><div><b class="mono">—</b><span>${$t('roster.career_injuries')}</span></div><div><b class="mono">—</b><span>${$t('roster.games_missed')}</span></div><div><b class="mono">${Number.isFinite(dur) ? Math.round(dur) : '—'}</b><span>${$t('roster.durability')}</span></div></div>
     <p class="dim inj-note">${$t('roster.injury_history_tracking_starts_with_your', { year: esc(yearOf(f.season.year)), week: f.season.week })}</p></div>`;
   }
-  const facts = [[$t('roster.career_injuries'), String(s.incidents)], [$t('roster.games_missed'), String(s.missed)], ['Durability', Number.isFinite(dur) ? String(Math.round(dur)) : '—']];
-  const ind = `<span class="chip inj-ind ${s.indicator}" title="${esc(s.indicator === 'early' ? `Classified after ${MIN_OPPORTUNITY} scheduled games on a roster since tracking began.` : `Since tracking began: ${s.missed} of ${s.opp} scheduled games missed, ${s.incidents} injur${s.incidents === 1 ? 'y' : 'ies'}. A record of the past, not a forecast.`)}">${esc(s.label)}</span>`;
+  const facts = [[$t('roster.career_injuries'), String(s.incidents)], [$t('roster.games_missed'), String(s.missed)], [$t('roster.durability'), Number.isFinite(dur) ? String(Math.round(dur)) : '—']];
+  const ind = `<span class="chip inj-ind ${s.indicator}" title="${esc(s.indicator === 'early' ? $t('roster.classified_after_scheduled_games_on_a', { games: MIN_OPPORTUNITY }) : $t('roster.since_tracking_began_of_scheduled_games', { missed: s.missed, opp: s.opp, incidents: s.incidents, n: s.incidents }))}">${esc(s.label)}</span>`;
   const note = s.note ? `<p class="dim inj-note">${$t('roster.injury_history_tracking_began_in', { year: esc(yearOf(s.note.y)) })}${s.note.w > 1 ? `${$t('roster.week_4', { w: s.note.w })}` : ''}${$t('roster.earlier_seasons_are_not_on_record')}</p>` : '';
   const recs = s.records.slice().reverse(); // newest first
   const log = recs.length ? `<details class="inj-log"${s.current ? ' open' : ''}><summary>${$t('roster.injury_log')} <span class="dim">(${recs.length})</span></summary><ol class="inj-list">${recs.map(entry).join('')}</ol></details>` : `<p class="inj-none">${$t('roster.no_injuries_recorded_since_tracking_began')}</p>`;

@@ -42,8 +42,8 @@ const CATS = [
   { label: $t('match.passing_yards'), key: 'passYds', sub: (p) => `${p.comp || 0}/${p.att || 0}` },
   { label: $t('match.rushing_yards'), key: 'rushYds', sub: (p) => `${p.rush || 0} car` },
   { label: $t('match.receiving_yards'), key: 'recYds', sub: (p) => `${p.rec || 0} rec` },
-  { label: 'Sacks', key: 'sacks', sub: () => '' },
-  { label: 'Tackles', key: 'tackles', sub: () => '' },
+  { label: $t('match.sacks_2'), key: 'sacks', sub: () => '' },
+  { label: $t('match.tackles'), key: 'tackles', sub: () => '' },
   { label: $t('match.broken_tackles'), key: 'broken', sub: (p) => (p.jukes ? `${p.jukes} jukes` : '') },
   { label: $t('match.abilities_fired'), key: 'abilities', sub: () => '' },
 ];
@@ -60,9 +60,9 @@ export function boxScoreHtml(state, teams, { title = $t('match.box_score') } = {
   const leaders = CATS.map((c) => `<div class="bs-row">${cell('away', c)}<div class="bs-label">${c.label}</div>${cell('home', c)}</div>`).join('');
   const S = (side) => state.stats[side];
   const tot = [
-    [$t('match.total_yards'), (s) => s.passYards + s.rushYards], ['Passing', (s) => s.passYards], ['Rushing', (s) => s.rushYards],
-    ['Completions', (s) => `${s.passComp}/${s.passAtt}`], [$t('match.first_downs'), (s) => s.firstDowns], [$t('match.sacks_taken'), (s) => s.sacks],
-    ['Turnovers', (s) => s.turnovers], ['Possession', (s) => fmtClock(Math.round(s.timeOfPossession || 0))],
+    [$t('match.total_yards'), (s) => s.passYards + s.rushYards], [$t('match.passing'), (s) => s.passYards], [$t('match.rushing'), (s) => s.rushYards],
+    [$t('match.completions'), (s) => `${s.passComp}/${s.passAtt}`], [$t('match.first_downs'), (s) => s.firstDowns], [$t('match.sacks_taken'), (s) => s.sacks],
+    [$t('match.turnovers'), (s) => s.turnovers], [$t('match.possession'), (s) => fmtClock(Math.round(s.timeOfPossession || 0))],
   ];
   const totals = `<table class="bs-totals"><thead><tr><th style="color:${A.color}">${esc(A.abbr)}</th><th></th><th style="color:${H.color}">${esc(H.abbr)}</th></tr></thead><tbody>${tot.map(([l, fn]) => `<tr><td>${fn(S('away'))}</td><td class="dim">${l}</td><td>${fn(S('home'))}</td></tr>`).join('')}</tbody></table>`;
   const pog = playersOfGame(state);

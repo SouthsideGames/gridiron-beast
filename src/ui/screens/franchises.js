@@ -16,7 +16,7 @@ import * as Save from '../../franchise/save.js';
 import { t as $t } from '../../text/index.js';
 
 const when = (t) => (t ? new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'never');
-const STATUS = { active: ['Active', 'good'], retired: ['Retired', ''], fired: ['Dismissed', 'warn'], damaged: [$t('franchises.needs_recovery'), 'bad'], migrating: [$t('franchises.moving_to_the_new_storage'), 'warn'], empty: [$t('franchises.empty_slot'), ''] };
+const STATUS = { active: [$t('franchises.active'), 'good'], retired: [$t('franchises.retired'), ''], fired: [$t('franchises.dismissed'), 'warn'], damaged: [$t('franchises.needs_recovery'), 'bad'], migrating: [$t('franchises.moving_to_the_new_storage'), 'warn'], empty: [$t('franchises.empty_slot'), ''] };
 const tierLine = (meta) => { const t = TIERS.find((x) => x.id === meta?.tier); const div = meta?.club ? divisionOf(meta.club) : null; return [t?.name, div ? `${$t('franchises.division', { div })}` : null].filter(Boolean).join(' · ') || null; };
 const recordText = (r) => (r ? `${r.w}-${r.l}${r.t ? `-${r.t}` : ''}` : '—');
 
@@ -70,15 +70,15 @@ export function registerFranchisesScreens(Router, app) {
         const list = await cloudFranchises(); const held = new Set((cache || []).map((s) => s.uid).filter(Boolean)); const empty = app.slots?.emptySlots(cache || []) || [];
         const offers = list.filter((c) => c.uid && !held.has(c.uid));
         const host = root.querySelector('#cloud-offers'); if (!host || !offers.length) return;
-        host.innerHTML = `<div class="panel" style="margin-top:10px">${$t('franchises.b_in_your_cloud_save_not')}<p class="muted">${empty.length ? $t('franchises.restore_one_into_an_empty_slot') : $t('franchises.free_a_slot_to_restore_one')}</p><div class="stack">${offers.map((c, i) => { const m = c.meta || {}; return `<div class="row between"><div><b>${esc(m.club || $t('franchises.franchise'))}</b>${m.owner ? ` · ${esc(m.owner)}` : ''}<div class="dim" style="font-size:12px">${m.status && m.status !== 'active' ? (m.status === 'fired' ? $t('franchises.dismissed') : $t('franchises.retired')) + ' archive · ' : ''}${m.seasons != null ? `${$t('franchises.seasons', { seasons: m.seasons, n: m.seasons })} ` : ''}saved ${esc(when(c.savedAt))}</div></div>${empty.length ? `<button class="btn small" data-action="cloud" data-i="${i}" data-slot="${empty[0]}">${$t('franchises.restore_into_slot', { empty: empty[0] })}</button>` : ''}</div>`; }).join('')}</div></div>`;
+        host.innerHTML = `<div class="panel" style="margin-top:10px">${$t('franchises.b_in_your_cloud_save_not')}<p class="muted">${empty.length ? $t('franchises.restore_one_into_an_empty_slot') : $t('franchises.free_a_slot_to_restore_one')}</p><div class="stack">${offers.map((c, i) => { const m = c.meta || {}; return `<div class="row between"><div><b>${esc(m.club || $t('franchises.franchise'))}</b>${m.owner ? ` · ${esc(m.owner)}` : ''}<div class="dim" style="font-size:12px">${m.status && m.status !== 'active' ? $t('franchises.archive', { status: m.status === 'fired' ? $t('franchises.dismissed') : $t('franchises.retired') }) + ' · ' : ''}${m.seasons != null ? `${$t('franchises.seasons', { seasons: m.seasons, n: m.seasons })} ` : ''}saved ${esc(when(c.savedAt))}</div></div>${empty.length ? `<button class="btn small" data-action="cloud" data-i="${i}" data-slot="${empty[0]}">${$t('franchises.restore_into_slot', { empty: empty[0] })}</button>` : ''}</div>`; }).join('')}</div></div>`;
         host.addEventListener('click', async (e) => {
           const b = e.target.closest('[data-action="cloud"]'); if (!b) return; const c = offers[Number(b.dataset.i)]; const slot = Number(b.dataset.slot); if (!c) return;
-          b.disabled = true; b.textContent = 'Restoring…';
-          const r0 = await app.switchSlot(slot); if (!r0.ok || app.f) { toast($t('franchises.that_slot_is_no_longer_empty'), 'bad'); b.disabled = false; b.textContent = 'Restore'; return; }
+          b.disabled = true; b.textContent = $t('franchises.restoring');
+          const r0 = await app.switchSlot(slot); if (!r0.ok || app.f) { toast($t('franchises.that_slot_is_no_longer_empty'), 'bad'); b.disabled = false; b.textContent = $t('franchises.restore'); return; }
           const raw = await cloudLoad({ uid: c.uid, createdAt: c.createdAt }); const f = raw && Save.migrate(raw);
-          if (!f) { toast($t('franchises.the_cloud_copy_could_not_be'), 'bad', 5000); b.disabled = false; b.textContent = 'Restore'; return; }
+          if (!f) { toast($t('franchises.the_cloud_copy_could_not_be'), 'bad', 5000); b.disabled = false; b.textContent = $t('franchises.restore'); return; }
           const r = await app.replaceFranchise(f, { copyKind: 'replaced', mirror: false });
-          if (!r.ok) { toast(`${$t('franchises.restore_failed_nothing_was_changed', { message: r.error?.message || 'unknown error' })}`, 'bad', 6000); b.disabled = false; b.textContent = 'Restore'; return; }
+          if (!r.ok) { toast(`${$t('franchises.restore_failed_nothing_was_changed', { message: r.error?.message || 'unknown error' })}`, 'bad', 6000); b.disabled = false; b.textContent = $t('franchises.restore'); return; }
           toast(`${$t('franchises.restored_into_slot', { club: f.club, slot })}`, 'good'); Router.go(f.lifecycle?.legacy ? 'legacy' : 'hq', {}, { reset: true });
         });
       })();
@@ -120,7 +120,7 @@ export async function deleteFlow(app, { slot, f, bytes = 0, onDone = null }) {
       if (a === 'cancel') { el.remove(); resolve(false); }
       if (a === 'export') { const r = await offerExport(f); const line = el.querySelector('#del-export'); if (line) line.textContent = r?.how === 'browser' ? $t('franchises.export_offered_to_your_browser_check') : r?.ok ? `${$t('franchises.saved_as', { name: r.name })}` : $t('franchises.no_file_was_saved'); }
       if (a === 'delete') {
-        if (!matches()) return; btn.disabled = true; btn.textContent = 'Deleting…';
+        if (!matches()) return; btn.disabled = true; btn.textContent = $t('franchises.deleting');
         const r = await app.deleteSlot(slot);
         if (!r.ok) { btn.disabled = false; btn.textContent = $t('franchises.delete_forever_2'); toast(`${$t('franchises.nothing_was_deleted', { message: r.error?.message || 'unknown error' })}`, 'bad', 6000); return; }
         el.remove(); toast(`${$t('franchises.deleted_undo_is_on_the_franchises', { name })}`, 'info', 5000); await onDone?.(); resolve(true);
@@ -138,7 +138,7 @@ export async function importFlow(app, Router, { file, preferredSlot = null, onDo
   const v = validateImport(text);
   if (!v.ok) { toast(`${$t('franchises.import_refused', { problems: v.problems[0] })}`, 'bad', 6000); return false; }
   const f = v.franchise; const m = v.meta || {}; const { list, empty, same } = await app.slots.slotFor({ uid: f.uid });
-  const status = f.lifecycle?.legacy ? (f.lifecycle.status === 'fired' ? $t('franchises.dismissed_archive') : $t('franchises.retired_archive')) : 'Active';
+  const status = f.lifecycle?.legacy ? (f.lifecycle.status === 'fired' ? $t('franchises.dismissed_archive') : $t('franchises.retired_archive')) : $t('franchises.active');
   const preview = `<div class="panel tight"><div><b>${esc(m.club || f.club || $t('franchises.franchise'))}</b>${m.owner ? ` · ${esc(m.owner)}` : ''}</div><div class="muted">${m.year != null ? yearOf(m.year) : ''}${m.week != null ? ` ${$t('franchises.week', { week: m.week })}` : ''} ${$t('franchises.in_the_file', { status: esc(status), kb: kb(text.length) })}</div><div class="dim mono" style="font-size:11px;overflow-wrap:anywhere">id ${esc(f.uid || 'none')}</div>${v.warnings?.length ? `<div class="warn-text">${esc(v.warnings[0])}</div>` : ''}</div>`;
   const slotButtons = (slots, label) => slots.map((n) => `<button class="btn block" data-action="into" data-slot="${n}">${$t('franchises.slot', { label, n })}</button>`).join('');
   const sameNote = same ? `<p class="warn-text">${$t('franchises.this_franchise_is_already_in_slot', { same })}</p>` : '';

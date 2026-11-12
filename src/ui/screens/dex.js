@@ -13,7 +13,7 @@ import { dexStatus, dexCounts, dexFormSeen, DEX_GROUPS } from '../../franchise/f
 import { dexCountsGlobal } from '../../franchise/dex-store.js';
 import { t as $t } from '../../text/index.js';
 
-const POS_NAME = { QB: 'Quarterback', RB: $t('league.running_back'), WR: 'Receiver', TE: $t('league.tight_end'), OL: 'Lineman', DL: $t('league.pass_rusher'), LB: 'Linebacker', CB: 'Cornerback', S: 'Safety', K: 'Kicker' };
+const POS_NAME = { QB: $t('league.quarterback'), RB: $t('league.running_back'), WR: $t('league.receiver'), TE: $t('league.tight_end'), OL: $t('league.lineman'), DL: $t('league.pass_rusher'), LB: $t('league.linebacker'), CB: $t('league.cornerback'), S: $t('league.safety'), K: $t('league.kicker') };
 
 export const silhouette = (s, size) => sprite16({ ...s, id: s.id + '_sil', colors: ['#1a2420', '#22302a'], look: 'cool', features: s.features.filter((f) => f !== 'glow' && f !== 'halo') }, size);
 
@@ -30,12 +30,12 @@ export function registerDexScreens(Router, app) {
       const { seen, signed, total } = counts.all;
       const career = dexCountsGlobal();
       const next = COLLECTION_MILESTONES.find((m) => m.at > counts.original.seen);
-      const groupLine = [['original', 'Original'], ['basic', 'Basic'], ['all', 'All']].map(([k, l]) => `<span class="chip" data-dex-group="${k}">${l} ${counts[k].seen}/${counts[k].total}</span>`).join(' ');
+      const groupLine = [['original', $t('league.original')], ['basic', $t('league.basic')], ['all', $t('league.all')]].map(([k, l]) => `<span class="chip" data-dex-group="${k}">${l} ${counts[k].seen}/${counts[k].total}</span>`).join(' ');
       const groups = Object.keys(TYPES).map((el) => {
         const list = SPECIES_DEX.filter((s) => s.element === el);
         const found = list.filter((s) => status(s) !== 'unknown').length;
         return `<section class="dex-el"><div class="row between"><h3 style="color:hsl(${TYPES[el].hue} 70% 62%);margin:0">${esc(el)}</h3><span class="dim mono">${found}/${list.length}</span></div>
-          <div class="dex-grid">${list.map((s) => { const st = status(s); return `<button class="dex-cell ${st}" data-action="open" data-id="${s.id}" aria-label="${st === 'unknown' ? 'Unknown species' : esc(s.name)}">${st === 'unknown' ? silhouette(s, 40) : sprite16(s, 40)}<span class="dex-name">${st === 'unknown' ? '???' : esc(s.name)}</span><span class="dex-r r-${s.rarity}">${st === 'unknown' ? '' : RARITIES[s.rarity].label}</span>${st === 'signed' ? `<span class="dex-tick" title="${$t('league.signed')}">✓</span>` : ''}</button>`; }).join('')}</div></section>`;
+          <div class="dex-grid">${list.map((s) => { const st = status(s); return `<button class="dex-cell ${st}" data-action="open" data-id="${s.id}" aria-label="${st === 'unknown' ? $t('league.unknown_species') : esc(s.name)}">${st === 'unknown' ? silhouette(s, 40) : sprite16(s, 40)}<span class="dex-name">${st === 'unknown' ? '???' : esc(s.name)}</span><span class="dex-r r-${s.rarity}">${st === 'unknown' ? '' : RARITIES[s.rarity].label}</span>${st === 'signed' ? `<span class="dex-tick" title="${$t('league.signed')}">✓</span>` : ''}</button>`; }).join('')}</div></section>`;
       }).join('');
       return `
         <div class="panel tight"><div class="row between"><div>${$t('league.b_discovered_b', { seen, total })}<div class="muted">${$t('league.signed_2', { signed })} ${revealAll ? $t('league.developer_view_all_revealed') : career.franchises > 1 ? `${$t('league.your_collection_across_franchises', { franchises: career.franchises })}` : f ? $t('league.scout_a_region_or_play_a') : $t('league.your_collection_carries_into_every_franchise')}</div></div>${next ? `<div class="dim" style="text-align:right;font-size:12px;max-width:45%">${$t('league.next_at_original_families', { at: next.at, reward: esc(next.reward) })}</div>` : ''}</div>

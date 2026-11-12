@@ -64,8 +64,8 @@ const tabsHtml = (cur) => `<div class="cp-tabs" role="tablist">${PAGE_TABS.map((
 // ---------------------------------------------------------------- Overview
 function overviewHtml(pg, readOnly, f = null) {
   const p = pg.p; const fx = pg.facts;
-  const seasonsTxt = p.kind === 'prospect' ? 'Prospect' : fx.seasons == null ? '—' : fmt(fx.seasons);
-  const facts = [['Seasons', seasonsTxt], ['Games', p.kind === 'prospect' || (p.kind === 'snapshot' && !fx.games) ? '—' : fmt(fx.games)], ['Teams', fx.teams ? fmt(fx.teams) : '—'], ['Titles', fmt(fx.titles)], ['Awards', fmt(fx.awards)], ['Records', fmt(fx.records)]];
+  const seasonsTxt = p.kind === 'prospect' ? $t('career.prospect') : fx.seasons == null ? '—' : fmt(fx.seasons);
+  const facts = [[$t('career.seasons_3'), seasonsTxt], [$t('career.games_3'), p.kind === 'prospect' || (p.kind === 'snapshot' && !fx.games) ? '—' : fmt(fx.games)], [$t('career.teams'), fx.teams ? fmt(fx.teams) : '—'], [$t('career.titles'), fmt(fx.titles)], [$t('career.awards_2'), fmt(fx.awards)], [$t('career.records_2'), fmt(fx.records)]];
   const spanTxt = pg.span ? span(pg.span.from, pg.span.to) : '';
   const focus = p.stats?.focus || [];
   const highlights = focus.length && (fx.games || p.kind === 'snapshot') ? `<div class="cp-sec"><div class="cp-sec-h">${$t('career.b_career_highlights_b')}<span class="dim">regular season${p.kind !== 'snapshot' ? ` · ${plural(fx.regGames, 'game')}` : ''}</span></div><div class="cs-stats">${focus.map((s) => `<div class="cs-stat"><b class="mono">${esc(s.text)}</b><span>${esc(s.label)}</span></div>`).join('')}</div>${p.stats?.post ? `<div class="cs-post">${$t('career.b_playoffs_b', { plural: plural(p.stats.post.games, 'game') })}${p.stats.post.text ? ` · ${esc(p.stats.post.text)}` : ''}</div>` : ''}</div>`
@@ -108,11 +108,11 @@ function statsHtml(pg, params) {
   const typeLabel = bucket === 'reg' ? 'regular season' : bucket === 'post' ? 'playoffs' : $t('career.regular_season_playoffs');
   const canOpen = p.kind === 'full';
   const table = rows.length ? `<div class="stat-table cp-stat-table"><table><thead><tr><th class="cp-yr">${$t('career.season')}</th><th class="cp-tm">${$t('career.team')}</th>${cols.map(([, l]) => `<th>${esc(l)}</th>`).join('')}</tr></thead><tbody>
-      ${rows.map((s) => `<tr>${canOpen ? `<td class="cp-yr"><button class="cp-yr-btn" data-action="tl-season" data-y="${s.year}" aria-label="Season ${esc(yearOf(s.year))}: game by game">${esc(yearOf(s.year))} ›</button></td>` : `<td class="cp-yr">${esc(yearOf(s.year))}</td>`}<td class="cp-tm"><span class="cp-dot" style="--club:${clubColor(s.team)}"></span>${esc(abbr(s.team))}</td>${cols.map(([k]) => `<td>${statCell(bucketLine(s, bucket), k)}</td>`).join('')}</tr>`).join('')}
+      ${rows.map((s) => `<tr>${canOpen ? `<td class="cp-yr"><button class="cp-yr-btn" data-action="tl-season" data-y="${s.year}" aria-label="${$t('career.season_game_by_game', { year: esc(yearOf(s.year)) })}">${esc(yearOf(s.year))} ›</button></td>` : `<td class="cp-yr">${esc(yearOf(s.year))}</td>`}<td class="cp-tm"><span class="cp-dot" style="--club:${clubColor(s.team)}"></span>${esc(abbr(s.team))}</td>${cols.map(([k]) => `<td>${statCell(bucketLine(s, bucket), k)}</td>`).join('')}</tr>`).join('')}
       <tr class="cp-total"><td class="cp-yr">${L.source === 'tables' ? $t('career.on_record_2') : $t('career.career')}</td><td class="cp-tm">${plural(rows.length, 'yr')}</td>${cols.map(([k]) => `<td>${statCell(total, k)}</td>`).join('')}</tr>
     </tbody></table></div>` : `<p class="dim">${bucket === 'post' ? $t('career.no_playoff_games_in_this_career') : $t('career.no_games_of_this_kind_on')}</p>`;
   return `<div class="panel cp-body">
-    ${seg([['reg', 'Regular season'], ['post', 'Playoffs'], ['all', 'Both']], 'cp-bucket', bucket)}
+    ${seg([['reg', $t('career.regular_season')], ['post', $t('career.playoffs')], ['all', $t('career.both')]], 'cp-bucket', bucket)}
     ${pg.groups.length > 1 ? `<div style="margin-top:6px">${seg(pg.groups.map((g) => [g.key, g.label]), 'cp-group', group)}</div>` : ''}
     <div class="dim stat-caption">${esc(typeLabel)} · ${plural(total.games || 0, 'game')}${canOpen ? $t('career.tap_a_season_for_its_games') : ''}</div>
     ${table}
@@ -151,7 +151,7 @@ export function careerPageHtml(app, params) {
 
 export function registerCareerScreens(Router, app) {
   Router.registerScreen('career', {
-    title: ({ params }) => { const r = resolveCareer(app, params); return r ? r.p.name : 'Career'; },
+    title: ({ params }) => { const r = resolveCareer(app, params); return r ? r.p.name : $t('career.career'); },
     render: ({ params }) => careerPageHtml(app, params),
     mount(root, ctx) {
       const params = ctx.params; // this history entry's own params: the section and filters are kept on it for Back

@@ -104,9 +104,9 @@ export function restoreFailText(r) {
   return `${$t('franchises.the_restored_franchise_could_not_be', { m })}`;
 }
 async function runRestore(app, id, btn) {
-  if (btn) { btn.disabled = true; btn.textContent = 'Restoring…'; }
+  if (btn) { btn.disabled = true; btn.textContent = $t('franchises.restoring'); }
   let r; try { r = await app.restoreBackup(id); } catch (e) { r = { ok: false, error: { message: e.message } }; }
-  if (!r.ok && btn) { btn.disabled = false; btn.textContent = 'Restore'; }
+  if (!r.ok && btn) { btn.disabled = false; btn.textContent = $t('franchises.restore'); }
   if (!r.ok) toast(`${$t('franchises.restore_failed', { restoreFail: restoreFailText(r) })}`, 'bad', 6500);
   return r;
 }
@@ -153,7 +153,7 @@ export function showSaveFailure(app, error) {
     <div class="stack"><button class="btn primary block" data-action="retry">${$t('franchises.retry_save')}</button><button class="btn block" data-action="exp">${$t('franchises.export_franchise')}</button><button class="btn ghost block" data-action="later">${$t('franchises.keep_playing')}</button></div>`, { title: $t('franchises.save_failed'), onClose: () => { failSheet = null; } });
   failSheet.el.addEventListener('click', async (e) => {
     const a = e.target.closest('[data-action]')?.dataset.action;
-    if (a === 'retry') { const btn = e.target.closest('button'); btn.disabled = true; btn.textContent = 'Saving…'; const r = await app.save({ immediate: true }); if (r?.ok) { failSheet?.close(); toast('Saved.', 'good'); } else { btn.disabled = false; btn.textContent = $t('franchises.retry_save_2'); toast(`${$t('franchises.still_failing', { message: r?.error?.message || 'unknown error' })}`, 'bad'); } }
+    if (a === 'retry') { const btn = e.target.closest('button'); btn.disabled = true; btn.textContent = $t('franchises.saving'); const r = await app.save({ immediate: true }); if (r?.ok) { failSheet?.close(); toast('Saved.', 'good'); } else { btn.disabled = false; btn.textContent = $t('franchises.retry_save_2'); toast(`${$t('franchises.still_failing', { message: r?.error?.message || 'unknown error' })}`, 'bad'); } }
     if (a === 'exp' && app.f) offerExport(app.f);
     if (a === 'later') failSheet?.close();
   });

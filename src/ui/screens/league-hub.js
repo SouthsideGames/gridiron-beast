@@ -17,7 +17,7 @@ import * as F from '../../franchise/franchise.js';
 import { t as $t } from '../../text/index.js';
 
 const TAB_KEY = 'gridiron-beast-v7-league-tab';
-const TABS = [['clubs', 'Clubs'], ['leaders', 'Leaders'], ['moves', 'Moves'], ['races', 'Races'], ['rivals', 'Rivals']];
+const TABS = [['clubs', $t('league.clubs')], ['leaders', $t('league.leaders')], ['moves', $t('league.moves')], ['races', $t('league.races')], ['rivals', $t('league.rivals')]];
 const get = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
 const set = (k, v) => { try { localStorage.setItem(k, v); } catch { /* a convenience */ } };
 const badge = (kind) => (kind === 'legendary' ? `<span class="chip accent" title="${$t('league.gym_legendary_bound_to_this_club')}">${$t('league.legend')}</span>` : kind === 'signature' ? `<span class="chip" style="border-color:#a855f7" title="${$t('league.the_rival_gms_signature_monster_bound')}">${$t('league.signature')}</span>` : '');
@@ -35,7 +35,7 @@ function clubsTab(f) {
 function leadersTab(f, mine) {
   const L = universeCareerLeaders(f, { n: 5, mine });
   return `<p class="muted">${$t('league.career_totals_regular_season_across', { mine: mine ? $t('league.your_roster') : $t('league.every_monster_the_universe_holds_the') })}</p>
-    ${seg([['all', 'Whole league'], ['mine', 'Your monsters']], 'scope', mine ? 'mine' : 'all')}
+    ${seg([['all', $t('league.whole_league')], ['mine', $t('league.your_monsters')]], 'scope', mine ? 'mine' : 'all')}
     ${RECORD_CATEGORIES.map((c) => { const rows = L[c.id]; if (!rows?.length) return ''; return `<div class="panel tight"><b>${esc(c.label)}</b><div class="list" style="margin-top:6px">${rows.map((r, i) => `<div class="item static ${r.club === f.club ? 'mine' : ''}"><span class="rank ${i === 0 ? 'top' : ''}">${i + 1}</span>${monsterSprite(r, 30)}<div class="grow"><div class="name">${careerLink(r.id, r.name)} <span class="dim">${esc(r.position)}${r.club ? ` · ${esc(r.club)}` : ''}${r.where === 'legend' ? $t('league.retired') : r.where === 'pool' || r.where === 'waivers' ? $t('league.free_agent') : ''}</span></div><div class="sub">${r.games} games</div></div><span class="chip ${i === 0 ? 'accent' : ''} mono">${Number(r.value).toLocaleString('en-US')}</span></div>`).join('')}</div></div>`; }).join('') || `<p class="dim">${$t('league.no_career_totals_yet_careers_begin')}</p>`}`;
 }
 
@@ -43,7 +43,7 @@ function movesTab(f) {
   const items = (f.leagueNews || []).filter((it) => TRANSACTION_KINDS.has(it.kind)).slice(0, 60);
   if (!items.length) return `<p class="dim">${$t('league.no_league_moves_on_record_yet')}</p>`;
   const byWeek = []; for (const it of items) { const k = `${it.year}|${it.week}`; let g = byWeek.find((x) => x.k === k); if (!g) { g = { k, year: it.year, week: it.week, items: [] }; byWeek.push(g); } g.items.push(it); }
-  const label = (w) => (w === 0 ? 'Offseason' : w > 10 ? 'Playoffs' : `${$t('league.week', { w })}`);
+  const label = (w) => (w === 0 ? $t('league.offseason') : w > 10 ? $t('league.playoffs') : `${$t('league.week', { w })}`);
   return `<p class="muted">${$t('league.the_leagues_moves_worth_a_line')}</p>${byWeek.map((g) => `<h3>${yearOf(g.year)} · ${label(g.week)}</h3><div class="list">${g.items.map((it) => `<div class="item static"><span>${it.icon || '📰'}</span><div class="grow"><div class="sub" style="font-size:14px">${linkText(it)}</div>${it.lines?.length ? `<div class="dim" style="font-size:12px;margin-top:4px">${it.lines.map((l) => linkText(l)).join(`<br>`)}</div>` : ''}</div></div>`).join('')}</div>`).join('')}`;
 }
 /** An item's text with its monster's name linked (the News UI's rule). */
@@ -80,7 +80,7 @@ export function registerLeagueHubScreens(Router, app) {
     },
   });
   Router.registerScreen('club', {
-    title: ({ params }) => params.club || 'Club',
+    title: ({ params }) => params.club || $t('league.club'),
     render({ f, params }) {
       const club = params.club; const meta = TEAM_META[club]; if (!meta) return `<p>${$t('league.no_such_club')}</p>`;
       const rows = clubRosterView(f, club); const rec = f.season.records[club] || { w: 0, l: 0 }; const mine = club === f.club;

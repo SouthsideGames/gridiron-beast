@@ -9,7 +9,7 @@ import * as CP from '../franchise/partnerships.js';
 import { findMonster } from '../franchise/career-profile.js';
 import { t as $t } from '../text/index.js';
 
-const SIDE_WORD = { offense: 'Offense', defense: 'Defense' };
+const SIDE_WORD = { offense: $t('roster.offense'), defense: $t('roster.defense') };
 export const monsterOf = (f, id) => findMonster(f, id)?.m || null;
 const nameOf = (f, id) => monsterOf(f, id)?.name || $t('roster.a_former_captain');
 
@@ -17,10 +17,10 @@ const nameOf = (f, id) => monsterOf(f, id)?.name || $t('roster.a_former_captain'
 export function chemMeterHtml(prog, { compact = false } = {}) {
   const pips = [1, 2, 3, 4].map((l) => `<i class="${prog.level >= l ? 'on' : ''}"></i>`).join('');
   const next = prog.next == null ? $t('roster.elite_the_top_level') : `${$t('roster.more_to', { toNext: prog.toNext, levelNames: CP.LEVEL_NAMES[prog.level + 1] })}`;
-  return `<span class="chem ${compact ? 'compact' : ''}" title="${esc(`${prog.name} · ${prog.n} plays together · ${next}`)}"><span class="chem-pips lv${prog.level}" aria-hidden="true">${pips}</span><b class="chem-name">${prog.name}</b>${compact ? '' : `<span class="chem-bar" aria-hidden="true"><i style="width:${Math.round(prog.pct * 100)}%"></i></span><span class="chem-next dim">${esc(next)}</span>`}</span>`;
+  return `<span class="chem ${compact ? 'compact' : ''}" title="${esc($t('roster.plays_together_2', { name: prog.name, plays: prog.n, next }))}"><span class="chem-pips lv${prog.level}" aria-hidden="true">${pips}</span><b class="chem-name">${prog.name}</b>${compact ? '' : `<span class="chem-bar" aria-hidden="true"><i style="width:${Math.round(prog.pct * 100)}%"></i></span><span class="chem-next dim">${esc(next)}</span>`}</span>`;
 }
 /** "C" for a monster who is one of his club's captains this season. */
-export function captainBadge(f, id, club = f?.club) { const c = CP.captaincyOf(f, club, id); return c ? `<span class="chip cap-badge" title="${esc(`${SIDE_WORD[c.side]} captain with ${nameOf(f, c.partner)}`)}" aria-label="${$t('roster.captain_3')}">C</span>` : ''; }
+export function captainBadge(f, id, club = f?.club) { const c = CP.captaincyOf(f, club, id); return c ? `<span class="chip cap-badge" title="${esc($t('roster.captain_with', { side: SIDE_WORD[c.side], partner: nameOf(f, c.partner) }))}" aria-label="${$t('roster.captain_3')}">C</span>` : ''; }
 const WHY = { gone: $t('roster.is_no_longer_on_the_team'), injured: $t('roster.is_injured'), benched: $t('roster.is_not_in_the_lineup') };
 /** Why a side's partnership is inactive this week, in one sentence, or null when it is active. */
 export function inactiveText(f, st) {
@@ -34,7 +34,7 @@ export function partnershipStripHtml(f, side, st) {
   if (!CP.isActive(f) || !st) return '';
   if (!st.pair) return `<div class="cap-strip none"><b>${SIDE_WORD[side]} captains</b><span class="dim">${esc(st.reason || $t('roster.no_partnership_this_season'))}</span></div>`;
   const a = monsterOf(f, st.pair.a), b = monsterOf(f, st.pair.b); const prog = st.progress; const why = inactiveText(f, st);
-  return `<button class="cap-strip ${st.active ? 'active' : 'inactive'}" data-action="go" data-screen="captains" aria-label="${esc(`${SIDE_WORD[side]} partnership, ${prog.name}, ${st.active ? 'active' : 'inactive'}`)}">
+  return `<button class="cap-strip ${st.active ? 'active' : 'inactive'}" data-action="go" data-screen="captains" aria-label="${esc($t('roster.partnership', { side: SIDE_WORD[side], name: prog.name, state: st.active ? $t('roster.active_2') : $t('roster.inactive_2') }))}">
     <span class="cap-faces">${a ? monsterSprite(a, 30) : ''}${b ? monsterSprite(b, 30) : ''}</span>
     <span class="cap-main"><span class="cap-line"><b>${esc(nameOf(f, st.pair.a))} & ${esc(nameOf(f, st.pair.b))}</b> <span class="dim">${esc(CP.PAIR_TYPES[st.pair.type].label)}</span></span>
       ${chemMeterHtml(prog)}

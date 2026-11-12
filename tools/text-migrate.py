@@ -172,7 +172,8 @@ class Rewriter:
         before, after = self.context(a, b)
         if re.search(r'(===?|!==?|\bcase|startsWith\(|endsWith\(|includes\(|indexOf\(|\.has\(|\.get\(|\.test\(|\bfrom|\bimport|typeof [\w.]+ ===?)\s*$', before): return raw
         if re.search(r'[\w$)\]]\s*\[\s*$', before): return raw                       # x['key']: an index, not an array of lines
-        if re.match(r'(===?|!==?|\]|\s*:(?!:))', after) and not re.search(r'[?]\s*$', before): return raw   # compared, indexed or an object key
+        listed = unescape(body, q) in self.also and after.startswith(']') and re.search(r'[,\[]\s*$', before)   # a named label closing a list: ['id', 'Label']
+        if re.match(r'(===?|!==?|\]|\s*:(?!:))', after) and not re.search(r'[?]\s*$', before) and not listed: return raw   # compared, indexed or an object key
         if re.search(r"\b(data-[\w-]+|class|className|action|screen|kind|id|key|type|role|icon|ns|side|mode|status)\s*[:=]\s*$", before): return raw
         text = unescape(body, q)
         if '<' in text and re.search(r'<[a-zA-Z/][^<>]*>', text):

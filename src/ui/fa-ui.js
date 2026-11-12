@@ -25,7 +25,7 @@ let filter = ''; let showAll = false; let keenOnly = false; // decision 14: the 
 /** How keen he is on the owner's club at given terms: { label, cls, why[] } (a readable explanation, decision 30). */
 export function interestOf(f, m, terms) {
   const r = E.rateOffer(f, m, f.club, terms); const p = personaOf(m); const ratio = r.score / (r.need || 1);
-  const label = ratio >= 1 ? 'Interested' : ratio >= E.FA_RULES.counterBand ? 'Listening' : $t('market.not_interested'); const cls = ratio >= 1 ? 'good' : ratio >= E.FA_RULES.counterBand ? 'warn' : 'bad';
+  const label = ratio >= 1 ? $t('market.interested') : ratio >= E.FA_RULES.counterBand ? $t('market.listening') : $t('market.not_interested'); const cls = ratio >= 1 ? 'good' : ratio >= E.FA_RULES.counterBand ? 'warn' : 'bad';
   const why = [];
   why.push(r.moneyRatio >= 1 ? $t('market.the_money_meets_his_ask') : r.moneyRatio >= E.FA_RULES.lowball ? $t('market.the_money_is_a_little_under') : $t('market.the_money_is_well_under_his'));
   const ask = E.askOf(f, m); if (terms.years !== ask.years) why.push(`${$t('market.he_would_rather_sign_for_seasons', { years: ask.years, n: ask.years })}`);
@@ -70,11 +70,11 @@ function myOffersHtml(f) {
 export function renewalOutlook(f, m) {
   if (!f.freeAgency?.v || !E.extensionEligible(f, m)) return null; const neg = F.extensionTalks(f, m.id); if (!neg) return null;
   const ask = E.askOf(f, m); const terms = { ...neg.demand };
-  if (neg.state === 'no-talks') return { label: $t('market.not_interested'), cls: 'bad', why: [neg.clue, 'He does not want to discuss an extension in this window. That is “not now”, not a decision to leave: a later window and the renewal of his expiring contract are new talks.'], ratio: 0, terms, talks: false, clue: neg.clue, state: neg.state, left: 0 };
-  if (neg.state === 'ended') return { label: $t('market.not_interested'), cls: 'bad', why: ['Talks ended in this window. A later window, and the renewal of his expiring contract, are new talks.'], ratio: 0, terms, talks: false, clue: null, state: neg.state, left: 0 };
-  const ratio = ask.salary / Math.max(1, neg.demand.salary); const label = ratio >= 1 / 1.05 ? 'Interested' : 'Listening';
+  if (neg.state === 'no-talks') return { label: $t('market.not_interested'), cls: 'bad', why: [neg.clue, $t('market.he_does_not_want_to_discuss')], ratio: 0, terms, talks: false, clue: neg.clue, state: neg.state, left: 0 };
+  if (neg.state === 'ended') return { label: $t('market.not_interested'), cls: 'bad', why: [$t('market.talks_ended_in_this_window_a')], ratio: 0, terms, talks: false, clue: null, state: neg.state, left: 0 };
+  const ratio = ask.salary / Math.max(1, neg.demand.salary); const label = ratio >= 1 / 1.05 ? $t('market.interested') : $t('market.listening');
   const clue = ratio < 0.9 ? $t('market.he_is_looking_for_a_stronger') : neg.clue;
-  return { label, cls: label === 'Interested' ? 'good' : 'warn', why: [clue, `${$t('market.he_opens_at_yr_for_seasons', { amount: fmt(neg.opening.salary), years: neg.opening.years, left: neg.left, left2: neg.left === 1 ? '' : 's', n: neg.opening.years })}`], ratio, terms, talks: true, clue, state: neg.state, left: neg.left };
+  return { label, cls: label === $t('market.interested') ? 'good' : 'warn', why: [clue, `${$t('market.he_opens_at_yr_for_seasons', { amount: fmt(neg.opening.salary), years: neg.opening.years, left: neg.left, left2: neg.left === 1 ? '' : 's', n: neg.opening.years })}`], ratio, terms, talks: true, clue, state: neg.state, left: neg.left };
 }
 /** R3: the GM Assistant's extension advice (optional, recommendations only): core monsters in their final season who are Interested now. */
 export function extensionAdviceHtml(f, { action = 'faopen' } = {}) {
@@ -82,7 +82,7 @@ export function extensionAdviceHtml(f, { action = 'faopen' } = {}) {
   const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const starters = new Set(Object.values(chart).filter(Boolean));
   const core = f.roster.map((m) => ({ m, o: renewalOutlook(f, m) })).filter(({ m, o }) => o && (starters.has(m.id) || ((m.age || 30) <= 25 && (m.potential || 0) >= monsterOverall(m) + 5)));
   if (!core.length) return '';
-  const row = ({ m, o }) => `<div class="item static"><div class="grow"><div class="name">${esc(m.name)} <span class="dim">${$t('market.ovr_age', { position: esc(m.position), monsterOverall: monsterOverall(m), age: m.age })}</span></div><div class="sub"><span class="chip ${o.cls}">${o.label}</span> ${$t('market.at_yr', { amount: fmt(o.terms.salary), years: o.terms.years, label: o.label === 'Interested' ? $t('market.a_good_moment_to_extend') : o.label === 'Listening' ? $t('market.he_may_counter') : $t('market.he_would_likely_say_no_now') })}</div></div><button class="btn small" data-action="${action}" data-id="${m.id}">${$t('market.extend')}</button></div>`;
+  const row = ({ m, o }) => `<div class="item static"><div class="grow"><div class="name">${esc(m.name)} <span class="dim">${$t('market.ovr_age', { position: esc(m.position), monsterOverall: monsterOverall(m), age: m.age })}</span></div><div class="sub"><span class="chip ${o.cls}">${o.label}</span> ${$t('market.at_yr', { amount: fmt(o.terms.salary), years: o.terms.years, label: o.label === $t('market.interested') ? $t('market.a_good_moment_to_extend') : o.label === $t('market.listening') ? $t('market.he_may_counter') : $t('market.he_would_likely_say_no_now') })}</div></div><button class="btn small" data-action="${action}" data-id="${m.id}">${$t('market.extend')}</button></div>`;
   return `<div class="panel tight">${$t('market.b_gm_assistant_extensions_b')} <span class="dim">${$t('market.recommendations_only_nothing_is_offered_without')}</span><div class="list" style="margin-top:4px">${core.sort((a, b) => b.o.ratio - a.o.ratio).slice(0, 6).map(row).join('')}</div></div>`;
 }
 
@@ -134,7 +134,7 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
   const p = personaOf(m);
   const draw = () => {
     const neg = talks(); const negHtml = neg ? negotiationPanel(neg) : '';
-    const it = (() => { if (mode === 'renew') return interestOf(f, m, t); if (mode !== 'extend') return interestOf(f, m, t); const tk = E.talksOpen(f, m, f.club); return tk.open ? interestOf(f, m, t) : { label: $t('market.not_interested'), cls: 'bad', why: [tk.clue, 'He is not ready to discuss an extension now; circumstances may change, and you may still bid for him in free agency.'], ratio: 0 }; })(); const block = mode === 'extend' || mode === 'renew' ? null : E.blocker(f, f.club, m, t, { own: mine, final: mode === 'now' });
+    const it = (() => { if (mode === 'renew') return interestOf(f, m, t); if (mode !== 'extend') return interestOf(f, m, t); const tk = E.talksOpen(f, m, f.club); return tk.open ? interestOf(f, m, t) : { label: $t('market.not_interested'), cls: 'bad', why: [tk.clue, $t('market.he_is_not_ready_to_discuss')], ratio: 0 }; })(); const block = mode === 'extend' || mode === 'renew' ? null : E.blocker(f, f.club, m, t, { own: mine, final: mode === 'now' });
     const sched = (() => { const start = mode === 'extend' ? (m.contract?.ends ?? 0) + 1 : mode === 'renew' ? f.season.year + 1 : (f.freeAgency?.leagueYear ?? f.season.year); const a = allocateBonus(t.bonus, t.years); return a.map((b, i) => ({ year: start + i, salary: t.salary, bonus: b, total: t.salary + b })); })();
     const rivals = E.competingOffers(f, id).filter((o) => o.club !== f.club);
     const hist = mine?.history || [];
@@ -189,7 +189,7 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
 
 /** The negotiation as the owner sees it: opening demand, his current demand, the offers made and his answers, attempts left, status. */
 function negotiationPanel(neg) {
-  const st = neg.state === 'active' ? 'Negotiating' : neg.state === 'agreed' ? 'Agreed' : neg.state === 'no-talks' ? (neg.window === 'renew' ? $t('market.not_negotiating_he_will_test_free') : $t('market.not_negotiating_in_this_window')) : neg.window === 'renew' ? $t('market.ended_he_will_test_free_agency') : $t('market.ended_for_this_window');
+  const st = neg.state === 'active' ? $t('market.negotiating') : neg.state === 'agreed' ? $t('market.agreed') : neg.state === 'no-talks' ? (neg.window === 'renew' ? $t('market.not_negotiating_he_will_test_free') : $t('market.not_negotiating_in_this_window')) : neg.window === 'renew' ? $t('market.ended_he_will_test_free_agency') : $t('market.ended_for_this_window');
   const ans = { accept: 'accepted', counter: 'countered', end: $t('market.ended_the_talks') };
   return `<div class="panel tight"><div class="row between">${$t('market.b_negotiation_b')}<span class="chip ${neg.state === 'active' ? 'warn' : neg.state === 'agreed' ? 'good' : 'bad'}">${esc(st)}</span></div>
     <div class="row between muted"><span>${$t('market.opening_demand')}</span><span>${fmt(neg.opening.salary)}/yr × ${neg.opening.years}</span></div>
@@ -284,6 +284,6 @@ export function lineupGateSheet(app, { mode = 'game', onContinue, onDone } = {})
     if (act === 'close') { closed = true; close(); onDone?.(); return; }
     if (act === 'sign') { negotiationSheet(app, b.dataset.id, () => { redraw(); onDone?.(); }, { mode: 'now' }); return; } // re-checked when the signing sheet closes
     if (act === 'market' || act === 'contracts' || act === 'lineup') { closed = true; close(); Router.go(act === 'market' ? 'famarket' : act); return; }
-    if (act === 'continue') { if (!(await confirmSheet(mode === 'game' ? $t('market.forfeit_this_game_it_is_recorded') : $t('market.start_the_season_without_a_legal'), { title: $t('market.continue_under_the_forfeit_rule'), okLabel: mode === 'game' ? 'Forfeit' : $t('market.start_anyway'), danger: true }))) return; closed = true; close(); onContinue?.(); }
+    if (act === 'continue') { if (!(await confirmSheet(mode === 'game' ? $t('market.forfeit_this_game_it_is_recorded') : $t('market.start_the_season_without_a_legal'), { title: $t('market.continue_under_the_forfeit_rule'), okLabel: mode === 'game' ? $t('market.forfeit') : $t('market.start_anyway'), danger: true }))) return; closed = true; close(); onContinue?.(); }
   });
 }

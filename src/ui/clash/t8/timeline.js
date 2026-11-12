@@ -14,7 +14,7 @@ import { DURATION } from '../choreographer.js';
 import { t as $t } from '../../../text/index.js';
 
 export { DURATION };
-export const STATUS_NAME = Object.freeze({ stunned: 'Stunned', slowed: 'Slowed', stumbled: 'Stumbled', knockedDown: $t('clash.knocked_down'), afflicted: 'Afflicted', weakened: 'Weakened', confused: 'Confused', healingReduced: $t('clash.healing_reduced'), shielded: 'Shielded', empowered: 'Empowered', quickened: 'Quickened', guarded: 'Guarded' });
+export const STATUS_NAME = Object.freeze({ stunned: $t('clash.stunned'), slowed: $t('clash.slowed'), stumbled: $t('clash.stumbled'), knockedDown: $t('clash.knocked_down'), afflicted: $t('clash.afflicted'), weakened: $t('clash.weakened'), confused: $t('clash.confused'), healingReduced: $t('clash.healing_reduced'), shielded: $t('clash.shielded'), empowered: $t('clash.empowered'), quickened: $t('clash.quickened'), guarded: $t('clash.guarded') });
 export const HARMFUL = new Set(['stunned', 'slowed', 'stumbled', 'knockedDown', 'afflicted', 'weakened', 'confused', 'healingReduced']);
 
 /** Events that are bookkeeping only (no visible beat of their own): they take a tick so the caption can be read while stepping. */
@@ -96,7 +96,7 @@ export function t8CuesFor(result) {
       case 'redirect': tier = 'power'; move = 'cover'; label = 'covers'; camera = cam([e.actor, e.target], 1.06); break;
       case 'survive': tier = 'power'; move = 'survive'; label = $t('clash.holds_on_at_1_hp'); camera = cam([e.actor], 1.08, 3); break;
       case 'raw_split': tier = 'routine'; move = 'split'; label = `shares ${e.sourceShare}`; camera = cam([e.actor, e.target]); break;
-      case 'skip': tier = 'power'; move = 'skip'; label = e.cause === 'stunned' ? 'Stunned!' : 'passes'; camera = cam([e.actor], e.cause === 'stunned' ? 1.06 : 1); if (e.cause !== 'stunned') tier = 'tick'; break;
+      case 'skip': tier = 'power'; move = 'skip'; label = e.cause === 'stunned' ? $t('clash.stunned_2') : 'passes'; camera = cam([e.actor], e.cause === 'stunned' ? 1.06 : 1); if (e.cause !== 'stunned') tier = 'tick'; break;
       case 'stun_safeguard': tier = 'routine'; move = 'shake-off'; label = $t('clash.shakes_it_off'); camera = cam([e.actor]); break;
       case 'rotation': tier = e.forced ? 'power' : 'routine'; move = e.forced ? 'yank' : 'walk'; camera = cam([e.out, e.in]); break;
       case 'rotation_delayed': tier = 'routine'; move = 'held'; label = 'rotation delayed'; camera = cam([e.actor]); break;

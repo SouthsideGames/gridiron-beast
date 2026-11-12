@@ -11,7 +11,7 @@ import { TIER_LABEL, TROPHY_META } from '../franchise/career-profile.js';
 import { sheet, toast, esc } from './dom.js';
 import { t as $t } from '../text/index.js';
 
-export const CARD_FORMATS = Object.freeze({ portrait: { w: 1080, h: 1350, label: 'Portrait' }, square: { w: 1080, h: 1080, label: 'Square' } });
+export const CARD_FORMATS = Object.freeze({ portrait: { w: 1080, h: 1350, label: $t('career.portrait') }, square: { w: 1080, h: 1080, label: $t('career.square') } });
 const FONT = $t('career.system_ui_apple_system_segoe_ui');
 export const TIER_STYLE = Object.freeze({
   prospect: { frame: '#6f8a80', glow: '#6f8a80', ribbon: '#2a3a34', ink: '#d9e7df' },
@@ -38,7 +38,7 @@ export function honourPills(p) {
 /** Three numbers for the card: the position's career statistics, or (before a first game) where he stands today. */
 export function cardStats(p) {
   if ((p.stats?.games || 0) > 0 && p.stats.focus?.length) return p.stats.focus.slice(0, 3).map((s) => ({ value: s.text, label: s.label }));
-  return [{ value: p.level != null ? String(p.level) : '—', label: 'Level' }, { value: p.ovr != null ? String(p.ovr) : '—', label: 'Overall' }, { value: p.seasons ? String(p.seasons) : '1', label: p.seasons > 1 ? 'Seasons' : 'Season' }];
+  return [{ value: p.level != null ? String(p.level) : '—', label: $t('career.level') }, { value: p.ovr != null ? String(p.ovr) : '—', label: $t('career.overall') }, { value: p.seasons ? String(p.seasons) : '1', label: p.seasons > 1 ? $t('career.seasons_3') : $t('career.season') }];
 }
 /** "Lumen · Light · QB", without repeating the species when the name already is it (numerals aside). */
 const idLine = (p) => [String(p.name || '').replace(/ (II|III|IV|V|VI|\d+)$/, '') === p.speciesName ? null : p.speciesName, p.type, p.position].filter(Boolean).join(' · ');
@@ -206,7 +206,7 @@ export function openCareerCard(p, { reduced = false } = {}) {
     busy = true; btns().forEach((b) => { b.disabled = true; });
     try {
       const r = await careerCardBlob(p, format); if (url) URL.revokeObjectURL(url); blob = r.blob; url = URL.createObjectURL(blob);
-      box.innerHTML = `<img class="cc-img ${format}" src="${url}" alt="${esc(`${p.name}'s ${CARD_FORMATS[format].label.toLowerCase()} career card`)}" width="${CARD_FORMATS[format].w}" height="${CARD_FORMATS[format].h}">`;
+      box.innerHTML = `<img class="cc-img ${format}" src="${url}" alt="${esc($t('career.s_career_card', { name: p.name, format: CARD_FORMATS[format].label.toLowerCase() }))}" width="${CARD_FORMATS[format].w}" height="${CARD_FORMATS[format].h}">`;
       box.dataset.clipped = String(r.report.clipped.length); box.dataset.format = format; box.dataset.bytes = String(blob.size);
       status.textContent = `${$t('career.card_ready_png', { label: CARD_FORMATS[format].label, w: CARD_FORMATS[format].w, h: CARD_FORMATS[format].h })}`; status.dataset.kind = 'ready';
     } catch (e) { box.innerHTML = `<p class="bad">${esc(e.message || $t('career.the_card_could_not_be_drawn'))}</p>`; blob = null; }

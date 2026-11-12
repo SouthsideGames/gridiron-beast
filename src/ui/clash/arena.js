@@ -370,7 +370,7 @@ export function createArena(root, result, opts = {}) {
       case 'ko': {
         const T = body(e.target); const R = rig(e.target); const major = cue.tier === 'major';
         await anim(T, softFlash() ? [{ filter: 'brightness(1)' }, { filter: 'brightness(1.5)' }, { filter: 'brightness(1)' }] : [{ filter: 'brightness(1)' }, { filter: 'brightness(4)' }, { filter: 'brightness(1)' }, { filter: 'brightness(4)' }, { filter: 'brightness(1)' }], D * 0.22, 'linear'); // reduce flashes: one soft pulse instead of the double strobe
-        if (major) banner('Knockout!', 'major', D * 0.9);
+        if (major) banner($t('clash.knockout'), 'major', D * 0.9);
         fx.koPuff(chest(e.target), { seed: cue.i }); monEl[e.target].classList.add('falling');
         const { dx } = towards(e.actor && e.actor !== e.target ? e.actor : e.target, e.target); const away = dx >= 0 ? 1 : -1;
         await anim(R, [{ transform: $t('clash.translate_0_0_rotate_0'), opacity: 1 }, { transform: `${$t('clash.translate_px_10px_rotate_deg', { away: away * 12, away2: away * 20 })}`, opacity: 1, offset: 0.3 }, { transform: `${$t('clash.translate_px_8px_rotate_deg', { away: away * 26, away2: away * 80 })}`, opacity: 0.8, offset: 0.7 }, { transform: `${$t('clash.translate_px_26px_rotate_deg_scale', { away: away * 34, away2: away * 90 })}`, opacity: 0 }], D * (major ? 0.7 : 0.6), 'ease-in');

@@ -20,7 +20,7 @@ import { STAFF, STAFF_ROLES } from '../../data/staff.js';
 import { t as $t } from '../../text/index.js';
 
 const TAB_KEY = 'gridiron-beast-v7-legacy-tab';
-const TABS = [['legacy', 'Legacy'], ['seasons', 'Seasons'], ['league', 'League'], ['roster', 'Roster'], ['careers', 'Careers']];
+const TABS = [['legacy', $t('career.legacy')], ['seasons', $t('career.seasons_3')], ['league', $t('career.league')], ['roster', $t('career.roster')], ['careers', $t('career.careers')]];
 const date = (t) => (t ? new Date(t).toLocaleDateString() : 'unknown date');
 const rec = (r) => (r ? `${r.w}-${r.l}${r.t ? `-${r.t}` : ''}` : '—');
 const na = `<span class="dim">${$t('career.not_recorded')}</span>`;

@@ -25,8 +25,8 @@ export const TIMING = Object.freeze({
 });
 export const STAGES = ['A', 'B', 'C', 'D', 'E'];
 /** Plain words for a form's stage (the game has no stage names of its own). */
-export const stageLabel = (n) => [$t('shared.base_form'), $t('shared.first_evolution'), $t('shared.second_evolution'), 'Third evolution'][n] || `${$t('shared.evolution', { n })}`;
-const CAPTION = { A: (r) => `${$t('shared.is_evolving', { fromName: r.fromName })}`, B: () => 'Energy is surging…', C: () => 'Transforming…', D: (r) => `${$t('shared.evolved_into', { fromName: r.fromName, toName: r.toName })}` };
+export const stageLabel = (n) => [$t('shared.base_form'), $t('shared.first_evolution'), $t('shared.second_evolution'), $t('shared.third_evolution')][n] || `${$t('shared.evolution', { n })}`;
+const CAPTION = { A: (r) => `${$t('shared.is_evolving', { fromName: r.fromName })}`, B: () => $t('shared.energy_is_surging'), C: () => $t('shared.transforming'), D: (r) => `${$t('shared.evolved_into', { fromName: r.fromName, toName: r.toName })}` };
 
 /** Sprite size for the stage: as large as the screen allows, in whole multiples of 16 so every art pixel stays crisp. */
 export function stageSpriteSize(vw = window.innerWidth, vh = window.innerHeight) {
@@ -50,7 +50,7 @@ export function evolutionResultsHtml(r, { beforeSprite, afterSprite }) {
       <span class="evo-arrow" aria-label="evolved into">➜</span>
       <div class="evo-form after">${afterSprite}<span class="nm">${esc(r.toName)}</span><span class="dim">${r.next ? stageLabel(r.toStage) : $t('shared.final_form')}</span></div>
     </div>
-    <div class="evo-tiles">${tile('Overall', r.overall)}${tile('Potential', r.potential)}</div>
+    <div class="evo-tiles">${tile($t('shared.overall'), r.overall)}${tile($t('shared.potential'), r.potential)}</div>
     <section class="evo-attrs" aria-label="${$t('shared.attribute_comparison')}">
       <h3>${$t('shared.attribute_improvements')}</h3>
       ${key.length ? `<table class="evo-table"><thead><tr><th scope="col">${$t('shared.attribute')}</th><th scope="col">${$t('shared.before')}</th><th scope="col">${$t('shared.after')}</th><th aria-hidden="true"></th></tr></thead><tbody>${key.map(row).join('')}</tbody></table>` : `<p class="dim">${$t('shared.no_change_to_the_attributes_a')} ` + esc(r.position) + ' uses.</p>'}

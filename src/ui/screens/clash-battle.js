@@ -24,7 +24,7 @@ export const MODE_TEXT = Object.freeze({
   watch: { label: $t('clash.watch_battle'), help: $t('clash.watch_every_exchange_your_monsters_enter') },
   skip: { label: $t('clash.skip_to_results'), help: $t('clash.the_same_battle_resolved_instantly_skipping') },
 });
-export const SPEED_LABEL = Object.freeze({ 1: 'Normal', 2: 'Fast', 4: 'Fastest' });
+export const SPEED_LABEL = Object.freeze({ 1: $t('clash.normal'), 2: $t('clash.fast'), 4: $t('clash.fastest') });
 export const HELP_HTML = `<p>${$t('clash.b_beast_clash_b_is_a')}</p>
 <p>${$t('clash.b_rotations_b_after_both_fighters')}</p>
 <p>${$t('clash.b_watch_battle_b_shows_every')}</p>
@@ -44,7 +44,7 @@ function bindings(app, Router) {
       title: $t('clash.tuesday_beast_clash'),
       skipLabel: $t('clash.skip_encounter'), skipHelp: $t('clash.skipping_the_encounter_means_no_battle'),
       skip: (f) => { F.skipEncounter(f); app.save(); toast($t('clash.encounter_skipped_on_to_wednesday')); Router.go('hq', {}, { reset: true }); },
-      theirName: () => 'The wild',
+      theirName: () => $t('clash.the_wild'),
       record: (f) => f.week.encounter,
       preview: (f, i) => F.encounterPreview(f, i),
       start: (f, i, opts) => F.startEncounter(f, i, opts),
@@ -227,7 +227,7 @@ export function registerClashBattle(Router, app) {
     const names = teamNames(f, e); const theirs = e.b || [];
     const headline = won ? (st.kind === 'pregame' ? $t('clash.you_won_the_clash') : st.kind === 'overtime' ? $t('clash.you_win_the_game') : 'VICTORY') : (st.kind === 'pregame' ? $t('clash.they_won_the_clash') : st.kind === 'overtime' ? $t('clash.they_win_the_game') : 'DEFEAT');
     const how = r.by === 'knockout' ? `${$t('clash.ran_out_of_monsters', { won: won ? names.b : names.a })}` : r.by === 'hp' ? $t('clash.more_health_left_after_30_exchanges') : $t('clash.a_coin_flip_after_an_exact');
-    const roster = (list, side) => `<div class="cl-result-team"><div class="cl-strip-label ${side === 'a' ? 'mine' : ''}">${esc(names[side])}${last ? ` ${$t('clash.standing', { standing: standing(side) })}` : ''}</div><div class="row" style="gap:4px;flex-wrap:wrap">${list.map((m) => { const id = full?.lines[side].find((x) => x.combatant.monsterId === m.id)?.id; const ko = id && last ? last.S[side][id].ko : false; return `<span class="cl-result-mon ${ko ? 'ko' : ''}" title="${esc(m.name)}${ko ? ' · knocked out' : ''}">${monsterSprite(m, 30)}</span>`; }).join('')}</div></div>`;
+    const roster = (list, side) => `<div class="cl-result-team"><div class="cl-strip-label ${side === 'a' ? 'mine' : ''}">${esc(names[side])}${last ? ` ${$t('clash.standing', { standing: standing(side) })}` : ''}</div><div class="row" style="gap:4px;flex-wrap:wrap">${list.map((m) => { const id = full?.lines[side].find((x) => x.combatant.monsterId === m.id)?.id; const ko = id && last ? last.S[side][id].ko : false; return `<span class="cl-result-mon ${ko ? 'ko' : ''}" title="${ko ? $t('clash.knocked_out_2', { name: esc(m.name) }) : esc(m.name)}">${monsterSprite(m, 30)}</span>`; }).join('')}</div></div>`;
     return `<div class="panel cl-result ${won ? 'won' : 'lost'}"><div class="cl-result-head">${headline}</div><div class="muted">${$t('clash.exchanges_knockouts', { how, exchanges: r.exchanges, kos: kos('b'), kos2: kos('a'), n: r.exchanges })}</div>
       <div class="cl-result-teams">${roster(mine, 'a')}${roster(theirs, 'b')}</div>
       ${xpRows(e)}

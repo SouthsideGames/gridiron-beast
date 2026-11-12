@@ -199,7 +199,7 @@ function applySettings() { document.documentElement.dataset.reducedMotion = app.
 
 function tabs(ctx, screenName) {
   if (!app.f || !ctx.inFranchise || isArchived(app.f)) return null; // an archive shows the Legacy shell, not the weekly tabs
-  const items = [['hq', 'HQ', '🏠'], ['roster', 'Roster', '🐾'], ['playbook', 'Plays', '📋'], ['league', 'League', '🏆'], ['more', 'More', '☰']];
+  const items = [['hq', 'HQ', '🏠'], ['roster', $t('franchises.roster'), '🐾'], ['playbook', $t('franchises.plays'), '📋'], ['league', $t('franchises.league'), '🏆'], ['more', $t('franchises.more'), '☰']];
   const counts = {}; for (const n of F.notices(app.f)) counts[n.screen] = (counts[n.screen] || 0) + 1;
   if (devNoticesOn(app.settings)) counts.more = (counts.more || 0) + reviewQueue().total; // developer reviews (GDD §23.7)
   return items.map(([screen, label, icon]) => ({ screen, label, icon, badge: counts[screen] || 0, active: screenName === screen || (ctx.tabOf?.[screenName] === screen) }));

@@ -107,7 +107,7 @@ export function detailHtml(f, m, d, p) {
     default: return '';
   }
 }
-const DT_TITLE = { season: $t('career.the_season'), title: $t('career.beast_bowl'), award: $t('career.league_award'), record: $t('career.league_record_2'), evolve: 'Evolution', game: $t('career.the_game'), hof: $t('career.hall_of_fame_2') };
+const DT_TITLE = { season: $t('career.the_season'), title: $t('career.beast_bowl'), award: $t('career.league_award'), record: $t('career.league_record_2'), evolve: $t('career.evolution'), game: $t('career.the_game'), hof: $t('career.hall_of_fame_2') };
 
 /** A trophy shelf's sheet: every season it was won, each opening its detail. */
 function trophySheetHtml(f, m, p, kind) {
@@ -131,7 +131,7 @@ function refForTrophy(kind, e) {
  */
 export function careerActions(ctx) {
   const render = () => careerSectionHtml(ctx.f(), ctx.profile(), { animate: false, domId: ctx.domId || null });
-  const openDetail = (ref) => { const m = ctx.monster(); const f = ctx.f(); const d = m ? eventDetail(f, m, ref) : null; const { el } = sheet(detailHtml(f, m, d, ctx.profile()), { title: DT_TITLE[ref.kind] || 'Details' }); bindDetail(el, ctx); };
+  const openDetail = (ref) => { const m = ctx.monster(); const f = ctx.f(); const d = m ? eventDetail(f, m, ref) : null; const { el } = sheet(detailHtml(f, m, d, ctx.profile()), { title: DT_TITLE[ref.kind] || $t('career.details') }); bindDetail(el, ctx); };
   return {
     ...timelineActions({ render, open: (k) => { const e = ctx.profile().timeline.find((x) => x.k === k); if (e?.ref) openDetail(e.ref); }, openSeason: (y) => openDetail({ kind: 'season', year: y }) }),
     'cs-scope': (el) => { const s = el.closest('section.timeline'); statScope[ctx.profile().id] = el.dataset.v; if (s) redrawKeepingPlace(s, render()); },
@@ -179,7 +179,7 @@ export function openCareerSheet(f, id, { go = null } = {}) {
   if (!p) { sheet(`<p>${$t('career.no_career_on_record_for_this_2')}</p>`, { title: $t('career.career') }); return null; }
   const ctx = { f: () => f, profile: () => withVisibility(f, careerProfile(f, id)), monster: () => findMonster(f, id)?.m || null, go };
   const extra = p.where === 'roster' && go ? `<button class="btn block" data-action="cs-card" style="margin-top:8px">${$t('career.open_s_monster_card', { name: esc(p.name) })}</button>` : '';
-  const { el, close } = sheet(`<div class="career-sheet">${careerSectionHtml(f, p, { animate: true })}${extra}</div>`, { title: p.kind === 'prospect' ? 'Prospect' : `${$t('career.career_3', { name: p.name })}` });
+  const { el, close } = sheet(`<div class="career-sheet">${careerSectionHtml(f, p, { animate: true })}${extra}</div>`, { title: p.kind === 'prospect' ? $t('career.prospect') : `${$t('career.career_3', { name: p.name })}` });
   delegateIn(el, { ...careerActions(ctx), 'cs-card': () => { close(); go('monster', { id }); } });
   return { el, close, profile: p };
 }

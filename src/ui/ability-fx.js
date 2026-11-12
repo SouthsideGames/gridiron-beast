@@ -45,7 +45,7 @@ const FAMILY_OF = {
   grove: 'aura',
   pincer: 'contact', deepRoots: 'block', bramble: 'contact', vanishing: 'move', foresight: 'throw', echoRead: 'cover', mindGame: 'move', dragonhide: 'block', longKick: 'passive',
 };
-export const FAMILY_LABEL = { move: 'Movement', block: 'Blocking', contact: 'Contact', throw: 'Passing', cover: 'Coverage', aura: 'Aura', passive: 'Passive' };
+export const FAMILY_LABEL = { move: $t('match.movement'), block: $t('match.blocking'), contact: $t('match.contact'), throw: $t('match.passing'), cover: $t('match.coverage'), aura: $t('match.aura'), passive: $t('match.passive') };
 export function familyOf(key) { return FAMILY_OF[key] || 'contact'; }
 
 /** Per-element look: two colours (bright, deep), a badge glyph and a particle style. */
@@ -69,14 +69,14 @@ export function elementFx(element) { return ELEMENT_FX[element] || DEFAULT_FX; }
 /** Outcome labels, keyed by event kind. Only shown when the event carries `ability: true`. */
 const OUTCOME = {
   shed: { label: $t('match.block_shed'), shake: true }, broken: { label: $t('match.tackle_broken'), shake: true }, broken_tackle: { label: $t('match.tackle_broken'), shake: true },
-  juke: { label: 'Juked', shake: false }, fumble: { label: $t('match.ball_stripped'), shake: true }, interception: { label: $t('match.picked_off'), shake: true },
-  incomplete: { label: $t('match.pass_deflected'), shake: false, only: (e) => e.pbu }, sack: { label: 'Sacked', shake: true },
+  juke: { label: $t('match.juked'), shake: false }, fumble: { label: $t('match.ball_stripped'), shake: true }, interception: { label: $t('match.picked_off'), shake: true },
+  incomplete: { label: $t('match.pass_deflected'), shake: false, only: (e) => e.pbu }, sack: { label: $t('match.sacked'), shake: true },
   tackle: { label: $t('match.read_stopped'), shake: false },
-  flattened: { label: 'Flattened', shake: true }, blink: { label: 'Blink!', shake: true }, read_frozen: { label: $t('match.read_frozen'), shake: false },
+  flattened: { label: $t('match.flattened'), shake: true }, blink: { label: $t('match.blink'), shake: true }, read_frozen: { label: $t('match.read_frozen'), shake: false },
   sack_denied: { label: $t('match.sack_denied'), shake: true }, pick_denied: { label: $t('match.pick_denied'), shake: false }, veiled: { label: $t('match.never_saw_it'), shake: false }, no_breakup: { label: $t('match.too_fast'), shake: false },
   spun: { label: $t('match.spun_around'), shake: false }, lost_track: { label: $t('match.lost_him'), shake: false }, falls_forward: { label: $t('match.2_yards'), shake: false },
-  stuffed: { label: 'Frozen', shake: true }, dragged: { label: $t('match.dragged_wide'), shake: false }, slipped: { label: $t('match.slipped_the_block'), shake: false },
-  pinched: { label: 'Pinned', shake: false }, vanished: { label: 'Vanished', shake: false }, thorned: { label: 'Thorned', shake: false }, bit_fake: { label: $t('match.bit_the_fake'), shake: false }, roared: { label: 'Roar!', shake: true }, catch: { label: $t('match.contested_catch'), shake: false, only: (e) => e.contested },
+  stuffed: { label: $t('match.frozen'), shake: true }, dragged: { label: $t('match.dragged_wide'), shake: false }, slipped: { label: $t('match.slipped_the_block'), shake: false },
+  pinched: { label: $t('match.pinned'), shake: false }, vanished: { label: $t('match.vanished'), shake: false }, thorned: { label: $t('match.thorned'), shake: false }, bit_fake: { label: $t('match.bit_the_fake'), shake: false }, roared: { label: $t('match.roar'), shake: true }, catch: { label: $t('match.contested_catch'), shake: false, only: (e) => e.contested },
 };
 export const OUTCOME_LABELS = Object.freeze(Object.fromEntries(Object.entries(OUTCOME).map(([k, v]) => [k, v.label])));
 
@@ -114,7 +114,7 @@ export function buildFx(sim, lookup, meta = null) {
     if (family === 'passive') continue;
     const nm = /^(.*)'s (.*) kicks in$/.exec(e.text || '');
     const sig = m?.species ? SIG[m.species] : null; const dur = sig?.dur || ACTION;
-    const f = { team: e.side, slot: e.by, t0: e.t, dur, family, key: e.key, species: m?.species || null, sig, element: m?.element || null, look: elementFx(m?.element), name: nm ? nm[2] : 'Ability', outcome: null, victim: null, victimTeam: null, target: null };
+    const f = { team: e.side, slot: e.by, t0: e.t, dur, family, key: e.key, species: m?.species || null, sig, element: m?.element || null, look: elementFx(m?.element), name: nm ? nm[2] : $t('match.ability_2'), outcome: null, victim: null, victimTeam: null, target: null };
     // Its path during the effect (ground trails), where it started (cyclone, cracks, smoke), and teammates nearby (roots, plates).
     f.path = frames.filter((fr) => fr.t >= e.t - 0.05 && fr.t <= e.t + dur).map((fr) => { const p = (e.side === 'off' ? fr.off : fr.def).find((q) => q[0] === e.by); return p ? [fr.t, p[1], p[2]] : null; }).filter(Boolean);
     const start = at(e.side, e.by, e.t); f.origin = start ? [start[1], start[2]] : null;

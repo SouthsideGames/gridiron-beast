@@ -17,16 +17,16 @@ export function qbReadsShown(settings, { live = false } = {}) {
   return live ? !!settings?.qbReads : settings?.devQbReads !== false;
 }
 
-const ACTION_TEXT = { throw: 'Throw', scramble: 'Scramble', throwaway: 'Throw-away' };
+const ACTION_TEXT = { throw: $t('match.throw'), scramble: $t('match.scramble'), throwaway: $t('match.throw_away') };
 const WHY_TEXT = { first_read: 'first read', progression: 'progression', noticed: 'spotted open', revisit: $t('match.came_back_to_him'), hot: 'hot throw under pressure', late_best: $t('match.best_option_late_in_the_down'), human: $t('match.your_call'), escape: 'escaping pressure', lane: 'open running lane', nothing_open: 'nothing open', pressure: 'pressure arriving', no_receivers: $t('match.no_receivers') };
 
 /** The outcome line from the play's own result. */
 export function resultText(sim) {
   const y = sim.yards ?? 0; const caught = sim.stats?.receiver != null && sim.result !== 'interception';
-  if (sim.result === 'interception') return 'Intercepted';
+  if (sim.result === 'interception') return $t('match.intercepted_2');
   if (sim.result === 'sack') return `${$t('match.sacked_for_yards', { y, n: Math.abs(y) })}`;
   if (sim.result === 'throwaway') return $t('match.thrown_away_incomplete');
-  if (sim.result === 'incomplete') return 'Incomplete';
+  if (sim.result === 'incomplete') return $t('match.incomplete');
   if (sim.events?.some((e) => e.kind === 'scramble') && !caught) return `${$t('match.scramble_for_yards', { y, result: sim.result === 'touchdown' ? $t('match.touchdown') : '', n: Math.abs(y) })}`;
   if (caught) return `${$t('match.completed_for_yards', { y, result: sim.result === 'touchdown' ? $t('match.touchdown') : '', n: Math.abs(y) })}`;
   return sim.result;

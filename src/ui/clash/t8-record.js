@@ -14,7 +14,7 @@
 import { abilityById, abilitiesOf } from '../../data/beast-dex.js';
 import { t as $t } from '../../text/index.js';
 
-const STATUS_NAME = Object.freeze({ stunned: 'Stunned', slowed: 'Slowed', stumbled: 'Stumbled', knockedDown: $t('clash.knocked_down'), afflicted: 'Afflicted', weakened: 'Weakened', confused: 'Confused', healingReduced: $t('clash.healing_reduced'), shielded: 'Shielded', empowered: 'Empowered', quickened: 'Quickened', guarded: 'Guarded' });
+const STATUS_NAME = Object.freeze({ stunned: $t('clash.stunned'), slowed: $t('clash.slowed'), stumbled: $t('clash.stumbled'), knockedDown: $t('clash.knocked_down'), afflicted: $t('clash.afflicted'), weakened: $t('clash.weakened'), confused: $t('clash.confused'), healingReduced: $t('clash.healing_reduced'), shielded: $t('clash.shielded'), empowered: $t('clash.empowered'), quickened: $t('clash.quickened'), guarded: $t('clash.guarded') });
 /** Shared-status glyphs (functional cues only; the badge pass is M6). */
 export const T8_STATUS_ICON = Object.freeze({ stunned: '💫', slowed: '🐢', afflicted: '☠️', weakened: '🔻', confused: '❓', healingReduced: '🩹', shielded: '🛡', empowered: '🔺', quickened: '💨', guarded: '🧱', stumbled: '〰️', knockedDown: '⬇️' });
 export const T8_STATUS_COLOR = Object.freeze({ stunned: '#e9a3ff', slowed: '#8ac6ff', afflicted: '#a3e635', weakened: '#f87171', confused: '#f0abfc', healingReduced: '#fb923c', shielded: '#93c5fd', empowered: '#fbbf24', quickened: '#5eead4', guarded: '#d6d3d1', stumbled: '#fde68a', knockedDown: '#fca5a5' });
@@ -55,7 +55,7 @@ function orderOf(ids, activeId) { return activeId && ids.includes(activeId) ? [a
 
 function lineOut(x) {
   const ab = x.abilityId ? abilityById(x.abilityId) : null; const fam = abilitiesOf(x.species);
-  const move = ab ? { name: ab.name, text: ab.mechanic || ab.details || '', trigger: { kind: 'contract' } } : { name: 'Strike', text: `${$t('clash.ordinary_attack_with_the_perks', { archetype: x.archetype, basic: x.basic ? ' (Basic)' : '', fam: fam?.clash ? '' : '' })}`, trigger: { kind: 'normal' } };
+  const move = ab ? { name: ab.name, text: ab.mechanic || ab.details || '', trigger: { kind: 'contract' } } : { name: $t('clash.strike'), text: `${$t('clash.ordinary_attack_with_the_perks', { archetype: x.archetype, basic: x.basic ? ' (Basic)' : '', fam: fam?.clash ? '' : '' })}`, trigger: { kind: 'normal' } };
   return { ...x, combatant: { ...x.combatant, move } };
 }
 
