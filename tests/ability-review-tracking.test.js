@@ -110,11 +110,13 @@ test('notifications: derived counts, told once per batch, never duplicated, upda
   assert.equal(D.takeReviewerFocus('fbability'), null); assert.deepEqual(D.takeReviewerFocus('clashability'), { status: 'revision', id: inv.clash[0].abilityId, anchor: `cl-${inv.clash[0].abilityId}` }); assert.equal(D.takeReviewerFocus('clashability'), null, 'taken once');
 });
 
-test('Developer Tools: no Legacy Ability Audit entry, exact reviewer titles, notices wired to the reviewers; review status never gates gameplay', () => {
+test('Developer Tools: no Legacy Ability Audit entry, exact reviewer titles, notices wired to the reviewers; review status never gates gameplay', async () => {
   const menu = fs.readFileSync(new URL('../src/ui/screens/menu.js', import.meta.url), 'utf8');
-  assert.ok(!/Legacy Ability Audit/.test(menu) && !/data-screen="ability-audit"/.test(menu), 'the legacy entry is gone from the menu');
-  assert.match(menu, /data-screen="ability-reviewer">🧪 Ability Reviewer\$\{devBadge/); assert.match(menu, /data-screen="clash-ability-reviewer">⚔️ Clash Ability Reviewer\$\{devBadge/);
-  assert.ok(!/Ability Reviewer \(/.test(menu), 'no descriptive text after either title');
+  // the menu's wording now lives in src/text/en.js: read each entry's label through its key
+  const en = JSON.parse(JSON.stringify((await import('../src/text/index.js')).englishText()));
+  const labelOf = (screen) => { const m = menu.match(new RegExp(`data-screen="${screen}">\\$\\{t\\('([\\w.]+)'\\)\\}\\$\\{devBadge`)); return m ? en[m[1]] : null; };
+  assert.ok(!/data-screen="ability-audit"/.test(menu) && !Object.values(en).some((v) => /Legacy Ability Audit/.test(JSON.stringify(v))), 'the legacy entry is gone from the menu');
+  assert.equal(labelOf('ability-reviewer'), '🧪 Ability Reviewer'); assert.equal(labelOf('clash-ability-reviewer'), '⚔️ Clash Ability Reviewer');
   assert.match(fs.readFileSync(new URL('../src/ui/screens/ability-reviewer.js', import.meta.url), 'utf8'), /title: 'Ability Reviewer',/);
   assert.match(fs.readFileSync(new URL('../src/ui/screens/clash-ability-reviewer.js', import.meta.url), 'utf8'), /title: 'Clash Ability Reviewer',/);
   const main = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
