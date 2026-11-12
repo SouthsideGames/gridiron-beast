@@ -1,4 +1,5 @@
 // Tiny DOM helpers: escape, element creation from HTML, delegation.
+import { t as $t } from '../text/index.js';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const $ = (sel, root = document) => root.querySelector(sel);
@@ -54,7 +55,7 @@ function watchSheets() {
 }
 export function sheet(contentHtml, { title = '', onClose = null } = {}) {
   watchSheets();
-  const el = html(`<div class="sheet-backdrop" role="dialog" aria-modal="true" aria-label="${esc(title || 'Dialog')}"><div class="sheet"><div class="sheet-head"><strong>${esc(title)}</strong><button class="btn ghost" data-action="sheet-close" aria-label="Close">✕</button></div><div class="sheet-body">${contentHtml}</div></div></div>`);
+  const el = html(`<div class="sheet-backdrop" role="dialog" aria-modal="true" aria-label="${esc(title || 'Dialog')}"><div class="sheet"><div class="sheet-head"><strong>${esc(title)}</strong><button class="btn ghost" data-action="sheet-close" aria-label="${$t('shared.close')}">✕</button></div><div class="sheet-body">${contentHtml}</div></div></div>`);
   const close = () => { el.remove(); onClose?.(); };
   el.addEventListener('click', (e) => { if (e.target === el || e.target.closest('[data-action="sheet-close"]')) close(); });
   const holdPage = (e) => { if (!e.target.closest?.('.sheet-body')) e.preventDefault(); };
@@ -64,9 +65,9 @@ export function sheet(contentHtml, { title = '', onClose = null } = {}) {
 }
 
 /** Confirm dialog (replaces window.confirm). */
-export function confirmSheet(text, { title = 'Are you sure?', okLabel = 'Confirm', danger = false } = {}) {
+export function confirmSheet(text, { title = $t('shared.are_you_sure'), okLabel = 'Confirm', danger = false } = {}) {
   return new Promise((resolve) => {
-    const { el, close } = sheet(`<p>${esc(text)}</p><div class="row"><button class="btn" data-action="no">Cancel</button><button class="btn ${danger ? 'danger' : 'primary'}" data-action="yes">${esc(okLabel)}</button></div>`, { title, onClose: () => resolve(false) });
+    const { el, close } = sheet(`<p>${esc(text)}</p><div class="row"><button class="btn" data-action="no">${$t('shared.cancel')}</button><button class="btn ${danger ? 'danger' : 'primary'}" data-action="yes">${esc(okLabel)}</button></div>`, { title, onClose: () => resolve(false) });
     el.addEventListener('click', (e) => { const a = e.target.closest('[data-action]')?.dataset.action; if (a === 'yes') { el.remove(); resolve(true); } if (a === 'no') { el.remove(); resolve(false); } });
   });
 }

@@ -20,6 +20,7 @@ import { toArenaRecord, isT8Result, T8_STATUS_ICON, T8_STATUS_COLOR } from './t8
 import { t8StateAt, t8CuesFor, t8NextExchangeIndex, STATUS_NAME } from './t8/timeline.js';
 import { buildClashT8, drawClashT8, t8Live } from './t8/fx-t8.js';
 import { STATUS_GLYPH } from '../fx/overhead.js';
+import { t as $t } from '../../text/index.js';
 
 // Condition glyphs: the legacy conditions and the Task 8 shared statuses (the translated path's functional cues; in native t8 mode the
 // status badge of the information layer carries the status, and the strips use STATUS_GLYPH with T8_STATUS_ICON as the fallback).
@@ -100,13 +101,13 @@ export function createArena(root, result, opts = {}) {
   // Reduce flashes (flash-pref.js): the setting, or the caller's option. Flashes and strobes are softened; nothing is hidden.
   const softFlash = () => !!opts.reducedFlash || flashPref();
   const calm = (frames) => frames.map((fr) => (typeof fr.filter === 'string' ? { ...fr, filter: fr.filter.replace(/brightness\((\d+(?:\.\d+)?)\)/g, (m, v) => (Number(v) > 1.5 ? 'brightness(1.5)' : m)) } : fr));
-  const isLandscape = () => window.matchMedia('(orientation: landscape) and (min-width: 600px)').matches;
+  const isLandscape = () => window.matchMedia($t('clash.orientation_landscape_and_min_width_600px')).matches;
   const all = [...result.lines.a, ...result.lines.b];
   const byId = Object.fromEntries(all.map((x) => [x.id, x]));
 
-  const names = { a: opts.names?.a || 'Side A', b: opts.names?.b || 'Side B' }; const simple = !!opts.simple; const noControls = opts.controls === false;
+  const names = { a: opts.names?.a || $t('clash.side_a'), b: opts.names?.b || $t('clash.side_b') }; const simple = !!opts.simple; const noControls = opts.controls === false;
   root.innerHTML = `<div class="cl-arena ${sizeKey} theme-${theme.key} ${simple ? 'simple' : ''} ${t8 ? 't8' : ''}">
-    <div class="cl-hud"><span class="cl-ex">Exchange <b>0</b> / ${result.exchanges}</span><span class="cl-sd"></span><span class="cl-standing"></span><span class="cl-order muted"></span><span class="cl-theme muted">${esc(theme.name)}</span><span class="cl-exp">${result.experiments?.length ? `⚠ ${esc(result.experiments.join(', '))}` : ''}${t8 && result.provisional ? '⚠ PROVISIONAL readings on' : ''}</span><div class="cl-exbar"><i></i></div></div>
+    <div class="cl-hud"><span class="cl-ex">${$t('clash.exchange_b_0_b', { exchanges: result.exchanges })}</span><span class="cl-sd"></span><span class="cl-standing"></span><span class="cl-order muted"></span><span class="cl-theme muted">${esc(theme.name)}</span><span class="cl-exp">${result.experiments?.length ? `⚠ ${esc(result.experiments.join(', '))}` : ''}${t8 && result.provisional ? $t('clash.provisional_readings_on') : ''}</span><div class="cl-exbar"><i></i></div></div>
     <div class="cl-matchup" aria-live="polite"></div>
     <div class="cl-viewport"><div class="cl-stage" style="background-color:${theme.base};background-image:${theme.tile}">
       <div class="cl-half cl-half-a" style="background:${theme.halfA}"></div><div class="cl-half cl-half-b" style="background:${theme.halfB}"></div><div class="cl-mid" style="background:${theme.line}"></div>
@@ -120,9 +121,9 @@ export function createArena(root, result, opts = {}) {
     <div class="cl-strips ${perSide >= 4 ? 'compact' : ''}">${['a', 'b'].map((s) => `<div class="cl-strip-wrap"><div class="cl-strip-label ${s === 'a' ? 'mine' : ''}">${esc(names[s])}</div><div class="cl-strip cl-strip-${s}">${result.lines[s].map((x) => `<div class="cl-card" data-card="${x.id}" title="${esc(x.name)}">${spriteImg(monsterSprite(mon(x), 16, { flip: s === 'b' }))}<div class="cl-card-body"><div class="cl-card-name">${esc(x.name)}</div><div class="bar"><i></i></div><div class="cl-card-sub"><span class="cl-card-hp"></span><span class="cl-card-sh"></span><span class="cl-card-cond"></span></div></div><span class="cl-card-ko">KO</span></div>`).join('')}</div></div>`).join('')}</div>
     <div class="cl-controls" ${noControls ? 'style="display:none"' : ''}>
       ${simple
-        ? `<div class="cl-btnrow simple"><button class="btn primary" data-cl="watch">▶ Watch</button><span class="cl-speedrow row"><span class="muted">Speed</span>${[1, 2, 4].map((s) => `<button class="btn small ${s === speed ? 'primary' : ''}" data-cl="speed" data-v="${s}">${s === 1 ? 'Normal' : s === 2 ? 'Fast' : 'Fastest'}</button>`).join('')}</span><button class="btn" data-cl="skip">Skip ▸▸</button></div>`
-        : `<div class="cl-btnrow"><button class="btn primary" data-cl="watch">▶ Watch</button><button class="btn" data-cl="step">⏭ Step</button><button class="btn" data-cl="nextex">Next Ex.</button><button class="btn" data-cl="skip">Skip</button></div>
-      <div class="row cl-speedrow"><span class="muted">Speed</span>${[1, 2, 4].map((s) => `<button class="btn small ${s === speed ? 'primary' : ''}" data-cl="speed" data-v="${s}">${s}×</button>`).join('')}<input type="range" min="0" max="${n - 1}" value="0" data-cl="scrub" aria-label="Replay position"><button class="btn small ghost" data-cl="fxq" title="Effects quality">FX ${quality === 'low' ? 'Low' : 'Full'}</button></div>`}
+        ? `<div class="cl-btnrow simple"><button class="btn primary" data-cl="watch">${$t('clash.watch')}</button><span class="cl-speedrow row"><span class="muted">${$t('clash.speed')}</span>${[1, 2, 4].map((s) => `<button class="btn small ${s === speed ? 'primary' : ''}" data-cl="speed" data-v="${s}">${s === 1 ? $t('clash.normal') : s === 2 ? $t('clash.fast') : $t('clash.fastest')}</button>`).join('')}</span><button class="btn" data-cl="skip">${$t('clash.skip')}</button></div>`
+        : `<div class="cl-btnrow"><button class="btn primary" data-cl="watch">${$t('clash.watch')}</button><button class="btn" data-cl="step">${$t('clash.step')}</button><button class="btn" data-cl="nextex">${$t('clash.next_ex')}</button><button class="btn" data-cl="skip">${$t('clash.skip_2')}</button></div>
+      <div class="row cl-speedrow"><span class="muted">${$t('clash.speed')}</span>${[1, 2, 4].map((s) => `<button class="btn small ${s === speed ? 'primary' : ''}" data-cl="speed" data-v="${s}">${s}×</button>`).join('')}<input type="range" min="0" max="${n - 1}" value="0" data-cl="scrub" aria-label="${$t('clash.replay_position')}"><button class="btn small ghost" data-cl="fxq" title="${$t('clash.effects_quality')}">FX ${quality === 'low' ? $t('clash.low') : $t('clash.full')}</button></div>`}
       <div class="cl-caption"></div>
     </div></div>`;
   const $ = (sel) => root.querySelector(sel); const $$ = (sel) => Array.from(root.querySelectorAll(sel));
@@ -170,7 +171,7 @@ export function createArena(root, result, opts = {}) {
         if (instant) el.querySelector('.cl-hp-ghost').style.width = `${pct}%`;
         el.querySelector('.cl-hp-shield').style.width = `${sh}%`;
         el.querySelector('.cl-sh').textContent = s.shield ? `🛡${s.shield}` : '';
-        const cond = s.cond || s.paused; const condEl = el.querySelector('.cl-cond'); condEl.textContent = cond ? COND_ICON[cond] : ''; condEl.title = cond ? `${cond}${s.paused && !s.cond ? ' (paused)' : ''}` : (s.t8status ? `${STATUS_NAME[s.t8status.id] || s.t8status.id}${s.t8status.remaining != null ? ` (${s.t8status.remaining} turns)` : ''}` : ''); condEl.style.opacity = s.paused && !s.cond ? '0.6' : '1';
+        const cond = s.cond || s.paused; const condEl = el.querySelector('.cl-cond'); condEl.textContent = cond ? COND_ICON[cond] : ''; condEl.title = cond ? `${cond}${s.paused && !s.cond ? ' (paused)' : ''}` : (s.t8status ? `${STATUS_NAME[s.t8status.id] || s.t8status.id}${s.t8status.remaining != null ? ` ${$t('clash.turns', { remaining: s.t8status.remaining })}` : ''}` : ''); condEl.style.opacity = s.paused && !s.cond ? '0.6' : '1';
         el.querySelector('.cl-ring-wrap').innerHTML = s.shield > 0 && !s.ko ? shieldRingSvg(s.shield / s.maxHp) : '';
         el.dataset.cond = s.cond || '';
         const card = $(`.cl-card[data-card="${id}"]`); card.classList.toggle('ko', !!s.ko); card.classList.toggle('front', !!slot.front && !s.ko);
@@ -179,10 +180,10 @@ export function createArena(root, result, opts = {}) {
       }
     }
     $('.cl-ex b').textContent = String(st.ex); $('.cl-exbar i').style.width = `${Math.min(100, st.ex / 30 * 100)}%`;
-    { const up = (side) => st.order[side].filter((id) => !st.S[side][id].ko).length; $('.cl-standing').textContent = `${up('a')} v ${up('b')} standing`; }
+    { const up = (side) => st.order[side].filter((id) => !st.S[side][id].ko).length; $('.cl-standing').textContent = `${$t('clash.v_standing', { up: up('a'), up2: up('b') })}`; }
     matchup(st);
-    $('.cl-sd').textContent = st.ramp > 1 ? `⚡ Sudden death ×${st.ramp.toFixed(2)}` : ''; viewport.classList.toggle('sudden', st.ramp > 1);
-    if (t8) { const o = $('.cl-order'); if (o) o.textContent = st.turnOrder ? `Turn order: ${st.turnOrder.map((id) => byId[id]?.name || id).join(' → ')}` : ''; }
+    $('.cl-sd').textContent = st.ramp > 1 ? `${$t('clash.sudden_death', { toFixed: st.ramp.toFixed(2) })}` : ''; viewport.classList.toggle('sudden', st.ramp > 1);
+    if (t8) { const o = $('.cl-order'); if (o) o.textContent = st.turnOrder ? `${$t('clash.turn_order')} ${st.turnOrder.map((id) => byId[id]?.name || id).join(' → ')}` : ''; }
     { const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(st.i); } // the host may have been emptied (destroy) mid-cue
     caption.textContent = result.log[st.i]?.text || '';
     if (t8) t8Draw();
@@ -211,7 +212,7 @@ export function createArena(root, result, opts = {}) {
     const el = $('.cl-matchup'); if (!el) return;
     const fa = st.front?.a, fb = st.front?.b; if (!fa || !fb || st.S.a[fa]?.ko || st.S.b[fb]?.ko) { el.innerHTML = ''; return; }
     const A = byId[fa], B = byId[fb]; const ab = opts.edge ? opts.edge(A.type, B.type) : 'even', ba = opts.edge ? opts.edge(B.type, A.type) : 'even';
-    const edge = (e) => e === 'strong' ? '<b class="edge strong" title="type advantage">▲</b>' : e === 'weak' ? '<b class="edge weak" title="type disadvantage">▼</b>' : '<span class="edge even">=</span>';
+    const edge = (e) => e === 'strong' ? `<b class="edge strong" title="type advantage">▲</b>` : e === 'weak' ? `<b class="edge weak" title="type disadvantage">▼</b>` : `<span class="edge even">=</span>`;
     el.innerHTML = `<span class="mu-side a"><span class="mu-name">${esc(A.name)}</span> <span class="mu-type">${esc(A.type)}</span> ${edge(ab)}</span><span class="mu-vs">vs</span><span class="mu-side b">${edge(ba)} <span class="mu-type">${esc(B.type)}</span> <span class="mu-name">${esc(B.name)}</span></span>`;
     el.className = `cl-matchup ${ab === 'strong' ? 'a-up' : ba === 'strong' ? 'b-up' : ''}`;
   }
@@ -233,13 +234,13 @@ export function createArena(root, result, opts = {}) {
   function floatText(id, text, cls, ms = 900, at = 0.6) {
     const el = monEl[id]; if (!el) return; const f = document.createElement('div'); f.className = `cl-float ${cls}`; f.textContent = text;
     f.style.left = el.style.left; f.style.top = `calc(${el.style.top} - ${el.style.getPropertyValue('--size') || '64px'} * ${at})`; layer.appendChild(f);
-    anim(f, [{ transform: 'translate(-50%, -40%) scale(0.6)', opacity: 0 }, { transform: 'translate(-50%, -90%) scale(1.15)', opacity: 1, offset: 0.25 }, { transform: 'translate(-50%, -170%) scale(1)', opacity: 0 }], ms).then(() => f.remove());
+    anim(f, [{ transform: $t('clash.translate_50_40_scale_0_6'), opacity: 0 }, { transform: $t('clash.translate_50_90_scale_1_15'), opacity: 1, offset: 0.25 }, { transform: $t('clash.translate_50_170_scale_1'), opacity: 0 }], ms).then(() => f.remove());
     if (dur(ms) <= 0) setTimeout(() => f.remove(), 600);
   }
   function banner(text, cls = '', ms = 1200) {
     const b = document.createElement('div'); b.className = `cl-banner ${cls}`; b.textContent = text; viewport.appendChild(b);
     if (/\bpower\b/.test(cls)) placeCallout(b);
-    const base = /\bpower\b/.test(cls) ? '' : 'translate(-50%, -50%) '; anim(b, [{ transform: `${base}scale(0.7)`, opacity: 0 }, { transform: `${base}scale(1.05)`, opacity: 1, offset: 0.2 }, { transform: `${base}scale(1)`, opacity: 1, offset: 0.8 }, { transform: `${base}scale(1)`, opacity: 0 }], ms).then(() => b.remove());
+    const base = /\bpower\b/.test(cls) ? '' : $t('clash.translate_50_50'); anim(b, [{ transform: `${base}scale(0.7)`, opacity: 0 }, { transform: `${base}scale(1.05)`, opacity: 1, offset: 0.2 }, { transform: `${base}scale(1)`, opacity: 1, offset: 0.8 }, { transform: `${base}scale(1)`, opacity: 0 }], ms).then(() => b.remove());
     if (dur(ms) <= 0) setTimeout(() => b.remove(), 800);
   }
   /** Move-name callout: pick the corner or edge spot that covers the least of any monster (sprite or tag). */
@@ -256,10 +257,10 @@ export function createArena(root, result, opts = {}) {
     if (!c || reduced()) { stage.style.transform = ''; return; }
     const land = isLandscape(); const z = c.zoom && c.zoom > 1 ? Math.min(1.1, land ? c.zoom : 1 + (c.zoom - 1) * 0.6) : 1;
     const ids = (c.focus || []).filter((id) => id && monEl[id]);
-    if (z > 1 && ids.length) { const cx = ids.reduce((s, id) => s + parseFloat(monEl[id].style.left), 0) / ids.length, cy = ids.reduce((s, id) => s + parseFloat(monEl[id].style.top), 0) / ids.length; stage.style.transformOrigin = `${Math.max(40, Math.min(60, cx))}% ${Math.max(35, Math.min(65, cy))}%`; stage.style.transform = `scale(${z})`; }
+    if (z > 1 && ids.length) { const cx = ids.reduce((s, id) => s + parseFloat(monEl[id].style.left), 0) / ids.length, cy = ids.reduce((s, id) => s + parseFloat(monEl[id].style.top), 0) / ids.length; stage.style.transformOrigin = `${Math.max(40, Math.min(60, cx))}% ${Math.max(35, Math.min(65, cy))}%`; stage.style.transform = `${$t('clash.scale', { z })}`; }
     else stage.style.transform = '';
     dimEl.classList.toggle('on', !!c.dim);
-    if (c.shake) anim(viewport, [{ transform: 'translate(0,0)' }, { transform: `translate(${c.shake}px, ${-c.shake / 2}px)` }, { transform: `translate(${-c.shake}px, ${c.shake / 2}px)` }, { transform: `translate(${c.shake / 2}px, 0)` }, { transform: 'translate(0,0)' }], 300, 'linear');
+    if (c.shake) anim(viewport, [{ transform: 'translate(0,0)' }, { transform: `${$t('clash.translate_px_px', { shake: c.shake, shake2: -c.shake / 2 })}` }, { transform: `${$t('clash.translate_px_px', { shake: -c.shake, shake2: c.shake / 2 })}` }, { transform: `${$t('clash.translate_px_0', { shake: c.shake / 2 })}` }, { transform: 'translate(0,0)' }], 300, 'linear');
   }
   const settle = () => { stage.style.transform = ''; dimEl.classList.remove('on'); };
 
@@ -271,18 +272,18 @@ export function createArena(root, result, opts = {}) {
     if (!owned) fx.burst(chest(t), cue.element || 'Metal', { tier: cue.tier, seed: cue.i });
     if (cue.number?.absorbed && !cue.number.bypassed) fx.shieldHit(chest(t));
     applyState(st);
-    if (cue.number) { floatText(t, `-${cue.number.value}`, 'dmg' + (heavy ? ' big' : '')); if (cue.number.absorbed) floatText(t, `${cue.number.absorbed} absorbed${cue.number.broken ? ', broken' : ''}`, 'shield', 1000, 0.15); if (cue.number.bypassed) floatText(t, 'shield bypassed', 'shield', 900, 0.15); if (cue.number.capped) floatText(t, 'hit cap', 'note', 800, 0.3); }
+    if (cue.number) { floatText(t, `-${cue.number.value}`, 'dmg' + (heavy ? ' big' : '')); if (cue.number.absorbed) floatText(t, `${cue.number.absorbed} absorbed${cue.number.broken ? $t('clash.broken') : ''}`, 'shield', 1000, 0.15); if (cue.number.bypassed) floatText(t, 'shield bypassed', 'shield', 900, 0.15); if (cue.number.capped) floatText(t, 'hit cap', 'note', 800, 0.3); }
     const R = rig(t);
     return Promise.all([
-      anim(body(t), [{ filter: 'brightness(3) contrast(1.2)' }, { filter: 'brightness(3)', offset: 0.3 }, { filter: 'brightness(1)' }], heavy ? 300 : 200, 'ease-out'),
-      anim(R, [{ transform: 'translate(0,0)' }, { transform: `translate(${dx / d * kb}px, ${dy / d * kb * 0.5}px) rotate(${dx > 0 ? 6 : -6}deg)`, offset: 0.35 }, { transform: 'translate(0,0) rotate(0)' }], heavy ? 420 : 280, 'cubic-bezier(.2,.9,.3,1)'),
+      anim(body(t), [{ filter: $t('clash.brightness_3_contrast_1_2') }, { filter: 'brightness(3)', offset: 0.3 }, { filter: 'brightness(1)' }], heavy ? 300 : 200, 'ease-out'),
+      anim(R, [{ transform: 'translate(0,0)' }, { transform: `${$t('clash.translate_px_px_rotate_deg', { kb: dx / d * kb, kb2: dy / d * kb * 0.5, dx: dx > 0 ? 6 : -6 })}`, offset: 0.35 }, { transform: $t('clash.translate_0_0_rotate_0') }], heavy ? 420 : 280, 'cubic-bezier(.2,.9,.3,1)'),
     ]);
   }
   /** Windup: crouch and gather element energy; longer and bigger for heavy moves. */
   async function windup(cue, heavy, dx, dy) {
     const A = rig(cue.actor); const back = heavy ? 0.14 : 0.06;
     if (heavy || cue.tier !== 'routine') fx.windup(chest(cue.actor), cue.element, { seed: cue.i });
-    await anim(A, [{ transform: 'translate(0,0) scale(1,1)' }, { transform: `translate(${-dx * back}px, ${-dy * back}px) scale(1.06, 0.92)` }], cue.duration * (heavy ? 0.28 : 0.16), 'ease-in');
+    await anim(A, [{ transform: $t('clash.translate_0_0_scale_1_1') }, { transform: `${$t('clash.translate_px_px_scale_1_06', { back: -dx * back, back2: -dy * back })}` }], cue.duration * (heavy ? 0.28 : 0.16), 'ease-in');
     return { back };
   }
   const hitStop = (cue) => wait(dur(cue.tier === 'major' ? 130 : cue.tier === 'power' ? 90 : 40));
@@ -305,19 +306,19 @@ export function createArena(root, result, opts = {}) {
         const heavy = cue.move === 'lunge-heavy' || cue.tier === 'major'; const A = rig(e.actor); const { dx, dy } = towards(e.actor, e.target);
         if (name && (heavy || cue.tier !== 'routine')) banner(name, cue.tier === 'major' ? 'major' : 'power', D * 0.9);
         const { back } = await windup(cue, heavy, dx, dy);
-        const from = `translate(${-dx * back}px, ${-dy * back}px) scale(1.06, 0.92)`;
+        const from = `${$t('clash.translate_px_px_scale_1_06', { back: -dx * back, back2: -dy * back })}`;
         if (cue.delivery === 'ability') { // t8: the ability's look draws the travel and the impact; the body recoils and the hit lands on the look's beat
-          anim(A, [{ transform: from }, { transform: `translate(${dx * 0.06}px, ${dy * 0.06}px) scale(0.98, 1.03)`, offset: 0.4 }, { transform: 'translate(0,0) scale(1,1)' }], D * 0.4, 'ease-out');
+          anim(A, [{ transform: from }, { transform: `${$t('clash.translate_px_px_scale_0_98', { dx: dx * 0.06, dy: dy * 0.06 })}`, offset: 0.4 }, { transform: $t('clash.translate_0_0_scale_1_1') }], D * 0.4, 'ease-out');
           await wait(dur(D * 0.3)); await hitStop(cue); await impact(cue, st, { heavy });
         } else if (cue.delivery === 'melee') {
-          const c = contact(e.actor, e.target); const to = `translate(${c.dx}px, ${c.dy}px) scale(0.96, 1.06)`;
+          const c = contact(e.actor, e.target); const to = `${$t('clash.translate_px_px_scale_0_96', { dx: c.dx, dy: c.dy })}`;
           await anim(A, [{ transform: from }, { transform: to }], D * (heavy ? 0.16 : 0.2), 'cubic-bezier(.2,.8,.3,1)');
           const hold = anim(A, [{ transform: to }, { transform: to }], heavy ? 130 : 40, 'linear'); await hitStop(cue);
           const back2 = impact(cue, st, { heavy }); await hold;
-          await anim(A, [{ transform: to }, { transform: 'translate(0,0) scale(1,1)' }], D * 0.3, 'ease-out'); await back2;
+          await anim(A, [{ transform: to }, { transform: $t('clash.translate_0_0_scale_1_1') }], D * 0.3, 'ease-out'); await back2;
         } else {
           // ranged: a recoil on release, the effect travels, then the impact lands on arrival
-          const rel = anim(A, [{ transform: from }, { transform: `translate(${dx * 0.08}px, ${dy * 0.08}px) scale(0.96, 1.06)`, offset: 0.4 }, { transform: 'translate(0,0) scale(1,1)' }], D * 0.35, 'ease-out');
+          const rel = anim(A, [{ transform: from }, { transform: `${$t('clash.translate_px_px_scale_0_96', { dx: dx * 0.08, dy: dy * 0.08 })}`, offset: 0.4 }, { transform: $t('clash.translate_0_0_scale_1_1') }], D * 0.35, 'ease-out');
           const a = chest(e.actor), b = chest(e.target); const ms = cue.tier === 'major' ? 420 : cue.tier === 'power' ? 340 : 260;
           if (cue.delivery === 'projectile') await fx.projectile(a, b, cue.element, { ms, tier: cue.tier, seed: cue.i });
           else if (cue.delivery === 'lob') await fx.projectile(a, b, cue.element, { ms: ms + 80, tier: cue.tier, seed: cue.i, lob: true });
@@ -333,36 +334,36 @@ export function createArena(root, result, opts = {}) {
         const a = e.actor && monEl[e.actor] ? chest(e.actor) : null; if (a && e.target && !looked) await fx.projectile(a, chest(e.target), cue.element, { ms: 200, tier: 'routine', seed: cue.i }); else if (looked) await wait(dur(D * 0.35));
         await impact(cue, st, { heavy: false }); break;
       }
-      case 'burn-tick': { fx.condition(chest(e.target), 'burn', { seed: cue.i }); applyState(st); floatText(e.target, `-${cue.number.value}`, 'dmg burn', 700); await anim(body(e.target), [{ filter: 'sepia(1) saturate(4) hue-rotate(-20deg)' }, { filter: 'none' }], D); break; }
+      case 'burn-tick': { fx.condition(chest(e.target), 'burn', { seed: cue.i }); applyState(st); floatText(e.target, `-${cue.number.value}`, 'dmg burn', 700); await anim(body(e.target), [{ filter: $t('clash.sepia_1_saturate_4_hue_rotate') }, { filter: 'none' }], D); break; }
       case 'mend': {
         if (!e.target || !monEl[e.target]) { applyState(st); await wait(dur(D)); break; }
-        if (e.actor && e.actor !== e.target && monEl[e.actor]) { if (!looked) fx.healBeam(chest(e.actor), chest(e.target)); anim(body(e.actor), [{ filter: 'brightness(1)' }, { filter: 'brightness(1.5) drop-shadow(0 0 6px #4ade80)' }, { filter: 'brightness(1)' }], D * 0.6); await wait(dur(D * 0.25)); }
+        if (e.actor && e.actor !== e.target && monEl[e.actor]) { if (!looked) fx.healBeam(chest(e.actor), chest(e.target)); anim(body(e.actor), [{ filter: 'brightness(1)' }, { filter: $t('clash.brightness_1_5_drop_shadow_0') }, { filter: 'brightness(1)' }], D * 0.6); await wait(dur(D * 0.25)); }
         if (!looked) fx.heal(chest(e.target), { seed: cue.i }); applyState(st);
         if (cue.number.value > 0) floatText(e.target, `+${cue.number.value}`, 'heal'); else floatText(e.target, 'full', 'note', 600);
-        await anim(body(e.target), [{ filter: 'brightness(1)' }, { filter: 'brightness(1.6) drop-shadow(0 0 8px #4ade80)' }, { filter: 'brightness(1)' }], D * 0.75); break;
+        await anim(body(e.target), [{ filter: 'brightness(1)' }, { filter: $t('clash.brightness_1_6_drop_shadow_0') }, { filter: 'brightness(1)' }], D * 0.75); break;
       }
       case 'shield': {
         if (e.actor && e.actor !== e.target && monEl[e.actor]) { fx.healBeam(chest(e.actor), chest(e.target)); await wait(dur(D * 0.2)); }
         fx.shieldUp(chest(e.target), { seed: cue.i }); applyState(st); floatText(e.target, `🛡+${cue.number.value}`, 'shield');
-        await anim(monEl[e.target]?.querySelector('.cl-ring-wrap'), [{ transform: 'translateX(-50%) scale(1.6)', opacity: 0 }, { transform: 'translateX(-50%) scale(1)', opacity: 1 }], D * 0.8); break;
+        await anim(monEl[e.target]?.querySelector('.cl-ring-wrap'), [{ transform: $t('clash.translatex_50_scale_1_6'), opacity: 0 }, { transform: $t('clash.translatex_50_scale_1'), opacity: 1 }], D * 0.8); break;
       }
-      case 'shatter': { fx.shieldBreak(chest(e.target), { seed: cue.i }); const r = monEl[e.target]?.querySelector('.cl-ring-wrap'); await anim(r, [{ transform: 'translateX(-50%) scale(1)', opacity: 1 }, { transform: 'translateX(-50%) scale(1.5)', opacity: 0 }], D * 0.6); applyState(st); floatText(e.target, 'shield broken', 'shield', 700); break; }
-      case 'dodge': { const { dx, dy } = towards(e.actor, e.target); const T = rig(e.target); floatText(e.target, cue.label || 'miss', 'note', 700); const c = contact(e.actor, e.target); anim(rig(e.actor), [{ transform: 'translate(0,0)' }, { transform: `translate(${c.dx * 0.7}px,${c.dy * 0.7}px)`, offset: 0.4 }, { transform: 'translate(0,0)' }], D * 0.9); await wait(dur(D * 0.3)); await anim(T, [{ transform: 'translate(0,0)', filter: 'blur(0)' }, { transform: `translate(${dx > 0 ? 22 : -22}px,${dy > 0 ? 6 : -6}px)`, filter: 'blur(1px)' }, { transform: 'translate(0,0)', filter: 'blur(0)' }], D * 0.5); applyState(st); break; }
-      case 'afflict': { if (t8) { applyState(st); floatText(e.target, `${t8Glyph(e.status)} ${cue.label}`, 'cond', 900); await anim(body(e.target), [{ filter: 'brightness(1)' }, { filter: 'brightness(1.5)' }, { filter: 'none' }], D * 0.6); break; } fx.condition(chest(e.target), e.condition, { seed: cue.i, strong: cue.tier !== 'routine' }); applyState(st); const col = COND_COLOR[e.condition] || '#fff'; floatText(e.target, `${COND_ICON[e.condition] || ''} ${cue.label}`, 'cond', 900); await anim(body(e.target), [{ filter: `drop-shadow(0 0 0 ${col})` }, { filter: `drop-shadow(0 0 10px ${col}) brightness(1.4)` }, { filter: 'none' }], D); break; }
+      case 'shatter': { fx.shieldBreak(chest(e.target), { seed: cue.i }); const r = monEl[e.target]?.querySelector('.cl-ring-wrap'); await anim(r, [{ transform: $t('clash.translatex_50_scale_1'), opacity: 1 }, { transform: $t('clash.translatex_50_scale_1_5'), opacity: 0 }], D * 0.6); applyState(st); floatText(e.target, 'shield broken', 'shield', 700); break; }
+      case 'dodge': { const { dx, dy } = towards(e.actor, e.target); const T = rig(e.target); floatText(e.target, cue.label || 'miss', 'note', 700); const c = contact(e.actor, e.target); anim(rig(e.actor), [{ transform: 'translate(0,0)' }, { transform: `${$t('clash.translate_px_px_2', { dx: c.dx * 0.7, dy: c.dy * 0.7 })}`, offset: 0.4 }, { transform: 'translate(0,0)' }], D * 0.9); await wait(dur(D * 0.3)); await anim(T, [{ transform: 'translate(0,0)', filter: 'blur(0)' }, { transform: `${$t('clash.translate_px_px_2', { dx: dx > 0 ? 22 : -22, dy: dy > 0 ? 6 : -6 })}`, filter: 'blur(1px)' }, { transform: 'translate(0,0)', filter: 'blur(0)' }], D * 0.5); applyState(st); break; }
+      case 'afflict': { if (t8) { applyState(st); floatText(e.target, `${t8Glyph(e.status)} ${cue.label}`, 'cond', 900); await anim(body(e.target), [{ filter: 'brightness(1)' }, { filter: 'brightness(1.5)' }, { filter: 'none' }], D * 0.6); break; } fx.condition(chest(e.target), e.condition, { seed: cue.i, strong: cue.tier !== 'routine' }); applyState(st); const col = COND_COLOR[e.condition] || '#fff'; floatText(e.target, `${COND_ICON[e.condition] || ''} ${cue.label}`, 'cond', 900); await anim(body(e.target), [{ filter: `${$t('clash.drop_shadow_0_0_0', { col })}` }, { filter: `${$t('clash.drop_shadow_0_0_10px_brightness', { col })}` }, { filter: 'none' }], D); break; }
       case 'resist': { applyState(st); const t = e.target || e.actor; floatText(t, cue.label || 'resisted', 'note', 600); fx.dust(chest(t), 4, cue.i); await anim(body(t), [{ transform: 'rotate(0)' }, { transform: 'rotate(-4deg)' }, { transform: 'rotate(4deg)' }, { transform: 'rotate(0)' }], D); break; }
       case 'clear': { applyState(st); if (e.target && monEl[e.target] && !monEl[e.target].classList.contains('gone')) { if (cue.label) floatText(e.target, cue.label, 'note', 600); if (!looked) fx.ring(chest(e.target), '#ffffff', 2, 24, 300); } await wait(dur(D)); break; }
-      case 'skip': { if (/shock/i.test(cue.label || '')) fx.skipShock(chest(e.actor), { seed: cue.i }); applyState(st); floatText(e.actor, cue.label, 'cond', 900); await anim(rig(e.actor), [{ transform: 'translate(0,0)' }, { transform: 'translate(-5px,0) rotate(-3deg)' }, { transform: 'translate(5px,0) rotate(3deg)' }, { transform: 'translate(-4px,0)' }, { transform: 'translate(3px,0)' }, { transform: 'translate(0,0)' }], D * 0.6, 'linear'); break; }
+      case 'skip': { if (/shock/i.test(cue.label || '')) fx.skipShock(chest(e.actor), { seed: cue.i }); applyState(st); floatText(e.actor, cue.label, 'cond', 900); await anim(rig(e.actor), [{ transform: 'translate(0,0)' }, { transform: $t('clash.translate_5px_0_rotate_3deg') }, { transform: $t('clash.translate_5px_0_rotate_3deg_2') }, { transform: 'translate(-4px,0)' }, { transform: 'translate(3px,0)' }, { transform: 'translate(0,0)' }], D * 0.6, 'linear'); break; }
       case 'yank': {
         const out = e.out; banner(e.text.split(':')[0], 'power', D * 0.8); const { dx, dy } = towards(e.actor || out, out);
         fx.dust(feet(out), 8, cue.i);
-        await anim(rig(out), [{ transform: 'translate(0,0) rotate(0)' }, { transform: `translate(${(dx || 1) > 0 ? 24 : -24}px,-34px) rotate(-25deg)` }], D * 0.28, 'ease-in');
+        await anim(rig(out), [{ transform: $t('clash.translate_0_0_rotate_0') }, { transform: `${$t('clash.translate_px_34px_rotate_25deg', { dx: (dx || 1) > 0 ? 24 : -24 })}` }], D * 0.28, 'ease-in');
         applyState(st); if (e.in && monEl[e.in]) { fx.enterPuff(feet(e.in), { seed: cue.i }); anim(rig(e.in), [{ transform: 'translateY(-16px)' }, { transform: 'translateY(0)' }], D * 0.4); }
         await wait(dur(D * 0.6)); break;
       }
       case 'walk': { applyState(st); if (e.out && monEl[e.out]) fx.dust(feet(e.out), 5, cue.i); await wait(dur(D * 0.5)); if (e.in && monEl[e.in]) fx.enterPuff(feet(e.in), { seed: cue.i }); await wait(dur(D * 0.5)); break; }
       case 'enter': {
         applyState(st);
-        if (e.ex > 0 && monEl[e.actor]) { await wait(dur(D * 0.35)); fx.enterPuff(feet(e.actor), { seed: cue.i }); floatText(e.actor, `${byId[e.actor]?.name || ''} enters!`, 'note', 800, 1.05); await anim(rig(e.actor), [{ transform: 'translateY(-14px) scale(1.04)' }, { transform: 'translateY(0) scale(1)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], D * 0.65); }
+        if (e.ex > 0 && monEl[e.actor]) { await wait(dur(D * 0.35)); fx.enterPuff(feet(e.actor), { seed: cue.i }); floatText(e.actor, `${byId[e.actor]?.name || ''} enters!`, 'note', 800, 1.05); await anim(rig(e.actor), [{ transform: $t('clash.translatey_14px_scale_1_04') }, { transform: $t('clash.translatey_0_scale_1') }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], D * 0.65); }
         else await wait(dur(D)); break;
       }
       case 'walk-back': { applyState(st); await wait(dur(D)); break; }
@@ -372,13 +373,13 @@ export function createArena(root, result, opts = {}) {
         if (major) banner('Knockout!', 'major', D * 0.9);
         fx.koPuff(chest(e.target), { seed: cue.i }); monEl[e.target].classList.add('falling');
         const { dx } = towards(e.actor && e.actor !== e.target ? e.actor : e.target, e.target); const away = dx >= 0 ? 1 : -1;
-        await anim(R, [{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: `translate(${away * 12}px,-10px) rotate(${away * 20}deg)`, opacity: 1, offset: 0.3 }, { transform: `translate(${away * 26}px,8px) rotate(${away * 80}deg)`, opacity: 0.8, offset: 0.7 }, { transform: `translate(${away * 34}px,26px) rotate(${away * 90}deg) scale(0.7)`, opacity: 0 }], D * (major ? 0.7 : 0.6), 'ease-in');
+        await anim(R, [{ transform: $t('clash.translate_0_0_rotate_0'), opacity: 1 }, { transform: `${$t('clash.translate_px_10px_rotate_deg', { away: away * 12, away2: away * 20 })}`, opacity: 1, offset: 0.3 }, { transform: `${$t('clash.translate_px_8px_rotate_deg', { away: away * 26, away2: away * 80 })}`, opacity: 0.8, offset: 0.7 }, { transform: `${$t('clash.translate_px_26px_rotate_deg_scale', { away: away * 34, away2: away * 90 })}`, opacity: 0 }], D * (major ? 0.7 : 0.6), 'ease-in');
         monEl[e.target].classList.remove('falling'); applyState(st); if (major) await wait(dur(D * 0.15)); break;
       }
-      case 'sudden-death': { banner('Sudden death!', 'sd', D); applyState(st); fx.ring([stage.clientWidth / 2, stage.clientHeight / 2], '#f87171', 8, Math.max(stage.clientWidth, stage.clientHeight) * 0.6, 700); await wait(dur(D * 0.8)); break; }
+      case 'sudden-death': { banner($t('clash.sudden_death_2'), 'sd', D); applyState(st); fx.ring([stage.clientWidth / 2, stage.clientHeight / 2], '#f87171', 8, Math.max(stage.clientWidth, stage.clientHeight) * 0.6, 700); await wait(dur(D * 0.8)); break; }
       case 'cap': case 'coin': { banner(cue.label, 'major', D); applyState(st); await wait(dur(D * 0.8)); break; }
       case 'victory': {
-        applyState(st); const side = e.winner; banner(simple ? (side === 'a' ? `${names.a} win!` : `${names.b} win`) : `Side ${side.toUpperCase()} wins!`, `major win ${side === 'a' ? 'mine' : 'theirs'} ${isLandscape() ? '' : side === 'b' ? 'low' : 'high'}`, D * 1.4);
+        applyState(st); const side = e.winner; banner(simple ? (side === 'a' ? `${names.a} win!` : `${names.b} win`) : `${$t('clash.side_wins', { toUpperCase: side.toUpperCase() })}`, `major win ${side === 'a' ? 'mine' : 'theirs'} ${isLandscape() ? '' : side === 'b' ? 'low' : 'high'}`, D * 1.4);
         const standing = st.order[side].filter((id) => !st.S[side][id].ko);
         for (const id of standing) fx.victory(feet(id), { seed: cue.i + id.charCodeAt(1) });
         const hop = (id) => anim(rig(id), [{ transform: 'translateY(0)' }, { transform: 'translateY(-16px)' }, { transform: 'translateY(0)' }, { transform: 'translateY(-12px)' }, { transform: 'translateY(0)' }], D, 'ease-in-out');
@@ -390,22 +391,22 @@ export function createArena(root, result, opts = {}) {
       case 'coin-small': { applyState(st); floatText(e.actor, 'coin flip', 'note', 500); await wait(dur(D)); break; }
       // ---- t8 moves (the ability look draws the distinctive part; these keep the state, numbers and body feedback honest)
       case 'self-hit': { applyState(st); const T = e.target; floatText(T, `-${cue.number.value}`, 'dmg'); floatText(T, 'hits itself', 'note', 800, 0.15); await anim(body(T), [{ filter: 'brightness(1)' }, { filter: 'brightness(2.5)' }, { filter: 'brightness(1)' }], D * 0.5); break; }
-      case 'dot-tick': { applyState(st); floatText(e.target, `-${cue.number.value}`, 'dmg burn', 700); await anim(body(e.target), [{ filter: 'brightness(1)' }, { filter: 'brightness(0.6) saturate(0.5)' }, { filter: 'none' }], D); break; }
+      case 'dot-tick': { applyState(st); floatText(e.target, `-${cue.number.value}`, 'dmg burn', 700); await anim(body(e.target), [{ filter: 'brightness(1)' }, { filter: $t('clash.brightness_0_6_saturate_0_5') }, { filter: 'none' }], D); break; }
       case 'hp-set': { applyState(st); const T = e.target; if (cue.number.value) floatText(T, `${cue.number.kind === 'heal' ? '+' : '-'}${cue.number.value}`, cue.number.kind === 'heal' ? 'heal' : 'dmg'); await wait(dur(D)); break; }
       case 'hp-cost': { applyState(st); floatText(e.actor, `-${cue.number.value} HP`, 'dmg', 700, 0.9); await wait(dur(D)); break; }
       case 'freeze': { applyState(st); floatText(e.target, cue.label, 'note', 700, 1.1); await wait(dur(D)); break; }
       case 'intercept': { applyState(st); if (e.actor && e.actor !== e.target) floatText(e.actor, 'intercepts!', 'note', 800); await wait(dur(D)); break; }
-      case 'cover': { applyState(st); floatText(e.actor, 'takes the hit!', 'note', 900, 1.05); await wait(dur(D)); break; }
-      case 'survive': { applyState(st); floatText(e.actor, '1 HP!', 'cond', 900); await anim(rig(e.actor), [{ transform: 'translate(0,0) rotate(0)' }, { transform: 'translate(-4px,0) rotate(-6deg)', offset: 0.4 }, { transform: 'translate(0,0) rotate(0)' }], D * 0.6); break; }
+      case 'cover': { applyState(st); floatText(e.actor, $t('clash.takes_the_hit'), 'note', 900, 1.05); await wait(dur(D)); break; }
+      case 'survive': { applyState(st); floatText(e.actor, '1 HP!', 'cond', 900); await anim(rig(e.actor), [{ transform: $t('clash.translate_0_0_rotate_0') }, { transform: $t('clash.translate_4px_0_rotate_6deg'), offset: 0.4 }, { transform: $t('clash.translate_0_0_rotate_0') }], D * 0.6); break; }
       case 'split': { applyState(st); if (e.actor) floatText(e.actor, `shares ${e.sourceShare}`, 'shield', 900); await wait(dur(D)); break; }
       case 'shake-off': { applyState(st); floatText(e.actor, cue.label, 'note', 700); await anim(body(e.actor), [{ transform: 'rotate(0)' }, { transform: 'rotate(-5deg)' }, { transform: 'rotate(5deg)' }, { transform: 'rotate(0)' }], D); break; }
       case 'held': { applyState(st); floatText(e.actor, cue.label, 'note', 900, 1.1); await wait(dur(D)); break; }
       case 'restrict': { applyState(st); if (e.target && e.actor !== e.target) floatText(e.target, 'signature restricted', 'cond', 900, 1.1); await wait(dur(D)); break; }
       case 'clock': { applyState(st); if (e.target) floatText(e.target, `cooldown ${cue.label}`, 'note', 900, 1.1); await wait(dur(D)); break; }
       case 'order': { applyState(st); await wait(dur(D)); break; }
-      case 'ability': case 'launch': { applyState(st); if (e.actor && monEl[e.actor] && e.stage === 'activation') anim(rig(e.actor), [{ transform: 'translate(0,0) scale(1,1)' }, { transform: 'translate(0,-6px) scale(1.04, 0.98)', offset: 0.3 }, { transform: 'translate(0,0) scale(1,1)' }], D * 0.6); await wait(dur(D)); break; }
+      case 'ability': case 'launch': { applyState(st); if (e.actor && monEl[e.actor] && e.stage === 'activation') anim(rig(e.actor), [{ transform: $t('clash.translate_0_0_scale_1_1') }, { transform: $t('clash.translate_0_6px_scale_1_04'), offset: 0.3 }, { transform: $t('clash.translate_0_0_scale_1_1') }], D * 0.6); await wait(dur(D)); break; }
       case 'impact': { applyState(st); await wait(dur(D)); break; }
-      case 'revive': { applyState(st); if (e.target && monEl[e.target]) { fx.enterPuff(feet(e.target), { seed: cue.i }); floatText(e.target, `${byId[e.target]?.name || ''} returns!`, 'heal', 1000, 1.05); await anim(rig(e.target), [{ transform: 'translateY(-14px) scale(1.04)', opacity: 0 }, { transform: 'translateY(0) scale(1)', opacity: 1 }], D * 0.7); } else await wait(dur(D)); break; }
+      case 'revive': { applyState(st); if (e.target && monEl[e.target]) { fx.enterPuff(feet(e.target), { seed: cue.i }); floatText(e.target, `${byId[e.target]?.name || ''} returns!`, 'heal', 1000, 1.05); await anim(rig(e.target), [{ transform: $t('clash.translatey_14px_scale_1_04'), opacity: 0 }, { transform: $t('clash.translatey_0_scale_1'), opacity: 1 }], D * 0.7); } else await wait(dur(D)); break; }
       case 'note': { applyState(st); await wait(dur(D)); break; }
       default: { applyState(st); await wait(dur(D)); }
     }
@@ -424,8 +425,8 @@ export function createArena(root, result, opts = {}) {
   function pause() { playing = false; token++; cancelAll(); if (t8) { t8clock.override = null; t8clock.end = cues[cursor].end; } applyState(stateOf(cursor), { instant: true }); setButtons(); }
   /** t8 (reviewer / check tool): show the arena exactly as at playback time t (seconds at 1x): the state after the cue playing then, the layer drawn at t. */
   function seek(t) { if (!t8) return; pause(); let k = 0; for (let j = 0; j < cues.length; j++) if (cues[j].at <= t + 1e-9) k = j; cursor = k; t8clock.override = t; applyState(stateOf(cursor), { instant: true }); opts.onCursor?.(cursor); const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(cursor); t8Draw(t); }
-  function setButtons() { const w = $('[data-cl="watch"]'); if (w) w.textContent = playing ? '⏸ Pause' : cursor >= n - 1 ? '↻ Replay' : '▶ Watch'; }
-  function inspect(id) { const st = stateOf(cursor); const s = st.S[id[0]][id]; const x = byId[id]; const t8s = t8 ? t8StateAt(result, cursor).S[id] : null; caption.textContent = `${x.name} · ${x.archetype} · ${x.type} · HP ${s.hp}/${s.maxHp}${s.shield ? ` · shield ${s.shield}` : ''}${s.cond ? ` · ${s.cond}` : s.paused ? ` · ${s.paused} (paused)` : ''}${s.t8status ? ` · ${STATUS_NAME[s.t8status.id] || s.t8status.id}${s.t8status.remaining != null ? ` (${s.t8status.remaining} turns)` : ''}` : ''}${t8s?.restricted ? ` · restricted to ordinary attacks (${t8s.restricted.abilityId})` : ''}${t8s && Object.keys(t8s.clocks).length ? ` · cooldown ${Object.values(t8s.clocks).map((k) => `${k.id} ${k.left}`).join(', ')}` : ''}${s.ko ? ' · knocked out' : ''}${x.combatant?.move ? ` · ${x.combatant.move.name}: ${x.combatant.move.text}` : x.abilityId ? ` · ${x.abilityId}` : ''}`; }
+  function setButtons() { const w = $('[data-cl="watch"]'); if (w) w.textContent = playing ? $t('clash.pause') : cursor >= n - 1 ? $t('clash.replay') : $t('clash.watch'); }
+  function inspect(id) { const st = stateOf(cursor); const s = st.S[id[0]][id]; const x = byId[id]; const t8s = t8 ? t8StateAt(result, cursor).S[id] : null; caption.textContent = `${x.name} · ${x.archetype} · ${x.type} · HP ${s.hp}/${s.maxHp}${s.shield ? ` ${$t('clash.shield', { shield: s.shield })}` : ''}${s.cond ? ` · ${s.cond}` : s.paused ? ` ${$t('clash.paused', { paused: s.paused })}` : ''}${s.t8status ? ` · ${STATUS_NAME[s.t8status.id] || s.t8status.id}${s.t8status.remaining != null ? ` ${$t('clash.turns', { remaining: s.t8status.remaining })}` : ''}` : ''}${t8s?.restricted ? ` ${$t('clash.restricted_to_ordinary_attacks', { abilityId: t8s.restricted.abilityId })}` : ''}${t8s && Object.keys(t8s.clocks).length ? ` ${$t('clash.cooldown')} ${Object.values(t8s.clocks).map((k) => `${k.id} ${k.left}`).join(', ')}` : ''}${s.ko ? $t('clash.knocked_out') : ''}${x.combatant?.move ? ` · ${x.combatant.move.name}: ${x.combatant.move.text}` : x.abilityId ? ` · ${x.abilityId}` : ''}`; }
   root.addEventListener('click', (ev) => {
     const m = ev.target.closest('.cl-mon, .cl-card'); if (m) { inspect(m.dataset.id || m.dataset.card); return; }
     const b = ev.target.closest('[data-cl]'); if (!b) return; const k = b.dataset.cl;

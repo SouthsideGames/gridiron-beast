@@ -16,6 +16,7 @@ import { yearOf } from '../data/calendar.js';
 import { attributeHelps } from '../data/stat-guide.js';
 import { createEvolutionFx, themeFor } from './evolution-fx.js';
 import { unlockSound, playCue } from './evolution-sound.js';
+import { t as $t } from '../text/index.js';
 
 /** Stage start times (ms from the start). Full motion: about ten seconds to the results; reduced: about five. */
 export const TIMING = Object.freeze({
@@ -24,8 +25,8 @@ export const TIMING = Object.freeze({
 });
 export const STAGES = ['A', 'B', 'C', 'D', 'E'];
 /** Plain words for a form's stage (the game has no stage names of its own). */
-export const stageLabel = (n) => ['Base form', 'First evolution', 'Second evolution', 'Third evolution'][n] || `Evolution ${n}`;
-const CAPTION = { A: (r) => `${r.fromName} is evolving!`, B: () => 'Energy is surging…', C: () => 'Transforming…', D: (r) => `${r.fromName} evolved into ${r.toName}!` };
+export const stageLabel = (n) => [$t('shared.base_form'), $t('shared.first_evolution'), $t('shared.second_evolution'), 'Third evolution'][n] || `${$t('shared.evolution', { n })}`;
+const CAPTION = { A: (r) => `${$t('shared.is_evolving', { fromName: r.fromName })}`, B: () => 'Energy is surging…', C: () => 'Transforming…', D: (r) => `${$t('shared.evolved_into', { fromName: r.fromName, toName: r.toName })}` };
 
 /** Sprite size for the stage: as large as the screen allows, in whole multiples of 16 so every art pixel stays crisp. */
 export function stageSpriteSize(vw = window.innerWidth, vh = window.innerHeight) {
@@ -39,28 +40,28 @@ export function evolutionResultsHtml(r, { beforeSprite, afterSprite }) {
   const key = r.changed.filter((a) => attributeHelps(r.position, a.key) && a.delta > 0); // what this position uses
   const other = r.changed.filter((a) => !key.includes(a));
   const row = (a, i) => `<tr class="${a.delta > 0 ? 'up' : a.delta < 0 ? 'down' : 'same'}" style="--i:${i}"><th scope="row">${esc(a.label)}</th><td class="mono">${a.from}</td><td class="mono"><b>${a.to}</b>${a.delta ? ` <span class="evo-d">(${delta(a.delta)})</span>` : ''}</td><td class="evo-bar" aria-hidden="true"><span class="base" style="width:${Math.max(0, Math.min(100, a.from))}%"></span><span class="gain" style="left:${Math.max(0, Math.min(100, a.from))}%;width:${Math.max(0, Math.min(100, a.to) - Math.min(100, a.from))}%"></span></td></tr>`;
-  const allRows = r.all.map((a, i) => (a.delta ? row(a, i) : `<tr class="same"><th scope="row">${esc(a.label)}</th><td class="mono">${a.from}</td><td class="mono">${a.to} <span class="dim">(no change)</span></td><td></td></tr>`)).join('');
-  const tile = (label, v) => v ? `<div class="evo-tile"><span class="lbl">${label}</span><span class="val mono">${v.from} <span class="arrow">→</span> <b>${v.to}</b></span>${v.delta ? `<span class="evo-d">${delta(v.delta)}</span>` : '<span class="dim">no change</span>'}</div>` : '';
-  const when = r.milestone.year != null ? `${yearOf(r.milestone.year)}${r.milestone.week ? `, week ${r.milestone.week}` : ''}` : '';
+  const allRows = r.all.map((a, i) => (a.delta ? row(a, i) : `<tr class="same"><th scope="row">${esc(a.label)}</th><td class="mono">${a.from}</td><td class="mono">${a.to} <span class="dim">${$t('shared.no_change')}</span></td><td></td></tr>`)).join('');
+  const tile = (label, v) => v ? `<div class="evo-tile"><span class="lbl">${label}</span><span class="val mono">${v.from} <span class="arrow">→</span> <b>${v.to}</b></span>${v.delta ? `<span class="evo-d">${delta(v.delta)}</span>` : `<span class="dim">${$t('shared.no_change_2')}</span>`}</div>` : '';
+  const when = r.milestone.year != null ? `${yearOf(r.milestone.year)}${r.milestone.week ? `${$t('shared.week', { milestone: r.milestone.week })}` : ''}` : '';
   return `<div class="evo-res-inner">
-    <div class="evo-eyebrow">Evolution complete</div>
+    <div class="evo-eyebrow">${$t('shared.evolution_complete')}</div>
     <div class="evo-pair">
       <div class="evo-form before">${beforeSprite}<span class="nm">${esc(r.fromName)}</span><span class="dim">${stageLabel(r.fromStage)}</span></div>
       <span class="evo-arrow" aria-label="evolved into">➜</span>
-      <div class="evo-form after">${afterSprite}<span class="nm">${esc(r.toName)}</span><span class="dim">${r.next ? stageLabel(r.toStage) : 'Final form'}</span></div>
+      <div class="evo-form after">${afterSprite}<span class="nm">${esc(r.toName)}</span><span class="dim">${r.next ? stageLabel(r.toStage) : $t('shared.final_form')}</span></div>
     </div>
     <div class="evo-tiles">${tile('Overall', r.overall)}${tile('Potential', r.potential)}</div>
-    <section class="evo-attrs" aria-label="Attribute comparison">
-      <h3>Attribute improvements</h3>
-      ${key.length ? `<table class="evo-table"><thead><tr><th scope="col">Attribute</th><th scope="col">Before</th><th scope="col">After</th><th aria-hidden="true"></th></tr></thead><tbody>${key.map(row).join('')}</tbody></table>` : '<p class="dim">No change to the attributes a ' + esc(r.position) + ' uses.</p>'}
-      ${other.length ? `<p class="dim evo-other">${other.every((a) => a.delta === other[0].delta) ? `${delta(other[0].delta)} to ${other.length} other attribute${other.length === 1 ? '' : 's'}.` : `${other.length} other attribute${other.length === 1 ? '' : 's'} changed.`}</p>` : ''}
-      <details class="evo-all"><summary>Show all ${r.all.length} attributes</summary><table class="evo-table full"><thead><tr><th scope="col">Attribute</th><th scope="col">Before</th><th scope="col">After</th><th aria-hidden="true"></th></tr></thead><tbody>${allRows}</tbody></table></details>
+    <section class="evo-attrs" aria-label="${$t('shared.attribute_comparison')}">
+      <h3>${$t('shared.attribute_improvements')}</h3>
+      ${key.length ? `<table class="evo-table"><thead><tr><th scope="col">${$t('shared.attribute')}</th><th scope="col">${$t('shared.before')}</th><th scope="col">${$t('shared.after')}</th><th aria-hidden="true"></th></tr></thead><tbody>${key.map(row).join('')}</tbody></table>` : `<p class="dim">${$t('shared.no_change_to_the_attributes_a')} ` + esc(r.position) + ' uses.</p>'}
+      ${other.length ? `<p class="dim evo-other">${other.every((a) => a.delta === other[0].delta) ? `${$t('shared.to_other_attributes', { delta: delta(other[0].delta), n: other.length })}` : `${$t('shared.other_attributes_changed', { n: other.length })}`}</p>` : ''}
+      <details class="evo-all"><summary>${$t('shared.show_all_attributes', { n: r.all.length })}</summary><table class="evo-table full"><thead><tr><th scope="col">${$t('shared.attribute')}</th><th scope="col">${$t('shared.before')}</th><th scope="col">${$t('shared.after')}</th><th aria-hidden="true"></th></tr></thead><tbody>${allRows}</tbody></table></details>
     </section>
     <ul class="evo-facts">
-      ${r.ability ? `<li><span class="ic" aria-hidden="true">⚡</span><span>New ${r.ability.kind === 'trait' ? 'trait' : 'ability'}: <b>${esc(r.ability.to)}</b></span></li>` : ''}
-      <li><span class="ic" aria-hidden="true">${r.next ? '🔮' : '👑'}</span><span>${r.next ? `Next evolution at level ${r.next.level}.` : 'Final form reached.'}</span></li>
-      ${r.salary.unchanged ? '<li><span class="ic" aria-hidden="true">📝</span><span>Salary unchanged until contract renewal.</span></li>' : ''}
-      <li><span class="ic" aria-hidden="true">📜</span><span>Career Timeline: <b>Evolved into ${esc(r.toName)}</b>${when ? ` · ${esc(when)}` : ''}</span></li>
+      ${r.ability ? `<li><span class="ic" aria-hidden="true">⚡</span><span>${$t('shared.new_b_b', { kind: r.ability.kind === 'trait' ? 'trait' : 'ability', to: esc(r.ability.to) })}</span></li>` : ''}
+      <li><span class="ic" aria-hidden="true">${r.next ? '🔮' : '👑'}</span><span>${r.next ? `${$t('shared.next_evolution_at_level', { level: r.next.level })}` : $t('shared.final_form_reached')}</span></li>
+      ${r.salary.unchanged ? `<li><span class="ic" aria-hidden="true">📝</span><span>${$t('shared.salary_unchanged_until_contract_renewal')}</span></li>` : ''}
+      <li><span class="ic" aria-hidden="true">📜</span><span>${$t('shared.career_timeline_b_evolved_into_b', { toName: esc(r.toName) })}${when ? ` · ${esc(when)}` : ''}</span></li>
     </ul>
   </div>`;
 }
@@ -71,27 +72,27 @@ export function evolutionResultsHtml(r, { beforeSprite, afterSprite }) {
  * `onClose()` runs once when the owner continues. Returns a controller (used by the UI check).
  */
 export function openEvolutionScene({ report: r, beforeMon, afterMon, settings = {}, onSound = null, onClose = null }) {
-  const sysReduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sysReduced = typeof matchMedia === 'function' && matchMedia($t('shared.prefers_reduced_motion_reduce')).matches;
   const reduced = !!settings.reducedMotion || sysReduced; const shake = !reduced && settings.screenShake !== false;
   let sound = !!settings.evoSound; const T = reduced ? TIMING.reduced : TIMING.full; const th = themeFor(r.type);
   if (sound) unlockSound(); // the scene opens inside the Evolve tap: start audio now, or iPhone Safari blocks the later cues
   const size = stageSpriteSize(); const small = Math.max(64, Math.floor(size * 0.36 / 16) * 16), big = Math.max(96, Math.floor(size * 0.5 / 16) * 16);
   const el = document.createElement('div');
-  el.className = `evo-scene${reduced ? ' reduced' : ''}`; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', `Evolution: ${r.fromName} into ${r.toName}`);
+  el.className = `evo-scene${reduced ? ' reduced' : ''}`; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', `${$t('shared.evolution_into', { fromName: r.fromName, toName: r.toName })}`);
   el.style.setProperty('--evo-glow', th.glow); el.style.setProperty('--evo-c1', th.colors[0]); el.style.setProperty('--evo-c2', th.colors[1]); el.style.setProperty('--evo-c3', th.colors[2]); el.style.setProperty('--evo-size', `${size}px`);
   el.dataset.type = r.type || 'Light';
   el.innerHTML = `<div class="evo-bg" aria-hidden="true"></div><div class="evo-rays" aria-hidden="true"></div><canvas class="evo-fx" aria-hidden="true"></canvas>
-    <div class="evo-top"><button class="evo-btn ghost evo-sound" data-evo="sound" aria-pressed="${sound}">${sound ? '🔊 Sound On' : '🔇 Sound Off'}</button><button class="evo-btn ghost evo-skip" data-evo="skip">Skip ⏭</button></div>
+    <div class="evo-top"><button class="evo-btn ghost evo-sound" data-evo="sound" aria-pressed="${sound}">${sound ? $t('shared.sound_on') : $t('shared.sound_off')}</button><button class="evo-btn ghost evo-skip" data-evo="skip">${$t('shared.skip')}</button></div>
     <div class="evo-show">
-      <div class="evo-head"><div class="evo-kicker">Evolution</div><div class="evo-name">${esc(r.fromName)}</div></div>
+      <div class="evo-head"><div class="evo-kicker">${$t('shared.evolution_2')}</div><div class="evo-name">${esc(r.fromName)}</div></div>
       <div class="evo-figure"><div class="evo-rings" aria-hidden="true"><i></i><i></i><i></i></div><div class="evo-glow" aria-hidden="true"></div>
         <div class="evo-sprite from">${monsterSprite(beforeMon, size)}</div><div class="evo-sprite to">${monsterSprite(afterMon, size)}</div></div>
-      <div class="evo-banner" aria-hidden="true"><div class="evo-banner-main">${esc(r.fromName.toUpperCase())} EVOLVED INTO <span>${esc(r.toName.toUpperCase())}</span>!</div><div class="evo-banner-sub"><span class="evo-type">${esc(r.type || '')}</span><span>${esc(r.position)}</span><span>${esc(stageLabel(r.toStage))}</span></div></div>
+      <div class="evo-banner" aria-hidden="true"><div class="evo-banner-main">${$t('shared.evolved_into_2', { toUpperCase: esc(r.fromName.toUpperCase()) })} <span>${esc(r.toName.toUpperCase())}</span>!</div><div class="evo-banner-sub"><span class="evo-type">${esc(r.type || '')}</span><span>${esc(r.position)}</span><span>${esc(stageLabel(r.toStage))}</span></div></div>
       <p class="evo-caption" aria-live="polite"></p>
     </div>
     <div class="evo-flash" aria-hidden="true"></div>
     <div class="evo-results" tabindex="-1">${evolutionResultsHtml(r, { beforeSprite: monsterSprite(beforeMon, small), afterSprite: monsterSprite(afterMon, big) })}</div>
-    <div class="evo-bottom"><button class="evo-btn ghost evo-next" data-evo="results">See Results ▸</button><button class="evo-btn ghost evo-replay" data-evo="replay">↺ Replay</button><button class="evo-btn primary evo-continue" data-evo="continue">Continue</button></div>`;
+    <div class="evo-bottom"><button class="evo-btn ghost evo-next" data-evo="results">${$t('shared.see_results')}</button><button class="evo-btn ghost evo-replay" data-evo="replay">${$t('shared.replay')}</button><button class="evo-btn primary evo-continue" data-evo="continue">${$t('shared.continue')}</button></div>`;
   document.body.appendChild(el); document.documentElement.classList.add('evo-open');
   const $ = (s) => el.querySelector(s); const fig = $('.evo-figure'); const cap = $('.evo-caption');
   const fx = createEvolutionFx($('.evo-fx'), () => { const b = fig.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2, r: size / 2 }; }, { type: r.type, reduced });
@@ -130,7 +131,7 @@ export function openEvolutionScene({ report: r, beforeMon, afterMon, settings = 
     if (a === 'skip' || a === 'results') goto('E');
     else if (a === 'replay') play();
     else if (a === 'continue') close();
-    else if (a === 'sound') { sound = !sound; if (sound) unlockSound(); const b = $('.evo-sound'); b.textContent = sound ? '🔊 Sound on' : '🔇 Sound off'; b.setAttribute('aria-pressed', String(sound)); onSound?.(sound); }
+    else if (a === 'sound') { sound = !sound; if (sound) unlockSound(); const b = $('.evo-sound'); b.textContent = sound ? $t('shared.sound_on_2') : $t('shared.sound_off_2'); b.setAttribute('aria-pressed', String(sound)); onSound?.(sound); }
     else if (!a && stage === 'D' && !e.target.closest('.evo-results')) goto('E'); // a tap on the reveal moves on
   });
   window.addEventListener('popstate', close); document.addEventListener('keydown', onKey);

@@ -9,6 +9,7 @@ import { elementFx } from './ability-fx.js';
 import { CLASH_VALUES } from '../clash/values.js';
 import { FOOTBALL_TYPE_VALUES, CONTESTS, pct } from '../sim/type-matchups.js';
 import { esc, sheet } from './dom.js';
+import { t as $t } from '../text/index.js';
 
 const hue = (t) => TYPES[t]?.hue ?? 120;
 /** A type chip: glyph, name, the type's colour. */
@@ -26,23 +27,23 @@ export function typeChartHtml(selected = 'Fire') {
   const list = (xs, cls) => xs.length ? xs.map((t) => typeChip(t, { cls, action: 'tc-pick' })).join('') : '<span class="dim">none</span>';
   const neutral = p.neutral.filter((t) => t !== sel);
   return `<div class="type-chart" data-selected="${esc(sel)}">
-    <p class="dim tc-lead">Tap a type. Every type is strong against two types and weak against two; the rest are neutral.</p>
-    <div class="tc-grid" role="group" aria-label="Types">${grid}</div>
+    <p class="dim tc-lead">${$t('league.tap_a_type_every_type_is')}</p>
+    <div class="tc-grid" role="group" aria-label="${$t('league.types')}">${grid}</div>
     <div class="tc-profile" style="--h:${hue(sel)}">
       <div class="tc-head">${typeChip(sel)} <span class="dim">${esc(TYPES[sel]?.blurb || '')}</span></div>
-      <div class="tc-row"><b class="tc-up">▲ Strong against</b><div>${list(p.strong, 'up')}</div></div>
-      <div class="tc-row"><b class="tc-down">▼ Weak against</b><div>${list(p.weak, 'down')}</div></div>
-      <div class="tc-row"><b class="dim">Neutral</b><div>${list(neutral, 'dim')}</div></div>
-      ${sel === 'Dragon' ? `<p class="tc-note">🐉 <b>Wildcard.</b> In football Dragon also gets ${pct(V.dragonNeutral)} against the types listed as neutral (never against another Dragon). In Beast Clash those matchups stay neutral.</p>` : ''}
+      <div class="tc-row"><b class="tc-up">${$t('league.strong_against_b')}<div>${list(p.strong, 'up')}</div></div>
+      <div class="tc-row"><b class="tc-down">${$t('league.weak_against_b')}<div>${list(p.weak, 'down')}</div></div>
+      <div class="tc-row"><b class="dim">${$t('league.neutral_b')}<div>${list(neutral, 'dim')}</div></div>
+      ${sel === 'Dragon' ? `<p class="tc-note">${$t('league.b_wildcard_b_in_football_dragon', { percent: pct(V.dragonNeutral) })}</p>` : ''}
     </div>
     <div class="tc-how">
-      <b>In football</b>
-      <p>Only when two monsters meet head-on: a block, a tackle, a sack attempt, coverage on a route, a contested catch. The edge goes on that monster's side of that one contest: <b class="tc-up">${pct(V.strong)}</b> when strong, <b class="tc-down">${pct(V.weak)}</b> when weak, nothing when neutral${sel === 'Dragon' ? `, ${pct(V.dragonNeutral)} for Dragon against neutral types` : ''}. It never changes ratings or overall, and ratings still matter far more.</p>
-      <b>In Beast Clash</b>
-      <p>Damage ×${CLASH_VALUES.types.strong} when strong (+${clashPct(CLASH_VALUES.types.strong)}), ×${CLASH_VALUES.types.weak} when weak (−${clashPct(CLASH_VALUES.types.weak)}).</p>
+      ${$t('league.b_in_football_b')}
+      <p>${$t('league.only_when_two_monsters_meet_head')} <b class="tc-up">${$t('league.b_when_strong', { percent: pct(V.strong) })} <b class="tc-down">${$t('league.b_when_weak_nothing_when_neutral', { percent: pct(V.weak) })}${sel === 'Dragon' ? `${$t('league.for_dragon_against_neutral_types', { percent: pct(V.dragonNeutral) })}` : ''}${$t('league.it_never_changes_ratings_or_overall')}</p>
+      ${$t('league.b_in_beast_clash_b')}
+      <p>${$t('league.damage_when_strong_when_weak', { strong: CLASH_VALUES.types.strong, clashPct: clashPct(CLASH_VALUES.types.strong), weak: CLASH_VALUES.types.weak, clashPct2: clashPct(CLASH_VALUES.types.weak) })}</p>
     </div>
-    <details class="tc-all"><summary>All matchups</summary>
-      <table class="tc-table"><thead><tr><th>Type</th><th>Strong against</th><th>Weak against</th></tr></thead><tbody>
+    <details class="tc-all"><summary>${$t('league.all_matchups')}</summary>
+      <table class="tc-table"><thead><tr><th>${$t('league.type')}</th><th>${$t('league.strong_against')}</th><th>${$t('league.weak_against')}</th></tr></thead><tbody>
       ${CHART_TYPES.map((t) => { const q = typeProfile(t); return `<tr><td>${typeChip(t)}</td><td>${q.strong.map((x) => typeChip(x, { cls: 'up' })).join(' ')}</td><td>${q.weak.map((x) => typeChip(x, { cls: 'down' })).join(' ')}</td></tr>`; }).join('')}
       </tbody></table></details>
   </div>`;
@@ -50,7 +51,7 @@ export function typeChartHtml(selected = 'Fire') {
 
 /** Open the chart in a sheet; tapping a type re-draws it in place. */
 export function openTypeChart(selected = 'Fire') {
-  const s = sheet(`<div id="tc-host">${typeChartHtml(selected)}</div>`, { title: 'Type Chart' });
+  const s = sheet(`<div id="tc-host">${typeChartHtml(selected)}</div>`, { title: $t('league.type_chart') });
   s.el.addEventListener('click', (e) => {
     const b = e.target.closest('[data-action="tc-pick"]'); if (!b) return;
     e.preventDefault(); const host = s.el.querySelector('#tc-host'); host.innerHTML = typeChartHtml(b.dataset.type);
@@ -64,22 +65,22 @@ const POS = { WR: 'WR', TE: 'TE', RB: 'RB', OL: 'OL', QB: 'QB', DL: 'DL', LB: 'L
 /** HTML for one expected matchup, seen from `me` ('off' or 'def'). `x` comes from describeMatchup. */
 export function matchupPanelHtml(x, me = 'off') {
   const mine = x[me], theirs = x[me === 'off' ? 'def' : 'off'];
-  const label = mine.mod > 0 ? (mine.edge === 'wild' ? 'Dragon wildcard edge' : 'Type advantage') : 'Type disadvantage';
+  const label = mine.mod > 0 ? (mine.edge === 'wild' ? $t('league.dragon_wildcard_edge') : $t('league.type_advantage')) : $t('league.type_disadvantage');
   const cls = mine.mod > 0 ? 'up' : 'down';
   const rows = mine.mod ? mine.contests.map((c) => `<li><span>${esc(CONTESTS[c])}</span><b class="tc-${cls}">${pct(mine.mod)}</b></li>`).join('') : '';
-  const theirRows = theirs.mod ? `<p class="dim tm-their">${esc(theirs.name)}'s side: ${theirs.contests.map((c) => `${esc(CONTESTS[c])} <b class="tc-${theirs.mod > 0 ? 'up' : 'down'}">${pct(theirs.mod)}</b>`).join(' · ')}</p>` : '';
+  const theirRows = theirs.mod ? `<p class="dim tm-their">${$t('league.s_side', { name: esc(theirs.name) })} ${theirs.contests.map((c) => `${esc(CONTESTS[c])} <b class="tc-${theirs.mod > 0 ? 'up' : 'down'}">${pct(theirs.mod)}</b>`).join(' · ')}</p>` : '';
   return `<div class="tm-panel">
     <div class="tm-title">${typeChip(mine.type || '?')} <b>${POS[mine.position] || esc(mine.position)}</b> <span class="dim">vs</span> ${typeChip(theirs.type || '?')} <b>${POS[theirs.position] || esc(theirs.position)}</b></div>
-    <div class="tm-names"><b>${esc(mine.name)}</b> <span class="dim">(${esc(mine.type || 'no type')} ${esc(mine.position)})</span> against <b>${esc(theirs.name)}</b> <span class="dim">(${esc(theirs.type || 'no type')} ${esc(theirs.position)})</span></div>
-    ${mine.mod ? `<div class="tm-verdict ${cls}">${mine.mod > 0 ? '▲' : '▼'} ${label}</div><ul class="tm-rows">${rows}</ul>` : '<div class="tm-verdict">Neutral matchup</div>'}
+    <div class="tm-names"><b>${esc(mine.name)}</b> <span class="dim">(${esc(mine.type || $t('league.no_type'))} ${esc(mine.position)})</span> against <b>${esc(theirs.name)}</b> <span class="dim">(${esc(theirs.type || $t('league.no_type'))} ${esc(theirs.position)})</span></div>
+    ${mine.mod ? `<div class="tm-verdict ${cls}">${mine.mod > 0 ? '▲' : '▼'} ${label}</div><ul class="tm-rows">${rows}</ul>` : `<div class="tm-verdict">${$t('league.neutral_matchup')}</div>`}
     <p class="tm-reason">${esc(mine.reason)}</p>
     ${theirRows}
-    <p class="dim tm-foot">These are situational modifiers, not permanent stat increases. This is the expected matchup before the snap: the edge only counts if these two actually meet. Once the play starts, every contest uses the monster really in it.</p>
-    <div class="row" style="gap:8px;margin-top:8px"><button class="btn small" data-action="tm-chart" data-type="${esc(mine.type || 'Fire')}">Type Chart</button><button class="btn small primary" data-action="sheet-close">Got It</button></div>
+    <p class="dim tm-foot">${$t('league.these_are_situational_modifiers_not_permanent')}</p>
+    <div class="row" style="gap:8px;margin-top:8px"><button class="btn small" data-action="tm-chart" data-type="${esc(mine.type || 'Fire')}">${$t('league.type_chart')}</button><button class="btn small primary" data-action="sheet-close">${$t('league.got_it')}</button></div>
   </div>`;
 }
 export function openMatchupPanel(x, me = 'off') {
-  const s = sheet(matchupPanelHtml(x, me), { title: 'Matchup' });
+  const s = sheet(matchupPanelHtml(x, me), { title: $t('league.matchup') });
   s.el.addEventListener('click', (e) => { const b = e.target.closest('[data-action="tm-chart"]'); if (!b) return; e.preventDefault(); s.close(); openTypeChart(b.dataset.type); });
   return s;
 }

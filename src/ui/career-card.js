@@ -9,9 +9,10 @@ import { TYPES } from '../data/monsters.js';
 import { yearOf } from '../data/calendar.js';
 import { TIER_LABEL, TROPHY_META } from '../franchise/career-profile.js';
 import { sheet, toast, esc } from './dom.js';
+import { t as $t } from '../text/index.js';
 
 export const CARD_FORMATS = Object.freeze({ portrait: { w: 1080, h: 1350, label: 'Portrait' }, square: { w: 1080, h: 1080, label: 'Square' } });
-const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+const FONT = $t('career.system_ui_apple_system_segoe_ui');
 export const TIER_STYLE = Object.freeze({
   prospect: { frame: '#6f8a80', glow: '#6f8a80', ribbon: '#2a3a34', ink: '#d9e7df' },
   rookie: { frame: '#6fae8f', glow: '#6fae8f', ribbon: '#21473a', ink: '#dff5ea' },
@@ -27,9 +28,9 @@ export const TIER_STYLE = Object.freeze({
 export function honourPills(p) {
   const out = [];
   for (const t of p.trophies || []) {
-    if (t.kind === 'hof') out.push({ text: 'HALL OF FAME', kind: 'hof' });
-    else if (t.kind === 'champion') out.push({ text: `${t.count > 1 ? `${t.count}× ` : ''}CHAMPION`, kind: 'champion' });
-    else if (t.kind === 'record') out.push({ text: `${t.count} LEAGUE RECORD${t.count === 1 ? '' : 'S'}`, kind: 'record' });
+    if (t.kind === 'hof') out.push({ text: $t('career.hall_of_fame_4'), kind: 'hof' });
+    else if (t.kind === 'champion') out.push({ text: `${t.count > 1 ? `${t.count}× ` : ''}${$t('career.champion_2')}`, kind: 'champion' });
+    else if (t.kind === 'record') out.push({ text: `${$t('career.league_record_3', { count: t.count, count2: t.count === 1 ? '' : 'S' })}`, kind: 'record' });
     else out.push({ text: `${t.count > 1 ? `${t.count}× ` : ''}${TROPHY_META[t.kind]?.short || t.kind.toUpperCase()}`, kind: 'award' });
   }
   return out;
@@ -41,10 +42,10 @@ export function cardStats(p) {
 }
 /** "Lumen · Light · QB", without repeating the species when the name already is it (numerals aside). */
 const idLine = (p) => [String(p.name || '').replace(/ (II|III|IV|V|VI|\d+)$/, '') === p.speciesName ? null : p.speciesName, p.type, p.position].filter(Boolean).join(' · ');
-const footLine = (p) => ((p.stats?.games || 0) > 0 ? `${p.level != null ? `Lv ${p.level}` : ''}${p.ovr != null ? ` · ${p.ovr} OVR` : ''}`.replace(/^ · /, '') : 'Awaiting his first game');
+const footLine = (p) => ((p.stats?.games || 0) > 0 ? `${p.level != null ? `Lv ${p.level}` : ''}${p.ovr != null ? ` ${$t('career.ovr_2', { ovr: p.ovr })}` : ''}`.replace(/^ · /, '') : $t('career.awaiting_his_first_game'));
 /** What the three numbers are: career regular-season totals (the game's definition), or where he stands before a first game. */
-const statsCaption = (p) => ((p.stats?.games || 0) > 0 ? `CAREER · REGULAR SEASON · ${p.stats.games} GAME${p.stats.games === 1 ? '' : 'S'}` : 'BEFORE HIS FIRST GAME');
-const seasonsLine = (p) => { const c = p.clubs || []; const from = c.find((x) => x.from != null)?.from; const last = c[c.length - 1]; const to = last?.to; return `${from != null ? `${yearOf(from)}${to == null ? '–now' : to !== from ? `–${yearOf(to)}` : ''} · ` : ''}${p.seasons <= 1 ? 'Rookie season' : `${p.seasons} seasons`}`; };
+const statsCaption = (p) => ((p.stats?.games || 0) > 0 ? `${$t('career.career_regular_season_game', { games: p.stats.games, games2: p.stats.games === 1 ? '' : 'S' })}` : $t('career.before_his_first_game'));
+const seasonsLine = (p) => { const c = p.clubs || []; const from = c.find((x) => x.from != null)?.from; const last = c[c.length - 1]; const to = last?.to; return `${from != null ? `${yearOf(from)}${to == null ? '–now' : to !== from ? `–${yearOf(to)}` : ''} · ` : ''}${p.seasons <= 1 ? $t('career.rookie_season') : `${p.seasons} seasons`}`; };
 
 // ------------------------------------------------------------ drawing helpers
 /** Set the largest font (from `size` down to `min`) whose text fits `max` px. Returns { size, width, fits }. */
@@ -94,10 +95,10 @@ export function drawCareerCard(canvas, p, format = 'portrait') {
   ctx.lineWidth = 14; ctx.strokeStyle = st.frame; rr(ctx, 22, 22, W - 44, H - 44, 36); ctx.stroke();
   if (st.double) { ctx.lineWidth = 4; rr(ctx, 46, 46, W - 92, H - 92, 26); ctx.stroke(); }
   // Ribbon and wordmark.
-  const tierText = p.tier === 'dynasty' ? `DYNASTY · ${p.honours?.titles || 2}× CHAMPION` : (TIER_LABEL[p.tier] || '').toUpperCase();
+  const tierText = p.tier === 'dynasty' ? `${$t('career.dynasty_champion', { titles: p.honours?.titles || 2 })}` : (TIER_LABEL[p.tier] || '').toUpperCase();
   ctx.fillStyle = st.ribbon; rr(ctx, W / 2 - 300, 64, 600, 64, 32); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = st.frame; ctx.stroke();
   text(tierText, W / 2, 108, 560, 34, 22, { color: st.ink, align: 'center', spacing: 4 });
-  text('GRIDIRON BEAST', 70, H - 64, 420, 30, 20, { weight: 900, color: 'rgba(255,255,255,.75)', spacing: 6 });
+  text($t('career.gridiron_beast'), 70, H - 64, 420, 30, 20, { weight: 900, color: 'rgba(255,255,255,.75)', spacing: 6 });
   const nameMax = W - 140;
   if (format === 'square') {
     // Left: the monster. Right: who, club, honours. Bottom: three numbers.
@@ -112,7 +113,7 @@ export function drawCareerCard(canvas, p, format = 'portrait') {
     text(idLine(p), x, 340, max, 34, 22, { weight: 700, color: `hsl(${typeHue} 70% 72%)` });
     ctx.fillStyle = clubCol; rr(ctx, x, 398, max, 70, 16); ctx.fill(); ctx.fillStyle = 'rgba(0,0,0,.35)'; rr(ctx, x, 398, max, 70, 16); ctx.fill();
     ctx.fillStyle = clubCol; ctx.fillRect(x, 398, 14, 70);
-    text(p.club || 'Free agent', x + 32, 446, max - 48, 34, 20, { weight: 800 });
+    text(p.club || $t('career.free_agent'), x + 32, 446, max - 48, 34, 20, { weight: 800 });
     text(seasonsLine(p), x, 516, max, 28, 18, { weight: 700, color: 'rgba(255,255,255,.75)' });
     pills(ctx, honourPills(p), x, 548, max, 2, st, texts);
     text(statsCaption(p), 70, 706, W - 140, 22, 16, { weight: 800, color: 'rgba(255,255,255,.55)', spacing: 3 });
@@ -125,7 +126,7 @@ export function drawCareerCard(canvas, p, format = 'portrait') {
     text(p.name, W / 2, 720, nameMax, 96, 44, { weight: 900, align: 'center' });
     text(idLine(p), W / 2, 776, nameMax, 38, 24, { weight: 700, color: `hsl(${typeHue} 70% 74%)`, align: 'center' });
     ctx.fillStyle = clubCol; rr(ctx, 90, 808, W - 180, 76, 18); ctx.fill(); ctx.fillStyle = 'rgba(0,0,0,.35)'; rr(ctx, 90, 808, W - 180, 76, 18); ctx.fill(); ctx.fillStyle = clubCol; ctx.fillRect(90, 808, 16, 76);
-    text(p.club || 'Free agent', W / 2, 860, W - 240, 38, 22, { weight: 800, align: 'center' });
+    text(p.club || $t('career.free_agent'), W / 2, 860, W - 240, 38, 22, { weight: 800, align: 'center' });
     text(seasonsLine(p), W / 2, 926, nameMax, 30, 20, { weight: 700, color: 'rgba(255,255,255,.75)', align: 'center' });
     const pl = honourPills(p); pills(ctx, pl, 90, 952, W - 180, 2, st, texts, true);
     const sy = pl.length ? (pl.length > 3 ? 1094 : 1050) : 992; text(statsCaption(p), W / 2, sy - 12, W - 180, 22, 16, { weight: 800, color: 'rgba(255,255,255,.55)', align: 'center', spacing: 3 });
@@ -142,7 +143,7 @@ function pills(ctx, list, x, y, max, rows, st, texts, center = false) {
   const width = (t) => ctx.measureText(t).width + pad * 2 + 36;
   let rest = list.slice();
   while (rest.length && row < rows) { line = []; let used = 0; while (rest.length) { const w = width(rest[0].text); if (used + w > max && line.length) break; line.push({ ...rest.shift(), w: Math.min(w, max) }); used += w + gap; } lines.push(line); row++; }
-  if (rest.length) { const last = lines[lines.length - 1]; const more = { text: `+${rest.length} MORE`, kind: 'more' }; more.w = width(more.text); while (last.length && last.reduce((a, b) => a + b.w + gap, 0) + more.w > max) rest.unshift(last.pop()); more.text = `+${rest.length} MORE`; last.push(more); }
+  if (rest.length) { const last = lines[lines.length - 1]; const more = { text: `${$t('career.more', { n: rest.length })}`, kind: 'more' }; more.w = width(more.text); while (last.length && last.reduce((a, b) => a + b.w + gap, 0) + more.w > max) rest.unshift(last.pop()); more.text = `${$t('career.more', { n: rest.length })}`; last.push(more); }
   lines.forEach((ln, i) => {
     const total = ln.reduce((a, b) => a + b.w, 0) + gap * (ln.length - 1); let cx = center ? x + (max - total) / 2 : x; const cy = y + i * (h + 12);
     for (const pl of ln) {
@@ -166,9 +167,9 @@ function statsRow(ctx, stats, x, y, w, h, st, texts) {
 /** Render to a PNG blob. Resolves { blob, report }. */
 export function careerCardBlob(p, format = 'portrait') {
   const canvas = document.createElement('canvas'); const report = drawCareerCard(canvas, p, format);
-  return new Promise((resolve, reject) => canvas.toBlob((blob) => { canvas.width = canvas.height = 0; blob ? resolve({ blob, report }) : reject(new Error('The card could not be drawn.')); }, 'image/png'));
+  return new Promise((resolve, reject) => canvas.toBlob((blob) => { canvas.width = canvas.height = 0; blob ? resolve({ blob, report }) : reject(new Error($t('career.the_card_could_not_be_drawn'))); }, 'image/png'));
 }
-export const cardFileName = (p, format) => `${String(p.name || 'monster').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-career-${format}.png`;
+export const cardFileName = (p, format) => `${$t('career.career_png', { name: String(p.name || 'monster').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), format })}`;
 
 /**
  * Where this page can hand a file over (GDD §41.6). What the page can know: the PNG was drawn (always confirmed), the share
@@ -184,21 +185,21 @@ export function exportSupport() {
   return { embedded, share, copy, download };
 }
 export const EXPORT_TEXT = Object.freeze({
-  requested: (name) => `Download requested: ${name}. Check your downloads.`,
-  requestedEmbedded: 'Download requested, but this preview may block downloads. If nothing arrives, press and hold (or right-click) the card to save it, or open the game in its own tab.',
-  noDownload: 'This browser cannot download files from here: press and hold (or right-click) the card to save it.',
-  shared: 'Career card shared.', shareFailed: 'Sharing did not go through: try Download, or press and hold the card.',
-  copied: 'Card copied as an image: paste it anywhere.', copyFailed: 'Copying images is blocked here: try Download, or press and hold the card.',
+  requested: (name) => `${$t('career.download_requested_check_your_downloads', { name })}`,
+  requestedEmbedded: $t('career.download_requested_but_this_preview_may'),
+  noDownload: $t('career.this_browser_cannot_download_files_from'),
+  shared: $t('career.career_card_shared'), shareFailed: $t('career.sharing_did_not_go_through_try'),
+  copied: $t('career.card_copied_as_an_image_paste'), copyFailed: $t('career.copying_images_is_blocked_here_try'),
 });
 
 /** The card sheet: a preview of the real PNG, the two layouts, then Share (where offered), Download and Copy image. */
 export function openCareerCard(p, { reduced = false } = {}) {
   let format = 'portrait'; let url = null; let blob = null; let busy = false; const sup = exportSupport();
-  const { el } = sheet(`<div class="cc"><div class="seg cc-formats" role="group" aria-label="Layout">${Object.entries(CARD_FORMATS).map(([k, v]) => `<button class="btn small ${k === format ? 'primary' : ''}" data-cc-format="${k}" aria-pressed="${k === format}">${v.label}</button>`).join('')}</div>
-    <div class="cc-preview ${reduced ? '' : 'anim'}" aria-live="polite"><div class="cc-loading dim">Drawing the card…</div></div>
-    <div class="cc-actions">${sup.share ? '<button class="btn primary block" data-cc="share" disabled>Share…</button>' : ''}<button class="btn block ${sup.share ? '' : 'primary'}" data-cc="save" disabled>Download Image</button>${sup.copy ? '<button class="btn block ghost" data-cc="copy" disabled>Copy Image</button>' : ''}</div>
+  const { el } = sheet(`<div class="cc"><div class="seg cc-formats" role="group" aria-label="${$t('career.layout')}">${Object.entries(CARD_FORMATS).map(([k, v]) => `<button class="btn small ${k === format ? 'primary' : ''}" data-cc-format="${k}" aria-pressed="${k === format}">${v.label}</button>`).join('')}</div>
+    <div class="cc-preview ${reduced ? '' : 'anim'}" aria-live="polite"><div class="cc-loading dim">${$t('career.drawing_the_card')}</div></div>
+    <div class="cc-actions">${sup.share ? `<button class="btn primary block" data-cc="share" disabled>${$t('career.share')}</button>` : ''}<button class="btn block ${sup.share ? '' : 'primary'}" data-cc="save" disabled>${$t('career.download_image')}</button>${sup.copy ? `<button class="btn block ghost" data-cc="copy" disabled>${$t('career.copy_image')}</button>` : ''}</div>
     <p class="cc-status dim" role="status" aria-live="polite"></p>
-    <p class="dim cc-note">${sup.embedded ? 'This game is running inside a preview, which may not allow downloads. ' : ''}You can always press and hold (or right-click) the card to save it. The PNG is drawn on this device from the game's own art; nothing in your franchise changes.</p></div>`, { title: `${p.name} · Career Card`, onClose: () => { if (url) URL.revokeObjectURL(url); url = null; blob = null; } });
+    <p class="dim cc-note">${$t('career.you_can_always_press_and_hold', { embedded: sup.embedded ? $t('career.this_game_is_running_inside_a') : '' })}</p></div>`, { title: `${$t('career.career_card_2', { name: p.name })}`, onClose: () => { if (url) URL.revokeObjectURL(url); url = null; blob = null; } });
   const btns = () => [...el.querySelectorAll('[data-cc]')]; const box = el.querySelector('.cc-preview'); const status = el.querySelector('.cc-status');
   const say = (text, kind = 'info') => { status.textContent = text; status.dataset.kind = kind; toast(text, kind, 4500); };
   const draw = async () => {
@@ -207,15 +208,15 @@ export function openCareerCard(p, { reduced = false } = {}) {
       const r = await careerCardBlob(p, format); if (url) URL.revokeObjectURL(url); blob = r.blob; url = URL.createObjectURL(blob);
       box.innerHTML = `<img class="cc-img ${format}" src="${url}" alt="${esc(`${p.name}'s ${CARD_FORMATS[format].label.toLowerCase()} career card`)}" width="${CARD_FORMATS[format].w}" height="${CARD_FORMATS[format].h}">`;
       box.dataset.clipped = String(r.report.clipped.length); box.dataset.format = format; box.dataset.bytes = String(blob.size);
-      status.textContent = `${CARD_FORMATS[format].label} card ready · ${CARD_FORMATS[format].w}×${CARD_FORMATS[format].h} PNG`; status.dataset.kind = 'ready';
-    } catch (e) { box.innerHTML = `<p class="bad">${esc(e.message || 'The card could not be drawn.')}</p>`; blob = null; }
+      status.textContent = `${$t('career.card_ready_png', { label: CARD_FORMATS[format].label, w: CARD_FORMATS[format].w, h: CARD_FORMATS[format].h })}`; status.dataset.kind = 'ready';
+    } catch (e) { box.innerHTML = `<p class="bad">${esc(e.message || $t('career.the_card_could_not_be_drawn'))}</p>`; blob = null; }
     busy = false; btns().forEach((b) => { b.disabled = !blob; });
   };
   el.addEventListener('click', async (e) => {
     const fb = e.target.closest('[data-cc-format]'); if (fb && !busy) { format = fb.dataset.ccFormat; el.querySelectorAll('[data-cc-format]').forEach((b) => { const on = b.dataset.ccFormat === format; b.classList.toggle('primary', on); b.setAttribute('aria-pressed', on); }); draw(); return; }
     const act = e.target.closest('[data-cc]')?.dataset.cc; if (!act || !blob || busy) return;
     const name = cardFileName(p, format);
-    if (act === 'share') { try { await navigator.share({ files: [new File([blob], name, { type: 'image/png' })], title: `${p.name} · Gridiron Beast` }); say(EXPORT_TEXT.shared, 'good'); } catch (err) { if (err?.name !== 'AbortError') say(EXPORT_TEXT.shareFailed, 'info'); } return; }
+    if (act === 'share') { try { await navigator.share({ files: [new File([blob], name, { type: 'image/png' })], title: `${$t('career.gridiron_beast_2', { name: p.name })}` }); say(EXPORT_TEXT.shared, 'good'); } catch (err) { if (err?.name !== 'AbortError') say(EXPORT_TEXT.shareFailed, 'info'); } return; }
     if (act === 'copy') { try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); say(EXPORT_TEXT.copied, 'good'); } catch { say(EXPORT_TEXT.copyFailed, 'info'); } return; }
     if (act === 'save') {
       if (!sup.download) { say(EXPORT_TEXT.noDownload, 'info'); return; }

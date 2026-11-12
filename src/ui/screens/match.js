@@ -21,7 +21,7 @@ import { GYM_BY_CLUB } from '../../data/gyms.js';
 import { isBeastBowlTag } from '../../data/league.js';
 import { beatenLines } from '../../data/dialogue.js';
 import { TYPES, SPECIES_BY_ID, resolveSpecies } from '../../data/monsters.js';
-const BADGE_LINES = ['Well played. Don’t get used to it.', 'You earned that one. Keep it polished for me.', 'I had you beaten on tape. Tape lies, apparently.', 'My monsters will remember this.', 'The league will hear about you now.', 'Fine. Take it. We’ll talk next season.', 'That was football. Respect.', 'Eight badges is a long road. You’re on it.'];
+const BADGE_LINES = [$t('match.well_played_dont_get_used_to'), $t('match.you_earned_that_one_keep_it'), $t('match.i_had_you_beaten_on_tape'), $t('match.my_monsters_will_remember_this'), $t('match.the_league_will_hear_about_you'), $t('match.fine_take_it_well_talk_next'), $t('match.that_was_football_respect'), 'Eight badges is a long road. You’re on it.'];
 import { fieldGoalDistance, yardLabel } from '../../core/field.js';
 import { teamOverall } from '../../franchise/roster.js';
 import { boxScoreHtml } from '../box-score.js';
@@ -35,6 +35,7 @@ import { replayReason, replayPlan, replayPosition, REPLAY } from '../replay.js';
 import { qbReadPanelHtml, qbReadsShown } from '../qb-read-ui.js';
 import { openMatchupPanel } from '../type-chart.js';
 import { postGameHtml } from '../captains-ui.js';
+import { t as $t } from '../../text/index.js';
 
 /** Start Sunday's game from the settled pregame Clash (set by registerMatchScreens; the battle screen calls it). */
 export let startSundayGame = null;
@@ -42,28 +43,28 @@ export let startSundayGame = null;
 export function registerMatchScreens(Router, app) {
   // ------------------------------------------------------------ pregame
   Router.registerScreen('pregame', {
-    title: 'Match Day', tabs: false,
+    title: $t('match.match_day'), tabs: false,
     render({ f }) {
-      const m = F.sundayMatchup(f); if (!m) return '<p>No game today.</p>';
-      if (f.week.pregame && f.week.pregame.status !== 'ready' && !f.game) { setTimeout(() => Router.go('clash-battle', { kind: 'pregame' }, { replace: true }), 0); return '<p class="muted">Opening the pregame Clash…</p>'; }
+      const m = F.sundayMatchup(f); if (!m) return `<p>${$t('match.no_game_today')}</p>`;
+      if (f.week.pregame && f.week.pregame.status !== 'ready' && !f.game) { setTimeout(() => Router.go('clash-battle', { kind: 'pregame' }, { replace: true }), 0); return `<p class="muted">${$t('match.opening_the_pregame_clash')}</p>`; }
       const mine = m[m.playerSide], theirs = m[m.playerSide === 'home' ? 'away' : 'home'];
-      const col = (team, label) => `<div class="panel tight"><div class="row"><b style="color:${team.color}">${esc(team.name)}</b><span class="chip">${label}</span></div><div class="muted" style="font-size:12px">OVR ${teamOverall(team)} · ${esc(team.offensePlays.length)} / ${esc(team.defensePlays.length)} plays</div>
-        <h3 style="font-size:12px">Offense</h3>${OFFENSE_BASE.map((s) => line(s, team.offense[s], team)).join('')}
-        <h3 style="font-size:12px">Defense</h3>${DEFENSE_BASE.map((s) => line(s, team.defense[s], team)).join('')}
-        <h3 style="font-size:12px">Packages</h3>${[...OFFENSE_PACKAGE_SLOTS, ...DEFENSE_PACKAGE_SLOTS].map((s) => line(s, team.offense[s] || team.defense[s], team)).join('')}</div>`;
+      const col = (team, label) => `<div class="panel tight"><div class="row"><b style="color:${team.color}">${esc(team.name)}</b><span class="chip">${label}</span></div><div class="muted" style="font-size:12px">${$t('match.ovr_plays', { teamOverall: teamOverall(team), n: esc(team.offensePlays.length), n2: esc(team.defensePlays.length) })}</div>
+        <h3 style="font-size:12px">${$t('match.offense')}</h3>${OFFENSE_BASE.map((s) => line(s, team.offense[s], team)).join('')}
+        <h3 style="font-size:12px">${$t('match.defense')}</h3>${DEFENSE_BASE.map((s) => line(s, team.defense[s], team)).join('')}
+        <h3 style="font-size:12px">${$t('match.packages')}</h3>${[...OFFENSE_PACKAGE_SLOTS, ...DEFENSE_PACKAGE_SLOTS].map((s) => line(s, team.offense[s] || team.defense[s], team)).join('')}</div>`;
       function line(s, m, team) { const b = team?.boosts?.[m?.id]; const badges = b ? `${b.media ? `<span class="boost media" title="Media day: +${b.media.amount} ${b.media.attr}">+</span>` : ''}${b.training ? `<span class="boost train" title="Training: ${b.training.join(', ')}">T</span>` : ''}` : ''; return `<div class="slotline"><span class="mono">${s}</span><span class="row" style="gap:4px;justify-content:flex-end;flex-wrap:nowrap">${m ? monsterSprite(m, 18) : ''}${esc(m?.name || '·')}${badges}</span></div>`; }
       const rv = f.rivals[f.tier];
       const gym = GYM_BY_CLUB[m.opponent]; const held = gym && F.badgeOf(f, m.opponent);
-      return `<div class="pregame">${m.rival ? `<div class="rival-banner">⚔️ RIVALRY GAME<div class="muted" style="font-weight:600;font-size:12px">GM ${esc(rv?.gm || '')} · all-time ${rv?.headToHead.w || 0}-${rv?.headToHead.l || 0}</div></div>` : m.playoff ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 ${esc(m.tag)}</div>` : ''}${gym ? `<div class="rival-banner" style="border-color:hsl(${TYPES[gym.element]?.hue ?? 120} 70% 55%);background:linear-gradient(90deg,hsl(${TYPES[gym.element]?.hue ?? 120} 40% 18%),hsl(${TYPES[gym.element]?.hue ?? 120} 30% 10%))">${held ? `🏅 ${esc(gym.badge).toUpperCase()} HELD` : `🏅 BADGE GAME · ${esc(gym.badge).toUpperCase()}`}<div class="muted" style="font-weight:600;font-size:12px">${esc(gym.coach.name)} · ${esc(gym.element)} gym${held ? '' : ' · win to earn it, no replays'}</div></div>` : ''}<div class="center" style="margin-bottom:8px"><div class="muted">${esc(m.tag)}</div><div style="font-size:18px;font-weight:900">${esc(m.away.name)} <span class="dim">@</span> ${esc(m.home.name)}</div></div>
-        ${(() => { const rec = (t) => { const r = f.season.records[t]; return r ? `${r.w}-${r.l}` : ''; }; const side = (team, label) => `<div class="mu-club"><div class="mu-abbr" style="color:${team.color}">${esc(team.abbr)}</div><div class="mu-name">${esc(team.name)}</div><div class="dim mono">${esc(rec(team.name))} · OVR ${teamOverall(team)}</div><div class="chip">${label}</div></div>`;
-          return `<div class="matchup-head ${m.playoff ? 'playoff' : ''}">${side(mine, m.playerSide === 'home' ? 'HOME' : 'AWAY')}<div class="mu-vs"><div class="mu-vs-word">VS</div><div class="dim" style="font-size:11px">${esc(m.tag || '')}</div></div>${side(theirs, m.playerSide === 'home' ? 'AWAY' : 'HOME')}</div>`; })()}
+      return `<div class="pregame">${m.rival ? `<div class="rival-banner">${$t('match.rivalry_game')}<div class="muted" style="font-weight:600;font-size:12px">${$t('match.gm_all_time', { gm: esc(rv?.gm || ''), w: rv?.headToHead.w || 0, l: rv?.headToHead.l || 0 })}</div></div>` : m.playoff ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 ${esc(m.tag)}</div>` : ''}${gym ? `<div class="rival-banner" style="border-color:hsl(${TYPES[gym.element]?.hue ?? 120} 70% 55%);background:linear-gradient(90deg,hsl(${TYPES[gym.element]?.hue ?? 120} 40% 18%),hsl(${TYPES[gym.element]?.hue ?? 120} 30% 10%))">${held ? `${$t('match.held', { toUpperCase: esc(gym.badge).toUpperCase() })}` : `${$t('match.badge_game', { toUpperCase: esc(gym.badge).toUpperCase() })}`}<div class="muted" style="font-weight:600;font-size:12px">${$t('match.gym', { name: esc(gym.coach.name), element: esc(gym.element), held: held ? '' : $t('match.win_to_earn_it_no_replays') })}</div></div>` : ''}<div class="center" style="margin-bottom:8px"><div class="muted">${esc(m.tag)}</div><div style="font-size:18px;font-weight:900">${esc(m.away.name)} <span class="dim">@</span> ${esc(m.home.name)}</div></div>
+        ${(() => { const rec = (t) => { const r = f.season.records[t]; return r ? `${r.w}-${r.l}` : ''; }; const side = (team, label) => `<div class="mu-club"><div class="mu-abbr" style="color:${team.color}">${esc(team.abbr)}</div><div class="mu-name">${esc(team.name)}</div><div class="dim mono">${$t('match.ovr', { rec: esc(rec(team.name)), teamOverall: teamOverall(team) })}</div><div class="chip">${label}</div></div>`;
+          return `<div class="matchup-head ${m.playoff ? 'playoff' : ''}">${side(mine, m.playerSide === 'home' ? $t('match.home') : $t('match.away'))}<div class="mu-vs"><div class="mu-vs-word">VS</div><div class="dim" style="font-size:11px">${esc(m.tag || '')}</div></div>${side(theirs, m.playerSide === 'home' ? $t('match.away') : $t('match.home'))}</div>`; })()}
         ${(() => { const v = F.sundayVenue(f); if (!v) return ''; const n = (team) => v.type ? Object.values({ ...team.offense, ...team.defense }).filter((p, i, arr) => p?.type === v.type && arr.findIndex((q) => q?.id === p.id) === i).length : null; return venueHtml(v, { mine: n(mine), theirs: n(theirs) }); })()}
         ${talkHtml(f)}
-        <div class="lineups">${col(mine, m.playerSide === 'home' ? 'HOME' : 'AWAY')}${col(theirs, m.playerSide === 'home' ? 'AWAY' : 'HOME')}</div>
-        ${(() => { const nMedia = Object.values(mine.boosts || {}).filter((b) => b.media).length; const tr = f.week.trainingFocus; return nMedia || tr ? `<div class="panel tight" style="margin-top:8px"><b>Today's boosts</b><div class="muted" style="font-size:13px">${tr ? `<span class="boost train">T</span> Training (${esc(TRAINING_FOCI[tr]?.label || tr)}): +${f.week.training?.amount ?? ''} ${esc((TRAINING_FOCI[tr]?.attrs || []).join(', '))} for every starter` : ''}${tr && nMedia ? '<br>' : ''}${nMedia ? `<span class="boost media">+</span> Media day: ${nMedia} monster${nMedia === 1 ? '' : 's'} fired up` : ''}</div></div>` : ''; })()}
-        <p class="dim" style="margin-top:8px">Coaching mode: <b>${f.settings.mode === 'key' ? 'Key Moments' : 'Full Coaching'}</b> (change in Settings).</p>
-        <p class="dim">Possession is decided by a <b>3v3 Beast Clash</b> between the two rosters: the winner chooses to receive, defer or kick.</p>
-        <button class="btn primary big block" data-action="toss">⚔️ Beast Clash for Possession →</button></div>`;
+        <div class="lineups">${col(mine, m.playerSide === 'home' ? $t('match.home') : $t('match.away'))}${col(theirs, m.playerSide === 'home' ? $t('match.away') : $t('match.home'))}</div>
+        ${(() => { const nMedia = Object.values(mine.boosts || {}).filter((b) => b.media).length; const tr = f.week.trainingFocus; return nMedia || tr ? `<div class="panel tight" style="margin-top:8px">${$t('match.b_todays_boosts_b')}<div class="muted" style="font-size:13px">${tr ? `<span class="boost train">T</span> ${$t('match.training', { label: esc(TRAINING_FOCI[tr]?.label || tr), amount: f.week.training?.amount ?? '' })} ${esc((TRAINING_FOCI[tr]?.attrs || []).join(', '))} ${$t('match.for_every_starter')}` : ''}${tr && nMedia ? '<br>' : ''}${nMedia ? `<span class="boost media">+</span> ${$t('match.media_day_monsters_fired_up', { nMedia, n: nMedia })}` : ''}</div></div>` : ''; })()}
+        <p class="dim" style="margin-top:8px">${$t('match.coaching_mode_b_b_change_in', { mode: f.settings.mode === 'key' ? $t('match.key_moments') : $t('match.full_coaching') })}</p>
+        <p class="dim">${$t('match.possession_is_decided_by_a_b')}</p>
+        <button class="btn primary big block" data-action="toss">${$t('match.beast_clash_for_possession')}</button></div>`;
     },
     mount(root) {
       delegate(root, {
@@ -77,13 +78,13 @@ export function registerMatchScreens(Router, app) {
   function edgeStrip(f, s, teams, me, returning = []) {
     const bits = [];
     const cb = R.comebackSide(s);
-    if (cb) bits.push(`<span class="edge-chip comeback ${cb === me ? 'mine' : ''}">🔥 COMEBACK · ${esc(s[cb].abbr)} +${s.comeback.edge}</span>`);
-    const lock = teams[me]?.schemeLock; if (lock?.offense) bits.push('<span class="edge-chip scheme mine">✦ SCHEME LOCK · offense</span>'); if (lock?.defense) bits.push('<span class="edge-chip scheme mine">✦ SCHEME LOCK · defense</span>');
-    const them = R.opponent(me); const tl = teams[them]?.schemeLock; if (tl?.offense || tl?.defense) bits.push('<span class="edge-chip scheme">✦ Their scheme is locked</span>');
+    if (cb) bits.push(`<span class="edge-chip comeback ${cb === me ? 'mine' : ''}">${$t('match.comeback', { abbr: esc(s[cb].abbr), edge: s.comeback.edge })}</span>`);
+    const lock = teams[me]?.schemeLock; if (lock?.offense) bits.push(`<span class="edge-chip scheme mine">${$t('match.scheme_lock_offense')}</span>`); if (lock?.defense) bits.push(`<span class="edge-chip scheme mine">${$t('match.scheme_lock_defense')}</span>`);
+    const them = R.opponent(me); const tl = teams[them]?.schemeLock; if (tl?.offense || tl?.defense) bits.push(`<span class="edge-chip scheme">${$t('match.their_scheme_is_locked')}</span>`);
     // Task 8 (I5, Sovereign Arm): the swallowed defender's portrait with the dragon mouth while he is out (read from the game's absence list)
-    for (const a of absentMonsters(s, teams)) bits.push(`<span class="edge-chip absent ${a.team === me ? 'mine' : ''}" title="Swallowed by Sovereign Arm"><span class="absent-face">${a.monster ? monsterSprite(a.monster, 18) : ''}<i aria-hidden="true">🐲</i></span> ${esc(a.monster?.name || 'A defender')} swallowed · out for ${esc(s[a.serveOn]?.abbr || 'the')} next offensive play</span>`);
+    for (const a of absentMonsters(s, teams)) bits.push(`<span class="edge-chip absent ${a.team === me ? 'mine' : ''}" title="${$t('match.swallowed_by_sovereign_arm')}"><span class="absent-face">${a.monster ? monsterSprite(a.monster, 18) : ''}<i aria-hidden="true">🐲</i></span> ${$t('match.swallowed_out_for_next_offensive_play', { name: esc(a.monster?.name || $t('match.a_defender')), abbr: esc(s[a.serveOn]?.abbr || 'the') })}</span>`);
     // ... and, on the play-call screen of the play he is back for, that he has returned (the field plays his return once: presnapT8)
-    for (const b of returning) bits.push(`<span class="edge-chip absent returned ${b.team === me ? 'mine' : ''}" title="Back from Sovereign Arm"><span class="absent-face">${b.monster ? monsterSprite(b.monster, 18) : ''}</span> ${esc(b.monster?.name || 'The defender')} is back in the formation</span>`);
+    for (const b of returning) bits.push(`<span class="edge-chip absent returned ${b.team === me ? 'mine' : ''}" title="${$t('match.back_from_sovereign_arm')}"><span class="absent-face">${b.monster ? monsterSprite(b.monster, 18) : ''}</span> ${$t('match.is_back_in_the_formation', { name: esc(b.monster?.name || $t('match.the_defender')) })}</span>`);
     return bits.length ? `<div class="edge-strip">${bits.join('')}</div>` : '';
   }
   startSundayGame = (f) => {
@@ -112,32 +113,32 @@ export function registerMatchScreens(Router, app) {
     if (r === 'safety') return { tier: 'score', text: 'SAFETY', mine: !mineOff };
     if (r === 'interception' || r === 'touchback_return') return { tier: 'turnover', text: 'INTERCEPTED!', mine: !mineOff };
     if (r === 'fumble') return { tier: 'turnover', text: 'FUMBLE!', mine: !mineOff };
-    if (ev.kind === 'field_goal') return ev.scored ? { tier: 'score', text: 'FIELD GOAL', mine: ev.kicking === me } : { tier: 'loss', text: 'NO GOOD', mine: ev.kicking !== me };
-    if (ev.kind === 'try') return /good|GOOD|converts|two-point conversion is good/i.test(ev.text) ? { tier: 'score', text: /two/i.test(ev.text) ? 'TWO POINTS' : 'EXTRA POINT', mine: mineOff } : /no good|fails|stopped|missed/i.test(ev.text) ? { tier: 'loss', text: 'NO GOOD', mine: !mineOff } : null;
+    if (ev.kind === 'field_goal') return ev.scored ? { tier: 'score', text: $t('match.field_goal'), mine: ev.kicking === me } : { tier: 'loss', text: $t('match.no_good'), mine: ev.kicking !== me };
+    if (ev.kind === 'try') return /good|GOOD|converts|two-point conversion is good/i.test(ev.text) ? { tier: 'score', text: /two/i.test(ev.text) ? $t('match.two_points') : $t('match.extra_point'), mine: mineOff } : /no good|fails|stopped|missed/i.test(ev.text) ? { tier: 'loss', text: $t('match.no_good'), mine: !mineOff } : null;
     if (r === 'sack') return { tier: 'sack', text: 'SACK', mine: !mineOff };
     if (r === 'incomplete' || r === 'throwaway') return { tier: 'routine', text: 'INCOMPLETE', mine: !mineOff };
     if (ev.kind === 'punt') return { tier: 'routine', text: 'PUNT', mine: null };
     if (ev.kind === 'kickoff') return { tier: 'routine', text: /touchback/i.test(ev.text) ? 'TOUCHBACK' : 'KICKOFF', mine: null };
     if (typeof yards === 'number' && ev.kind === 'play') {
       const toGo = ev.toGo ?? 10; const first = yards >= toGo;
-      if (first) return { tier: 'first', text: yards >= 20 ? `BIG PLAY · +${yards}` : 'FIRST DOWN', mine: mineOff };
-      if (yards >= 15) return { tier: 'big', text: `+${yards} YDS`, mine: mineOff };
-      if (yards < 0) return { tier: 'loss', text: `${yards} YDS`, mine: !mineOff };
-      return { tier: 'routine', text: yards === 0 ? 'NO GAIN' : `+${yards} YDS`, mine: mineOff };
+      if (first) return { tier: 'first', text: yards >= 20 ? `${$t('match.big_play', { yards })}` : $t('match.first_down'), mine: mineOff };
+      if (yards >= 15) return { tier: 'big', text: `${$t('match.yds', { yards })}`, mine: mineOff };
+      if (yards < 0) return { tier: 'loss', text: `${$t('match.yds_2', { yards })}`, mine: !mineOff };
+      return { tier: 'routine', text: yards === 0 ? $t('match.no_gain') : `${$t('match.yds', { yards })}`, mine: mineOff };
     }
     return null;
   }
 
   Router.registerScreen('match', {
     title: ({ f }) => f?.game ? `${f.game.state.away.abbr} ${f.game.state.score.away}-${f.game.state.score.home} ${f.game.state.home.abbr}` : 'Match', back: false, tabs: false, help: false, // the ⓘ button is this screen's help (it links to Coach Assist)
-    topRight: () => `<button class="btn ghost small" data-action="box" aria-label="Box score">📊</button><button class="btn ghost small" data-action="log" aria-label="Play log">📋</button><button class="btn ghost small" data-action="help" aria-label="How a match works">ⓘ</button>`,
+    topRight: () => `<button class="btn ghost small" data-action="box" aria-label="${$t('match.box_score')}">📊</button><button class="btn ghost small" data-action="log" aria-label="${$t('match.play_log')}">📋</button><button class="btn ghost small" data-action="help" aria-label="${$t('match.how_a_match_works')}">ⓘ</button>`,
     render({ f }) {
-      const G = f.game; if (!G) return `<div class="panel"><p>No game in progress.</p><button class="btn block" data-action="hq">Headquarters</button></div>`;
+      const G = f.game; if (!G) return `<div class="panel"><p>${$t('match.no_game_in_progress')}</p><button class="btn block" data-action="hq">${$t('match.headquarters')}</button></div>`;
       const P = screenParts(f);
       // Three in-place regions (refresh(): a play's start and end update them without rebuilding the screen): the head, the field
       // with what lies over it, the panels under the field; then the controls. display:contents wrappers add no box of their own.
       return `<div id="match-head" style="display:contents">${P.head}</div>
-        <div class="${P.wrapClass}" id="fieldwrap" aria-label="Football field"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldSvg(P.field)}</svg>${P.over}</div><div id="field-after" style="display:contents">${P.after}</div>
+        <div class="${P.wrapClass}" id="fieldwrap" aria-label="${$t('match.football_field')}"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldSvg(P.field)}</svg>${P.over}</div><div id="field-after" style="display:contents">${P.after}</div>
         <div id="controls">${P.controls}</div>`;
     },
     mount(root, ctx) {
@@ -155,20 +156,20 @@ export function registerMatchScreens(Router, app) {
         kickoff: () => act(f, { kickoff: 'normal' }),
         onside: () => act(f, { kickoff: 'onside' }),
         trykick: () => act(f, { tryChoice: 'kick' }),
-        trytwo: () => { const G = f.game; if (!G.selected.offense) { toast('Pick a play for the two-point try.'); return; } act(f, { tryChoice: 'two' }); },
+        trytwo: () => { const G = f.game; if (!G.selected.offense) { toast($t('match.pick_a_play_for_the_two')); return; } act(f, { tryChoice: 'two' }); },
         continue: () => act(f, {}),
-        timeout: () => { const G = f.game; if (R.timeout(G.state, G.playerSide)) { G.lastEvent = { text: `Timeout, ${G.state[G.playerSide].name}.` }; app.save(); Router.render(); } else toast('No timeouts left.'); },
+        timeout: () => { const G = f.game; if (R.timeout(G.state, G.playerSide)) { G.lastEvent = { text: `${$t('match.timeout', { name: G.state[G.playerSide].name })}` }; app.save(); Router.render(); } else toast($t('match.no_timeouts_left')); },
         tempo: (el) => { f.game.tempo = el.value; app.save(); },
         mode: () => { const G = f.game; G.mode = G.mode === 'key' ? 'full' : 'key'; app.save(); Router.render(); },
         auto: () => { const G = f.game; G.auto = !G.auto; app.save(); if (!G.auto) { clearTimeout(autoTimer); autoTimer = null; } Router.render(); },
         autospeed: () => { const G = f.game; G.autoSpeed = (G.autoSpeed || 1) === 2 ? 1 : 2; app.save(); Router.render(); },
         keymoment: () => simToKeyMoment(f),
-        simfinal: async () => { if (!(await confirmSheet('Let the coach play the rest of the game out instantly? You will see the final score and box score; no replays.', { title: 'Sim to Final', okLabel: 'Sim It' }))) return; simToFinal(f); },
+        simfinal: async () => { if (!(await confirmSheet($t('match.let_the_coach_play_the_rest'), { title: $t('match.sim_to_final'), okLabel: $t('match.sim_it') }))) return; simToFinal(f); },
         skip: () => { if (anim) finishAnim(f, true); },
         replay: () => { if (!anim && lastReplay && lastReplay.gameKey === f.game?.state.seed) startReplay(f, lastReplay); },
         finish: () => finishGame(f),
         otclash: () => { const pv = F.overtimePreview(f); if (!pv.ok) { toast(pv.reason, 'bad'); return; } Router.go('clash-battle', { kind: 'overtime' }); },
-        boxscore: () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: 'Box Score' }),
+        boxscore: () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: $t('match.box_score_2') }),
         kneel: () => { R.kneel(f.game.state); afterStep(f, { kind: 'kneel', text: f.game.state.lastPlay.text }); },
         spike: () => { R.spike(f.game.state); afterStep(f, { kind: 'spike', text: f.game.state.lastPlay.text }); },
       });
@@ -183,9 +184,9 @@ export function registerMatchScreens(Router, app) {
       root.querySelector('#fieldwrap')?.addEventListener('keydown', (e) => { if (e.key !== 'Enter' && e.key !== ' ') return; const icon = e.target.closest?.('.tm-icon'); if (icon) { e.preventDefault(); e.stopPropagation(); openTypeIcon(icon); return; }
         const chip = !anim && e.target.closest?.('[data-inspect]'); if (chip) { e.preventDefault(); e.stopPropagation(); openInspect(app.f, chip.dataset.inspect); } });
       document.querySelector('.topbar [data-action="log"]')?.addEventListener('click', () => showLog(f));
-      document.querySelector('.topbar [data-action="help"]')?.addEventListener('click', () => sheet(`${matchHelpHtml(f)}<button class="btn small" data-action="assist-help" data-screen="match" style="margin-top:8px">? More Help (Coach Assist)</button>`, { title: 'How a Match Works' }));
+      document.querySelector('.topbar [data-action="help"]')?.addEventListener('click', () => sheet(`${matchHelpHtml(f)}<button class="btn small" data-action="assist-help" data-screen="match" style="margin-top:8px">${$t('match.more_help_coach_assist')}</button>`, { title: $t('match.how_a_match_works_2') }));
       momentSheets(f);
-      document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: f.game.state.finished ? 'Final' : `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: 'Box Score' }));
+      document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: f.game.state.finished ? 'Final' : `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: $t('match.box_score_2') }));
     },
     unmount() { settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
   });
@@ -214,33 +215,33 @@ export function registerMatchScreens(Router, app) {
       inspectMap = [...row(dS, 'defense', field.presnap.defensePlay, 'def'), ...row(s.possession, 'offense', field.presnap.offensePlay, 'off')];
       inspectForm = { defSide: dS, defensePlay: look0.presnap.defensePlay, exact: dS === me && !!look0.myPlay, vacant: pre8?.vacant || [] };
     }
-    const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? 'Try' : s.phase === 'kickoff' ? 'Kickoff' : s.phase === 'free_kick' ? 'Free kick' : '';
+    const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? 'Try' : s.phase === 'kickoff' ? 'Kickoff' : s.phase === 'free_kick' ? $t('match.free_kick') : '';
     const ab = G.lastEvent?.abilities?.length ? `<div class="ability-strip">${G.lastEvent.abilities.slice(0, 3).map((x) => `<span class="${x.team === me ? 'mine' : ''} ${x.trait ? 'trait' : ''}"${x.mid ? ` role="button" tabindex="0" data-inspect="${esc(x.mid)}" aria-label="Inspect ${esc(x.who)}"` : ''}>${x.trait ? '·' : '⚡'} ${esc(x.who)} · ${esc(x.what)}${x.tick ? ` <i class="ability-tick">✓ ${esc(x.tick)}</i>` : ''}</span>`).join('')}</div>` : '';
     const co = G.lastEvent?.callout; const fresh = !!G.lastEvent?.fresh; if (G.lastEvent) G.lastEvent.fresh = false; // the pop plays once, not on every re-render
     const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''} ${co ? `tier-${co.tier} ${co.mine === true ? 'mine' : co.mine === false ? 'theirs' : ''}` : ''} ${fresh ? 'fresh' : ''}" id="banner">${co && co.tier !== 'routine' ? `<div class="callout">${esc(co.text)}</div>` : co ? `<span class="callout small">${esc(co.text)}</span> ` : ''}${esc(G.lastEvent.text)}${ab}</div>` : '';
     const tdFlash = reducedFlash(f.settings) ? '' : fresh && co?.tier === 'td' ? ` td-flash ${co.mine ? 'mine' : 'theirs'}` : fresh && co?.tier === 'turnover' ? ' to-flash' : '';
     const bump = (side) => (G.scoreSeen?.[side] != null && G.scoreSeen[side] !== s.score[side]) ? 'bump' : ''; const bumpA = bump('away'), bumpH = bump('home'); G.scoreSeen = { ...s.score };
-    const eventBanner = G.event === 'rival' ? `<div class="rival-banner compact">⚔️ RIVALRY GAME · ${esc(s[them].name)} · GM ${esc(f.rivals[f.tier]?.gm || '')}</div>` : G.event === 'playoff' ? `<div class="rival-banner compact" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 PLAYOFFS · ${esc(G.tag || 'Win or go home')}</div>` : '';
+    const eventBanner = G.event === 'rival' ? `<div class="rival-banner compact">${$t('match.rivalry_game_gm', { name: esc(s[them].name), gm: esc(f.rivals[f.tier]?.gm || '') })}</div>` : G.event === 'playoff' ? `<div class="rival-banner compact" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">${$t('match.playoffs', { tag: esc(G.tag || $t('match.win_or_go_home')) })}</div>` : '';
     const head = `${eventBanner}
         <div class="scoreboard" aria-live="polite">
           <div class="team"><span class="pos" style="visibility:${s.possession === 'away' && !s.finished ? 'visible' : 'hidden'}"></span><span class="abbr"><span style="color:${s.away.color}">${esc(s.away.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.away)}${'○'.repeat(3 - s.timeouts.away)}</span></span><span class="score ${bumpA}">${s.score.away}</span></div>
-          <div class="mid"><b>${s.finished ? 'FINAL' : R.quarterText(s)} ${s.ot ? '' : fmtClock(s.clock)}</b>${esc(sit)}${clockStateHtml(s, G, myBall)}</div>
+          <div class="mid"><b>${s.finished ? $t('match.final') : R.quarterText(s)} ${s.ot ? '' : fmtClock(s.clock)}</b>${esc(sit)}${clockStateHtml(s, G, myBall)}</div>
           <div class="team right"><span class="score ${bumpH}">${s.score.home}</span><span class="abbr"><span style="color:${s.home.color}">${esc(s.home.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.home)}${'○'.repeat(3 - s.timeouts.home)}</span></span><span class="pos" style="visibility:${s.possession === 'home' && !s.finished ? 'visible' : 'hidden'}"></span></div>
         </div>
-        <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? 'YOUR BALL' : 'YOUR DEFENSE'}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? 'Home' : 'Away'}${G.mode === 'key' ? ' · Key Moments' : ''}</span></div>
+        <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? $t('match.your_ball') : $t('match.your_defense')}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? $t('match.home_2') : $t('match.away_2')}${G.mode === 'key' ? $t('match.key_moments_2') : ''}</span></div>
         ${edgeStrip(f, s, teams, me, pre8?.returning || [])}`;
     const wrapClass = `field-wrap${tdFlash}${venueClass(s.venue)}${anim?.replay ? ' replaying' : ''}`;
-    const over = `${weatherLayer(f, s.venue)}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> INSTANT REPLAY <b>${esc(anim.replay.reason.label)}</b></div><div class="replay-slow" aria-hidden="true">SLOW-MO</div>` : banner}`;
+    const over = `${weatherLayer(f, s.venue)}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> ${$t('match.instant_replay_b_b', { label: esc(anim.replay.reason.label) })}</div><div class="replay-slow" aria-hidden="true">${$t('match.slow_mo')}</div>` : banner}`;
     // N9c: a field the snap creates only if its creator is in the play (Runway, Bloom Break, Crosswind Rescue) is marked as conditional
-    const warning = !anim ? (s.t8?.preChoice?.foresight || []).map((m) => `<div class="t8-conditional" role="note">Foresight: ${esc(findMonster(teams, m.targetMid)?.monster?.name || m.targetSlot)} is marked. Blitzing risks Confused this play.</div>`).join('') + (s.t8?.preChoice?.prism || []).map(() => '<div class="t8-conditional" role="note">Prism Break shattered an existing enemy zone before play selection.</div>').join('') : '';
-    const cond = !anim && pre8?.notes?.length ? `<div class="t8-conditional" role="note">${pre8.notes.map((n) => `<span class="${n.shown ? '' : 'held'}" data-ability="${esc(n.ability)}">◇ <b>${esc(n.name)}</b> ${n.shown ? `is created at the snap only if ${esc(n.creator)} is on the field for the play` : `is not created: ${esc(n.creator)} is not on the field in this play (it stays ready)`}</span>`).join('')}</div>` : '';
-    const after = `${cond}${warning}${anim?.replay && anim.ev?.sim?.qb && qbReadsShown(f.settings) ? qbReadPanelHtml(anim.ev.sim, (slot, side) => `${(side === 'def' ? anim.ev.sim.names?.def : anim.ev.sim.names?.off)?.[slot] || slot} (${slot})`, { title: 'QB Reads on This Play' }) : ''}${!anim && presnapEdges.length ? '<div class="tm-legend"><span><b class="up">▲</b> type advantage</span><span><b class="down">▼</b> disadvantage</span><span>tap an icon</span><span>tap a monster to inspect</span></div>' : !anim && inspectMap ? '<div class="tm-legend"><span>Tap a monster to inspect: stamina, status, ability</span></div>' : ''}`;
+    const warning = !anim ? (s.t8?.preChoice?.foresight || []).map((m) => `<div class="t8-conditional" role="note">${$t('match.foresight_is_marked_blitzing_risks_confused', { name: esc(findMonster(teams, m.targetMid)?.monster?.name || m.targetSlot) })}</div>`).join('') + (s.t8?.preChoice?.prism || []).map(() => `<div class="t8-conditional" role="note">${$t('match.prism_break_shattered_an_existing_enemy')}</div>`).join('') : '';
+    const cond = !anim && pre8?.notes?.length ? `<div class="t8-conditional" role="note">${pre8.notes.map((n) => `<span class="${n.shown ? '' : 'held'}" data-ability="${esc(n.ability)}">◇ <b>${esc(n.name)}</b> ${n.shown ? `${$t('match.is_created_at_the_snap_only', { creator: esc(n.creator) })}` : `${$t('match.is_not_created_is_not_on', { creator: esc(n.creator) })}`}</span>`).join('')}</div>` : '';
+    const after = `${cond}${warning}${anim?.replay && anim.ev?.sim?.qb && qbReadsShown(f.settings) ? qbReadPanelHtml(anim.ev.sim, (slot, side) => `${(side === 'def' ? anim.ev.sim.names?.def : anim.ev.sim.names?.off)?.[slot] || slot} (${slot})`, { title: $t('match.qb_reads_on_this_play') }) : ''}${!anim && presnapEdges.length ? `<div class="tm-legend"><span><b class="up">▲</b> type advantage</span><span><b class="down">▼</b> disadvantage</span><span>${$t('match.tap_an_icon')}</span><span>${$t('match.tap_a_monster_to_inspect')}</span></div>` : !anim && inspectMap ? `<div class="tm-legend"><span>${$t('match.tap_a_monster_to_inspect_stamina')}</span></div>` : ''}`;
     const title = `${s.away.abbr} ${s.score.away}-${s.score.home} ${s.home.abbr}`;
     return { title, head, wrapClass, field, over, after, controls: controlsHtml(f, teams, look) };
   }
   /** What mount() does after the markup is in place; refresh() repeats it (the play clock restarts, Auto is rescheduled, the halftime sheet opens). */
   function afterRender(f, root) {
-    { const G = f.game, st = G.state; if (!anim && !st.finished && st.quarter >= 3 && !G.halftimeShown) { G.halftimeShown = true; app.save(); sheet(boxScoreHtml(st, teamsFor(f), { title: 'Halftime' }), { title: 'Halftime' }); } }
+    { const G = f.game, st = G.state; if (!anim && !st.finished && st.quarter >= 3 && !G.halftimeShown) { G.halftimeShown = true; app.save(); sheet(boxScoreHtml(st, teamsFor(f), { title: $t('match.halftime') }), { title: $t('match.halftime') }); } }
     startPlayClock(f, root);
     runPresnapReveal(f);
     scheduleAuto(f);
@@ -323,7 +324,7 @@ export function registerMatchScreens(Router, app) {
   function spotFor(ballOn, myBall) {
     if (myBall) return yardLabel(ballOn);
     if (ballOn === 50) return 'MIDFIELD';
-    return ballOn < 50 ? `THEIR ${ballOn}` : `YOUR ${100 - ballOn}`;
+    return ballOn < 50 ? `${$t('match.their', { ballOn })}` : `${$t('match.your', { ballOn: 100 - ballOn })}`;
   }
   function teamsFor(f) { const m = F.sundayMatchup(f); return { home: m.home, away: m.away }; }
 
@@ -390,42 +391,42 @@ export function registerMatchScreens(Router, app) {
   /** The clock line under the score (GDD §20.4): is time going to come off at the next snap, and how much. */
   function clockStateHtml(s, G, myBall) {
     if (s.finished || s.ot || s.phase !== 'scrimmage') return '';
-    if (!s.clockRunning) return '<div class="clockstate stopped">⏸ STOPPED · snap costs 0 s</div>';
+    if (!s.clockRunning) return `<div class="clockstate stopped">${$t('match.stopped_snap_costs_0_s')}</div>`;
     const tempo = myBall ? (G.tempo || 'normal') : null; const cost = tempo ? R.RUNOFF[tempo] : null;
     const unstoppable = s.timeouts[myBall ? R.opponent(s.possession) : s.possession] === 0 && s.clock <= R.RUNOFF.milk;
-    return `<div class="clockstate running">▶ RUNNING · ${cost != null ? `−${cost} s at snap` : 'time off at snap'}${unstoppable ? ' · can’t be stopped' : ''}</div>`;
+    return `<div class="clockstate running">${$t('match.running')} ${cost != null ? `${$t('match.s_at_snap', { cost })}` : $t('match.time_off_at_snap')}${unstoppable ? $t('match.cant_be_stopped') : ''}</div>`;
   }
   /** The ⓘ sheet: every control on the match screen, in plain words. */
   function matchHelpHtml(f) {
-    return `<h3>Downs</h3><p>Four tries to gain 10 yards. Make it and you get four more; reach the end zone for a touchdown (6, plus a 1-point kick). On fourth down you usually punt or kick a field goal (3).</p>
-      <h3>The clock</h3><p>The clock does not tick on its own: each play uses a few seconds, and if the last play ended with the clock <b>running</b> (tackled in bounds, no score), the time between plays comes off <b>when you snap</b>: ${R.RUNOFF.normal} s at normal tempo, ${R.RUNOFF.hurry} s in hurry-up, ${R.RUNOFF.milk} s milking it. The line under the score tells you which. An incompletion, a run out of bounds, a score or a timeout stops it: the next snap then costs nothing.</p>
-      <h3>Timeout · Spike · Kneel · Tempo</h3><p><b>Timeout</b> (three a half) stops the clock so your next snap costs no time, on defense it is how you get the ball back from a team running the clock out. <b>Hurry-up</b> tempo cuts the runoff to ${R.RUNOFF.hurry} s for free; <b>milk clock</b> raises it to ${R.RUNOFF.milk} s when you are protecting a lead. <b>Spike</b> stops the clock for the price of a down (appears under a minute); <b>kneel</b> burns time when you are ahead, if the other side has no timeouts and less than ${R.RUNOFF.milk} s is left, the clock runs out and the game is over.</p>
-      <h3>Calling plays</h3><p>Pick one of the six cards you set on Friday and press Snap; on defense pick a defense. ★ is the coach's suggestion; ✦ counters what you learned scouting; a grayed card needs a package you cannot field. <b>FG</b> kicks on any down when the kick is makeable.</p>
-      <h3>Key Moments · Full Coaching · Auto · Sim</h3><p><b>Key Moments</b> simulates the routine downs and stops for the big ones; <b>Full Coaching</b> lets you call every snap. <b>Auto</b> calls the coach's plays for you (1× or 2×) until you stop it. <b>Sim to key moment</b> jumps ahead; <b>Sim to final</b> ends the game at once.</p>
-      <h3>Edges</h3><p>${F.comebackRule(f) ? `<b>Comeback mode:</b> down ${F.COMEBACK.margin}+ in the fourth, either side plays with +${F.COMEBACK.edge}. ` : ''}<b>Scheme lock:</b> all starters on a side fitting the coordinator's scheme play with +${F.SCHEME_LOCK_EDGE}. Training (T) and media day (+) lifts show on the pregame lineup. Abilities fire on the strip under the field. <b>Inspect:</b> before the snap, tap a monster in the formation (or an entry of the ability strip) for its stamina, status and ability, and what is protecting it.</p>
-      <h3>Type matchups</h3><p>Before the snap, a green <b>▲</b> or amber <b>▼</b> beside one of your monsters means a type advantage or disadvantage against the monster he is expected to face. Tap it to see the matchup. In the play, the edge (+4% or −4% on his side of a block, tackle, sack, separation or contested catch; Dragon +2% against neutral types) counts only against the monster he really meets. It never changes ratings. The Type Chart is under More and on every monster card.</p>`;
+    return `<h3>${$t('match.downs')}</h3><p>${$t('match.four_tries_to_gain_10_yards')}</p>
+      <h3>${$t('match.the_clock')}</h3><p>${$t('match.the_clock_does_not_tick_on', { normal: R.RUNOFF.normal, hurry: R.RUNOFF.hurry, milk: R.RUNOFF.milk })}</p>
+      <h3>${$t('match.timeout_spike_kneel_tempo')}</h3><p>${$t('match.b_timeout_b_three_a_half', { hurry: R.RUNOFF.hurry, milk: R.RUNOFF.milk, milk2: R.RUNOFF.milk })}</p>
+      <h3>${$t('match.calling_plays')}</h3><p>${$t('match.pick_one_of_the_six_cards')}</p>
+      <h3>${$t('match.key_moments_full_coaching_auto_sim')}</h3><p>${$t('match.b_key_moments_b_simulates_the')}</p>
+      <h3>${$t('match.edges')}</h3><p>${F.comebackRule(f) ? `${$t('match.b_comeback_mode_b_down_in', { margin: F.COMEBACK.margin, edge: F.COMEBACK.edge })} ` : ''}${$t('match.b_scheme_lock_b_all_starters', { schemeLockEdge: F.SCHEME_LOCK_EDGE })}</p>
+      <h3>${$t('match.type_matchups')}</h3><p>${$t('match.before_the_snap_a_green_b')}</p>`;
   }
   function controlsHtml(f, teams, look) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
     // While a play animates in Auto, keep the Auto controls on screen so it can be stopped at any moment (no Skip: Auto is already watching the game for you).
-    if (anim && G.auto) return `<div class="match-actions"><div class="secondary"><button class="btn primary big" data-action="auto" style="flex:2">Auto ■ Stop</button><button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed" title="Auto speed">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button></div><p class="dim center" style="margin:4px 0 0">Auto is calling the coach's plays. Stop and you take over on the next snap.</p>${anim.replay ? '<button class="btn block" data-action="skip" style="margin-top:6px">Skip Replay ▸▸</button>' : ''}</div>`;
-    if (anim) return `<div class="match-actions"><button class="btn block ${anim.replay ? 'primary' : ''}" data-action="skip">${anim.replay ? 'Skip Replay ▸▸' : 'Skip ▸▸'}</button></div>`;
+    if (anim && G.auto) return `<div class="match-actions"><div class="secondary"><button class="btn primary big" data-action="auto" style="flex:2">${$t('match.auto_stop')}</button><button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed" title="${$t('match.auto_speed')}">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button></div><p class="dim center" style="margin:4px 0 0">${$t('match.auto_is_calling_the_coachs_plays')}</p>${anim.replay ? `<button class="btn block" data-action="skip" style="margin-top:6px">${$t('match.skip_replay')}</button>` : ''}</div>`;
+    if (anim) return `<div class="match-actions"><button class="btn block ${anim.replay ? 'primary' : ''}" data-action="skip">${anim.replay ? $t('match.skip_replay') : $t('match.skip')}</button></div>`;
     // Auto stays stoppable in every phase it plays through (continues, kickoffs, tries), not only at the snap.
-    const autoBar = G.auto && !s.finished ? `<div class="secondary" style="margin-bottom:6px"><button class="btn primary" data-action="auto" style="flex:2">Auto ■ Stop</button><button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button></div>` : '';
+    const autoBar = G.auto && !s.finished ? `<div class="secondary" style="margin-bottom:6px"><button class="btn primary" data-action="auto" style="flex:2">${$t('match.auto_stop')}</button><button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button></div>` : '';
     // 📼 the last big play again (GDD §34.4): offered between plays, on kickoffs and tries too (right after a touchdown).
-    const rpRow = lastReplay && lastReplay.gameKey === s.seed && !s.finished && s.phase !== 'scrimmage' ? `<div class="secondary" style="margin-bottom:6px"><button class="btn small" data-action="replay">📼 Replay: ${esc(lastReplay.reason.label.toLowerCase())}</button></div>` : '';
-    if (s.finished && s.needsTiebreak && !s.winner) { const n = F.inPlayoffs(f) ? 5 : 3; return `<div class="match-actions"><div class="panel center"><h2>STILL TIED</h2><div class="muted">${esc(s.away.name)} ${s.score.away}-${s.score.home} ${esc(s.home.name)} after overtime</div><p class="muted" style="margin:6px 0 0">A <b>${n}v${n} Beast Clash</b> decides the game. The football score stays as it is; the Clash winner takes the win.</p></div><button class="btn primary big block" data-action="otclash">⚔️ Overtime Beast Clash →</button></div>`; }
-    if (s.finished) return `<div class="match-actions"><div class="panel center"><h2>${s.winner === me ? 'VICTORY' : s.winner === null ? 'TIE' : 'DEFEAT'}</h2><div class="muted">${esc(s.away.name)} ${s.score.away}-${s.score.home} ${esc(s.home.name)}${s.tiebreak ? ` (OT · won by ${s.tiebreak.size}v${s.tiebreak.size} Beast Clash)` : s.ot ? ' (OT)' : ''}</div></div><button class="btn primary big block" data-action="finish">Continue →</button></div>`;
-    if (G.lastEvent?.needsContinue) return `<div class="match-actions">${autoBar}${rpRow}<button class="btn primary big block" data-action="continue">Continue →</button></div>`;
+    const rpRow = lastReplay && lastReplay.gameKey === s.seed && !s.finished && s.phase !== 'scrimmage' ? `<div class="secondary" style="margin-bottom:6px"><button class="btn small" data-action="replay">${$t('match.replay', { toLowerCase: esc(lastReplay.reason.label.toLowerCase()) })}</button></div>` : '';
+    if (s.finished && s.needsTiebreak && !s.winner) { const n = F.inPlayoffs(f) ? 5 : 3; return `<div class="match-actions"><div class="panel center"><h2>${$t('match.still_tied')}</h2><div class="muted">${$t('match.after_overtime', { name: esc(s.away.name), away: s.score.away, home: s.score.home, name2: esc(s.home.name) })}</div><p class="muted" style="margin:6px 0 0">${$t('match.a_b_v_beast_clash_b', { n, n2: n })}</p></div><button class="btn primary big block" data-action="otclash">${$t('match.overtime_beast_clash')}</button></div>`; }
+    if (s.finished) return `<div class="match-actions"><div class="panel center"><h2>${s.winner === me ? $t('match.victory') : s.winner === null ? $t('match.tie') : $t('match.defeat')}</h2><div class="muted">${esc(s.away.name)} ${s.score.away}-${s.score.home} ${esc(s.home.name)}${s.tiebreak ? ` ${$t('match.ot_won_by_v_beast_clash', { size: s.tiebreak.size, size2: s.tiebreak.size })}` : s.ot ? ' (OT)' : ''}</div></div><button class="btn primary big block" data-action="finish">${$t('match.continue')}</button></div>`;
+    if (G.lastEvent?.needsContinue) return `<div class="match-actions">${autoBar}${rpRow}<button class="btn primary big block" data-action="continue">${$t('match.continue')}</button></div>`;
     if (s.phase === 'kickoff' || s.phase === 'free_kick') {
       const weKick = s.kickingTeam === me;
-      return `<div class="match-actions">${autoBar}${rpRow}${weKick ? `<div class="primary-row ${s.phase === 'kickoff' ? 'three' : ''}" style="grid-template-columns:${s.phase === 'kickoff' ? '2fr 1fr' : '1fr'}"><button class="btn primary big" data-action="kickoff">${s.phase === 'free_kick' ? 'Free Kick' : 'Kick Off'}</button>${s.phase === 'kickoff' ? '<button class="btn" data-action="onside">Onside</button>' : ''}</div>` : `<button class="btn primary big block" data-action="kickoff">Receive the Kick</button>`}</div>`;
+      return `<div class="match-actions">${autoBar}${rpRow}${weKick ? `<div class="primary-row ${s.phase === 'kickoff' ? 'three' : ''}" style="grid-template-columns:${s.phase === 'kickoff' ? '2fr 1fr' : '1fr'}"><button class="btn primary big" data-action="kickoff">${s.phase === 'free_kick' ? $t('match.free_kick_2') : $t('match.kick_off')}</button>${s.phase === 'kickoff' ? `<button class="btn" data-action="onside">${$t('match.onside')}</button>` : ''}</div>` : `<button class="btn primary big block" data-action="kickoff">${$t('match.receive_the_kick')}</button>`}</div>`;
     }
     if (s.phase === 'try') {
-      if (s.tryTeam !== me) return `<div class="match-actions">${autoBar}${rpRow}<button class="btn primary big block" data-action="continue">Opponent's Try: Continue</button></div>`;
+      if (s.tryTeam !== me) return `<div class="match-actions">${autoBar}${rpRow}<button class="btn primary big block" data-action="continue">${$t('match.opponents_try_continue')}</button></div>`;
       const two = PLAYS; const plays = teams[me].offensePlays.filter((id) => PLAYS[id].tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t)));
-      return `<div class="match-actions">${autoBar}${rpRow}<p class="muted center" style="margin:0">Touchdown! Kick (${AI.tryDecision(s) === 'two' ? 'coach suggests two' : 'coach suggests the kick'})</p>
-        <div class="primary-row" style="grid-template-columns:1fr 1fr"><button class="btn primary big" data-action="trykick">Kick PAT (+1)</button><button class="btn big" data-action="trytwo">Go for Two</button></div>
+      return `<div class="match-actions">${autoBar}${rpRow}<p class="muted center" style="margin:0">${$t('match.touchdown_kick', { tryDecision: AI.tryDecision(s) === 'two' ? 'coach suggests two' : $t('match.coach_suggests_the_kick') })}</p>
+        <div class="primary-row" style="grid-template-columns:1fr 1fr"><button class="btn primary big" data-action="trykick">${$t('match.kick_pat_1')}</button><button class="btn big" data-action="trytwo">${$t('match.go_for_two')}</button></div>
         ${cards(plays, 'offense', G.selected.offense, null)}</div>`;
     }
     // Scrimmage.
@@ -437,26 +438,26 @@ export function registerMatchScreens(Router, app) {
     let primary;
     if (myBall && s.down === 4) {
       const fg = R.fieldGoalInfo(s, teams); const dec = AI.fourthDownDecision(s, teams[me]);
-      primary = `<div class="primary-row three"><button class="btn ${dec === 'go' ? 'primary' : ''} big" data-action="snap" ${selected ? '' : 'disabled'}>Go for It</button><button class="btn ${dec === 'punt' ? 'primary' : ''} big" data-action="punt">Punt</button><button class="btn ${dec === 'fg' ? 'primary' : ''} big" data-action="fg">FG ${fg.distance} yd<br><small>${Math.round(fg.chance * 100)}%</small></button></div>`;
-    } else primary = `<button class="btn primary big block" data-action="snap" ${selected ? '' : 'disabled'}>${myBall ? (selected ? `Snap · ${esc(PLAYS[selected].name)}` : 'Pick a Play') : (selected ? `Set Defense · ${esc(PLAYS[selected].name)}` : 'Pick a Defense')}</button>`;
+      primary = `<div class="primary-row three"><button class="btn ${dec === 'go' ? 'primary' : ''} big" data-action="snap" ${selected ? '' : 'disabled'}>${$t('match.go_for_it')}</button><button class="btn ${dec === 'punt' ? 'primary' : ''} big" data-action="punt">${$t('match.punt')}</button><button class="btn ${dec === 'fg' ? 'primary' : ''} big" data-action="fg">${$t('match.fg_yd_br', { distance: fg.distance })}<small>${Math.round(fg.chance * 100)}%</small></button></div>`;
+    } else primary = `<button class="btn primary big block" data-action="snap" ${selected ? '' : 'disabled'}>${myBall ? (selected ? `${$t('match.snap', { name: esc(PLAYS[selected].name) })}` : $t('match.pick_a_play')) : (selected ? `${$t('match.set_defense', { name: esc(PLAYS[selected].name) })}` : $t('match.pick_a_defense'))}</button>`;
     // Early field goal: on any down, when the kick is makeable; highlighted when a half is about to end.
     let fgEarly = '';
-    if (myBall && s.down < 4 && s.phase === 'scrimmage') { const fg = R.fieldGoalInfo(s, teams); if (fg.chance >= 0.2) fgEarly = `<button class="btn small ${!s.ot && s.clock <= 30 && (s.quarter === 2 || s.quarter >= 4) ? 'good' : ''}" data-action="fg" title="Kick now instead of running a play">FG ${fg.distance} yd · ${Math.round(fg.chance * 100)}%</button>`; }
+    if (myBall && s.down < 4 && s.phase === 'scrimmage') { const fg = R.fieldGoalInfo(s, teams); if (fg.chance >= 0.2) fgEarly = `<button class="btn small ${!s.ot && s.clock <= 30 && (s.quarter === 2 || s.quarter >= 4) ? 'good' : ''}" data-action="fg" title="${$t('match.kick_now_instead_of_running_a')}">FG ${fg.distance} yd · ${Math.round(fg.chance * 100)}%</button>`; }
     const secondary = `<div class="secondary">
-      <button class="btn small" data-action="timeout" ${s.timeouts[me] ? '' : 'disabled'}>Timeout (${s.timeouts[me]})</button>
-      ${myBall ? `<select class="btn small" data-change="tempo" aria-label="Tempo" style="min-height:36px;margin:0;flex:1"><option value="normal" ${(G.tempo || 'normal') === 'normal' ? 'selected' : ''}>Tempo: normal</option><option value="hurry" ${G.tempo === 'hurry' ? 'selected' : ''}>Tempo: hurry-up</option><option value="milk" ${G.tempo === 'milk' ? 'selected' : ''}>Tempo: milk clock</option></select>` : ''}
+      <button class="btn small" data-action="timeout" ${s.timeouts[me] ? '' : 'disabled'}>${$t('match.timeout_2', { timeouts: s.timeouts[me] })}</button>
+      ${myBall ? `<select class="btn small" data-change="tempo" aria-label="${$t('match.tempo')}" style="min-height:36px;margin:0;flex:1"><option value="normal" ${(G.tempo || 'normal') === 'normal' ? 'selected' : ''}>${$t('match.tempo_normal')}</option><option value="hurry" ${G.tempo === 'hurry' ? 'selected' : ''}>${$t('match.tempo_hurry_up')}</option><option value="milk" ${G.tempo === 'milk' ? 'selected' : ''}>${$t('match.tempo_milk_clock')}</option></select>` : ''}
       ${fgEarly}
-      ${myBall && s.phase === 'scrimmage' ? (() => { const sg = R.fieldGoalSignature(s, teams); return sg?.available ? `<button class="btn small good" data-action="fgsig" title="Once per game: the signature kick's own chart">${esc(sg.label)} ${sg.distance} yd · ${Math.round(sg.chance * 100)}%</button>` : ''; })() : ''}
-      ${myBall && AI.shouldKneel(s) ? '<button class="btn small" data-action="kneel">Kneel</button>' : ''}${myBall && !s.ot && s.clockRunning && s.quarter >= 2 && s.clock < 60 ? '<button class="btn small" data-action="spike">Spike</button>' : ''}
-      <button class="btn small ${G.auto ? 'primary' : ''}" data-action="auto" title="Auto: the coach's suggested plays are called for you, every play animated, until you turn it off">${G.auto ? 'Auto ■ Stop' : 'Auto ▶'}</button>
-      ${G.auto ? `<button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed" title="Auto speed">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button>` : ''}
-      <button class="btn small" data-action="mode">${G.mode === 'key' ? 'Key Moments ✓' : 'Full Coaching ✓'}</button>
-      <button class="btn small" data-action="simfinal" title="Skip the rest of the game">Sim to Final ⏭</button>
-      ${lastReplay && lastReplay.gameKey === s.seed ? `<button class="btn small" data-action="replay" title="Watch the last big play again: ${esc(lastReplay.reason.label.toLowerCase())}">📼 Replay</button>` : ''}
-      ${G.mode === 'key' ? '<button class="btn small good" data-action="keymoment">Sim to Key Moment ▸</button>' : ''}</div>`;
-    const clock = f.settings.liveClock && s.phase === 'scrimmage' ? `<div class="playclock">Play clock <b id="pc">40</b><div class="bar"><i id="pcbar" style="width:100%"></i></div></div>` : '';
+      ${myBall && s.phase === 'scrimmage' ? (() => { const sg = R.fieldGoalSignature(s, teams); return sg?.available ? `<button class="btn small good" data-action="fgsig" title="${$t('match.once_per_game_the_signature_kicks')}">${esc(sg.label)} ${sg.distance} yd · ${Math.round(sg.chance * 100)}%</button>` : ''; })() : ''}
+      ${myBall && AI.shouldKneel(s) ? `<button class="btn small" data-action="kneel">${$t('match.kneel')}</button>` : ''}${myBall && !s.ot && s.clockRunning && s.quarter >= 2 && s.clock < 60 ? `<button class="btn small" data-action="spike">${$t('match.spike')}</button>` : ''}
+      <button class="btn small ${G.auto ? 'primary' : ''}" data-action="auto" title="${$t('match.auto_the_coachs_suggested_plays_are')}">${G.auto ? $t('match.auto_stop') : $t('match.auto')}</button>
+      ${G.auto ? `<button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed" title="${$t('match.auto_speed')}">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button>` : ''}
+      <button class="btn small" data-action="mode">${G.mode === 'key' ? $t('match.key_moments_3') : $t('match.full_coaching_2')}</button>
+      <button class="btn small" data-action="simfinal" title="${$t('match.skip_the_rest_of_the_game')}">${$t('match.sim_to_final_2')}</button>
+      ${lastReplay && lastReplay.gameKey === s.seed ? `<button class="btn small" data-action="replay" title="Watch the last big play again: ${esc(lastReplay.reason.label.toLowerCase())}">${$t('match.replay_2')}</button>` : ''}
+      ${G.mode === 'key' ? `<button class="btn small good" data-action="keymoment">${$t('match.sim_to_key_moment')}</button>` : ''}</div>`;
+    const clock = f.settings.liveClock && s.phase === 'scrimmage' ? `<div class="playclock">${$t('match.play_clock')} <b id="pc">40</b><div class="bar"><i id="pcbar" style="width:100%"></i></div></div>` : '';
     return `<div class="match-actions">${primary}${secondary}${clock}</div>
-      <div class="muted" style="font-size:12px;margin:4px 0">${myBall ? 'Your offensive plays' : 'Your defensive plays'} · ★ coach's suggestion · opponent's call is hidden${teams[me].blockedPlays?.length ? ` · <span style="color:var(--bad)">${teams[me].blockedPlays.length} play${teams[me].blockedPlays.length === 1 ? '' : 's'} unavailable (no legal ${teams[me].blockedSlots.join('/')})</span>` : ''}</div>
+      <div class="muted" style="font-size:12px;margin:4px 0">${$t('match.coachs_suggestion_opponents_call_is_hidden', { myBall: myBall ? $t('match.your_offensive_plays') : $t('match.your_defensive_plays') })}${teams[me].blockedPlays?.length ? ` · <span style="color:var(--bad)">${$t('match.plays_unavailable_no_legal', { n: teams[me].blockedPlays.length })} ${teams[me].blockedSlots.join('/')})</span>` : ''}</div>
       ${cards(plan, side, selected, suggestion)}`;
   }
   function cards(ids, side, selected, suggestion) {
@@ -625,7 +626,7 @@ export function registerMatchScreens(Router, app) {
         const s2 = G.state;
         fieldDraw(svg, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame, prevFrame: sim.frames[pos.i - 1] || null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), qbRead: qbReadsShown(f.settings), ownLabel: s2[anim.ev.offenseSide || s2.possession].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide || s2.possession)].abbr, camera: anim.camera, event: G.event, noLines: true, sprites: anim.sprites, time: frame.t });
         // Camera: a slight zoom that tracks the ball (CSS transform on the svg; the wrap clips it).
-        if (zoomOn) { const bx = (anim.ballLat + frame.ball[1] - VB[0]) / VB[2], by = (anim.camera.top - (anim.ballOn + frame.ball[0])) / VB[3]; svg.style.transformOrigin = `${(Math.max(0.15, Math.min(0.85, bx)) * 100).toFixed(1)}% ${(Math.max(0.15, Math.min(0.85, by)) * 100).toFixed(1)}%`; svg.style.transform = `scale(${REPLAY.zoom})`; }
+        if (zoomOn) { const bx = (anim.ballLat + frame.ball[1] - VB[0]) / VB[2], by = (anim.camera.top - (anim.ballOn + frame.ball[0])) / VB[3]; svg.style.transformOrigin = `${(Math.max(0.15, Math.min(0.85, bx)) * 100).toFixed(1)}% ${(Math.max(0.15, Math.min(0.85, by)) * 100).toFixed(1)}%`; svg.style.transform = `${$t('match.scale', { zoom: REPLAY.zoom })}`; }
         wrap?.classList.toggle('slowmo', !!pos.slow);
       }
       anim.raf = requestAnimationFrame(tick);
@@ -655,7 +656,7 @@ export function registerMatchScreens(Router, app) {
       seen[ab.name] = true; app.save();
       const side = e.side === 'off' ? off : R.opponent(off); const yours = side === G.playerSide; const club = G.state[side]?.name || '';
       if (G.auto) { toast(`✨ ${ab.name} (${m.name}, ${yours ? 'yours' : club}): ${ab.text}`, 'good', 5000); return; }
-      sheet(`<p style="margin-top:0"><b>${esc(m.name)}</b> ${yours ? '(yours)' : `of the ${esc(club)}`} just used <b>${esc(ab.name)}</b>.</p><p class="muted">${esc(ab.text)}</p><p class="dim" style="font-size:12px">Every signature ability belongs to one monster in the league. You will see this tip once per ability.</p><button class="btn small see-it" data-see-it="${sp.id}">▶ See It Again</button>`, { title: `✨ ${ab.name}` });
+      sheet(`<p style="margin-top:0"><b>${esc(m.name)}</b> ${yours ? '(yours)' : `${$t('match.of_the', { club: esc(club) })}`} ${$t('match.just_used_b_b', { name: esc(ab.name) })}</p><p class="muted">${esc(ab.text)}</p><p class="dim" style="font-size:12px">${$t('match.every_signature_ability_belongs_to_one')}</p><button class="btn small see-it" data-see-it="${sp.id}">${$t('match.see_it_again')}</button>`, { title: `✨ ${ab.name}` });
       return;
     }
   }
@@ -685,25 +686,25 @@ export function registerMatchScreens(Router, app) {
   function fxMeta(ev, live) { return { ...(live ? { preroll: true } : {}), ...(ev?.fxRevealed?.length ? { revealed: ev.fxRevealed } : {}), ...(ev?.fxStaged?.length ? { staged: ev.fxStaged } : {}) }; }
   // ---- I4: the monster inspect sheet (match-fx.js inspectInfo; the game's sheet()). Opened from the formation or the ability strip.
   let inspectMap = null; let inspectForm = null;
-  const STATUS_NAME = { stunned: 'Stunned', slowed: 'Slowed', stumbled: 'Stumbled', knockedDown: 'Knocked Down', afflicted: 'Afflicted', weakened: 'Weakened', confused: 'Confused' };
+  const STATUS_NAME = { stunned: 'Stunned', slowed: 'Slowed', stumbled: 'Stumbled', knockedDown: $t('match.knocked_down'), afflicted: 'Afflicted', weakened: 'Weakened', confused: 'Confused' };
   function inspectHtml(f, I) {
     const s = f.game.state; const m = I.monster; const st = I.stamina; const num = (v) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
-    const note = (n) => `<div class="inspect-note ${n.tick ? 'tick' : ''}">${n.tick ? '<b aria-hidden="true">✓</b> ' : ''}${esc(n.text)}</div>`;
+    const note = (n) => `<div class="inspect-note ${n.tick ? 'tick' : ''}">${n.tick ? `<b aria-hidden="true">✓</b> ` : ''}${esc(n.text)}</div>`;
     const bar = I.full ? `<div class="inspect-bar ${st.exhausted ? 'out' : st.low ? 'low' : ''}" role="img" aria-label="Stamina ${num(st.now)} of ${st.capacity}"><i style="width:${Math.round(st.frac * 100)}%"></i></div>` : '';
-    const stamLine = I.full ? `${num(st.now)} / ${st.capacity}${st.played ? '' : ' · has not played yet'}` : st.exhausted ? 'Exhausted' : st.low ? 'Low' : 'Not low';
+    const stamLine = I.full ? `${num(st.now)} / ${st.capacity}${st.played ? '' : $t('match.has_not_played_yet')}` : st.exhausted ? 'Exhausted' : st.low ? 'Low' : $t('match.not_low');
     return `<div class="inspect" data-inspect-sheet="${esc(m.id)}">
-      <div class="row" style="gap:10px;align-items:center">${monsterSprite(m, 44)}<div class="grow"><b>${esc(m.name)}</b><div class="muted" style="font-size:12px">${esc(m.type || '')} ${esc(m.position || '')}${I.slot ? ` · lined up at ${esc(I.slot)}` : ''} · ${esc(s[I.team].abbr)}${I.full ? '' : ' (opponent)'}</div></div></div>
-      ${I.absent ? `<div class="inspect-note tick">🐲 Swallowed by Sovereign Arm: he misses ${esc(s[I.absent.serveOn]?.abbr || 'the offense')}'s next offensive play, then returns to his formation spot.</div>` : ''}
-      <div class="inspect-sec" data-sec="stamina"><div class="row between"><b>Stamina</b><span>${stamLine}</span></div>${bar}
-        ${st.exhausted ? '<div class="inspect-note">Exhausted for the rest of the game: every attribute is halved.</div>' : st.low ? '<div class="inspect-note">Low: the battery shows over his head.</div>' : ''}${I.staminaNotes.map(note).join('')}</div>
-      ${I.awarenessNotes.length ? `<div class="inspect-sec" data-sec="awareness"><b>Awareness</b>${I.awarenessNotes.map(note).join('')}</div>` : ''}
-      <div class="inspect-sec" data-sec="status"><div class="row between"><b>Status</b><span>${I.status ? `${esc(STATUS_NAME[I.status.id] || I.status.id)}${I.status.remaining != null ? ` · ${I.status.remaining} play${I.status.remaining === 1 ? '' : 's'} left` : ' · this play'}` : 'None'}</span></div></div>
+      <div class="row" style="gap:10px;align-items:center">${monsterSprite(m, 44)}<div class="grow"><b>${esc(m.name)}</b><div class="muted" style="font-size:12px">${esc(m.type || '')} ${esc(m.position || '')}${I.slot ? ` ${$t('match.lined_up_at', { slot: esc(I.slot) })}` : ''} · ${esc(s[I.team].abbr)}${I.full ? '' : ' (opponent)'}</div></div></div>
+      ${I.absent ? `<div class="inspect-note tick">${$t('match.swallowed_by_sovereign_arm_he_misses', { abbr: esc(s[I.absent.serveOn]?.abbr || $t('match.the_offense')) })}</div>` : ''}
+      <div class="inspect-sec" data-sec="stamina"><div class="row between">${$t('match.b_stamina_b')}<span>${stamLine}</span></div>${bar}
+        ${st.exhausted ? `<div class="inspect-note">${$t('match.exhausted_for_the_rest_of_the')}</div>` : st.low ? `<div class="inspect-note">${$t('match.low_the_battery_shows_over_his')}</div>` : ''}${I.staminaNotes.map(note).join('')}</div>
+      ${I.awarenessNotes.length ? `<div class="inspect-sec" data-sec="awareness">${$t('match.b_awareness_b')}${I.awarenessNotes.map(note).join('')}</div>` : ''}
+      <div class="inspect-sec" data-sec="status"><div class="row between">${$t('match.b_status_b')}<span>${I.status ? `${esc(STATUS_NAME[I.status.id] || I.status.id)}${I.status.remaining != null ? ` ${$t('match.plays_left', { remaining: I.status.remaining, n: I.status.remaining })}` : $t('match.this_play')}` : $t('match.none')}</span></div></div>
       ${I.ability ? `<div class="inspect-sec" data-sec="ability"><b>${esc(I.ability.name)}</b><div class="muted" style="font-size:12px">${esc(I.ability.text)}</div></div>` : ''}</div>`;
   }
   function openInspect(f, mid) {
     const G = f?.game; if (!G || !mid) return; const teams = teamsFor(f); const mine = findMonster(teams, mid)?.team === G.playerSide; // an opponent shows only what the field already shows
     const I = inspectInfo(G.state, teams, mid, { formation: inspectForm, last: G.lastEvent?.inspect || null, full: mine }); if (!I) return;
-    sheet(inspectHtml(f, I), { title: 'Inspect' });
+    sheet(inspectHtml(f, I), { title: $t('match.inspect') });
   }
   // ---- I5: a temporary absence (Sovereign Arm) on the formation: the empty spot while he is out, his return once (match-fx.js).
   const absenceTrack = createAbsenceTracker();
@@ -795,10 +796,10 @@ export function registerMatchScreens(Router, app) {
       if (ev.scored || KEY_RESULTS.has(ev.sim?.result) || isKey()) break;
     }
     G.simmed = lines.slice(-6);
-    G.lastEvent = { text: `${n} play${n === 1 ? '' : 's'} simulated. ${lines[lines.length - 1] || ''}`, important: false };
+    G.lastEvent = { text: `${$t('match.plays_simulated', { n, n3: lines[lines.length - 1] || '' })}`, important: false };
     G.selected = { offense: null, defense: null }; G.aiCall = null;
     app.save(); Router.render();
-    if (lines.length > 1) sheet(`<div class="log">${lines.map((l) => `<div class="entry"><span class="t"></span><span>${esc(l)}</span></div>`).join('')}</div>`, { title: 'Simulated Plays' });
+    if (lines.length > 1) sheet(`<div class="log">${lines.map((l) => `<div class="entry"><span class="t"></span><span>${esc(l)}</span></div>`).join('')}</div>`, { title: $t('match.simulated_plays') });
   }
 
   /** Skip the rest of the game: the coach plays it out headless, then the final whistle screen. */
@@ -808,14 +809,14 @@ export function registerMatchScreens(Router, app) {
     const controllers = { [me]: aiController(me), [them]: aiController(them) };
     let n = 0; while (!s.finished && n++ < 600) { const ev = step(s, teams, controllers, G.tendencies, {}); if (!ev) break; }
     stopAnim(); clearTimeout(autoTimer); autoTimer = null; G.auto = false;
-    G.lastEvent = { text: `Simulated to the final whistle. ${s[me].name} ${s.score[me]}, ${s[them].name} ${s.score[them]}.`, important: true };
+    G.lastEvent = { text: `${$t('match.simulated_to_the_final_whistle', { name: s[me].name, score: s.score[me], name2: s[them].name, score2: s.score[them] })}`, important: true };
     G.selected = { offense: null, defense: null }; G.aiCall = null;
     app.save(); Router.render();
   }
 
   function showLog(f) {
     const s = f.game?.state; if (!s) return;
-    sheet(`<div class="log">${s.log.slice().reverse().map((e) => `<div class="entry ${e.important ? 'important' : ''}"><span class="t">${R.quarterText({ quarter: e.q })} ${fmtClock(e.clock)}</span><span>${esc(e.text)}${e.repro ? `<br><small class="dim mono">repro ${esc(e.repro)}</small>` : ''}</span></div>`).join('')}</div><p class="dim">A repro code replays that exact play: <span class="mono">node tests/tools/replay.js CODE</span>.</p>`, { title: 'Play-by-Play' });
+    sheet(`<div class="log">${s.log.slice().reverse().map((e) => `<div class="entry ${e.important ? 'important' : ''}"><span class="t">${R.quarterText({ quarter: e.q })} ${fmtClock(e.clock)}</span><span>${esc(e.text)}${e.repro ? `<br><small class="dim mono">repro ${esc(e.repro)}</small>` : ''}</span></div>`).join('')}</div><p class="dim">${$t('match.a_repro_code_replays_that_exact')} <span class="mono">node tests/tools/replay.js CODE</span>.</p>`, { title: $t('match.play_by_play') });
   }
 
   function finishGame(f) {
@@ -827,7 +828,7 @@ export function registerMatchScreens(Router, app) {
     const r = F.finishSunday(f, s); app.save(); app.backup(f);
     const ev = r.events || [];
     const badgeClub = r.newBadge; const gym = badgeClub ? GYM_BY_CLUB[badgeClub] : null;
-    const otTag = s.tiebreak ? ` (OT · ${s.tiebreak.size}v${s.tiebreak.size} Clash)` : s.ot ? ' (OT)' : ''; const box = boxScoreHtml(s, teams, { title: gym ? `Final${otTag} · 🏅 BADGE GAME WON` : `Final${otTag}` });
+    const otTag = s.tiebreak ? ` ${$t('match.ot_v_clash', { size: s.tiebreak.size, size2: s.tiebreak.size })}` : s.ot ? ' (OT)' : ''; const box = boxScoreHtml(s, teams, { title: gym ? `${$t('match.final_badge_game_won', { otTag })}` : `${$t('match.final_2', { otTag })}` });
     // Beast Bowl won: the ceremony follows the final whistle (GDD §35). The result, the title and the season's end are already
     // saved above (finishSunday), so skipping the ceremony can never skip anything that counts.
     const title = won && f.season.champion === f.club && (f.history || []).some((h) => h.year === f.season.year && h.championship);
@@ -836,33 +837,33 @@ export function registerMatchScreens(Router, app) {
     const handshake = () => {
       if (!gym) return toHq();
       const hue = TYPES[gym.element]?.hue ?? 120; const lines = beatenLines(badgeClub);
-      const { close } = sheet(`<div class="talk handshake"><div class="row" style="gap:12px;align-items:flex-start">${portraitSprite(gym.coach.portrait, 56, { hue })}<div class="grow"><div class="talk-name">${esc(gym.coach.name)} <span class="dim">· head coach, ${esc(badgeClub)}</span></div>${lines.map((l) => `<p class="talk-line">“${esc(l)}”</p>`).join('')}</div></div>
-        <button class="btn primary big block" data-action="shake" style="margin-top:10px">🤝 Shake Hands</button></div>`, { title: 'Midfield', onClose: celebrate });
+      const { close } = sheet(`<div class="talk handshake"><div class="row" style="gap:12px;align-items:flex-start">${portraitSprite(gym.coach.portrait, 56, { hue })}<div class="grow"><div class="talk-name">${esc(gym.coach.name)} <span class="dim">${$t('match.head_coach', { badgeClub: esc(badgeClub) })}</span></div>${lines.map((l) => `<p class="talk-line">“${esc(l)}”</p>`).join('')}</div></div>
+        <button class="btn primary big block" data-action="shake" style="margin-top:10px">${$t('match.shake_hands')}</button></div>`, { title: $t('match.midfield'), onClose: celebrate });
       document.querySelector('.sheet [data-action="shake"]')?.addEventListener('click', () => close());
     };
     const celebrate = () => {
       if (!gym) return toHq();
       const hue = TYPES[gym.element]?.hue ?? 120; const n = Object.keys(f.campaign.badges).length; const sp = SPECIES_BY_ID[gym.legendary];
-      const { close } = sheet(`<div class="badge-win" style="--hue:${hue}"><div class="badge-win-ring"><span>★</span></div><div class="badge-win-title">BADGE EARNED</div><div class="badge-win-name">${esc(gym.badge)}</div>
-        <p class="muted">${esc(gym.coach.name)} and the ${esc(badgeClub)} fall, ${s.score[me]}-${s.score[R.opponent(me)]}. That's badge ${n} of 8.</p>
+      const { close } = sheet(`<div class="badge-win" style="--hue:${hue}"><div class="badge-win-ring"><span>★</span></div><div class="badge-win-title">${$t('match.badge_earned')}</div><div class="badge-win-name">${esc(gym.badge)}</div>
+        <p class="muted">${$t('match.and_the_fall_thats_badge_of', { name: esc(gym.coach.name), badgeClub: esc(badgeClub), score: s.score[me], score2: s.score[R.opponent(me)], n })}</p>
         <div class="row" style="justify-content:center;gap:10px">${portraitSprite(gym.coach.portrait, 44, { hue })}<p class="talk-line" style="margin:0;max-width:26ch">“${esc(BADGE_LINES[n % BADGE_LINES.length])}”</p></div>
-        ${sp ? `<p class="dim" style="margin-top:8px">${esc(sp.name)}, their legendary, can now be tracked when you win the Beast Bowl.</p>` : ''}
-        <button class="btn primary big block" data-action="badge-ok" style="margin-top:8px">Continue</button></div>`, { title: 'Gym Cleared', onClose: toHq });
+        ${sp ? `<p class="dim" style="margin-top:8px">${$t('match.their_legendary_can_now_be_tracked', { name: esc(sp.name) })}</p>` : ''}
+        <button class="btn primary big block" data-action="badge-ok" style="margin-top:8px">${$t('match.continue_2')}</button></div>`, { title: $t('match.gym_cleared'), onClose: toHq });
       document.querySelector('.sheet [data-action="badge-ok"]')?.addEventListener('click', () => close());
     };
     // The final whistle (2026-10-22 presentation pass): a result hero weighted to the occasion, the box score, then what the
     // game did to the roster: XP for every starter, level-ups with the rating change, injuries.
     const them = R.opponent(me); const tag = G.tag || ''; const champ = G.event === 'playoff' && isBeastBowlTag(tag); /* only the Beast Bowl itself ("Titan Semifinal" matched /final/ before v42.11) */ const playoff = G.event === 'playoff';
-    const diff = s.score[me] - s.score[them]; const feel = won ? (champ ? 'BEAST BOWL CHAMPIONS' : playoff ? 'PLAYOFF WIN' : diff >= 17 ? 'DOMINANT WIN' : diff <= 3 ? 'NARROW WIN' : 'VICTORY') : (champ ? 'BEAST BOWL LOST' : playoff ? 'SEASON OVER' : diff >= -3 ? 'NARROW LOSS' : 'DEFEAT');
-    const hero = `<div class="final-hero ${won ? 'won' : 'lost'} ${champ ? 'champ' : playoff ? 'playoff' : ''}"><div class="final-feel">${feel}</div><div class="final-score"><span style="color:${s[me].color}">${esc(s[me].abbr)}</span> ${s.score[me]} <span class="dim">–</span> ${s.score[them]} <span style="color:${s[them].color}">${esc(s[them].abbr)}</span></div><div class="dim">${esc(tag || `Week ${f.season.week}`)}${otTag}${G.event === 'rival' ? ' · ⚔️ rivalry' : ''}</div></div>`;
+    const diff = s.score[me] - s.score[them]; const feel = won ? (champ ? $t('match.beast_bowl_champions') : playoff ? $t('match.playoff_win') : diff >= 17 ? $t('match.dominant_win') : diff <= 3 ? $t('match.narrow_win') : 'VICTORY') : (champ ? $t('match.beast_bowl_lost') : playoff ? $t('match.season_over') : diff >= -3 ? $t('match.narrow_loss') : 'DEFEAT');
+    const hero = `<div class="final-hero ${won ? 'won' : 'lost'} ${champ ? 'champ' : playoff ? 'playoff' : ''}"><div class="final-feel">${feel}</div><div class="final-score"><span style="color:${s[me].color}">${esc(s[me].abbr)}</span> ${s.score[me]} <span class="dim">–</span> ${s.score[them]} <span style="color:${s[them].color}">${esc(s[them].abbr)}</span></div><div class="dim">${esc(tag || `${$t('match.week', { week: f.season.week })}`)}${otTag}${G.event === 'rival' ? $t('match.rivalry') : ''}</div></div>`;
     const xpRows = ev.filter((e) => e.kind === 'xp').sort((a, b) => b.amount - a.amount);
     const lvl = ev.filter((e) => e.kind === 'levelup' || e.kind === 'evolve'); const inj = ev.filter((e) => e.kind === 'injury');
-    const after = `${lvl.length ? `<h3>Level-ups</h3><div class="list">${lvl.map((e) => e.kind === 'evolve' ? `<div class="item static good"><div class="grow"><div class="name">✨ EVOLUTION · ${esc(e.from)} → ${esc(e.to)}</div></div></div>` : `<div class="item static"><div class="grow"><div class="name">⬆️ ${esc(e.name)} · level ${e.level}</div><div class="sub">${e.from} → <b style="color:var(--good)">${e.to}</b> OVR</div></div></div>`).join('')}</div>` : ''}
-      ${inj.length ? `<h3>Injuries</h3><div class="list">${inj.map((e) => `<div class="item static" style="border-color:var(--bad)"><div class="grow"><div class="name" style="color:var(--bad)">🩹 ${esc(e.name)}</div><div class="sub">${esc(e.severity)} · out ${e.weeks} week${e.weeks === 1 ? '' : 's'}</div></div></div>`).join('')}</div>` : ''}
-      ${xpRows.length ? `<h3>Experience</h3><div class="xp-grid">${xpRows.slice(0, 12).map((x) => `<div class="xp-row"><span class="xp-name">${esc(x.name)} <span class="dim">${esc(x.position)}</span></span><span class="xp-amt">${x.max ? 'MAX' : `+${Math.round(x.amount * 10) / 10}`}${x.training ? `<span class="dim" title="Training bar progress (shared by football and Beast Clash)"> · +${Math.round(x.training * 1000) / 10}% training</span>` : ''}${x.masteryCredits ? `<span class="dim" data-reward="mastery" title="Football ability mastery: valid uses this game"> · +${x.masteryCredits} mastery</span>` : ''}${x.gradeAdj ? `<span class="dim" data-reward="grade" title="Performance grade: the adjustment to this game's level XP"> · grade ${x.gradeAdj > 0 ? '+' : ''}${Math.round(x.gradeAdj * 100)}%</span>` : ''}</span><div class="bar"><i style="width:${x.max ? 100 : Math.min(100, Math.round(x.xp / x.next * 100))}%"></i></div><span class="dim mono xp-lv">Lv ${x.level}</span></div>`).join('')}${xpRows.length > 12 ? `<p class="dim">and ${xpRows.length - 12} more starters.</p>` : ''}</div>` : ''}
-      ${(() => { const pr = ev.filter((e) => e.kind === 'practice'); return pr.length ? `<h3>Development slots</h3><div class="xp-grid">${pr.map((x) => `<div class="xp-row"><span class="xp-name">${esc(x.name)} <span class="dim">${esc(x.position)}</span></span><span class="xp-amt">${x.max ? 'MAX' : `+${Math.round(x.amount * 10) / 10}`}${x.training ? `<span class="dim" title="Training bar progress (shared by football and Beast Clash)"> · +${Math.round(x.training * 1000) / 10}% training</span>` : ''}${x.masteryCredits ? `<span class="dim" data-reward="mastery" title="Football ability mastery: valid uses this game"> · +${x.masteryCredits} mastery</span>` : ''}${x.gradeAdj ? `<span class="dim" data-reward="grade" title="Performance grade: the adjustment to this game's level XP"> · grade ${x.gradeAdj > 0 ? '+' : ''}${Math.round(x.gradeAdj * 100)}%</span>` : ''}</span><div class="bar"><i style="width:${x.max ? 100 : Math.min(100, Math.round(x.xp / x.next * 100))}%"></i></div><span class="dim mono xp-lv">Lv ${x.level}</span></div>`).join('')}<p class="dim">Practice XP for reserves in development slots who did not start.</p></div>` : ''; })()}
-      ${!lvl.length && !inj.length ? '<p class="dim">No injuries. Fatigue builds with every game and recovers through the week.</p>' : ''}`;
-    sheet(`${hero}${box}${postGameHtml(f, r.partnerships, r.captainNote)}${after}`, { title: gym ? 'Final · badge game' : champ ? 'Beast Bowl' : playoff ? 'Final · playoffs' : 'Final', onClose: handshake });
+    const after = `${lvl.length ? `<h3>${$t('match.level_ups')}</h3><div class="list">${lvl.map((e) => e.kind === 'evolve' ? `<div class="item static good"><div class="grow"><div class="name">${$t('match.evolution', { from: esc(e.from), to: esc(e.to) })}</div></div></div>` : `<div class="item static"><div class="grow"><div class="name">${$t('match.level', { name: esc(e.name), level: e.level })}</div><div class="sub">${e.from} → <b style="color:var(--good)">${$t('match.b_ovr', { to: e.to })}</div></div></div>`).join('')}</div>` : ''}
+      ${inj.length ? `<h3>${$t('match.injuries')}</h3><div class="list">${inj.map((e) => `<div class="item static" style="border-color:var(--bad)"><div class="grow"><div class="name" style="color:var(--bad)">🩹 ${esc(e.name)}</div><div class="sub">${$t('match.out_weeks', { severity: esc(e.severity), weeks: e.weeks, n: e.weeks })}</div></div></div>`).join('')}</div>` : ''}
+      ${xpRows.length ? `<h3>${$t('match.experience')}</h3><div class="xp-grid">${xpRows.slice(0, 12).map((x) => `<div class="xp-row"><span class="xp-name">${esc(x.name)} <span class="dim">${esc(x.position)}</span></span><span class="xp-amt">${x.max ? $t('match.max') : `+${Math.round(x.amount * 10) / 10}`}${x.training ? `<span class="dim" title="${$t('match.training_bar_progress_shared_by_football')}"> ${$t('match.training_2', { training: Math.round(x.training * 1000) / 10 })}</span>` : ''}${x.masteryCredits ? `<span class="dim" data-reward="mastery" title="${$t('match.football_ability_mastery_valid_uses_this')}"> ${$t('match.mastery', { masteryCredits: x.masteryCredits })}</span>` : ''}${x.gradeAdj ? `<span class="dim" data-reward="grade" title="${$t('match.performance_grade_the_adjustment_to_this')}"> ${$t('match.grade', { gradeAdj: x.gradeAdj > 0 ? '+' : '', n: Math.round(x.gradeAdj * 100) })}</span>` : ''}</span><div class="bar"><i style="width:${x.max ? 100 : Math.min(100, Math.round(x.xp / x.next * 100))}%"></i></div><span class="dim mono xp-lv">Lv ${x.level}</span></div>`).join('')}${xpRows.length > 12 ? `<p class="dim">${$t('match.and_more_starters', { n: xpRows.length - 12 })}</p>` : ''}</div>` : ''}
+      ${(() => { const pr = ev.filter((e) => e.kind === 'practice'); return pr.length ? `<h3>${$t('match.development_slots')}</h3><div class="xp-grid">${pr.map((x) => `<div class="xp-row"><span class="xp-name">${esc(x.name)} <span class="dim">${esc(x.position)}</span></span><span class="xp-amt">${x.max ? $t('match.max') : `+${Math.round(x.amount * 10) / 10}`}${x.training ? `<span class="dim" title="${$t('match.training_bar_progress_shared_by_football')}"> ${$t('match.training_2', { training: Math.round(x.training * 1000) / 10 })}</span>` : ''}${x.masteryCredits ? `<span class="dim" data-reward="mastery" title="${$t('match.football_ability_mastery_valid_uses_this')}"> ${$t('match.mastery', { masteryCredits: x.masteryCredits })}</span>` : ''}${x.gradeAdj ? `<span class="dim" data-reward="grade" title="${$t('match.performance_grade_the_adjustment_to_this')}"> ${$t('match.grade', { gradeAdj: x.gradeAdj > 0 ? '+' : '', n: Math.round(x.gradeAdj * 100) })}</span>` : ''}</span><div class="bar"><i style="width:${x.max ? 100 : Math.min(100, Math.round(x.xp / x.next * 100))}%"></i></div><span class="dim mono xp-lv">Lv ${x.level}</span></div>`).join('')}<p class="dim">${$t('match.practice_xp_for_reserves_in_development')}</p></div>` : ''; })()}
+      ${!lvl.length && !inj.length ? `<p class="dim">${$t('match.no_injuries_fatigue_builds_with_every')}</p>` : ''}`;
+    sheet(`${hero}${box}${postGameHtml(f, r.partnerships, r.captainNote)}${after}`, { title: gym ? $t('match.final_badge_game') : champ ? $t('match.beast_bowl') : playoff ? $t('match.final_playoffs') : 'Final', onClose: handshake });
   }
 
   function startPlayClock(f, root) {
@@ -876,7 +877,7 @@ export function registerMatchScreens(Router, app) {
       if (pc) pc.textContent = Math.max(0, Math.ceil(left)); if (bar) bar.style.width = `${Math.max(0, left / 40 * 100)}%`;
       if (left <= 0 && G.state.possession === G.playerSide) {
         left = 40; const s = G.state; s.ballOn = Math.max(1, s.ballOn - 5); s.toGo += 5; s.clockRunning = false;
-        R.log(s, 'Delay of game: 5-yard penalty.', 'info'); G.lastEvent = { text: 'Delay of game, 5-yard penalty.', important: false }; G.aiCall = null; app.save(); Router.render();
+        R.log(s, $t('match.delay_of_game_5_yard_penalty'), 'info'); G.lastEvent = { text: $t('match.delay_of_game_5_yard_penalty_2'), important: false }; G.aiCall = null; app.save(); Router.render();
       } else if (left <= 0) left = 40;
     }, 250);
   }
@@ -888,5 +889,5 @@ function talkHtml(f) {
   const hue = t.speaker.element ? (TYPES[t.speaker.element]?.hue ?? 120) : null;
   const chosen = t.replies.find((r) => r.id === t.reply);
   return `<div class="talk ${t.kind}"><div class="row" style="align-items:flex-start;flex-wrap:nowrap">${portraitSprite(t.speaker.portrait, 48, { hue })}<div class="grow" style="min-width:0"><div class="muted" style="font-size:11px;letter-spacing:.06em">${esc(t.speaker.name).toUpperCase()} · ${esc(t.title)}</div>${t.lines.map((l) => `<p class="talk-line">“${esc(l)}”</p>`).join('')}</div></div>
-    ${t.replies && t.replies.length && t.kind !== 'ordinary' ? (chosen ? `<div class="talk-reply"><span class="dim">You:</span> “${esc(chosen.label)}” <span class="dim">· ${esc(chosen.text)}</span></div>` : `<div class="talk-replies">${t.replies.map((r) => `<button class="btn small" data-action="reply" data-v="${r.id}" title="${esc(r.text)}">${esc(r.label)}</button>`).join('')}</div>`) : ''}</div>`;
+    ${t.replies && t.replies.length && t.kind !== 'ordinary' ? (chosen ? `<div class="talk-reply"><span class="dim">${$t('match.you')}</span> “${esc(chosen.label)}” <span class="dim">· ${esc(chosen.text)}</span></div>` : `<div class="talk-replies">${t.replies.map((r) => `<button class="btn small" data-action="reply" data-v="${r.id}" title="${esc(r.text)}">${esc(r.label)}</button>`).join('')}</div>`) : ''}</div>`;
 }

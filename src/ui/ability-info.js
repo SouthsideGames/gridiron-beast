@@ -7,11 +7,12 @@ import { esc } from './dom.js';
 import { abilitiesOf, familyById } from '../data/beast-dex.js';
 import { THRESHOLDS, TIERS, tierIndex } from '../franchise/t8/mastery.js';
 import { SPECS } from '../sim/abilities/review-texts.js';
+import { t as $t } from '../text/index.js';
 
 export const MODES = Object.freeze(['football', 'clash']);
-export const MODE_LABEL = Object.freeze({ football: 'Football', clash: 'Beast Clash' });
-const SHOWN_SECTIONS = ['Trigger / eligibility', 'Targets / placement', 'Core resolution', 'Recharge / frequency', 'Lifetime / persistence', 'Exceptions / counterplay', 'Progression / notes'];
-const SECTION_LABEL = { 'Trigger / eligibility': 'When it happens', 'Targets / placement': 'Who or where', 'Core resolution': 'What it does', 'Recharge / frequency': 'How often', 'Lifetime / persistence': 'How long it lasts', 'Exceptions / counterplay': 'Limits and counterplay', 'Progression / notes': 'Forms and mastery' };
+export const MODE_LABEL = Object.freeze({ football: 'Football', clash: $t('shared.beast_clash') });
+const SHOWN_SECTIONS = [$t('shared.trigger_eligibility'), $t('shared.targets_placement'), $t('shared.core_resolution'), $t('shared.recharge_frequency'), $t('shared.lifetime_persistence'), $t('shared.exceptions_counterplay'), 'Progression / notes'];
+const SECTION_LABEL = { 'Trigger / eligibility': $t('shared.when_it_happens'), 'Targets / placement': $t('shared.who_or_where'), 'Core resolution': $t('shared.what_it_does'), 'Recharge / frequency': $t('shared.how_often'), 'Lifetime / persistence': $t('shared.how_long_it_lasts'), 'Exceptions / counterplay': $t('shared.limits_and_counterplay'), 'Progression / notes': $t('shared.forms_and_mastery') };
 const familyIdOf = (x) => (typeof x === 'string' ? x : x?.species || x?.familyId || x?.id || null);
 /** The Dex mechanic line without the "ID: Name;" prefix some records carry. */
 const tidy = (a) => String(a.mechanic || '').replace(new RegExp(`^${a.id}:\\s*${a.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')};\\s*`), '');
@@ -40,7 +41,7 @@ export function masteryInfo(m, mode) {
 export function masteryBarHtml(m, mode) {
   const a = abilityInfo(m, mode); if (!a || !m?.dev) return '';
   const k = masteryInfo(m, mode);
-  return `<div class="row between dim t8-bar-label" data-bar="mastery" data-mode="${mode}"><span>${esc(a.name)} mastery (${MODE_LABEL[mode]})</span><span><b>${k.tier}</b>${k.mastered ? ' · MAX' : ` · ${k.credits}/${k.next} uses`}</span></div><div class="bar mastery" style="margin:2px 0 4px" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${k.pct}" aria-label="${esc(a.name)} mastery"><i style="width:${k.pct}%"></i></div>`;
+  return `<div class="row between dim t8-bar-label" data-bar="mastery" data-mode="${mode}"><span>${$t('shared.mastery', { name: esc(a.name), modeLabel: MODE_LABEL[mode] })}</span><span><b>${k.tier}</b>${k.mastered ? $t('shared.max') : ` · ${k.credits}/${k.next} uses`}</span></div><div class="bar mastery" style="margin:2px 0 4px" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${k.pct}" aria-label="${esc(a.name)} mastery"><i style="width:${k.pct}%"></i></div>`;
 }
 
 /** One ability as a block: name, mode, summary, optional mastery line (for an individual) and the full Dex rules, collapsed. */
@@ -49,12 +50,12 @@ export function abilityBlockHtml(x, mode, { monster = null, seeIt = false } = {}
   const k = monster?.dev ? masteryInfo(monster, mode) : null;
   return `<div class="ab-block" data-ability="${a.id}"><div class="row between" style="gap:6px"><b>${esc(a.name)}</b><span class="chip">${MODE_LABEL[mode]}</span></div>
     <p class="muted" style="margin:2px 0">${esc(a.summary)}</p>${a.story ? `<p class="dim" style="margin:2px 0;font-style:italic">${esc(a.story)}</p>` : ''}
-    ${k ? `<div class="dim" style="font-size:12px">Mastery: <b>${k.tier}</b>${k.mastered ? ' (highest tier)' : ` · ${k.need} more valid use${k.need === 1 ? '' : 's'} to ${k.nextTier}`}</div>` : ''}
-    <details class="ab-rules"><summary class="muted" style="cursor:pointer">Full rules</summary>${a.sections.map((s) => `<p style="margin:4px 0"><b>${s.label}.</b> <span class="muted">${esc(s.text)}</span></p>`).join('')}</details>
-    ${seeIt && mode === 'football' ? `<button class="btn small see-it" data-see-it="${esc(familyIdOf(x))}" data-form="${monster?.stage ?? ''}" data-mastery="${k ? k.index : 0}">▶ See It</button>` : ''}</div>`;
+    ${k ? `<div class="dim" style="font-size:12px">${$t('shared.mastery_b_b', { tier: k.tier })}${k.mastered ? $t('shared.highest_tier') : ` ${$t('shared.more_valid_uses_to', { need: k.need, nextTier: k.nextTier, n: k.need })}`}</div>` : ''}
+    <details class="ab-rules"><summary class="muted" style="cursor:pointer">${$t('shared.full_rules')}</summary>${a.sections.map((s) => `<p style="margin:4px 0"><b>${s.label}.</b> <span class="muted">${esc(s.text)}</span></p>`).join('')}</details>
+    ${seeIt && mode === 'football' ? `<button class="btn small see-it" data-see-it="${esc(familyIdOf(x))}" data-form="${monster?.stage ?? ''}" data-mastery="${k ? k.index : 0}">${$t('shared.see_it')}</button>` : ''}</div>`;
 }
 /** Both abilities of a family or monster, or the plain statement that a Basic has none. */
 export function abilitiesHtml(x, opts = {}) {
-  if (!hasAbilities(x)) { const fam = familyById(familyIdOf(x)); return `<p class="dim" data-ability="none">${fam?.rarity === 'basic' ? 'Basic families have no signature ability in football or Beast Clash.' : 'No signature ability.'}</p>`; }
+  if (!hasAbilities(x)) { const fam = familyById(familyIdOf(x)); return `<p class="dim" data-ability="none">${fam?.rarity === 'basic' ? $t('shared.basic_families_have_no_signature_ability') : $t('shared.no_signature_ability')}</p>`; }
   return MODES.map((mode) => abilityBlockHtml(x, mode, opts)).join('');
 }

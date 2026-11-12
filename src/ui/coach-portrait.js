@@ -4,6 +4,7 @@
 // Layers, back to front: hair behind the head, shoulders and outfit, neck, head, ears, face features, facial hair, hair in front,
 // hat, glasses, extra. Older portraits ('custom|…' and seeded busts) keep their own renderer in pixel-monster.js; nothing saved
 // before this version changes how it looks. No images, no dependencies: inline SVG rectangles like every other sprite in the game.
+import { t as $t } from '../text/index.js';
 
 export const SKINS = Object.freeze(['#fbe3d0', '#f5d0b0', '#eebd96', '#e0a77a', '#cf9462', '#b87d4e', '#9c653c', '#7d4e2d', '#5f3a21', '#452a18']);
 export const HAIR_COLORS2 = Object.freeze(['#17171a', '#2c1c12', '#4a2f1b', '#6b4526', '#8f5f2e', '#c69248', '#e3c178', '#b3472f', '#d9662b', '#8d8f94', '#e9e6df', '#3d4fb0', '#2f8f6b', '#b0489a']);
@@ -24,13 +25,13 @@ export const BUILDS = Object.freeze(['slim', 'average', 'broad', 'stocky']);
 export const LABELS = Object.freeze({
   oval: 'Oval', round: 'Round', square: 'Square', long: 'Long', heart: 'Heart', dot: 'Simple', narrow: 'Narrow', wide: 'Wide', tired: 'Tired', sharp: 'Sharp',
   thin: 'Thin', thick: 'Thick', arched: 'Arched', stern: 'Stern', flat: 'Flat', raised: 'Raised', small: 'Small', button: 'Button', broad: 'Broad', pointed: 'Pointed',
-  bald: 'Bald', buzz: 'Buzz cut', shortfade: 'Short fade', hightop: 'High-top fade', flattop: 'Flat top', afro: 'Afro', puffs: 'Afro puffs', shortcurls: 'Short curls', longcurls: 'Long curls', braids: 'Braids', cornrows: 'Cornrows', locs: 'Locs',
-  ponytail: 'Ponytail', longstraight: 'Long straight', bob: 'Bob', wavy: 'Wavy', bun: 'Bun', topknot: 'Top knot', mohawk: 'Mohawk', slick: 'Slicked back', sidepart: 'Side part', pixie: 'Pixie',
-  none: 'None', stubble: 'Stubble', mustache: 'Mustache', handlebar: 'Handlebar', goatee: 'Goatee', soulpatch: 'Soul patch', chinstrap: 'Chin strap', beard: 'Full beard', longbeard: 'Long beard', sideburns: 'Sideburns',
-  tee: 'T-shirt', polo: 'Polo', hoodie: 'Hoodie', jacket: 'Track jacket', windbreaker: 'Windbreaker', quarterzip: 'Quarter-zip', sweater: 'Sweater', turtleneck: 'Turtleneck', jersey: 'Jersey', vest: 'Puffer vest', blazer: 'Blazer and tie', suit: 'Suit',
-  cap: 'Cap', cap_back: 'Backwards cap', visor: 'Visor', beanie: 'Beanie', bucket: 'Bucket hat', headband: 'Headband', bandana: 'Bandana', fedora: 'Fedora',
+  bald: 'Bald', buzz: $t('shared.buzz_cut'), shortfade: $t('shared.short_fade'), hightop: $t('shared.high_top_fade'), flattop: $t('shared.flat_top'), afro: 'Afro', puffs: $t('shared.afro_puffs'), shortcurls: $t('shared.short_curls'), longcurls: $t('shared.long_curls'), braids: 'Braids', cornrows: 'Cornrows', locs: 'Locs',
+  ponytail: 'Ponytail', longstraight: $t('shared.long_straight'), bob: 'Bob', wavy: 'Wavy', bun: 'Bun', topknot: $t('shared.top_knot'), mohawk: 'Mohawk', slick: $t('shared.slicked_back'), sidepart: $t('shared.side_part'), pixie: 'Pixie',
+  none: 'None', stubble: 'Stubble', mustache: 'Mustache', handlebar: 'Handlebar', goatee: 'Goatee', soulpatch: $t('shared.soul_patch'), chinstrap: $t('shared.chin_strap'), beard: $t('shared.full_beard'), longbeard: $t('shared.long_beard'), sideburns: 'Sideburns',
+  tee: 'T-shirt', polo: 'Polo', hoodie: 'Hoodie', jacket: $t('shared.track_jacket'), windbreaker: 'Windbreaker', quarterzip: 'Quarter-zip', sweater: 'Sweater', turtleneck: 'Turtleneck', jersey: 'Jersey', vest: $t('shared.puffer_vest'), blazer: $t('shared.blazer_and_tie'), suit: 'Suit',
+  cap: 'Cap', cap_back: $t('shared.backwards_cap'), visor: 'Visor', beanie: 'Beanie', bucket: $t('shared.bucket_hat'), headband: 'Headband', bandana: 'Bandana', fedora: 'Fedora',
   shades: 'Sunglasses', aviators: 'Aviators', monocle: 'Monocle', headset: 'Headset', whistle: 'Whistle', earring: 'Earring', chain: 'Chain', towel: 'Towel', lanyard: 'Lanyard', toothpick: 'Toothpick',
-  slim: 'Slim', average: 'Average', stocky: 'Stocky', team: 'Team colors', black: 'Black', grey: 'Gray', white: 'White',
+  slim: 'Slim', average: 'Average', stocky: 'Stocky', team: $t('shared.team_colors'), black: 'Black', grey: 'Gray', white: 'White',
 });
 export const labelOf = (v) => LABELS[v] || String(v);
 
@@ -236,8 +237,8 @@ export function coachPortrait(spec, size = 44, { teamColor = null, cls = 'sprite
 
 /** The editor's categories: each option is { key, label, values } (values are indexes for the numeric parts). */
 export const COACH_CATEGORIES = Object.freeze([
-  { id: 'face', label: 'Face', icon: '🙂', options: [{ key: 'skin', label: 'Skin tone', values: SKINS.map((_, i) => i), swatch: (i) => SKINS[i] }, { key: 'face', label: 'Face shape', values: FACES.map((_, i) => i), name: (i) => labelOf(FACES[i]) }, { key: 'eyes', label: 'Eyes', values: EYES.map((_, i) => i), name: (i) => labelOf(EYES[i]) }, { key: 'brows', label: 'Eyebrows', values: BROWS.map((_, i) => i), name: (i) => labelOf(BROWS[i]) }, { key: 'nose', label: 'Nose', values: NOSES.map((_, i) => i), name: (i) => labelOf(NOSES[i]) }] },
-  { id: 'hair', label: 'Hair', icon: '💇', options: [{ key: 'hair', label: 'Hairstyle', values: HAIRS, name: labelOf }, { key: 'hairColor', label: 'Hair color', values: HAIR_COLORS2.map((_, i) => i), swatch: (i) => HAIR_COLORS2[i] }, { key: 'facial', label: 'Facial hair', values: FACIALS, name: labelOf }] },
+  { id: 'face', label: 'Face', icon: '🙂', options: [{ key: 'skin', label: $t('shared.skin_tone'), values: SKINS.map((_, i) => i), swatch: (i) => SKINS[i] }, { key: 'face', label: $t('shared.face_shape'), values: FACES.map((_, i) => i), name: (i) => labelOf(FACES[i]) }, { key: 'eyes', label: 'Eyes', values: EYES.map((_, i) => i), name: (i) => labelOf(EYES[i]) }, { key: 'brows', label: 'Eyebrows', values: BROWS.map((_, i) => i), name: (i) => labelOf(BROWS[i]) }, { key: 'nose', label: 'Nose', values: NOSES.map((_, i) => i), name: (i) => labelOf(NOSES[i]) }] },
+  { id: 'hair', label: 'Hair', icon: '💇', options: [{ key: 'hair', label: 'Hairstyle', values: HAIRS, name: labelOf }, { key: 'hairColor', label: $t('shared.hair_color'), values: HAIR_COLORS2.map((_, i) => i), swatch: (i) => HAIR_COLORS2[i] }, { key: 'facial', label: $t('shared.facial_hair'), values: FACIALS, name: labelOf }] },
   { id: 'outfit', label: 'Outfit', icon: '👕', options: [{ key: 'outfit', label: 'Outfit', values: OUTFITS, name: labelOf }, { key: 'outfitColor', label: 'Color', values: OUTFIT_COLORS, swatch: (v) => (v === 'team' ? null : v === 'black' ? '#24262b' : v === 'grey' ? '#8a8f99' : v === 'white' ? '#e9ebef' : `hsl(${v} 55% 44%)`), name: (v) => (v === 'team' ? 'Team' : '') }] },
   { id: 'extras', label: 'Extras', icon: '🧢', options: [{ key: 'hat', label: 'Hat', values: HATS, name: labelOf }, { key: 'glasses', label: 'Glasses', values: GLASSES, name: labelOf }, { key: 'extra', label: 'Accessory', values: EXTRAS, name: labelOf }] },
   { id: 'build', label: 'Build', icon: '💪', options: [{ key: 'build', label: 'Build', values: BUILDS.map((_, i) => i), name: (i) => labelOf(BUILDS[i]) }] },

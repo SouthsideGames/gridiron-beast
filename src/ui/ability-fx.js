@@ -16,6 +16,7 @@ import { SIG, statusMarks } from './ability-sigs.js';
 import { SPECIES_DEX } from '../data/species.js';
 import { buildT8, drawT8, t8Hold, t8Shakes, DEX_ID, fieldAlpha as t8FieldAlpha } from './fx/t8-fx.js';
 import { kickSim } from './fx/kick-fx.js';
+import { t as $t } from '../text/index.js';
 export { kickSim };
 /** Task 8: a formula kick (punt, field goal) as a drawable sim with its kick ability cue, and its fx state. `ev`: { kind, res, from }. */
 export function buildKickFx(ev, lookup, meta = null) { const sim = kickSim(ev); return sim ? { sim, fx: buildFx(sim, lookup, meta) } : null; }
@@ -67,15 +68,15 @@ export function elementFx(element) { return ELEMENT_FX[element] || DEFAULT_FX; }
 
 /** Outcome labels, keyed by event kind. Only shown when the event carries `ability: true`. */
 const OUTCOME = {
-  shed: { label: 'Block Shed', shake: true }, broken: { label: 'Tackle Broken', shake: true }, broken_tackle: { label: 'Tackle Broken', shake: true },
-  juke: { label: 'Juked', shake: false }, fumble: { label: 'Ball Stripped', shake: true }, interception: { label: 'Picked Off', shake: true },
-  incomplete: { label: 'Pass Deflected', shake: false, only: (e) => e.pbu }, sack: { label: 'Sacked', shake: true },
-  tackle: { label: 'Read & Stopped', shake: false },
-  flattened: { label: 'Flattened', shake: true }, blink: { label: 'Blink!', shake: true }, read_frozen: { label: 'Read Frozen', shake: false },
-  sack_denied: { label: 'Sack Denied', shake: true }, pick_denied: { label: 'Pick Denied', shake: false }, veiled: { label: 'Never Saw It', shake: false }, no_breakup: { label: 'Too Fast', shake: false },
-  spun: { label: 'Spun Around', shake: false }, lost_track: { label: 'Lost Him', shake: false }, falls_forward: { label: '+2 Yards', shake: false },
-  stuffed: { label: 'Frozen', shake: true }, dragged: { label: 'Dragged Wide', shake: false }, slipped: { label: 'Slipped the Block', shake: false },
-  pinched: { label: 'Pinned', shake: false }, vanished: { label: 'Vanished', shake: false }, thorned: { label: 'Thorned', shake: false }, bit_fake: { label: 'Bit the Fake', shake: false }, roared: { label: 'Roar!', shake: true }, catch: { label: 'Contested Catch', shake: false, only: (e) => e.contested },
+  shed: { label: $t('match.block_shed'), shake: true }, broken: { label: $t('match.tackle_broken'), shake: true }, broken_tackle: { label: $t('match.tackle_broken'), shake: true },
+  juke: { label: 'Juked', shake: false }, fumble: { label: $t('match.ball_stripped'), shake: true }, interception: { label: $t('match.picked_off'), shake: true },
+  incomplete: { label: $t('match.pass_deflected'), shake: false, only: (e) => e.pbu }, sack: { label: 'Sacked', shake: true },
+  tackle: { label: $t('match.read_stopped'), shake: false },
+  flattened: { label: 'Flattened', shake: true }, blink: { label: 'Blink!', shake: true }, read_frozen: { label: $t('match.read_frozen'), shake: false },
+  sack_denied: { label: $t('match.sack_denied'), shake: true }, pick_denied: { label: $t('match.pick_denied'), shake: false }, veiled: { label: $t('match.never_saw_it'), shake: false }, no_breakup: { label: $t('match.too_fast'), shake: false },
+  spun: { label: $t('match.spun_around'), shake: false }, lost_track: { label: $t('match.lost_him'), shake: false }, falls_forward: { label: $t('match.2_yards'), shake: false },
+  stuffed: { label: 'Frozen', shake: true }, dragged: { label: $t('match.dragged_wide'), shake: false }, slipped: { label: $t('match.slipped_the_block'), shake: false },
+  pinched: { label: 'Pinned', shake: false }, vanished: { label: 'Vanished', shake: false }, thorned: { label: 'Thorned', shake: false }, bit_fake: { label: $t('match.bit_the_fake'), shake: false }, roared: { label: 'Roar!', shake: true }, catch: { label: $t('match.contested_catch'), shake: false, only: (e) => e.contested },
 };
 export const OUTCOME_LABELS = Object.freeze(Object.fromEntries(Object.entries(OUTCOME).map(([k, v]) => [k, v.label])));
 

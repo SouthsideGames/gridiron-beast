@@ -2,6 +2,7 @@
 // from My office afterwards. It only ever produces a portrait spec string; saving it changes f.owner.portrait and nothing else.
 import { esc } from './dom.js';
 import { COACH_CATEGORIES, coachPortrait, coachSpec, labelOf, randomLook, DEFAULT_LOOK } from './coach-portrait.js';
+import { t as $t } from '../text/index.js';
 
 /** Editor HTML: a live preview, category tabs, and for each option a ◀ name ▶ stepper plus tappable choices. */
 export function coachEditorHtml(look, { tab = 'face', teamColor = null, teamNote = '' } = {}) {
@@ -15,7 +16,7 @@ export function coachEditorHtml(look, { tab = 'face', teamColor = null, teamNote
   };
   return `<div class="coach-editor">
     <div class="ce-top"><div class="ce-preview">${coachPortrait(L, 128, { teamColor })}</div>
-      <div class="ce-side"><button class="btn small" data-action="ce-random">🎲 Surprise Me</button>${teamNote ? `<div class="dim" style="font-size:11px;margin-top:6px">${esc(teamNote)}</div>` : ''}</div></div>
+      <div class="ce-side"><button class="btn small" data-action="ce-random">${$t('shared.surprise_me')}</button>${teamNote ? `<div class="dim" style="font-size:11px;margin-top:6px">${esc(teamNote)}</div>` : ''}</div></div>
     <div class="ce-tabs" role="tablist">${COACH_CATEGORIES.map((c) => `<button class="ce-tab ${c.id === cat.id ? 'on' : ''}" role="tab" aria-selected="${c.id === cat.id}" data-action="ce-tab" data-v="${c.id}"><span aria-hidden="true">${c.icon}</span> ${esc(c.label)}</button>`).join('')}</div>
     <div class="ce-body">${cat.options.map(option).join('')}</div>
   </div>`;

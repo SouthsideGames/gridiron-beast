@@ -8,6 +8,7 @@ import { eventRef } from '../franchise/career-profile.js';
 import { yearOf } from '../data/calendar.js';
 import { TEAM_META } from '../data/league.js';
 import { esc } from './dom.js';
+import { t as $t } from '../text/index.js';
 
 export const TIMELINE_FOLD = 6; // events shown before "show the whole career"
 const view = { filter: 'all', open: {} }; // per session: the filter, and which monsters are unfolded
@@ -15,7 +16,7 @@ export const timelineView = view;
 
 function itemHtml(e, i, animate, interactive) {
   const col = TEAM_META[e.c]?.color || null;
-  const meta = [e.w != null ? (e.w > 10 ? (ROUND_NAMES[e.w - 10] || 'Playoffs') : `Week ${e.w}`) : null, e.c ? `<span class="tl-club"${col ? ` style="--club:${col}"` : ''}>${esc(e.c)}</span>` : null].filter(Boolean).join(' · ');
+  const meta = [e.w != null ? (e.w > 10 ? (ROUND_NAMES[e.w - 10] || 'Playoffs') : `${$t('career.week_3', { w: e.w })}`) : null, e.c ? `<span class="tl-club"${col ? ` style="--club:${col}"` : ''}>${esc(e.c)}</span>` : null].filter(Boolean).join(' · ');
   const link = interactive && e.ref;
   const inner = `<span class="tl-icon" aria-hidden="true">${e.icon}</span>
     <div class="tl-body"><div class="tl-title">${esc(e.title)}${e.tier === 'major' ? ' <span class="tl-badge">★</span>' : ''}</div>${meta ? `<div class="tl-meta">${meta}</div>` : ''}<div class="tl-desc">${esc(e.desc)}</div></div>${link ? '<span class="tl-go" aria-hidden="true">›</span>' : ''}`;
@@ -27,7 +28,7 @@ function itemHtml(e, i, animate, interactive) {
  * domId (the section's element id, 'timeline' on the monster card), head (HTML above the filter: the summary and trophies),
  * animate, reduced, interactive }.
  */
-export function timelineSectionHtml(all, { name = 'This monster', id = '', domId = null, head = '', animate = true, reduced = false, interactive = true, emptyText = null, seasonLinks = null } = {}) {
+export function timelineSectionHtml(all, { name = $t('career.this_monster'), id = '', domId = null, head = '', animate = true, reduced = false, interactive = true, emptyText = null, seasonLinks = null } = {}) {
   const list = view.filter === 'highlights' ? all.filter((e) => e.tier !== 'career') : all;
   const open = !!view.open[id]; const shown = open ? list : list.slice(0, TIMELINE_FOLD);
   const anim = animate && !reduced;
@@ -38,18 +39,18 @@ export function timelineSectionHtml(all, { name = 'This monster', id = '', domId
       if (started) html += '</ol>'; started = true;
       const n = list.filter((x) => x.y === e.y).length; const hasMajor = list.some((x) => x.y === e.y && x.tier === 'major');
       const sl = interactive && e.y != null && seasonLinks?.has(e.y);
-      html += sl ? `<button class="tl-season link ${hasMajor ? 'has-major' : ''}" data-action="tl-season" data-y="${e.y}" aria-label="${esc(`Season ${yearOf(e.y)}: open the season`)}"><span>Season ${esc(yearOf(e.y))}</span><span class="dim">${n} moment${n === 1 ? '' : 's'} ›</span></button><ol class="tl-list">` : `<div class="tl-season ${hasMajor ? 'has-major' : ''}"><span>${e.y == null ? 'Before the timeline' : `Season ${esc(yearOf(e.y))}`}</span><span class="dim">${n} moment${n === 1 ? '' : 's'}</span></div><ol class="tl-list">`;
+      html += sl ? `<button class="tl-season link ${hasMajor ? 'has-major' : ''}" data-action="tl-season" data-y="${e.y}" aria-label="${esc(`Season ${yearOf(e.y)}: open the season`)}"><span>${$t('career.season_2', { year: esc(yearOf(e.y)) })}</span><span class="dim">${$t('career.moments', { n })}</span></button><ol class="tl-list">` : `<div class="tl-season ${hasMajor ? 'has-major' : ''}"><span>${e.y == null ? $t('career.before_the_timeline') : `${$t('career.season_2', { year: esc(yearOf(e.y)) })}`}</span><span class="dim">${$t('career.moments_2', { n })}</span></div><ol class="tl-list">`;
       lastY = e.y;
     }
     html += itemHtml(e, i++, anim, interactive);
   }
   if (shown.length) html += '</ol>';
-  const empty = `<div class="tl-empty"><span aria-hidden="true">🌱</span><div><b>${esc(name)}'s story starts here.</b><div class="dim">${emptyText || (view.filter === 'highlights' && all.length ? 'No highlights yet: a first touchdown, an evolution or an award will appear here.' : 'A first game, a first touchdown, an evolution or an award will appear here as they happen.')}</div></div></div>`;
-  const more = list.length > shown.length ? `<button class="btn block tl-more" data-action="tl-more" data-id="${esc(id)}">Show the Whole Career (${list.length - shown.length} More)</button>` : open && list.length > TIMELINE_FOLD ? `<button class="btn block ghost tl-more" data-action="tl-more" data-id="${esc(id)}">Show Less</button>` : '';
-  return `<section class="panel timeline"${domId ? ` id="${esc(domId)}"` : ''} data-mid="${esc(id)}" aria-label="Career timeline">
+  const empty = `<div class="tl-empty"><span aria-hidden="true">🌱</span><div>${$t('career.b_s_story_starts_here_b', { name: esc(name) })}<div class="dim">${emptyText || (view.filter === 'highlights' && all.length ? $t('career.no_highlights_yet_a_first_touchdown') : $t('career.a_first_game_a_first_touchdown'))}</div></div></div>`;
+  const more = list.length > shown.length ? `<button class="btn block tl-more" data-action="tl-more" data-id="${esc(id)}">${$t('career.show_the_whole_career_more', { n: list.length - shown.length })}</button>` : open && list.length > TIMELINE_FOLD ? `<button class="btn block ghost tl-more" data-action="tl-more" data-id="${esc(id)}">${$t('career.show_less')}</button>` : '';
+  return `<section class="panel timeline"${domId ? ` id="${esc(domId)}"` : ''} data-mid="${esc(id)}" aria-label="${$t('career.career_timeline')}">
     ${head}
-    <div class="row between tl-head"><b>Career Timeline</b><div class="tl-filter" role="group" aria-label="Show"><button class="chip ${view.filter === 'all' ? 'on' : ''}" data-action="tl-filter" data-v="all" aria-pressed="${view.filter === 'all'}">All</button><button class="chip ${view.filter === 'highlights' ? 'on' : ''}" data-action="tl-filter" data-v="highlights" aria-pressed="${view.filter === 'highlights'}">Highlights</button></div></div>
-    ${all.length ? `<div class="tl-sum dim">${all.length} moment${all.length === 1 ? '' : 's'}${major ? ` · <b class="tl-gold">${major} major</b>` : ''}${seasons ? ` · ${seasons} season${seasons === 1 ? '' : 's'}` : ''}${interactive && all.some((e) => e.ref) ? ' · tap a › entry for the record' : ''}</div>` : ''}
+    <div class="row between tl-head">${$t('career.b_career_timeline_b')}<div class="tl-filter" role="group" aria-label="${$t('career.show')}"><button class="chip ${view.filter === 'all' ? 'on' : ''}" data-action="tl-filter" data-v="all" aria-pressed="${view.filter === 'all'}">${$t('career.all')}</button><button class="chip ${view.filter === 'highlights' ? 'on' : ''}" data-action="tl-filter" data-v="highlights" aria-pressed="${view.filter === 'highlights'}">${$t('career.highlights')}</button></div></div>
+    ${all.length ? `<div class="tl-sum dim">${$t('career.moments_2', { n: all.length })}${major ? ` · <b class="tl-gold">${major} major</b>` : ''}${seasons ? ` ${$t('career.seasons_2', { seasons, n: seasons })}` : ''}${interactive && all.some((e) => e.ref) ? $t('career.tap_a_entry_for_the_record') : ''}</div>` : ''}
     ${shown.length ? html : empty}${more}
   </section>`;
 }

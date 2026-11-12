@@ -4,6 +4,7 @@
 import { esc, sheet } from './dom.js';
 import { rosterWarnings } from '../franchise/assist-advice.js';
 import { TOPICS, AREAS, TOPIC_KEYS, ASSIST_MODES, ASSIST_MODE_TEXT, assistSettings, setAssist, autoTip, momentTip, dismissTip, resetTips, tipProgress, helpTopics } from '../franchise/assist.js';
+import { t as $t } from '../text/index.js';
 
 // Older imports keep working.
 export { resetTips as resetTutorial };
@@ -18,7 +19,7 @@ const stepsHtml = (steps) => steps?.length ? `<ol class="assist-steps">${steps.m
 export function tipHtml(f, screen) {
   const t = autoTip(f, screen); if (!t || t.sheet) return '';
   const p = tipProgress(f);
-  return `<div class="tip" role="note" data-tip="${t.key}"><div class="row between"><b>${t.guided ? '🧭' : '📘'} ${esc(t.title)}</b><span class="dim" style="font-size:11px">${t.guided ? 'Guided' : `tip ${Math.min(p.done + 1, p.total)}/${p.total}`}</span></div><p>${para(t.text)}</p>${stepsHtml(t.steps)}<div class="row" style="flex-wrap:wrap"><button class="btn small primary" data-action="tut-ok" data-k="${t.key}">Got It</button>${t.primer ? '<button class="btn small" data-action="tut-primer">How Football Works</button>' : ''}<button class="btn small ghost" data-action="tut-expert">Turn Tips Off</button></div></div>`;
+  return `<div class="tip" role="note" data-tip="${t.key}"><div class="row between"><b>${t.guided ? '🧭' : '📘'} ${esc(t.title)}</b><span class="dim" style="font-size:11px">${t.guided ? $t('shared.guided') : `${$t('shared.tip', { n: Math.min(p.done + 1, p.total), total: p.total })}`}</span></div><p>${para(t.text)}</p>${stepsHtml(t.steps)}<div class="row" style="flex-wrap:wrap"><button class="btn small primary" data-action="tut-ok" data-k="${t.key}">${$t('shared.got_it')}</button>${t.primer ? `<button class="btn small" data-action="tut-primer">${$t('shared.how_football_works')}</button>` : ''}<button class="btn small ghost" data-action="tut-expert">${$t('shared.turn_tips_off')}</button></div></div>`;
 }
 
 /** Sheet-style tips (the match screen, moments such as the clock): open once, then remembered. */
@@ -32,7 +33,7 @@ export function momentSheet(f, key, save) {
 }
 function openTipSheet(f, t, save) {
   dismissTip(f, t.key); save?.();
-  sheet(`<p>${para(t.text)}</p>${stepsHtml(t.steps)}<div class="row" style="flex-wrap:wrap">${t.primer ? '<button class="btn small" data-action="tut-primer">How Football Works</button>' : ''}<button class="btn small ghost" data-action="tut-expert">Turn Tips Off</button></div>`, { title: `${t.guided ? '🧭' : '📘'} ${t.title}` });
+  sheet(`<p>${para(t.text)}</p>${stepsHtml(t.steps)}<div class="row" style="flex-wrap:wrap">${t.primer ? `<button class="btn small" data-action="tut-primer">${$t('shared.how_football_works')}</button>` : ''}<button class="btn small ghost" data-action="tut-expert">${$t('shared.turn_tips_off')}</button></div>`, { title: `${t.guided ? '🧭' : '📘'} ${t.title}` });
 }
 
 /** Roster and cap warnings as short notes: critical ones always, the rest when contextual hints are on. `max` keeps HQ short. */
@@ -45,23 +46,23 @@ export function noteHtml(text, kind = '') { return text ? `<p class="assist-note
 
 /** Does this screen carry the "? Help" button? (Every mode: help is on demand, never automatic.) */
 export function hasHelp(screen) { return helpTopics(screen).length > 0; }
-export function helpButtonHtml(screen) { return hasHelp(screen) ? `<button class="btn ghost help-btn" data-action="assist-help" data-screen="${esc(screen)}" aria-label="Help for this screen">? Help</button>` : ''; }
+export function helpButtonHtml(screen) { return hasHelp(screen) ? `<button class="btn ghost help-btn" data-action="assist-help" data-screen="${esc(screen)}" aria-label="${$t('shared.help_for_this_screen')}">${$t('shared.help')}</button>` : ''; }
 
 function topicHtml(k, open = false) {
   const t = TOPICS[k];
-  return `<details class="assist-topic" ${open ? 'open' : ''}><summary><b>${esc(t.title)}</b></summary><p>${para(t.brief)}</p>${stepsHtml(t.steps)}${t.primer ? '<button class="btn small" data-action="tut-primer">How Football Works</button>' : ''}</details>`;
+  return `<details class="assist-topic" ${open ? 'open' : ''}><summary><b>${esc(t.title)}</b></summary><p>${para(t.brief)}</p>${stepsHtml(t.steps)}${t.primer ? `<button class="btn small" data-action="tut-primer">${$t('shared.how_football_works')}</button>` : ''}</details>`;
 }
 /** The help sheet: this screen's topics first, the Coach Assist mode switch, then everything else by area. */
 export function helpHtml(f, screen) {
   const here = helpTopics(screen); const a = f ? assistSettings(f) : null;
   const rest = TOPIC_KEYS.filter((k) => !here.includes(k));
-  return `${here.length ? `<h3 style="margin-top:0">On this screen</h3>${here.map((k, i) => topicHtml(k, i === 0)).join('')}` : ''}
-    ${a ? `<h3>Coach Assist</h3><div class="chips" role="radiogroup" aria-label="Coach Assist mode">${ASSIST_MODES.map((m) => `<button class="chip ${a.mode === m ? 'on accent' : ''}" role="radio" aria-checked="${a.mode === m}" data-action="assist-mode" data-v="${m}">${ASSIST_MODE_TEXT[m].label}</button>`).join('')}</div><p class="dim" style="margin:4px 0 0">${esc(ASSIST_MODE_TEXT[a.mode].text)} Change it any time here or in Settings.</p>` : ''}
-    <h3>All topics</h3>${AREAS.map((area) => { const ks = rest.filter((k) => TOPICS[k].area === area); return ks.length ? `<div class="dim" style="margin:8px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:.04em">${esc(area)}</div>${ks.map((k) => topicHtml(k)).join('')}` : ''; }).join('')}
-    <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn small" data-action="tut-primer">How Football Works</button><button class="btn small" data-action="assist-stats">What the Stats Mean</button></div>`;
+  return `${here.length ? `<h3 style="margin-top:0">${$t('shared.on_this_screen')}</h3>${here.map((k, i) => topicHtml(k, i === 0)).join('')}` : ''}
+    ${a ? `<h3>${$t('shared.coach_assist')}</h3><div class="chips" role="radiogroup" aria-label="${$t('shared.coach_assist_mode')}">${ASSIST_MODES.map((m) => `<button class="chip ${a.mode === m ? 'on accent' : ''}" role="radio" aria-checked="${a.mode === m}" data-action="assist-mode" data-v="${m}">${ASSIST_MODE_TEXT[m].label}</button>`).join('')}</div><p class="dim" style="margin:4px 0 0">${$t('shared.change_it_any_time_here_or', { text: esc(ASSIST_MODE_TEXT[a.mode].text) })}</p>` : ''}
+    <h3>${$t('shared.all_topics')}</h3>${AREAS.map((area) => { const ks = rest.filter((k) => TOPICS[k].area === area); return ks.length ? `<div class="dim" style="margin:8px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:.04em">${esc(area)}</div>${ks.map((k) => topicHtml(k)).join('')}` : ''; }).join('')}
+    <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn small" data-action="tut-primer">${$t('shared.how_football_works')}</button><button class="btn small" data-action="assist-stats">${$t('shared.what_the_stats_mean')}</button></div>`;
 }
 export function openHelp(app, screen, onChange) {
-  const { el, close } = sheet(helpHtml(app.f, screen), { title: 'Help' });
+  const { el, close } = sheet(helpHtml(app.f, screen), { title: $t('shared.help_2') });
   el.addEventListener('click', (e) => {
     const b = e.target.closest('[data-action="assist-mode"]'); if (!b || !app.f) return;
     setAssist(app.f, { mode: b.dataset.v }); app.save(); close(); onChange?.(); openHelp(app, screen, onChange);
@@ -71,23 +72,23 @@ export function openHelp(app, screen, onChange) {
 /** Coach Assist settings block (Settings screen). */
 export function assistSettingsHtml(f) {
   const a = assistSettings(f);
-  return `<div class="field"><span>Coach Assist</span><div class="seg" role="radiogroup" aria-label="Coach Assist mode" style="display:flex;gap:6px;flex-wrap:wrap">${ASSIST_MODES.map((m) => `<button class="btn small ${a.mode === m ? 'primary' : ''}" role="radio" aria-checked="${a.mode === m}" data-action="assist-mode" data-v="${m}">${ASSIST_MODE_TEXT[m].label}${m === 'standard' ? ' (Default)' : ''}</button>`).join('')}</div><div class="dim" style="margin-top:4px">${esc(ASSIST_MODE_TEXT[a.mode].text)}</div></div>
-    <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="assist-hints" ${a.hints ? 'checked' : ''}> Contextual hints (counter plays, upgrades, roster warnings)</label>
-    <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="assist-consequences" ${a.consequences ? 'checked' : ''}> Explain what routine choices will do (cap room after a signing, and so on)</label>
-    <p class="dim">Confirmations for choices you cannot undo, and warnings about the cap or an illegal lineup, always show.</p>
-    <div class="row" style="flex-wrap:wrap"><button class="btn small" data-action="tutreset">Show All Tips Again</button><button class="btn small" data-action="primer">How Football Works</button></div>`;
+  return `<div class="field"><span>${$t('shared.coach_assist')}</span><div class="seg" role="radiogroup" aria-label="${$t('shared.coach_assist_mode')}" style="display:flex;gap:6px;flex-wrap:wrap">${ASSIST_MODES.map((m) => `<button class="btn small ${a.mode === m ? 'primary' : ''}" role="radio" aria-checked="${a.mode === m}" data-action="assist-mode" data-v="${m}">${ASSIST_MODE_TEXT[m].label}${m === 'standard' ? ' (Default)' : ''}</button>`).join('')}</div><div class="dim" style="margin-top:4px">${esc(ASSIST_MODE_TEXT[a.mode].text)}</div></div>
+    <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="assist-hints" ${a.hints ? 'checked' : ''}> ${$t('shared.contextual_hints_counter_plays_upgrades_roster')}</label>
+    <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="assist-consequences" ${a.consequences ? 'checked' : ''}> ${$t('shared.explain_what_routine_choices_will_do')}</label>
+    <p class="dim">${$t('shared.confirmations_for_choices_you_cannot_undo')}</p>
+    <div class="row" style="flex-wrap:wrap"><button class="btn small" data-action="tutreset">${$t('shared.show_all_tips_again')}</button><button class="btn small" data-action="primer">${$t('shared.how_football_works')}</button></div>`;
 }
 
 /** The football primer, as a sheet. */
 export function primerHtml() {
-  return `<h3>The field</h3><p>100 yards long, an end zone at each end. Your offense attacks up the screen toward the far end zone.</p>
-  <h3>Downs</h3><p>The offense gets four plays (downs) to gain 10 yards. Gain them and the count resets. “2nd &amp; 7” means second down, 7 yards still needed.</p>
-  <h3>Scoring</h3><p>Touchdown: carry or catch the ball in the end zone, 6 points, then a 1-point kick. Field goal: kick it through the posts, 3 points, usually on fourth down when you’re close. Safety: tackled in your own end zone, 2 points to the other team.</p>
-  <h3>Fourth down</h3><p>Too far to go? Punt: kick it away so the other team starts far from your end zone. Close enough? Kick the field goal. Feeling brave? Go for it.</p>
-  <h3>Positions (7 a side)</h3><p><b>Offense:</b> QB throws or hands off; RB runs; WR catch; TE blocks and catches; OL block. <b>Defense:</b> DL rush the passer and stop runs; LB do a bit of everything; CB cover receivers; S the last line.</p>
-  <h3>Turnovers</h3><p>Interception (defense catches a pass) or fumble (ball knocked loose and recovered): the other team gets the ball right there.</p>
-  <h3>Attributes</h3><p>Every monster has twelve attributes (speed, catching, arm and so on), but each position only uses some of them: accuracy matters to a quarterback and does nothing for a receiver. <b>More → What the stats mean</b> lists what each one does at every position, and training points are worth spending where they help (any attribute can be trained, but only some count for a position).</p>
-  <h3>What you do</h3><p>You don’t steer anyone. You build the team, pick the six plays for each side on Friday, and on Sunday you call one of those plays each snap. Monsters do the rest, using their ratings and abilities.</p>`;
+  return `<h3>${$t('shared.the_field')}</h3><p>${$t('shared.100_yards_long_an_end_zone')}</p>
+  <h3>${$t('shared.downs')}</h3><p>${$t('shared.the_offense_gets_four_plays_downs')}</p>
+  <h3>${$t('shared.scoring')}</h3><p>${$t('shared.touchdown_carry_or_catch_the_ball')}</p>
+  <h3>${$t('shared.fourth_down')}</h3><p>${$t('shared.too_far_to_go_punt_kick')}</p>
+  <h3>${$t('shared.positions_7_a_side')}</h3><p>${$t('shared.b_offense_b_qb_throws_or')}</p>
+  <h3>${$t('shared.turnovers')}</h3><p>${$t('shared.interception_defense_catches_a_pass_or')}</p>
+  <h3>${$t('shared.attributes')}</h3><p>${$t('shared.every_monster_has_twelve_attributes_speed')}</p>
+  <h3>${$t('shared.what_you_do')}</h3><p>${$t('shared.you_dont_steer_anyone_you_build')}</p>`;
 }
 
 /** Hook the tip and help buttons once, for every screen. */
@@ -95,7 +96,7 @@ export function initTutorial({ app, Router, openStats }) {
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-action^="tut-"], [data-action="assist-help"], [data-action="assist-stats"]'); if (!b) return;
     const a = b.dataset.action;
-    if (a === 'tut-primer') { sheet(primerHtml(), { title: 'How Football Works' }); return; }
+    if (a === 'tut-primer') { sheet(primerHtml(), { title: $t('shared.how_football_works') }); return; }
     if (a === 'assist-stats') { openStats?.(); return; }
     if (a === 'assist-help') { openHelp(app, b.dataset.screen, () => Router.render()); return; }
     if (!app.f) return;
