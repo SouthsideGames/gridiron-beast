@@ -107,7 +107,9 @@ export function careerPage(f, id, { profile = null } = {}) {
   const lines = seasonLines(f, found, p);
   const years = lines.seasons.map((s) => s.year);
   const clubYears = (p.clubs || []).flatMap((c) => [c.from, c.to]).filter((y) => y != null);
-  const allYears = [...years, ...clubYears];
+  const retirementYear = (f?.monsterHallOfFame?.candidates || [])
+    .find((c) => String(c.id) === String(p.id))?.retiredYear;
+  const allYears = [...years, ...clubYears, ...(Number.isInteger(retirementYear) ? [retirementYear] : [])];
   const span = allYears.length ? { from: Math.min(...allYears), to: found?.where === 'roster' || found?.where === 'league' ? null : Math.max(...allYears) } : null;
   const count = (k) => (p.trophies || []).find((t) => t.kind === k)?.count || 0;
   const careerAll = sum(lines.career.reg, lines.career.post);
@@ -121,6 +123,7 @@ export function careerPage(f, id, { profile = null } = {}) {
     historicalRecognition: {
       awards: historicalAwardsForMonster,
       induction,
+      retirementYear: Number.isInteger(retirementYear) ? retirementYear : null,
     },
     status: careerStatus(f, found, p), designation: designationOf(found?.m, p), span,
     facts: { seasons: p.seasons ?? null, onRecord: p.onRecord ?? lines.seasons.length, games: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0) + (lines.career.post.games || 0), regGames: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0), postGames: lines.career.post.games || 0, teams: teams.length, titles: count('champion'), awards: AWARD_KINDS.reduce((a, k) => a + count(k), 0), records: count('record'), hof: count('hof') > 0 || !!induction },
