@@ -16,7 +16,10 @@ const Save = await at('src/franchise/save.js');
 const T9 = await at('src/franchise/task9-history.js').catch(() => null);          // absent on a build without Task 9
 const HOF = await at('src/franchise/monster-hof-voting.js').catch(() => null);
 const N = Number(args.n || 1), SEASONS = Number(args.seasons || 20), SEED = Number(args.seed || 1);
-const sha = (v) => createHash('sha256').update(JSON.stringify(v ?? null)).digest('hex').slice(0, 16);
+// The digest leaves out where a saved sentence came from (tk, tv, tp and the …L fields beside a sentence): that note depends on
+// which lines were read on screen just before (src/text/index.js, recalled), never changes the sentence, and no rule reads it.
+const NOTES = new Set(['tk', 'tv', 'tp', 'awardLineL', 'clueL', 'labelL', 'lineL', 'modeWhyL', 'schemeL', 'textL', 'whyL', 'streakL', 'tagL']); const LINE_NOTE = (k) => NOTES.has(k);
+const sha = (v) => createHash('sha256').update(JSON.stringify(v ?? null, (k, x) => (LINE_NOTE(k) ? undefined : x))).digest('hex').slice(0, 16);
 let problems = 0; const bad = (m) => { problems++; if (problems < 40) console.log('PROBLEM', m); };
 const out = [];
 
