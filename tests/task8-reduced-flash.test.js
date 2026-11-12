@@ -16,6 +16,8 @@ import { prepare } from './helpers/fx-football.js';
 import { flash, setFlashSoft } from '../src/ui/clash/t8/looks/common.js';
 import { catalog, prepare as prepareClash, drawAt } from './helpers/fx-clash.js';
 import { drawClashT8 } from '../src/ui/clash/t8/fx-t8.js';
+import { englishText } from '../src/text/index.js';
+const EN = englishText();
 
 const src = (rel) => fs.readFileSync(new URL(`../${rel}`, import.meta.url), 'utf8');
 const opacities = (svg) => [...svg.matchAll(/opacity="([\d.]+)"/g)].map((m) => Number(m[1]));
@@ -32,7 +34,7 @@ test('the setting: off by default, one boolean saved with the settings, schema 1
 
 test('the setting is offered beside Reduce motion, passed to the football and Clash effect layers, and is not a quality preset', () => {
   const menu = src('src/ui/screens/menu.js');
-  assert.match(menu, /data-change="reducedflash" \$\{s\.reducedFlash \? 'checked' : ''\}> Reduce flashes/); assert.match(menu, /reducedflash: \(el\) => set\('reducedFlash', el\.checked\)/);
+  { const m = menu.match(/data-change="reducedflash" \$\{s\.reducedFlash \? 'checked' : ''\}> \$\{t\('([\w.]+)'\)\}/); assert.ok(m, 'the Reduce flashes switch is in Settings'); assert.match(EN[m[1]], /^Reduce flashes/, 'its label, from src/text/en.js'); } assert.match(menu, /reducedflash: \(el\) => set\('reducedFlash', el\.checked\)/);
   assert.ok(menu.indexOf('data-change="reducedflash"') > menu.indexOf('data-change="reduced"') && menu.indexOf('data-change="reducedflash"') < menu.indexOf('data-change="shake"'), 'right after Reduce motion');
   assert.ok(!/fxQuality|data-change="quality"/.test(menu), 'no graphics-quality preset in Settings');
   const match = src('src/ui/screens/match.js'); assert.ok((match.match(/fxOptions: fxOptionsFor\(f\.settings\)/g) || []).length >= 5, 'every match draw with effects passes fxOptions'); assert.match(match, /const tdFlash = reducedFlash\(f\.settings\) \? ''/);

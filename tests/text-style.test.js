@@ -32,13 +32,13 @@ test('American spelling: no British spellings in the game\'s wording', () => {
   assert.deepEqual(found, [], 'British spelling in player-facing text');
 });
 
-test('Title Case on buttons and screen titles: the labels the owner flagged, and the week\'s main button', () => {
+test('Title Case on buttons and screen titles: the labels the owner flagged, and the week\'s main button', async () => {
   const src = Object.fromEntries(files);
   const hq = src['src/ui/screens/hq.js'];
   assert.match(hq, />Choose Captains/); assert.ok(!/>Choose captains/.test(hq));
   for (const label of ['Monday · Scout a Region', 'Tuesday · Monster Encounter', 'Wednesday · Training Focus', 'Thursday · Scout Opponent', 'Friday · Set Game Plan', 'Saturday · Media Day', 'Play Sunday Game', 'Take the Bye Week']) assert.ok(hq.includes(`'${label}'`), label);
   assert.match(hq, /Let the Staff Run the Week → Sunday/); assert.match(hq, /Finish and Read the Headline/);
-  assert.match(src['src/ui/screens/menu.js'], /Edit Appearance/); assert.match(src['src/ui/screens/match.js'], /Receive the Kick/);
+  assert.ok(Object.values((await import('../src/text/index.js')).englishText()).includes('✏️ Edit Appearance'), 'menu labels now live in src/text/en.js'); assert.match(src['src/ui/screens/match.js'], /Receive the Kick/);
   // screen titles and dialog buttons: `title: '...'` and `okLabel: '...'` in the interface code are Title Case
   const minor = new Set('a an the and but or nor for as at by in of on to via vs per'.split(' '));
   const offenders = [];

@@ -5,7 +5,8 @@
 
 Reads every string and template literal under src/, keeps the ones that are wording a person can read (not ids, CSS classes,
 colours, SVG paths or code), splits HTML into its separate pieces of text, and writes one row per distinct line:
-  id, area, kind, text, file, line, correction
+  id, key, area, kind, text, file, line, correction
+`key` is the line's permanent name in the central text file (src/text/en.js); it is empty for wording not yet moved there.
 `text` shows inserted values as {…}. `correction` is left empty for the reader to fill in. `kind` is button, title, attribute
 (tooltips and labels read by screen readers) or text. Generated Beast Dex data is read from its source of truth as shipped
 (src/data/beast-dex.generated.js). The retired 250-question media library (src/data/media.js) is skipped: nothing shows it.
@@ -140,6 +141,18 @@ def export():
             if not f.endswith('.js'): continue
             p = os.path.join(dp, f); rel = os.path.relpath(p, ROOT).replace(os.sep, '/')
             if rel in SKIP: continue
+            if rel == 'src/text/en.js':   # the central text file: one row per key, under its own section
+                section = 'Central text'
+                for n, line in enumerate(open(p, encoding='utf8').read().split('\n'), 1):
+                    h = re.match(r"  // ── (.*?) \[\w+\]$", line)
+                    if h: section = h.group(1); continue
+                    m = re.match(r"  '([\w.]+)': (.*),$", line)
+                    if not m: continue
+                    val = m.group(2)
+                    forms = re.findall(r"(\w+): '((?:[^'\\]|\\.)*)'", val) if val.startswith('{') else [('', val[1:-1])]
+                    for form, v in forms:
+                        rows.append({'area': section, 'kind': 'text', 'text': re.sub(r'\s+', ' ', unescape(v)).strip(), 'file': rel, 'line': n, 'key': m.group(1) + (f' ({form})' if form else '')})
+                continue
             s = open(p, encoding='utf8').read(); lits = []; parse_code(s, 0, lits)
             lits.sort(key=lambda x: x[1])
             for kind, pos, raw in lits:
@@ -151,12 +164,12 @@ def export():
                     seen.add(key)
                     rows.append({'area': area_of(rel), 'kind': k, 'text': text, 'file': rel, 'line': s.count('\n', 0, pos) + 1})
     order = {name: i for i, name in enumerate(dict.fromkeys(n for _, n in AREAS))}
-    rows.sort(key=lambda r: (r['area'].startswith('Developer'), order.get(r['area'], 99), r['file'], r['line']))
+    rows.sort(key=lambda r: (r['area'].startswith('Developer'), 'key' not in r, order.get(r['area'], 99), r['file'], r['line']))
     for i, r in enumerate(rows, 1): r['id'] = f'T{i:05d}'
     return rows
 def to_csv(rows):
-    buf = io.StringIO(); w = csv.writer(buf, lineterminator='\n'); w.writerow(['id', 'area', 'kind', 'text', 'file', 'line', 'correction'])
-    for r in rows: w.writerow([r['id'], r['area'], r['kind'], r['text'], r['file'], r['line'], ''])
+    buf = io.StringIO(); w = csv.writer(buf, lineterminator='\n'); w.writerow(['id', 'key', 'area', 'kind', 'text', 'file', 'line', 'correction'])
+    for r in rows: w.writerow([r['id'], r.get('key', ''), r['area'], r['kind'], r['text'], r['file'], r['line'], ''])
     return buf.getvalue()
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(); ap.add_argument('--out', default=os.path.join(ROOT, 'docs/text/GAME_TEXT.csv')); ap.add_argument('--check', action='store_true'); a = ap.parse_args()
