@@ -8,6 +8,7 @@
 // the rebound.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, byStage } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [60, 75]; const COOLDOWN = [5, 4, 3, 2];
 const MISS_ALL = { missCheck: (v, id, info) => (id === 'b0' && info.attacker === 'a0' && info.tag === 'ordinary' ? { miss: true, source: 'controlled reviewer miss' } : null) };
@@ -20,10 +21,10 @@ export default registerClashAbility({
     afterWholeAttack(api, self, info) {
       if (info.attackerId !== self.id || info.tag !== 'ordinary' || !info.allMissed || !info.inAction || !api.ready(self)) return;
       const t = api.enemyReserves(self)[0];
-      if (!t) { api.cleanup(self, 'no living enemy reserve: readiness kept, nothing stored'); return; }
-      api.trigger(self, 'the ordinary attack was evaded'); api.activate(self, `rebound ${byStage(POWER, self.stage)}% at ${t.name}`, { targetId: t.id });
+      if (!t) { api.cleanup(self, $E('clashlog.no_living_enemy_reserve_readiness_kept')); return; }
+      api.trigger(self, $E('clashlog.the_ordinary_attack_was_evaded')); api.activate(self, `${$E('clashlog.rebound_at', { byStage: byStage(POWER, self.stage), name: t.name })}`, { targetId: t.id });
       api.cooldown(self, byTier(COOLDOWN, self.tier)); api.executed(self);
-      api.strike(self, t.id, { tag: 'reaction', mult: byStage(POWER, self.stage) / 100, strikeKey: 'rebound', label: 'Arc Rebound' });
+      api.strike(self, t.id, { tag: 'reaction', mult: byStage(POWER, self.stage) / 100, strikeKey: 'rebound', label: $E('clashlog.arc_rebound') });
     },
   },
   review: {

@@ -14,6 +14,7 @@
 // successful shed is the live activation (gated: a denied start keeps readiness for a later shed); cooldown only.
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, scrimmage, ready, spend, countPlay, slotOrder } from './nature-electric-common.js';
+import { E as $E } from '../../core/english.js';
 
 export const ARC = Object.freeze({ within: 3 });
 
@@ -28,7 +29,7 @@ export default registerAbility({
       if (!tgt) return; // readiness kept for a later shed
       if (!ctx.canStartSignature(self)) return; // denied: readiness kept for a later shed (nothing spent)
       spend(st, byMastery(CD_5432, self.mastery)); ctx.executed(self);
-      ctx.log(`${self.name}'s Chain Break arcs to ${tgt.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ELE-05-F', victim: tgt.slot });
+      ctx.log(`${$E('sim.s_chain_break_arcs_to', { name: self.name, name2: tgt.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ELE-05-F', victim: tgt.slot });
       ctx.applyStatus(tgt, { id: 'stumbled', strength: 1, duration: 0, restOfPlay: true, source: self, abilityId: 'ELE-05-F', keepEngagement: true });
     },
     playEnd(ctx, self) { countPlay(ctx, self, ctx.state(self), 'def'); },

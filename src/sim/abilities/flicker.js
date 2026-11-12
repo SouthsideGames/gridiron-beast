@@ -16,6 +16,7 @@
 // activation is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, stageOf, scrimmage, ready, spend, countPlay, disabled, positionOf } from './nature-electric-common.js';
+import { E as $E } from '../../core/english.js';
 
 export const CONFUSE = [35, 45]; // % by form
 export const WIRES = Object.freeze({ partnerWithin: 5, defendersWithin: 3, awarenessPct: 20, duration: 1 });
@@ -36,7 +37,7 @@ export default registerAbility({
       self.assignment = { ...mine, r: theirs.r, points: [[self.x, self.y], ...theirs.points.slice(1)] }; self.wp = 0;
       mate.assignment = { ...theirs, r: mine.r, points: [[mate.x, mate.y], ...mine.points.slice(1)] }; mate.wp = 0;
       spend(st, byMastery(CD_5432, self.mastery)); ctx.executed(self);
-      ctx.log(`${self.name} crosses wires with ${mate.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ELE-01-F', partner: mate.slot, collected: victims.map((d) => d.slot), routes: { [self.slot]: self.assignment.points, [mate.slot]: mate.assignment.points } });
+      ctx.log(`${$E('sim.crosses_wires_with', { name: self.name, name2: mate.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ELE-01-F', partner: mate.slot, collected: victims.map((d) => d.slot), routes: { [self.slot]: self.assignment.points, [mate.slot]: mate.assignment.points } });
       const chance = (CONFUSE[stageOf(self.form)] ?? CONFUSE[0]) / 100;
       for (const d of victims) if (ctx.rng.chance(chance)) ctx.applyStatus(d, { id: 'confused', strength: WIRES.awarenessPct, duration: WIRES.duration, source: self, abilityId: 'ELE-01-F' });
     },

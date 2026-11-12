@@ -6,13 +6,14 @@
 // every mastery. Mastery execution: the cleanse attempt.
 import { registerClashAbility } from '../t8/registry.js';
 import { isHarmful } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 function attempt(api, self, why) {
   const st = self.state; const me = api.me(self);
   if (st.used || !me.active || me.koed || !isHarmful(me.status)) return;
   st.used = true; api.trigger(self, why); api.executed(self);
   const ok = api.cleanse(self, self.id);
-  if (ok) api.activate(self, 'harmful status shed'); else api.cleanup(self, 'the status is uncleansable: the sole use is spent');
+  if (ok) api.activate(self, 'harmful status shed'); else api.cleanup(self, $E('clashlog.the_status_is_uncleansable_the_sole'));
 }
 
 export default registerClashAbility({
@@ -20,8 +21,8 @@ export default registerClashAbility({
   initBattle: () => ({ used: false }),
   values: () => ({}), // identical at every mastery (no numeric scaling)
   hooks: {
-    statusApplied(api, self) { attempt(api, self, 'a harmful status applied while active'); },
-    onEntry(api, self) { attempt(api, self, 'entered active already holding a harmful status'); },
+    statusApplied(api, self) { attempt(api, self, $E('clashlog.a_harmful_status_applied_while_active')); },
+    onEntry(api, self) { attempt(api, self, $E('clashlog.entered_active_already_holding_a_harmful')); },
   },
   review: {
     scenarios: [

@@ -9,6 +9,7 @@
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
 import { decisionsPlan } from '../t8/review.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [75, 85, 95, 105];
 
@@ -21,12 +22,12 @@ export default registerClashAbility({
     onDeparture(api, self) { self.state.ready = false; },
     pursuit(api, self, { side, out, reason }) {
       const st = self.state; const me = api.me(self); if (!st.ready || !me.active || me.koed || side === self.side) return null;
-      if (reason === 'relay' && !api.provisional(self, 'feather-relay-voluntary', 'a Feather Relay rotation')) return null;
+      if (reason === 'relay' && !api.provisional(self, 'feather-relay-voluntary', $E('clashlog.a_feather_relay_rotation'))) return null;
       if (reason !== 'voluntary' && reason !== 'relay') return null;
-      if (me.stunned) { api.cleanup(self, 'Stunned: the pursuit opportunity is kept'); return null; }
+      if (me.stunned) { api.cleanup(self, $E('clashlog.stunned_the_pursuit_opportunity_is_kept')); return null; }
       st.ready = false; api.trigger(self, `${api.get(out).name} rotates out voluntarily`, { targetId: out }); api.executed(self);
-      api.activate(self, `pursuit at ${byTier(POWER, self.tier)}% (undodgeable)`, { targetId: out });
-      api.strike(self, out, { tag: 'reaction', mult: byTier(POWER, self.tier) / 100, undodgeable: true, strikeKey: 'pursuit', label: 'Riptide Pursuit' });
+      api.activate(self, `${$E('clashlog.pursuit_at_undodgeable', { byTier: byTier(POWER, self.tier) })}`, { targetId: out });
+      api.strike(self, out, { tag: 'reaction', mult: byTier(POWER, self.tier) / 100, undodgeable: true, strikeKey: 'pursuit', label: $E('clashlog.riptide_pursuit') });
       return null;
     },
   },

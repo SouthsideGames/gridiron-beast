@@ -19,6 +19,7 @@
 // the cooldown is not spent); no charge.
 import { registerAbility } from './registry.js';
 import { able, scrimmage, byMastery } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const HALO = Object.freeze({ radius: [6, 8, 10, 12], cooldown: 5, duration: 2, clashPoolPct: 15 });
 
@@ -35,7 +36,7 @@ export default registerAbility({
       st.cd = HALO.cooldown; self.halo.fresh = true; // spent on the attempt, even if blocked
       const res = ctx.applyStatus(r, { id: 'shielded', strength: HALO.clashPoolPct, duration: HALO.duration, source: self, abilityId: 'LIG-03-F', payload: { fumbleSaves: 1, clashPoolPct: HALO.clashPoolPct } });
       if (res.accepted) ctx.executed(self, { passive: true });
-      ctx.log(`${self.name}'s Guiding Halo ${res.accepted ? 'shields' : 'cannot shield'} ${r.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-03-F', target: r.slot, accepted: res.accepted, reason: res.reason, dist: +d.toFixed(2) });
+      ctx.log(`${$E('sim.s_guiding_halo', { name: self.name, accepted: res.accepted ? 'shields' : 'cannot shield', name2: r.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-03-F', target: r.slot, accepted: res.accepted, reason: res.reason, dist: +d.toFixed(2) });
     },
     playEnd(ctx, self) {
       if (self.team !== 'off' || !scrimmage(ctx)) return; const st = ctx.state(self);

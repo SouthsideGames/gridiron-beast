@@ -10,6 +10,7 @@ import { registerClashAbility } from '../t8/registry.js';
 import { approvedValues } from '../../data/beast-dex.js';
 import { stokeTheFlamePct } from '../../data/approved-values.js';
 import { byTier, byStage } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const V = approvedValues('FIR-01-C'); const NEEDED = 3;
 const COUNTED = new Set(['ordinary', 'special', 'followUp', 'delayed', 'commanded', 'assist']);
@@ -25,15 +26,15 @@ export default registerClashAbility({
       const dmg = info.hits.reduce((s, h) => s + (h.losses?.[self.id] ?? 0) + (h.poolLosses?.[self.id] ?? 0), 0); if (dmg <= 0) return;
       const me = api.me(self); if (me.koed) return; // must survive
       const st = self.state; st.charges += 1;
-      api.log(self, 'ability_progress', `${self.name}: Stoke the Flame ${st.charges} / ${NEEDED}`, { charges: st.charges, stage: 'trigger' });
+      api.log(self, 'ability_progress', `${$E('clashlog.stoke_the_flame', { name: self.name, charges: st.charges, needed: NEEDED })}`, { charges: st.charges, stage: 'trigger' });
       if (st.charges < NEEDED) return;
       st.charges = 0;
-      if (me.stunned) { api.cleanup(self, 'the third charge is consumed: Stunned blocks the counter (Stunned duration untouched)'); return; }
+      if (me.stunned) { api.cleanup(self, $E('clashlog.the_third_charge_is_consumed_stunned')); return; }
       const target = !att.koed && att.side !== self.side ? att.id : api.foe(self)?.id;
-      if (!target) { api.cleanup(self, 'the third charge is consumed: no valid target'); return; }
+      if (!target) { api.cleanup(self, $E('clashlog.the_third_charge_is_consumed_no')); return; }
       const pctV = stokeTheFlamePct(self.form, self.tier);
-      api.activate(self, `counterburst at ${pctV}%`, { targetId: target }); api.executed(self);
-      api.strike(self, target, { tag: 'reaction', mult: pctV / 100, strikeKey: 'counterburst', label: 'Stoke the Flame' });
+      api.activate(self, `${$E('clashlog.counterburst_at', { pctV })}`, { targetId: target }); api.executed(self);
+      api.strike(self, target, { tag: 'reaction', mult: pctV / 100, strikeKey: 'counterburst', label: $E('clashlog.stoke_the_flame_2') });
     },
   },
   review: {

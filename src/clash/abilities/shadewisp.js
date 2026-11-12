@@ -8,6 +8,7 @@
 // qualifying attempt spends readiness even if the status is blocked. No new pool, decoy or retaliation. Mastery execution: the attempt.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, isNormal, able } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const GUARD = [25, 30, 35, 40]; const TURNS = 2; const COOLDOWN = 5; const NEEDED = 2;
 
@@ -22,11 +23,11 @@ export default registerClashAbility({
       const hp = info.hits.reduce((s, h) => s + (h.losses?.[self.id] ?? 0), 0); if (hp <= 0) return; // miss / shield-only: no count, no reset
       const st = self.state;
       if (st.attackerId !== info.attackerId) { st.attackerId = info.attackerId; st.count = 1; } else st.count += 1;
-      api.log(self, 'ability_progress', `${self.name}: Mirage Veil ${st.count} / ${NEEDED} (${att.name})`, { count: st.count, stage: 'trigger' });
+      api.log(self, 'ability_progress', `${$E('clashlog.mirage_veil', { name: self.name, count: st.count, needed: NEEDED, name2: att.name })}`, { count: st.count, stage: 'trigger' });
       if (st.count < NEEDED) return;
       st.count = 0; st.attackerId = null;
-      if (!able(me)) { api.cleanup(self, 'source unable: the trigger is discarded, readiness kept'); return; }
-      api.activate(self, `veil: Guarded ${byTier(GUARD, self.tier)}%`); api.cooldown(self, COOLDOWN); api.executed(self);
+      if (!able(me)) { api.cleanup(self, $E('clashlog.source_unable_the_trigger_is_discarded')); return; }
+      api.activate(self, `${$E('clashlog.veil_guarded', { byTier: byTier(GUARD, self.tier) })}`); api.cooldown(self, COOLDOWN); api.executed(self);
       api.applyStatus(self, self.id, { id: 'guarded', strength: byTier(GUARD, self.tier), duration: TURNS });
     },
     anyDeparture(api, self, { id }) { if (self.state.attackerId === id) { self.state.attackerId = null; self.state.count = 0; } },

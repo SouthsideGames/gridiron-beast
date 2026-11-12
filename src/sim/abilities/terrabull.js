@@ -19,6 +19,7 @@
 // after the reception is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { scrimmage, tier, countDown, BODY } from './earth-ice-util.js';
+import { E as $E } from '../../core/english.js';
 
 const COOLDOWN = [5, 4, 3, 2];
 export const SCREEN = Object.freeze({ width: 3, thick: 0.5, gap: 1, travel: 5, minDepth: 5 });
@@ -37,11 +38,11 @@ export default registerAbility({
       const ss = self.ss;
       if (ss.wall) {
         const w = ss.wall; if (!w.live) return;
-        if (self.x - ss.from >= SCREEN.travel) { w.live = false; ctx.log(`${self.name}'s Stone Screen cracks into rubble`, { kind: 'ability_end', by: self.slot, side: self.team, ability: 'EAR-05-F' }); return; }
+        if (self.x - ss.from >= SCREEN.travel) { w.live = false; ctx.log(`${$E('sim.s_stone_screen_cracks_into_rubble', { name: self.name })}`, { kind: 'ability_end', by: self.slot, side: self.team, ability: 'EAR-05-F' }); return; }
         if (!ss.moving) return;
         const others = ctx.actors.filter((o) => o !== self);
         const hit = others.find((o) => o.team !== self.team && touches(o, w));
-        if (hit) { ss.moving = false; ctx.log(`${hit.name} meets the Stone Screen; it sets in place`, { kind: 'wall_stop', by: self.slot, side: self.team, victim: hit.slot, ability: 'EAR-05-F' }); return; }
+        if (hit) { ss.moving = false; ctx.log(`${$E('sim.meets_the_stone_screen_it_sets', { name: hit.name })}`, { kind: 'wall_stop', by: self.slot, side: self.team, victim: hit.slot, ability: 'EAR-05-F' }); return; }
         const next = rectAt(self, ss.side);
         if (others.some((o) => touches(o, next, BODY))) { ss.moving = false; return; } // never moves into (or displaces) a monster
         Object.assign(w, next); return;
@@ -54,11 +55,11 @@ export default registerAbility({
       if (!nearest) return;
       const side = Math.sign(nearest.y - self.y) || 1; const r = rectAt(self, side); const B = ctx.bounds;
       const illegal = (B && (r.y0 < B.left || r.y1 > B.right || r.x0 < B.ownEndLine || r.x1 > B.endLine)) || ctx.actors.some((o) => touches(o, r, BODY));
-      if (illegal) { ctx.log(`${self.name}'s Stone Screen has no room to rise`, { kind: 'ability_skip', by: self.slot, side: self.team, ability: 'EAR-05-F' }); return; }
+      if (illegal) { ctx.log(`${$E('sim.s_stone_screen_has_no_room', { name: self.name })}`, { kind: 'ability_skip', by: self.slot, side: self.team, ability: 'EAR-05-F' }); return; }
       if (!ctx.canStartSignature(self)) return;
       st.cd = tier(COOLDOWN, self.mastery); st.fresh = true; ctx.executed(self);
       Object.assign(ss, { from: self.x, side, moving: true, wall: ctx.addObstacle({ kind: 'rect', ...r, owner: self.slot, ability: 'EAR-05-F', blocks: (a) => a !== self }) });
-      ctx.log(`${self.name}'s Stone Screen rises beside him`, { kind: 'ability', by: self.slot, side: self.team, ability: 'EAR-05-F', wall: { ...r }, wallSide: side });
+      ctx.log(`${$E('sim.s_stone_screen_rises_beside_him', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'EAR-05-F', wall: { ...r }, wallSide: side });
     },
     playEnd(ctx, self, s) { if (self.ss?.wall) self.ss.wall.live = false; if (self.team === 'off' && !s.kickoff && !s.twoPoint) countDown(ctx.state(self)); },
   },

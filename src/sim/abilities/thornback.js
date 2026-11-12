@@ -18,6 +18,7 @@
 // created in the pre-snap step (out of play: not gated); the token earned by the broken tackle is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { byMastery, scrimmage, ready, spend, countPlay, bandInField } from './nature-electric-common.js';
+import { E as $E } from '../../core/english.js';
 
 export const TURN = [25, 30, 35, 40]; // % by mastery
 export const TRAP = Object.freeze({ width: 8, length: 6, cooldown: 3 });
@@ -40,7 +41,7 @@ export default registerAbility({
       const st = ctx.state(self);
       if (self.bt.done || self.team !== 'off' || !scrimmage(ctx) || ctx.stats.receiver !== self.slot || ctx.ball.holder !== self || !ready(st) || !ctx.canGainCharge(self)) return;
       self.bt.done = true; st.token = true; ctx.executed(self);
-      ctx.log(`${self.name} earns a Bramble Trap`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-05-F' });
+      ctx.log(`${$E('sim.earns_a_bramble_trap', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-05-F' });
     },
     playEnd(ctx, self) { countPlay(ctx, self, ctx.state(self), 'off'); },
   },

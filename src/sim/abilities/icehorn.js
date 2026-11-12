@@ -17,6 +17,7 @@
 // (gated).
 import { registerAbility } from './registry.js';
 import { tier, countDown, opponentSide } from './earth-ice-util.js';
+import { E as $E } from '../../core/english.js';
 
 const COOLDOWN = [5, 4, 3, 2];
 export const PERMAFROST = Object.freeze({ width: 10, length: 6, braking: 30, lifetime: 2 });
@@ -29,7 +30,7 @@ export default registerAbility({
       const st = ctx.state(self);
       if (st.pending && ctx.createdFor(self.mid)) {
         st.pending = false; st.cd = tier(COOLDOWN, self.mastery); st.fresh = true; st.creation = true;
-        ctx.log(`${self.name} stamps: Permafrost spreads across the backfield`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ICE-04-F' });
+        ctx.log(`${$E('sim.stamps_permafrost_spreads_across_the_backfield', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ICE-04-F' });
       }
     },
     playEnd(ctx, self, s) {
@@ -41,7 +42,7 @@ export default registerAbility({
       if (!(sack || tfl) || !ctx.canGainCharge(self)) return;
       st.pending = true; ctx.executed(self);
       ctx.queueField({ owner: self.mid, ownerTeam: opponentSide(ctx.teamSide), side: 'def', type: 'Ice', ability: 'ICE-04-F', strength: PERMAFROST.braking, lifetime: PERMAFROST.lifetime, clock: 'ownerDefense', place: 'backfield', width: PERMAFROST.width, length: PERMAFROST.length });
-      ctx.log(`${self.name} banks a Permafrost`, { kind: 'ability_ready', by: self.slot, side: self.team, ability: 'ICE-04-F' });
+      ctx.log(`${$E('sim.banks_a_permafrost', { name: self.name })}`, { kind: 'ability_ready', by: self.slot, side: self.team, ability: 'ICE-04-F' });
     },
   },
 });

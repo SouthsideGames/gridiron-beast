@@ -8,6 +8,7 @@
 // several eligible rescuers, the first in lineup order (D15; the engine asks reserves in lineup order). No heal or guaranteed survival.
 // No mastery scaling. Mastery execution: the cover.
 import { registerClashAbility } from '../t8/registry.js';
+import { E as $E } from '../../core/english.js';
 
 const ELIGIBLE = new Set(['ordinary', 'special', 'followUp']);
 
@@ -20,7 +21,7 @@ export default registerClashAbility({
       const st = self.state; const me = api.me(self); if (st.used || me.active || me.koed || me.stunned) return null;
       const t = api.get(info.target); if (!t || t.side !== self.side || !t.active || t.id === self.id || !info.lethal || !ELIGIBLE.has(info.tag)) return null;
       const owner = api.get(api.curAttack()?.owner ?? info.attacker); if (!owner || owner.side === self.side) return null;
-      st.used = true; api.trigger(self, `${t.name} would be knocked out (${info.predicted} predicted)`, { targetId: t.id }); api.executed(self);
+      st.used = true; api.trigger(self, `${$E('clashlog.would_be_knocked_out_predicted', { name: t.name, predicted: info.predicted })}`, { targetId: t.id }); api.executed(self);
       return { to: self.id, abilityId: 'EAR-01-C' };
     },
   },

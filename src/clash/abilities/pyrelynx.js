@@ -10,6 +10,7 @@
 // delayed attacks the text names; follow-ups and commanded / assist strikes do not roll. Mastery execution: the decoy creation.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const CHANCE = [30, 35, 40, 45]; const COOLDOWN = 3; const ROLLS = new Set(['ordinary', 'special', 'delayed']);
 
@@ -21,18 +22,18 @@ export default registerClashAbility({
     onEntry(api, self) {
       if (self.state.decoy || !api.ready(self)) return;
       self.state.decoy = true; api.cooldown(self, COOLDOWN); api.executed(self);
-      api.activate(self, `decoy created (${byTier(CHANCE, self.tier)}% diversion)`);
+      api.activate(self, `${$E('clashlog.decoy_created_diversion', { byTier: byTier(CHANCE, self.tier) })}`);
     },
-    onDeparture(api, self) { if (self.state.decoy) { self.state.decoy = false; api.cleanup(self, 'the unused decoy ends as Flarynx leaves the active position'); } },
+    onDeparture(api, self) { if (self.state.decoy) { self.state.decoy = false; api.cleanup(self, $E('clashlog.the_unused_decoy_ends_as_flarynx')); } },
     missCheck(api, self, info) {
       const st = self.state;
-      if (st.rolled && st.rolled.seq === info.attackSeq) return st.rolled.miss ? { miss: true, source: 'Heat Mirage decoy', abilityId: 'FIR-05-C' } : null; // one roll per whole attack
+      if (st.rolled && st.rolled.seq === info.attackSeq) return st.rolled.miss ? { miss: true, source: $E('clashlog.heat_mirage_decoy'), abilityId: 'FIR-05-C' } : null; // one roll per whole attack
       if (!st.decoy || !ROLLS.has(info.tag)) return null;
       st.decoy = false;
-      const miss = api.rng.chance(byTier(CHANCE, self.tier) / 100, self, 'Heat Mirage diversion');
+      const miss = api.rng.chance(byTier(CHANCE, self.tier) / 100, self, $E('clashlog.heat_mirage_diversion'));
       st.rolled = { seq: info.attackSeq, miss };
-      if (!miss) api.cleanup(self, 'the decoy is consumed: the attack resolves normally');
-      return miss ? { miss: true, source: 'Heat Mirage decoy', abilityId: 'FIR-05-C' } : null;
+      if (!miss) api.cleanup(self, $E('clashlog.the_decoy_is_consumed_the_attack'));
+      return miss ? { miss: true, source: $E('clashlog.heat_mirage_decoy'), abilityId: 'FIR-05-C' } : null;
     },
   },
   review: {

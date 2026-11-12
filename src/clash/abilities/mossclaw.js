@@ -8,6 +8,7 @@
 // execution: the launch.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, byStage, removableHarmful, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const PER_TURN = [10, 15]; const MAX_TURNS = 3; const COOLDOWN = [5, 4, 3, 2];
 const WEAK = { id: 'weakened', strength: 10, duration: 5 };
@@ -19,11 +20,11 @@ export default registerClashAbility({
   hooks: {
     chooseAction(api, self, { foeId }) {
       if (!foeId || !api.ready(self)) return null; const f = api.get(foeId);
-      if (!removableHarmful(f.status)) return f.status ? unmet({ condition: 'removable harmful status on the opposing active', detail: `${f.status.id}${f.status.payload?.uncleansable ? ' (uncleansable)' : ''}: not consumed` }) : null;
+      if (!removableHarmful(f.status)) return f.status ? unmet({ condition: $E('clashlog.removable_harmful_status_on_the_opposing'), detail: `${$E('clashlog.not_consumed', { id: f.status.id, payload: f.status.payload?.uncleansable ? ' (uncleansable)' : '' })}` }) : null;
       const n = Math.min(MAX_TURNS, f.status.remaining); const mult = 1 + (n * byStage(PER_TURN, self.stage)) / 100;
-      api.activate(self, `detonate ${f.status.id} (${n} counted turn${n === 1 ? '' : 's'}): ${Math.round(mult * 100)}%`, { targetId: foeId, counted: n, status: f.status.id });
+      api.activate(self, `${$E('clashlog.detonate_counted_turns', { id: f.status.id, n, n3: Math.round(mult * 100) })}`, { targetId: foeId, counted: n, status: f.status.id });
       api.cooldown(self, byTier(COOLDOWN, self.tier)); api.executed(self);
-      return { kind: 'attack', tag: 'special', mult, strikeKey: 'connected attack', label: 'Spore Detonation' };
+      return { kind: 'attack', tag: 'special', mult, strikeKey: 'connected attack', label: $E('clashlog.spore_detonation') };
     },
     attached(api, self, info) {
       if (info.abilityId !== 'NAT-02-C' || info.attacker !== self.id) return null;

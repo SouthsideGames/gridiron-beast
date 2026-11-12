@@ -17,6 +17,7 @@
 // release is the live activation (gated); the low-yardage bar is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { scrimmage, disabled, tier, allowedGain } from './earth-ice-util.js';
+import { E as $E } from '../../core/english.js';
 
 const MAX_GAIN = [3, 4, 5, 6]; // by mastery
 export const FULL = 3;
@@ -31,7 +32,7 @@ export default registerAbility({
       if (st.bar < FULL || self.team !== 'def' || !scrimmage(ctx) || disabled(ctx, self)) return undefined;
       if (!ctx.canStartSignature(self)) return undefined;
       st.bar = 0; self.sw.launched = true; ctx.executed(self);
-      ctx.log(`${self.name}'s Stonewall Swat knocks the pass down`, { kind: 'ability', by: self.slot, side: self.team, victim: passer.slot, ability: 'EAR-02-F', fromX: +self.x.toFixed(2), fromY: +self.y.toFixed(2), x: +passer.x.toFixed(2), y: +passer.y.toFixed(2) });
+      ctx.log(`${$E('sim.s_stonewall_swat_knocks_the_pass', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, victim: passer.slot, ability: 'EAR-02-F', fromX: +self.x.toFixed(2), fromY: +self.y.toFixed(2), x: +passer.x.toFixed(2), y: +passer.y.toFixed(2) });
       return { breakup: true };
     },
     playEnd(ctx, self, s) {

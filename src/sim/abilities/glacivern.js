@@ -10,6 +10,7 @@
 // Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): a formula field-
 // goal retry (rules.js fieldGoalMiss), out of play; not gated.
 import { registerAbility } from './registry.js';
+import { E as $E } from '../../core/english.js';
 
 export default registerAbility({
   family: 'glacivern', abilityId: 'ICE-06-F',
@@ -21,7 +22,7 @@ export default registerAbility({
       st.used = true; ctx.executed(self);
       const again = retry();
       return { ...again, checks: [{ good: false, chance: res.chance }, { good: again.good, chance: again.chance }], secondChance: true, ability: 'ICE-06-F',
-        text: `${res.text} ${self.name}'s Second Chance: an ice shard redirects the ball toward the uprights. ${again.good ? `It is GOOD from ${again.distance} yards.` : 'Still no good.'}` };
+        text: `${$E('sim.s_second_chance_an_ice_shard', { text: res.text, name: self.name })} ${again.good ? `${$E('sim.it_is_good_from_yards', { distance: again.distance })}` : $E('sim.still_no_good')}` };
     },
   },
 });

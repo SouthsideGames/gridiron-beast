@@ -5,6 +5,7 @@
 // reserve pauses. The football carry converts to the same-percent Strength (S12). Mastery execution: the cast.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const EMP = [15, 18, 21, 24]; const TURNS = 2; const MIN_EMPTY = 2;
 
@@ -17,8 +18,8 @@ export default registerClashAbility({
       if (self.state.used) return null;
       const empty = api.allies(self).filter((v) => !v.status);
       if (empty.length < MIN_EMPTY) return null;
-      self.state.used = true; api.trigger(self, `${empty.length} living allies with empty slots`); api.executed(self);
-      api.activate(self, `team Empowered +${byTier(EMP, self.tier)}%`);
+      self.state.used = true; api.trigger(self, `${$E('clashlog.living_allies_with_empty_slots', { n: empty.length })}`); api.executed(self);
+      api.activate(self, `${$E('clashlog.team_empowered', { byTier: byTier(EMP, self.tier) })}`);
       api.applyStatuses(self, empty.map((v, i) => ({ targetId: v.id, order: i, id: 'empowered', strength: byTier(EMP, self.tier), duration: TURNS })));
       return { kind: 'done' };
     },

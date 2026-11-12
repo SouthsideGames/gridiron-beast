@@ -7,6 +7,7 @@
 // source limited by its own wording to attacks, no miss source applies to this non-attack utility (plan §5a). Mastery execution: the attempt.
 import { registerClashAbility } from '../t8/registry.js';
 import { BENEFICIAL } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 export default registerClashAbility({
   family: 'tidefin', abilityId: 'WAT-04-C',
@@ -16,7 +17,7 @@ export default registerClashAbility({
     chooseAction(api, self, { foeId }) {
       if (self.state.used || !foeId) return null; const f = api.get(foeId);
       if (!f.status || !BENEFICIAL.includes(f.status.id)) return null;
-      self.state.used = true; api.activate(self, `wash away ${f.name}'s ${f.status.id}`, { targetId: foeId }); api.executed(self);
+      self.state.used = true; api.activate(self, `${$E('clashlog.wash_away_s', { name: f.name, id: f.status.id })}`, { targetId: foeId }); api.executed(self);
       api.removeStatus(self, foeId, 'washed away');
       return { kind: 'done' };
     },

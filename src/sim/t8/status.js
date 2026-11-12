@@ -2,6 +2,7 @@
 // One shared status per monster, beneficial or harmful. Episodes accept at most three applications. Football clocks count completed
 // plays the monster actually participates in; Clash clocks count recipient normal turns (Stunned skips included). The application
 // play/turn does not consume duration. Transfer between Clash and football is 1:1 for supported statuses; unsupported ones clear.
+import { E as $E } from '../../core/english.js';
 
 export const STATUS = Object.freeze({
   stunned: { kind: 'harmful', football: true, clash: true },
@@ -30,17 +31,17 @@ export const MAX_APPLICATIONS = 3;
  */
 export function tryApply(slot, attempt) {
   const def = STATUS[attempt.id]; if (!def) throw new Error(`unknown status ${attempt.id}`);
-  if (!def[attempt.mode]) return { slot, accepted: false, reason: 'unsupported in this mode' };
+  if (!def[attempt.mode]) return { slot, accepted: false, reason: $E('sim.unsupported_in_this_mode') };
   if (!slot) return { slot: newEpisode(attempt), accepted: true, reason: 'new episode' };
-  if (slot.id !== attempt.id) return { slot, accepted: false, reason: 'slot occupied by another status' };
-  if (slot.applications >= MAX_APPLICATIONS) return { slot, accepted: false, reason: 'episode at three applications' };
+  if (slot.id !== attempt.id) return { slot, accepted: false, reason: $E('sim.slot_occupied_by_another_status') };
+  if (slot.applications >= MAX_APPLICATIONS) return { slot, accepted: false, reason: $E('sim.episode_at_three_applications') };
   const cmp = Math.sign(attempt.strength - slot.originalStrength);
   if (cmp < 0) return { slot, accepted: false, reason: 'weaker application ignored' };
   const next = { ...slot, applications: slot.applications + 1, appliedThisUnit: true };
   if (cmp === 0) next.remaining = slot.remaining + attempt.duration; // equal: duration only (no strength, shield HP or saves)
   else { next.strength = attempt.strength; next.originalStrength = attempt.strength; next.remaining = attempt.duration; if (attempt.payload) next.payload = { ...attempt.payload }; }
   if (attempt.restOfPlay) next.restOfPlay = true;
-  return { slot: next, accepted: true, reason: cmp === 0 ? 'equal: duration added' : 'stronger: replaced' };
+  return { slot: next, accepted: true, reason: cmp === 0 ? $E('sim.equal_duration_added') : $E('sim.stronger_replaced') };
 }
 function newEpisode(a) {
   return { id: a.id, strength: a.strength, originalStrength: a.strength, remaining: a.duration, applications: 1, appliedThisUnit: true,

@@ -14,6 +14,7 @@
 // `awaiting ruling`; the reading in T8_FLAGS.delayedSlot applies only in provisional mode. The cap case is 'd8-cap-delayed' (engine).
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const MAIN = [150, 160, 170, 180], SPLASH = [50, 55, 60, 65];
 
@@ -22,7 +23,7 @@ export function delayedTargets(api, self, item, { mainPct, splashPct }) {
   const f = item.frozen; const main = (id) => ({ id, mult: mainPct / 100, key: 'main hit' }); const splash = (id) => ({ id, mult: splashPct / 100, key: 'splash' });
   if (!f.disputed) return { targets: [...(f.occupantId ? [main(f.occupantId)] : []), ...f.others.map(splash)], disputed: [] };
   const disputedIds = [f.occupantId, ...(f.launchTargetAlive ? [f.launchTargetId] : [])];
-  if (!api.provisional(self, 'delayed-slot', `the launch target ${api.get(f.launchTargetId).name} is no longer the active fighter`)) {
+  if (!api.provisional(self, 'delayed-slot', `${$E('clashlog.the_launch_target_is_no_longer', { name: api.get(f.launchTargetId).name })}`)) {
     return { targets: f.others.filter((id) => !disputedIds.includes(id)).map(splash), disputed: disputedIds };
   }
   if (api.flags.delayedSlot.value === 'active-position') return { targets: [main(f.occupantId), ...f.others.map(splash)], disputed: [] };
@@ -39,10 +40,10 @@ export default registerClashAbility({
       const st = self.state;
       if (st.used) return null; // spent: the ordinary attack (no second meteor)
       if (!foeId) return unmet('opposing active fighter');
-      api.trigger(self, 'ready, normal action, opposing active present', { targetId: foeId });
+      api.trigger(self, $E('clashlog.ready_normal_action_opposing_active_present'), { targetId: foeId });
       st.used = true; st.inFlight = true;
       api.delay(self, { targetSide: api.get(foeId).side, targetId: foeId, after: 1 });
-      api.activate(self, 'meteor launched in place of the normal attack', { targetId: foeId });
+      api.activate(self, $E('clashlog.meteor_launched_in_place_of_the'), { targetId: foeId });
       api.executed(self);
       return { kind: 'done' };
     },
@@ -51,11 +52,11 @@ export default registerClashAbility({
       const { targets, disputed } = delayedTargets(api, self, item, { mainPct: byTier(MAIN, self.tier), splashPct: byTier(SPLASH, self.tier) });
       for (const t of targets) {
         if (api.get(t.id).koed) continue; // knocked out by an earlier hit's reaction: frozen identity, no target
-        const r = api.strike(self, t.id, { tag: 'delayed', mult: t.mult, strikeKey: t.key, label: `Falling Star ${t.key}`, exception, normalAction: false });
+        const r = api.strike(self, t.id, { tag: 'delayed', mult: t.mult, strikeKey: t.key, label: `${$E('clashlog.falling_star', { key: t.key })}`, exception, normalAction: false });
         if (r.decided) break;
       }
       self.state.inFlight = false;
-      api.cleanup(self, disputed.length ? `meteor resolved; ${disputed.length} disputed hit(s) awaiting ruling` : 'meteor resolved');
+      api.cleanup(self, disputed.length ? `${$E('clashlog.meteor_resolved_disputed_hit_s_awaiting', { n: disputed.length })}` : 'meteor resolved');
     },
   },
   review: {

@@ -4,6 +4,7 @@
 // Drawing only: the result (`res`) is final before anything is drawn; the frames only show it. Second Chance bends the drawn flight
 // (wide first, the shard strikes, then toward the uprights or still wide) to show the one final result the engine resolved.
 import { kickFrames } from '../kick-anim.js';
+import { t as $t } from '../../text/index.js';
 
 /** The kick abilities' ids and how to read them from a kick result. */
 export const KICK_ABILITY = Object.freeze({
@@ -28,12 +29,12 @@ export function kickSim(ev) {
     air.forEach((f, i) => { const k = (i + 1) / n; const wide = 6 * side * Math.min(1, k / strikeK); const y = k <= strikeK ? wide : good ? 6 * side * (1 - (k - strikeK) / (1 - strikeK)) : 6 * side + (k - strikeK) * 4 * side; f.ball = [f.ball[0], +y.toFixed(2), 1]; });
     const last = air[n - 1]; if (last) for (const f of frames) if (f.t > last.t) f.ball = [f.ball[0], good ? 0 : last.ball[1], 0];
     const at = frames.find((f) => f.t >= tStrike) || frames[0]; const K = at.off.find((p) => p[0] === 'K') || at.off[0];
-    events.push({ t: tStrike, kind: 'ability', ability: 'ICE-06-F', by: 'K', side: 'off', x: at.ball[0], y: at.ball[1], fromX: K[1], fromY: K[2], good, text: 'Second Chance' });
+    events.push({ t: tStrike, kind: 'ability', ability: 'ICE-06-F', by: 'K', side: 'off', x: at.ball[0], y: at.ball[1], fromX: K[1], fromY: K[2], good, text: $t('fx.second_chance') });
   } else if (id === 'DRA-05-F') {
-    events.push({ t: Math.max(0, tAir - 0.4), kind: 'ability', ability: 'DRA-05-F', by: 'K', side: 'off', good: !!ev.res.good, landT: tLand, text: 'Dragon Roar' });
+    events.push({ t: Math.max(0, tAir - 0.4), kind: 'ability', ability: 'DRA-05-F', by: 'K', side: 'off', good: !!ev.res.good, landT: tLand, text: $t('fx.dragon_roar') });
   } else if (id === 'EAR-04-F') {
     const catchF = frames.find((f) => f.t >= tLand) || frames[frames.length - 1]; const ret = catchF.def.find((p) => p[0] === 'PR');
-    events.push({ t: catchF.t, kind: 'ability', ability: 'EAR-04-F', by: 'P', side: 'off', victim: 'PR', victimSide: 'def', x: ret?.[1], y: ret?.[2], text: 'Stone Cradle' });
+    events.push({ t: catchF.t, kind: 'ability', ability: 'EAR-04-F', by: 'P', side: 'off', victim: 'PR', victimSide: 'def', x: ret?.[1], y: ret?.[2], text: $t('fx.stone_cradle') });
   }
   return { frames, events, ballOn: 0, ballLat: 0, kick: true, kickAbility: id };
 }

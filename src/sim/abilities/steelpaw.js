@@ -17,6 +17,7 @@
 // (per-snap qualification and a per-monster ledger, no readiness): not gated.
 import { registerAbility } from './registry.js';
 import { able, scrimmage, byMastery } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const IRON_LUNGS = Object.freeze({ radius: [3, 4, 5, 6], relief: 1 });
 /** The per-monster progress ledger (game scope, shared by every source). */
@@ -37,7 +38,7 @@ export default registerAbility({
         else L.progress[p.mid] = 1;
       }
       if (relieved.length) { ctx.executed(self, { passive: true });
-        ctx.log(`${self.name}'s Iron Lungs steady ${relieved.map((p) => p.name).join(' and ')}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'MET-02-F', targets: relieved.map((p) => p.slot) }); }
+        ctx.log(`${$E('sim.s_iron_lungs_steady', { name: self.name })} ${relieved.map((p) => p.name).join(' and ')}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'MET-02-F', targets: relieved.map((p) => p.slot) }); }
     },
   },
 });

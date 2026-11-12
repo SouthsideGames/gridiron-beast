@@ -14,6 +14,7 @@
 // release is the live activation (gated; the shockwave is its launched effect and continues); cooldown only, no charge.
 import { registerAbility } from './registry.js';
 import { scrimmage, byMastery, cooldownStep } from './fw-util.js';
+import { E as $E } from '../../core/english.js';
 
 export const METEOR = Object.freeze({ minTarget: 15, radius: 3, pushByMastery: [1, 1.25, 1.5, 1.75], cooldown: 3 });
 
@@ -29,7 +30,7 @@ export default registerAbility({
       if (self.team !== 'off' || !scrimmage(ctx) || ctx.state(self).cd > 0 || !((b.aim?.x ?? b.landing?.x) >= METEOR.minTarget)) return;
       if (!ctx.canStartSignature(self)) return;
       m.powered = true; m.fired = true; ctx.state(self).cd = METEOR.cooldown; ctx.executed(self);
-      ctx.log(`${self.name} launches a Meteor Impact pass`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-03-F', phase: 'release' });
+      ctx.log(`${$E('sim.launches_a_meteor_impact_pass', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-03-F', phase: 'release' });
     },
     catchMade(ctx, self, r) {
       if (!self.meteor?.powered || r.team !== self.team || r === self) return;
@@ -41,7 +42,7 @@ export default registerAbility({
         const [ux, uy] = d > 1e-6 ? [(o.x - r.x) / d, (o.y - r.y) / d] : [lx / ll, ly / ll];
         const moved = ctx.displace(o, ux * push, uy * push); hit.push({ slot: o.slot, moved: +moved.toFixed(3) });
       }
-      ctx.log(`${self.name}'s Meteor Impact shockwave`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-03-F', phase: 'shockwave', x: +r.x.toFixed(2), y: +r.y.toFixed(2), radius: METEOR.radius, victims: hit });
+      ctx.log(`${$E('sim.s_meteor_impact_shockwave', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-03-F', phase: 'shockwave', x: +r.x.toFixed(2), y: +r.y.toFixed(2), radius: METEOR.radius, victims: hit });
     },
     playEnd(ctx, self) { if (self.team !== 'off' || !scrimmage(ctx)) return; const m = self.meteor; cooldownStep(ctx.state(self), !!m?.fired); },
   },

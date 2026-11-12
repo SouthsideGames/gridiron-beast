@@ -7,6 +7,7 @@
 // whole HP. Mastery execution: the setup.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const GUARD = [25, 30, 35, 40]; const TURNS = 2; const CAP = 30; const COOLDOWN = 6; const HP_LINE = 50;
 
@@ -18,8 +19,8 @@ export default registerClashAbility({
     chooseAction(api, self) {
       if (!api.ready(self)) return null; const me = api.me(self);
       if (me.hp * 100 <= HP_LINE * me.maxHp) return null;
-      if (me.status) return unmet({ condition: 'no status', detail: `${me.status.id}: ordinary attack, readiness kept` });
-      api.activate(self, `Guarded ${byTier(GUARD, self.tier)}% with a ${CAP}% per-hit cap`); api.cooldown(self, COOLDOWN); api.executed(self); self.state.capStrength = byTier(GUARD, self.tier);
+      if (me.status) return unmet({ condition: $E('clashlog.no_status'), detail: `${$E('clashlog.ordinary_attack_readiness_kept', { id: me.status.id })}` });
+      api.activate(self, `${$E('clashlog.guarded_with_a_per_hit_cap', { byTier: byTier(GUARD, self.tier), cap: CAP })}`); api.cooldown(self, COOLDOWN); api.executed(self); self.state.capStrength = byTier(GUARD, self.tier);
       api.applyStatus(self, self.id, { id: 'guarded', strength: byTier(GUARD, self.tier), duration: TURNS, payload: { pct: byTier(GUARD, self.tier), temperedCap: self.id } });
       return { kind: 'done' };
     },

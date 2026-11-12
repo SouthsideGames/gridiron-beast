@@ -9,6 +9,7 @@
 import { registerClashAbility } from '../t8/registry.js';
 import { mindMendDonation } from '../t8/apportion.js';
 import { byTier, byStage, injured, lowestHpPct, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const BASE = [10, 15]; const BONUS = [0, 2, 4, 6]; const COOLDOWN = 4;
 
@@ -22,11 +23,11 @@ export default registerClashAbility({
       const t = lowestHpPct(api.allies(self).filter((v) => v.id !== self.id && injured(v))); if (!t) return null;
       const me = api.me(self); const pctV = byStage(BASE, self.stage) + byTier(BONUS, self.tier);
       const d = mindMendDonation({ sourceHp: me.hp, sourceMaxHp: me.maxHp, pct: pctV, targetHp: t.hp, targetMaxHp: t.maxHp, healFactor: api.healFactor(t.id) });
-      if (!d) return unmet({ condition: 'an affordable positive donation', detail: `source ${me.hp} HP; ${t.name} missing ${t.maxHp - t.hp}` });
-      api.activate(self, `donate ${d.donation} HP to ${t.name} (gain ${d.gain}${d.lost ? `, ${d.lost} lost to Healing Reduced` : ''})`, { targetId: t.id });
+      if (!d) return unmet({ condition: $E('clashlog.an_affordable_positive_donation'), detail: `${$E('clashlog.source_hp_missing', { hp: me.hp, name: t.name, hp2: t.maxHp - t.hp })}` });
+      api.activate(self, `${$E('clashlog.donate_hp_to_gain', { donation: d.donation, name: t.name, gain: d.gain })}${d.lost ? `${$E('clashlog.lost_to_healing_reduced', { lost: d.lost })}` : ''})`, { targetId: t.id });
       api.cooldown(self, COOLDOWN); api.executed(self);
-      api.setHp(self, self.id, me.hp - d.donation, `Mind Mend donation of ${d.donation}`);
-      api.setHp(self, t.id, t.hp + d.gain, `Mind Mend credit of ${d.credit}${d.lost ? ` (${d.lost} lost)` : ''}`);
+      api.setHp(self, self.id, me.hp - d.donation, `${$E('clashlog.mind_mend_donation_of', { donation: d.donation })}`);
+      api.setHp(self, t.id, t.hp + d.gain, `${$E('clashlog.mind_mend_credit_of', { credit: d.credit })}${d.lost ? ` ${$E('clashlog.lost', { lost: d.lost })}` : ''}`);
       api.notifyHealed(self, t.id, d.gain, 'donation');
       return { kind: 'done' };
     },

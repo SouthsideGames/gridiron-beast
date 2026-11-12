@@ -10,6 +10,7 @@
 // Divide). P9 diagnostic: two constructs per battle. Mastery execution: the summon.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, isNormal, SPAR } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const BOLT = [40, 50, 60, 70]; const GUARDS = 2;
 
@@ -21,7 +22,7 @@ export default registerClashAbility({
     chooseAction(api, self) {
       const st = self.state; if (st.summoned) return null;
       st.summoned = true; st.guards = GUARDS; api.construct(self, GUARDS);
-      api.activate(self, 'two guards summoned instead of the normal action'); api.executed(self);
+      api.activate(self, $E('clashlog.two_guards_summoned_instead_of_the')); api.executed(self);
       return { kind: 'done' };
     },
     followUp(api, self, info) {
@@ -30,13 +31,13 @@ export default registerClashAbility({
       if (hp <= 0) return; // a miss or full absorption keeps the guard
       const me = api.me(self); const t = api.get(info.targetId);
       if (me.koed) return;
-      if (me.stunned) { api.cleanup(self, 'Stunned after the retaliation: the guard is kept'); return; }
-      if (t.koed || !t.active || t.side === self.side) { api.cleanup(self, 'the target is gone: the guard is kept (no redirect)'); return; }
+      if (me.stunned) { api.cleanup(self, $E('clashlog.stunned_after_the_retaliation_the_guard')); return; }
+      if (t.koed || !t.active || t.side === self.side) { api.cleanup(self, $E('clashlog.the_target_is_gone_the_guard')); return; }
       st.guards -= 1; api.construct(self, -1);
-      api.activate(self, `a guard bolts ${t.name} (${st.guards} left)`, { targetId: t.id });
-      api.strike(self, t.id, { tag: 'followUp', mult: byTier(BOLT, self.tier) / 100, strikeKey: 'bolt', label: 'Twin Thunder bolt' });
+      api.activate(self, `${$E('clashlog.a_guard_bolts_left', { name: t.name, guards: st.guards })}`, { targetId: t.id });
+      api.strike(self, t.id, { tag: 'followUp', mult: byTier(BOLT, self.tier) / 100, strikeKey: 'bolt', label: $E('clashlog.twin_thunder_bolt') });
     },
-    onKO(api, self) { if (self.state.guards) { api.construct(self, -self.state.guards); self.state.guards = 0; api.cleanup(self, 'Voltarch\'s knockout removes its guards'); } },
+    onKO(api, self) { if (self.state.guards) { api.construct(self, -self.state.guards); self.state.guards = 0; api.cleanup(self, $E('clashlog.voltarchs_knockout_removes_its_guards')); } },
   },
   review: {
     scenarios: [

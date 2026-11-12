@@ -11,6 +11,7 @@
 import { registerClashAbility } from '../t8/registry.js';
 import { perkTag } from '../t8/flags.js';
 import { byTier, unmet, perkGate } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const MULT = [1.5, 1.75, 2, 2.25]; const POWER = 120; const COOLDOWN = 5;
 const SHIELD = { id: 'shielded', strength: 60, duration: 5 };
@@ -22,10 +23,10 @@ export default registerClashAbility({
   hooks: {
     chooseAction(api, self, { foeId }) {
       if (!foeId || !api.ready(self)) return null; const f = api.get(foeId);
-      if (f.status?.id !== 'shielded' || !(f.status.payload?.remaining > 0)) return unmet({ condition: 'enemy active Shielded with a positive pool', detail: 'ordinary attack, readiness kept' });
+      if (f.status?.id !== 'shielded' || !(f.status.payload?.remaining > 0)) return unmet({ condition: $E('clashlog.enemy_active_shielded_with_a_positive'), detail: $E('clashlog.ordinary_attack_readiness_kept_2') });
       const g = perkGate(api, self, foeId, perkTag('MET-04-C')); if (!g.ok) return null;
-      api.activate(self, `bite at ${POWER}% with shield multiplier ${byTier(MULT, self.tier)}`, { targetId: foeId }); api.cooldown(self, COOLDOWN); api.executed(self);
-      return { kind: 'attack', tag: g.tag, mult: POWER / 100, strikeKey: 'bite', label: 'Iron Bite' };
+      api.activate(self, `${$E('clashlog.bite_at_with_shield_multiplier', { power: POWER, byTier: byTier(MULT, self.tier) })}`, { targetId: foeId }); api.cooldown(self, COOLDOWN); api.executed(self);
+      return { kind: 'attack', tag: g.tag, mult: POWER / 100, strikeKey: 'bite', label: $E('clashlog.iron_bite') };
     },
     shieldRule(api, self, info) { return info.abilityId === 'MET-04-C' ? { mult: byTier(MULT, self.tier) } : null; },
   },

@@ -8,6 +8,7 @@
 import { registerClashAbility } from '../t8/registry.js';
 import { perkTag } from '../t8/flags.js';
 import { byTier, perkGate } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [115, 125, 135, 145]; const THRESHOLD = 35;
 const SHIELD = { id: 'shielded', strength: 5, duration: 2 };
@@ -21,9 +22,9 @@ export default registerClashAbility({
       if (!foeId) return null; const f = api.get(foeId);
       if (f.hp * 100 >= THRESHOLD * f.maxHp) return null; // the ordinary attack; nothing to report (a passive condition)
       const g = perkGate(api, self, foeId, perkTag('LIG-05-C')); if (!g.ok) return null;
-      api.trigger(self, `${f.name} is below ${THRESHOLD}% HP at commit`, { targetId: foeId });
-      api.activate(self, `${byTier(POWER, self.tier)}% conditional attack`, { targetId: foeId }); api.executed(self, { passive: true });
-      return { kind: 'attack', tag: g.tag, mult: byTier(POWER, self.tier) / 100, strikeKey: 'conditional attack', label: 'Radiant Pursuit' };
+      api.trigger(self, `${$E('clashlog.is_below_hp_at_commit', { name: f.name, threshold: THRESHOLD })}`, { targetId: foeId });
+      api.activate(self, `${$E('clashlog.conditional_attack', { byTier: byTier(POWER, self.tier) })}`, { targetId: foeId }); api.executed(self, { passive: true });
+      return { kind: 'attack', tag: g.tag, mult: byTier(POWER, self.tier) / 100, strikeKey: 'conditional attack', label: $E('clashlog.radiant_pursuit') };
     },
   },
   review: {

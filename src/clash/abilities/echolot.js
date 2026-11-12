@@ -8,6 +8,7 @@
 // rotation; it clears on knockout and at the Clash end. Balanced: the ordinary-only perk question is moot. Mastery execution: the launch.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const FACTOR = [35, 50, 65, 80]; const CAP = 15; const COOLDOWN = 5;
 
@@ -19,14 +20,14 @@ export default registerClashAbility({
     afterWholeAttack(api, self, info) {
       const att = api.get(info.attackerId); if (!att || att.side === self.side || info.tag === 'dot') return;
       let last = null; for (const h of info.hits) { const loss = h.losses?.[self.id] ?? 0; if (loss > 0 && !h.transferred?.includes(self.id)) last = loss; }
-      if (last != null) { self.state.memory = last; api.log(self, 'ability_progress', `${self.name}: Echo Strike remembers ${last} HP`, { memory: last, stage: 'trigger' }); }
+      if (last != null) { self.state.memory = last; api.log(self, 'ability_progress', `${$E('clashlog.echo_strike_remembers_hp', { name: self.name, last })}`, { memory: last, stage: 'trigger' }); }
     },
     chooseAction(api, self, { foeId }) {
       if (!foeId || !api.ready(self) || !self.state.memory) return null;
       const f = api.get(foeId); const bonus = Math.min((self.state.memory * byTier(FACTOR, self.tier)) / 100, (f.maxHp * CAP) / 100);
-      api.activate(self, `echo of ${self.state.memory} HP: +${bonus.toFixed(2)} raw (cap ${CAP}% of ${f.name}'s max HP)`, { targetId: foeId, memory: self.state.memory, bonus });
+      api.activate(self, `${$E('clashlog.echo_of_hp_raw_cap_of', { memory: self.state.memory, toFixed: bonus.toFixed(2), cap: CAP, name: f.name })}`, { targetId: foeId, memory: self.state.memory, bonus });
       self.state.pendingBonus = bonus; self.state.memory = 0; api.cooldown(self, COOLDOWN); api.executed(self);
-      return { kind: 'attack', tag: 'special', mult: 1, strikeKey: 'enhanced normal attack', label: 'Echo Strike' };
+      return { kind: 'attack', tag: 'special', mult: 1, strikeKey: 'enhanced normal attack', label: $E('clashlog.echo_strike') };
     },
     rawModifiers(api, self, info) { if (info.abilityId !== 'PSY-04-C' || !self.state.pendingBonus) return null; const add = self.state.pendingBonus; self.state.pendingBonus = 0; return { add }; },
     onKO(api, self) { self.state.memory = 0; self.state.pendingBonus = 0; },

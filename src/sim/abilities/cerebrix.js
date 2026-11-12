@@ -18,6 +18,7 @@
 // at the snap is the live activation (gated after the mark: readiness kept); cooldown only.
 import { registerAbility } from './registry.js';
 import { positionOf } from '../../data/personnel.js';
+import { E as $E } from '../../core/english.js';
 
 export const FORESIGHT = Object.freeze({ chance: 0.5, awarenessPct: 20, depth: 3 });
 const COOLDOWN = [6, 5, 4, 3];
@@ -40,7 +41,7 @@ export default registerAbility({
       st.cd = COOLDOWN[self.mastery] ?? COOLDOWN[0]; st.fresh = true; ctx.executed(self);
       const hit = ctx.rng.chance(FORESIGHT.chance);
       const res = hit ? ctx.applyStatus(mark, { id: 'confused', strength: FORESIGHT.awarenessPct, duration: 0, restOfPlay: true, source: self, abilityId: 'PSY-03-F' }) : null;
-      ctx.log(`${self.name}'s Foresight ${hit ? (res.accepted ? 'confuses' : 'cannot confuse') : 'misses'} ${mark.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'PSY-03-F', victim: mark.slot, roll: hit, accepted: !!res?.accepted });
+      ctx.log(`${$E('sim.s_foresight', { name: self.name, hit: hit ? (res.accepted ? 'confuses' : 'cannot confuse') : 'misses', name2: mark.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'PSY-03-F', victim: mark.slot, roll: hit, accepted: !!res?.accepted });
     },
     playEnd(ctx, self) {
       const st = ctx.state(self); if (self.team !== 'off' || ctx.kickoff || ctx.twoPoint) return;

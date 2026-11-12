@@ -15,6 +15,7 @@
 // push is the live activation (gated once: denied, no absorption this play and the cooldown untouched); cooldown only.
 import { registerAbility } from './registry.js';
 import { scrimmage, byMastery } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const ANCHOR = Object.freeze({ allowance: [0.5, 0.75, 1, 1.25], cooldown: [5, 4, 3, 2] });
 
@@ -32,13 +33,13 @@ export default registerAbility({
       if (!A.spent && !ctx.canStartSignature(self)) { A.armed = false; return undefined; } // denied: no absorption this play, the cooldown untouched
       const move = push * ctx.dt, take = Math.min(move, A.budget); A.budget -= take; A.absorbed += take;
       if (!A.spent) { A.spent = true; const st = ctx.state(self); st.cd = byMastery(ANCHOR.cooldown, self.mastery); ctx.executed(self);
-        ctx.log(`${self.name}'s Anchor Plate drops`, { kind: 'ability', by: self.slot, side: self.team, ability: 'MET-01-F', victim: d.slot }); }
+        ctx.log(`${$E('sim.s_anchor_plate_drops', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'MET-01-F', victim: d.slot }); }
       return (move - take) / ctx.dt;
     },
     playEnd(ctx, self) {
       const A = self.plate; if (self.team !== 'off' || !scrimmage(ctx)) return; const st = ctx.state(self);
       if (st.cd > 0 && !A?.spent) st.cd -= 1; // subsequent offensive plays; the spending play excluded
-      if (A?.spent) ctx.log(`${self.name}'s Anchor Plate absorbed ${A.absorbed.toFixed(2)} yd`, { kind: 'ability_end', by: self.slot, side: self.team, ability: 'MET-01-F', absorbed: +A.absorbed.toFixed(3) });
+      if (A?.spent) ctx.log(`${$E('sim.s_anchor_plate_absorbed_yd', { name: self.name, toFixed: A.absorbed.toFixed(2) })}`, { kind: 'ability_end', by: self.slot, side: self.team, ability: 'MET-01-F', absorbed: +A.absorbed.toFixed(3) });
     },
   },
 });

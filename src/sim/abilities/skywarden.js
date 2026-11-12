@@ -20,6 +20,7 @@
 // (gated).
 import { registerAbility } from './registry.js';
 import { byMastery, able, pushSafely } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const PBUS = 3, RANGE = 8;
 export const PUSH = [5, 6.5, 8, 10]; // yards by mastery
@@ -38,7 +39,7 @@ export default registerAbility({
       const [m] = pushSafely({ actors: ctx.actors, movers: [r], ux, uy, distance: byMastery(PUSH, self.mastery), bounds: ctx.bounds, obstacles: ctx.obstacles() });
       ctx.ball.x = r.x; ctx.ball.y = r.y; // the ball moves with the carrier
       ctx.state(self).charges = 0; ab.fired = true; ctx.executed(self);
-      ctx.log(`${self.name}'s Air Brake drives ${r.name} back`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WIN-03-F', victim: r.slot, dir: [+ux.toFixed(3), +uy.toFixed(3)], from: m.from.map((v) => +v.toFixed(2)), to: m.to.map((v) => +v.toFixed(2)) });
+      ctx.log(`${$E('sim.s_air_brake_drives_back', { name: self.name, name2: r.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WIN-03-F', victim: r.slot, dir: [+ux.toFixed(3), +uy.toFixed(3)], from: m.from.map((v) => +v.toFixed(2)), to: m.to.map((v) => +v.toFixed(2)) });
     },
     playEnd(ctx, self) {
       const st = ctx.state(self); if (self.team !== 'def' || ctx.twoPoint || self.ab?.fired) return;

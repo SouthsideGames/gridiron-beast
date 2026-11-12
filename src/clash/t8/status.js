@@ -22,6 +22,7 @@
 //    an explicit replacement such as Mountain Shelter starts a fresh episode).
 import { STATUS, MAX_APPLICATIONS, tryApply, endOfUnit, transfer } from '../../sim/t8/status.js';
 import { roundHalfUp } from './arith.js';
+import { E as $E } from '../../core/english.js';
 
 export { STATUS, MAX_APPLICATIONS };
 
@@ -148,7 +149,7 @@ export function absorb(slot, amount, breakMult = 1) {
 
 /** Ordinary cleanse (spec §10): removes a harmful status only; an uncleansable payload (Faultline) refuses. */
 export function cleanse(slot) {
-  if (!slot) return { slot: null, removed: false, reason: 'no status' };
+  if (!slot) return { slot: null, removed: false, reason: $E('clashlog.no_status') };
   if (STATUS[slot.id].kind !== 'harmful') return { slot, removed: false, reason: 'ordinary cleanse removes harmful statuses only' };
   if (slot.payload?.uncleansable) return { slot, removed: false, reason: 'uncleansable' };
   return { slot: null, removed: true, reason: 'cleansed' };
@@ -160,7 +161,7 @@ export function cleanse(slot) {
  * that explicit permission may use this. `overridesUncleansable` must be set by the caller when its approval says so.
  */
 export function replaceWith(slot, attempt, { recipientInTurn = false, overridesUncleansable = false } = {}) {
-  if (slot?.payload?.uncleansable && !overridesUncleansable) return { slot, accepted: false, reason: 'uncleansable status is not overridden by this source' };
+  if (slot?.payload?.uncleansable && !overridesUncleansable) return { slot, accepted: false, reason: $E('clashlog.uncleansable_status_is_not_overridden_by') };
   return applyClash(null, attempt, { recipientInTurn });
 }
 

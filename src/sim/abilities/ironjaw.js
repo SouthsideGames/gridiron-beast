@@ -17,6 +17,7 @@
 // (gated).
 import { registerAbility } from './registry.js';
 import { scrimmage, byMastery } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const BALL_CLAMP = Object.freeze({ factor: [0.25, 0.40, 0.55, 0.70] });
 
@@ -31,13 +32,13 @@ export default registerAbility({
       if (!ctx.canStartSignature(self)) return undefined; // denied: the token is kept
       st.token = false; self.clamp.spent = true; ctx.executed(self);
       const p = fumbleP * byMastery(BALL_CLAMP.factor, self.mastery); const fumble = ctx.rng.chance(p);
-      ctx.log(`${self.name}'s Ball Clamp snaps at the ball${fumble ? ' and jars it loose' : ''}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'MET-04-F', victim: c.slot, p, fumble, x: +c.x.toFixed(2), y: +c.y.toFixed(2) });
+      ctx.log(`${$E('sim.s_ball_clamp_snaps_at_the', { name: self.name, fumble: fumble ? $E('sim.and_jars_it_loose') : '' })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'MET-04-F', victim: c.slot, p, fumble, x: +c.x.toFixed(2), y: +c.y.toFixed(2) });
       return { fumble };
     },
     playEnd(ctx, self, s) {
       if (self.team !== 'def' || !scrimmage(ctx) || self.clamp?.spent) return; // cannot earn and spend on the same play
       const st = ctx.state(self);
-      if (!st.token && s.result === 'sack' && ctx.stats.tackler === self.slot && ctx.canGainCharge(self)) { st.token = true; ctx.log(`${self.name} earns a Ball Clamp`, { kind: 'ability_charge', by: self.slot, side: self.team, ability: 'MET-04-F' }); }
+      if (!st.token && s.result === 'sack' && ctx.stats.tackler === self.slot && ctx.canGainCharge(self)) { st.token = true; ctx.log(`${$E('sim.earns_a_ball_clamp', { name: self.name })}`, { kind: 'ability_charge', by: self.slot, side: self.team, ability: 'MET-04-F' }); }
     },
   },
 });

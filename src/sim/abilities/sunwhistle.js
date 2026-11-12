@@ -17,6 +17,7 @@
 // game hook (out of play: not gated).
 import { registerAbility } from './registry.js';
 import { able, stageOf, byMastery } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const QUICKENED = Object.freeze({ byForm: [15, 20], byMastery: [0, 3, 6, 9] });
 export const dawnSignalPct = (form, mastery) => (QUICKENED.byForm[stageOf(form)] ?? QUICKENED.byForm[0]) + byMastery(QUICKENED.byMastery, mastery);
@@ -27,7 +28,7 @@ export default registerAbility({
   game: {
     extraPoint(g, self, { good }) {
       if (!good) return; const st = g.state(self); if (st.pending) return; // max one pending
-      st.pending = true; g.log(`${self.name} banks a Dawn Signal for the next kickoff`, { by: self.mid, ability: 'LIG-02-F', banked: true });
+      st.pending = true; g.log(`${$E('sim.banks_a_dawn_signal_for_the', { name: self.name })}`, { by: self.mid, ability: 'LIG-02-F', banked: true });
     },
   },
   hooks: {
@@ -42,7 +43,7 @@ export default registerAbility({
       const pct = dawnSignalPct(self.form, self.mastery);
       const r = ctx.applyStatus(target, { id: 'quickened', strength: pct, duration: 0, restOfPlay: true, source: self, abilityId: 'LIG-02-F' });
       if (r.accepted) ctx.executed(self);
-      ctx.log(`${self.name}'s Dawn Signal ${r.accepted ? 'quickens' : 'cannot reach'} ${target.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-02-F', target: target.slot, accepted: r.accepted, pct, x: +target.x.toFixed(2), y: +target.y.toFixed(2) });
+      ctx.log(`${$E('sim.s_dawn_signal', { name: self.name, accepted: r.accepted ? 'quickens' : 'cannot reach', name2: target.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-02-F', target: target.slot, accepted: r.accepted, pct, x: +target.x.toFixed(2), y: +target.y.toFixed(2) });
     },
   },
 });

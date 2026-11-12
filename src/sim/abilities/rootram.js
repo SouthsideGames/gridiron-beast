@@ -14,6 +14,7 @@
 // first engagement is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, scrimmage, ready, spend, countPlay, disabled } from './nature-electric-common.js';
+import { E as $E } from '../../core/english.js';
 
 export default registerAbility({
   family: 'rootram', abilityId: 'NAT-03-F', repeatableCooldown: true,
@@ -25,11 +26,11 @@ export default registerAbility({
       r.tried = true; const st = ctx.state(self);
       if (!scrimmage(ctx) || !ready(st) || disabled(ctx, self) || !ctx.canStartSignature(self)) return;
       r.rooted = true; self.anchor = { x: self.x, y: self.y }; spend(st, byMastery(CD_5432, self.mastery)); ctx.executed(self);
-      ctx.log(`${self.name} sets Deep Roots`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-03-F', x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
+      ctx.log(`${$E('sim.sets_deep_roots', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-03-F', x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
     },
     shedAttempt(ctx, self, d) {
       const r = self.dr; if (!r?.rooted || r.guardUsed) return undefined;
-      r.guardUsed = true; ctx.log(`${self.name}'s roots hold against ${d.name}`, { kind: 'shed_prevented', by: self.slot, side: self.team, victim: d.slot, ability: 'NAT-03-F' });
+      r.guardUsed = true; ctx.log(`${$E('sim.s_roots_hold_against', { name: self.name, name2: d.name })}`, { kind: 'shed_prevented', by: self.slot, side: self.team, victim: d.slot, ability: 'NAT-03-F' });
       return { prevent: true };
     },
     playEnd(ctx, self) { self.anchor = null; countPlay(ctx, self, ctx.state(self), 'off'); },

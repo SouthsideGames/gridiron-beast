@@ -8,6 +8,7 @@
 // No reflection, healing or shield. Mastery execution: the cast.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const GUARD = [30, 35, 40, 45]; const TURNS = 2; const HP_LINE = 50;
 
@@ -20,8 +21,8 @@ export default registerClashAbility({
       if (self.state.used) return null;
       const allies = api.allies(self); const low = allies.filter((v) => v.hp * 100 <= HP_LINE * v.maxHp);
       if (!low.length) return null;
-      self.state.used = true; api.trigger(self, `${low.map((v) => v.name).join(', ')} at or below ${HP_LINE}% HP`); api.executed(self);
-      api.activate(self, `team Guarded ${byTier(GUARD, self.tier)}% for every living teammate, replacing any status`);
+      self.state.used = true; api.trigger(self, `${low.map((v) => v.name).join(', ')} ${$E('clashlog.at_or_below_hp', { hpLine: HP_LINE })}`); api.executed(self);
+      api.activate(self, `${$E('clashlog.team_guarded_for_every_living_teammate', { byTier: byTier(GUARD, self.tier) })}`);
       for (const v of allies) api.replaceStatus(self, v.id, { id: 'guarded', strength: byTier(GUARD, self.tier), duration: TURNS }, { overridesUncleansable: true });
       return { kind: 'done' };
     },

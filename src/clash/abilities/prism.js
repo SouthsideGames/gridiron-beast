@@ -8,6 +8,7 @@
 // The secondary is a contested Stone Divide target (PROVISIONAL_POINTS['stone-divide-scope']).
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const SECONDARY = [30, 40, 50, 60]; const EVERY = 3;
 
@@ -22,13 +23,13 @@ export default registerClashAbility({
       api.trigger(self, 'third performed normal attack', { targetId: foeId }); api.executed(self);
       self.state.count = -1;
       return { kind: 'run', run: (a, s) => {
-        const p = a.strike(s, foeId, { tag: 'special', mult: 1, strikeKey: 'primary', label: 'Refraction primary' });
+        const p = a.strike(s, foeId, { tag: 'special', mult: 1, strikeKey: 'primary', label: $E('clashlog.refraction_primary') });
         if (p.decided) return true;
         const secondaryId = p.redirected ? ownReserve : enemyReserve;
-        if (!p.landed) { a.cleanup(s, 'no secondary: the primary did not connect'); return false; }
-        if (!secondaryId || a.get(secondaryId).koed) { a.cleanup(s, 'no secondary: no living reserve captured at launch'); return false; }
-        a.activate(s, `secondary ${byTier(SECONDARY, s.tier)}% at ${a.get(secondaryId).name}${p.redirected ? ' (Confused: own side)' : ''}`, { targetId: secondaryId });
-        return a.strike(s, secondaryId, { tag: 'followUp', mult: byTier(SECONDARY, s.tier) / 100, strikeKey: 'secondary', label: 'Refraction secondary' }).decided;
+        if (!p.landed) { a.cleanup(s, $E('clashlog.no_secondary_the_primary_did_not')); return false; }
+        if (!secondaryId || a.get(secondaryId).koed) { a.cleanup(s, $E('clashlog.no_secondary_no_living_reserve_captured')); return false; }
+        a.activate(s, `${$E('clashlog.secondary_at', { byTier: byTier(SECONDARY, s.tier), name: a.get(secondaryId).name, redirected: p.redirected ? $E('clashlog.confused_own_side') : '' })}`, { targetId: secondaryId });
+        return a.strike(s, secondaryId, { tag: 'followUp', mult: byTier(SECONDARY, s.tier) / 100, strikeKey: 'secondary', label: $E('clashlog.refraction_secondary') }).decided;
       } };
     },
     afterWholeAttack(api, self, info) { if (info.attackerId === self.id && info.normal && info.inAction) self.state.count += 1; },

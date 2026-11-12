@@ -18,6 +18,7 @@
 // attempt is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { scrimmage, byMastery, cooldownStep } from './fw-util.js';
+import { E as $E } from '../../core/english.js';
 
 export const TOUCH = Object.freeze({ cooldownByMastery: [5, 4, 3, 2] });
 
@@ -30,7 +31,7 @@ export default registerAbility({
       if (self.team !== 'off' || !scrimmage(ctx) || self.touch.used || ctx.state(self).cd > 0) return undefined;
       if (!ctx.canStartSignature(self)) return undefined;
       self.touch.used = true; ctx.state(self).cd = byMastery(TOUCH.cooldownByMastery, self.mastery); ctx.executed(self);
-      ctx.log(`${self.name} bobbles it and reaches again`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-04-F' });
+      ctx.log(`${$E('sim.bobbles_it_and_reaches_again', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-04-F' });
       return { retry: true };
     },
     playEnd(ctx, self) { if (self.team !== 'off' || !scrimmage(ctx)) return; cooldownStep(ctx.state(self), !!self.touch?.used); },

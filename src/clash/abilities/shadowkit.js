@@ -11,6 +11,7 @@ import { registerClashAbility } from '../t8/registry.js';
 import { approvedValues } from '../../data/beast-dex.js';
 import { shadowPounceDodgePct } from '../../data/approved-values.js';
 import { byTier, byStage, isNormal } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const COUNTER = [70, 80]; const BONUS = [0, 5, 10, 15]; const DODGE = approvedValues('DAR-01-C').dodgePctByStage;
 
@@ -21,21 +22,21 @@ export default registerClashAbility({
   hooks: {
     missCheck(api, self, info) {
       const st = self.state; const me = api.me(self);
-      if (st.rolled && st.rolled.seq === info.attackSeq) return st.rolled.miss ? { miss: true, source: 'Shadow Pounce dodge', abilityId: 'DAR-01-C' } : null;
+      if (st.rolled && st.rolled.seq === info.attackSeq) return st.rolled.miss ? { miss: true, source: $E('clashlog.shadow_pounce_dodge'), abilityId: 'DAR-01-C' } : null;
       if (st.used || !me.active || me.stunned || !isNormal(info.tag) || api.get(info.attacker).side === self.side) return null;
       const pctV = shadowPounceDodgePct(self.form, st.used); if (!pctV) return null;
-      const miss = api.rng.chance(pctV / 100, self, 'Shadow Pounce dodge'); st.rolled = { seq: info.attackSeq, miss };
-      return miss ? { miss: true, source: 'Shadow Pounce dodge', abilityId: 'DAR-01-C' } : null;
+      const miss = api.rng.chance(pctV / 100, self, $E('clashlog.shadow_pounce_dodge')); st.rolled = { seq: info.attackSeq, miss };
+      return miss ? { miss: true, source: $E('clashlog.shadow_pounce_dodge'), abilityId: 'DAR-01-C' } : null;
     },
     afterWholeAttack(api, self, info) {
       const st = self.state; const me = api.me(self); if (st.used || !me.active || me.koed) return;
       const att = api.get(info.attackerId); if (!att || att.side === self.side || !isNormal(info.tag) || !info.inAction || info.redirected) return;
       if (!info.allMissed || !info.hits.length || !info.hits.every((h) => h.targetId === self.id)) return;
-      if (me.stunned) { api.cleanup(self, 'unable at the reaction point: the counter use is kept'); return; }
-      if (att.koed || !att.active) { api.cleanup(self, 'the attacker is no longer active: no counter, the use is kept'); return; }
+      if (me.stunned) { api.cleanup(self, $E('clashlog.unable_at_the_reaction_point_the')); return; }
+      if (att.koed || !att.active) { api.cleanup(self, $E('clashlog.the_attacker_is_no_longer_active')); return; }
       st.used = true; const pctV = byStage(COUNTER, self.stage) + byTier(BONUS, self.tier);
-      api.trigger(self, 'the whole attack missed'); api.activate(self, `counter at ${pctV}%`, { targetId: att.id }); api.executed(self);
-      api.strike(self, att.id, { tag: 'counter', mult: pctV / 100, strikeKey: 'counter', label: 'Shadow Pounce' });
+      api.trigger(self, $E('clashlog.the_whole_attack_missed')); api.activate(self, `${$E('clashlog.counter_at', { pctV })}`, { targetId: att.id }); api.executed(self);
+      api.strike(self, att.id, { tag: 'counter', mult: pctV / 100, strikeKey: 'counter', label: $E('clashlog.shadow_pounce') });
     },
   },
   review: {

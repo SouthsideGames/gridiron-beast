@@ -21,6 +21,7 @@
 // the field (not an in-play gain): not gated.
 import { registerAbility } from './registry.js';
 import { scrimmage } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const DAYBREAK = Object.freeze({ charges: 2 });
 const conceded = (t8, side) => (t8?.touchdowns?.[side === 'home' ? 'away' : 'home'] || 0);
@@ -47,7 +48,7 @@ export default registerAbility({
       if (!ctx.canStartSignature(self)) return; // denied: both charges are kept
       st.mark = conceded(ctx.t8, ctx.teamSide); ctx.executed(self); // both charges spent
       const others = ctx.actors.filter((a) => a !== self); for (const a of others) blind(ctx, a);
-      ctx.log(`${self.name}'s Daybreak flares`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-06-F', affected: others.map((a) => `${a.team}:${a.slot}`), x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
+      ctx.log(`${$E('sim.s_daybreak_flares', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-06-F', affected: others.map((a) => `${a.team}:${a.slot}`), x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
     },
   },
 });

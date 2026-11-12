@@ -19,6 +19,7 @@ import { prismBreak } from './abilities/prism.js';
 import * as ST from './special-teams.js';
 import { recordPerformance, mergePerformance } from './t8/performance.js';
 import { showBattery } from './t8/stamina.js';
+import { E as $E, lineOf as $lineOf } from '../core/english.js';
 
 /**
  * Task 8 presentation snapshot (docs/task8/FX_FOOTBALL_MATRIX.md; spec §13 badge / charge / battery cycle): what the field shows over
@@ -83,8 +84,8 @@ export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER,
   const partners = kickoffPartners(home, away); if (partners) { state.partners = partners; state.partnerCredits = { home: {}, away: {} }; }
   // Task 8 M4 (spec §10): the opening Clash's end statuses carry into the game at kickoff, 1:1 for supported statuses (the caller
   // passes the Clash's football-shaped payloads; unsupported ones are dropped by the shared gate's transfer).
-  if (statusCarry && Object.keys(statusCarry).length) { T8S.carryInto(state, statusCarry, 'football'); for (const [mid, s] of Object.entries(state.t8.status)) log(state, `${mid} carries ${s.id} into the game (${s.remaining} play${s.remaining === 1 ? '' : 's'}).`, 'info', { status: s.id, mid, carried: true }); }
-  log(state, `${state[winner].name} wins the toss and elects to ${pick === 'defer' ? 'defer' : pick}.`, 'info');
+  if (statusCarry && Object.keys(statusCarry).length) { T8S.carryInto(state, statusCarry, 'football'); for (const [mid, s] of Object.entries(state.t8.status)) log(state, `${$E('sim.carries_into_the_game_plays', { mid, id: s.id, remaining: s.remaining, n: s.remaining })}`, 'info', { status: s.id, mid, carried: true }); }
+  log(state, `${$E('sim.wins_the_toss_and_elects_to', { name: state[winner].name, pick: pick === 'defer' ? 'defer' : pick })}`, 'info');
   return state;
 }
 
@@ -92,7 +93,7 @@ function teamInfo(t) { return { id: t.id, name: t.name, abbr: t.abbr || t.name.s
 export function blankStats() { return { plays: 0, yards: 0, passYards: 0, rushYards: 0, passAtt: 0, passComp: 0, sacks: 0, turnovers: 0, firstDowns: 0, td: 0, fg: 0, punts: 0, timeOfPossession: 0, players: {} }; }
 
 export function log(state, text, kind = 'play', extra = {}) {
-  state.log.push({ q: state.quarter, clock: state.clock, team: state.possession, text, kind, ...extra });
+  state.log.push({ q: state.quarter, clock: state.clock, team: state.possession, text, ...$lineOf(text), kind, ...extra });   // the same English as ever, plus which lines it is (src/core/english.js)
   if (state.log.length > 600) state.log.shift();
 }
 const rng = (state) => { const r = rngFromState(state.rngState); return { r, save: () => { state.rngState = r.state; } }; };
@@ -101,12 +102,12 @@ export const clockText = (s) => `${Math.floor(s / 60)}:${String(Math.max(0, Math
 export const quarterText = (state) => (state.quarter <= 4 ? `Q${state.quarter}` : `OT${state.quarter - 4}`);
 export function situationText(state) {
   if (state.phase === 'kickoff') return 'Kickoff';
-  if (state.phase === 'try') return 'Conversion attempt';
-  if (state.phase === 'free_kick') return 'Free kick after safety';
+  if (state.phase === 'try') return $E('sim.conversion_attempt');
+  if (state.phase === 'free_kick') return $E('sim.free_kick_after_safety');
   if (state.finished) return 'Final';
   const downs = ['1st', '2nd', '3rd', '4th'];
   const goal = state.ballOn + state.toGo >= 100;
-  return `${downs[state.down - 1]} & ${goal ? 'Goal' : state.toGo} · ${yardLabel(state.ballOn)}`;
+  return `${downs[state.down - 1]} & ${goal ? $E('sim.goal') : state.toGo} · ${yardLabel(state.ballOn)}`;
 }
 export const inTwoMinute = (state) => (state.quarter === 2 || state.quarter >= 4) && state.clock <= 120;
 
@@ -133,7 +134,7 @@ export function preSnapRunoff(state, tempo = 'normal') {
 export function timeout(state, side) {
   if (state.timeouts[side] <= 0 || state.finished) return false;
   state.timeouts[side] -= 1; state.clockRunning = false;
-  log(state, `Timeout, ${state[side].name} (${state.timeouts[side]} left).`, 'info');
+  log(state, `${$E('sim.timeout_left', { name: state[side].name, timeouts: state.timeouts[side] })}`, 'info');
   return true;
 }
 
@@ -360,7 +361,7 @@ export function preparePreChoice(state, teams, looks = {}) {
     recordExecution(t8, m.id, m.species);
     const removed = { kind: zone.kind, fields: zone.fields.map((f) => f.id), yard: zone.rect.yard, lat: zone.rect.lat };
     record.prism.push({ mid: m.id, slot, at: dp.align[slot], removed });
-    log(state, `${m.name}'s Prism Break shatters ${zone.kind === 'base' ? 'an enemy field' : 'a hybrid overlap'}`, 'ability', { ability: 'LIG-04-F', by: m.id, removed, preChoice: true });
+    log(state, `${$E('sim.s_prism_break_shatters', { name: m.name, kind: zone.kind === 'base' ? $E('sim.an_enemy_field') : $E('sim.a_hybrid_overlap') })}`, 'ability', { ability: 'LIG-04-F', by: m.id, removed, preChoice: true });
   }
   return record;
 }
@@ -484,16 +485,16 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
 
   switch (sim.result) {
     case 'incomplete': case 'throwaway':
-      lines.push(sim.result === 'throwaway' ? 'Throwaway.' : `Incomplete${sim.stats.target ? ' to ' + playerName(sim, 'off', sim.stats.target) : ''}.`);
+      lines.push(sim.result === 'throwaway' ? 'Throwaway.' : `${$E('sim.incomplete', { target: sim.stats.target ? ' to ' + playerName(sim, 'off', sim.stats.target) : '' })}`);
       stops = true; nextDown(state, 0, lines); break;
     case 'sack':
       S.sacks += 1; state.stats[def].sacks += 0;
-      lines.push(`Sacked by ${playerName(sim, 'def', sim.stats.tackler)} for ${gain} yards.`);
+      lines.push(`${$E('sim.sacked_by_for_yards', { player: playerName(sim, 'def', sim.stats.tackler), gain })}`);
       if (sim.endYard <= 0) { scored = safety(state, lines); break; }
       nextDown(state, gain, lines); break;
     case 'tackle': case 'out_of_bounds': {
-      const who = sim.stats.receiver ? `${playerName(sim, 'off', sim.stats.receiver)} catches it for ${gain}` : `${playerName(sim, 'off', sim.stats.carrier)} runs for ${gain}`;
-      lines.push(`${who}${sim.result === 'out_of_bounds' ? ', out of bounds' : sim.stats.tackler ? ', tackled by ' + playerName(sim, 'def', sim.stats.tackler) : ''}.`);
+      const who = sim.stats.receiver ? `${$E('sim.catches_it_for', { player: playerName(sim, 'off', sim.stats.receiver), gain })}` : `${$E('sim.runs_for', { player: playerName(sim, 'off', sim.stats.carrier), gain })}`;
+      lines.push(`${who}${sim.result === 'out_of_bounds' ? $E('sim.out_of_bounds') : sim.stats.tackler ? $E('sim.tackled_by') + playerName(sim, 'def', sim.stats.tackler) : ''}.`);
       if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else S.rushYards += gain;
       S.yards += gain; state.drive.yards += gain;
       if (sim.result === 'out_of_bounds' && inTwoMinute(state)) stops = true;
@@ -501,11 +502,11 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
     }
     case 'touchdown': {
       if (sim.stats.defensiveScore) {
-        lines.push(`${playerName(sim, 'def', sim.stats.interceptor || sim.stats.carrier)} returns it for a TOUCHDOWN!`);
+        lines.push(`${$E('sim.returns_it_for_a_touchdown', { player: playerName(sim, 'def', sim.stats.interceptor || sim.stats.carrier) })}`);
         S.turnovers += 1; stops = true;
         scored = touchdown(state, def, lines);
       } else {
-        lines.push(`${playerName(sim, 'off', sim.stats.carrier)} ${sim.stats.receiver ? 'catches' : 'runs'} it in. TOUCHDOWN!`);
+        lines.push(`${$E('sim.it_in_touchdown', { player: playerName(sim, 'off', sim.stats.carrier), receiver: sim.stats.receiver ? 'catches' : 'runs' })}`);
         if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else S.rushYards += gain;
         S.yards += gain; state.drive.yards += gain; stops = true;
         scored = touchdown(state, off, lines);
@@ -515,13 +516,13 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
     case 'interception': case 'fumble': case 'touchback_return': {
       S.turnovers += 1; stops = true;
       if (sim.result === 'fumble' && (sim.stats.receiver || sim.stats.carrier)) { if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else S.rushYards += gain; S.yards += gain; } // yards to the spot of the fumble still count
-      if (sim.result === 'interception' || sim.result === 'touchback_return') lines.push(`INTERCEPTED by ${playerName(sim, 'def', sim.stats.interceptor)}!`);
-      else lines.push(`FUMBLE forced by ${playerName(sim, 'def', sim.stats.forcedBy)}, recovered by the defense!`);
+      if (sim.result === 'interception' || sim.result === 'touchback_return') lines.push(`${$E('sim.intercepted_by', { player: playerName(sim, 'def', sim.stats.interceptor) })}`);
+      else lines.push(`${$E('sim.fumble_forced_by_recovered_by_the', { player: playerName(sim, 'def', sim.stats.forcedBy) })}`);
       if (sim.turnoverSpot == null && (sim.result === 'touchback_return' || sim.endYard >= 100)) { changePossession(state, FIELD.touchbackOther, lines, 'Touchback.'); }
       else changePossession(state, sim.turnoverSpot ?? clamp(100 - sim.endYard, 1, 99), lines); // M3 hook: an ability-awarded spot (Hoard Flight)
       break;
     }
-    case 'safety': { lines.push(`${playerName(sim, 'off', sim.stats.carrier)} is tackled in the end zone.`); if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else if (sim.stats.carrier) S.rushYards += gain; S.yards += gain; scored = safety(state, lines); stops = true; break; }
+    case 'safety': { lines.push(`${$E('sim.is_tackled_in_the_end_zone', { player: playerName(sim, 'off', sim.stats.carrier) })}`); if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else if (sim.stats.carrier) S.rushYards += gain; S.yards += gain; scored = safety(state, lines); stops = true; break; }
     default: lines.push(lastEvent); nextDown(state, gain, lines);
   }
   if (!scored && state.phase === 'scrimmage' && !state.finished) state.clockRunning = !stops;
@@ -536,7 +537,7 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
   return { text, scored, result: sim.result, yards: gain };
 }
 
-function playerName(sim, team, slot) { return slot ? (sim.names?.[team]?.[slot] || slot) : team === 'off' ? 'the offense' : 'the defense'; }
+function playerName(sim, team, slot) { return slot ? (sim.names?.[team]?.[slot] || slot) : team === 'off' ? $E('sim.the_offense') : $E('sim.the_defense'); }
 
 /**
  * Per-player stat lines for one scrimmage play (GDD §16). Keys are shared by the
@@ -618,10 +619,10 @@ function kickerStat(state, side, key, n = 1) { const p = (state.stats[side].play
 function nextDown(state, gain, lines) {
   state.ballOn = clamp(state.ballOn + gain, 1, 99);
   state.ballLat = 0;
-  if (gain >= state.toGo) { firstDown(state); lines.push('First down.'); state.stats[state.possession].firstDowns += 1; return; }
+  if (gain >= state.toGo) { firstDown(state); lines.push($E('sim.first_down')); state.stats[state.possession].firstDowns += 1; return; }
   state.toGo = Math.max(1, Math.round(state.toGo - gain));
   state.down += 1;
-  if (state.down > 4) { lines.push('Turnover on downs!'); changePossession(state, 100 - state.ballOn, lines); }
+  if (state.down > 4) { lines.push($E('sim.turnover_on_downs')); changePossession(state, 100 - state.ballOn, lines); }
 }
 function firstDown(state) { state.down = 1; state.toGo = Math.min(10, 100 - state.ballOn); }
 function changePossession(state, newBallOn, lines, note = null) {
@@ -632,7 +633,7 @@ function changePossession(state, newBallOn, lines, note = null) {
   state.clockRunning = false;
   state.drive = { team: state.possession, plays: 0, yards: 0, start: state.ballOn };
   if (note) lines.push(note);
-  lines.push(`${state[state.possession].name} ball at the ${yardLabel(state.ballOn).toLowerCase()}.`);
+  lines.push(`${$E('sim.ball_at_the', { name: state[state.possession].name, toLowerCase: yardLabel(state.ballOn).toLowerCase() })}`);
 }
 function touchdown(state, side, lines) {
   state.score[side] += 6; state.stats[side].td += 1;
@@ -645,7 +646,7 @@ function touchdown(state, side, lines) {
 function safety(state, lines) {
   const scoringSide = opponent(state.possession);
   state.score[scoringSide] += 2;
-  lines.push(`SAFETY! ${state[scoringSide].name} ${state.score.home}-${state.score.away}.`);
+  lines.push(`${$E('sim.safety', { name: state[scoringSide].name, home: state.score.home, away: state.score.away })}`);
   // The team that conceded free-kicks from its own 20; the scoring team receives.
   state.phase = 'free_kick'; state.kickingTeam = state.possession; state.clockRunning = false;
   return { team: scoringSide, points: 2, kind: 'safety' };
@@ -676,7 +677,7 @@ export function attemptTwoPoint(state, teams, offensePlayId, defensePlayId) {
   const good = sim.touchdown && !sim.stats.defensiveScore;
   if (good) state.score[state.tryTeam] += 2;
   { const bumpTwo = (slot) => { if (!slot) return; const p = (state.stats[state.tryTeam].players[slot] ||= {}); p.twoPtAtt = (p.twoPtAtt || 0) + 1; if (good) p.twoPt = (p.twoPt || 0) + 1; }; bumpTwo(sim.stats.passer); if (sim.stats.carrier && sim.stats.carrier !== sim.stats.passer) bumpTwo(sim.stats.carrier); }
-  const text = good ? 'Two-point conversion is GOOD!' : sim.stats.defensiveScore ? 'Conversion returned the other way, two points for the defense!' : 'Two-point conversion fails.';
+  const text = good ? $E('sim.two_point_conversion_is_good') : sim.stats.defensiveScore ? $E('sim.conversion_returned_the_other_way_two') : $E('sim.two_point_conversion_fails');
   if (sim.stats.defensiveScore) state.score[opponent(state.tryTeam)] += 2;
   finishTry(state, text);
   return { sim, good, text };
@@ -748,7 +749,7 @@ export function doKickoff(state, teams, { onside = false } = {}) {
   let res; let sim = null; let units = null;
   if (state.phase === 'free_kick') {
     res = ST.punt(r, { ballOn: 20, kicker: teams[kicking].kicker, returner: teams[receiving].returner, rushPressure: 0 });
-    res.text = 'Free kick: ' + res.text;
+    res.text = $E('sim.free_kick') + res.text;
   } else if (onside) res = ST.kickoff(r, { kicker: teams[kicking].kicker, returner: teams[receiving].returner, onside });
   else {
     // Live kickoff (N7b P7): the flight and the touchback come from the approved kicking formula; the return is played in the engine.
@@ -756,14 +757,14 @@ export function doKickoff(state, teams, { onside = false } = {}) {
     const target = Math.max(-9, 13 - 18 * Math.max(1, Math.min(99, teams[kicking].kicker?.attrs?.kicking ?? 60)) / 99);
     const flight = ST.kickoffFlight(r, { kicker: teams[kicking].kicker });
     kickerPerformance(state, kicking, 'kickoffs', [{ error: target <= 0 && flight.touchback ? 0 : Math.abs(flight.landingFromGoal - target), target }]);
-    if (flight.touchback) res = { touchback: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, live: true, text: 'Kickoff sails into the end zone. Touchback.' };
+    if (flight.touchback) res = { touchback: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, live: true, text: $E('sim.kickoff_sails_into_the_end_zone') };
     else {
       const seed = r.seed(); const catchAt = Math.max(-9, flight.landingFromGoal);
       const plays = kickoffPlays(units); const slots = { offense: units.ret, defense: units.coverage }; const view = snapView(state, (state.t8 ||= { status: {} }), slots, receiving === 'home'); // Task 8 presentation (data only)
       sim = simulatePlay({ offensePlay: plays.ret, defensePlay: plays.cov, offense: units.ret, defense: units.coverage, ballOn: KICK_SPOT, ballLat: 0, seed,
         options: { kickoff: { returner: units.returnerSlot, landing: [catchAt - KICK_SPOT, 0], hang: KICKOFF_HANG }, offenseSide: receiving, memory: abilityMemory(state, { drive: `ko@${state.playCount || 0}` }), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8: (state.t8 ||= { status: {} }) } });
       rememberAbilities(state, sim); sim.t8view = view;
-      res = kickoffOutcome(sim, catchAt, state[receiving].name, sim.names.off[units.returnerSlot] || 'The returner');
+      res = kickoffOutcome(sim, catchAt, state[receiving].name, sim.names.off[units.returnerSlot] || $E('sim.the_returner'));
     }
   }
   save();
@@ -776,7 +777,7 @@ export function doKickoff(state, teams, { onside = false } = {}) {
   else { state.possession = receiving; state.ballOn = res.ballOn; firstDown(state); }
   state.drive = { team: state.possession, plays: 0, yards: 0, start: state.ballOn };
   runClock(state, 5);
-  if (state.phase === 'scrimmage') lines.push(`${state[state.possession].name} ball at the ${yardLabel(state.ballOn).toLowerCase()}.`);
+  if (state.phase === 'scrimmage') lines.push(`${$E('sim.ball_at_the', { name: state[state.possession].name, toLowerCase: yardLabel(state.ballOn).toLowerCase() })}`);
   const text = lines.join(' ');
   state.lastPlay = { text, result: 'kickoff', ...(sim ? { seed: sim.seed, stats: sim.stats, kickResult: sim.result } : {}) };
   log(state, text, 'kick', { team: kicking, important: !!res.touchdown || !!res.kickingTouchdown || !!res.recoveredByKicking, ...(sim ? { result: sim.result, repro: `kickoff|${sim.ballOn}|${sim.seed}` } : {}) });
@@ -792,14 +793,14 @@ export function doKickoff(state, teams, { onside = false } = {}) {
 /** What a live kickoff's engine result means for the game (receiving team's yards unless noted). */
 function kickoffOutcome(sim, catchAt, team, who) {
   const end = sim.endYard; const ret = Math.round(end - catchAt);
-  if (sim.result === 'touchdown') return { touchdown: true, live: true, ballOn: 100, returnYards: Math.round(100 - catchAt), text: `${who} takes the kickoff back for a TOUCHDOWN!` };
+  if (sim.result === 'touchdown') return { touchdown: true, live: true, ballOn: 100, returnYards: Math.round(100 - catchAt), text: `${$E('sim.takes_the_kickoff_back_for_a', { who })}` };
   if (sim.result === 'fumble') { // the kicking team recovered: its ball at the spot, or its touchdown in the receiving end zone
-    if (end <= 0) return { kickingTouchdown: true, live: true, returnYards: ret, ballOn: 100, text: `${who} fumbles the kickoff in the end zone and the kicking team recovers. TOUCHDOWN!` };
-    return { recoveredByKicking: true, live: true, returnYards: ret, kickingBallOn: 100 - end, ballOn: end, text: `${who} fumbles the return and the kicking team recovers!` };
+    if (end <= 0) return { kickingTouchdown: true, live: true, returnYards: ret, ballOn: 100, text: `${$E('sim.fumbles_the_kickoff_in_the_end', { who })}` };
+    return { recoveredByKicking: true, live: true, returnYards: ret, kickingBallOn: 100 - end, ballOn: end, text: `${$E('sim.fumbles_the_return_and_the_kicking', { who })}` };
   }
-  if (sim.result === 'touchback' || end <= 0) return { touchback: true, live: true, returned: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, text: `${who} fields the kickoff in the end zone and is downed there. Touchback.` };
+  if (sim.result === 'touchback' || end <= 0) return { touchback: true, live: true, returned: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, text: `${$E('sim.fields_the_kickoff_in_the_end', { who })}` };
   const ballOn = clamp(Math.round(end), 1, 99);
-  return { touchback: false, live: true, ballOn, returnYards: ret, text: `${who} returns the kickoff ${ret} yards${sim.result === 'out_of_bounds' ? ', out of bounds' : sim.stats.tackler ? `, tackled by ${sim.names.def[sim.stats.tackler] || sim.stats.tackler}` : ''}.` };
+  return { touchback: false, live: true, ballOn, returnYards: ret, text: `${$E('sim.returns_the_kickoff_yards', { who, ret })}${sim.result === 'out_of_bounds' ? $E('sim.out_of_bounds') : sim.stats.tackler ? `${$E('sim.tackled_by_2', { def: sim.names.def[sim.stats.tackler] || sim.stats.tackler })}` : ''}.` };
 }
 /**
  * One live kickoff's stat lines. Everyone on either unit gets a special-teams snap (`stSnaps`: never snapsOff or snapsDef; a
@@ -892,7 +893,7 @@ export function doFieldGoal(state, teams, { signature = false } = {}) {
   if (sig?.available) {
     const k = teams[kicking].kicker; const c = contractOf(k.species); const good = r.chance(sig.chance);
     c.fieldGoal.spend(abilityState(state.t8, k.id, k.species, k.form || `${k.species}:0`, k.mastery || 0)); recordExecution(state.t8, k.id, k.species);
-    res = { distance: sig.distance, good, chance: sig.chance, signature: sig.abilityId, text: `${k.name || 'The kicker'}'s ${c.fieldGoal.label}: ${good ? `the field goal is GOOD from ${sig.distance} yards` : `the ${sig.distance}-yard kick is no good`}.` };
+    res = { distance: sig.distance, good, chance: sig.chance, signature: sig.abilityId, text: `${k.name || $E('sim.the_kicker')}'s ${c.fieldGoal.label}: ${good ? `${$E('sim.the_field_goal_is_good_from', { distance: sig.distance })}` : `${$E('sim.the_yard_kick_is_no_good', { distance: sig.distance })}`}.` };
   } else {
     res = ST.attemptFieldGoal(r, state.ballOn, teams[kicking].kicker);
     // M3 hook: a kicker contract on a missed check (Second Chance: one fresh ordinary check, same distance and conditions, same play)
@@ -931,10 +932,10 @@ export function kneel(state) {
   runClock(state, 3);
   state.ballOn = Math.max(1, state.ballOn - 1); state.down += 1; state.toGo += 1;
   state.clockRunning = true;
-  const lines = ['Quarterback kneels.'];
+  const lines = [$E('sim.quarterback_kneels')];
   if (state.down > 4) changePossession(state, 100 - state.ballOn, lines);
   // Victory formation: the clock is running, the defense has no timeouts, and less than one slow snap is left, nothing can stop it, so it runs out now.
-  else if (!state.ot && state.clock > 0 && state.clock <= RUNOFF.milk && state.timeouts[opponent(state.possession)] <= 0) { runClock(state, state.clock); lines.push(`The clock runs out: ${state.quarter >= 4 ? 'that is the game.' : 'end of the half.'}`); }
+  else if (!state.ot && state.clock > 0 && state.clock <= RUNOFF.milk && state.timeouts[opponent(state.possession)] <= 0) { runClock(state, state.clock); lines.push(`${$E('sim.the_clock_runs_out', { quarter: state.quarter >= 4 ? $E('sim.that_is_the_game') : $E('sim.end_of_the_half') })}`); }
   log(state, lines.join(' '), 'play');
   state.lastPlay = { text: lines.join(' '), result: 'kneel' };
   if (state.clock <= 0) endOfPeriod(state);
@@ -943,7 +944,7 @@ export function spike(state) {
   if (state.phase !== 'scrimmage') return;
   runClock(state, 2);
   state.down += 1; state.clockRunning = false;
-  const lines = ['Spike to stop the clock.'];
+  const lines = [$E('sim.spike_to_stop_the_clock')];
   if (state.down > 4) changePossession(state, 100 - state.ballOn, lines);
   log(state, lines.join(' '), 'play');
   state.lastPlay = { text: lines.join(' '), result: 'spike' };
@@ -963,8 +964,8 @@ export function endOfPeriod(state) {
     if (state.t8) T8F.halftime(state.t8); // Task 8 §11: non-legendary fields clear at halftime (pending creations carry)
     state.timeouts = { home: 3, away: 3 };
     state.phase = 'kickoff'; state.possession = state.secondHalfReceiver; state.kickingTeam = opponent(state.secondHalfReceiver);
-    log(state, `HALFTIME. ${state.home.abbr} ${state.score.home}-${state.score.away} ${state.away.abbr}. ${state[state.secondHalfReceiver].name} receive the second-half kickoff.`, 'period', { important: true });
-  } else log(state, `End of the ${state.quarter === 2 ? 'first' : 'third'} quarter.`, 'period');
+    log(state, `${$E('sim.halftime_receive_the_second_half_kickoff', { abbr: state.home.abbr, home: state.score.home, away: state.score.away, abbr2: state.away.abbr, name: state[state.secondHalfReceiver].name })}`, 'period', { important: true });
+  } else log(state, `${$E('sim.end_of_the_quarter', { quarter: state.quarter === 2 ? 'first' : 'third' })}`, 'period');
 }
 function finish(state, { tiebreak = false } = {}) {
   state.finished = true; state.phase = 'final'; state.clockRunning = false;
@@ -972,7 +973,7 @@ function finish(state, { tiebreak = false } = {}) {
   // Clash (the franchise's overtime Clash) takes the statuses and the stamina verdict with it, and clears them when it is applied.
   if (tiebreak) state.needsTiebreak = true; else T8S.atGameEnd(state);
   state.winner = state.score.home > state.score.away ? 'home' : state.score.away > state.score.home ? 'away' : null;
-  log(state, `FINAL: ${state.home.name} ${state.score.home}, ${state.away.name} ${state.score.away}.`, 'period', { important: true });
+  log(state, $E('sim.final', { home: state.home.name, homeScore: state.score.home, away: state.away.name, awayScore: state.score.away }), 'period', { important: true });
 }
 function startOvertime(state) {
   const { r, save } = rng(state);
@@ -980,7 +981,7 @@ function startOvertime(state) {
   save();
   state.ot = { period: 1, first, possessionsLeft: 2, scoreAtStart: { ...state.score } };
   state.quarter = 5; state.clock = 0; state.timeouts = { home: 1, away: 1 };
-  log(state, `OVERTIME. Each team gets a possession from the opponent 25. ${state[first].name} go first.`, 'period', { important: true });
+  log(state, `${$E('sim.overtime_each_team_gets_a_possession', { name: state[first].name })}`, 'period', { important: true });
   otPossession(state, first);
 }
 function otPossession(state, side) {
@@ -997,9 +998,9 @@ export function otAfterPossession(state) {
     return;
   }
   if (state.score.home !== state.score.away) { finish(state); return; }
-  if (state.otPeriods && ot.period >= state.otPeriods) { finish(state, { tiebreak: true }); log(state, 'Still tied after overtime. The game goes to a tiebreaker.', 'period', { important: true }); return; }
+  if (state.otPeriods && ot.period >= state.otPeriods) { finish(state, { tiebreak: true }); log(state, $E('sim.still_tied_after_overtime_the_game'), 'period', { important: true }); return; }
   ot.period += 1; ot.possessionsLeft = 2; ot.first = opponent(ot.first);
-  log(state, `Still tied, overtime period ${ot.period}.${ot.period >= 3 ? ' Two-point attempts only.' : ''}`, 'period');
+  log(state, `${$E('sim.still_tied_overtime_period', { period: ot.period, period2: ot.period >= 3 ? $E('sim.two_point_attempts_only') : '' })}`, 'period');
   state.quarter = 4 + ot.period;
   otPossession(state, ot.first);
 }

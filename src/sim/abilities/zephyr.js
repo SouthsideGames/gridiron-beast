@@ -18,6 +18,7 @@
 // signature, gated at the snap (denied: no target, nothing spent); no charge.
 import { registerAbility, contractOf } from './registry.js';
 import { byMastery, scrimmage, able, byLineup } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const RADIUS = [4, 5, 6, 7]; // yards by mastery
 export const COOLDOWN = 4;
@@ -37,7 +38,7 @@ export default registerAbility({
       const b = cands[0]; if (!b) return;
       if (!ctx.canStartSignature(self)) return; // denied: no target this play, nothing spent
       self.tw = { target: b }; // snapshot: never switched
-      ctx.log(`${self.name}'s Tailwind Huddle picks ${b.name}`, { kind: 'ability_target', by: self.slot, side: self.team, ability: 'WIN-05-F', victim: b.slot, radius: R });
+      ctx.log(`${$E('sim.s_tailwind_huddle_picks', { name: self.name, name2: b.name })}`, { kind: 'ability_target', by: self.slot, side: self.team, ability: 'WIN-05-F', victim: b.slot, radius: R });
     },
     playEnd(ctx, self) {
       const st = ctx.state(self); if (self.team !== 'off' || !scrimmage(ctx)) return;
@@ -46,7 +47,7 @@ export default registerAbility({
       ctx.afterWhistle(() => { // after every ordinary playEnd decrement
         const bs = ctx.state(b); if (!(bs.cd > 0)) return; // already ready: nothing to remove, nothing spent
         bs.cd -= 1; st.cd = COOLDOWN; ctx.executed(self, { passive: true });
-        ctx.log(`${self.name}'s Tailwind Huddle speeds ${b.name}'s recharge`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WIN-05-F', victim: b.slot, cd: bs.cd });
+        ctx.log(`${$E('sim.s_tailwind_huddle_speeds_s_recharge', { name: self.name, name2: b.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WIN-05-F', victim: b.slot, cd: bs.cd });
       });
     },
   },

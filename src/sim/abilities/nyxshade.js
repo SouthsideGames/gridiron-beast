@@ -16,6 +16,7 @@
 // release is the live activation (gated: the bar is preserved); pass-breakup charges are in-play charge gains (gated).
 import { registerAbility } from './registry.js';
 import { byMastery, able, byLineup } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const PBUS = 2, PARTNER_RADIUS = 3;
 export const MAX_SWAP = [8, 10, 12, 14]; // yards by mastery
@@ -45,7 +46,7 @@ export default registerAbility({
       const a = [self.x, self.y], b = [d.x, d.y];
       self.x = b[0]; self.y = b[1]; d.x = a[0]; d.y = a[1]; // simultaneous exchange; velocities and assignments untouched
       ctx.state(self).charges = 0; sx.fired = true; ctx.executed(self);
-      ctx.log(`${self.name}'s Shadow Exchange swaps places with ${d.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DAR-06-F', partner: d.slot, from: a.map((v) => +v.toFixed(2)), to: b.map((v) => +v.toFixed(2)) });
+      ctx.log(`${$E('sim.s_shadow_exchange_swaps_places_with', { name: self.name, name2: d.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DAR-06-F', partner: d.slot, from: a.map((v) => +v.toFixed(2)), to: b.map((v) => +v.toFixed(2)) });
     },
     playEnd(ctx, self) {
       const st = ctx.state(self); if (self.team !== 'def' || ctx.twoPoint || self.sx?.fired) return;

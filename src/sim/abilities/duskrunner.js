@@ -17,6 +17,7 @@
 // cooldown only.
 import { registerAbility } from './registry.js';
 import { byMastery, scrimmage, able } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const YARDS = [5, 4, 3, 2]; // by mastery
 export const COOLDOWN = 5;
@@ -33,7 +34,7 @@ export default registerAbility({
       if (self.x < byMastery(YARDS, self.mastery)) return;
       if (!ctx.canStartSignature(self)) { vc.used = true; return; } // denied: this first qualifying juke starts nothing; the cooldown is untouched
       vc.used = true; vc.token = { d, live: false }; st.cd = COOLDOWN; st.fresh = true; ctx.executed(self);
-      ctx.log(`${self.name}'s Vanishing Cut leaves ${d.name} grasping at shadow`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DAR-03-F', victim: d.slot, x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
+      ctx.log(`${$E('sim.s_vanishing_cut_leaves_grasping_at', { name: self.name, name2: d.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DAR-03-F', victim: d.slot, x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
     },
     tackleAttempt(ctx, self, d) {
       const tk = self.vc?.token; if (!tk || tk.d !== d || tk.spent) return undefined;

@@ -15,6 +15,7 @@
 // charge gain (gated).
 import { registerAbility } from './registry.js';
 import { positionOf } from '../../data/personnel.js';
+import { E as $E } from '../../core/english.js';
 
 export const DRAGON_STOMP = Object.freeze({ plays: 3 });
 const offensive = (ctx, self) => self.team === 'off' && !ctx.kickoff && !ctx.twoPoint;
@@ -33,7 +34,7 @@ export default registerAbility({
       const bk = (ctx.stats.blockers[self.slot] ||= { pass: 0, run: 0, lost: 0 }); bk.pancakeAttempts = (bk.pancakeAttempts || 0) + 1;
       const r = ctx.applyStatus(d, { id: 'knockedDown', strength: 1, duration: 0, restOfPlay: true, source: self, abilityId: 'DRA-04-F' });
       if (r.accepted) { self.engaged = null; d.engaged = null; bk.pancakes = (bk.pancakes || 0) + 1; ctx.stats.pancakes = (ctx.stats.pancakes || 0) + 1; }
-      ctx.log(r.accepted ? `${self.name}'s Dragon Stomp flattens ${d.name}` : `${d.name} withstands ${self.name}'s Dragon Stomp`, { kind: r.accepted ? 'pancake' : 'ability', by: self.slot, side: self.team, ability: 'DRA-04-F', victim: d.slot, accepted: r.accepted, reason: r.reason });
+      ctx.log(r.accepted ? `${$E('sim.s_dragon_stomp_flattens', { name: self.name, name2: d.name })}` : `${$E('sim.withstands_s_dragon_stomp', { name: d.name, name2: self.name })}`, { kind: r.accepted ? 'pancake' : 'ability', by: self.slot, side: self.team, ability: 'DRA-04-F', victim: d.slot, accepted: r.accepted, reason: r.reason });
     },
     playEnd(ctx, self) {
       if (!offensive(ctx, self) || self.stomp?.done) return; // the activation play cannot recharge

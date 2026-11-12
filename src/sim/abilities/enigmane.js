@@ -17,6 +17,7 @@
 // Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the afterimage at
 // the charged cut is the live activation (gated: readiness kept); the no-reception bar is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
+import { E as $E } from '../../core/english.js';
 
 export const MIND_GAME = Object.freeze({ plays: 4, within: 2 });
 
@@ -28,7 +29,7 @@ export default registerAbility({
     tick(ctx, self) {
       const mg = self.mg; if (!mg || self.team !== 'off' || ctx.kickoff || ctx.twoPoint) return;
       if (mg.image) { // the chase: until anyone catches the football (an interception included); the whistle ends the play
-        if (ctx.stats.receiver || ctx.stats.interceptor || (ctx.ball.holder && ctx.ball.holder.team === 'def')) { mg.chaser.t8Chase = null; mg.image = null; ctx.log(`${mg.chaser.name} gives up the afterimage`, { kind: 'afterimage_end', by: self.slot, side: self.team, victim: mg.chaser.slot }); return; }
+        if (ctx.stats.receiver || ctx.stats.interceptor || (ctx.ball.holder && ctx.ball.holder.team === 'def')) { mg.chaser.t8Chase = null; mg.image = null; ctx.log(`${$E('sim.gives_up_the_afterimage', { name: mg.chaser.name })}`, { kind: 'afterimage_end', by: self.slot, side: self.team, victim: mg.chaser.slot }); return; }
         const dt = ctx.t - mg.at; mg.at = ctx.t; const B = ctx.bounds;
         mg.image.x = Math.min(B.endLine - 0.5, Math.max(B.ownEndLine + 0.5, mg.image.x + mg.ux * mg.speed * dt));
         mg.image.y = Math.min(B.right - 0.5, Math.max(B.left + 0.5, mg.image.y + mg.uy * mg.speed * dt));
@@ -44,7 +45,7 @@ export default registerAbility({
       const dx = pts[1][0] - pts[0][0], dy = pts[1][1] - pts[0][1], L = Math.hypot(dx, dy) || 1;
       Object.assign(mg, { image: { x: self.x, y: self.y }, chaser: man, ux: dx / L, uy: dy / L, speed: self.maxSpeed, at: ctx.t, fired: true });
       man.t8Chase = mg.image; st.bar = 0; ctx.executed(self);
-      ctx.log(`${man.name} bites on ${self.name}'s afterimage`, { kind: 'afterimage', by: self.slot, side: self.team, ability: 'PSY-05-F', victim: man.slot, x: +self.x.toFixed(2), y: +self.y.toFixed(2), dir: [+(dx / L).toFixed(3), +(dy / L).toFixed(3)] });
+      ctx.log(`${$E('sim.bites_on_s_afterimage', { name: man.name, name2: self.name })}`, { kind: 'afterimage', by: self.slot, side: self.team, ability: 'PSY-05-F', victim: man.slot, x: +self.x.toFixed(2), y: +self.y.toFixed(2), dir: [+(dx / L).toFixed(3), +(dy / L).toFixed(3)] });
     },
     playEnd(ctx, self, s) {
       const mg = self.mg; if (mg?.chaser) mg.chaser.t8Chase = null; // the whistle ends the chase

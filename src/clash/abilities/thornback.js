@@ -9,6 +9,7 @@
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
 import { decisionsPlan } from '../t8/review.js';
+import { E as $E } from '../../core/english.js';
 
 const POOL = [20, 22, 24, 26]; const TURNS = 3;
 
@@ -21,22 +22,22 @@ export default registerClashAbility({
       const st = self.state; if (st.granted) return; st.granted = true;
       api.trigger(self, 'first active entry'); api.executed(self);
       const ok = api.shield(self, self.id, { pctMaxHp: byTier(POOL, self.tier), duration: TURNS });
-      if (ok) { st.ownPool = api.me(self).status.originalStrength; api.activate(self, `Shell Harvest shield ${st.ownPool} HP`); } else api.cleanup(self, 'the entry shield was blocked: the attempt is spent');
+      if (ok) { st.ownPool = api.me(self).status.originalStrength; api.activate(self, `${$E('clashlog.shell_harvest_shield_hp', { ownPool: st.ownPool })}`); } else api.cleanup(self, $E('clashlog.the_entry_shield_was_blocked_the'));
     },
     cashOut(api, self, { out, reason }) {
       if (out !== self.id) return null; const st = self.state; const me = api.me(self);
       const slot = me.status; const own = slot?.id === 'shielded' && st.ownPool && slot.originalStrength === st.ownPool && slot.payload?.remaining > 0;
       if (!own) return null;
-      if (reason === 'relay' && !api.provisional(self, 'feather-relay-voluntary', 'a Feather Relay departure')) return null;
+      if (reason === 'relay' && !api.provisional(self, 'feather-relay-voluntary', $E('clashlog.a_feather_relay_departure'))) return null;
       if (reason !== 'voluntary' && reason !== 'relay') return null;
       const left = slot.payload.remaining;
-      api.activate(self, `voluntary departure cashes out ${left} shield HP`);
-      api.removeStatus(self, self.id, 'cashed out (Shell Harvest)');
+      api.activate(self, `${$E('clashlog.voluntary_departure_cashes_out_shield_hp', { left })}`);
+      api.removeStatus(self, self.id, $E('clashlog.cashed_out_shell_harvest'));
       api.heal(self, self.id, { base: left, kind: 'cash-out' });
       st.ownPool = 0;
       return null;
     },
-    statusApplied(api, self, slot) { if (self.state.ownPool && slot.id === 'shielded' && slot.strength !== self.state.ownPool) { self.state.ownPool = 0; api.cleanup(self, 'replaced by another source: no longer eligible'); } },
+    statusApplied(api, self, slot) { if (self.state.ownPool && slot.id === 'shielded' && slot.strength !== self.state.ownPool) { self.state.ownPool = 0; api.cleanup(self, $E('clashlog.replaced_by_another_source_no_longer')); } },
   },
   review: {
     scenarios: [

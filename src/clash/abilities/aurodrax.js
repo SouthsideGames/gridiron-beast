@@ -6,6 +6,7 @@
 // reserve); repeatable; a missed enhanced attack still spends. Mastery execution: either branch's use.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet, SPAR } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const ATTACK = [130, 140, 150, 160]; const GUARD = [25, 30, 35, 40]; const COOLDOWN = 5; const TURNS = 2; const HP_LINE = 50;
 
@@ -18,11 +19,11 @@ export default registerClashAbility({
       if (!api.ready(self)) return null; const me = api.me(self);
       if (me.hp * 100 > HP_LINE * me.maxHp) {
         if (!foeId) return null;
-        api.activate(self, `HighHP branch: attack at ${byTier(ATTACK, self.tier)}%`, { targetId: foeId }); api.cooldown(self, COOLDOWN); api.executed(self);
-        return { kind: 'attack', tag: 'special', mult: byTier(ATTACK, self.tier) / 100, strikeKey: 'HighHP attack', label: 'Sovereign Balance' };
+        api.activate(self, `${$E('clashlog.highhp_branch_attack_at', { byTier: byTier(ATTACK, self.tier) })}`, { targetId: foeId }); api.cooldown(self, COOLDOWN); api.executed(self);
+        return { kind: 'attack', tag: 'special', mult: byTier(ATTACK, self.tier) / 100, strikeKey: $E('clashlog.highhp_attack'), label: $E('clashlog.sovereign_balance') };
       }
-      if (me.status) return unmet({ condition: 'empty status slot (LowHP branch)', detail: `${me.status.id}: ordinary attack, readiness kept` });
-      api.activate(self, `LowHP branch: self Guarded ${byTier(GUARD, self.tier)}%`); api.cooldown(self, COOLDOWN); api.executed(self);
+      if (me.status) return unmet({ condition: $E('clashlog.empty_status_slot_lowhp_branch'), detail: `${$E('clashlog.ordinary_attack_readiness_kept', { id: me.status.id })}` });
+      api.activate(self, `${$E('clashlog.lowhp_branch_self_guarded', { byTier: byTier(GUARD, self.tier) })}`); api.cooldown(self, COOLDOWN); api.executed(self);
       api.applyStatus(self, self.id, { id: 'guarded', strength: byTier(GUARD, self.tier), duration: TURNS });
       return { kind: 'done' };
     },

@@ -12,6 +12,7 @@
 // Harvest is unaddressed: those four report `awaiting ruling` ('feather-relay-voluntary'). Mastery execution: the relay.
 import { registerClashAbility } from '../t8/registry.js';
 import { byStage } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const HEAL = [8, 10, 12]; const LINE = 50;
 
@@ -23,10 +24,10 @@ export default registerClashAbility({
     teamAction(api, self, { activeId }) {
       const st = self.state; const me = api.me(self); const act = api.get(activeId);
       if (st.used || me.active || me.koed || me.stunned || act.hp * 100 >= LINE * act.maxHp) return null;
-      const L = api.rotationLegality(self.side); if (!L.legal) return api.unmet(self, L.unmet.map((u) => ({ ...u, detail: `${u.detail ? `${u.detail}; ` : ''}the use is kept` })), { hook: 'teamAction' });
+      const L = api.rotationLegality(self.side); if (!L.legal) return api.unmet(self, L.unmet.map((u) => ({ ...u, detail: `${u.detail ? `${u.detail}; ` : ''}${$E('clashlog.the_use_is_kept')}` })), { hook: 'teamAction' });
       return { run: (a, s) => {
         const inc = a.reserves(s)[0];
-        a.trigger(s, `${act.name} is below ${LINE}% HP`, { targetId: activeId }); a.activate(s, `relay: ${act.name} rotates with ${inc.name} (no entry penalty)`, { targetId: inc.id });
+        a.trigger(s, `${$E('clashlog.is_below_hp', { name: act.name, line: LINE })}`, { targetId: activeId }); a.activate(s, `${$E('clashlog.relay_rotates_with_no_entry_penalty', { name: act.name, name2: inc.name })}`, { targetId: inc.id });
         const r = a.teamRotation(s, s.side, inc.id);
         if (!r.rotated) { if (r.unmet.length) a.unmet(s, r.unmet, { hook: 'teamAction' }); return { acted: false, decided: r.decided }; }
         s.state.used = true; a.executed(s);

@@ -16,6 +16,7 @@
 // charge gain (gated).
 import { registerAbility } from './registry.js';
 import { STATUS } from '../t8/status.js';
+import { E as $E } from '../../core/english.js';
 
 export const DRAGON_CALL = Object.freeze({ plays: 3, radius: [3, 5] });
 const stageOf = (form) => Number(String(form).split(':')[1] || 0);
@@ -37,7 +38,7 @@ export default registerAbility({
         ctx.ward(a);
       }
       st.bar = 0; self.call.pulsed = true; ctx.executed(self, { passive: true });
-      ctx.log(`${self.name}'s Dragon Call pulses`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DRA-02-F', radius: R, recipients: snap.map((a) => `${a.team}:${a.slot}`), cleansed, x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
+      ctx.log(`${$E('sim.s_dragon_call_pulses', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DRA-02-F', radius: R, recipients: snap.map((a) => `${a.team}:${a.slot}`), cleansed, x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
     },
     playEnd(ctx, self) {
       if (self.team !== 'off' || ctx.kickoff || ctx.twoPoint || self.call?.pulsed) return; // the activation play cannot recharge

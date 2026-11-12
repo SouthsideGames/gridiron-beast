@@ -9,6 +9,7 @@
 // rebuild, a separate valid execution).
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const INITIAL = 20; const INITIAL_TURNS = 3; const REBUILD = [10, 12, 14, 16]; const REBUILD_TURNS = 2;
 
@@ -20,8 +21,8 @@ export default registerClashAbility({
     onEntry(api, self) {
       const st = self.state; if (st.granted) return; st.granted = true;
       api.trigger(self, 'first active entry'); api.executed(self);
-      if (api.shield(self, self.id, { pctMaxHp: INITIAL, duration: INITIAL_TURNS })) { st.ownPool = api.me(self).status.originalStrength; api.activate(self, `Glacier Wall ${st.ownPool} HP`); }
-      else api.cleanup(self, 'entry shield blocked: the opportunity is spent');
+      if (api.shield(self, self.id, { pctMaxHp: INITIAL, duration: INITIAL_TURNS })) { st.ownPool = api.me(self).status.originalStrength; api.activate(self, `${$E('clashlog.glacier_wall_hp', { ownPool: st.ownPool })}`); }
+      else api.cleanup(self, $E('clashlog.entry_shield_blocked_the_opportunity_is'));
     },
     statusApplied(api, self, slot) { if (self.state.ownPool && slot.id === 'shielded' && slot.strength !== self.state.ownPool) self.state.ownPool = 0; },
     statusEnded(api, self, { id, reason }) {
@@ -33,9 +34,9 @@ export default registerClashAbility({
       const st = self.state; if (!st.depleted || st.rebuildUsed) return;
       if (!info.landed.some((l) => l.id === self.id) || api.get(info.attacker).side === self.side) return;
       st.rebuildUsed = true; st.depleted = false;
-      api.trigger(self, 'the original pool was depleted by that hit'); api.executed(self);
-      if (api.shield(self, self.id, { pctMaxHp: byTier(REBUILD, self.tier), duration: REBUILD_TURNS })) api.activate(self, `rebuilt ${api.me(self).status.originalStrength} HP (once)`);
-      else api.cleanup(self, 'rebuild blocked: the opportunity is spent');
+      api.trigger(self, $E('clashlog.the_original_pool_was_depleted_by')); api.executed(self);
+      if (api.shield(self, self.id, { pctMaxHp: byTier(REBUILD, self.tier), duration: REBUILD_TURNS })) api.activate(self, `${$E('clashlog.rebuilt_hp_once', { originalStrength: api.me(self).status.originalStrength })}`);
+      else api.cleanup(self, $E('clashlog.rebuild_blocked_the_opportunity_is_spent'));
     },
   },
   review: {

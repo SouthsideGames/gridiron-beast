@@ -13,6 +13,7 @@
 // cooldown or charges; the contract says it does not nullify Eclipse denial): not gated.
 import { registerAbility } from './registry.js';
 import { byMastery, able } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const RADIUS = [4, 5, 6, 7]; // yards by mastery
 
@@ -28,7 +29,7 @@ export default registerAbility({
         const covered = on && ctx.dist(b, self) <= R;
         if (covered) { (b.nightWatch ||= new Set()).add(self.mid); } else if (b.nightWatch) b.nightWatch.delete(self.mid);
         b.ignoreFieldAwareness = !!b.nightWatch?.size; // read by the field effects this same tick (after the contracts' tick)
-        if (covered && b.fx?.base?.Dark && !self.nwCredited) { self.nwCredited = true; ctx.executed(self, { passive: true }); ctx.log(`${self.name}'s Night Watch keeps ${b.name}'s eyes clear`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DAR-02-F', victim: b.slot }); }
+        if (covered && b.fx?.base?.Dark && !self.nwCredited) { self.nwCredited = true; ctx.executed(self, { passive: true }); ctx.log(`${$E('sim.s_night_watch_keeps_s_eyes', { name: self.name, name2: b.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DAR-02-F', victim: b.slot }); }
       }
     },
   },

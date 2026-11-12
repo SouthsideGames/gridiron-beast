@@ -21,6 +21,7 @@
 import { registerAbility } from './registry.js';
 import { scrimmage, able, byLineup } from './common.js';
 import { STUMBLE_SPEED_LOSS } from '../t8/field-effects.js';
+import { E as $E } from '../../core/english.js';
 
 export const CATCHES = 3, RADIUS = 5, SHOTS = 3, BLAST_SPEED = 20, DT = 0.05;
 
@@ -34,7 +35,7 @@ export default registerAbility({
       if (!ctx.canStartSignature(self)) return; // denied: the full bar is kept
       cy.tornado = { x: self.x, y: self.y, targeted: new Set(), shots: [] };
       ctx.state(self).charges = 0; ctx.executed(self);
-      ctx.log(`${self.name}'s Cyclonic Release spins up a tornado`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WIN-06-F', x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
+      ctx.log(`${$E('sim.s_cyclonic_release_spins_up_a', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WIN-06-F', x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
       select(ctx, self, cy.tornado);
     },
     tick(ctx, self) {
@@ -44,13 +45,13 @@ export default registerAbility({
         if (d > step) { s.x += ((s.target.x - s.x) / d) * step; s.y += ((s.target.y - s.y) / d) * step; continue; }
         s.live = false; s.hit = true;
         ctx.applyStatus(s.target, { id: 'stumbled', strength: STUMBLE_SPEED_LOSS * 100, duration: 0, source: self, abilityId: 'WIN-06-F' });
-        ctx.log(`A crescent blast hits ${s.target.name}`, { kind: 'ability_hit', by: self.slot, side: self.team, ability: 'WIN-06-F', victim: s.target.slot });
+        ctx.log(`${$E('sim.a_crescent_blast_hits', { name: s.target.name })}`, { kind: 'ability_hit', by: self.slot, side: self.team, ability: 'WIN-06-F', victim: s.target.slot });
       }
       select(ctx, self, T);
     },
     playEnd(ctx, self, s) {
       const T = self.cy?.tornado;
-      if (T) { for (const sh of T.shots) if (sh.live) { sh.live = false; ctx.log(`The whistle stops a crescent blast at ${sh.target.name}`, { kind: 'ability_cancel', by: self.slot, side: self.team, ability: 'WIN-06-F', victim: sh.target.slot }); } return; } // the activation reception cannot recharge
+      if (T) { for (const sh of T.shots) if (sh.live) { sh.live = false; ctx.log(`${$E('sim.the_whistle_stops_a_crescent_blast', { name: sh.target.name })}`, { kind: 'ability_cancel', by: self.slot, side: self.team, ability: 'WIN-06-F', victim: sh.target.slot }); } return; } // the activation reception cannot recharge
       if (!scrimmage(ctx) || self.team !== 'off' || s.receiver !== self.slot) return;
       const st = ctx.state(self); if (ctx.canGainCharge(self)) st.charges = Math.min(CATCHES, st.charges + 1);
     },
@@ -65,6 +66,6 @@ function select(ctx, self, T) {
   for (const d of near) {
     if (T.targeted.size >= SHOTS) break;
     T.targeted.add(d); T.shots.push({ target: d, x: T.x, y: T.y, live: true, hit: false });
-    ctx.log(`The tornado fires at ${d.name}`, { kind: 'ability_shot', by: self.slot, side: self.team, ability: 'WIN-06-F', victim: d.slot, x: +T.x.toFixed(2), y: +T.y.toFixed(2) });
+    ctx.log(`${$E('sim.the_tornado_fires_at', { name: d.name })}`, { kind: 'ability_shot', by: self.slot, side: self.team, ability: 'WIN-06-F', victim: d.slot, x: +T.x.toFixed(2), y: +T.y.toFixed(2) });
   }
 }

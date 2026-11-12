@@ -8,6 +8,7 @@
 // the arming (the committed use).
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [150, 160, 170, 180];
 const STUN = { id: 'stunned', strength: 1, duration: 1 };
@@ -19,14 +20,14 @@ export default registerClashAbility({
   hooks: {
     stunnedSkip(api, self) {
       const st = self.state; if (st.committed) return;
-      st.committed = true; st.armed = true; api.trigger(self, 'a normal action was lost to Stunned: the charge arms'); api.executed(self);
+      st.committed = true; st.armed = true; api.trigger(self, $E('clashlog.a_normal_action_was_lost_to')); api.executed(self);
     },
     chooseAction(api, self, { foeId }) {
       const st = self.state; if (!st.armed || !foeId) return null;
-      st.armed = false; api.activate(self, `unbroken charge at ${byTier(POWER, self.tier)}% (undodgeable)`, { targetId: foeId });
-      return { kind: 'attack', tag: 'special', mult: byTier(POWER, self.tier) / 100, undodgeable: true, strikeKey: 'charge', label: 'Unbroken Charge' };
+      st.armed = false; api.activate(self, `${$E('clashlog.unbroken_charge_at_undodgeable', { byTier: byTier(POWER, self.tier) })}`, { targetId: foeId });
+      return { kind: 'attack', tag: 'special', mult: byTier(POWER, self.tier) / 100, undodgeable: true, strikeKey: 'charge', label: $E('clashlog.unbroken_charge') };
     },
-    onKO(api, self) { if (self.state.armed) { self.state.armed = false; api.cleanup(self, 'the knockout destroys the armed charge'); } },
+    onKO(api, self) { if (self.state.armed) { self.state.armed = false; api.cleanup(self, $E('clashlog.the_knockout_destroys_the_armed_charge')); } },
   },
   review: {
     scenarios: [

@@ -10,6 +10,7 @@
 // applies the literal text under one active fighter: the only front ally is the casting Solchirp, so the target is itself.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, injured } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const HEAL = [5, 6, 7, 8]; const PULSES = 2; const COOLDOWN = 6;
 
@@ -22,8 +23,8 @@ export default registerClashAbility({
       if (!api.ready(self) || self.state.pulsesLeft) return null;
       const me = api.me(self); // under one active fighter the front ally is the caster
       if (!injured(me) || me.status) return null;
-      if (!api.provisional(self, 'd14-dawn-song-target', '"Front ally, self only if actually front": the caster is the only front ally')) return null;
-      api.activate(self, `Dawn Song on ${me.name}: ${byTier(HEAL, self.tier)}% now and at the end of the next ${PULSES} own turns`, { targetId: self.id });
+      if (!api.provisional(self, 'd14-dawn-song-target', $E('clashlog.front_ally_self_only_if_actually'))) return null;
+      api.activate(self, `${$E('clashlog.dawn_song_on_now_and_at', { name: me.name, byTier: byTier(HEAL, self.tier), pulses: PULSES })}`, { targetId: self.id });
       api.cooldown(self, COOLDOWN); api.executed(self);
       api.heal(self, self.id, { pctMaxHp: byTier(HEAL, self.tier) });
       self.state.pulsesLeft = PULSES; self.state.targetId = self.id; self.state.castTurn = api.me(self).turns; api.schedule(self, +1);
@@ -31,11 +32,11 @@ export default registerClashAbility({
     },
     endOfTurn(api, self) {
       const st = self.state; if (!st.pulsesLeft || api.me(self).turns === st.castTurn) return; // the cast turn is excluded
-      st.pulsesLeft -= 1; api.log(self, 'ability', `${self.name}: Dawn Song pulse (${PULSES - st.pulsesLeft} / ${PULSES})`, { stage: 'resolution' });
+      st.pulsesLeft -= 1; api.log(self, 'ability', `${$E('clashlog.dawn_song_pulse', { name: self.name, pulsesLeft: PULSES - st.pulsesLeft, pulses: PULSES })}`, { stage: 'resolution' });
       api.heal(self, st.targetId, { pctMaxHp: byTier(HEAL, self.tier), kind: 'pulse' });
       if (!st.pulsesLeft) { st.targetId = null; api.schedule(self, -1); api.cleanup(self, 'schedule complete'); }
     },
-    onKO(api, self) { if (self.state.pulsesLeft) { self.state.pulsesLeft = 0; self.state.targetId = null; api.schedule(self, -1); api.cleanup(self, 'knockout cancels the pending pulses'); } },
+    onKO(api, self) { if (self.state.pulsesLeft) { self.state.pulsesLeft = 0; self.state.targetId = null; api.schedule(self, -1); api.cleanup(self, $E('clashlog.knockout_cancels_the_pending_pulses')); } },
   },
   review: {
     scenarios: [

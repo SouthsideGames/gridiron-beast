@@ -17,6 +17,7 @@
 // protection chosen in the pre-snap step before every defensive snap, with no readiness, charge or cooldown (nothing to deny or keep):
 // treated as a passive grant, not gated.
 import { registerAbility } from './registry.js';
+import { E as $E } from '../../core/english.js';
 
 export default registerAbility({
   family: 'leafhorn', abilityId: 'NAT-04-F',
@@ -32,7 +33,7 @@ export default registerAbility({
       const st = ctx.state(self); if (self.team !== 'def' || ctx.kickoff || ctx.twoPoint || !st.pick?.mid) return;
       const tgt = ctx.actors.find((a) => a.team === self.team && a.mid === st.pick.mid && !a.temp); if (!tgt) return;
       (tgt.immune ||= new Set()).add('stumbled'); ctx.executed(self);
-      ctx.log(`${self.name}'s Surefoot Canopy covers ${tgt.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-04-F', target: tgt.slot });
+      ctx.log(`${$E('sim.s_surefoot_canopy_covers', { name: self.name, name2: tgt.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-04-F', target: tgt.slot });
     },
   },
 });

@@ -13,6 +13,7 @@ import { approvedValues } from '../../data/beast-dex.js';
 import { mindGameAfterimagePct } from '../../data/approved-values.js';
 import { perkTag } from '../t8/flags.js';
 import { byTier, isNormal, perkGate } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const TURNS = [1, 2, 2, 3]; const REDIRECT = 25; const AFTERIMAGE = approvedValues('PSY-05-C').afterimageMissPct;
 
@@ -23,23 +24,23 @@ export default registerClashAbility({
   hooks: {
     missCheck(api, self, info) {
       const st = self.state; const me = api.me(self);
-      if (st.rolled && st.rolled.seq === info.attackSeq) return st.rolled.miss ? { miss: true, source: 'Mind Game afterimage', abilityId: 'PSY-05-C' } : null;
+      if (st.rolled && st.rolled.seq === info.attackSeq) return st.rolled.miss ? { miss: true, source: $E('clashlog.mind_game_afterimage'), abilityId: 'PSY-05-C' } : null;
       if (!me.active || !isNormal(info.tag) || api.get(info.attacker).side === self.side) return null;
       const pctV = mindGameAfterimagePct(st.trick); if (!pctV) return null;
-      const miss = api.rng.chance(pctV / 100, self, 'Mind Game afterimage'); st.rolled = { seq: info.attackSeq, miss };
-      return miss ? { miss: true, source: 'Mind Game afterimage', abilityId: 'PSY-05-C' } : null;
+      const miss = api.rng.chance(pctV / 100, self, $E('clashlog.mind_game_afterimage')); st.rolled = { seq: info.attackSeq, miss };
+      return miss ? { miss: true, source: $E('clashlog.mind_game_afterimage'), abilityId: 'PSY-05-C' } : null;
     },
     afterWholeAttack(api, self, info) {
       const st = self.state; const att = api.get(info.attackerId);
       if (info.attackerId === self.id && st.armed) { st.armed = false; return; }
       if (st.trick || !att || att.side === self.side || !isNormal(info.tag) || !info.allMissed || !info.hits.every((h) => h.targetId === self.id)) return;
-      st.trick = true; api.trigger(self, 'an enemy normal attack missed completely: one trick stored');
+      st.trick = true; api.trigger(self, $E('clashlog.an_enemy_normal_attack_missed_completely'));
     },
     chooseAction(api, self, { foeId }) {
       const st = self.state; if (!st.trick || !foeId) return null;
       const g = perkGate(api, self, foeId, perkTag('PSY-05-C')); if (!g.ok) return null;
-      st.trick = false; st.armed = true; api.activate(self, 'the trick attack (consumed on launch)', { targetId: foeId }); api.executed(self);
-      return { kind: 'attack', tag: g.tag, mult: 1, strikeKey: 'trick attack', label: 'Mind Game' };
+      st.trick = false; st.armed = true; api.activate(self, $E('clashlog.the_trick_attack_consumed_on_launch'), { targetId: foeId }); api.executed(self);
+      return { kind: 'attack', tag: g.tag, mult: 1, strikeKey: 'trick attack', label: $E('clashlog.mind_game') };
     },
     attached(api, self, info) {
       if (info.attacker !== self.id || info.strikeKey !== 'trick attack' || api.get(info.target).koed || info.target === self.id) return null;

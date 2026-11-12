@@ -20,6 +20,7 @@
 import { registerAbility } from './registry.js';
 import { FIELD } from '../../core/field.js';
 import { scrimmage, byMastery } from './fw-util.js';
+import { E as $E } from '../../core/english.js';
 
 export const WAKE = Object.freeze({ minYac: 5, length: 5, lbDepth: 5, minWidth: 5, lifetime: 2, slowByMastery: [25, 28, 31, 34] });
 
@@ -31,7 +32,7 @@ export default registerAbility({
       const st = ctx.state(self);
       if (self.team === 'off' && st.pending && ctx.createdFor(self.mid)) {
         st.pending = false; ctx.executed(self); // the stored token is spent when its zone actually spawns
-        ctx.log(`${self.name}'s Burning Wake erupts ahead`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-06-F', phase: 'spawn' });
+        ctx.log(`${$E('sim.s_burning_wake_erupts_ahead', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-06-F', phase: 'spawn' });
       }
     },
     playEnd(ctx, self, s) {
@@ -43,7 +44,7 @@ export default registerAbility({
       st.pending = true; st.earnedOn = ctx.possession;
       ctx.queueField({ owner: self.mid, ownerTeam: ctx.teamSide, type: 'Fire', ability: 'FIR-06-F', strength: byMastery(WAKE.slowByMastery, self.mastery), lifetime: WAKE.lifetime,
         clock: 'scrimmageAny', width, length: WAKE.length, lbDepth: WAKE.lbDepth, lateral: 'creator', clearsAtHalftime: false, payload: { yac } });
-      ctx.log(`${self.name} earns a Burning Wake (${width.toFixed(1)} yards wide)`, { kind: 'ability_charge', by: self.slot, side: self.team, ability: 'FIR-06-F', yac, width: +width.toFixed(2) });
+      ctx.log(`${$E('sim.earns_a_burning_wake_yards_wide', { name: self.name, toFixed: width.toFixed(1) })}`, { kind: 'ability_charge', by: self.slot, side: self.team, ability: 'FIR-06-F', yac, width: +width.toFixed(2) });
     },
   },
 });

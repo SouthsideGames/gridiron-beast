@@ -16,6 +16,7 @@
 // first engagement while ready is the live activation (gated); cooldown only, no charge.
 import { registerAbility } from './registry.js';
 import { scrimmage, byMastery, cooldownStep } from './fw-util.js';
+import { E as $E } from '../../core/english.js';
 
 export const SCORCH = Object.freeze({ pctByMastery: [10, 12, 14, 16], cooldown: 3 });
 
@@ -30,7 +31,7 @@ export default registerAbility({
       const k = 1 - byMastery(SCORCH.pctByMastery, self.mastery) / 100;
       (blocker.pairMods ||= new Map()).set(self.mid, { strength: k, blocking: k });
       self.scorch.marked = blocker; ctx.state(self).cd = SCORCH.cooldown; ctx.executed(self);
-      ctx.log(`${self.name}'s Scorch Mark brands ${blocker.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-04-F', victim: blocker.slot, victimSide: blocker.team, pct: Math.round((1 - k) * 100) });
+      ctx.log(`${$E('sim.s_scorch_mark_brands', { name: self.name, name2: blocker.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-04-F', victim: blocker.slot, victimSide: blocker.team, pct: Math.round((1 - k) * 100) });
     },
     playEnd(ctx, self) { if (self.team !== 'def' || !scrimmage(ctx)) return; cooldownStep(ctx.state(self), !!self.scorch?.marked); },
   },

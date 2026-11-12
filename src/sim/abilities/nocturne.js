@@ -18,6 +18,7 @@
 // (gated).
 import { registerAbility } from './registry.js';
 import { byMastery, scrimmage, sideOf } from './common.js';
+import { E as $E } from '../../core/english.js';
 
 export const MIN_GAIN = 15, STRENGTH = 25, COOLDOWN = 6;
 export const LIFETIME = [1, 2, 2, 3]; // by mastery
@@ -35,7 +36,7 @@ export default registerAbility({
       st.banked = true; ctx.executed(self);
       ctx.queueField({ owner: self.mid, ownerTeam: sideOf(ctx, self), side: 'off', type: 'Dark', ability: 'DAR-05-F', strength: STRENGTH, lifetime: byMastery(LIFETIME, self.mastery),
         clock: 'teamOffense', width: POCKET.width, los: [0, POCKET.length], latFromBall: 0 });
-      ctx.log(`${self.name} banks a Blackout Pocket`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DAR-05-F' });
+      ctx.log(`${$E('sim.banks_a_blackout_pocket', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DAR-05-F' });
     },
   },
 });

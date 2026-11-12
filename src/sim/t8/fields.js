@@ -1,6 +1,7 @@
 // Task 8 M2 (WP5): field geometry, overlap resolution and movement-modifier aggregation (spec §11; N7d clocks live in the ability
 // contracts). Absolute coordinates as src/core/field.js: `yard` -10..110 (end lines), `lat` -26.67..26.67. Pure; not yet wired.
 import { FIELD } from '../../core/field.js';
+import { E as $E } from '../../core/english.js';
 
 export const PLAYABLE = Object.freeze({ yardMin: -FIELD.endZone, yardMax: FIELD.length + FIELD.endZone, latMin: -FIELD.halfWidth, latMax: FIELD.halfWidth });
 
@@ -25,8 +26,8 @@ export const contains = (r, yard, lat) => inRect(r, yard, lat) && !(r.holes || [
 export const RECIPES = Object.freeze([
   { hybrid: 'Steam', parents: ['Fire', 'Water'] },
   { hybrid: 'Eclipse', parents: ['Light', 'Dark'] },
-  { hybrid: 'Living Terrain', parents: ['Nature', 'Earth'] },
-  { hybrid: 'Magnetic Storm', parents: ['Electric', 'Metal'] },
+  { hybrid: $E('sim.living_terrain'), parents: ['Nature', 'Earth'] },
+  { hybrid: $E('sim.magnetic_storm'), parents: ['Electric', 'Metal'] },
   { hybrid: 'Froststorm', parents: ['Ice', 'Wind'] },
   { hybrid: 'Mindstorm', parents: ['Psychic', 'Electric'] },
 ]);

@@ -20,6 +20,7 @@
 // is the live activation (gated; readiness kept when denied); cooldown only.
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, scrimmage, ready, spend, countPlay, disabled, nearestClear } from './nature-electric-common.js';
+import { E as $E } from '../../core/english.js';
 
 export const VAULT = Object.freeze({ beyond: 1.2, clearance: 0.8, flight: 0.4, scale: 16 });
 
@@ -38,7 +39,7 @@ export default registerAbility({
       const v = self.vv; if (!v) return;
       if (v.flight) { // the airborne traversal
         const f = v.flight;
-        if (disabled(ctx, self) || self.stun > 1e5) { v.flight = null; self.noEngage = Math.max(0, self.noEngage); ctx.log(`${self.name}'s vault is cut short`, { kind: 'ability_end', by: self.slot, side: self.team, ability: 'NAT-02-F' }); return; }
+        if (disabled(ctx, self) || self.stun > 1e5) { v.flight = null; self.noEngage = Math.max(0, self.noEngage); ctx.log(`${$E('sim.s_vault_is_cut_short', { name: self.name })}`, { kind: 'ability_end', by: self.slot, side: self.team, ability: 'NAT-02-F' }); return; }
         const k = Math.min(1, (ctx.t - f.t0) / VAULT.flight);
         self.x = f.from.x + (f.to.x - f.from.x) * k; self.y = f.from.y + (f.to.y - f.from.y) * k; self.vx = 0; self.vy = 0;
         if (k >= 1) { v.flight = null; self.noEngage = 0; ctx.log(`${self.name} lands past ${f.over}`, { kind: 'vault_land', by: self.slot, side: self.team, ability: 'NAT-02-F', x: +self.x.toFixed(2), y: +self.y.toFixed(2) }); }
@@ -52,11 +53,11 @@ export default registerAbility({
       const ix = b.x + ux * VAULT.beyond, iy = b.y + uy * VAULT.beyond;
       const cands = []; for (const ox of [0, -0.5, 0.5, -1]) for (const oy of [0, -0.5, 0.5, -1, 1]) cands.push({ x: ix + ox, y: iy + oy });
       const land = nearestClear(ctx, cands.filter((p) => p.x < b.x), ix, iy, VAULT.clearance, [self, b]);
-      if (!land) { ctx.log(`${self.name} finds no landing past ${b.name}`, { kind: 'ability_blocked', by: self.slot, side: self.team, ability: 'NAT-02-F' }); return; } // readiness kept
+      if (!land) { ctx.log(`${$E('sim.finds_no_landing_past', { name: self.name, name2: b.name })}`, { kind: 'ability_blocked', by: self.slot, side: self.team, ability: 'NAT-02-F' }); return; } // readiness kept
       const st = ctx.state(self); spend(st, byMastery(CD_5432, self.mastery)); ctx.executed(self);
       const A = self.attrs.agility * ctx.scale(self, b, 'shed'), Bk = b.attrs.blocking * ctx.scale(b, self, 'block');
       const p = 1 / (1 + Math.exp(-(A - Bk) / VAULT.scale));
-      if (!ctx.rng.chance(p)) { ctx.log(`${self.name}'s Vine Vault is held by ${b.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-02-F', success: false, chance: +p.toFixed(4), victim: b.slot }); return; }
+      if (!ctx.rng.chance(p)) { ctx.log(`${$E('sim.s_vine_vault_is_held_by', { name: self.name, name2: b.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-02-F', success: false, chance: +p.toFixed(4), victim: b.slot }); return; }
       self.engaged = null; b.engaged = null;
       v.flight = { from: { x: self.x, y: self.y }, to: { x: land.x, y: land.y }, t0: ctx.t, over: b.name }; self.noEngage = Math.max(self.noEngage, VAULT.flight);
       ctx.log(`${self.name} vaults over ${b.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-02-F', success: true, chance: +p.toFixed(4), victim: b.slot, blockerX: +b.x.toFixed(2), x: +land.x.toFixed(2), y: +land.y.toFixed(2) });

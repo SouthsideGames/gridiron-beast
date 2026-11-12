@@ -20,7 +20,7 @@ import { toArenaRecord, isT8Result, T8_STATUS_ICON, T8_STATUS_COLOR } from './t8
 import { t8StateAt, t8CuesFor, t8NextExchangeIndex, STATUS_NAME } from './t8/timeline.js';
 import { buildClashT8, drawClashT8, t8Live } from './t8/fx-t8.js';
 import { STATUS_GLYPH } from '../fx/overhead.js';
-import { t as $t } from '../../text/index.js';
+import { t as $t, lineText } from '../../text/index.js';
 
 // Condition glyphs: the legacy conditions and the Task 8 shared statuses (the translated path's functional cues; in native t8 mode the
 // status badge of the information layer carries the status, and the strips use STATUS_GLYPH with T8_STATUS_ICON as the fallback).
@@ -185,7 +185,7 @@ export function createArena(root, result, opts = {}) {
     $('.cl-sd').textContent = st.ramp > 1 ? `${$t('clash.sudden_death', { toFixed: st.ramp.toFixed(2) })}` : ''; viewport.classList.toggle('sudden', st.ramp > 1);
     if (t8) { const o = $('.cl-order'); if (o) o.textContent = st.turnOrder ? `${$t('clash.turn_order')} ${st.turnOrder.map((id) => byId[id]?.name || id).join(' → ')}` : ''; }
     { const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(st.i); } // the host may have been emptied (destroy) mid-cue
-    caption.textContent = result.log[st.i]?.text || '';
+    caption.textContent = lineText(result.log[st.i]) || '';   // the log entry in the player's language (its `text` stays English)
     if (t8) t8Draw();
   }
 

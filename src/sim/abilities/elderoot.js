@@ -18,6 +18,7 @@
 // the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { byMastery, scrimmage, ready, spend, countPlay, disabled, nearestClear } from './nature-electric-common.js';
+import { E as $E } from '../../core/english.js';
 
 export const CLONE_PCT = [60, 65, 70, 75];
 export const GROVE = Object.freeze({ cooldown: 5, clearance: 1.0 });
@@ -31,13 +32,13 @@ export default registerAbility({
       if (self.team !== 'def' || !scrimmage(ctx) || !ready(st) || disabled(ctx, self) || !ctx.canStartSignature(self)) return;
       const cands = []; for (const dx of [0, -1, 1]) for (const dy of [1, 1.5, 2, 2.5, 3]) for (const s of [-1, 1]) cands.push({ x: self.x + dx, y: self.y + s * dy });
       const spot = nearestClear(ctx, cands.filter((p) => p.x >= 0.5), self.x, self.y, GROVE.clearance, [self]);
-      if (!spot) { ctx.log(`${self.name} finds no room for a Grove Guardian`, { kind: 'ability_blocked', by: self.slot, side: self.team, ability: 'NAT-06-F' }); return; }
+      if (!spot) { ctx.log(`${$E('sim.finds_no_room_for_a_grove', { name: self.name })}`, { kind: 'ability_blocked', by: self.slot, side: self.team, ability: 'NAT-06-F' }); return; }
       const pct = byMastery(CLONE_PCT, self.mastery) / 100; const attrs = {};
       for (const [k, v] of Object.entries(self.attrs)) attrs[k] = Math.max(1, Math.round(v * pct));
-      const clone = ctx.spawn({ team: 'def', slot: `${self.slot}+`, mid: `${self.mid}~grove`, name: `${self.name}'s Grove Guardian`, type: self.type, attrs, x: spot.x, y: spot.y,
+      const clone = ctx.spawn({ team: 'def', slot: `${self.slot}+`, mid: `${self.mid}~grove`, name: `${$E('sim.s_grove_guardian', { name: self.name })}`, type: self.type, attrs, x: spot.x, y: spot.y,
         assignment: self.assignment, credit: self.slot, possessionEndsPlay: true, cloneOf: self.mid });
       spend(st, GROVE.cooldown); ctx.executed(self);
-      ctx.log(`${self.name} raises a Grove Guardian`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-06-F', clone: clone.slot, ratings: { ...attrs }, x: +spot.x.toFixed(2), y: +spot.y.toFixed(2) });
+      ctx.log(`${$E('sim.raises_a_grove_guardian', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-06-F', clone: clone.slot, ratings: { ...attrs }, x: +spot.x.toFixed(2), y: +spot.y.toFixed(2) });
     },
     playEnd(ctx, self) { countPlay(ctx, self, ctx.state(self), 'def'); },
   },

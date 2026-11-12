@@ -6,6 +6,7 @@
 // Ordinary-only Striker bonuses excluded (explicit: special). Mastery execution: the roar's launch.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const POWER = [120, 130, 140, 150]; const WEAK = 15; const TURNS = 2;
 
@@ -16,13 +17,13 @@ export default registerClashAbility({
   hooks: {
     chooseAction(api, self, { foeId }) {
       if (self.state.used || !foeId) return null;
-      self.state.used = true; api.trigger(self, 'first performed normal attack of the Clash', { targetId: foeId }); api.executed(self);
-      return { kind: 'attack', tag: 'special', mult: byTier(POWER, self.tier) / 100, strikeKey: 'roar', label: 'Dragon Roar' };
+      self.state.used = true; api.trigger(self, $E('clashlog.first_performed_normal_attack_of_the'), { targetId: foeId }); api.executed(self);
+      return { kind: 'attack', tag: 'special', mult: byTier(POWER, self.tier) / 100, strikeKey: 'roar', label: $E('clashlog.dragon_roar') };
     },
     attached(api, self, info) {
       if (info.abilityId !== 'DRA-05-C' || info.attacker !== self.id) return null;
       if (api.get(info.target).koed) return null;
-      api.activate(self, `connected: Weakened ${WEAK}% attempt`, { targetId: info.target });
+      api.activate(self, `${$E('clashlog.connected_weakened_attempt', { weak: WEAK })}`, { targetId: info.target });
       return { kind: 'status', targetId: info.target, id: 'weakened', strength: WEAK, duration: TURNS, abilityId: 'DRA-05-C' };
     },
   },

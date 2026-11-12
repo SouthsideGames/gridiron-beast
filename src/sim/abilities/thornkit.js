@@ -27,6 +27,7 @@
 // in the pre-snap step (out of play: not gated); the token earned at the route cut is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, stageOf, scrimmage, ready, spend, countPlay, cutsTaken } from './nature-electric-common.js';
+import { E as $E } from '../../core/english.js';
 
 export const TURN = [15, 20, 25]; // % by form
 export const PATCH = Object.freeze({ width: 6, length: 4, bandFrom: 0, bandTo: 12 });
@@ -63,7 +64,7 @@ export default registerAbility({
       if (!cuts.length || self.team !== 'off' || !scrimmage(ctx) || ctx.offensePlay.type !== 'pass' || !ready(st) || self.bb.done) return;
       if (!cuts.some((c) => c.angle >= 45) || !ctx.canGainCharge(self)) return;
       self.bb.done = true; st.token = true; { const at = SNAP_INDEX.get(st); if (at != null) st.drawKey = at + 1; } ctx.executed(self);
-      ctx.log(`${self.name} earns a Bloom Break`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-01-F' });
+      ctx.log(`${$E('sim.earns_a_bloom_break', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-01-F' });
     },
     playEnd(ctx, self) { countPlay(ctx, self, ctx.state(self), 'off'); },
   },

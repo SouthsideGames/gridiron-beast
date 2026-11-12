@@ -11,6 +11,7 @@
 // kept. Mastery execution: the interception.
 import { registerClashAbility } from '../t8/registry.js';
 import { strikeClass } from '../t8/ability-kinds.js';
+import { E as $E } from '../../core/english.js';
 
 export default registerClashAbility({
   family: 'terrabull', abilityId: 'EAR-05-C',
@@ -26,7 +27,7 @@ export default registerClashAbility({
         if (!api.provisional(self, 'stone-divide-scope', `${info.abilityId} ${info.strikeKey || info.tag} (${c.contested})`)) return null;
         if (!api.flags.stoneDivide[c.contested]) return null;
       }
-      st.used = true; api.activate(self, `wall: ${info.abilityId || info.tag} is intercepted`, { targetId: info.attacker }); api.executed(self);
+      st.used = true; api.activate(self, `${$E('clashlog.wall_is_intercepted', { abilityId: info.abilityId || info.tag })}`, { targetId: info.attacker }); api.executed(self);
       return { intercepted: true, abilityId: 'EAR-05-C' };
     },
   },

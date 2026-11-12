@@ -20,6 +20,7 @@
 // activation is the live activation (gated); cooldown only, no charge.
 import { registerAbility } from './registry.js';
 import { stageOf, scrimmage, byMastery, cooldownStep } from './fw-util.js';
+import { E as $E } from '../../core/english.js';
 
 export const GUARD = Object.freeze({ reach: 1.6, strengthSplit: 0.5, cooldown: 3, blockingByStage: [[70, 73, 76, 79], [80, 83, 86, 89]] });
 
@@ -33,7 +34,7 @@ export default registerAbility({
       const frac = byMastery(GUARD.blockingByStage[stageOf(self.form)] || GUARD.blockingByStage[0], self.mastery) / 100;
       self.guard.active = true; self.maxEngagements = 2; self.splitMods = { strength: GUARD.strengthSplit, blocking: frac };
       ctx.state(self).cd = GUARD.cooldown; ctx.executed(self);
-      ctx.log(`${self.name}'s Divided Guard braces`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-02-F', phase: 'snap' });
+      ctx.log(`${$E('sim.s_divided_guard_braces', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-02-F', phase: 'snap' });
     },
     tick(ctx, self) {
       const g = self.guard; if (!g?.active) return;
@@ -44,7 +45,7 @@ export default registerAbility({
       const free = ctx.opponents(self.team).filter((d) => !d.engaged && !(d.stun > 0) && !(d.noEngage > 0) && !d.knockedDown && ctx.dist(d, self) <= GUARD.reach).sort((p, q) => ctx.dist(p, self) - ctx.dist(q, self))[0];
       if (free && ctx.tryEngage(self, free)) {
         g.held = [self.engaged, self.engaged2]; g.doubled += 1;
-        ctx.log(`${self.name} divides to hold ${self.engaged.name} and ${free.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-02-F', phase: 'double', victims: [self.engaged.slot, free.slot] });
+        ctx.log(`${$E('sim.divides_to_hold_and', { name: self.name, name2: self.engaged.name, name3: free.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-02-F', phase: 'double', victims: [self.engaged.slot, free.slot] });
       }
     },
     playEnd(ctx, self) { if (self.team !== 'off' || !scrimmage(ctx)) return; cooldownStep(ctx.state(self), !!self.guard?.active); },

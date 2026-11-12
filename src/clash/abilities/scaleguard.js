@@ -8,6 +8,7 @@
 // application and one conversion per Clash. Mastery execution: the entry attempt and the conversion.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const GUARD = [20, 25, 30, 35]; const TURNS = 2;
 
@@ -20,7 +21,7 @@ export default registerClashAbility({
       const st = self.state; if (st.entered) return; st.entered = true;
       api.trigger(self, 'first active entry'); api.executed(self);
       const r = api.applyStatus(self, self.id, { id: 'guarded', strength: byTier(GUARD, self.tier), duration: TURNS, payload: { pct: byTier(GUARD, self.tier), dragonhide: self.id } });
-      if (r.accepted) { st.ownStrength = byTier(GUARD, self.tier); api.activate(self, `Dragonhide Guarded ${st.ownStrength}%`); } else api.cleanup(self, 'blocked by an existing status: the entry opportunity is spent');
+      if (r.accepted) { st.ownStrength = byTier(GUARD, self.tier); api.activate(self, `${$E('clashlog.dragonhide_guarded', { ownStrength: st.ownStrength })}`); } else api.cleanup(self, $E('clashlog.blocked_by_an_existing_status_the'));
     },
     chooseAction(api, self, { foeId }) {
       const st = self.state; const me = api.me(self);
@@ -29,8 +30,8 @@ export default registerClashAbility({
       if (!own) { st.ownStrength = 0; return null; }
       if (me.status.remaining !== 1) return null; // not yet the final protected turn
       st.converted = true; const pctV = 100 + st.ownStrength;
-      api.activate(self, `final protected turn: the Guarded becomes a ${pctV}% attack`, { targetId: foeId }); api.executed(self);
-      api.removeStatus(self, self.id, 'consumed (Dragonhide conversion)');
+      api.activate(self, `${$E('clashlog.final_protected_turn_the_guarded_becomes', { pctV })}`, { targetId: foeId }); api.executed(self);
+      api.removeStatus(self, self.id, $E('clashlog.consumed_dragonhide_conversion'));
       return { kind: 'attack', tag: 'special', mult: pctV / 100, strikeKey: 'conversion', label: 'Dragonhide' };
     },
   },

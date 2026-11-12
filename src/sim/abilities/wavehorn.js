@@ -19,6 +19,7 @@
 // decided by the snap assignment, no readiness: not gated.
 import { registerAbility } from './registry.js';
 import { auraLayer, byMastery } from './fw-util.js';
+import { E as $E } from '../../core/english.js';
 
 export const BREAKWATER = Object.freeze({ radius: 3, maxRadius: 5, pctByMastery: [25, 30, 35, 40], blocking: Object.freeze(['block', 'run_block', 'pull', 'stalk', 'release', 'fake']) });
 
@@ -35,7 +36,7 @@ export default registerAbility({
         auraLayer(o, 'strength', 'breakwater', self.mid, inside ? r : 0, { rewrite: true });
         if (inside && !self.breakwater.seen.has(o.mid)) {
           self.breakwater.seen.add(o.mid); ctx.executed(self, { passive: true });
-          ctx.log(`${self.name}'s Breakwater saps ${o.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-05-F', victim: o.slot, victimSide: o.team, radius: R });
+          ctx.log(`${$E('sim.s_breakwater_saps', { name: self.name, name2: o.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-05-F', victim: o.slot, victimSide: o.team, radius: R });
         }
       }
     },

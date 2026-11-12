@@ -8,6 +8,7 @@
 // 'd13-values' at Developing / Expert / Mastered. Provisional mode: owner normal turns and the Progression ladder (T8_FLAGS).
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, removableHarmful, lowestHpPct } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const LADDER = [8, 10, 12, 14]; const CORE = 10; const COOLDOWN = 5;
 
@@ -19,10 +20,10 @@ export default registerClashAbility({
     chooseAction(api, self) {
       if (!api.ready(self)) return null;
       const t = lowestHpPct(api.allies(self).filter((v) => v.id !== self.id && removableHarmful(v.status))); if (!t) return null;
-      if (!api.provisional(self, 'clear-light-cooldown-unit', '"cooldown 5 turns fixed": whose turns?')) return null;
+      if (!api.provisional(self, 'clear-light-cooldown-unit', $E('clashlog.cooldown_5_turns_fixed_whose_turns'))) return null;
       const ladder = byTier(LADDER, self.tier); let pctV = ladder;
-      if (ladder !== CORE) { if (!api.provisional(self, 'd13-values', `Core ${CORE}% against Progression ${ladder}%`)) return null; pctV = api.flags.d13ValuePrecedence.value === 'core' ? CORE : ladder; }
-      api.activate(self, `cleanse ${t.name}'s ${t.status.id}, then heal ${pctV}%`, { targetId: t.id });
+      if (ladder !== CORE) { if (!api.provisional(self, 'd13-values', `${$E('clashlog.core_against_progression', { core: CORE, ladder })}`)) return null; pctV = api.flags.d13ValuePrecedence.value === 'core' ? CORE : ladder; }
+      api.activate(self, `${$E('clashlog.cleanse_s_then_heal', { name: t.name, id: t.status.id, pctV })}`, { targetId: t.id });
       if (!api.cleanse(self, t.id)) return null;
       api.cooldown(self, COOLDOWN); api.executed(self);
       api.heal(self, t.id, { pctMaxHp: pctV });

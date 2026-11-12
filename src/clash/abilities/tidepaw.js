@@ -9,6 +9,7 @@
 // Fractions: Aquip 15/16/17/18%; Aquarrel 18/19/20/21%; Abyssin 21/22/23/24%. Mastery execution: the heal action.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, byStage, hpPct } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const FRAC = [[15, 16, 17, 18], [18, 19, 20, 21], [21, 22, 23, 24]]; const SHIELD_TURNS = 3;
 
@@ -25,11 +26,11 @@ export default registerClashAbility({
       const missing = (v) => 1 - hpPct(v);
       const t = order.reduce((best, v) => (missing(v) > missing(best) ? v : best), order[0]);
       const pctV = byTier(byStage(FRAC, self.stage), self.tier);
-      api.activate(self, `heal ${t.name} (${pctV}% of its max HP); surplus becomes a shield`, { targetId: t.id }); api.executed(self);
+      api.activate(self, `${$E('clashlog.heal_of_its_max_hp_surplus', { name: t.name, pctV })}`, { targetId: t.id }); api.executed(self);
       const r = api.heal(self, t.id, { pctMaxHp: pctV });
       const surplus = r.budget - r.amount;
       if (surplus > 0) api.shield(self, t.id, { pool: surplus, duration: SHIELD_TURNS, noFactors: true });
-      else if (r.budget === 0) api.cleanup(self, 'Healing Reduced 100%: no heal and no surplus shield');
+      else if (r.budget === 0) api.cleanup(self, $E('clashlog.healing_reduced_100_no_heal_and'));
       return { kind: 'done' };
     },
   },

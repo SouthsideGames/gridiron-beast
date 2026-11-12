@@ -7,6 +7,7 @@
 // even if no teammate is injured. The count survives rotation, pauses in reserve, clears at the Clash end. Mastery execution: the trigger.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, byStage, injured, lowestHpPct, SPAR } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const SHARE = [25, 35]; const CAP = [8, 10, 12, 14]; const EVERY = 3;
 
@@ -19,11 +20,11 @@ export default registerClashAbility({
       if (info.attackerId !== self.id || !info.normal || !info.inAction || info.redirected) return;
       const dealt = info.hits.reduce((s, h) => s + (h.losses?.[info.targetId] ?? 0), 0); if (dealt <= 0) return;
       const st = self.state; st.count += 1; if (st.count < EVERY) return;
-      st.count = 0; api.trigger(self, `third qualifying attack (${dealt} HP dealt)`); api.executed(self);
+      st.count = 0; api.trigger(self, `${$E('clashlog.third_qualifying_attack_hp_dealt', { dealt })}`); api.executed(self);
       const t = lowestHpPct(api.allies(self).filter((v) => v.id !== self.id && injured(v)));
-      if (!t) { api.cleanup(self, 'no injured teammate: the count resets'); return; }
+      if (!t) { api.cleanup(self, $E('clashlog.no_injured_teammate_the_count_resets')); return; }
       const amount = Math.min((dealt * byStage(SHARE, self.stage)) / 100, (t.maxHp * byTier(CAP, self.tier)) / 100);
-      api.activate(self, `heal ${t.name} from ${dealt} HP dealt`, { targetId: t.id });
+      api.activate(self, `${$E('clashlog.heal_from_hp_dealt', { name: t.name, dealt })}`, { targetId: t.id });
       api.heal(self, t.id, { base: amount });
     },
   },

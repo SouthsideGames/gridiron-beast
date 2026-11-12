@@ -7,6 +7,7 @@
 // Stunned skip cannot activate it and does not spend the use; cannot activate after the Clash ended. Mastery execution: the revival.
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, byStage } from './util.js';
+import { E as $E } from '../../core/english.js';
 
 const HP = [[10, 12, 14, 16], [15, 17, 19, 21], [20, 22, 24, 26]];
 
@@ -20,8 +21,8 @@ export default registerClashAbility({
       const down = api.lineup(self.side).filter((v) => v.koed && v.id !== self.id).sort((p, q) => p.koOrder - q.koOrder || p.id.localeCompare(q.id));
       if (!down.length) return null;
       const t = down[0]; const pctV = byTier(byStage(HP, self.stage), self.tier);
-      self.state.used = true; api.trigger(self, `${t.name} is the earliest knocked-out ally`, { targetId: t.id }); api.executed(self);
-      api.activate(self, `revive ${t.name} at ${pctV}% max HP, at the back of the lineup`, { targetId: t.id });
+      self.state.used = true; api.trigger(self, `${$E('clashlog.is_the_earliest_knocked_out_ally', { name: t.name })}`, { targetId: t.id }); api.executed(self);
+      api.activate(self, `${$E('clashlog.revive_at_max_hp_at_the', { name: t.name, pctV })}`, { targetId: t.id });
       api.revive(self, t.id, Math.max(1, Math.floor((t.maxHp * pctV) / 100 + 0.5)));
       return { kind: 'done' };
     },
