@@ -21,7 +21,7 @@
 | --- | --- | ---: | --- |
 | 1 | Foundation; menus, settings, office, Developer Tools; new-franchise flow; stadiums and weather; Media Day | 808 | done |
 | 2 | Remaining player-facing screens: headquarters and week, match day, roster, Beast Clash screens, careers, league, franchise slots, free agency and trades, shared cards and sheets | 2,827 | done |
-| 3 | Franchise: news, notices, reasons and rules text; the club log and League News are saved as lines that follow the language | 1,074 | done |
+| 3 | Franchise: news, notices, reasons and rules text; the club log and League News are saved as lines that follow the language | 1,031 | done |
 | 4 | Data: dialogue, achievements, staff, stat guide, leagues, gyms, club identities, tempers, offseason meetings, the playbook, monster natures and scheme fit, rarities, coach appearance | 1,041 | done |
 | 5 | Beast Dex: 1,584 shown lines under translator keys (see "The Beast Dex" below) | 1,584 | done |
 | 6 | Game logs: football play-by-play and the Beast Clash log; ability banners in the effect files | about 2,300 | approved (decision 3) |
