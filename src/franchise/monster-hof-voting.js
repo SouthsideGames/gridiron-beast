@@ -98,7 +98,7 @@ export function recordRetiredMonsterCandidates(f, retired, year) {
   if (!Array.isArray(hof.candidates)) hof.candidates = [];
   if (!Array.isArray(hof.elections)) hof.elections = [];
   const known = new Set(hof.candidates.map((c) => String(c.id)));
-  const retiredIds = [...(retired?.owner || []), ...(retired?.league || [])];
+  const retiredIds = [...(retired?.owner || []), ...(retired?.league || []), ...(retired?.unsignedIds || [])];
   for (const item of retiredIds) {
     const id = String(item?.id ?? '');
     if (!id || known.has(id)) continue;
