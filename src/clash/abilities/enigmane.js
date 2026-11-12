@@ -50,11 +50,11 @@ export default registerClashAbility({
   review: {
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'An afterimage miss earns the trick; the next attack Confuses the target (controlled seed selection)',
-        explain: (c) => `The opponent's attack strikes an afterimage (15%; controlled seed selection, labelled); Enigmane's next attack carries the trick and Confuses the target for ${c.values.confusedTurns} of its turns.`,
+        explain: (c) => `The opponent's attack strikes an afterimage (15%; controlled seed selection, labeled); Enigmane's next attack carries the trick and Confuses the target for ${c.values.confusedTurns} of its turns.`,
         setup: () => ({ a: [{ species: 'enigmane', overall: 60 }], b: [{ species: 'charbun', overall: 99 }], seed: 1, stopAt: { exchange: 3 }, probes: [{ initiative: (v, id) => (id === 'b0' ? { priority: 1 } : null) }], seedSearch: { until: (r) => r.log.some((e) => e.kind === 'status' && e.abilityId === 'PSY-05-C'), max: 300, why: 'an afterimage miss happens before Enigmane\'s next attack' } }),
         expect: (r, h) => { const s = h.ev('status', (e) => e.abilityId === 'PSY-05-C')[0]; h.check('Confused attempt from the trick attack', s && s.slot.id === 'confused' && s.slot.remaining === h.values.confusedTurns); h.check('the trick came from a miss', h.has('trigger', (e) => e.abilityId === 'PSY-05-C')); h.executed(1); } },
       { id: 'no-trick', kind: 'blocked', title: 'No trick stored: ordinary attacks only',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe makes the opponent undodgeable, so no miss and no trick.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe makes the opponent undodgeable, so no miss and no trick.',
         setup: () => ({ a: [{ species: 'enigmane' }], b: [{ species: 'charbun' }], seed: 1, stopAt: { exchange: 3 }, probes: [{ chooseAction: (v, id) => (id === 'b0' ? { kind: 'attack', abilityId: 'TEST-UNDODGEABLE', undodgeable: true, mult: 1 } : null) }] }),
         expect: (r, h) => { h.check('no trick (no Confused, no roll)', !h.has('status', (e) => e.abilityId === 'PSY-05-C') && !h.has('roll', (e) => e.abilityId === 'PSY-05-C')); } },
       { id: 'perk-provisional', kind: 'valid', title: 'APPROVED N9c (D5 proposal: ordinary, so pierce applies): the trick attack against the Tank',

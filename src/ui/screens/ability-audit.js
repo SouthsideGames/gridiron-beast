@@ -25,7 +25,7 @@ import { syncReviews } from '../../franchise/review-store.js';
 import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, reviewsText, cardMismatches, cardIssue, proposalsPending } from '../dev-review.js';
 import { CARD_PROPOSALS } from '../../data/card-check.js';
 
-const STATUS_FILTERS = [['all', 'All'], ['todo', '🔔 To review'], ['approved', '✓ Good'], ['needs_work', '✎ Waiting on dev'], ['card', '⚠ Card mismatch'], ['proposal', '✍ New cards']];
+const STATUS_FILTERS = [['all', 'All'], ['todo', '🔔 To Review'], ['approved', '✓ Good'], ['needs_work', '✎ Waiting on Dev'], ['card', '⚠ Card Mismatch'], ['proposal', '✍ New Cards']];
 
 /** What makes each effect key fire in engine.js (presentation reads the same hooks). */
 const HOOKS = {
@@ -41,7 +41,7 @@ const HOOKS = {
   eruption: 'Once per drive: the first defender he blocks, or the first who hits him with the ball, is flattened.', riptide: 'While run blocking, drags his man up to a yard toward the nearer sideline.',
   undertow: 'Interception chance x1.25 on throws of 15+ air yards into his half.', grove: 'Every tick: teammates within 5 yards get +5 Awareness; they never bite on play action or misdirection.', overcharge: 'After his sack, +8 Speed on every play of that drive.',
   thunderclap: 'Ball 15% faster; a trailing defender cannot break up or pick a quick pass.', whiteout: 'Once per drive: the QB is about to throw to his first read and has to move on.',
-  nightVeil: 'Left out of the QB\u2019s read of how open a receiver is; a ball arriving within 1 yard of him (not engaged or stunned) has catch chance 0, interceptions still possible.', refraction: 'QB judgement noise x1.2 for receivers within 4 yards of him.', daybreak: 'After every catch: chasers behind him are held below his pace and cannot tackle from behind.',
+  nightVeil: 'Left out of the QB\u2019s read of how open a receiver is; a ball arriving within 1 yard of him (not engaged or stunned) has catch chance 0, interceptions still possible.', refraction: 'QB judgment noise x1.2 for receivers within 4 yards of him.', daybreak: 'After every catch: chasers behind him are held below his pace and cannot tackle from behind.',
   blink: 'Once per game: the first tackle attempt, he appears 5 yards downfield.', sovereign: 'First-read throws cannot be intercepted; +10 Arm and Accuracy in the fourth quarter.', roar: 'At the snap, the nearest blocker cannot engage for 0.15 s.',
   cyclone: 'On her first break, everyone covering her is stunned for 0.35 s.', eclipse: 'Deep route past 10 yards: everyone covering him is stunned for 0.2 s.', landslide: 'Runs crossing the line within 2.5 yards of him fall forward 2 more yards; never shed in pass protection.',
   permafrost: 'A run that meets him is pushed back a yard on contact.', heatHaze: 'Trails receivers on deep routes 0.15 s closer.', glacierWall: 'Sacks from his side of the line fail 30% of the time.',
@@ -168,7 +168,7 @@ export function registerAbilityAudit(Router, app) {
         ${missing.length ? `<div class="panel tight warn">No activation hook (passive only): ${missing.map((e) => esc(e.sp.name)).join(', ')}</div>` : ''}
         <div class="panel tight review-summary"><div class="row between"><b>Your review</b><span class="dim">${reviewable.length} abilities</span></div>
           <div class="bar review-bar" style="margin:6px 0"><i class="ok" style="width:${count.approved / reviewable.length * 100}%"></i><i class="nw" style="width:${count.needs_work / reviewable.length * 100}%"></i></div>
-          <div class="row" style="gap:10px;font-size:13px"><span style="color:var(--good)">✓ ${count.approved} good</span><span style="color:var(--warn)">✎ ${count.needs_work} need work</span><span class="dim">🔔 ${count.todo} to review</span><span style="color:var(--warn)">⚠ ${count.card} card mismatch${count.card === 1 ? '' : 'es'}</span><span class="grow"></span><button class="btn small ghost" data-action="rv-copy">Copy notes</button></div>
+          <div class="row" style="gap:10px;font-size:13px"><span style="color:var(--good)">✓ ${count.approved} good</span><span style="color:var(--warn)">✎ ${count.needs_work} need work</span><span class="dim">🔔 ${count.todo} to review</span><span style="color:var(--warn)">⚠ ${count.card} card mismatch${count.card === 1 ? '' : 'es'}</span><span class="grow"></span><button class="btn small ghost" data-action="rv-copy">Copy Notes</button></div>
           <div class="dim" style="font-size:11px;margin-top:4px">${globalThis.claude?.use ? 'Saved to this app; Claude can read your verdicts and notes.' : 'Saved on this device. Use Copy notes to send them.'}</div></div>
         <div class="chips" style="margin:8px 0 4px">${STATUS_FILTERS.map(([v, label]) => `<button class="chip ${v === st.status ? 'on' : ''}" data-action="st" data-v="${v}">${label}${v === 'all' ? '' : ` ${count[v]}`}</button>`).join('')}</div>
         <div class="chips" style="margin:4px 0 8px">${elements.map((el) => `<button class="chip ${el === st.element ? 'on' : ''}" data-action="el" data-v="${el}">${el === 'All' ? 'All' : elementFx(el).glyph + ' ' + el}</button>`).join('')}</div>
@@ -179,7 +179,7 @@ export function registerAbilityAudit(Router, app) {
             <div><b style="color:${L.a}">${esc(e.eff?.name || 'None')}</b> <span class="dim">${e.eff?.kind === 'trait' ? 'trait (no field effect)' : FAMILY_LABEL[e.family]}</span></div>
             <div class="muted" style="font-size:12px">${esc(e.eff?.text || '')}</div>
             <div class="dim" style="font-size:12px">Hook: ${esc(e.key ? HOOKS[e.key] || e.key : 'none')}${e.keys.length > 1 ? ` <span class="dim">(${e.keys.join(', ')})</span>` : ''}</div>
-            ${e.eff?.kind === 'ability' ? `<div class="row" style="margin-top:6px;gap:6px"><button class="btn small" data-action="staged" data-id="${e.sp.id}">▶ Staged</button>${e.hooked ? `<button class="btn small" data-action="live" data-id="${e.sp.id}">▶ In play</button>` : '<span class="chip warn">no hook</span>'}</div>${reviewHtml('ability', e.sp.id, { open: st.notesOpen.has('ability:' + e.sp.id) })}` : ''}
+            ${e.eff?.kind === 'ability' ? `<div class="row" style="margin-top:6px;gap:6px"><button class="btn small" data-action="staged" data-id="${e.sp.id}">▶ Staged</button>${e.hooked ? `<button class="btn small" data-action="live" data-id="${e.sp.id}">▶ In Play</button>` : '<span class="chip warn">no hook</span>'}</div>${reviewHtml('ability', e.sp.id, { open: st.notesOpen.has('ability:' + e.sp.id) })}` : ''}
           </div></div></div>`; }).join('')}</div>`;
     },
     mount(root) {
@@ -188,7 +188,7 @@ export function registerAbilityAudit(Router, app) {
         el: (el) => { st.element = el.dataset.v; Router.render(); },
         st: (el) => { st.status = el.dataset.v; Router.render(); },
         ...reviewHandlers(() => Router.render()),
-        'rv-copy': async () => { const txt = reviewsText(); if (!txt) { toast('No reviews yet.'); return; } try { await navigator.clipboard.writeText(txt); toast('Notes copied.', 'good'); } catch { sheet(`<textarea class="review-note" rows="12" readonly>${esc(txt)}</textarea>`, { title: 'Your notes' }); } },
+        'rv-copy': async () => { const txt = reviewsText(); if (!txt) { toast('No reviews yet.'); return; } try { await navigator.clipboard.writeText(txt); toast('Notes copied.', 'good'); } catch { sheet(`<textarea class="review-note" rows="12" readonly>${esc(txt)}</textarea>`, { title: 'Your Notes' }); } },
         staged: (el) => preview(entries.find((e) => e.sp.id === el.dataset.id), 'staged'),
         live: (el) => preview(entries.find((e) => e.sp.id === el.dataset.id), 'live'),
       });
@@ -264,7 +264,7 @@ export function openAbilityPreview(settings, speciesId, { context = '' } = {}) {
   raf = requestAnimationFrame(tick);
 }
 /** The "▶ See it" button for a monster with a signature ability, or ''. */
-export function seeItButton(m) { const sp = resolveSpecies(m); return sp?.ability ? `<button class="btn small see-it" data-see-it="${sp.id}">▶ See it</button>` : ''; }
+export function seeItButton(m) { const sp = resolveSpecies(m); return sp?.ability ? `<button class="btn small see-it" data-see-it="${sp.id}">▶ See It</button>` : ''; }
 
 // ---------------------------------------------------------------- Developer → Ability Balance (GDD §23.15)
 const RARITY_ORDER = ['legendary', 'rare', 'uncommon', 'trait'];
@@ -294,7 +294,7 @@ export function registerAbilityBalance(Router) {
       const flagged = rows.filter((r) => flags(r).length);
       return `<p class="muted">Each ability measured over ${ABILITY_BALANCE.snaps.toLocaleString('en-US')} paired snaps: the same plays and seeds with the monster's ability and without it, with drive, half and game memory like a real game. <b>Value</b> is the yards of field position it is worth to its team per snap on the field (a turnover counts as 45 yards). Inside ±${NOISE} is noise. Measured ${esc(ABILITY_BALANCE.generated)}; rerun with <span class="mono">node tools/ability-balance.mjs</span>.</p>
         <div class="panel tight"><b>⚑ ${flagged.length} to look at</b><div class="muted" style="font-size:13px;margin-top:2px">${flagged.map((r) => `${esc(r.ability)} (${flags(r)[0]})`).join(' · ')}</div></div>
-        <div class="chips" style="margin:8px 0"><button class="chip ${group === 'rarity' ? 'on' : ''}" data-action="g" data-v="rarity">By rarity</button><button class="chip ${group === 'all' ? 'on' : ''}" data-action="g" data-v="all">Strongest first</button></div>${body}`;
+        <div class="chips" style="margin:8px 0"><button class="chip ${group === 'rarity' ? 'on' : ''}" data-action="g" data-v="rarity">By Rarity</button><button class="chip ${group === 'all' ? 'on' : ''}" data-action="g" data-v="all">Strongest First</button></div>${body}`;
     },
     mount(root) { delegate(root, { g: (el) => { group = el.dataset.v; Router.render(); } }); },
   });

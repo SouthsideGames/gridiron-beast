@@ -24,7 +24,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'rootram', hp: 1, sparring: true }, { species: 'tidepaw' }], b: [{ species: 'charbun', overall: 99 }], seed: 1, stopAt: { exchange: 2 } }),
         expect: (r, h) => { const sv = h.ev('survive', (e) => e.abilityId === 'NAT-03-C'); h.check('one survival at 1 HP on exchange 1', sv.length === 1 && sv[0].ex === 1 && h.ev('damage', (e) => e.target === 'a0' && e.ex === 1)[0]?.hpAfter === 1); h.check('knocked out by the next hit', h.has('ko', (e) => e.target === 'a0' && e.ex === 2)); h.executed(1); } },
       { id: 'reserve-redirected', kind: 'interaction', title: 'In reserve: a lethal hit redirected onto Bramblet is survived too',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe redirects a lethal hit from the active ally onto the 1-HP reserve Bramblet (an Emergency Cover-type redirect). Last Root works in reserve: it survives at 1 HP.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe redirects a lethal hit from the active ally onto the 1-HP reserve Bramblet (an Emergency Cover-type redirect). Last Root works in reserve: it survives at 1 HP.',
         setup: () => ({ a: [{ species: 'tidepaw', hp: 1, sparring: true }, { species: 'rootram', hp: 1 }], b: [{ species: 'charbun', overall: 99 }], seed: 1, stopAt: { exchange: 1 }, probes: [{ lethalRedirect: (v, id, info) => (id === 'a0' && info.lethal ? { to: 'a1', abilityId: 'TEST-COVER' } : null) }] }),
         expect: (r, h) => { h.check('survived in reserve at 1 HP', h.has('survive', (e) => e.abilityId === 'NAT-03-C' && e.actor === 'a1') && h.line('a1').hp === 1); } },
       { id: 'once', kind: 'blocked', title: 'Spent: no second survival (no refresh)',

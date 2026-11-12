@@ -35,7 +35,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'metalhorn' }, { species: 'tidepaw', status: { id: 'slowed', strength: 15, duration: 5 } }], b: [{ species: 'gravelpup' }], seed: 1, stopAt: { exchange: 1 } }),
         expect: (r, h) => { h.unmetReported(); h.check('ordinary attack', h.has('damage', (e) => e.actor === 'a0')); } },
       { id: 'cooldown', kind: 'depletion', title: 'Five owner turns of cooldown between casts',
-        explain: () => 'Against sparring partners (labelled) Ferrhorn shields on exchange 1 and again on exchange 7.',
+        explain: () => 'Against sparring partners (labeled) Ferrhorn shields on exchange 1 and again on exchange 7.',
         setup: () => ({ a: [{ species: 'metalhorn', overall: 30 }, { species: 'tidepaw' }, { species: 'lumen' }], b: [{ species: 'gravelpup', overall: 99, sparring: true }, { species: 'tinhare', overall: 99, sparring: true }], seed: 1, stopAt: { exchange: 7 } }),
         expect: (r, h) => { h.check('casts on exchanges 1 and 7', h.ev('status', (e) => e.abilityId === 'MET-05-C').map((e) => e.ex).join(',') === '1,7'); } },
     ],

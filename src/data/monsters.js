@@ -40,7 +40,7 @@ export const NATURES = Object.freeze({
   sturdy: { name: 'Sturdy', up: 'durability', down: 'agility', behavior: 'Absorbs hits and protects the ball.' },
   relentless: { name: 'Relentless', up: 'durability', down: 'accuracy', behavior: 'Maintains effort late in drives.' },
   precise: { name: 'Precise', up: 'accuracy', down: 'strength', behavior: 'Chooses safer throwing windows.' },
-  surehanded: { name: 'Surehanded', up: 'catching', down: 'tackling', behavior: 'Prioritises securing receptions.' },
+  surehanded: { name: 'Surehanded', up: 'catching', down: 'tackling', behavior: 'Prioritizes securing receptions.' },
   technical: { name: 'Technical', up: 'agility', down: 'arm', behavior: 'Executes crisp routes.' },
   cerebral: { name: 'Cerebral', up: 'awareness', down: 'strength', behavior: 'Reads defensive tendencies more accurately.' },
   instinctive: { name: 'Instinctive', up: 'awareness', down: 'durability', behavior: 'Reacts quickly to loose balls and routes.' },

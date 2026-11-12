@@ -19,7 +19,7 @@ export default function batch(b) {
 
   add(D('slot_fire', 'Slot Fire', 'nickel', { DL1: RUSH('B_L'), DL2: RUSH('edge_R'), SS: RUSH('B_R'), LB1: ZONE('hook_M'), ...THIRDS() },
     T(['blitz', 'zone'], 'The slot defender blitzes inside through the right B gap while the end widens; three deep behind.', { SS: [3, 5] })),
-  'When the offence slides its protection away from the slot.', 'The inside blitz from the slot is hard to see and harder to pick up.', 'PA Boot to the right and slow throws.', 'Bubble Screen and quick throws to the slot’s receiver.');
+  'When the offense slides its protection away from the slot.', 'The inside blitz from the slot is hard to see and harder to pick up.', 'PA Boot to the right and slow throws.', 'Bubble Screen and quick throws to the slot’s receiver.');
 
   add(D('weak_fire', 'Weak Fire', 'nickel', { DL1: ZONE('hook_L'), LB1: RUSH('B_L'), DL2: RUSH('B_R'), SS: RUSH('edge_R'), ...THIRDS() },
     T(['blitz', 'zone'], 'The left lineman drops into the hook; the linebacker and the strong safety blitz around him.')),
@@ -31,7 +31,7 @@ export default function batch(b) {
 
   add(D('sim_right', 'Sim Right', 'nickel', { DL2: ZONE('hook_R'), DL1: RUSH('B_L'), LB1: RUSH('A_R'), SS: RUSH('edge_R'), ...THIRDS() },
     T(['blitz', 'zone', 'disguise'], 'The right lineman drops into the hook while the linebacker and strong safety come from the right.')),
-  'Against offences that slide protection to the strong side.', 'Two rushers attack where the lineman left; the hot throw meets a lineman.', 'Stick and Quick Slants to the right.', 'Throws to the left flat.');
+  'Against offenses that slide protection to the strong side.', 'Two rushers attack where the lineman left; the hot throw meets a lineman.', 'Stick and Quick Slants to the right.', 'Throws to the left flat.');
 
   add(D('nickel_zero', 'Nickel Zero', 'nickel_press', { ...TWO, LB1: RUSH('A_R'), ...MAN_OUT, SS: MAN('inside'), FS: MAN('back') },
     T(['blitz', 'man', 'risky'], 'Pressed man on everyone, no deep safety, the linebacker blitzes.')),
@@ -43,7 +43,7 @@ export default function batch(b) {
 
   add(D('nickel_mug_zero', 'Nickel Mug Zero', 'nickel', { DL1: RUSH('edge_L'), DL2: RUSH('edge_R'), LB1: RUSH('A_L'), SS: RUSH('A_R'), ...MAN_OUT, FS: MAN('inside') },
     T(['blitz', 'man', 'risky', 'interior'], 'Linebacker and strong safety mugged in the A gaps, ends wide; man with no safety.', { LB1: [1.2, -0.9], SS: [1.2, 0.9] })),
-  'Third-and-medium when the back stays in.', 'Two inside rushers and two outside: the centre can only take one.', 'QB Draw, Stick and slow drops.', 'Bubble Screen and Toss Sweep, nobody outside.');
+  'Third-and-medium when the back stays in.', 'Two inside rushers and two outside: the center can only take one.', 'QB Draw, Stick and slow drops.', 'Bubble Screen and Toss Sweep, nobody outside.');
 
   add(D('nickel_spy_zero', 'Nickel Spy Zero', 'nickel', { ...TWO, LB1: SPY, SS: RUSH('edge_R'), ...MAN_OUT, FS: MAN('inside') },
     T(['blitz', 'man', 'risky', 'anti_scramble'], 'The strong safety blitzes off the edge, the linebacker spies, man with no deep help.')),
@@ -51,7 +51,7 @@ export default function batch(b) {
 
   add(D('mike_blitz_1', 'Mike Blitz 1', 'nickel', { ...TWO, LB1: RUSH('A_L'), SS: MAN('inside'), ...MAN_OUT, FS: ZONE('deep_middle') },
     T(['blitz', 'man'], 'Cover 1 behind a middle linebacker blitz; nobody covers the back.')),
-  'Against offences that keep the back in to block.', 'The linebacker hits the A gap; if the back releases, he is open.', 'Y Cross and slow drops.', 'Wheel, Texas and RB Screen.');
+  'Against offenses that keep the back in to block.', 'The linebacker hits the A gap; if the back releases, he is open.', 'Y Cross and slow drops.', 'Wheel, Texas and RB Screen.');
 
   add(D('nickel_blitz_1', 'Nickel Blitz 1', 'nickel', { ...TWO, SS: RUSH('edge_R'), LB1: MAN('inside'), ...MAN_OUT, FS: ZONE('deep_middle') },
     T(['blitz', 'man'], 'The slot defender blitzes off the right edge; Cover 1 behind.', { SS: [3, 7] })),
@@ -75,14 +75,14 @@ export default function batch(b) {
 
   add(D('overload_left', 'Overload Left', 'nickel', { LB1: RUSH('edge_L'), DL1: RUSH('A_L'), DL2: RUSH('B_R'), SS: MAN('inside'), ...MAN_OUT, FS: ZONE('deep_middle') },
     T(['blitz', 'man'], 'Two rushers from the left side, one from the right; Cover 1 behind.')),
-  'When the offence slides protection right.', 'More rushers than blockers on the left side.', 'Slow drops and PA Boot to the left.', 'Screens to the left and the back free in the flat.');
+  'When the offense slides protection right.', 'More rushers than blockers on the left side.', 'Slow drops and PA Boot to the left.', 'Screens to the left and the back free in the flat.');
 
   add(D('double_cat', 'Double Cat', 'nickel', { ...TWO, CB1: RUSH('edge_L'), SS: RUSH('edge_R'), LB1: ZONE('hook_M'), FS: ZONE('deep_half_L'), CB2: ZONE('deep_half_R') },
     T(['blitz', 'zone', 'risky'], 'Left corner and strong safety blitz off both edges; two deep and one hook behind.', { CB1: [2, -12], SS: [3, 7] })),
   'Desperation pressure from both edges.', 'Only three defenders cover: the flats are empty.', 'Slow throws and play action.', 'Bubble Screen, Curl Flat and Swing Screen.');
 
   add(D('nickel_bear', 'Nickel Bear', 'nickel', { DL1: RUSH('A_L'), DL2: RUSH('A_R'), LB1: ZONE('short_R'), SS: ZONE('short_L'), ...MAN_OUT, FS: ZONE('deep_middle') },
-    T(['run', 'balanced'], 'Both linemen over the centre, the strong safety and linebacker fill the gaps; man outside.', { DL1: [1, -0.9], DL2: [1, 0.9], SS: [4, -3.5], LB1: [4, 3.5] })),
+    T(['run', 'balanced'], 'Both linemen over the center, the strong safety and linebacker fill the gaps; man outside.', { DL1: [1, -0.9], DL2: [1, 0.9], SS: [4, -3.5], LB1: [4, 3.5] })),
   'Against inside runs from spread sets.', 'Clog the middle with the linemen; the second level fills.', 'Inside Zone, Duo and QB Draw.', 'Outside Zone and Toss Sweep.');
 
   add(D('nickel_contain_spy', 'Nickel Contain Spy', 'nickel', { DL1: CONTAIN('contain_L'), DL2: CONTAIN('contain_R'), LB1: SPY, SS: ZONE('hook_M'), ...MAN_OUT, FS: ZONE('deep_middle') },
@@ -91,11 +91,11 @@ export default function batch(b) {
 
   add(D('mike_fire_robber', 'Mike Fire Robber', 'nickel', { ...TWO, LB1: RUSH('A_L'), SS: ZONE('robber'), ...MAN_OUT, FS: ZONE('deep_middle') },
     T(['blitz', 'man', 'trap'], 'Linebacker blitzes; the strong safety robs the middle where the hot throw goes.')),
-  'When the offence throws hot slants against blitzes.', 'The robber sits exactly where the hot read lands.', 'Quick Slants and Stick thrown hot.', 'The inside receiver vertically and the back.');
+  'When the offense throws hot slants against blitzes.', 'The robber sits exactly where the hot read lands.', 'Quick Slants and Stick thrown hot.', 'The inside receiver vertically and the back.');
 
   add(D('double_drop_nickel', 'Double Drop Nickel', 'nickel', { DL1: ZONE('short_L'), DL2: ZONE('short_R'), LB1: RUSH('A_M'), SS: RUSH('edge_R'), ...THIRDS() },
     T(['blitz', 'zone', 'disguise'], 'Both linemen drop into short zones while the linebacker and strong safety rush.')),
-  'Against screen-happy offences.', 'The linemen drop right into the screen lanes.', 'RB Screen, Middle Screen and Quick Slants.', 'Deep throws with time.');
+  'Against screen-happy offenses.', 'The linemen drop right into the screen lanes.', 'RB Screen, Middle Screen and Quick Slants.', 'Deep throws with time.');
 
   add(D('free_fire_man', 'Free Fire Man', 'nickel', { ...TWO, FS: RUSH('A_R'), SS: ZONE('deep_middle'), LB1: MAN('inside'), ...MAN_OUT },
     T(['blitz', 'man', 'disguise'], 'The free safety blitzes up the middle and the strong safety rotates to the deep middle; man underneath.', { FS: [10, 2], SS: [12, 7] })),
@@ -107,7 +107,7 @@ export default function batch(b) {
 
   add(D('screen_trap', 'Screen Trap', 'nickel', { DL1: ZONE('short_L'), DL2: ZONE('short_R'), LB1: RUSH('A_M'), SS: RUSH('edge_R'), CB1: ZONE('flat_L'), CB2: ZONE('flat_R'), FS: ZONE('deep_middle') },
     T(['pass', 'zone', 'trap'], 'Both linemen drop to the short zones and the corners squat in the flats: every screen lane is covered.')),
-  'After the offence has hurt you with screens.', 'The defence sits on the screen; anything deep is single-high.', 'RB Screen, Bubble Screen and Tunnel Screen.', 'Deep Post and verticals.');
+  'After the offense has hurt you with screens.', 'The defense sits on the screen; anything deep is single-high.', 'RB Screen, Bubble Screen and Tunnel Screen.', 'Deep Post and verticals.');
 
   add(D('flat_kill', 'Flat Kill', 'nickel', { ...TWO, CB1: ZONE('flat_L'), CB2: ZONE('flat_R'), LB1: ZONE('seam_L'), SS: ZONE('seam_R'), FS: ZONE('deep_middle') },
     T(['pass', 'zone'], 'Corners squat in the flats, two seam defenders carry the verticals, one deep safety.')),
@@ -115,15 +115,15 @@ export default function batch(b) {
 
   add(D('trips_solo', 'Trips Solo', 'nickel', { ...TWO, CB1: MAN('wideL'), SS: ZONE('curl_flat_R'), LB1: ZONE('hook_R'), CB2: ZONE('deep_third_R'), FS: ZONE('deep_middle') },
     T(['pass', 'zone', 'man'], 'Against trips: the single receiver gets the corner alone in man; everyone else rolls to the trips side.')),
-  'When the offence lines up three receivers to one side.', 'The solo corner is on an island; the trips side is outnumbered by defenders.', 'Snag, Trips Spacing and Flood to trips.', 'The single receiver on a Slant or Fade.');
+  'When the offense lines up three receivers to one side.', 'The solo corner is on an island; the trips side is outnumbered by defenders.', 'Snag, Trips Spacing and Flood to trips.', 'The single receiver on a Slant or Fade.');
 
   add(D('sideline_cover_2', 'Sideline Cover 2', 'nickel', { ...TWO, CB1: ZONE('curl_flat_L'), CB2: ZONE('curl_flat_R'), FS: ZONE('deep_half_L'), SS: ZONE('deep_half_R'), LB1: ZONE('hook_M') },
     T(['pass', 'zone', 'two_minute'], 'Cover 2 with the corners sitting deeper in the curl-flat to take away sideline throws.')),
-  'Two-minute defence: keep them in bounds.', 'Corners sit at six yards near the sideline; the middle is open.', 'Quick Outs, Double Bench and outs.', 'Stick and Dagger in the middle.');
+  'Two-minute defense: keep them in bounds.', 'Corners sit at six yards near the sideline; the middle is open.', 'Quick Outs, Double Bench and outs.', 'Stick and Dagger in the middle.');
 
   add(D('nickel_goal_line', 'Nickel Goal Line', 'nickel', { DL1: RUSH('A_L'), DL2: RUSH('A_R'), LB1: RUSH('B_R'), FS: ZONE('goal_L'), SS: ZONE('goal_R'), ...MAN_OUT },
     T(['goalline', 'short', 'balanced'], 'Goal line with nickel personnel: three rushers, safeties in the goal-line zones, corners man.')),
-  'Inside the 5 against a spread offence.', 'The safeties sit on the goal line: quick throws meet them at the line.', 'Snag, Goal Line Fade and spread runs.', 'Jumbo Lead and power runs.');
+  'Inside the 5 against a spread offense.', 'The safeties sit on the goal line: quick throws meet them at the line.', 'Snag, Goal Line Fade and spread runs.', 'Jumbo Lead and power runs.');
 
   // ================================================================ base pressure
   add(D('will_fire', 'Will Fire', 'base', { DL1: RUSH('A_L'), LB1: RUSH('B_L'), DL2: RUSH('B_R'), LB2: ZONE('hook_M'), ...THIRDS() },
@@ -156,7 +156,7 @@ export default function batch(b) {
 
   add(D('walk_blitz', 'Walk Blitz', 'base_walk', { ...TWO, LB1: RUSH('edge_L'), LB2: MAN('inside'), ...MAN_OUT, FS: ZONE('deep_middle') },
     T(['blitz', 'man'], 'The walked-out linebacker blitzes off the left edge; Cover 1 behind.')),
-  'Against offences that read the walked linebacker as a cover man.', 'He looks like he is covering the slot, then he comes.', 'PA Boot to the left and slow drops.', 'Quick throws to the left slot.');
+  'Against offenses that read the walked linebacker as a cover man.', 'He looks like he is covering the slot, then he comes.', 'PA Boot to the left and slow drops.', 'Quick throws to the left slot.');
 
   add(D('spy_fire', 'Spy Fire', 'base', { ...TWO, LB1: SPY, LB2: RUSH('A_R'), ...THIRDS() },
     T(['blitz', 'zone', 'anti_scramble'], 'One linebacker blitzes, the other spies; three deep and no underneath zones.')),
@@ -229,7 +229,7 @@ export default function batch(b) {
 
   add(D('heavy_halves_fire', 'Heavy Halves Fire', 'heavy', { DL1: RUSH('edge_L'), DL3: RUSH('A_M'), DL2: RUSH('edge_R'), LB1: RUSH('A_L'), LB2: RUSH('A_R'), CB1: ZONE('deep_half_L'), CB2: ZONE('deep_half_R') },
     T(['blitz', 'zone', 'risky'], 'Five rushers from the heavy front with both corners in deep halves.')),
-  'When the offence is in max protection.', 'Five rushers, two deep, nothing underneath.', 'PA Shot and long drops.', 'Every short throw.');
+  'When the offense is in max protection.', 'Five rushers, two deep, nothing underneath.', 'PA Shot and long drops.', 'Every short throw.');
 
   add(D('heavy_sim', 'Heavy Sim', 'heavy', { DL3: ZONE('hook_M'), LB1: RUSH('A_L'), LB2: RUSH('A_R'), DL1: RUSH('B_L'), DL2: RUSH('B_R'), CB1: ZONE('deep_half_L'), CB2: ZONE('deep_half_R') },
     T(['blitz', 'zone', 'disguise'], 'The nose tackle drops into the hook while both linebackers blitz the A gaps.')),
@@ -319,7 +319,7 @@ export default function batch(b) {
   // ================================================================ run fronts and situational (base)
   add(D('okie_front', 'Okie Front', 'base', { ...TWO, LB1: ZONE('short_L'), LB2: ZONE('short_R'), ...MAN_OUT, FS: ZONE('robber') },
     T(['run', 'balanced'], 'Two linemen in the B gaps, linebackers fill the A gaps, the safety comes down as an extra run defender.')),
-  'Early downs against a balanced offence that likes to run.', 'Eight men near the box; the corners are on islands.', 'Inside Zone, Dive and Trap.', 'PA Post, Deep Post and Slot Fade.');
+  'Early downs against a balanced offense that likes to run.', 'Eight men near the box; the corners are on islands.', 'Inside Zone, Dive and Trap.', 'PA Post, Deep Post and Slot Fade.');
 
   add(D('under_front', 'Under Front', 'base_wide', { DL1: RUSH('B_L'), DL2: RUSH('A_R'), LB1: ZONE('short_R'), LB2: ZONE('hook_L'), ...MAN_OUT, FS: ZONE('deep_middle') },
     T(['run', 'balanced'], 'The line shifts away from the tight end; the linebackers fill toward it.')),
@@ -339,10 +339,10 @@ export default function batch(b) {
 
   add(D('option_squeeze', 'Option Squeeze', 'base', { DL1: CONTAIN('contain_L'), DL2: CONTAIN('contain_R'), LB1: SPY, LB2: ZONE('short_M'), ...MAN_OUT, FS: ZONE('deep_middle') },
     T(['run', 'anti_outside', 'anti_scramble'], 'Ends squeeze the option from outside, one linebacker spies the quarterback, the other fills.')),
-  'Against option offences.', 'Everyone has one option player: end, spy, filler.', 'Speed Option, Option Pitch and Inverted Veer.', 'Passes, the corners are alone.');
+  'Against option offenses.', 'Everyone has one option player: end, spy, filler.', 'Speed Option, Option Pitch and Inverted Veer.', 'Passes, the corners are alone.');
 
   add(D('draw_squeeze', 'Draw Squeeze', 'base', { DL1: RUSH('A_L'), DL2: RUSH('A_R'), LB1: ZONE('short_M'), LB2: ZONE('hook_M'), ...THIRDS() },
-    T(['run', 'zone', 'interior'], 'Both linemen pinch the centre and two linebackers sit in the middle: built for the draw.')),
+    T(['run', 'zone', 'interior'], 'Both linemen pinch the center and two linebackers sit in the middle: built for the draw.')),
   'Third-and-medium against draw-happy teams.', 'The middle is crowded; outside throws are open.', 'QB Draw, Lead Draw and Spread Draw.', 'Curl Flat, outs and outside runs.');
 
   add(D('nickel_box', 'Nickel Box', 'nickel', { ...TWO, LB1: ZONE('short_M'), SS: ZONE('short_R'), ...MAN_OUT, FS: ZONE('deep_middle') },
@@ -358,7 +358,7 @@ export default function batch(b) {
   'Against a scrambler who also throws the seam.', 'The linebacker takes the deep middle; the big man spies.', 'TE Seam, scrambles and QB Draw.', 'Any throw with time: one rusher only.');
 
   add(D('bear_spy', 'Bear Spy', 'heavy', { DL1: RUSH('A_L'), DL3: RUSH('A_R'), DL2: RUSH('B_R'), LB1: SPY, LB2: ZONE('short_R'), ...MAN_OUT },
-    T(['run', 'anti_scramble'], 'Bear front over the centre and guards, one linebacker spying, the other filling right.', { DL1: [1, -1.6], DL3: [1, 0.9], DL2: [1, 2.6] })),
+    T(['run', 'anti_scramble'], 'Bear front over the center and guards, one linebacker spying, the other filling right.', { DL1: [1, -1.6], DL3: [1, 0.9], DL2: [1, 2.6] })),
   'Against a quarterback who runs inside from tight sets.', 'The bear front takes away the inside run; the spy takes the keep.', 'QB Power, Midline Read and inside runs.', 'Toss Sweep and outside runs.');
 
   add(D('bear_halves', 'Bear Halves', 'heavy', { DL1: RUSH('A_L'), DL3: RUSH('A_R'), DL2: RUSH('B_R'), LB1: ZONE('short_L'), LB2: ZONE('hook_R'), CB1: ZONE('deep_half_L'), CB2: ZONE('deep_half_R') },

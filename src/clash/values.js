@@ -113,7 +113,7 @@ export const CLASH_VALUES = deepFreeze({
     scorchulk_maul_first: { implemented: '1.1.0', species: 'cinderclaw', label: 'Cinder Maul may strike first again (the never-first clause removed)', changes: { neverFirst: false } },
     // Gate B.2 redesign candidates
     coglet_gearshot_pierce: { species: 'gearwing', label: 'Gear Shot: steady roll, and its strikes ignore Tank guard (pierce)', changes: { pierce: true } },
-    coglet_gearshot_break: { species: 'gearwing', label: 'Gear Shot: steady roll, and its strikes strip shields at double rate (armour-breaking)', changes: { breakAlways: 2 } },
+    coglet_gearshot_break: { species: 'gearwing', label: 'Gear Shot: steady roll, and its strikes strip shields at double rate (armor-breaking)', changes: { breakAlways: 2 } },
     coglet_gearshot_pierce_break: { species: 'gearwing', label: 'Gear Shot: steady roll, pierce and double shield-break', changes: { pierce: true, breakAlways: 2 } },
     coglet_gearshot_heavy_break: { species: 'gearwing', label: 'Gear Shot: every second strike hits 1.3x and strips shields at double rate; strikes never roll below full', changes: { kind: 'heavy', trigger: { kind: 'every', n: 2 }, mult: 1.3, breakAlways: 2 } },
     coglet_gearshot_heavy_pierce: { species: 'gearwing', label: 'Gear Shot: every second strike hits 1.3x and ignores Tank guard; strikes never roll below full', changes: { kind: 'heavy', trigger: { kind: 'every', n: 2 }, mult: 1.3, pierce: true } },

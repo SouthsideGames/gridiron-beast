@@ -27,7 +27,7 @@ export default registerClashAbility({
         if (p.decided) return true;
         const me = a.me(s);
         if (!(p.shieldDamage >= 1)) { a.cleanup(s, 'no ricochet: the primary removed no shield HP'); return false; }
-        if (me.koed || (me.stunned && !me.stunProtected)) { a.cleanup(s, 'ricochet cancelled: the source is knocked out or Stunned'); return false; }
+        if (me.koed || (me.stunned && !me.stunProtected)) { a.cleanup(s, 'ricochet canceled: the source is knocked out or Stunned'); return false; }
         const last = a.enemyReserves(s).slice(-1)[0]; if (!last) { a.cleanup(s, 'no ricochet: no living enemy reserve'); return false; }
         a.activate(s, `ricochet ${byTier(RICOCHET, s.tier)}% at the last enemy reserve ${last.name}`, { targetId: last.id });
         return a.strike(s, last.id, { tag: 'followUp', mult: byTier(RICOCHET, s.tier) / 100, strikeKey: 'ricochet', label: 'Bank Shot ricochet' }).decided;
@@ -49,7 +49,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'stoneguard' }], b: [{ species: 'gravelpup', overall: 99, status: SHIELD }], seed: 1, stopAt: { exchange: 1 } }),
         expect: (r, h) => { h.unmetReported((e) => e.unmet.some((u) => /reserve/.test(u.condition))); h.check('use kept', h.state('a0')?.used === false); } },
       { id: 'missed-primary', kind: 'miss', title: 'The primary misses (controlled miss): no ricochet, the use is still spent',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe supplies an explicit miss on the primary. No shield HP is removed, so no bounce; the once-use is spent on launch.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe supplies an explicit miss on the primary. No shield HP is removed, so no bounce; the once-use is spent on launch.',
         setup: () => ({ a: [{ species: 'stoneguard' }], b: [{ species: 'gravelpup', overall: 99, status: SHIELD }, { species: 'tinhare' }], seed: 1, stopAt: { exchange: 1 }, probes: [{ missCheck: (v, id, info) => (id === 'b0' && info.abilityId === 'EAR-04-C' ? { miss: true, source: 'controlled reviewer miss' } : null) }] }),
         expect: (r, h) => { h.check('primary missed', h.has('miss', (e) => e.actor === 'a0')); h.check('no ricochet', h.ab('damage').length === 0); h.check('use spent', h.state('a0')?.used === true); } },
     ],

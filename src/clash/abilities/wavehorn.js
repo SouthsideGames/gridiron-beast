@@ -40,7 +40,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'wavehorn', overall: 30 }], b: SPAR(), seed: 1, stopAt: { exchange: 2 } }),
         expect: (r, h) => { const d = h.ab('damage')[0]; h.check('charged on exchange 2', d && d.ex === 2 && d.mult === h.values.chargedPct / 100); const rot = h.ev('rotation', (e) => e.forced && e.abilityId === 'WAT-05-C')[0]; h.check('b0 forced out, b1 in', rot && rot.out === 'b0' && rot.in === 'b1'); h.executed(1); } },
       { id: 'evaded', kind: 'miss', title: 'An explicit miss on the charged attack: no damage, no rotation, the charge spent (controlled miss)',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe supplies a miss on the charged attack.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe supplies a miss on the charged attack.',
         setup: () => ({ a: [{ species: 'wavehorn', overall: 30 }], b: SPAR(), seed: 1, stopAt: { exchange: 3 }, probes: [{ missCheck: (v, id, info) => (info.abilityId === 'WAT-05-C' ? { miss: true, source: 'controlled reviewer miss' } : null) }] }),
         expect: (r, h) => { h.check('no forced rotation', !h.has('rotation', (e) => e.forced)); h.check('the next attack is ordinary (charge spent)', h.has('damage', (e) => e.actor === 'a0' && e.ex === 3 && e.tag === 'ordinary')); } },
       { id: 'no-reserve', kind: 'blocked', title: 'No living reserve: the charged damage lands and nobody rotates',

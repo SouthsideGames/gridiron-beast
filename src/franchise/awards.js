@@ -22,11 +22,11 @@ export const AWARDS = Object.freeze({
 export const AWARD_RULES = Object.freeze({
   mvp: 'Individual production, efficiency and impact (each compared with others at the same position), then the club’s win rate and availability. Quarterbacks carry a 1.25× responsibility factor, linemen 0.8×; defenders are judged on their DPOY score at 0.85×. Turnovers count against.',
   opoy: 'Offensive production (45%), efficiency (30%) and impact, touchdowns, first downs, minus turnovers (25%), each as a position-adjusted score. Versatile monsters (a back who catches, a receiver who runs) get a small bonus. Team record does not count.',
-  dpoy: 'Pass rush, takeaways, coverage and run defence, weighted by position: linemen on rush and run defence, linebackers evenly, corners and safeties on coverage and takeaways. Compared with others at the same position, so a shutdown corner with two interceptions can beat a sack leader.',
+  dpoy: 'Pass rush, takeaways, coverage and run defense, weighted by position: linemen on rush and run defense, linebackers evenly, corners and safeties on coverage and takeaways. Compared with others at the same position, so a shutdown corner with two interceptions can beat a sack leader.',
   coy: 'Wins above what the roster’s talent predicted before the season, improvement on last season, and point margin. Expectations are recorded in week 1, not after the fact.',
   oroy: 'First-season monsters, scored on the OPOY scale against the whole league.',
   droy: 'First-season monsters, scored on the DPOY scale against the whole league.',
-  smoy: 'The monster whose ability did the most: on every play where it fired, yards beyond (or short of) a normal play, touchdowns and takeaways, totalled per game and compared across the league. Firing often is not enough; it has to change plays.',
+  smoy: 'The monster whose ability did the most: on every play where it fired, yards beyond (or short of) a normal play, touchdowns and takeaways, totaled per game and compared across the league. Firing often is not enough; it has to change plays.',
 });
 
 // ------------------------------------------------------------ components
@@ -55,7 +55,7 @@ const DEF = {
 const DEF_WEIGHTS = { DL: { passRush: 0.4, runDefense: 0.3, takeaways: 0.2, coverage: 0.1 }, LB: { passRush: 0.3, runDefense: 0.3, takeaways: 0.2, coverage: 0.2 }, CB: { coverage: 0.45, takeaways: 0.3, runDefense: 0.15, passRush: 0.1 }, S: { coverage: 0.4, takeaways: 0.3, runDefense: 0.2, passRush: 0.1 } };
 /** MVP responsibility: a quarterback touches every snap; a blocker or a defender shapes fewer plays. Never an automatic win. */
 export const MVP_RESPONSIBILITY = Object.freeze({ QB: 1.35, RB: 1.0, WR: 1.0, TE: 0.95, OL: 0.8, DEF: 0.85 });
-const COMPONENT_LABEL = { volume: 'production', efficiency: 'efficiency', impact: 'impact', passRush: 'pass rush', takeaways: 'takeaways', coverage: 'coverage', runDefense: 'run defence' };
+const COMPONENT_LABEL = { volume: 'production', efficiency: 'efficiency', impact: 'impact', passRush: 'pass rush', takeaways: 'takeaways', coverage: 'coverage', runDefense: 'run defense' };
 
 /** z-score of fn within each position group of rows. */
 function zWithin(rows, fn) {

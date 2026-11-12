@@ -360,7 +360,7 @@ async function reconcileCloudInner({ playedAt = null } = {}) {
   if (!app.f || (f.savedAt || 0) > mineAt) {
     const st = app.storage.store; const local = app.f; const localAt = local?.savedAt;
     if (local && !st) { // fallback storage has no backups: the player chooses, the device's copy is never replaced silently
-      if (!(await confirmSheet(`Your cloud save (${f.club}, saved ${new Date(f.savedAt).toLocaleString()}) is newer than the franchise on this device. Load the cloud save? This device's copy will be replaced; export it first from Settings if you want to keep it.`, { title: 'Newer cloud save', okLabel: 'Load cloud save' }))) return;
+      if (!(await confirmSheet(`Your cloud save (${f.club}, saved ${new Date(f.savedAt).toLocaleString()}) is newer than the franchise on this device. Load the cloud save? This device's copy will be replaced; export it first from Settings if you want to keep it.`, { title: 'Newer Cloud Save', okLabel: 'Load Cloud Save' }))) return;
     }
     if (st && !f.uid && local?.uid && local.createdAt === f.createdAt) f.uid = local.uid;
     // Committed locally first (with the device's copy kept as 'pre-cloud'), adopted only after that commit succeeded.

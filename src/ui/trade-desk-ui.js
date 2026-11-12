@@ -35,7 +35,7 @@ function monsterRow(m, side, on) {
 export function openTradeDesk(app, { onDone = null, team = null } = {}) {
   const f = app.f; const partners = F.deskPartners(f);
   const state = { team: team || partners.slice().sort((a, b) => b.clubLeft - a.clubLeft || (a.team < b.team ? -1 : 1))[0].team, giveM: [], getM: [], giveP: [], getP: [], fPos: 'all', fPosTheirs: 'all', result: null };
-  const { el } = sheet('', { title: '🤝 Trade desk', onClose: () => onDone?.() });
+  const { el } = sheet('', { title: '🤝 Trade Desk', onClose: () => onDone?.() });
   const body = el.querySelector('.sheet-body');
   const prop = () => ({ team: state.team, giveMonsters: state.giveM, givePicks: state.giveP, getMonsters: state.getM, getPicks: state.getP });
   const toggle = (arr, v, match = (a, b) => a === b) => { const i = arr.findIndex((x) => match(x, v)); if (i >= 0) arr.splice(i, 1); else arr.push(v); };
@@ -65,13 +65,13 @@ export function openTradeDesk(app, { onDone = null, team = null } = {}) {
       if (!r.ok) result = `<p class="bad">${esc(r.reason)}</p>`;
       else if (r.accepted) result = `<div class="panel tight" style="border-color:var(--good)"><b class="good">✅ Deal done.</b><div class="dim">${r.got.monsters.map((m) => `${esc(m.name)} (${esc(m.position)}, ${monsterOverall(m)} OVR) joins your roster.`).join(' ') || 'The picks are yours.'}</div></div>`;
       else result = `<div class="panel tight" style="border-color:var(--bad)"><b class="bad">The ${esc(state.team)} said no.</b>${r.reasons.map((x) => `<div style="font-size:13px;margin-top:4px">• ${esc(x.text)}</div>`).join('')}
-        ${r.counter ? `<div style="margin-top:8px"><div style="font-size:13px"><b>Counter:</b> ${esc(r.counter.text)}</div><button type="button" class="btn small" data-counter="1" style="margin-top:4px">Add it to the proposal</button></div>` : ''}</div>`;
+        ${r.counter ? `<div style="margin-top:8px"><div style="font-size:13px"><b>Counter:</b> ${esc(r.counter.text)}</div><button type="button" class="btn small" data-counter="1" style="margin-top:4px">Add It to the Proposal</button></div>` : ''}</div>`;
     }
     body.innerHTML = `${tradeStatusHtml(f)}${partnerSel}
       <div class="panel tight" style="margin-top:8px">${list('mine', assets.mine, state.giveM, state.fPos)}${picks('mine', assets.myPicks, state.giveP)}</div>
       <div class="panel tight">${list('theirs', assets.theirs, state.getM, state.fPosTheirs)}${picks('theirs', assets.theirPicks, state.getP)}</div>
       ${summary}
-      <button type="button" class="btn primary big block" data-send="1" ${canSend ? '' : 'disabled'} style="margin-top:8px">📞 Send the proposal</button>${result}`;
+      <button type="button" class="btn primary big block" data-send="1" ${canSend ? '' : 'disabled'} style="margin-top:8px">📞 Send the Proposal</button>${result}`;
   };
   body.addEventListener('change', (e) => {
     const t = e.target; if (!t.dataset.f) return;
@@ -91,7 +91,7 @@ export function openTradeDesk(app, { onDone = null, team = null } = {}) {
       const pr = prop(); const assets = F.deskAssetsFor(f, state.team);
       const nm = (ids, list) => ids.map((id) => list.find((x) => x.id === id)?.name).filter(Boolean);
       const sends = [...nm(pr.giveMonsters, assets.mine), ...pr.givePicks.map(pickLabel)].join(', '), gets = [...nm(pr.getMonsters, assets.theirs), ...pr.getPicks.map(pickLabel)].join(', ');
-      if (!(await confirmSheet(`Send ${sends} to the ${state.team} for ${gets}? If they accept, the deal is done at once.`, { title: 'Send the proposal', okLabel: 'Send' }))) return;
+      if (!(await confirmSheet(`Send ${sends} to the ${state.team} for ${gets}? If they accept, the deal is done at once.`, { title: 'Send the Proposal', okLabel: 'Send' }))) return;
       const r = F.deskPropose(f, pr); state.result = r; app.save();
       if (r.ok && r.accepted) { state.giveM = []; state.getM = []; state.giveP = []; state.getP = []; toast('Deal done.', 'good'); }
       render(); return;
@@ -129,7 +129,7 @@ export function callPanelHtml(f) {
     <div class="muted" style="font-size:13px">“${says}”</div>
     ${effect ? `<div class="dim" style="font-size:12px;margin-top:4px">If you accept: roster ${effect.youBefore} → ${effect.youAfter} · cap room ${Math.round(effect.youCapAfter).toLocaleString('en-US')}${effect.youCapAfter < 0 ? ' (over: the commissioner will review)' : ''}${effect.depth.map((x) => ` · ${esc(x.pos)} best ${x.before.best ?? '—'} → ${x.after.best ?? '—'}`).join('')}</div>` : ''}
     <div class="dim" style="font-size:11px;margin-top:2px">Good until ${until}${(c.sends || []).length || c.player ? ' · arrivals join on a two-season deal at their salary' : ''}</div>
-    <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn small primary" data-call="yes">Accept</button><button class="btn small" data-call="no">No thanks</button>${c.player?.species && resolveSpecies({ species: c.player.species })?.ability ? `<button class="btn small see-it" data-see-it="${resolveSpecies({ species: c.player.species }).id}">▶ His ability</button>` : ''}</div></div></div></div>`;
+    <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn small primary" data-call="yes">Accept</button><button class="btn small" data-call="no">No Thanks</button>${c.player?.species && resolveSpecies({ species: c.player.species })?.ability ? `<button class="btn small see-it" data-see-it="${resolveSpecies({ species: c.player.species }).id}">▶ His Ability</button>` : ''}</div></div></div></div>`;
 }
 /** The sentence the confirmation asks. */
 export function callConfirmText(f, c) {

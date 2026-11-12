@@ -43,10 +43,10 @@ export function savePanelHtml(app) {
     <p class="muted">${c.state === 'on' ? `☁️ Cloud save on${c.at ? ` · last synced ${timeOnly(c.at)}` : ''}${c.error ? ` · <span class="bad-text">${esc(cloudErrorText(c.error))}</span>` : ''}` : 'Cloud save is available when playing inside Claude.'}</p>
     <div class="storage-meter" id="storage-meter"><span class="dim">Measuring storage…</span></div>
     <div class="stack">
-      ${app.storage.store ? '<button class="btn block" data-action="backups">Restore a backup</button>' : (Save.loadBackup() ? '<button class="btn block" data-action="restore-legacy">Restore last week’s backup</button>' : '')}
-      ${app.f ? '<button class="btn block" data-action="export">Export franchise (.gbfranchise)</button>' : ''}
+      ${app.storage.store ? '<button class="btn block" data-action="backups">Restore a Backup</button>' : (Save.loadBackup() ? '<button class="btn block" data-action="restore-legacy">Restore Last Week’s Backup</button>' : '')}
+      ${app.f ? '<button class="btn block" data-action="export">Export Franchise (.gbfranchise)</button>' : ''}
       <label class="btn block" style="cursor:pointer">Import a franchise file<input type="file" accept=".gbfranchise,application/json,.json" data-change="import" class="sr-only"></label>
-      ${app.f ? '<button class="btn danger block" data-action="reset">Delete franchise</button>' : ''}
+      ${app.f ? '<button class="btn danger block" data-action="reset">Delete Franchise</button>' : ''}
     </div></div>`;
 }
 
@@ -67,7 +67,7 @@ export async function fillStorageMeter(root, app) {
     </div>
     <p class="dim">${u.raw ? `Your franchise is ${kb(u.raw)} as plain data; it is stored compressed, with nothing removed. ` : ''}The browser estimate is approximate: it covers this whole site (including cached game files) and browsers may report a rounded or padded figure.</p>
     ${tight ? '<p class="warn-text">⚠ This browser is offering little storage. Export your franchise regularly and allow storage below.</p>' : ''}
-    ${u.persisted === true ? '<p class="dim">✓ The browser has agreed to keep this data (it will not clear it to free space).</p>' : u.persisted === false && navigator.storage?.persist ? '<button class="btn block ghost" data-action="persist">Ask the browser to keep this data</button><p class="dim">Without this, a browser low on space may clear site data. It may say no; your saves keep working either way.</p>' : ''}`;
+    ${u.persisted === true ? '<p class="dim">✓ The browser has agreed to keep this data (it will not clear it to free space).</p>' : u.persisted === false && navigator.storage?.persist ? '<button class="btn block ghost" data-action="persist">Ask the Browser to Keep This Data</button><p class="dim">Without this, a browser low on space may clear site data. It may say no; your saves keep working either way.</p>' : ''}`;
   } catch (e) { el.innerHTML = `<span class="dim">Storage figures unavailable (${esc(e.message)}).</span>`; }
 }
 
@@ -88,7 +88,7 @@ export async function offerExport(f) {
     if (check.ok) toast(`Export file prepared (${what}). Check that your browser saved it.`, 'good', 4500);
     else toast(`Export file prepared (${what}). Keep it: it holds your current progress. Check that your browser saved it.`, 'bad', 7000);
   } else if (r.ok) toast(`Export saved (${what}) as ${r.name}.`, check.ok ? 'good' : 'bad', 5000);
-  else if (r.code === 'declined') toast('Export cancelled. No file was saved. Your progress is still saved on this device.', 'info', 5000);
+  else if (r.code === 'declined') toast('Export canceled. No file was saved. Your progress is still saved on this device.', 'info', 5000);
   else if (r.code === 'rate_limited') toast('A save prompt is already open. Finish or close it, then try again.', 'info', 5000);
   else toast(`Files cannot be saved from this view (${r.code}). No file was saved. Your progress is still saved on this device.`, 'bad', 7000);
   return r;
@@ -115,7 +115,7 @@ function backupRowHtml(b, i) {
   return `<div class="backup-row ${b.ok ? '' : 'bad'}"><div class="grow"><b>${esc(KIND[b.kind] || b.kind)}</b><div class="muted">${where(b.meta)}</div><div class="dim">Saved ${esc(when(b.savedAt))}${b.ok ? '' : ` · ⚠ fails its integrity check`}</div></div>${b.ok && b.kind !== 'quarantine' ? `<button class="btn" data-action="pick" data-i="${i}">Restore</button>` : ''}</div>`;
 }
 export async function openBackups(app, { onRestored, intro = '' } = {}) {
-  const { el, close } = sheet('<p class="dim">Checking backups…</p>', { title: 'Restore a backup' });
+  const { el, close } = sheet('<p class="dim">Checking backups…</p>', { title: 'Restore a Backup' });
   let list = [];
   try { list = await app.storage.store.listBackups(); } catch (e) { el.querySelector('.sheet-body').innerHTML = `<p>Backups could not be read: ${esc(e.message)}</p>`; return; }
   const body = el.querySelector('.sheet-body');
@@ -124,7 +124,7 @@ export async function openBackups(app, { onRestored, intro = '' } = {}) {
   body.addEventListener('click', async (e) => {
     const b = list[Number(e.target.closest('[data-action="pick"]')?.dataset.i)]; if (!b) return;
     const cur = app.f; const lost = cur?.savedAt && b.savedAt && cur.savedAt > b.savedAt;
-    const ok = await confirmSheet(`Restore "${KIND[b.kind] || b.kind}" (${where(b.meta).replace(/&amp;/g, '&')}, saved ${when(b.savedAt)})?${lost ? ` Progress made after ${when(b.savedAt)} will no longer be in your franchise (the current franchise is kept as a backup).` : ''}`, { title: 'Restore backup', okLabel: 'Restore' });
+    const ok = await confirmSheet(`Restore "${KIND[b.kind] || b.kind}" (${where(b.meta).replace(/&amp;/g, '&')}, saved ${when(b.savedAt)})?${lost ? ` Progress made after ${when(b.savedAt)} will no longer be in your franchise (the current franchise is kept as a backup).` : ''}`, { title: 'Restore Backup', okLabel: 'Restore' });
     if (!ok) return;
     const r = await runRestore(app, b.id, body.querySelector(`[data-action="pick"][data-i="${list.indexOf(b)}"]`));
     if (r.ok) { close(); toast('Backup restored and saved.', 'good'); onRestored?.(); }
@@ -135,7 +135,7 @@ export async function openBackups(app, { onRestored, intro = '' } = {}) {
 export async function importFile(app, file) {
   const text = await file.text(); const v = validateImport(text);
   if (!v.ok) { toast(`Import refused: ${v.problems[0]}`, 'bad', 5000); return false; }
-  const ok = await confirmSheet(`Import ${where(v.meta).replace(/&amp;/g, '&')}?${app.f ? ' Your current franchise is kept as a backup on this device.' : ''}${v.warnings.length ? ` Note: ${v.warnings[0]}` : ''}`, { title: 'Import franchise', okLabel: 'Import' });
+  const ok = await confirmSheet(`Import ${where(v.meta).replace(/&amp;/g, '&')}?${app.f ? ' Your current franchise is kept as a backup on this device.' : ''}${v.warnings.length ? ` Note: ${v.warnings[0]}` : ''}`, { title: 'Import Franchise', okLabel: 'Import' });
   if (!ok) return false;
   const r = await app.replaceFranchise(v.franchise, { copyKind: 'replaced' });
   if (!r.ok) { toast(`Import failed: ${r.error?.message || 'the franchise could not be saved'}. Nothing was changed.`, 'bad', 6000); return false; }
@@ -149,7 +149,7 @@ export function showSaveFailure(app, error) {
   const quota = error?.code === 'quota';
   failSheet = sheet(`<p><b>Your latest progress is not saved yet.</b> ${esc(error?.message || 'The save did not complete.')}</p>
     <p class="muted">${error?.code === 'newer-elsewhere' ? 'Reloading loads the newest save; what happened in this tab since then can be exported first. ' : ''}Your franchise is still here in the game. ${quota ? 'Free some space on this device (or in the browser\'s site data), then retry. ' : ''}Retry the save, or export the franchise to a file to be safe. Closing the game now could lose what happened since the last save${app.storage.store?.status().lastOkAt ? ` (${timeOnly(app.storage.store.status().lastOkAt)})` : ''}.</p>
-    <div class="stack"><button class="btn primary block" data-action="retry">Retry save</button><button class="btn block" data-action="exp">Export franchise</button><button class="btn ghost block" data-action="later">Keep playing</button></div>`, { title: 'Save failed', onClose: () => { failSheet = null; } });
+    <div class="stack"><button class="btn primary block" data-action="retry">Retry Save</button><button class="btn block" data-action="exp">Export Franchise</button><button class="btn ghost block" data-action="later">Keep Playing</button></div>`, { title: 'Save Failed', onClose: () => { failSheet = null; } });
   failSheet.el.addEventListener('click', async (e) => {
     const a = e.target.closest('[data-action]')?.dataset.action;
     if (a === 'retry') { const btn = e.target.closest('button'); btn.disabled = true; btn.textContent = 'Saving…'; const r = await app.save({ immediate: true }); if (r?.ok) { failSheet?.close(); toast('Saved.', 'good'); } else { btn.disabled = false; btn.textContent = 'Retry save'; toast(`Still failing: ${r?.error?.message || 'unknown error'}`, 'bad'); } }
@@ -163,7 +163,7 @@ export function showSaveFailure(app, error) {
 export function showStaleTab(app, onClose) {
   const { el, close } = sheet(`<p><b>This franchise was changed in another tab or window of the game.</b></p>
     <p class="muted">This tab can no longer save without overwriting that progress, so it won't. Reload to continue from the newest save. If you played on in this tab and want to keep it, export it first.</p>
-    <div class="stack"><button class="btn primary block" data-action="reload">Reload the game</button><button class="btn block" data-action="exp">Export this tab's franchise</button></div>`, { title: 'Changed in another tab', onClose });
+    <div class="stack"><button class="btn primary block" data-action="reload">Reload the Game</button><button class="btn block" data-action="exp">Export This Tab's Franchise</button></div>`, { title: 'Changed in Another Tab', onClose });
   el.addEventListener('click', (e) => {
     const a = e.target.closest('[data-action]')?.dataset.action;
     if (a === 'reload') { close(); location.reload(); }
@@ -174,21 +174,21 @@ export function showStaleTab(app, onClose) {
 // ------------------------------------------------------------ recovery
 export function registerRecoveryScreen(Router, app) {
   Router.registerScreen('recovery', {
-    title: 'Save recovery', back: false, tabs: false,
+    title: 'Save Recovery', back: false, tabs: false,
     render() {
       const r = app.recovery || {}; const good = (r.backups || []).filter((b) => b.ok && b.kind !== 'quarantine');
       // Task 8 fresh-save break (spec §15): a save from an earlier version is identified and refused, with Start New Franchise.
       if (r.error?.code === 'incompatible') return `<div class="panel"><h3>This save is from an earlier version</h3>
         <p>${esc(r.error.message)}</p>
         <p class="muted">Nothing has been changed or deleted. Saves from earlier versions are not converted.</p></div>
-        <div class="stack" style="margin-top:12px"><button class="btn primary block" data-action="start-new">Start new franchise</button>
-        <button class="btn ghost block" data-action="leave">Go to the main menu</button></div>`;
+        <div class="stack" style="margin-top:12px"><button class="btn primary block" data-action="start-new">Start New Franchise</button>
+        <button class="btn ghost block" data-action="leave">Go to the Main Menu</button></div>`;
       return `<div class="panel"><h3>Your save could not be loaded</h3>
         <p>The game stopped instead of loading a save that failed its integrity check${r.error ? ` (${esc(r.error.message)})` : ''}. Nothing has been changed or deleted.</p>
         <p class="muted">Choose a backup to restore. Progress made after the backup was saved will not be in it. The damaged save is kept on this device either way.</p></div>
         ${good.length ? `<div class="stack">${(r.backups || []).map((b, i) => backupRowHtml(b, i)).join('')}</div>` : '<div class="panel"><p>No readable backup was found on this device.</p><p class="muted">If you play inside Claude, your cloud save will be offered here once it has been checked. You can also import an exported franchise file.</p></div>'}
         <div class="stack" style="margin-top:12px"><label class="btn block" style="cursor:pointer">Import a franchise file<input type="file" accept=".gbfranchise,application/json,.json" data-change="import" class="sr-only"></label>
-        <button class="btn ghost block" data-action="leave">Go to the main menu without restoring</button></div>`;
+        <button class="btn ghost block" data-action="leave">Go to the Main Menu Without Restoring</button></div>`;
     },
     mount(root) {
       root.addEventListener('click', async (e) => {
@@ -196,7 +196,7 @@ export function registerRecoveryScreen(Router, app) {
         const pick = e.target.closest('[data-action="pick"]'); const leave = e.target.closest('[data-action="leave"]');
         if (leave) { if (await confirmSheet('Go on without a franchise? The damaged save and all backups stay on this device; you can restore one later from Settings.', { title: 'Continue', okLabel: 'Continue' })) { app.recovery = null; Router.go('menu', {}, { reset: true }); } return; }
         if (!pick) return; const b = app.recovery.backups[Number(pick.dataset.i)];
-        if (!(await confirmSheet(`Restore "${KIND[b.kind] || b.kind}" (${where(b.meta).replace(/&amp;/g, '&')}, saved ${when(b.savedAt)})? Anything after that time is not in this backup.`, { title: 'Restore backup', okLabel: 'Restore' }))) return;
+        if (!(await confirmSheet(`Restore "${KIND[b.kind] || b.kind}" (${where(b.meta).replace(/&amp;/g, '&')}, saved ${when(b.savedAt)})? Anything after that time is not in this backup.`, { title: 'Restore Backup', okLabel: 'Restore' }))) return;
         const r = await runRestore(app, b.id, pick); if (r.ok) { app.recovery = null; toast('Backup restored and saved.', 'good'); Router.go('menu', {}, { reset: true }); }
       });
       root.addEventListener('change', async (e) => { const inp = e.target.closest('[data-change="import"]'); if (!inp?.files?.[0]) return; try { if (await importFile(app, inp.files[0])) { app.recovery = null; Router.go('menu', {}, { reset: true }); } } catch (err) { toast(`Import failed: ${err.message}`, 'bad'); } inp.value = ''; });

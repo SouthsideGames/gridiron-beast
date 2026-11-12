@@ -121,8 +121,8 @@ export function createArena(root, result, opts = {}) {
     <div class="cl-controls" ${noControls ? 'style="display:none"' : ''}>
       ${simple
         ? `<div class="cl-btnrow simple"><button class="btn primary" data-cl="watch">▶ Watch</button><span class="cl-speedrow row"><span class="muted">Speed</span>${[1, 2, 4].map((s) => `<button class="btn small ${s === speed ? 'primary' : ''}" data-cl="speed" data-v="${s}">${s === 1 ? 'Normal' : s === 2 ? 'Fast' : 'Fastest'}</button>`).join('')}</span><button class="btn" data-cl="skip">Skip ▸▸</button></div>`
-        : `<div class="cl-btnrow"><button class="btn primary" data-cl="watch">▶ Watch</button><button class="btn" data-cl="step">⏭ Step</button><button class="btn" data-cl="nextex">Next ex.</button><button class="btn" data-cl="skip">Skip</button></div>
-      <div class="row cl-speedrow"><span class="muted">Speed</span>${[1, 2, 4].map((s) => `<button class="btn small ${s === speed ? 'primary' : ''}" data-cl="speed" data-v="${s}">${s}×</button>`).join('')}<input type="range" min="0" max="${n - 1}" value="0" data-cl="scrub" aria-label="Replay position"><button class="btn small ghost" data-cl="fxq" title="Effects quality">FX ${quality === 'low' ? 'low' : 'full'}</button></div>`}
+        : `<div class="cl-btnrow"><button class="btn primary" data-cl="watch">▶ Watch</button><button class="btn" data-cl="step">⏭ Step</button><button class="btn" data-cl="nextex">Next Ex.</button><button class="btn" data-cl="skip">Skip</button></div>
+      <div class="row cl-speedrow"><span class="muted">Speed</span>${[1, 2, 4].map((s) => `<button class="btn small ${s === speed ? 'primary' : ''}" data-cl="speed" data-v="${s}">${s}×</button>`).join('')}<input type="range" min="0" max="${n - 1}" value="0" data-cl="scrub" aria-label="Replay position"><button class="btn small ghost" data-cl="fxq" title="Effects quality">FX ${quality === 'low' ? 'Low' : 'Full'}</button></div>`}
       <div class="cl-caption"></div>
     </div></div>`;
   const $ = (sel) => root.querySelector(sel); const $$ = (sel) => Array.from(root.querySelectorAll(sel));

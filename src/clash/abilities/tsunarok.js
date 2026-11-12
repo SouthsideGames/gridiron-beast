@@ -37,7 +37,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'tsunarok', overall: 30 }], b: [{ species: 'gravelpup', overall: 99 }, { species: 'tinhare', overall: 99 }], seed: 1, config: { policies: { a: 'none', b: 'manual' }, decisions: { b: decisionsPlan({ 1: 'b1' }) } }, stopAt: { exchange: 1 } }),
         expect: (r, h) => { const d = h.ab('damage')[0]; const rot = h.ev('rotation', (e) => e.out === 'b0')[0]; h.check('pursuit before the departure', d && rot && d.seq < rot.seq && d.target === 'b0' && d.tag === 'reaction'); h.check(`${h.values.pursuitPct}%`, d?.mult === h.values.pursuitPct / 100); h.executed(1); } },
       { id: 'forced-no-trigger', kind: 'blocked', title: 'A forced rotation does not trigger it',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe forces the opponent out; no pursuit.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe forces the opponent out; no pursuit.',
         setup: () => ({ a: [{ species: 'tsunarok', overall: 30 }], b: [{ species: 'gravelpup', overall: 99 }, { species: 'tinhare', overall: 99 }], seed: 1, stopAt: { exchange: 1 }, probes: [{ chooseAction: (v, id) => (id === 'b0' ? { kind: 'forcedRotation', side: 'own', abilityId: 'TEST-FORCE' } : null) }] }),
         expect: (r, h) => { h.check('no pursuit (forced rotation)', h.ab('damage').length === 0); } },
       { id: 'once-per-entry', kind: 'depletion', title: 'One pursuit per active entry: a second enemy rotation is not punished',

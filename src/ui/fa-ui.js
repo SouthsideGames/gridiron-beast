@@ -54,7 +54,7 @@ export function assistantHtml(f) {
   const usable = F.freeAgencyCap(f).usable; const want = [...new Set([...holes, ...thin])];
   const recs = []; for (const pos of want) { const best = F.freeAgentMarket(f).filter((x) => x.monster.position === pos && !x.mine && x.ask.salary <= usable).sort((a, b) => monsterOverall(b.monster) - monsterOverall(a.monster))[0]; if (best) recs.push({ pos, x: best, hole: holes.includes(pos) }); if (recs.length >= 3) break; }
   const warn = F.lineupWarnings(f); const warnHtml = warn.length ? `<div class="dim" style="margin-top:4px">${warn.map((x) => `<b>${esc(x.slot)}</b> ${esc(x.formation)}: ${esc(x.fix)}`).join('<br>')}</div>` : '';
-  return extensionAdviceHtml(f) + `<div class="panel tight"><b>🧭 GM Assistant</b> <span class="dim">recommendations only</span>${warnHtml}${recs.length ? `<div class="list" style="margin-top:4px">${recs.map(({ pos, x, hole }) => `<div class="item static"><div class="grow"><div class="name">${esc(x.monster.name)} <span class="dim">${pos} · ${monsterOverall(x.monster)} OVR · asks ${fmt(x.ask.salary)}</span></div><div class="sub">${hole ? `You have no healthy ${pos} for a starting slot.` : `You are thin at ${pos}.`}</div></div><button class="btn small" data-action="faopen" data-id="${x.monster.id}">Prepare offer</button></div>`).join('')}</div>` : '<div class="dim">Nothing urgent within your usable cap.</div>'}</div>`;
+  return extensionAdviceHtml(f) + `<div class="panel tight"><b>🧭 GM Assistant</b> <span class="dim">recommendations only</span>${warnHtml}${recs.length ? `<div class="list" style="margin-top:4px">${recs.map(({ pos, x, hole }) => `<div class="item static"><div class="grow"><div class="name">${esc(x.monster.name)} <span class="dim">${pos} · ${monsterOverall(x.monster)} OVR · asks ${fmt(x.ask.salary)}</span></div><div class="sub">${hole ? `You have no healthy ${pos} for a starting slot.` : `You are thin at ${pos}.`}</div></div><button class="btn small" data-action="faopen" data-id="${x.monster.id}">Prepare Offer</button></div>`).join('')}</div>` : '<div class="dim">Nothing urgent within your usable cap.</div>'}</div>`;
 }
 
 /** The owner's live offers. */
@@ -108,17 +108,17 @@ export function faOffseasonHtml(f) {
   if (!F.task7Offseason(f)) return null;
   const pending = F.offseasonPending(f).length; const open = F.freeAgencyOpen(f); const done = F.freeAgencyDone(f); const p = f.freeAgency.period;
   const comp = F.legendCompliance(f);
-  const compHtml = comp ? `<div class="panel tight" style="border-color:var(--bad)"><b>⚖️ Legendary limit</b><div class="muted">${esc(comp.reason)}${comp.due ? '' : ` Until then you keep them, but cannot add another on that side.`}</div><div class="row" style="gap:6px;margin-top:6px"><button class="btn small" data-action="releasemon">Release…</button><button class="btn small" data-action="shop">Trade desk…</button></div></div>` : '';
-  if (!open && !done) return `${compHtml}<h3>Free agency</h3><div class="panel tight"><b>Five periods, before the draft.</b><div class="dim">Every club bids in the same market. Make offers in a period; monsters answer when you advance it, by their own priorities and deadlines.</div><button class="btn primary block" data-action="faopenmarket" ${pending ? 'disabled' : ''} style="margin-top:6px">Open free agency (Period 1)</button>${pending ? `<p class="dim center">Settle the ${pending} renewal${pending === 1 ? '' : 's'} first.</p>` : ''}</div>`;
+  const compHtml = comp ? `<div class="panel tight" style="border-color:var(--bad)"><b>⚖️ Legendary limit</b><div class="muted">${esc(comp.reason)}${comp.due ? '' : ` Until then you keep them, but cannot add another on that side.`}</div><div class="row" style="gap:6px;margin-top:6px"><button class="btn small" data-action="releasemon">Release…</button><button class="btn small" data-action="shop">Trade Desk…</button></div></div>` : '';
+  if (!open && !done) return `${compHtml}<h3>Free agency</h3><div class="panel tight"><b>Five periods, before the draft.</b><div class="dim">Every club bids in the same market. Make offers in a period; monsters answer when you advance it, by their own priorities and deadlines.</div><button class="btn primary block" data-action="faopenmarket" ${pending ? 'disabled' : ''} style="margin-top:6px">Open Free Agency (Period 1)</button>${pending ? `<p class="dim center">Settle the ${pending} renewal${pending === 1 ? '' : 's'} first.</p>` : ''}</div>`;
   const list = F.freeAgentMarket(f).filter((x) => !filter || x.monster.position === filter).map((x) => ({ x, i: interestOf(f, x.monster, x.ask) })).filter(({ i }) => !keenOnly || i.ratio >= 1).sort((a, b) => monsterOverall(b.x.monster) - monsterOverall(a.x.monster));
   const shown = showAll ? list : list.slice(0, 25);
   const head = open ? `<div class="row between"><b>Free agency · Period ${p} of ${E.FA_RULES.periods}</b><span class="dim">${F.freeAgentMarket(f).length} unsigned</span></div>` : `<div class="row between"><b>Free agency closed</b><span class="dim">unsigned monsters stay on the market all year: offers are answered at once</span></div>`;
   return `${compHtml}${floorPanelHtml(f)}<h3>Free agency</h3>${head}${capPanelHtml(f)}${assistantHtml(f)}${myOffersHtml(f)}
-    <div class="row" style="gap:4px;flex-wrap:wrap;margin:6px 0"><button class="btn small ${filter ? '' : 'primary'}" data-action="fafilter" data-v="">All</button>${POS.map((x) => `<button class="btn small ${filter === x ? 'primary' : ''}" data-action="fafilter" data-v="${x}">${x}</button>`).join('')}<button class="btn small ${keenOnly ? 'primary' : ''}" data-action="fakeen" aria-pressed="${keenOnly}">Interested in you</button><button class="btn small ${f.settings?.gmAssistant ? 'primary' : ''}" data-action="faassist" aria-pressed="${f.settings?.gmAssistant ? 'true' : 'false'}" style="margin-left:auto">🧭 GM Assistant ${f.settings?.gmAssistant ? 'on' : 'off'}</button></div>
+    <div class="row" style="gap:4px;flex-wrap:wrap;margin:6px 0"><button class="btn small ${filter ? '' : 'primary'}" data-action="fafilter" data-v="">All</button>${POS.map((x) => `<button class="btn small ${filter === x ? 'primary' : ''}" data-action="fafilter" data-v="${x}">${x}</button>`).join('')}<button class="btn small ${keenOnly ? 'primary' : ''}" data-action="fakeen" aria-pressed="${keenOnly}">Interested in You</button><button class="btn small ${f.settings?.gmAssistant ? 'primary' : ''}" data-action="faassist" aria-pressed="${f.settings?.gmAssistant ? 'true' : 'false'}" style="margin-left:auto">🧭 GM Assistant ${f.settings?.gmAssistant ? 'On' : 'Off'}</button></div>
     <div class="list">${shown.map(({ x, i }) => { const m = x.monster; const rival = x.offers.filter((o) => o.club !== f.club).length; const legend = legendSide(m);
       return `<div class="item tappable" data-action="faopen" data-id="${m.id}" role="button" tabindex="0">${monsterSprite(m, 32)}<div class="grow"><div class="name">${legend ? '🌟 ' : ''}${esc(m.name)} <span class="dim">${esc(m.position)} · ${monsterOverall(m)} OVR · ${esc(rarityOf(m))} · age ${m.age}</span></div><div class="sub">asks <b>${fmt(x.ask.salary)}</b>/yr · ${x.ask.years} season${x.ask.years === 1 ? '' : 's'} · ${fitOf(f, m)}${rival ? ` · ${rival} other offer${rival === 1 ? '' : 's'}` : ''}</div></div><span class="chip ${i.cls}">${i.label}</span></div>`; }).join('') || '<p class="dim">Nobody on the market at this position.</p>'}</div>
-    ${list.length > shown.length ? `<button class="btn small block" data-action="faall">Show all ${list.length}</button>` : ''}
-    ${open ? `<div class="row" style="gap:6px;margin-top:10px"><button class="btn primary grow" data-action="faadvance">${p >= E.FA_RULES.periods ? 'Close free agency' : `Advance to Period ${p + 1}`}</button><button class="btn" data-action="fafinish">Finish now</button></div>` : ''}`;
+    ${list.length > shown.length ? `<button class="btn small block" data-action="faall">Show All ${list.length}</button>` : ''}
+    ${open ? `<div class="row" style="gap:6px;margin-top:10px"><button class="btn primary grow" data-action="faadvance">${p >= E.FA_RULES.periods ? 'Close Free Agency' : `Advance to Period ${p + 1}`}</button><button class="btn" data-action="fafinish">Finish Now</button></div>` : ''}`;
 }
 
 /** The negotiation sheet: simple terms first, the rest expandable. `mode`: 'offer' (periods), 'now' (immediate), 'extend'. */
@@ -138,7 +138,7 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
     const rivals = E.competingOffers(f, id).filter((o) => o.club !== f.club);
     const hist = mine?.history || [];
     const deadline = mine ? mine.expires : mode === 'offer' ? E.deadlineFor(f, m) : null;
-    const blockHtml = block ? `<div class="panel tight" style="border-color:var(--bad)"><b>Can’t ${mode === 'offer' ? 'offer' : 'sign'} yet</b><div class="muted">${esc(block.reason)}</div>${block.code === 'roster' ? '<button class="btn small" data-action="goroster">Salary & Contracts…</button>' : block.code === 'legendary' ? '<button class="btn small" data-action="goroster">Release a legendary…</button>' : ''}</div>` : '';
+    const blockHtml = block ? `<div class="panel tight" style="border-color:var(--bad)"><b>Can’t ${mode === 'offer' ? 'offer' : 'sign'} yet</b><div class="muted">${esc(block.reason)}</div>${block.code === 'roster' ? '<button class="btn small" data-action="goroster">Salary & Contracts…</button>' : block.code === 'legendary' ? '<button class="btn small" data-action="goroster">Release a Legendary…</button>' : ''}</div>` : '';
     return `<div class="row" style="gap:12px">${monsterSprite(m, 56)}<div class="grow"><div style="font-size:18px;font-weight:900">${legendSide(m) ? '🌟 ' : ''}${esc(m.name)}</div><div class="muted">${esc(m.position)} · ${monsterOverall(m)} OVR · age ${m.age} · ${esc(rarityOf(m))}</div><div class="muted">asks ${fmt(ask.salary)}/yr for ${ask.years} season${ask.years === 1 ? '' : 's'}</div></div></div>
       <div class="panel tight"><div class="row between"><b>Salary per season</b><span><button class="btn small" data-t="sal" data-d="-1000">−1k</button> <b>${fmt(t.salary)}</b> <button class="btn small" data-t="sal" data-d="1000">+1k</button></span></div>
         <div class="row between" style="margin-top:6px"><b>Seasons</b><span class="seg">${[1, 2, 3].map((y) => `<button class="btn small ${t.years === y ? 'primary' : ''}" data-t="yrs" data-v="${y}">${y}</button>`).join('')}</span></div>
@@ -153,7 +153,7 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
         <b style="display:block;margin-top:8px">Cap schedule</b>${sched.map((r) => `<div class="row between muted"><span>${yearOf(r.year)}</span><span>${fmt(r.salary)} + ${fmt(r.bonus)} = <b>${fmt(r.total)}</b></span></div>`).join('')}
         ${hist.length ? `<b style="display:block;margin-top:8px">History</b>${hist.map((h) => `<div class="dim">P${h.p ?? '–'} ${esc(h.act)}${h.salary ? ` · ${fmt(h.salary)} × ${h.years}${h.bonus ? ` + ${fmt(h.bonus)}` : ''}` : ''}</div>`).join('')}` : ''}
       </details>
-      <div class="row" style="gap:6px;margin-top:8px">${mode === 'offer' ? (mine ? `<button class="btn primary grow" data-act="revise">Revise offer</button>${mine.state === 'countered' ? '<button class="btn grow" data-act="counter">Accept his counter</button>' : ''}<button class="btn danger" data-act="withdraw">Withdraw</button>` : `<button class="btn primary grow" data-act="offer" ${block ? 'disabled' : ''}>Make offer</button>`) : mode === 'extend' || mode === 'renew' ? negButtons(neg, mode) : `<button class="btn primary grow" data-act="now" ${block ? 'disabled' : ''}>Offer now</button>`}</div>`;
+      <div class="row" style="gap:6px;margin-top:8px">${mode === 'offer' ? (mine ? `<button class="btn primary grow" data-act="revise">Revise Offer</button>${mine.state === 'countered' ? '<button class="btn grow" data-act="counter">Accept His Counter</button>' : ''}<button class="btn danger" data-act="withdraw">Withdraw</button>` : `<button class="btn primary grow" data-act="offer" ${block ? 'disabled' : ''}>Make Offer</button>`) : mode === 'extend' || mode === 'renew' ? negButtons(neg, mode) : `<button class="btn primary grow" data-act="now" ${block ? 'disabled' : ''}>Offer Now</button>`}</div>`;
   };
   const { el, close } = sheet(draw(), { title: mode === 'extend' ? 'Contract extension' : mode === 'renew' ? 'Contract renewal' : 'Free agent' }); let advOpen = false;
   const root = () => el;
@@ -199,8 +199,8 @@ function negotiationPanel(neg) {
     <div class="dim" style="font-size:12px">Accepting his demand is binding and uses no counteroffer. Each counteroffer gets an answer: accept, counter or end the talks; the second gets his final decision.</div></div>`;
 }
 function negButtons(neg, mode) {
-  if (!neg || neg.state !== 'active') return `<button class="btn grow" disabled>${neg?.state === 'agreed' ? 'Agreed' : 'Talks closed'}</button>`;
-  return `<button class="btn primary grow" data-act="acceptdemand">Accept ${fmt(neg.demand.salary)}/yr</button><button class="btn grow" data-act="renewoffer" ${neg.left ? '' : 'disabled'}>Counteroffer (${neg.left} left)</button>`;
+  if (!neg || neg.state !== 'active') return `<button class="btn grow" disabled>${neg?.state === 'agreed' ? 'Agreed' : 'Talks Closed'}</button>`;
+  return `<button class="btn primary grow" data-act="acceptdemand">Accept ${fmt(neg.demand.salary)}/yr</button><button class="btn grow" data-act="renewoffer" ${neg.left ? '' : 'disabled'}>Counteroffer (${neg.left} Left)</button>`;
 }
 
 /** Handlers the offseason screen delegates (kept here with the markup they serve). */
@@ -210,7 +210,7 @@ export function faHandlers(app, Router) {
     faopen: (el) => negotiationSheet(app, el.dataset.id, () => Router.render()),
     fafloorrel: async (el) => { // owner rule 2026-11-04: the owner chooses each release; nothing is released automatically
       const x = F.rosterFloorPlan(app.f).releases.find((r) => r.id === el.dataset.id); if (!x) return;
-      if (!(await confirmSheet(`Release ${x.name} (${x.position}, ${x.ovr} OVR)? His ${fmt(x.saving)} cr. charge leaves next season's books (no dead cap). He joins the free-agent pool and cannot rejoin you this league year.`, { title: 'Release to make cap room', okLabel: 'Release' }))) return;
+      if (!(await confirmSheet(`Release ${x.name} (${x.position}, ${x.ovr} OVR)? His ${fmt(x.saving)} cr. charge leaves next season's books (no dead cap). He joins the free-agent pool and cannot rejoin you this league year.`, { title: 'Release to Make Cap Room', okLabel: 'Release' }))) return;
       const r = F.releaseMonster(app.f, x.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save({ immediate: true }); toast(`${x.name} released: ${fmt(x.saving)} cr. freed.`, 'info'); Router.render();
     },
     fafilter: (el) => { filter = el.dataset.v || ''; Router.render(); },
@@ -219,19 +219,19 @@ export function faHandlers(app, Router) {
     faassist: () => { app.f.settings ||= {}; app.f.settings.gmAssistant = !app.f.settings.gmAssistant; app.save(); Router.render(); },
     faadvance: async () => {
       const w = F.advanceWarning(app.f); const last = app.f.freeAgency.period >= E.FA_RULES.periods;
-      if (w.length && !(await confirmSheet(`${w.length} of your offers will be answered or expire at this advance${last ? ', and the market closes' : ''}. Advance anyway?`, { title: 'Pending offers', okLabel: 'Advance' }))) return;
+      if (w.length && !(await confirmSheet(`${w.length} of your offers will be answered or expire at this advance${last ? ', and the market closes' : ''}. Advance anyway?`, { title: 'Pending Offers', okLabel: 'Advance' }))) return;
       const r = F.advanceFreeAgency(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save({ immediate: true });
       const mine = r.signed.filter((x) => x.club === app.f.club); for (const s of r.signed) { const m = app.f.roster.find((x) => x.id === s.mid) || null; if (m && legendSide(m)) toast(`🌟 Legendary signing: ${m.name} joins ${s.club}!`, 'good', 4000); }
       toast(mine.length ? `Signed: ${mine.map((x) => x.name).join(', ')}.` : r.period ? `Period ${r.period} of ${E.FA_RULES.periods}.` : 'Free agency closed. The draft is next.', mine.length ? 'good' : 'info'); Router.render();
     },
-    fafinish: async () => { const w = E.liveOffers(app.f, (o) => o.club === app.f.club); /* finishing settles every live offer, not only those due this period */ if (!(await confirmSheet(`Finish free agency now? Every remaining period passes at once${w.length ? `; ${w.length} live offer${w.length === 1 ? '' : 's'} of yours will be answered or expire` : ''}.`, { title: 'Finish free agency', okLabel: 'Finish' }))) return; F.finishFreeAgency(app.f); app.save({ immediate: true }); Router.render(); },
+    fafinish: async () => { const w = E.liveOffers(app.f, (o) => o.club === app.f.club); /* finishing settles every live offer, not only those due this period */ if (!(await confirmSheet(`Finish free agency now? Every remaining period passes at once${w.length ? `; ${w.length} live offer${w.length === 1 ? '' : 's'} of yours will be answered or expire` : ''}.`, { title: 'Finish Free Agency', okLabel: 'Finish' }))) return; F.finishFreeAgency(app.f); app.save({ immediate: true }); Router.render(); },
   };
 }
 
 /** The year-round market screen (decision 9): the offseason periods when they run, else immediate negotiation (decision 17). */
 export function registerFaScreens(R, app) {
   R.registerScreen('famarket', {
-    title: 'Free-agent market',
+    title: 'Free-Agent Market',
     render({ f }) {
       if (!f.freeAgency?.v) return '<p class="dim">The free-agent market arrives with this franchise’s next offseason.</p>';
       const t7Off = F.task7Offseason(f) && f.season.finished;
@@ -244,9 +244,9 @@ export function registerFaScreens(R, app) {
 function marketListHtml(f) {
   const list = F.freeAgentMarket(f).filter((x) => !filter || x.monster.position === filter).map((x) => ({ x, i: interestOf(f, x.monster, x.ask) })).filter(({ i }) => !keenOnly || i.ratio >= 1).sort((a, b) => monsterOverall(b.x.monster) - monsterOverall(a.x.monster));
   const shown = showAll ? list : list.slice(0, 25);
-  return `<div class="row" style="gap:4px;flex-wrap:wrap;margin:6px 0"><button class="btn small ${filter ? '' : 'primary'}" data-action="fafilter" data-v="">All</button>${POS.map((x) => `<button class="btn small ${filter === x ? 'primary' : ''}" data-action="fafilter" data-v="${x}">${x}</button>`).join('')}<button class="btn small ${keenOnly ? 'primary' : ''}" data-action="fakeen" aria-pressed="${keenOnly}">Interested in you</button><button class="btn small ${f.settings?.gmAssistant ? 'primary' : ''}" data-action="faassist" aria-pressed="${f.settings?.gmAssistant ? 'true' : 'false'}" style="margin-left:auto">🧭 GM Assistant ${f.settings?.gmAssistant ? 'on' : 'off'}</button></div>
+  return `<div class="row" style="gap:4px;flex-wrap:wrap;margin:6px 0"><button class="btn small ${filter ? '' : 'primary'}" data-action="fafilter" data-v="">All</button>${POS.map((x) => `<button class="btn small ${filter === x ? 'primary' : ''}" data-action="fafilter" data-v="${x}">${x}</button>`).join('')}<button class="btn small ${keenOnly ? 'primary' : ''}" data-action="fakeen" aria-pressed="${keenOnly}">Interested in You</button><button class="btn small ${f.settings?.gmAssistant ? 'primary' : ''}" data-action="faassist" aria-pressed="${f.settings?.gmAssistant ? 'true' : 'false'}" style="margin-left:auto">🧭 GM Assistant ${f.settings?.gmAssistant ? 'On' : 'Off'}</button></div>
     <div class="list">${shown.map(({ x, i }) => { const m = x.monster; return `<div class="item tappable" data-action="faopen" data-id="${m.id}" role="button" tabindex="0">${monsterSprite(m, 32)}<div class="grow"><div class="name">${legendSide(m) ? '🌟 ' : ''}${esc(m.name)} <span class="dim">${esc(m.position)} · ${monsterOverall(m)} OVR · ${esc(rarityOf(m))} · age ${m.age}</span></div><div class="sub">asks <b>${fmt(x.ask.salary)}</b>/yr · ${x.ask.years} season${x.ask.years === 1 ? '' : 's'} · ${fitOf(f, m)}</div></div><span class="chip ${i.cls}">${i.label}</span></div>`; }).join('') || '<p class="dim">Nobody on the market at this position.</p>'}</div>
-    ${list.length > shown.length ? `<button class="btn small block" data-action="faall">Show all ${list.length}</button>` : ''}`;
+    ${list.length > shown.length ? `<button class="btn small block" data-action="faall">Show All ${list.length}</button>` : ''}`;
 }
 
 /**
@@ -272,7 +272,7 @@ export function lineupGateSheet(app, { mode = 'game', onContinue, onDone } = {})
     const cont = mode === 'game' ? 'Forfeit this game' : 'Start the season anyway';
     return `<div class="assist-note critical" role="alert">⚠️ ${esc(g.reason)}</div>
       <div class="muted" style="margin:6px 0">Usable cap ${fmt(g.cap)} · roster ${g.roster}/${F.ROSTER_MAX}</div>${short}${holes}${periods}
-      <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn small" data-act="market">Free-agent market</button><button class="btn small" data-act="contracts">Release a monster</button><button class="btn small" data-act="lineup">Lineup</button></div>
+      <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn small" data-act="market">Free-Agent Market</button><button class="btn small" data-act="contracts">Release a Monster</button><button class="btn small" data-act="lineup">Lineup</button></div>
       <div class="dim" style="margin-top:8px">${mode === 'game' ? 'If you continue without a legal lineup, this game is recorded as a forfeit (0-21 loss, no stats).' : 'If you start without a legal lineup, each game is forfeited (0-21, no stats) until the slot is filled.'}</div>
       <button class="btn danger block" data-act="continue" style="margin-top:6px">${cont}</button>`;
   };
@@ -283,6 +283,6 @@ export function lineupGateSheet(app, { mode = 'game', onContinue, onDone } = {})
     if (act === 'close') { closed = true; close(); onDone?.(); return; }
     if (act === 'sign') { negotiationSheet(app, b.dataset.id, () => { redraw(); onDone?.(); }, { mode: 'now' }); return; } // re-checked when the signing sheet closes
     if (act === 'market' || act === 'contracts' || act === 'lineup') { closed = true; close(); Router.go(act === 'market' ? 'famarket' : act); return; }
-    if (act === 'continue') { if (!(await confirmSheet(mode === 'game' ? 'Forfeit this game? It is recorded as a 0-21 loss with no stats.' : 'Start the season without a legal lineup? Each game is forfeited until the slot is filled.', { title: 'Continue under the forfeit rule', okLabel: mode === 'game' ? 'Forfeit' : 'Start anyway', danger: true }))) return; closed = true; close(); onContinue?.(); }
+    if (act === 'continue') { if (!(await confirmSheet(mode === 'game' ? 'Forfeit this game? It is recorded as a 0-21 loss with no stats.' : 'Start the season without a legal lineup? Each game is forfeited until the slot is filled.', { title: 'Continue Under the Forfeit Rule', okLabel: mode === 'game' ? 'Forfeit' : 'Start anyway', danger: true }))) return; closed = true; close(); onContinue?.(); }
   });
 }

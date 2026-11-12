@@ -31,7 +31,7 @@ export default registerClashAbility({
   review: {
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'From reserve at round start: the roll succeeds (controlled seed selection) and the opposing active is Confused for two turns',
-        explain: (c) => `Nocturne waits in reserve; at the start of exchange 1 it rolls its ${c.values.chancePct}% chance (controlled seed selection until it succeeds, labelled).`,
+        explain: (c) => `Nocturne waits in reserve; at the start of exchange 1 it rolls its ${c.values.chancePct}% chance (controlled seed selection until it succeeds, labeled).`,
         setup: () => ({ a: [{ species: 'gravelpup', sparring: true }, { species: 'nocturne' }], b: [{ species: 'kindlet' }], seed: 1, stopAt: { exchange: 1 }, seedSearch: { until: (r) => r.log.some((e) => e.kind === 'status' && e.abilityId === 'DAR-05-C'), why: 'the application roll succeeds' } }),
         expect: (r, h) => { const s = h.ev('status', (e) => e.abilityId === 'DAR-05-C')[0]; h.check('Confused 2 turns at round start', s && s.phase === 'round_start' && s.slot.remaining === 2 && s.target === 'b0'); h.check('the active ally still acts', h.has('turn_start', (e) => e.actor === 'a0')); h.executed(1); } },
       { id: 'roll-fails', kind: 'miss', title: 'The roll fails (controlled seed selection): the use is still consumed',

@@ -50,7 +50,7 @@ export default registerClashAbility({
   review: {
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'Link on turn 1, then a protected hit is split raw with the floored owner share',
-        explain: (c) => `Muddlet links instead of attacking. Once it is in reserve, each enemy hit on the active ally is split before mitigation: Muddlet takes ${c.values.sharePct}% of the raw budget (floored), the ally the rest, each with its own defences; Muddlet gets no Tank guard in reserve.`,
+        explain: (c) => `Muddlet links instead of attacking. Once it is in reserve, each enemy hit on the active ally is split before mitigation: Muddlet takes ${c.values.sharePct}% of the raw budget (floored), the ally the rest, each with its own defenses; Muddlet gets no Tank guard in reserve.`,
         setup: () => ({ a: [{ species: 'mudcub' }, { species: 'tidepaw', overall: 90 }], b: [{ species: 'pebble', overall: 99 }], seed: 4, config: { policies: { a: 'manual', b: 'none' }, decisions: { a: decisionsPlan({ 4: 'a1' }) } }, stopAt: { exchange: 7 } }),
         expect: (r, h) => {
           h.stages('trigger', 'activation');

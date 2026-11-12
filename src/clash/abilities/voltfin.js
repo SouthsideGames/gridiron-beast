@@ -29,11 +29,11 @@ export default registerClashAbility({
   review: {
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'An evaded ordinary attack rebounds once at the first enemy reserve',
-        explain: (c) => `CONTROLLED PREREQUISITE (labelled): a reviewer probe supplies the explicit miss on the active. Volcoil's attack rebounds at the first reserve for ${c.values.reboundPct}%; the cooldown starts at the rebound.`,
+        explain: (c) => `CONTROLLED PREREQUISITE (labeled): a reviewer probe supplies the explicit miss on the active. Volcoil's attack rebounds at the first reserve for ${c.values.reboundPct}%; the cooldown starts at the rebound.`,
         setup: () => ({ a: [{ species: 'voltfin' }], b: [{ species: 'gravelpup', sparring: true }, { species: 'tinhare' }, { species: 'mudlark' }], seed: 1, stopAt: { exchange: 1 }, probes: [MISS_ALL] }),
         expect: (r, h) => { const d = h.ab('damage'); h.check('rebound on b1 (first reserve), reaction-tagged', d.length === 1 && d[0].target === 'b1' && d[0].tag === 'reaction' && d[0].mult === h.values.reboundPct / 100); h.check(`cooldown ${h.values.cooldown}`, h.ev('clock_start', (e) => e.clock === 'ELE-02-C')[0]?.left === h.values.cooldown); h.executed(1); } },
       { id: 'no-reserve', kind: 'blocked', title: 'No enemy reserve: readiness kept',
-        explain: () => 'Against a lone opponent (controlled miss, labelled) there is nothing to rebound into; the cooldown does not start.',
+        explain: () => 'Against a lone opponent (controlled miss, labeled) there is nothing to rebound into; the cooldown does not start.',
         setup: () => ({ a: [{ species: 'voltfin' }], b: [{ species: 'gravelpup', sparring: true }], seed: 1, stopAt: { exchange: 1 }, probes: [MISS_ALL] }),
         expect: (r, h) => { h.check('no rebound, readiness kept', h.ab('damage').length === 0 && !h.has('clock_start', (e) => e.clock === 'ELE-02-C')); } },
       { id: 'shield-not-miss', kind: 'blocked', title: 'A shield-absorbed attack is not a miss: no rebound',

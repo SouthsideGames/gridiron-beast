@@ -43,7 +43,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'emberfox', overall: 99, sparring: true }], b: [{ species: 'kindlet', overall: 40 }], seed: 1, stopAt: { exchange: 4 } }),
         expect: (r, h) => { const d = h.ab('damage'); h.check('one counterburst, on exchange 3, reaction-tagged', d.length === 1 && d[0].ex === 3 && d[0].tag === 'reaction'); h.check('power = form + mastery', d[0]?.mult === (h.values.counterburstPct + h.values.masteryBonusPts) / 100); h.check('charges reset', h.state('a0')?.charges === 1 || h.state('a0')?.charges === 0); h.executed(1); h.stages('trigger', 'activation', 'resolution'); } },
       { id: 'misses-no-charge', kind: 'blocked', title: 'Missed and fully absorbed-at-zero attacks give no charge (controlled misses)',
-        explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe makes every enemy attack miss Flaroo: no charge builds, no counterburst.',
+        explain: () => 'CONTROLLED PREREQUISITE (labeled): a reviewer probe makes every enemy attack miss Flaroo: no charge builds, no counterburst.',
         setup: () => ({ a: [{ species: 'emberfox', sparring: true }], b: [{ species: 'kindlet', overall: 40 }], seed: 1, stopAt: { exchange: 4 }, probes: [{ missCheck: (v, id) => (id === 'a0' ? { miss: true, source: 'controlled reviewer miss' } : null) }] }),
         expect: (r, h) => { h.check('no charge, no counterburst', h.state('a0')?.charges === 0 && h.ab('damage').length === 0); } },
       { id: 'stunned-consumes', kind: 'blocked', title: 'Stunned at the third charge: the charge is consumed with no counter; Stunned duration untouched',

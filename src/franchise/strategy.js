@@ -61,7 +61,7 @@ export function rawMode(x, { ageingBar = STRATEGY.ageingShare } = {}) {
   const losing = x.recent <= STRATEGY.losing, winning = x.recent >= STRATEGY.winning;
   if ((winning && x.quality >= 0) || (!losing && x.quality >= STRATEGY.contendQuality)) return { mode: 'contend', why: winning ? 'winning with a strong roster' : 'a roster well above the league' };
   if (losing) {
-    if (x.ageingShare >= ageingBar) return { mode: 'rebuild', why: 'losing with an ageing roster' };
+    if (x.ageingShare >= ageingBar) return { mode: 'rebuild', why: 'losing with an aging roster' };
     if (x.committedShare >= STRATEGY.cappedShare) return { mode: 'rebuild', why: 'losing and capped out' };
     if (x.extraPicks >= STRATEGY.extraPicks) return { mode: 'rebuild', why: 'losing with extra draft picks' };
     return { mode: 'retool', why: 'losing with a young roster' };

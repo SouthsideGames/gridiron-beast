@@ -61,7 +61,7 @@ export default registerClashAbility({
   review: {
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'Launch, then the main hit and the splash at the end of the next exchange',
-        explain: (c) => `Pyronix launches its meteor instead of attacking; at the end of exchange 2 the opposing active takes ${c.values.mainPct}% and every other living opponent (reserves included) ${c.values.splashPct}% of a normal attack, each with its own type and defence.`,
+        explain: (c) => `Pyronix launches its meteor instead of attacking; at the end of exchange 2 the opposing active takes ${c.values.mainPct}% and every other living opponent (reserves included) ${c.values.splashPct}% of a normal attack, each with its own type and defense.`,
         setup: () => ({ a: [{ species: 'firestorm' }], b: [{ species: 'pebble', overall: 90 }, { species: 'tidepaw', overall: 90 }, { species: 'lumen', overall: 90 }], seed: 3, stopAt: { exchange: 2 } }),
         expect: (r, h) => {
           h.stages('trigger', 'activation', 'resolution', 'cleanup');

@@ -296,7 +296,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   // Deferred reactions (Rubble Reprisal: "Finish the entire originating healing ability ... BEFORE reaction"): queued by a hook and run
   // when the outermost resolving step has finished (the end of the normal action, of the outermost strike, of a rotation, of a phase).
   const deferred = [];
-  function flushDeferred() { while (deferred.length && !winner) { const d = deferred.shift(); const o = byId.get(d.ownerId); if (!o || o.koed) { if (LOG && o) log('cancelled', o, null, `${o.c.name}'s deferred ${d.abilityId} is cancelled (knocked out)`, { abilityId: d.abilityId, stage: 'cleanup', rule: 'B3 rule 2' }); continue; } d.fn(api, o.self); } }
+  function flushDeferred() { while (deferred.length && !winner) { const d = deferred.shift(); const o = byId.get(d.ownerId); if (!o || o.koed) { if (LOG && o) log('cancelled', o, null, `${o.c.name}'s deferred ${d.abilityId} is canceled (knocked out)`, { abilityId: d.abilityId, stage: 'cleanup', rule: 'B3 rule 2' }); continue; } d.fn(api, o.self); } }
   const isNormalAttack = (tag) => tag === 'ordinary' || tag === 'special';
   const label = (spec) => spec.label || (spec.tag === 'ordinary' ? 'attack' : spec.abilityId || spec.tag);
   const penaltyOf = (x, spec) => (isNormalAttack(spec?.tag ?? 'ordinary') || spec?.support ? x.p8?.factor ?? 1 : 1);
@@ -346,7 +346,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     const prevAttack = curAttack;
     curAttack = { seq: ++attackSeq, attacker: att.c.id, owner: spec.commandedBy ?? att.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null, suppressRetaliation: !!spec.suppressRetaliation, noRetaliation: spec.noRetaliation ?? (spec.tag === 'reaction' || spec.tag === 'counter' || spec.tag === 'commanded'), extra: isExtraStrike(spec) };
     try {
-      if (att.koed && !spec.exception) { if (LOG) log('cancelled', att, intended, `${att.c.name}'s ${label(spec)} is cancelled (knocked out)`, { rule: 'B3 rule 2', stage: 'cleanup', abilityId: spec.abilityId ?? null }); out.cancelled = true; out.decided = endCheck(); return out; }
+      if (att.koed && !spec.exception) { if (LOG) log('cancelled', att, intended, `${att.c.name}'s ${label(spec)} is canceled (knocked out)`, { rule: 'B3 rule 2', stage: 'cleanup', abilityId: spec.abilityId ?? null }); out.cancelled = true; out.decided = endCheck(); return out; }
       // 3.4 launch: a performed normal attack is counted here (performed-attack counters); costs and once-uses are the contract's own;
       // then launch accuracy (Snowbank Shot); then ONE Confused roll for the whole attack (eligible normal attacks; commanded attacks
       // roll their own ordinary chance, spec §10; reactions and counters never roll).
@@ -363,8 +363,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       }
       out.target = t.c.id;
       for (let h = 1; h <= hits; h++) {
-        if (att.koed && !spec.exception) { if (LOG) log('hits_cancelled', att, t, `${att.c.name}'s remaining hits are cancelled (knocked out)`, { remaining: hits - h + 1, rule: 'B3 rule 2' }); break; }
-        if (h > 1 && (t.koed || (!t.active && t !== att))) { if (LOG) log('hits_cancelled', att, t, `${att.c.name}'s remaining hits are cancelled (target gone)`, { remaining: hits - h + 1, rule: 'multi-hit-target-ko (provisional)' }); break; }
+        if (att.koed && !spec.exception) { if (LOG) log('hits_cancelled', att, t, `${att.c.name}'s remaining hits are canceled (knocked out)`, { remaining: hits - h + 1, rule: 'B3 rule 2' }); break; }
+        if (h > 1 && (t.koed || (!t.active && t !== att))) { if (LOG) log('hits_cancelled', att, t, `${att.c.name}'s remaining hits are canceled (target gone)`, { remaining: hits - h + 1, rule: 'multi-hit-target-ko (provisional)' }); break; }
         const r = oneHit(att, t, spec, h);
         out.hits.push(r); if (r.intercepted) out.intercepted = true;
         if (!r.missed && !r.intercepted) { out.landed = true; out.hpDamage += r.hpDamage; out.shieldDamage += r.shieldDamage; out.kos.push(...r.kos); }
@@ -551,7 +551,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       if (!d.kind) continue; // a bare report ({ ok }) is not a descriptor
       const owner = byId.get(d.owner ?? ownerId);
       if (d.exception && !POST_KO_EXCEPTIONS[d.exception]) throw new Error(`${d.exception} is not an approved post-KO exception (B3 rule 3)`);
-      if (owner.koed && !d.exception) { if (LOG) log('cancelled', owner, null, `${owner.c.name}'s ${d.abilityId || d.kind} is cancelled (knocked out)`, { hook, item: d.kind, abilityId: d.abilityId ?? null, rule: 'B3 rule 2', stage: 'cleanup' }); continue; }
+      if (owner.koed && !d.exception) { if (LOG) log('cancelled', owner, null, `${owner.c.name}'s ${d.abilityId || d.kind} is canceled (knocked out)`, { hook, item: d.kind, abilityId: d.abilityId ?? null, rule: 'B3 rule 2', stage: 'cleanup' }); continue; }
       if (LOG && d.abilityId) log('ability', owner, null, `${owner.c.name}: ${d.abilityId} (${hook})`, { hook, abilityId: d.abilityId, stage: 'activation', ...(owner.koed ? { postKO: d.exception } : {}) });
       if (d.kind === 'strike') {
         const tgt = byId.get(d.target === 'attacker' ? curHit?.attacker : d.target);
@@ -997,7 +997,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     let turnNo = 0;
     for (const x of order) {
       turnNo += 1;
-      if (x.koed || !x.active) { phase = 'turn'; if (LOG) log('turn_cancelled', x, null, `${x.c.name}'s turn is cancelled (${x.koed ? 'knocked out' : 'no longer active'})`); }
+      if (x.koed || !x.active) { phase = 'turn'; if (LOG) log('turn_cancelled', x, null, `${x.c.name}'s turn is canceled (${x.koed ? 'knocked out' : 'no longer active'})`); }
       else if (takeTurn(x)) break;
       if (stopAt && stopAt.exchange === ex && stopAt.turn === turnNo && !winner) { stopped = { kind: 'turn', ex, turn: turnNo }; break; }
     }

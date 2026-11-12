@@ -45,7 +45,7 @@ export default registerClashAbility({
         setup: () => ({ a: [{ species: 'glaciron' }], b: [{ species: 'voltfang', overall: 99 }], seed: 1, stopAt: { exchange: 4 } }),
         expect: (r, h) => { const br = h.ev('status_end', (e) => e.target === 'a0' && e.reason === 'broken')[0]; const re = h.ev('status', (e) => e.target === 'a0' && e.abilityId === 'ICE-05-C')[1]; h.check('the original pool broke, then the rebuild', br && re && re.seq > br.seq && re.hit === br.hit); h.check(`rebuild ${h.values.rebuildPct}% for 2 turns`, re && re.slot.pool === Math.floor(h.line('a0').maxHp * h.values.rebuildPct / 100 + 0.5) && re.slot.remaining === 2); h.executed(2); } },
       { id: 'expiry-no-rebuild', kind: 'blocked', title: 'The original shield expires unbroken: no rebuild',
-        explain: () => 'Against a sparring partner (labelled) nothing breaks the pool; it expires after three owner turns and no rebuild follows.',
+        explain: () => 'Against a sparring partner (labeled) nothing breaks the pool; it expires after three owner turns and no rebuild follows.',
         setup: () => ({ a: [{ species: 'glaciron', overall: 30 }], b: [{ species: 'gravelpup', overall: 99, sparring: true }], seed: 1, stopAt: { exchange: 5 } }),
         expect: (r, h) => { h.check('expired, not broken', h.has('status_end', (e) => e.target === 'a0' && e.reason === 'expired')); h.check('no rebuild', h.ev('status', (e) => e.abilityId === 'ICE-05-C').length === 1); } },
       { id: 'once', kind: 'depletion', title: 'The rebuilt shield never rebuilds again',

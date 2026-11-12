@@ -17,7 +17,7 @@ export default function batch(b) {
 
   add(O('trips_drive', 'Trips Drive', 'spread_trips_rt', { QB: PASS(), WR3: R('shallow'), WR2: R('dig'), WR1: R('go'), RB: R('flat'), LG: BLOCK, RG: BLOCK },
     P('WR3', ['WR3', 'WR2', 'RB', 'WR1'], 'five', ['medium', 'zone_beater'], 'Drive from trips right: the outside receiver clears, the inside man crosses shallow under the dig.')),
-  'When the defence matches trips with zone defenders.', 'The go route empties the deep third; the shallow-dig high-low hits the linebacker.', 'Cover 3 and Cover 2 Zone.', 'Robber.');
+  'When the defense matches trips with zone defenders.', 'The go route empties the deep third; the shallow-dig high-low hits the linebacker.', 'Cover 3 and Cover 2 Zone.', 'Robber.');
 
   add(O('shallow_cross', 'Shallow Cross', 'gun_spread', { QB: PASS(), WR3: R('shallow'), WR2: R('hook'), WR1: R('go'), RB: BLOCK, LG: BLOCK, RG: BLOCK },
     P('WR3', ['WR3', 'WR2', 'WR1'], 'five', ['medium', 'man_beater'], 'The slot crosses shallow; the outside receiver on his side sits in a hook behind him; the far receiver runs off.')),
@@ -97,7 +97,7 @@ export default function batch(b) {
 
   add(O('empty_mesh', 'Empty Mesh', 'empty_2x2', { QB: PASS(), WR3: R('shallow'), RB: R('drag'), WR1: R('corner'), WR2: R('hook'), LG: BLOCK, RG: BLOCK },
     P('WR3', ['WR3', 'RB', 'WR1', 'WR2'], 'five', ['medium', 'man_beater'], 'Two crossers rub in the middle from an empty set: left slot shallow, back drag.')),
-  'Against man coverage when you need a rub.', 'The crossers brush past each other: the trailing defender gets caught.', 'Cover 1, Cover 0 and Man Press.', 'Zone defences; the crossers run into the hook defenders.');
+  'Against man coverage when you need a rub.', 'The crossers brush past each other: the trailing defender gets caught.', 'Cover 1, Cover 0 and Man Press.', 'Zone defenses; the crossers run into the hook defenders.');
 
   add(O('pro_mesh', 'Pro Mesh', 'gun_pro', { QB: PASS(), TE: R('drag'), WR2: R('shallow'), WR1: R('corner'), RB: R('angle'), LG: BLOCK, RG: BLOCK },
     P('TE', ['TE', 'WR2', 'RB', 'WR1'], 'five', ['medium', 'man_beater'], 'Mesh with the tight end and right receiver crossing, a corner on the left and the back’s angle route.')),
@@ -113,7 +113,7 @@ export default function batch(b) {
 
   add(O('twins_flood', 'Twins Flood', 'gun_twins_rt', { QB: PASS(), WR2: R('go'), WR1: R('sail'), TE: R('drag'), RB: BLOCK, LG: BLOCK, RG: BLOCK },
     P('WR1', ['WR1', 'TE', 'WR2'], 'five', ['medium', 'zone_beater'], 'Twins right: go and sail outside while the left tight end drags across to the right flat.')),
-  'Against zone when the defence covers the twins with two.', 'The tight end arrives late to the flat as the third level.', 'Cover 3.', 'Cover 2 Man.');
+  'Against zone when the defense covers the twins with two.', 'The tight end arrives late to the flat as the third level.', 'Cover 3.', 'Cover 2 Man.');
 
   add(O('y_over', 'Y Over', 'gun_pro', { QB: PASS(), TE: R('over'), WR1: R('dig'), WR2: R('comeback'), RB: R('arrow'), LG: BLOCK, RG: BLOCK },
     P('TE', ['TE', 'WR1', 'WR2', 'RB'], 'five', ['medium', 'deep'], 'The tight end runs a deep over route across the field; the left receiver digs under it.')),
@@ -193,7 +193,7 @@ export default function batch(b) {
   'Against single-high safeties: two posts, one safety.', 'Throw the post the safety does not take.', 'Cover 1 and Cover 3.', 'Cover 2 Zone and Cover 4.');
 
   add(O('twins_corner_seam', 'Twins Corner Seam', 'ace_twins', { QB: PASS(), WR2: R('corner'), WR1: R('seam'), TE: R('flat'), RB: BLOCK, LG: BLOCK, RG: BLOCK },
-    P('WR2', ['WR2', 'WR1', 'TE'], 'five', ['deep', 'zone_beater'], 'Under centre, twins left: the slot runs a corner, the outside receiver a seam inside him.')),
+    P('WR2', ['WR2', 'WR1', 'TE'], 'five', ['deep', 'zone_beater'], 'Under center, twins left: the slot runs a corner, the outside receiver a seam inside him.')),
   'Against Cover 2 on the twins side.', 'The seam holds the safety inside; the corner is open over the corner defender.', 'Cover 2 Zone and Tampa 2.', 'Cover 4.');
 
   add(O('trips_seams', 'Trips Seams', 'spread_trips_rt', { QB: PASS(), WR1: R('go'), WR2: R('skinny_post'), WR3: R('seam'), RB: R('drift'), LG: BLOCK, RG: BLOCK },
@@ -235,11 +235,11 @@ export default function batch(b) {
 
   add(O('pa_sail_boot', 'Sail Boot Left', 'tight_wing_lt', { QB: BOOT([[-1.6, 0], [-4, -1], [-5, -6], [-3, -11]]), RB: FAKE, TE: R('sail'), WR1: R('deep_cross'), LG: BLOCK, RG: BLOCK },
     P('TE', ['TE', 'WR1'], 'pa', ['medium', 'play_action', 'boot'], 'Fake right, the quarterback boots left; the wing runs the sail and the right receiver crosses deep.')),
-  'After runs to the right have drawn the defence over.', 'The quarterback reads high to low on the move: sail, then the crosser.', 'Run Wall and over-pursuing fronts.', 'Edge Contain.');
+  'After runs to the right have drawn the defense over.', 'The quarterback reads high to low on the move: sail, then the crosser.', 'Run Wall and over-pursuing fronts.', 'Edge Contain.');
 
   add(O('waggle', 'Waggle', 'i_pro', { QB: BOOT([[-1.6, 0], [-4, 1], [-5, 5], [-3, 10]]), RB: FAKE, WR2: R('sail'), TE: R('arrow'), WR1: R('deep_cross'), LG: BLOCK, RG: BLOCK },
     P('WR2', ['WR2', 'TE', 'WR1'], 'pa', ['medium', 'play_action', 'boot'], 'The quarterback boots right after the fake with a three-level flood: sail, flat and a deep crosser.')),
-  'Against a defence keying the run on early downs.', 'On the move: sail first, tight end in the flat second, crosser last.', 'Run Wall and Bear Front.', 'Edge Contain and QB Spy.');
+  'Against a defense keying the run on early downs.', 'On the move: sail first, tight end in the flat second, crosser last.', 'Run Wall and Bear Front.', 'Edge Contain and QB Spy.');
 
   add(O('pa_seam', 'PA Seam', 'ace_twins', { QB: PA_UC, RB: FAKE, WR2: R('seam'), WR1: R('comeback'), TE: R('flat'), LG: BLOCK, RG: BLOCK },
     P('WR2', ['WR2', 'WR1', 'TE'], 'pa', ['medium', 'deep', 'play_action'], 'Fake the run; the left slot runs straight up the seam past the linebackers.')),
@@ -255,11 +255,11 @@ export default function batch(b) {
 
   add(O('pa_flood', 'PA Flood', 'gun_pro', { QB: PA_GUN, RB: FAKE, WR2: R('go'), TE: R('sail'), WR1: R('deep_cross'), LG: BLOCK, RG: BLOCK },
     P('TE', ['TE', 'WR1', 'WR2'], 'pa', ['medium', 'play_action'], 'Play action from the gun: go and sail to the right with the left receiver crossing deep behind.')),
-  'When the defence plays the gun run game hard.', 'The sail opens when the corner carries the go.', 'Cover 3 and Run Wall.', 'Cover 2 Man and blitzes.');
+  'When the defense plays the gun run game hard.', 'The sail opens when the corner carries the go.', 'Cover 3 and Run Wall.', 'Cover 2 Man and blitzes.');
 
   add(O('pistol_boot', 'Pistol Boot', 'tight_pistol', { QB: BOOT([[-3.5, 0], [-5, 1], [-6, 6], [-4, 11]]), RB: FAKE, TE: R('arrow'), WR1: R('deep_cross'), LG: BLOCK, RG: BLOCK },
     P('TE', ['TE', 'WR1'], 'pa', ['medium', 'play_action', 'boot'], 'Pistol fake, quarterback rolls right; tight end to the flat, left receiver crossing deep.')),
-  'Against an over-pursuing defence.', 'The tight end is the first read on the move; the crosser if the flat is taken.', 'Run Wall and Bear Front.', 'Edge Contain.');
+  'Against an over-pursuing defense.', 'The tight end is the first read on the move; the crosser if the flat is taken.', 'Run Wall and Bear Front.', 'Edge Contain.');
 
   add(O('pa_corner', 'PA Corner', 'tight_i', { QB: PA_UC, RB: FAKE, TE: R('corner'), WR1: R('dig'), LG: BLOCK, RG: BLOCK },
     P('TE', ['TE', 'WR1'], 'pa', ['medium', 'deep', 'play_action', 'redzone'], 'Fake the dive; the tight end runs a corner route while the receiver digs across.')),
@@ -267,7 +267,7 @@ export default function batch(b) {
 
   add(O('te_throwback', 'TE Throwback', 'tight_wing_lt', { QB: BOOT([[-1.6, 0], [-4, 1], [-5, 6], [-3, 11]]), RB: FAKE, WR1: R('deep_out'), TE: R('flat'), LG: BLOCK, RG: BLOCK },
     P('TE', ['TE', 'WR1'], 'pa', ['medium', 'play_action', 'boot', 'misdirection'], 'Everything rolls right with the quarterback; the left wing tight end slips out to the left flat for the throwback.')),
-  'Once the defence starts flying to the boot side.', 'The quarterback looks right, then throws back across to the tight end.', 'Over-pursuing defences and Zone Blitz.', 'QB Spy.');
+  'Once the defense starts flying to the boot side.', 'The quarterback looks right, then throws back across to the tight end.', 'Over-pursuing defenses and Zone Blitz.', 'QB Spy.');
 
   add(O('pa_deep_over', 'PA Deep Over', 'gun_wing', { QB: PA_GUN, RB: FAKE, TE: R('over'), WR1: R('go'), WR2: R('curl'), LG: BLOCK, RG: BLOCK },
     P('TE', ['TE', 'WR2', 'WR1'], 'pa', ['deep', 'long', 'play_action'], 'Play action from the gun: the wing tight end crosses deep, the right receiver curls.')),
@@ -287,11 +287,11 @@ export default function batch(b) {
 
   add(O('pistol_pa_post', 'Pistol PA Post', 'pistol_twins', { QB: PA_PISTOL, RB: FAKE, WR1: R('post'), WR3: R('dig'), WR2: R('go'), LG: BLOCK, RG: BLOCK },
     P('WR1', ['WR1', 'WR3', 'WR2'], 'pa', ['deep', 'long', 'play_action'], 'Spread play action from the pistol: post over a dig on the left, go on the right.')),
-  'When the defence crowds the box against spread runs.', 'The dig holds the safety; the post goes behind him.', 'Run Wall and Cover 3.', 'Cover 4 and blitzes.');
+  'When the defense crowds the box against spread runs.', 'The dig holds the safety; the post goes behind him.', 'Run Wall and Cover 3.', 'Cover 4 and blitzes.');
 
   add(O('jumbo_boot', 'Jumbo Boot', 'goal_jumbo', { QB: BOOT([[-1.6, 0], [-4, 1], [-5, 5], [-3, 9]]), RB: FAKE, TE: R('flat'), WR1: R('deep_cross'), LG: BLOCK, RG: BLOCK },
     P('TE', ['TE', 'WR1'], 'pa', ['short', 'redzone', 'play_action', 'boot'], 'Goal-line set, quarterback boots right; tight end to the flat, receiver crossing behind him.')),
-  'Inside the 5 after a stuffed run.', 'The defence collapses on the fake; the tight end is alone in the flat.', 'Goal Line Stand and Run Wall.', 'Edge Contain.');
+  'Inside the 5 after a stuffed run.', 'The defense collapses on the fake; the tight end is alone in the flat.', 'Goal Line Stand and Run Wall.', 'Edge Contain.');
 
   add(O('pa_bench', 'PA Bench', 'tight_twins', { QB: PA_GUN, RB: FAKE, WR1: R('deep_out'), TE: R('seam'), LG: BLOCK, RG: BLOCK },
     P('WR1', ['WR1', 'TE'], 'pa', ['medium', 'play_action'], 'Play action with a deep out on the twins side and the tight end splitting the safeties.')),

@@ -51,7 +51,7 @@ export function abilityBlockHtml(x, mode, { monster = null, seeIt = false } = {}
     <p class="muted" style="margin:2px 0">${esc(a.summary)}</p>${a.story ? `<p class="dim" style="margin:2px 0;font-style:italic">${esc(a.story)}</p>` : ''}
     ${k ? `<div class="dim" style="font-size:12px">Mastery: <b>${k.tier}</b>${k.mastered ? ' (highest tier)' : ` · ${k.need} more valid use${k.need === 1 ? '' : 's'} to ${k.nextTier}`}</div>` : ''}
     <details class="ab-rules"><summary class="muted" style="cursor:pointer">Full rules</summary>${a.sections.map((s) => `<p style="margin:4px 0"><b>${s.label}.</b> <span class="muted">${esc(s.text)}</span></p>`).join('')}</details>
-    ${seeIt && mode === 'football' ? `<button class="btn small see-it" data-see-it="${esc(familyIdOf(x))}" data-form="${monster?.stage ?? ''}" data-mastery="${k ? k.index : 0}">▶ See it</button>` : ''}</div>`;
+    ${seeIt && mode === 'football' ? `<button class="btn small see-it" data-see-it="${esc(familyIdOf(x))}" data-form="${monster?.stage ?? ''}" data-mastery="${k ? k.index : 0}">▶ See It</button>` : ''}</div>`;
 }
 /** Both abilities of a family or monster, or the plain statement that a Basic has none. */
 export function abilitiesHtml(x, opts = {}) {

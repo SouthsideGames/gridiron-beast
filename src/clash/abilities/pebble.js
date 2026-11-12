@@ -27,7 +27,7 @@ export default registerClashAbility({
   review: {
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'A lethal hit on the active ally is redirected to the reserve Pebblit (no Tank guard in reserve)',
-        explain: () => 'The active ally is staged at 1 HP; the opponent\'s lethal hit is taken by Pebblit from reserve instead, against its own defences without the Tank guard; nobody changes position.',
+        explain: () => 'The active ally is staged at 1 HP; the opponent\'s lethal hit is taken by Pebblit from reserve instead, against its own defenses without the Tank guard; nobody changes position.',
         setup: () => ({ a: [{ species: 'tidepaw', hp: 1, sparring: true }, { species: 'pebble', overall: 99 }], b: [{ species: 'charbun', overall: 70 }], seed: 1, stopAt: { exchange: 1 } }),
         expect: (r, h) => { const red = h.ev('redirect', (e) => e.abilityId === 'EAR-01-C')[0]; const d = h.ev('damage', (e) => e.target === 'a1')[0]; h.check('redirected to a1', red && red.actor === 'a1' && d); h.check('no Tank guard in reserve', d && d.guard === false); h.check('the ally survives, positions unchanged', h.line('a0').hp === 1 && h.line('a0').active); h.executed(1); } },
       { id: 'not-lethal', kind: 'blocked', title: 'A non-lethal hit is not covered',

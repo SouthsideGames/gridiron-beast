@@ -82,8 +82,8 @@ export function seasonScore(r, role) {
 }
 const ROLE_WHY = {
   head_coach: (r) => `win rank ${r.res.win} of ${r.res.n} with the ${ord(r.pre.team)}-strongest roster${r.res.champion ? ', champions' : r.res.playoffs ? ', playoffs' : ''}`,
-  offensive_coordinator: (r) => `scoring rank ${r.res.pf} of ${r.res.n} with the ${ord(r.pre.off)}-strongest offence`,
-  defensive_coordinator: (r) => `points-allowed rank ${r.res.pa} of ${r.res.n} with the ${ord(r.pre.def)}-strongest defence`,
+  offensive_coordinator: (r) => `scoring rank ${r.res.pf} of ${r.res.n} with the ${ord(r.pre.off)}-strongest offense`,
+  defensive_coordinator: (r) => `points-allowed rank ${r.res.pa} of ${r.res.n} with the ${ord(r.pre.def)}-strongest defense`,
   head_scout: (r) => `draft picks ${r.draft.gap >= 0 ? '+' : ''}${r.draft.gap.toFixed(1)} against the picks around them`,
   monster_trainer: (r) => `training delivered ${Math.round(100 * r.train.got / r.train.ref)}% of an average trainer's`,
 };

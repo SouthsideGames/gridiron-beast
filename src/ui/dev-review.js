@@ -13,6 +13,7 @@ import { SIG_REV } from './ability-sigs.js';
 import { reviews, setReview } from '../franchise/review-store.js';
 import { esc } from './dom.js';
 import { CARD_CHECK, CARD_STATUS_LABEL, CARD_PROPOSALS } from '../data/card-check.js';
+import { REVIEW_FP_ALIASES } from '../data/review-fp-aliases.js';
 
 function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 
@@ -47,7 +48,8 @@ const fpOf = (ns, id) => { if (ns === 'fbability' || ns === 'clashability') retu
  */
 export function reviewState(ns, id) {
   const r = reviews(ns)[id]; if (!r?.status) return 'new';
-  const same = !r.fp || r.fp === fpOf(ns, id);
+  const cur = fpOf(ns, id); const alias = REVIEW_FP_ALIASES[ns]?.[id]; // a wording-only pass keeps earlier verdicts (review-fp-aliases.js)
+  const same = !r.fp || r.fp === cur || (!!alias && alias[0] === r.fp && alias[1] === cur);
   if (r.status === 'approved') return same ? 'approved' : 'changed';
   return same ? 'needs_work' : 'updated';
 }
@@ -152,8 +154,8 @@ export function reviewHtml(ns, id, { open = false } = {}) {
   return `<div class="review" data-review="${ns}:${id}">
     ${since ? `<div class="review-since">🔔 ${since}</div>` : ''}
     ${ns === 'ability' ? cardHtml(id) : ''}
-    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn small review-btn ${st === 'approved' ? 'approved' : ''}" data-action="rv-approve" data-ns="${ns}" data-id="${id}" aria-pressed="${st === 'approved'}">${isAb ? '✓ Approve' : '✓ Looks good'}</button><button class="btn small review-btn ${st === 'needs_work' ? 'needswork' : ''}" data-action="rv-needs" data-ns="${ns}" data-id="${id}" aria-pressed="${st === 'needs_work'}">${isAb ? '✎ Needs revision' : '✎ Needs work'}</button>${showNote ? '' : `<button class="btn small ghost" data-action="rv-note" data-ns="${ns}" data-id="${id}">💬 Note</button>`}</div>
-    ${showNote ? `<textarea class="review-note" data-change="rv-text" data-ns="${ns}" data-id="${id}" rows="2" maxlength="2000" placeholder="${ns === 'ability' ? 'What should it look like? Shape, colour, size, timing, label...' : 'What should change? Routes, timing, art, when to call it...'}">${esc(r.note || '')}</textarea>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn small review-btn ${st === 'approved' ? 'approved' : ''}" data-action="rv-approve" data-ns="${ns}" data-id="${id}" aria-pressed="${st === 'approved'}">${isAb ? '✓ Approve' : '✓ Looks Good'}</button><button class="btn small review-btn ${st === 'needs_work' ? 'needswork' : ''}" data-action="rv-needs" data-ns="${ns}" data-id="${id}" aria-pressed="${st === 'needs_work'}">${isAb ? '✎ Needs Revision' : '✎ Needs Work'}</button>${showNote ? '' : `<button class="btn small ghost" data-action="rv-note" data-ns="${ns}" data-id="${id}">💬 Note</button>`}</div>
+    ${showNote ? `<textarea class="review-note" data-change="rv-text" data-ns="${ns}" data-id="${id}" rows="2" maxlength="2000" placeholder="${ns === 'ability' ? 'What should it look like? Shape, color, size, timing, label...' : 'What should change? Routes, timing, art, when to call it...'}">${esc(r.note || '')}</textarea>
     <label class="row review-gameplay"><input type="checkbox" data-change="rv-gameplay" data-ns="${ns}" data-id="${id}" ${r.gameplay ? 'checked' : ''}> ⚙ ${ns === 'ability' ? 'The ability should <b>do</b> something different (gameplay, not just looks)' : 'The play should <b>work</b> differently (assignments, not just art)'}</label>
     <div class="dim review-saved" data-saved="${ns}:${id}" style="font-size:11px">${r.updatedAt ? 'Saved' : 'Saves when you tap away'}</div>` : ''}
     ${ns === 'play' && PLAYS[id]?.reserve ? `<label class="row review-practice" style="gap:6px;margin-top:8px"><input type="checkbox" data-change="rv-practice" data-ns="${ns}" data-id="${id}" ${r.practice ? 'checked' : ''} style="width:auto;min-height:0;margin:0"> 🎯 OK to add this play to the practice field</label>` : ''}
@@ -200,7 +202,7 @@ function cardHtml(id) {
   const found = c ? `<div class="card-issue ${c.status}"><b>⚠ ${CARD_STATUS_LABEL[c.status]}</b> <span class="dim">(found by the code check, on the developer's list)</span><div>In the game today: ${esc(c.does)}</div></div>` : '';
   const prop = CARD_PROPOSALS[id]; const decision = reviews('ability')[id]?.proposal || null;
   const proposal = prop ? `<div class="card-proposal ${decision || ''}"><b>✍ Proposed new card</b> <span class="dim">(not a legendary, so no absolutes)</span><div class="card-proposal-text">\u201c${esc(prop)}\u201d</div>
-    <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small review-btn ${decision === 'approved' ? 'approved' : ''}" data-action="rv-proposal" data-ns="ability" data-id="${id}" data-v="approved" aria-pressed="${decision === 'approved'}">✓ Use this card</button><button class="btn small review-btn ${decision === 'rejected' ? 'needswork' : ''}" data-action="rv-proposal" data-ns="ability" data-id="${id}" data-v="rejected" aria-pressed="${decision === 'rejected'}">✎ Not this, see my note</button></div>
+    <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small review-btn ${decision === 'approved' ? 'approved' : ''}" data-action="rv-proposal" data-ns="ability" data-id="${id}" data-v="approved" aria-pressed="${decision === 'approved'}">✓ Use This Card</button><button class="btn small review-btn ${decision === 'rejected' ? 'needswork' : ''}" data-action="rv-proposal" data-ns="ability" data-id="${id}" data-v="rejected" aria-pressed="${decision === 'rejected'}">✎ Not This, See My Note</button></div>
     <div class="dim" style="font-size:11px;margin-top:4px">${decision === 'approved' ? 'Approved: the developer builds it next, then it comes back to you as UPDATED.' : decision === 'rejected' ? 'Rejected: say what you want instead in the note below.' : 'Nothing changes until you decide.'}</div></div>` : '';
-  return `${found}${proposal}<button class="btn small card-toggle ${owner ? 'on' : ''}" data-action="rv-mismatch" data-ns="ability" data-id="${id}" aria-pressed="${owner}">${owner ? '⚠ You flagged: card doesn\u2019t match the game' : c ? '⚠ Confirm: make it do what the card says' : '⚠ Card doesn\u2019t match what I see'}</button>`;
+  return `${found}${proposal}<button class="btn small card-toggle ${owner ? 'on' : ''}" data-action="rv-mismatch" data-ns="ability" data-id="${id}" aria-pressed="${owner}">${owner ? '⚠ You Flagged: Card Doesn\u2019t Match the Game' : c ? '⚠ Confirm: Make It Do What the Card Says' : '⚠ Card Doesn\u2019t Match What I See'}</button>`;
 }

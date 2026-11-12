@@ -21,7 +21,7 @@ import { fmtMoney } from '../dom.js';
 const STEPS = ['name', 'look', 'background', 'club', 'difficulty', 'offense'];
 const LINES = {
   name: 'Ah, there you are! I knew our new franchise owner would be here soon. What should I call you?',
-  look: 'Let’s get your picture for the league programme. Make it look like you.',
+  look: 'Let’s get your picture for the league program. Make it look like you.',
   background: 'Every owner comes from somewhere. Where are you from, and what did you do before this?',
   club: 'The top franchises aren’t for sale. These four clubs finished at the bottom of the league and need an owner willing to rebuild. Pick your opportunity.',
   difficulty: 'How hard do you want this league to be? Choose carefully: it is set for the life of your franchise, and the Hall of Fame judges you by it.',
@@ -42,17 +42,17 @@ export function registerOnboardingScreens(Router, app) {
       let body = '';
       if (step === 'name') body = `<div class="grid2"><label class="field">First name<input id="first" maxlength="18" value="${esc(draft.first)}" autocomplete="given-name"></label><label class="field">Last name<input id="last" maxlength="18" value="${esc(draft.last)}" autocomplete="family-name"></label></div>`;
       if (step === 'look') {
-        body = `<div class="row" style="margin-bottom:8px">${['Female', 'Male', 'Nonbinary'].map((g) => `<button class="btn small ${draft.gender === g ? 'primary' : ''}" data-action="gender" data-v="${g}">${g === 'Nonbinary' ? 'Non-binary' : g}</button>`).join('')}</div>
-          ${coachEditorHtml(draft.editor.look, { tab: draft.editor.tab, teamColor: draft.club ? TEAM_META[draft.club]?.color : null, teamNote: 'Team colours follow the club you pick next. You can change your look any time from My office.' })}`;
+        body = `<div class="row" style="margin-bottom:8px">${['Female', 'Male', 'Nonbinary'].map((g) => `<button class="btn small ${draft.gender === g ? 'primary' : ''}" data-action="gender" data-v="${g}">${g === 'Nonbinary' ? 'Non-Binary' : g}</button>`).join('')}</div>
+          ${coachEditorHtml(draft.editor.look, { tab: draft.editor.tab, teamColor: draft.club ? TEAM_META[draft.club]?.color : null, teamNote: 'Team colors follow the club you pick next. You can change your look any time from My office.' })}`;
       }
       if (step === 'background') body = `<div class="stack" style="margin-top:8px">${Object.entries(BACKGROUNDS).map(([id, b]) => `<button class="choice ${draft.background === id ? 'selected' : ''}" data-action="background" data-v="${id}"><span class="name">${esc(b.label)}</span><div class="muted">${esc(b.text)}</div></button>`).join('')}</div>`;
       if (step === 'club') body = `<div class="stack">${STARTER_CLUBS.map((c) => `<button class="choice ${draft.club === c.name ? 'selected' : ''}" data-action="club" data-v="${esc(c.name)}"><span class="name" style="color:${TEAM_META[c.name].color}">${esc(c.name)}</span><span class="muted">${esc(divisionOf(c.name))} Division · ${esc(conferenceFor(divisionOf(c.name)))} Conference · last season ${c.record}</span></button>`).join('')}</div>${draft.rival ? `<div class="panel tight" style="border-color:#a855f7;margin-top:8px">⚔️ Your division rival: <b>${esc(draft.rival)}</b> · new GM ${esc(RIVAL_GMS[draft.rival])}. You meet twice a season.</div>` : ''}`;
       if (step === 'rival') { const r = draft.rival; body = `<div class="panel center" style="border-color:#a855f7"><div style="font-size:32px">⚔️</div><h2>YOUR RIVAL HAS ARRIVED</h2><div style="font-size:18px;font-weight:800;color:${TEAM_META[r].color}">${esc(r)}</div><div class="muted">New General Manager: <b>${esc(RIVAL_GMS[r])}</b></div><p class="muted" style="margin-top:8px">You meet twice a season, home and away. Rivalry results are tracked for your whole career.</p></div>`; }
       if (step === 'difficulty') body = `<div class="stack">${Object.entries(DIFFICULTY).map(([id, d]) => `<button class="choice ${draft.difficulty === id ? 'selected' : ''}" data-action="difficulty" data-v="${id}"><span class="name">${esc(d.label)}</span><div class="muted">${esc(d.text)}</div><div class="muted">${esc(d.hof)}</div></button>`).join('')}</div><p class="dim" style="margin-top:8px">Locked once the franchise starts. Game length and coaching mode can still be changed in Settings.</p>`;
-      if (step === 'offense') body = cornerstoneGrid('offense') + `<div class="row between" style="margin-top:8px"><span class="dim">Not what you had in mind?</span><button class="btn small" data-action="reroll" ${draft.rerolls >= 2 ? 'disabled' : ''}>Show three others (${2 - draft.rerolls} left)</button></div><p class="dim" style="margin-top:8px">A balanced coaching staff is hired for you. You can replace anyone later from the Staff screen.</p>`;
+      if (step === 'offense') body = cornerstoneGrid('offense') + `<div class="row between" style="margin-top:8px"><span class="dim">Not what you had in mind?</span><button class="btn small" data-action="reroll" ${draft.rerolls >= 2 ? 'disabled' : ''}>Show Three Others (${2 - draft.rerolls} Left)</button></div><p class="dim" style="margin-top:8px">A balanced coaching staff is hired for you. You can replace anyone later from the Staff screen.</p>`;
       return `<div class="commissioner">${portraitSprite('commissioner', 56, { hue: 210 })}<div class="speech"><div class="muted" style="font-size:11px;margin-bottom:4px">LEAGUE COMMISSIONER · ${draft.step + 1} / ${STEPS.length}</div>${esc(LINES[step])}</div></div>
         <div style="margin:12px 0">${body}</div>
-        <div class="row between"><button class="btn" data-action="back">‹ Back</button><button class="btn primary" data-action="next" id="next">${step === 'offense' ? 'Enter the league →' : 'Continue →'}</button></div>
+        <div class="row between"><button class="btn" data-action="back">‹ Back</button><button class="btn primary" data-action="next" id="next">${step === 'offense' ? 'Enter the League →' : 'Continue →'}</button></div>
         <p id="err" class="muted" style="color:var(--bad);min-height:18px"></p>`;
     },
     mount(root, ctx) {
@@ -102,14 +102,14 @@ export function registerOnboardingScreens(Router, app) {
   // time; the last one is the warning. Shown once per franchise (f.welcomed).
   let beat = 0;
   Router.registerScreen('welcome', {
-    title: 'Welcome to the league', tabs: false,
+    title: 'Welcome to the League', tabs: false,
     render({ f }) {
       const beats = commissionerWelcome(f); const shown = beats.slice(0, beat + 1); const last = beat >= beats.length - 1;
       const am = assistSettings(f).mode;
       return `<div class="panel tight" style="margin-bottom:8px"><div class="row between" style="flex-wrap:wrap;gap:6px"><b>How much help would you like?</b><span class="chips" role="radiogroup" aria-label="Coach Assist">${ASSIST_MODES.map((m) => `<button class="chip ${am === m ? 'on accent' : ''}" role="radio" aria-checked="${am === m}" data-action="assist-mode" data-v="${m}">${ASSIST_MODE_TEXT[m].label}</button>`).join('')}</span></div><div class="dim" style="margin-top:4px">${esc(ASSIST_MODE_TEXT[am].text)} Change it any time in Settings or from ? Help.</div></div><div class="welcome">
         <div class="row" style="gap:12px;align-items:flex-start">${portraitSprite('commissioner', 72, { hue: 40 })}<div class="grow"><div class="talk-name">The Commissioner</div><div class="dim">League office · ${esc(f.club)}</div></div></div>
         <div class="stack" style="margin-top:12px">${shown.map((b, i) => `<div class="talk ${i === beat ? 'fresh' : ''} ${b.ominous ? 'ominous' : ''}"><p class="talk-line">${b.text}</p></div>`).join('')}</div>
-        <button class="btn primary big block" data-action="${last ? 'enter' : 'more'}" style="margin-top:12px">${last ? 'Enter headquarters →' : 'Continue'}</button>
+        <button class="btn primary big block" data-action="${last ? 'enter' : 'more'}" style="margin-top:12px">${last ? 'Enter Headquarters →' : 'Continue'}</button>
         ${last ? '' : '<p class="dim center" style="margin-top:6px">Tap to let him finish.</p>'}</div>`;
     },
     mount(root, ctx) {
@@ -144,7 +144,7 @@ export function registerOnboardingScreens(Router, app) {
     const after = salarySummary(f, c.salary);
     const hc = staffMember(f, 'head_coach');
     const extra = c.role === 'head_coach' ? `<div class="muted">Offense: ${esc(c.identity.offense)} · Defense: ${esc(c.identity.defense)} · Aggression ${Math.round(c.identity.aggression * 100)}</div>`
-      : c.role.includes('coordinator') ? `<div class="muted">${(PLAYBOOKS[c.id] || []).length} plays · scheme fit with ${hc ? esc(hc.name) : 'head coach'}: <b>${hc ? alignmentFor(hc, c) : '·'}</b></div><button class="btn small" data-action="plays" data-id="${c.id}" data-name="${esc(c.name)}">View playbook</button>`
+      : c.role.includes('coordinator') ? `<div class="muted">${(PLAYBOOKS[c.id] || []).length} plays · scheme fit with ${hc ? esc(hc.name) : 'head coach'}: <b>${hc ? alignmentFor(hc, c) : '·'}</b></div><button class="btn small" data-action="plays" data-id="${c.id}" data-name="${esc(c.name)}">View Playbook</button>`
       : c.role === 'head_scout' ? `<div class="muted">Volcanic ${c.biomes.fire} · Coastal ${c.biomes.water} · Forest ${c.biomes.forest} · Frost ${c.biomes.ice}</div>`
       : `<div class="muted">Focus strength. Passing ${c.bonus.passing} · Rushing ${c.bonus.rushing} · Coverage ${c.bonus.coverage} · Pass rush ${c.bonus.pass_rush}</div>`;
     return `<div class="panel"><div class="row">${portraitSprite(c.id, 44)}<div class="grow"><b>${esc(c.name)}</b> <span class="chip">${esc(c.style)}</span><div class="muted">${esc(c.strength)} · OVR ${c.overall}</div></div></div>

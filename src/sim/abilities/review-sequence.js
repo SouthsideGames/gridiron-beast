@@ -42,7 +42,7 @@ export function reviewSequence({ family, form = null, mastery = 0, variant = 'ma
   const fam = FAMILIES.find((f) => f.id === family); const abilityId = fam?.abilities?.football;
   const base = { ok: false, family, abilityId, form: form || `${family}:0`, mastery, variant, plays: [], phases: [], failure: null, error: null };
   if (!abilityId) return { ...base, failure: { condition: 'no football ability' } };
-  const contract = contractOf(family); if (!contract) return { ...base, failure: { condition: 'no registered contract (legacy behaviour is not reviewed here)' } };
+  const contract = contractOf(family); if (!contract) return { ...base, failure: { condition: 'no registered contract (legacy behavior is not reviewed here)' } };
   const sc0 = SCENARIOS[family]; if (!sc0) return { ...base, failure: { condition: 'no scenario for this family' } };
   const v = variant === 'main' ? null : variantsOf(family).find((x) => x.id === variant);
   if (variant !== 'main' && !v) return { ...base, failure: { condition: `no variant ${variant}` } };

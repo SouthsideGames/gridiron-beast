@@ -15,6 +15,8 @@ let afterMount = null; // (ctx, screenName) => void
 let helpProvider = null; // (ctx, screenName) => html for the top bar's "? Help" button (Coach Assist, every mode)
 
 export function registerScreen(name, screen) { screens.set(name, screen); }
+/** Every registered screen name (tools and checks that walk the whole game use it). */
+export const screenNames = () => [...screens.keys()];
 export function init({ root, context, tabs, tip = null, mounted = null, help = null }) { app = root; ctxProvider = context; tabsProvider = tabs; tipProvider = tip; afterMount = mounted; helpProvider = help; }
 export function currentScreen() { return stack[stack.length - 1] || null; }
 

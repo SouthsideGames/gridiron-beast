@@ -30,7 +30,7 @@ export const LABELS = Object.freeze({
   tee: 'T-shirt', polo: 'Polo', hoodie: 'Hoodie', jacket: 'Track jacket', windbreaker: 'Windbreaker', quarterzip: 'Quarter-zip', sweater: 'Sweater', turtleneck: 'Turtleneck', jersey: 'Jersey', vest: 'Puffer vest', blazer: 'Blazer and tie', suit: 'Suit',
   cap: 'Cap', cap_back: 'Backwards cap', visor: 'Visor', beanie: 'Beanie', bucket: 'Bucket hat', headband: 'Headband', bandana: 'Bandana', fedora: 'Fedora',
   shades: 'Sunglasses', aviators: 'Aviators', monocle: 'Monocle', headset: 'Headset', whistle: 'Whistle', earring: 'Earring', chain: 'Chain', towel: 'Towel', lanyard: 'Lanyard', toothpick: 'Toothpick',
-  slim: 'Slim', average: 'Average', stocky: 'Stocky', team: 'Team colours', black: 'Black', grey: 'Grey', white: 'White',
+  slim: 'Slim', average: 'Average', stocky: 'Stocky', team: 'Team colors', black: 'Black', grey: 'Gray', white: 'White',
 });
 export const labelOf = (v) => LABELS[v] || String(v);
 
@@ -237,8 +237,8 @@ export function coachPortrait(spec, size = 44, { teamColor = null, cls = 'sprite
 /** The editor's categories: each option is { key, label, values } (values are indexes for the numeric parts). */
 export const COACH_CATEGORIES = Object.freeze([
   { id: 'face', label: 'Face', icon: '🙂', options: [{ key: 'skin', label: 'Skin tone', values: SKINS.map((_, i) => i), swatch: (i) => SKINS[i] }, { key: 'face', label: 'Face shape', values: FACES.map((_, i) => i), name: (i) => labelOf(FACES[i]) }, { key: 'eyes', label: 'Eyes', values: EYES.map((_, i) => i), name: (i) => labelOf(EYES[i]) }, { key: 'brows', label: 'Eyebrows', values: BROWS.map((_, i) => i), name: (i) => labelOf(BROWS[i]) }, { key: 'nose', label: 'Nose', values: NOSES.map((_, i) => i), name: (i) => labelOf(NOSES[i]) }] },
-  { id: 'hair', label: 'Hair', icon: '💇', options: [{ key: 'hair', label: 'Hairstyle', values: HAIRS, name: labelOf }, { key: 'hairColor', label: 'Hair colour', values: HAIR_COLORS2.map((_, i) => i), swatch: (i) => HAIR_COLORS2[i] }, { key: 'facial', label: 'Facial hair', values: FACIALS, name: labelOf }] },
-  { id: 'outfit', label: 'Outfit', icon: '👕', options: [{ key: 'outfit', label: 'Outfit', values: OUTFITS, name: labelOf }, { key: 'outfitColor', label: 'Colour', values: OUTFIT_COLORS, swatch: (v) => (v === 'team' ? null : v === 'black' ? '#24262b' : v === 'grey' ? '#8a8f99' : v === 'white' ? '#e9ebef' : `hsl(${v} 55% 44%)`), name: (v) => (v === 'team' ? 'Team' : '') }] },
+  { id: 'hair', label: 'Hair', icon: '💇', options: [{ key: 'hair', label: 'Hairstyle', values: HAIRS, name: labelOf }, { key: 'hairColor', label: 'Hair color', values: HAIR_COLORS2.map((_, i) => i), swatch: (i) => HAIR_COLORS2[i] }, { key: 'facial', label: 'Facial hair', values: FACIALS, name: labelOf }] },
+  { id: 'outfit', label: 'Outfit', icon: '👕', options: [{ key: 'outfit', label: 'Outfit', values: OUTFITS, name: labelOf }, { key: 'outfitColor', label: 'Color', values: OUTFIT_COLORS, swatch: (v) => (v === 'team' ? null : v === 'black' ? '#24262b' : v === 'grey' ? '#8a8f99' : v === 'white' ? '#e9ebef' : `hsl(${v} 55% 44%)`), name: (v) => (v === 'team' ? 'Team' : '') }] },
   { id: 'extras', label: 'Extras', icon: '🧢', options: [{ key: 'hat', label: 'Hat', values: HATS, name: labelOf }, { key: 'glasses', label: 'Glasses', values: GLASSES, name: labelOf }, { key: 'extra', label: 'Accessory', values: EXTRAS, name: labelOf }] },
   { id: 'build', label: 'Build', icon: '💪', options: [{ key: 'build', label: 'Build', values: BUILDS.map((_, i) => i), name: (i) => labelOf(BUILDS[i]) }] },
 ]);

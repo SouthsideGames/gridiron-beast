@@ -47,7 +47,7 @@ function legacyTab(f) {
       ${lg.rival ? `<b>Rival</b><span>${esc(lg.rival.team)} · all-time ${lg.rival.headToHead?.w ?? 0}-${lg.rival.headToHead?.l ?? 0}</span>` : ''}
       ${lg.difficulty ? `<b>Difficulty</b><span>${esc(lg.difficulty)}</span>` : ''}
     </div>
-    ${card ? `<button class="btn block" data-action="hof" style="margin-top:10px">🏛️ Open the Hall of Fame card</button>` : '<p class="dim" style="margin-top:8px">No Hall of Fame card: the checklist was not met when this franchise ended.</p>'}
+    ${card ? `<button class="btn block" data-action="hof" style="margin-top:10px">🏛️ Open the Hall of Fame Card</button>` : '<p class="dim" style="margin-top:8px">No Hall of Fame card: the checklist was not met when this franchise ended.</p>'}
     </div>
     ${lg.bestMonsters?.length ? `<div class="panel"><b>Best monsters</b><div class="row" style="flex-wrap:wrap;gap:8px;margin-top:8px">${lg.bestMonsters.map((m, i) => `<button class="btn small" data-action="best" data-i="${i}">${esc(m.name)} · ${esc(m.position)} ${m.ovr}</button>`).join('')}</div></div>` : ''}
     ${lg.badges?.length ? `<div class="panel tight"><b>Badges</b><div class="muted">${lg.badges.map((b) => `${esc(b.badge)}${b.year != null ? ` (${yearOf(b.year)})` : ''}`).join(' · ')}</div></div>` : ''}
@@ -73,7 +73,7 @@ function seasonsTab(f) {
   const hist = (f.history || []).slice().reverse();
   return `<div class="list">${hist.map((h) => `<div class="item static"><div class="grow"><div class="name">${yearOf(h.year)} · ${esc(h.club)}</div><div class="muted">${rec(h.record)}${h.place != null ? ` · ${h.place}${['st', 'nd', 'rd'][h.place - 1] || 'th'}` : ''}${h.champion ? ` · ${h.champion === h.club ? '🏆 Beast Bowl champions' : `${esc(h.champion)} won the Beast Bowl`}` : ''}${h.playoffs ? ' · playoffs' : ''}</div>
       <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${h.awards ? `<button class="btn small" data-action="awards" data-year="${h.year}">Awards</button>` : ''}${h.championship ? `<button class="btn small" data-action="ceremony" data-year="${h.year}">Ceremony</button>` : ''}${h.leagueStats ? `<span class="dim" style="font-size:12px">tables kept</span>` : ''}</div></div></div>`).join('')}</div>
-    <div class="grid2" style="margin-top:10px"><button class="btn block" data-action="go" data-screen="standings">Final standings</button><button class="btn block" data-action="go" data-screen="schedule">Final schedule</button></div>`;
+    <div class="grid2" style="margin-top:10px"><button class="btn block" data-action="go" data-screen="standings">Final Standings</button><button class="btn block" data-action="go" data-screen="schedule">Final Schedule</button></div>`;
 }
 function awardsSheetHtml(h) {
   const L = h.awards?.league || {};
@@ -81,7 +81,7 @@ function awardsSheetHtml(h) {
   return `<div class="list">${rows.join('')}</div>`;
 }
 function leagueTab(f) {
-  return `<div class="grid2"><button class="btn block" data-action="go" data-screen="records">📜 Records book</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button><button class="btn block" data-action="news">📰 League News</button><button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button></div>
+  return `<div class="grid2"><button class="btn block" data-action="go" data-screen="records">📜 Records Book</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button><button class="btn block" data-action="news">📰 League News</button><button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button></div>
     <p class="dim" style="margin-top:8px">Standings, the schedule and League News are those of the final season (${yearOf(f.season.year)}). Earlier seasons' awards are under Seasons.</p>`;
 }
 function rosterTab(f) {
@@ -110,7 +110,7 @@ export function registerLegacyScreens(Router, app) {
       return `${headerHtml(f)}
         <div class="segmented" role="tablist" style="margin:8px 0">${TABS.map(([id, label]) => `<button class="btn small ${tab === id ? 'primary' : ''}" role="tab" aria-selected="${tab === id}" data-action="tab" data-tab="${id}">${label}</button>`).join('')}</div>
         ${body(f)}
-        <div class="grid2" style="margin-top:12px"><button class="btn block" data-action="export">Export franchise</button><button class="btn block" data-action="go" data-screen="franchises">Franchises</button></div>`;
+        <div class="grid2" style="margin-top:12px"><button class="btn block" data-action="export">Export Franchise</button><button class="btn block" data-action="go" data-screen="franchises">Franchises</button></div>`;
     },
     mount(root) {
       delegate(root, {
@@ -119,7 +119,7 @@ export function registerLegacyScreens(Router, app) {
         export: async () => { await offerExport(app.f); },
         hof: () => Router.go('hof'),
         news: () => sheet(leagueNewsSheetHtml(app.f), { title: 'League News' }),
-        awards: (el) => { const h = app.f.history.find((x) => x.year === Number(el.dataset.year)); if (h) sheet(awardsSheetHtml(h), { title: `${yearOf(h.year)} awards` }); },
+        awards: (el) => { const h = app.f.history.find((x) => x.year === Number(el.dataset.year)); if (h) sheet(awardsSheetHtml(h), { title: `${yearOf(h.year)} Awards` }); },
         ceremony: (el) => Router.go('ceremony', { year: Number(el.dataset.year) }),
         best: (el) => { const m = app.f.lifecycle.legacy.bestMonsters[Number(el.dataset.i)]; if (m?.career) Router.go('career', { best: Number(el.dataset.i) }); else toast('No career snapshot was kept for this monster.', 'info'); },
       });

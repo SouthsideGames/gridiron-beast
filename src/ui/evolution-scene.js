@@ -81,7 +81,7 @@ export function openEvolutionScene({ report: r, beforeMon, afterMon, settings = 
   el.style.setProperty('--evo-glow', th.glow); el.style.setProperty('--evo-c1', th.colors[0]); el.style.setProperty('--evo-c2', th.colors[1]); el.style.setProperty('--evo-c3', th.colors[2]); el.style.setProperty('--evo-size', `${size}px`);
   el.dataset.type = r.type || 'Light';
   el.innerHTML = `<div class="evo-bg" aria-hidden="true"></div><div class="evo-rays" aria-hidden="true"></div><canvas class="evo-fx" aria-hidden="true"></canvas>
-    <div class="evo-top"><button class="evo-btn ghost evo-sound" data-evo="sound" aria-pressed="${sound}">${sound ? '🔊 Sound on' : '🔇 Sound off'}</button><button class="evo-btn ghost evo-skip" data-evo="skip">Skip ⏭</button></div>
+    <div class="evo-top"><button class="evo-btn ghost evo-sound" data-evo="sound" aria-pressed="${sound}">${sound ? '🔊 Sound On' : '🔇 Sound Off'}</button><button class="evo-btn ghost evo-skip" data-evo="skip">Skip ⏭</button></div>
     <div class="evo-show">
       <div class="evo-head"><div class="evo-kicker">Evolution</div><div class="evo-name">${esc(r.fromName)}</div></div>
       <div class="evo-figure"><div class="evo-rings" aria-hidden="true"><i></i><i></i><i></i></div><div class="evo-glow" aria-hidden="true"></div>
@@ -91,7 +91,7 @@ export function openEvolutionScene({ report: r, beforeMon, afterMon, settings = 
     </div>
     <div class="evo-flash" aria-hidden="true"></div>
     <div class="evo-results" tabindex="-1">${evolutionResultsHtml(r, { beforeSprite: monsterSprite(beforeMon, small), afterSprite: monsterSprite(afterMon, big) })}</div>
-    <div class="evo-bottom"><button class="evo-btn ghost evo-next" data-evo="results">See results ▸</button><button class="evo-btn ghost evo-replay" data-evo="replay">↺ Replay</button><button class="evo-btn primary evo-continue" data-evo="continue">Continue</button></div>`;
+    <div class="evo-bottom"><button class="evo-btn ghost evo-next" data-evo="results">See Results ▸</button><button class="evo-btn ghost evo-replay" data-evo="replay">↺ Replay</button><button class="evo-btn primary evo-continue" data-evo="continue">Continue</button></div>`;
   document.body.appendChild(el); document.documentElement.classList.add('evo-open');
   const $ = (s) => el.querySelector(s); const fig = $('.evo-figure'); const cap = $('.evo-caption');
   const fx = createEvolutionFx($('.evo-fx'), () => { const b = fig.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2, r: size / 2 }; }, { type: r.type, reduced });
