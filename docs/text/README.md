@@ -47,12 +47,13 @@ The tool gives each piece of wording a key, writes it to `en.js`, and replaces i
 1. **Names stay in English in every language:** club, stadium, species and reporter names, and the reporters' outlets. `src/text/names.js` lists their keys; a translation cannot replace them.
 2. **Saved text follows the language:** news items and headlines will be saved as a key plus its values (stage 3), so old news shows in whatever language is chosen. Text already saved as sentences in existing franchises stays as written.
 3. **Game logs move too** (stage 6): the engines will record keys and values, and the Clash reference battles will be re-recorded once more, with the same proof as before that no battle changed.
+4. **Developer Tools stay in English** (owner, 2026-11-12): they are for the developer only, so their wording stays in the code and is not given to translators.
 
 ### Still open
 
 1. **Words that are both a saved value and a label** (for example the owner's gender, "Female" and "Male") are still in the code. Translating them needs a small code change to separate the value from the label.
 2. **Left in the screen files after stage 2, on purpose** (about 700 lines, all listed without a key in `GAME_TEXT.csv`):
-   - Developer Tools screens (Clash Lab, AI Testing Lab, Attribute Lab, the two ability reviewers, Practice, evolution preview): about 690 lines only the developer sees. Say if translators should get them.
+   - Developer Tools screens (Clash Lab, AI Testing Lab, Attribute Lab, the two ability reviewers, Practice, evolution preview): about 690 lines only the developer sees. Not translated (decision 4).
    - Ability names and banners in the effect files (`src/ui/fx/looks`, `src/ui/clash/t8/looks`, `src/ui/fx/match-fx.js`, `kick-fx.js`): they repeat the ability data, so they move with the abilities in stage 4.
    - Coach appearance options (`src/ui/coach-portrait.js`, 81 words such as "Braids" and "Visor"): each word is also the saved value's label source; they move with the data in stage 4.
    - The Clash animation captions that are read off the battle log (`src/ui/clash/choreographer.js`): they move with the log in stage 6.
