@@ -229,7 +229,7 @@ export function retiredCandidateProfile(f, c) {
     books: [], honours: { titles, awards, records, hof: !!induction },
     trophies, timeline: [],
     tier: careerTier({ titles, awards, records, hof: !!induction, seasons: c.seasons ?? 0 }),
-    notes: ['Partial retired career: detailed season records are no longer available.'],
+    notes: [$t('franchise.partial_retired_career_detailed_season_records')],
   };
 }
 

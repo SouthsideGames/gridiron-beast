@@ -9,7 +9,8 @@ import { SPECIES_BY_ID } from '../data/monsters.js';
 import { hasLeague } from './league-registry.js';
 import { isArchived } from './lifecycle.js';
 import { t as $t } from '../text/index.js';
-import { historicalAwards, historicalHallOfFame } from './legacy-index.js';
+import { historicalAwards, historicalHallOfFame, monsterHallStatus } from './legacy-index.js';
+import { monsterRecordHonours } from './records-history.js';
 
 export const PAGE_TABS = Object.freeze([['overview', 'Overview'], ['timeline', 'Timeline'], ['stats', 'Stats'], ['awards', 'Awards'], ['teams', 'Teams']]);
 const MOVE_TYPES = new Set(['join', 'drafted', 'signed', 'left']);
@@ -124,6 +125,8 @@ export function careerPage(f, id, { profile = null } = {}) {
       awards: historicalAwardsForMonster,
       induction,
       retirementYear: Number.isInteger(retirementYear) ? retirementYear : null,
+      hall: monsterHallStatus(f, p.id),          // candidate record, ballots and first eligible election (null: the Hall has no record of him)
+      records: monsterRecordHonours(f, p.id),    // the standing records credited to him in the record book
     },
     status: careerStatus(f, found, p), designation: designationOf(found?.m, p), span,
     facts: { seasons: p.seasons ?? null, onRecord: p.onRecord ?? lines.seasons.length, games: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0) + (lines.career.post.games || 0), regGames: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0), postGames: lines.career.post.games || 0, teams: teams.length, titles: count('champion'), awards: AWARD_KINDS.reduce((a, k) => a + count(k), 0), records: count('record'), hof: count('hof') > 0 || !!induction },

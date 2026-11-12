@@ -3,7 +3,7 @@
 export { careerProfile, retiredCandidateProfile } from './career-profile.js';
 export { careerPage } from './career-page.js';
 export { franchiseSeasonHistory, championshipHistory, historicalAwards,
-  historicalHallOfFame, franchiseLegacyIndex } from './legacy-index.js';
+  historicalHallOfFame, franchiseLegacyIndex, monsterHallStatus, franchiseTotals } from './legacy-index.js';
 export { historicalRecords, monsterRecordHonours } from './records-history.js';
 export { monsterHofBallot, monsterHofInductees, candidateScore,
   WAIT_SEASONS, MAX_INDUCTEES, VOTER_COUNT, VOTE_THRESHOLD } from './monster-hof-voting.js';

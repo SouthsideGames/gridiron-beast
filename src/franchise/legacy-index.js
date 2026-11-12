@@ -1,6 +1,6 @@
 // Task 9: compact, read-only historical index from existing franchise facts.
 // No gameplay mutations, speculative rosters, or fabricated historical outcomes.
-import { monsterHofInductees } from './monster-hof-voting.js';
+import { monsterHofInductees, WAIT_SEASONS } from './monster-hof-voting.js';
 import { historicalRecords } from './records-history.js';
 
 const yearSort = (a, b) => (a.year ?? 0) - (b.year ?? 0);
@@ -66,5 +66,45 @@ export function franchiseLegacyIndex(f) {
     hallOfFame: historicalHallOfFame(f), records: historicalRecords(f),
     completedSeasons: seasons.length,
     ownerTitles: seasons.filter((s) => s.champion != null && s.champion === s.club).length,
+  };
+}
+
+/**
+ * Where one monster stands with the Monster Hall of Fame, from the saved candidates and elections only:
+ * { candidate, induction, eligibleYear, lastBallot, ballots } or null when the Hall has no record of him.
+ * `eligibleYear` is the first election he can appear in (retirement year + the waiting period).
+ */
+export function monsterHallStatus(f, id) {
+  if (id == null) return null;
+  const hof = f?.monsterHallOfFame; const key = String(id);
+  const candidate = (hof?.candidates || []).find((c) => String(c.id) === key) || null;
+  const elections = (hof?.elections || []).slice().sort(yearSort);
+  const induction = monsterHofInductees(elections).find((c) => String(c.id) === key) || null;
+  if (!candidate && !induction) return null;
+  const ballots = elections.flatMap((e) => (e.ballot || []).filter((b) => String(b.id) === key).map((b) => ({ year: e.year, votes: b.votes, voters: b.voters, qualified: !!b.qualified })));
+  const retiredYear = candidate?.retiredYear ?? induction?.retiredYear ?? null;
+  return {
+    candidate: candidate ? { ...candidate, honours: candidate.honours ? { ...candidate.honours } : null } : null,
+    induction, retiredYear,
+    eligibleYear: Number.isInteger(retiredYear) ? retiredYear + WAIT_SEASONS : null,
+    lastBallot: ballots[ballots.length - 1] || null, ballots,
+  };
+}
+
+/** The franchise's own totals across every recorded season: nothing here is estimated. */
+export function franchiseTotals(f) {
+  const seasons = franchiseSeasonHistory(f);
+  const sum = (k) => seasons.reduce((n, s) => n + (s.record?.[k] || 0), 0);
+  const rated = seasons.filter((s) => s.record && (s.record.w + s.record.l + (s.record.t || 0)) > 0);
+  const pct = (s) => (s.record.w + (s.record.t || 0) / 2) / (s.record.w + s.record.l + (s.record.t || 0));
+  const best = rated.slice().sort((a, b) => pct(b) - pct(a) || b.record.w - a.record.w || a.year - b.year)[0] || null;
+  const titleYears = seasons.filter((s) => s.champion != null && s.champion === s.club).map((s) => s.year);
+  const clubAwards = seasons.flatMap((s) => Object.entries(s.awards).flatMap(([award, ws]) => ws.filter((w) => w.team != null && w.team === s.club).map((w) => ({ year: s.year, award, id: w.id, name: w.name }))));
+  const recordsHeld = historicalRecords(f).flatMap((sec) => sec.rows.filter((r) => r.record && r.record.team === f?.club).map((r) => ({ scope: sec.scope, category: r.category, label: r.label, ...r.record })));
+  return {
+    seasons: seasons.length, w: sum('w'), l: sum('l'), t: sum('t'),
+    playoffs: seasons.filter((s) => s.playoffs === true).length,
+    titleYears, best: best ? { year: best.year, record: { ...best.record }, place: best.place } : null,
+    clubAwards, recordsHeld,
   };
 }
