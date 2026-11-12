@@ -9,6 +9,7 @@ import { SPECIES_BY_ID } from '../data/monsters.js';
 import { hasLeague } from './league-registry.js';
 import { isArchived } from './lifecycle.js';
 import { t as $t } from '../text/index.js';
+import { historicalAwards, historicalHallOfFame } from './legacy-index.js';
 
 export const PAGE_TABS = Object.freeze([['overview', 'Overview'], ['timeline', 'Timeline'], ['stats', 'Stats'], ['awards', 'Awards'], ['teams', 'Teams']]);
 const MOVE_TYPES = new Set(['join', 'drafted', 'signed', 'left']);
@@ -114,6 +115,11 @@ export function careerPage(f, id, { profile = null } = {}) {
   const timeline = p.timeline || [];
   return {
     p, found: found ? { where: found.where, team: found.team || null } : null,
+    // Task 9: independent historical recognition; do not rewrite a saved career timeline.
+    historicalRecognition: {
+      awards: historicalAwards(f).filter((a) => a.id != null && String(a.id) === String(p.id)),
+      induction: historicalHallOfFame(f).inductees.find((c) => String(c.id) === String(p.id)) || null,
+    },
     status: careerStatus(f, found, p), designation: designationOf(found?.m, p), span,
     facts: { seasons: p.seasons ?? null, onRecord: p.onRecord ?? lines.seasons.length, games: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0) + (lines.career.post.games || 0), regGames: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0), postGames: lines.career.post.games || 0, teams: teams.length, titles: count('champion'), awards: AWARD_KINDS.reduce((a, k) => a + count(k), 0), records: count('record'), hof: count('hof') > 0 },
     lines, groups: statGroups(p.position, careerAll), teams,
