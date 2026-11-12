@@ -192,7 +192,36 @@ export function careerProfile(f, id) {
   const found = findMonster(f, id);
   if (found) return found.where === 'draft' ? prospectProfile(f, found.m) : fullProfile(f, found.m, found.where, found.team);
   const rows = leagueRowsFor(f, id); if (rows.length) return leagueProfile(f, id, rows);
+  // Task 9: some retired monsters have only a compact Hall candidate snapshot.
+  // Offer a clearly partial profile rather than inventing stats or a team.
+  const candidate = (f?.monsterHallOfFame?.candidates || [])
+    .find((c) => String(c.id) === String(id));
+  if (candidate) return retiredCandidateProfile(f, candidate);
   return null;
+}
+
+/**
+ * Minimal profile for a retired candidate whose original monster object has
+ * been pruned. Unknown identity and season details remain explicitly absent.
+ */
+export function retiredCandidateProfile(f, c) {
+  const trophies = trophyCase(f, { id: c.id }, []);
+  const induction = (f?.monsterHallOfFame?.elections || []).flatMap((e) => e.inductees || [])
+    .find((i) => String(i.id) === String(c.id));
+  const titles = c.honours?.titles ?? 0;
+  const awards = c.honours?.awards ?? 0;
+  const records = c.honours?.records ?? 0;
+  return {
+    v: PROFILE_VERSION, kind: 'snapshot', where: 'retired', id: c.id,
+    name: c.name, species: null, stage: 0, speciesName: null, type: null,
+    position: c.position, level: null, ovr: null, yearsPro: null,
+    club: null, clubs: [], seasons: c.seasons ?? null, onRecord: 0, complete: false,
+    stats: { career: {}, season: {}, games: c.games ?? 0, focus: [], seasonFocus: null },
+    books: [], honours: { titles, awards, records, hof: !!induction },
+    trophies, timeline: [],
+    tier: careerTier({ titles, awards, records, hof: !!induction, seasons: c.seasons ?? 0 }),
+    notes: ['Partial retired career: detailed season records are no longer available.'],
+  };
 }
 
 function identity(m) {
