@@ -153,6 +153,12 @@ def export():
                     for form, v in forms:
                         rows.append({'area': section, 'kind': 'text', 'text': re.sub(r'\s+', ' ', unescape(v)).strip(), 'file': rel, 'line': n, 'key': m.group(1) + (f' ({form})' if form else '')})
                 continue
+            if rel == 'src/data/beast-dex.generated.js':   # the Beast Dex: the lines the game shows, each under its translator key (tools/dex-text.mjs)
+                import subprocess, json
+                dex = json.loads(subprocess.run(['node', os.path.join(ROOT, 'tools/dex-text.mjs')], capture_output=True, text=True, check=True).stdout)
+                for n, (k, v) in enumerate(dex.items(), 1):
+                    rows.append({'area': area_of(rel), 'kind': 'text', 'text': re.sub(r'\s+', ' ', v).strip(), 'file': 'docs/beast-dex/data', 'line': n, 'key': k})
+                continue
             s = open(p, encoding='utf8').read(); lits = []; parse_code(s, 0, lits)
             lits.sort(key=lambda x: x[1])
             for kind, pos, raw in lits:

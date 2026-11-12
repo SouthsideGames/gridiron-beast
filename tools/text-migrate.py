@@ -143,8 +143,9 @@ def param_name(src, used):
     used.add(name); return name
 
 # ------------------------------------------------------------------ the rewrite
+DEV_ONLY = re.compile(r'(throw new \w*Error|(problems|errors|issues|bad|fails|failures)\.push|console\.\w+|assert(\.\w+)?)\(\s*$')   # messages only a developer reads
 class Rewriter:
-    def __init__(self, s, keys, data=False): self.s = s; self.keys = keys; self.left = []; self.count = 0; self.data = data; self.also = set(next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--also=')), '').split('|')) - {''}
+    def __init__(self, s, keys, data=False): self.s = s; self.keys = keys; self.left = []; self.count = 0; self.data = data; self.name_arg = next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--name-arg=')), None); self.fields = next((set(a.split('=', 1)[1].split('|')) for a in sys.argv if a.startswith('--fields=')), None); self.also = set(next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--also=')), '').split('|')) - {''}
     def call(self, text, params=None):
         key = self.keys.key_for(text); self.count += 1
         if params: return f"$t('{key}', {{ {', '.join(f'{n}: {src}' if n != src.strip() else n for n, src in params)} }})"
@@ -167,15 +168,34 @@ class Rewriter:
         while j < len(s) and s[j] in ' \t\n': j += 1
         before = s[max(0, i - 24):i + 1]; after = s[j:j + 12]
         return before, after
+    def prop_of(self, a):
+        """The property a literal at `a` is the value of: `prop: '…'`, or an item of `prop: ['…', '…']`. None otherwise."""
+        s = self.s; pat = r"([A-Za-z_$][\w$]*)\s*:\s*$"
+        m = re.search(pat, s[max(0, a - 80):a])
+        if m: return m.group(1)
+        i = a - 1; depth = 0; lo = max(0, a - 6000)
+        while i >= lo:
+            c = s[i]
+            if c in ')]}': depth += 1
+            elif c in '([{':
+                if depth: depth -= 1
+                elif c == '[': m = re.search(pat, s[max(0, i - 80):i]); return m.group(1) if m else None
+                else: return None
+            i -= 1
+        return None
     def string(self, k, in_text):
         a, b = k[1], k[2]; raw = self.s[a:b]; q = raw[0]; body = raw[1:-1]
         before, after = self.context(a, b)
         if re.search(r'(===?|!==?|\bcase|startsWith\(|endsWith\(|includes\(|indexOf\(|\.has\(|\.get\(|\.test\(|\bfrom|\bimport|typeof [\w.]+ ===?)\s*$', before): return raw
         if re.search(r'[\w$)\]]\s*\[\s*$', before): return raw                       # x['key']: an index, not an array of lines
-        listed = unescape(body, q) in self.also and after.startswith(']') and re.search(r'[,\[]\s*$', before)   # a named label closing a list: ['id', 'Label']
+        in_list = after.startswith(']') and (re.search(r',\s*$', before) or re.search(r'(^|[=:(,\[?|&]|\breturn)\s*\[\s*$', before))   # the last item of an array literal, not an index: x['id']
+        listed = in_list and (unescape(body, q) in self.also or (self.data and len(unescape(body, q).split()) > 1))   # a named label closing a list: ['id', 'Label']; in data, a closing sentence
         if re.match(r'(===?|!==?|\]|\s*:(?!:))', after) and not re.search(r'[?]\s*$', before) and not listed: return raw   # compared, indexed or an object key
         if re.search(r"\b(data-[\w-]+|class|className|action|screen|kind|id|key|type|role|icon|ns|side|mode|status)\s*[:=]\s*$", before): return raw
         text = unescape(body, q)
+        if DEV_ONLY.search(self.s[max(0, a - 40):a]): return raw
+        if self.fields is not None:                                                      # --fields: only the named properties of a data file hold wording
+            return self.call(text) if (text in self.also or (self.prop_of(a) in self.fields and is_wording(text))) else raw
         if '<' in text and re.search(r'<[a-zA-Z/][^<>]*>', text):
             new, n = self.markup(text)
             if n == 0: return raw
@@ -189,6 +209,7 @@ class Rewriter:
         if not multi and re.search(r"\b(title|okLabel|cancelLabel)\s*:\s*$", before): return self.call(text)
         if self.data and (multi or re.search(r"\b(name|short|label|role|outlet|blurb|title)\s*:\s*$", before)): return self.call(text)
         if text in self.also: return self.call(text)
+        if self.name_arg and re.search(r"\b(" + self.name_arg + r")\(\s*'[\w-]+',\s*$", self.s[max(0, a - 60):a]): return self.call(text)   # --name-arg: the display name in builder('id', 'Name', …)
         self.left.append(text); return raw
     def markup(self, text):
         """Plain markup held in a string literal: wording between tags becomes ${t('key')}. Returns (template body, count)."""
@@ -210,6 +231,8 @@ class Rewriter:
         out.append(esc_tpl(text)); return 0
     # -- templates
     def template(self, k):
+        if DEV_ONLY.search(self.s[max(0, k[1] - 40):k[1]]): return self.s[k[1]:k[2]]                   # an error for the developer, not wording
+        if self.fields is not None and self.prop_of(k[1]) not in self.fields: return self.s[k[1]:k[2]]   # --fields: other templates are values, not wording
         node = k[3]; s = self.s; items = []   # ('tag', src) ('text', src) ('inline', src, a, b, kids) ('struct', new src)
         in_tag = False
         for p in node['parts']:

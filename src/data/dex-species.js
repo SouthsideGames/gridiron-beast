@@ -11,6 +11,7 @@
 //   abilities come from the Dex contract registry (WP6, WP7). Basics have no unique ability.
 import { FAMILIES, formsOf, abilitiesOf } from './beast-dex.js';
 import { SPECIES_DEX as LEGACY } from './species-legacy.js';
+import { dexLine, dexKey } from '../text/dex.js';
 
 const LEGACY_BY_ID = new Map(LEGACY.map((s) => [s.id, s]));
 
@@ -23,7 +24,7 @@ function speciesFromFamily(f) {
     id: f.id, name: f.name, element: f.type, rarity: f.rarity, position: f.position, clashArchetype: f.clashArchetype,
     // Sprite spec: the original 102 forms keep their approved art exactly (legacy spec); Basics use their Dex recipe.
     ...spriteSpec(old || f.appearance),
-    personality: f.description,
+    personality: dexLine(dexKey.familyDescription(f.id), f.description),
     evolution: formsOf(f.id).slice(1).map((x) => ({ name: x.name, level: x.evolutionLevel })),
     dexAbilities: { football: ab.football?.id || null, clash: ab.clash?.id || null },
     standalone: f.standalone,

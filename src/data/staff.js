@@ -4,9 +4,10 @@
 //  - Coordinators: the play catalog the owner can equip from.
 //  - Scout: biome accuracy for prospect discovery and attribute reveals.
 //  - Trainer: Wednesday training focus strength.
+import { t as $t } from '../text/index.js';
 
 export const STAFF_ROLES = ['head_coach', 'offensive_coordinator', 'defensive_coordinator', 'head_scout', 'monster_trainer'];
-export const ROLE_LABEL = Object.freeze({ head_coach: 'Head Coach', offensive_coordinator: 'Offensive Coordinator', defensive_coordinator: 'Defensive Coordinator', head_scout: 'Head Scout', monster_trainer: 'Monster Trainer' });
+export const ROLE_LABEL = Object.freeze({ head_coach: $t('data.head_coach'), offensive_coordinator: $t('data.offensive_coordinator'), defensive_coordinator: $t('data.defensive_coordinator'), head_scout: $t('data.head_scout'), monster_trainer: $t('data.monster_trainer') });
 
 export const PLAYBOOKS = Object.freeze({
   oc_swift: ['quick_slants', 'stick', 'curl_flat', 'smash', 'mesh', 'levels', 'dagger', 'three_verticals', 'deep_post', 'deep_corner', 'slot_fade', 'bubble_screen', 'rb_screen', 'double_move', 'inside_zone', 'qb_draw', 'hail_mary'],
@@ -18,21 +19,21 @@ export const PLAYBOOKS = Object.freeze({
 });
 
 export const STAFF = Object.freeze([
-  { id: 'hc_flint', name: 'Marcus Flint', role: 'head_coach', overall: 82, style: 'Physical', strength: 'Power running and toughness', salary: 108000, identity: { offense: 'run', defense: 'pressure', aggression: 0.65, passBias: 0.42 } },
-  { id: 'hc_vale', name: 'Avery Vale', role: 'head_coach', overall: 80, style: 'Balanced', strength: 'Adaptable game plans', salary: 96000, identity: { offense: 'balanced', defense: 'balanced', aggression: 0.5, passBias: 0.55 } },
-  { id: 'hc_reyes', name: 'Jordan Reyes', role: 'head_coach', overall: 84, style: 'Speed', strength: 'Tempo and passing preparation', salary: 117000, identity: { offense: 'pass', defense: 'coverage', aggression: 0.55, passBias: 0.66 } },
-  { id: 'oc_swift', name: 'Elena Swift', role: 'offensive_coordinator', overall: 86, style: 'Air Raid', strength: 'Passing and receiver development', salary: 90000, scheme: 'pass' },
-  { id: 'oc_brock', name: 'Tobias Brock', role: 'offensive_coordinator', overall: 83, style: 'Ground Attack', strength: 'Power and outside runs', salary: 78000, scheme: 'run' },
-  { id: 'oc_park', name: 'Nia Park', role: 'offensive_coordinator', overall: 80, style: 'Balanced', strength: 'Flexible run-pass approach', salary: 75000, scheme: 'balanced' },
-  { id: 'dc_stone', name: 'Darius Stone', role: 'defensive_coordinator', overall: 84, style: 'Blitz Heavy', strength: 'Quarterback pressure', salary: 87000, scheme: 'pressure' },
-  { id: 'dc_ice', name: 'Iris Frost', role: 'defensive_coordinator', overall: 85, style: 'Zone Control', strength: 'Deep pass defense', salary: 93000, scheme: 'coverage' },
-  { id: 'dc_fox', name: 'Ronan Fox', role: 'defensive_coordinator', overall: 81, style: 'Man Coverage', strength: 'One-on-one coverage', salary: 72000, scheme: 'man' },
-  { id: 'sc_tide', name: 'Marina Tide', role: 'head_scout', overall: 88, style: 'Water Specialist', strength: 'Coastal scouting', salary: 75000, biomes: { water: 95, fire: 10, forest: 42, ice: 72 } },
-  { id: 'sc_ash', name: 'Ash Calder', role: 'head_scout', overall: 86, style: 'Fire Specialist', strength: 'Volcanic scouting', salary: 72000, biomes: { water: 12, fire: 95, forest: 45, ice: 24 } },
-  { id: 'sc_moss', name: 'Rowan Moss', role: 'head_scout', overall: 80, style: 'Generalist', strength: 'Consistent across all biomes', salary: 66000, biomes: { water: 65, fire: 65, forest: 65, ice: 65 } },
-  { id: 'tr_speed', name: 'Sera Dash', role: 'monster_trainer', overall: 84, style: 'Speed & Agility', strength: 'Best at Rushing and Coverage focus', salary: 69000, bonus: { rushing: 5, coverage: 4, passing: 2, pass_rush: 2 } },
-  { id: 'tr_power', name: 'Bram Forge', role: 'monster_trainer', overall: 83, style: 'Power & Contact', strength: 'Best at Pass Rush and Rushing focus', salary: 66000, bonus: { pass_rush: 5, rushing: 4, coverage: 2, passing: 2 } },
-  { id: 'tr_focus', name: 'Nia Focus', role: 'monster_trainer', overall: 86, style: 'Technique', strength: 'Best at Passing and Coverage focus', salary: 75000, bonus: { passing: 5, coverage: 4, rushing: 2, pass_rush: 2 } },
+  { id: 'hc_flint', name: 'Marcus Flint', role: 'head_coach', overall: 82, style: $t('data.physical'), strength: $t('data.power_running_and_toughness'), salary: 108000, identity: { offense: 'run', defense: 'pressure', aggression: 0.65, passBias: 0.42 } },
+  { id: 'hc_vale', name: 'Avery Vale', role: 'head_coach', overall: 80, style: $t('data.balanced'), strength: $t('data.adaptable_game_plans'), salary: 96000, identity: { offense: 'balanced', defense: 'balanced', aggression: 0.5, passBias: 0.55 } },
+  { id: 'hc_reyes', name: 'Jordan Reyes', role: 'head_coach', overall: 84, style: $t('data.speed'), strength: $t('data.tempo_and_passing_preparation'), salary: 117000, identity: { offense: 'pass', defense: 'coverage', aggression: 0.55, passBias: 0.66 } },
+  { id: 'oc_swift', name: 'Elena Swift', role: 'offensive_coordinator', overall: 86, style: $t('data.air_raid'), strength: $t('data.passing_and_receiver_development'), salary: 90000, scheme: 'pass' },
+  { id: 'oc_brock', name: 'Tobias Brock', role: 'offensive_coordinator', overall: 83, style: $t('data.ground_attack'), strength: $t('data.power_and_outside_runs'), salary: 78000, scheme: 'run' },
+  { id: 'oc_park', name: 'Nia Park', role: 'offensive_coordinator', overall: 80, style: $t('data.balanced'), strength: $t('data.flexible_run_pass_approach'), salary: 75000, scheme: 'balanced' },
+  { id: 'dc_stone', name: 'Darius Stone', role: 'defensive_coordinator', overall: 84, style: $t('data.blitz_heavy'), strength: $t('data.quarterback_pressure'), salary: 87000, scheme: 'pressure' },
+  { id: 'dc_ice', name: 'Iris Frost', role: 'defensive_coordinator', overall: 85, style: $t('data.zone_control'), strength: $t('data.deep_pass_defense'), salary: 93000, scheme: 'coverage' },
+  { id: 'dc_fox', name: 'Ronan Fox', role: 'defensive_coordinator', overall: 81, style: $t('data.man_coverage'), strength: $t('data.one_on_one_coverage'), salary: 72000, scheme: 'man' },
+  { id: 'sc_tide', name: 'Marina Tide', role: 'head_scout', overall: 88, style: $t('data.water_specialist'), strength: $t('data.coastal_scouting'), salary: 75000, biomes: { water: 95, fire: 10, forest: 42, ice: 72 } },
+  { id: 'sc_ash', name: 'Ash Calder', role: 'head_scout', overall: 86, style: $t('data.fire_specialist'), strength: $t('data.volcanic_scouting'), salary: 72000, biomes: { water: 12, fire: 95, forest: 45, ice: 24 } },
+  { id: 'sc_moss', name: 'Rowan Moss', role: 'head_scout', overall: 80, style: $t('data.generalist'), strength: $t('data.consistent_across_all_biomes'), salary: 66000, biomes: { water: 65, fire: 65, forest: 65, ice: 65 } },
+  { id: 'tr_speed', name: 'Sera Dash', role: 'monster_trainer', overall: 84, style: $t('data.speed_agility'), strength: $t('data.best_at_rushing_and_coverage_focus'), salary: 69000, bonus: { rushing: 5, coverage: 4, passing: 2, pass_rush: 2 } },
+  { id: 'tr_power', name: 'Bram Forge', role: 'monster_trainer', overall: 83, style: $t('data.power_contact'), strength: $t('data.best_at_pass_rush_and_rushing'), salary: 66000, bonus: { pass_rush: 5, rushing: 4, coverage: 2, passing: 2 } },
+  { id: 'tr_focus', name: 'Nia Focus', role: 'monster_trainer', overall: 86, style: $t('data.technique'), strength: $t('data.best_at_passing_and_coverage_focus'), salary: 75000, bonus: { passing: 5, coverage: 4, rushing: 2, pass_rush: 2 } },
 ]);
 export const staffById = (id) => STAFF.find((s) => s.id === id) || null;
 
@@ -50,10 +51,10 @@ export function alignment(hc, coordinator) {
 
 /** Training focus → attribute bonuses applied on Sunday (temporary). */
 export const TRAINING_FOCI = Object.freeze({
-  passing: { label: 'Passing', attrs: ['accuracy', 'catching', 'awareness'], text: 'Quarterback accuracy, receiver hands and reads.' },
-  rushing: { label: 'Rushing', attrs: ['blocking', 'strength', 'agility'], text: 'Run blocking, power and cuts.' },
-  coverage: { label: 'Coverage', attrs: ['coverage', 'awareness', 'speed'], text: 'Pass defense and reaction.' },
-  pass_rush: { label: 'Pass Rush', attrs: ['strength', 'tackling', 'agility'], text: 'Getting to the quarterback and finishing tackles.' },
+  passing: { label: $t('data.passing'), attrs: ['accuracy', 'catching', 'awareness'], text: $t('data.quarterback_accuracy_receiver_hands_and_reads') },
+  rushing: { label: $t('data.rushing'), attrs: ['blocking', 'strength', 'agility'], text: $t('data.run_blocking_power_and_cuts') },
+  coverage: { label: $t('data.coverage'), attrs: ['coverage', 'awareness', 'speed'], text: $t('data.pass_defense_and_reaction') },
+  pass_rush: { label: $t('data.pass_rush'), attrs: ['strength', 'tackling', 'agility'], text: $t('data.getting_to_the_quarterback_and_finishing') },
 });
 export function trainingBonus(trainer, focus) {
   const f = TRAINING_FOCI[focus]; if (!f) return null;
@@ -75,8 +76,8 @@ export const REGIONS = Object.freeze({
 
 /** Owner backgrounds chosen at creation (GDD §15.13): flavour plus one small perk. */
 export const BACKGROUNDS = Object.freeze({
-  player: { label: 'Former player', text: 'You played the game. Training sessions succeed a little more often (+6%).', perk: 'training' },
-  scout: { label: 'Former scout', text: 'You know what to look for. Scouting reveals one more rating on every prospect.', perk: 'scouting' },
-  analyst: { label: 'Analyst', text: 'You live in the tape. Thursday reports show one extra opponent play from week 1.', perk: 'analyst' },
-  business: { label: 'Businessperson', text: 'You know money. The salary cap is 4% higher.', perk: 'cap' },
+  player: { label: $t('data.former_player'), text: $t('data.you_played_the_game_training_sessions'), perk: 'training' },
+  scout: { label: $t('data.former_scout'), text: $t('data.you_know_what_to_look_for'), perk: 'scouting' },
+  analyst: { label: $t('data.analyst'), text: $t('data.you_live_in_the_tape_thursday'), perk: 'analyst' },
+  business: { label: $t('data.businessperson'), text: $t('data.you_know_money_the_salary_cap'), perk: 'cap' },
 });

@@ -16,28 +16,29 @@
 // Every number below is PROVISIONAL: the ruling approves the mechanism and the table, not values.
 import { schemePreferences, schemeAttributes } from './monsters.js';
 import { GYM_BY_CLUB } from './gyms.js';
+import { t as $t } from '../text/index.js';
 
 /** Scheme ids (monsters.js FIT_KEYS / SCHEME_LABEL): offence pass (Air Raid), run (Ground Attack), balanced; defence pressure (Blitz Heavy), coverage (Zone Control), man (Man Coverage). */
 // `passStyle` / `runStyle`: the playbook tags a gym's (or club's) approved strategy leans to; `positions`: where its acquisition tilt applies.
 export const IDENTITIES = Object.freeze({
   // ---- gyms (AI_IDENTITIES.md §3). Schemes follow the approved strategy column; where the column names no side, the gym coach's scheme (gyms.js).
-  'Harbor Sentinels': { offense: 'balanced', defense: 'coverage', label: 'Ball-hawk zone defense, ball-control offense', runStyle: 'inside', positions: ['CB', 'S'] },
-  'Sunfire Lions': { offense: 'pass', defense: 'coverage', label: 'Air Raid with Light cooldown fields', passStyle: 'vertical', positions: ['QB', 'WR'] },
-  'Thunder Mesa': { offense: 'pass', defense: 'pressure', label: 'Quick passing behind extra protection, blitzing defense', passStyle: 'quick', positions: ['QB', 'WR', 'OL', 'DL', 'LB'] },
-  'Canyon Crushers': { offense: 'run', defense: 'pressure', label: 'Ground attack, physical run front', runStyle: 'inside', runFront: true, positions: ['RB', 'OL', 'TE', 'DL'] },
-  'Eastport Phantoms': { offense: 'pass', defense: 'man', label: 'Man-coverage tricks, Dark fields', positions: ['CB', 'S'] },
-  'Frostpeak Howlers': { offense: 'balanced', defense: 'coverage', label: 'Field position: bend-don\'t-break zone, reliable kicking', positions: ['K', 'CB', 'S'] },
-  'Ironpeak Rams': { offense: 'run', defense: 'pressure', label: 'Run-stuffing blitz front, power runs', runStyle: 'inside', runFront: true, positions: ['RB', 'OL', 'DL', 'LB'] },
-  'Palmetto Vipers': { offense: 'pass', defense: 'man', label: 'Aggressive vertical passing, man coverage', passStyle: 'vertical', positions: ['QB', 'WR', 'CB', 'S'] },
+  'Harbor Sentinels': { offense: 'balanced', defense: 'coverage', label: $t('data.ball_hawk_zone_defense_ball_control'), runStyle: 'inside', positions: ['CB', 'S'] },
+  'Sunfire Lions': { offense: 'pass', defense: 'coverage', label: $t('data.air_raid_with_light_cooldown_fields'), passStyle: 'vertical', positions: ['QB', 'WR'] },
+  'Thunder Mesa': { offense: 'pass', defense: 'pressure', label: $t('data.quick_passing_behind_extra_protection_blitzing'), passStyle: 'quick', positions: ['QB', 'WR', 'OL', 'DL', 'LB'] },
+  'Canyon Crushers': { offense: 'run', defense: 'pressure', label: $t('data.ground_attack_physical_run_front'), runStyle: 'inside', runFront: true, positions: ['RB', 'OL', 'TE', 'DL'] },
+  'Eastport Phantoms': { offense: 'pass', defense: 'man', label: $t('data.man_coverage_tricks_dark_fields'), positions: ['CB', 'S'] },
+  'Frostpeak Howlers': { offense: 'balanced', defense: 'coverage', label: $t('data.field_position_bend_dont_break_zone'), positions: ['K', 'CB', 'S'] },
+  'Ironpeak Rams': { offense: 'run', defense: 'pressure', label: $t('data.run_stuffing_blitz_front_power_runs'), runStyle: 'inside', runFront: true, positions: ['RB', 'OL', 'DL', 'LB'] },
+  'Palmetto Vipers': { offense: 'pass', defense: 'man', label: $t('data.aggressive_vertical_passing_man_coverage'), passStyle: 'vertical', positions: ['QB', 'WR', 'CB', 'S'] },
   // ---- ordinary clubs (AI_IDENTITIES.md §4): offence / defence exactly as the table
-  'Ember City Beasts': { offense: 'pass', defense: 'pressure', label: 'Air Raid, Blitz Heavy', passStyle: 'vertical' },
-  'Stonehaven Titans': { offense: 'run', defense: 'coverage', label: 'Ground Attack, Zone Control' },
-  'Glacier Guardians': { offense: 'balanced', defense: 'coverage', label: 'Balanced, Zone Control' },
-  'Stormport Bolts': { offense: 'pass', defense: 'man', label: 'Air Raid, Man Coverage' },
-  'Northstar Wolves': { offense: 'run', defense: 'pressure', label: 'Ground Attack, Blitz Heavy' },
-  'Sundown Drakes': { offense: 'pass', defense: 'coverage', label: 'Air Raid, Zone Control', passStyle: 'vertical' },
-  'Ashford Hawks': { offense: 'balanced', defense: 'man', label: 'Balanced, Man Coverage' },
-  'Bayou Stalkers': { offense: 'run', defense: 'man', label: 'Ground Attack, Man Coverage', runStyle: 'option' },
+  'Ember City Beasts': { offense: 'pass', defense: 'pressure', label: $t('data.air_raid_blitz_heavy'), passStyle: 'vertical' },
+  'Stonehaven Titans': { offense: 'run', defense: 'coverage', label: $t('data.ground_attack_zone_control') },
+  'Glacier Guardians': { offense: 'balanced', defense: 'coverage', label: $t('data.balanced_zone_control') },
+  'Stormport Bolts': { offense: 'pass', defense: 'man', label: $t('data.air_raid_man_coverage') },
+  'Northstar Wolves': { offense: 'run', defense: 'pressure', label: $t('data.ground_attack_blitz_heavy') },
+  'Sundown Drakes': { offense: 'pass', defense: 'coverage', label: $t('data.air_raid_zone_control'), passStyle: 'vertical' },
+  'Ashford Hawks': { offense: 'balanced', defense: 'man', label: $t('data.balanced_man_coverage') },
+  'Bayou Stalkers': { offense: 'run', defense: 'man', label: $t('data.ground_attack_man_coverage'), runStyle: 'option' },
 });
 /** Default acquisition positions of a scheme, for a club whose entry names none (an ordinary club). Balanced names none. */
 export const SCHEME_POSITIONS = Object.freeze({ pass: ['QB', 'WR'], run: ['RB', 'OL', 'TE'], balanced: [], pressure: ['DL', 'LB'], coverage: ['CB', 'S'], man: ['CB', 'S'] });

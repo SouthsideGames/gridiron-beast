@@ -8,10 +8,11 @@ import { abilitiesOf, familyById } from '../data/beast-dex.js';
 import { THRESHOLDS, TIERS, tierIndex } from '../franchise/t8/mastery.js';
 import { SPECS } from '../sim/abilities/review-texts.js';
 import { t as $t } from '../text/index.js';
+import { dexLine, dexKey } from '../text/dex.js';
 
 export const MODES = Object.freeze(['football', 'clash']);
 export const MODE_LABEL = Object.freeze({ football: $t('shared.football'), clash: $t('shared.beast_clash') });
-const SHOWN_SECTIONS = [$t('shared.trigger_eligibility'), $t('shared.targets_placement'), $t('shared.core_resolution'), $t('shared.recharge_frequency'), $t('shared.lifetime_persistence'), $t('shared.exceptions_counterplay'), 'Progression / notes'];
+const SHOWN_SECTIONS = ['Trigger / eligibility', 'Targets / placement', 'Core resolution', 'Recharge / frequency', 'Lifetime / persistence', 'Exceptions / counterplay', 'Progression / notes']; // the Dex's section ids, never shown: SECTION_LABEL holds the wording
 const SECTION_LABEL = { 'Trigger / eligibility': $t('shared.when_it_happens'), 'Targets / placement': $t('shared.who_or_where'), 'Core resolution': $t('shared.what_it_does'), 'Recharge / frequency': $t('shared.how_often'), 'Lifetime / persistence': $t('shared.how_long_it_lasts'), 'Exceptions / counterplay': $t('shared.limits_and_counterplay'), 'Progression / notes': $t('shared.forms_and_mastery') };
 const familyIdOf = (x) => (typeof x === 'string' ? x : x?.species || x?.familyId || x?.id || null);
 /** The Dex mechanic line without the "ID: Name;" prefix some records carry. */
@@ -23,10 +24,11 @@ const tidy = (a) => String(a.mechanic || '').replace(new RegExp(`^${a.id}:\\s*${
  */
 export function abilityInfo(x, mode = 'football') {
   const id = familyIdOf(x); const a = id ? abilitiesOf(id)?.[mode] : null; if (!a) return null;
-  const story = a.details?.find((d) => d.section === 'Ability story')?.rule || null;
-  const summary = (mode === 'football' && SPECS[id]?.expect) || tidy(a);
-  const sections = SHOWN_SECTIONS.map((s) => { const d = a.details?.find((x2) => x2.section === s); return d ? { label: SECTION_LABEL[s], text: d.rule } : null; }).filter(Boolean);
-  return { id: a.id, name: a.name, mode, category: a.category, summary, story, sections };
+  const rule = (section) => { const d = a.details?.find((x2) => x2.section === section); return d ? dexLine(dexKey.abilityRule(a.id, section), d.rule) : null; }; // shown through the central text (src/text/dex.js)
+  const story = rule('Ability story');
+  const summary = mode === 'football' && SPECS[id]?.expect ? dexLine(dexKey.abilitySummary(id), SPECS[id].expect) : dexLine(dexKey.abilityMechanic(a.id), tidy(a));
+  const sections = SHOWN_SECTIONS.map((s) => { const text = rule(s); return text ? { label: SECTION_LABEL[s], text } : null; }).filter(Boolean);
+  return { id: a.id, name: dexLine(dexKey.abilityName(a.id), a.name), mode, category: a.category, summary, story, sections };
 }
 /** True when the family has no abilities (a Basic). */
 export const hasAbilities = (x) => { const id = familyIdOf(x); return !!(id && (abilitiesOf(id)?.football || abilitiesOf(id)?.clash)); };

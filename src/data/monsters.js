@@ -13,62 +13,63 @@ import { selectIndividual, targetPercentile } from '../franchise/t8/selection.js
 import { applyNaturalGrowth, evolve as evolveDev, invest as investDev, MAX_LEVEL, XP_PER_LEVEL, trainingCost, devProblems } from '../franchise/t8/progression.js';
 import { simulateHistory, allocateTraining } from '../franchise/t8/career.js';
 import { pickFamily } from '../franchise/t8/generation.js';
+import { t as $t } from '../text/index.js';
 
 export const TYPES = Object.freeze({
-  Fire: { icon: 'flame', bias: { strength: 4, agility: 2 }, hue: 14, blurb: 'Explosive power' },
-  Water: { icon: 'drop', bias: { agility: 3, awareness: 2 }, hue: 200, blurb: 'Adaptability' },
-  Nature: { icon: 'leaf', bias: { durability: 5 }, hue: 120, blurb: 'Endurance and recovery' },
-  Electric: { icon: 'bolt', bias: { speed: 5 }, hue: 52, blurb: 'Acceleration and speed' },
-  Earth: { icon: 'rock', bias: { strength: 5, blocking: 2 }, hue: 30, blurb: 'Strength and blocking' },
-  Ice: { icon: 'snow', bias: { coverage: 3, tackling: 2 }, hue: 190, blurb: 'Defensive discipline' },
-  Wind: { icon: 'wind', bias: { agility: 5 }, hue: 160, blurb: 'Agility and routes' },
-  Dark: { icon: 'moon', bias: { agility: 2, awareness: 3 }, hue: 270, blurb: 'Deception and misdirection' },
-  Light: { icon: 'star', bias: { accuracy: 3, awareness: 2 }, hue: 45, blurb: 'Precision and awareness' },
-  Metal: { icon: 'gear', bias: { durability: 3, blocking: 2 }, hue: 215, blurb: 'Durability and protection' },
-  Psychic: { icon: 'eye', bias: { awareness: 5 }, hue: 300, blurb: 'Anticipation' },
-  Dragon: { icon: 'dragon', bias: { speed: 2, strength: 2, awareness: 1 }, hue: 0, blurb: 'Versatility' },
+  Fire: { icon: 'flame', bias: { strength: 4, agility: 2 }, hue: 14, blurb: $t('monsters.explosive_power') },
+  Water: { icon: 'drop', bias: { agility: 3, awareness: 2 }, hue: 200, blurb: $t('monsters.adaptability') },
+  Nature: { icon: 'leaf', bias: { durability: 5 }, hue: 120, blurb: $t('monsters.endurance_and_recovery') },
+  Electric: { icon: 'bolt', bias: { speed: 5 }, hue: 52, blurb: $t('monsters.acceleration_and_speed') },
+  Earth: { icon: 'rock', bias: { strength: 5, blocking: 2 }, hue: 30, blurb: $t('monsters.strength_and_blocking') },
+  Ice: { icon: 'snow', bias: { coverage: 3, tackling: 2 }, hue: 190, blurb: $t('monsters.defensive_discipline') },
+  Wind: { icon: 'wind', bias: { agility: 5 }, hue: 160, blurb: $t('monsters.agility_and_routes') },
+  Dark: { icon: 'moon', bias: { agility: 2, awareness: 3 }, hue: 270, blurb: $t('monsters.deception_and_misdirection') },
+  Light: { icon: 'star', bias: { accuracy: 3, awareness: 2 }, hue: 45, blurb: $t('monsters.precision_and_awareness') },
+  Metal: { icon: 'gear', bias: { durability: 3, blocking: 2 }, hue: 215, blurb: $t('monsters.durability_and_protection') },
+  Psychic: { icon: 'eye', bias: { awareness: 5 }, hue: 300, blurb: $t('monsters.anticipation') },
+  Dragon: { icon: 'dragon', bias: { speed: 2, strength: 2, awareness: 1 }, hue: 0, blurb: $t('monsters.versatility') },
 });
 export const TYPE_NAMES = Object.keys(TYPES);
 
 // 25 natures: one attribute ×1.10, one ×0.90; three neutral. The legacy
 // nature names are kept; their stat keys are mapped onto the twelve live attributes.
 export const NATURES = Object.freeze({
-  swift: { name: 'Swift', up: 'speed', down: 'strength', behavior: 'Gets early separation; less effective on contact.' },
-  explosive: { name: 'Explosive', up: 'agility', down: 'durability', behavior: 'Strong first burst; tires faster.' },
-  elusive: { name: 'Elusive', up: 'agility', down: 'strength', behavior: 'Attempts more evasive moves.' },
-  powerful: { name: 'Powerful', up: 'strength', down: 'speed', behavior: 'Prefers contact and power moves.' },
-  sturdy: { name: 'Sturdy', up: 'durability', down: 'agility', behavior: 'Absorbs hits and protects the ball.' },
-  relentless: { name: 'Relentless', up: 'durability', down: 'accuracy', behavior: 'Maintains effort late in drives.' },
-  precise: { name: 'Precise', up: 'accuracy', down: 'strength', behavior: 'Chooses safer throwing windows.' },
-  surehanded: { name: 'Surehanded', up: 'catching', down: 'tackling', behavior: 'Prioritizes securing receptions.' },
-  technical: { name: 'Technical', up: 'agility', down: 'arm', behavior: 'Executes crisp routes.' },
-  cerebral: { name: 'Cerebral', up: 'awareness', down: 'strength', behavior: 'Reads defensive tendencies more accurately.' },
-  instinctive: { name: 'Instinctive', up: 'awareness', down: 'durability', behavior: 'Reacts quickly to loose balls and routes.' },
-  focused: { name: 'Focused', up: 'awareness', down: 'agility', behavior: 'Makes fewer assignment errors.' },
-  aggressive: { name: 'Aggressive', up: 'tackling', down: 'coverage', behavior: 'Pursues big hits; occasionally overcommits.' },
-  disciplined: { name: 'Disciplined', up: 'coverage', down: 'strength', behavior: 'Stays in assigned coverage.' },
-  ferocious: { name: 'Ferocious', up: 'strength', down: 'coverage', behavior: 'Rushes the quarterback aggressively.' },
-  protective: { name: 'Protective', up: 'blocking', down: 'agility', behavior: 'Stays engaged with blockers.' },
-  slippery: { name: 'Slippery', up: 'agility', down: 'durability', behavior: 'Attempts extra tackle escapes.' },
-  secure: { name: 'Secure', up: 'catching', down: 'speed', behavior: 'Protects possession over extra yardage.' },
-  gifted: { name: 'Gifted', up: 'arm', down: 'durability', behavior: 'Raw talent; special abilities hit harder.' },
-  resistant: { name: 'Resistant', up: 'durability', down: 'arm', behavior: 'Shrugs off opponent abilities.' },
-  adaptive: { name: 'Adaptive', up: 'awareness', down: 'kicking', behavior: 'Adjusts to repeated play calls.' },
-  patient: { name: 'Patient', up: 'blocking', down: 'speed', behavior: 'Waits for openings instead of forcing moves.' },
-  balanced: { name: 'Balanced', up: null, down: null, behavior: 'Neutral: standard positional tendencies.' },
-  calm: { name: 'Calm', up: null, down: null, behavior: 'Neutral: unflappable under pressure.' },
-  hardy: { name: 'Hardy', up: null, down: null, behavior: 'Neutral: steady week to week.' },
+  swift: { name: $t('monsters.swift'), up: 'speed', down: 'strength', behavior: $t('monsters.gets_early_separation_less_effective_on') },
+  explosive: { name: $t('monsters.explosive'), up: 'agility', down: 'durability', behavior: $t('monsters.strong_first_burst_tires_faster') },
+  elusive: { name: $t('monsters.elusive'), up: 'agility', down: 'strength', behavior: $t('monsters.attempts_more_evasive_moves') },
+  powerful: { name: $t('monsters.powerful'), up: 'strength', down: 'speed', behavior: $t('monsters.prefers_contact_and_power_moves') },
+  sturdy: { name: $t('monsters.sturdy'), up: 'durability', down: 'agility', behavior: $t('monsters.absorbs_hits_and_protects_the_ball') },
+  relentless: { name: $t('monsters.relentless'), up: 'durability', down: 'accuracy', behavior: $t('monsters.maintains_effort_late_in_drives') },
+  precise: { name: $t('monsters.precise'), up: 'accuracy', down: 'strength', behavior: $t('monsters.chooses_safer_throwing_windows') },
+  surehanded: { name: $t('monsters.surehanded'), up: 'catching', down: 'tackling', behavior: $t('monsters.prioritizes_securing_receptions') },
+  technical: { name: $t('monsters.technical'), up: 'agility', down: 'arm', behavior: $t('monsters.executes_crisp_routes') },
+  cerebral: { name: $t('monsters.cerebral'), up: 'awareness', down: 'strength', behavior: $t('monsters.reads_defensive_tendencies_more_accurately') },
+  instinctive: { name: $t('monsters.instinctive'), up: 'awareness', down: 'durability', behavior: $t('monsters.reacts_quickly_to_loose_balls_and') },
+  focused: { name: $t('monsters.focused'), up: 'awareness', down: 'agility', behavior: $t('monsters.makes_fewer_assignment_errors') },
+  aggressive: { name: $t('monsters.aggressive'), up: 'tackling', down: 'coverage', behavior: $t('monsters.pursues_big_hits_occasionally_overcommits') },
+  disciplined: { name: $t('monsters.disciplined'), up: 'coverage', down: 'strength', behavior: $t('monsters.stays_in_assigned_coverage') },
+  ferocious: { name: $t('monsters.ferocious'), up: 'strength', down: 'coverage', behavior: $t('monsters.rushes_the_quarterback_aggressively') },
+  protective: { name: $t('monsters.protective'), up: 'blocking', down: 'agility', behavior: $t('monsters.stays_engaged_with_blockers') },
+  slippery: { name: $t('monsters.slippery'), up: 'agility', down: 'durability', behavior: $t('monsters.attempts_extra_tackle_escapes') },
+  secure: { name: $t('monsters.secure'), up: 'catching', down: 'speed', behavior: $t('monsters.protects_possession_over_extra_yardage') },
+  gifted: { name: $t('monsters.gifted'), up: 'arm', down: 'durability', behavior: $t('monsters.raw_talent_special_abilities_hit_harder') },
+  resistant: { name: $t('monsters.resistant'), up: 'durability', down: 'arm', behavior: $t('monsters.shrugs_off_opponent_abilities') },
+  adaptive: { name: $t('monsters.adaptive'), up: 'awareness', down: 'kicking', behavior: $t('monsters.adjusts_to_repeated_play_calls') },
+  patient: { name: $t('monsters.patient'), up: 'blocking', down: 'speed', behavior: $t('monsters.waits_for_openings_instead_of_forcing') },
+  balanced: { name: $t('monsters.balanced'), up: null, down: null, behavior: $t('monsters.neutral_standard_positional_tendencies') },
+  calm: { name: $t('monsters.calm'), up: null, down: null, behavior: $t('monsters.neutral_unflappable_under_pressure') },
+  hardy: { name: $t('monsters.hardy'), up: null, down: null, behavior: $t('monsters.neutral_steady_week_to_week') },
 });
 export const NATURE_IDS = Object.keys(NATURES);
 
 /** Signature abilities with real engine effects (see engine.js `abilityBoost`). */
 export const ABILITIES = Object.freeze({
-  meteor_pass: { name: 'Meteor Pass', text: '+8 Accuracy and +6 Arm on throws 15+ yards downfield.', effect: { deepThrow: { accuracy: 8, arm: 6 } } },
-  lightning_break: { name: 'Lightning Break', text: '+12% speed for the first 1.5 seconds after the snap.', effect: { burst: { speed: 0.12, until: 1.5 } } },
-  stone_charge: { name: 'Stone Charge', text: '+10 Strength when breaking tackles between the tackles.', effect: { carryStrength: 10 } },
-  crushing_rush: { name: 'Crushing Rush', text: '+4 Strength when shedding a block against the run.', effect: { runStuff: 4 } },
-  aerial_lock: { name: 'Aerial Lock', text: '+10 Catching on interception chances.', effect: { pickCatching: 10 } },
-  cold_read: { name: 'Cold Read', text: 'Reacts 0.2 s sooner to runs and short passes.', effect: { reaction: 0.2 } },
+  meteor_pass: { name: $t('monsters.meteor_pass'), text: $t('monsters.8_accuracy_and_6_arm_on'), effect: { deepThrow: { accuracy: 8, arm: 6 } } },
+  lightning_break: { name: $t('monsters.lightning_break'), text: $t('monsters.12_speed_for_the_first_1'), effect: { burst: { speed: 0.12, until: 1.5 } } },
+  stone_charge: { name: $t('monsters.stone_charge'), text: $t('monsters.10_strength_when_breaking_tackles_between'), effect: { carryStrength: 10 } },
+  crushing_rush: { name: $t('monsters.crushing_rush'), text: $t('monsters.4_strength_when_shedding_a_block'), effect: { runStuff: 4 } },
+  aerial_lock: { name: $t('monsters.aerial_lock'), text: $t('monsters.10_catching_on_interception_chances'), effect: { pickCatching: 10 } },
+  cold_read: { name: $t('monsters.cold_read'), text: $t('monsters.reacts_0_2_s_sooner_to'), effect: { reaction: 0.2 } },
 });
 
 /** Base attribute profile per position (before type, nature and variance). */
@@ -282,9 +283,9 @@ export const bankedPoints = (m) => devOf(m).bank;
 /** Invest one banked point (or the remainder if less) in an attribute. Exact fractions; refunds at the ceiling (spec §4). */
 export function spendPoint(m, attr, { points = null } = {}) {
   const d = devOf(m);
-  if (!(attr in d.current)) return { ok: false, reason: 'Unknown attribute.' };
-  if (FR.cmp(d.bank, FR.ZERO) <= 0) return { ok: false, reason: 'No training points to invest.' };
-  if (d.current[attr] >= d.potential[attr]) return { ok: false, reason: `${ATTR_NAME[attr] || attr} is at this monster's ceiling (${d.potential[attr]}).` };
+  if (!(attr in d.current)) return { ok: false, reason: $t('monsters.unknown_attribute') };
+  if (FR.cmp(d.bank, FR.ZERO) <= 0) return { ok: false, reason: $t('monsters.no_training_points_to_invest') };
+  if (d.current[attr] >= d.potential[attr]) return { ok: false, reason: `${$t('monsters.is_at_this_monsters_ceiling', { attrName: ATTR_NAME[attr] || attr, potential: d.potential[attr] })}` };
   const amount = points ? FR.min(FR.frac(points), d.bank) : FR.min(FR.ONE, d.bank);
   const r = investDev(d, m, attr, amount); syncFromDev(m);
   return { ok: true, value: d.current[attr], increases: r.increases, refunded: r.refunded, left: d.bank };
@@ -411,10 +412,10 @@ export const ROSTER_MIN = 26; // below this a club cannot play
  * decision). Derived from the twelve engine attributes per position.
  */
 export const HEADLINE = Object.freeze([
-  { key: 'speed', label: 'Speed', help: 'Top speed, acceleration, cuts' },
-  { key: 'power', label: 'Power', help: 'Blocking, tackling, breaking tackles' },
-  { key: 'hands', label: 'Hands', help: 'Catching, throwing, kicking' },
-  { key: 'smarts', label: 'Smarts', help: 'Reads, reactions, coverage' },
+  { key: 'speed', label: $t('monsters.speed'), help: $t('monsters.top_speed_acceleration_cuts') },
+  { key: 'power', label: $t('monsters.power'), help: $t('monsters.blocking_tackling_breaking_tackles') },
+  { key: 'hands', label: $t('monsters.hands'), help: $t('monsters.catching_throwing_kicking') },
+  { key: 'smarts', label: $t('monsters.smarts'), help: $t('monsters.reads_reactions_coverage') },
 ]);
 export function headlineAttributes(m, opts) {
   const a = effectiveAttributes(m, opts);
@@ -437,14 +438,14 @@ export function headlineAttributes(m, opts) {
  */
 const FIT_KEYS = {
   offense: {
-    pass: { QB: ['hands', 'smarts'], RB: ['speed', 'hands'], WR: ['speed', 'hands'], TE: ['hands', 'speed'], OL: ['smarts', 'power'], why: 'Air Raid wants speed and hands' },
-    run: { QB: ['smarts', 'speed'], RB: ['power', 'speed'], WR: ['power', 'speed'], TE: ['power'], OL: ['power'], why: 'Ground Attack wants power' },
-    balanced: { QB: ['hands', 'smarts', 'speed'], RB: ['speed', 'power', 'hands'], WR: ['speed', 'hands', 'power'], TE: ['hands', 'power'], OL: ['power', 'smarts'], why: 'Balanced wants all-rounders' },
+    pass: { QB: ['hands', 'smarts'], RB: ['speed', 'hands'], WR: ['speed', 'hands'], TE: ['hands', 'speed'], OL: ['smarts', 'power'], why: $t('monsters.air_raid_wants_speed_and_hands') },
+    run: { QB: ['smarts', 'speed'], RB: ['power', 'speed'], WR: ['power', 'speed'], TE: ['power'], OL: ['power'], why: $t('monsters.ground_attack_wants_power') },
+    balanced: { QB: ['hands', 'smarts', 'speed'], RB: ['speed', 'power', 'hands'], WR: ['speed', 'hands', 'power'], TE: ['hands', 'power'], OL: ['power', 'smarts'], why: $t('monsters.balanced_wants_all_rounders') },
   },
   defense: {
-    pressure: { DL: ['power', 'speed'], LB: ['speed', 'power'], CB: ['speed', 'power'], S: ['speed', 'power'], why: 'Blitz Heavy wants fast, strong rushers' },
-    coverage: { DL: ['power', 'smarts'], LB: ['smarts', 'hands'], CB: ['smarts', 'hands'], S: ['smarts', 'hands'], why: 'Zone Control wants smart cover monsters' },
-    man: { DL: ['power', 'speed'], LB: ['speed', 'smarts'], CB: ['speed', 'hands'], S: ['speed', 'hands'], why: 'Man Coverage wants speed to stay on top' },
+    pressure: { DL: ['power', 'speed'], LB: ['speed', 'power'], CB: ['speed', 'power'], S: ['speed', 'power'], why: $t('monsters.blitz_heavy_wants_fast_strong_rushers') },
+    coverage: { DL: ['power', 'smarts'], LB: ['smarts', 'hands'], CB: ['smarts', 'hands'], S: ['smarts', 'hands'], why: $t('monsters.zone_control_wants_smart_cover_monsters') },
+    man: { DL: ['power', 'speed'], LB: ['speed', 'smarts'], CB: ['speed', 'hands'], S: ['speed', 'hands'], why: $t('monsters.man_coverage_wants_speed_to_stay') },
   },
 };
 const keyMean = (m, keys) => { const h = headlineAttributes(m); return keys.reduce((a, k) => a + h[k], 0) / keys.length; };
@@ -475,7 +476,7 @@ export function schemeAttributes(scheme, position) {
   const w = POSITION_WEIGHTS[position] || {};
   return [...new Set(keys.flatMap((k) => raw[k] || []))].filter((a) => w[a] > 0);
 }
-export const SCHEME_LABEL = Object.freeze({ pass: 'Air Raid', run: 'Ground Attack', balanced: 'Balanced', pressure: 'Blitz Heavy', coverage: 'Zone Control', man: 'Man Coverage' });
+export const SCHEME_LABEL = Object.freeze({ pass: $t('monsters.air_raid'), run: $t('monsters.ground_attack'), balanced: $t('monsters.balanced'), pressure: $t('monsters.blitz_heavy'), coverage: $t('monsters.zone_control'), man: $t('monsters.man_coverage') });
 /** Every scheme on the monster's side, with whether it fits and how far above/below the bar it sits, so the card can say what it *prefers*. */
 export function schemePreferences(m) {
   const side = ['QB', 'RB', 'WR', 'TE', 'OL'].includes(m.position) ? 'offense' : ['DL', 'LB', 'CB', 'S'].includes(m.position) ? 'defense' : null;

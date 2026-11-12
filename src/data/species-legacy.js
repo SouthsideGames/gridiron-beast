@@ -8,12 +8,13 @@
 // Each species has a fixed element, ONE football position (Task 7 D6, owner 2026-11-04: no secondary positions), a
 // signature ability (uncommon and up) or a shared trait (commons), a design
 // spec for the 16×16 sprite builder, and an evolution plan (built in Prototype 2).
+import { t as $t } from '../text/index.js';
 
 export const RARITIES = Object.freeze({
-  common: { label: 'Common', weight: 60, note: 'Everyday sightings in the element’s regions.' },
-  uncommon: { label: 'Uncommon', weight: 30, note: 'Seen most weeks if you scout the right region.' },
-  rare: { label: 'Rare', weight: 9, note: 'One home region only, and only from week 4.' },
-  legendary: { label: 'Legendary', weight: 0, note: 'Never scouted normally: unlocked by Legend Tracks. Each exists once in the league.' },
+  common: { label: $t('monsters.common'), weight: 60, note: $t('monsters.everyday_sightings_in_the_elements_regions') },
+  uncommon: { label: $t('monsters.uncommon'), weight: 30, note: $t('monsters.seen_most_weeks_if_you_scout') },
+  rare: { label: $t('monsters.rare'), weight: 9, note: $t('monsters.one_home_region_only_and_only') },
+  legendary: { label: $t('monsters.legendary'), weight: 0, note: $t('monsters.never_scouted_normally_unlocked_by_legend') },
 });
 
 /** Shared traits for commons (small, situational edges). */
@@ -153,9 +154,9 @@ export const LEGEND_RULES = Object.freeze({ tracksNeeded: 3, aiLegendaries: 3, p
 
 /** Collection book milestones (discovered = seen as a prospect, on any club, or signed). */
 export const COLLECTION_MILESTONES = Object.freeze([
-  { at: 10, reward: 'Scouting reports reveal one extra rating.' },
-  { at: 25, reward: '+1 recruiting attempt each Tuesday.' },
-  { at: 40, reward: 'Rare sightings 50% more likely.' },
-  { at: 60, reward: 'One free Legend Track.' },
-  { at: 72, reward: 'Completion badge and a golden collection book.' },
+  { at: 10, reward: $t('monsters.scouting_reports_reveal_one_extra_rating') },
+  { at: 25, reward: $t('monsters.1_recruiting_attempt_each_tuesday') },
+  { at: 40, reward: $t('monsters.rare_sightings_50_more_likely') },
+  { at: 60, reward: $t('monsters.one_free_legend_track') },
+  { at: 72, reward: $t('monsters.completion_badge_and_a_golden_collection') },
 ]);
