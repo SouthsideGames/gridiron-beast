@@ -4,7 +4,7 @@
 // Revised 2026-10-22 (owner authorization): the forecast compares the club with the league instead of a fixed number, the safe
 // goal is the rounded forecast, a narrow miss on the hot seat is a final warning rather than a dismissal, and three
 // missed seasons in a row end the franchise however narrow the misses. Nothing else in the game can end a franchise.
-import { t as $t } from '../text/index.js';
+import { t as $t, captured, lineField, fieldLine } from '../text/index.js';
 
 export const CONFIDENCE_MAX = 2;
 export const HOT_SEAT = -1;
@@ -36,12 +36,12 @@ export function goalOffers(f, { expectedWinPct = 0.5, gamesInSeason = 9, gymsThi
   // A rebuilding club's medium goal is one badge from a gym on its schedule that it does not hold yet (a badge is won once, so
   // gyms already beaten do not count); with none left to win, the playoffs.
   const medium = expectedWinPct >= 0.45 || gymsThisSeason < 1
-    ? { id: 'playoffs', label: $t('franchise.make_the_playoffs'), text: $t('franchise.finish_in_a_playoff_spot_standings'), weight: 1 }
-    : { id: 'badges', label: $t('franchise.win_a_gym_badge'), target: 1, text: `${$t('franchise.take_a_badge_off_one_of', { gymsThisSeason, n: gymsThisSeason })}`, weight: 1 };
+    ? { id: 'playoffs', ...lineField('label', captured(() => $t('franchise.make_the_playoffs'))), ...lineField('text', captured(() => $t('franchise.finish_in_a_playoff_spot_standings'))), weight: 1 }
+    : { id: 'badges', ...lineField('label', captured(() => $t('franchise.win_a_gym_badge'))), target: 1, ...lineField('text', captured(() => `${$t('franchise.take_a_badge_off_one_of', { gymsThisSeason, n: gymsThisSeason })}`)), weight: 1 };
   return [
-    { id: 'wins', label: `${$t('franchise.win_games', { safeWins })}`, target: safeWins, forecastWins: +exp.toFixed(1), text: `${$t('franchise.the_forecast_says_match_it', { toFixed: exp.toFixed(1) })}`, weight: 1, tier: 'safe' },
+    { id: 'wins', ...lineField('label', captured(() => `${$t('franchise.win_games', { safeWins })}`)), target: safeWins, forecastWins: +exp.toFixed(1), ...lineField('text', captured(() => `${$t('franchise.the_forecast_says_match_it', { toFixed: exp.toFixed(1) })}`)), weight: 1, tier: 'safe' },
     { ...medium, forecastWins: +exp.toFixed(1), tier: 'medium' },
-    { id: 'title', label: $t('franchise.win_the_beast_bowl'), forecastWins: +exp.toFixed(1), text: $t('franchise.everything_hit_this_and_the_board'), weight: 2, tier: 'stretch' },
+    { id: 'title', ...lineField('label', captured(() => $t('franchise.win_the_beast_bowl'))), forecastWins: +exp.toFixed(1), ...lineField('text', captured(() => $t('franchise.everything_hit_this_and_the_board'))), weight: 2, tier: 'stretch' },
   ];
 }
 
@@ -98,7 +98,7 @@ export function settleGoal(f, facts) {
   if (!goal || goal.year !== f.season.year) return null;
   const v = settleConfidence(b, goal, facts);
   goal.result = v.met ? 'met' : 'missed';
-  b.history.push({ year: goal.year, id: goal.id, label: goal.label, met: v.met, miss: v.miss, wins: facts.wins, forecast: goal.forecastWins ?? null, confidence: b.confidence, reason: v.reason });
+  b.history.push({ year: goal.year, id: goal.id, ...lineField('label', fieldLine(goal, 'label')), met: v.met, miss: v.miss, wins: facts.wins, forecast: goal.forecastWins ?? null, confidence: b.confidence, reason: v.reason });
   if (v.met) b.scoutBonusYear = f.season.year + 1;
   if (v.fired) b.fired = true;
   b.goal = null;

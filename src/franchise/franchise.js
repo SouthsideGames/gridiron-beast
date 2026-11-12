@@ -78,7 +78,7 @@ import { newUid } from '../core/uid.js';
 import { CLASH_SIZE, SWAP_EVERY, policiesOf, normalizeMode, snapMonster, autoLineup, eligibleBattlers, runBattle, runRecord, battleSummary, pendingDecision, applyBattleEffects, aiPossessionChoice, POSSESSION_CHOICES, newBattleRecord, isT8Record, recordDecision, settleHeadless, upgradeUnresolvedRecord, carryOutOf, masteryRecord } from './clash-link.js';
 import { carryInto as t8CarryInto, atGameEnd as t8AtGameEnd } from '../sim/t8/status-runtime.js';
 import { exhaustedSet as t8ExhaustedSet } from '../sim/t8/stamina-runtime.js';
-import { t as $t, line as $L, lineParts as $P, lineText, lineFields } from '../text/index.js';
+import { t as $t, line as $L, lineParts as $P, lineText, lineFields, lineField, captured, recording, recalled, fieldLine, fieldText, labelLine } from '../text/index.js';
 
 export const SCHEMA_VERSION = 10; // 10: Task 8, the fresh-save break (Dex individuals with `m.dev`; spec §15): saves 6, 8 and 9 are refused with a Start New Franchise message (save.js). Earlier: 9 Task 7 free agency, 8 the league registry, 6 every save before it
 export const LEAGUE_SCHEMA_VERSION = 8;
@@ -207,7 +207,7 @@ function makePostseasonEvent(f) {
   const coach = staffMember(f, coordRole);
   const other = r.pick(ALL_TEAMS.filter((t) => t !== f.club));
   save();
-  const vars = { star: star?.name || $t('franchise.your_star'), club: f.club, rival, record: `${rec.w}-${rec.l}`, coach: coach?.name || $t('franchise.your_coordinator'), role: coordRole, side: coordRole === 'offensive_coordinator' ? 'offense' : 'defense', other, scheme: coach?.style || 'my scheme', fit: weakSide?.fit ?? 0, total: weakSide?.total ?? 0 };
+  const vars = { star: star?.name || $t('franchise.your_star'), club: f.club, rival, record: `${rec.w}-${rec.l}`, coach: coach?.name || $t('franchise.your_coordinator'), role: coordRole, side: coordRole === 'offensive_coordinator' ? 'offense' : 'defense', other, ...lineField('scheme', labelLine(coach?.style || 'my scheme')), fit: weakSide?.fit ?? 0, total: weakSide?.total ?? 0 };
   return { kind, starId: star?.id || null, coordRole, vars, resolved: false, chosen: null };
 }
 const fillVars = (t, vars) => String(t).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
@@ -215,14 +215,15 @@ const fillVars = (t, vars) => String(t).replace(/\{(\w+)\}/g, (_, k) => vars[k] 
 export function postseasonEvent(f) {
   const e = f.postseason; if (!e || e.resolved) return null;
   const def = POSTSEASON_EVENTS[e.kind]; if (!def) return null;
-  const options = def.options.map((o) => ({ ...o, label: fillVars(o.label, e.vars), text: fillVars(o.text, e.vars) }));
+  const vars = e.vars?.schemeL ? { ...e.vars, scheme: fieldText(e.vars, 'scheme') } : e.vars;   // the coach's style is a saved line
+  const options = def.options.map((o) => ({ ...o, label: fillVars(o.label, vars), text: fillVars(o.text, vars) }));
   if (difficultyOf(f) === DIFFICULTY.rookie && def.rookie) options.push({ ...def.rookie });
-  return { kind: e.kind, title: def.title, speaker: def.speaker, lines: def.lines.map((l) => fillVars(l, e.vars)), options, vars: e.vars };
+  return { kind: e.kind, title: def.title, speaker: def.speaker, lines: def.lines.map((l) => fillVars(l, vars)), options, vars: vars };
 }
 export function resolvePostseason(f, optionId) {
   const e = f.postseason; if (!e || e.resolved) return { ok: false, reason: $t('franchise.no_decision_pending') };
   const ev = postseasonEvent(f); if (!ev.options.find((o) => o.id === optionId)) return { ok: false, reason: $t('franchise.not_an_option') };
-  const star = f.roster.find((m) => m.id === e.starId); const coach = staffMember(f, e.coordRole); let text = '';
+  const star = f.roster.find((m) => m.id === e.starId); const coach = staffMember(f, e.coordRole); let text = ''; const done = recording();   // the result sentence is saved in the club log as a line
   const hireBest = (role, { preferScheme = null } = {}) => { const cands = STAFF.filter((c) => c.role === role && c.id !== f.staff[role]).sort((a, b) => (preferScheme ? (b.scheme === preferScheme) - (a.scheme === preferScheme) : 0) || b.overall - a.overall); const c = cands[0]; if (c) f.staff[role] = c.id; return c; };
   if (e.kind === 'star_out') {
     if (optionId === 'raise' && star) { star.salary = Math.round((star.salary || salaryFor(star)) * (1 + RAISE_PCT)); text = `${$t('franchise.stays_on_a_raise', { name: star.name })}`; }
@@ -238,7 +239,8 @@ export function resolvePostseason(f, optionId) {
     else if (optionId === 'fire' && coach) { f.pendingDeadCap = (f.pendingDeadCap || 0) + Math.round(coach.salary * 0.5); const c = hireBest(e.coordRole); text = `${$t('franchise.fired_half_their_salary_counts_against', { name: coach.name, c: c ? c.name + ' hired' : $t('franchise.no_replacement') })}`; }
     else text = `${$t('franchise.stays_the_roster_is_on_you', { name: coach?.name || $t('franchise.your_coordinator') })}`;
   }
-  e.resolved = true; e.chosen = optionId; news(f, $L('franchise.postseason', { text }), 'info');
+  const textL = done(text);
+  e.resolved = true; e.chosen = optionId; news(f, $L('franchise.postseason', { text: textL }), 'info');
   return { ok: true, text };
 }
 /** Which scheme most of the side's starters fit (for "change the scheme to the roster"). */
@@ -362,9 +364,9 @@ function stampGlobal(f, a, vars) {
 }
 function sceneVars(f, c) {
   const rv = f.rivals?.[f.tier]; const rec = f.season?.records?.[f.club] || { w: 0, l: 0 };
-  return { club: f.club, CLUB: String(f.club).toUpperCase(), owner: `${f.owner.first} ${f.owner.last}`.trim(), first: f.owner.first, rival: rv?.team || $t('franchise.your_rival'), gm: rv?.gm || $t('franchise.their_gm'), year: yearOf(f.season?.year || 1), YEAR: yearOf(f.season?.year || 1), week: f.season?.week || 1, record: `${rec.w}-${rec.l}`, wins: f.campaign?.wins || 0, badges: Object.keys(f.campaign?.badges || {}).length, titles: f.campaign?.titles || 0, awardLine: c.awardLine || '', REGION: String(c.region || 'home region').toUpperCase() };
+  return { club: f.club, CLUB: String(f.club).toUpperCase(), owner: `${f.owner.first} ${f.owner.last}`.trim(), first: f.owner.first, rival: rv?.team || $t('franchise.your_rival'), gm: rv?.gm || $t('franchise.their_gm'), year: yearOf(f.season?.year || 1), YEAR: yearOf(f.season?.year || 1), week: f.season?.week || 1, record: `${rec.w}-${rec.l}`, wins: f.campaign?.wins || 0, badges: Object.keys(f.campaign?.badges || {}).length, titles: f.campaign?.titles || 0, awardLine: fieldText(c, 'awardLine') || '', ...(c.awardLineL ? { awardLineL: c.awardLineL } : {}), REGION: String(c.region || 'home region').toUpperCase() };
 }
-function fillScene(text, v) { return String(text).replace(/\{(\w+)\}/g, (m, k) => (v[k] != null ? v[k] : m)); }
+function fillScene(text, v) { if (v?.awardLineL) v = { ...v, awardLine: fieldText(v, 'awardLine') }; return String(text).replace(/\{(\w+)\}/g, (m, k) => (v[k] != null ? v[k] : m)); }   // the award sentence is a saved line
 /** The next cutscene to play, filled in: { id, title, speaker, beats, earned }. */
 export function nextScene(f) {
   const q = f.scenes?.[0]; if (!q) return null; const a = ACHIEVEMENT_BY_ID[q.id]; if (!a) { f.scenes.shift(); return nextScene(f); }
@@ -476,7 +478,7 @@ const frng = (f) => { const r = rngFromState(f.rngState); return { r, save: () =
 
 /** A club note. `who` = { mid, mname } when the note names one monster (the club log links it to his career, GDD §40.5). */
 /** One item of the club log. `text` is a sentence, or a saved line (src/text/index.js line / lineParts) so the item can be shown in another language later. */
-export function news(f, text, kind = 'info', who = null) { const n = { text: lineText(text), ...lineFields(text), kind, week: f.season?.week, year: f.season?.year }; if (who?.mid) { n.mid = who.mid; n.mname = who.mname; } f.news.unshift(n); if (f.news.length > 60) f.news.pop(); }
+export function news(f, text, kind = 'info', who = null) { text = recalled(text); const n = { text: lineText(text), ...lineFields(text), kind, week: f.season?.week, year: f.season?.year }; if (who?.mid) { n.mid = who.mid; n.mname = who.mname; } f.news.unshift(n); if (f.news.length > 60) f.news.pop(); }
 
 // ------------------------------------------------------------ staff
 export const staffHired = (f) => STAFF_ROLES.every((r) => f.staff[r]);
@@ -940,7 +942,7 @@ export function forfeitSunday(f) {
   injuriesBeforeGame(f, [[f.club, f.roster, m.opponent, {}], [m.opponent, m[oppSide].roster, f.club, {}]], { home: m.home.name, away: m.away.name, week: f.season.week, playoff: !!m.playoff, round: playoffFixture(f)?.round || null }); // a forfeited game is still a scheduled game missed by the injured
   const score = { [side]: 0, [oppSide]: 21 };
   const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: score.home, awayScore: score.away, ot: false, player: true, forfeit: true };
-  f.week.gameResult = { ...res, won: false, playerScore: 0, oppScore: 21, opponent: m.opponent, tag: m.tag, forfeit: true };
+  f.week.gameResult = { ...res, won: false, playerScore: 0, oppScore: 21, opponent: m.opponent, tag: m.tag, ...(m.tagL ? { tagL: m.tagL } : {}), forfeit: true };
   if (m.playoff) recordPlayoffResult(f, res); else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: 0, oppScore: 21, won: false, forfeit: true }; }
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 }; f.campaign.h2h ||= {}; const h2h = (f.campaign.h2h[m.opponent] ||= { w: 0, l: 0, last: null, streakL: 0 }); h2h.l += 1; h2h.last = 'l'; h2h.streakL += 1;
   news(f, $L('franchise.forfeit_could_not_field_a_legal', { club: f.club, opponent: m.opponent }), 'loss');
@@ -961,7 +963,7 @@ function renewTask7(f, item, m, choice, { years, salary, bonus }) {
   const nextYear = f.season.year + 1;
   if (choice === 'walk') { f.roster = f.roster.filter((x) => x.id !== m.id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === m.id) delete f.lineupManual[slot]; toPool(f, m, 'walked'); item.status = 'walked'; news(f, $L('franchise.walks_as_a_free_agent_back', { name: m.name, homeRegion: homeRegion(m) }), 'loss'); return { ok: true, status: 'walked' }; }
   const neg = renewalNeg(f, item, m);
-  if (neg.state === 'no-talks') { item.status = 'declined'; return { ok: true, status: 'declined', talks: 'closed', clue: neg.clue }; }
+  if (neg.state === 'no-talks') { item.status = 'declined'; return { ok: true, status: 'declined', talks: 'closed', ...lineField('clue', fieldLine(neg, 'clue')) }; }
   if (neg.state === 'ended') { item.status = 'declined'; return { ok: true, status: 'declined' }; }
   const accept = choice === 'sign' || choice === 'acceptcounter';
   let terms = accept ? { ...neg.demand } : { salary: Math.round((salary ?? (choice === 'counter' ? neg.demand.salary * COUNTER_PCT : neg.demand.salary)) / 100) * 100, years: years ?? neg.demand.years, bonus: Math.max(0, Math.round((bonus || 0) / 100) * 100) };
@@ -971,7 +973,7 @@ function renewTask7(f, item, m, choice, { years, salary, bonus }) {
   if (r.outcome === 'agreed') {
     const t = r.terms; m.salary = t.salary; m.contract = makeContract({ start: nextYear, years: t.years, salary: t.salary, bonus: t.bonus, kind: 'renewal' }); m.contract.bonusPaid = { by: f.club, ly: nextYear };
     item.status = 'signed'; item.final = t.salary; item.years = t.years; if (neg.offers.length) item.countered = 'accepted'; delete item.counter;
-    news(f, $P($L('franchise.re_signed_for', { name: m.name }), ` `, t.years === 1 ? 'one season' : `${t.years} seasons`, ` `, $L('franchise.at_cr', { toLocaleString: t.salary.toLocaleString('en-US') }), (t.bonus ? $P(` `, $L('franchise.plus_a_cr_bonus', { toLocaleString: t.bonus.toLocaleString('en-US') })) : ''), `.`), 'roster');
+    news(f, $P($L('franchise.re_signed_for', { name: m.name }), ` `, (t.years === 1 ? $L('franchise.one_season') : $L('franchise.count_seasons', { years: t.years })), ` `, $L('franchise.at_cr', { toLocaleString: t.salary.toLocaleString('en-US') }), (t.bonus ? $P(` `, $L('franchise.plus_a_cr_bonus', { toLocaleString: t.bonus.toLocaleString('en-US') })) : ''), `.`), 'roster');
     return { ok: true, status: 'signed' };
   }
   if (r.outcome === 'countered') { item.counter = r.counter; return { ok: true, status: 'countered', counter: r.counter, left: item.left }; }
@@ -983,7 +985,7 @@ function renewTask7(f, item, m, choice, { years, salary, bonus }) {
 function renewalNeg(f, item, m) {
   const neg = negotiation(f, m, f.club, 'renew'); item.negKey = neg.key; if (item.opening == null) item.opening = neg.opening.salary;
   item.ask = neg.demand.salary; item.demandYears = neg.demand.years; item.left = countersLeft(neg);
-  if (neg.state === 'no-talks' && !item.status) { item.status = 'declined'; item.talks = 'closed'; item.clue = neg.clue; news(f, $L('franchise.does_not_want_to_negotiate_a', { name: m.name, clue: neg.clue }), 'loss'); }
+  if (neg.state === 'no-talks' && !item.status) { item.status = 'declined'; item.talks = 'closed'; Object.assign(item, lineField('clue', fieldLine(neg, 'clue'))); news(f, $L('franchise.does_not_want_to_negotiate_a', { name: m.name, clue: fieldLine(neg, 'clue') }), 'loss'); }
   return neg;
 }
 /** Open the owner's renewal negotiations for the offseason book (Task 7): opening demands, and any monster who will not negotiate. */
@@ -1410,7 +1412,7 @@ export function commissionerGoals(f) {
   const gyms = new Set(f.season.schedule.filter((g) => !g.bye && GYM_BY_CLUB[g.opponent] && !badgeOf(f, g.opponent)).map((g) => g.opponent)).size; // badges still to win
   return goalOffers(f, { expectedWinPct: boardForecastFor(f, games).winPct, gamesInSeason: games, gymsThisSeason: gyms });
 }
-export function chooseGoal(f, id) { const r = boardChooseGoal(f, id, commissionerGoals(f)); if (r.ok) news(f, $L('franchise.commissioners_office_you_committed_to_this', { label: r.goal.label }), 'info'); return r; }
+export function chooseGoal(f, id) { const r = boardChooseGoal(f, id, commissionerGoals(f)); if (r.ok) news(f, $L('franchise.commissioners_office_you_committed_to_this', { label: fieldLine(r.goal, 'label') }), 'info'); return r; }
 /** Where the goal stands mid-season (for HQ). */
 export function goalProgress(f) {
   const g = f.board?.goal; if (!g) return null; const rec = record(f);
@@ -2233,17 +2235,19 @@ export function playerProfile(f, { opponent = null } = {}) {
   const D = DIFFICULTY[f.settings?.difficulty] || DIFFICULTY.pro;
   return { games: games.length, offense, defense, passRate: plays ? passes / plays : 0.5, rematch: vs.length > 0, swaps: D.iq >= 1.5 ? 3 : D.iq < 1 ? 1 : 2 };
 }
+/** The schedule's game categories as lines (the saved value stays the id in league.js). */
+const CATEGORY_LINE = Object.freeze({ Division: $L('franchise.division'), Conference: $L('franchise.conference'), Interconference: $L('franchise.interconference') });
 export function sundayMatchup(f) {
   const fx = currentFixture(f); const po = playoffFixture(f);
-  let home, away, oppName, tag;
+  let home, away, oppName, tag, tagL = null;
   if (po) { oppName = po.home === f.club ? po.away : po.home; home = po.home; away = po.away; tag = po.tag; }
-  else if (fx && !fx.bye) { oppName = fx.opponent; home = fx.home ? f.club : oppName; away = fx.home ? oppName : f.club; tag = `${$t('franchise.week', { fx: fx.week, category: fx.category })}`; }
+  else if (fx && !fx.bye) { oppName = fx.opponent; home = fx.home ? f.club : oppName; away = fx.home ? oppName : f.club; tag = `${$t('franchise.week', { fx: fx.week, category: fx.category })}`; tagL = $L('franchise.week', { fx: fx.week, category: CATEGORY_LINE[fx.category] || fx.category }); }
   else return null;
   const mine = playerTeam(f, { trainingBonus: f.week.trainingFocus ? scaledBonus(trainingBonus(staffMember(f, 'monster_trainer'), f.week.trainingFocus), f.week.trainingFactor ?? 1) : null });
   const theirs = aiTeam(f, oppName, undefined, { scouting: playerProfile(f, { opponent: oppName }) });
   const rival = f.rivals[f.tier]?.team === oppName;
   withCaptains(f, mine, f.club); withCaptains(f, theirs, oppName); // Captain Partnerships (GDD §27.4B): the level is read here and fixed at kickoff
-  return { home: home === f.club ? mine : theirs, away: away === f.club ? mine : theirs, playerSide: home === f.club ? 'home' : 'away', opponent: oppName, tag, rival, playoff: !!po, forfeit: !!mine.forfeit, forfeitReason: mine.forfeitReason || null };
+  return { home: home === f.club ? mine : theirs, away: away === f.club ? mine : theirs, playerSide: home === f.club ? 'home' : 'away', opponent: oppName, tag, ...(tagL ? { tagL: lineFields(tagL) } : {}), rival, playoff: !!po, forfeit: !!mine.forfeit, forfeitReason: mine.forfeitReason || null };
 }
 
 // ------------------------------------------------------------ development slots (Task 6 Phase C, GM slots; GDD §57)
@@ -2311,7 +2315,7 @@ export function finishSunday(f, gameState) {
   save();
   injuriesAfterGame(f, it, ig);
   f.week.events = events;
-  f.week.gameResult = { ...res, won, playerScore: gameState.score[side], oppScore: gameState.score[oppSide], opponent: m.opponent, tag: m.tag };
+  f.week.gameResult = { ...res, won, playerScore: gameState.score[side], oppScore: gameState.score[oppSide], opponent: m.opponent, tag: m.tag, ...(m.tagL ? { tagL: m.tagL } : {}) };
   { const offense = {}, defense = {}; let passes = 0, plays = 0;
     for (const c of gameState.calls || []) { if (c.side === side) { offense[c.off] = (offense[c.off] || 0) + 1; plays++; if (PLAYS[c.off]?.type === 'pass') passes++; } else defense[c.def] = (defense[c.def] || 0) + 1; }
     (f.season.scouting ||= []).push({ week: f.season.week, opponent: m.opponent, offense, defense, passes, plays }); }
@@ -2341,7 +2345,7 @@ export function finishSunday(f, gameState) {
     if (!f.campaign.badges[m.opponent]) { f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}-${gameState.score[oppSide]}` }; f.campaign.lastBadge = { club: m.opponent, year: f.season.year, week: f.season.week, n: Object.keys(f.campaign.badges).length }; news(f, $L('franchise.badge_earned_the_badge_of_8', { badge: gym.badge, n: Object.keys(f.campaign.badges).length, name: gym.coach.name, opponent: m.opponent, club: f.club, score: gameState.score[side], score2: gameState.score[oppSide] }), 'win'); }
   }
   // Level-ups are shown after the game and on the Career Timeline; the club log keeps evolutions and injuries.
-  for (const e of events.filter((x) => x.kind !== 'xp' && x.kind !== 'levelup')) news(f, e.kind === 'levelup' ? $L('franchise.reached_level_ovr', { name: e.name, level: e.level, from: e.from, to: e.to, autoPoints: (f.settings.autoPoints ? '' : $L('franchise.2_attribute_points_to_spend_on'))}) : e.kind === 'evolve' ? `${$t('franchise.evolution_evolved_into_2', { from: e.from, to: e.to })}` : e.kind === 'injury' ? `${$t('franchise.injured_out_weeks', { name: e.name, severity: e.severity, weeks: e.weeks, n: e.weeks })}` : e.name, e.kind === 'evolve' ? 'win' : e.kind, e.id ? { mid: e.id, mname: e.kind === 'evolve' ? e.to : e.name } : null);
+  for (const e of events.filter((x) => x.kind !== 'xp' && x.kind !== 'levelup')) news(f, e.kind === 'levelup' ? $L('franchise.reached_level_ovr', { name: e.name, level: e.level, from: e.from, to: e.to, autoPoints: (f.settings.autoPoints ? '' : $L('franchise.2_attribute_points_to_spend_on'))}) : e.kind === 'evolve' ? $L('franchise.evolution_evolved_into_2', { from: e.from, to: e.to }) : e.kind === 'injury' ? $L('franchise.injured_out_weeks', { name: e.name, severity: e.severity, weeks: e.weeks, n: e.weeks }) : e.name, e.kind === 'evolve' ? 'win' : e.kind, e.id ? { mid: e.id, mname: e.kind === 'evolve' ? e.to : e.name } : null);
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
   f.game = null;
   recordPlayStats(f, gameState, side);
@@ -2497,7 +2501,7 @@ function endSeason(f) {
   // The board's goal (GDD §17.4): settled now, before the offseason.
   { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
     const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club, forecastWins: boardForecastFor(f, s.schedule.filter((g) => !g.bye).length || 9).wins });
-    if (verdict) { s.boardVerdict = verdict; news(f, verdict.met ? $L('franchise.board_goal_met_confidence_the_scouting', { label: verdict.goal.label, confidence: verdict.confidence >= 0 ? '+' : '', confidence2: verdict.confidence, confidence3: confidenceLabel(verdict.confidence) }) : verdict.status === 'fired' ? $L('franchise.board_goal_missed_wins_forecast_the', { label: verdict.goal.label, w: rec.w, forecastWins: verdict.goal.forecastWins ?? '?', reason: verdict.reason ? verdict.reason[0].toUpperCase() + verdict.reason.slice(1) + '.' : '' }) : verdict.status === 'warning' ? $L('franchise.board_goal_missed_narrowly_wins_forecast', { label: verdict.goal.label, w: rec.w, forecastWins: verdict.goal.forecastWins ?? '?' }) : verdict.status === 'hot_seat' ? $L('franchise.board_goal_missed_you_are_on', { label: verdict.goal.label }) : $L('franchise.board_goal_missed_confidence', { label: verdict.goal.label, confidence: verdict.confidence }), verdict.met ? 'win' : 'loss'); } }
+    if (verdict) { s.boardVerdict = verdict; news(f, verdict.met ? $L('franchise.board_goal_met_confidence_the_scouting', { label: fieldLine(verdict.goal, 'label'), confidence: verdict.confidence >= 0 ? '+' : '', confidence2: verdict.confidence, confidence3: confidenceLabel(verdict.confidence) }) : verdict.status === 'fired' ? $L('franchise.board_goal_missed_wins_forecast_the', { label: fieldLine(verdict.goal, 'label'), w: rec.w, forecastWins: verdict.goal.forecastWins ?? '?', reason: verdict.reason ? verdict.reason[0].toUpperCase() + verdict.reason.slice(1) + '.' : '' }) : verdict.status === 'warning' ? $L('franchise.board_goal_missed_narrowly_wins_forecast', { label: fieldLine(verdict.goal, 'label'), w: rec.w, forecastWins: verdict.goal.forecastWins ?? '?' }) : verdict.status === 'hot_seat' ? $L('franchise.board_goal_missed_you_are_on', { label: verdict.goal.label }) : $L('franchise.board_goal_missed_confidence', { label: fieldLine(verdict.goal, 'label'), confidence: verdict.confidence }), verdict.met ? 'win' : 'loss'); } }
   if (rec.w < rec.l || onHotSeat(f)) f.postseason = makePostseasonEvent(f); // a losing record, or the hot seat, makes one story event mandatory (GDD §15.7, §17.4)
   if (champion === f.club && legendChoices(f).length) f.legendPick = { year: s.year, resolved: false }; // Beast Bowl champions choose a Legend Track (GDD §15.8)
   // Campaign: league awards won by this club's monsters count toward the Hall of Fame.
@@ -2505,7 +2509,7 @@ function endSeason(f) {
   const mine = Object.entries(s.awards.league || {}).filter(([, w]) => w && w.team === f.club);
   f.campaign.awards += mine.length;
   s.finished = true;
-  checkAchievements(f, 'season', { wins: rec.w, losses: rec.l, champion: champion === f.club, awardsWon: mine.length, awardLine: mine.length ? mine.map(([k, w]) => `${w.name}: ${AWARDS[k]?.label || k}.`).join(' ') : '', wasHotSeat, goalMet: !!s.boardVerdict?.met });
+  checkAchievements(f, 'season', { wins: rec.w, losses: rec.l, champion: champion === f.club, awardsWon: mine.length, ...lineField('awardLine', mine.length ? $P(...mine.flatMap(([k, w], i) => [i ? ' ' : '', w.name, ': ', labelLine(AWARDS[k]?.label || k), '.'])) : ''), wasHotSeat, goalMet: !!s.boardVerdict?.met });
 }
 export const TIERS_ENABLED = false;
 

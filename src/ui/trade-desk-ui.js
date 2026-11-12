@@ -8,7 +8,7 @@ import * as F from '../franchise/franchise.js';
 import { monsterSprite } from './pixel-monster.js';
 import { careerLink } from './career-ui.js';
 import { monsterOverall, resolveSpecies } from '../data/monsters.js';
-import { t as $t } from '../text/index.js';
+import { t as $t, fieldText } from '../text/index.js';
 
 const pickText = (p) => `${yearOf(p.year)} R${p.round}${p.original ? ` (${esc(String(p.original).split(' ').pop())})` : ''}`;
 const pickLabel = (p) => `${yearOf(p.year)} R${p.round}`;
@@ -25,8 +25,8 @@ export function tradeStatusHtml(f) {
 }
 
 function monsterRow(m, side, on) {
-  const blocked = !!m.why;
-  const note = m.why || (side === 'theirs' && !m.forSale ? $t('market.a_starter_with_no_ready_replacement') : '');
+  const blocked = !!fieldText(m, 'why');
+  const note = fieldText(m, 'why') || (side === 'theirs' && !m.forSale ? $t('market.a_starter_with_no_ready_replacement') : '');
   return `<button type="button" class="item ${on ? 'mine' : ''}" data-m="${side}:${m.id}" data-sale="${side === 'theirs' && !m.forSale ? '0' : '1'}" aria-pressed="${on ? 'true' : 'false'}" ${blocked ? 'disabled' : ''} style="min-height:44px;padding:4px 8px;${on ? 'border-color:var(--accent)' : ''}">
     ${monsterSprite({ species: m.species, name: m.name, id: m.id }, 28)}<span class="grow" style="min-width:0"><b>${esc(m.name)}</b> <span class="dim" style="font-size:12px">${esc(m.position)} · ${m.ovr} OVR · ${m.age}y</span>
     <span class="chip ${m.role === 0 ? 'accent' : ''}" style="margin-left:4px">${ROLE[m.role] || 'bench'}</span>${m.injured ? ` <span title="${$t('market.out_for_weeks')}">🩹</span>` : ''}</span><span class="dim" style="font-size:12px">${fmtMoney(m.salary)}</span></button>${note ? `<div class="dim" style="font-size:11px;margin:-2px 0 4px 10px">${esc(note)}</div>` : ''}`;

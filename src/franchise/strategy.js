@@ -25,7 +25,7 @@ import { DRAFT_ROUNDS } from './draft.js';
 import { ALL_TEAMS } from '../data/league.js';
 import { isGymClub } from '../data/gyms.js';
 import { salaryFor } from '../data/monsters.js';
-import { t as $t } from '../text/index.js';
+import { t as $t, captured, lineField, fieldLine } from '../text/index.js';
 
 export const MODES = Object.freeze(['rebuild', 'retool', 'compete', 'contend']); // weakest ambition first: the index is the scale
 export const MODE_LABEL = Object.freeze({ contend: 'Contend', compete: 'Compete', retool: 'Retool', rebuild: 'Rebuild' });
@@ -60,14 +60,14 @@ export function strategyInputs(f, club, { year, cap, teamOf, aiMean }) {
 /** The mode the facts point to, before the stability rules. Returns { mode, why }. */
 export function rawMode(x, { ageingBar = STRATEGY.ageingShare } = {}) {
   const losing = x.recent <= STRATEGY.losing, winning = x.recent >= STRATEGY.winning;
-  if ((winning && x.quality >= 0) || (!losing && x.quality >= STRATEGY.contendQuality)) return { mode: 'contend', why: winning ? $t('franchise.winning_with_a_strong_roster') : $t('franchise.a_roster_well_above_the_league') };
+  if ((winning && x.quality >= 0) || (!losing && x.quality >= STRATEGY.contendQuality)) return { mode: 'contend', ...lineField('why', captured(() => winning ? $t('franchise.winning_with_a_strong_roster') : $t('franchise.a_roster_well_above_the_league')))};
   if (losing) {
-    if (x.ageingShare >= ageingBar) return { mode: 'rebuild', why: $t('franchise.losing_with_an_aging_roster') };
-    if (x.committedShare >= STRATEGY.cappedShare) return { mode: 'rebuild', why: $t('franchise.losing_and_capped_out') };
-    if (x.extraPicks >= STRATEGY.extraPicks) return { mode: 'rebuild', why: $t('franchise.losing_with_extra_draft_picks') };
-    return { mode: 'retool', why: $t('franchise.losing_with_a_young_roster') };
+    if (x.ageingShare >= ageingBar) return { mode: 'rebuild', ...lineField('why', captured(() => $t('franchise.losing_with_an_aging_roster')))};
+    if (x.committedShare >= STRATEGY.cappedShare) return { mode: 'rebuild', ...lineField('why', captured(() => $t('franchise.losing_and_capped_out')))};
+    if (x.extraPicks >= STRATEGY.extraPicks) return { mode: 'rebuild', ...lineField('why', captured(() => $t('franchise.losing_with_extra_draft_picks')))};
+    return { mode: 'retool', ...lineField('why', captured(() => $t('franchise.losing_with_a_young_roster')))};
   }
-  return { mode: 'compete', why: $t('franchise.between_the_two') };
+  return { mode: 'compete', ...lineField('why', captured(() => $t('franchise.between_the_two')))};
 }
 /**
  * The stability rules. `cur` the stored state ({ mode, modeSince, modePending }), `raw` the raw mode, `year` the season just played.
@@ -95,8 +95,8 @@ export function evaluateStrategies(f, { year, cap, teamOf }) {
   for (const club of clubs) {
     const st = clubRecord(f, club).strategy; const x = inputs[club]; const raw = rawMode(x, { ageingBar: st.mode === 'rebuild' ? Math.max(ageingBar, median) : ageingBar }); // F1 (owner-approved 2026-11-03): a club already rebuilding stays "old" only while its ageing share is at or above the league median
     const before = st.mode || null; const n = nextMode(st, raw.mode, year, { gym: isGymClub(club) });
-    st.mode = n.mode; st.modeSince = n.modeSince; st.modePending = n.modePending; st.modeLastWin = Math.round(x.win * 1000) / 1000; st.modeWhy = raw.why;
-    if (n.mode !== before) changes.push({ club, mode: n.mode, from: before, why: raw.why });
+    st.mode = n.mode; st.modeSince = n.modeSince; st.modePending = n.modePending; st.modeLastWin = Math.round(x.win * 1000) / 1000; Object.assign(st, lineField('modeWhy', fieldLine(raw, 'why'))); if (!raw.whyL) delete st.modeWhyL;
+    if (n.mode !== before) changes.push({ club, mode: n.mode, from: before, ...lineField('why', fieldLine(raw, 'why')) });
   }
   return changes;
 }

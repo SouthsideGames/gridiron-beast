@@ -12,7 +12,7 @@ import { TEAM_META } from '../data/league.js';
 import { yearOf } from '../data/calendar.js';
 import { POSITION_NAME } from '../data/stat-guide.js';
 import { esc, sheet } from './dom.js';
-import { t as $t } from '../text/index.js';
+import { t as $t, fieldText } from '../text/index.js';
 
 const statScope = {}; // per monster id: 'career' | 'season'
 const clubColor = (c) => TEAM_META[c]?.color || '#9fb8ad';
@@ -90,7 +90,7 @@ export function detailHtml(f, m, d, p) {
       <div class="kv">${d.opp ? `${$t('career.b_final_b')}<span>${$t('career.beat_the', { opp: esc(d.opp) })}${d.score ? ` <b class="mono">${esc(d.score)}</b>` : ''}${d.ot ? ' (OT)' : ''}${d.venue ? ` · ${esc(d.venue)}` : ''}</span>` : ''}${d.record ? `${$t('career.b_season_b')}<span class="mono">${d.record.w}-${d.record.l}${d.record.t ? `-${d.record.t}` : ''}${d.playoffs ? ` ${$t('career.playoffs_2', { w: d.playoffs.w, l: d.playoffs.l })}` : ''}</span>` : ''}${$t('career.b_his_part_b')}<span>${esc(d.role)}</span>${d.line ? `${$t('career.b_playoffs_b_2')}<span>${$t('career.games', { games: d.line.games, n: d.line.games })}${d.line.text ? ` · ${esc(d.line.text)}` : ''}</span>` : ''}</div>${missing}
       ${d.ceremony && f && p?.where === 'roster' ? `<button class="btn block" data-action="dt-ceremony" data-year="${d.year}" style="margin-top:8px">${$t('career.watch_the_ceremony_again')}</button>` : ''}`;
     case 'award': return `<div class="dt-hero gold"><span class="dt-icon">${TROPHY_META[d.key]?.icon || '🏅'}</span><div><div class="dt-title">${esc(d.label)}</div><div class="dt-sub">${yearOf(d.year)} · ${club(d.club)}${d.record ? ` <span class="dim">${esc(d.record)} club</span>` : ''}</div></div></div>
-      ${d.why ? `<p class="dt-why">${esc(d.why.split(' · ')[0])}</p>` : ''}${d.line ? `<div class="kv">${$t('career.b_season_b')}<span>${d.line.games ? `${$t('career.games_2', { games: d.line.games })} ` : ''}${esc(d.line.text || '')}</span></div>` : ''}${missing}`;
+      ${fieldText(d, 'why') ? `<p class="dt-why">${esc(fieldText(d, 'why').split(' · ')[0])}</p>` : ''}${d.line ? `<div class="kv">${$t('career.b_season_b')}<span>${d.line.games ? `${$t('career.games_2', { games: d.line.games })} ` : ''}${esc(d.line.text || '')}</span></div>` : ''}${missing}`;
     case 'record': return `<div class="dt-hero"><span class="dt-icon">📜</span><div><div class="dt-title">${$t('career.league_record', { scope: d.scope === 'game' ? 'one game' : 'one season' })}</div><div class="dt-sub">${yearOf(d.year)}${d.week ? `${$t('career.week', { week: d.week })}` : ''} · ${club(d.club)}</div></div></div>
       <div class="dt-big mono">${fmtN(d.value)} <span>${esc(d.stat)}</span></div>
       <div class="kv">${d.opp ? `${$t('career.b_against_b')}<span>the ${esc(d.opp)}</span>` : ''}${d.game ? `${$t('career.b_result_b')}<span>${d.game.won ? $t('career.won') : $t('career.lost')} <b class="mono">${esc(d.game.score)}</b></span>` : ''}${$t('career.b_today_b')}<span>${d.standing ? `<b class="good">${$t('career.still_the_league_record')}</b>` : d.brokenBy ? `${$t('career.since_broken_by_with_in', { name: esc(d.brokenBy.name || d.brokenBy.team), team: esc(d.brokenBy.team || ''), n: fmtN(d.brokenBy.value), year: yearOf(d.brokenBy.year) })}` : $t('career.the_records_book_has_moved_on')}</span>${d.prev ? `${$t('career.b_he_broke_b')}<span>${esc(d.prev.name || d.prev.team || '')}'s ${fmtN(d.prev.value)}${d.prev.year != null ? ` (${yearOf(d.prev.year)})` : ''}</span>` : ''}</div>`;

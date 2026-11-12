@@ -23,7 +23,7 @@ const plain = (v, key = '') => {
   if (typeof v === 'number' || typeof v === 'boolean' || v === null) return v;
   if (typeof v === 'string') return /^[\w:#|.+\-/]*$/.test(v) && !wording.has(v) ? v : undefined;
   if (Array.isArray(v)) return v.map((x) => plain(x) ?? null);
-  if (v && typeof v === 'object') { const o = {}; for (const k of Object.keys(v)) { if (k === 'createdAt' || k === 'uid') continue; const x = plain(v[k], k); if (x !== undefined) o[k] = x; } return o; }
+  if (v && typeof v === 'object') { const o = {}; for (const k of Object.keys(v)) { if (k === 'createdAt' || k === 'uid' || k === 'tk' || k === 'tv' || k === 'tp' || (k.endsWith('L') && k.slice(0, -1) in v)) continue; const x = plain(v[k], k); if (x !== undefined) o[k] = x; } return o; }   // a saved line's key and values are where its wording came from, not state
   return undefined;
 };
 const sha = (x) => createHash('sha256').update(JSON.stringify(x)).digest('hex');
@@ -43,7 +43,7 @@ const fold = (k) => (/^(mvp|opoy|dpoy|oroy|droy|coy|smoy)$/.test(k) ? '<award>' 
 const note = (v, path) => {
   if (typeof v === 'string') { if (!(/^[\w:#|.+\-/]*$/.test(v) && !wording.has(v))) (places[path] ||= createHash('sha256')).update(v + '\u0001'); return; }
   if (Array.isArray(v)) { for (const x of v) note(x, `${path}[]`); return; }
-  if (v && typeof v === 'object') for (const k of Object.keys(v)) { if (k === 'createdAt' || k === 'uid' || (k === 'text' && (v.tk || v.tp))) continue; note(v[k], path ? `${path}.${fold(k)}` : fold(k)); }   // a saved line's `text` is only its English copy
+  if (v && typeof v === 'object') for (const k of Object.keys(v)) { if (k === 'createdAt' || k === 'uid' || (k === 'text' && (v.tk || v.tp)) || v[`${k}L`]) continue; note(v[k], path ? `${path}.${fold(k)}` : fold(k)); }   // a saved line's sentence is only its copy (text beside tk / tp, or `why` beside `whyL`)
 };
 note(r.f, '');
 out.saved = Object.fromEntries(Object.entries(places).map(([k, h]) => [k, h.digest('hex').slice(0, 16)]));

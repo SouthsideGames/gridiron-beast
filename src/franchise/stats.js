@@ -291,16 +291,16 @@ export function leadersSnapshot(table) {
 /** Short stat line for a row, position-aware (used by award sheets and leaders). */
 export function statLine(r) {
   const d = withDerived(r); const b = [];
-  if (d.att) b.push(`${d.comp || 0}/${d.att}, ${d.passYds || 0} yds, ${d.passTd || 0} TD, ${d.intThrown || 0} INT${d.rating != null ? `${$t('franchise.rtg', { rating: d.rating })}` : ''}`);
-  if (d.rush) b.push(`${$t('franchise.car_yds', { rush: d.rush, rushYds: d.rushYds || 0 })}${d.rushTd ? `, ${d.rushTd} TD` : ''}`);
-  if (d.rec || d.targets) b.push(`${$t('franchise.rec_yds_2', { rec: d.rec || 0, targets: d.targets || 0, recYds: d.recYds || 0 })}${d.recTd ? `, ${d.recTd} TD` : ''}`);
+  if (d.att) b.push(`${$t('franchise.yds_td_int', { comp: d.comp || 0, att: d.att, yds: d.passYds || 0, td: d.passTd || 0, int: d.intThrown || 0 })}${d.rating != null ? `${$t('franchise.rtg', { rating: d.rating })}` : ''}`);
+  if (d.rush) b.push(`${$t('franchise.car_yds', { rush: d.rush, rushYds: d.rushYds || 0 })}${d.rushTd ? $t('franchise.td', { td: d.rushTd }) : ''}`);
+  if (d.rec || d.targets) b.push(`${$t('franchise.rec_yds_2', { rec: d.rec || 0, targets: d.targets || 0, recYds: d.recYds || 0 })}${d.recTd ? $t('franchise.td', { td: d.recTd }) : ''}`);
   if (d.pbSnaps && !d.att && !d.rush && !d.rec) b.push(`${$t('franchise.blocks_won_sacks_allowed', { blockWinPct: d.blockWinPct ?? '·', sacksAllowed: d.sacksAllowed || 0 })}`);
-  if (d.tacklesTotal) b.push(`${d.tacklesTotal} tkl${d.tfl ? `${$t('franchise.tfl', { tfl: d.tfl })}` : ''}`);
-  if (d.sacks) b.push(`${d.sacks} sacks`); if (d.pressures) b.push(`${d.pressures} press`);
-  if (d.int) b.push(`${$t('franchise.int', { int: d.int })}`); if (d.pd) b.push(`${d.pd} PD`); if (d.ff) b.push(`${d.ff} FF`);
+  if (d.tacklesTotal) b.push(`${$t('franchise.tkl', { tackles: d.tacklesTotal })}${d.tfl ? `${$t('franchise.tfl', { tfl: d.tfl })}` : ''}`);
+  if (d.sacks) b.push($t('franchise.sacks', { sacks: d.sacks })); if (d.pressures) b.push($t('franchise.press', { pressures: d.pressures }));
+  if (d.int) b.push(`${$t('franchise.int', { int: d.int })}`); if (d.pd) b.push($t('franchise.pd', { pd: d.pd })); if (d.ff) b.push($t('franchise.ff', { ff: d.ff }));
   if (d.covTargets) b.push(`${$t('franchise.allowed_yds', { recAllowed: d.recAllowed || 0, covTargets: d.covTargets, ydsAllowed: d.ydsAllowed || 0 })}`);
-  if (d.fga || d.xpa) b.push(`${d.fgm || 0}/${d.fga || 0} FG, ${d.xpm || 0}/${d.xpa || 0} XP`);
-  if (d.fumLost) b.push(`${d.fumLost} FL`);
+  if (d.fga || d.xpa) b.push($t('franchise.fg_xp', { fgm: d.fgm || 0, fga: d.fga || 0, xpm: d.xpm || 0, xpa: d.xpa || 0 }));
+  if (d.fumLost) b.push($t('franchise.fl', { lost: d.fumLost }));
   return b.join(' · ');
 }
 

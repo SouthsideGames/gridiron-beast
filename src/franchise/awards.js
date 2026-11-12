@@ -11,7 +11,7 @@
 import { leagueRows, withDerived, statLine, OFFENSE_POSITIONS, DEFENSE_POSITIONS } from './stats.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
 import { hashString } from '../core/rng.js';
-import { t as $t } from '../text/index.js';
+import { t as $t, captured, lineField } from '../text/index.js';
 
 export const AWARDS = Object.freeze({
   mvp: { label: $t('franchise.most_valuable_monster'), short: 'MVP' }, opoy: { label: $t('franchise.offensive_monster_of_the_year'), short: 'OPOY' }, dpoy: { label: $t('franchise.defensive_monster_of_the_year'), short: 'DPOY' },
@@ -93,32 +93,32 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
   const defScore = (r) => { const w = DEF_WEIGHTS[r.position] || DEF_WEIGHTS.LB; const c = { passRush: Z.passRush(r), takeaways: Z.takeaways(r), coverage: Z.coverage(r), runDefense: Z.runDefense(r) }; const s = Object.entries(w).reduce((a, [k, wt]) => a + wt * c[k], 0); return { s, c, prod: DEF.passRush(r) + DEF.runDefense(r) + DEF.takeaways(r) }; };
   const finalist = (r, { s, c, prod }, extraWhy = '') => {
     const best = Object.entries(c).filter(([k]) => COMPONENT_LABEL[k]).sort((a, b) => b[1] - a[1])[0];
-    const why = `${best && best[1] > 0.5 ? `${$t('franchise.elite_for_a', { componentLabel: COMPONENT_LABEL[best[0]], position: r.position })}` : `${$t('franchise.solid_across_the_board_for_a', { position: r.position })}`}${extraWhy} · ${statLine(r)}`;
-    return { ...r, score: Math.round(s * 100) / 100, prod, components: Object.fromEntries(Object.entries(c).map(([k, v]) => [k, Math.round(v * 100) / 100])), why, record: recordOf(r.team), minGames, rookie: r.yearsPro === 0 };
+    const why = captured(() => `${best && best[1] > 0.5 ? `${$t('franchise.elite_for_a', { componentLabel: COMPONENT_LABEL[best[0]], position: r.position })}` : `${$t('franchise.solid_across_the_board_for_a', { position: r.position })}`}${typeof extraWhy === 'function' ? extraWhy() : extraWhy} · ${statLine(r)}`);
+    return { ...r, score: Math.round(s * 100) / 100, prod, components: Object.fromEntries(Object.entries(c).map(([k, v]) => [k, Math.round(v * 100) / 100])), ...lineField('why', why), record: recordOf(r.team), minGames, rookie: r.yearsPro === 0 };
   };
   const top = (list) => list.sort(tieBreak).slice(0, n);
   const opoy = top(off.map((r) => finalist(r, offScore(r))));
   const dpoy = top(def.map((r) => finalist(r, defScore(r))));
   const mvp = top([
-    ...off.map((r) => { const o = offScore(r); const indiv = o.s * (MVP_RESPONSIBILITY[r.position] || 1); const team = (winPct(r.team) - 0.5) * 3; const s = indiv * 0.75 + team * 0.2 + avail(r) * 0.3; return finalist(r, { s, c: { ...o.c, team: team }, prod: o.prod }, `${$t('franchise.club', { record: recordOf(r.team) })}`); }),
-    ...def.map((r) => { const d = defScore(r); const team = (winPct(r.team) - 0.5) * 3; const s = d.s * MVP_RESPONSIBILITY.DEF * 0.75 + team * 0.2 + avail(r) * 0.3; return finalist(r, { s, c: { ...d.c, team }, prod: d.prod }, `${$t('franchise.club', { record: recordOf(r.team) })}`); }),
+    ...off.map((r) => { const o = offScore(r); const indiv = o.s * (MVP_RESPONSIBILITY[r.position] || 1); const team = (winPct(r.team) - 0.5) * 3; const s = indiv * 0.75 + team * 0.2 + avail(r) * 0.3; return finalist(r, { s, c: { ...o.c, team: team }, prod: o.prod }, () => $t('franchise.club', { record: recordOf(r.team) })); }),
+    ...def.map((r) => { const d = defScore(r); const team = (winPct(r.team) - 0.5) * 3; const s = d.s * MVP_RESPONSIBILITY.DEF * 0.75 + team * 0.2 + avail(r) * 0.3; return finalist(r, { s, c: { ...d.c, team }, prod: d.prod }, () => $t('franchise.club', { record: recordOf(r.team) })); }),
   ]);
-  const oroy = top(off.filter((r) => r.yearsPro === 0).map((r) => finalist(r, offScore(r), $t('franchise.rookie'))));
-  const droy = top(def.filter((r) => r.yearsPro === 0).map((r) => finalist(r, defScore(r), $t('franchise.rookie'))));
+  const oroy = top(off.filter((r) => r.yearsPro === 0).map((r) => finalist(r, offScore(r), () => $t('franchise.rookie'))));
+  const droy = top(def.filter((r) => r.yearsPro === 0).map((r) => finalist(r, defScore(r), () => $t('franchise.rookie'))));
   const coy = Object.entries(records).map(([team, rec]) => {
     const g = rec.w + rec.l + (rec.t || 0); if (!g) return null;
     const ex = expectations[team] || {}; const expected = ex.expectedWinPct ?? 0.5; const last = ex.lastWinPct;
     const actual = rec.w / g; const over = actual - expected; const improve = last == null ? 0 : actual - last; const margin = ((rec.pf || 0) - (rec.pa || 0)) / g;
     const score = over * g * 2 + improve * g * 1 + margin * 0.08 + rec.w * 0.15;
-    const why = `${$t('franchise.wins_vs_the_preseason_forecast_from', { over: over >= 0 ? '+' : '', over2: (over * g).toFixed(1), expected: (expected * g).toFixed(1), talent: ex.talent ?? '?' })}${last != null ? `${$t('franchise.on_last_season', { improve: improve >= 0 ? 'up' : 'down', improve2: Math.abs(improve * g).toFixed(1) })}` : ''}${$t('franchise.points_per_game', { margin: margin >= 0 ? '+' : '', toFixed: margin.toFixed(1) })}`;
-    return { team, coach: coachOf(team), w: rec.w, l: rec.l, pf: rec.pf || 0, pa: rec.pa || 0, talent: ex.talent ?? null, expected: Math.round(expected * g * 10) / 10, score: Math.round(score * 100) / 100, why, record: recordOf(team), name: coachOf(team), prod: over, games: g };
+    const why = captured(() => `${$t('franchise.wins_vs_the_preseason_forecast_from', { over: over >= 0 ? '+' : '', over2: (over * g).toFixed(1), expected: (expected * g).toFixed(1), talent: ex.talent ?? '?' })}${last != null ? `${$t('franchise.on_last_season', { improve: improve >= 0 ? 'up' : 'down', improve2: Math.abs(improve * g).toFixed(1) })}` : ''}${$t('franchise.points_per_game', { margin: margin >= 0 ? '+' : '', toFixed: margin.toFixed(1) })}`);
+    return { team, coach: coachOf(team), w: rec.w, l: rec.l, pf: rec.pf || 0, pa: rec.pa || 0, talent: ex.talent ?? null, expected: Math.round(expected * g * 10) / 10, score: Math.round(score * 100) / 100, ...lineField('why', why), record: recordOf(team), name: coachOf(team), prod: over, games: g };
   }).filter(Boolean).sort(tieBreak).slice(0, n);
   // Signature Monster of the Year: ability impact per game across the whole league (position-free), at least one firing per game.
   // Effectiveness = impact per firing × √(firings per game, capped at 6): a clutch ability that changes a few plays a game beats one that fires every snap for a yard.
   const sig = rows.filter((r) => (r.abilityPlays || 0) >= (r.games || 1));
   const eff = (r) => ((r.abilityImpact || 0) / Math.max(1, r.abilityPlays || 0)) * Math.sqrt(Math.min(6, perGame(r, r.abilityPlays || 0)));
   const zSig = (() => { const v = sig.map(eff); const m = v.reduce((a, b) => a + b, 0) / (v.length || 1); const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / (v.length || 1)); return (r) => (sd < 1e-6 ? 0 : (eff(r) - m) / sd); })();
-  const smoy = top(sig.map((r) => { const s = zSig(r); return { ...r, score: Math.round(s * 100) / 100, prod: r.abilityImpact || 0, components: { effectiveness: Math.round(zSig(r) * 100) / 100 }, why: `${$t('franchise.ability_fired_times_impact_per_firing', { abilityPlays: r.abilityPlays, abilityImpact: ((r.abilityImpact || 0) / Math.max(1, r.abilityPlays)).toFixed(1), abilityImpact2: (r.abilityImpact || 0) >= 0 ? '+' : '', abilityImpact3: r.abilityImpact || 0, statLine: statLine(r) })}`, record: recordOf(r.team), minGames, rookie: r.yearsPro === 0 }; }));
+  const smoy = top(sig.map((r) => { const s = zSig(r); return { ...r, score: Math.round(s * 100) / 100, prod: r.abilityImpact || 0, components: { effectiveness: Math.round(zSig(r) * 100) / 100 }, ...lineField('why', captured(() => `${$t('franchise.ability_fired_times_impact_per_firing', { abilityPlays: r.abilityPlays, abilityImpact: ((r.abilityImpact || 0) / Math.max(1, r.abilityPlays)).toFixed(1), abilityImpact2: (r.abilityImpact || 0) >= 0 ? '+' : '', abilityImpact3: r.abilityImpact || 0, statLine: statLine(r) })}`)), record: recordOf(r.team), minGames, rookie: r.yearsPro === 0 }; }));
   return { mvp, opoy, dpoy, oroy, droy, coy, smoy, minGames, weeks };
 }
 
