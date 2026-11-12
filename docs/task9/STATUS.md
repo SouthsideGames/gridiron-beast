@@ -20,7 +20,7 @@ The owner's own Hall of Fame card (the GM Hall of Fame) is unchanged and separat
 
 ## Verification (2026-11-12)
 
-- **Full suite:** 2,088 of 2,088 passed at 4fedf4c (`npm test`, 51 min, nothing else running). It includes 20 new tests in `tests/task9-history-screens.test.js` and `tests/task9-save-compat.test.js`.
+- **Full suite:** 2,088 of 2,088 passed at 4fedf4c (`npm test`, 51 min, nothing else running). It includes 10 new tests in `tests/task9-history-screens.test.js` and `tests/task9-save-compat.test.js`.
 - **Real franchises:** two hands-off franchises played to the 20-season limit with `tools/task9-history-study.mjs`, on this branch and on `main`.
   - All 40 seasons give the same save digest on both builds, leaving out the Hall data and the saved-line origin notes (which depend on what was read on screen and which no rule reads).
   - No problems from the per-season checks: one election per season, nobody inducted twice, while active or early; candidates match preserved retirement records; awards, records and season summaries match the franchise; every inductee opens a career page; a JSON round trip changes nothing.
