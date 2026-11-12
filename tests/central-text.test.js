@@ -97,3 +97,12 @@ test('buttons and titles that now read from en.js are still Title Case', () => {
 test('text never decides anything: the engines and the save code do not read the central text', () => {
   for (const [rel, s] of files) if (/^src\/(sim|clash|core)\//.test(rel) || /^src\/franchise\/(save|store|slots|cloud-save)\.js$/.test(rel)) assert.ok(!/text\/index\.js/.test(s), `${rel} imports the text module`);
 });
+
+test('names stay in English in every language: stadium and reporter names cannot be replaced by a translation', async () => {
+  const { KEEP_ENGLISH } = await import('../src/text/names.js'); assert.ok(KEEP_ENGLISH.size >= 22);
+  for (const k of KEEP_ENGLISH) assert.equal(typeof en[k], 'string', `${k} is a line in en.js`);
+  for (const name of ['Howling Glacier Bowl', 'Palmetto Grove', 'Dirk Stirwell', 'Dr. Prudence Ledger', 'Toby Fumbleton', 'The Daily Snap']) assert.ok([...KEEP_ENGLISH].some((k) => en[k] === name), name);
+  const some = [...KEEP_ENGLISH][0];
+  try { setLanguage('fr', { [some]: 'Traduit', 'menu.week': 'Semaine {week}', 'not.a_key': 'x' }); assert.equal(t(some), en[some], 'the name is kept'); assert.equal(t('menu.week', { week: 2 }), 'Semaine 2'); assert.equal(t('not.a_key'), 'not.a_key'); }
+  finally { setLanguage('en'); }
+});

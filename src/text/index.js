@@ -7,12 +7,16 @@
 // A language is chosen once, before the game starts drawing (setLanguage), because data modules read their text when they load.
 // Text never decides anything: no rule, id or saved value is taken from here.
 import en from './en.js';
+import { KEEP_ENGLISH } from './names.js';
 
 let table = en; let code = 'en'; let plural = null;
 const rule = () => (plural ||= (() => { try { return new Intl.PluralRules(code); } catch { return new Intl.PluralRules('en'); } })());
 
 /** Use another language's table (same keys as en.js; missing keys fall back to English). */
-export function setLanguage(lang, strings) { code = lang || 'en'; table = strings ? { ...en, ...strings } : en; plural = null; }
+export function setLanguage(lang, strings) {
+  code = lang || 'en'; plural = null;
+  table = strings ? { ...en, ...Object.fromEntries(Object.entries(strings).filter(([k]) => k in en && !KEEP_ENGLISH.has(k))) } : en; // names stay English; unknown keys are ignored
+}
 export const language = () => code;
 
 export function t(key, vars = null) {

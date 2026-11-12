@@ -41,13 +41,16 @@ The tool gives each piece of wording a key, writes it to `en.js`, and replaces i
 2. For data files, confirm the module's exports are identical before and after.
 3. For screens, render them before and after and compare the HTML. Stage 1: 333 renders across 64 screens and the new-franchise flow were byte-identical, apart from the browser's own storage estimate.
 
-### Decisions still open
+### Decisions (owner, 2026-11-11)
+
+1. **Names stay in English in every language:** club, stadium, species and reporter names, and the reporters' outlets. `src/text/names.js` lists their keys; a translation cannot replace them.
+2. **Saved text follows the language:** news items and headlines will be saved as a key plus its values (stage 3), so old news shows in whatever language is chosen. Text already saved as sentences in existing franchises stays as written.
+3. **Game logs move too** (stage 6): the engines will record keys and values, and the Clash reference battles will be re-recorded once more, with the same proof as before that no battle changed.
+
+### Still open
 
 1. **Words that are both a saved value and a label** (for example the owner's gender, "Female" and "Male") are still in the code. Translating them needs a small code change to separate the value from the label.
-2. **Names:** whether club, stadium, species and reporter names are translated or kept in English.
-3. **Text saved into a franchise** (news items, headlines) stays in the language it was written in. Showing old news in a newly chosen language would mean saving keys instead of sentences.
-4. **Game logs** (stage 6): the Beast Clash reference battles hash each log line's wording. Moving that wording behind keys means the engine records keys and values and the screen turns them into sentences, which changes those reference hashes once more.
-5. **Value names** in a few lines are machine-chosen (`{b}`, `{played2}`). They work; renaming them for translators is a tidy-up.
+2. **Value names** in a few lines are machine-chosen (`{b}`, `{played2}`). They work; renaming them for translators is a tidy-up.
 
 ## The full listing
 
