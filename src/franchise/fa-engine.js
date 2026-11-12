@@ -28,7 +28,7 @@ import { personaOf, responseWindow } from './fa-personality.js';
 import { leagueYear, hasFreeAgency, noteSigned, returnLock } from './fa-state.js';
 import { ambitionOf, AMBITION, moodOf, talkChance, isHomeClub, draw, clueFor } from './ambition.js';
 import { OFFENSE_GROUPS, DEFENSE_GROUPS } from './roster.js';
-import { t as $t, line as $L, lineParts as $P } from '../text/index.js';
+import { t as $t, line as $L, lineParts as $P, captured, lineField, fieldLine } from '../text/index.js';
 
 export const FA_RULES = Object.freeze({
   periods: 5,               // free-agency periods before the draft (decisions 12, 27)
@@ -249,7 +249,7 @@ export const periodNow = (f) => fa(f)?.period ?? null;
 export const deadlineFor = (f, m) => Math.min(FA_RULES.periods, (periodNow(f) || 1) + responseWindow(m));
 
 function logTx(f, e) { const L = (fa(f).log ||= []); L.push({ ly: leagueYear(f), p: periodNow(f), ...e }); if (L.length > 300) L.splice(0, L.length - 300); }
-function close(f, o, state, why = null) { if (!LIVE.has(o.state)) return false; o.state = state; o.closed = { p: periodNow(f), why }; o.reserved = 0; return true; } // the reservation is released here, once
+function close(f, o, state, why = null) { if (!LIVE.has(o.state)) return false; o.state = state; o.closed = { p: periodNow(f), ...lineField('why', why) }; o.reserved = 0; return true; } // the reservation is released here, once
 
 /** R1 c: the monster an offer will release on signing, if he is still on the club and releasable; else null. */
 export const reliefOf = (f, o) => { if (!o?.release) return null; const m = rosterOf(f, o.club).find((x) => x.id === o.release); return m && !isProtected(m) ? m : null; };
@@ -316,7 +316,7 @@ export function sign(f, club, mid, terms, { offer = null, via = 'free_agent', st
   contract.bonusPaid = { by: club, ly: start }; // paid once; no refund on any departure (resolution 6)
   takeUnsigned(f, mid);
   if (offer) { offer.state = 'signed'; offer.reserved = 0; offer.closed = { p: periodNow(f), why: 'signed' }; }
-  for (const o of liveOffers(f, (x) => x.mid === mid)) close(f, o, 'rejected', `${$t('franchise.signed_with', { club })}`);
+  for (const o of liveOffers(f, (x) => x.mid === mid)) close(f, o, 'rejected', $L('franchise.signed_with', { club }));
   m.salary = contract.salary;
   if (isOwner(f, club)) { m.contract = contract; HOOKS.joinOwner?.(f, m, via, start); }
   else { if (relief) HOOKS.releaseAi?.(f, club, relief.id); addToClub(f, club, m, { year: start, via: 'signed', contract, salary: contract.salary, source: u.where === 'extra' ? 'pool' : u.where }); } // R1 c: validated together above, released and signed together here
@@ -396,7 +396,7 @@ export function talksOpen(f, m, club, { window = null } = {}) {
   const key = `${f.seed ?? 0}|${m.id}|${club}|${m.contract?.ends ?? leagueYear(f)}${window ? `|${window}` : ''}`; const open = draw(`talk|${key}`) < chance;
   const rk = (r) => (r === 'starter' ? 2 : r === 'backup' ? 1 : 0);
   const apply = { direction: outlook < 0.45, role: rk(mrole) > rk(role), home: home && open };
-  return { open, chance, apply, clue: clueFor(amb, apply, key, { talks: open }), key };
+  return { open, chance, apply, ...lineField('clue', captured(() => clueFor(amb, apply, key, { talks: open }))), key };
 }
 
 // ------------------------------------------------------------ contract negotiations (owner 2026-11-05, 13:23)
@@ -445,7 +445,7 @@ export function negotiation(f, m, club, window, { peek = false } = {}) {
   const c = R == null ? NEG.unreachable : R / ask.salary; const share = Math.max(NEG.openRange[0], Math.min(NEG.openRange[1], 1 + NEG.margin + (NEG.gap[amb] || 0) + NEG.circumstance * (c - FA_RULES.tolerance)));
   const salary = toStep(ask.salary * share);
   const opening = { salary: Math.max(OFFER_STEP, salary), years: ask.years, bonus: 0 };
-  const neg = { key, mid: m.id, club, window, kind: window === 'renew' ? 'renewal' : 'extension', ly: leagueYear(f), ends: m.contract?.ends ?? null, opening, demand: { ...opening }, offers: [], state: t.open ? 'active' : 'no-talks', clue: t.clue, testsMarket: !t.open && window === 'renew', agreed: null };
+  const neg = { key, mid: m.id, club, window, kind: window === 'renew' ? 'renewal' : 'extension', ly: leagueYear(f), ends: m.contract?.ends ?? null, opening, demand: { ...opening }, offers: [], state: t.open ? 'active' : 'no-talks', ...lineField('clue', fieldLine(t, 'clue')), testsMarket: !t.open && window === 'renew', agreed: null };
   if (!peek) S[key] = neg; return neg; // `peek`: what he would say, without opening anything (screens never change the game)
 }
 /** Counteroffers left to the club in this negotiation. */

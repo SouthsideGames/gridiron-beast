@@ -274,7 +274,7 @@ export function eventDetail(f, m, ref) {
     case 'award': {
       const h = (f.history || []).find((x) => x.year === ref.year); const w = h?.awards?.league?.[ref.key] || (f.season?.awardsFinal?.year === ref.year ? f.season.awardsFinal.winners?.[ref.key] : null);
       const mine = w && w.id === m.id ? w : null; const reg = book(ref.year)?.reg || null;
-      return { kind: 'award', key: ref.key, label: TROPHY_META[ref.key]?.label || ref.key, year: ref.year, club: ref.club || mine?.team || null, why: mine?.why || null, record: mine?.record || null, line: reg && (reg.games || 0) > 0 ? { games: reg.games, text: statLine(reg) } : mine ? { games: mine.games || null, text: statLine(mine) } : null, missing: mine || reg ? null : $t('franchise.the_seasons_award_sheet_was_not') };
+      return { kind: 'award', key: ref.key, label: TROPHY_META[ref.key]?.label || ref.key, year: ref.year, club: ref.club || mine?.team || null, why: mine?.why || null, ...(mine?.whyL ? { whyL: mine.whyL } : {}), record: mine?.record || null, line: reg && (reg.games || 0) > 0 ? { games: reg.games, text: statLine(reg) } : mine ? { games: mine.games || null, text: statLine(mine) } : null, missing: mine || reg ? null : $t('franchise.the_seasons_award_sheet_was_not') };
     }
     case 'record': {
       const R = f.records || {}; const cur = ref.scope === 'game' ? R.game?.[ref.cat] : R.season?.[ref.cat];

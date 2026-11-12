@@ -4,7 +4,7 @@
 import { esc } from './dom.js';
 import { REASON_TEXT } from '../sim/qb-read.js';
 import { devDisplaysAllowed } from '../version.js';
-import { t as $t } from '../text/index.js';
+import { t as $t, fieldText } from '../text/index.js';
 
 /**
  * QB reads in the game itself (replay read list and ring, practice field, the live read ring) are a DEVELOPMENT display
@@ -37,7 +37,7 @@ export function qbReadLines(sim, name = (s) => s) {
   const q = sim?.qb; if (!q) return [];
   const out = []; let n = 0;
   for (const e of q.reads || []) {
-    if (e.kind === 'read') { n++; out.push({ t: e.t, kind: 'read', slot: e.slot, text: `Read ${n}: ${name(e.slot)} — ${e.why === 'fixed' ? `${REASON_TEXT.fixed}, ` : ''}${REASON_TEXT[e.reason] || e.reason}${e.why === 'revisit' ? $t('match.second_look') : ''}` }); }
+    if (e.kind === 'read') { n++; out.push({ t: e.t, kind: 'read', slot: e.slot, text: `Read ${n}: ${name(e.slot)} — ${fieldText(e, 'why') === 'fixed' ? `${REASON_TEXT.fixed}, ` : ''}${REASON_TEXT[e.reason] || e.reason}${fieldText(e, 'why') === 'revisit' ? $t('match.second_look') : ''}` }); }
     if (e.kind === 'pressure') out.push({ t: e.t, kind: 'pressure', text: `${$t('match.pressure_closing', { name: name(e.by, 'def') })}` });
   }
   const d = q.decision;

@@ -55,3 +55,38 @@ test('League News moves are saved lines, and the sentence is the same English as
   try { setLanguage('zz', other(keys)); assert.match(lineText(l), /«/); assert.match(lineText(JSON.parse(JSON.stringify(r))), /«/); assert.equal(lineEnglish(l), l.text); }
   finally { setLanguage('en'); }
 });
+
+// ---- sentences built by ordinary code (award citations, clues, goal labels): captured, recalled, and a record's field
+test('captured: the lines a builder reads are found inside its finished sentence, in any order, nested where one is a value of another', async () => {
+  const { captured, recording } = await import('../src/text/index.js');
+  const build = () => { const a = t('menu.week', { week: 3 }); const b = [t('menu.week', { week: 4 }), '5 yds'].join(' · '); return `${t('menu.stopped', { reason: a })} / ${b} end`; };
+  const c = captured(build);
+  assert.equal(c.text, build(), 'the sentence is exactly what the builder produced');
+  assert.deepEqual(c.tp, [{ tk: 'menu.stopped', tv: { reason: { tk: 'menu.week', tv: { week: 3 } } } }, ' / ', { tk: 'menu.week', tv: { week: 4 } }, ' · 5 yds end']);
+  assert.deepEqual(captured(() => t('menu.week', { week: 1 })), { text: 'Week 1', tk: 'menu.week', tv: { week: 1 } }, 'a sentence that is one line is that line');
+  assert.deepEqual(captured(() => 'nothing read'), { text: 'nothing read' });
+  const done = recording(); const s = `(${t('menu.week', { week: 8 })})`; assert.deepEqual(done(s).tp, ['(', { tk: 'menu.week', tv: { week: 8 } }, ')']);
+  try { setLanguage('zz', { 'menu.week': 'Semana {week}', 'menu.stopped': 'Parado: {reason}' }); assert.equal(lineText(c), 'Parado: Semana 3 / Semana 4 · 5 yds end'); }
+  finally { setLanguage('en'); }
+  assert.equal(lineText(c), c.text);
+});
+
+test('a record keeps a sentence and its line side by side; fieldText shows the line now, or the sentence of an older record', async () => {
+  const { captured, lineField, fieldText, fieldLine } = await import('../src/text/index.js');
+  const rec = { id: 1, ...lineField('why', captured(() => `${t('menu.week', { week: 2 })} · 12 tkl`)) };
+  assert.deepEqual(rec, { id: 1, why: 'Week 2 · 12 tkl', whyL: { tp: [{ tk: 'menu.week', tv: { week: 2 } }, ' · 12 tkl'] } });
+  assert.deepEqual(lineField('why', 'plain'), { why: 'plain' }); assert.deepEqual(lineField('why', captured(() => 'plain')), { why: 'plain' }, 'no line in it: saved alone');
+  assert.equal(fieldText({ why: 'written long ago' }, 'why'), 'written long ago'); assert.equal(fieldText(null, 'why'), '');
+  const copy = { ...lineField('reason', fieldLine(rec, 'why')) }; assert.deepEqual(copy, { reason: rec.why, reasonL: rec.whyL }, 'a line passes from one record to another');
+  try { setLanguage('zz', { 'menu.week': 'Semana {week}' }); assert.equal(fieldText(rec, 'why'), 'Semana 2 · 12 tkl'); assert.equal(rec.why, 'Week 2 · 12 tkl'); }
+  finally { setLanguage('en'); }
+});
+
+test('the stat line reads as before, and the Board goal offers carry their lines', async () => {
+  const { fieldText } = await import('../src/text/index.js'); const B = await import('../src/franchise/board.js'); const S = await import('../src/franchise/stats.js');
+  const line = S.statLine({ att: 20, comp: 12, passYds: 180, passTd: 2, intThrown: 1, tacklesTotal: 3, sacks: 2 });
+  assert.match(line, /^12\/20, 180 yds, 2 TD, 1 INT/); assert.match(line, /2 sacks/);
+  const old = importJson(readFileSync(new URL('./fixtures/save-v10-season2.json', import.meta.url), 'utf8')); const f = old.franchise || old.f || old;
+  const offers = B.goalOffers ? B.goalOffers(f) : F.commissionerGoals(f);
+  for (const o of offers) { assert.equal(fieldText(o, 'label'), o.label); assert.ok(o.labelL, `${o.id}: the label has its line`); }
+});

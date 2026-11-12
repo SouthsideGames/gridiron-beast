@@ -15,7 +15,7 @@ import { monsterOverall, resolveSpecies } from '../data/monsters.js';
 import { lineupProblems, buildDepthChart } from '../franchise/roster.js';
 import { positionOf } from '../data/personnel.js';
 import { yearOf } from '../data/calendar.js';
-import { t as $t } from '../text/index.js';
+import { t as $t, fieldText } from '../text/index.js';
 
 const fmt = (n) => Math.round(n || 0).toLocaleString('en-US');
 const POS = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'CB', 'S', 'K'];
@@ -70,10 +70,10 @@ function myOffersHtml(f) {
 export function renewalOutlook(f, m) {
   if (!f.freeAgency?.v || !E.extensionEligible(f, m)) return null; const neg = F.extensionTalks(f, m.id); if (!neg) return null;
   const ask = E.askOf(f, m); const terms = { ...neg.demand };
-  if (neg.state === 'no-talks') return { label: $t('market.not_interested'), cls: 'bad', why: [neg.clue, $t('market.he_does_not_want_to_discuss')], ratio: 0, terms, talks: false, clue: neg.clue, state: neg.state, left: 0 };
+  if (neg.state === 'no-talks') return { label: $t('market.not_interested'), cls: 'bad', why: [fieldText(neg, 'clue'), $t('market.he_does_not_want_to_discuss')], ratio: 0, terms, talks: false, clue: fieldText(neg, 'clue'), state: neg.state, left: 0 };
   if (neg.state === 'ended') return { label: $t('market.not_interested'), cls: 'bad', why: [$t('market.talks_ended_in_this_window_a')], ratio: 0, terms, talks: false, clue: null, state: neg.state, left: 0 };
   const ratio = ask.salary / Math.max(1, neg.demand.salary); const label = ratio >= 1 / 1.05 ? $t('market.interested') : $t('market.listening');
-  const clue = ratio < 0.9 ? $t('market.he_is_looking_for_a_stronger') : neg.clue;
+  const clue = ratio < 0.9 ? $t('market.he_is_looking_for_a_stronger') : fieldText(neg, 'clue');
   return { label, cls: label === $t('market.interested') ? 'good' : 'warn', why: [clue, `${$t('market.he_opens_at_yr_for_seasons', { amount: fmt(neg.opening.salary), years: neg.opening.years, left: neg.left, left2: neg.left === 1 ? '' : 's', n: neg.opening.years })}`], ratio, terms, talks: true, clue, state: neg.state, left: neg.left };
 }
 /** R3: the GM Assistant's extension advice (optional, recommendations only): core monsters in their final season who are Interested now. */
@@ -134,7 +134,7 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
   const p = personaOf(m);
   const draw = () => {
     const neg = talks(); const negHtml = neg ? negotiationPanel(neg) : '';
-    const it = (() => { if (mode === 'renew') return interestOf(f, m, t); if (mode !== 'extend') return interestOf(f, m, t); const tk = E.talksOpen(f, m, f.club); return tk.open ? interestOf(f, m, t) : { label: $t('market.not_interested'), cls: 'bad', why: [tk.clue, $t('market.he_is_not_ready_to_discuss')], ratio: 0 }; })(); const block = mode === 'extend' || mode === 'renew' ? null : E.blocker(f, f.club, m, t, { own: mine, final: mode === 'now' });
+    const it = (() => { if (mode === 'renew') return interestOf(f, m, t); if (mode !== 'extend') return interestOf(f, m, t); const tk = E.talksOpen(f, m, f.club); return tk.open ? interestOf(f, m, t) : { label: $t('market.not_interested'), cls: 'bad', why: [fieldText(tk, 'clue'), $t('market.he_is_not_ready_to_discuss')], ratio: 0 }; })(); const block = mode === 'extend' || mode === 'renew' ? null : E.blocker(f, f.club, m, t, { own: mine, final: mode === 'now' });
     const sched = (() => { const start = mode === 'extend' ? (m.contract?.ends ?? 0) + 1 : mode === 'renew' ? f.season.year + 1 : (f.freeAgency?.leagueYear ?? f.season.year); const a = allocateBonus(t.bonus, t.years); return a.map((b, i) => ({ year: start + i, salary: t.salary, bonus: b, total: t.salary + b })); })();
     const rivals = E.competingOffers(f, id).filter((o) => o.club !== f.club);
     const hist = mine?.history || [];
@@ -143,7 +143,7 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
     return `<div class="row" style="gap:12px">${monsterSprite(m, 56)}<div class="grow"><div style="font-size:18px;font-weight:900">${legendSide(m) ? '🌟 ' : ''}${esc(m.name)}</div><div class="muted">${esc(m.position)} · ${monsterOverall(m)} OVR · age ${m.age} · ${esc(rarityOf(m))}</div><div class="muted">${$t('market.asks_yr_for_seasons', { amount: fmt(ask.salary), years: ask.years, n: ask.years })}</div></div></div>
       <div class="panel tight"><div class="row between">${$t('market.b_salary_per_season_b')}<span><button class="btn small" data-t="sal" data-d="-1000">−1k</button> <b>${fmt(t.salary)}</b> <button class="btn small" data-t="sal" data-d="1000">+1k</button></span></div>
         <div class="row between" style="margin-top:6px">${$t('market.b_seasons_b')}<span class="seg">${[1, 2, 3].map((y) => `<button class="btn small ${t.years === y ? 'primary' : ''}" data-t="yrs" data-v="${y}">${y}</button>`).join('')}</span></div>
-        <div class="row between" style="margin-top:6px">${$t('market.b_interest_b')}<span class="chip ${it.cls}">${it.label}</span></div><ul class="dim" style="margin:4px 0 0 16px;padding:0">${it.why.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
+        <div class="row between" style="margin-top:6px">${$t('market.b_interest_b')}<span class="chip ${it.cls}">${it.label}</span></div><ul class="dim" style="margin:4px 0 0 16px;padding:0">${fieldText(it, 'why').map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
         ${deadline ? `<div class="dim" style="margin-top:4px">${$t('market.he_answers_by_b_period_b', { deadline, mine: mode === 'offer' && !mine ? $t('market.his_patience_sets_it_revisions_keep') : '' })}</div>` : mode === 'now' ? `<div class="dim" style="margin-top:4px">${$t('market.outside_the_periods_he_answers_at')}</div>` : ''}</div>
       ${negHtml}${blockHtml}
       <details class="panel tight"><summary>${$t('market.b_advanced_b')} <span class="dim">${$t('market.bonus_priorities_competing_offers_cap_schedule')}</span></summary>
@@ -196,7 +196,7 @@ function negotiationPanel(neg) {
     ${neg.demand.salary !== neg.opening.salary || neg.demand.bonus ? `<div class="row between muted"><span>${$t('market.his_latest_counter')}</span><b>${fmt(neg.demand.salary)}/yr × ${neg.demand.years}${neg.demand.bonus ? ` + ${fmt(neg.demand.bonus)}` : ''}</b></div>` : ''}
     ${neg.offers.filter((o) => !o.free).map((o, i) => `<div class="row between dim"><span>${$t('market.your_counteroffer', { i: i + 1 })}</span><span>${fmt(o.salary)} × ${o.years}${o.bonus ? ` + ${fmt(o.bonus)}` : ''} · ${ans[o.answer] || o.answer}</span></div>`).join('')}
     <div class="row between muted"><span>${$t('market.counteroffers_left')}</span><b>${neg.left}</b></div>
-    ${neg.state === 'no-talks' && neg.clue ? `<div class="dim">${esc(neg.clue)}</div>` : ''}
+    ${neg.state === 'no-talks' && fieldText(neg, 'clue') ? `<div class="dim">${esc(fieldText(neg, 'clue'))}</div>` : ''}
     <div class="dim" style="font-size:12px">${$t('market.accepting_his_demand_is_binding_and')}</div></div>`;
 }
 function negButtons(neg, mode) {

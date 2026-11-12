@@ -14,7 +14,7 @@ import { hasLeague, clubPayroll } from '../../franchise/league-registry.js';
 import { clubDirectory, clubRosterView, universeCareerLeaders, protectedMonsters, headToHead } from '../../franchise/league-careers.js';
 import { TRANSACTION_KINDS } from '../../franchise/league-news.js';
 import * as F from '../../franchise/franchise.js';
-import { t as $t, lineText } from '../../text/index.js';
+import { t as $t, lineText, fieldText } from '../../text/index.js';
 
 const TAB_KEY = 'gridiron-beast-v7-league-tab';
 const TABS = [['clubs', $t('league.clubs')], ['leaders', $t('league.leaders')], ['moves', $t('league.moves')], ['races', $t('league.races')], ['rivals', $t('league.rivals')]];
@@ -52,7 +52,7 @@ function linkText(it) { let t = esc(lineText(it)); if (it.mid && it.mname) { con
 function racesTab(f) {
   if (!f.season || f.season.week <= 1 && !f.season.awardsFinal) return `<p class="dim">${$t('league.races_start_after_the_first_sunday')}</p>`;
   const races = F.awardRaces(f, { n: 3 }); const frozen = !!f.season.awardsFinal;
-  return `<p class="muted">${frozen ? `${$t('league.the_awards', { year: yearOf(f.season.year), finished: f.season.finished ? '' : $t('league.frozen_for_the_playoffs') })}` : $t('league.where_the_award_races_stand_this')}</p>${Object.entries(AWARDS).map(([k, aw]) => { const rows = races[k]; if (!Array.isArray(rows) || !rows.length) return ''; return `<div class="panel tight"><b>${esc(aw.label)}</b><div class="list" style="margin-top:6px">${rows.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}"><span class="rank ${i === 0 ? 'top' : ''}">${i + 1}</span><div class="grow"><div class="name">${k === 'coy' ? esc(r.coach || r.name) : careerLink(r.id, r.name)} <span class="dim">${esc(r.position || '')} · ${esc(r.team)}</span></div><div class="sub">${esc(r.why || '')}</div></div></div>`).join('')}</div></div>`; }).join('')}`;
+  return `<p class="muted">${frozen ? `${$t('league.the_awards', { year: yearOf(f.season.year), finished: f.season.finished ? '' : $t('league.frozen_for_the_playoffs') })}` : $t('league.where_the_award_races_stand_this')}</p>${Object.entries(AWARDS).map(([k, aw]) => { const rows = races[k]; if (!Array.isArray(rows) || !rows.length) return ''; return `<div class="panel tight"><b>${esc(aw.label)}</b><div class="list" style="margin-top:6px">${rows.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}"><span class="rank ${i === 0 ? 'top' : ''}">${i + 1}</span><div class="grow"><div class="name">${k === 'coy' ? esc(r.coach || r.name) : careerLink(r.id, r.name)} <span class="dim">${esc(r.position || '')} · ${esc(r.team)}</span></div><div class="sub">${esc(fieldText(r, 'why') || '')}</div></div></div>`).join('')}</div></div>`; }).join('')}`;
 }
 
 function rivalsTab(f) {

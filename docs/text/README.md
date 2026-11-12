@@ -44,7 +44,17 @@ A sentence that is kept in the save used to be saved as finished English. The cl
 - `text` is still saved (the English at the time), so nothing that reads `text` breaks and an older build can open the save.
 - `lineEnglish(saved)` is the English whatever is shown; Media Day uses it to recognise a recent evolution, trade or signing in the club log.
 
-`tests/fixtures/saved-wording.json` is the inventory of the places where a finished sentence is still saved (award citations, a free agent's clue, the Board goal's label, and the plain fragments inside some news lines). `tests/text-never-decides.test.js` fails if a new place appears. To take a place off the list, save a line there and show it with `lineText`.
+**Sentences built by ordinary code** (owner 2026-11-12: convert the remaining places). An award citation or a stat line is put together from many lines by code that was never written to save keys. Three helpers cover those without rewriting the builders:
+
+- `captured(() => build())` runs the builder, notes every line it reads, and finds those lines inside the finished sentence. `recording()` is the same for code that cannot be wrapped in one function.
+- `lineField('why', line)` saves a record's field as the sentence plus its line (`why` and `whyL`); `fieldText(record, 'why')` shows it in the language chosen now, or the sentence of an older record; `fieldLine(record, 'why')` passes it on to another record or into another line.
+- A value or part that is itself a label read from a table filled at load (an award's name, a coach's style) is recognised by its wording and saved as that line; a plain sentence handed to the club log is matched against the lines read just before it (`recalled`).
+
+These never change a sentence: the saved `text` is exactly what the code produced. They only remember where the wording came from.
+
+Saved this way now: award citations and stat lines (season, finals, history), a free agent's clue, why an offer closed, an AI club's strategy note, career-event lines, the Board goal's label and text and its history, the last game's label, the achievement award line, and the offseason meeting's scheme.
+
+`tests/fixtures/saved-wording.json` is the inventory of the places where a finished sentence is still saved: after this work, only plain fragments inside some club-log lines (parts of the staff's week summary, a Media Day headline). `tests/text-never-decides.test.js` fails if a new place appears.
 
 ### Wording never decides anything
 

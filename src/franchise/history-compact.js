@@ -6,6 +6,7 @@
 // league decorated keeps his season books in his legend stub, so the copy survives him.
 
 import { addInto, statLine } from './stats.js';
+import { captured, lineField } from '../text/index.js';
 
 export const COMPACT_VERSION = 1;
 /** Identity and award fields a winner row always keeps (what the screens show without a book). */
@@ -30,7 +31,7 @@ export function slimWinner(w, year, monsterOf) {
   if (!w || !w.id || w.slim) return [];
   const m = monsterOf(w.id); const book = seasonBookOf(m, year); const dup = duplicatedKeys(w, book);
   if (!dup.length) return [];
-  w.line = w.line || statLine(w);
+  if (!w.line) Object.assign(w, lineField('line', captured(() => statLine(w))));   // the stat line, saved as a line (central text)
   for (const k of dup) delete w[k];
   w.slim = COMPACT_VERSION;
   return dup;
