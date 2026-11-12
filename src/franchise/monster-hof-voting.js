@@ -10,11 +10,16 @@ export const VOTE_THRESHOLD = 0.7;
 const integer = (n, fallback = 0) => Number.isFinite(n) ? Math.max(0, Math.floor(n)) : fallback;
 const hash = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 const stableId = (c) => String(c?.id ?? '');
-const count = (c, key) => integer(c?.honours?.[key] ?? c?.[key] ?? 0);
-const seasons = (c) => integer(c?.seasons ?? c?.yearsPro);
-const games = (c) => integer(c?.games ?? c?.stats?.games);
+const count = (c, key) => {
+  const explicit = c?.honours?.[key] ?? c?.[key];
+  if (Number.isFinite(explicit)) return integer(explicit);
+  const kinds = { titles: 'champion', awards: 'award', records: 'record' };
+  return (c?.ev || []).filter((e) => e?.t === kinds[key]).length;
+};
+const seasons = (c) => Array.isArray(c?.seasons) ? c.seasons.length : integer(c?.seasons ?? c?.yearsPro);
+const games = (c) => integer(c?.games ?? c?.career?.games ?? c?.stats?.games);
 const eligible = (c, year, inducted) =>
-  c && stableId(c) && Number.isInteger(c.retiredYear) &&
+  c && stableId(c) && Number.isInteger((c.retiredYear ?? c.retired ?? (c.retired === true ? c.left : undefined))) &&
   year - c.retiredYear >= WAIT_SEASONS && c.retiredYear < year &&
   !inducted.has(stableId(c));
 
@@ -52,7 +57,7 @@ export function monsterHofBallot(candidates, year, past = []) {
     }
     return {
       id: stableId(c), name: String(c.name || 'Unknown'), position: c.position || null,
-      retiredYear: c.retiredYear, score, votes, voters: VOTER_COUNT,
+      retiredYear: c.retiredYear ?? c.retired ?? c.left, score, votes, voters: VOTER_COUNT,
       share: votes / VOTER_COUNT, qualified: votes / VOTER_COUNT >= VOTE_THRESHOLD,
     };
   }).sort((a, b) => b.votes - a.votes || b.score - a.score || a.id.localeCompare(b.id));
