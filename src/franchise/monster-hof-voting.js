@@ -19,7 +19,7 @@ const count = (c, key) => {
 const seasons = (c) => Array.isArray(c?.seasons) ? c.seasons.length : integer(c?.seasons ?? c?.yearsPro);
 const games = (c) => integer(c?.games ?? c?.career?.games ?? c?.stats?.games);
 const eligible = (c, year, inducted) =>
-  c && stableId(c) && Number.isInteger((c.retiredYear ?? c.retired ?? (c.retired === true ? c.left : undefined))) &&
+  c && stableId(c) && Number.isInteger(c.retiredYear) &&
   year - c.retiredYear >= WAIT_SEASONS && c.retiredYear < year &&
   !inducted.has(stableId(c));
 
