@@ -82,7 +82,7 @@ function awardsSheetHtml(h) {
   return `<div class="list">${rows.join('')}</div>`;
 }
 function leagueTab(f) {
-  return `<div class="grid2"><button class="btn block" data-action="go" data-screen="records">${$t('career.records_book')}</button><button class="btn block" data-action="go" data-screen="standings">${$t('career.standings')}</button><button class="btn block" data-action="news">${$t('career.league_news')}</button><button class="btn block" data-action="go" data-screen="schedule">${$t('career.schedule')}</button></div>
+  return `<div class="grid2"><button class="btn block" data-action="go" data-screen="records">${$t('career.records_book')}</button><button class="btn block" data-action="go" data-screen="standings">${$t('career.standings')}</button><button class="btn block" data-action="news">${$t('career.league_news')}</button><button class="btn block" data-action="go" data-screen="schedule">${$t('career.schedule')}</button><button class="btn block" data-action="go" data-screen="history">${$t('career.franchise_history')}</button><button class="btn block" data-action="go" data-screen="awardhistory">${$t('career.award_history')}</button><button class="btn block" data-action="go" data-screen="monsterhof">${$t('career.monster_hall_of_fame')}</button></div>
     <p class="dim" style="margin-top:8px">${$t('career.standings_the_schedule_and_league_news', { year: yearOf(f.season.year) })}</p>`;
 }
 function rosterTab(f) {

@@ -1445,3 +1445,172 @@ html.apex-open, html.apex-open body { overflow: hidden; }
 /* Developer: an ability-review notice is one large tap target that opens its reviewer (same panel look as the play-review notice). */
 .dev-notice { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 0; margin: 0; color: inherit; font: inherit; cursor: pointer; min-height: 44px; }
 .dev-notice:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ---- Franchise History, Award History, Records and the Monster Hall of Fame (Task 9) ---- */
+.hh-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 0 0 var(--s3); }
+.hh-nav-btn { appearance: none; font: inherit; font-weight: 800; font-size: 11.5px; color: var(--ink-2); background: var(--panel); border: 2px solid var(--line); border-radius: var(--r); min-height: 48px; padding: 4px 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: pointer; touch-action: manipulation; line-height: 1.15; text-align: center; }
+.hh-nav-btn > span { font-size: 16px; line-height: 1; }
+.hh-nav-btn.on { background: var(--accent); color: var(--accent-ink); border-color: #c9a30c; }
+.hh-nav-btn:focus-visible, .hof-plaque:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.hh-nav-btn:active { transform: scale(.97); }
+.hh-head { border-left: 6px solid var(--club, var(--line)); }
+.hh-club { display: flex; align-items: center; gap: 8px; font-size: 18px; }
+.hh-club i, .hh-champ i { display: inline-block; width: 12px; height: 12px; background: var(--club, var(--line-2)); border: 2px solid #0a1611; flex: 0 0 auto; }
+.hh-owner { font-size: 12px; margin: 2px 0 10px; }
+.hh-tiers { font-size: 12px; margin-top: 8px; }
+.hh-glance { margin-top: 4px; }
+.hh-h { margin: var(--s3) 0 var(--s2); }
+.hh-wrap { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.hh-wrap .chip { white-space: normal; }
+.hh-champs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px; }
+.hh-champ { display: flex; align-items: center; gap: 6px; font-size: 12px; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r); padding: 5px 8px; min-width: 0; }
+.hh-champ span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hh-champ.mine { border-color: var(--accent); background: #2a2a12; color: var(--accent); font-weight: 800; }
+.hh-decade { margin: 0 0 var(--s2); }
+.hh-decade > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 6px var(--s3); background: var(--panel-2); border: 2px solid var(--line); border-radius: var(--r); }
+.hh-decade > summary::-webkit-details-marker { display: none; }
+.hh-decade > summary::before { content: "▸"; color: var(--ink-3); flex: 0 0 auto; }
+.hh-decade[open] > summary::before { content: "▾"; }
+.hh-decade > summary > b { flex: 0 0 auto; }
+.hh-decade > summary > .dim { flex: 1; text-align: right; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hh-decade > .list { margin-top: var(--s2); }
+.hh-season { align-items: flex-start; }
+.hh-season.champ { border-color: var(--accent); background: linear-gradient(90deg, rgba(250,204,21,.09), transparent 60%); }
+.hh-season .name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.hh-season .sub { overflow-wrap: anywhere; }
+.hh-season-btns { display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto; }
+.hh-seg { margin-bottom: var(--s2); }
+.hh-seg .btn.small { flex: 1; min-height: 40px; }
+.hh-kinds { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 0 0 8px; }
+.hh-kinds::-webkit-scrollbar { display: none; }
+.hh-nosprite { display: inline-grid; place-items: center; flex: 0 0 auto; width: 32px; height: 32px; background: var(--bg-2); border: 1px dashed var(--line-2); border-radius: var(--r); color: var(--ink-3); font-weight: 800; }
+.hh-nosprite.coach { border-style: solid; }
+.hh-recsum { font-size: 12px; margin: 0 0 var(--s2); }
+.hh-record .sub, .hh-awardhistory .item .sub { overflow-wrap: anywhere; }
+.hh-prev { color: var(--ink-3); margin-top: 2px; }
+.hh-value { font-family: var(--mono); font-weight: 800; font-size: 14px; flex: 0 0 auto; }
+.hh-empty { text-align: center; }
+/* the Hall: a gold-framed room */
+.hof-hero { text-align: center; border-color: #b8891a; background: radial-gradient(120% 90% at 50% 0%, rgba(250,204,21,.16), transparent 60%), var(--panel); box-shadow: 0 3px 0 #0a1611, inset 0 0 0 2px rgba(250,204,21,.12); position: relative; overflow: hidden; }
+.hof-hero.anim::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 40%, rgba(255,240,170,.14) 50%, transparent 60%); transform: translateX(-100%); animation: hof-sheen 5s ease-in-out infinite; pointer-events: none; }
+@keyframes hof-sheen { 0%, 55% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.hof-crest { font-size: 34px; line-height: 1; filter: drop-shadow(2px 2px 0 #000); }
+.hof-title { font-size: 20px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); text-shadow: 2px 2px 0 #000; margin-top: 4px; }
+.hof-sub { font-size: 12.5px; color: var(--ink-2); margin: 2px 0 10px; }
+.hof-rule { font-size: 12px; margin: 10px 0 0; line-height: 1.4; }
+.hof-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s2); }
+.hof-plaque { appearance: none; font: inherit; color: var(--ink); text-align: center; cursor: pointer; touch-action: manipulation; position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 6px 10px; min-width: 0; background: linear-gradient(180deg, #3a2c0a, #201a0c 70%); border: 2px solid #b8891a; border-radius: var(--r); box-shadow: 0 3px 0 #0a1611, inset 0 0 0 2px rgba(255,224,138,.12); }
+.hof-plaque:active { transform: scale(.98); }
+.hof-plaque.new { border-color: var(--accent); box-shadow: 0 3px 0 #0a1611, 0 0 14px rgba(250,204,21,.35), inset 0 0 0 2px rgba(255,224,138,.2); }
+.hof-new { position: absolute; top: -2px; left: 50%; transform: translate(-50%, -50%); background: var(--accent); color: var(--accent-ink); font-size: 9px; font-weight: 900; letter-spacing: .08em; padding: 1px 6px; border-radius: 999px; white-space: nowrap; }
+.hof-frame { display: grid; place-items: center; width: 68px; height: 68px; background: #0d1a14; border: 2px solid var(--club, #b8891a); border-radius: var(--r); box-shadow: inset 0 0 0 2px rgba(0,0,0,.5); }
+.hof-frame .hh-nosprite { width: 56px; height: 56px; border: 0; font-size: 22px; }
+.hof-name { font-size: 15px; font-weight: 900; color: #ffe08a; margin-top: 6px; overflow-wrap: anywhere; line-height: 1.15; }
+.hof-pos { font-size: 11.5px; color: var(--ink-2); }
+.hof-class { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-top: 4px; }
+.hof-meta { font-size: 11px; color: var(--ink-3); line-height: 1.3; }
+.hof-hon { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; margin-top: 6px; font-size: 11px; }
+.hof-quiet { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px var(--s3); font-size: 12px; border-bottom: 1px solid var(--line); margin-bottom: var(--s2); }
+.hof-ballot.in { border-color: #b8891a; background: linear-gradient(90deg, rgba(250,204,21,.09), transparent 60%); }
+.hof-vote { display: flex; align-items: center; gap: 8px; margin-top: 5px; font-size: 12px; }
+.hof-vote-track { position: relative; flex: 1; height: 10px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 3px; overflow: visible; }
+.hof-vote-track i { display: block; height: 100%; background: var(--ink-3); border-radius: 2px; }
+.hof-ballot.in .hof-vote-track i { background: var(--accent); }
+.hof-vote-track u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); text-decoration: none; }
+.cp-hall.in { border-top-color: #b8891a; }
+html[data-reduced-motion="1"] .hof-hero.anim::after { animation: none; display: none; }
+@media (prefers-reduced-motion: reduce) { .hof-hero.anim::after { animation: none; display: none; } }
+@media (max-width: 359px) { .hof-grid, .hh-champs { grid-template-columns: 1fr 1fr; } .hh-nav-btn { font-size: 10.5px; } }
+.hof-election { border: 2px solid var(--line); border-radius: var(--r); background: var(--panel); }
+.hof-election.on { border-color: #b8891a; }
+.hof-election-h { appearance: none; font: inherit; color: inherit; background: none; border: 0; width: 100%; min-height: 48px; padding: 8px var(--s3); display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; text-align: left; cursor: pointer; touch-action: manipulation; }
+.hof-election-h > .dim { text-align: right; font-size: 12px; }
+.hof-election-names { grid-column: 1 / -1; font-size: 12.5px; color: #ffe08a; font-weight: 700; overflow-wrap: anywhere; }
+.hof-election-h:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.hof-ballots { padding: 0 var(--s2) var(--s2); }
+.hof-election .hh-more { margin: 0 var(--s2) var(--s2); width: calc(100% - 2 * var(--s2)); }
+.hh-more { margin-top: var(--s2); }
+.hh-wrap button.chip { min-height: 32px; min-width: 40px; justify-content: center; cursor: pointer; }
+
+/* ---- Hall of Fame Day (Task 9): the offseason ceremony. A dark hall, gold light; CSS-only motion, none when reduced. ---- */
+.hofd { position: relative; margin: calc(-1 * var(--s3)); min-height: calc(100dvh - 20px); padding: var(--s3) var(--s3) 84px; color: #f3e7c4; overflow: hidden;
+  background: radial-gradient(90% 46% at 50% 0%, rgba(250,204,21,.22), transparent 70%), repeating-linear-gradient(90deg, rgba(255,224,138,.045) 0 2px, transparent 2px 46px), linear-gradient(180deg, #1c1630 0%, #120f1f 55%, #0b0a14 100%); }
+.hofd::before, .hofd::after { content: ""; position: absolute; top: 0; bottom: 0; width: 14px; background: linear-gradient(90deg, #2c2342, #4a3b66 45%, #2c2342); box-shadow: inset 0 0 0 1px rgba(255,224,138,.18); opacity: .8; pointer-events: none; }
+.hofd::before { left: 0; } .hofd::after { right: 0; }
+.hofd-head { text-align: center; position: relative; z-index: 1; padding: 6px 12px 0; }
+.hofd-over { font-size: 10px; letter-spacing: .28em; color: #c9b27a; }
+.hofd-title { font-size: 22px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); text-shadow: 2px 2px 0 #000, 0 0 18px rgba(250,204,21,.35); margin-top: 2px; }
+.hofd-year { font-size: 12px; color: #c9b27a; }
+.hofd-dots { display: flex; justify-content: center; gap: 5px; margin: 10px 0 2px; }
+.hofd-dots i { width: 8px; height: 8px; background: #3a3056; border: 1px solid #5d4f85; }
+.hofd-dots i.done { background: #8a6d1c; border-color: #b8891a; } .hofd-dots i.on { background: var(--accent); border-color: #fff3c0; }
+.hofd-stage { position: relative; z-index: 1; padding: 10px 10px 0; max-width: 620px; margin: 0 auto; animation: hofd-in .5s ease-out both; }
+@keyframes hofd-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.hofd-h { font-size: 17px; text-align: center; color: #ffe08a; margin: 6px 0 10px; letter-spacing: .04em; }
+.hofd-lead { text-align: center; font-size: 13.5px; line-height: 1.45; margin: 8px 0; color: #e6dcc0; }
+.hofd-lead.dim { color: #a99f86; font-size: 12.5px; }
+.hofd-speech .speech { background: #241d38; border-color: #5d4f85; color: #f3e7c4; }
+.hofd-speech .speech p { margin: 0 0 8px; line-height: 1.45; font-size: 14px; } .hofd-speech .speech p:last-child { margin: 0; }
+.hofd-speech .muted { color: #c9b27a; letter-spacing: .08em; text-transform: uppercase; }
+.hofd-nominees { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 6px; }
+.hofd-nominee { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 6px 8px; background: #201a33; border: 1px solid #4a3b66; border-radius: var(--r); animation: hofd-in .4s ease-out both; animation-delay: calc(var(--i) * 45ms); }
+.hofd-nominee b { display: block; font-size: 13.5px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hofd-nominee span { font-size: 11.5px; color: #b9ad90; }
+.hofd-nominee .grow { min-width: 0; }
+.hofd-nominee .hh-nosprite { width: 34px; height: 34px; background: #17122a; border-color: #4a3b66; color: #6c5f8f; }
+/* the Board: fifteen hooded figures nobody can name */
+.hofd-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px 6px; max-width: 340px; margin: 4px auto 10px; padding: 14px 10px 10px; background: radial-gradient(80% 70% at 50% 0%, rgba(120,96,190,.22), transparent 75%); border-bottom: 3px solid #2c2342; }
+.hofd-seat { position: relative; display: grid; place-items: center; height: 46px; }
+.hofd-figure { display: block; width: 26px; height: 34px; background: #07060d; border-radius: 13px 13px 3px 3px; box-shadow: 0 0 0 1px rgba(140,120,200,.22), 0 -3px 10px rgba(120,96,190,.25); position: relative; }
+.hofd-figure::after { content: ""; position: absolute; left: 6px; right: 6px; top: 8px; height: 3px; background: rgba(250,204,21,.0); box-shadow: 0 0 6px rgba(250,204,21,.0); animation: hofd-eyes 4.5s ease-in-out infinite; animation-delay: calc(var(--i) * 290ms); }
+@keyframes hofd-eyes { 0%, 82%, 100% { background: rgba(250,204,21,0); box-shadow: 0 0 6px rgba(250,204,21,0); } 88%, 94% { background: rgba(250,204,21,.75); box-shadow: 0 0 8px rgba(250,204,21,.6); } }
+.hofd-ballot { position: absolute; bottom: -2px; width: 12px; height: 8px; background: #f3e7c4; border: 1px solid #8a6d1c; opacity: 0; }
+.hofd-board.voted .hofd-ballot { animation: hofd-cast .7s ease-in both; animation-delay: calc(400ms + var(--i) * 110ms); }
+@keyframes hofd-cast { 0% { opacity: 0; transform: translateY(-14px); } 40% { opacity: 1; } 100% { opacity: 1; transform: translateY(6px) scale(.8); } }
+.hofd-envelope { text-align: center; font-size: 40px; margin-top: 6px; filter: drop-shadow(0 0 12px rgba(250,204,21,.45)); animation: hofd-seal 2.4s ease-out both; animation-delay: 2s; }
+@keyframes hofd-seal { from { opacity: 0; transform: scale(.4) rotate(-12deg); } to { opacity: 1; transform: none; } }
+/* a reveal */
+.hofd-kicker { text-align: center; font-size: 11px; letter-spacing: .24em; color: #c9b27a; margin: 4px 0 6px; }
+.hofd-reveal { position: relative; text-align: center; padding: 18px 10px 14px; border: 3px solid #b8891a; border-radius: var(--r); overflow: hidden; background: linear-gradient(180deg, #3a2c0a, #1d1708 78%); box-shadow: 0 4px 0 #050409, 0 0 26px rgba(250,204,21,.28), inset 0 0 0 2px rgba(255,224,138,.16); }
+.hofd-rays { position: absolute; left: 50%; top: 70px; width: 420px; height: 420px; margin: -210px 0 0 -210px; background: repeating-conic-gradient(rgba(250,204,21,.13) 0 9deg, transparent 9deg 18deg); border-radius: 50%; animation: hofd-spin 26s linear infinite; pointer-events: none; }
+@keyframes hofd-spin { to { transform: rotate(360deg); } }
+.hofd-portrait { position: relative; display: inline-grid; place-items: center; width: 112px; height: 112px; background: #0d1a14; border: 3px solid var(--club, #b8891a); border-radius: var(--r); box-shadow: inset 0 0 0 2px rgba(0,0,0,.5), 0 0 0 2px #050409; }
+.hofd-portrait > * { animation: hofd-unveil 1.5s ease-out both; }
+@keyframes hofd-unveil { 0%, 35% { filter: brightness(0); transform: scale(.92); } 100% { filter: none; transform: none; } }
+.hofd-portrait .hh-nosprite { width: 96px; height: 96px; border: 0; font-size: 34px; background: none; }
+.hofd-name { position: relative; font-size: 26px; font-weight: 900; color: #ffe08a; text-shadow: 2px 2px 0 #000; margin-top: 10px; line-height: 1.1; overflow-wrap: anywhere; animation: hofd-in .6s ease-out .9s both; }
+.hofd-pos { position: relative; font-size: 13px; color: #e6dcc0; margin-top: 2px; animation: hofd-in .6s ease-out 1.05s both; }
+.hofd-classline { position: relative; display: inline-block; margin-top: 8px; padding: 2px 10px; font-size: 11px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; background: var(--accent); color: var(--accent-ink); animation: hofd-in .6s ease-out 1.2s both; }
+.hofd-votes { position: relative; display: flex; justify-content: center; gap: 3px; margin-top: 12px; flex-wrap: wrap; }
+.hofd-votes i { width: 13px; height: 13px; background: #2a2212; border: 1px solid #6b5416; }
+.hofd-votes i.on { background: var(--accent); border-color: #fff3c0; animation: hofd-vote .3s ease-out both; animation-delay: calc(1.4s + var(--k) * 70ms); }
+@keyframes hofd-vote { from { background: #2a2212; transform: scale(.4); } to { background: var(--accent); transform: none; } }
+.hofd-votes-n { position: relative; font-size: 12.5px; color: #e6dcc0; margin-top: 5px; font-family: var(--mono); }
+.hofd-honours { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 5px; }
+.hofd-honours li { display: flex; gap: 8px; align-items: flex-start; padding: 7px 10px; background: #201a33; border: 1px solid #4a3b66; border-radius: var(--r); font-size: 13.5px; line-height: 1.35; color: #f3e7c4; animation: hofd-in .45s ease-out both; }
+.hofd-honours li:nth-child(1) { animation-delay: 1.5s; } .hofd-honours li:nth-child(2) { animation-delay: 1.65s; } .hofd-honours li:nth-child(3) { animation-delay: 1.8s; } .hofd-honours li:nth-child(4) { animation-delay: 1.95s; } .hofd-honours li:nth-child(n+5) { animation-delay: 2.1s; }
+.hofd-honours li > span:last-child { overflow-wrap: anywhere; }
+.hofd-none { text-align: center; padding: 22px 12px; border: 2px dashed #5d4f85; border-radius: var(--r); background: #1a1530; }
+.hofd-none b { display: block; font-size: 17px; color: #ffe08a; margin-top: 8px; }
+.hofd-doors { font-size: 44px; filter: grayscale(.5) drop-shadow(0 0 10px rgba(120,96,190,.5)); }
+.hofd-class { margin-bottom: 12px; }
+.hof-plaque.static { cursor: default; }
+.hofd-news { text-align: center; font-size: 12.5px; color: #c9b27a; margin: 12px 0 0; }
+.hofd-foot { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; gap: 8px; padding: 10px max(12px, env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right)); background: linear-gradient(180deg, transparent, #0b0a14 34%); }
+.hofd-foot .btn { min-height: 48px; } .hofd-foot .btn:first-child { min-width: 56px; }
+.hofd-foot .btn.primary { font-size: 15px; }
+/* the card on the offseason page, and the sealed notice in the Hall */
+.hofd-card { border-color: #b8891a; background: radial-gradient(120% 90% at 50% 0%, rgba(250,204,21,.14), transparent 60%), var(--panel); }
+.hofd-card.held { border-color: var(--line); background: var(--panel); }
+.hofd-card-h { font-weight: 900; font-size: 16px; color: var(--accent); letter-spacing: .03em; }
+.hofd-card p { margin: 4px 0 10px; font-size: 13.5px; color: var(--ink-2); }
+.hof-sealed { margin: 10px 0 0; padding: 6px 10px; font-size: 12.5px; font-weight: 700; color: var(--accent); border: 1px dashed #b8891a; border-radius: var(--r); background: rgba(250,204,21,.07); }
+.hofd.reduced *, html[data-reduced-motion="1"] .hofd * { animation: none !important; transition: none !important; }
+.hofd.reduced .hofd-ballot, html[data-reduced-motion="1"] .hofd .hofd-ballot { opacity: 1; transform: translateY(6px) scale(.8); }
+@media (prefers-reduced-motion: reduce) { .hofd * { animation: none !important; } .hofd .hofd-ballot { opacity: 1; transform: translateY(6px) scale(.8); } }
+@media (orientation: landscape) and (max-height: 520px) { .hofd-reveal { display: grid; grid-template-columns: auto 1fr; column-gap: 16px; text-align: left; align-items: center; } .hofd-portrait { grid-row: span 5; } .hofd-votes { justify-content: flex-start; } .hofd-rays { left: 70px; } .hofd-board { max-width: 520px; grid-template-columns: repeat(15, 1fr); } }
+.hofd-foot .btn.primary { flex: 1; }
+.hofd-nominee span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.hofd-figure { width: 30px; height: 26px; margin-top: 14px; border-radius: 12px 12px 2px 2px; }
+.hofd-figure::before { content: ""; position: absolute; left: 7px; top: -13px; width: 16px; height: 17px; background: #07060d; border-radius: 8px 8px 6px 6px; box-shadow: 0 0 0 1px rgba(140,120,200,.22); }
+.hofd-figure::after { left: 10px; right: 10px; top: -6px; height: 2px; }

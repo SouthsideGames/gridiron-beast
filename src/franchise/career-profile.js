@@ -15,6 +15,8 @@ import { AWARDS } from './awards.js';
 import { monsterOverall, SPECIES_BY_ID } from '../data/monsters.js';
 import { yearOf } from '../data/calendar.js';
 import { t as $t } from '../text/index.js';
+import { monsterHofInductees } from './monster-hof-voting.js';
+import { revealedElections } from './hall-ceremony.js';
 
 export const PROFILE_VERSION = 1;
 
@@ -168,6 +170,14 @@ export function trophyCase(f, m, events = careerEvents(m)) {
   // The current season's awards, frozen when the regular season ends and announced in League News, count from that moment: the
   // Career Timeline entry and the season archive only arrive when the season closes after the playoffs (same key, so no double).
   const af = f?.season?.awardsFinal; if (af) for (const [k, w] of Object.entries(af.winners || {})) if (w && w.id === m.id && TROPHY_META[k] && k !== 'coy') put(k, { key: `${`award:${k}:${af.year ?? f.season.year}`}`, year: af.year ?? f.season.year, club: w.team });
+  // Task 9 Monster Hall of Fame is separate from the legacy GM Hall of Fame.
+  // An induction is derived from the saved election; no career mutation is needed.
+  const induction = monsterHofInductees(revealedElections(f))
+    .find((c) => String(c.id) === String(m.id));
+  if (induction) put('hof', {
+    key: `monster-hof:${induction.inductedYear}`,
+    year: induction.inductedYear, club: null, source: 'monster',
+  });
   const out = TROPHY_ORDER.filter((k) => shelves[k]).map((k) => { const s = shelves[k]; s.entries.sort((a, b) => (a.year ?? 0) - (b.year ?? 0)); s.count = s.entries.length; return s; });
   return out;
 }
@@ -183,7 +193,45 @@ export function careerProfile(f, id) {
   const found = findMonster(f, id);
   if (found) return found.where === 'draft' ? prospectProfile(f, found.m) : fullProfile(f, found.m, found.where, found.team);
   const rows = leagueRowsFor(f, id); if (rows.length) return leagueProfile(f, id, rows);
+  // Task 9: some retired monsters have only a compact Hall candidate snapshot.
+  // Offer a clearly partial profile rather than inventing stats or a team.
+  const candidate = (f?.monsterHallOfFame?.candidates || [])
+    .find((c) => String(c.id) === String(id));
+  if (candidate) return retiredCandidateProfile(f, candidate);
+  // An elected monster must remain reachable even if the candidate pool is
+  // absent in an older or partially migrated save. The election is permanent.
+  const induction = revealedElections(f)
+    .flatMap((e) => e?.inductees || [])
+    .find((c) => String(c.id) === String(id));
+  if (induction) return retiredCandidateProfile(f, {
+    id: induction.id, name: induction.name, position: induction.position,
+    retiredYear: induction.retiredYear,
+  });
   return null;
+}
+
+/**
+ * Minimal profile for a retired candidate whose original monster object has
+ * been pruned. Unknown identity and season details remain explicitly absent.
+ */
+export function retiredCandidateProfile(f, c) {
+  const trophies = trophyCase(f, { id: c.id }, []);
+  const induction = revealedElections(f).flatMap((e) => e.inductees || [])
+    .find((i) => String(i.id) === String(c.id));
+  const titles = c.honours?.titles ?? 0;
+  const awards = c.honours?.awards ?? 0;
+  const records = c.honours?.records ?? 0;
+  return {
+    v: PROFILE_VERSION, kind: 'snapshot', where: 'retired', id: c.id,
+    name: c.name, species: null, stage: 0, speciesName: null, type: null,
+    position: c.position, level: null, ovr: null, yearsPro: null,
+    club: null, clubs: [], seasons: c.seasons ?? null, onRecord: 0, complete: false,
+    stats: { career: {}, season: {}, games: c.games ?? 0, focus: [], seasonFocus: null },
+    books: [], honours: { titles, awards, records, hof: !!induction },
+    trophies, timeline: [],
+    tier: careerTier({ titles, awards, records, hof: !!induction, seasons: c.seasons ?? 0 }),
+    notes: [$t('franchise.partial_retired_career_detailed_season_records')],
+  };
 }
 
 function identity(m) {

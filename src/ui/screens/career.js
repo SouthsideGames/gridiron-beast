@@ -41,7 +41,7 @@ export function resolveCareer(app, params) {
 }
 
 function headerHtml(pg, reduced) {
-  const p = pg.p; const col = clubColor(p.club);
+  const p = pg.p; const col = clubColor(p.club); const hr = pg.historicalRecognition;
   const sameName = String(p.name || '').replace(/ (II|III|IV|V|VI|\d+)$/, '') === p.speciesName;
   const team = p.club ? `<span class="cs-team"><i></i>${esc(p.club)}</span>` : `<span class="dim">${$t('career.no_club')}</span>`;
   const teamLabel = pg.status.key === 'retired' || pg.status.key === 'gone' ? $t('career.last_club') : pg.status.key === 'free' ? $t('career.last_club') : null;
@@ -55,9 +55,24 @@ function headerHtml(pg, reduced) {
         <div class="cs-sub">${teamLabel ? `<span class="dim">${teamLabel}:</span> ` : ''}${team}</div></div>
       ${rating}
     </div>
-    <div class="cp-tags"><span class="chip cp-status s-${esc(pg.status.key)}" title="${esc(pg.status.detail)}">${esc(pg.status.label)}</span>${desig}${p.honours?.hof ? `<span class="chip cp-hof">${$t('career.hall_of_fame')}</span>` : ''}${p.tier && TIER_LABEL[p.tier] && p.tier !== 'hof' ? `<span class="chip">${esc(TIER_LABEL[p.tier])}</span>` : ''}${p.level != null && pg.status.key !== 'retired' ? `<span class="chip">Lv ${p.level}</span>` : ''}</div>
-    ${pg.status.detail ? `<div class="cp-statusline dim">${esc(pg.status.detail)}</div>` : ''}
+    <div class="cp-tags"><span class="chip cp-status s-${esc(pg.status.key)}" title="${esc(pg.status.detail)}">${esc(pg.status.label)}</span>${desig}${hr?.induction ? `<span class="chip cp-hof">🏛 ${$t('career.class_of', { year: yearOf(hr.induction.inductedYear) })}</span>` : p.honours?.hof ? `<span class="chip cp-hof">${$t('career.hall_of_fame')}</span>` : ''}${p.tier && TIER_LABEL[p.tier] && p.tier !== 'hof' ? `<span class="chip">${esc(TIER_LABEL[p.tier])}</span>` : ''}${p.level != null && pg.status.key !== 'retired' ? `<span class="chip">Lv ${p.level}</span>` : ''}</div>
+    ${hr?.retirementYear != null && pg.status.key === 'retired' ? `<div class="cp-statusline dim">${$t('career.retired_after_the_season', { year: yearOf(hr.retirementYear) })}</div>` : pg.status.detail ? `<div class="cp-statusline dim">${esc(pg.status.detail)}</div>` : ''}
   </div>`;
+}
+
+// ---------------------------------------------------------------- Historical recognition (Task 9): the Monster Hall of Fame and standing records
+const SCOPE_LABEL = { game: () => $t('career.single_game_record'), season: () => $t('career.single_season_record'), team: () => $t('career.team_record') };
+function recordsHeldHtml(pg) {
+  const rows = pg.historicalRecognition?.records || []; if (!rows.length) return '';
+  return `<div class="cp-sec"><div class="cp-sec-h">${$t('career.b_records_held_b')}<span class="dim">${rows.length}</span></div><ol class="cp-moments">${rows.map((r) => `<li><span aria-hidden="true">📈</span><div><b>${esc(r.label)} · <span class="mono">${esc(r.value)}</span></b><span class="dim">${(SCOPE_LABEL[r.scope] || SCOPE_LABEL.game)()}${r.year != null ? ` · ${esc(yearOf(r.year))}` : ''}${r.team ? ` · ${esc(r.team)}` : ''}</span></div></li>`).join('')}</ol></div>`;
+}
+function hallHtml(pg, canGo) {
+  const h = pg.historicalRecognition?.hall; if (!h) return '';
+  const ind = h.induction; const lb = h.lastBallot;
+  const line = ind ? $t('career.inducted_into_the_monster_hall_of', { year: yearOf(ind.inductedYear), votes: ind.votes, voters: ind.voters })
+    : lb ? $t('career.on_the_ballot_votes', { year: yearOf(lb.year), votes: lb.votes, voters: lb.voters })
+      : h.eligibleYear != null ? $t('career.first_eligible_for_the_ballot', { retired: yearOf(h.retiredYear), year: yearOf(h.eligibleYear) }) : '';
+  return `<div class="cp-sec cp-hall ${ind ? 'in' : ''}"><div class="cp-sec-h">${$t('career.b_monster_hall_of_fame_b')}${canGo ? `<button class="cp-more" data-action="cp-hall">${$t('career.open_the_hall')}</button>` : ''}</div><p class="${ind ? 'cp-hofline' : 'dim'}" style="margin:0">${ind ? '🏛 ' : ''}${esc(line)}</p>${!ind && h.ballots.length > 1 ? `<p class="dim" style="margin:4px 0 0;font-size:12px">${$t('career.ballots_so_far', { n: h.ballots.length })}</p>` : ''}</div>`;
 }
 const tabsHtml = (cur) => `<div class="cp-tabs" role="tablist">${PAGE_TABS.map(([k, l]) => `<button class="cp-tab ${cur === k ? 'on' : ''}" role="tab" aria-selected="${cur === k}" data-action="cp-tab" data-v="${k}">${l}</button>`).join('')}</div>`;
 
@@ -76,7 +91,7 @@ function overviewHtml(pg, readOnly, f = null) {
   return `<div class="panel cp-body">
     <div class="cp-facts">${facts.map(([l, v]) => `<div><b class="mono">${esc(v)}</b><span>${l}</span></div>`).join('')}</div>
     ${spanTxt ? `<div class="cp-span dim">${p.kind === 'league' ? $t('career.on_record_2') : $t('career.career')} ${esc(spanTxt)}${!p.complete && fx.onRecord && fx.seasons && fx.onRecord < fx.seasons ? ` ${$t('career.on_record', { plural: plural(fx.onRecord, 'season') })}` : ''}</div>` : ''}
-    ${highlights}${honours}${clubs}${!readOnly && f && p.id ? careerPartnershipsHtml(f, p.id) : ''}${!readOnly && f && p.id ? careerInjuryHtml(f, p.id, { firstSeason: pg.span?.from ?? null }) : ''}${moments}
+    ${highlights}${honours}${hallHtml(pg, !readOnly && !!f?.history)}${recordsHeldHtml(pg)}${clubs}${!readOnly && f && p.id ? careerPartnershipsHtml(f, p.id) : ''}${!readOnly && f && p.id ? careerInjuryHtml(f, p.id, { firstSeason: pg.span?.from ?? null }) : ''}${moments}
     ${(p.notes || []).map((n) => `<p class="cs-note">${esc(n)}</p>`).join('')}
     ${!p.legacy && (p.kind === 'full' || p.kind === 'snapshot') ? `<button class="btn block cc-btn" data-action="cc-open" style="margin-top:10px">${$t('career.career_card')}</button>` : ''}
   </div>`;
@@ -126,7 +141,7 @@ function awardsHtml(pg, reduced) {
   const list = pg.awards.length ? `<div class="cp-sec"><div class="cp-sec-h">${$t('career.b_honors_by_season_b')}</div><div class="list">${pg.awards.flatMap((a) => a.entries.map((e) => ({ ...e, a }))).sort((x, y) => (y.year ?? -1) - (x.year ?? -1)).map((e) => `<div class="item static cp-hrow"><span class="cp-hicon" aria-hidden="true">${e.a.icon}</span><div class="grow"><div class="name">${esc(e.a.label)}</div><div class="sub">${e.year == null ? $t('career.season_not_recorded_2') : esc(yearOf(e.year))}${e.club ? ` · ${esc(e.club)}` : ''}</div></div></div>`).join('')}</div></div>` : '';
   const ms = pg.milestones.filter((e) => ['milestone', 'season', 'first', 'debut', 'playoff', 'star', 'rival', 'bowl', 'evolve'].includes(e.t));
   const miles = ms.length ? `<div class="cp-sec"><div class="cp-sec-h">${$t('career.b_milestones_b')}<span class="dim">${ms.length}</span></div><ol class="cp-moments">${ms.map((e) => `<li><span aria-hidden="true">${e.icon}</span><div><b>${esc(e.title)}</b><span class="dim">${e.y == null ? $t('career.before_the_timeline') : esc(yearOf(e.y))}${e.c ? ` · ${esc(e.c)}` : ''}</span></div></li>`).join('')}</ol></div>` : '';
-  return `<div class="panel cp-body">${trophyCaseHtml(p, { reduced, interactive: p.kind === 'full' || p.kind === 'league' })}${p.honours?.hof ? `<p class="cp-hofline">${$t('career.enshrined_in_the_hall_of_fame')}</p>` : ''}${list}${miles || (p.kind === 'full' ? `<p class="dim">${$t('career.firsts_milestones_and_big_seasons_appear')}</p>` : '')}</div>`;
+  return `<div class="panel cp-body">${trophyCaseHtml(p, { reduced, interactive: p.kind === 'full' || p.kind === 'league' })}${p.honours?.hof && !pg.historicalRecognition?.induction ? `<p class="cp-hofline">${$t('career.enshrined_in_the_hall_of_fame')}</p>` : ''}${hallHtml(pg, false)}${recordsHeldHtml(pg)}${list}${miles || (p.kind === 'full' ? `<p class="dim">${$t('career.firsts_milestones_and_big_seasons_appear')}</p>` : '')}</div>`;
 }
 
 // ---------------------------------------------------------------- Team History
@@ -165,6 +180,7 @@ export function registerCareerScreens(Router, app) {
         ...base, 'tl-filter': tl['tl-filter'], 'tl-more': tl['tl-more'],
         'cp-tab': (el) => { params.tab = el.dataset.v; Router.render(); root.querySelector('.cp-tabs')?.scrollIntoView({ block: 'nearest' }); },
         'cp-order': (el) => set('order', el.dataset.v),
+        'cp-hall': () => Router.go('monsterhof'),
         'cp-bucket': (el) => set('bucket', el.dataset.v),
         'cp-group': (el) => set('group', el.dataset.v),
       });

@@ -14,6 +14,7 @@ import { hasLeague, clubPayroll } from '../../franchise/league-registry.js';
 import { clubDirectory, clubRosterView, universeCareerLeaders, protectedMonsters, headToHead } from '../../franchise/league-careers.js';
 import { TRANSACTION_KINDS } from '../../franchise/league-news.js';
 import * as F from '../../franchise/franchise.js';
+import { historyNavHtml } from './history.js';
 import { t as $t, lineText, fieldText } from '../../text/index.js';
 
 const TAB_KEY = 'gridiron-beast-v7-league-tab';
@@ -73,10 +74,10 @@ export function registerLeagueHubScreens(Router, app) {
       if (!f) return `<div class="panel"><p>${$t('league.no_franchise_is_open')}</p><button class="btn block" data-action="go" data-screen="menu">${$t('league.main_menu')}</button></div>`;
       const tab = TABS.some(([k]) => k === get(TAB_KEY)) ? get(TAB_KEY) : 'clubs';
       const body = tab === 'clubs' ? clubsTab(f) : tab === 'leaders' ? leadersTab(f, scope === 'mine') : tab === 'moves' ? movesTab(f) : tab === 'races' ? racesTab(f) : rivalsTab(f);
-      return `<div class="seg wrap" role="tablist" style="margin-bottom:8px">${TABS.map(([k, l]) => `<button class="btn small ${tab === k ? 'primary' : ''}" role="tab" aria-selected="${tab === k}" data-action="tab" data-tab="${k}">${l}</button>`).join('')}</div>${body}`;
+      return `<div class="seg wrap" role="tablist" style="margin-bottom:8px">${TABS.map(([k, l]) => `<button class="btn small ${tab === k ? 'primary' : ''}" role="tab" aria-selected="${tab === k}" data-action="tab" data-tab="${k}">${l}</button>`).join('')}</div>${body}<h3 class="hh-h">${$t('league.history_and_records')}</h3>${historyNavHtml(null)}`;
     },
     mount(root) {
-      delegate(root, { tab: (el) => { set(TAB_KEY, el.dataset.tab); Router.render(); }, scope: (el) => { scope = el.dataset.v; Router.render(); }, club: (el) => Router.go('club', { club: el.dataset.club }), go: (el) => Router.go(el.dataset.screen) });
+      delegate(root, { tab: (el) => { set(TAB_KEY, el.dataset.tab); Router.render(); }, scope: (el) => { scope = el.dataset.v; Router.render(); }, club: (el) => Router.go('club', { club: el.dataset.club }), go: (el) => Router.go(el.dataset.screen), hnav: (el) => Router.go(el.dataset.screen) });
     },
   });
   Router.registerScreen('club', {

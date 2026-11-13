@@ -27,6 +27,7 @@ export { GROUP_SLOTS } from './roster.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
 import { retirementPass, agingContext, nativeAging, retirementOutlook } from './retirement.js';
+import { recordRetiredMonsterCandidates, electMonsterHallOfFame } from './monster-hof-voting.js';
 import { pickChannelSpecies, basicsFor, raiseToLevel } from '../data/monsters.js';
 import { BASIC_SHARE } from './t8/generation.js';
 import { createRewardLedger, prune as pruneLedger } from './reward-ledger.js';
@@ -2484,7 +2485,13 @@ function endSeason(f) {
   leagueSeasonEnd(f, { year: s.year, awards: s.awards, records: f.records, champion }); // the 15 persistent rosters' season-end events (GDD §42.6)
   archiveSeasonTables(f); // the season's league tables stay readable from the statistics screens (2026-10-22)
   if (hasLeague(f)) slimSeasonAwards(f.history[f.history.length - 1].awards, s.year, (id) => f.roster.find((m) => m.id === id) || f.league.monsters[id] || null); // forward-only compaction of the winner rows (GDD §46): every number keeps one copy, in the book
-  { const { r, save } = frng(f); retirementPass(f, r, { year: s.year, news: (t, k) => news(f, t, k) }); save(); } // retirements as the offseason opens, before contracts and the draft (GDD §55.3)
+  { const { r, save } = frng(f); const retired = retirementPass(f, r, { year: s.year, news: (t, k) => news(f, t, k) }); save();
+    // Task 9 history-only bookkeeping: no simulation RNG draws, retirement changes or award recalculation.
+    recordRetiredMonsterCandidates(f, retired, s.year);
+    const hof = (f.monsterHallOfFame ||= { v: 1, candidates: [], elections: [] });
+    const result = electMonsterHallOfFame(hof.candidates, s.year, hof.elections);
+    if (result.created) hof.elections = result.history;
+  } // retirements as the offseason opens, before contracts and the draft (GDD §55.3)
   if (hasFreeAgency(f) && seasonsCompleted(f) >= SEASON_CAP) f.freeAgency.lastSeason = s.year; // the 20-season endpoint: no free-agency offseason after the last season (specification edge cases)
   if (hasLeague(f)) migrateAmbitions(f); // any monster still without his hidden Ambition gets it (idempotent; the same value every time)
   if (hasLeague(f) && migrationDue(f)) { const rep = migratePositions(f, { year: s.year }); news(f, $P($L('franchise.single_position_rule_monsters_now_play', { moved: rep.moved, n: rep.owner.length }), (rep.ownerHoles.length ? $P(` `, $L('franchise.your_lineup_has_open_starting_slots', { n: rep.ownerHoles.length })) : '')), rep.ownerHoles.length ? 'loss' : 'info'); } // owner 2026-11-05, once per save, at this offseason boundary

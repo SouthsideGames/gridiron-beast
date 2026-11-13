@@ -43,6 +43,15 @@ export function migrate(f) {
   if (!hasLeague(f)) return null; // a 10 without its league registry is not a save this game wrote (the game always creates one)
   if ((f.roster || []).some((m) => m && !m.dev)) throw incompatibleSave(f); // a monster without its development record is not a Task 8 save
   if (hasLeague(f)) { const p = verifyLeague(f); if (p.length) throw Object.assign(new Error(`The league registry is damaged: ${p[0]}`), { code: 'league', problems: p }); }
+  // Task 9 is an optional additive field in schema 10. Do not infer missing
+  // historical ballots or retroactively induct monsters on load.
+  if (!f.monsterHallOfFame || typeof f.monsterHallOfFame !== 'object') {
+    f.monsterHallOfFame = { v: 1, candidates: [], elections: [] };
+  } else {
+    if (!Array.isArray(f.monsterHallOfFame.candidates)) f.monsterHallOfFame.candidates = [];
+    if (!Array.isArray(f.monsterHallOfFame.elections)) f.monsterHallOfFame.elections = [];
+    f.monsterHallOfFame.v ||= 1;
+  }
   f.news ||= []; f.history ||= []; f.lineupManual ||= {}; f.depth ||= {}; f.settings ||= {}; f.week ||= {}; f.campaign ||= { badges: {}, gymWins: {}, titles: f.badges ? Object.values(f.badges).reduce((a, b) => a + b, 0) : 0, wins: 0, awards: 0 };
   migrateSpecies(f);
   dedupeRosterNames(f);

@@ -7,7 +7,6 @@ import { discover } from '../../franchise/t8/discovery.js';
 import { venueHtml } from '../stadium-preview.js';
 import { leagueNewsPanel, leagueNewsSheetHtml } from '../league-news-ui.js';
 import { careerLink, careerBlockHtml } from '../career-ui.js';
-import { resolveRecordHolder } from '../../franchise/career-profile.js';
 import { legendaryCardHtml, openLegendarySheet, announceLegendary } from '../legendary-ui.js';
 import { LEGENDARY_IDS, unannouncedLegendary } from '../../franchise/legendary.js';
 import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
@@ -33,14 +32,14 @@ import { playCardSvg, legendHtml } from '../play-art.js';
 import { teamOverall, buildDepthChart } from '../../franchise/roster.js';
 import { AWARD_RULES } from '../../franchise/awards.js';
 import { RIVAL_WEEKLY } from '../../data/dialogue.js';
-import { LEADER_CATEGORIES, leaders, statLine, RECORD_CATEGORIES, TEAM_RECORDS, ensureRecords, leagueSeasons, seasonTables, combinedTable, ARCHIVE_SEASONS } from '../../franchise/stats.js';
-import { universeCareerLeaders } from '../../franchise/league-careers.js';
+import { LEADER_CATEGORIES, leaders, statLine, leagueSeasons, seasonTables, combinedTable, ARCHIVE_SEASONS } from '../../franchise/stats.js';
 import { HELP_HTML as CLASH_HELP } from './clash-battle.js';
 import { warningsHtml, noteHtml } from '../tutorial.js';
 import { suggestProspect, suggestDraftPick, suggestContract, suggestGoal, consequence } from '../../franchise/assist-advice.js';
 import { captainWarning, captainBadge } from '../captains-ui.js';
 import { callPanelHtml, callConfirmText, openTradeDesk, tradeStatusHtml, tradeLineHtml } from '../trade-desk-ui.js';
 import { faOffseasonHtml, faHandlers, migrationPanelHtml, negotiationSheet, lineupGateSheet } from '../fa-ui.js';
+import { hallCeremony, hallCeremonyDue, hallCeremonyHeld } from '../../franchise/hall-ceremony.js';
 import { t as $t, fieldText } from '../../text/index.js';
 
 const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2, S: 1, K: 1 };
@@ -81,7 +80,8 @@ export function registerHqScreens(Router, app) {
       const day = f.season.day;
       const offPending = f.season.finished && (!F.offseasonReady(f) || !F.draftDone(f) || f.roster.length < F.ROSTER_MIN || F.nextStaffRole(f));
       const due = retirementDue(f);
-      const next = due === 'fired' ? { label: $t('hq.the_board_has_let_you_go'), action: 'fired', icon: '🚪' } : due === 'season-cap' ? { label: `${$t('hq.season_complete_retire_to_the_franchise', { seasonCap: SEASON_CAP })}`, action: 'retire-now', icon: '🏛️' } : due === 'voluntary' ? { label: $t('hq.retirement_complete_it_now'), action: 'retire-now', icon: '🏛️' } : f.season.finished ? (F.postseasonEvent(f) ? { label: `${$t('hq.postseason', { title: F.postseasonEvent(f).title })}`, action: 'postseason', icon: '📞' } : f.legendPick && !f.legendPick.resolved ? { label: $t('hq.choose_your_legend_track'), action: 'legend', icon: '🌟' } : { label: offPending ? `${$t('hq.offseason')} ${F.offseasonPending(f).length ? F.offseasonPending(f).length + ' contract decision' + (F.offseasonPending(f).length === 1 ? '' : 's') : !F.draftDone(f) ? $t('hq.the_draft') : f.roster.length < F.ROSTER_MIN ? $t('hq.sign_to') + F.ROSTER_MIN + ' monsters' : 'hire staff'}` : $t('hq.continue_to_the_offseason'), action: 'offseason', icon: '📋' }) : nextAction(f);
+      const hofDue = due !== 'fired' && hallCeremonyDue(f) && !F.postseasonEvent(f) && !(f.legendPick && !f.legendPick.resolved);
+      const next = due === 'fired' ? { label: $t('hq.the_board_has_let_you_go'), action: 'fired', icon: '🚪' } : hofDue ? { label: $t('hq.hall_of_fame_day_attend'), action: 'hofday', icon: '🏛️' } : due === 'season-cap' ? { label: `${$t('hq.season_complete_retire_to_the_franchise', { seasonCap: SEASON_CAP })}`, action: 'retire-now', icon: '🏛️' } : due === 'voluntary' ? { label: $t('hq.retirement_complete_it_now'), action: 'retire-now', icon: '🏛️' } : f.season.finished ? (F.postseasonEvent(f) ? { label: `${$t('hq.postseason', { title: F.postseasonEvent(f).title })}`, action: 'postseason', icon: '📞' } : f.legendPick && !f.legendPick.resolved ? { label: $t('hq.choose_your_legend_track'), action: 'legend', icon: '🌟' } : { label: offPending ? `${$t('hq.offseason')} ${F.offseasonPending(f).length ? F.offseasonPending(f).length + ' contract decision' + (F.offseasonPending(f).length === 1 ? '' : 's') : !F.draftDone(f) ? $t('hq.the_draft') : f.roster.length < F.ROSTER_MIN ? $t('hq.sign_to') + F.ROSTER_MIN + ' monsters' : 'hire staff'}` : $t('hq.continue_to_the_offseason'), action: 'offseason', icon: '📋' }) : nextAction(f);
       const race = f.season.week >= 5 && !f.season.finished && !F.inPlayoffs(f) ? `<div class="muted" style="margin-top:4px">${$t('hq.playoff_race_b_b', { text: esc(F.playoffPicture(f).text) })}</div>` : '';
       const gameLine = f.season.finished ? `${$t('hq.b_season_complete_b', { year: yearOf(f.season.year), club: f.season.champion === f.club ? $t('hq.beast_bowl_champions') : f.season.champion ? $t('hq.won_the_beast_bowl_2', { club: esc(f.season.champion) }) : '' })} <button class="btn small" data-action="awards">${$t('hq.how_we_finished')}</button>`
         : po ? `<b>${esc(po.tag)}</b> · ${po.home === f.club ? 'vs' : '@'} ${esc(opp)}`
@@ -108,7 +108,7 @@ export function registerHqScreens(Router, app) {
         ${f.week.gameResult && !f.week.gameResult.bye && day === 0 ? '' : ''}
         <div class="grid2" style="margin-bottom:var(--s3)">
           <button class="btn block" data-action="go" data-screen="schedule">${$t('hq.schedule')}</button><button class="btn block" data-action="go" data-screen="standings">${$t('hq.standings')}</button>
-          <button class="btn block" data-action="go" data-screen="league">${$t('hq.league_hub')}</button><button class="btn block" data-action="go" data-screen="records">${$t('hq.records')}</button>
+          <button class="btn block" data-action="go" data-screen="league">${$t('hq.league_hub')}</button><button class="btn block" data-action="go" data-screen="history">${$t('hq.history_and_records')}</button>
           <button class="btn block" data-action="go" data-screen="staff">${$t('hq.coaching_staff')}</button><button class="btn block" data-action="go" data-screen="practice">${$t('hq.practice')}</button></div>
         ${leagueNewsPanel(f, { clubLog: f.news })}`;
     },
@@ -131,6 +131,7 @@ export function registerHqScreens(Router, app) {
         commissioner: () => Router.go('commissioner'),
         restbye: () => { F.skipToByeIfIdle(app.f); app.save(); Router.render(); },
         postseason: () => Router.go('postseason'),
+        hofday: () => Router.go('hofceremony', { year: app.f.season.year, step: 0 }),
         legend: () => Router.go('legend'),
         // Retirement (GDD §42.4, decision R): available once the Hall of Fame checklist is met; it takes effect after the season.
         retire: async () => {
@@ -194,8 +195,11 @@ export function registerHqScreens(Router, app) {
       const srow = (i) => (t7 && i.eval ? staffNegRow(f, i, fmt) : old_srow(i));
       const old_srow = (i) => `<div class="item static ${i.status ? 'done' : ''}"><div class="grow"><div class="name">${esc(i.name)} <span class="dim">${esc(i.role.replace(/_/g, ' '))}</span></div><div class="sub">${$t('hq.asks_b_b_yr_10', { current: fmt(i.current), ask: fmt(i.ask) })}</div>${i.status || !t7 ? '' : (() => { const c = F.staffRenewalCheck(f, i.role); return `<div class="sub" style="color:${c.ok ? 'var(--good)' : 'var(--bad)'}">${c.ok ? `${$t('hq.fits_next_seasons_cap_cr_would', { amount: fmt(c.room - c.demand) })}` : esc(c.reason)}</div>`; })()}${i.status ? '' : termLine(i)}${i.status ? `<div class="sub">${i.status === 'signed' ? `${$t('hq.re_signed_for', { years: i.years === 1 ? '1 season' : '2 seasons' })}` : $t('hq.left')}</div>` : `<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><span class="seg"><button class="btn small ${(yrs[i.id] || 2) === 1 ? 'primary' : ''}" data-action="yrs" data-id="${i.id}" data-v="1">1 yr</button><button class="btn small ${(yrs[i.id] || 2) === 2 ? 'primary' : ''}" data-action="yrs" data-id="${i.id}" data-v="2">2 yr</button></span><button class="btn small primary" data-action="c" data-id="${i.id}" data-v="sign">${$t('hq.re_sign')}</button><button class="btn small danger" data-action="c" data-id="${i.id}" data-v="walk">${$t('hq.let_walk')}</button></div>`}</div></div>`;
       const faHtml = faOffseasonHtml(f); const market = faHtml == null ? F.offseasonMarket(f) : [];
-      const canStart = F.offseasonReady(f) && (!t7 || F.freeAgencyDone(f)) && F.draftDone(f) && f.roster.length >= F.ROSTER_MIN && !F.nextStaffRole(f) && !F.legendCompliance(f)?.due;
-      return `${migrationPanelHtml(f)}${callPanelHtml(f)}${warningsHtml(f, { max: 2, only: ['min', 'expiring'] })}<div class="panel"><div class="row between">${$t('hq.b_roster_b', { n: f.roster.length, rosterMax: F.ROSTER_MAX })}<span class="chip ${f.roster.length < F.ROSTER_MIN ? 'bad' : ''}">minimum ${F.ROSTER_MIN}</span></div>
+      const canStartBase = F.offseasonReady(f) && (!t7 || F.freeAgencyDone(f)) && F.draftDone(f) && f.roster.length >= F.ROSTER_MIN && !F.nextStaffRole(f) && !F.legendCompliance(f)?.due;
+      const hofDay = !!hallCeremony(f, f.season?.year) && f.season.finished; const hofAttended = hofDay && hallCeremonyHeld(f, f.season.year);
+      const canStart = canStartBase && !hallCeremonyDue(f);
+      const hofPanel = hofDay ? `<div class="panel hofd-card ${hofAttended ? 'held' : ''}"><div class="hofd-card-h">🏛️ ${$t('hq.hall_of_fame_day')}</div><p>${hofAttended ? $t('hq.the_ceremony_has_been_held') : $t('hq.the_commissioner_is_waiting_the_boards')}</p><button class="btn ${hofAttended ? '' : 'primary'} block" data-action="hofday">${hofAttended ? $t('hq.replay_the_ceremony') : $t('hq.attend_the_ceremony')}</button></div>` : '';
+      return `${hofPanel}${migrationPanelHtml(f)}${callPanelHtml(f)}${warningsHtml(f, { max: 2, only: ['min', 'expiring'] })}<div class="panel"><div class="row between">${$t('hq.b_roster_b', { n: f.roster.length, rosterMax: F.ROSTER_MAX })}<span class="chip ${f.roster.length < F.ROSTER_MIN ? 'bad' : ''}">minimum ${F.ROSTER_MIN}</span></div>
         <div class="bar ${cap.over ? 'bad' : usage > 90 ? 'warn' : ''}" style="margin:6px 0"><i style="width:${usage}%"></i></div><div class="row between muted"><span>${$t('hq.cap', { amount: fmt(cap.cap) })}</span><span style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${cap.over ? $t('hq.over_by') + fmt(-cap.remaining) : $t('hq.room') + fmt(cap.remaining)}</span></div>
         ${cap.over ? `<div class="panel tight hotseat" style="margin:6px 0">${$t('hq.b_over_the_cap_by_b', { amount: fmt(-cap.remaining) })}<div class="dim">${$t('hq.you_can_start_the_season_over')}</div><div class="row" style="gap:6px;margin-top:6px"><button class="btn small primary" data-action="releasemon">${$t('hq.release_a_monster')}</button><button class="btn small" data-action="staffroom">${$t('hq.staff')}</button></div></div>` : ''}
         ${t7 ? `<p class="dim">${$t('hq.renewals_run_one_to_three_seasons')}</p>` : ''}<p class="dim" ${t7 ? 'hidden' : ''}>${$t('hq.new_signings_are_two_seasons_at')}</p></div>
@@ -212,6 +216,7 @@ export function registerHqScreens(Router, app) {
     },
     mount(root) {
       delegate(root, {
+        hofday: () => Router.go('hofceremony', { year: app.f.season.year, step: 0, from: 'offseason' }),
         yrs: (el) => { yrs[el.dataset.id] = Number(el.dataset.v); Router.render(); },
         c: async (el) => { const v = el.dataset.v; const item = (app.f.offseason?.items || []).find((i) => i.id === el.dataset.id); if (v === 'acceptcounter') { const r = F.resolveContract(app.f, el.dataset.id, 'acceptcounter'); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); return; } if (v === 'walk' && !(await confirmSheet(`${$t('hq.let_walk_2', { name: item?.name, item: item?.kind === 'staff' ? $t('hq.you_will_need_to_hire_a') : $t('hq.they_go_to_the_free_agent') })}`, { title: $t('hq.let_walk'), okLabel: $t('hq.let_walk'), danger: true }))) return; const r = F.resolveContract(app.f, el.dataset.id, v, { years: yrs[el.dataset.id] || 2 }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); if (r.status === 'rejected') toast(r.reason, 'bad'); else if (r.status === 'walked' && fieldText(r, 'why')) toast(`${$t('hq.leaves', { name: item?.name, why: fieldText(r, 'why') })}`, 'bad'); else if (r.status === 'countered') toast(`${$t('hq.he_counters_yr_for', { toLocaleString: r.counter.salary.toLocaleString('en-US'), years: r.counter.years })}`, 'info'); else if (r.status === 'declined') toast($t('hq.he_turned_it_down_a_free'), 'bad'); else if (r.status === 'signed') toast('Re-signed.', 'good'); else if (v === 'counter') toast(r.countered === 'accepted' ? $t('hq.they_took_the_counter') : $t('hq.they_refused_and_walked'), r.countered === 'accepted' ? 'good' : 'bad'); Router.render(); },
         sign: (el, ev) => { ev?.stopPropagation?.(); const r = F.signFreeAgent(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(r.overCap ? $t('hq.signed_over_the_cap') : 'Signed.', r.overCap ? 'bad' : 'good'); Router.render(); },
@@ -223,7 +228,7 @@ export function registerHqScreens(Router, app) {
         releasemon: () => Router.go('contracts'), staffroom: () => Router.go('staff'),
         signall: async () => { const left = (app.f.offseason?.items || []).filter((i) => i.kind === 'monster' && !i.status); if (!(await confirmSheet(`${$t('hq.re_sign_all_remaining_monsters_at', { n: left.length })}`, { title: $t('hq.sign_everyone'), okLabel: $t('hq.sign_all') }))) return; for (const i of left) F.resolveContract(app.f, i.id, 'sign'); app.save(); Router.render(); },
         ...faHandlers(app, Router), // Task 7: the market (fa-ui.js)
-        start: async () => { if (!(await confirmSheet(`${$t('hq.start_the_season_2', { year: yearOf(app.f.season.year + 1), task7Offseason: F.task7Offseason(app.f) ? $t('hq.the_record_resets_your_roster_aged') : $t('hq.your_roster_ages_one_year_and') })}`, { title: $t('hq.new_season'), okLabel: $t('hq.start') }))) return; const r = F.startNextSeason(app.f); if (!r.ok && r.code === 'lineup') { lineupGateSheet(app, { mode: 'season', onContinue: () => { const x = F.startNextSeason(app.f, { acceptForfeits: true }); if (!x.ok) { toast(x.reason, 'bad'); return; } app.save(); Router.go('hq', {}, { reset: true }); }, onDone: () => { app.save(); Router.render(); } }); return; } if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.go('hq', {}, { reset: true }); }, // the lineup safeguard at the season start
+        start: async () => { if (hallCeremonyDue(app.f)) { Router.go('hofceremony', { year: app.f.season.year, step: 0, from: 'offseason' }); return; } if (!(await confirmSheet(`${$t('hq.start_the_season_2', { year: yearOf(app.f.season.year + 1), task7Offseason: F.task7Offseason(app.f) ? $t('hq.the_record_resets_your_roster_aged') : $t('hq.your_roster_ages_one_year_and') })}`, { title: $t('hq.new_season'), okLabel: $t('hq.start') }))) return; const r = F.startNextSeason(app.f); if (!r.ok && r.code === 'lineup') { lineupGateSheet(app, { mode: 'season', onContinue: () => { const x = F.startNextSeason(app.f, { acceptForfeits: true }); if (!x.ok) { toast(x.reason, 'bad'); return; } app.save(); Router.go('hq', {}, { reset: true }); }, onDone: () => { app.save(); Router.render(); } }); return; } if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.go('hq', {}, { reset: true }); }, // the lineup safeguard at the season start
       });
     },
   });
@@ -822,38 +827,7 @@ export function registerHqScreens(Router, app) {
       root.querySelector('[data-action="cat"]')?.addEventListener('change', (e) => { leaderCat = e.target.value; Router.render(); });
     },
   });
-  let recordsTab = 'game';
-  Router.registerScreen('records', {
-    title: $t('hq.records_book_2'),
-    render({ f }) {
-      const R = ensureRecords(f); const tab = recordsTab;
-      const tabs = [['game', $t('hq.single_game')], ['season', $t('hq.season_3')], ['career', $t('hq.your_careers')], ['team', $t('hq.team')]];
-      let body = '';
-      const row = (label, r, sub, cat = null) => `<div class="item static ${r?.team === f.club ? 'mine' : ''}">${r?.species ? monsterSprite(r, 30) : ''}<div class="grow"><div class="name">${esc(label)}</div><div class="sub">${r ? `<b>${(() => { const id = r.name ? (r.id || resolveRecordHolder(f, r, { scope: recordsTab === 'season' ? 'season' : 'game', cat }).id) : null; return id ? careerLink(id, r.name) : esc(r.name || r.team); })()}</b>${r.position ? ` (${esc(r.position)})` : ''} · ${esc(sub(r))}` : $t('hq.no_record_yet')}</div></div><span class="chip accent">${r ? r.value : '·'}</span></div>`;
-      if (tab === 'game') body = RECORD_CATEGORIES.map((c) => row(c.label, R.game[c.id], (r) => `${r.team} vs ${r.opp} · ${yearOf(r.year)} wk ${r.week}${r.playoff ? ' (playoffs)' : ''}`, c.id)).join('');
-      else if (tab === 'season') body = RECORD_CATEGORIES.map((c) => row(c.label, R.season[c.id], (r) => `${r.team} · ${yearOf(r.year)}`, c.id)).join('') + `<p class="dim">${$t('hq.season_records_are_written_when_a')}</p>`;
-      else if (tab === 'career') { const L = universeCareerLeaders(f, { n: 1 }); body = RECORD_CATEGORIES.map((c) => { const r = L[c.id]?.[0]; return row(c.label, r ? { ...r, team: r.club || '' } : null, (x) => `${$t('hq.regular_season_games', { club: x.club ? esc(x.club) : x.where === 'legend' ? 'retired' : 'free agent', games: x.games })}`, c.id); }).join('') + `<p class="dim">${$t('hq.career_totals_across_every_monster_the')}</p>`; }
-      else body = TEAM_RECORDS.map((c) => row(c.label, R.team[c.id], (r) => `${r.score} vs ${r.opp} · ${yearOf(r.year)} wk ${r.week}${r.playoff ? ' (playoffs)' : ''}`)).join('');
-      return `<div class="seg" style="margin-bottom:8px">${tabs.map(([k, l]) => `<button class="btn small ${tab === k ? 'primary' : ''}" data-action="rtab" data-v="${k}">${l}</button>`).join('')}</div><div class="list">${body}</div>`;
-    },
-    mount(root) { delegate(root, { rtab: (el) => { recordsTab = el.dataset.v; Router.render(); } }); },
-  });
-  Router.registerScreen('awardhistory', {
-    title: $t('hq.award_history_2'),
-    render({ f }) {
-      const seasons = [...f.history.filter((h) => h.awards?.league).map((h) => ({ year: h.year, league: h.awards.league })), ...(f.season.awardsFinal && !f.season.finished ? [{ year: f.season.year, league: f.season.awardsFinal.winners, live: true }] : [])].sort((a, b) => b.year - a.year);
-      if (!seasons.length) return `<p class="dim">${$t('hq.award_winners_are_named_when_the')}</p>`;
-      return seasons.map((s) => `<h3>${yearOf(s.year)}${s.live ? ` <span class="chip">${$t('hq.this_season_2')}</span>` : ''}</h3><div class="list">${Object.entries(F.AWARDS).map(([k, a]) => { const w = s.league[k]; if (!w) return ''; return `<div class="item static ${w.team === f.club ? 'mine' : ''}">${k === 'coy' ? '' : monsterSprite(w, 32)}<div class="grow"><div class="name">${esc(a.short)} · ${k === 'coy' ? esc(w.coach) : careerLink(w.id, w.name)}</div><div class="sub">${esc(w.team)}${w.record ? ' · ' + w.record : ''}${fieldText(w, 'why') ? ' · ' + esc(fieldText(w, 'why')) : ''}</div></div></div>`; }).join('')}</div>`).join('');
-    },
-  });
-  Router.registerScreen('history', {
-    title: $t('hq.franchise_history'),
-    render({ f }) {
-      return `<div class="panel"><div class="kv">${$t('hq.b_owner_b')}<span>${esc(f.owner.first)} ${esc(f.owner.last)}${f.owner.hometown ? ' · ' + esc(f.owner.hometown) : ''}</span>${$t('hq.b_titles_b')}<span>${$t('hq.challenger_vanguard_sovereign', { challenger: f.badges.challenger, vanguard: f.badges.vanguard, sovereign: f.badges.sovereign })}</span></div></div>
-        ${f.history.length ? `<div class="list">${f.history.slice().reverse().map((h) => `<div class="item static"><div class="grow"><div class="name">${yearOf(h.year)} · ${esc(h.club)}</div><div class="sub">${h.record.w}-${h.record.l}${h.place ? ` ${$t('hq.overall', { place: h.place, n: ['st', 'nd', 'rd'][h.place - 1] || 'th' })}` : ''}${h.playoffs ? $t('hq.playoffs_3') : ''}${h.champion === h.club ? $t('hq.champions') : h.champion ? ` ${$t('hq.champion_2', { champion: esc(h.champion) })}` : ''}${h.legacy ? $t('hq.imported') : ''}</div>${h.awards ? `<div class="sub">${h.awards.mvp ? `${$t('hq.mvp', { name: esc(h.awards.mvp.name) })}` : ''}${h.awards.rivalry ? ` · ⚔️ ${h.awards.rivalry.swept ? 'swept' : h.awards.rivalry.wins + '-' + (h.awards.rivalry.games - h.awards.rivalry.wins) + ' vs'} ${esc(h.awards.rivalry.team)}` : ''}</div>` : ''}</div><div class="row" style="gap:4px;flex-wrap:wrap;justify-content:flex-end">${h.championship ? `<button class="btn small good" data-action="ceremony" data-year="${h.year}" title="${$t('hq.the_beast_bowl_ceremony_and_summary')}">${$t('hq.ceremony')}</button>` : ''}${h.awards ? `<button class="btn small" data-action="awards" data-year="${h.year}">${$t('hq.awards')}</button>` : ''}</div></div>`).join('')}</div>` : `<p class="muted">${$t('hq.no_completed_seasons_yet')}</p>`}`;
-    },
-    mount(root) { delegate(root, { ceremony: (el) => Router.go('ceremony', { year: Number(el.dataset.year) }), awards: (el) => { const h = app.f.history.find((x) => x.year === Number(el.dataset.year)); if (h?.awards) sheet(awardsHtml(h.awards), { title: `${$t('hq.awards_2', { year: yearOf(h.year) })}` }); } }); },
-  });
+  // The history screens (Franchise History, Award History, Records, Monster Hall of Fame) live in ./history.js (Task 9).
 }
 
 export function playDetailHtml(id, f = null, { practiceButton = true } = {}) {
