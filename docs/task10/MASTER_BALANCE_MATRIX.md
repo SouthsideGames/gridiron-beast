@@ -30,7 +30,7 @@ Not found: I found no other deferred Task 7 test in the Task 7 documents, the GD
 
 | ID | Requirement | Target | Test | Status |
 |---|---|---|---|---|
-| R-1 | The study owner does not forfeit for lack of a legal lineup | Forfeits at or near 0; the benchmark owner otherwise unchanged | Repair owner (does what the lineup warning asks: signs the cheapest legal free agent for an open slot), `tools/task7-allstar-record.mjs`, generalised for all studies | **PENDING** (first task) |
+| R-1 | The study owner does not forfeit for lack of a legal lineup | Forfeits at or near 0; the benchmark owner otherwise unchanged | Repair owner (does what the lineup warning asks: signs the cheapest legal free agent for an open slot), `tools/study-owner.mjs`: before a game and in the offseason | **FAIL**, improved: 5.8% of owner games forfeited over 8 franchises × 20 seasons (2.5% in seven of them; one franchise 53 forfeits). Before: whole seasons in 6 of 8. The rest are positions with no free agent to sign (T7-27, T7-31) |
 | R-2 | Hands-off owner reported beside the repair owner | Both lines in every league-wide table (GDD §59.10: the repair owner is a separate diagnostic, not a replacement) | Paired runs, same seeds | PENDING |
 
 ## 1. Football simulation and gameplay
@@ -184,7 +184,7 @@ A new baseline is needed: GDD §59.10 says the post-Task 8 validation establishe
 | P-9 | AI team strength over time | no progressive weakening | owner brief | Release: 58–63 overall from season 6 to 20 | PASS |
 | P-10 | Gym clubs against ordinary clubs | no numeric target found | M6 | M6: gyms win 58%, hold 61 of 78 titles | PENDING (no target; owner question) |
 | P-11 | League parity: win distribution, playoff spread | none set | — | contaminated by forfeits | PENDING (R-1) |
-| P-12 | Championship concentration | Task 6 band: ordinary title share 5–15% | T7-17 | One club won 6–11 of 20 titles in 7 of 8 franchises (contaminated) | PENDING (R-1) |
+| P-12 | Championship concentration | Task 6 band: ordinary title share 5–15% | T7-17 | Corrected runs: the leading club won 5–13 of 20 titles; 5–10 different champions per franchise | PENDING (ordinary against gym share not yet split; Rookie difficulty only) |
 
 ## 5. Task 9 history and Hall of Fame
 
@@ -192,13 +192,13 @@ A new baseline is needed: GDD §59.10 says the post-Task 8 validation establishe
 |---|---|---|---|---|
 | H-1 | Eligibility after three completed seasons; no retroactive candidates; nobody twice | rule | tests; 12 franchises, 0 problems | PASS |
 | H-2 | Ballot of the 15 strongest; class of at most three; results sealed; deterministic | rule | tests | PASS |
-| H-3 | Individual merit outweighs titles | "substantially more" | titles 3% of points; 117 of 127 inducted without title points | PASS, to be confirmed on corrected runs |
-| H-4 | Selectivity | none set (owner: "selective and prestigious") | 12–20 inductees per franchise, 49% empty classes | BLOCKED (owner sets the target); figures PENDING (R-1) |
-| H-5 | Positional fairness | "considered fairly", including specialists | QB 15% … OL 4% | PENDING (R-1), then owner |
-| H-6 | No backlog from the ballot or class limits | — | limit binds in 9% of elections | PENDING (R-1) |
-| H-7 | Highly accomplished monsters left out | — | 6 of 1,564 eligible | PENDING (R-1) |
-| H-8 | MVP distribution and repeat winners | none set | one monster won 4 to 12 of 20 MVPs | PENDING (R-1), then owner |
-| H-9 | Awards by position | none set | no LB, S, OL or K won MVP in 160 awards | PENDING (R-1) |
+| H-3 | Individual merit outweighs titles | "substantially more" | Corrected runs: titles 3% of points; 109 of 123 inducted without title points | PASS |
+| H-4 | Selectivity | none set (owner: "selective and prestigious") | Corrected runs: 10–20 inductees per franchise (mean 15.4), 49% empty classes, 15% classes of three | BLOCKED (owner sets the target) |
+| H-5 | Positional fairness | "considered fairly", including specialists | Corrected runs: QB 13%, RB 12%, K 11%, LB 11%, TE 10%, DL 8%, OL 6%, WR 6%, CB 5%, S 5% | BLOCKED (owner judges whether this is fair enough) |
+| H-6 | No backlog from the ballot or class limits | — | Corrected runs: the class limit binds in 8% of elections; 85% of inductees enter on their first ballot | PASS |
+| H-7 | Highly accomplished monsters left out | — | Corrected runs: 7 of 1,515 eligible (listed in `BALANCE_AUDIT.md`) | PASS (measured); owner may review the names |
+| H-8 | MVP distribution and repeat winners | none set | Corrected runs: the most MVPs by one monster per franchise: 4, 6, 6, 6, 7, 7, 12, 15 of 20 | BLOCKED (owner: is this acceptable?) |
+| H-9 | Awards by position | none set | Corrected runs, 160 MVPs: WR 44, DL 44, QB 37, RB 27, TE 6, CB 2; no LB, S, OL or K | BLOCKED (owner) |
 | H-10 | Record-breaking frequency; records stay meaningful over 20 seasons | none set | not measured | PENDING |
 | H-11 | Awards reflect performance | GDD §16.4 model | not measured | PENDING |
 | H-12 | Hall of Fame Day safeguards: nothing but the ceremony record changes | rule | twin-franchise test | PASS |

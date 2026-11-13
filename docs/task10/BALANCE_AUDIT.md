@@ -54,3 +54,14 @@ Full results: `docs/task9/HALL_OF_FAME.md`. Summary over 8 franchises (1,564 eli
 1. Hall selectivity (the Board's standard), and whether linemen and defensive backs should have an award of their own.
 2. Whether repeated MVP awards by one monster should be limited, and how (voter fatigue, a stronger team-record part, or nothing).
 3. Whether a career should count seasons played before the franchise began.
+
+## Corrected runs (repair owner, seeds 3 to 10, Rookie, 20 seasons)
+
+The study owner now covers every position in the offseason and signs for an open slot before a game (`tools/study-owner.mjs`).
+
+- **Forfeits:** 84 of 1,440 owner games (5.8%); 31 of 1,260 (2.5%) in seven franchises and 53 in one. Before the fix: whole seasons in 6 of 8 franchises. What remains are positions with no free agent to sign.
+- **Game finding (high): the in-season free-agent pool is often empty at a position.** Example, seed 3 season 9: ten free agents, none a linebacker, while the owner had one. A real player who loses a starter in season may have no legal signing and must trade or forfeit. To be quantified per position and week (matrix T7-25, T7-27, T7-31).
+- **Hall of Fame, corrected:** 10 to 20 inductees per franchise (mean 15.4); classes of 0 / 1 / 2 / 3: 49% / 22% / 15% / 15%; class limit binding in 8% of elections; 85% first ballot. By position: QB 13%, RB 12%, K 11%, LB 11%, TE 10%, DL 8%, OL 6%, WR 6%, CB 5%, S 5%. Titles: 3% of points; 109 of 123 still inducted without them. The earlier figures hold: forfeits were not driving them.
+- **Left out, corrected (7 of 1,515):** a TE with an MVP and an SMOY in 5 seasons (78 points); a WR with the best production at his position in 9 seasons (75); an RB with an MVP and an OPOY in 4 seasons (71); a TE with an MVP and an OPOY in 1 season (63); two QBs with two SMOY each (57, 43); an LB with two DROY (56). Short careers are what keeps award winners out.
+- **MVP repeats, corrected:** the most by one monster per franchise is 4, 6, 6, 6, 7, 7, 12 and 15 of 20. By position over 160 awards: WR 44, DL 44, QB 37, RB 27, TE 6, CB 2. The finding stands without forfeits.
+- **Titles, corrected:** the leading club won 5 to 13 of 20; 5 to 10 different champions per franchise. In seed 4 the hands-off Rookie owner won 13 titles and went 9-0 in twelve seasons.
