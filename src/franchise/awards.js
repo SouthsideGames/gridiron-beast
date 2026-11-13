@@ -82,7 +82,7 @@ const tieBreak = (a, b) => b.score - a.score || b.prod - a.prod || (b.games || 0
  * {team: {w,l,t,pf,pa}}; `expectations` from the preseason; `coachOf(team)`.
  * Returns {award: [finalist...]} with score, components, why and record.
  */
-export function computeAwards({ table, records, expectations = {}, coachOf = (t) => `${t} staff`, n = 5 }) {
+export function computeAwards({ table, records, expectations = {}, coachOf = (t) => `${t} staff`, n = 5, priorRookieAwardIds = [] }) {
   const { rows, minGames, weeks } = eligibleRows(table);
   const off = rows.filter((r) => OFFENSE_POSITIONS.has(r.position)), def = rows.filter((r) => DEFENSE_POSITIONS.has(r.position));
   const Z = { volume: zWithin(off, OFF.volume), efficiency: zWithin(off, OFF.efficiency), impact: zWithin(off, OFF.impact), passRush: zWithin(def, DEF.passRush), takeaways: zWithin(def, DEF.takeaways), coverage: zWithin(def, DEF.coverage), runDefense: zWithin(def, DEF.runDefense) };
@@ -103,8 +103,9 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
     ...off.map((r) => { const o = offScore(r); const indiv = o.s * (MVP_RESPONSIBILITY[r.position] || 1); const team = (winPct(r.team) - 0.5) * 3; const s = indiv * 0.75 + team * 0.2 + avail(r) * 0.3; return finalist(r, { s, c: { ...o.c, team: team }, prod: o.prod }, () => $t('franchise.club', { record: recordOf(r.team) })); }),
     ...def.map((r) => { const d = defScore(r); const team = (winPct(r.team) - 0.5) * 3; const s = d.s * MVP_RESPONSIBILITY.DEF * 0.75 + team * 0.2 + avail(r) * 0.3; return finalist(r, { s, c: { ...d.c, team }, prod: d.prod }, () => $t('franchise.club', { record: recordOf(r.team) })); }),
   ]);
-  const oroy = top(off.filter((r) => r.yearsPro === 0).map((r) => finalist(r, offScore(r), () => $t('franchise.rookie'))));
-  const droy = top(def.filter((r) => r.yearsPro === 0).map((r) => finalist(r, defScore(r), () => $t('franchise.rookie'))));
+  const priorRookies = new Set(priorRookieAwardIds);
+  const oroy = top(off.filter((r) => r.yearsPro === 0 && !priorRookies.has(r.id)).map((r) => finalist(r, offScore(r), () => $t('franchise.rookie'))));
+  const droy = top(def.filter((r) => r.yearsPro === 0 && !priorRookies.has(r.id)).map((r) => finalist(r, defScore(r), () => $t('franchise.rookie'))));
   const coy = Object.entries(records).map(([team, rec]) => {
     const g = rec.w + rec.l + (rec.t || 0); if (!g) return null;
     const ex = expectations[team] || {}; const expected = ex.expectedWinPct ?? 0.5; const last = ex.lastWinPct;
