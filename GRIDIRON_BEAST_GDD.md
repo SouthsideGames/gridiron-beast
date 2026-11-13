@@ -4554,8 +4554,22 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 
 
 
-## Task 10 owner approval — 2026-11-13 (candidate branch)
+## Task 10 owner approval — 2026-11-13
 
-**Sack-rate acceptance target: 7.0% of pass dropbacks.** The denominator must consistently include pass attempts, sacks, and qualifying scrambles; exclude designed runs. This is an owner-approved target, not a claim that the current build passes. Achieve it through pass-rush/blocking/QB decisions, not a forced sack probability. Validate separately by Rookie, Pro, All-Star, early/mid/late franchise, abilities on/off, and assess effects on completion, scoring, injuries, rushing, QB/OL/DL attributes and abilities. The pass-rush pocket-compression adjustment on `chatgpt/task10-balance-fixes` is a **candidate only** and must not be merged before verification.
+**Testing philosophy (owner, 2026-11-13 afternoon): correctness first.** Every ability, attribute and mechanic must activate when intended and do what it documents. Strong monsters, dominant clubs, repeat MVPs and poor clubs are acceptable outcomes of working mechanics. Balance is investigated only when a result suggests a mechanic is not activating, an attribute has no effect, an ability differs from its description, a calculation is reversed or broken, an exploit bypasses a rule, or an outcome is impossible. No artificial win-rate targets or forced parity.
 
-**MVP voter fatigue:** owner approves a soft, capped experimental model; repeat MVPs remain possible, with no automatic exclusion. Validate position fairness and full-career effects before final acceptance. Other Task 10 fixes remain subject to regression and owner merge approval.
+**Sack rate.** A 7.0% of dropbacks figure was recorded earlier the same day. It is not to be forced: sacks must come from the existing pass-rush, blocking and quarterback mechanics. The Awareness, Speed, Agility and Strength contributions are audited first (one attribute varied at a time); a change is made only where an attribute does not act where intended. The experimental pocket-compression constant from `chatgpt/task10-balance-fixes` was not adopted (it did not move the sack rate and broke two engine tests).
+
+**MVP.** The MVP alone caps each statistical component at +3 standard deviations within the position. OPOY, DPOY and the rookie awards are unchanged. No voter fatigue and no repeat-winner limit: a monster may win repeatedly when his performance justifies it.
+
+**Falling Star (FIR-03-C).** The delayed meteor and its main-target damage and mastery scaling stay. No splash: only the marked occupant is hit; reserves and team-mates of the target are never damaged.
+
+**Second Tide (WAT-01-C).** On every second eligible normal action the heal and surplus shield resolve and the normal attack still follows in the same action.
+
+**Rookie rollover.** A monster's first-year status lasts one actual season; founding rookies are second-year monsters in season 2 and age normally.
+
+**Trading.** Owner and AI clubs trade during weeks 1–7; trading closes at the start of week 8.
+
+**Playbooks.** The reviewed reserve offense and defense plays are released into the normal game pools.
+
+**Beast Clash.** One continuous automatic battle with player-controlled substitutions: no stay/rotate prompts; the player taps a living reserve to switch; the four-exchange voluntary rotation cooldown is kept; knockout replacements are automatic and do not reset it.

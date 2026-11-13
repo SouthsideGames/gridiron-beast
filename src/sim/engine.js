@@ -578,9 +578,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (!d.temp && offs.filter((o) => !o.temp && (o.engaged === d || o.engaged2 === d)).length >= 2) (stats.doubleTeamOccupation ||= {})[d.slot] = true;
     const goal = defenderGoal(d);
     const gx = goal.x - d.x, gy = goal.y - d.y, gd = Math.hypot(gx, gy) || 1;
-    // Task 10 sack-rate candidate: modestly increase pass-rush pocket compression.
-    // Keep the blocker/rusher matchup and type edge decisive; never roll a synthetic sack.
-    let push = clamp((runFit ? 0.2 : 1.0) + edge * 2.5, -0.5, 2.4); // yards/s the defender gains
+    let push = clamp((runFit ? 0.2 : 0.75) + edge * 2.5, -0.5, 2.4); // yards/s the defender gains
     if (FX) push *= FX.resist(push > 0 ? blocker : d); // Earth field: the one being driven back resists
     if (!runFit && be.deepRoots && push > 0) { push *= be.deepRoots; if (t > 0.5) abilityUsed(blocker, 'deepRoots'); } // Deep Roots: pass rushers drive him back at half speed
     if (blocker.contract) { const f = hook('blockPush', blocker, d, push); if (typeof f === 'number') push = f; } // M3 hook: the blocker's contract filters the ordinary push
