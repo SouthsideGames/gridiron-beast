@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { monsterHofBallot, electMonsterHallOfFame, monsterHofInductees, recordRetiredMonsterCandidates, WAIT_SEASONS } from '../src/franchise/monster-hof-voting.js';
+import { monsterHofBallot, electMonsterHallOfFame, monsterHofInductees, recordRetiredMonsterCandidates, candidateScore, MAX_NOMINEES, WAIT_SEASONS } from '../src/franchise/monster-hof-voting.js';
 
 const star = { id: 'retired-1', name: 'Star', position: 'QB', retiredYear: 5, seasons: 12, games: 110, honours: { titles: 3, awards: 4, records: 2 } };
 const peer = { id: 'retired-2', name: 'Peer', position: 'LB', retiredYear: 5, seasons: 11, games: 90, honours: { titles: 2, awards: 3, records: 1 } };
@@ -73,4 +73,19 @@ test('decorated unsigned retirees are captured only when retirement pass verifie
   assert.deepEqual(f.monsterHallOfFame.candidates.map((c) => c.id), ['unsigned-1']);
   assert.equal(f.monsterHallOfFame.candidates[0].games, 12);
   assert.equal(f.monsterHallOfFame.candidates[0].honours.awards, 1);
+});
+
+test('anonymous Board nominates only fifteen highest-scoring eligible retirees', () => {
+  const pool = Array.from({ length: 118 }, (_, i) => ({ ...star, id: `nominee-${i}`, honours: { titles: 0, awards: i, records: 0 } }));
+  const ballot = monsterHofBallot(pool, 9);
+  assert.equal(MAX_NOMINEES, 15);
+  assert.equal(ballot.length, 15);
+  assert.equal(ballot[0].id, 'nominee-117');
+  assert.equal(ballot.some((x) => x.id === 'nominee-0'), false);
+  const election = electMonsterHallOfFame(pool, 9).election;
+  assert.equal(election.authority, 'anonymous-hall-board');
+  assert.equal(election.sealed, true);
+});
+test('individual awards outweigh championships in nomination score', () => {
+  assert.ok(candidateScore({ ...star, honours: { titles: 0, awards: 2, records: 0 } }) > candidateScore({ ...star, honours: { titles: 6, awards: 0, records: 0 } }));
 });
