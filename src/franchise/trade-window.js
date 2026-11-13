@@ -6,9 +6,9 @@
 // answers the offers clubs bring. Free agency has its own rules and does not read this file.
 import { t as $t } from '../text/index.js';
 
-/** Trades are processed before the games of weeks 2 through 8. Once week 8 has been played, regular-season trading is over. */
-export const FIRST_TRADE_WEEK = 2;
-export const TRADE_DEADLINE_WEEK = 8;
+/** Trades are processed before the games of weeks 1 through 7. Once week 8 begins, regular-season trading is over. */
+export const FIRST_TRADE_WEEK = 1;
+export const TRADE_DEADLINE_WEEK = 7;
 
 /** Is this week of the regular season inside the in-season window (club-to-club deals, calls to the owner)? */
 export const seasonTradeWeek = (week) => Number.isFinite(week) && week >= FIRST_TRADE_WEEK && week <= TRADE_DEADLINE_WEEK;
@@ -31,5 +31,5 @@ export function tradeWindowState(s) {
   if (week > TRADE_DEADLINE_WEEK) return { phase: 'deadline-passed', desk: false, calls: false, aiAi: false, open: false, reason: `${$t('franchise.the_trade_deadline_the_end_of', { tradeDeadlineWeek: TRADE_DEADLINE_WEEK })}`, next: reopens };
   if (week < FIRST_TRADE_WEEK) return { phase: 'early', desk: false, calls: false, aiAi: false, open: false, reason: `${$t('franchise.your_desk_is_closed_during_the', { firstTradeWeek: FIRST_TRADE_WEEK, tradeDeadlineWeek: TRADE_DEADLINE_WEEK })}`, next: reopens };
   const left = TRADE_DEADLINE_WEEK - week + 1;
-  return { phase: 'open-season', desk: false, calls, aiAi, open: false, reason: `${$t('franchise.your_desk_is_closed_during_the_2', { tradeDeadlineWeek: TRADE_DEADLINE_WEEK, left, n: left })}`, next: reopens };
+  return { phase: 'open-season', desk: true, calls, aiAi, open: true, reason: `Trading is open through Week ${TRADE_DEADLINE_WEEK} (${left} week${left === 1 ? '' : 's'} remaining)`, next: reopens };
 }
