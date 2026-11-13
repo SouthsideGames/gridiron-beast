@@ -162,7 +162,7 @@ Two failures were found earlier, on the mixed run at `4d9036e`:
 
 Both are fixed in `5e56a94`.
 
-**Run 2, the final full suite on `c84bb73`:** {{FINAL}}
+**Run 2, the final full suite on `c84bb73`:** **2,122 tests, 2,122 pass, 0 fail** (57 minutes). The baseline had 2,103 tests; the 19 new ones are the Task 10 tests.
 
 The timeline determinism test (owner decision E) passed on `61f62c0` and failed on the mixed earlier run. Whether it fails depends on whether a retired monster holds a record in that seed's season. The weakness is still there.
 
