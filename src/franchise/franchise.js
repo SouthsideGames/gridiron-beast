@@ -353,7 +353,7 @@ export function checkAchievements(f, trigger, ctx = {}) {
     if (!ok) continue;
     f.achievements[a.id] = { year: f.season?.year || 1, week: f.season?.week || 1 };
     const vars = sceneVars(f, c); f.scenes.push({ id: a.id, ctx: vars }); earned.push(a.id); stampGlobal(f, a, vars);
-    news(f, $L('franchise.achievement', { fillScene: fillScene(a.title, sceneVars(f, c)) }), 'win');
+    news(f, $L('franchise.achievement', { fillScene: captured(() => fillScene(a.titleKey ? $t(a.titleKey) : a.title, sceneVars(f, c))) }), 'win'); // Task 10: the title is kept as a line (it was a finished sentence inside the saved line)
   }
   return earned;
 }
