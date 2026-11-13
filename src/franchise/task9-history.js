@@ -2,6 +2,7 @@
 // without accessing or mutating simulation state. The GM Hall of Fame remains separate.
 export { careerProfile, retiredCandidateProfile } from './career-profile.js';
 export { careerPage } from './career-page.js';
+export { hallCeremony } from './hall-ceremony.js';
 export { franchiseSeasonHistory, championshipHistory, historicalAwards,
   historicalHallOfFame, franchiseLegacyIndex, monsterHallStatus, franchiseTotals } from './legacy-index.js';
 export { historicalRecords, monsterRecordHonours } from './records-history.js';
