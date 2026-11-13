@@ -5,6 +5,7 @@ export const MONSTER_HOF_VERSION = 1;
 export const WAIT_SEASONS = 3;
 export const MAX_INDUCTEES = 3;
 export const VOTER_COUNT = 15;
+export const MAX_NOMINEES = 15;
 export const VOTE_THRESHOLD = 0.7;
 
 const integer = (n, fallback = 0) => Number.isFinite(n) ? Math.max(0, Math.floor(n)) : fallback;
@@ -31,8 +32,8 @@ export function candidateScore(c) {
   const years = seasons(c);
   const played = games(c);
   // These are Hall voting criteria only, not gameplay attributes or awards.
-  return titles * 18 + awards * 22 + records * 12 +
-    Math.min(years, 20) * 2 + Math.min(played, 200) / 10;
+  return titles * 5 + awards * 28 + records * 19 +
+    Math.min(years, 20) * 3 + Math.min(played, 200) / 8;
 }
 
 export function monsterHofBallot(candidates, year, past = []) {
@@ -45,7 +46,8 @@ export function monsterHofBallot(candidates, year, past = []) {
     const old = unique.get(id);
     if (!old || candidateScore(c) > candidateScore(old)) unique.set(id, c);
   }
-  const pool = [...unique.values()].sort((a, b) => stableId(a).localeCompare(stableId(b)));
+  // The independent, anonymous Hall Board reviews only the top fifteen eligible careers.
+  const pool = [...unique.values()].sort((a, b) => candidateScore(b) - candidateScore(a) || stableId(a).localeCompare(stableId(b))).slice(0, MAX_NOMINEES);
   const ballot = pool.map((c) => {
     const score = candidateScore(c);
     let votes = 0;
@@ -72,7 +74,7 @@ export function electMonsterHallOfFame(candidates, year, history = []) {
   const inductees = ballot.filter((c) => c.qualified).slice(0, MAX_INDUCTEES)
     .map(({ id, name, position, retiredYear, votes, voters, score }) =>
       ({ id, name, position, retiredYear, inductedYear: year, votes, voters, score }));
-  const election = { v: MONSTER_HOF_VERSION, year, ballot, inductees };
+  const election = { v: MONSTER_HOF_VERSION, year, ballot, inductees, authority: 'anonymous-hall-board', sealed: true };
   return { election, history: [...(history || []), election], created: true };
 }
 
