@@ -2,7 +2,7 @@
 
 **Branch:** `task10-integration` (not merged; `main` and the main game link are untouched). **Task 10 is not declared complete:** that waits for the owner's review.
 
-**Full regression and benchmark build:** `61f62c0`. The later commits on the branch only add tests and this report.
+**Builds measured:** the full regression first on `61f62c0`, then the final run on `c84bb73`. The benchmark and the census ran on `61f62c0`.
 
 **Baseline for comparisons:** `task10-franchise-final-balance` at `37adc00`. It passes 2,103 of 2,103 tests.
 
@@ -26,6 +26,7 @@ ChatGPT's commits were treated as untested candidates. Where one was wrong, the 
 | `5bd6a16` | Play-by-play |
 | `61f62c0` | Coach identities |
 | `ba48583` | Quarterback draw-order test |
+| `6454c03`, `980a1ce`, `f9cc211`, `c84bb73` | Regression fixes (§7) |
 
 ## 2. The eight approved changes
 
@@ -143,9 +144,66 @@ All four attributes work in the right direction. One gap: **Strength plays no pa
   - The game is unaffected (the writers are always on), but the Hall is not timeline-independent.
   - **Proposed fix:** a small record ledger kept outside the timeline. It is a save-format addition, so it is left for approval.
 
-{{REGRESSION}}
+## 7. Regression (Stage D)
 
-{{BENCHMARK}}
+**Run 1, the full suite on `61f62c0`:** 2,121 tests, 2,116 pass, 5 fail. All five are now fixed, and each passes when rerun alone.
+
+| Failing test | Cause | Fix | Commit |
+|---|---|---|---|
+| `contracts: … staff renewals within ±8%` | **A real defect** (the pre-existing staff-renewal weakness). A coordinator hired in a postseason event inherited the departed coordinator's contract and raise, and the departed coordinator's renewal stayed open. Signing it priced the new hire from the old one's demand. | The replacement gets his own contract at his own salary, and the stale renewal is withdrawn. The test now also checks that each renewal is for the person currently in the role. | `6454c03` |
+| `retirement is a permanent exit` | Outdated test. Since Task 10, a retirement's honours are saved as data, not as an English sentence. | The test reads them through `honoursText`. | `980a1ce` |
+| `F8: Edge Contain … better half of the 26 calls` | Outdated test. The defensive book is now every released call (176), not 26. Edge Contain ranks 80 of 176, in the better half. | "Better half" is measured on the whole book. | `f9cc211` |
+| `F7 final: an early cut … free defender across the line` | A test-geometry edge case found by a released defense (`toss_sweep` vs `base_cat`). The back was already past the line when he cut, beside an unblocked linebacker. This is the intended behaviour; the test assumed the back was still behind the line. | A free defender level with or behind the back counts. 1 case of 34 early cuts. | `f9cc211` |
+| `a made-up translation of every line changes nothing but the wording` | The last saved-sentence gap from the candidate review: an achievement title written into a news line as finished English. | The title is saved as a line, read through its key. | `c84bb73` |
+
+Two failures were found earlier, on the mixed run at `4d9036e`:
+- The Clash boundary rule: the session import is now routed through `src/clash/index.js`.
+- The arena source test: it now accepts the `record` getter.
+
+Both are fixed in `5e56a94`.
+
+**Run 2, the final full suite on `c84bb73`:** {{FINAL}}
+
+The timeline determinism test (owner decision E) passed on `61f62c0` and failed on the mixed earlier run. Whether it fails depends on whether a retired monster holds a record in that seed's season. The weakness is still there.
+
+
+## 8. Balance and correctness checks (Stage D)
+
+These are measurements only. Per Section 5, there are no parity or win-rate targets.
+
+### Football ability census
+
+200 whole games between generated clubs, on `61f62c0`.
+- **No ability that worked in the baseline census (300 games) has stopped executing.**
+- Two abilities with 10 or more appearances never executed. Both are pre-existing and already listed in `OWNER_DECISIONS_2026-11-13.md` §8:
+  - Foresight (cerebrix): 0 in both runs.
+  - Crosswind Rescue (windlynx): 0.02 per appearance in the baseline, 0 in 37 appearances here. That is within chance for something this rare.
+- No other ability's activation rate halved or doubled.
+
+### Reduced franchise benchmark
+
+Pro difficulty, seeds 1–5 × 10 seasons, on `61f62c0`, using the production lifecycle and the hands-off owner policy.
+
+| Measure | This branch | Baseline, same seeds |
+|---|---|---|
+| Integrity problems | 0 | 0 |
+| Errors | 0 | 0 |
+| AI rosters | 28–38 | 27–38 |
+| Negative cap room | 0 | 0 |
+| AI club-seasons with a lineup problem | 2 of 800 | 3 of 1,600 (seeds 1–10) |
+| Hands-off owner win % (seeds 1–5) | 51, 24, 52, 38, 29 | 52, 28, 28, 75, 42 |
+| Distinct champions per run | 4–7 | 2–7 |
+| Unsigned players at market close (mean) | 29.4 | 29.0 |
+| 0–21 forfeits in owner games | 139 of 450 | 36 of 450 |
+
+Run time was 898 seconds.
+
+**About the forfeits.** They are the hands-off benchmark owner, not a game rule:
+- The cause is a missing position. In seed 4 from season 6, the club has one cornerback for two CB slots, and the benchmark owner never signs anyone.
+- The game flags this as a critical "no legal lineup" warning before every such Sunday.
+- The baseline shows the same pattern (whole forfeited seasons in seeds 2 and 3). This branch's different seasons reach it in more runs.
+- **Not a correctness defect, but worth noting:** a player who ignores the roster for several seasons gets forfeits.
+
 
 ## 9. Risks
 
