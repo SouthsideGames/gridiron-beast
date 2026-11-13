@@ -62,7 +62,7 @@ const COMPONENT_LABEL = { volume: 'production', efficiency: 'efficiency', impact
 function zWithin(rows, fn) {
   const by = {}; for (const r of rows) (by[r.position] ||= []).push(fn(r));
   const st = Object.fromEntries(Object.entries(by).map(([p, v]) => { const m = v.reduce((a, b) => a + b, 0) / v.length; const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length); return [p, { m, sd }]; }));
-  return (r) => { const s = st[r.position]; if (!s || s.sd < 1e-6) return 0; return (fn(r) - s.m) / s.sd; };
+  return (r) => { const s = st[r.position]; if (!s || s.sd < 1e-6) return 0; return Math.min(3, (fn(r) - s.m) / s.sd); };
 }
 
 /** Workload gate: most of the league's weeks, and a starter's share of snaps for the position. */
