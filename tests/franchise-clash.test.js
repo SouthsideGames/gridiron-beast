@@ -47,8 +47,8 @@ test('enter: the battle is seeded from the franchise generator, deterministic, r
   const copy = JSON.parse(JSON.stringify(f)); assert.equal(logHash(F.encounterBattle(copy)), logHash(r1), 'rebuilt from a saved copy');
   assert.deepEqual(r1.lines.a.map((x) => x.combatant.monsterId).sort(), [...e.mine].sort()); assert.deepEqual(r1.lines.b.map((x) => x.combatant.monsterId).sort(), [...e.wild].sort());
   assert.equal(r1.log.find((x) => x.kind === 'enter' && x.actor?.[0] === 'a').actor, 'a0'); assert.equal(r1.lines.b.find((x) => x.id === 'b0').combatant.monsterId, e.wild[0], 'the chosen monster starts in the wild front');
-  // Task 8 M4 (S12): a version-2 record on the t8 engine; Watch prompts the player's rotations (D1), the wild side is the AI (D2)
-  assert.equal(e.version, Link.CLASH_RECORD_VERSION); assert.equal(e.ruleset, 't8'); assert.equal(r1.ruleset, 't8'); assert.deepEqual(r1.config.policies, { a: 'manual', b: 'ai' });
+  // Task 8 M4 (S12): a version-2 record on the t8 engine; Task 10: Watch is the continuous player policy (taps, no prompts), the wild side is the AI (D2)
+  assert.equal(e.version, Link.CLASH_RECORD_VERSION); assert.equal(e.ruleset, 't8'); assert.equal(r1.ruleset, 't8'); assert.deepEqual(r1.config.policies, { a: 'player', b: 'ai' });
   assert.equal(F.startEncounter(f, 0).ok, false, 'one encounter per Tuesday');
   assert.equal(F.recruit(f, 0, 'development').ok, false, 'no pitch while the battle is open');
 });
@@ -93,7 +93,7 @@ test('skip: no battle, no reward, no penalty; the week moves on and nothing else
   assert.equal(JSON.stringify({ roster: f.roster, rng: f.rngState, board: f.board, campaign: f.campaign, news: f.news.length }), snap);
 });
 
-test('Watch (Task 8 M4, D1): the chosen order is the order of entry; the battle stops at the player\'s first legal rotation prompt; "Auto for the rest" hands the side to the AI and the battle runs to its end with knockout replacements in lineup order', () => {
+test('Watch (Task 8 M4; Task 10 continuous): the chosen order is the order of entry; the battle never stops for a prompt; "Auto for the rest" hands the side to the AI and the battle runs to its end with knockout replacements in lineup order', () => {
   let kos = 0, prompts = 0;
   for (let seed = 80; seed < 100; seed++) {
     const f = newFranchise(seed); toTuesday(f); const pv = F.encounterPreview(f, 0); if (pv.size < 3) continue;
@@ -102,16 +102,13 @@ test('Watch (Task 8 M4, D1): the chosen order is the order of entry; the battle 
     assert.deepEqual(f.week.encounter.mine, order, 'the lineup is stored in the order chosen');
     const byId = Object.fromEntries(r.lines.a.map((x) => [x.id, x.combatant.monsterId])); assert.deepEqual(['a0', 'a1', 'a2'].map((id) => byId[id]), order, 'slots a0, a1, a2 are the order of entry');
     assert.equal(r.log.find((x) => x.kind === 'enter' && x.actor?.[0] === 'a').actor, 'a0', 'the first in line opens');
-    const p = Link.pendingDecision(r);
-    if (p) {
-      prompts++; assert.equal(p.kind, 'rotation'); assert.equal(p.side, 'a'); assert.ok(p.options.includes('stay') && p.options.includes('auto')); assert.ok(p.reserves.length >= 1);
-      assert.equal(r.log[p.index].kind, 'rotation_prompt', 'the prompt is the last event of the pending log');
-      assert.equal(F.resolveEncounter(f).ok, false, 'the battle cannot settle while the prompt is open');
-      const prefix = r.log.length;
-      assert.ok(F.encounterDecide(f, p.ex, 'auto').ok); r = F.encounterBattle(f);
-      assert.equal(Link.pendingDecision(r), null, 'Auto for the rest: no further prompt'); assert.ok(r.log.length > prefix);
+    assert.equal(Link.pendingDecision(r), null, 'no prompt'); assert.ok(r.winner, 'the battle runs through on its own');
+    const s = F.encounterSession(f); let legal = null; while (!s.done) { const v = s.view.rotation; if (v.exchangesLeft === 0 && v.reserves.length) { legal = v; break; } s.advance(); }
+    if (legal) {
+      prompts++; assert.ok(F.encounterDecide(f, legal.ex, 'auto').ok); const prefix = legal.lastSeq; r = F.encounterBattle(f);
+      assert.equal(Link.pendingDecision(r), null); assert.ok(r.log.length > prefix);
       assert.ok(r.log.some((x) => x.kind === 'rotation_decision' && x.decision === 'auto'), 'the choice is recorded in the log');
-    } else assert.ok(r.winner, 'no legal rotation phase before the end: the battle ran through');
+    }
     // after each knockout on side a, the replacement is the first living reserve in lineup order (B3 rule 4; ko-replacement-line-order)
     for (const ev of r.log.filter((x) => x.kind === 'ko' && x.target?.[0] === 'a')) {
       const i = r.log.indexOf(ev); const enter = r.log.slice(i + 1).find((x) => x.kind === 'enter' && x.actor?.[0] === 'a');
@@ -122,7 +119,7 @@ test('Watch (Task 8 M4, D1): the chosen order is the order of entry; the battle 
     if (r.by === 'knockout') assert.ok(last.order[loser].every((id) => last.S[loser][id].ko), 'a knockout win means the other side has nobody left');
     assert.ok(F.resolveEncounter(f).ok);
   }
-  assert.ok(kos > 3, 'knockouts with replacements were seen'); assert.ok(prompts > 5, `rotation prompts were seen (${prompts})`);
+  assert.ok(kos > 3, 'knockouts with replacements were seen'); assert.ok(prompts > 5, `legal switch points were seen (${prompts})`);
 });
 
 test('staff auto-run handles Tuesday through an encounter and the week still reaches Sunday; the final week keeps the recovery day', () => {
@@ -184,13 +181,13 @@ test('pregame: the player cannot start a second Clash or change the AI choice; i
 });
 
 // ---------------------------------------------------------------- Play / Auto / Skip to results (GDD §26.0)
-test('modes (Task 8 M4): Watch prompts, Skip plays the AI policy; Watch with "Auto for the rest" at its first prompt is the identical battle to Skip; legacy play/auto settings map onto Watch; a FINISHED legacy record still replays on the legacy engine (D19)', () => {
+test('modes (Task 8 M4; Task 10): Watch is continuous (taps, no prompt), Skip plays the AI policy; Watch with "Auto for the rest" from the start is the identical battle to Skip; legacy play/auto settings map onto Watch; a FINISHED legacy record still replays on the legacy engine (D19)', () => {
   const f = newFranchise(300); toTuesday(f);
-  assert.ok(F.startEncounter(f, 0, { mode: 'watch' }).ok); const e = f.week.encounter; assert.equal(e.mode, 'watch'); assert.deepEqual(e.policies, { a: 'manual', b: 'ai' });
-  const watch = F.encounterBattle(f); const p = Link.pendingDecision(watch); assert.ok(p, 'Watch waits at the first legal rotation phase');
+  assert.ok(F.startEncounter(f, 0, { mode: 'watch' }).ok); const e = f.week.encounter; assert.equal(e.mode, 'watch'); assert.deepEqual(e.policies, { a: 'player', b: 'ai' });
+  const watch = F.encounterBattle(f); assert.equal(Link.pendingDecision(watch), null, 'Watch never waits at a prompt'); const p = { ex: 1 };
   const skipRec = JSON.parse(JSON.stringify(e)); skipRec.policies = Link.t8Policies('skip'); f.week.encounter = skipRec; const skip = F.encounterBattle(f); assert.equal(Link.pendingDecision(skip), null, 'Skip never asks');
   f.week.encounter = e; assert.ok(F.encounterDecide(f, p.ex, 'auto').ok); const watchAuto = F.encounterBattle(f);
-  assert.equal(watchAuto.stateHash, skip.stateHash, 'Watch + Auto at the first prompt = Skip: the same battle (§15: same seed and inputs)'); assert.equal(watchAuto.winner, skip.winner);
+  assert.equal(watchAuto.stateHash, skip.stateHash, 'Watch + Auto from the first rotation phase = Skip: the same battle (§15: same seed and inputs)'); assert.equal(watchAuto.winner, skip.winner);
   const g = newFranchise(301); toTuesday(g); assert.ok(F.startEncounter(g, 0, { mode: 'auto' }).ok); assert.equal(g.week.encounter.mode, 'watch', "'auto' is 'watch' now");
   const h = newFranchise(302); toTuesday(h); assert.ok(F.startEncounter(h, 0, { mode: 'play' }).ok); assert.equal(h.week.encounter.mode, 'watch');
   // D19: a FINISHED record from before M4 (no ruleset, no version) replays on the frozen legacy engine with the policies it was played with
@@ -200,7 +197,7 @@ test('modes (Task 8 M4): Watch prompts, Skip plays the AI policy; Watch with "Au
   assert.deepEqual(Link.policiesOf({ policies: { a: 'none', b: 'none' } }), { a: 'none', b: 'none' });
   // D19 (plan default): an UNRESOLVED legacy record (status 'battle', rewards not applied) is re-run on t8 from its seed and lineups, tagged
   const open = JSON.parse(JSON.stringify(legacy)); open.status = 'battle'; open.result = null; open.mode = 'watch'; f.week.encounter = open;
-  const r2 = F.encounterBattle(f); assert.equal(r2.ruleset, 't8'); assert.equal(open.ruleset, 't8'); assert.equal(open.version, Link.CLASH_RECORD_VERSION); assert.equal(open.migrated.from, 'legacy'); assert.deepEqual(open.policies, { a: 'manual', b: 'ai' });
+  const r2 = F.encounterBattle(f); assert.equal(r2.ruleset, 't8'); assert.equal(open.ruleset, 't8'); assert.equal(open.version, Link.CLASH_RECORD_VERSION); assert.equal(open.migrated.from, 'legacy'); assert.deepEqual(open.policies, { a: 'player', b: 'ai' }, 'Task 10: re-run as a continuous Watch battle');
 });
 
 // ---------------------------------------------------------------- Remember my choice and battle speed (GDD §26.0)

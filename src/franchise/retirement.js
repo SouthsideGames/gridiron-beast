@@ -10,7 +10,7 @@
 import { monsterOverall } from '../data/monsters.js';
 import { trueOnset, publicOnset, retireChance, injuryClass, transitionSeason, transitionRamp, transitionClubCap, CAREER_AFTER_ONSET, NEAR_PEAK, DECLINED, forecast, careerStage } from '../data/aging.js';
 import { hasLeague, leagueClubs, clubRoster, removeFromClub, isAgeless, isProtected, legendStub, leagueEvent, moveIdentity } from './league-registry.js';
-import { isDecorated, honoursLine } from './league.js';
+import { isDecorated, honoursData } from './league.js';
 import { buildDepthChart } from './roster.js';
 import * as IH from './injury-history.js';
 import { universeCareerLeaders } from './league-careers.js';
@@ -95,7 +95,7 @@ export function retirementPass(f, r, { year, news = null }) {
       if (isDecorated(f, gone) || leaderIds().has(gone.id) || formerMine) f.league.legends[gone.id] = legendStub(gone, { year, club });
       // League News: a retirement always stands as a line, so only the ones that matter are reported (about 30 retire a season,
       // GDD §55.5): a decorated career, a starter, a 65+ monster or a former monster of the owner's; the rest are in the summary
-      const honours = honoursLine(f, gone);
+      const honours = honoursData(f, gone); // data, not a sentence (Task 10): the news writes it in the reader's language
       // whether to report is decided from the record (isDecorated: awards, records, titles), never from the career timeline, so the
       // timeline writers cannot change the league's state (Task 6 Phase D fix); the honours text still reads the timeline when it is on
       const decorated = isDecorated(f, gone);
@@ -117,7 +117,7 @@ export function retirementPass(f, r, { year, news = null }) {
       (m.history ||= []).push({ club: f.club, from: m.contract?.signed || m.joined?.year || year, to: year, reason: 'retired' });
       m.contract = null; m.retired = year;
       addEvent(m, { k: `retired:${year}`, t: 'retired', y: year, c: f.club, x: { age, owner: 1 } });
-      if (hasLeague(f)) { f.league.legends[m.id] = legendStub(m, { year, club: f.club, honours: [] }); leagueEvent(f, { kind: 'retire', club: f.club, honours: honoursLine(f, m), starter: st.has(m.id), ...moveIdentity(f, m), age, ovr, formerMine: true }); }
+      if (hasLeague(f)) { f.league.legends[m.id] = legendStub(m, { year, club: f.club, honours: [] }); leagueEvent(f, { kind: 'retire', club: f.club, honours: honoursData(f, m), starter: st.has(m.id), ...moveIdentity(f, m), age, ovr, formerMine: true }); }
       out.owner.push({ id: m.id, name: m.name, position: m.position, age, ovr, seasons, starter: st.has(m.id) });
       news?.($P($L('franchise.ovr_retires_at', { name: m.name, position: m.position, ovr, age }), (seasons ? $P(` `, $L('franchise.after_seasons', { seasons, n: seasons })) : ''), $L('franchise.retirement_is_final_plan_the_draft')), 'roster');
     }

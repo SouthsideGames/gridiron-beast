@@ -76,7 +76,7 @@ import { playGame } from '../sim/game-runner.js';
 import { teamStrengths } from '../sim/coach-ai.js';
 import { guarded, mayStartSeason, isArchived, seasonsCompleted, SEASON_CAP } from './lifecycle.js';
 import { newUid } from '../core/uid.js';
-import { CLASH_SIZE, SWAP_EVERY, policiesOf, normalizeMode, snapMonster, autoLineup, eligibleBattlers, runBattle, runRecord, battleSummary, pendingDecision, applyBattleEffects, aiPossessionChoice, POSSESSION_CHOICES, newBattleRecord, isT8Record, recordDecision, settleHeadless, upgradeUnresolvedRecord, carryOutOf, masteryRecord } from './clash-link.js';
+import { CLASH_SIZE, SWAP_EVERY, policiesOf, normalizeMode, snapMonster, autoLineup, eligibleBattlers, runBattle, runRecord, battleSummary, pendingDecision, applyBattleEffects, aiPossessionChoice, POSSESSION_CHOICES, newBattleRecord, isT8Record, recordDecision, settleHeadless, upgradeUnresolvedRecord, carryOutOf, masteryRecord, recordSession } from './clash-link.js';
 import { carryInto as t8CarryInto, atGameEnd as t8AtGameEnd } from '../sim/t8/status-runtime.js';
 import { exhaustedSet as t8ExhaustedSet } from '../sim/t8/stamina-runtime.js';
 import { t as $t, line as $L, lineParts as $P, lineText, lineFields, lineField, captured, recording, recalled, fieldLine, fieldText, labelLine } from '../text/index.js';
@@ -233,11 +233,11 @@ export function resolvePostseason(f, optionId) {
     else text = `${star?.name || $t('franchise.your_star_2')} stays.`;
   } else if (e.kind === 'coordinator_offer') {
     if (optionId === 'bonus' && coach) { f.pendingDeadCap = (f.pendingDeadCap || 0) + Math.round(coach.salary * RETENTION_BONUS_PCT); text = `${$t('franchise.stays_the_bonus_hits_next_seasons', { name: coach.name })}`; }
-    else if (optionId === 'leave') { const c = hireBest(e.coordRole); text = `${$t('franchise.leaves_for', { name: coach?.name || $t('franchise.your_coordinator'), other: e.vars.other, c: c ? c.name + ' is hired.' : '' })}`; }
-    else text = `${coach?.name || $t('franchise.your_coordinator')} stays.`;
+    else if (optionId === 'leave') { const c = hireBest(e.coordRole); text = `${$t('franchise.leaves_for', { name: coach?.name || $t('franchise.your_coordinator'), other: e.vars.other, c: c ? $t('franchise.is_hired', { name: c.name }) : '' })}`; }
+    else text = $t('franchise.coach_stays', { name: coach?.name || $t('franchise.your_coordinator') });
   } else if (e.kind === 'scheme_mutiny') {
-    if (optionId === 'scheme') { const want = bestSchemeFor(f, e.coordRole); const c = hireBest(e.coordRole, { preferScheme: want }); text = `${$t('franchise.leaves_without_severance', { c: c ? c.name + ' (' + c.style + ') takes over' : $t('franchise.no_replacement_found'), name: coach?.name || $t('franchise.the_coordinator') })}`; }
-    else if (optionId === 'fire' && coach) { f.pendingDeadCap = (f.pendingDeadCap || 0) + Math.round(coach.salary * 0.5); const c = hireBest(e.coordRole); text = `${$t('franchise.fired_half_their_salary_counts_against', { name: coach.name, c: c ? c.name + ' hired' : $t('franchise.no_replacement') })}`; }
+    if (optionId === 'scheme') { const want = bestSchemeFor(f, e.coordRole); const c = hireBest(e.coordRole, { preferScheme: want }); text = `${$t('franchise.leaves_without_severance', { c: c ? $t('franchise.takes_over', { name: c.name, style: c.style }) : $t('franchise.no_replacement_found'), name: coach?.name || $t('franchise.the_coordinator') })}`; }
+    else if (optionId === 'fire' && coach) { f.pendingDeadCap = (f.pendingDeadCap || 0) + Math.round(coach.salary * 0.5); const c = hireBest(e.coordRole); text = `${$t('franchise.fired_half_their_salary_counts_against', { name: coach.name, c: c ? $t('franchise.hired_short', { name: c.name }) : $t('franchise.no_replacement') })}`; }
     else text = `${$t('franchise.stays_the_roster_is_on_you', { name: coach?.name || $t('franchise.your_coordinator') })}`;
   }
   const textL = done(text);
@@ -1934,6 +1934,15 @@ export function encounterBattle(f, { log = 'full' } = {}) {
   if (!a.length || !b.length) return null;
   return runRecord(e, { a, b, log });
 }
+/** Task 10: the encounter's live continuous battle (Watch), or null (Skip, finished, legacy). See clash-link.js recordSession. */
+export function encounterSession(f) {
+  const e = f.week.encounter; if (!e || !e.seed) return null;
+  upgradeUnresolvedRecord(e);
+  const a = e.a || e.mine.map((id) => f.roster.find((m) => m.id === id)).filter(Boolean);
+  const byId = new Map(f.week.prospects.map((p) => [p.monster.id, p.monster]));
+  const b = e.b || e.wild.map((id) => byId.get(id)).filter(Boolean);
+  return recordSession(e, { a, b });
+}
 /**
  * The player's answer at a rotation prompt (t8, D1): a reserve's id, 'stay' or 'auto' ("Auto for the rest of this battle"). Legacy
  * 'play' records keep the old swap answer ('stay' is recorded for this exchange and the next three).
@@ -2424,9 +2433,10 @@ function startPlayoffs(f) {
   finalizeAwards(f);
   const qualified = Object.values(seeds).flat().includes(f.club);
   checkAchievements(f, 'playoffs', { qualified });
-  news(f, qualified ? $L('franchise.playoffs_qualified_as_the', { club: f.club, seed: seedLabel(seeds, f.club) }) : $L('franchise.regular_season_over_missed_the_playoffs', { club: f.club }), qualified ? 'win' : 'loss');
+  news(f, qualified ? $L('franchise.playoffs_qualified_as_the', { club: f.club, seed: seedLine(seeds, f.club) }) : $L('franchise.regular_season_over_missed_the_playoffs', { club: f.club }), qualified ? 'win' : 'loss');
 }
-function seedLabel(seeds, club) { for (const [conf, s] of Object.entries(seeds)) { const i = s.indexOf(club); if (i >= 0) return `${$t('franchise.seed_2', { conf, i: i + 1 })}`; } return $t('franchise.a_qualifier'); }
+/** The seed as a saved line (Task 10: it follows the language like the sentence around it). */
+function seedLine(seeds, club) { for (const [conf, s] of Object.entries(seeds)) { const i = s.indexOf(club); if (i >= 0) return $L('franchise.seed_2', { conf, i: i + 1 }); } return $L('franchise.a_qualifier'); }
 function recordPlayoffResult(f, res) {
   const p = f.season.playoffs;
   const g = p.fixtures.find((x) => x.round === p.round && x.home === res.home && x.away === res.away);
@@ -2825,6 +2835,8 @@ export function overtimeBattle(f, { log = 'full' } = {}) {
   const e = f.week.overtime; if (!e || !e.seed) return null;
   upgradeUnresolvedRecord(e); return runRecord(e, { log });
 }
+/** Task 10: the overtime Clash's live continuous battle (Watch), or null. */
+export function overtimeSession(f) { const e = f.week.overtime; if (!e || !e.seed) return null; upgradeUnresolvedRecord(e); return recordSession(e); }
 export function overtimeDecide(f, ex, choice) {
   const e = f.week.overtime; if (!e || e.status !== 'battle') return { ok: false, reason: $t('franchise.no_battle_in_progress') };
   if (isT8Record(e)) return recordDecision(e, ex, choice) ? { ok: true } : { ok: false, reason: $t('franchise.not_a_legal_rotation_decision') };
@@ -2910,6 +2922,8 @@ export function pregameBattle(f, { log = 'full' } = {}) {
   const e = f.week.pregame; if (!e || !e.seed) return null;
   upgradeUnresolvedRecord(e); return runRecord(e, { log });
 }
+/** Task 10: the pregame Clash's live continuous battle (Watch), or null. */
+export function pregameSession(f) { const e = f.week.pregame; if (!e || !e.seed) return null; upgradeUnresolvedRecord(e); return recordSession(e); }
 export function pregameDecide(f, ex, choice) {
   const e = f.week.pregame; if (!e || e.status !== 'battle') return { ok: false, reason: $t('franchise.no_battle_in_progress') };
   if (isT8Record(e)) return recordDecision(e, ex, choice) ? { ok: true } : { ok: false, reason: $t('franchise.not_a_legal_rotation_decision') };

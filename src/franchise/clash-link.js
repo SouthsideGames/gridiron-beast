@@ -10,6 +10,7 @@ import { clashGrade } from './t8/grading.js';
 import * as FR from '../core/fraction.js';
 import { simulateByRuleset, logHashFor, battleConfig, chooseLineup, archetypeOf, CLASH_VALUES, T8_RULESET, T8_VALUES, t8Config } from '../clash/index.js';
 import { createRng } from '../core/rng.js';
+import { createClashSessionT8 } from '../clash/t8/index.js';
 import { monsterOverall, xpForLevel } from '../data/monsters.js';
 import { tierIndex, applyMastery } from './t8/mastery.js';
 
@@ -53,7 +54,8 @@ export const T8_CONTEXT = Object.freeze({ encounter: 'standalone', pregame: 'ope
 export function rulesetOf(record) { return record?.ruleset === T8_RULESET ? T8_RULESET : null; }
 export const isT8Record = (record) => rulesetOf(record) === T8_RULESET;
 /** D1 / D2: the player's side is manual (prompted) in Watch; Skip, headless settlement and staff auto-run use the AI policy. The opponent is always the AI. */
-export function t8Policies(mode) { return { a: normalizeMode(mode) === 'watch' ? 'manual' : 'ai', b: 'ai' }; }
+/** Task 10 (owner 2026-11-13): Watch is ONE continuous battle (policy 'player': the player taps a reserve to switch, never prompted); Skip is the AI. */
+export function t8Policies(mode) { return { a: normalizeMode(mode) === 'watch' ? 'player' : 'ai', b: 'ai' }; }
 /** The version-2 record fields of a new battle (the caller adds the occasion's own fields). */
 export function newBattleRecord({ occasion, mode = 'watch', carryIn = null }) {
   const m = normalizeMode(mode) || 'watch';
@@ -61,6 +63,9 @@ export function newBattleRecord({ occasion, mode = 'watch', carryIn = null }) {
 }
 /** D19: an unresolved pre-M4 record is re-run on t8 from its own seed and lineups (in place, once; tagged). Finished records are never touched. */
 export function upgradeUnresolvedRecord(e) {
+  // Task 10: an unresolved Watch battle saved under the prompt model continues as one continuous battle. Every earlier prompt was answered
+  // (the battle could not pass one otherwise), so its recorded decisions rebuild the same battle so far; from here on, no tap means stay.
+  if (e && e.status === 'battle' && isT8Record(e) && !e.result && e.policies?.a === 'manual') { e.policies = { ...e.policies, a: 'player' }; return e; }
   if (!e || e.status !== 'battle' || isT8Record(e) || e.result) return e;
   const legacy = { policies: e.policies || null, decisions: e.decisions || null, mode: e.mode || null };
   Object.assign(e, { version: CLASH_RECORD_VERSION, ruleset: T8_RULESET, engine: T8_VALUES.engineVersion, context: e.context || (e.prospectIndex != null ? 'standalone' : e.playoff != null ? 'overtime' : 'opening'), policies: t8Policies(e.mode), decisions: { a: {} }, migrated: { from: 'legacy', ...legacy } });
@@ -78,6 +83,11 @@ export function recordDecision(e, ex, choice) {
  * policy (D2) plays the rest. Returns the completed result; the decisions are recorded on the record.
  */
 export function settleHeadless(e, run) {
+  // Task 10: a continuous Watch battle settled without the screen (the player left, a staff auto-run, a tied game settled offscreen) is
+  // handed to the AI from the next boundary the player had not reached: the same D1 rule as answering Auto at an open prompt.
+  if (isT8Record(e) && e.status === 'battle' && !e.result && policiesOf(e).a === 'player' && !Object.values(e.decisions?.a || {}).includes('auto')) {
+    const s = recordSession(e); if (s && !s.done) recordDecision(e, s.view.rotation.ex, 'auto');
+  }
   let result = run(); let guard = 0;
   while (result?.pending && guard++ < 64) { const p = pendingDecision(result); if (!p || p.kind !== 'rotation' || !recordDecision(e, p.ex, 'auto')) break; result = run(); }
   return result;
@@ -141,6 +151,30 @@ export function runBattle({ a, b, seed, mode = 'watch', decisions = null, polici
 export function runRecord(e, { a = e?.a, b = e?.b, log = 'full' } = {}) {
   if (!e?.seed || !a?.length || !b?.length) return null;
   return runBattle({ a, b, seed: e.seed, mode: e.mode, decisions: e.decisions, policies: policiesOf(e), log, ruleset: rulesetOf(e), context: e.context || 'standalone', carryIn: e.carryIn || null });
+}
+
+/**
+ * Task 10: the live session of a Watch battle (one continuous battle, see createClashSessionT8). Built from the record's lineups, seed,
+ * context and carry-in; on a reload it runs the recorded decisions up to the last exchange the player reached (`e.reachedEx`), so the
+ * screen resumes where it was. Returns null for a record that is not a continuous t8 Watch battle (Skip, AI, legacy, finished).
+ */
+export function recordSession(e, { a = e?.a, b = e?.b } = {}) {
+  if (!e?.seed || !a?.length || !b?.length || rulesetOf(e) !== T8_RULESET || e.status !== 'battle') return null;
+  const pol = policiesOf(e); if (pol.a !== 'player') return null;
+  const context = e.context || 'standalone';
+  const config = t8Config({ ruleset: T8_RULESET, context, policies: { a: pol.a, b: pol.b } });
+  const s = createClashSessionT8({ a, b, seed: e.seed, config, carryIn: context === 'standalone' ? null : e.carryIn || null });
+  const upTo = Number(e.reachedEx) || 0; let guard = 0;
+  while (!s.done && s.view.exchanges < upTo && guard++ < 1000) { const d = e.decisions?.a?.[s.view.rotation.ex]; if (d === 'auto') s.auto(); else if (d && d !== 'stay') s.request(d); s.advance(); }
+  return s;
+}
+/** Task 10: what the session did at the boundary it just passed, recorded on the battle record (only switches that happened, and 'auto'). */
+export function recordSessionStep(e, { ex, asked, view }) {
+  if (!isT8Record(e)) return false;
+  e.reachedEx = view.exchanges;
+  if (!asked) return false;
+  const happened = asked === 'auto' || view.log.some((x) => x.kind === 'rotation' && x.ex === ex && x.side === 'a' && x.in === asked);
+  return happened ? recordDecision(e, ex, asked) : false;
 }
 
 /** The small record a save keeps of a finished battle (the full log is rebuilt from the seed when needed). A pending t8 battle has no summary. */

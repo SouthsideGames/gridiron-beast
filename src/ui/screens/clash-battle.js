@@ -1,13 +1,15 @@
 // Beast Clash in Franchise Mode: the one battle screen for Tuesday encounters, the pregame Clash and the overtime Clash (GDD §26).
 // The screen never decides a battle: the franchise module draws the seed and fixes the lineups, the engine plays the battle, and
 // this screen shows the record (through the arena player). Revised 2026-10-22 (owner brief): ONE selection phase (the monsters
-// and their order of entry), then ONE continuous battle with no further decisions; the next monster steps up on a knockout
-// until one side has nobody left. Watch and Skip to results are the identical battle.
+// and their order of entry), then ONE continuous battle; the next monster steps up on a knockout until one side has nobody left.
+// Task 10 (owner 2026-11-13): Watch is a live session (createClashSessionT8): the battle plays on by itself, the player taps a reserve
+// in the lineup bar to switch at the next boundary, and the arena is extended in place, never rebuilt. No stay / rotate prompts.
 import { abilityInfo, masteryInfo } from '../ability-info.js';
 import { esc, delegate, toast, sheet, fmtMoney } from '../dom.js';
 import { monsterSprite } from '../pixel-monster.js';
 import * as F from '../../franchise/franchise.js';
-import { CLASH_MODES, CLASH_SPEEDS, clashSettings, pendingDecision, policiesOf, normalizeMode, isT8Record } from '../../franchise/clash-link.js';
+import { CLASH_MODES, CLASH_SPEEDS, clashSettings, pendingDecision, policiesOf, normalizeMode, isT8Record, recordSessionStep } from '../../franchise/clash-link.js';
+import { t8StateAt } from '../clash/t8/timeline.js';
 import { consequence } from '../../franchise/assist-advice.js';
 import { createArena } from '../clash/arena.js';
 import { stateAt as stateAtRecord } from '../clash/choreographer.js';
@@ -48,7 +50,7 @@ function bindings(app, Router) {
       record: (f) => f.week.encounter,
       preview: (f, i) => F.encounterPreview(f, i),
       start: (f, i, opts) => F.startEncounter(f, i, opts),
-      battle: (f) => F.encounterBattle(f), decide: (f, ex, choice) => F.encounterDecide(f, ex, choice),
+      battle: (f) => F.encounterBattle(f), session: (f) => F.encounterSession(f), decide: (f, ex, choice) => F.encounterDecide(f, ex, choice),
       resolve: (f) => F.resolveEncounter(f),
       occasion: 'encounter', mySide: 'a',
       resultHtml(f, e) {
@@ -84,7 +86,7 @@ function bindings(app, Router) {
       record: (f) => f.week.pregame,
       preview: (f) => F.pregamePreview(f),
       start: (f, i, opts) => F.startPregameClash(f, opts),
-      battle: (f) => F.pregameBattle(f), decide: (f, ex, choice) => F.pregameDecide(f, ex, choice),
+      battle: (f) => F.pregameBattle(f), session: (f) => F.pregameSession(f), decide: (f, ex, choice) => F.pregameDecide(f, ex, choice),
       resolve: (f) => F.resolvePregameClash(f),
       occasion: 'pregame', mySide: 'a',
       theirName: (f) => F.pregamePreview(f).opponent || $t('clash.their_team'),
@@ -107,7 +109,7 @@ function bindings(app, Router) {
       record: (f) => f.week.overtime,
       preview: (f) => F.overtimePreview(f),
       start: (f, i, opts) => F.startOvertimeClash(f, { ...opts, state: app.f?.game?.state || null }), // the football state: statuses and exhaustion carry into the deciding Clash (§10, §12)
-      battle: (f) => F.overtimeBattle(f), decide: (f, ex, choice) => F.overtimeDecide(f, ex, choice),
+      battle: (f) => F.overtimeBattle(f), session: (f) => F.overtimeSession(f), decide: (f, ex, choice) => F.overtimeDecide(f, ex, choice),
       resolve: (f) => F.resolveOvertimeClash(f),
       occasion: 'overtime', mySide: 'a',
       theirName: (f) => F.overtimePreview(f).opponent || $t('clash.their_team'),
@@ -127,10 +129,10 @@ function bindings(app, Router) {
 
 export function registerClashBattle(Router, app) {
   const BINDINGS = bindings(app, Router);
-  const st = { kind: null, i: 0, arena: null, cursor: 0, result: null, lineup: null, editing: false, replaying: false };
+  const st = { kind: null, i: 0, arena: null, cursor: 0, result: null, lineup: null, editing: false, replaying: false, session: null, subNote: null };
   const settings = () => clashSettings(app.f?.settings);
   const saveSettings = (patch) => { if (!app.f) return; app.f.settings.clash = { ...settings(), ...patch }; app.save(); };
-  const stop = () => { if (st.arena) { st.cursor = st.arena.cursor; st.arena.destroy(); st.arena = null; } };
+  const stop = () => { if (st.arena) { st.cursor = st.arena.cursor; st.arena.destroy(); st.arena = null; } st.session = null; };
   const B = () => BINDINGS[st.kind];
 
   // ---------- the one selection phase (before the seed is drawn): the monsters and their order of entry
@@ -163,13 +165,15 @@ export function registerClashBattle(Router, app) {
 
   // ---------- the battle itself: continuous; in Watch the t8 engine stops at the player's legal rotation phases (D1) and the prompt below answers them
   function battleHtml(f, e) {
-    const pend = isT8Record(e) && st.result?.pending ? pendingDecision(st.result) : null;
+    const live = isT8Record(e) && policiesOf(e).a === 'player';
+    const pend = !live && isT8Record(e) && st.result?.pending ? pendingDecision(st.result) : null; // old prompt-model saves only
     return `<div class="row between" style="margin-bottom:4px"><span class="muted">${e.size}v${e.size} · ${esc(B().title.split('·').pop().trim())}</span><span class="row" style="gap:6px">${pend ? `<button class="btn small primary" data-action="rotprompt">${$t('clash.rotation_your_call')}</button>` : ''}<button class="btn small ghost" data-action="help">${$t('clash.help')}</button></span></div>
-      <div id="fb-arena"></div>`;
+      <div id="fb-arena"></div>${live ? '<div id="cl-subs" class="panel tight cl-subs" role="group" aria-live="polite"></div>' : ''}`;
   }
   function teamNames(f, e) { const theirs = st.kind === 'encounter' ? $t('clash.the_wild') : (e.opponent || $t('clash.the_opponent_2')); return { a: f.club.split(' ').pop(), b: theirs }; }
   function mountBattle(root, f, e) {
     const host = root.querySelector('#fb-arena'); if (!host) return;
+    if (isT8Record(e) && policiesOf(e).a === 'player' && B().session) { const s = B().session(f); if (s) { mountLive(root, host, f, e, s); return; } }
     st.result = B().battle(f); if (!st.result) { toast($t('clash.the_battle_could_not_be_rebuilt'), 'bad'); return; }
     const legacyPend = !isT8Record(e) && policiesOf(e).a === 'manual' ? pendingDecision(st.result) : null; // a 'play' battle from before 2026-10-22 left mid-decision: it finishes on its own as Auto
     if (legacyPend) { e.policies = { a: 'smart', b: 'smart' }; e.mode = 'watch'; app.save(); st.result = B().battle(f); }
@@ -180,6 +184,76 @@ export function registerClashBattle(Router, app) {
     if (st.cursor) st.arena.setCursor(Math.min(st.cursor, end));
     if (st.cursor >= end) { atEnd(f); return; }
     setTimeout(() => st.arena?.play(), 300);
+  }
+  // ---------- Task 10: the live continuous battle (Watch)
+  function mountLive(root, host, f, e, s) {
+    st.session = s; st.result = s.view; st.subNote = null;
+    st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, live: true, looks: app.clashLooks || null,
+      onCursor: (i) => { st.cursor = i; drawSubs(root); }, onEnd: () => liveNext(root, f), onSkip: () => liveSkip(root, f) });
+    // Resume where the player was: the same cursor in this visit, or (after a reload) the start of the last exchange reached.
+    const last = st.result.log.length - 1;
+    const at = st.cursor > 0 ? Math.min(st.cursor, last) : (Number(e.reachedEx) > 1 ? Math.max(0, st.result.log.findIndex((x) => x.ex === Number(e.reachedEx))) : 0);
+    if (at > 0) st.arena.setCursor(at);
+    drawSubs(root);
+    root.querySelector('#cl-subs')?.addEventListener('click', (ev) => { const b = ev.target.closest('[data-sub]'); if (b) tapSub(root, b.dataset.sub); });
+    setTimeout(() => st.arena?.play(), 300);
+  }
+  /** The arena reached the end of what the session has computed: run the next boundary (with the player's tap, if any) and play on. */
+  function liveNext(root, f) {
+    const s = st.session; if (!s || !st.arena) return;
+    if (s.done) { finish(f); return; }
+    const e = B().record(f); const r = s.view.rotation; const asked = s.queued;
+    const v = s.advance();
+    if (recordSessionStep(e, { ex: r.ex, asked, view: v })) app.save();
+    if (s.lastRefusal) st.subNote = { kind: 'bad', text: $t('clash.sub_blocked', { name: s.view.lines.a.find((x) => x.id === r.activeId)?.name || '' }) };
+    else if (asked && asked !== 'auto') st.subNote = null;
+    st.result = v; st.arena.extend(v); drawSubs(root); st.arena.play();
+  }
+  /** Skip during a live battle: the rest of the SAME battle, with the switches the player already made and no new ones. */
+  function liveSkip(root, f) {
+    const s = st.session; if (!s || !st.arena) return; const e = B().record(f); let guard = 0;
+    while (!s.done && guard++ < 1000) { const r = s.view.rotation; const asked = s.queued; const v = s.advance(); recordSessionStep(e, { ex: r.ex, asked, view: v }); }
+    app.save(); st.result = s.result; st.arena.extend(s.result); st.arena.pause(); st.arena.setCursor(s.result.log.length - 1); finish(f);
+  }
+  function tapSub(root, id) {
+    const s = st.session; if (!s || s.done) return;
+    if (id === '__auto') { s.auto(); st.subNote = { kind: 'info', text: $t('clash.sub_auto_on') }; drawSubs(root); return; }
+    if (s.queued === id) { s.cancel(); st.subNote = { kind: 'info', text: $t('clash.sub_cancelled') }; drawSubs(root); return; }
+    const c = s.request(id); const name = s.view.lines.a.find((x) => x.id === id)?.name || '';
+    st.subNote = c.ok ? { kind: 'good', text: $t('clash.sub_queued', { name }) }
+      : c.reason === 'cooldown' ? { kind: 'info', text: $t('clash.sub_wait', { n: c.exchangesLeft }) }
+      : c.reason === 'no-reserve' ? { kind: 'info', text: $t('clash.sub_none') }
+      : c.reason === 'auto' ? { kind: 'info', text: $t('clash.sub_auto_on') } : null; // tapping the active or a knocked-out monster does nothing
+    drawSubs(root);
+  }
+  /** The lineup bar: what is on screen now (the cursor's state), and whether a switch is available at the coming boundary. Never blocks.
+   *  Built once per battle and then updated in place, so a finger on a card is never pulled out from under it by the animation. */
+  function drawSubs(root) {
+    const el = root.querySelector('#cl-subs'); const s = st.session; if (!el || !s || !st.result) return;
+    if (el.dataset.built !== '1') {
+      el.innerHTML = `<div class="row between cl-sub-head"><b>${$t('clash.sub_lineup')}</b><button class="btn small ghost" data-sub="__auto">${$t('clash.sub_auto_btn')}</button></div>
+        <div class="cl-sub-row">${st.result.lines.a.map((x) => `<button class="cl-sub" data-sub="${esc(x.id)}"><span class="cl-sub-name">${esc(x.name)}</span><span class="cl-sub-state"></span><span class="cl-sub-hp"><i></i></span><span class="cl-sub-num"></span></button>`).join('')}</div>
+        <div class="cl-sub-hint dim" data-sub-hint></div><span class="cl-sub-note"></span>`;
+      el.dataset.built = '1';
+    }
+    const now = t8StateAt(st.result, Math.max(0, st.arena?.cursor ?? st.cursor ?? 0));
+    const rot = s.done ? null : s.view.rotation; const auto = !!rot && rot.policy !== 'player';
+    for (const x of st.result.lines.a) {
+      const card = el.querySelector(`.cl-sub[data-sub="${CSS.escape ? CSS.escape(x.id) : x.id}"]`); if (!card) continue;
+      const n = now.S[x.id] || {}; const ko = !!n.ko; const active = !!n.active && !ko; const queued = s.queued === x.id;
+      const canTap = !s.done && !auto && !ko && !active && !!rot?.reserves.some((y) => y.id === x.id);
+      const hp = Math.round(n.hp ?? x.maxHp), max = Math.round(n.maxHp || x.maxHp); const pct = Math.max(0, Math.min(100, Math.round(100 * hp / (max || 1))));
+      card.classList.toggle('active', active); card.classList.toggle('ko', ko); card.classList.toggle('queued', queued); card.classList.toggle('wait', canTap && rot.exchangesLeft > 0);
+      if (canTap) card.removeAttribute('aria-disabled'); else card.setAttribute('aria-disabled', 'true');
+      card.setAttribute('aria-pressed', String(queued));
+      card.querySelector('.cl-sub-state').textContent = ko ? $t('clash.sub_ko') : active ? $t('clash.sub_active') : $t('clash.sub_reserve');
+      card.querySelector('.cl-sub-hp').setAttribute('aria-label', $t('clash.sub_hp', { hp, maxHp: max })); card.querySelector('.cl-sub-hp i').style.width = `${pct}%`;
+      card.querySelector('.cl-sub-num').textContent = `${hp}/${max}`;
+    }
+    const autoBtn = el.querySelector('[data-sub="__auto"]'); if (autoBtn) autoBtn.hidden = s.done || auto;
+    el.querySelector('[data-sub-hint]').textContent = s.done ? $t('clash.sub_over') : auto ? $t('clash.sub_auto_on') : !rot.reserves.length ? $t('clash.sub_none') : rot.exchangesLeft > 0 ? $t('clash.sub_wait', { n: rot.exchangesLeft }) : $t('clash.sub_tap');
+    const note = el.querySelector('.cl-sub-note'); const nk = st.subNote && !s.done ? st.subNote : null;
+    note.className = `cl-sub-note ${nk ? nk.kind : ''}`; note.textContent = nk ? nk.text : '';
   }
   /** The log has been played to its last event: either the battle is over (settle it) or the engine stopped at the player's rotation prompt (D1). */
   function atEnd(f) {
@@ -216,7 +290,7 @@ export function registerClashBattle(Router, app) {
   function xpRows(e) {
     const rows = (e.events || []).filter((x) => x.kind === 'xp'); const lv = (e.events || []).filter((x) => x.kind === 'levelup');
     if (!rows.length) return `<div class="dim" style="margin-top:4px">${$t('clash.your_battlers_earned_experience')}${lv.length ? ` · <b>${esc(lv.map((x) => `${$t('clash.level', { name: x.name, level: x.level })}`).join(', '))}</b>` : ''}.</div>`;
-    return `<div style="margin-top:8px;text-align:left">${rows.map((x) => `<div class="row between" style="font-size:13px;gap:8px;margin-top:4px"><span style="min-width:0;overflow-wrap:anywhere;white-space:normal;flex:1"><b>${esc(x.name)}</b> <span class="mono" style="color:var(--good)">${x.max ? $t('clash.max') : `+${Math.round(x.amount)} XP`}${x.training ? ` ${$t('clash.training', { training: Math.round(x.training * 100) })}` : ''}${x.masteryCredits ? ` ${$t('clash.clash_mastery', { masteryCredits: Math.round(x.masteryCredits) })}` : ''}${x.gradeAdj ? ` ${$t('clash.grade', { gradeAdj: x.gradeAdj > 0 ? '+' : '', n: Math.round(x.gradeAdj * 100) })}` : ''}</span>${x.bonus ? ` <span class="dim mono" title="${esc(x.bonusLabel || '')}">${$t('clash.basic_bonus', { base: x.base, bonus: x.bonus })}</span>` : ''}${x.levelsGained ? ` <span class="chip good">${$t('clash.level_2', { level: x.level })}</span>` : ''}</span><span class="dim mono" style="white-space:nowrap">Lv ${x.level} · ${Math.round(x.xp)}/${Math.round(x.next)}</span></div><div class="bar" style="margin:2px 0 0"><i style="width:${Math.min(100, Math.round(x.xp / x.next * 100))}%"></i></div>`).join('')}</div>`;
+    return `<div style="margin-top:8px;text-align:left">${rows.map((x) => `<div class="row between" style="font-size:13px;gap:8px;margin-top:4px"><span style="min-width:0;overflow-wrap:anywhere;white-space:normal;flex:1"><b>${esc(x.name)}</b> <span class="mono" style="color:var(--good)">${x.max ? $t('clash.max') : `+${Math.round(x.amount)} XP`}${x.training ? ` ${$t('clash.training', { training: Math.round(x.training * 100) })}` : ''}${x.masteryCredits ? ` ${$t('clash.clash_mastery', { masteryCredits: Math.round(x.masteryCredits) })}` : ''}${x.gradeAdj ? ` ${$t('clash.grade', { gradeAdj: x.gradeAdj > 0 ? '+' : '', n: Math.round(x.gradeAdj * 100) })}` : ''}</span>${x.bonus ? ` <span class="dim mono" title="${esc(x.bonusLabel || '')}">${$t('clash.basic_bonus', { base: Math.round(x.base), bonus: Math.round(x.amount) - Math.round(x.base) })}</span>` : ''}${x.levelsGained ? ` <span class="chip good">${$t('clash.level_2', { level: x.level })}</span>` : ''}</span><span class="dim mono" style="white-space:nowrap">Lv ${x.level} · ${Math.round(x.xp)}/${Math.round(x.next)}</span></div><div class="bar" style="margin:2px 0 0"><i style="width:${Math.min(100, Math.round(x.xp / x.next * 100))}%"></i></div>`).join('')}</div>`;
   }
   /** The outcome in one glance: who won and how, who is still standing on each side, knockouts by each side, then XP. */
   function resultHtml(f, e) {

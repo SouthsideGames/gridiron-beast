@@ -44,22 +44,30 @@ export function leaveLeague(f, m, { year, club = null }) {
     const last = club || m.history?.[m.history.length - 1]?.club || null;
     f.league.legends[m.id] = legendStub(m, { year, club: last });
     // A retirement (owner's rule, 2026-10-24): he leaves the active league for good and cannot return. Reported with his honours.
-    leagueEvent(f, { kind: 'retire', club: last, honours: honoursLine(f, m), ...moveIdentity(f, m) });
+    leagueEvent(f, { kind: 'retire', club: last, honours: honoursData(f, m), ...moveIdentity(f, m) });
     return 'legend';
   }
   return 'gone';
 }
 /** "two-time MVP, a Beast Bowl champion, a league record" — from the save's own records. */
-export function honoursLine(f, m) {
-  const ev = m.career?.ev || []; const parts = [];
+/** A monster's honours as data (Task 10: saved on the retirement event instead of a finished sentence, so the news follows the language). */
+export function honoursData(f, m) {
+  const ev = m.career?.ev || [];
   const awards = {}; for (const e of ev) if (e.t === 'award') awards[e.x?.key] = (awards[e.x?.key] || 0) + 1;
   for (const h of f.history || []) for (const [k, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && !ev.some((e) => e.t === 'award' && e.y === h.year && e.x?.key === k)) awards[k] = (awards[k] || 0) + 1;
-  const label = { mvp: 'MVP', opoy: $t('franchise.offensive_monster_of_the_year'), dpoy: $t('franchise.defensive_monster_of_the_year'), smoy: $t('franchise.signature_monster_of_the_year'), oroy: $t('franchise.offensive_rookie_of_the_year'), droy: $t('franchise.defensive_rookie_of_the_year') };
-  for (const [k, n] of Object.entries(awards)) if (label[k]) parts.push(`${n > 1 ? `${['', 'two', 'three', 'four', 'five'][n] || n}-time ` : ''}${label[k]}`);
-  const titles = ev.filter((e) => e.t === 'champion').length; if (titles) parts.push(titles === 1 ? $t('franchise.a_beast_bowl_champion') : `${$t('franchise.time_beast_bowl_champion', { titles })}`);
-  const recs = ev.filter((e) => e.t === 'record').length; if (recs) parts.push(recs === 1 ? $t('franchise.a_league_record') : `${recs} league records`);
+  const titles = ev.filter((e) => e.t === 'champion').length, records = ev.filter((e) => e.t === 'record').length;
+  return Object.keys(awards).length || titles || records ? { awards, titles, records } : null;
+}
+/** The honours as words (read at display time). A string is an honours sentence saved before Task 10 and is shown as it was. */
+export function honoursText(h) {
+  if (!h) return ''; if (typeof h === 'string') return h;
+  const parts = []; const label = { mvp: 'MVP', opoy: $t('franchise.offensive_monster_of_the_year'), dpoy: $t('franchise.defensive_monster_of_the_year'), smoy: $t('franchise.signature_monster_of_the_year'), oroy: $t('franchise.offensive_rookie_of_the_year'), droy: $t('franchise.defensive_rookie_of_the_year') };
+  for (const [k, n] of Object.entries(h.awards || {})) if (label[k]) parts.push(`${n > 1 ? `${['', 'two', 'three', 'four', 'five'][n] || n}-time ` : ''}${label[k]}`);
+  if (h.titles) parts.push(h.titles === 1 ? $t('franchise.a_beast_bowl_champion') : `${$t('franchise.time_beast_bowl_champion', { titles: h.titles })}`);
+  if (h.records) parts.push(h.records === 1 ? $t('franchise.a_league_record') : `${h.records} league records`);
   return parts.join(', ');
 }
+export function honoursLine(f, m) { return honoursText(honoursData(f, m)); }
 
 /**
  * A monster enters his region's pool (released, walked, or spilled from a club). The pool keeps POOL_CAP; the oldest entry

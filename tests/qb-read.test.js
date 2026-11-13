@@ -12,14 +12,17 @@ import * as Lab from '../src/lab/qb-lab.js';
 import * as Save from '../src/franchise/save.js';
 import { newFranchise } from '../tools/franchise-soak.mjs';
 
-const PASS = OFFENSE_IDS.filter((id) => PLAYS[id].type === 'pass' && !PLAYS[id].tags.includes('screen'));
-const ZONE = DEFENSE_IDS.filter((id) => PLAYS[id].tags.includes('zone')), BLITZ = DEFENSE_IDS.filter((id) => PLAYS[id].tags.includes('blitz'));
+// Task 10: the released reserve plays grew the pools to 129 pass plays x 176 defenses, too many for full Awareness sweeps. The sweeps use the
+// original live plays plus a fixed one-in-eight sample of the released ones (the same plays on every run).
+const sample = (ids) => ids.filter((id, i) => !PLAYS[id].reserve || i % 8 === 0);
+const PASS = sample(OFFENSE_IDS.filter((id) => PLAYS[id].type === 'pass' && !PLAYS[id].tags.includes('screen')));
+const DEFS = sample(DEFENSE_IDS);
+const ZONE = DEFS.filter((id) => PLAYS[id].tags.includes('zone')), BLITZ = DEFS.filter((id) => PLAYS[id].tags.includes('blitz'));
 const sweeps = {};
 function sweep(aw, seeds = 2) {
   const key = `${aw}:${seeds}`; if (sweeps[key]) return sweeps[key]; const L = lineup(11, 62); L.offense.QB.attrs = { ...L.offense.QB.attrs, awareness: aw }; const out = [];
-  // Task 10: the released reserve plays made the pools 129 pass plays × 176 defenses; the sweep keeps only what the tests read (not the
-  // frames, but the first frame that shows a read, which test 14 draws) so it fits in memory, and covers every pass play and every defense.
-  for (const o of PASS) for (const d of DEFENSE_IDS) for (let s = 1; s <= seeds; s++) { const r = simulatePlay({ offensePlay: PLAYS[o], defensePlay: PLAYS[d], ballOn: 35, seed: s * 977 + d.length * 13 + o.length, offense: L.offense, defense: L.defense }); const { frames, ...rest } = r; const read = frames?.filter((f) => f.read) || []; out.push({ o, d, r: { ...rest, frames: read.length ? [read[0]] : [] }, dec: r.qb?.decision || null, reads: (r.qb?.reads || []).filter((e) => e.kind === 'read') }); }
+  // Task 10: the sweep keeps only what the tests read (not the frames, but the first frame that shows a read, which test 14 draws).
+  for (const o of PASS) for (const d of DEFS) for (let s = 1; s <= seeds; s++) { const r = simulatePlay({ offensePlay: PLAYS[o], defensePlay: PLAYS[d], ballOn: 35, seed: s * 977 + d.length * 13 + o.length, offense: L.offense, defense: L.defense }); const { frames, ...rest } = r; const read = frames?.filter((f) => f.read) || []; out.push({ o, d, r: { ...rest, frames: read.length ? [read[0]] : [] }, dec: r.qb?.decision || null, reads: (r.qb?.reads || []).filter((e) => e.kind === 'read') }); }
   return (sweeps[key] = out);
 }
 const share = (xs, f) => xs.filter(f).length / Math.max(1, xs.length);
@@ -52,7 +55,7 @@ test('5. everyone covered: he weighs scrambling and the rush rather than just th
 });
 test('6. blitz: less time to decide', () => {
   const t = (ds) => mean(sweep(75).filter((x) => ds.includes(x.d) && x.dec).map((x) => x.dec.t));
-  const calm = DEFENSE_IDS.filter((d) => !BLITZ.includes(d)); assert.ok(t(BLITZ) < t(calm) - 0.05, `blitz ${t(BLITZ).toFixed(2)} vs ${t(calm).toFixed(2)}`);
+  const calm = DEFS.filter((d) => !BLITZ.includes(d)); assert.ok(t(BLITZ) < t(calm) - 0.05, `blitz ${t(BLITZ).toFixed(2)} vs ${t(calm).toFixed(2)}`);
 });
 test('7. zone: he finds the windows', () => {
   const s = sweep(75).filter((x) => ZONE.includes(x.d) && x.dec?.action === 'throw');

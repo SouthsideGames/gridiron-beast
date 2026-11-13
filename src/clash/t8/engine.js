@@ -855,6 +855,9 @@ function* runT8({ a, b, seed = 1, config = {}, log: logMode = 'full', probes = [
   const optionView = (x) => ({ id: x.c.id, monsterId: x.c.monsterId, name: x.c.name, hp: x.hp, maxHp: x.c.maxHp, type: x.c.type, archetype: x.c.archetype, status: x.status ? x.status.id : null });
   function rotationRequest(side) {
     if (side.policy === 'none') return null;
+    // Task 10: 'auto' on the continuous player policy hands the side to the AI from this rotation phase, legal or not (the approved
+    // "Auto for the rest", D1; also what a headless settlement records).
+    if (side.policy === 'player' && (session?.decisions?.[side.key]?.[ex] ?? cfg.decisions?.[side.key]?.[ex]) === 'auto') { side.policy = 'ai'; if (LOG) log('rotation_decision', side.active, null, `${$E('clashlog.auto_for_the_rest_of_this', { toUpperCase: side.key.toUpperCase() })}`, { side: side.key, decision: 'auto' }); }
     const L = voluntaryLegality(side);
     if (!L.legal) { if (L.lock && LOG) log('rotation_unavailable', side.active, null, `${$E('clashlog.cannot_rotate', { name: side.active.c.name, reason: L.lock.reason || 'locked' })}`, { side: side.key, unmet: L.unmet, stage: 'trigger' }); return null; }
     const reserves = reservesOf(side);
