@@ -225,7 +225,7 @@ export function resolvePostseason(f, optionId) {
   const e = f.postseason; if (!e || e.resolved) return { ok: false, reason: $t('franchise.no_decision_pending') };
   const ev = postseasonEvent(f); if (!ev.options.find((o) => o.id === optionId)) return { ok: false, reason: $t('franchise.not_an_option') };
   const star = f.roster.find((m) => m.id === e.starId); const coach = staffMember(f, e.coordRole); let text = ''; const done = recording();   // the result sentence is saved in the club log as a line
-  const hireBest = (role, { preferScheme = null } = {}) => { const cands = STAFF.filter((c) => c.role === role && c.id !== f.staff[role]).sort((a, b) => (preferScheme ? (b.scheme === preferScheme) - (a.scheme === preferScheme) : 0) || b.overall - a.overall); const c = cands[0]; if (c) f.staff[role] = c.id; return c; };
+  const hireBest = (role, { preferScheme = null } = {}) => { const cands = STAFF.filter((c) => c.role === role && c.id !== f.staff[role]).sort((a, b) => (preferScheme ? (b.scheme === preferScheme) - (a.scheme === preferScheme) : 0) || b.overall - a.overall); const c = cands[0]; if (c) { f.staff[role] = c.id; (f.staffContracts ||= {})[role] = newContract(f.season?.year || 1); (f.staffRaise ||= {})[role] = 1; withdrawStaffRenewal(f, role); } return c; }; // Task 10 fix: the replacement gets his own contract at his own salary (he inherited the departed coordinator's contract and raise, and the departed one's renewal stayed open)
   if (e.kind === 'star_out') {
     if (optionId === 'raise' && star) { star.salary = Math.round((star.salary || salaryFor(star)) * (1 + RAISE_PCT)); text = `${$t('franchise.stays_on_a_raise', { name: star.name })}`; }
     else if (optionId === 'promise' && star) { star.promise = { benched: 0 }; text = `${$t('franchise.stays_with_a_promised_starting_spot', { name: star.name })}`; }
@@ -527,6 +527,15 @@ export function hireDefaultStaff(f) {
   f.lastStaffHires = out; // what was hired, and whether under the exception (callers keep the old void return)
 }
 /** Front office: swap one staff member for a candidate (cap permitting). */
+/**
+ * Task 10 fix: a role that gets a new staff member (a postseason event's replacement, a front-office swap) starts a fresh contract,
+ * so an offseason renewal still open for that role belonged to the person who left. It is withdrawn; signing it used to set the new
+ * hire's salary from the old one's demand (the staff renewal ±8% weakness in tests/franchise.test.js).
+ */
+function withdrawStaffRenewal(f, role) {
+  const items = f.offseason?.items; if (!Array.isArray(items)) return;
+  for (let i = items.length - 1; i >= 0; i--) if (items[i]?.kind === 'staff' && items[i].role === role && !items[i].status) items.splice(i, 1);
+}
 export function replaceStaff(f, id) {
   const c = staffById(id); if (!c) return { ok: false, reason: $t('franchise.unknown_candidate') };
   if (f.staff[c.role] === id) return { ok: false, reason: $t('franchise.already_on_staff') };
@@ -536,7 +545,7 @@ export function replaceStaff(f, id) {
   // Firing mid-season costs: the rest of the outgoing coach's salary stays on the books this season.
   let severance = 0;
   if (current && f.season && !f.season.finished) { severance = Math.round(current.salary * Math.max(0, (10 - (f.season.week || 1)) / 10)); f.deadCap = (f.deadCap || 0) + severance; }
-  f.staff[c.role] = id; (f.staffContracts ||= {})[c.role] = newContract(f.season?.year || 1); (f.staffRaise ||= {})[c.role] = 1;
+  f.staff[c.role] = id; (f.staffContracts ||= {})[c.role] = newContract(f.season?.year || 1); (f.staffRaise ||= {})[c.role] = 1; withdrawStaffRenewal(f, c.role);
   news(f, $P(c.name, ` hired as `, c.role.replace(/_/g, ' '), (current ? $L('franchise.replacing', { name: current.name }) : ''), (severance ? $P(` `, $L('franchise.cr_severance_this_season', { toLocaleString: severance.toLocaleString('en-US') })) : ''), `.`), 'roster');
   return { ok: true, replaced: current, severance };
 }
