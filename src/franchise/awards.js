@@ -62,7 +62,7 @@ const COMPONENT_LABEL = { volume: 'production', efficiency: 'efficiency', impact
 function zWithin(rows, fn) {
   const by = {}; for (const r of rows) (by[r.position] ||= []).push(fn(r));
   const st = Object.fromEntries(Object.entries(by).map(([p, v]) => { const m = v.reduce((a, b) => a + b, 0) / v.length; const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length); return [p, { m, sd }]; }));
-  return (r) => { const s = st[r.position]; if (!s || s.sd < 1e-6) return 0; return Math.min(3, (fn(r) - s.m) / s.sd); };
+  return (r) => { const s = st[r.position]; if (!s || s.sd < 1e-6) return 0; return (fn(r) - s.m) / s.sd; };
 }
 
 /** Workload gate: most of the league's weeks, and a starter's share of snaps for the position. */
@@ -101,10 +101,11 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
   const dpoy = top(def.map((r) => finalist(r, defScore(r))));
   // Task 10 candidate: soft MVP voter fatigue. The prior consecutive wins
   // matter only to a close race; there is no repeat-win prohibition.
+  const capMvp = (o) => ({ ...o, s: Math.min(3, o.s) });
   const fatigue = (r) => Math.min(0.6, 0.12 * Math.max(0, Number(mvpWinStreaks[r.id]) || 0));
   const mvp = top([
-    ...off.map((r) => { const o = offScore(r); const indiv = o.s * (MVP_RESPONSIBILITY[r.position] || 1); const team = (winPct(r.team) - 0.5) * 3; const s = indiv * 0.75 + team * 0.2 + avail(r) * 0.3 - fatigue(r); return finalist(r, { s, c: { ...o.c, team: team, voterFatigue: -fatigue(r) }, prod: o.prod }, () => $t('franchise.club', { record: recordOf(r.team) })); }),
-    ...def.map((r) => { const d = defScore(r); const team = (winPct(r.team) - 0.5) * 3; const s = d.s * MVP_RESPONSIBILITY.DEF * 0.75 + team * 0.2 + avail(r) * 0.3 - fatigue(r); return finalist(r, { s, c: { ...d.c, team, voterFatigue: -fatigue(r) }, prod: d.prod }, () => $t('franchise.club', { record: recordOf(r.team) })); }),
+    ...off.map((r) => { const o = capMvp(offScore(r)); const indiv = o.s * (MVP_RESPONSIBILITY[r.position] || 1); const team = (winPct(r.team) - 0.5) * 3; const s = indiv * 0.75 + team * 0.2 + avail(r) * 0.3 - fatigue(r); return finalist(r, { s, c: { ...o.c, team: team, voterFatigue: -fatigue(r) }, prod: o.prod }, () => $t('franchise.club', { record: recordOf(r.team) })); }),
+    ...def.map((r) => { const d = capMvp(defScore(r)); const team = (winPct(r.team) - 0.5) * 3; const s = d.s * MVP_RESPONSIBILITY.DEF * 0.75 + team * 0.2 + avail(r) * 0.3 - fatigue(r); return finalist(r, { s, c: { ...d.c, team, voterFatigue: -fatigue(r) }, prod: d.prod }, () => $t('franchise.club', { record: recordOf(r.team) })); }),
   ]);
   const priorRookies = new Set(priorRookieAwardIds);
   const oroy = top(off.filter((r) => r.yearsPro === 0 && !priorRookies.has(r.id)).map((r) => finalist(r, offScore(r), () => $t('franchise.rookie'))));
