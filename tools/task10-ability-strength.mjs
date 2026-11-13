@@ -57,7 +57,16 @@ function paired(on, off) {
   return out;
 }
 const rows = []; const t0 = Date.now();
-if (args.pairs) {
+if (args.types) {
+  // Elemental advantage at club level, abilities off: the same games with every home monster of one type and every away monster
+  // of another. 'even' Water v Water, 'strong' Water v Fire (Water beats Fire), 'weak' Fire v Water.
+  const typed = (seed, ht, at) => { const teams = clubs(seed); for (const [t, ty] of [[teams.home, ht], [teams.away, at]]) { for (const side of ['offense', 'defense']) for (const k of Object.keys(t[side])) t[side][k] = { ...t[side][k], type: ty }; t.kicker = { ...t.kicker, type: ty }; if (t.returner) t.returner = { ...t.returner, type: ty }; }
+    const state = R.newGame({ home: teams.home, away: teams.away, seed }); const ctrl = { home: aiController('home'), away: aiController('away') }; const tend = { home: newTendencies(), away: newTendencies() };
+    for (let i = 0; i < 2500 && !state.finished; i++) if (!step(state, teams, ctrl, tend, {})) break; return { margin: state.score.home - state.score.away, pf: state.score.home, pa: state.score.away, win: state.score.home > state.score.away ? 1 : state.score.home === state.score.away ? 0.5 : 0, ypp: 0, yppAllowed: 0, to: 0 }; };
+  const even = [], strong = [], weak = []; for (let g = 0; g < G; g++) { even.push(typed(1000 + g, 'Water', 'Water')); strong.push(typed(1000 + g, 'Water', 'Fire')); weak.push(typed(1000 + g, 'Fire', 'Water')); }
+  const mean = (a, k) => +(a.reduce((x, y) => x + y[k], 0) / a.length).toFixed(2);
+  const row = { types: true, games: G, evenWin: mean(even, 'win'), strongWin: mean(strong, 'win'), weakWin: mean(weak, 'win'), evenMargin: mean(even, 'margin'), strong: paired(strong, even), weak: paired(weak, even) }; rows.push(row); console.log(JSON.stringify(row));
+} else if (args.pairs) {
   for (const pr of String(args.pairs).split(',')) {
     const fams = pr.split('+').map((id) => FAMILIES.find((f) => f.id === id)); if (fams.some((f) => !f)) continue;
     const cat = reviewCatalog(); const subj = (on) => fams.map((fam) => { const c = cat.find((x) => x.family === fam.id); return { fam, form: c.forms[c.forms.length - 1], mastery: 3, on }; });
