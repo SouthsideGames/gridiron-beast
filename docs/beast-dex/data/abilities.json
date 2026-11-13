@@ -271,7 +271,7 @@
     "name": "Falling Star",
     "category": "Delayed attack",
     "activation": "Normal action replaced by launch",
-    "mechanic": "Delayed slot meteor; independent team-wide splash hits",
+    "mechanic": "Delayed slot meteor; one hit on the marked position’s occupant",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -281,13 +281,13 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Mark the normal target lineup position, not combatant identity; normally the opposing front. Current occupant takes main hit. Every OTHER living opponent, including reserves, takes splash. Empty main slot: splash still hits every living opponent.",
-        "provenance": "Approved conversation decisions; unresolved points explicitly marked"
+        "rule": "Mark the normal target lineup position, not combatant identity; normally the opposing front. Current occupant takes the hit. No other opponent is hit: no splash, reserves and other teammates of the target are never damaged. Empty marked slot: the meteor lands on nobody.",
+        "provenance": "Owner-approved Task 10 revision (2026-11-13)."
       },
       {
         "section": "Core resolution",
-        "rule": "Impact at end of following exchange after rotations. Freeze target identities/order when impact begins: marked occupant first, then other living opponents front-to-back. Resolve each target’s eligible reactions immediately after its hit before next target. Remaining meteor hits persist if retaliation knocks Pyronix out.",
-        "provenance": "Approved conversation decisions; unresolved points explicitly marked"
+        "rule": "Impact at end of following exchange after rotations. Freeze the target identity when impact begins: the marked occupant. Resolve the target’s eligible reactions immediately after the hit.",
+        "provenance": "Owner-approved Task 10 revision (2026-11-13)."
       },
       {
         "section": "Recharge / frequency",
@@ -296,23 +296,23 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Once launched, persists through owner rotation/knockout while Clash ongoing. Recalculate offensive strength at impact; if owner is knocked out, use strength immediately before knockout, including for remaining hits. Targets use current defense/type/shield/evasion at their hit.",
-        "provenance": "Approved conversation decisions; unresolved points explicitly marked"
+        "rule": "Once launched, persists through owner rotation/knockout while Clash ongoing. Recalculate offensive strength at impact; if owner is knocked out, use strength immediately before knockout. Target uses current defense/type/shield/evasion at the hit.",
+        "provenance": "Owner-approved Task 10 revision (2026-11-13)."
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Delayed direct attack. Each hit independently respects normal evasion/decoys; one diversion cannot cancel other hits. Each damaged target may trigger eligible reactions once. No Burn/stun. No formation/grid adjacency requirement remains.",
-        "provenance": "Approved conversation decisions; unresolved points explicitly marked"
+        "rule": "Delayed direct attack. The hit respects normal evasion/decoys. The damaged target may trigger eligible reactions once. No Burn/stun. No formation/grid adjacency requirement remains.",
+        "provenance": "Owner-approved Task 10 revision (2026-11-13)."
       },
       {
         "section": "Visuals",
-        "rule": "Meteor flies UP and out of battle view on launch. Persistent slot marker warns of impact. Meteor descends onto marked position, then fiery wave travels across opposing lineup; each hit and reaction follows authoritative order.",
-        "provenance": "Approved conversation decisions; unresolved points explicitly marked"
+        "rule": "Meteor flies UP and out of battle view on launch. Persistent slot marker warns of impact. Meteor descends onto the marked position and strikes its occupant only.",
+        "provenance": "Owner-approved Task 10 revision (2026-11-13)."
       },
       {
         "section": "Progression / notes",
-        "rule": "Main damage 150/160/170/180%; splash 50/55/60/65% to EVERY other living opponent, including reserves. Independent target defense/type calculations. No adjacency-based targeting.",
-        "provenance": "Approved conversation decisions; unresolved points explicitly marked"
+        "rule": "Main damage 150/160/170/180% by mastery. No splash. Target defense/type calculated as for any hit. No adjacency-based targeting.",
+        "provenance": "Owner-approved Task 10 revision (2026-11-13)."
       }
     ],
     "source": "Beast Dex v18; subject to later Task 8 overrides"
@@ -694,14 +694,14 @@
     "mode": "Beast Clash",
     "name": "Second Tide",
     "category": "Support",
-    "activation": "Every second eligible normal action",
+    "activation": "Every second eligible normal action, in addition to the attack",
     "mechanic": "Heal most injured percentage; surplus attempts Shielded",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Every second own normal turn on which able to act replaces attack. First eligible action attacks. Stunned skipped actions do not build ability counter (but do tick status duration).",
-        "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
+        "rule": "Every second own normal turn on which able to act, the support effect resolves and the normal attack still follows in the same action; it never replaces the attack. First eligible action attacks only. Stunned skipped actions do not build ability counter (but do tick status duration).",
+        "provenance": "Owner-approved Task 10 revision (2026-11-13)."
       },
       {
         "section": "Targets / placement",
@@ -710,8 +710,8 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Compute healing budget from recipient maximum HP and form/mastery; apply Healing Reduced to budget FIRST. Restore missing HP; 100% remaining surplus attempts Shielded. 100% Healing Reduced means no heal or surplus shield. No damage.",
-        "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
+        "rule": "Compute healing budget from recipient maximum HP and form/mastery; apply Healing Reduced to budget FIRST. Restore missing HP; 100% remaining surplus attempts Shielded. 100% Healing Reduced means no heal or surplus shield. The support effect deals no damage; the normal attack then resolves as usual.",
+        "provenance": "Owner-approved Task 10 revision (2026-11-13)."
       },
       {
         "section": "Recharge / frequency",
