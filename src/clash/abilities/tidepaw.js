@@ -21,11 +21,8 @@ export default registerClashAbility({
     chooseAction(api, self) {
       const st = self.state; st.actions += 1; // an eligible own action (chooseAction is asked only when able to act)
       if (st.actions % 2 !== 0) return null; // odd actions attack
-      // Do not sacrifice an attack when every ally is healthy and already shielded.
-      // A full-health ally without a shield can still benefit from the surplus shield.
-      const candidates = api.allies(self);
-      if (candidates.every((v) => hpPct(v) >= 1 && v.status?.id === 'shielded')) return null;
-      const allies = candidates; const active = allies.find((v) => v.active);
+      // Second Tide is a bonus support action: it never replaces the normal attack.
+      const allies = api.allies(self); const active = allies.find((v) => v.active);
       const order = [active, ...allies.filter((v) => !v.active)].filter(Boolean);
       const missing = (v) => 1 - hpPct(v);
       const t = order.reduce((best, v) => (missing(v) > missing(best) ? v : best), order[0]);
@@ -35,7 +32,7 @@ export default registerClashAbility({
       const surplus = r.budget - r.amount;
       if (surplus > 0) api.shield(self, t.id, { pool: surplus, duration: SHIELD_TURNS, noFactors: true });
       else if (r.budget === 0) api.cleanup(self, $E('clashlog.healing_reduced_100_no_heal_and'));
-      return { kind: 'done' };
+      return null; // continue into the normal attack after healing/shielding
     },
   },
   review: {
