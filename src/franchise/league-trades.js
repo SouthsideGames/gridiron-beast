@@ -1,6 +1,6 @@
 // Trades between AI clubs (GDD §46, Phase 4; decision E, owner's rules of 2026-10-24): uncommon, driven by roster needs,
 // at fair value, inside the cap and the roster limits, never a protected monster, a cornerstone or a rookie on his first deal.
-// Two windows: the offseason (after free agency, before the nudge) and weeks 2–8 of the season. Every decision draws from the
+// Two windows: the offseason (after free agency, before the nudge) and weeks 1–7 of the season. Every decision draws from the
 // franchise generator in a fixed order, so one seed gives one league. The owner's own trades are untouched.
 
 import { monsterOverall, ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
@@ -41,8 +41,8 @@ export const AI_TRADE_RULES = Object.freeze({
   upgrade: 2,          // the incoming monster must beat the club's weakest available starter at the position by this much
   band: DEAL_RULES.band, // market value received / given, both ways (position-sensitive since Task 5: trade-value.js)
   offseasonMax: 3,     // deals in one offseason window
-  weekChance: 0.25,    // chance of one deal attempt in each of weeks 2–8 (about 1.75 a season, 2–4 with the offseason)
-  weeks: [FIRST_TRADE_WEEK, TRADE_DEADLINE_WEEK], // the trade deadline is the end of week 8 (trade-window.js)
+  weekChance: 0.25,    // chance of one deal attempt in each of weeks 1–7 (about 1.75 a season, 2–4 with the offseason)
+  weeks: [FIRST_TRADE_WEEK, TRADE_DEADLINE_WEEK], // open weeks 1–7; trading closes when week 8 begins (trade-window.js)
   season: { upgrade: 4, minGain: 16 }, // in season a deal must lift a starting slot by a margin a coach would act on: twice the offseason bar (the first Task 5 design, with the offseason bar in season, made 1.6 in-season deals a season and nearly every attempt a deal: not the "occasional deal" of §46.5)
   picksAhead: 2,       // classes a club will pay picks from
   targets: 6,          // the biggest upgrades a club looks at per window
@@ -125,7 +125,7 @@ function attempt(f, r, A, { year, cap, done, window }) {
 }
 /**
  * R4 starter sales (Task 6 Phase D; owner's decision D13, specification §1.8 R4): a club in Rebuild mode may sell ONE starter, and only
- * STARTER_SALE.perWindow sale happens in the whole league in one trading window (the offseason window, or weeks 2–8 of a season).
+ * STARTER_SALE.perWindow sale happens in the whole league in one trading window (the offseason window, or weeks 1–7 of a season).
  *   the starter    not protected, tradable (no rookie on his first deal), available, within PLAN.ageingHorizon (2) seasons of his public
  *                  decline onset or past it, and older than STARTER_SALE.youngStarAge (never a young star)
  *   the buyer      not rebuilding, with a legitimate need: he beats its weakest available starter at the position by the window's bar
@@ -135,7 +135,7 @@ function attempt(f, r, A, { year, cap, done, window }) {
  * The existing valuation, cap, roster and window rules are reused unchanged; nothing here draws from the generator.
  */
 export const STARTER_SALE = Object.freeze({ perWindow: 1, youngAge: 25, youngStarAge: 26, replacementWithin: 4 });
-/** No sale yet in this window (offseason window: week 0 of `year`; in season: weeks 2–8 of `year`). */
+/** No sale yet in this window (offseason window: week 0 of `year`; in season: weeks 1–7 of `year`). */
 export function saleOpen(f, year, week) { return !(f.league?.trades || []).some((t) => t.sale && t.year === year && (week > 0 ? t.week > 0 : t.week === 0)); }
 /** The starters a rebuilding club may sell, the furthest past onset first. */
 export function sellableStarters(f, roster) {

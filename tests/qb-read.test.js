@@ -17,7 +17,9 @@ const ZONE = DEFENSE_IDS.filter((id) => PLAYS[id].tags.includes('zone')), BLITZ 
 const sweeps = {};
 function sweep(aw, seeds = 2) {
   const key = `${aw}:${seeds}`; if (sweeps[key]) return sweeps[key]; const L = lineup(11, 62); L.offense.QB.attrs = { ...L.offense.QB.attrs, awareness: aw }; const out = [];
-  for (const o of PASS) for (const d of DEFENSE_IDS) for (let s = 1; s <= seeds; s++) { const r = simulatePlay({ offensePlay: PLAYS[o], defensePlay: PLAYS[d], ballOn: 35, seed: s * 977 + d.length * 13 + o.length, offense: L.offense, defense: L.defense }); out.push({ o, d, r, dec: r.qb?.decision || null, reads: (r.qb?.reads || []).filter((e) => e.kind === 'read') }); }
+  // Task 10: the released reserve plays made the pools 129 pass plays × 176 defenses; the sweep keeps only what the tests read (not the
+  // frames, but the first frame that shows a read, which test 14 draws) so it fits in memory, and covers every pass play and every defense.
+  for (const o of PASS) for (const d of DEFENSE_IDS) for (let s = 1; s <= seeds; s++) { const r = simulatePlay({ offensePlay: PLAYS[o], defensePlay: PLAYS[d], ballOn: 35, seed: s * 977 + d.length * 13 + o.length, offense: L.offense, defense: L.defense }); const { frames, ...rest } = r; const read = frames?.filter((f) => f.read) || []; out.push({ o, d, r: { ...rest, frames: read.length ? [read[0]] : [] }, dec: r.qb?.decision || null, reads: (r.qb?.reads || []).filter((e) => e.kind === 'read') }); }
   return (sweeps[key] = out);
 }
 const share = (xs, f) => xs.filter(f).length / Math.max(1, xs.length);

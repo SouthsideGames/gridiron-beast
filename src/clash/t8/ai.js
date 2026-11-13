@@ -19,11 +19,12 @@
 import { typeFactor } from '../types.js';
 import { clashEffect } from './status.js';
 
-export const T8_POLICIES = Object.freeze(['none', 'ai', 'manual']);
+export const T8_POLICIES = Object.freeze(['none', 'ai', 'manual', 'player']);
 export const T8_POLICY_LABEL = Object.freeze({
   none: 'Never rotates (tests and staged scenarios only)',
   ai: 'Adapted smart policy (D2): rotates only for a clear expected gain, or when the active is about to fall',
   manual: 'The player decides at each legal rotation phase (Watch); "Auto for the rest" hands the side to the AI policy (D1)',
+  player: 'Continuous Watch (Task 10): the side stays in unless the player has tapped a reserve; never prompts. A recorded reserve id switches, \'auto\' hands the side to the AI policy',
 });
 
 const hpShare = (x) => x.hp / x.c.maxHp;

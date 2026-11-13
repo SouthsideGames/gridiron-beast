@@ -1352,12 +1352,12 @@ function callStamp(f) { return f.offseason ? `off:${f.season.year}` : `wk:${f.se
 /** The call waiting for an answer, or null. */
 export function tradeCall(f) { const c = f.tradeCall; return c && c.expires === callStamp(f) && tradeWindow(f).calls ? c : null; } // a call never outlives the window: past the deadline it is simply gone
 const callMonster = (m) => ({ id: m.id, name: m.name, species: m.species, position: m.position, ovr: monsterOverall(m), age: m.age, salary: m.salary });
-/** Once a week in season (weeks 2-8) and once when the offseason opens, a club may call with an offer. */
+/** Once a week in season (weeks 1-7) and once when the offseason opens, a club may call with an offer. */
 export function maybeTradeCall(f) {
   const stamp = callStamp(f);
   if (f.tradeCall && f.tradeCall.expires !== stamp) { news(f, $P($L('franchise.the_offer', { team: f.tradeCall.team }), ` `, (f.tradeCall.kind ? $L('franchise.to_you') : $P($L('franchise.for_your'), ` `, f.tradeCall.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + '))), ` expired.`), 'info'); f.tradeCall = null; }
   if (f.tradeCall || isFired(f)) return null;
-  if (!tradeWindow(f).calls) return null; // weeks 2–8 and the offseason: the trade deadline is the end of week 8 (trade-window.js)
+  if (!tradeWindow(f).calls) return null; // weeks 1–7 and the offseason: trading closes when week 8 begins (trade-window.js)
   f.callsMade ||= {}; if (f.callsMade[stamp]) return null; f.callsMade[stamp] = true;
   const until = f.offseason ? $t('franchise.the_new_season') : $t('franchise.the_end_of_the_week');
   if (hasLeague(f)) { // the club's own roster decides who calls and what for (trade-desk.js buildIncomingOffer)

@@ -371,7 +371,9 @@ function compile(play) {
 // into ordinary play (they make Crossed Wires, ELE-01-F, reachable in released gameplay). Their formations stay reserve formations.
 export const RELEASED_RESERVE_OFFENSE = Object.freeze(['bunch_snag', 'bunch_whip', 'whip_corner', 'y_pivot', 'bunch_slant_arrow', 'bunch_scissors', 'corner_arrow', 'bunch_flood', 'post_wheel', 'bunch_verticals']);
 const RELEASED = new Set(RELEASED_RESERVE_OFFENSE);
-const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: false }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: false }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN, BRACKET });
+// Task 10 (owner 2026-11-13): every reviewed reserve play is released into the open pools below. The compiled play keeps its catalogue
+// flag (`reserve`), so a play's data and its review fingerprint (dev-review.js) are exactly what was reviewed; release is pool membership.
+const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: !RELEASED.has(id) }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN, BRACKET });
 // Legendary Plays (GDD §36): built on the same assignments as every play, each tied to one Legendary monster who must be on
 // the field in its slot. Like reserve plays they live in PLAYS (engine, art, audit) and never in OFFENSE_IDS / DEFENSE_IDS:
 // a club can call one only when it holds that Legendary and has put the play in one of its six slots.
@@ -400,11 +402,18 @@ const LEGENDARY_DEFENSE = [
 export const PLAYS = Object.freeze(Object.fromEntries([...OFFENSE_PLAYS, ...DEFENSE_PLAYS, ...RESERVE.offense, ...RESERVE.defense, ...LEGENDARY_OFFENSE, ...LEGENDARY_DEFENSE].map((p) => [p.id, compile(p)])));
 export const LEGENDARY_IDS = Object.freeze([...LEGENDARY_OFFENSE, ...LEGENDARY_DEFENSE].map((p) => p.id));
 export const isLegendary = (id) => !!PLAYS[id]?.legendary;
-export const OFFENSE_IDS = [...OFFENSE_PLAYS.map((p) => p.id), ...RESERVE.offense.map((p) => p.id)]; // N8b: the released bunch plays
-export const DEFENSE_IDS = [...DEFENSE_PLAYS.map((p) => p.id), ...RESERVE.defense.map((p) => p.id)];
-export const RESERVE_OFFENSE_IDS = []; // All reviewed reserve plays released by owner for Task 10 polish.
+// Held back from the Task 10 release (measured 2026-11-13, tools in docs/task10): the designed handoff is missed on most snaps, so the
+// play does not run as drawn: end_around (100% of snaps), pin_pull (98%), pistol_zone_read (45%), midline_read (36%); no live option
+// play misses more than 10%. They stay reserve plays, reviewable in the Playbook Audit, until their assignments are fixed and re-reviewed.
+export const HELD_BACK_OFFENSE = Object.freeze(['end_around', 'pin_pull', 'pistol_zone_read', 'midline_read']);
+const HELD = new Set(HELD_BACK_OFFENSE);
+export const OFFENSE_IDS = [...OFFENSE_PLAYS.map((p) => p.id), ...RESERVE.offense.filter((p) => !HELD.has(p.id)).map((p) => p.id)]; // N8b's bunch plays, then (Task 10) every reserve offense play but the held-back four
+export const DEFENSE_IDS = [...DEFENSE_PLAYS.map((p) => p.id), ...RESERVE.defense.map((p) => p.id)]; // Task 10: every reserve defense play
+export const RESERVE_OFFENSE_IDS = RESERVE.offense.filter((p) => HELD.has(p.id)).map((p) => p.id); // Task 10: only the held-back plays remain reserve
 export const RESERVE_DEFENSE_IDS = [];
-export const isReserve = (id) => !!PLAYS[id]?.reserve;
+const OPEN_IDS = new Set([...OFFENSE_IDS, ...DEFENSE_IDS]);
+/** Held back from play: a catalogue reserve play that is not in an open pool (since Task 10, only HELD_BACK_OFFENSE). */
+export const isReserve = (id) => !!PLAYS[id]?.reserve && !OPEN_IDS.has(id);
 export const getPlay = (id) => { const p = PLAYS[id]; if (!p) throw new Error(`Unknown play ${id}`); return p; };
 
 /** Eligible receivers for an offensive play (skill players running routes or carrying). */

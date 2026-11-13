@@ -3,7 +3,7 @@
 
 import { esc, delegate, toast, sheet } from '../dom.js';
 import * as F from '../../franchise/franchise.js';
-import { PLAYS, OFFENSE_IDS, DEFENSE_IDS, RESERVE_OFFENSE_IDS, RESERVE_DEFENSE_IDS } from '../../data/playbook.js';
+import { PLAYS, OFFENSE_IDS, DEFENSE_IDS, RESERVE_OFFENSE_IDS, RESERVE_DEFENSE_IDS, isReserve } from '../../data/playbook.js';
 import { simulatePlay } from '../../sim/engine.js';
 import { pickSlots } from '../../sim/rules.js';
 import { fieldSvg, fieldDraw, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
@@ -150,13 +150,13 @@ export function registerPracticeScreens(Router, app) {
       const queue = shown.filter((id) => NEEDS_OWNER.has(states[id]) && id !== audit.play);
       const mark = (id) => (states[id] ? ({ approved: '✓ ', needs_work: '✎ ', new: '• ', changed: '🔔 ', updated: '🔔 ' })[states[id]] : '');
       const opts = (list, value, marks = () => '') => list.map((p) => `<option value="${p}" ${p === value ? 'selected' : ''}>${marks(p)}${esc(PLAYS[p].name)}</option>`).join('');
-      const groups = (side, list, value, marks) => { const L = list.filter((id) => !PLAYS[id].reserve), R = list.filter((id) => PLAYS[id].reserve); return (L.length && R.length) ? `<optgroup label="In the game (${L.length})">${opts(L, value, marks)}</optgroup><optgroup label="Reserve (${R.length})">${opts(R, value, marks)}</optgroup>` : opts(list, value, marks); };
+      const groups = (side, list, value, marks) => { const L = list.filter((id) => !isReserve(id)), R = list.filter((id) => isReserve(id)); return (L.length && R.length) ? `<optgroup label="In the game (${L.length})">${opts(L, value, marks)}</optgroup><optgroup label="Reserve (${R.length})">${opts(R, value, marks)}</optgroup>` : opts(list, value, marks); };
       const sel = (name, key, side, list, value, marks) => `<label class="field">${name}<select data-change="${key}">${groups(side, list, value, marks)}</select></label>`;
       const count = (side, which) => listFor(side, which).length;
       const due = (side) => listFor(side, 'all').filter((id) => NEEDS_OWNER.has(reviewState('play', id))).length;
       const chip = (key, v, label) => `<button class="btn small ${audit[key] === v ? 'primary' : ''}" data-action="a-set" data-k="${key}" data-v="${v}">${label}</button>`;
       const run = audit.run; const n = run ? run.frames.length : 0;
-      const isReservePlay = !!PLAYS[audit.play].reserve;
+      const isReservePlay = isReserve(audit.play);
       return `<p class="muted">Every play with its art, assignments and a run you can watch. ${approved}/${shown.length} approved in this list · 🔔 ${shown.filter((id) => NEEDS_OWNER.has(states[id])).length} to review. In the list: ✓ good, ✎ waiting on dev, • new, 🔔 changed since your review.</p>
         <div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px"><button class="btn small ${audit.side === 'offense' ? 'primary' : ''}" data-action="side" data-v="offense">Offense (${count('offense', 'all')})${devBadge(app.settings, due('offense'))}</button><button class="btn small ${audit.side === 'defense' ? 'primary' : ''}" data-action="side" data-v="defense">Defense (${count('defense', 'all')})${devBadge(app.settings, due('defense'))}</button></div>
         <div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px"><span class="muted" style="font-size:12px">Show</span>${chip('list', 'all', `All ${count(audit.side, 'all')}`)}${chip('list', 'live', `In the Game ${count(audit.side, 'live')}`)}${chip('list', 'reserve', `Reserve ${count(audit.side, 'reserve')}`)}</div>

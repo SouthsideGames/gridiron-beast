@@ -91,7 +91,59 @@ export function t8Config(config = {}) {
  *    staged ability state is a labelled prerequisite (never a manufactured result); the result is marked `staged: true`.
  *  carryIn: opening / overtime only (spec §10; D10, D11).  stopAt: { exchange, turn? } (turn stepping; the B11 checkpoint, S13).
  */
-export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'full', probes = [], stage = null, carryIn = null, stopAt = null }) {
+export function simulateClashT8(args) {
+  const g = runT8(args, null); const r = g.next();
+  if (!r.done) throw new Error('A t8 battle paused outside a session'); // without a session the generator never yields
+  return r.value;
+}
+
+/**
+ * Task 10 (owner 2026-11-13): ONE continuous battle. A session keeps a single live battle state and advances it exchange by exchange:
+ * it pauses before each rotation phase (after both actives have acted), shows the live state, and takes the player's command for that
+ * rotation phase (a reserve to bring in, or 'auto'), then continues from the same state. Nothing is re-simulated and nothing restarts.
+ * The decisions it was given are the record: simulateClashT8 with the same lineups, seed, config and those decisions reproduces the
+ * session's battle exactly (log, state hash, winner), which is how replays, reloads and Skip settle it.
+ *   const s = createClashSessionT8({ a, b, seed, config: { ruleset: 't8', policies: { a: 'player', b: 'ai' } } });
+ *   s.view (the live result-shaped view) · s.request(reserveId) · s.auto() · s.advance() · s.finish() · s.result · s.decisions
+ */
+export function createClashSessionT8(args) {
+  const live = { decisions: { a: {}, b: {} }, view: null };
+  const g = runT8(args, live); let step = g.next(); let done = step.done; let result = done ? step.value : null; let pendingCmd = null; let lastRefusal = null;
+  const view = () => (done ? result : step.value);
+  const rotationInfo = () => (done ? null : step.value.rotation);
+  return {
+    get done() { return done; }, get result() { return result; }, get view() { return view(); }, get ex() { return view().exchanges; },
+    get decisions() { return structuredClone(live.decisions); }, get queued() { return pendingCmd; }, get lastRefusal() { return lastRefusal; },
+    /** Can the player switch to `id` at the coming rotation phase? { ok, reason, exchangesLeft }. A refusal changes nothing (no cooldown is touched). */
+    canSwitch(id) {
+      if (done) return { ok: false, reason: 'finished' };
+      const r = rotationInfo(); if (!r || r.side !== 'a') return { ok: false, reason: 'not-player' };
+      if (r.policy !== 'player') return { ok: false, reason: 'auto' };
+      if (!r.reserves.some((x) => x.id === id || x.monsterId === id)) return { ok: false, reason: r.reserves.length ? 'not-reserve' : 'no-reserve' };
+      if (r.exchangesLeft > 0) return { ok: false, reason: 'cooldown', exchangesLeft: r.exchangesLeft };
+      return { ok: true };
+    },
+    /** Queue a switch for the coming rotation phase (the next safe boundary). Returns canSwitch's answer; only a legal request is queued. */
+    request(id) { const c = this.canSwitch(id); if (c.ok) { const r = rotationInfo(); pendingCmd = r.reserves.find((x) => x.id === id || x.monsterId === id).id; } return c; },
+    cancel() { pendingCmd = null; },
+    /** Hand the player's rotations to the AI policy for the rest of this battle (the approved "Auto for the rest", D1). */
+    auto() { if (!done && rotationInfo()?.policy === 'player') pendingCmd = 'auto'; },
+    /** Run the coming rotation phase (with the queued command, if any) and the next exchange up to its rotation phase. Returns the new view. */
+    advance() {
+      if (done) return result;
+      const r = rotationInfo(); lastRefusal = null;
+      if (pendingCmd && r) live.decisions.a[r.ex] = pendingCmd;
+      const asked = pendingCmd; pendingCmd = null;
+      step = g.next(); done = step.done; if (done) result = step.value;
+      if (asked && asked !== 'auto' && r) { const v = view(); const rot = v.log.slice(r.lastSeq + 1).find((e) => e.kind === 'rotation' && e.ex === r.ex && e.side === 'a'); if (!rot) lastRefusal = { ex: r.ex, id: asked, reason: 'blocked' }; } // a rotation lock or delay refused it at the boundary
+      return view();
+    },
+    /** Run to the end with no further switches (or with the AI, after auto()). */
+    finish() { let guard = 0; while (!done && guard++ < 10000) this.advance(); return result; },
+  };
+}
+
+function* runT8({ a, b, seed = 1, config = {}, log: logMode = 'full', probes = [], stage = null, carryIn = null, stopAt = null }, session = null) {
   resetLines();   // a log entry never picks up a line read before this battle (src/core/english.js)
   const cfg = t8Config(config); const context = cfg.context || 'standalone'; const ABILITIES = cfg.abilities !== 'off'; const PROV = cfg.provisional === 'on';
   if (carryIn && context === 'standalone') throw new Error('A standalone Clash has no incoming status carry (D12)');
@@ -806,8 +858,9 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     const L = voluntaryLegality(side);
     if (!L.legal) { if (L.lock && LOG) log('rotation_unavailable', side.active, null, `${$E('clashlog.cannot_rotate', { name: side.active.c.name, reason: L.lock.reason || 'locked' })}`, { side: side.key, unmet: L.unmet, stage: 'trigger' }); return null; }
     const reserves = reservesOf(side);
-    if (side.policy === 'manual') {
-      const d = cfg.decisions?.[side.key]?.[ex];
+    if (side.policy === 'manual' || side.policy === 'player') {
+      const d = session?.decisions?.[side.key]?.[ex] ?? cfg.decisions?.[side.key]?.[ex];
+      if (d === undefined && side.policy === 'player') return null; // continuous battle (Task 10): no tap, no switch, no prompt
       if (d === undefined) return { pending: { kind: 'rotation', ex, side: side.key, activeId: side.active.c.id, options: ['stay', 'auto', ...reserves.map((x) => x.c.id)], reserves: reserves.map(optionView) } };
       if (d === 'auto') { side.policy = 'ai'; if (LOG) log('rotation_decision', side.active, null, `${$E('clashlog.auto_for_the_rest_of_this', { toUpperCase: side.key.toUpperCase() })}`, { side: side.key, decision: 'auto' }); }
       else if (d === 'stay') { if (LOG) log('rotation_decision', side.active, null, `${$E('clashlog.stays_in_your_call', { name: side.active.c.name })}`, { side: side.key, decision: 'stay' }); return null; }
@@ -963,6 +1016,17 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   for (const side of [S.a, S.b]) enter(side.line[0], 'opening');
 
   // ---- the exchange loop (P6 "Beast Clash exchange", B3)
+  const lineOut = (side) => side.line.map((x) => ({ id: x.c.id, monsterId: x.c.monsterId, species: x.c.species, name: x.c.name, archetype: x.c.archetype, type: x.c.type, basic: x.c.basic, form: x.c.form, tier: x.c.tier,
+    hp: x.hp, maxHp: x.c.maxHp, active: x.active, koed: x.koed, koOrder: x.koOrder, turns: x.turns, skips: x.skips, stunnedSkips: x.stunnedSkips, entries: x.entries, performed: x.performed, status: x.status ? structuredClone(x.status) : null, clocks: x.clocks.map((k) => ({ id: k.id, kind: k.kind, left: k.left })), stats: { ...x.stats }, combatant: x.c,
+    abilityId: x.mod?.abilityId ?? null, ability: x.ab ? structuredClone(x.ab) : null, executions: x.executions, passiveCredited: x.passiveCredited, sigRestrict: x.sigRestrict ? { ...x.sigRestrict } : null }));
+  /** Task 10 session view: the battle so far, in the shape of a pending result (the arena plays it), plus the player's rotation options. */
+  const sessionView = () => {
+    const side = S.a; const res = reservesOf(side);
+    const lines = { a: lineOut(S.a), b: lineOut(S.b) };
+    return Object.freeze({ ruleset: V.ruleset, engine: V.engineVersion, pending: true, session: true, boundary: { kind: 'session', ex, side: 'a', lastSeq: events.length - 1 }, winner: null, by: null, exchanges: ex, seed, model, config: cfg, context,
+      lines, log: events.slice(), rngDraws: draws, hpShare: null, sides: { a: { policy: S.a.policy, rotations: S.a.rotations, lastVoluntary: S.a.lastVoluntary }, b: { policy: S.b.policy, rotations: S.b.rotations, lastVoluntary: S.b.lastVoluntary } },
+      rotation: { side: 'a', ex, policy: side.policy, lastSeq: events.length - 1, exchangesLeft: Math.max(0, CADENCE - (ex - side.lastVoluntary)), cadence: CADENCE, activeId: side.active?.c.id ?? null, reserves: res.map(optionView) } });
+  };
   let stopped = null;
   if (stopAt != null && (!Number.isInteger(stopAt.exchange) || stopAt.exchange < 1 || (stopAt.turn != null && ![1, 2].includes(stopAt.turn)))) throw new Error('stopAt needs { exchange >= 1, turn? 1 | 2 }');
   while (ex < V.battle.exchangeCap && !winner) {
@@ -1004,6 +1068,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       if (stopAt && stopAt.exchange === ex && stopAt.turn === turnNo && !winner) { stopped = { kind: 'turn', ex, turn: turnNo }; break; }
     }
     if (winner || stopped) break;
+    if (session) yield sessionView(); // Task 10: the session shows this exchange and takes the player's command for the rotation phase below
     // 4. Rotation phase (P8).
     phase = 'rotation';
     if (LOG) log('rotation_phase', null, null, $E('clashlog.rotation_phase'), { cadence: { a: ex - S.a.lastVoluntary >= CADENCE, b: ex - S.b.lastVoluntary >= CADENCE } });
@@ -1058,9 +1123,6 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   else { carryOut = {}; for (const x of all()) if (x.status) { const t = toFootball(x.status, x.c.maxHp); if (t) carryOut[x.c.monsterId] = t; } }
   if (LOG && !stopped) log('end', null, null, `${$E('clashlog.side_wins_by_after_exchanges', { toUpperCase: winner.toUpperCase(), by: by === 'knockout' ? 'knockout' : by === 'hp' ? $E('clashlog.hp_share') : 'coin flip', ex, n: ex })}`, { winner, by });
 
-  const lineOut = (side) => side.line.map((x) => ({ id: x.c.id, monsterId: x.c.monsterId, species: x.c.species, name: x.c.name, archetype: x.c.archetype, type: x.c.type, basic: x.c.basic, form: x.c.form, tier: x.c.tier,
-    hp: x.hp, maxHp: x.c.maxHp, active: x.active, koed: x.koed, koOrder: x.koOrder, turns: x.turns, skips: x.skips, stunnedSkips: x.stunnedSkips, entries: x.entries, performed: x.performed, status: x.status ? structuredClone(x.status) : null, clocks: x.clocks.map((k) => ({ id: k.id, kind: k.kind, left: k.left })), stats: { ...x.stats }, combatant: x.c,
-    abilityId: x.mod?.abilityId ?? null, ability: x.ab ? structuredClone(x.ab) : null, executions: x.executions, passiveCredited: x.passiveCredited, sigRestrict: x.sigRestrict ? { ...x.sigRestrict } : null }));
   const lines = { a: lineOut(S.a), b: lineOut(S.b) };
   const sides = { a: { policy: S.a.policy, rotations: S.a.rotations, forced: S.a.forced, lastVoluntary: S.a.lastVoluntary }, b: { policy: S.b.policy, rotations: S.b.rotations, forced: S.b.forced, lastVoluntary: S.b.lastVoluntary } };
   const mastery = {}; for (const x of all()) if (x.mod) mastery[x.c.monsterId] = { abilityId: x.mod.abilityId, executions: x.executions, passiveCredited: x.passiveCredited };
