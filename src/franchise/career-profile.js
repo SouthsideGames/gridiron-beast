@@ -16,6 +16,7 @@ import { monsterOverall, SPECIES_BY_ID } from '../data/monsters.js';
 import { yearOf } from '../data/calendar.js';
 import { t as $t } from '../text/index.js';
 import { monsterHofInductees } from './monster-hof-voting.js';
+import { revealedElections } from './hall-ceremony.js';
 
 export const PROFILE_VERSION = 1;
 
@@ -171,7 +172,7 @@ export function trophyCase(f, m, events = careerEvents(m)) {
   const af = f?.season?.awardsFinal; if (af) for (const [k, w] of Object.entries(af.winners || {})) if (w && w.id === m.id && TROPHY_META[k] && k !== 'coy') put(k, { key: `${`award:${k}:${af.year ?? f.season.year}`}`, year: af.year ?? f.season.year, club: w.team });
   // Task 9 Monster Hall of Fame is separate from the legacy GM Hall of Fame.
   // An induction is derived from the saved election; no career mutation is needed.
-  const induction = monsterHofInductees(f?.monsterHallOfFame?.elections || [])
+  const induction = monsterHofInductees(revealedElections(f))
     .find((c) => String(c.id) === String(m.id));
   if (induction) put('hof', {
     key: `monster-hof:${induction.inductedYear}`,
@@ -199,7 +200,7 @@ export function careerProfile(f, id) {
   if (candidate) return retiredCandidateProfile(f, candidate);
   // An elected monster must remain reachable even if the candidate pool is
   // absent in an older or partially migrated save. The election is permanent.
-  const induction = (f?.monsterHallOfFame?.elections || [])
+  const induction = revealedElections(f)
     .flatMap((e) => e?.inductees || [])
     .find((c) => String(c.id) === String(id));
   if (induction) return retiredCandidateProfile(f, {
@@ -215,7 +216,7 @@ export function careerProfile(f, id) {
  */
 export function retiredCandidateProfile(f, c) {
   const trophies = trophyCase(f, { id: c.id }, []);
-  const induction = (f?.monsterHallOfFame?.elections || []).flatMap((e) => e.inductees || [])
+  const induction = revealedElections(f).flatMap((e) => e.inductees || [])
     .find((i) => String(i.id) === String(c.id));
   const titles = c.honours?.titles ?? 0;
   const awards = c.honours?.awards ?? 0;

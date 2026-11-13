@@ -1,6 +1,7 @@
 // Task 9: compact, read-only historical index from existing franchise facts.
 // No gameplay mutations, speculative rosters, or fabricated historical outcomes.
 import { monsterHofInductees, WAIT_SEASONS } from './monster-hof-voting.js';
+import { revealedElections } from './hall-ceremony.js';   // a sealed election (its ceremony not yet held) is shown nowhere
 import { historicalRecords } from './records-history.js';
 
 const yearSort = (a, b) => (a.year ?? 0) - (b.year ?? 0);
@@ -39,7 +40,7 @@ export function historicalAwards(f, kind = null) {
 
 /** Annual Hall of Fame elections and inductees are read from the franchise save. */
 export function historicalHallOfFame(f) {
-  const elections = f?.monsterHallOfFame?.elections || [];
+  const elections = revealedElections(f);
   const inductees = monsterHofInductees(elections);
   const inductedIds = new Set(inductees.map((c) => String(c.id)));
   const candidates = (f?.monsterHallOfFame?.candidates || []).map((c) => ({
@@ -78,7 +79,7 @@ export function monsterHallStatus(f, id) {
   if (id == null) return null;
   const hof = f?.monsterHallOfFame; const key = String(id);
   const candidate = (hof?.candidates || []).find((c) => String(c.id) === key) || null;
-  const elections = (hof?.elections || []).slice().sort(yearSort);
+  const elections = revealedElections(f).slice().sort(yearSort);
   const induction = monsterHofInductees(elections).find((c) => String(c.id) === key) || null;
   if (!candidate && !induction) return null;
   const ballots = elections.flatMap((e) => (e.ballot || []).filter((b) => String(b.id) === key).map((b) => ({ year: e.year, votes: b.votes, voters: b.voters, qualified: !!b.qualified })));

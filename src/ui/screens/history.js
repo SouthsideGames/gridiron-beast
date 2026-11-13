@@ -7,7 +7,6 @@
 // save holds no record the screen says so. The owner's own Hall of Fame card (the GM Hall of Fame, screen 'hof') is separate.
 
 import { esc, delegate, sheet } from '../dom.js';
-import { hallCeremony } from '../../franchise/hall-ceremony.js';
 import { yearOf } from '../../data/calendar.js';
 import { TEAM_META } from '../../data/league.js';
 import { POSITION_NAME } from '../../data/stat-guide.js';
@@ -18,7 +17,8 @@ import { AWARDS } from '../../franchise/awards.js';
 import { RECORD_CATEGORIES } from '../../franchise/stats.js';
 import { resolveRecordHolder } from '../../franchise/career-profile.js';
 import { universeCareerLeaders } from '../../franchise/league-careers.js';
-import { franchiseSeasonHistory, championshipHistory, historicalAwards, historicalHallOfFame, historicalRecords, franchiseTotals, monsterHallStatus, WAIT_SEASONS, MAX_INDUCTEES, VOTER_COUNT, VOTE_THRESHOLD } from '../../franchise/task9-history.js';
+import { franchiseSeasonHistory, championshipHistory, historicalAwards, historicalHallOfFame, historicalRecords, franchiseTotals, monsterHallStatus, WAIT_SEASONS, MAX_INDUCTEES, MAX_NOMINEES, VOTER_COUNT, VOTE_THRESHOLD } from '../../franchise/task9-history.js';
+import { sealedElectionYear } from '../../franchise/hall-ceremony.js';
 import { fieldText, t as $t } from '../../text/index.js';
 
 const clubColor = (c) => TEAM_META[c]?.color || '#9fb8ad';
@@ -124,11 +124,13 @@ function hallHtml(f, params, reduced) {
   const hall = historicalHallOfFame(f); const view = ['inductees', 'elections', 'candidates'].includes(params.view) ? params.view : 'inductees';
   const stub = (id) => f.league?.legends?.[id] || null; const cand = new Map(hall.candidates.map((c) => [String(c.id), c]));
   const lastYear = hall.elections.length ? hall.elections[hall.elections.length - 1].year : null;
+  const sealed = sealedElectionYear(f);
   const classes = hall.elections.filter((e) => e.inductees.length).length;
   const hero = `<div class="panel hof-hero ${reduced ? '' : 'anim'}"><div class="hof-crest" aria-hidden="true">🏛️</div><div class="hof-title">${$t('history.monster_hall_of_fame')}</div>
       <div class="hof-sub">${$t('history.the_leagues_greatest_retired_monsters')}</div>
       ${glance([[hall.inductees.length, $t('history.inductees')], [classes, $t('history.classes')], [hall.elections.length, $t('history.elections')]])}
-      <p class="dim hof-rule">${$t('history.hall_rule', { wait: WAIT_SEASONS, voters: VOTER_COUNT, pct: Math.round(VOTE_THRESHOLD * 100), max: MAX_INDUCTEES })}</p></div>`;
+      <p class="dim hof-rule">${$t('history.hall_rule', { wait: WAIT_SEASONS, voters: VOTER_COUNT, pct: Math.round(VOTE_THRESHOLD * 100), max: MAX_INDUCTEES, nominees: MAX_NOMINEES })}</p>
+      ${sealed != null ? `<p class="hof-sealed">✉️ ${$t('history.the_result_is_sealed_until', { year: yearOf(sealed) })}</p>` : ''}</div>`;
   const seg = `<div class="seg hh-seg" role="tablist">${[['inductees', $t('history.inductees')], ['elections', $t('history.elections')], ['candidates', $t('history.candidates')]].map(([k, l]) => `<button class="btn small ${view === k ? 'primary' : ''}" role="tab" aria-selected="${view === k}" data-action="hview" data-v="${k}">${l}</button>`).join('')}</div>`;
   let body;
   if (view === 'inductees') {
@@ -151,6 +153,7 @@ function hallHtml(f, params, reduced) {
       const shown = all ? ordered : ordered.slice(0, Math.max(TOP, e.inductees.length));
       return `<div class="list hof-ballots">${shown.map((b) => { const s = stub(b.id); const inn = ids.has(String(b.id));
         return `<div class="item static hof-ballot ${inn ? 'in' : ''}">${sprite(s ? { ...s, name: b.name } : null, 30)}<div class="grow"><div class="name">${careerLink(b.id, b.name)} ${inn ? `<span class="chip accent">🏛️ ${$t('history.inducted')}</span>` : b.qualified ? `<span class="chip">${$t('history.qualified_class_full')}</span>` : ''}</div><div class="sub">${esc(posName(b.position))}${Number.isInteger(b.retiredYear) ? ` · ${$t('history.retired_in', { year: yearOf(b.retiredYear) })}` : ''}</div>${voteBar(b)}</div></div>`; }).join('')}</div>
+        <button class="btn block hh-more" data-action="hall-replay" data-year="${e.year}">🏛️ ${$t('history.replay_the_ceremony')}</button>
         ${ordered.length > shown.length ? `<button class="btn block hh-more" data-action="hall-all" data-v="1">${$t('history.show_the_whole_ballot', { n: ordered.length })}</button>` : all && ordered.length > TOP ? `<button class="btn block hh-more" data-action="hall-all" data-v="0">${$t('history.show_the_leading_votes')}</button>` : ''}`; };
     body = els.length ? `<div class="list hof-elections">${els.map((e) => { const on = cur && e.year === cur.year;
       if (!e.ballot.length) return `<div class="hof-quiet"><b class="mono">${yearOf(e.year)}</b><span class="dim">${$t('history.no_eligible_candidates')}</span></div>`;
@@ -192,33 +195,9 @@ export function registerHistoryScreens(Router, app) {
     render: ({ f, params }) => (f ? wrap('records', recordsHtml(f, params)) : noFranchise()),
     mount(root, ctx) { const params = ctx.params; delegate(root, { ...nav, rtab: (el) => { params.tab = el.dataset.v; Router.render(); } }); },
   });
-  // The Hall Board's members and ballots remain secret. Only sealed annual results are revealed.
-  Router.registerScreen('hofceremony', {
-    title: 'Hall of Fame Day',
-    render({ f, params }) {
-      const c = hallCeremony(f, Number(params.year || f?.season?.year));
-      if (!c) return '<div class="panel">No Hall of Fame election is available for this season.</div>';
-      const step = Math.max(0, Math.min(c.stages.length - 1, Number(params.step || 0)));
-      const stage = c.stages[step];
-      const header = '<div class="panel" style="text-align:center;border-color:#b89b58;background:linear-gradient(145deg,#22202d,#393044);color:#f5dc99"><div style="font-size:12px;letter-spacing:2px">THE COMMISSIONER PRESENTS</div><h2 style="color:#f5dc99">🏛️ MONSTER HALL OF FAME</h2><p>Annual Induction Ceremony · Season ' + esc(c.year) + '</p><div style="font-size:12px">The Hall Board · Identities Undisclosed</div></div>';
-      let body = '';
-      if (stage.id === 'welcome') body = '<h3>Commissioner’s Address</h3><p>' + esc(c.commissioner.opening) + '</p>';
-      else if (stage.id === 'nominees') body = '<h3>The Final Fifteen</h3><p>' + esc(c.commissioner.nominees) + '</p><div class="list">' + c.nominees.map((n, i) => '<div class="item static"><b>' + (i + 1) + '.</b> ' + esc(n.name) + ' · ' + esc(n.position || '—') + '</div>').join('') + '</div>';
-      else if (stage.id === 'board') body = '<h3>Behind Closed Doors</h3><p>Fifteen anonymous Board members cast their votes in private. Their identities and individual ballots are never disclosed.</p><p>The commissioner now opens the sealed results.</p>';
-      else if (stage.kind === 'inductee') { const m = stage.monster; body = '<h3>🏆 Welcome to the Hall</h3><div class="panel" style="text-align:center;border-color:#b89b58"><h2>' + esc(m.name) + '</h2><p>' + esc(m.position || '') + ' · Class of ' + esc(c.year) + '</p><p>' + esc(m.votes) + ' of ' + esc(m.voters) + ' Board votes</p></div>'; }
-      else body = '<h3>Commissioner’s Closing Address</h3><p>' + esc(c.commissioner.closing) + '</p><p>' + (c.inductees.length ? c.inductees.length + ' monster(s) enter the Hall this year.' : 'No inductees were selected this year.') + '</p>';
-      return header + '<div class="panel">' + body + '</div><div class="row" style="justify-content:space-between;gap:8px"><button class="btn" data-action="hofback">Back to offseason</button><button class="btn primary" data-action="hofnext" data-step="' + (step + 1) + '">' + (step + 1 < c.stages.length ? 'Continue Ceremony' : 'Finish Ceremony') + '</button></div>';
-    },
-    mount(root, ctx) {
-      delegate(root, {
-        hofback: () => Router.go('offseason'),
-        hofnext: (el) => { const c = hallCeremony(app.f, Number(ctx.params.year || app.f?.season?.year)); if (!c || Number(el.dataset.step) >= c.stages.length) { if (c && app.f?.monsterHallOfFame) { const hof = app.f.monsterHallOfFame; hof.ceremonySeenYears ||= []; if (!hof.ceremonySeenYears.includes(c.year)) hof.ceremonySeenYears.push(c.year); app.save(); } Router.go('offseason'); } else { ctx.params.step = Number(el.dataset.step); Router.render(); } },
-      });
-    },
-  });
   Router.registerScreen('monsterhof', {
     title: $t('history.monster_hall_of_fame'),
     render: ({ f, params }) => (f ? wrap('monsterhof', hallHtml(f, params, reduced())) : noFranchise()),
-    mount(root, ctx) { const params = ctx.params; delegate(root, { ...nav, hview: (el) => { params.view = el.dataset.v; delete params.all; Router.render(); }, 'hall-year': (el) => { params.year = Number(el.dataset.year); delete params.all; Router.render(); }, 'hall-all': (el) => { params.all = el.dataset.v; Router.render(); } }); },
+    mount(root, ctx) { const params = ctx.params; delegate(root, { ...nav, hview: (el) => { params.view = el.dataset.v; delete params.all; Router.render(); }, 'hall-year': (el) => { params.year = Number(el.dataset.year); delete params.all; Router.render(); }, 'hall-all': (el) => { params.all = el.dataset.v; Router.render(); }, 'hall-replay': (el) => Router.go('hofceremony', { year: Number(el.dataset.year), step: 0, from: 'hall' }) }); },
   });
 }
