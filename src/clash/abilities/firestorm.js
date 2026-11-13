@@ -3,7 +3,7 @@
 // Contract (Dex): launch a meteor in place of the normal attack, once per Clash; one meteor in flight per owner. It marks the normal
 // target's lineup position, not the monster. Impact at the end of the following exchange after rotations: target identities are
 // frozen when the impact begins (the marked occupant first, then every other living opponent front-to-back, reserves included). Main
-// hit 150/160/170/180% by mastery; splash 50/55/60/65% to EVERY other living opponent; an empty main slot still splashes everyone.
+// hit 150/160/170/180% by mastery; Task 10 candidate splash 15/20/25/30% to EVERY other living opponent; an empty main slot still splashes everyone.
 // Each hit is an independent delayed direct attack (its own type, defence, shield and explicit-miss roll) and each damaged target's
 // reactions resolve right after its hit. The meteor persists through the owner's rotation and knockout (B3 rule 3: the owner's pre-KO
 // strength, engine.js knockout snapshot). No Burn / stun, no adjacency. Mastery execution: the launch.
@@ -16,7 +16,8 @@ import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet } from './util.js';
 import { E as $E } from '../../core/english.js';
 
-const MAIN = [150, 160, 170, 180], SPLASH = [50, 55, 60, 65];
+// Task 10 candidate: reduce all-reserve splash while preserving the meteor's identity.
+const MAIN = [150, 160, 170, 180], SPLASH = [15, 20, 25, 30];
 
 /** The impact's target list [{ id, mult, key }] for the given reading, or null when the reading is withheld (disputed, normal mode). */
 export function delayedTargets(api, self, item, { mainPct, splashPct }) {
