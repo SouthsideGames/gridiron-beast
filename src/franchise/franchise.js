@@ -2757,7 +2757,7 @@ export function startNextSeason(f, opts = {}) {
     for (const list of Object.values(f.pool || {})) offseason(list, r, ageCtx); // unsigned monsters age too (in pool order)
     if (hasLeague(f) && f.league.waivers?.length) offseason(f.league.waivers, r, ageCtx);
     if (!hasLeague(f)) ageDraftees(f, f.season.year); // the generated rosters' draftees (v40 saves); persistent rosters age below
-    for (const m of f.roster) if (m.rookie === f.season.year) { m.yearsPro = 0; m.age -= 1; } // just drafted: the coming season is their first (offseason() aged everyone)
+    for (const m of f.roster) if (m.rookie === f.season.year && m.joined === f.season.year + 1) { m.yearsPro = 0; m.age -= 1; } // just drafted: the coming season is their first (offseason() aged everyone)
   }
   if (hasLeague(f)) { // the league's offseason after the owner's (GDD §42.6 steps 3, 6-8; decisions C, D, F)
     const t0 = globalThis.performance?.now?.() ?? Date.now();
