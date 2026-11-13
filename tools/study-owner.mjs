@@ -41,5 +41,27 @@ export function repairOwner(f, stats = {}) {
   }
   return !openSlots(f).length;
 }
+/**
+ * The same care in the offseason, when the market is at its largest: every position holds at least as many monsters as it has
+ * starting slots. In season the free-agent pool is small and often has nobody at a position (seed 3, season 9: no linebacker
+ * among ten free agents), so a need left open in the offseason cannot be repaired later. Call from runFranchise's onOffseason.
+ */
+export function repairOffseason(f, stats = {}) {
+  stats.offSigned ||= 0; stats.offFailed ||= 0;
+  for (const [pos, slots] of Object.entries(RO.GROUP_SLOTS)) {
+    for (let k = 0; k < 4; k++) {
+      const have = f.roster.filter((m) => m.position === pos).length; if (have >= slots.length) break;
+      if (f.roster.length >= ROSTER_MAX) { const cnt = {}; for (const m of f.roster) cnt[m.position] = (cnt[m.position] || 0) + 1;
+        const spare = f.roster.filter((m) => m.position !== pos && cnt[m.position] > (RO.GROUP_SLOTS[m.position]?.length || 1) + 1).sort((a, b) => monsterOverall(a) - monsterOverall(b))[0];
+        if (!spare || !F.releaseMonster(f, spare.id).ok) { stats.offFailed++; break; } stats.released = (stats.released || 0) + 1; }
+      const room = E.capView(f, f.club).usable; let done = false;
+      for (const x of F.freeAgentMarket(f).filter((x) => x.monster.position === pos && !x.monster.injury).sort((a, b) => a.ask.salary - b.ask.salary)) {
+        if (x.ask.salary > room) continue;
+        let r = F.negotiateFreeAgent(f, x.monster.id, x.ask); if (r.ok && r.outcome === 'countered') r = F.negotiateFreeAgent(f, x.monster.id, r.counter);
+        if (r.ok && r.outcome === 'signed') { stats.offSigned++; done = true; break; } }
+      if (!done) { stats.offFailed++; if ((stats.offWhy ||= []).length < 12) stats.offWhy.push({ year: f.season?.year, pos, have, need: slots.length, room, market: F.freeAgentMarket(f).filter((x) => x.monster.position === pos).length }); break; }
+    }
+  }
+}
 /** Forfeits in a finished season of the owner's schedule (from the saved history). */
 export const forfeitsIn = (h) => (h?.schedule || []).filter((g) => g.result?.forfeit).length;

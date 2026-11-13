@@ -28,9 +28,9 @@ for (let i = 0; i < N; i++) {
   const seed = SEED + i; const seen = { elections: 0, inducted: new Set(), retiredAt: new Map() }; let last = null;
   // a hands-off owner is usually dismissed within a few seasons; the study keeps the board content (the same on every build that
   // is compared) so the franchise reaches the 20-season limit. --real-board leaves the board alone.
-  const repair = {}; const r = runFranchise(seed, { difficulty: args.difficulty || 'rookie', seasons: SEASONS, beforeGame: OWNER ? (f) => OWNER.repairOwner(f, repair) : null, onOffseason: args['real-board'] ? null : (f) => { if (f.board) { f.board.confidence = 2; f.board.misses = 0; } }, onSeason: (f, s) => {
+  const repair = {}; const r = runFranchise(seed, { difficulty: args.difficulty || 'rookie', seasons: SEASONS, beforeGame: OWNER ? (f) => OWNER.repairOwner(f, repair) : null, onOffseason: (f) => { if (!args['real-board'] && f.board) { f.board.confidence = 2; f.board.misses = 0; } if (OWNER) OWNER.repairOffseason(f, repair); }, onSeason: (f, s) => {
     const { monsterHallOfFame, createdAt, uid, ...rest } = f;
-    const lastH = f.history[f.history.length - 1]; const row = { seed, season: s, year: lastH?.year, digest: sha(rest), saveKB: Math.round(Save.exportJson(f).length / 1024), record: lastH ? `${lastH.record.w}-${lastH.record.l}` : null, forfeits: (lastH?.schedule || []).filter((g) => g.result?.forfeit).length, ...(OWNER ? { repair: { ...repair, why: undefined } } : {}) };
+    const lastH = f.history[f.history.length - 1]; const row = { seed, season: s, year: lastH?.year, digest: sha(rest), saveKB: Math.round(Save.exportJson(f).length / 1024), record: lastH ? `${lastH.record.w}-${lastH.record.l}` : null, forfeits: (lastH?.schedule || []).filter((g) => g.result?.forfeit).length, ...(OWNER ? { repair: { ...repair, why: undefined, offWhy: undefined } } : {}) };
     if (T9 && HOF) {
       const hof = f.monsterHallOfFame || { candidates: [], elections: [] };
       row.hofKB = +(JSON.stringify(hof).length / 1024).toFixed(1);
