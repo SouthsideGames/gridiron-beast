@@ -4552,3 +4552,10 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
   - cap-exempt protected gym legendaries on AI clubs (D1);
   - the difficulty quality targets, coach IQ, opponent film and trade margins (GDD §15.2).
 
+
+
+## Task 10 owner approval — 2026-11-13 (candidate branch)
+
+**Sack-rate acceptance target: 7.0% of pass dropbacks.** The denominator must consistently include pass attempts, sacks, and qualifying scrambles; exclude designed runs. This is an owner-approved target, not a claim that the current build passes. Achieve it through pass-rush/blocking/QB decisions, not a forced sack probability. Validate separately by Rookie, Pro, All-Star, early/mid/late franchise, abilities on/off, and assess effects on completion, scoring, injuries, rushing, QB/OL/DL attributes and abilities. The pass-rush pocket-compression adjustment on `chatgpt/task10-balance-fixes` is a **candidate only** and must not be merged before verification.
+
+**MVP voter fatigue:** owner approves a soft, capped experimental model; repeat MVPs remain possible, with no automatic exclusion. Validate position fairness and full-career effects before final acceptance. Other Task 10 fixes remain subject to regression and owner merge approval.
