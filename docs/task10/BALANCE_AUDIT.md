@@ -6,7 +6,7 @@ Branch `task10-franchise-final-balance`, from the Task 9 release tree. Nothing h
 
 - **Real franchises only.** Every figure comes from hands-off franchises played by the game itself (`tools/franchise-soak.mjs`), 20 seasons each.
 - **Runs so far.** Eight franchises, seeds 3 to 10, rookie difficulty, board kept content so the owner is never dismissed (`tools/task9-history-study.mjs`). Their saves are the input of the Hall of Fame study.
-- **Runs in progress.** Seeds 11 to 14, default difficulty, with the per-club, per-season recorder of the Task 8 league-health study (`tools/t8-league-health.mjs`).
+- **League-health runs.** Seeds 11 to 14, default difficulty, with the per-club, per-season recorder of the Task 8 league-health study (`tools/t8-league-health.mjs`). It records strength, age, level, roster size, identity and trades, not standings, cap use or awards; those need a recorder of their own (next step).
 - **Earlier evidence still valid.** Task 9 changed no gameplay result (40 of 40 seasons identical to the previous release), so the Task 8 M6 20-season records (`docs/task8/m6/`, seeds 1 to 3) and their approved targets (`docs/task8/m6/OWNER_ADOPTION_2026-11-11.md`) still describe the released game.
 
 ## A. Hall of Fame — measured
@@ -32,7 +32,9 @@ Full results: `docs/task9/HALL_OF_FAME.md`. Summary over 8 franchises (1,564 eli
 
 ## C. League competitive balance — first findings (8 franchises, rookie difficulty)
 
-- **Finding (high, needs confirming): a hands-off owner's club stops winning for years.** In 6 of 8 franchises the owner's club had runs of 0-9 seasons; seed 3 was winless for its last 12 seasons and seed 10 for 12 of its last 14. A club that never wins a game over many seasons points to forfeited games (the hands-off owner continues under the forfeit rule when the lineup is incomplete), not to weak play. The league-health runs record lineups and roster sizes and will show which. If it is forfeits, real players are protected by the lineup safeguard, but every other club's record, and every award and record set against that club, is distorted in these studies.
+- **Confirmed (study artifact, medium): the winless seasons are forfeits.** In 6 of 8 franchises the hands-off owner's club had whole seasons of 0-9, every game a 0-21 forfeit; seed 3 forfeited its last 12 seasons. The rosters show why: positions run out while others pile up (seed 3 ended with 6 quarterbacks and 1 linebacker; seed 10 with 4 kickers, 1 receiver and no cornerback). Nobody manages the owner's roster in a hands-off run, and the study keeps the owner employed. A real player is stopped by the lineup safeguard before a season of forfeits. Effects on the studies: the other clubs each collect free wins, and awards and records are won partly against a club that does not play. Recommended: make the study owner fill empty positions (a harness change, no game change) before any league-wide figure from these runs is treated as final.
+- **Passes: the AI clubs do not weaken over time.** Four franchises with the league-health recorder (seeds 11 to 14, default difficulty): the ordinary AI clubs' mean overall rises from 50 to 52 in season 1 to about 60 by season 6 and stays between 58 and 63 through season 20. Rosters stay between 28 and 38. No run reported a problem.
+- **Apex monsters (for section B):** the league holds 1 to 6 in season 1 and 15 to 23 by season 20.
 - **Finding (medium): titles concentrate.** One club won 6 to 11 of the 20 titles in 7 of 8 franchises (11 for the owner's own club in seed 4). Distinct champions per franchise: 6 to 12.
 
 ## E. Awards and records — first findings
