@@ -21,7 +21,11 @@ export default registerClashAbility({
     chooseAction(api, self) {
       const st = self.state; st.actions += 1; // an eligible own action (chooseAction is asked only when able to act)
       if (st.actions % 2 !== 0) return null; // odd actions attack
-      const allies = api.allies(self); const active = allies.find((v) => v.active);
+      // Do not sacrifice an attack when every ally is healthy and already shielded.
+      // A full-health ally without a shield can still benefit from the surplus shield.
+      const candidates = api.allies(self);
+      if (candidates.every((v) => hpPct(v) >= 1 && v.status?.id === 'shielded')) return null;
+      const allies = candidates; const active = allies.find((v) => v.active);
       const order = [active, ...allies.filter((v) => !v.active)].filter(Boolean);
       const missing = (v) => 1 - hpPct(v);
       const t = order.reduce((best, v) => (missing(v) > missing(best) ? v : best), order[0]);
