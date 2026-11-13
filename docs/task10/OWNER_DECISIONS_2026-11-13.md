@@ -280,7 +280,18 @@ Method:
 
 **One ability is clearly strong: Stonewall Swat (rockram, a common linebacker).** +2.6 points a game (±0.65, 160 games), from 1.9 fewer points allowed, and its club wins 13 points of win rate more often. It executes 3.6 times a game. At no mastery it measured higher still (+5.0 ±1.3 on 40 games). Second: Crossed Wires (flicker) +1.2 (±0.5).
 
-**Combinations.** Stonewall Swat and Crossed Wires on one club: +3.0 (±0.9), no more than the two alone add up to. More pairs are running.
+**Combinations: no pair is stronger together than its parts** (six pairs of the strongest singles on one club, 120 paired games each; margin in points a game):
+
+| Pair | Together | The two alone, added |
+|---|---|---|
+| Stonewall Swat + Pressure Drain | +3.5 (±0.8) | +3.3 |
+| Stonewall Swat + Crossed Wires | +3.0 (±0.9) | +3.8 |
+| Stonewall Swat + Bulwark Grid | +3.0 (±0.8) | about +3.9 |
+| Stonewall Swat + Blink | +2.8 (±0.7) | about +4.1 |
+| Crossed Wires + Pressure Drain | +1.4 (±0.8) | +1.9 |
+| Pressure Drain + Breakwater | +1.3 (±0.9) | about +2.1 |
+
+Every pair that includes Stonewall Swat is worth about 3 points; the partner adds little.
 
 **Abilities that almost never execute in an AI-played game** (census, executions per game appearance):
 
