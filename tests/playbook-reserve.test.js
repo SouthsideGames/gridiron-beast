@@ -12,15 +12,19 @@ import { REVIEWABLE_PLAYS } from '../src/ui/dev-review.js';
 const RESERVE = [...RESERVE_OFFENSE_IDS, ...RESERVE_DEFENSE_IDS];
 const ALL = [...OFFENSE_IDS, ...DEFENSE_IDS, ...RESERVE];
 
-test('150 offensive and 150 defensive reserve plays built; 10 bunch plays released by the owner (N8b, Crossed Wires); the rest flagged, none in the live lists', async () => {
-  const { RELEASED_RESERVE_OFFENSE } = await import('../src/data/playbook.js');
-  assert.equal(RESERVE_OFFENSE_IDS.length + RELEASED_RESERVE_OFFENSE.length, 150); assert.equal(RELEASED_RESERVE_OFFENSE.length, 10);
+test('150 offensive and 150 defensive reserve plays built; 10 bunch plays released (N8b); Task 10 releases the reviewed rest except the four held back', async () => {
+  const { RELEASED_RESERVE_OFFENSE, HELD_BACK_OFFENSE } = await import('../src/data/playbook.js');
+  const catalogOff = Object.values(PLAYS).filter((p) => p.side === 'offense' && (p.reserve || RELEASED_RESERVE_OFFENSE.includes(p.id)));
+  const catalogDef = Object.values(PLAYS).filter((p) => p.side === 'defense' && p.reserve);
+  assert.equal(catalogOff.length, 150); assert.equal(catalogDef.length, 150); assert.equal(RELEASED_RESERVE_OFFENSE.length, 10);
   for (const id of RELEASED_RESERVE_OFFENSE) { assert.ok(OFFENSE_IDS.includes(id), `${id} released`); assert.ok(!isReserve(id)); }
-  assert.equal(RESERVE_DEFENSE_IDS.length, 150);
+  // Task 10 (owner 2026-11-13): every reviewed reserve play is released except the four that fail a live invariant (held back for the owner)
+  assert.deepEqual([...RESERVE_OFFENSE_IDS].sort(), [...HELD_BACK_OFFENSE].sort()); assert.equal(RESERVE_DEFENSE_IDS.length, 0);
+  for (const p of catalogOff) assert.equal(OFFENSE_IDS.includes(p.id), !HELD_BACK_OFFENSE.includes(p.id), `${p.id}: released unless held back`);
+  for (const p of catalogDef) assert.ok(DEFENSE_IDS.includes(p.id), `${p.id} released`);
   for (const id of RESERVE) { assert.ok(PLAYS[id]?.reserve, `${id} flagged reserve`); assert.ok(isReserve(id)); }
-  for (const id of [...OFFENSE_IDS, ...DEFENSE_IDS]) { assert.equal(PLAYS[id].reserve, undefined, `${id} live plays carry no reserve key (keeps review fingerprints)`); assert.ok(!isReserve(id)); }
+  for (const id of [...OFFENSE_IDS, ...DEFENSE_IDS]) assert.ok(!isReserve(id), `${id} is live`); // a released play keeps its compiled reserve key (review fingerprints); release is pool membership
   assert.ok(RESERVE_OFFENSE_IDS.every((id) => PLAYS[id].side === 'offense'));
-  assert.ok(RESERVE_DEFENSE_IDS.every((id) => PLAYS[id].side === 'defense'));
   assert.equal(new Set(ALL).size, ALL.length, 'ids unique');
 });
 
