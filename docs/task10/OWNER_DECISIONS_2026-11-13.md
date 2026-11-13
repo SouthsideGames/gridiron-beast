@@ -36,16 +36,23 @@ The 64.5% on v42.8.0 reproduces the original record to the decimal, so the tool 
 2. **Per-game stamina (about 2 points with abilities off).**
 3. **The Task 8 abilities (about 6 points).** Before Task 8, abilities added about 1 point of completion. Now they take away 4.4 points (55.3% on, 59.7% off). Deep completion shows it most: 50% with abilities off, 36.7% with them on. Defensive abilities now outweigh offensive ones in the passing game. The per-ability study (decision 8) will name which.
 
-**The practice clubs no longer represent a franchise league.** In the eight corrected 20-season franchises, the season-20 leagues complete **67.1%** of passes (62.9 to 71.0% by franchise, 18,674 attempts), because quarterbacks develop: the median starting quarterback there has Accuracy about 76, and several are all-99 Apex monsters. Scoring moves the same way: in the first recorded franchise, 14.3 points per team per game in season 1, 21 to 24 by seasons 3 to 5, and 27 to 34 from season 13 on. Yards per attempt in the season-20 leagues is 10.4 and yards per carry 8.0 (practice clubs: 7.1 and 6.2).
+**The practice clubs no longer represent a franchise league, not even a new one.** Completion measured in the franchise leagues themselves, season by season (four recorded franchises, Rookie to All-Star):
 
-**What this means for the target (no change made):** "about 65% in representative games with abilities on" was written when a generated club was a mature club. Since Task 8 a new league starts well below it and a developed league ends above it. The owner needs to say which games the 65% describes:
-- (a) a new league in season 1 (then the released game is about 10 points low and passing needs recalibrating);
-- (b) a developed league (then the released game is at or slightly above it from mid-franchise, and the question becomes the early seasons and the late-franchise scoring);
-- (c) a band over the life of a franchise.
+| Season | 1 | 2 | 3 | 5 | 10 | 15 | 20 |
+|---|---|---|---|---|---|---|---|
+| Completion | 57 to 62% | 59 to 65% | 63 to 66% | 63 to 67% | 64 to 71% | 64 to 69% | 67 to 70% |
 
-The season-by-season completion series is being recorded now (see decision 7's runs) so this can be put in numbers. **Matrix: F-1 stays FAIL against the practice-club measure; the cause is now known and the open point is the owner's definition of "representative".**
+- A new league's median starting quarterback has Accuracy 65 to 70; the practice clubs are weaker than that (a third of their attempts come from quarterbacks under 60).
+- The eight corrected franchises' season-20 leagues complete **67.1%** (62.9 to 71.0%, 18,674 attempts).
+- So in the games people actually play, completion is 3 to 8 points under the target in season 1, at the target from about season 3 to 5, and 0 to 5 points over it late on.
 
-A second point to raise: **football drifts with development.** Offense gains more than defense as ratings rise (scoring doubles over 20 seasons). That is a balance finding in its own right, recorded as F-20.
+**What this means for the target (no change made):** "about 65% in representative games with abilities on" is met in franchise play for most of a franchise and missed by the practice-club study. Two things for the owner:
+- say which games the 65% describes (I recommend the franchise league, measured by the recorder, with a band such as 62 to 68% across seasons 1 to 20; then seasons 1 and 2 are slightly low and the rest pass);
+- the practice-club study should either be retired as the measure or the practice clubs rebuilt to match a real season-1 league.
+
+**Matrix: F-1 stays FAIL on the practice-club measure as written; on the franchise measure it would be a PASS from season 3. The open point is the owner's definition.**
+
+**F-20, football drifts with development.** Scoring rises as monsters develop, by an amount that depends on the league: 14 points per team per game in season 1 to 25 to 31 late on in seed 3 (all three difficulties), 12 to 13 rising to 15 to 23 in seed 4 (and back to 13 in one of its three runs). Yards per attempt in the season-20 leagues is 10.4 and yards per carry 8.0 (practice clubs: 7.1 and 6.2). Sacks stay at 1.2 to 3.4% of dropbacks in every season.
 
 ---
 
@@ -74,23 +81,44 @@ Until the owner rules, **F-2 is BLOCKED (owner), not PASS and not FAIL**, with 5
 
 ---
 
-## 1. Repeat MVPs (PRELIMINARY: one franchise recorded in full; five more running)
+## 1. Repeat MVPs (DONE on six recorded franchises: 120 seasons, Rookie, Pro and All-Star)
 
-**Is the same monster really the strongest candidate each season? Yes.** The recorder recomputes the whole race every season (about 200 eligible monsters, not the saved top five). In the first franchise (seed 3, Rookie), Scorchulk (DL, Northstar Wolves) wins 15 of 20. In each of those seasons he is first by a clear margin (3.0 to 3.7 award points against 2.2 to 2.9 for second), on clubs that go 7-2 to 9-0. Season 11: 16 sacks, 27 tackles for loss, 55 pressures in 9 games, in a league where a team is sacked about once in three games.
+The recorder recomputes the whole race every season (about 200 eligible monsters, not the saved top five), and its winner matched the game's own winner in every season.
 
-**Why it is the same monster: he is an Apex.** He reached 99 in all twelve attributes by season 3, and an Apex never ages, declines or retires (Task 8 rule, tested). Every repeat winner in the eight corrected franchises is an Apex: Scorchulk (seeds 3 and 4), Pyronix II, Zaptera, Quarrox III, and so on. Of the 20 MVPs in seed 3, 17 went to Apex monsters; non-Apex monsters won only in seasons 1, 2 and 15. The number of Apex monsters among eligible players grows from 7 in season 1 to 14 to 17 late on, but the first one to reach all-99 at a position keeps the top of that position for the rest of the franchise.
+**Is the same monster really the strongest candidate each season? Yes.** In every repeat, the winner is first on the award's own measure, by a mean margin of 0.32 award points over second place (median 0.24). Example (seed 3, Rookie): Scorchulk, a defensive lineman, wins 15 of 20; in season 11 he has 16 sacks, 27 tackles for loss and 55 pressures in 9 games, in a league where a team is sacked about once in three games.
 
-**Does the calculation evaluate positions properly? Partly.** Three structural effects, all visible in the full races:
-1. **Scores are distances from the position's average, with no ceiling.** Sacks and pressures are rare and very unevenly spread, so a dominant pass rusher sits 4 to 5 standard deviations above the other linemen. Passing numbers are spread more evenly, so the best quarterback is usually about 2 above his peers. Even with the quarterback's 1.35 weight against a defender's 0.85, the best lineman outscored the best quarterback in 15 of 20 seasons. In season 20 an all-99 Apex quarterback on an 8-1 club scored 2.91 and lost to the Apex lineman's 3.18.
-2. **Some positions cannot win.** The best offensive lineman of a season ranked between 14th and 32nd in every season; the best linebacker and the best safety were rarely in the top ten. Over the 160 MVPs of the eight corrected franchises: WR 44, DL 44, QB 37, RB 27, TE 6, CB 2, and none for OL, LB, S or K.
-3. **Group size.** There are about 30 eligible linemen, corners and defensive linemen against 15 quarterbacks, backs and tight ends. The best of 30 is usually further from the average than the best of 15.
+**Why it is the same monster: the long runs are Apex monsters.** The most MVPs by one monster in the six franchises: 15, 11 and 8 (all Apex), then 7, 6 and 5 by Aurelion, a legendary wide receiver who is not an Apex and does age. An Apex reaches 99 in all twelve attributes and never ages, declines or retires (Task 8 rule, tested).
+- 72 of the 120 MVPs went to Apex monsters, and half of all top-three places (179 of 360), although Apex monsters are only 7 to 17 of about 200 eligible players.
+- The first Apex to reach all-99 at a position keeps the top of that position for the rest of the franchise.
+- Take the Apex monsters out and the award looks ordinary: the best non-Apex candidate was a quarterback in 53 seasons, a wide receiver in 45, a tight end in 13 and a running back in 9.
 
-**What I recommend looking at (nothing changed; each needs approval):**
-- No repeat limit and no voter fatigue, as decided.
-- The repeat itself is the Apex rule working as designed (all-99, ageless). If a monster winning 15 MVPs is not wanted, the lever is in the Apex rules, not in the award. That is a Task 8 design question for the owner.
-- The award's position effect is real and can be shown without touching the Apex question: a ceiling on how far above his position one statistic can lift a candidate (for example 3 standard deviations) would stop one skewed statistic deciding the award. I will put numbers on that from the six recorded franchises before proposing it.
+**Does the calculation evaluate positions properly? No, not evenly.**
 
-**Matrix:** H-8 moves from BLOCKED (owner) to PENDING (investigation running); P-12 (award distribution by position) is new evidence, FAIL against "no position structurally excluded" if the owner adopts that as a requirement.
+| Position | MVPs (120) | Best candidate's median rank in the race | His best component, in standard deviations above his position |
+|---|---|---|---|
+| DL | 44 | 2nd | 4.2 |
+| WR | 33 | 3rd | 3.1 |
+| RB | 21 | 3rd | 2.6 |
+| QB | 16 | 3rd | 2.1 |
+| TE | 6 | 5th | 2.6 |
+| CB | 0 | 10th | 3.1 |
+| S | 0 | 13th | 2.9 |
+| LB | 0 | 15th | 2.7 |
+| OL | 0 | 25th | 1.8 |
+
+1. **Scores are distances from the position's average, with no ceiling.** Sacks and pressures are rare and unevenly spread, so a dominant pass rusher sits 4 standard deviations above the other linemen; passing numbers are spread evenly, so the best quarterback is about 2 above his peers. The quarterback's 1.35 weight against a defender's 0.85 does not make up the difference.
+2. **Four positions cannot win.** No OL, LB, CB, S or K won in 120 seasons here, and none of OL, LB, S or K in the 160 seasons of the eight earlier franchises. The best offensive lineman of a season is typically 25th.
+3. **A low sack rate feeds it.** With sacks at about 2% of dropbacks, most linemen have almost none, which is what makes one dominant rusher such an outlier (decision 6).
+
+**What a ceiling would do (a what-if on the recorded races, not a change):** with every component limited to 3 standard deviations, the winner changes in 41 of 120 seasons and the awards split QB 37, RB 34, WR 29, DL 12, TE 8.
+
+**Recommendations (each needs approval; nothing changed):**
+- No repeat limit and no voter fatigue, as decided. The repeats are the Apex rule working as written.
+- If one monster winning 8 to 15 MVPs is not wanted, the lever is the Apex rule (all-99 and ageless), a Task 8 design question, not the award.
+- Independently of that, I recommend a ceiling of 3 standard deviations on each award component. The evidence supports it: it removes the lineman's structural advantage without touching any statistic, and a truly dominant season still wins.
+- OL, LB and S cannot win under any setting examined. If the owner wants them eligible in practice, that needs a different measure for those positions; I have not designed one.
+
+**Matrix:** H-8 **PASS** (the repeat winner is the strongest candidate; no limit by decision). H-9 **FAIL** against "positions evaluated properly", with the ceiling proposed.
 
 ---
 
@@ -119,65 +147,86 @@ Standards unchanged, as decided. I traced each of the seven through every electi
 
 ---
 
-## 3. Free-agent availability and legal rosters (PRELIMINARY: mechanism established, one franchise measured week by week; five more running)
+## 3. Free-agent availability and legal rosters (DONE on six recorded franchises: 1,242 game weeks, Rookie, Pro and All-Star)
 
 **Why the owner's club still forfeits: the owner and the AI clubs do not have the same supply.**
-- When an AI club cannot field a legal lineup, the weekly cover (`leagueInjuryCover`) signs from the waivers or the pools and, when nobody is there, **generates a replacement-level veteran at that position on the spot**. The same happens in the AI's offseason free agency. The code comment says so: "The owner faces the same rule through the forfeit; an AI club simply signs."
-- The owner can only sign monsters that already exist on the market. When the market has nobody at the position, there is nothing to do but forfeit.
-- In the first recorded franchise, **no AI club had an open starting slot at kickoff in 2,940 club-weeks.** In the corrected franchises' league logs, 66 of 123 recorded in-season AI cover signings (54%) were generated arrivals, most often at LB (25), CB (17) and RB (9): the same positions where the owner finds nobody.
+- When an AI club cannot field a legal lineup, the weekly cover (`leagueInjuryCover`) signs from the waivers or the pools and, when nobody is there, **generates a replacement-level veteran at that position on the spot**. The AI's offseason free agency does the same. The code comment says so: "The owner faces the same rule through the forfeit; an AI club simply signs."
+- The owner can only sign monsters that already exist on the market.
+- **AI clubs: 0 open starting slots at kickoff in 18,630 club-weeks.**
+- **The owner: an open starting slot before 39 games; the repair owner could fix 5. In all 34 he could not fix, the market had nobody at that position.** 32 forfeits in 1,080 regular-season games (3.0%).
+- In the eight earlier franchises' league logs, 66 of 123 recorded in-season AI cover signings (54%) were generated arrivals, most at LB (25), CB (17) and RB (9).
 
-**How empty the market is (seed 3, Rookie, 196 game weeks, healthy free agents a club could sign that day):**
+**How empty the market is** (healthy free agents a club could sign on game day):
 
 | Position | Game weeks with nobody available | Mean available |
 |---|---|---|
-| RB | 80% | 0.2 |
-| LB | 77% | 0.35 |
-| CB | 76% | 0.5 |
-| WR | 63% | 1.45 |
-| TE | 58% | 0.8 |
-| S | 55% | 0.8 |
-| DL | 42% | 1.4 |
-| K | 37% | 1.35 |
-| OL | 31% | 1.4 |
-| QB | 14% | 2.5 |
+| RB | 71% | 0.4 |
+| CB | 60% | 0.6 |
+| S | 60% | 0.8 |
+| WR | 54% | 1.1 |
+| LB | 53% | 1.1 |
+| TE | 49% | 0.9 |
+| OL | 42% | 1.3 |
+| K | 38% | 1.2 |
+| DL | 36% | 1.3 |
+| QB | 22% | 2.0 |
 
-- The whole market holds a median of 9 monsters in season (0 to 27).
-- **It dries up over the franchise:** 15 free agents on average in seasons 1 to 5, 14 in seasons 6 to 10, 9 in seasons 11 to 15, **5 in seasons 16 to 20** (8 of 10 positions empty).
-- Within a season it is flat until the last weeks, then falls (11 in weeks 1 to 10, 5 by week 13).
-- Offseason, after the draft: RB, TE, LB, CB and S average under two available monsters each; at least one position was empty in most offseasons; the owner was short of a full starting group somewhere in 10 of 20 offseasons.
-- Every time the repair owner could not fix an open slot, the market had nobody at that position (3 of 3).
+- **When:** it dries up in the second half of a franchise. Seasons 1 to 5: 14 free agents on average, 3.5 of the 10 positions empty. Seasons 6 to 10: 16 and 3.4. Seasons 11 to 15: **7 and 6.1**. Seasons 16 to 20: **6 and 6.3**. All 32 forfeits fell in season 7 or later, 31 of them from season 9 on.
+- Within a season the market is flat until the last weeks, then falls by half.
+- Offseason (seed 3): RB, TE, LB, CB and S average under two available monsters each after the draft, and the owner was short of a full starting group somewhere in 10 of 20 offseasons.
+- The same on every difficulty: Rookie, Pro and All-Star show the same pattern.
 
 **Assessment against the deferred Task 7 requirements (GDD §59.10):**
-- (7) free-agent availability by position: **FAIL** for the owner at RB, LB, CB, TE, S and WR in season.
-- (2) legal starting-lineup completion: AI clubs **PASS** (0 open slots); the owner's club **FAIL** without a source of cover.
+- (7) free-agent availability by position: **FAIL**. Six of ten positions have nobody available in at least half of all game weeks.
+- (2) legal starting-lineup completion: AI clubs **PASS**; the owner's club **FAIL** when the market is empty.
 - (3) injury and departure replacement availability: **FAIL** for the owner, PASS for AI (by generation).
-- (8) generated replacement frequency: more than half of AI in-season cover. The catalogue expansion did not create a market that sustains itself; the AI clubs are kept legal by generation.
-- (15) forfeit frequency: 5.8% of the repair owner's games across eight franchises (one franchise accounts for most), 0 for AI clubs.
+- (8) generated replacement frequency: more than half of AI in-season cover. The larger catalogue did not create a market that sustains itself; AI clubs are kept legal by generation.
+- (15) forfeit frequency: 3.0% of the repair owner's games here (5.8% in the eight earlier franchises), 0 for AI clubs.
 
-**The design question for the owner (no change made):** a human player who manages well can still be left with no legal move, because the fix the AI uses does not exist for him. Options, each needing approval:
-- (a) give the owner the same emergency cover (a replacement-level veteran offered when the market has nobody at an open starting position);
-- (b) keep a standing floor on the market (the league keeps at least one or two healthy replacement-level free agents at every position);
-- (c) let the lineup rule bend (play a monster out of position at a penalty) instead of forfeiting.
+**Can a human player keep a legal roster for 20 seasons?** Not reliably by his own actions. A careful player who keeps depth at every position avoids most of it, but after season 10 an injury at RB, CB, S or LB will often find an empty market, and the game then offers no legal move.
 
-I will size these against the six recorded franchises and the reduced Task 7 benchmark before recommending one.
+**Options (each needs approval; nothing changed):**
+- (a) **Give the owner the cover the AI already has**: when he has an open starting slot and the market has nobody healthy at that position, a replacement-level veteran is offered at the minimum deal. This is the smallest change and makes the two sides equal. I recommend it.
+- (b) A standing floor on the market (the league always keeps one or two healthy replacement-level free agents at every position). Fixes the same thing and also gives depth signings, but changes the market for everyone.
+- (c) Let the lineup rule bend (a monster plays out of position at a penalty) instead of forfeiting. A larger design change.
 
-**Matrix:** R-1 stays FAIL and is reclassified from "harness" to "game"; T7-25, T7-27, T7-31 are FAIL (owner side) on preliminary evidence; T7-26 PASS for AI clubs.
-
----
-
-## 7. Championship concentration (PRELIMINARY: one franchise analysed; Rookie, Pro and All-Star on two seeds running)
-
-First recorded franchise (seed 3, Rookie, repair owner):
-- Northstar Wolves won 7 of 20 titles; nine different champions; seven clubs had an undefeated regular season at least once (Northstar four times).
-- **Club overall rating does not explain it.** Club overalls sit in a narrow band (standard deviation 3 to 4 points; in season 20 the clubs run from 57 to 70). Northstar was the top-rated club in only three of its seven title seasons and was sixth and eighth in two.
-- **Apex monsters do.** Northstar held three Apex monsters from season 9, including the lineman who won 15 MVPs. League-wide the Apex count rises from 10 to 25 over the franchise, at most 2 on a club early and 4 late.
-- **Results are far more spread than evenly matched clubs would give.** The standard deviation of season win rate is 0.24 to 0.30 every season; for sixteen equal clubs over nine games it would be about 0.17. Nine-game seasons with a few all-99 monsters produce 8-1 and 9-0 clubs regularly.
-
-Still to come before any recommendation: the same analysis on Rookie, Pro and All-Star (two seeds each), the hands-off against the repair owner, how AI club quality targets differ by difficulty, and whether the clubs that win 10 to 13 titles are the ones that collect Apex monsters.
+**Matrix:** R-1 FAIL (game issue). T7-25, T7-27, T7-31, T7-39 **FAIL**; T7-26 PASS for AI clubs, FAIL for the owner; T7-32 measured.
 
 ---
 
-## 8. The complete ability audit (Clash: DONE; football: RUNNING)
+## 7. Championship concentration (PRELIMINARY: two seeds on each of Rookie, Pro and All-Star, repair owner; the benchmark runs will add seeds)
+
+| Seed | Difficulty | Owner's win rate | Owner's titles | Leading club | Different champions | Owner's Apex monsters at the start |
+|---|---|---|---|---|---|---|
+| 3 | Rookie | 54% | 0 | Northstar Wolves 7 | 9 | 0 |
+| 3 | Pro | 24% | 0 | Ironpeak Rams 5 | 6 | 0 |
+| 3 | All-Star | 37% | 0 | Palmetto Vipers 8 | 8 | 0 |
+| 4 | Rookie | **92%** | **13** | the owner's club | 7 | 2 |
+| 4 | Pro | 76% | 5 | the owner's club | 8 | 2 |
+| 4 | All-Star | **84%** | **13** | the owner's club | 5 | 2 |
+
+**The club that wins 13 titles and goes undefeated a dozen times is the owner's own club, and nobody is managing it.** The study owner trains through his staff and repairs his lineup; he does not trade, scout or set a lineup. In seed 4 that club went 9-0 in twelve Rookie seasons and nine All-Star seasons.
+
+**What separates the two seeds is the founding roster, not the difficulty.**
+- In seed 4 the owner's club starts with two Apex monsters and a club rating of 56 to 58 against an AI average of 51 to 55. In seed 3 it starts with none, level with the AI clubs.
+- Apex monsters never age, so a founding advantage never erodes. The seed-4 club still has them in season 20 and has added one or two.
+- **Difficulty barely moves it.** The AI clubs' average rating in season 1 is 52 on Rookie, 53 on Pro and 55 on All-Star, and by season 20 it is 60 to 63 on every difficulty. A club with two founding Apex monsters wins 92% on Rookie and 84% on All-Star.
+- The approved owner win-rate targets (Rookie 54 to 70%, Pro 45 to 53%, All-Star 32 to 40%) are missed in both directions depending on the seed: 54 and 92 on Rookie, 24 and 76 on Pro, 37 and 84 on All-Star. Two seeds cannot fix a mean, but the spread between seeds is three times the spread between difficulties.
+
+**AI roster quality and parity.**
+- Club ratings are close together in every season (standard deviation 3 to 4 points; 55 to 72 in season 20) and the title winner is often not the top-rated club (in seed 3 Rookie, the seven-time champion was top-rated in three of its seven title seasons).
+- Results are far more spread than the ratings: the standard deviation of season win rate is 0.2 to 0.3 every season, where sixteen equal clubs over nine games would give about 0.17. A few all-99 monsters on a club decide games that the club rating does not predict.
+- The league's Apex count grows from 5 to 11 at the start to 12 to 25 by season 20, at most 4 on one club.
+
+**Player development.** AI clubs gain about 5 to 9 rating points in the first ten seasons and then level off; the owner's club gains 6 to 15 in the same time and also levels off. Development is not what separates clubs late on.
+
+**Reading.** Concentration comes from ageless all-99 monsters being unevenly dealt at the start and never leaving, in a nine-game season. It is the same root as the repeat MVPs (decision 1). Before recommending anything I want the benchmark seeds (C and CH sets, 20 seasons, Pro) to confirm how often a founding roster hands one club two or more Apex monsters, and how the hands-off and repair owners compare.
+
+**Matrix:** P-12 PENDING with a cause identified; T7-22 to T7-24 and T7-41 (difficulty win rates) FAIL on preliminary evidence (the bands are missed on every difficulty in at least one of two seeds).
+
+---
+
+## 8. The complete ability audit (DONE: Clash in full, football first pass)
 
 ### Clash (72 abilities): DONE
 
@@ -220,15 +269,80 @@ Method: mature monsters (five seasons played), every battle seeded and repeatabl
 
 **One against one** follows rarity and archetype more than ability (legendary families win 79% of the round robin, common 25%; several Support commons win almost nothing alone). The game never plays one against one, so this is context only.
 
-### Football (72 abilities)
+### Football (72 abilities): DONE (first pass, 40 paired games each; nine abilities rechecked at 160)
 
-Method: whole real games in pairs. The same two clubs and the same seed are played twice: once with the family's monster carrying his ability, once with the very same monster without it. Nobody else on either club has an ability. Measured at the first form with no mastery and at the last form with full mastery, 40 paired games each (11,520 games): executions per game, games in which it never executes, and the paired change in margin, points, yards per play and turnovers. **Running now.** Early rows already show the pattern the owner asked about: Guiding Halo (lumen) executes 0.7 to 0.8 times a game and changed the result of none of the first six paired games.
+Method:
+- **Paired games** (`tools/task10-ability-strength.mjs`). The same two clubs and the same seed are played twice as whole real games: once with the family's monster carrying his ability, once with the very same monster (same ratings, same type) without it. Nobody else on either club has an ability, so the two games are identical until the ability acts. Measured at the first form with no mastery and at the last form with full mastery: 11,520 games, then 2,880 more for the recheck.
+- **Census** (`tools/task10-ability-census.mjs`): 300 ordinary games between generated clubs with every monster's ability on, counting each ability's executions per game. This catches abilities that only react to other abilities.
+- What 40 paired games can see: an effect of about 2 points a game or more. Smaller effects need more games, which is why the candidates were rerun at 160.
 
-### Still to do under decision 8
-- Positional and elemental balance tables from the football run.
-- Football type advantage at club level (one club all of a favoured type).
-- Football ability pairs on one club (the strongest singles together).
-- The same abilities compared between Football and Clash.
+**Overall: football abilities are close to neutral one at a time.** The mean effect of one ability on the point margin is +0.07 points a game at full mastery and 0.00 at none. No position group, element or rarity stands out (every group mean is within 0.7 points of zero, inside the noise). That is very different from Clash, where abilities change the winner of one battle in five.
+
+**One ability is clearly strong: Stonewall Swat (rockram, a common linebacker).** +2.6 points a game (±0.65, 160 games), from 1.9 fewer points allowed, and its club wins 13 points of win rate more often. It executes 3.6 times a game. At no mastery it measured higher still (+5.0 ±1.3 on 40 games). Second: Crossed Wires (flicker) +1.2 (±0.5).
+
+**Combinations.** Stonewall Swat and Crossed Wires on one club: +3.0 (±0.9), no more than the two alone add up to. More pairs are running.
+
+**Abilities that almost never execute in an AI-played game** (census, executions per game appearance):
+
+| Ability | Executions per game | Games with none |
+|---|---|---|
+| Foresight (cerebrix, QB) | 0 in 154 appearances | 100% |
+| Air Brake (skywarden, CB) | 0.01 | 99% |
+| Night Watch (nightowl, S) | 0.01 | 99% |
+| Crosswind Rescue (windlynx, S) | 0.02 | 98% |
+| Prism Break (prism, S) | 0.02 | 98% |
+| Hoard Flight (sablewing, CB) | 0.03 | 97% |
+| Ball Clamp (ironjaw, DL) | 0.05 | 96% |
+| Tsunami Line (tsunarok, S, legendary) | 0.03 (paired games) | 98% |
+| Shadow Exchange (nyxshade, CB, legendary) | 0.03 (paired games) | 98% |
+| Second Chance (glacivern, K, legendary) | 0.13 (paired games) | 88% |
+
+- Legendary families do not appear in generated clubs, so their figures come from the paired games.
+- Cold Snap and Tailwind Huddle never execute when theirs is the only ability on the field, but do in ordinary games (0.6 and 0.9 a game): they react to other abilities.
+- Whether Foresight and the others are meant to wait for a human player's activation I have not confirmed; in AI-played games, which is every AI club's game and every simulated game, they do nothing.
+
+**Abilities that execute and change nothing.** In the paired games the score was identical with and without the ability in every game:
+
+| Ability | Executions per game | Games whose result differed |
+|---|---|---|
+| **Surefoot Canopy** (leafhorn, S) | **25** | **0 of 200** |
+| Chain Break (joltrex, DL) | 2.1 | 0 of 80 |
+| Beacon Lane (glimmer, WR) | 1.8 | 0 of 80 |
+| Radiant Pursuit (halofang, LB) | 1.1 | 0 of 80 |
+| Dragon Call (wyrmkit, TE) | 1.0 | 0 of 80 |
+| Guiding Halo (lumen, QB) | 0.9 | 1 of 80 |
+| Mind Game (enigmane, TE) | 0.6 | 0 of 80 |
+| Splashdown (tidepaw, CB) | 0.3 | 0 of 80 |
+| Sovereign Arm (aurodrax, QB, legendary) | 0.2 | 0 of 80 |
+
+Some of these protect against something only another ability does (Surefoot Canopy, Night Watch), so alone they have nothing to protect against. The combined test below is the measure of whether that matters. A further nine changed three games or fewer of 40 at full mastery (Ambush Tag, Iron Lungs, Permafrost, Frostmark, Shadow Patch, Stone Screen, Cyclonic Release, Bramble Trap, Vanishing Cut).
+
+**No ability is reliably harmful to its own club.** Four looked negative on 40 games (Deep Roots −1.9, Blackout Pocket −1.6, Clean Sweep −1.2, Gear Grid −1.0). At 160 games: Deep Roots +0.5 (±0.7), Blackout Pocket −0.4 (±0.3), Gear Grid −0.1 (±0.3), Clean Sweep −0.5 (±0.27). Only Clean Sweep remains slightly negative, and not conclusively.
+
+**All abilities together** (the passing study, 48 matched games, every monster's ability on against all off): completion 55.3% against 59.7%, deep completion 36.7% against 50.0%, yards per carry 6.2 against 5.8, sacks 1.7% against 2.0%, points per team 12.5 against 12.8. Together the abilities suppress passing, mostly deep passing, and help the run a little. No single ability accounts for it in the paired games, so it is the sum of many small defensive effects. Stonewall Swat is the largest single piece.
+
+**Mastery and forms.** Full mastery raises executions for many abilities (for example Runway 4.1 to 6.9 a game, Static Field 4.7 to 9.0, Deep Roots 4.5 to 8.6) without a measurable change in results.
+
+**Elemental advantage in football.** With abilities off, a club whose every monster has the favoured type against a club of the unfavoured type gains 2.2 points a game (±1.0) and wins 57% instead of 42% (120 games); the unfavoured club loses 0.8 (±1.0). That is the largest type effect possible, and it is modest, as the ±4% contest value intends.
+
+### Football against Clash
+
+| | Football | Clash |
+|---|---|---|
+| Effect of abilities on results | Small: one ability of 72 measurably moves the score | Large: the winner changes in 20% of battles |
+| Strongest ability | Stonewall Swat, +2.6 points a game | Falling Star, +26 points of win rate |
+| Abilities that rarely or never execute | 10 | 12 (16 counting those idle in most battles) |
+| Abilities that execute without effect | 9 or more | few |
+| Abilities that hurt their own side | none confirmed | about 10 |
+| Type advantage | +2.2 points a game for a whole favoured club | 58% against 42% |
+| Rarity | no measurable order | legendary abilities weakest |
+
+The same family can be on both lists: Cerebrix's football Foresight never executes in AI games and its Clash Foresight costs its team 9 points; Halofang's Radiant Pursuit changes nothing in football and costs 7 points in Clash; Glacivern, Nyxshade and Tsunarok (all legendary) are nearly dormant in both.
+
+### Limits of this audit
+- Football effects under about 1 point a game are not resolved for most abilities; a full 160-game pass over all 72 takes about three hours and can be run if wanted.
+- Clash was measured with the AI's rotation policy on both sides; a human choosing rotations may get more from situational abilities.
+- The reviewers were used to confirm each named ability's trigger from its contract; I did not rerun all 816 reviewer variants here (they pass in the regression suite).
 
 ---
 
@@ -253,5 +367,10 @@ Two facts for the complete run:
 | A-24 | Twelve Clash abilities execute in fewer than 1 battle in 14 (Unbroken Charge never) | FAIL against "useful" |
 | A-25 | Falling Star is worth +25.8 points of team win rate, 2.5 times the next ability | FAIL against "balanced" |
 | A-26 | Legendary Clash abilities are the weakest rarity group (−2.5 points) | FAIL against the rarity order |
+| A-29 | Football: Stonewall Swat is worth +2.6 points a game, alone among the 72 | FAIL against "balanced" |
+| A-30 | Football: ten abilities almost never execute in AI-played games | FAIL against "useful" |
+| A-31 | Football: nine abilities execute with no effect on any result when alone | FAIL against "useful", pending the owner's view of protective abilities |
+| A-32 | Football: abilities together take 4.4 points off completion and 13 points off deep completion | PENDING an owner target |
+| A-33 | Football type advantage: +2.2 points a game for a whole favoured club | PASS |
 | A-27 | Clash type chart: favoured 58.2%, unfavoured 41.8% | PASS |
 | A-28 | No Clash ability pair is stronger together than its parts (2,556 pairs) | PASS |
