@@ -17,7 +17,7 @@ import { byTier, unmet } from './util.js';
 import { E as $E } from '../../core/english.js';
 
 // Task 10 candidate: reduce all-reserve splash while preserving the meteor's identity.
-const MAIN = [150, 160, 170, 180], SPLASH = [15, 20, 25, 30];
+const MAIN = [150, 160, 170, 180], SPLASH = [0, 0, 0, 0];
 
 /** The impact's target list [{ id, mult, key }] for the given reading, or null when the reading is withheld (disputed, normal mode). */
 export function delayedTargets(api, self, item, { mainPct, splashPct }) {
@@ -51,7 +51,7 @@ export default registerClashAbility({
     delayedImpact(api, self, item) {
       const me = api.me(self); const exception = me.koed ? 'FIR-03-C' : undefined;
       const { targets, disputed } = delayedTargets(api, self, item, { mainPct: byTier(MAIN, self.tier), splashPct: byTier(SPLASH, self.tier) });
-      for (const t of targets) {
+      for (const t of targets.filter((hit) => hit.key === 'main hit')) {
         if (api.get(t.id).koed) continue; // knocked out by an earlier hit's reaction: frozen identity, no target
         const r = api.strike(self, t.id, { tag: 'delayed', mult: t.mult, strikeKey: t.key, label: `${$E('clashlog.falling_star', { key: t.key })}`, exception, normalAction: false });
         if (r.decided) break;
