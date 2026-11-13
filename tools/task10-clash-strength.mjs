@@ -9,7 +9,8 @@
 //   B  round robin Every family against every other, 1 v 1, last form and full mastery, abilities on and off: the win rate each
 //                  family really has among its peers, and what abilities add or take relative to the others.
 //   C  elements    From B with abilities off: win rate of the attacking type against each defending type, against the chart.
-//   node tools/task10-clash-strength.mjs [--seeds=3] [--rr=6] [--only=fam,...] [--json=out.json]
+//   D  teams       --teams=N: N battles of three against three between random teams of the families (see below); runs alone.
+//   node tools/task10-clash-strength.mjs [--seeds=3] [--rr=6] [--only=fam,...] [--teams=N] [--json=out.json]
 import { writeFileSync } from 'node:fs';
 import { simulateClashT8 } from '../src/clash/t8/index.js';
 import { FAMILIES, formsOf, abilityById } from '../src/data/beast-dex.js';
@@ -48,7 +49,7 @@ function isolate(fam, v, size) {
   return best;
 }
 const A = []; const t0 = Date.now();
-for (const fam of WITH) {
+for (const fam of args.teams ? [] : WITH) {
   if (ONLY && !ONLY.has(fam.id)) continue; const ab = abilityById(fam.abilities.clash) || {}; const forms = formsOf(fam.id);
   for (const v of [{ id: 'base', stage: 0, tier: 0 }, { id: 'top', stage: forms.length - 1, tier: 3 }]) {
     const subject = mk(fam, 70, { stage: v.stage, tier: v.tier });
@@ -58,7 +59,7 @@ for (const fam of WITH) {
 }
 // ---------------------------------------------------------------- B: round robin among the families, C: elements
 let B = [], C = null;
-if (!ONLY) {
+if (!ONLY && !args.teams) {
   const top = WITH.map((fam) => ({ fam, m: mk(fam, 70, { stage: formsOf(fam.id).length - 1, tier: 3 }) })); const tally = new Map(top.map((x) => [x.fam.id, { n: 0, on: 0, off: 0, ex: 0 }])); const el = {};
   for (let i = 0; i < top.length; i++) for (let j = i + 1; j < top.length; j++) for (let s = 0; s < RR; s++) {
     const x = top[i], y = top[j]; const flip = s % 2 === 1; const a = flip ? y : x, b = flip ? x : y; const seed = 1 + i * 977 + j * 131 + s * 7919;
@@ -70,4 +71,28 @@ if (!ONLY) {
   C = Object.fromEntries(Object.entries(el).map(([k, v]) => [k, { battles: v.n, winOffPct: pct(v.off, v.n), winOnPct: pct(v.on, v.n) }]));
   for (const r of B) console.log(JSON.stringify(r)); console.log(JSON.stringify({ elements: C }));
 }
-if (args.json) writeFileSync(String(args.json), JSON.stringify({ seeds: SEEDS, rr: RR, basics: BASIC.length, families: WITH.length, sec: Math.round((Date.now() - t0) / 1000), A, B, C }));
+// ---------------------------------------------------------------- D: three against three among the families (the game's size)
+// Random teams of three different families (last form, full mastery), abilities on and off with the same seeds. Per family: the
+// win rate of the teams he is on, with and without abilities, and his executions per battle. Per pair on the same team: the win
+// rate together against what the two members' own rates predict (a synergy or a clash between two abilities).
+let D = null;
+if (args.teams) {
+  const N = Number(args.teams); const top = WITH.map((fam) => ({ fam, m: mk(fam, 70, { stage: formsOf(fam.id).length - 1, tier: 3 }) })); const r = createRng(20261113);
+  const T = new Map(top.map((x) => [x.fam.id, { n: 0, on: 0, off: 0, ex: 0, none: 0 }])); const P = new Map(); let exchOn = 0, exchOff = 0, flips = 0;
+  const draw = (ban) => { const t = []; while (t.length < 3) { const x = top[r.int(top.length)]; if (!t.includes(x) && !ban.includes(x)) t.push(x); } return t; };
+  for (let g = 0; g < N; g++) {
+    const a = draw([]), b = draw(a); const seed = 1 + g * 7919; const on = fight(a.map((x) => x.m), b.map((x) => x.m), seed, 'on'), off = fight(a.map((x) => x.m), b.map((x) => x.m), seed, 'off');
+    exchOn += on.exchanges; exchOff += off.exchanges; if (on.winner !== off.winner) flips++;
+    for (const [team, side] of [[a, 'a'], [b, 'b']]) {
+      for (const x of team) { const t = T.get(x.fam.id); t.n++; if (on.winner === side) t.on++; if (off.winner === side) t.off++; const e = on.mastery?.[x.m.id]?.executions || 0; t.ex += e; if (!e) t.none++; }
+      for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) { const k = [team[i].fam.id, team[j].fam.id].sort().join('+'); const p = P.get(k) || { n: 0, on: 0, off: 0 }; p.n++; if (on.winner === side) p.on++; if (off.winner === side) p.off++; P.set(k, p); }
+    }
+  }
+  const fam = top.map((x) => { const t = T.get(x.fam.id); return { family: x.fam.id, ability: abilityById(x.fam.abilities.clash)?.name, element: x.fam.type, rarity: x.fam.rarity, position: x.fam.position, ovr: monsterOverall(x.m), battles: t.n, winOnPct: pct(t.on, t.n), winOffPct: pct(t.off, t.n), abilityPts: +(100 * (t.on - t.off) / t.n).toFixed(1), exPerBattle: +(t.ex / t.n).toFixed(2), noExecutionPct: pct(t.none, t.n) }; }).sort((p, q) => q.abilityPts - p.abilityPts);
+  const rate = Object.fromEntries(fam.map((f) => [f.family, { on: f.winOnPct, off: f.winOffPct }]));
+  // a pair's synergy: how much more abilities add to the pair's teams than they add to the two members' teams on average
+  const pairs = [...P.entries()].map(([k, p]) => { const [x, y] = k.split('+'); const gain = 100 * (p.on - p.off) / p.n; const expect = ((rate[x].on - rate[x].off) + (rate[y].on - rate[y].off)); const se = 100 * Math.sqrt(0.25 / p.n) * 1.2; return { pair: k, battles: p.n, winOnPct: pct(p.on, p.n), winOffPct: pct(p.off, p.n), gainPts: +gain.toFixed(1), expectedPts: +expect.toFixed(1), synergyPts: +(gain - expect).toFixed(1), z: +((gain - expect) / se).toFixed(2) }; }).sort((p, q) => q.z - p.z);
+  D = { battles: N, exchangesOn: +(exchOn / N).toFixed(1), exchangesOff: +(exchOff / N).toFixed(1), winnerChangedPct: pct(flips, N), families: fam, pairsTop: pairs.slice(0, 25), pairsBottom: pairs.slice(-25), pairCount: pairs.length, pairZsd: +Math.sqrt(pairs.reduce((a, p) => a + p.z * p.z, 0) / pairs.length).toFixed(2) };
+  for (const f of fam) console.log(JSON.stringify(f)); console.log(JSON.stringify({ battles: N, exchangesOn: D.exchangesOn, exchangesOff: D.exchangesOff, winnerChangedPct: D.winnerChangedPct, pairZsd: D.pairZsd })); for (const p of [...D.pairsTop.slice(0, 8), ...D.pairsBottom.slice(-8)]) console.log(JSON.stringify(p));
+}
+if (args.json) writeFileSync(String(args.json), JSON.stringify({ seeds: SEEDS, rr: RR, basics: BASIC.length, families: WITH.length, sec: Math.round((Date.now() - t0) / 1000), A, B, C, D }));
