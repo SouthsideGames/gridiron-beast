@@ -2552,13 +2552,24 @@ export function championshipRecord(f, s = f.season) {
  */
 export function awardRaces(f, { n = 3 } = {}) {
   if (f.season.awardsFinal) return Object.fromEntries(Object.entries(f.season.awardsFinal.races).map(([k, v]) => [k, Array.isArray(v) ? v.slice(0, n) : v]));
-  const res = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n });
+  const res = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n, priorRookieAwardIds: priorRookieAwardIds(f) });
   return res;
+}
+/** Previous rookie-award winners are never eligible to win another rookie award. */
+function priorRookieAwardIds(f) {
+  const ids = new Set();
+  for (const season of f.history || []) {
+    for (const key of ['oroy', 'droy']) {
+      const id = season.awards?.league?.[key]?.id;
+      if (id != null) ids.add(id);
+    }
+  }
+  return [...ids];
 }
 /** Freeze the regular-season awards (called when the playoffs are drawn). */
 export function finalizeAwards(f) {
   if (f.season.awardsFinal) return f.season.awardsFinal;
-  const races = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n: 5 });
+  const races = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n: 5, priorRookieAwardIds: priorRookieAwardIds(f) });
   f.season.awardsFinal = { year: f.season.year, races, winners: Object.fromEntries(Object.entries(AWARDS).map(([k]) => [k, races[k]?.[0] || null])) };
   addLeagueNews(f, awardNews({ year: f.season.year, week: 10, winners: f.season.awardsFinal.winners, priorOf: (id, key) => (f.history || []).filter((h) => h.awards?.league?.[key]?.id === id).length }));
   for (const [k, w] of Object.entries(f.season.awardsFinal.winners)) if (w && w.team === f.club) news(f, $L('franchise.one_of_yours', { short: AWARDS[k].short, k: (k === 'coy' ? $L('franchise.your_staff') : w.name)}), 'win');
