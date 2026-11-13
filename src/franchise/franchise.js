@@ -2552,8 +2552,22 @@ export function championshipRecord(f, s = f.season) {
  */
 export function awardRaces(f, { n = 3 } = {}) {
   if (f.season.awardsFinal) return Object.fromEntries(Object.entries(f.season.awardsFinal.races).map(([k, v]) => [k, Array.isArray(v) ? v.slice(0, n) : v]));
-  const res = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n, priorRookieAwardIds: priorRookieAwardIds(f) });
+  const res = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n, priorRookieAwardIds: priorRookieAwardIds(f), mvpWinStreaks: mvpWinStreaks(f) });
   return res;
+}
+/** Consecutive MVPs in completed seasons, reset after any other winner. */
+function mvpWinStreaks(f) {
+  const history = (f.history || []).slice().sort((a, b) => a.year - b.year);
+  const streaks = {};
+  let previous = null;
+  for (const season of history) {
+    const id = season.awards?.league?.mvp?.id;
+    if (id == null) { previous = null; continue; }
+    if (id !== previous) { for (const key of Object.keys(streaks)) delete streaks[key]; streaks[id] = 1; }
+    else streaks[id] = (streaks[id] || 0) + 1;
+    previous = id;
+  }
+  return streaks;
 }
 /** Previous rookie-award winners are never eligible to win another rookie award. */
 function priorRookieAwardIds(f) {
@@ -2569,7 +2583,7 @@ function priorRookieAwardIds(f) {
 /** Freeze the regular-season awards (called when the playoffs are drawn). */
 export function finalizeAwards(f) {
   if (f.season.awardsFinal) return f.season.awardsFinal;
-  const races = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n: 5, priorRookieAwardIds: priorRookieAwardIds(f) });
+  const races = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n: 5, priorRookieAwardIds: priorRookieAwardIds(f), mvpWinStreaks: mvpWinStreaks(f) });
   f.season.awardsFinal = { year: f.season.year, races, winners: Object.fromEntries(Object.entries(AWARDS).map(([k]) => [k, races[k]?.[0] || null])) };
   addLeagueNews(f, awardNews({ year: f.season.year, week: 10, winners: f.season.awardsFinal.winners, priorOf: (id, key) => (f.history || []).filter((h) => h.awards?.league?.[key]?.id === id).length }));
   for (const [k, w] of Object.entries(f.season.awardsFinal.winners)) if (w && w.team === f.club) news(f, $L('franchise.one_of_yours', { short: AWARDS[k].short, k: (k === 'coy' ? $L('franchise.your_staff') : w.name)}), 'win');
