@@ -1,0 +1,20 @@
+
+== t10-C-106-108.json pro runs 3 × 20 seasons | integrity problems 0 | AI club-seasons 960: roster 28–38, with a lineup problem 4, negative cap room 0
+hands-off owner win % by seed: 9 43 24 | mean 25.3 | 0–21 results (forfeits) in owner games 237 of 540
+titles: top AI club / owner titles / distinct champions per run: 4/0/8 8/0/7 7/0/9
+AI arrivals by source {"other":4310} | generated 0 of 4310 {} | unsigned at market close (mean) 26.2
+
+== t10-C-116-120.json pro runs 5 × 20 seasons | integrity problems 0 | AI club-seasons 1600: roster 28–38, with a lineup problem 3, negative cap room 0
+hands-off owner win % by seed: 40 58 45 13 26 | mean 36.4 | 0–21 results (forfeits) in owner games 261 of 900
+titles: top AI club / owner titles / distinct champions per run: 5/0/9 4/0/11 10/0/7 5/0/10 5/0/7
+AI arrivals by source {"other":7219} | generated 0 of 7219 {} | unsigned at market close (mean) 24.0
+
+== t10-B-1-10.json pro runs 10 × 10 seasons | integrity problems 0 | AI club-seasons 1600: roster 27–38, with a lineup problem 3, negative cap room 0
+hands-off owner win % by seed: 52 28 28 75 42 45 25 26 64 44 | mean 42.9 | 0–21 results (forfeits) in owner games 107 of 900
+titles: top AI club / owner titles / distinct champions per run: 8/0/2 3/0/6 4/0/5 3/0/6 6/0/5 5/0/6 3/0/7 4/0/7 5/0/4 4/0/5
+AI arrivals by source {"other":6231} | generated 0 of 6231 {} | unsigned at market close (mean) 29.0
+
+== t10-B-61-70.json pro runs 10 × 10 seasons | integrity problems 0 | AI club-seasons 1600: roster 30–38, with a lineup problem 2, negative cap room 0
+hands-off owner win % by seed: 63 51 40 22 66 72 30 48 63 46 | mean 50.1 | 0–21 results (forfeits) in owner games 134 of 900
+titles: top AI club / owner titles / distinct champions per run: 7/0/4 3/0/6 7/0/4 6/0/5 3/0/6 3/0/7 3/0/6 4/0/5 3/0/4 4/0/6
+AI arrivals by source {"other":6046} | generated 0 of 6046 {} | unsigned at market close (mean) 31.4

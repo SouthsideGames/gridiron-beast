@@ -1,0 +1,90 @@
+{
+ "root": "/home/claude/gb-t9",
+ "games": 120,
+ "variants": {
+  "enabled": {
+   "games": 120,
+   "attempts": 4501,
+   "completionPct": 57.1,
+   "yardsPerAttempt": 7.64,
+   "intPct": 0.9,
+   "sackPctOfDropbacks": 1.9,
+   "deepAttempts": 343,
+   "deepCompletionPct": 37.6,
+   "yardsPerCarry": 6.27,
+   "pointsPerTeamGame": 13.7,
+   "abilityEventsPerGame": 95.1,
+   "playsWithAnAbilityPct": 79.3,
+   "completionByQbAccuracy": {
+    "acc<60": {
+     "attempts": 1352,
+     "completionPct": 50.5
+    },
+    "acc70+": {
+     "attempts": 1249,
+     "completionPct": 64
+    },
+    "acc60-69": {
+     "attempts": 1900,
+     "completionPct": 57.4
+    }
+   }
+  },
+  "noAbilities": {
+   "games": 120,
+   "attempts": 4404,
+   "completionPct": 59.9,
+   "yardsPerAttempt": 8.15,
+   "intPct": 1.2,
+   "sackPctOfDropbacks": 1.8,
+   "deepAttempts": 358,
+   "deepCompletionPct": 44.7,
+   "yardsPerCarry": 6.13,
+   "pointsPerTeamGame": 13.8,
+   "abilityEventsPerGame": 0,
+   "playsWithAnAbilityPct": 0,
+   "completionByQbAccuracy": {
+    "acc<60": {
+     "attempts": 1304,
+     "completionPct": 57.1
+    },
+    "acc70+": {
+     "attempts": 1294,
+     "completionPct": 62.3
+    },
+    "acc60-69": {
+     "attempts": 1806,
+     "completionPct": 60.2
+    }
+   }
+  },
+  "noAbilitiesNoTypes": {
+   "games": 120,
+   "attempts": 4562,
+   "completionPct": 58.6,
+   "yardsPerAttempt": 7.74,
+   "intPct": 1.1,
+   "sackPctOfDropbacks": 1.8,
+   "deepAttempts": 349,
+   "deepCompletionPct": 40.7,
+   "yardsPerCarry": 6,
+   "pointsPerTeamGame": 13.7,
+   "abilityEventsPerGame": 0,
+   "playsWithAnAbilityPct": 0,
+   "completionByQbAccuracy": {
+    "acc<60": {
+     "attempts": 1394,
+     "completionPct": 53.8
+    },
+    "acc70+": {
+     "attempts": 1308,
+     "completionPct": 64.5
+    },
+    "acc60-69": {
+     "attempts": 1860,
+     "completionPct": 58
+    }
+   }
+  }
+ }
+}

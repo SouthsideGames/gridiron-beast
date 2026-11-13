@@ -1,0 +1,11 @@
+not ok 73 - the timeline never changes the game: the same franchise with the writers switched off plays out identically
+not ok 792 - FIR-03-C Falling Star: registered with a kinds row, scenarios of the required kinds, and contract-sourced values
+not ok 875 - FIR-03-C Falling Star: registered with a kinds row, scenarios of the required kinds, and contract-sourced values
+not ok 1106 - contracts: two-year deals from signing, salaries frozen until renewal, the offseason book, counters and walks to the pool, the market and the roster floor
+not ok 1293 - no intentional throw-away anywhere: full games, the forced-read path and the Lab's human decisions (v42.6)
+not ok 1369 - Goal Line Man: on a pass he covers again, it still stops screens and the quick game, and play-action still hurts it
+not ok 1446 - awards: an exceptional pass rusher and a shutdown corner with few interceptions both have a path to DPOY
+not ok 2033 - a made-up translation of every line changes nothing but the wording: one franchise season and 120 Clash battles
+# tests 2103
+# pass 2095
+# fail 8
