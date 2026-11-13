@@ -346,13 +346,32 @@ The same family can be on both lists: Cerebrix's football Foresight never execut
 
 ---
 
-## 4. Task 7 benchmark, reduced seed set (RUNNING, preliminary by decision)
+## 4. Task 7 benchmark, reduced seed set (PRELIMINARY by decision; two of four jobs finished, two running)
 
-The Task 6/7 harness (`tools/ai-franchise-benchmark.mjs` v4) runs on the released game without change (checked: 0 problems on a two-season smoke run). Running now, on the released game, four whole jobs of the original plan so the results can be reused in the complete run: C 106–108 × 20 seasons, B 1–10 × 10, CH 116–120 × 20, H 61–70 × 10 (Pro).
+The Task 6/7 harness (`tools/ai-franchise-benchmark.mjs` v4, hands-off owner as the plan defines him) runs on the released game without change. The reduced set is four whole jobs of the original plan, so the results are reused in the complete run: C 106–108 × 20 seasons and B 1–10 × 10 (finished), CH 116–120 × 20 and H 61–70 × 10 (running), all Pro.
 
-Two facts for the complete run:
-- **The Task 6 baseline files are gone.** The comparative gate compares against the `rc-*` run files of v42.21.0, which lived in an earlier work area and are not in the repository. The complete benchmark therefore needs the baseline rerun too (the v42.21.0 tree is checked out and its harness runs).
-- **Size.** The complete plan is 255 jobs on each build. On this machine (two cores) that is roughly 15 to 20 hours of computing for the candidate and about half that for the baseline. It can be done in stages in the background; nothing will be declared passed before it is complete.
+**Finished so far (13 franchises, 160 franchise-seasons). Preliminary, not a pass.**
+
+| Hard gate | Result on the reduced set |
+|---|---|
+| Integrity (soak, league, save round trip, market checks) | 0 problems in 13 runs |
+| Cap (no club below zero usable room) | 0 of 2,560 AI club-seasons |
+| Rosters 26 to 38 with a legal lineup | Sizes 27 to 38. **7 AI club-seasons of 2,560 ended with a lineup problem** (to be examined: the gate requires none at season start) |
+| Legendary limits, determinism, performance | not yet run |
+
+| Reported measure | Result |
+|---|---|
+| Hands-off owner win rate, Pro (target 45 to 53%) | 10-season runs: **42.9%** (25 to 75% by seed). 20-season runs: **25.3%** (9, 24, 43%) |
+| Hands-off owner forfeits | 12% of his games in the 10-season runs, **44%** in the 20-season runs. This is the unmanaged owner the plan specifies; it is why his win rate collapses, and it is the free-agent problem of decision 3 |
+| Leading AI club's titles | 3 to 8 of 10 seasons; 4 to 8 of 20 |
+| AI signings that were generated arrivals | 20-season runs: 824 generated against 535 from pools and waivers (**61%**, about 14 per league-season). In season: 17 of 29. By position: WR 131, LB 115, CB 108, DL 99, OL 95, S 80, RB 74, K 58, TE 42, QB 22 |
+| Unsigned monsters at the offseason market's close | 26 to 29 on average |
+
+**The comparative gate cannot be judged yet**, for two reasons:
+- **The Task 6 baseline files are gone.** The gate compares against the `rc-*` run files of v42.21.0, which lived in an earlier work area and were never in the repository. The baseline has to be rerun (the v42.21.0 tree is checked out here and its harness runs).
+- The reduced set is too small for the plan's statistics (matched seeds, 2,000-resample intervals, held-out confirmation).
+
+**Size of the complete run.** 255 jobs on each build. On this machine (two cores) the candidate takes roughly 15 to 20 hours and the baseline about half that. It can run in stages in the background. Nothing is declared passed until it is complete.
 
 ---
 
