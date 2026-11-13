@@ -814,9 +814,29 @@ export function registerMatchScreens(Router, app) {
     app.save(); Router.render();
   }
 
-  function showLog(f) {
+  /**
+   * Task 10 (owner 2026-11-13): the play-by-play reads like a broadcast by default: grouped by quarter, each snap with the down,
+   * distance and spot it started from, who had the ball and the play that was called. The technical view (a toggle in the sheet)
+   * adds the engine's own detail for testing: the result code, the yards, both play ids and the repro code that replays the play.
+   */
+  function showLog(f, technical = showLog.technical || false) {
     const s = f.game?.state; if (!s) return;
-    sheet(`<div class="log">${s.log.slice().reverse().map((e) => `<div class="entry ${e.important ? 'important' : ''}"><span class="t">${R.quarterText({ quarter: e.q })} ${fmtClock(e.clock)}</span><span>${esc(lineText(e))}${e.repro ? `<br><small class="dim mono">repro ${esc(e.repro)}</small>` : ''}</span></div>`).join('')}</div><p class="dim">${$t('match.a_repro_code_replays_that_exact')} <span class="mono">node tests/tools/replay.js CODE</span>.</p>`, { title: $t('match.play_by_play') });
+    showLog.technical = technical;
+    const abbr = (side) => s[side]?.abbr || '';
+    const playName = (id) => (id && PLAYS[id] ? PLAYS[id].name : '');
+    const row = (e) => {
+      const snap = e.kind === 'play' && e.down;
+      const sit = snap ? `${abbr(e.team)} · ${R.situationText({ phase: 'scrimmage', down: e.down, toGo: e.toGo, ballOn: e.ballOn })}` : '';
+      const call = snap && e.off ? playName(e.off) : '';
+      const tech = technical && (e.result || e.repro) ? `<br><small class="dim mono">${esc([e.result, e.yards != null ? `${e.yards} yds` : null, e.off && e.def ? `${e.off} vs ${e.def}` : null, e.kind].filter(Boolean).join(' · '))}${e.repro ? `<br>repro ${esc(e.repro)}` : ''}</small>` : '';
+      return `<div class="entry ${e.important ? 'important' : ''} ${e.kind}"><span class="t">${fmtClock(e.clock)}</span><span>${sit ? `<small class="pbp-sit">${esc(sit)}${call ? ` · ${esc(call)}` : ''}</small><br>` : ''}${esc(lineText(e))}${tech}</span></div>`;
+    };
+    const groups = []; for (const e of s.log.slice().reverse()) { const q = R.quarterText({ quarter: e.q }); if (groups.at(-1)?.q !== q) groups.push({ q, rows: [] }); groups.at(-1).rows.push(e); }
+    const body = groups.map((g) => `<h4 class="pbp-q">${esc(g.q)}</h4>${g.rows.map(row).join('')}`).join('');
+    const toggle = `<div class="row" style="justify-content:flex-end"><button class="btn ghost small" data-action="pbp-view" aria-pressed="${technical}">${technical ? $t('match.pbp_simple_view') : $t('match.pbp_technical_view')}</button></div>`;
+    const foot = technical ? `<p class="dim">${$t('match.a_repro_code_replays_that_exact')} <span class="mono">node tests/tools/replay.js CODE</span>.</p>` : '';
+    const sh = sheet(`${toggle}<div class="log pbp">${body}</div>${foot}`, { title: $t('match.play_by_play') });
+    sh.el.querySelector('[data-action="pbp-view"]')?.addEventListener('click', () => { sh.close(); showLog(f, !technical); });
   }
 
   function finishGame(f) {

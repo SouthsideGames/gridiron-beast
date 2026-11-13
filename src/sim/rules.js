@@ -472,7 +472,7 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
   const S = state.stats[off];
   const lines = [];
   const wasGoalToGo = state.ballOn + state.toGo >= 100;
-  const toGoBefore = state.toGo; const downBefore = state.down;
+  const toGoBefore = state.toGo; const downBefore = state.down; const ballOnBefore = state.ballOn;
   state.playCount += 1; S.plays += 1; state.drive.plays += 1;
   runClock(state, sim.elapsed);
   const name = (team, slot) => state[team === 'off' ? off : def].name;
@@ -489,11 +489,14 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
       stops = true; nextDown(state, 0, lines); break;
     case 'sack':
       S.sacks += 1; state.stats[def].sacks += 0;
-      lines.push(`${$E('sim.sacked_by_for_yards', { player: playerName(sim, 'def', sim.stats.tackler), gain })}`);
+      lines.push(gain < 0 ? $E('sim.sacked_by_for_a_loss', { player: playerName(sim, 'def', sim.stats.tackler), loss: -gain }) : $E('sim.sacked_by_for_no_gain', { player: playerName(sim, 'def', sim.stats.tackler) })); // Task 10: a loss reads as a loss, not "for -6 yards"
       if (sim.endYard <= 0) { scored = safety(state, lines); break; }
       nextDown(state, gain, lines); break;
     case 'tackle': case 'out_of_bounds': {
-      const who = sim.stats.receiver ? `${$E('sim.catches_it_for', { player: playerName(sim, 'off', sim.stats.receiver), gain })}` : `${$E('sim.runs_for', { player: playerName(sim, 'off', sim.stats.carrier), gain })}`;
+      // Task 10 (player-friendly play-by-play): a gain, no gain and a loss each read as football says them.
+      const who = sim.stats.receiver
+        ? (gain > 0 ? $E('sim.catches_it_for', { player: playerName(sim, 'off', sim.stats.receiver), gain }) : gain === 0 ? $E('sim.catches_it_for_no_gain', { player: playerName(sim, 'off', sim.stats.receiver) }) : $E('sim.catches_it_for_a_loss', { player: playerName(sim, 'off', sim.stats.receiver), loss: -gain }))
+        : (gain > 0 ? $E('sim.runs_for', { player: playerName(sim, 'off', sim.stats.carrier), gain }) : gain === 0 ? $E('sim.runs_for_no_gain', { player: playerName(sim, 'off', sim.stats.carrier) }) : $E('sim.runs_for_a_loss', { player: playerName(sim, 'off', sim.stats.carrier), loss: -gain }));
       lines.push(`${who}${sim.result === 'out_of_bounds' ? $E('sim.out_of_bounds') : sim.stats.tackler ? $E('sim.tackled_by') + playerName(sim, 'def', sim.stats.tackler) : ''}.`);
       if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else S.rushYards += gain;
       S.yards += gain; state.drive.yards += gain;
@@ -506,7 +509,7 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
         S.turnovers += 1; stops = true;
         scored = touchdown(state, def, lines);
       } else {
-        lines.push(`${$E('sim.it_in_touchdown', { player: playerName(sim, 'off', sim.stats.carrier), receiver: sim.stats.receiver ? 'catches' : 'runs' })}`);
+        lines.push(sim.stats.receiver ? $E('sim.catches_it_for_a_touchdown', { player: playerName(sim, 'off', sim.stats.carrier), gain }) : $E('sim.runs_it_in_for_a_touchdown', { player: playerName(sim, 'off', sim.stats.carrier), gain }));
         if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else S.rushYards += gain;
         S.yards += gain; state.drive.yards += gain; stops = true;
         scored = touchdown(state, off, lines);
@@ -530,7 +533,8 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
   if (!scored && state.clock <= 0) endOfPeriod(state);
   const text = lines.join(' ');
   state.lastPlay = { text, result: sim.result, yards: gain, offensePlayId, defensePlayId, seed: sim.seed, ballOn: sim.ballOn, stats: sim.stats };
-  log(state, text, 'play', { team: off, result: sim.result, yards: gain, important: !!scored || ['interception', 'fumble', 'touchback_return'].includes(sim.result), repro: `${offensePlayId || '?'}|${defensePlayId || '?'}|${sim.ballOn}|${sim.seed}` });
+  log(state, text, 'play', { team: off, result: sim.result, yards: gain, important: !!scored || ['interception', 'fumble', 'touchback_return'].includes(sim.result), repro: `${offensePlayId || '?'}|${defensePlayId || '?'}|${sim.ballOn}|${sim.seed}`,
+    down: downBefore, toGo: toGoBefore, ballOn: ballOnBefore, off: offensePlayId || null, def: defensePlayId || null }); // Task 10: the situation before the snap (numbers, not words) for the play-by-play
   recordPlayerStats(state, sim, off, def, { toGo: toGoBefore });
   recordPerformance(state, sim, off, def, { toGo: toGoBefore, down: downBefore });
   if (state.ot) otCheckAfterPlay(state);
@@ -640,7 +644,7 @@ function touchdown(state, side, lines) {
   { const L = ((state.t8 ||= { status: {} }).touchdowns ||= { home: 0, away: 0 }); L[side] += 1; } // M3 hook: the touchdown ledger by scoring club (offense, defense, returns)
   state.phase = 'try'; state.tryTeam = side; state.ballOn = 100 - FIELD.twoPointSpot; state.down = 1; state.toGo = FIELD.twoPointSpot;
   state.possession = side;
-  lines.push(`${state[side].name} ${state.score.home}-${state.score.away}.`);
+  lines.push(`${state.home.abbr} ${state.score.home}-${state.score.away} ${state.away.abbr}.`); // Task 10: both clubs named, like every other score line ("Away 0-6" read as Away having 0)
   return { team: side, points: 6, kind: 'touchdown' };
 }
 function safety(state, lines) {
