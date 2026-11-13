@@ -212,7 +212,7 @@ export function registerHistoryScreens(Router, app) {
     mount(root, ctx) {
       delegate(root, {
         hofback: () => Router.go('offseason'),
-        hofnext: (el) => { const c = hallCeremony(app.f, Number(ctx.params.year || app.f?.season?.year)); if (!c || Number(el.dataset.step) >= c.stages.length) Router.go('offseason'); else { ctx.params.step = Number(el.dataset.step); Router.render(); } },
+        hofnext: (el) => { const c = hallCeremony(app.f, Number(ctx.params.year || app.f?.season?.year)); if (!c || Number(el.dataset.step) >= c.stages.length) { if (c && app.f?.monsterHallOfFame) { const hof = app.f.monsterHallOfFame; hof.ceremonySeenYears ||= []; if (!hof.ceremonySeenYears.includes(c.year)) hof.ceremonySeenYears.push(c.year); app.save(); } Router.go('offseason'); } else { ctx.params.step = Number(el.dataset.step); Router.render(); } },
       });
     },
   });
