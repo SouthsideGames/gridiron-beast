@@ -15,6 +15,8 @@ Scope (owner, 2026-11-12): the final comprehensive balance audit of the whole ga
 
 **Harness note.** Every 20-season franchise run so far used a hands-off owner whose roster nobody manages. On the released game that club forfeits whole seasons (6 of 8 Rookie franchises). League-wide figures from those runs are marked PENDING until rerun with the repair owner (R-1).
 
+**Update 2026-11-13.** The owner ruled on eight open points. The investigations, their evidence and the new rows (F-20, D-1, A-22 to A-28) are in `OWNER_DECISIONS_2026-11-13.md`. Rows changed here today: R-1, F-1, F-2, H-4, H-5, H-8, H-9, T7-26, T7-27, T7-31, T7-32. The summary counts below are recounted when the running studies finish.
+
 ## 0. Deferred Task 7 tests recovered
 
 Source: GDD §59.10 "Task 7 → Task 8 dependency" (owner decision 2026-11-05), `docs/TASK7_REMEDIATION_PROPOSAL.md` §9, `docs/TASK7_BENCHMARK_PLAN.md`, `docs/TASK7_NEGOTIATION_RESULTS.md` §7.
@@ -30,15 +32,15 @@ Not found: I found no other deferred Task 7 test in the Task 7 documents, the GD
 
 | ID | Requirement | Target | Test | Status |
 |---|---|---|---|---|
-| R-1 | The study owner does not forfeit for lack of a legal lineup | Forfeits at or near 0; the benchmark owner otherwise unchanged | Repair owner (does what the lineup warning asks: signs the cheapest legal free agent for an open slot), `tools/study-owner.mjs`: before a game and in the offseason | **FAIL**, improved: 5.8% of owner games forfeited over 8 franchises × 20 seasons (2.5% in seven of them; one franchise 53 forfeits). Before: whole seasons in 6 of 8. The rest are positions with no free agent to sign (T7-27, T7-31) |
+| R-1 | The study owner does not forfeit for lack of a legal lineup | Forfeits at or near 0; the benchmark owner otherwise unchanged | Repair owner (does what the lineup warning asks: signs the cheapest legal free agent for an open slot), `tools/study-owner.mjs`: before a game and in the offseason | **FAIL**, improved: 5.8% of owner games forfeited over 8 franchises × 20 seasons (2.5% in seven of them; one franchise 53 forfeits). Before: whole seasons in 6 of 8. The rest are positions with no free agent to sign (T7-27, T7-31) **Reclassified 2026-11-13 (owner): a game issue, not a harness issue. Cause: AI clubs are covered by generated arrivals, the owner is not (`OWNER_DECISIONS_2026-11-13.md` §3).** |
 | R-2 | Hands-off owner reported beside the repair owner | Both lines in every league-wide table (GDD §59.10: the repair owner is a separate diagnostic, not a replacement) | Paired runs, same seeds | PENDING |
 
 ## 1. Football simulation and gameplay
 
 | ID | Requirement | Approved target | Source | Test | Evidence | Status |
 |---|---|---|---|---|---|---|
-| F-1 | Completion rate, abilities on | about 65% | GDD §53.5c | `tools/passing-calibration.mjs`, 48 matched games | Release: 56.8% (120 matchups, `docs/task8/m6/FINAL_VERIFICATION.md`); 64.5% pre-T8 | **FAIL** against the recorded target. No later ruling moving the target was found |
-| F-2 | Sacks per dropback | 5–7% (rebuild plan); 2.5% accepted at v42.8 | `GRIDIRON_BEAST_REBUILD_PLAN.md`, GDD §53.5c | passing calibration | Release: 2.0% | PENDING: which target stands is an owner question |
+| F-1 | Completion rate, abilities on | about 65% | GDD §53.5c | `tools/passing-calibration.mjs`, 48 matched games | Release: 55.3% (48 games, the original study), 56.8% (120 matchups); abilities off 59.7%. Season-20 franchise leagues: 67.1% | **FAIL** against the practice-club measure; cause found (`OWNER_DECISIONS_2026-11-13.md` §5): the method is the original (v42.8 reproduces 64.5%); Task 8 lowered it in three steps (catalogue switch, stamina, abilities). Open point: the owner defines which games "representative" means, since developed franchise leagues complete 67.1% |
+| F-2 | Sacks per dropback | 5–7% (rebuild plan); 2.5% accepted at v42.8 | `GRIDIRON_BEAST_REBUILD_PLAN.md`, GDD §53.5c | passing calibration | Release: 1.7% (48 games), 2.0% (120); season-20 franchise leagues 1.8% | BLOCKED (owner): no approved sack target exists in the GDD, Task 7 or Task 8 records (`OWNER_DECISIONS_2026-11-13.md` §6). 5–7% is the only written target (rebuild plan); 2.5% and 2.2% were measurements, the second accepted as a deviation at v42.14 |
 | F-3 | Interception rate | none recorded (1.4% at v42.8) | GDD §53.5c | passing calibration | not re-measured after Task 8 | PENDING |
 | F-4 | Yards per attempt, yards per carry, points per team game | none recorded (7.9 / 6.2 / 13.7 at v42.8) | GDD §53.5c | passing calibration, matched study | Release: 6.41 per carry, 13.7 points | PENDING (no target; report against the v42.8 reference) |
 | F-5 | Run and pass share by AI coaches | follows club identity | `docs/task8/AI_IDENTITIES.md` | league-health identity rows | Release: pass clubs 81% pass, run clubs 43%, balanced 66% (seeds 11–12) | PASS (identity separates clubs as specified) |
@@ -136,13 +138,13 @@ A new baseline is needed: GDD §59.10 says the post-Task 8 validation establishe
 | ID | Item | Evidence | Status |
 |---|---|---|---|
 | T7-25 | Monster availability by position | M6 `position-coverage.json` | PENDING (re-read against the release) |
-| T7-26 | Legal starting-lineup completion | M6: 0 flags in 8,505 AI club-weeks. Release: the hands-off owner forfeits whole seasons | AI clubs PASS (M6); owner **FAIL** as a study owner, real player protected by the lineup safeguard |
-| T7-27 | Injury and departure replacement availability | none | PENDING |
+| T7-26 | Legal starting-lineup completion | M6: 0 flags in 8,505 AI club-weeks. Release: the hands-off owner forfeits whole seasons | AI clubs **PASS** (0 open starting slots in 2,940 club-weeks, seed 3); owner **FAIL**: he has no source of cover when the market is empty (`OWNER_DECISIONS_2026-11-13.md` §3) |
+| T7-27 | Injury and departure replacement availability | Seed 3: every unrepaired open slot had nobody at the position on the market | **FAIL** for the owner, PASS for AI clubs by generation (`OWNER_DECISIONS_2026-11-13.md` §3, preliminary) |
 | T7-28 | Long-term roster stability | Release: rosters 28–38 for 20 seasons | PASS on 4 runs |
 | T7-29 | Draft position distribution | none | PENDING |
 | T7-30 | First-round development and starting chances | none post-T8 | PENDING (with T7-14) |
-| T7-31 | Free-agent availability by position | none | PENDING |
-| T7-32 | Generated replacement frequency | none post-T8 | PENDING (with T7-15) |
+| T7-31 | Free-agent availability by position | Seed 3, 196 game weeks: nobody available at RB in 80% of weeks, LB 77%, CB 76%, WR 63%, TE 58%, S 55%; the market shrinks from 15 monsters (seasons 1–5) to 5 (seasons 16–20) | **FAIL** (preliminary, `OWNER_DECISIONS_2026-11-13.md` §3) |
+| T7-32 | Generated replacement frequency | 66 of 123 logged in-season AI cover signings were generated arrivals (LB 25, CB 17, RB 9) | PENDING the benchmark count (preliminary: a majority of AI in-season cover is generated) |
 | T7-33 | Gym elemental identity and starter composition | M6: each gym 2.7–4.0 times the league share of its element | PASS (M6) |
 | T7-34 | Rebuilding recovery | none post-T8 | PENDING (with T7-7) |
 | T7-35 | Persistent weak franchises | none post-T8 | PENDING (with T7-16) |
@@ -193,12 +195,12 @@ A new baseline is needed: GDD §59.10 says the post-Task 8 validation establishe
 | H-1 | Eligibility after three completed seasons; no retroactive candidates; nobody twice | rule | tests; 12 franchises, 0 problems | PASS |
 | H-2 | Ballot of the 15 strongest; class of at most three; results sealed; deterministic | rule | tests | PASS |
 | H-3 | Individual merit outweighs titles | "substantially more" | Corrected runs: titles 3% of points; 109 of 123 inducted without title points | PASS |
-| H-4 | Selectivity | none set (owner: "selective and prestigious") | Corrected runs: 10–20 inductees per franchise (mean 15.4), 49% empty classes, 15% classes of three | BLOCKED (owner sets the target) |
-| H-5 | Positional fairness | "considered fairly", including specialists | Corrected runs: QB 13%, RB 12%, K 11%, LB 11%, TE 10%, DL 8%, OL 6%, WR 6%, CB 5%, S 5% | BLOCKED (owner judges whether this is fair enough) |
+| H-4 | Selectivity | none set (owner: "selective and prestigious") | Corrected runs: 10–20 inductees per franchise (mean 15.4), 49% empty classes, 15% classes of three | **PASS** (owner 2026-11-13: about 8% inducted is reasonable; standards kept) |
+| H-5 | Positional fairness | "considered fairly", including specialists | Corrected runs: QB 13%, RB 12%, K 11%, LB 11%, TE 10%, DL 8%, OL 6%, WR 6%, CB 5%, S 5% | **PASS** for the exclusions examined (`OWNER_DECISIONS_2026-11-13.md` §2): six of the seven accomplished monsters left out are justified, one is a borderline case; notes on unrecorded careers and late retirees |
 | H-6 | No backlog from the ballot or class limits | — | Corrected runs: the class limit binds in 8% of elections; 85% of inductees enter on their first ballot | PASS |
 | H-7 | Highly accomplished monsters left out | — | Corrected runs: 7 of 1,515 eligible (listed in `BALANCE_AUDIT.md`) | PASS (measured); owner may review the names |
-| H-8 | MVP distribution and repeat winners | none set | Corrected runs: the most MVPs by one monster per franchise: 4, 6, 6, 6, 7, 7, 12, 15 of 20 | BLOCKED (owner: is this acceptable?) |
-| H-9 | Awards by position | none set | Corrected runs, 160 MVPs: WR 44, DL 44, QB 37, RB 27, TE 6, CB 2; no LB, S, OL or K | BLOCKED (owner) |
+| H-8 | MVP distribution and repeat winners | none set | Corrected runs: the most MVPs by one monster per franchise: 4, 6, 6, 6, 7, 7, 12, 15 of 20 | PENDING (`OWNER_DECISIONS_2026-11-13.md` §1, preliminary): every repeat winner is an ageless all-99 Apex and is the strongest candidate by the model each season; no repeat limit by owner decision |
+| H-9 | Awards by position | none set | Corrected runs, 160 MVPs: WR 44, DL 44, QB 37, RB 27, TE 6, CB 2; no LB, S, OL or K | PENDING (`OWNER_DECISIONS_2026-11-13.md` §1, preliminary): the award is structurally tilted (scores are uncapped distances from the position average; the best DL averages +4.7 SD on his best component, the best QB +2.2; OL, LB, S and K cannot win) |
 | H-10 | Record-breaking frequency; records stay meaningful over 20 seasons | none set | not measured | PENDING |
 | H-11 | Awards reflect performance | GDD §16.4 model | not measured | PENDING |
 | H-12 | Hall of Fame Day safeguards: nothing but the ceremony record changes | rule | twin-franchise test | PASS |
