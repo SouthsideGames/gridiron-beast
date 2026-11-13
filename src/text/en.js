@@ -6810,6 +6810,7 @@ export default {
   'history.a_monster_joins_the_ballot_three': 'A monster can be nominated once three seasons have passed since he retired.',
   'history.inductee_of': 'INDUCTEE {i} OF {n}',
   'history.league_records_set': { one: '{n} league record set', other: '{n} league records set' },
+  'history.the_most_productive_the_league_has': 'The most productive {position} the league has seen',
   'history.among_the_most_productive': 'Among the most productive at {position} the league has seen',
   'history.line_qb': '{yds} passing yards · {td} TD · {int} INT',
   'history.line_rb': '{yds} rushing yards · {td} TD',

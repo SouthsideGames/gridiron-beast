@@ -41,7 +41,8 @@ function honours(m) {
   for (const [k, n] of Object.entries(m.awardsBy || {})) out.push(['🏅', `${n > 1 ? `${n}× ` : ''}${AWARDS[k]?.label || k}`]);
   if (!Object.keys(m.awardsBy || {}).length && m.awards) out.push(['🏅', $t('history.awards_count', { n: m.awards })]);
   if (m.records) out.push(['📈', $t('history.league_records_set', { n: m.records })]);
-  if (m.standing != null && m.standing >= 0.75) out.push(['⭐', $t('history.among_the_most_productive', { position: posName(m.position).toLowerCase() })]);
+  if (m.rank === 1) out.push(['👑', $t('history.the_most_productive_the_league_has', { position: posName(m.position).toLowerCase() })]);
+  else if (m.standing != null && m.standing >= 0.75) out.push(['⭐', $t('history.among_the_most_productive', { position: posName(m.position).toLowerCase() })]);
   if (m.titles) out.push(['🏆', $t('history.titles_count', { n: m.titles })]);
   if (m.seasons) out.push(['📅', `${$t('history.seasons_on_record', { n: m.seasons })}${m.games ? ` · ${$t('history.games_count', { n: m.games })}` : ''}`]);
   const line = careerLine(m); if (line) out.push(['📊', line]);
@@ -103,7 +104,7 @@ export function registerHallCeremony(Router, app) {
         'hofd-next': () => { const c = hallCeremony(app.f, Number(params.year ?? app.f.season?.year)); if (!c) { leave(); return; }
           const stages = ceremonyStages(c); const step = Number(params.step || 0);
           if (step >= stages.length - 1) { const r = completeHallCeremony(app.f, c.year); if (r.first) app.save(); leave(); return; }   // held once, saved once; a replay changes nothing
-          params.step = step + 1; Router.render(); window.scrollTo?.(0, 0); },
+          params.step = step + 1; Router.render(); globalThis.scrollTo?.(0, 0); },
       });
     },
   });

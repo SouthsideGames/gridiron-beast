@@ -4,7 +4,7 @@
 // held, and one League News item. It never touches a roster, a contract, training, health, the draft or the game's random numbers.
 import { isArchived } from './lifecycle.js';
 import { addLeagueNews } from './league-news.js';
-import { productionStanding, candidateCase, VOTER_COUNT, MAX_NOMINEES } from './monster-hof-voting.js';
+import { productionStanding, productionRank, candidateCase, VOTER_COUNT, MAX_NOMINEES } from './monster-hof-voting.js';
 import { line as $L, lineParts as $P } from '../text/index.js';
 
 const hall = (f) => f?.monsterHallOfFame || null;
@@ -24,15 +24,15 @@ export const hallCeremonyDue = (f) => sealedElectionYear(f) != null;
 /** The elections the public knows about: every one except a sealed one. */
 export const revealedElections = (f) => { const sealed = sealedElectionYear(f); return (hall(f)?.elections || []).filter((e) => e && e.year !== sealed); };
 
-const facts = (f, row, standing) => {
+const facts = (f, row, standing, rank) => {
   const c = (hall(f)?.candidates || []).find((x) => String(x.id) === String(row.id)) || null; const stub = f.league?.legends?.[row.id] || null;
   return { id: row.id, name: row.name, position: row.position, retiredYear: row.retiredYear,
     species: stub?.species || null, stage: stub?.stage || 0, type: stub?.type || null, lastClub: stub?.lastClub || null,
     clubs: (stub?.history || []).map((h) => ({ club: h.club, from: h.from, to: h.to })),
     seasons: c?.seasons ?? null, games: c?.games ?? null, titles: c?.honours?.titles ?? 0,
     awardsBy: { ...(c?.awardsBy || {}) }, awards: c?.honours?.awards ?? 0, recordsBy: { ...(c?.recordsBy || {}) }, records: c?.honours?.records ?? 0,
-    career: stub?.career ? { ...stub.career } : null, standing: c ? standing.get(String(c.id)) ?? null : null,
-    case: c ? candidateCase(c, standing.get(String(c.id)) ?? 0.5) : null };
+    career: stub?.career ? { ...stub.career } : null, standing: c ? standing.get(String(c.id)) ?? null : null, rank: rank.get(String(row.id)) || 0,
+    case: c ? candidateCase(c, standing.get(String(c.id)) ?? 0.5, rank.get(String(c.id)) || 0) : null };
 };
 /**
  * Everything the ceremony of one year shows, or null when that year held no election. The nominees are listed in name order, so
@@ -40,9 +40,9 @@ const facts = (f, row, standing) => {
  */
 export function hallCeremony(f, year = f?.season?.year) {
   const election = electionOf(f, year); if (!election) return null;
-  const standing = productionStanding((hall(f)?.candidates || []).filter((c) => c && c.retiredYear <= year));
-  const nominees = (election.ballot || []).slice(0, MAX_NOMINEES).map((b) => facts(f, b, standing)).sort((a, b) => String(a.name).localeCompare(String(b.name)) || String(a.id).localeCompare(String(b.id)));
-  const inductees = (election.inductees || []).map((x) => ({ ...facts(f, x, standing), votes: x.votes, voters: x.voters, inductedYear: x.inductedYear ?? year }));
+  const peers = (hall(f)?.candidates || []).filter((c) => c && c.retiredYear <= year); const standing = productionStanding(peers); const rank = productionRank(peers);
+  const nominees = (election.ballot || []).slice(0, MAX_NOMINEES).map((b) => facts(f, b, standing, rank)).sort((a, b) => String(a.name).localeCompare(String(b.name)) || String(a.id).localeCompare(String(b.id)));
+  const inductees = (election.inductees || []).map((x) => ({ ...facts(f, x, standing, rank), votes: x.votes, voters: x.voters, inductedYear: x.inductedYear ?? year }));
   const before = (hall(f)?.elections || []).filter((e) => e.year < year).reduce((n, e) => n + (e.inductees || []).length, 0);
   return { year, seats: VOTER_COUNT, nominees, inductees, membersBefore: before, held: hallCeremonyHeld(f, year), sealed: sealedElectionYear(f) === year };
 }

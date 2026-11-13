@@ -28,7 +28,7 @@ function franchise(years = 35) {
         coy: { team: 'Frostpeak Howlers', coach: 'Sigrid Hale', name: 'Sigrid Hale', record: '8-1' } } } });
     const id = `retired-${year}`; const great = year % 4 === 0;
     f.league.legends[id] = { id, name: `Veteran ${year}`, species: 'duskrunner', stage: 0, position: 'RB', lastClub: f.club, left: year };
-    f.monsterHallOfFame.candidates.push({ id, name: `Veteran ${year}`, position: 'RB', retiredYear: year, seasons: 8, games: 90, honours: great ? { titles: 3, awards: 2, records: 1 } : { titles: 0, awards: 0, records: 0 } });
+    f.monsterHallOfFame.candidates.push({ id, name: `Veteran ${year}`, position: 'RB', retiredYear: year, seasons: 8, games: 90, honours: great ? { titles: 3, awards: 2, records: 1 } : { titles: 0, awards: 0, records: 0 }, ...(great ? { awardsBy: { mvp: 1, opoy: 1 }, recordsBy: { season: 1 } } : {}) });
     f.monsterHallOfFame.elections = electMonsterHallOfFame(f.monsterHallOfFame.candidates, year, f.monsterHallOfFame.elections).history;
   }
   return f;
@@ -37,7 +37,7 @@ const clean = (html, where) => { for (const bad of ['undefined', 'NaN', '[object
 const links = (html) => [...html.matchAll(/data-career="([^"]+)"/g)].map((m) => m[1]);
 
 test('the four history screens are registered and each carries the strip that joins them', () => {
-  assert.deepEqual([...screens.keys()].sort(), ['awardhistory', 'history', 'monsterhof', 'records']);
+  assert.deepEqual([...screens.keys()].sort(), ['awardhistory', 'history', 'monsterhof', 'records']);   // Hall of Fame Day is its own screen (tests/hall-of-fame-day.test.js)
   const f = franchise();
   for (const name of screens.keys()) {
     const html = render(name, f); clean(html, name);
@@ -100,7 +100,7 @@ test('Monster Hall of Fame: plaques for inductees, elections and candidates stay
   assert.equal((html.match(/class="hof-plaque/g) || []).length, hall.inductees.length);
   assert.deepEqual(links(html).sort(), hall.inductees.map((x) => String(x.id)).sort(), 'every plaque opens its monster, and only inductees have one');
   for (const x of hall.inductees) assert.ok(x.inductedYear - x.retiredYear >= WAIT_SEASONS);
-  assert.match(html, /15 voters decide: 70% is needed, and at most 3 monsters/);
+  assert.match(html, /the 15 strongest eligible careers are nominated, and an anonymous Board of 15 votes in private: 70% is needed, and at most 3 monsters/);
   const el = render('monsterhof', f, { view: 'elections' }); clean(el, 'elections');
   assert.equal((el.match(/data-action="hall-year"/g) || []).length, hall.elections.filter((e) => e.ballot.length).length, 'every election with a ballot can be opened');
   assert.equal((el.match(/hof-quiet/g) || []).length, hall.elections.filter((e) => !e.ballot.length).length);

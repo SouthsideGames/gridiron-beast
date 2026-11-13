@@ -27,7 +27,8 @@ test('a save from before Task 9 opens with an empty Hall and nothing invented', 
 });
 
 test('a damaged optional field is repaired without touching what is valid', () => {
-  const f = fixture(); const election = { v: 1, year: 1, ballot: [], inductees: [{ id: 'm_x', name: 'Old Great', position: 'QB', retiredYear: -3, inductedYear: 1, votes: 15, voters: 15, score: 90 }] };
+  const f = fixture(); const election = { v: 1, year: 0,   // an earlier year: the election of the season just finished stays sealed until its ceremony
+     ballot: [], inductees: [{ id: 'm_x', name: 'Old Great', position: 'QB', retiredYear: -3, inductedYear: 0, votes: 15, voters: 15, score: 90 }] };
   for (const broken of [null, 'x', 7, { candidates: 'no', elections: [election] }, { v: 1, candidates: [], elections: null }]) {
     const had = Array.isArray(broken?.elections); const g = JSON.parse(JSON.stringify(f)); g.monsterHallOfFame = broken; const m = migrate(g);
     assert.ok(Array.isArray(m.monsterHallOfFame.candidates) && Array.isArray(m.monsterHallOfFame.elections));

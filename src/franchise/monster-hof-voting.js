@@ -35,10 +35,10 @@ const eligible = (c, year, inducted) =>
 export const HALL_CASE = Object.freeze({
   award: Object.freeze({ mvp: 30, opoy: 22, dpoy: 22, smoy: 12, oroy: 8, droy: 8 }), awardOther: 14,
   record: Object.freeze({ season: 10, game: 5 }), recordOther: 7, recordCap: 30,
-  production: 40, productionPeers: 8,
+  production: 40, productionPeers: 8, best: Object.freeze([16, 8]), bestPeers: 10,
   season: 2, seasonCap: 12, gamesPer: 16, gamesCap: 160,
   title: 2, titleCap: 3,
-  standardFrom: 50, standardSpan: 31,
+  standardFrom: 57, standardSpan: 31,
 });
 const num = (v) => (Number.isFinite(v) ? v : 0);
 /** A career's output in one number, by position, from the preserved career totals. Only ever compared within a position. */
@@ -71,17 +71,28 @@ export function productionStanding(candidates) {
   for (const group of by.values()) for (const c of group) { let lower = 0, same = 0; for (const o of group) { if (o === c) continue; if (o.prod < c.prod) lower++; else if (o.prod === c.prod) same++; } out.set(stableId(c), (lower + same / 2 + 0.5 * k) / (group.length - 1 + k)); }
   return out;
 }
-/** The parts of a Hall case, in points: { awards, records, production, longevity, titles, total }. `standing` is 0..1 (see productionStanding). */
-export function candidateCase(c, standing = 0.5) {
+/**
+ * The most productive careers at each position: Map(id -> 1 | 2). Being the best (or second best) a position has seen is the one
+ * honour open to every position alike, a lineman or a kicker as much as a quarterback. Counted only once a position has enough
+ * retired monsters on record (HALL_CASE.bestPeers), so the first few retirees of a young league are not crowned by default.
+ */
+export function productionRank(candidates) {
+  const by = new Map(); for (const c of candidates || []) { if (!c || !Number.isFinite(c.prod) || !(c.prod > 0)) continue; const k = c.position || '?'; if (!by.has(k)) by.set(k, []); by.get(k).push(c); }
+  const out = new Map();
+  for (const group of by.values()) { if (group.length < HALL_CASE.bestPeers) continue; const sorted = group.slice().sort((a, b) => b.prod - a.prod || stableId(a).localeCompare(stableId(b))); for (let i = 0; i < HALL_CASE.best.length && i < sorted.length; i++) out.set(stableId(sorted[i]), i + 1); }
+  return out;
+}
+/** The parts of a Hall case, in points: { awards, records, production, longevity, titles, total }. `standing` is 0..1 (see productionStanding); `rank` is 1 or 2 for the best at a position (see productionRank). */
+export function candidateCase(c, standing = 0.5, rank = 0) {
   const H = HALL_CASE;
   const awards = awardPoints(c); const records = recordPoints(c);
-  const production = Math.round(H.production * standing * standing * 10) / 10;   // only the top of a position earns much
+  const production = Math.round((H.production * standing * standing + (H.best[rank - 1] || 0)) * 10) / 10;   // only the top of a position earns much
   const longevity = Math.min(seasons(c), H.seasonCap) * H.season + Math.min(games(c), H.gamesCap) / H.gamesPer;
   const titles = Math.min(titlesOf(c), H.titleCap) * H.title;
   return { awards, records, production, longevity, titles, total: Math.round((awards + records + production + longevity + titles) * 10) / 10 };
 }
 /** A candidate's Hall points. Without a standing among his peers the production part is taken at the middle. */
-export function candidateScore(c, standing = 0.5) { return candidateCase(c, standing).total; }
+export function candidateScore(c, standing = 0.5, rank = 0) { return candidateCase(c, standing, rank).total; }
 
 export function monsterHofBallot(candidates, year, past = []) {
   if (!Number.isInteger(year)) throw new TypeError('year must be an integer');
@@ -89,8 +100,8 @@ export function monsterHofBallot(candidates, year, past = []) {
   const unique = new Map();
   // peers: every retired monster on record by this election, inducted or not, eligible or not
   const known = new Map(); for (const c of candidates || []) { if (c && stableId(c) && Number.isInteger(c.retiredYear) && c.retiredYear <= year && !known.has(stableId(c))) known.set(stableId(c), c); }
-  const standing = productionStanding([...known.values()]);
-  const scoreOf = (c) => candidateScore(c, standing.get(stableId(c)) ?? 0.5);
+  const standing = productionStanding([...known.values()]); const rank = productionRank([...known.values()]);
+  const scoreOf = (c) => candidateScore(c, standing.get(stableId(c)) ?? 0.5, rank.get(stableId(c)) || 0);
   for (const c of candidates || []) {
     if (!eligible(c, year, inducted)) continue;
     const id = stableId(c);

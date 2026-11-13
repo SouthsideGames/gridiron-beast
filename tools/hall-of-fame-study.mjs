@@ -5,7 +5,7 @@
 //   node tools/hall-of-fame-study.mjs save1.json save2.json ... [--json=out.json] [--snubs=5] [--quiet]
 // Nothing is simulated here, so a rule change can be measured in seconds on the same franchises.
 import { readFileSync, writeFileSync } from 'node:fs';
-import { electMonsterHallOfFame, monsterHofInductees, productionStanding, candidateCase, caseFacts, WAIT_SEASONS, MAX_INDUCTEES, MAX_NOMINEES, VOTE_THRESHOLD, HALL_CASE } from '../src/franchise/monster-hof-voting.js';
+import { electMonsterHallOfFame, monsterHofInductees, productionStanding, productionRank, candidateCase, caseFacts, WAIT_SEASONS, MAX_INDUCTEES, MAX_NOMINEES, VOTE_THRESHOLD, HALL_CASE } from '../src/franchise/monster-hof-voting.js';
 
 const files = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const args = Object.fromEntries(process.argv.slice(2).filter((a) => a.startsWith('--')).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
@@ -27,11 +27,11 @@ export function study(f, { noTitles = false } = {}) {
     const qualified = e.ballot.filter((b) => b.qualified).length;
     perYear.push({ year, eligible: eligible.length, nominees: e.ballot.length, qualified, inducted: e.inductees.length, shutOut: Math.max(0, qualified - MAX_INDUCTEES), notNominated: Math.max(0, eligible.length - MAX_NOMINEES) });
   }
-  const lastYear = years[years.length - 1]; const standing = productionStanding(candidates);
+  const lastYear = years[years.length - 1]; const standing = productionStanding(candidates); const rank = productionRank(candidates);
   const inductees = monsterHofInductees(history); const inIds = new Map(inductees.map((x) => [String(x.id), x]));
-  const rows = candidates.map((c) => { const st = standing.get(String(c.id)) ?? 0.5; const k = candidateCase(c, st); const stub = stubs[c.id] || {}; const ind = inIds.get(String(c.id));
+  const rows = candidates.map((c) => { const st = standing.get(String(c.id)) ?? 0.5; const k = candidateCase(c, st, rank.get(String(c.id)) || 0); const stub = stubs[c.id] || {}; const ind = inIds.get(String(c.id));
     return { id: c.id, name: c.name, position: c.position, retiredYear: c.retiredYear, eligibleFrom: c.retiredYear + WAIT_SEASONS, eligible: c.retiredYear + WAIT_SEASONS <= lastYear, seasons: c.seasons, games: c.games,
-      titles: c.honours?.titles || 0, awards: c.honours?.awards || 0, records: c.honours?.records || 0, awardsBy: c.awardsBy || {}, recordsBy: c.recordsBy || {}, prod: c.prod, standing: st, case: k,
+      titles: c.honours?.titles || 0, awards: c.honours?.awards || 0, records: c.honours?.records || 0, awardsBy: c.awardsBy || {}, recordsBy: c.recordsBy || {}, prod: c.prod, standing: st, rank: rank.get(String(c.id)) || 0, case: k,
       inducted: ind ? ind.inductedYear : null, wait: ind ? ind.inductedYear - (c.retiredYear + WAIT_SEASONS) : null, votes: ind ? ind.votes : null, lastClub: stub.lastClub || null, career: stub.career || null }; });
   return { club: f.club, seasons: years.length, perYear, rows, history };
 }
@@ -66,7 +66,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const parts = ['awards', 'records', 'production', 'longevity', 'titles']; say(`\nwhere an inductee's points come from: ${parts.map((p) => `${p} ${pct(inducted.reduce((n, x) => n + x.case[p], 0), inducted.reduce((n, x) => n + x.case.total, 0))}`).join(' · ')}`);
   const weakest = inducted.slice().sort((a, b) => a.case.total - b.case.total).slice(0, SNUBS); say(`\nweakest cases inducted:`); for (const x of weakest) say(`  [${x.save}] ${line(x)} · inducted ${x.inducted}, ${x.votes}/15`);
   const snubs = eligible.filter((x) => x.inducted == null).sort((a, b) => b.case.total - a.case.total); say(`\nbest eligible monsters NOT inducted (${snubs.length} left out in all):`); for (const x of snubs.slice(0, SNUBS * 2)) say(`  [${x.save}] ${line(x)} · eligible since ${x.eligibleFrom}`);
-  const strong = snubs.filter((x) => x.awards >= 2 || x.standing >= 0.9 || x.case.total >= HALL_CASE.standardFrom + HALL_CASE.standardSpan); say(`\nhighly accomplished and never inducted (2+ awards, or top 10% of the position, or a case above every Board standard): ${strong.length}`);
+  const strong = snubs.filter((x) => x.awards >= 2 || x.rank === 1 || x.case.total >= HALL_CASE.standardFrom + HALL_CASE.standardSpan); say(`\nhighly accomplished and never inducted (2+ awards, or the most productive at the position, or a case above every Board standard): ${strong.length}`);
   for (const x of strong.slice(0, SNUBS * 2)) say(`  [${x.save}] ${line(x)}`);
   // titles against individual merit: of two eligible careers, does the one with more titles but the weaker individual case get in?
   const indiv = (x) => x.case.awards + x.case.records + x.case.production;
