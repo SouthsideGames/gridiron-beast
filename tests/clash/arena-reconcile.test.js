@@ -54,6 +54,7 @@ test('a t8 result plays natively by default (translated only on request); bookke
 
 test('the arena source keeps both APIs: the M4 player API and the fx t8 mode', () => {
   const src = fs.readFileSync(new URL('../../src/ui/clash/arena.js', import.meta.url), 'utf8');
-  for (const k of ['playTo: (i)', 'record: result', 'get length()', "opts.controls === false", "cue.tier === 'silent'", 'opts.looks', 'seek,', 'setQuality(q)', 't8Elements', 'cl-t8-under', 'cl-t8-over', 't8clock', "case 'revive'", 'T8_STATUS_ICON', 'STATUS_GLYPH']) assert.ok(src.includes(k), `arena keeps ${k}`);
+  assert.ok(src.includes('record: result') || src.includes('get record() { return result; }'), 'arena keeps record (a getter since Task 10: the continuous battle extends it in place)');
+  for (const k of ['playTo: (i)', 'get length()', "opts.controls === false", "cue.tier === 'silent'", 'opts.looks', 'seek,', 'setQuality(q)', 't8Elements', 'cl-t8-under', 'cl-t8-over', 't8clock', "case 'revive'", 'T8_STATUS_ICON', 'STATUS_GLYPH']) assert.ok(src.includes(k), `arena keeps ${k}`);
   assert.ok(!/from '\.\.\/\.\.\/clash\/(t8\/)?engine/.test(src), 'the arena never imports the engine');
 });

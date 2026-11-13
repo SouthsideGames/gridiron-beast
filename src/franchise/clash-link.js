@@ -8,9 +8,8 @@ import { clashAward } from './t8/awards.js';
 import { applyAward } from './progression.js';
 import { clashGrade } from './t8/grading.js';
 import * as FR from '../core/fraction.js';
-import { simulateByRuleset, logHashFor, battleConfig, chooseLineup, archetypeOf, CLASH_VALUES, T8_RULESET, T8_VALUES, t8Config } from '../clash/index.js';
+import { simulateByRuleset, logHashFor, battleConfig, chooseLineup, archetypeOf, CLASH_VALUES, T8_RULESET, T8_VALUES, t8Config, createClashSessionT8 } from '../clash/index.js';
 import { createRng } from '../core/rng.js';
-import { createClashSessionT8 } from '../clash/t8/index.js';
 import { monsterOverall, xpForLevel } from '../data/monsters.js';
 import { tierIndex, applyMastery } from './t8/mastery.js';
 
