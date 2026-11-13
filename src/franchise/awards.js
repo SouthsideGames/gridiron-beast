@@ -82,7 +82,7 @@ const tieBreak = (a, b) => b.score - a.score || b.prod - a.prod || (b.games || 0
  * {team: {w,l,t,pf,pa}}; `expectations` from the preseason; `coachOf(team)`.
  * Returns {award: [finalist...]} with score, components, why and record.
  */
-export function computeAwards({ table, records, expectations = {}, coachOf = (t) => `${t} staff`, n = 5, priorRookieAwardIds = [] }) {
+export function computeAwards({ table, records, expectations = {}, coachOf = (t) => `${t} staff`, n = 5, priorRookieAwardIds = [], mvpWinStreaks = {} }) {
   const { rows, minGames, weeks } = eligibleRows(table);
   const off = rows.filter((r) => OFFENSE_POSITIONS.has(r.position)), def = rows.filter((r) => DEFENSE_POSITIONS.has(r.position));
   const Z = { volume: zWithin(off, OFF.volume), efficiency: zWithin(off, OFF.efficiency), impact: zWithin(off, OFF.impact), passRush: zWithin(def, DEF.passRush), takeaways: zWithin(def, DEF.takeaways), coverage: zWithin(def, DEF.coverage), runDefense: zWithin(def, DEF.runDefense) };
@@ -99,9 +99,12 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
   const top = (list) => list.sort(tieBreak).slice(0, n);
   const opoy = top(off.map((r) => finalist(r, offScore(r))));
   const dpoy = top(def.map((r) => finalist(r, defScore(r))));
+  // Task 10 candidate: soft MVP voter fatigue. The prior consecutive wins
+  // matter only to a close race; there is no repeat-win prohibition.
+  const fatigue = (r) => Math.min(0.6, 0.12 * Math.max(0, Number(mvpWinStreaks[r.id]) || 0));
   const mvp = top([
-    ...off.map((r) => { const o = offScore(r); const indiv = o.s * (MVP_RESPONSIBILITY[r.position] || 1); const team = (winPct(r.team) - 0.5) * 3; const s = indiv * 0.75 + team * 0.2 + avail(r) * 0.3; return finalist(r, { s, c: { ...o.c, team: team }, prod: o.prod }, () => $t('franchise.club', { record: recordOf(r.team) })); }),
-    ...def.map((r) => { const d = defScore(r); const team = (winPct(r.team) - 0.5) * 3; const s = d.s * MVP_RESPONSIBILITY.DEF * 0.75 + team * 0.2 + avail(r) * 0.3; return finalist(r, { s, c: { ...d.c, team }, prod: d.prod }, () => $t('franchise.club', { record: recordOf(r.team) })); }),
+    ...off.map((r) => { const o = offScore(r); const indiv = o.s * (MVP_RESPONSIBILITY[r.position] || 1); const team = (winPct(r.team) - 0.5) * 3; const s = indiv * 0.75 + team * 0.2 + avail(r) * 0.3 - fatigue(r); return finalist(r, { s, c: { ...o.c, team: team, voterFatigue: -fatigue(r) }, prod: o.prod }, () => $t('franchise.club', { record: recordOf(r.team) })); }),
+    ...def.map((r) => { const d = defScore(r); const team = (winPct(r.team) - 0.5) * 3; const s = d.s * MVP_RESPONSIBILITY.DEF * 0.75 + team * 0.2 + avail(r) * 0.3 - fatigue(r); return finalist(r, { s, c: { ...d.c, team, voterFatigue: -fatigue(r) }, prod: d.prod }, () => $t('franchise.club', { record: recordOf(r.team) })); }),
   ]);
   const priorRookies = new Set(priorRookieAwardIds);
   const oroy = top(off.filter((r) => r.yearsPro === 0 && !priorRookies.has(r.id)).map((r) => finalist(r, offScore(r), () => $t('franchise.rookie'))));
