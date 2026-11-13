@@ -233,3 +233,10 @@ These requirements have no tool that measures them on the Task 8 game. They are 
 8. **A league recorder for standings, playoff spread, titles, cap use, contracts and awards per season** (P-11, P-12, T7-37, T7-38, T7-48, T7-49, H-8 to H-11). The league-health recorder does not capture these.
 9. **The Task 7 comparative benchmark on Task 8** (T7-7 to T7-24): the tools exist (`tools/task6-compare`, `balance-compare.mjs`, `task6-balance-gates.mjs`) but there is no approved Task 8 baseline, and the seed sets (320 franchise runs) take many hours.
 10. **Attribute effectiveness on the Task 8 engine** (F-6 to F-10): `tools/attr-study.mjs` exists and needs re-running.
+
+
+## Task 10 owner approval — 2026-11-13 (candidate branch)
+
+**Sack-rate acceptance target: 7.0% of pass dropbacks.** The denominator must consistently include pass attempts, sacks, and qualifying scrambles; exclude designed runs. This is an owner-approved target, not a claim that the current build passes. Achieve it through pass-rush/blocking/QB decisions, not a forced sack probability. Validate separately by Rookie, Pro, All-Star, early/mid/late franchise, abilities on/off, and assess effects on completion, scoring, injuries, rushing, QB/OL/DL attributes and abilities. The pass-rush pocket-compression adjustment on `chatgpt/task10-balance-fixes` is a **candidate only** and must not be merged before verification.
+
+**MVP voter fatigue:** owner approves a soft, capped experimental model; repeat MVPs remain possible, with no automatic exclusion. Validate position fairness and full-career effects before final acceptance. Other Task 10 fixes remain subject to regression and owner merge approval.
