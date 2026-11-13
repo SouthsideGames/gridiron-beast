@@ -3,7 +3,7 @@
 // awards, records and Monster Hall of Fame data against the franchise itself, measures what Task 9 adds to the save, and prints
 // a digest of the rest of the save so the same seed can be compared with a build without Task 9 (the history must not change
 // a single gameplay result). Exits 1 on a problem.
-//   node tools/task9-history-study.mjs [--seed=1] [--n=1] [--seasons=20] [--real-board] [--root=/path/to/another/checkout] [--dump=file.json]
+//   node tools/task9-history-study.mjs [--seed=1] [--n=1] [--seasons=20] [--real-board] [--owner=repair] [--difficulty=rookie] [--root=/path/to/another/checkout] [--dump=file.json]
 import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -12,6 +12,7 @@ const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] 
 const ROOT = resolve(args.root || new URL('..', import.meta.url).pathname);
 const at = (p) => import(pathToFileURL(resolve(ROOT, p)).href);
 const { runFranchise } = await at('tools/franchise-soak.mjs');
+const OWNER = args.owner === 'repair' ? await at('tools/study-owner.mjs') : null;   // --owner=repair: the hands-off owner plus the lineup repair a player is asked for (tools/study-owner.mjs)
 const Save = await at('src/franchise/save.js');
 const T9 = await at('src/franchise/task9-history.js').catch(() => null);          // absent on a build without Task 9
 const HOF = await at('src/franchise/monster-hof-voting.js').catch(() => null);
@@ -27,9 +28,9 @@ for (let i = 0; i < N; i++) {
   const seed = SEED + i; const seen = { elections: 0, inducted: new Set(), retiredAt: new Map() }; let last = null;
   // a hands-off owner is usually dismissed within a few seasons; the study keeps the board content (the same on every build that
   // is compared) so the franchise reaches the 20-season limit. --real-board leaves the board alone.
-  const r = runFranchise(seed, { difficulty: 'rookie', seasons: SEASONS, onOffseason: args['real-board'] ? null : (f) => { if (f.board) { f.board.confidence = 2; f.board.misses = 0; } }, onSeason: (f, s) => {
+  const repair = {}; const r = runFranchise(seed, { difficulty: args.difficulty || 'rookie', seasons: SEASONS, beforeGame: OWNER ? (f) => OWNER.repairOwner(f, repair) : null, onOffseason: args['real-board'] ? null : (f) => { if (f.board) { f.board.confidence = 2; f.board.misses = 0; } }, onSeason: (f, s) => {
     const { monsterHallOfFame, createdAt, uid, ...rest } = f;
-    const row = { seed, season: s, year: f.history[f.history.length - 1]?.year, digest: sha(rest), saveKB: Math.round(Save.exportJson(f).length / 1024) };
+    const lastH = f.history[f.history.length - 1]; const row = { seed, season: s, year: lastH?.year, digest: sha(rest), saveKB: Math.round(Save.exportJson(f).length / 1024), record: lastH ? `${lastH.record.w}-${lastH.record.l}` : null, forfeits: (lastH?.schedule || []).filter((g) => g.result?.forfeit).length, ...(OWNER ? { repair: { ...repair, why: undefined } } : {}) };
     if (T9 && HOF) {
       const hof = f.monsterHallOfFame || { candidates: [], elections: [] };
       row.hofKB = +(JSON.stringify(hof).length / 1024).toFixed(1);
