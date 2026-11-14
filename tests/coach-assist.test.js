@@ -101,11 +101,11 @@ test('Coach Assist never touches the game: a week plays out identically in Guide
 
 test('Coach Assist explains the balanced Tuesday and the revised Board (help on the goal screen, Guided goal suggestion)', () => {
   const t = (k) => `${A.TOPICS[k].brief} ${(A.TOPICS[k].steps || []).join(' ')}`;
-  assert.match(t('recruit'), /3v3/); assert.match(t('recruit'), /Only that prospect can join/); assert.match(t('recruit'), /cannot be signed/); assert.match(t('recruit'), /stronger lineup wins more often/);
+  assert.match(t('recruit'), /3v3/); assert.match(t('recruit'), /Only the prospect can join your team/); assert.match(t('recruit'), /wild companions/); // plain-language wording (2026-11-14): only the prospect is signable; the companions' 'never signable' is checked below assert.match(t('recruit'), /stronger lineup wins more often/);
   assert.match(t('companions'), /Why 3v3/); assert.match(t('companions'), /never signable/); assert.match(t('companions'), /follows your club/);
   assert.match(t('skips'), /Skip the encounter/); assert.match(t('skips'), /Skip to results/);
-  assert.match(t('board'), /league.s average/); assert.match(t('board'), /safe goal is that forecast, rounded/); assert.match(t('board'), /rebuilding club/);
-  assert.match(t('confidence'), /\+1 \(\+2 for the title\)/); assert.match(t('confidence'), /final warning/); assert.match(t('confidence'), /Three missed seasons in a row/);
+  assert.match(t('board'), /league average/); assert.match(t('board'), /safe goal is that estimate, rounded/); assert.match(t('board'), /against this league/); assert.match(t('board'), /rebuilding club/);
+  assert.match(t('confidence'), /\+1 confidence, or \+2 for the title/); assert.match(t('confidence'), /Miss it to lose 1/); assert.match(t('confidence'), /final warning/); assert.match(t('confidence'), /Three missed seasons in a row/);
   assert.deepEqual(A.helpTopics('goals'), ['board', 'confidence']); assert.ok(A.helpTopics('recruit').includes('companions'));
   assert.equal(A.helpTopics('clash-battle')[0], 'clash', 'the pregame and overtime Clash open on the general Clash topic, not the Tuesday one');
   const f = fresh(5); const offers = F.commissionerGoals(f);
