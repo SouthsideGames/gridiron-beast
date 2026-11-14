@@ -557,3 +557,32 @@ Detail: `docs/FRANCHISE_QOL_UPDATE.md`. Amends §8 and §15.
 **Coach appearance:** The coach portrait is built from modular layers (hair, face, outfit, extras, build), chosen in an editor at creation and editable later from My office without affecting the save.
 
 **Ability reviews:** Every Football Ability and every Clash Ability has a review status (Pending Review, Approved, Needs Revision) in its own reviewer, with separate records. Inventories come from the ability registries. Outstanding reviews are counted by the same notification system as play reviews. Review status never changes gameplay. The Legacy Ability Audit is no longer on the Developer menu.
+
+
+## Optional Feature Backlog — Head Coach Substitution Philosophy (Not Implemented)
+
+**Status:** Optional enhancement; design parked for a later update. This is not part of the Task 10 release scope.
+
+Keep the existing head-coach identities, scheme alignment, coordinator compatibility, and contract evaluation. Add an optional **substitution philosophy** that influences between-play football substitutions using the existing fatigue and depth-chart systems:
+
+- **Heavy Rotation:** favors fresher eligible reserves and uses the bench frequently.
+- **Balanced Rotation:** considers fatigue, relative player quality, and game situation.
+- **Starter-Focused:** prefers starters, substitutes voluntarily less often, but must still replace unavailable players.
+
+**Gameplay setting:** Player chooses whether the head coach manages substitutions automatically or the player manages substitutions manually. The exact interface, default, and any override behavior are deferred.
+
+**Possible companion enhancement:** Injuries may occur during a game rather than only afterward. Injured monsters who cannot continue must be replaced regardless of coaching philosophy. Reuse existing injury and recovery rules where possible; injury probabilities, thresholds, and substitution decision formulas remain undecided.
+
+**Guardrails:** Substitute only between plays, preserve legal positional assignments and fatigue state, avoid changing coordinator playbooks or existing head-coach effects, and test both AI and owner teams. No implementation or balance values are authorized by this backlog entry.
+
+## Task 10 Clarification — Reclaimable Gym Badges
+
+Every completed regular-season or playoff game against a gym club places that gym's badge at stake. A player win earns or retains that badge; a player loss removes it if owned. A subsequent win can reclaim it. Campaign badge progress reflects **currently owned distinct badges**, not lifetime collection. Do not create a second lifetime badge counter. The other campaign milestones remain cumulative. Once a campaign completion achievement has been awarded, preserve that historical award rather than revoking it after a later badge loss.
+
+## Task 10 Clarification — Four Reserve Run Plays
+
+- **End Around:** receiver approaches QB after snap and receives a proximity-based handoff before carrying the ball.
+- **Pin and Pull:** designed running-back handoff; QB must not choose a voluntary keep.
+- **Midline Read:** genuine read option; QB Awareness influences a choice between QB lane and RB lane based on defenders and available gaps.
+- **Pistol Zone Read:** genuine read option; a valid QB keep is not evidence of a broken handoff. Test both keep and give against controlled defensive looks, then separately test exchange execution.
+- Run-pass options (RPOs) are **not** yet implemented and are outside this Task 10 correction.
