@@ -312,7 +312,7 @@ function migrateLeague(f) {
 // saving first would stamp a stale copy as the newest and upload it over progress another device already sent for this franchise.
 let holdLeagueSave = false; let heldLeagueSave = null;
 async function flushHeldLeagueSave() { const f = heldLeagueSave; heldLeagueSave = null; holdLeagueSave = false; if (f && app.f === f) await app.save({ immediate: true }); }
-function adopt(f) { migrateLeague(f); app.f = f; app.lastSig = null; applySettings(); mergeDex(f.dex); F.syncAchievementsToGlobal(f); if (f.uid && f.seed != null) { linkHofCards({ uid: f.uid, seed: f.seed }); linkAchievements({ uid: f.uid, seed: f.seed }); } }
+function adopt(f) { migrateLeague(f); app.f = f; app.lastSig = null; applySettings(); mergeDex(f.dex, { franchise: F.franchiseKey(f) }); F.syncAchievementsToGlobal(f); if (f.uid && f.seed != null) { linkHofCards({ uid: f.uid, seed: f.seed }); linkAchievements({ uid: f.uid, seed: f.seed }); } }
 
 /** Open storage, migrate the v39.1 save on first run, then load (or stop at recovery). Then reconcile with the cloud copy. */
 async function boot() {

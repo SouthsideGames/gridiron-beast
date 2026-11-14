@@ -1,4 +1,4 @@
-import { dexContent, individualQuirk, portraitReaction } from '../../dex/content.js';
+import { dexContent, individualQuirk, portraitReaction, templateDevelopment, templateHabitat } from '../../dex/content.js';
 import { formsOf, familyById } from '../../data/beast-dex.js';
 import { playMonsterCry } from '../../audio/detail-audio.js';
 import { stopCry } from '../../audio/monster-cries.js';
@@ -103,7 +103,7 @@ export function speciesSheet(s, f, { monster = null, previewGames = null, reveal
   const profilePanel = `${quirk}<section class="dexp-sec dexp-bio">${biography}</section>
     <dl class="dexp-facts-grid"><div><dt>Element</dt><dd>${esc(s.element)}</dd></div><div><dt>Size</dt><dd>${esc(capital(current.size).replace(/\.$/, ''))}</dd></div><div><dt>Build</dt><dd>${esc(capital(current.body).replace(/\.$/, ''))}</dd></div><div><dt>Rarity</dt><dd>${esc(rarity)}</dd></div></dl>
     <section class="dexp-card"><h3>Personality</h3><p>${esc(content?.personality || s.personality)}</p></section>
-    <section class="dexp-card"><h3>Habitat</h3><p class="dexp-region">${esc(regions)}</p>${content?.habitat ? `<p>${esc(content.habitat)}</p>` : ''}</section>
+    <section class="dexp-card"><h3>Habitat</h3><p class="dexp-region">${esc(regions)}</p>${content?.habitat && !templateHabitat(content) ? `<p>${esc(content.habitat)}</p>` : ''}</section>
     ${facts}${relationships}`;
 
   // ---- Football
@@ -130,7 +130,7 @@ export function speciesSheet(s, f, { monster = null, previewGames = null, reveal
     return `${i ? `<span class="dexp-evo-arrow" aria-hidden="true">›<small>Lv ${esc(s.evolution[i - 1].level)}</small></span>` : ''}<${tag} class="dexp-evo${here ? ' here' : ''}${open ? '' : ' locked'}" ${tag === 'button' ? `type="button" data-dex-goto="${i}" aria-label="Show ${esc(x.name)}"` : ''}>${open ? sprite16(x, 56) : silhouette(x, 56)}<b>${open ? esc(x.name) : '???'}</b><span class="dim">${i ? `Stage ${i + 1}` : 'Base form'}</span>${here ? `<span class="chip accent">${monster ? 'Current form' : 'Shown'}</span>` : ''}</${tag}>`;
   }).join('');
   const evolutionPanel = `<section class="dexp-sec"><h3>Evolution line</h3>${s.evolution.length ? `<div class="dexp-chain">${chainHtml}</div>` : `<div class="dexp-chain">${chainHtml}</div><p class="dim">This species does not evolve.</p>`}</section>
-    ${content?.development ? `<section class="dexp-card"><h3>Personality development</h3><p>${esc(content.development)}</p></section>` : ''}
+    ${content?.development && !templateDevelopment(content) ? `<section class="dexp-card"><h3>Personality development</h3><p>${esc(content.development)}</p></section>` : ''}
     ${monster ? `<section class="dexp-sec"><h3>${esc(displayName)}’s evolution history</h3>${historyHtml(timeline.filter(e => e.t === 'evolve'), stage > 0 ? `Joined your club in its ${current.name} form; no evolutions recorded with your club yet.` : 'No evolutions yet.')}</section>` : ''}`;
 
   // ---- Journal

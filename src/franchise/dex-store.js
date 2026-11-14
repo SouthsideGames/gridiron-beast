@@ -35,12 +35,16 @@ export function dexRecordGlobal(id, how, stamp) {
   return changed;
 }
 /** Merge another dex (a franchise's, or the cloud copy) into this one; earliest stamps win. */
-export function mergeDex(other) {
+/** The shared Dex's key for one franchise game. Franchise saves keep the bare activity id ("fb:…"); the shared Dex adds the franchise. */
+export const knowledgeEventId = (franchise, act) => (String(act).startsWith('fb:') ? `${franchise}:${act}` : String(act));
+/** Merge another Dex (cloud copy, or a franchise's own `f.dex` with `{ franchise }`) into this device's Dex by union. A franchise's bare
+ *  game ids are only counted when the franchise is named; without it they cannot be told apart from another franchise's games. */
+export function mergeDex(other, { franchise = null } = {}) {
   if (!other) return; const d = load(); let changed = false;
   for (const k of ['seen', 'signed']) for (const [id, stamp] of Object.entries(other[k] || {})) if (!d[k][id]) { d[k][id] = stamp; changed = true; }
   d.forms ||= {}; for (const [id, st] of Object.entries(other.forms || {})) if ((d.forms[id] || 0) < st) { d.forms[id] = st; changed = true; }
   d.knowledge ||= {};
-  for (const [id, events] of Object.entries(other.knowledge || {})) { const own = d.knowledge[id] ||= {}; for (const key of Object.keys(events || {})) if (!own[key]) { own[key] = true; changed = true; } }
+  for (const [id, events] of Object.entries(other.knowledge || {})) { const own = d.knowledge[id] ||= {}; for (const raw of Object.keys(events || {})) { if (raw.startsWith('fb:') && !franchise) continue; const key = knowledgeEventId(franchise, raw); if (!own[key]) { own[key] = true; changed = true; } } }
   if ((other.franchises || 0) > d.franchises) { d.franchises = other.franchises; changed = true; }
   if (changed) persist();
 }

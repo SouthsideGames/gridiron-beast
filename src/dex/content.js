@@ -75,6 +75,11 @@ const RELATIONSHIPS = {
   pyroclast: [{ familyId: 'emberfox', kind: 'legendary folklore', games: 30, text: 'One locker-room tale imagines Pyroclast inspecting a young Flaroo’s warm-up. It is a story about the little beast’s determination, not a documented encounter.' }],
 };
 
+/** True when a development line is the catalog template that only restates the personality (see content/catalog-format.js). */
+export const templateDevelopment = (c) => !!c?.development && !!c.personality && c.development.endsWith(c.personality) && /^(This species has no further evolution\.|At this stage of the family’s development,)/.test(c.development);
+/** True when the habitat line only restates the region list. */
+export const templateHabitat = (c) => /^[^.]* is found in [^.]*\.$/.test(c?.habitat || '');
+
 /** Stage-specific editorial draft; physical measurements are never invented. */
 export function dexContent(familyId, stage = 0) {
   const family = familyById(familyId);

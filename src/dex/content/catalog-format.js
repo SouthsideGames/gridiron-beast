@@ -15,7 +15,7 @@ export function editorialRows(rows) {
     const regions = species.get(familyId)?.regions || ELEMENT_REGIONS[family.type] || [];
     const record = {
       biography: [(stage === 0 ? family.description + ' ' : '') + first, second], personality,
-      habitat: `${form.name} is found in ${regions.join(' and ')}. ${facts[0]}`,
+      habitat: `${form.name} is found in ${regions.join(' and ')}.`, // the first fun fact was appended here too, so it appeared twice on the Profile tab
       funFacts: facts,
       development: formsOf(familyId).length === 1 ? `This species has no further evolution. Growing familiarity reveals its established character: ${personality}` : `At this stage of the family’s development, ${form.name} shows this outlook: ${personality}`,
       lore: lore.map((text, i) => ({ games: [5,15,30][i], title: [`Getting to know ${form.name}`, 'Behind the routine', 'A closer bond'][i], text })),

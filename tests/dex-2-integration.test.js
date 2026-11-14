@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
 import * as Save from '../src/franchise/save.js';
-import { resetDex, dexData, dexKnowledge, dexKnowledgeGame, mergeDex } from '../src/franchise/dex-store.js';
+import { resetDex, dexData, dexKnowledge, dexKnowledgeGame, mergeDex, knowledgeEventId } from '../src/franchise/dex-store.js';
 import { playedIds } from '../src/franchise/development.js';
 import { SPECIES_DEX } from '../src/data/species.js';
 import { formsOf } from '../src/data/beast-dex.js';
@@ -55,13 +55,16 @@ test('one knowledge credit per family per completed owner game: lineup members o
   }
   // Replay of the same game, a save export/import, and a cloud merge of the same records add nothing.
   const event = Object.keys(f.dex.knowledge[a.species]).pop();
-  assert.equal(dexKnowledgeGame([...families], event), false, 'replaying the same game is ignored');
-  const g = Save.importJson(Save.exportJson(f)); mergeDex(g.dex); mergeDex(JSON.parse(JSON.stringify(dexData())));
+  assert.match(event, /^fb:/, 'the franchise records the game by its activity id (no per-run identity in the save)');
+  assert.equal(dexKnowledgeGame([...families], knowledgeEventId(F.franchiseKey(f), event)), false, 'replaying the same game is ignored');
+  const g = Save.importJson(Save.exportJson(f)); mergeDex(g.dex, { franchise: F.franchiseKey(g) }); mergeDex(g.dex); mergeDex(JSON.parse(JSON.stringify(dexData())));
   for (const id of families) assert.equal(dexKnowledge(id).games - globalBefore[id], 1, `${id}: still one credit after reload and merges`);
   assert.deepEqual(counts(g), after, 'the franchise save keeps the same knowledge');
-  // Another franchise's game with the same family counts separately: knowledge is shared across franchises.
-  dexKnowledgeGame([a.species], 'another-franchise:game-1');
-  assert.equal(dexKnowledge(a.species).games - globalBefore[a.species], 2);
+  // Another franchise's save with the same week counts separately (knowledge is shared across franchises); unattributed ids never count.
+  mergeDex({ knowledge: { [a.species]: { [event]: true } } }, { franchise: 'another-franchise' });
+  assert.equal(dexKnowledge(a.species).games - globalBefore[a.species], 2, 'the same week in another franchise is another game');
+  mergeDex({ knowledge: { [a.species]: { 'fb:9:w9:r:Somewhere': true } } });
+  assert.equal(dexKnowledge(a.species).games - globalBefore[a.species], 2, 'a bare game id with no franchise is not counted');
 });
 
 test('locked lore and relationships never appear anywhere in a profile before their thresholds (every form, all boundaries)', () => {

@@ -1,6 +1,6 @@
 import { SPECIES_DEX } from '../../data/species.js';
 import { formsOf } from '../../data/beast-dex.js';
-import { dexContent } from '../../dex/content.js';
+import { dexContent, templateDevelopment } from '../../dex/content.js';
 import { auditDexContent } from '../../dex/content-audit.js';
 import { speciesSheet, bindDexProfile, showPortraitReaction, releaseDexProfiles } from './dex.js';
 import { dexMotion } from '../dex-motion.js';
@@ -53,7 +53,7 @@ export function registerBeastDexReviewer(Router) {
         <div class="dexr-summary"><span><b>${coverage.expanded}/${coverage.forms}</b> forms drafted${coverage.remaining ? ` · ${coverage.remaining} awaiting writing` : ''}</span><span>${esc(LABEL[component])}: <b class="st-approved">${counts.approved}</b> approved · <b class="st-revision">${counts.revision}</b> revision · <b>${counts.pending}</b> pending</span></div>
         ${warning}
         <details class="dexr-filters" data-filters ${filtersOpen ? 'open' : ''}><summary>Filters and search${active.length ? ` · ${esc(active.join(' · '))}` : ''} <span class="dim">(${available.length} of ${DEX_REVIEW_CATALOG.length})</span></summary><div class="dexr-filter-grid">${selection}</div></details>
-        <button data-action="report" class="btn small">Export feedback</button></div>`;
+        <button data-action="report" class="btn small">Export Feedback</button></div>`;
       if (!row) return `<div class="dexr">${header}<p class="panel">No forms match these filters.</p></div>`;
       const { species: s, form } = row;
       const reviews = snapshot[form.id] || {}, content = dexContent(s.id, form.stage);
@@ -73,12 +73,12 @@ export function registerBeastDexReviewer(Router) {
         <div class="dexr-row" aria-label="Evolution family">${siblings}</div>
         <div class="dexr-row"><span class="dexr-k">View</span>${seg('View', view, [['species', 'Species'], ['individual', realMonster || !f ? 'My Beast' : 'My Beast (sample)']])}</div>
         <div class="dexr-row"><span class="dexr-k">Lore games</span>${seg('Lore games', games, [0, 4, 5, 14, 15, 29, 30].map(n => [n, String(n)]))}</div>
-        <div class="dexr-row"><button data-action="cry" class="btn small">▶ Play cry</button><button class="btn small" data-action="reaction">Normal reaction</button><button class="btn small" data-action="rare-reaction">Rare reaction</button></div>
-        <p class="dim dexr-meta">Motion: ${esc(motion?.label || 'none')}<br>Content: ${esc(content.status)} · ${content.lore.length}/3 lore entries · ${content.relationships.length}/3 relationships${view === 'individual' ? ` · ${realMonster ? `real beast from your roster (${esc(monster.name)})` : 'sample beast (no career)'}` : ''}</p></div>`;
+        <div class="dexr-row"><button data-action="cry" class="btn small">▶ Play Cry</button><button class="btn small" data-action="reaction">Normal Reaction</button><button class="btn small" data-action="rare-reaction">Rare Reaction</button></div>
+        <p class="dim dexr-meta">Motion: ${esc(motion?.label || 'none')}<br>Content: ${esc(content.status)} · ${content.lore.length}/3 lore entries · ${content.relationships.length}/3 relationships${templateDevelopment(content) ? ' · development line is the template that repeats Personality (hidden in the Dex; needs writing)' : ''}${view === 'individual' ? ` · ${realMonster ? `real beast from your roster (${esc(monster.name)})` : 'sample beast (no career)'}` : ''}</p></div>`;
       const cards = REVIEW_COMPONENTS.map(c => {
         const st = dexReviewStatus(form.id, c, snapshot); const stored = reviews[c];
         const changed = stored && stored.status !== 'pending' && st === 'pending' ? `<p class="dexr-changed">Content changed since your “${esc(STATUS_LABEL[stored.status] || stored.status)}” verdict, so it is pending again. Your notes are kept.</p>` : '';
-        return `<section class="dexr-card st-${st}" id="dexr-${c}" data-review-component="${c}" data-review-id="${esc(form.id)}"><h3>${esc(LABEL[c])}</h3>${changed}<fieldset class="dexr-status"><legend class="dexr-k">Verdict</legend>${['pending', 'approved', 'revision'].map(v => `<label class="v-${v}"><input type="radio" name="st-${esc(form.id)}-${c}" value="${v}" data-review-status ${v === st ? 'checked' : ''}><span>${STATUS_LABEL[v]}</span></label>`).join('')}</fieldset><label class="dexp-field">Feedback<textarea data-review-notes maxlength="4000" rows="3" placeholder="What should change? (saved as you type)">${esc(reviews[c]?.notes || '')}</textarea></label><div class="dexr-card-foot"><span class="dim" data-saved></span><button class="btn small" data-action="save">Save review</button></div></section>`;
+        return `<section class="dexr-card st-${st}" id="dexr-${c}" data-review-component="${c}" data-review-id="${esc(form.id)}"><h3>${esc(LABEL[c])}</h3>${changed}<fieldset class="dexr-status"><legend class="dexr-k">Verdict</legend>${['pending', 'approved', 'revision'].map(v => `<label class="v-${v}"><input type="radio" name="st-${esc(form.id)}-${c}" value="${v}" data-review-status ${v === st ? 'checked' : ''}><span>${STATUS_LABEL[v]}</span></label>`).join('')}</fieldset><label class="dexp-field">Feedback<textarea data-review-notes maxlength="4000" rows="3" placeholder="What should change? (saved as you type)">${esc(reviews[c]?.notes || '')}</textarea></label><div class="dexr-card-foot"><span class="dim" data-saved></span><button class="btn small" data-action="save">Save Review</button></div></section>`;
       }).join('');
       return `<div class="dexr">${header}${nav}${controls}<div class="dexr-preview">${speciesSheet(s, realMonster ? f : null, { monster, previewStage: form.stage, previewGames: games, revealAll: true, stagePicker: false, viewPicker: false })}</div><h2 class="dexr-h">Review ${esc(form.name)}</h2>${cards}</div>`;
     },
@@ -118,7 +118,7 @@ export function registerBeastDexReviewer(Router) {
         previous: () => step(-1), next: () => step(1), reaction: () => react(false), 'rare-reaction': () => react(true),
         cry: () => { const row = DEX_REVIEW_CATALOG.find(x => x.form.id === selected); if (row) playMonsterCry({ species: row.species.id, stage: row.form.stage }); },
         save: () => toast(saveDraft(root) ? 'Review saved.' : 'Device storage unavailable. Your notes are kept for this session only: export feedback before leaving.'),
-        report: () => { saveDraft(root); sheet(`<textarea readonly rows="15" style="width:100%">${esc(JSON.stringify({ version: 2, coverage, reviews: dexReviews() }, null, 2))}</textarea>`, { title: 'Beast Dex feedback — copy to share' }); },
+        report: () => { saveDraft(root); sheet(`<textarea readonly rows="15" style="width:100%">${esc(JSON.stringify({ version: 2, coverage, reviews: dexReviews() }, null, 2))}</textarea>`, { title: 'Beast Dex Feedback — Copy to Share' }); },
       });
     },
     unmount() { saveAndWarn(activeRoot); activeRoot = null; clearTimeout(saveTimer); stopCry(); releaseDexProfiles(); },
