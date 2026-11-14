@@ -184,7 +184,7 @@ export default function batch(b) {
   add(O('end_around', 'End Around', 'gun_pro', {
     QB: HANDOFF, WR2: CARRY([[-1.2, 18], [-4, 8], [-5, 0], [-3, -8], [2, -14], [14, -16]]),
     LG: RUNBLOCK([1.5, -3]), RG: PULL([-2, -1], [1, -7]), TE: RUNBLOCK([1.5, 1]), RB: RUNBLOCK([-1, -6]), WR1: STALK([3, -17]),
-  }, { type: 'run', tags: ['run', 'outside', 'misdirection', 'trick'], desc: 'The right receiver loops behind the quarterback and takes it around the left end.' }),
+  }, { type: 'run', motion: { slot: 'WR2', to: [-3.5, 9] }, tags: ['run', 'outside', 'misdirection', 'trick'], desc: 'The right receiver motions inward from his wide split before the snap, loops behind the quarterback and takes the handoff around the left end.' }),
   'Once a game, when the defense is flying to the ball.', 'A long-developing play: the right guard and the back must get to the left edge in time.', 'Over-pursuing defenses and Zone Blitz.', 'Edge Contain and disciplined backside defenders.');
 
   add(O('rocket_toss', 'Rocket Toss', 'spread_left', {
