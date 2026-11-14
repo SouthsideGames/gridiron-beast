@@ -357,4 +357,6 @@ ChatGPT added a per-monster honour ledger, `careerHonours`, holding awards, cham
 
 ### 11.4 Regression
 
-{{FULL3}}
+**Full suite on `ed59f29`:** **2,136 tests, 2,136 pass, 0 fail**, none cancelled or skipped (66 minutes). The timeline determinism test passes, as do all the new tests for this round: End Around, the badge goal and the honour ledger.
+
+**Final Task 10 commit:** `ed59f29` (code). The report commits after it change documentation only.
