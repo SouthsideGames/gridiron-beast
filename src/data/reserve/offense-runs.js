@@ -89,7 +89,7 @@ export default function batch(b) {
   'With a fast back when the edge defender plays inside.', 'The pitch is live: the back catches it moving and gets behind both guards.', 'Heavy fronts and Goal Line Stand.', 'Edge Contain and Man Press corners who come up fast.');
 
   add(O('pin_pull', 'Pin and Pull', 'tight_gun', {
-    QB: HANDOFF, RB: CARRY([[-5.2, -2.8], [-4, -5], [-1, -8], [4, -10], [22, -11]]),
+    QB: HANDOFF, RB: CARRY([[-5.2, -2.8], [-5, -0.7], [-4, -5], [-1, -8], [4, -10], [22, -11]]),
     C: RUNBLOCK([1.5, 1]), LG: RUNBLOCK([1.5, 0.5]), RG: PULL([-1.5, -1], [1.5, -5]), TE: RUNBLOCK([1.5, 2]), WR1: STALK([3, -16]),
   }, { type: 'run', tags: ['run', 'outside'], desc: 'Down blocks pin the interior; the right guard pulls to lead the back around the left edge.' }),
   'When the defense slants or stunts inside.', 'The pulling guard is the key block; the back stays on his hip until the corner.', 'Zone Blitz and slanting fronts.', 'Edge Contain.');
