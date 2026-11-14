@@ -1097,11 +1097,19 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     return { x: best.x + ux * off, y: best.y + uy * off };
   }
   function qbHandoff(a) {
-    const rb = offs.find((o) => ['carry'].includes(o.assignment.a));
+    const runner = offs.find((o) => o.assignment.a === 'carry');
     if (!handoffDone) {
-      if (rb) { a.mesh ||= meshPoint({ x: a.assignment.points[0][0], y: a.assignment.points[0][1] }, rb); steer(a, a.mesh.x, a.mesh.y, 0.8, 0.3); } else steer(a, a.x, a.y, 0, 0.2);
-      if (rb && dist(a, rb) < 1.5 && t > 0.2) giveBall(rb);
-      else if (rb && t > 1.1) missedMesh(a, rb); // Phase C1 (F1): the exchange can no longer happen; the ball never jumps to a back out of reach
+      if (runner) {
+        // An end-around receiver starts wide and must travel behind the QB before
+        // the hand-to-hand exchange. Ordinary backfield handoffs develop faster.
+        const endAround = offensePlay.id === 'end_around' && /^WR/.test(runner.slot);
+        const pinPull = offensePlay.id === 'pin_pull' && runner.slot === 'RB';
+        const deadline = endAround ? 4.5 : pinPull ? 1.8 : 1.1;
+        a.mesh ||= meshPoint({ x: a.assignment.points[0][0], y: a.assignment.points[0][1] }, runner);
+        steer(a, a.mesh.x, a.mesh.y, 0.8, 0.3);
+        if (dist(a, runner) < 1.5 && t > 0.2) giveBall(runner);
+        else if (t > deadline) missedMesh(a, runner); // Never teleport the ball across an unreachable mesh.
+      } else steer(a, a.x, a.y, 0, 0.2);
       return;
     }
     steer(a, a.x - 2, a.y + 2, 0.5, 0.5); // carry out the fake
