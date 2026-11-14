@@ -2,8 +2,8 @@ import { audioContext,audioBus,unlockAudio,isAudioHidden } from './context.js';
 export const MUSIC_TRACKS=Object.freeze({main:'assets/audio/music/main.mp3',clash:'assets/audio/music/clash.mp3',championship:'assets/audio/music/championship.mp3',pregame:'assets/audio/music/pregame.mp3'});
 // undefined preserves the current track (Settings); null is a deliberate quiet scene.
 export function musicForScreen(name){
- if(name==='settings')return undefined;
- if(name==='match'||name==='developer'||/reviewer|preview|audit|lab/.test(name))return null;
+ if(name==='settings'||name==='developer')return undefined;
+ if(name==='match'||/reviewer|preview|audit|lab/.test(name))return null;
  return name==='pregame'?'pregame':name==='clash-battle'?'clash':name==='ceremony'?'championship':'main';
 }
 export class MusicPlayer {
@@ -15,7 +15,9 @@ export class MusicPlayer {
   const previous=this.desired;this.desired=id;
   if(!restart&&previous===id&&(id===null||this.current?.id===id||this.pending?.id===id))return;
   if(this.hidden())return;
-  const ac=this.getContext();if(!ac||ac.state!=='running')return;
+  const ac=this.getContext();if(!ac)return;
+  // Request playback during the gesture, before awaiting resume (Safari media activation).
+  if(ac.state!=='running')void ac.resume().catch(()=>{});
   if(!restart&&this.pending?.id===id)return;
   if(!restart&&this.current?.id===id){++this.ticket;clearTimeout(this.timer);this.dispose(this.pending);this.pending=null;this.dispose(this.outgoing);this.outgoing=null;this.ramp(this.current,1,fadeMs);return;}
   const ticket=++this.ticket;clearTimeout(this.timer);this.dispose(this.pending);this.pending=null;this.dispose(this.outgoing);this.outgoing=null;
@@ -37,8 +39,10 @@ export const music=new MusicPlayer();
 let installed=false;
 export function installAudioLifecycle(){
  if(installed||!globalThis.document)return;installed=true;
- const unlock=async()=>{if(!isAudioHidden()&&await unlockAudio())music.select(music.desired);};
+ const unlock=()=>{if(isAudioHidden())return;void unlockAudio();void music.select(music.desired).catch(()=>{});};
  document.addEventListener('pointerdown',unlock,{capture:true});document.addEventListener('keydown',unlock,{capture:true});
+ document.addEventListener('touchend',unlock,{capture:true,passive:true});
+ document.addEventListener('click',unlock,{capture:true});
  document.addEventListener('visibilitychange',()=>{if(document.hidden){music.pause();audioContext()?.suspend().catch(()=>{});}else unlock();});
  globalThis.addEventListener?.('pagehide',()=>music.pause());
  const nativeApp=globalThis.Capacitor?.Plugins?.App;if(nativeApp?.addListener)try{Promise.resolve(nativeApp.addListener('appStateChange',state=>globalThis.dispatchEvent(new CustomEvent('gb-app-state',{detail:state})))).catch(()=>{});}catch{}
