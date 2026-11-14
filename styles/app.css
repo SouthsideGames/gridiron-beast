@@ -1675,6 +1675,7 @@ html[data-reduced-motion="1"] .hof-hero.anim::after { animation: none; display: 
 .dexp-facts-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 10px; }
 .dexp-facts-grid div { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r); padding: 6px 4px; text-align: center; }
 .dexp-facts-grid dt { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.dexp-facts-grid div.wide { grid-column: 1 / -1; }
 .dexp-facts-grid dd { margin: 2px 0 0; font-weight: 800; font-size: 13px; overflow-wrap: anywhere; }
 .dexp-region { font-weight: 800; color: var(--ink); }
 .dexp-facts { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }

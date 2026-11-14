@@ -92,6 +92,9 @@ export function speciesSheet(s, f, { monster = null, previewGames = null, reveal
 
   // ---- Profile
   const biography = (content?.biography || [s.personality]).map((text, i) => `<p class="${i ? '' : 'dexp-lead'}">${esc(text)}</p>`).join('');
+  const status = revealAll ? 'seen' : dexStatus(f, s.id); const ownedCount = f ? f.roster.filter(x => x.species === s.id).length : 0;
+  const collection = esc(status === 'signed' ? `${$t('league.signed')}${f ? ` ${$t('league.on_your_roster', { n: ownedCount })}` : ''}` : status === 'seen' ? $t('league.seen_never_signed') : $t('league.not_yet_discovered'));
+  const seenForms = revealAll ? s.evolution.length : dexFormSeen(f, s.id);
   const regions = (s.regions || ELEMENT_REGIONS[s.element] || []).join(', ');
   const facts = content?.funFacts.length ? `<section class="dexp-card"><h3>Fun facts</h3><ul class="dexp-facts">${content.funFacts.map(text => `<li>${esc(text)}</li>`).join('')}</ul></section>` : '';
   const relationships = content?.relationships.length ? `<section class="dexp-sec"><h3>Species relationships</h3><div class="dexp-rels">${content.relationships.map(relation => {
@@ -101,9 +104,9 @@ export function speciesSheet(s, f, { monster = null, previewGames = null, reveal
   }).join('')}</div></section>` : '';
   const quirk = monster ? `<section class="dexp-card dexp-mine-card"><h3>Individual quirk</h3><p>${esc(individualQuirk(monster))}</p><p class="dim dexp-note">Cosmetic only: quirks never change ratings or results.</p></section>` : '';
   const profilePanel = `${quirk}<section class="dexp-sec dexp-bio">${biography}</section>
-    <dl class="dexp-facts-grid"><div><dt>Element</dt><dd>${esc(s.element)}</dd></div><div><dt>Size</dt><dd>${esc(capital(current.size).replace(/\.$/, ''))}</dd></div><div><dt>Build</dt><dd>${esc(capital(current.body).replace(/\.$/, ''))}</dd></div><div><dt>Rarity</dt><dd>${esc(rarity)}</dd></div></dl>
+    <dl class="dexp-facts-grid"><div><dt>Element</dt><dd>${esc(s.element)}</dd></div><div><dt>Size</dt><dd>${esc(capital(current.size).replace(/\.$/, ''))}</dd></div><div><dt>Build</dt><dd>${esc(capital(current.body).replace(/\.$/, ''))}</dd></div><div><dt>Rarity</dt><dd>${esc(rarity)}${s.cornerstone ? esc($t('league.cornerstone')) : ''}</dd></div><div class="wide"><dt>Collection</dt><dd>${collection}</dd></div></dl>
     <section class="dexp-card"><h3>Personality</h3><p>${esc(content?.personality || s.personality)}</p></section>
-    <section class="dexp-card"><h3>Habitat</h3><p class="dexp-region">${esc(regions)}</p>${content?.habitat && !templateHabitat(content) ? `<p>${esc(content.habitat)}</p>` : ''}</section>
+    <section class="dexp-card"><h3>${$t('league.where_to_find_it')}</h3><p class="dexp-region">${esc(regions)}${s.fromWeek ? ` ${esc($t('league.from_week', { fromWeek: s.fromWeek }))}` : ''}${s.rarity === 'legendary' && f ? esc(f.campaign?.unlocked?.[s.id] ? $t('league.unlocked_scoutable_there_now') : ` ${$t('league.legend_tracks_3', { tracks: f.campaign?.tracks?.[s.id] || 0 })}`) : ''}</p>${content?.habitat && !templateHabitat(content) ? `<p>${esc(content.habitat)}</p>` : ''}</section>
     ${facts}${relationships}`;
 
   // ---- Football
@@ -121,7 +124,7 @@ export function speciesSheet(s, f, { monster = null, previewGames = null, reveal
   const career = monster && f ? fullProfile(f, monster) : null;
   const stats = career ? `<section class="dexp-card"><h3>Career statistics</h3><div class="dexp-tiles"><div><b>${career.stats.games}</b><span>Regular-season games</span></div><div><b>${career.stats.postGames}</b><span>Playoff games</span></div></div>${career.stats.focus.map(x => `<p class="dexp-stat"><span>${esc(x.label)}</span><b>${esc(x.text)}</b></p>`).join('')}</section>` : '';
   const footballPanel = `<p class="dexp-pos"><span class="chip">${esc(position)}</span></p>${monster ? `<section class="dexp-card dexp-mine-card"><h3>Current ratings</h3><p class="dim dexp-note">${esc(displayName)}’s ratings now. The shaded band is this form’s natural starting range.</p><table class="dexp-attrs" aria-label="Current attributes"><tbody>${currentRows}</tbody></table></section>` : ''}${scout}${natural}
-    <section class="dexp-sec dexp-abilities"><h3>Abilities</h3>${abilitiesHtml(s, { monster, dex2: true, seeIt: revealAll || dexStatus(f, s.id) !== 'unknown' })}</section>${stats}`;
+    <section class="dexp-sec dexp-abilities"><h3>${$t('league.signature_abilities')}</h3>${abilitiesHtml(s, { monster, dex2: true, seeIt: revealAll || dexStatus(f, s.id) !== 'unknown' })}</section>${stats}`;
 
   // ---- Evolution
   const chainHtml = chain.map((x, i) => {
@@ -129,7 +132,7 @@ export function speciesSheet(s, f, { monster = null, previewGames = null, reveal
     const tag = open && !monster && stagePicker && i !== stage ? 'button' : 'div';
     return `${i ? `<span class="dexp-evo-arrow" aria-hidden="true">›<small>Lv ${esc(s.evolution[i - 1].level)}</small></span>` : ''}<${tag} class="dexp-evo${here ? ' here' : ''}${open ? '' : ' locked'}" ${tag === 'button' ? `type="button" data-dex-goto="${i}" aria-label="Show ${esc(x.name)}"` : ''}>${open ? sprite16(x, 56) : silhouette(x, 56)}<b>${open ? esc(x.name) : '???'}</b><span class="dim">${i ? `Stage ${i + 1}` : 'Base form'}</span>${here ? `<span class="chip accent">${monster ? 'Current form' : 'Shown'}</span>` : ''}</${tag}>`;
   }).join('');
-  const evolutionPanel = `<section class="dexp-sec"><h3>Evolution line</h3>${s.evolution.length ? `<div class="dexp-chain">${chainHtml}</div>` : `<div class="dexp-chain">${chainHtml}</div><p class="dim">This species does not evolve.</p>`}</section>
+  const evolutionPanel = `<section class="dexp-sec"><h3>${$t('league.evolution')}</h3>${s.evolution.length ? `<div class="dexp-chain">${chainHtml}</div>${monster ? '' : `<p class="dim dexp-note">${esc(seenForms ? $t('league.you_have_seen_this_species_evolve', { n: seenForms >= s.evolution.length ? ' fully' : '' }) : $t('league.evolves_at_the_levels_shown_evolved'))}</p>`}` : `<div class="dexp-chain">${chainHtml}</div><p class="dim">This species does not evolve.</p>`}</section>
     ${content?.development && !templateDevelopment(content) ? `<section class="dexp-card"><h3>Personality development</h3><p>${esc(content.development)}</p></section>` : ''}
     ${monster ? `<section class="dexp-sec"><h3>${esc(displayName)}’s evolution history</h3>${historyHtml(timeline.filter(e => e.t === 'evolve'), stage > 0 ? `Joined your club in its ${current.name} form; no evolutions recorded with your club yet.` : 'No evolutions yet.')}</section>` : ''}`;
 
@@ -151,7 +154,7 @@ export function speciesSheet(s, f, { monster = null, previewGames = null, reveal
   const stageSelect = stagePicker && !monster && s.evolution.length ? `<label class="dexp-field">Evolution form<select data-dex-stage>${[s, ...s.evolution].map((x, i) => i <= seen ? `<option value="${i}" ${i === stage ? 'selected' : ''}>${esc(x.name)}</option>` : '').join('')}</select></label>` : '';
   const sub = monster
     ? `${esc(current.name)}${monster.level != null ? ` · Lv ${esc(monster.level)}` : ''} · ${esc(position)}`
-    : `${esc(s.element)} · ${esc(rarity)} · ${esc(position)}`;
+    : `${esc($t('league.type_3', { element: s.element }))} ${esc(rarity)} · ${esc(position)}`;
   return `<div class="dexp ${monster ? 'is-mine' : 'is-species'}" data-dex-profile data-family="${esc(s.id)}" data-stage="${stage}" data-reveal="${revealAll}" data-preview-games="${previewGames ?? ''}" style="--el-h:${elementHue(s.element)}">
     <div class="dexp-kindbar"><span class="dexp-badge">${monster ? 'My Beast View' : 'Species View'}</span>${monster ? '<span class="dim">Your club’s individual</span>' : '<span class="dim">Shared species entry</span>'}</div>
     ${viewSelect || stageSelect ? `<div class="dexp-controls">${viewSelect}${stageSelect}</div>` : ''}
