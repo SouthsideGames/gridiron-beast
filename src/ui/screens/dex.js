@@ -1,3 +1,5 @@
+import { dexContent, individualQuirk, portraitReaction } from '../../dex/content.js';
+import { formsOf, familyById } from '../../data/beast-dex.js';
 import { playMonsterCry } from '../../audio/detail-audio.js';
 import { stopCry } from '../../audio/monster-cries.js';
 // Beast Dex: every species in the game, grouped by element. Reachable from the
@@ -17,6 +19,7 @@ import { fullProfile } from '../../franchise/career-profile.js';
 import { dexKnowledge, LORE_THRESHOLDS, dexCountsGlobal } from '../../franchise/dex-store.js';
 import { t as $t } from '../../text/index.js';
 
+let profileSerial = 0;
 const POS_NAME = { QB: $t('league.quarterback'), RB: $t('league.running_back'), WR: $t('league.receiver'), TE: $t('league.tight_end'), OL: $t('league.lineman'), DL: $t('league.pass_rusher'), LB: $t('league.linebacker'), CB: $t('league.cornerback'), S: $t('league.safety'), K: $t('league.kicker') };
 
 export const silhouette = (s, size) => sprite16({ ...s, id: s.id + '_sil', colors: ['#1a2420', '#22302a'], look: 'cool', features: s.features.filter((f) => f !== 'glow' && f !== 'halo') }, size);
@@ -54,7 +57,7 @@ export function registerDexScreens(Router, app) {
           const s = SPECIES_DEX.find((x) => x.id === el.dataset.id); if (!s) return;
           const st = ctx.params?.all ? 'seen' : dexStatus(ctx.f, s.id);
           if (st === 'unknown') { sheet(`<div class="row">${silhouette(s, 72)}<div>${$t('league.b_unknown_species_b')}<div class="muted">${$t('league.type_2', { element: esc(s.element), label: RARITIES[s.rarity].label })}</div><div class="muted">${$t('league.found_in')} ${esc((s.regions || ELEMENT_REGIONS[s.element]).join(', '))}</div></div></div><p class="muted">${$t('league.scout_that_region_or_face_a')}</p>`, { title: '???' }); return; }
-          playMonsterCry(s.id); const detail = sheet(speciesSheet(s, ctx.f), { title: s.name, onClose: stopCry }); bindDexProfile(detail.el);
+          playMonsterCry(s.id); const detail = sheet(speciesSheet(s, ctx.f, { revealAll: !!ctx.params?.all }), { title: s.name, onClose: stopCry }); bindDexProfile(detail.el, { f: ctx.f });
         },
       });
     },
@@ -62,8 +65,11 @@ export function registerDexScreens(Router, app) {
 }
 
 /** Presentation reads existing records; it never backfills or mutates a monster. */
-export function speciesSheet(s, f, { monster = null, previewGames = null, revealAll = false } = {}) {
-  const stage = monster?.stage || 0;
+export function speciesSheet(s, f, { monster = null, previewGames = null, revealAll = false, previewStage = 0, stagePicker = true } = {}) {
+  const profileId = `dex-profile-${++profileSerial}`;
+  const stage = monster?.stage ?? previewStage;
+  const content = dexContent(s.id, stage);
+  const form = formsOf(s.id).find(x => x.stage === stage);
   const current = evolvedSpec(s, stage);
   const knowledge = dexKnowledge(s.id);
   const games = previewGames ?? knowledge.games;
@@ -74,18 +80,48 @@ export function speciesSheet(s, f, { monster = null, previewGames = null, reveal
   const attributes = monster ? Object.entries(monster.attributes || {}).map(([key, value]) => `<tr><th scope="row">${esc(key)}</th><td>${esc(value)}</td></tr>`).join('') : '';
   const seen = revealAll ? s.evolution.length : dexFormSeen(f, s.id);
   const evolution = `<div class="row" style="flex-wrap:wrap">${[s, ...s.evolution.map((_, i) => evolvedSpec(s, i + 1))].map((form, i) => `<div>${i <= seen ? sprite16(form, 64) : silhouette(form, 64)}<p>${i <= seen ? esc(form.name) : '???'}</p>${i ? `<p>Level ${esc(s.evolution[i - 1].level)}</p>` : ''}</div>`).join('')}</div>${s.evolution.length ? '' : '<p>This species does not evolve.</p>'}`;
-  const lore = LORE_THRESHOLDS.map(n => `<p>${games >= n ? 'Unlocked' : 'Locked'} · ${n} games${games >= n ? ' · Expanded lore awaiting content review.' : ''}</p>`).join('');
+  const lore = LORE_THRESHOLDS.map(n => {
+    const entry = content?.lore.find(x => x.games === n);
+    return `<article><h4>${games >= n ? 'Unlocked' : 'Locked'} · ${n} games</h4>${games >= n && entry ? `<b>${esc(entry.title)}</b><p>${esc(entry.text)}</p>` : games >= n ? '<p class="dim">Lore is being prepared.</p>' : `<p class="dim">${n - games} more games to unlock.</p>`}</article>`;
+  }).join('');
+  const biography = (content?.biography || [s.personality]).map(text => `<p>${esc(text)}</p>`).join('');
+  const facts = content?.funFacts.length ? `<h3>Fun facts</h3><ul>${content.funFacts.map(text => `<li>${esc(text)}</li>`).join('')}</ul>` : '';
+  const ranges = Object.entries(form?.starting || {}).sort((a,b) => (b[1][0]+b[1][1])-(a[1][0]+a[1][1]));
+  const strengths = ranges.slice(0,3).map(([key]) => key).join(', ');
+  const weaknesses = (form?.belowBandWeaknesses || []).join(', ');
+  const scout = `<h3>Scouting report</h3><p>${esc(content?.scouting || s.position)}</p><p>Highest natural starting ratings: ${esc(strengths || 'not recorded')}.${weaknesses ? ` Lower starting bands: ${esc(weaknesses)}.` : ''} Individual development and current attributes determine this beast’s present ratings.</p><details><summary>View natural attribute ranges</summary><p>Starting ranges for this evolution stage; these are not current ratings or guaranteed career limits.</p><table><tbody>${ranges.map(([key,range]) => `<tr><th scope="row">${esc(key)}</th><td>${range[0]}–${range[1]}</td></tr>`).join('')}</tbody></table></details>`;
+  const relationships = content?.relationships.length ? `<h3>Species relationships</h3>${content.relationships.map(relation => games >= relation.games ? `<article><b>${esc(relation.kind)} · ${esc(familyById(relation.familyId)?.name)}</b><p>${esc(relation.text)}</p></article>` : `<p class="dim">Relationship lore unlocks at ${relation.games} games.</p>`).join('')}` : '';
   const panels = {
-    Profile: `<h3>${esc(monster?.name || current.name)}</h3><p>${esc(s.personality)}</p><p>${esc(s.element)} · ${esc(s.size)} · ${esc(s.body)}</p><h3>Habitat</h3><p>${esc((s.regions || ELEMENT_REGIONS[s.element] || []).join(', '))}</p>`,
-    Football: `<h3>${esc(POS_NAME[s.position] || s.position)}</h3>${monster ? `<table aria-label="Current attributes"><tbody>${attributes}</tbody></table>` : ''}${abilitiesHtml(s, { monster, seeIt: revealAll || dexStatus(f, s.id) !== 'unknown' })}${stats}`,
-    Evolution: evolution + (monster ? `<p>Current stage: ${stage + 1}</p>${history(timeline.filter(e => e.t === 'evolve'))}` : ''),
+    Profile: `<h3>${esc(monster?.name || current.name)}</h3>${biography}<p>${esc(s.element)} · ${esc(s.size)} · ${esc(s.body)}</p><h3>Habitat</h3><p>${esc((s.regions || ELEMENT_REGIONS[s.element] || []).join(', '))}</p>${facts}${relationships}${monster ? `<h3>Individual quirk</h3><p>${esc(individualQuirk(monster))}</p>` : ''}`,
+    Football: `<h3>${esc(POS_NAME[s.position] || s.position)}</h3>${scout}${monster ? `<table aria-label="Current attributes"><tbody>${attributes}</tbody></table>` : ''}${abilitiesHtml(s, { monster, dex2: true, seeIt: revealAll || dexStatus(f, s.id) !== 'unknown' })}${stats}`,
+    Evolution: evolution + (content?.development ? `<h3>Personality development</h3><p>${esc(content.development)}</p>` : '') + (monster ? `<p>Current stage: ${stage + 1}</p>${history(timeline.filter(e => e.t === 'evolve'))}` : ''),
     Journal: monster ? `<h3>Franchise accomplishments and personal history</h3>${history(timeline)}` : `<h3>Species knowledge</h3><p>${games} games · shared across individuals and franchises</p>${lore}`,
   };
-  return `<div data-dex-profile><p class="chip">${monster ? 'My Beast View' : 'Species View'}</p><div data-dex-portrait style="position:sticky;top:0;z-index:1;background:var(--panel,#15231f)">${sprite16(current, 96)}</div><div role="tablist" aria-label="Beast Dex sections">${Object.keys(panels).map((name, i) => `<button type="button" role="tab" data-dex-tab="${name}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${name}</button>`).join('')}</div>${Object.entries(panels).map(([name, content], i) => `<section role="tabpanel" aria-label="${name}" data-dex-panel="${name}" ${i ? 'hidden' : ''}>${content}</section>`).join('')}</div>`;
+  return `<div data-dex-profile data-family="${esc(s.id)}" data-reveal="${revealAll}" data-preview-games="${previewGames ?? ''}"><p class="chip">${monster ? 'My Beast View' : 'Species View'}</p>${stagePicker && !monster && s.evolution.length ? `<label>Evolution form <select data-dex-stage>${[s, ...s.evolution].map((form, i) => i <= seen ? `<option value="${i}" ${i === stage ? 'selected' : ''}>${esc(form.name)}</option>` : '').join('')}</select></label>` : ''}<div data-dex-portrait style="position:sticky;top:0;z-index:1;background:var(--panel,#15231f)"><button type="button" class="btn ghost" aria-label="Interact with ${esc(monster?.name || current.name)}" data-dex-react data-name="${esc(monster?.name || current.name)}" data-features="${esc(JSON.stringify(current.features || []))}">${sprite16(current, 96)}</button><p data-dex-reaction role="status" aria-live="polite"></p></div><div role="tablist" aria-label="Beast Dex sections">${Object.keys(panels).map((name, i) => `<button type="button" role="tab" id="${profileId}-tab-${name}" aria-controls="${profileId}-panel-${name}" data-dex-tab="${name}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${name}</button>`).join('')}</div>${Object.entries(panels).map(([name, content], i) => `<section role="tabpanel" id="${profileId}-panel-${name}" aria-labelledby="${profileId}-tab-${name}" aria-label="${name}" data-dex-panel="${name}" ${i ? 'hidden' : ''}>${content}</section>`).join('')}</div>`;
 }
 
 /** Bind locally to a sheet, including keyboard tab navigation. */
-export function bindDexProfile(root) {
+export function bindDexProfile(root, { f = null } = {}) {
+  root.querySelectorAll('[data-dex-stage]').forEach(select => select.addEventListener('change', () => {
+    const profile = select.closest('[data-dex-profile]');
+    const s = SPECIES_DEX.find(x => x.id === profile.dataset.family);
+    const stage = Number(select.value);
+    const games = profile.dataset.previewGames;
+    const container = profile.parentElement;
+    profile.outerHTML = speciesSheet(s, f, { previewStage: stage, previewGames: games === '' ? null : Number(games), revealAll: profile.dataset.reveal === 'true' });
+    playMonsterCry({ species: s.id, stage });
+    bindDexProfile(container, { f });
+  }));
+  root.querySelectorAll('[data-dex-react]').forEach(button => {
+    button.addEventListener('click', () => {
+      const rare = Math.random() < 0.05; // Cosmetic randomness, independent of the seeded simulation.
+      const reaction = portraitReaction({ name: button.dataset.name, features: JSON.parse(button.dataset.features), rare });
+      const portrait = button.closest('[data-dex-portrait]');
+      portrait.querySelector('[data-dex-reaction]').textContent = reaction;
+      portrait.dataset.reaction = rare ? 'rare' : 'normal';
+      portrait.dispatchEvent(new CustomEvent('beast-dex-reaction', { bubbles: true, detail: { rare, reaction } }));
+    });
+  });
   const tabs = [...root.querySelectorAll('[data-dex-tab]')];
   const select = (tab) => {
     for (const item of tabs) { item.setAttribute('aria-selected', String(item === tab)); item.tabIndex = item === tab ? 0 : -1; }
