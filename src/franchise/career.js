@@ -61,6 +61,14 @@ export function setCareerEnabled(on) { enabled = !!on; }
 /** A monster new to the league's records (founding, drafted, developer): nothing older to rebuild. */
 export function markCareerFresh(m) { if (!enabled) return; const b = book(m); b.bf = 1; b.lv = m.level || 1; }
 export function addEvent(m, e) {
+  // Compact, timeline-independent historical evidence for Hall of Fame cases
+  // and retirement news. Kept even when the optional timeline writer is disabled.
+  if (['award', 'champion', 'record'].includes(e.t)) {
+    const ledger = (m.careerHonours ||= []);
+    if (!ledger.some((x) => x.k === e.k)) ledger.push({
+      k: e.k, t: e.t, y: e.y ?? null, ...(e.x ? { x: { ...e.x } } : {}),
+    });
+  }
   if (!enabled) return false;
   const b = book(m); if (b.ev.some((x) => x.k === e.k)) return false;
   const out = { k: e.k, t: e.t, y: e.y ?? null }; if (e.w != null) out.w = e.w; if (e.c) out.c = e.c; if (e.x && Object.keys(e.x).length) out.x = e.x;
@@ -94,7 +102,6 @@ export function fullRecord(m, year) {
  */
 /** `lineOf(m)`: the game just played, for monsters who keep no logs (AI clubs, GDD §46); by default the last log entry. */
 export function careerAfterGame(roster, ctx, { lineOf = null } = {}) {
-  if (!enabled) return 0;
   const { year, week, club } = ctx; let added = 0;
   for (const m of roster) {
     const b = book(m);
@@ -145,7 +152,6 @@ export function noteEvolution(m, { year, week = null, club, from, to, level = nu
  * who played in that postseason but not in the final itself.
  */
 export function careerSeasonEnd(roster, ctx) {
-  if (!enabled) return 0;
   const { year, club } = ctx; let added = 0;
   for (const m of roster) {
     const b = book(m); const s = m.stats; const bookY = s?.season?.year === year ? s.season : (s?.seasons || []).find((x) => x.year === year);
