@@ -1,8 +1,10 @@
 // Editorial content is independent of gameplay. Existing descriptions remain the fallback.
 // New writing is a review draft; it is not a replacement for the approved prototype text.
+import { LINKED_FAMILY_DRAFTS } from './content/linked-families.js';
 import { familyById, formsOf } from '../data/beast-dex.js';
 
-export const CONTENT_VERSION = 1;
+export const CONTENT_VERSION = 2;
+const immutable = value => { if (value && typeof value === 'object' && !Object.isFrozen(value)) { for (const child of Object.values(value)) immutable(child); Object.freeze(value); } return value; };
 const FLAROO = [
   {
     biography: [
@@ -48,6 +50,13 @@ const FLAROO = [
   },
 ];
 
+export const EDITORIAL_DRAFTS = immutable({ emberfox: FLAROO, ...LINKED_FAMILY_DRAFTS });
+const FLAROO_REACTIONS = [
+  { normal: ['{name} leans forward, ready for the practice whistle.', '{name} turns its ears toward you, then checks whether the team is moving.'], rare: ['{name} makes an earnest attempt to sit still beside you. The tail has not agreed to the arrangement.'] },
+  { normal: ['{name} watches you with carefully practiced composure.'], rare: ['{name} seems to anticipate a compliment. Its carefully composed expression is already slipping.'] },
+  { normal: ['{name} pauses to make certain you have its attention.'], rare: ['{name} leaves a little room beside itself, then waits as though the invitation needs no explanation.'] },
+];
+
 // Curated editorial drafts, reciprocal where the relationship involves two species.
 const RELATIONSHIPS = {
   emberfox: [
@@ -60,21 +69,24 @@ const RELATIONSHIPS = {
   pyroclast: [{ familyId: 'emberfox', kind: 'legendary folklore', games: 30, text: 'One locker-room tale imagines Pyroclast inspecting a young Flaroo’s warm-up. It is a story about the little beast’s determination, not a documented encounter.' }],
 };
 
-/** Stage-specific editorial record with no invented relationships or physical measurements. */
+/** Stage-specific editorial draft; physical measurements are never invented. */
 export function dexContent(familyId, stage = 0) {
   const family = familyById(familyId);
   const form = formsOf(familyId).find(x => x.stage === stage);
   if (!family || !form) return null;
-  const draft = familyId === 'emberfox' ? FLAROO[stage] : null;
-  return {
+  const draft = EDITORIAL_DRAFTS[familyId]?.[stage];
+  return immutable({
     version: CONTENT_VERSION, id: form.id, familyId, stage, name: form.name,
     status: draft || RELATIONSHIPS[familyId] ? 'draft' : 'existing-description',
     biography: draft?.biography || [family.description],
     personality: draft?.personality || family.description,
     funFacts: draft?.funFacts || [], development: draft?.development || '',
     lore: draft?.lore || [], relationships: RELATIONSHIPS[familyId] || [],
+    habitat: draft?.habitat || (familyId === 'emberfox' ? 'Found around the Volcanic Fields and Thunder Plains, this family brings its energy back to familiar paths and the company of its team.' : ''),
+    reactions: draft?.reactions || (familyId === 'emberfox' ? FLAROO_REACTIONS[stage] : null),
+    expanded: !!draft,
     scouting: family.buildIdentity || '',
-  };
+  });
 }
 
 /** A stable, cosmetic-only identity, derived without consuming franchise randomness. */
@@ -93,7 +105,9 @@ export function individualQuirk(monster) {
 }
 
 /** Text reactions have no status, morale, attribute, mastery, or gameplay effects. */
-export function portraitReaction({ name, features = [], rare = false }) {
+export function portraitReaction({ name, features = [], rare = false, reactions = null, choice = 0 }) {
+  const options = reactions?.[rare ? 'rare' : 'normal'];
+  if (options?.length) return options[Math.abs(choice) % options.length].replaceAll('{name}', name);
   if (rare) return `${name} pauses to give you its undivided attention. Apparently, this is a very important team meeting.`;
   if (features.includes('ears')) return `${name} turns its ears toward you.`;
   return `${name} notices you and settles into a familiar pose.`;
