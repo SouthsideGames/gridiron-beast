@@ -185,6 +185,8 @@ export function showPortraitReaction(button, rare = false) {
 // One controller per scroll host (a sheet body, or the page for the reviewer): rebinding a re-rendered profile, closing a sheet or
 // leaving the reviewer aborts the previous listeners, animations and timers instead of stacking them.
 const hosts = new Map();
+let lastInput = 'pointer';
+if (typeof document !== 'undefined') { document.addEventListener('keydown', () => { lastInput = 'keyboard'; }, true); document.addEventListener('pointerdown', () => { lastInput = 'pointer'; }, true); }
 const prune = () => { for (const [k, c] of hosts) if (k !== document && !k.isConnected) { c.abort(); hosts.delete(k); } };
 /** Abort the page-level profile binding (the reviewer's route exit), or every binding with { all: true }. */
 export function releaseDexProfiles({ all = false } = {}) { for (const [k, c] of hosts) if (all || k === document) { c.abort(); hosts.delete(k); } prune(); }
@@ -198,7 +200,9 @@ export function openDexSheet(html, { title = 'Beast Dex', f = null, opener = nul
   detail.el.classList.add('dex-sheet');
   document.addEventListener('keydown', onKey, true);
   bindDexProfile(detail.el, { f });
-  (detail.el.querySelector('[data-dex-tab][aria-selected="true"]') || detail.el.querySelector('[data-action="sheet-close"]'))?.focus({ preventScroll: true });
+  // Keyboard users land on the selected tab; a touch or mouse opening focuses the dialog itself, so no focus ring appears on a tab.
+  const panel = detail.el.querySelector('.sheet'); panel?.setAttribute('tabindex', '-1');
+  (lastInput === 'keyboard' ? detail.el.querySelector('[data-dex-tab][aria-selected="true"]') : panel)?.focus({ preventScroll: true });
   return detail;
 }
 

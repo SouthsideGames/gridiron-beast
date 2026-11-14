@@ -1756,6 +1756,7 @@ button.dexp-evo:hover { border-color: var(--line-2); }
 .dexp-history p { margin: 2px 0 0; font-size: 14px; color: var(--ink-2); }
 /* The Dex sheet keeps one height while you switch tabs, so the tab bar never jumps under your finger. */
 .dex-sheet .sheet { height: 88dvh; }
+.dex-sheet .sheet:focus { outline: none; }
 @media (max-width: 359px) { .dexp-facts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dexp-stage-art { width: 96px; height: 108px; } .dexp-sprite, .dexp-sprite svg { width: 76px; height: 76px; } .dexp-tabs [role="tab"] { font-size: 12px; } }
 @media (min-width: 700px) { .dex-sheet .sheet { max-width: 720px; } .dexp-stage-art { width: 132px; height: 144px; } .dexp-sprite, .dexp-sprite svg { width: 104px; height: 104px; } .dexp-name { font-size: 24px; } }
 
