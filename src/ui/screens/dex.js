@@ -52,14 +52,14 @@ export function registerDexScreens(Router, app) {
           const s = SPECIES_DEX.find((x) => x.id === el.dataset.id); if (!s) return;
           const st = ctx.params?.all ? 'seen' : dexStatus(ctx.f, s.id);
           if (st === 'unknown') { sheet(`<div class="row">${silhouette(s, 72)}<div>${$t('league.b_unknown_species_b')}<div class="muted">${$t('league.type_2', { element: esc(s.element), label: RARITIES[s.rarity].label })}</div><div class="muted">${$t('league.found_in')} ${esc((s.regions || ELEMENT_REGIONS[s.element]).join(', '))}</div></div></div><p class="muted">${$t('league.scout_that_region_or_face_a')}</p>`, { title: '???' }); return; }
-          playMonsterCry(s.id); sheet(speciesSheet(s, ctx.f), { title: s.name, onClose: stopCry });
+          playMonsterCry(s.id); const detail = sheet(speciesSheet(s, ctx.f), { title: s.name, onClose: stopCry }); bindDexProfile(detail.el);
         },
       });
     },
   });
 }
 
-export function speciesSheet(s, f) {
+function legacySpeciesSheet(s, f) {
   const known = dexStatus(f, s.id) !== 'unknown';
   const formSeen = dexFormSeen(f, s.id);
   const evo = s.evolution.length ? `<h3>${$t('league.evolution')}</h3><div class="row" style="flex-wrap:wrap;gap:8px;align-items:flex-end">${sprite16(s, 40)}${s.evolution.map((e, i) => `<span class="dim">→</span><span class="center" style="font-size:12px">${formSeen >= i + 1 ? sprite16(evolvedSpec(s, i + 1), 40 + i * 8) : silhouette(evolvedSpec(s, i + 1), 40 + i * 8)}<br>${formSeen >= i + 1 ? esc(e.name) : '???'} <span class="dim">L${e.level}</span></span>`).join('')}</div><p class="dim">${formSeen ? `${$t('league.you_have_seen_this_species_evolve', { n: formSeen >= s.evolution.length ? ' fully' : '' })}` : $t('league.evolves_at_the_levels_shown_evolved')}</p>` : '';
@@ -73,4 +73,41 @@ export function speciesSheet(s, f) {
     <h3>${$t('league.signature_abilities')}</h3>${abilitiesHtml(s, { seeIt: known })}
     <h3>${$t('league.where_to_find_it')}</h3><p class="muted">${esc((s.regions || ELEMENT_REGIONS[s.element]).join(', '))}${s.fromWeek ? ` ${$t('league.from_week', { fromWeek: s.fromWeek })}` : ''}${s.rarity === 'legendary' ? (f?.campaign?.unlocked?.[s.id] ? $t('league.unlocked_scoutable_there_now') : ` ${$t('league.legend_tracks_3', { tracks: f?.campaign?.tracks?.[s.id] || 0 })}`) : ''}</p>
     ${evo}`;
+}
+
+
+/** Functional Dex 2 shell. Approved expanded lore is supplied separately. */
+export function speciesSheet(s, f, { monster = null } = {}) {
+  const legacy = legacySpeciesSheet(s, f);
+  const abilityStart = legacy.indexOf('<h3>' + $t('league.signature_abilities'));
+  const habitatStart = legacy.indexOf('<h3>' + $t('league.where_to_find_it'));
+  const evolutionStart = legacy.indexOf('<h3>' + $t('league.evolution'));
+  const profile = legacy.slice(0, abilityStart) + legacy.slice(habitatStart, evolutionStart < 0 ? undefined : evolutionStart);
+  const evolution = evolutionStart < 0 ? '<p>This species does not evolve.</p>' : legacy.slice(evolutionStart);
+  const attributes = monster ? Object.entries(monster.attributes || {}).map(([key, value]) => `<tr><th scope="row">${esc(key)}</th><td>${esc(value)}</td></tr>`).join('') : '';
+  const panels = {
+    Profile: profile + (monster ? `<h3>My Beast</h3><p>${esc(monster.name || s.name)}</p>` : ''),
+    Football: `<h3>${esc(POS_NAME[s.position] || s.position)}</h3>${monster ? `<table aria-label="Current attributes"><tbody>${attributes}</tbody></table>` : ''}${abilitiesHtml(s, { monster, seeIt: dexStatus(f, s.id) !== 'unknown' })}`,
+    Evolution: evolution + (monster ? `<p>Current evolution stage: ${esc((monster.stage || 0) + 1)}</p>` : ''),
+    Journal: `<p>${esc(monster ? 'Personal history' : 'Species discovery')}</p><p>${esc(dexStatus(f, s.id))}</p><p class="dim">Expanded lore and history are being prepared for Beast Dex 2.0.</p>`,
+  };
+  return `<div data-dex-profile><p class="chip">${monster ? 'My Beast View' : 'Species View'}</p>${sprite16(monster ? evolvedSpec(s, monster.stage || 0) : s, 96)}<div role="tablist" aria-label="Beast Dex sections">${Object.keys(panels).map((name, i) => `<button type="button" role="tab" data-dex-tab="${name}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${name}</button>`).join('')}</div>${Object.entries(panels).map(([name, content], i) => `<section role="tabpanel" aria-label="${name}" data-dex-panel="${name}" ${i ? 'hidden' : ''}>${content}</section>`).join('')}</div>`;
+}
+
+/** Bind locally to a sheet, including keyboard tab navigation. */
+export function bindDexProfile(root) {
+  const tabs = [...root.querySelectorAll('[data-dex-tab]')];
+  const select = (tab) => {
+    for (const item of tabs) { item.setAttribute('aria-selected', String(item === tab)); item.tabIndex = item === tab ? 0 : -1; }
+    for (const panel of root.querySelectorAll('[data-dex-panel]')) panel.hidden = panel.dataset.dexPanel !== tab.dataset.dexTab;
+  };
+  for (const tab of tabs) {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', (event) => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const index = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (tabs.indexOf(tab) + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      select(tabs[index]); tabs[index].focus();
+    });
+  }
 }
