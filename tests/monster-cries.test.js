@@ -1,0 +1,33 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { cryCatalog, cryRecipe, renderCry } from '../src/audio/monster-cries.js';
+import { FORMS } from '../src/data/beast-dex.js';
+import { cryVerdict, saveCryReview, cryReviews } from '../src/audio/cry-reviews.js';
+test('every real form has a deterministic, finite, bounded and distinct cry',()=>{
+ assert.deepEqual(cryCatalog.map(x=>x.id),FORMS.map(x=>x.id));const hashes=new Set();
+ for(const row of cryCatalog){const recipe=cryRecipe(row.id),pcm=renderCry(recipe);assert.ok(pcm.length>2205&&pcm.length<66150);for(const v of pcm)assert.ok(Number.isFinite(v)&&Math.abs(v)<1);const h=createHash('sha256').update(Buffer.from(pcm.buffer)).digest('hex');assert.ok(!hashes.has(h),row.id);hashes.add(h);assert.deepEqual(pcm,renderCry(cryRecipe(row.id)));}
+});
+test('Drakling forms independently compose different articulation and use rendered evolution traits',()=>{
+ const rows=cryCatalog.filter(x=>x.familyId==='drakeling');assert.deepEqual(rows.map(x=>x.appearance.size),['small','medium','large']);assert.ok(rows[1].appearance.features.includes('claws'));assert.ok(rows[2].appearance.features.includes('spikes'));
+ const recipes=rows.map(x=>cryRecipe(x.id));assert.deepEqual(recipes.map(x=>x.events[0].kind),['chirrup','rattle','creak']);assert.notDeepEqual(recipes[0].events.map(x=>x.at),recipes[1].events.map(x=>x.at));assert.match(recipes[0].description,/thinks he is already enormous/);
+});
+test('descriptions select distinctive voice treatments',()=>{
+ assert.ok(cryRecipe('gearwing:0').events.every(x=>x.kind==='mechanical'));assert.equal(cryRecipe('sunwhistle:0').events.length,4);assert.ok(cryRecipe('steelpaw:0').events.every(x=>x.kind==='chirrup'));assert.equal(cryRecipe('gloamtoad:0').voice,'croak');
+});
+test('reviews survive reload-like reads and stale recipes return to pending; failed saves remain exportable',()=>{
+ const storage=new Map();globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
+ assert.ok(saveCryReview('drakeling:0','approved','good'));assert.equal(cryVerdict('drakeling:0'),'approved');
+ const r=JSON.parse(storage.values().next().value);r['gearwing:0']={status:'approved',fingerprint:'old recipe',updatedAt:'2020'};storage.set('gridiron-beast-cry-reviews-v1',JSON.stringify(r));assert.equal(cryVerdict('gearwing:0'),'pending');
+ globalThis.localStorage={getItem:()=>{throw Error();},setItem:()=>{throw Error();}};assert.equal(saveCryReview('drakeling:1','revision','different rhythm'),false);assert.equal(cryReviews()['drakeling:1'].notes,'different rhythm');delete globalThis.localStorage;
+});
+test('playback unlock races, replacement and stop do not leave duplicate voices',async()=>{
+ const { playCry,stopCry }=await import('../src/audio/monster-cries.js');let unblock=null;let started=0,stopped=0;
+ class AC {constructor(){this.state='suspended';}resume(){if(this.state==='running')return Promise.resolve();return new Promise(r=>{unblock=()=>{this.state='running';r();};});}createBuffer(c,n){return{copyToChannel(data){assert.equal(data.length,n);}};}createGain(){return{gain:{value:0},connect(){return this;},disconnect(){}};}createBufferSource(){return{connect(){return this;},disconnect(){},start(){started++;},stop(){stopped++;this.onended?.();}};}}
+ globalThis.AudioContext=AC;const first=playCry('drakeling:0');stopCry();unblock();assert.equal(await first,false);assert.equal(started,0);
+ const second=playCry('drakeling:1');await new Promise(r=>setImmediate(r));assert.equal(started,1);
+ const third=playCry('drakeling:2');await new Promise(r=>setImmediate(r));assert.equal(await second,false);assert.equal(started,2);stopCry();assert.equal(await third,false);assert.equal(stopped,2);delete globalThis.AudioContext;
+});
+test('reviewer mounts its real catalog, description, sprites and per-form controls without a franchise',async()=>{
+ const { registerMonsterCryReviewer }=await import('../src/ui/screens/monster-cry-reviewer.js');let screen;registerMonsterCryReviewer({registerScreen(name,s){assert.equal(name,'monster-cry-reviewer');screen=s;}});const html=screen.render();assert.match(html,/222 forms/);assert.match(html,/baby dragon who thinks he is already enormous/);for(const name of ['Drakling','Drakyra','Dracolossus'])assert.ok(html.includes(name));assert.equal((html.match(/data-cry-form=/g)||[]).length,3);assert.equal((html.match(/data-status="approved"/g)||[]).length,3);assert.match(html,/<svg/);assert.match(html,/Copy review report/);
+});

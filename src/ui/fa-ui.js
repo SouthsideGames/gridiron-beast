@@ -1,3 +1,5 @@
+import { playMonsterCry } from '../audio/detail-audio.js';
+import { stopCry } from '../audio/monster-cries.js';
 // Task 7 — the free-agency market screens (decisions 11, 12, 14, 19, 29, 30; specification "Interface").
 // Simple by default: period, cap (total, committed, reserved, usable), position filter, each free agent's name, overall, position,
 // rarity, fit, ask and interest, and a one-tap offer at his ask. Expandable: his priorities, the competing offers, bonus and term
@@ -156,7 +158,8 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
       </details>
       <div class="row" style="gap:6px;margin-top:8px">${mode === 'offer' ? (mine ? `<button class="btn primary grow" data-act="revise">${$t('market.revise_offer')}</button>${mine.state === 'countered' ? `<button class="btn grow" data-act="counter">${$t('market.accept_his_counter')}</button>` : ''}<button class="btn danger" data-act="withdraw">${$t('market.withdraw')}</button>` : `<button class="btn primary grow" data-act="offer" ${block ? 'disabled' : ''}>${$t('market.make_offer')}</button>`) : mode === 'extend' || mode === 'renew' ? negButtons(neg, mode) : `<button class="btn primary grow" data-act="now" ${block ? 'disabled' : ''}>${$t('market.offer_now')}</button>`}</div>`;
   };
-  const { el, close } = sheet(draw(), { title: mode === 'extend' ? $t('market.contract_extension') : mode === 'renew' ? $t('market.contract_renewal') : $t('market.free_agent') }); let advOpen = false;
+  playMonsterCry(m);
+  const { el, close } = sheet(draw(), { title: mode === 'extend' ? $t('market.contract_extension') : mode === 'renew' ? $t('market.contract_renewal') : $t('market.free_agent'), onClose: stopCry }); let advOpen = false;
   const root = () => el;
   const redraw = () => { const body = el.querySelector('.sheet-body') || el; advOpen = !!el.querySelector('details')?.open; body.innerHTML = draw(); if (advOpen) el.querySelector('details')?.setAttribute('open', ''); };
   const done = (msg, kind = 'good') => { app.save({ immediate: true }); toast(msg, kind); close(); onDone?.(); };
