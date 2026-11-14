@@ -65,7 +65,7 @@ export function registerDexScreens(Router, app) {
 }
 
 /** Presentation reads existing records; it never backfills or mutates a monster. */
-export function speciesSheet(s, f, { monster = null, previewGames = null, revealAll = false, previewStage = 0, stagePicker = true } = {}) {
+export function speciesSheet(s, f, { monster = null, previewGames = null, revealAll = false, previewStage = 0, stagePicker = true, viewPicker = true } = {}) {
   const profileId = `dex-profile-${++profileSerial}`;
   const stage = monster?.stage ?? previewStage;
   const content = dexContent(s.id, stage);
@@ -90,18 +90,39 @@ export function speciesSheet(s, f, { monster = null, previewGames = null, reveal
   const strengths = ranges.slice(0,3).map(([key]) => key).join(', ');
   const weaknesses = (form?.belowBandWeaknesses || []).join(', ');
   const scout = `<h3>Scouting report</h3><p>${esc(content?.scouting || s.position)}</p><p>Highest natural starting ratings: ${esc(strengths || 'not recorded')}.${weaknesses ? ` Lower starting bands: ${esc(weaknesses)}.` : ''} Individual development and current attributes determine this beast’s present ratings.</p><details><summary>View natural attribute ranges</summary><p>Starting ranges for this evolution stage; these are not current ratings or guaranteed career limits.</p><table><tbody>${ranges.map(([key,range]) => `<tr><th scope="row">${esc(key)}</th><td>${range[0]}–${range[1]}</td></tr>`).join('')}</tbody></table></details>`;
+  const owned = f?.roster?.filter(m => m.species === s.id) || [];
+  const viewSelect = viewPicker && owned.length ? `<label>Viewing<select data-dex-view><option value="species" ${!monster ? 'selected' : ''}>Species View</option>${owned.map(m => `<option value="${esc(m.id)}" ${monster?.id === m.id ? 'selected' : ''}>My Beast: ${esc(m.name)}</option>`).join('')}</select></label>` : '';
   const relationships = content?.relationships.length ? `<h3>Species relationships</h3>${content.relationships.map(relation => games >= relation.games ? `<article><b>${esc(relation.kind)} · ${esc(familyById(relation.familyId)?.name)}</b><p>${esc(relation.text)}</p></article>` : `<p class="dim">Relationship lore unlocks at ${relation.games} games.</p>`).join('')}` : '';
   const panels = {
-    Profile: `<h3>${esc(monster?.name || current.name)}</h3>${biography}<p>${esc(s.element)} · ${esc(s.size)} · ${esc(s.body)}</p><h3>Habitat</h3><p>${esc((s.regions || ELEMENT_REGIONS[s.element] || []).join(', '))}</p>${facts}${relationships}${monster ? `<h3>Individual quirk</h3><p>${esc(individualQuirk(monster))}</p>` : ''}`,
+    Profile: `<h3>${esc(monster?.name || current.name)}</h3>${biography}<h3>Personality</h3><p>${esc(content?.personality || s.personality)}</p><p>${esc(s.element)} · ${esc(s.size)} · ${esc(s.body)}</p><h3>Habitat</h3><p>${esc((s.regions || ELEMENT_REGIONS[s.element] || []).join(', '))}</p>${content?.habitat ? `<p>${esc(content.habitat)}</p>` : ''}${facts}${relationships}${monster ? `<h3>Individual quirk</h3><p>${esc(individualQuirk(monster))}</p>` : ''}`,
     Football: `<h3>${esc(POS_NAME[s.position] || s.position)}</h3>${scout}${monster ? `<table aria-label="Current attributes"><tbody>${attributes}</tbody></table>` : ''}${abilitiesHtml(s, { monster, dex2: true, seeIt: revealAll || dexStatus(f, s.id) !== 'unknown' })}${stats}`,
     Evolution: evolution + (content?.development ? `<h3>Personality development</h3><p>${esc(content.development)}</p>` : '') + (monster ? `<p>Current stage: ${stage + 1}</p>${history(timeline.filter(e => e.t === 'evolve'))}` : ''),
     Journal: monster ? `<h3>Franchise accomplishments and personal history</h3>${history(timeline)}` : `<h3>Species knowledge</h3><p>${games} games · shared across individuals and franchises</p>${lore}`,
   };
-  return `<div data-dex-profile data-family="${esc(s.id)}" data-reveal="${revealAll}" data-preview-games="${previewGames ?? ''}"><p class="chip">${monster ? 'My Beast View' : 'Species View'}</p>${stagePicker && !monster && s.evolution.length ? `<label>Evolution form <select data-dex-stage>${[s, ...s.evolution].map((form, i) => i <= seen ? `<option value="${i}" ${i === stage ? 'selected' : ''}>${esc(form.name)}</option>` : '').join('')}</select></label>` : ''}<div data-dex-portrait style="position:sticky;top:0;z-index:1;background:var(--panel,#15231f)"><button type="button" class="btn ghost" aria-label="Interact with ${esc(monster?.name || current.name)}" data-dex-react data-name="${esc(monster?.name || current.name)}" data-features="${esc(JSON.stringify(current.features || []))}">${sprite16(current, 96)}</button><p data-dex-reaction role="status" aria-live="polite"></p></div><div role="tablist" aria-label="Beast Dex sections">${Object.keys(panels).map((name, i) => `<button type="button" role="tab" id="${profileId}-tab-${name}" aria-controls="${profileId}-panel-${name}" data-dex-tab="${name}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${name}</button>`).join('')}</div>${Object.entries(panels).map(([name, content], i) => `<section role="tabpanel" id="${profileId}-panel-${name}" aria-labelledby="${profileId}-tab-${name}" aria-label="${name}" data-dex-panel="${name}" ${i ? 'hidden' : ''}>${content}</section>`).join('')}</div>`;
+  return `<div data-dex-profile data-family="${esc(s.id)}" data-stage="${stage}" data-reveal="${revealAll}" data-preview-games="${previewGames ?? ''}"><p class="chip">${monster ? 'My Beast View' : 'Species View'}</p>${viewSelect}${stagePicker && !monster && s.evolution.length ? `<label>Evolution form <select data-dex-stage>${[s, ...s.evolution].map((form, i) => i <= seen ? `<option value="${i}" ${i === stage ? 'selected' : ''}>${esc(form.name)}</option>` : '').join('')}</select></label>` : ''}<div data-dex-portrait style="position:sticky;top:0;z-index:1;background:var(--panel,#15231f)"><button type="button" class="btn ghost" aria-label="Interact with ${esc(monster?.name || current.name)}" data-dex-react data-name="${esc(monster?.name || current.name)}" data-features="${esc(JSON.stringify(current.features || []))}" data-reactions="${esc(JSON.stringify(content?.reactions || null))}">${sprite16(current, 96)}</button><p data-dex-reaction role="status" aria-live="polite"></p></div><div role="tablist" aria-label="Beast Dex sections">${Object.keys(panels).map((name, i) => `<button type="button" role="tab" id="${profileId}-tab-${name}" aria-controls="${profileId}-panel-${name}" data-dex-tab="${name}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${name}</button>`).join('')}</div>${Object.entries(panels).map(([name, content], i) => `<section role="tabpanel" id="${profileId}-panel-${name}" aria-labelledby="${profileId}-tab-${name}" aria-label="${name}" data-dex-panel="${name}" ${i ? 'hidden' : ''}>${content}</section>`).join('')}</div>`;
+}
+
+/** Shared by a normal portrait tap and deterministic reviewer previews. */
+export function showPortraitReaction(button, rare = false) {
+  const reaction = portraitReaction({ name: button.dataset.name, features: JSON.parse(button.dataset.features), reactions: JSON.parse(button.dataset.reactions || 'null'), rare, choice: Math.floor(Math.random() * 100) });
+  const portrait = button.closest('[data-dex-portrait]');
+  portrait.querySelector('[data-dex-reaction]').textContent = reaction;
+  portrait.dataset.reaction = rare ? 'rare' : 'normal';
+  const profile = portrait.closest('[data-dex-profile]');
+  portrait.dispatchEvent(new CustomEvent('beast-dex-reaction', { bubbles: true, detail: { rare, reaction, familyId: profile?.dataset.family, stage: Number(profile?.dataset.stage || 0) } }));
 }
 
 /** Bind locally to a sheet, including keyboard tab navigation. */
 export function bindDexProfile(root, { f = null } = {}) {
+  root.querySelectorAll('[data-dex-view]').forEach(select => select.addEventListener('change', () => {
+    const profile = select.closest('[data-dex-profile]');
+    const s = SPECIES_DEX.find(x => x.id === profile.dataset.family);
+    const monster = select.value === 'species' ? null : f?.roster?.find(m => m.id === select.value && m.species === s.id);
+    const container = profile.parentElement;
+    profile.outerHTML = speciesSheet(s, f, { monster, revealAll: profile.dataset.reveal === 'true' });
+    playMonsterCry(monster || s.id);
+    bindDexProfile(container, { f });
+  }));
   root.querySelectorAll('[data-dex-stage]').forEach(select => select.addEventListener('change', () => {
     const profile = select.closest('[data-dex-profile]');
     const s = SPECIES_DEX.find(x => x.id === profile.dataset.family);
@@ -113,14 +134,7 @@ export function bindDexProfile(root, { f = null } = {}) {
     bindDexProfile(container, { f });
   }));
   root.querySelectorAll('[data-dex-react]').forEach(button => {
-    button.addEventListener('click', () => {
-      const rare = Math.random() < 0.05; // Cosmetic randomness, independent of the seeded simulation.
-      const reaction = portraitReaction({ name: button.dataset.name, features: JSON.parse(button.dataset.features), rare });
-      const portrait = button.closest('[data-dex-portrait]');
-      portrait.querySelector('[data-dex-reaction]').textContent = reaction;
-      portrait.dataset.reaction = rare ? 'rare' : 'normal';
-      portrait.dispatchEvent(new CustomEvent('beast-dex-reaction', { bubbles: true, detail: { rare, reaction } }));
-    });
+    button.addEventListener('click', () => showPortraitReaction(button, Math.random() < 0.05));
   });
   const tabs = [...root.querySelectorAll('[data-dex-tab]')];
   const select = (tab) => {
