@@ -86,7 +86,7 @@ link are unchanged). PR #114 stays a draft until the owner approves merging.
 
 ### Checks
 - Full suite on `e78c853`: 2,165 of 2,166 passed; the one failure (`central-text`, the dropped lines above) also fails on ChatGPT's
-  `b7ce1f8` and is fixed in `c1caf29`. Deploy check on the preview folder: everything passes except "BUILD.test is false", which is
+  `b7ce1f8` and is fixed in `c1caf29`. Full suite on the preview commit `c1caf29`: 2,166 of 2,166 passed. Deploy check on the preview folder: everything passes except "BUILD.test is false", which is
   expected for a test build.
 - `node tools/audit-dex-content.mjs --require-complete`: 222/222. Targeted tests: dex-2, dex-text, task8-dex-collection, and the new
   `tests/dex-2-integration.test.js` (counting rule through replay/reload/import/cloud merge; no locked lore, title or relationship
