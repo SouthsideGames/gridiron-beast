@@ -1,3 +1,5 @@
+import { playMonsterCry } from '../../audio/detail-audio.js';
+import { stopCry } from '../../audio/monster-cries.js';
 // Beast Dex: every species in the game, grouped by element. Reachable from the
 // main menu (no franchise needed). With a franchise, species you have scouted
 // or faced are revealed; species you have signed are marked. Everything else
@@ -50,7 +52,7 @@ export function registerDexScreens(Router, app) {
           const s = SPECIES_DEX.find((x) => x.id === el.dataset.id); if (!s) return;
           const st = ctx.params?.all ? 'seen' : dexStatus(ctx.f, s.id);
           if (st === 'unknown') { sheet(`<div class="row">${silhouette(s, 72)}<div>${$t('league.b_unknown_species_b')}<div class="muted">${$t('league.type_2', { element: esc(s.element), label: RARITIES[s.rarity].label })}</div><div class="muted">${$t('league.found_in')} ${esc((s.regions || ELEMENT_REGIONS[s.element]).join(', '))}</div></div></div><p class="muted">${$t('league.scout_that_region_or_face_a')}</p>`, { title: '???' }); return; }
-          sheet(speciesSheet(s, ctx.f), { title: s.name });
+          playMonsterCry(s.id); sheet(speciesSheet(s, ctx.f), { title: s.name, onClose: stopCry });
         },
       });
     },

@@ -1,3 +1,5 @@
+import { playMonsterCry } from '../audio/detail-audio.js';
+import { stopCry } from '../audio/monster-cries.js';
 // Monster Career Presentation (GDD §40): the summary header, the trophy case, the details behind timeline events and
 // trophies, and the career sheet that opens from anywhere in the game (roster, free agency, the draft, awards, news, the Hall
 // of Fame). One implementation: the monster card and every sheet render the same section from the same profile.
@@ -177,9 +179,10 @@ export function openCareerSheet(f, id, { go = null } = {}) {
   if (found?.where === 'roster') F.monsterTimeline(f, found.m); // the Phase 1 backfill, as the card does
   const p = withVisibility(f, careerProfile(f, id));
   if (!p) { sheet(`<p>${$t('career.no_career_on_record_for_this_2')}</p>`, { title: $t('career.career') }); return null; }
+  if (found?.m) playMonsterCry(found.m);
   const ctx = { f: () => f, profile: () => withVisibility(f, careerProfile(f, id)), monster: () => findMonster(f, id)?.m || null, go };
   const extra = p.where === 'roster' && go ? `<button class="btn block" data-action="cs-card" style="margin-top:8px">${$t('career.open_s_monster_card', { name: esc(p.name) })}</button>` : '';
-  const { el, close } = sheet(`<div class="career-sheet">${careerSectionHtml(f, p, { animate: true })}${extra}</div>`, { title: p.kind === 'prospect' ? $t('career.prospect') : `${$t('career.career_3', { name: p.name })}` });
+  const { el, close } = sheet(`<div class="career-sheet">${careerSectionHtml(f, p, { animate: true })}${extra}</div>`, { title: p.kind === 'prospect' ? $t('career.prospect') : `${$t('career.career_3', { name: p.name })}`, onClose: stopCry });
   delegateIn(el, { ...careerActions(ctx), 'cs-card': () => { close(); go('monster', { id }); } });
   return { el, close, profile: p };
 }

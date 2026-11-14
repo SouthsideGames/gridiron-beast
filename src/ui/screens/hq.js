@@ -1,3 +1,5 @@
+import { playMonsterCry } from '../../audio/detail-audio.js';
+import { stopCry } from '../../audio/monster-cries.js';
 // Franchise Headquarters and the weekly action screens, plus playbook
 // browsing and the league screens.
 
@@ -256,6 +258,7 @@ export function registerHqScreens(Router, app) {
   /** The scout's full report on a fully scouted prospect (GDD §19.4): bio, nature, ability, all twelve attributes, and how they compare with the owner's best at the position. */
   function prospectSheet(f, m) {
     const v = F.prospectView(f, m); if (v.level < 6) return;
+    playMonsterCry(m);
     const sp = resolveSpecies(m); const temper = temperSummary(m.temper); const attrs = m.attributes;
     const mine = f.roster.filter((x) => x.position === m.position).sort((a, b) => monsterOverall(b) - monsterOverall(a));
     const best = mine[0]; const depth = F.depthNeeds(f).find((n) => n.position === m.position);
@@ -271,7 +274,7 @@ export function registerHqScreens(Router, app) {
         ${sp.evolution?.length ? `<div class="dim">${$t('hq.evolves_at_level', { level: sp.evolution[0].level })}</div>` : ''}</div>
       ${headlineHtml(m)}${(() => { const fit = F.fitFor(f, m); return fit ? `<p class="${fit.fits ? 'fit-key' : 'dim'}" style="margin:6px 0 0">${fit.fits ? $t('hq.fits_your_scheme_2') : $t('hq.not_a_scheme_fit')} · ${esc(fieldText(fit, 'why'))}</p>` : ''; })()}
       <div class="attr-grid" style="margin-top:8px">${ATTRIBUTES.map((k) => `<div class="attr"><span>${ATTR_LABEL[k]}</span><div class="bar ${attrs[k] < 45 ? 'bad' : attrs[k] < 60 ? 'warn' : ''}"><i style="width:${attrs[k]}%"></i></div><b>${attrs[k]}</b></div>`).join('')}</div>
-      <div class="panel tight" style="margin-top:8px">${$t('hq.b_on_your_roster_b')}<div class="muted">${best ? `${$t('hq.your_best_is_at_ovr_at', { position: esc(m.position), name: esc(best.name), monsterOverall: monsterOverall(best), n: mine.length })}${depth && depth.status !== 'ok' ? `, ${esc(depth.status)}` : ''}). ${monsterOverall(m) >= monsterOverall(best) ? $t('hq.this_prospect_would_start_on_day') : monsterOverall(m) >= monsterOverall(best) - 6 ? $t('hq.a_real_backup_with_room_to') : $t('hq.a_development_pick_behind_the_starter')}` : `${$t('hq.you_have_nobody_at_this_prospect', { position: esc(m.position) })}`}</div></div>`, { title: $t('hq.scouting_report') });
+      <div class="panel tight" style="margin-top:8px">${$t('hq.b_on_your_roster_b')}<div class="muted">${best ? `${$t('hq.your_best_is_at_ovr_at', { position: esc(m.position), name: esc(best.name), monsterOverall: monsterOverall(best), n: mine.length })}${depth && depth.status !== 'ok' ? `, ${esc(depth.status)}` : ''}). ${monsterOverall(m) >= monsterOverall(best) ? $t('hq.this_prospect_would_start_on_day') : monsterOverall(m) >= monsterOverall(best) - 6 ? $t('hq.a_real_backup_with_room_to') : $t('hq.a_development_pick_behind_the_starter')}` : `${$t('hq.you_have_nobody_at_this_prospect', { position: esc(m.position) })}`}</div></div>`, { title: $t('hq.scouting_report'), onClose: stopCry });
   }
   /**
    * A free agent's card (polish 2.0). What is public: bio, clubs, ability, the ask. What the scout has
@@ -279,7 +282,7 @@ export function registerHqScreens(Router, app) {
    */
   function freeAgentSheet(f, id, onSigned) {
     const entry = F.offseasonMarket(f).find((e) => e.monster.id === id); if (!entry) return; const fmt = (n) => n.toLocaleString('en-US');
-    const m = entry.monster; const v = F.freeAgentView(f, m); const sp = resolveSpecies(m); const temper = temperSummary(m.temper);
+    const m = entry.monster; playMonsterCry(m); const v = F.freeAgentView(f, m); const sp = resolveSpecies(m); const temper = temperSummary(m.temper);
     if (v.potential != null) { (app.apexSeen ||= new Map()).set(m.id, m); if (discover(f, m, 'free-agent-report')) setTimeout(() => { app.save(); app.playApex?.(); }, 0); } // a potential-revealing report: an Apex is discovered here (spec §5)
     const bio = F.monsterBio({ ...f, club: '__nobody__' }, m); const clubs = (m.history || []).map((h) => `${esc(h.club)}${h.from ? ` (${yearOf(h.from)}${h.to && h.to !== h.from ? `-${yearOf(h.to)}` : ''})` : ''}`).join(', ');
     const askV = F.freeAgentAsk(f, m); const ask = askV.exact; const askText = askV.estimate ? `${$t('hq.asks_about_yr_an_estimate_until', { amount: fmt(askV.shown) })}` : `${$t('hq.asks_yr', { amount: fmt(ask) })}`; const h = headlineAttributes(m);

@@ -1,3 +1,4 @@
+import { audioPreferences, setAudioPreferences } from '../../audio/context.js';
 // Main menu, settings, developer tools, about.
 
 import { esc, delegate, toast, confirmSheet, sheet } from '../dom.js';
@@ -113,12 +114,15 @@ export function registerMenuScreens(Router, app) {
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="devnotices" ${s.devNotices !== false ? 'checked' : ''}> ${t('menu.developer_review_notices_new_or_changed')}</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="liveclock" ${s.liveClock ? 'checked' : ''}> ${t('menu.live_40_second_play_clock_off')}</label>
         </div>
+        <div class="panel"><h3>Audio</h3><label class="field row"><input type="checkbox" style="width:auto" data-change="audio-mute" ${audioPreferences().muted ? 'checked' : ''}> Mute all audio</label>${[['music','Music volume'],['sfx','Sound effects volume'],['crowd','Crowd volume'],['cries','Monster cry volume']].map(([key,label]) => `<label class="field">${label}<input type="range" min="0" max="1" step="0.05" data-change="audio-${key}" value="${audioPreferences()[key]}"></label>`).join('')}<p class="dim">Audio starts after a tap. These settings apply across franchises.</p></div>
         ${savePanelHtml(app)}
         <p class="dim">${t('menu.saves_from_earlier_versions_are_never')}</p>
         <p class="center dim">${t('menu.build_files_if_this_does_not', { build: esc(buildLabel()), gbFiles: globalThis.__gbFiles === 'mapped' ? t('menu.up_to_date') : globalThis.__gbFiles === 'refreshed' ? 'refreshed' : 'checking' })}</p>`;
     },
     mount(root, ctx) {
       fillStorageMeter(root, app);
+      const audioSet = patch => { if (!setAudioPreferences(patch)) toast('Audio setting could not be saved on this device.', 'bad'); };
+      root.querySelectorAll('[data-change^="audio-"]').forEach(el => el.addEventListener('input', () => audioSet(el.dataset.change === 'audio-mute' ? { muted: el.checked } : { [el.dataset.change.slice(6)]: Number(el.value) })));
       const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); };
       delegate(root, {
         quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), speed: (el) => set('speed', Number(el.value)),
@@ -150,6 +154,7 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="go" data-screen="practice">${t('menu.practice_field')}</button>
         <button class="btn block" data-action="go" data-screen="ai-lab">${t('menu.ai_testing_lab_qb_decisions')}</button>
         <button class="btn block" data-action="go" data-screen="attr-lab">${t('menu.attribute_testing_lab')}</button>
+        <button class="btn block" data-action="go" data-screen="monster-cry-reviewer">Monster Cry Reviewer</button>
         <button class="btn block" data-action="go" data-screen="evo-preview">${t('menu.preview_evolution')}</button>
         <button class="btn block badge-host" data-action="go" data-screen="ability-reviewer">${t('menu.ability_reviewer')}${devBadge(app.settings, q.football.outstanding)}</button>
         <button class="btn block" data-action="go" data-screen="ability-balance">${t('menu.ability_balance')}</button>
