@@ -141,13 +141,13 @@ All four attributes work in the right direction. One gap: **Strength plays no pa
   - **Options:** fix their play art in a follow-up, or leave them in reserve. They stay in reserve and are reviewable in the Playbook Audit.
 - **C. RPO:** the catalogue has no RPO plays, so none could be released. Authoring them would be new content.
 - **D. QB Strength in sack attempts:** today only Agility resists the pocket sack (GDD line 1229). Add Strength, or keep as designed.
-- **E. Hall of Fame record credit reads the career timeline.** `tests/career-timeline.test.js` ("the timeline never changes the game") fails whenever a retired monster holds a league record. The Hall case's record points come from the timeline events, so with the timeline writers switched off the case differs (`monsterHallOfFame.candidates[].recordsBy`).
+- **E. Hall of Fame record credit reads the career timeline:** **resolved:** the honour ledger (§11.3). Original note: `tests/career-timeline.test.js` ("the timeline never changes the game") fails whenever a retired monster holds a league record. The Hall case's record points come from the timeline events, so with the timeline writers switched off the case differs (`monsterHallOfFame.candidates[].recordsBy`).
   - This is a Task 9 weakness. The candidate review exposed it first; Task 10's changed seasons expose it again.
   - The game is unaffected (the writers are always on), but the Hall is not timeline-independent.
   - **Second symptom (found 2026-11-13 evening):** a retiring monster's titles and records in his League News line also come from the timeline (§10.4).
   - **Proposed fix:** a small record ledger kept outside the timeline. It is a save-format addition, so it is left for approval.
-- **F. End Around's design (new).** The receiver lines up 18 yards wide and reaches the QB at about 2.7 seconds, so pressure usually gets there first (§10.2). Choose a tighter split, pre-snap motion, or the QB opening toward him, or leave the play held back.
-- **G. The board's "win a gym badge" goal (new; an interpretation, easy to reverse).** It now counts a badge taken during the season even if it is lost again later that season. Under the new rule it would otherwise silently fail for a badge won in week 2 and lost in week 9.
+- **F. End Around's design:** **resolved:** pre-snap motion, corrected and released (§11.1). Original note: The receiver lines up 18 yards wide and reaches the QB at about 2.7 seconds, so pressure usually gets there first (§10.2). Choose a tighter split, pre-snap motion, or the QB opening toward him, or leave the play held back.
+- **G. The board's "win a gym badge" goal:** **resolved by the owner's ruling (§11.2).** Original note: It now counts a badge taken during the season even if it is lost again later that season. Under the new rule it would otherwise silently fail for a badge won in week 2 and lost in week 9.
 
 ## 7. Regression (Stage D)
 
@@ -305,3 +305,56 @@ That is a change to the play's design, so the play stays held back. Its reserve 
 | `partnership-franchise`: the captain-pick fallback | An outdated test setup. The changed seasons left the club with one spare linebacker, and the test removed him, so the season correctly refused to start on the lineup gate. | **Fixed** in `932bada`: the test removes a captain whose position has depth to spare. Passes when rerun alone. |
 | `career-timeline`: "the timeline never changes the game" | **Pre-existing (decision E), with a second symptom.** A retiring monster's titles and records in his League News line are read from the career timeline (only awards fall back to the season history). With the writers off, a retiring Beast Bowl champion loses "a Beast Bowl champion" from that line. Game results are unaffected. Like the Hall record credit, the fix is a small title-and-record ledger outside the timeline: a save-format addition, left for approval. | **Open (decision E).** Whether it fails depends on the seed's seasons; it passed on `c84bb73`. |
 
+## 11. The three final decisions (ChatGPT `chatgpt/task10-final-decisions` at `830f1f4`)
+
+The branch sat directly on `a1f5b5e`. It was reviewed on its own branch, corrected there, and fast-forwarded into `task10-integration` at `ed59f29`.
+
+### 11.1 End Around: pre-snap motion (decision F)
+
+ChatGPT added the motion (the receiver lines up 18 yards wide and motions 9.3 yards inward to `[-3.5, 9]`) but left his route starting at the wide spot.
+- **The defect:** the playbook validator rejected it ("WR2's path must start where the motion ends"). Snapped at the motion spot, he ran back out to 18 before looping in, so the play got worse.
+- **The correction (`8bbd4a9`):** the route starts where the motion ends. The motion and the wide alignment are unchanged.
+
+| End Around (11 defenses × 30 seeds) | Handoffs | At | Sacks | Yards per play | Handoffs vs blitzes |
+|---|---|---|---|---|---|
+| Before (no motion) | 46% | 2.65 s | 37% | −0.31 | 8/150 |
+| ChatGPT as committed | 0% | — | 53% | −1.75 | 0/150 |
+| **Corrected** | **100%** | **1.15 s** | **0%** | **+1.66** | **150/150** |
+
+- **Movement:** no missed meshes, freezing or overlap in 660 snaps.
+- **Visual check:** the play card shows the wide alignment, the motion zigzag inward, and the loop behind the QB around the left end. A simulated snap's tracks follow the same shape with no doubling back.
+- **Status:** End Around is now released, so nothing is held back. Its reserve walk-through meets the normal 7-second limit again, and the live-play invariants pass.
+
+### 11.2 Board badge goal
+
+**The owner's rule:** a badge earned or reclaimed this season counts only if still held at season's end, and a carried-over badge counts only if reclaimed. ChatGPT's season-end change implements it correctly. The goal is settled after the playoffs, and a badge enters the season list only when newly won.
+
+**Correction (`4e607cb`):** HQ's mid-season progress used a separate calculation. Both now use one exported rule, `badgesWonThisSeason`, and the GDD wording is updated.
+
+**Tests** (`tests/task10-badge-goal.test.js`): 8 real seasons across 4 seeds, with gym results set per club and a save/load after every game.
+- Each season's count and board verdict are checked against an independent calculation from the games.
+- Covered: earned and kept (met); earned then lost, including in the playoffs; carried-over and kept (not counted); lost then reclaimed; an all-losses season (missed).
+- Direct checks: a forfeit after earning, a carried-over badge, a reclaim, save/load, and the fallback for saves without the season list.
+
+### 11.3 Honour ledger (decision E)
+
+ChatGPT added a per-monster honour ledger, `careerHonours`, holding awards, championships and records, written whether or not the timeline writers are on. The retirement news, legend records and Hall of Fame case facts read it. Three defects were corrected in `ed59f29`:
+
+1. **Old saves lost honours.** Every reader did `careerHonours || career.ev`. A monster from an existing save, who has honours only in his timeline, got a ledger holding just his next honour, which then hid everything older.
+   - **Reproduced:** a two-time champion with six league records and three awards was left with only his awards after one new honour.
+   - **Fix:** one reader, `honourEvents`, merges ledger and timeline by key. The ledger is seeded from the timeline the first time it is written. The Hall case merges a legend record's ledger with its timeline, so legends preserved by older saves still make their case.
+2. **The writers-off switch no longer meant "nothing written".** ChatGPT removed the guards from the after-game and season-end passes, so the timeline was written with the writers off, and the determinism test failed on "nothing written with the writers off". Those passes now run on a throwaway copy of the book when the writers are off: honours are found and the timeline is untouched.
+3. **A pre-existing wording bug**, also in the published build: "two-time" was written "three-time" (the number words were off by one).
+
+**Tests:**
+- `tests/career-timeline.test.js` (including "the timeline never changes the game", which failed before): 9 of 9 pass.
+- `tests/task10-honour-ledger.test.js`:
+  - the ledger equals the timeline's honours and survives save/load;
+  - the old-save scenario keeps every earlier honour;
+  - **four seasons with the writers on and off produce identical retirement news honours and identical Hall of Fame candidates** (6 candidates, 3 retirements with honours);
+  - the wording.
+- 200 of 200 tests in the related suites (Hall, legends, retirement, career, saves, compaction, translation).
+
+### 11.4 Regression
+
+{{FULL3}}
