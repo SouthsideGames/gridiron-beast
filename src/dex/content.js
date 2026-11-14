@@ -1,3 +1,9 @@
+import { FIRE_WATER_DRAFTS } from './content/fire-water.js';
+import { NATURE_ELECTRIC_DRAFTS } from './content/nature-electric.js';
+import { ICE_WIND_DRAFTS } from './content/ice-wind.js';
+import { EARTH_DARK_DRAFTS } from './content/earth-dark.js';
+import { LIGHT_METAL_DRAFTS } from './content/light-metal.js';
+import { PSYCHIC_DRAGON_DRAFTS } from './content/psychic-dragon.js';
 // Editorial content is independent of gameplay. Existing descriptions remain the fallback.
 // New writing is a review draft; it is not a replacement for the approved prototype text.
 import { LINKED_FAMILY_DRAFTS } from './content/linked-families.js';
@@ -50,7 +56,7 @@ const FLAROO = [
   },
 ];
 
-export const EDITORIAL_DRAFTS = immutable({ emberfox: FLAROO, ...LINKED_FAMILY_DRAFTS });
+export const EDITORIAL_DRAFTS = immutable({ emberfox: FLAROO, ...LINKED_FAMILY_DRAFTS, ...FIRE_WATER_DRAFTS, ...NATURE_ELECTRIC_DRAFTS, ...ICE_WIND_DRAFTS, ...EARTH_DARK_DRAFTS, ...LIGHT_METAL_DRAFTS, ...PSYCHIC_DRAGON_DRAFTS });
 const FLAROO_REACTIONS = [
   { normal: ['{name} leans forward, ready for the practice whistle.', '{name} turns its ears toward you, then checks whether the team is moving.'], rare: ['{name} makes an earnest attempt to sit still beside you. The tail has not agreed to the arrangement.'] },
   { normal: ['{name} watches you with carefully practiced composure.'], rare: ['{name} seems to anticipate a compliment. Its carefully composed expression is already slipping.'] },
