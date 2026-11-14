@@ -52,7 +52,7 @@ export function leaveLeague(f, m, { year, club = null }) {
 /** "two-time MVP, a Beast Bowl champion, a league record" — from the save's own records. */
 /** A monster's honours as data (Task 10: saved on the retirement event instead of a finished sentence, so the news follows the language). */
 export function honoursData(f, m) {
-  const ev = m.career?.ev || [];
+  const ev = m.careerHonours || m.career?.ev || [];
   const awards = {}; for (const e of ev) if (e.t === 'award') awards[e.x?.key] = (awards[e.x?.key] || 0) + 1;
   for (const h of f.history || []) for (const [k, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && !ev.some((e) => e.t === 'award' && e.y === h.year && e.x?.key === k)) awards[k] = (awards[k] || 0) + 1;
   const titles = ev.filter((e) => e.t === 'champion').length, records = ev.filter((e) => e.t === 'record').length;
