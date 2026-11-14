@@ -1,3 +1,4 @@
+import { registerBeastDexReviewer } from './ui/screens/beast-dex-reviewer.js';
 import { music, musicForScreen, installAudioLifecycle } from './audio/music.js';
 import { routeDetailAudio } from './audio/detail-audio.js';
 // App bootstrap: holds the franchise state, persists it and wires screens.
@@ -234,6 +235,7 @@ export function start() {
   registerAbilityReviewer(Router, app);
   registerClashLab(Router, app); // Beast Clash developer tools
   registerMonsterCryReviewer(Router);
+  registerBeastDexReviewer(Router);
   registerClashAbilityReviewer(Router, app); // Task 8 M4 S15 + fx: Developer → Clash Ability Reviewer (72 Clash abilities on the t8 engine, played with their arena looks; the fx presentation check folded in)
   registerAiLab(Router, app); // AI Testing Lab (GDD §53.8): Developer Tools only
   registerAttrLab(Router, app); // Attribute Testing Lab (GDD §8.2 audit): Developer Tools only
