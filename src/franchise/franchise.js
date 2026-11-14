@@ -956,6 +956,7 @@ export function forfeitSunday(f) {
   if (m.playoff) recordPlayoffResult(f, res); else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: 0, oppScore: 21, won: false, forfeit: true }; }
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 }; f.campaign.h2h ||= {}; const h2h = (f.campaign.h2h[m.opponent] ||= { w: 0, l: 0, last: null, streakL: 0 }); h2h.l += 1; h2h.last = 'l'; h2h.streakL += 1;
   news(f, $L('franchise.forfeit_could_not_field_a_legal', { club: f.club, opponent: m.opponent }), 'loss');
+  settleGymBadge(f, m, false, 0, 21); // a forfeit is a counted loss: a held badge goes back to its gym
   f.game = null; f.lastGame = { ...f.week.gameResult, events: [], year: f.season.year, week: f.season.week, newBadge: null };
   advanceWeek(f);
   return { ok: true, result: f.lastGame };
@@ -2315,6 +2316,29 @@ export function setDevSlot(f, id, on) {
 export function resetDevSlots(f) { delete f.devSlots; return { ok: true, slots: devSlotsView(f) }; }
 
 /** Record the player's finished game and roll the week forward. */
+/**
+ * Gym badges (Task 10 owner clarification, 2026-11-13; GDD "Reclaimable Gym Badges"). Every counting game against a gym club, regular
+ * season or playoff, played or forfeited, puts that club's badge at stake: a win earns it (or keeps it), a loss gives it back to the
+ * gym if it is held, and a later win earns it again. Badge progress is the badges held now. Achievements already awarded stay.
+ * f.season.badgesEarned lists the badges taken this season (the board's "win a gym badge" goal counts those, even one lost again).
+ */
+function settleGymBadge(f, m, won, myScore, oppScore) {
+  const gym = GYM_BY_CLUB[m.opponent]; if (!gym) return;
+  const c = f.campaign; c.badges ||= {}; c.gymWins ||= {};
+  if (won) {
+    c.gymWins[m.opponent] = (c.gymWins[m.opponent] || 0) + 1;
+    if (c.badges[m.opponent]) return; // kept
+    c.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${myScore}-${oppScore}` };
+    const n = Object.keys(c.badges).length;
+    c.lastBadge = { club: m.opponent, year: f.season.year, week: f.season.week, n };
+    (f.season.badgesEarned ||= []).push(m.opponent);
+    news(f, $L('franchise.badge_earned_the_badge_of_8', { badge: gym.badge, n, name: gym.coach.name, opponent: m.opponent, club: f.club, score: myScore, score2: oppScore }), 'win');
+  } else if (c.badges[m.opponent]) {
+    delete c.badges[m.opponent];
+    if (c.lastBadge?.club === m.opponent) c.lastBadge = null; // the "new badge" banner is about this badge only
+    news(f, $L('franchise.badge_lost_reclaimed', { badge: gym.badge, name: gym.coach.name, opponent: m.opponent, club: f.club, score: myScore, score2: oppScore, n: Object.keys(c.badges).length }), 'loss');
+  }
+}
 export function finishSunday(f, gameState) {
   syncLegendary(f); // Legendary Plays: discovery and plan cleanup (GDD §36)
   const m = sundayMatchup(f); if (!m) return;
@@ -2351,29 +2375,15 @@ export function finishSunday(f, gameState) {
   for (const x of f.roster.filter((p) => p.promise)) {
     if (!Object.values(m[side].chart).includes(x.id)) { x.promise.benched += 1; if (x.promise.benched >= PROMISE_BENCH_LIMIT) { f.roster = f.roster.filter((p) => p.id !== x.id); noteCaptainLeft(f, f.club, x, 'walked'); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === x.id) delete f.lineupManual[slot]; news(f, $L('franchise.walked_out_you_promised_a_starting', { name: x.name, promiseBenchLimit: PROMISE_BENCH_LIMIT }), 'loss'); } else news(f, $L('franchise.was_promised_a_start_and_sat', { name: x.name, benched: x.promise.benched, promiseBenchLimit: PROMISE_BENCH_LIMIT }), 'loss'); }
   }
-  // Campaign: career wins, head-to-head memory (drives the pregame dialogue) and gym badges (first win over a gym club, in any counting game; no replays).
+  // Campaign: career wins, head-to-head memory (drives the pregame dialogue) and gym badges (Task 10, owner 2026-11-13: every counting game
+  // against a gym club puts its badge at stake; see settleGymBadge).
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 };
   if (won) f.campaign.wins += 1;
   f.campaign.h2h ||= {}; const h2h = (f.campaign.h2h[m.opponent] ||= { w: 0, l: 0, last: null, streakL: 0 });
   h2h[won ? 'w' : 'l'] += 1; h2h.last = won ? 'w' : 'l'; h2h.streakL = won ? 0 : h2h.streakL + 1;
   // The pregame reply: a confident word backed up is remembered; one that wasn't rattles the room.
   if (f.week.pregameReply === 'confident') { if (won) news(f, $L('franchise.you_said_youd_take_it_and', { opponent: m.opponent }), 'win'); else { f.rattled = true; news(f, $L('franchise.the_confident_talk_before_the_game'), 'loss'); } }
-  const gym = GYM_BY_CLUB[m.opponent];
-  if (gym) {
-    if (won) {
-      f.campaign.gymWins[m.opponent] = (f.campaign.gymWins[m.opponent] || 0) + 1;
-      if (!f.campaign.badges[m.opponent]) {
-        f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}-${gameState.score[oppSide]}` };
-        f.campaign.lastBadge = { club: m.opponent, year: f.season.year, week: f.season.week, n: Object.keys(f.campaign.badges).length };
-        news(f, $L('franchise.badge_earned_the_badge_of_8', { badge: gym.badge, n: Object.keys(f.campaign.badges).length, name: gym.coach.name, opponent: m.opponent, club: f.club, score: gameState.score[side], score2: gameState.score[oppSide] }), 'win');
-      }
-    } else if (f.campaign.badges[m.opponent]) {
-      // Badge ownership is live: every loss to its gym leader puts the badge back in the gym.
-      delete f.campaign.badges[m.opponent];
-      f.campaign.lastBadge = null;
-      news(f, `${gym.coach.name} reclaimed the ${gym.badge} badge after defeating ${f.club}.`, 'loss');
-    }
-  }
+  settleGymBadge(f, m, won, gameState.score[side], gameState.score[oppSide]);
   // Level-ups are shown after the game and on the Career Timeline; the club log keeps evolutions and injuries.
   for (const e of events.filter((x) => x.kind !== 'xp' && x.kind !== 'levelup')) news(f, e.kind === 'levelup' ? $L('franchise.reached_level_ovr', { name: e.name, level: e.level, from: e.from, to: e.to, autoPoints: (f.settings.autoPoints ? '' : $L('franchise.2_attribute_points_to_spend_on'))}) : e.kind === 'evolve' ? $L('franchise.evolution_evolved_into_2', { from: e.from, to: e.to }) : e.kind === 'injury' ? $L('franchise.injured_out_weeks', { name: e.name, severity: e.severity, weeks: e.weeks, n: e.weeks }) : e.name, e.kind === 'evolve' ? 'win' : e.kind, e.id ? { mid: e.id, mname: e.kind === 'evolve' ? e.to : e.name } : null);
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
@@ -2536,7 +2546,7 @@ function endSeason(f) {
   }
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
-  { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
+  { const gymWinsThisYear = Array.isArray(s.badgesEarned) ? new Set(s.badgesEarned).size : Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length; // badges taken this season, even one lost again (older saves: the held ones)
     const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club, forecastWins: boardForecastFor(f, s.schedule.filter((g) => !g.bye).length || 9).wins });
     if (verdict) { s.boardVerdict = verdict; news(f, verdict.met ? $L('franchise.board_goal_met_confidence_the_scouting', { label: fieldLine(verdict.goal, 'label'), confidence: verdict.confidence >= 0 ? '+' : '', confidence2: verdict.confidence, confidence3: confidenceLabel(verdict.confidence) }) : verdict.status === 'fired' ? $L('franchise.board_goal_missed_wins_forecast_the', { label: fieldLine(verdict.goal, 'label'), w: rec.w, forecastWins: verdict.goal.forecastWins ?? '?', reason: verdict.reason ? verdict.reason[0].toUpperCase() + verdict.reason.slice(1) + '.' : '' }) : verdict.status === 'warning' ? $L('franchise.board_goal_missed_narrowly_wins_forecast', { label: fieldLine(verdict.goal, 'label'), w: rec.w, forecastWins: verdict.goal.forecastWins ?? '?' }) : verdict.status === 'hot_seat' ? $L('franchise.board_goal_missed_you_are_on', { label: verdict.goal.label }) : $L('franchise.board_goal_missed_confidence', { label: fieldLine(verdict.goal, 'label'), confidence: verdict.confidence }), verdict.met ? 'win' : 'loss'); } }
   if (rec.w < rec.l || onHotSeat(f)) f.postseason = makePostseasonEvent(f); // a losing record, or the hot seat, makes one story event mandatory (GDD §15.7, §17.4)

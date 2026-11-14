@@ -67,8 +67,8 @@ const liveOwnerOffers = (f) => Object.values(f.freeAgency?.offers || {}).filter(
 let triedT7 = null;
 /** Recording only (Task 7 owner rule 2026-11-04): releases the hands-off owner made to reach the minimum within the cap, cumulative. */
 export const floorLog = { owner: 0 };
-export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null, legacy = false, from = null, onOffseason = null, contractChoice = null, negotiate = null, beforeGame = null } = {}) {
-  const f = from || newFranchise(seed, { difficulty, legacy });
+export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null, legacy = false, from = null, onOffseason = null, contractChoice = null, negotiate = null, beforeGame = null, alterGame = null, afterGame = null } = {}) {
+  let f = from || newFranchise(seed, { difficulty, legacy });
   const problems = [...check(f, from ? 'loaded' : 'created')];
   if (from && f.season?.finished) { const n = F.startNextSeason(f, { acceptForfeits: true }); if (!n.ok) problems.push(`loaded save: next season blocked (${n.reason})`); else problems.push(...check(f, 'loaded: next season'));} const log = { seasons: [], clash: { encounters: 0, encounterWins: 0, signed: 0, pregame: 0, pregameWins: 0, ot: 0, otWins: 0 }, fired: false };
   for (let s = 1; s <= seasons && !log.fired; s++) {
@@ -89,7 +89,9 @@ export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, chec
       if (f.week.pregame?.result) { log.clash.pregame++; if (f.week.pregame.result.winner === 'a') log.clash.pregameWins++; }
       if (game.tiebreak) { log.clash.ot++; if (game.tiebreak.playerWon) log.clash.otWins++; }
       if (game.needsTiebreak && !game.winner) problems.push(`season ${s} week ${f.season.week}: tied game without a winner`);
+      if (alterGame) alterGame(f, game, m); // Task 10 test hook: a test may set a finished game's result before it is recorded; absent by default
       F.finishSunday(f, game);
+      if (afterGame) { const g = afterGame(f, m); if (g) f = g; } // Task 10 test hook: e.g. a save/load round trip, continuing on the loaded franchise
       problems.push(...check(f, `season ${s} week ${f.season.week}`));
       if (day0 === f.season.day && guard > 50) { problems.push(`season ${s}: no progress`); break; }
     }

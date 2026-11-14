@@ -5419,6 +5419,7 @@ export default {
   'franchise.you_said_youd_take_it_and': 'You said you\'d take it, and you did. {opponent}\'s coach will remember.',
   'franchise.the_confident_talk_before_the_game': 'The confident talk before the game didn\'t age well. Next week\'s practice is harder.',
   'franchise.badge_earned_the_badge_of_8': 'BADGE EARNED: the {badge} · badge {n} of 8. {name}\'s {opponent} fall to {club} {score}-{score2}.',
+  'franchise.badge_lost_reclaimed': { one: 'BADGE LOST: {name}\'s {opponent} take back the {badge}, beating {club} {score2}-{score}. {n} badge held.', other: 'BADGE LOST: {name}\'s {opponent} take back the {badge}, beating {club} {score2}-{score}. {n} badges held.' },
   'franchise.2_attribute_points_to_spend_on': ', 2 attribute points to spend on the roster',
   'franchise.reached_level_ovr': '{name} reached level {level} ({from} → {to} OVR){autoPoints}.',
   'franchise.evolution_evolved_into_2': 'EVOLUTION! {from} evolved into {to}.',
