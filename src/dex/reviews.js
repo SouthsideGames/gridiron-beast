@@ -4,6 +4,7 @@ import { SPECIES_DEX } from '../data/species.js';
 import { evolvedSpec } from '../data/monsters.js';
 import { SPECS } from '../sim/abilities/review-texts.js';
 import { cryRecipe } from '../audio/monster-cries.js';
+import { dexMotion } from '../ui/dex-motion.js';
 export const REVIEW_COMPONENTS = Object.freeze(['visuals', 'audio', 'lore', 'football', 'clash', 'progression']);
 const KEY = 'gridiron-beast-dex-reviews-v1';
 const memory = {};
@@ -38,7 +39,7 @@ export function reviewFingerprint(id, component) {
   let payload;
   switch (component) {
     case 'audio': payload = cryRecipe(id); break;
-    case 'visuals': payload = { appearance: evolvedSpec(speciesById.get(form.familyId), form.stage), reactions: content.reactions, version: 1 }; break;
+    case 'visuals': payload = { appearance: evolvedSpec(speciesById.get(form.familyId), form.stage), reactions: content.reactions, motion: dexMotion(form.familyId, form.stage), version: 2 }; break; // the portrait motion is part of what a visuals verdict approves
     case 'football': case 'clash': payload = { form, ability: abilitiesOf(form.familyId)?.[component], scouting: content.scouting, ...(component === 'football' ? { explanation: SPECS[form.familyId] } : {}) }; break;
     case 'progression': payload = { forms: formsOf(form.familyId).map(x => ({ id: x.id, name: x.name, level: x.evolutionLevel })), development: content.development, lore: content.lore, thresholds: [5,15,30], shared: true }; break;
     case 'lore': payload = { biography: content.biography, personality: content.personality, habitat: content.habitat, facts: content.funFacts, relationships: content.relationships, lore: content.lore }; break;

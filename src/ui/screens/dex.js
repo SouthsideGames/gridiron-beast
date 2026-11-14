@@ -243,7 +243,7 @@ export function bindDexProfile(root, { f = null } = {}) {
   // Compact portrait while reading: the portrait stays on screen but gives the text more room once the reader scrolls.
   const head = profile.querySelector('.dexp-head');
   const scrollTarget = scroller || window;
-  let raf = 0; const top = () => (scroller ? scroller.scrollTop : -profile.getBoundingClientRect().top);
+  let raf = 0; const top = () => (scroller ? scroller.scrollTop : (parseFloat(getComputedStyle(head).top) || 0) - profile.getBoundingClientRect().top);
   const sync = () => { raf = 0; head?.classList.toggle('compact', top() > 48); };
   scrollTarget.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(sync); }, { passive: true, signal });
   signal.addEventListener('abort', () => cancelAnimationFrame(raf), { once: true });
