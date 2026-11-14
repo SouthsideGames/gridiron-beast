@@ -990,7 +990,15 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       case 'handoff': { if (a === qb) qbHandoff(a); return; }
       case 'pitch': { if (a === qb) qbPitch(a); return; }
       case 'option': { qbOption(a); return; }
-      case 'keep': case 'carry': { followPath(a, asg.points, 0.9); return; }
+      case 'keep': case 'carry': {
+        // Pin and Pull is a mandatory RB give, not a read option. Keep the back
+        // in the exchange pocket until the QB reaches him, then run his route.
+        if (asg.a === 'carry' && offensePlay.id === 'pin_pull' && a.slot === 'RB' && !handoffDone && qb) {
+          steer(a, qb.x, qb.y, 0.55, 0.3);
+          return;
+        }
+        followPath(a, asg.points, 0.9); return;
+      }
       case 'pass': case 'play_action': case 'boot': { qbTick(a); return; }
       default: steer(a, a.x, a.y, 0, 0.2);
     }
