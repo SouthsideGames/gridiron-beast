@@ -55,9 +55,13 @@ export function toArenaRecord(result) {
 
 function orderOf(ids, activeId) { return activeId && ids.includes(activeId) ? [activeId, ...ids.filter((id) => id !== activeId)] : ids.slice(); }
 
-function lineOut(x) {
+/** A fighter's move as the arena names it: the Dex ability name and its shared plain explanation (exact rules stay in the Dex). */
+export function clashMove(x) {
   const ab = x.abilityId ? abilityById(x.abilityId) : null; const fam = abilitiesOf(x.species);
-  const move = ab ? { name: dexLine(dexKey.abilityName(ab.id), ab.name), text: CLASH_SIMPLE[ab.id] ? dexLine(dexKey.abilityPlain(ab.id), CLASH_SIMPLE[ab.id]) : ab.mechanic ? dexLine(dexKey.abilityMechanic(ab.id), ab.mechanic) : ab.details || '', trigger: { kind: 'contract' } } : { name: $t('clash.strike'), text: `${$t('clash.ordinary_attack_with_the_perks', { archetype: x.archetype, basic: x.basic ? ' (Basic)' : '', fam: fam?.clash ? '' : '' })}`, trigger: { kind: 'normal' } };
+  return ab ? { name: dexLine(dexKey.abilityName(ab.id), ab.name), text: CLASH_SIMPLE[ab.id] ? dexLine(dexKey.abilityPlain(ab.id), CLASH_SIMPLE[ab.id]) : ab.mechanic ? dexLine(dexKey.abilityMechanic(ab.id), ab.mechanic) : ab.details || '', trigger: { kind: 'contract' } } : { name: $t('clash.strike'), text: `${$t('clash.ordinary_attack_with_the_perks', { archetype: x.archetype, basic: x.basic ? ' (Basic)' : '', fam: fam?.clash ? '' : '' })}`, trigger: { kind: 'normal' } };
+}
+function lineOut(x) {
+  const move = clashMove(x);
   return { ...x, combatant: { ...x.combatant, move } };
 }
 
