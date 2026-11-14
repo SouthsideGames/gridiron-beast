@@ -405,9 +405,9 @@ export const isLegendary = (id) => !!PLAYS[id]?.legendary;
 // Held back from the Task 10 release (measured 2026-11-13, tools in docs/task10): the designed handoff is missed on most snaps, so the
 // play does not run as drawn: end_around (100% of snaps), pin_pull (98%), pistol_zone_read (45%), midline_read (36%); no live option
 // play misses more than 10%. They stay reserve plays, reviewable in the Playbook Audit, until their assignments are fixed and re-reviewed.
-// Task 10 (2026-11-13): Pin and Pull, Midline Read and Pistol Zone Read are corrected and released. End Around stays held back: the
-// receiver aligned 18 yards wide cannot reach the quarterback before pressure does (a play-design decision for the owner; see the report).
-export const HELD_BACK_OFFENSE = Object.freeze(['end_around']);
+// Task 10 (2026-11-13): Pin and Pull, Midline Read and Pistol Zone Read corrected and released; End Around released 2026-11-14 with the
+// owner's pre-snap motion (he lines up 18 wide and motions in, so he reaches the quarterback in time). Nothing is held back.
+export const HELD_BACK_OFFENSE = Object.freeze([]);
 const HELD = new Set(HELD_BACK_OFFENSE);
 export const OFFENSE_IDS = [...OFFENSE_PLAYS.map((p) => p.id), ...RESERVE.offense.filter((p) => !HELD.has(p.id)).map((p) => p.id)]; // N8b's bunch plays, then (Task 10) every reserve offense play but the held-back four
 export const DEFENSE_IDS = [...DEFENSE_PLAYS.map((p) => p.id), ...RESERVE.defense.map((p) => p.id)]; // Task 10: every reserve defense play

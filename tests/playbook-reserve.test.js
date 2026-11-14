@@ -3,7 +3,7 @@
 // the practice field until the owner releases them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { PLAYS, OFFENSE_IDS, DEFENSE_IDS, RESERVE_OFFENSE_IDS, RESERVE_DEFENSE_IDS, LESSONS, validatePlaybook, manKeyTargets, counterPlays, eligibleReceivers, isReserve, HELD_BACK_OFFENSE } from '../src/data/playbook.js';
+import { PLAYS, OFFENSE_IDS, DEFENSE_IDS, RESERVE_OFFENSE_IDS, RESERVE_DEFENSE_IDS, LESSONS, validatePlaybook, manKeyTargets, counterPlays, eligibleReceivers, isReserve } from '../src/data/playbook.js';
 import { PLAYBOOKS } from '../src/data/staff.js';
 import { playbookFor, adaptPlaybook } from '../src/franchise/roster.js';
 import { simulatePlay } from '../src/sim/engine.js';
@@ -81,10 +81,7 @@ test('every reserve play runs in the engine: a clean walk-through and live snaps
   for (const id of RESERVE_OFFENSE_IDS) {
     const w = simulatePlay({ offensePlay: PLAYS[id], defensePlay: PLAYS.cover_3, seed: 3, options: { dryRun: { noDefense: true } } });
     assert.equal(w.result, 'dry_run', `${id} walk-through`);
-    // Task 10: End Around is held back because its receiver, 18 yards wide, reaches the quarterback only at about 2.7 s (owner
-    // decision). Its walk-through is slow for that reason, not stalled: while held back it must still reach a real handoff to him.
-    if (id === 'end_around' && HELD_BACK_OFFENSE.includes(id)) { const h = w.events.find((e) => e.kind === 'handoff'); assert.ok(h && h.to === 'WR2', 'end_around walk-through reaches the handoff'); }
-    else assert.ok(w.elapsed < 7, `${id} walk-through finishes (${w.elapsed}s)`);
+    assert.ok(w.elapsed < 7, `${id} walk-through finishes (${w.elapsed}s)`);
     for (const d of ['cover_3', 'cover_1', 'fire_zone']) { const r = simulatePlay({ offensePlay: PLAYS[id], defensePlay: PLAYS[d], seed: 11 }); assert.notEqual(r.result, 'guard', `${id} vs ${d}`); }
   }
   for (const id of RESERVE_DEFENSE_IDS) {

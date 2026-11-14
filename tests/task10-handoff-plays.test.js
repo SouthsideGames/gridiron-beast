@@ -10,9 +10,9 @@ const DEFS = ['cover_1', 'cover_2_zone', 'cover_3', 'cover_4', 'zone_blitz', 'fi
 const at = (f, slot) => f.off.find((p) => p[0] === slot);
 const frameAt = (sim, t) => sim.frames.filter((x) => x.t <= t + 1e-9).at(-1);
 
-test('the corrected plays are released; End Around alone is held back', () => {
-  for (const id of ['pin_pull', 'midline_read', 'pistol_zone_read']) assert.ok(OFFENSE_IDS.includes(id), `${id} released`);
-  assert.deepEqual([...HELD_BACK_OFFENSE], ['end_around']); assert.ok(!OFFENSE_IDS.includes('end_around'));
+test('the four corrected plays are released; nothing is held back', () => {
+  for (const id of ['pin_pull', 'midline_read', 'pistol_zone_read', 'end_around']) assert.ok(OFFENSE_IDS.includes(id), `${id} released`);
+  assert.deepEqual([...HELD_BACK_OFFENSE], []);
 });
 
 test('Pin and Pull: always the back, from a reachable handoff; no keep; he runs his route at once, never back toward where he lined up', () => {
@@ -51,12 +51,25 @@ for (const off of ['midline_read', 'pistol_zone_read']) {
   });
 }
 
-test('End Around: the receiver comes to the quarterback and takes a reachable handoff; the exchange never falls back early', () => {
-  let hands = 0;
-  for (const def of ['cover_2_zone', 'cover_3', 'cover_4', 'edge_contain']) for (let s = 1; s <= 8; s++) {
-    const sim = play({ off: 'end_around', def, attr: 'speed', value: 65, seed: 98000 + s * 7 + def.length });
-    const mm = sim.events.find((e) => e.kind === 'mesh_missed'); assert.ok(!mm || mm.t > 4.4, `${def}/${s}: no early fallback`);
-    const h = sim.events.find((e) => e.kind === 'handoff'); if (h) { hands++; assert.equal(h.to, 'WR2'); assert.ok(h.reach < 1.5); assert.equal(sim.stats.carrier, 'WR2'); }
+test('End Around (owner 2026-11-14): lines up 18 wide, motions in before the snap, and takes a reachable handoff in time against every look', () => {
+  const p = PLAYS.end_around;
+  assert.deepEqual(p.align.WR2, [-1.2, 18], 'he still lines up at the original wide split');
+  assert.deepEqual(p.motion, { slot: 'WR2', to: [-3.5, 9] }, 'pre-snap motion inward');
+  assert.deepEqual(p.assignments.WR2.points[0], p.motion.to, 'his route continues from where the motion ends (no run back out wide)');
+  const looks = ['cover_1', 'cover_2_zone', 'cover_3', 'cover_4', 'zone_blitz', 'fire_zone', 'all_out', 'safety_blitz', 'qb_spy', 'edge_contain'];
+  let n = 0, hands = 0, sacks = 0, blitzN = 0, blitzHands = 0;
+  for (const def of looks) for (let s = 1; s <= 8; s++) {
+    const sim = play({ off: 'end_around', def, attr: 'speed', value: 65, seed: 98000 + s * 7 + def.length }); n++;
+    assert.ok(!sim.events.some((e) => e.kind === 'mesh_missed' && e.t < 4.4), `${def}/${s}: no early fallback`);
+    const h = sim.events.find((e) => e.kind === 'handoff'); if (sim.result === 'sack') sacks++;
+    if (/blitz|all_out|fire/.test(def)) { blitzN++; if (h) blitzHands++; }
+    if (h) {
+      hands++; assert.equal(h.to, 'WR2'); assert.ok(h.reach < 1.5); assert.equal(sim.stats.carrier, 'WR2');
+      const fAt = (t) => sim.frames.filter((x) => x.t <= t + 1e-9).at(-1); const w0 = at(fAt(h.t), 'WR2'), w1 = at(fAt(h.t + 0.5), 'WR2');
+      if (!(sim.events.find((e) => e.kind === 'tackle')?.t < h.t + 0.5)) assert.ok(w1[2] < w0[2] - 1, `${def}/${s}: he carries on toward the left edge after the handoff`);
+    }
   }
-  assert.ok(hands >= 20, `the receiver gets it in most of these base looks (${hands}/32)`);
+  assert.ok(hands / n >= 0.9, `handoff on ${hands}/${n} (was 46% before the motion)`);
+  assert.ok(sacks / n <= 0.1, `sacks ${sacks}/${n} (was 37% before the motion)`);
+  assert.ok(blitzHands / blitzN >= 0.8, `even against pressure (${blitzHands}/${blitzN}; was 8 of 150)`);
 });
