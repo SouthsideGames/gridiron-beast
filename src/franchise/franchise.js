@@ -2363,7 +2363,11 @@ export function finishSunday(f, gameState) {
   const { r, save } = frng(f);
   const ledger = (f.rewardLedger ||= createRewardLedger()); const act = gameActivityId(f, f.club);
   const knowledgePlayers = playedIds(m[side].chart);
-  dexKnowledgeGame(f.roster.filter(x => knowledgePlayers.has(x.id)).map(x => x.species), `${f.uid || franchiseKey(f)}:${act}`);
+  const knowledgeEvent = `${f.uid || franchiseKey(f)}:${act}`;
+  const knowledgeFamilies = [...new Set(f.roster.filter(x => knowledgePlayers.has(x.id)).map(x => x.species))];
+  f.dex ||= { seen: {}, signed: {} }; f.dex.knowledge ||= {};
+  for (const id of knowledgeFamilies) (f.dex.knowledge[id] ||= {})[knowledgeEvent] = true;
+  dexKnowledgeGame(knowledgeFamilies, knowledgeEvent);
   const events = afterGame(f.roster, m[side].chart, gameState.stats[side].players, r, { won, autoSpend: !!f.settings.autoPoints, autoEvolve: false, ledger, activityId: act, mastery: gameState.t8?.mastery });
   { const played = playedIds(m[side].chart); const slots = ownerDevSlots(f, { notify: true }); events.push(...practiceAfterGame(f.roster, slots.ids, played, r, { autoSpend: !!f.settings.autoPoints, autoEvolve: false, ledger, activityId: `${act}:reserve` })); } // C1: the owner's development slots (Task 6 Phase C)
   aiAfterGame(f, m[oppSide], gameState, oppSide, r); // the persistent opponent develops from this game too (GDD §42.6)
