@@ -15,3 +15,15 @@ First implementation pass: all 72 Beast Clash abilities now have shared brief ex
 Remaining game-wide audit: football ability summaries, Clash onboarding and status help, training/mastery/evolution explanations, roster attributes and scouting, franchise contracts and salary cap, notifications/errors/tutorials. Developer diagnostics may retain technical terminology; ordinary player flows should explain the practical meaning first.
 
 Full browser/device review and semantic review of simplified copy remain required before release. This change does not publish the private preview or merge main.
+
+## Central-file review — November 14, 2026
+
+Reviewed the central English table and rewrote 100 entries in src/text/en.js. Changes cover menu/settings help, onboarding, contract renewals, salary-cap warnings, scouting, clock controls, training and attribute help, captain requirements, Clash rules/switching/statuses, career records, field bonuses, save/backup warnings, free agency/trades, Board goals, and Hall of Fame requirements.
+
+All permanent keys, fixed names, inserted-value placeholders, plural forms, and HTML formatting are preserved. Developer diagnostics, proper names, balance formulas, log identifiers, and comic dialogue were not globally replaced. Existing legacy or conflicting rule text was not silently changed into a new gameplay rule.
+
+Regenerated docs/text/GAME_TEXT.csv with the repository export tool. This also refreshes its inventory of recently added Dex content; the large CSV diff is generated inventory, not thousands of rewritten player lines.
+
+Validation: 19 central-text, style, saved-line, and text-never-decides tests passed. The latter verifies a franchise season and 120 Clash battles. A separate before/after check confirms unchanged keys, fixed names, placeholders, and HTML. Export --check passes. The complete release suite and device review must be rerun on the final preview build.
+
+Publish the branch to the existing private Beast Dex preview, not the main game or shared test link. Keep PR #114 unmerged.
