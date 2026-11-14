@@ -1,3 +1,5 @@
+import { playMonsterCry } from '../../audio/detail-audio.js';
+import { stopCry } from '../../audio/monster-cries.js';
 // The full-screen Monster Career Profile (GDD §48): a player page for any monster the game has a record of — the owner's
 // roster, former monsters, AI clubs' players, the rival's signature, gym legendaries, retired legends, Hall of Fame cards and
 // the final roster of an archived franchise. Five sections: Overview, Timeline, Statistics, Awards & Trophy Case, Team
@@ -171,6 +173,7 @@ export function registerCareerScreens(Router, app) {
     mount(root, ctx) {
       const params = ctx.params; // this history entry's own params: the section and filters are kept on it for Back
       const r = resolveCareer(app, params); if (!r) return;
+      if (ctx.entering) { stopCry(); playMonsterCry(r.p); }
       const cctx = { f: () => r.f, profile: () => resolveCareer(app, params)?.p, monster: () => (r.readOnly ? null : findMonster(r.f, r.p.id)?.m || null), go: (s, prm) => Router.go(s, prm) };
       const base = careerActions(cctx);
       const pageTimeline = () => { const pg = careerPage(r.f, r.p.id, { profile: resolveCareer(app, params).p }); return pageTimelineHtml(pg, params, !!app.settings?.reducedMotion); };

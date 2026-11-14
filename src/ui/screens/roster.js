@@ -1,3 +1,5 @@
+import { playMonsterCry } from '../../audio/detail-audio.js';
+import { stopCry } from '../../audio/monster-cries.js';
 // Roster: depth chart, reserves, monster details, slot assignment,
 // contracts and the coaching staff room.
 
@@ -192,7 +194,7 @@ export function registerRosterScreens(Router, app) {
         'mon-go': (el) => Router.go('monster', { id: el.dataset.id }, { replace: true }), // replace: Back still returns to where you came from
         'career-jump': () => root.querySelector('#timeline')?.scrollIntoView({ block: 'start', behavior: app.f?.settings?.reducedMotion ? 'auto' : 'smooth' }),
         typechart: (el) => openTypeChart(el.dataset.type),
-        species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); sheet(speciesSheet(sp, ctx.f), { title: sp.name }); },
+        species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); playMonsterCry(m); sheet(speciesSheet(sp, ctx.f), { title: sp.name, onClose: stopCry }); },
         'mastery-mode': (el) => { masteryMode = el.dataset.v === 'clash' ? 'clash' : 'football'; Router.render(); },
         'apex-replay': () => { const m = app.f.roster.find((x) => x.id === ctx.params.id); if (m && apexKnown(app.f, m) && !document.querySelector('.apex-scene')) openApexDiscovery({ monster: m, settings: app.settings }); },
         autospendone: () => { F.autoSpendAllPoints(app.f, { only: ctx.params.id }); app.save(); Router.render(); },

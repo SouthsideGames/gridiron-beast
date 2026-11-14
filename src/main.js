@@ -1,3 +1,5 @@
+import { music, musicForScreen, installAudioLifecycle } from './audio/music.js';
+import { routeDetailAudio } from './audio/detail-audio.js';
 // App bootstrap: holds the franchise state, persists it and wires screens.
 
 import * as Router from './ui/router.js';
@@ -41,6 +43,7 @@ import { registerClashAbilityReviewer } from './ui/screens/clash-ability-reviewe
 import { registerClashBattle } from './ui/screens/clash-battle.js';
 import { registerAiLab } from './ui/screens/ai-lab.js';
 import { registerAttrLab } from './ui/screens/attr-lab.js';
+import { registerMonsterCryReviewer } from './ui/screens/monster-cry-reviewer.js';
 import { registerEvoPreview } from './ui/screens/evo-preview.js';
 import { reviewQueue, devNoticesOn, freshAnnouncement } from './ui/dev-review.js';
 import { syncReviews, onReviews } from './franchise/review-store.js';
@@ -216,8 +219,9 @@ export function start() {
   app.findMonster = (id) => { const f = app.f; if (!f) return null; return f.roster.find((m) => m.id === id) || f.draft?.class?.find((m) => m.id === id) || f.week?.prospects?.map((p) => p.monster).find((m) => m?.id === id) || app.apexSeen?.get(id) || null; };
   app.playApex = (name = Router.currentScreen()?.name) => { if (!app.f || APEX_QUIET.has(name)) return false; return playPendingApex({ f: app.f, find: app.findMonster, settings: app.settings, save: () => app.save({ immediate: true }), onDone: () => Router.render() }); };
   Router.init({ root: $('#app'), context: () => { if (app.f) syncDiscovery(app.f); return { app, f: app.f, inFranchise: !!app.f, tabOf: TAB_OF }; }, tabs,
-    tip: (ctx, name) => (ctx.f ? tipHtml(ctx.f, name) : ''), mounted: (ctx, name) => { if (ctx.f) { maybeSheetTip(ctx.f, name, () => app.save()); app.playApex(name); } }, help: (ctx, name) => (ctx.f ? helpButtonHtml(name) : '') });
+    tip: (ctx, name) => (ctx.f ? tipHtml(ctx.f, name) : ''), mounted: (ctx, name) => { const track = musicForScreen(name); if (track !== undefined) void music.select(track).catch(() => {}); routeDetailAudio(name, ctx); if (ctx.f) { maybeSheetTip(ctx.f, name, () => app.save()); app.playApex(name); } }, help: (ctx, name) => (ctx.f ? helpButtonHtml(name) : '') });
   initTutorial({ app, Router, openStats: () => openStatGuide() });
+  installAudioLifecycle();
   registerMenuScreens(Router, app);
   registerOnboardingScreens(Router, app);
   registerHqScreens(Router, app);
@@ -229,6 +233,7 @@ export function start() {
   registerAbilityAudit(Router, app); // the Legacy Ability Audit: no longer on the Developer menu (owner 2026-11-11); kept registered because Ability Balance and the ability preview live in the same module
   registerAbilityReviewer(Router, app);
   registerClashLab(Router, app); // Beast Clash developer tools
+  registerMonsterCryReviewer(Router);
   registerClashAbilityReviewer(Router, app); // Task 8 M4 S15 + fx: Developer → Clash Ability Reviewer (72 Clash abilities on the t8 engine, played with their arena looks; the fx presentation check folded in)
   registerAiLab(Router, app); // AI Testing Lab (GDD §53.8): Developer Tools only
   registerAttrLab(Router, app); // Attribute Testing Lab (GDD §8.2 audit): Developer Tools only
