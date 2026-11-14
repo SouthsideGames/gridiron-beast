@@ -47,13 +47,13 @@ export function masteryBarHtml(m, mode) {
 }
 
 /** One ability as a block: name, mode, summary, optional mastery line (for an individual) and the full Dex rules, collapsed. */
-export function abilityBlockHtml(x, mode, { monster = null, seeIt = false } = {}) {
+export function abilityBlockHtml(x, mode, { monster = null, seeIt = false, dex2 = false } = {}) {
   const a = abilityInfo(x, mode); if (!a) return '';
   const k = monster?.dev ? masteryInfo(monster, mode) : null;
   return `<div class="ab-block" data-ability="${a.id}"><div class="row between" style="gap:6px"><b>${esc(a.name)}</b><span class="chip">${MODE_LABEL[mode]}</span></div>
     <p class="muted" style="margin:2px 0">${esc(a.summary)}</p>${a.story ? `<p class="dim" style="margin:2px 0;font-style:italic">${esc(a.story)}</p>` : ''}
     ${k ? `<div class="dim" style="font-size:12px">${$t('shared.mastery_b_b', { tier: k.tier })}${k.mastered ? $t('shared.highest_tier') : ` ${$t('shared.more_valid_uses_to', { need: k.need, nextTier: k.nextTier, n: k.need })}`}</div>` : ''}
-    <details class="ab-rules"><summary class="muted" style="cursor:pointer">${$t('shared.full_rules')}</summary>${a.sections.map((s) => `<p style="margin:4px 0"><b>${s.label}.</b> <span class="muted">${esc(s.text)}</span></p>`).join('')}</details>
+    <details class="ab-rules"><summary class="muted" style="cursor:pointer">${dex2 ? 'Exact mechanics — View details' : $t('shared.full_rules')}</summary>${a.sections.map((s) => `<p style="margin:4px 0"><b>${s.label}.</b> <span class="muted">${esc(s.text)}</span></p>`).join('')}</details>
     ${seeIt && mode === 'football' ? `<button class="btn small see-it" data-see-it="${esc(familyIdOf(x))}" data-form="${monster?.stage ?? ''}" data-mastery="${k ? k.index : 0}">${$t('shared.see_it')}</button>` : ''}</div>`;
 }
 /** Both abilities of a family or monster, or the plain statement that a Basic has none. */
