@@ -5,17 +5,17 @@ Branch: `codex/beast-dex-2`. Do not merge before the owner's review.
 ## Implemented behavior
 
 - Main Dex opens Species View; roster's species detail opens My Beast View.
-- Four keyboard-accessible tabs, with one sticky portrait. Revealed evolved forms can be selected in Species View.
+- Four keyboard-accessible tabs, with one sticky portrait. Revealed evolved forms can be selected in Species View. An owned-species selector switches between Species View and each real My Beast entry without modifying the roster.
 - Existing species descriptions remain the fallback. `src/dex/content.js` supplies stage-specific editorial content.
 - Flaroo / Blazynx / Infernox use family ID `emberfox`. New biographies, personality development, fun facts, nine lore entries, and three reciprocal family relationship drafts are included. These are NEW DRAFTS, not a recovered copy of the previous chat's approved prototype.
-- Other forms retain their actual existing descriptions. Relationships involving Spriglet, Cindruff, and Pyroclast have matching reciprocal drafts. No other expanded biographies have been authored.
+- Other forms retain their actual existing descriptions. Relationships involving Spriglet, Cindruff, and Pyroclast have matching reciprocal drafts. Expanded stage-specific drafts now also cover Spriglet / Floracat / Sylvanyx, Cindruff / Magmaul, Pyroclast, Aquip / Aquarrel / Abyssin, and Muddlet / Sludgeon. Total: 14 expanded form drafts across six families; 208 forms retain the existing-description fallback.
 - Natural scouting uses the authoritative form's starting attribute bands, declared below-band weaknesses, build identity, and the existing football / Clash ability explanations. Exact mechanics remain sourced from the existing registry; no ability effects are changed.
 - My Beast uses existing career profiles and timeline records, with evolution history, attributes, statistics, and a stable cosmetic quirk derived from individual identity.
-- Portrait taps emit cosmetic text reactions. Rare reactions have a 5% chance using UI randomness, independent of simulation RNG. The portrait dispatches `beast-dex-reaction` with `{ rare, reaction }` for visual animation work. Actual animation choreography is not implemented.
+- Portrait taps emit cosmetic text reactions. Rare reactions have a 5% chance using UI randomness, independent of simulation RNG. The portrait dispatches `beast-dex-reaction` with `{ rare, reaction, familyId, stage }` for visual animation work. Actual animation choreography is not implemented.
 - Species knowledge counts once per family per completed owner football game if at least one individual appears in the played lineup. Multiple family members do not multiply credit. Reserve practice, opponent appearances, and Clash do not count. This counting interpretation should be included in owner acceptance review.
 - Knowledge uses franchise/game identity for deduplication, survives in the global Dex and franchise save, and merges by event union. Thresholds: 5, 15, 30. No historical games are invented or backfilled. Lore is cosmetic, with no mastery cosmetics or gameplay rewards.
-- Developer → Beast Dex Reviewer covers all forms from the actual catalog (currently 192 families / 222 forms, not 500 distinct live entries). Filter by component/status; preview species or real/sample My Beast; preview 0/5/15/30 games; audition each form's cry.
-- Six independent component verdicts and notes, per form. Notes are saved on change/navigation/export. Export includes session feedback even when storage fails. Verdicts return to pending when the reviewed payload changes. No franchise unlocks are modified by previews.
+- Developer → Beast Dex Reviewer covers all forms from the actual catalog (currently 192 families / 222 forms, not 500 distinct live entries). Filter by component, status, element, name, or content coverage; preview species or real/sample My Beast; preview exact lore boundaries; audition each form's cry; preview normal and rare reactions deterministically; jump among family forms. The active tab is preserved across reviewer selections.
+- Six independent component verdicts and notes, per form. Notes are autosaved after typing and flushed on change/navigation/export/route exit. Export includes session feedback even when storage fails. Verdicts return to pending when the component-specific reviewed payload changes. Compact revision digests avoid storing repeated biography and ability payloads in limited device storage. Older fingerprint formats return to pending while retaining notes. No franchise unlocks are modified by previews.
 - Existing Monster Cry Reviewer is retained. Its review store and this store remain separate; Dex audio approval does not automatically approve the cry review queue.
 
 ## Claude: visuals and testing
@@ -30,6 +30,14 @@ Work on this branch. Preserve functionality and authoritative gameplay values.
 - Test lore boundaries at 4/5, 14/15, 29/30; multiple individuals; replay/reload; save export/import; cloud union; blocked/full storage.
 - Test review edits through form switches, view/lore/filter changes, export, and content revisions. Approvals are component-specific.
 - Review the three new Flaroo-family drafts with the owner before using their exact prose as the production standard. Other expanded content remains an editorial backlog.
+
+## Content pipeline
+
+- Run `node tools/audit-dex-content.mjs` to validate expanded drafts and print coverage.
+- Add `--json` for the exact missing form IDs, or `--require-complete` for a strict release content gate.
+- `src/dex/content/linked-families.js` holds the next individually written family batches; `src/dex/content.js` retains Flaroo and the curated relationship registry.
+- Every expanded form needs at least two biography paragraphs, personality, habitat, two fun facts, personality development, lore at exactly 5/15/30 games, and normal/rare text reactions. Relationships are optional, capped at three, use real family IDs, and require reciprocal entries. Legendary folklore is explicitly a story, not a gameplay rule.
+- The audit checks schema completeness and references; the owner and Claude still review prose quality, visual fit, gameplay accuracy and world consistency.
 
 ## Remaining work
 
