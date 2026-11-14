@@ -219,7 +219,7 @@ export function canTakePlayer(f) { return f.roster.length < ROSTER_MAX; }
 export const describePick = (p, yearOf) => `${yearOf(p.year)} R${p.round}${p.original ? ` (${p.original.split(' ').pop()})` : ''}`;
 
 // ---------------------------------------------------------------- AI clubs calling the owner (GDD §19.6, second pass)
-/** Chance a club calls in a given week (in season, weeks 2-8) and once when the offseason opens. */
+/** Chance a club calls in a given week (in season, weeks 1-7) and once when the offseason opens. */
 export const CALL_CHANCE = Object.freeze({ rookie: 0.32, pro: 0.26, allstar: 0.2 });
 /** A club that calls with a player names its price: a little above what it would accept if asked. */
 export const CALL_PREMIUM = 1.1;

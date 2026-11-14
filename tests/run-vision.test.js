@@ -46,7 +46,8 @@ test('F8: Edge Contain sets the edge against Outside Zone; inside runs are what 
   const ec = PLAYS.edge_contain; assert.deepEqual([ec.align.DL1[1], ec.align.DL2[1]], [-5, 5], 'the contain linemen line up outside');
   const ypc = (off, def) => mean(Array.from({ length: 16 }, (_, i) => play({ off, def, attr: 'speed', value: 65, seed: 79000 + i }).yards));
   const oz = DEFENSE_IDS.map((d) => [d, ypc('outside_zone', d)]).sort((a, b) => a[1] - b[1]); const rank = oz.findIndex(([d]) => d === 'edge_contain') + 1;
-  assert.ok(rank <= 13, `Edge Contain is in the better half of the 26 calls against Outside Zone (rank ${rank}, ${oz[rank - 1][1].toFixed(2)} yd)`);
+  // Task 10: the defensive book is every released call now, not 26; "the better half" is measured on the whole book.
+  assert.ok(rank <= Math.ceil(DEFENSE_IDS.length / 2), `Edge Contain is in the better half of the ${DEFENSE_IDS.length} calls against Outside Zone (rank ${rank}, ${oz[rank - 1][1].toFixed(2)} yd)`);
   assert.ok(ypc('power_right', 'edge_contain') > ypc('outside_zone', 'edge_contain'), 'Power gains more than Outside Zone against it');
   const some = new Set(Array.from({ length: 16 }, (_, i) => play({ off: 'outside_zone', def: 'edge_contain', attr: 'speed', value: 65, seed: 79000 + i }).yards >= 6));
   assert.ok(some.has(true), 'the edge is not a wall: Outside Zone still breaks some against it');
@@ -67,7 +68,9 @@ test('F7 final: an early cut is still possible, but only with a free defender ac
   for (const off of ['inside_zone', 'power_right', 'power_left', 'dive', 'counter', 'trap', 'outside_zone', 'stretch_left', 'toss_sweep']) for (const def of DEFENSE_IDS) for (let i = 0; i < 4; i++) {
     const s = play({ off, def, offSubjects: ['RB'], attr: 'awareness', value: 95, seed: 86000 + i }); const c = s.events.find((e) => e.kind === 'cutback' && e.at > 3); if (!c) continue; early++;
     const f = s.frames.filter((x) => x.t <= c.t + 1e-6).at(-1); const rb = pos(f, 'off', 'RB');
-    assert.ok(f.def.some((d) => !d[3] && d[1] < 0 && d[1] > rb[1] - 1.5 && Math.abs(d[2] - rb[2]) < 6), `${off} vs ${def} seed ${86000 + i}: an early cut with nobody across the line near him`);
+    // Task 10: with the released defenses a back can already be past the line when he cuts (toss_sweep vs base_cat: an unblocked
+    // linebacker a yard beside him); "across the line" then means level with or behind the back, still a free defender near his track.
+    assert.ok(f.def.some((d) => !d[3] && d[1] < Math.max(0, rb[1]) && d[1] > rb[1] - 1.5 && Math.abs(d[2] - rb[2]) < 6), `${off} vs ${def} seed ${86000 + i}: an early cut with nobody across the line near him`);
   }
   assert.ok(early >= 1, 'early cuts are not prohibited');
 });

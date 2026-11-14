@@ -25,11 +25,11 @@ const clone = (x) => JSON.parse(JSON.stringify(x));
 test('records are versioned: new battles are version 2 on ruleset t8 with the engine version, context and D1/D2 policies; the engine is chosen from the record', () => {
   const f = newFranchise(23); toTuesday(f);
   assert.ok(F.startEncounter(f, 0, { mode: 'watch' }).ok); const e = f.week.encounter;
-  assert.equal(e.version, 2); assert.equal(e.ruleset, T8_RULESET); assert.equal(e.engine, T8_VALUES.engineVersion); assert.equal(e.context, 'standalone'); assert.deepEqual(e.policies, { a: 'manual', b: 'ai' }); assert.deepEqual(e.decisions, { a: {} });
+  assert.equal(e.version, 2); assert.equal(e.ruleset, T8_RULESET); assert.equal(e.engine, T8_VALUES.engineVersion); assert.equal(e.context, 'standalone'); assert.deepEqual(e.policies, { a: 'player', b: 'ai' }); assert.deepEqual(e.decisions, { a: {} }); // Task 10: Watch is the continuous player policy
   assert.ok(e.a.every((m) => Number.isInteger(m.clashMasteryTier) && m.clashMasteryTier === tierIndex(f.roster.find((x) => x.id === m.id).dev.mastery.clash || 0)), 'the snapshot carries the Clash mastery TIER (not the raw credit count)');
   const r = F.encounterBattle(f); assert.equal(r.ruleset, 't8'); assert.equal(r.config.ruleset, 't8'); assert.equal(r.context, 'standalone');
   assert.equal(Link.rulesetOf(e), 't8'); assert.equal(Link.rulesetOf({ seed: 1, a: [], b: [] }), null, 'a pre-M4 record names no ruleset');
-  assert.equal(Link.isT8Record(e), true); assert.equal(Link.t8Policies('skip').a, 'ai'); assert.equal(Link.t8Policies('watch').a, 'manual'); assert.equal(Link.t8Policies('auto').a, 'manual', "'auto' is Watch");
+  assert.equal(Link.isT8Record(e), true); assert.equal(Link.t8Policies('skip').a, 'ai'); assert.equal(Link.t8Policies('watch').a, 'player'); assert.equal(Link.t8Policies('auto').a, 'player', "'auto' is Watch");
   // the summary records the engine too
   assert.ok(F.encounterDecide(f, Link.pendingDecision(r)?.ex ?? 1, 'auto').ok); const b = F.resolveEncounter(f); assert.ok(b.ok, b.reason);
   assert.equal(e.result.ruleset, 't8'); assert.equal(e.result.engine, T8_VALUES.engineVersion); assert.ok(e.result.stateHash); assert.equal(e.result.hash, logHashFor(F.encounterBattle(f)));
@@ -51,30 +51,24 @@ test('D19: a finished pre-M4 record replays on the isolated historical engine wi
   const b = F.resolveEncounter(f); assert.ok(b.ok, b.reason); assert.equal(open.result.ruleset, 't8');
 });
 
-test('D1 boundary: Watch stops at the first legal rotation prompt with the options stay / auto / reserves; a recorded choice continues the IDENTICAL log past the boundary; invalid choices are refused; a reload mid-prompt continues identically', () => {
+test('Task 10 continuous Watch: no prompt and no boundary stop; a recorded switch continues the IDENTICAL log up to its rotation phase; invalid choices are refused; \'auto\' hands the side to the AI; a reload continues identically', () => {
   let seen = 0;
   for (let seed = 40; seed < 52; seed++) {
     const f = newFranchise(seed); toTuesday(f); const pv = F.encounterPreview(f, 0); if (pv.size < 3) continue;
-    assert.ok(F.startEncounter(f, 0, { mode: 'watch' }).ok); const r = F.encounterBattle(f); const p = Link.pendingDecision(r); if (!p) continue; seen++;
-    assert.equal(r.pending, true); assert.equal(r.winner, null); assert.equal(r.boundary.kind, 'rotation'); assert.equal(r.log[r.log.length - 1].kind, 'rotation_prompt'); assert.equal(p.index, r.log.length - 1);
-    assert.deepEqual(p.options.slice(0, 2), ['stay', 'auto']); assert.ok(p.reserves.every((x) => p.options.includes(x.id) && x.monsterId && x.name && x.hp > 0));
-    assert.throws(() => Link.battleSummary(r), /pending/, 'no summary for a pending battle');
-    assert.equal(F.resolveEncounter(f).ok, false); assert.equal(F.resolveEncounter(f).pending.kind, 'rotation');
-    assert.equal(F.encounterDecide(f, p.ex, '').ok, false); assert.equal(F.encounterDecide(f, 0, 'stay').ok, false);
-    // save and reload at the boundary: the same prompt, the same log
-    const g = Save.importJson(Save.exportJson(f)); const rg = F.encounterBattle(g); assert.equal(logHashFor(rg), logHashFor(r)); assert.deepEqual(Link.pendingDecision(rg), p);
-    // a reserve choice: the log is identical up to the boundary, then continues with the rotation
-    const pick = p.reserves[0].id; assert.ok(F.encounterDecide(f, p.ex, pick).ok); const r2 = F.encounterBattle(f);
-    for (let i = 0; i < r.log.length - 1; i++) assert.equal(r2.log[i].text, r.log[i].text, `event ${i} identical before the boundary`);
-    const rot = r2.log.find((x, i) => i >= r.log.length - 1 && x.kind === 'rotation' && x.side === 'a'); assert.ok(rot, 'the rotation happens'); assert.equal(rot.in, pick); assert.equal(rot.by, 'manual');
-    // a bad decision is refused by the engine
-    const h = clone(f); h.week.encounter.decisions.a[p.ex] = 'zz9'; assert.throws(() => F.encounterBattle(h), /not a living reserve/);
-    // 'stay' keeps it in; the next prompt (if any) is at least four exchanges later for a rotation but 'stay' spends no cadence
-    const s = clone(f); s.week.encounter.decisions.a = { [p.ex]: 'stay' }; const rs = F.encounterBattle(s); const p2 = Link.pendingDecision(rs); if (p2) assert.ok(p2.ex > p.ex);
-    // 'auto' = Skip from here: no prompt ever again and the battle settles
-    assert.ok(F.encounterDecide(f, p.ex, 'auto').ok || true); const t = clone(f); t.week.encounter.decisions.a = { [p.ex]: 'auto' }; const rt = F.encounterBattle(t); assert.equal(Link.pendingDecision(rt), null); assert.ok(rt.winner);
+    assert.ok(F.startEncounter(f, 0, { mode: 'watch' }).ok); const r = F.encounterBattle(f);
+    assert.equal(r.pending, false, 'a Watch battle never stops for a prompt'); assert.ok(r.winner); assert.ok(!r.log.some((x) => x.kind === 'rotation_prompt'));
+    assert.equal(Link.pendingDecision(r), null);
+    const s = F.encounterSession(f); let legal = null; while (!s.done) { const v = s.view.rotation; if (v.exchangesLeft === 0 && v.reserves.length) { legal = v; break; } s.advance(); }
+    if (!legal) continue; seen++;
+    assert.equal(F.encounterDecide(f, legal.ex, '').ok, false); assert.equal(F.encounterDecide(f, 0, 'stay').ok, false);
+    const pick = legal.reserves[0].id; assert.ok(F.encounterDecide(f, legal.ex, pick).ok); const r2 = F.encounterBattle(f);
+    for (let i = 0; i <= legal.lastSeq; i++) assert.equal(r2.log[i].text, r.log[i].text, `event ${i} identical before the switch`);
+    const rot = r2.log.find((x) => x.kind === 'rotation' && x.side === 'a' && x.ex === legal.ex); assert.ok(rot, 'the rotation happens at that rotation phase'); assert.equal(rot.in, pick);
+    const h = clone(f); h.week.encounter.decisions.a[legal.ex] = 'zz9'; assert.throws(() => F.encounterBattle(h), /not a living reserve/, 'a bogus reserve is refused by the engine');
+    const g = Save.importJson(Save.exportJson(f)); assert.equal(logHashFor(F.encounterBattle(g)), logHashFor(r2), 'a reload rebuilds the same battle');
+    const t = clone(f); t.week.encounter.decisions.a = { [legal.ex]: 'auto' }; const rt = F.encounterBattle(t); assert.ok(rt.winner); assert.ok(rt.log.some((x) => x.kind === 'rotation_decision' && x.decision === 'auto' && x.ex === legal.ex), 'auto is recorded where it was chosen');
   }
-  assert.ok(seen >= 6, `prompts seen: ${seen}`);
+  assert.ok(seen >= 6, `legal switch points seen: ${seen}`);
 });
 
 test('D2 policy: Skip, headless settlement (settleHeadless answers auto), staff auto-run and league games never prompt; the opponent is always the AI', () => {

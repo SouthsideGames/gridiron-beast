@@ -7,7 +7,7 @@
 // badges (main menu, More tab, Developer) and a one-time toast per new batch.
 
 import { SPECIES_DEX } from '../data/species.js';
-import { PLAYS, OFFENSE_IDS, DEFENSE_IDS, RESERVE_OFFENSE_IDS, RESERVE_DEFENSE_IDS } from '../data/playbook.js';
+import { PLAYS, OFFENSE_IDS, DEFENSE_IDS, RESERVE_OFFENSE_IDS, RESERVE_DEFENSE_IDS, isReserve } from '../data/playbook.js';
 import { ELEMENT_FX, FX_REVISION, familyOf } from './ability-fx.js';
 import { SIG_REV } from './ability-sigs.js';
 import { reviews, setReview } from '../franchise/review-store.js';
@@ -158,7 +158,7 @@ export function reviewHtml(ns, id, { open = false } = {}) {
     ${showNote ? `<textarea class="review-note" data-change="rv-text" data-ns="${ns}" data-id="${id}" rows="2" maxlength="2000" placeholder="${ns === 'ability' ? 'What should it look like? Shape, color, size, timing, label...' : 'What should change? Routes, timing, art, when to call it...'}">${esc(r.note || '')}</textarea>
     <label class="row review-gameplay"><input type="checkbox" data-change="rv-gameplay" data-ns="${ns}" data-id="${id}" ${r.gameplay ? 'checked' : ''}> ⚙ ${ns === 'ability' ? 'The ability should <b>do</b> something different (gameplay, not just looks)' : 'The play should <b>work</b> differently (assignments, not just art)'}</label>
     <div class="dim review-saved" data-saved="${ns}:${id}" style="font-size:11px">${r.updatedAt ? 'Saved' : 'Saves when you tap away'}</div>` : ''}
-    ${ns === 'play' && PLAYS[id]?.reserve ? `<label class="row review-practice" style="gap:6px;margin-top:8px"><input type="checkbox" data-change="rv-practice" data-ns="${ns}" data-id="${id}" ${r.practice ? 'checked' : ''} style="width:auto;min-height:0;margin:0"> 🎯 OK to add this play to the practice field</label>` : ''}
+    ${ns === 'play' && isReserve(id) ? `<label class="row review-practice" style="gap:6px;margin-top:8px"><input type="checkbox" data-change="rv-practice" data-ns="${ns}" data-id="${id}" ${r.practice ? 'checked' : ''} style="width:auto;min-height:0;margin:0"> 🎯 OK to add this play to the practice field</label>` : ''}
   </div>`;
 }
 

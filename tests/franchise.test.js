@@ -6,7 +6,7 @@ import * as F from '../src/franchise/franchise.js';
 import { t7FA, t7FillToMin } from './t7-support.js';
 import { PLAYS as PLAYS_T7 } from '../src/data/playbook.js';
 import { teamSchedule, leagueSeasonFixtures, standings, blankRecord, applyResult, ALL_TEAMS } from '../src/data/league.js';
-import { STAFF_ROLES } from '../src/data/staff.js';
+import { STAFF_ROLES, staffById } from '../src/data/staff.js';
 import { ROSTER_MAX } from '../src/data/monsters.js';
 import { slotsOf } from '../src/franchise/trade-value.js';
 import { exportJson, importJson, importLegacy, legacySummary } from '../src/franchise/save.js';
@@ -656,7 +656,8 @@ test('contracts: two-year deals from signing, salaries frozen until renewal, the
   holdDraft(f); assert.equal(F.startNextSeason(f).ok, true);
   run();
   if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
-  const items = f.offseason.items; assert.ok(items.filter((i) => i.kind === 'monster').length >= 14 && items.filter((i) => i.kind === 'staff').length === 5, 'the two-year founders and the staff come up after season 2');
+  const items = f.offseason.items; assert.ok(items.filter((i) => i.kind === 'monster').length >= 14 && items.filter((i) => i.kind === 'staff').length === Object.values(f.staffContracts).filter((c) => c.ends <= 2).length && items.filter((i) => i.kind === 'staff').length >= 4, 'the two-year founders and the staff come up after season 2 (Task 10: a coordinator replaced in the postseason event has a new contract and is not up for renewal)');
+  for (const i of items.filter((x) => x.kind === 'staff')) assert.equal(i.name, staffById(f.staff[i.role])?.name, 'each renewal is for the person in the role');
   assert.equal(F.startNextSeason(f).ok, false, 'decisions gate the new season');
   const first = items.find((i) => i.kind === 'monster'); const mon = f.roster.find((x) => x.id === first.id);
   { const rs = F.resolveContract(f, first.id, 'sign'); assert.equal(rs.ok, true, rs.reason); // Task 7: the monster answers the renewal (personality, role, the club's results)

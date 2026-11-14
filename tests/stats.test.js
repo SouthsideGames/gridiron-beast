@@ -195,3 +195,14 @@ test('records book: single-game, team and season records are written and only im
   for (let guard = 0; guard < 40 && !f.season.finished; guard++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); }
   assert.ok(R.season.passYds?.value > 0 && R.season.passYds.year === 1, 'season record written at season end');
 });
+
+test('awards (Task 10, owner 2026-11-13): the +3 SD component cap applies to MVP only; OPOY, DPOY and rookie awards are uncapped; no penalty for past MVPs', () => {
+  const edge = { name: 'Edge', position: 'DL', team: 'Club 3', line: { tackles: 30, assists: 10, tfl: 14, sacks: 12, pressures: 45, ff: 3, fr: 1 } };
+  const r = run([edge]);
+  const mvp = r.mvp.find((x) => x.name === 'Edge'); const dpoy = r.dpoy.find((x) => x.name === 'Edge');
+  assert.ok(dpoy && Math.max(...Object.values(dpoy.components)) > 3, `DPOY keeps the uncapped component (${JSON.stringify(dpoy?.components)})`);
+  assert.ok(!mvp || Object.entries(mvp.components).filter(([k]) => k !== 'team' && k !== 'versatility').every(([, v]) => v <= 3), `MVP components are capped at 3 (${JSON.stringify(mvp?.components)})`);
+  const rookie = run([{ ...edge, name: 'Rookie Edge', yearsPro: 0 }]);
+  assert.ok(Math.max(...Object.values(rookie.droy.find((x) => x.name === 'Rookie Edge').components)) > 3, 'DROY is uncapped');
+  for (const list of Object.values(r)) if (Array.isArray(list)) for (const x of list) assert.ok(!('voterFatigue' in (x.components || {})), 'no voter-fatigue component');
+});

@@ -21,9 +21,9 @@ const foes = (seed) => [M('ashkit', seed + 10), M('mudcub', seed + 11), M('lumen
 const manualA = (decisions = {}) => ({ config: { ruleset: 't8', policies: { a: 'manual', b: 'none' }, decisions: { a: decisions } } });
 const battles = (n, seed0, k = 3) => { const rng = createRng(seed0); return Array.from({ length: n }, (_, i) => ({ a: randomLineup(rng, k), b: randomLineup(rng, k), seed: i + 1 })); };
 
-test('values: cadence 4 and forced pacing 3 are the approved values; the policies are none / ai / manual; AI is the default (D1)', () => {
+test('values: cadence 4 and forced pacing 3 are the approved values; the policies are none / ai / manual / player (Task 10 continuous Watch); AI is the default (D1)', () => {
   assert.equal(ROTATION_CADENCE_EXCHANGES, 4); assert.equal(T8_VALUES.swaps.voluntaryEvery, 4); assert.equal(T8_VALUES.swaps.forcedEvery, 3);
-  assert.deepEqual(T8_POLICIES, ['none', 'ai', 'manual']);
+  assert.deepEqual(T8_POLICIES, ['none', 'ai', 'manual', 'player']);
   assert.deepEqual(run(team(1), foes(1), 1).config.policies, { a: 'ai', b: 'ai' });
   assert.deepEqual(rotationEntryPenalty({ firstAfterVoluntaryRotation: true }), { factor: 0.5, spent: true });
 });

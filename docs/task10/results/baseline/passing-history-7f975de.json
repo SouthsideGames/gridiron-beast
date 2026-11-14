@@ -1,0 +1,90 @@
+{
+ "root": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/t10/bis/7f975de",
+ "games": 48,
+ "variants": {
+  "enabled": {
+   "games": 48,
+   "attempts": 1568,
+   "completionPct": 65.4,
+   "yardsPerAttempt": 8.21,
+   "intPct": 1.5,
+   "sackPctOfDropbacks": 2.5,
+   "deepAttempts": 166,
+   "deepCompletionPct": 42.2,
+   "yardsPerCarry": 6.21,
+   "pointsPerTeamGame": 12.6,
+   "abilityEventsPerGame": 177.9,
+   "playsWithAnAbilityPct": 91.6,
+   "completionByQbAccuracy": {
+    "acc60-69": {
+     "attempts": 781,
+     "completionPct": 64.1
+    },
+    "acc70+": {
+     "attempts": 735,
+     "completionPct": 67.6
+    },
+    "acc<60": {
+     "attempts": 52,
+     "completionPct": 53.8
+    }
+   }
+  },
+  "noAbilities": {
+   "games": 48,
+   "attempts": 1621,
+   "completionPct": 63.5,
+   "yardsPerAttempt": 7.95,
+   "intPct": 1.2,
+   "sackPctOfDropbacks": 2.7,
+   "deepAttempts": 177,
+   "deepCompletionPct": 35,
+   "yardsPerCarry": 6.05,
+   "pointsPerTeamGame": 11.9,
+   "abilityEventsPerGame": 0,
+   "playsWithAnAbilityPct": 0,
+   "completionByQbAccuracy": {
+    "acc60-69": {
+     "attempts": 834,
+     "completionPct": 63.8
+    },
+    "acc70+": {
+     "attempts": 730,
+     "completionPct": 63.8
+    },
+    "acc<60": {
+     "attempts": 57,
+     "completionPct": 54.4
+    }
+   }
+  },
+  "noAbilitiesNoTypes": {
+   "games": 48,
+   "attempts": 1651,
+   "completionPct": 64.9,
+   "yardsPerAttempt": 8.09,
+   "intPct": 1.2,
+   "sackPctOfDropbacks": 2.2,
+   "deepAttempts": 209,
+   "deepCompletionPct": 41.6,
+   "yardsPerCarry": 6.03,
+   "pointsPerTeamGame": 14,
+   "abilityEventsPerGame": 0,
+   "playsWithAnAbilityPct": 0,
+   "completionByQbAccuracy": {
+    "acc60-69": {
+     "attempts": 858,
+     "completionPct": 63.9
+    },
+    "acc70+": {
+     "attempts": 735,
+     "completionPct": 66.7
+    },
+    "acc<60": {
+     "attempts": 58,
+     "completionPct": 56.9
+    }
+   }
+  }
+ }
+}

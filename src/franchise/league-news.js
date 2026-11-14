@@ -7,6 +7,7 @@
 // Items: { id, year, week, kind, tier: 'major' | 'notable' | 'info', icon, text, games?, leaders?, round? }
 //   kind: scores · upset · streak · unbeaten · shutout · blowout · overtime · race · race_lead · award · record · playoffs · champion
 
+import { honoursText } from './league.js';
 import { AWARDS } from './awards.js';
 import { RECORD_CATEGORIES, TEAM_RECORDS } from './stats.js';
 import { yearOf } from '../data/calendar.js';
@@ -227,7 +228,7 @@ export function moveLine(e) {
     case 'release': return e.reason === 'walked' ? $L('franchise.leaves_as_a_free_agent_his', { who, club: e.club }) : $L('franchise.release', { club: e.club, who, why: (e.why === 'cap' ? $L('franchise.to_get_under_the_cap') : (e.why === 'room' ? $L('franchise.to_make_room') : ''))});
     case 'trade': return (e.toOwner ? $L('franchise.trade_to_for', { from: e.from, who, to: e.to, consideration: e.consideration || 'picks' }) : $P($L('franchise.trade_goes_from_to', { who, from: e.from, to: e.to }), e.consideration ? ` for ${e.consideration}` : '', `.`));
     case 'draft': return $L('franchise.draft_at_round', { club: e.club, who, overall: e.overall, e: e.round });
-    case 'retire': return $P($L('franchise.retires_at', { mname: e.mname, age: e.age || $t('franchise.the_end_of_a_long_career') }), e.honours ? `: ${e.honours}` : '', '.', e.club ? $P(' ', $L('franchise.he_played_his_last_season_with', { club: e.club })) : '');
+    case 'retire': return $P($L('franchise.retires_at', { mname: e.mname, age: e.age || $t('franchise.the_end_of_a_long_career') }), e.honours ? `: ${honoursText(e.honours)}` : '', '.', e.club ? $P(' ', $L('franchise.he_played_his_last_season_with', { club: e.club })) : '');
     case 'milestone': return $L('franchise.reaches', { mname: e.mname, club: e.club, milestone: e.milestone });
     default: return { text: `${e.mname}: ${e.kind}.` };
   }

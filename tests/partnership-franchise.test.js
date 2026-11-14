@@ -124,14 +124,17 @@ test('the offseason pick is used when the season starts; an invalid pick falls b
   const s = F.suggestedCaptains(f); const pick = { offense: [s.offense.a, s.offense.b], defense: [s.defense.a, s.defense.b] };
   const r = F.pickCaptains(f, pick); assert.ok(r.ok, r.reason); assert.equal(f.partnerships.pick.year, f.season.year + 1);
   assert.equal(F.pickCaptains(f, { offense: [s.defense.a, s.defense.b], defense: pick.defense }).ok, false, 'a defensive pair cannot be the offense');
-  const g = copy(f);
+  let g = copy(f);
   const n = F.startNextSeason(f); assert.ok(n.ok, n.reason);
   const e = CP.captainsOf(f, f.club); assert.equal(e.mode, 'offseason'); assert.deepEqual([e.offense.a, e.offense.b].sort(), pick.offense.slice().sort()); assert.deepEqual([e.defense.a, e.defense.b].sort(), pick.defense.slice().sort());
   assert.equal(f.partnerships.pick, undefined, 'the pick is used once');
   for (const club of ALL_TEAMS) assert.ok(CP.captainsOf(f, club), `${club} named captains for the new season`);
   // An invalid pick (a picked captain gone before the season starts): the suggestion, explained.
-  const gone = g.roster.find((m) => m.id === pick.defense[1]); g.roster = g.roster.filter((m) => m.id !== gone.id);
-  assert.ok(F.startNextSeason(g).ok);
+  // (Task 10: remove a picked defensive captain whose position has depth to spare, so the season can still start; removing a
+  // club's only spare at a position correctly blocks the season on the lineup gate, which is not what this checks.)
+  let gone = null, started = null;
+  for (const id of [pick.defense[1], pick.defense[0]]) { const h = copy(g); const m = h.roster.find((x) => x.id === id); h.roster = h.roster.filter((x) => x.id !== id); const r2 = F.startNextSeason(h); if (r2.ok) { gone = m; started = h; break; } }
+  assert.ok(gone, 'a picked defensive captain can leave without blocking the season'); g = started;
   const e2 = CP.captainsOf(g, g.club); assert.ok(e2.defense && ![e2.defense.a, e2.defense.b].includes(gone.id), 'never the departed monster');
   assert.ok(g.news.some((n) => /Defense: .*roster.*suggested pair was used/.test(n.text)), 'the fallback is explained');
 });

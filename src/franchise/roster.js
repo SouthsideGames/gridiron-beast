@@ -6,6 +6,7 @@ import { tierIndex } from './t8/mastery.js';
 import { effectiveAttributes, monsterOverall, createRoster, speciesEffect } from '../data/monsters.js';
 import { OFFENSE_IDS, DEFENSE_IDS, PLAYS, counterPlays } from '../data/playbook.js';
 import { createRng } from '../core/rng.js';
+import { COACH_STYLES } from '../data/identities.js';
 const PLAYS_IDS = new Set(Object.keys(PLAYS));
 
 export const available = (m) => !m.injury;
@@ -161,12 +162,18 @@ export const IDENTITY_STYLE_WEIGHT = 3; // PROVISIONAL
 const PASS_STYLE = Object.freeze({ vertical: ['deep', 'long'], quick: ['quick', 'short'] });
 const RUN_STYLE = Object.freeze({ inside: ['inside', 'goalline'], option: ['option', 'outside', 'misdirection'] });
 const RUN_D = ['run_wall', 'edge_contain', 'bear_front', 'goal_line', 'goal_line_man', 'qb_spy'];
+// Task 10: a coach with one of the five coach identities (identities.js COACH_STYLES) draws from the whole released book of his
+// side (the reviewed reserve plays released in Task 10 included), minus the desperation and red-zone-only calls; his style's tags
+// (with the club's passStyle / runStyle) are the ones drawn more often. A coach without a style keeps the older pools above.
+const STYLE_POOL = (type) => OFFENSE_IDS.filter((id) => PLAYS[id].type === type && !PLAYS[id].legendary && !PLAYS[id].tags.some((t) => t === 'desperation' || t === 'redzone'));
 function identityPlaybook(seed, coach) {
   const rng = createRng(seed); const id = coach.identity;
+  const style = id.style ? COACH_STYLES[id.style] : null;
   const tagged = (tags) => (p) => (tags?.length && PLAYS[p]?.tags.some((t) => tags.includes(t)) ? IDENTITY_STYLE_WEIGHT : 1);
   const pick = (arr, n, w = () => 1) => { const a = arr.filter((p) => PLAYS_IDS.has(p)); const out = []; while (out.length < n && a.length) { const tot = a.reduce((s, p) => s + w(p), 0); let x = rng.next() * tot, i = 0; for (; i < a.length - 1; i++) { x -= w(a[i]); if (x < 0) break; } out.push(a.splice(i, 1)[0]); } return out; };
   const runs = IDENTITY_RUNS[id.offense];
-  const offense = [...pick(RUN_PLAYS, runs, tagged(RUN_STYLE[id.runStyle])), ...pick(PASS_PLAYS, AI_PLAN_SIZE - runs, tagged(PASS_STYLE[id.passStyle]))];
+  const runTags = [...(RUN_STYLE[id.runStyle] || []), ...(style?.runTags || [])], passTags = [...(PASS_STYLE[id.passStyle] || []), ...(style?.passTags || [])];
+  const offense = [...pick(style ? STYLE_POOL('run') : RUN_PLAYS, runs, tagged(runTags)), ...pick(style ? STYLE_POOL('pass') : PASS_PLAYS, AI_PLAN_SIZE - runs, tagged(passTags))];
   const blitz = [...new Set([...ZONE_D, ...MAN_D, 'fire_zone'])].filter((p) => PLAYS[p]?.tags.includes('blitz'));
   const zone = ZONE_D.filter((p) => !blitz.includes(p)), man = MAN_D.filter((p) => !blitz.includes(p));
   const primary = id.defense === 'pressure' ? blitz : id.defense === 'man' ? man : zone;

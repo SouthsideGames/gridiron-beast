@@ -153,7 +153,10 @@ export function fieldLayers(o) {
     pre = s; s = '';
     const showStatus = true; // Task 8 (spec §13): status information stays visible at every quality level
     for (const [slot, x, y, eng, st] of frame.def) marker(slot, x, y, 'def', eng, frame.holder === slot && frame.holderTeam === 'def', showStatus ? st : 0);
-    for (const [slot, x, y, eng, st] of frame.off) marker(slot, x, y, 'off', eng, frame.holder === slot && frame.holderTeam === 'off', showStatus ? st : 0);
+    // Draw the ball-carrying QB after all linemen so their sprites cannot cover him.
+    const qbOnTop = frame.holderTeam === 'off' && frame.holder === 'QB';
+    for (const [slot, x, y, eng, st] of frame.off) if (!qbOnTop || slot !== 'QB') marker(slot, x, y, 'off', eng, frame.holder === slot && frame.holderTeam === 'off', showStatus ? st : 0);
+    if (qbOnTop) for (const [slot, x, y, eng, st] of frame.off) if (slot === 'QB') marker(slot, x, y, 'off', eng, true, showStatus ? st : 0);
     const [bx, by, air] = frame.ball;
     const cx = X(ballLat + by), cy = Y(ballOn + bx);
     s += layers.ball; // fire or wind on a ball in the air, just under the ball

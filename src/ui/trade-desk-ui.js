@@ -102,7 +102,7 @@ export function openTradeDesk(app, { onDone = null, team = null } = {}) {
 }
 
 // ---------------------------------------------------------------- an AI club's call
-/** One line for the HQ during the regular season and postseason, when the desk itself is closed: where the trade calendar stands. '' in the offseason and on the draft clock (the desk is open there and has its own banner). */
+/** One line for the HQ during the regular season and postseason: where the trade calendar stands (open weeks 1–7, then closed). '' in the offseason and on the draft clock (the desk is open there and has its own banner). */
 export function tradeLineHtml(f) {
   const w = F.tradeWindow(f); if (!['early', 'open-season', 'deadline-passed', 'postseason'].includes(w.phase) || !F.deskAvailable(f)) return '';
   const tone = w.phase === 'open-season' ? 'accent' : 'bad';
@@ -112,7 +112,7 @@ export function tradeLineHtml(f) {
 /** The panel for the call that is waiting, or ''. Calls made before Task 5 (no `kind`) show exactly as they did. */
 export function callPanelHtml(f) {
   const c = F.tradeCall(f); if (!c) return '';
-  const until = f.offseason ? $t('market.the_new_season') : `${$t('market.the_end_of_the_week_trade', { tradeDeadlineWeek: F.TRADE_DEADLINE_WEEK })}`;
+  const until = f.offseason ? $t('market.the_new_season') : `${$t('market.the_end_of_the_week_trade', { closesWeek: F.TRADE_DEADLINE_WEEK + 1 })}`;
   const asks = (c.asks || []).map((m) => `${esc(m.name)} (${esc(m.position)}, ${m.ovr} OVR)`).join(' + ');
   const sends = (c.sends || []).map((m) => `${esc(m.name)} (${esc(m.position)}, ${m.ovr} OVR, age ${m.age})`).join(' + ');
   const myPicks = (c.give || []).map((p) => `${yearOf(p.year)} round ${p.round}${p.original !== f.club ? ` ${$t('market.from_the', { original: esc(p.original) })}` : ''}`).join(' + ');

@@ -43,7 +43,8 @@ const shown = (vars, how) => (vars ? Object.fromEntries(Object.entries(vars).map
 const kept = (vars) => (vars ? Object.fromEntries(Object.entries(vars).map(([k, v]) => { if (v && typeof v === 'object') return [k, slim(v)]; const lk = typeof v === 'string' ? labelKey(v) : null; return [k, lk ? { tk: lk } : v]; })) : vars);   // a value that is itself a label (an award's name, a coach's style) is saved as that line
 export const line = (key, vars = null) => ({ text: t(key, shown(vars, lineText)), tk: key, ...(vars ? { tv: kept(vars) } : {}) });
 export function lineParts(...parts) { const tp = parts.filter((p) => p !== '' && p !== null && p !== undefined && p !== false).map(slim); return { text: tp.map(lineText).join(''), tp }; }
-export function lineText(x) { return typeof x === 'string' ? x : !x ? '' : x.tk ? t(x.tk, shown(x.tv, lineText)) : x.tp ? x.tp.map(lineText).join('') : (x.text ?? ''); }
+// A line whose key has since been retired (Task 10 reworded some play lines) shows the English it was saved with.
+export function lineText(x) { return typeof x === 'string' ? x : !x ? '' : x.tk && !(x.tk in en) && x.text != null ? x.text : x.tk ? t(x.tk, shown(x.tv, lineText)) : x.tp ? x.tp.map(lineText).join('') : (x.text ?? ''); }
 // ---- capturing a sentence that is built from several lines by ordinary code (award citations, a free agent's clue, …).
 // captured(() => build()) runs the builder, notes every line it reads, then finds those lines inside the finished sentence:
 // the result is a saved line ({ text, tp }) whose parts are the lines (with their values) and the plain text between them.

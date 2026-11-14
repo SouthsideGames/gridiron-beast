@@ -71,6 +71,7 @@ const spriteImg = (svg) => `<img class="cl-sprite" alt="" draggable="false" src=
  *   names: { a, b } (team names for the strips, the matchup line and the victory banner; default 'Side A' / 'Side B'),
  *   edge: (attackerType, defenderType) => 'strong' | 'weak' | 'even' (the matchup line's type edge; the arena itself never imports the engine),
  *   simple: true (franchise battles: Watch / Speed / Skip only, no step, scrubber or FX toggle),
+ *   live: true (Task 10: a continuous battle still being played; the header shows no total), onSkip() (the host settles Skip itself),
  *   controls: false (no control row at all: the host drives playback through the API, as the Clash reviewer does),
  *   quality: 'full' | 'low' | 'min' (the starting effects quality; 'min' only in native t8 mode), subject: abilityId (native t8: the
  *     reviewer's subject ability, see buildClashT8 `only`),
@@ -87,8 +88,8 @@ export function createArena(root, result, opts = {}) {
   const passed = result; const mode = arenaMode(result, opts);
   if (mode === 'translated') result = toArenaRecord(result);
   const t8 = mode === 'native';
-  const cues = t8 ? t8CuesFor(result) : cuesFor(result); const n = result.log.length;
-  const t8state = t8 ? buildClashT8(result, cues, { only: opts.subject || null }) : null;
+  let cues = t8 ? t8CuesFor(result) : cuesFor(result); let n = result.log.length;
+  let t8state = t8 ? buildClashT8(result, cues, { only: opts.subject || null }) : null;
   /** t8 state in the legacy arena shape ({ S: { a: { id: {...} } }, order, front, ramp, ex, i }); shield = the Shielded pool, statuses in `t8status`. */
   const t8Legacy = (st) => { const S = { a: {}, b: {} }; for (const id of Object.keys(st.S)) { const x = st.S[id]; S[id[0]][id] = { ...x, shield: x.status?.id === 'shielded' ? x.status.pool || 0 : 0, cond: null, paused: null, t8status: x.status }; } return { S, order: st.order, front: st.front, ramp: st.ramp, ex: st.ex, i: st.i, turnOrder: st.turnOrder }; };
   const stateOf = (i) => (t8 ? t8Legacy(t8StateAt(result, i)) : stateAt(result, i));
@@ -107,7 +108,7 @@ export function createArena(root, result, opts = {}) {
 
   const names = { a: opts.names?.a || $t('clash.side_a'), b: opts.names?.b || $t('clash.side_b') }; const simple = !!opts.simple; const noControls = opts.controls === false;
   root.innerHTML = `<div class="cl-arena ${sizeKey} theme-${theme.key} ${simple ? 'simple' : ''} ${t8 ? 't8' : ''}">
-    <div class="cl-hud"><span class="cl-ex">${$t('clash.exchange_b_0_b', { exchanges: result.exchanges })}</span><span class="cl-sd"></span><span class="cl-standing"></span><span class="cl-order muted"></span><span class="cl-theme muted">${esc(theme.name)}</span><span class="cl-exp">${result.experiments?.length ? `⚠ ${esc(result.experiments.join(', '))}` : ''}${t8 && result.provisional ? $t('clash.provisional_readings_on') : ''}</span><div class="cl-exbar"><i></i></div></div>
+    <div class="cl-hud"><span class="cl-ex">${opts.live ? $t('clash.exchange_b_0_live') : $t('clash.exchange_b_0_b', { exchanges: result.exchanges })}</span><span class="cl-sd"></span><span class="cl-standing"></span><span class="cl-order muted"></span><span class="cl-theme muted">${esc(theme.name)}</span><span class="cl-exp">${result.experiments?.length ? `⚠ ${esc(result.experiments.join(', '))}` : ''}${t8 && result.provisional ? $t('clash.provisional_readings_on') : ''}</span><div class="cl-exbar"><i></i></div></div>
     <div class="cl-matchup" aria-live="polite"></div>
     <div class="cl-viewport"><div class="cl-stage" style="background-color:${theme.base};background-image:${theme.tile}">
       <div class="cl-half cl-half-a" style="background:${theme.halfA}"></div><div class="cl-half cl-half-b" style="background:${theme.halfB}"></div><div class="cl-mid" style="background:${theme.line}"></div>
@@ -433,7 +434,7 @@ export function createArena(root, result, opts = {}) {
     if (k === 'watch') { if (playing) pause(); else { if (cursor >= n - 1) setCursor(0); runTo(n - 1); } }
     if (k === 'step') { if (playing) pause(); else if (cursor < n - 1) runTo(cursor + 1); }
     if (k === 'nextex') { if (playing) pause(); else if (cursor < n - 1) runTo(Math.max(cursor + 1, nextEx(cursor + 1))); }
-    if (k === 'skip') { pause(); setCursor(n - 1); if (cursor >= n - 1) opts.onEnd?.(); }
+    if (k === 'skip') { if (opts.onSkip) { opts.onSkip(); return; } pause(); setCursor(n - 1); if (cursor >= n - 1) opts.onEnd?.(); }
     if (k === 'speed') { speed = Number(b.dataset.v) || 1; for (const s of $$('[data-cl="speed"]')) s.classList.toggle('primary', Number(s.dataset.v) === speed); }
     if (k === 'fxq') { quality = t8 ? (quality === 'full' ? 'low' : quality === 'low' ? 'min' : 'full') : quality === 'low' ? 'full' : 'low'; b.textContent = `FX ${quality}`; fx.resize(); if (t8) t8Draw(); opts.onQuality?.(quality); }
   });
@@ -445,8 +446,20 @@ export function createArena(root, result, opts = {}) {
   return {
     // `record`: the record the arena plays: the result the consumer passed (native t8 and legacy), or the translated one (opts.t8 === 'translated');
     // `source` is always the result as passed. `mode`: 'native' | 'translated' | 'legacy' (see arenaMode).
-    get cursor() { return cursor; }, get playing() { return playing; }, cues, theme: theme.key, record: result, source: passed, mode, get length() { return n; }, t8: t8state, seek,
+    get cursor() { return cursor; }, get playing() { return playing; }, get cues() { return cues; }, theme: theme.key, get record() { return result; }, source: passed, mode, get length() { return n; }, get t8() { return t8state; }, seek,
     setCursor, play: () => runTo(n - 1), pause, step: () => runTo(cursor + 1), skip: () => { pause(); setCursor(n - 1); },
+    /**
+     * Task 10 (continuous Beast Clash): take the longer record of the SAME battle (the live session's next view, or its final result)
+     * without rebuilding anything: the monsters, the stage, the cursor and the playback clock stay; only the cues past the cursor are new.
+     * `next` must extend the current log (its first events are exactly the ones already here). Native t8 mode only.
+     */
+    extend(next) {
+      if (!t8 || mode !== 'native') throw new Error('extend() plays a live t8 battle (native mode only)');
+      if (next.log.length < n || next.log[n - 1]?.seq !== result.log[n - 1]?.seq || next.log[n - 1]?.kind !== result.log[n - 1]?.kind) throw new Error('extend() needs the same battle, continued');
+      result = next; cues = t8CuesFor(result); n = result.log.length; t8state = buildClashT8(result, cues, { only: opts.subject || null });
+      const sc = $('[data-cl="scrub"]'); if (sc) sc.max = String(n - 1);
+      setButtons();
+    },
     /** Play from the cursor to event index `i` (inclusive), animating each cue; resolves when it arrives or is interrupted. */
     playTo: (i) => runTo(Math.max(cursor, Math.min(n - 1, i))),
     setSpeed(s) { speed = s; for (const b of $$('[data-cl="speed"]')) b.classList.toggle('primary', Number(b.dataset.v) === speed); }, get speed() { return speed; },

@@ -174,7 +174,7 @@ export function leagueAgeing(f, r, { year, ctx = {} }) {
   for (const club of order(f)) {
     const roster = clubRoster(f, club);
     offseason(roster, r, { ...ctx, train: trainingPriority(clubIdentity(f, club)) }); // Task 8 D7: the identity's training priority; skips the ageless itself (progression.js); ctx: the old-save transition and last season's injuries (GDD §55)
-    for (const m of roster) { if (m.rookie === year) { m.yearsPro = 0; m.age -= 1; } n++; } // Task 8 (N7f): the rival's signature monster no longer grows automatically each season; he develops like everyone else
+    for (const m of roster) { if (m.rookie === year && m.joined === year + 1) { m.yearsPro = 0; m.age -= 1; } n++; } // Task 8 (N7f): the rival's signature monster no longer grows automatically each season; he develops like everyone else
   }
   return n;
 }

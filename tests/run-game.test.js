@@ -27,7 +27,8 @@ test('F1: every handoff on a live run is hand to hand (no ball moves to a back o
     if (PLAYS[off].assignments.QB?.a === 'pitch') continue; // a toss is a pitch, not a handoff
     for (const def of DEFENSE_IDS) for (let s = 0; s < 2; s++) {
       const sim = play({ off, def, attr: 'speed', value: 65, seed: 81000 + s });
-      for (const e of sim.events.filter((x) => x.kind === 'handoff')) assert.ok(e.reach <= 1.5, `${off} vs ${def} seed ${81000 + s}: handoff from ${e.reach} yd at ${e.t}`);
+      const pitched = new Set(sim.events.filter((x) => x.kind === 'pitch').map((x) => x.t)); // an option pitch is logged as a pitch, then the ball changes hands: it is not a handoff (Task 10: released option plays)
+      for (const e of sim.events.filter((x) => x.kind === 'handoff' && !pitched.has(x.t))) assert.ok(e.reach <= 1.5, `${off} vs ${def} seed ${81000 + s}: handoff from ${e.reach} yd at ${e.t}`);
     }
   }
 });

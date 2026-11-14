@@ -209,3 +209,25 @@ html[data-reduced-motion="1"] .cl-result-head { animation: none; }
 .crv-phase { display: inline-flex; gap: 4px; flex-wrap: wrap; font-size: 11px; }
 .crv-phase span { padding: 1px 6px; border-radius: 10px; border: 1px solid var(--line); color: var(--ink-2); }
 .crv-phase span.on { border-color: var(--accent); color: var(--accent); }
+
+/* Task 10: the lineup bar of a continuous Beast Clash (tap a reserve to switch). Touch targets stay at least 44 px tall; names wrap. */
+.cl-subs { margin-top: 8px; padding: 8px; }
+.cl-sub-head { gap: 8px; margin-bottom: 6px; }
+.cl-sub-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; }
+.cl-sub { display: flex; flex-direction: column; align-items: stretch; gap: 3px; min-height: 56px; padding: 6px 8px; text-align: left; border-radius: 10px; border: 2px solid var(--line, #444); background: var(--panel2, rgba(255,255,255,0.04)); color: inherit; font: inherit; cursor: pointer; touch-action: manipulation; }
+.cl-sub-name { font-weight: 800; font-size: 13px; line-height: 1.15; overflow-wrap: anywhere; }
+.cl-sub-state { font-size: 11px; opacity: 0.8; }
+.cl-sub-hp { display: block; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12); overflow: hidden; }
+.cl-sub-hp i { display: block; height: 100%; background: var(--good, #4caf50); }
+.cl-sub-num { font-size: 11px; font-variant-numeric: tabular-nums; opacity: 0.85; }
+.cl-sub.active { border-color: var(--accent, #f5b942); }
+.cl-sub.active .cl-sub-state { color: var(--accent, #f5b942); opacity: 1; font-weight: 700; }
+.cl-sub.queued { border-color: var(--good, #4caf50); box-shadow: 0 0 0 2px rgba(76,175,80,0.35) inset; }
+.cl-sub.wait { opacity: 0.75; }
+.cl-sub.ko { opacity: 0.45; cursor: default; }
+.cl-sub.ko .cl-sub-hp i { background: transparent; }
+.cl-sub[aria-disabled="true"] { cursor: default; }
+.cl-sub-hint { margin-top: 6px; font-size: 12px; }
+.cl-sub-note { display: block; margin-top: 4px; font-size: 12px; font-weight: 700; }
+.cl-sub-note.good { color: var(--good, #4caf50); } .cl-sub-note.bad { color: var(--bad, #e57373); }
+@media (max-width: 380px) { .cl-sub-row { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); } .cl-sub { padding: 5px 6px; } }

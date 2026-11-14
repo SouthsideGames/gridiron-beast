@@ -394,7 +394,7 @@ test('AI trades: deterministic by seed, same deals, same order', () => {
   assert.deepEqual(run(), run());
 });
 
-// ---------------------------------------------------------------- the trade deadline (end of week 8) and the offseason roster floor
+// ---------------------------------------------------------------- the trade calendar (Task 10: open weeks 1–7, closes when week 8 begins) and the offseason roster floor
 import { tradeWindowState, TRADE_DEADLINE_WEEK, FIRST_TRADE_WEEK, seasonTradeWeek } from '../src/franchise/trade-window.js';
 import { releaseFromClub } from '../src/franchise/league.js';
 import { validateClubs } from '../src/franchise/league-season.js';
@@ -403,63 +403,69 @@ const regular = (week, extra = {}) => ({ fired: false, finished: false, offseaso
 function inSeason(week, seed = 51, league = 52) { const f = played(league); f.season.finished = false; f.season.week = week; f.offseason = null; f.draft = null; f.tradeCall = null; f.callsMade = {}; f.seed = seed; return f; }
 const sellable = (f) => { const team = aiClubs(f)[1]; const a = F.deskAssetsFor(f, team); const m = a.theirs.find((x) => !x.why && x.forSale); return { team, m, pick: F.myTradablePicks(f).at(-1) }; };
 
-test('trade deadline: the calendar is week 8 — closed in week 1, open weeks 2–8, closed after, closed in the postseason, open again when the season ends', () => {
-  assert.equal(TRADE_DEADLINE_WEEK, 8); assert.equal(FIRST_TRADE_WEEK, 2);
+test('trade calendar (Task 10, owner 2026-11-13): open weeks 1–7 for the owner and AI clubs, closed when week 8 begins, closed in the postseason, open again when the season ends', () => {
+  assert.equal(TRADE_DEADLINE_WEEK, 7); assert.equal(FIRST_TRADE_WEEK, 1);
   const rows = [1, 2, 7, 8, 9, 10, 11, 12].map((w) => [w, tradeWindowState(regular(w))]);
   for (const [w, s] of rows) {
-    const open = w >= 2 && w <= 8;
-    assert.equal(s.calls, open, `calls, week ${w}`); assert.equal(s.aiAi, open, `AI–AI, week ${w}`); assert.equal(s.desk, false, `the owner's desk is closed in season, week ${w}`); assert.equal(s.open, false);
+    const open = w >= 1 && w <= 7;
+    assert.equal(s.calls, open, `calls, week ${w}`); assert.equal(s.aiAi, open, `AI–AI, week ${w}`); assert.equal(s.desk, open, `the owner's desk, week ${w}`); assert.equal(s.open, open);
     assert.ok(s.reason.length > 20 && s.next.length > 20, `week ${w} says why and when it reopens`);
   }
-  assert.equal(rows.find(([w]) => w === 9)[1].phase, 'deadline-passed'); assert.match(rows.find(([w]) => w === 9)[1].reason, /end of week 8/);
+  assert.equal(rows.find(([w]) => w === 8)[1].phase, 'deadline-passed'); assert.match(rows.find(([w]) => w === 8)[1].reason, /week 8 began/);
+  assert.match(rows.find(([w]) => w === 7)[1].reason, /1 week left/); assert.match(rows.find(([w]) => w === 1)[1].reason, /7 weeks left/);
   assert.equal(rows.find(([w]) => w === 11)[1].phase, 'postseason');
-  assert.equal(seasonTradeWeek(8), true); assert.equal(seasonTradeWeek(9), false); assert.equal(seasonTradeWeek(1), false); assert.equal(seasonTradeWeek(NaN), false);
+  assert.equal(seasonTradeWeek(7), true); assert.equal(seasonTradeWeek(8), false); assert.equal(seasonTradeWeek(1), true); assert.equal(seasonTradeWeek(0), false); assert.equal(seasonTradeWeek(NaN), false);
   for (const s of [tradeWindowState(regular(10, { finished: true, offseason: true })), tradeWindowState(regular(10, { finished: true })), tradeWindowState(regular(1, { draftOpen: true }))]) assert.equal(s.desk, true, s.phase);
   const off = tradeWindowState(regular(10, { finished: true, offseason: true })); assert.deepEqual([off.calls, off.aiAi, off.open], [true, true, true]);
   assert.equal(tradeWindowState(regular(5, { fired: true })).calls, false);
 });
 
-test('trade deadline: clubs trade with each other through week 8 and not at all after it', () => {
+test('trade deadline: clubs trade with each other through week 7 and not at all once week 8 begins', () => {
   const cap = tierById(played().tier).cap; let w8 = 0, late = 0;
   for (const league of TRADE_LEAGUES) { if (w8) break;
   for (let s = 1; s <= 40; s++) {
-    for (const week of [8, 9, 10, 11]) {
+    for (const week of [7, 8, 9, 10, 11]) {
       const f = inSeason(week, s, league); const clubs = aiClubs(f); const A = clubs[s % clubs.length]; const starter = at(R.clubRoster(f, A), 'LB')[1]; if (R.isProtected(starter)) continue; weak(starter, 44);
       const deals = []; for (let i = 0; i < 12; i++) deals.push(...LT.aiTrades(f, createRng(1000 + s * 20 + i), { year: f.season.year, cap, window: 'season' }));
-      if (week === 8) w8 += deals.length; else late += deals.length;
+      if (week === 7) w8 += deals.length; else late += deals.length;
     }
   } }
-  assert.ok(w8 >= 1, 'the same leagues do trade in week 8'); assert.equal(late, 0, 'no deal in weeks 9, 10 or the postseason');
+  assert.ok(w8 >= 1, 'the same leagues do trade in week 7'); assert.equal(late, 0, 'no deal in weeks 8, 9, 10 or the postseason');
   const f = inSeason(5); f.season.finished = true; assert.deepEqual(LT.aiTrades(f, createRng(1), { year: f.season.year, cap, window: 'season' }), [], 'a finished season has no in-season window');
 });
 
-test('trade deadline: a club calls through week 8; the offer is answerable then and gone after; a stale or edited save cannot bring it back', () => {
+test('trade deadline: a club calls through week 7; the offer is answerable then and gone when week 8 begins; a stale or edited save cannot bring it back', () => {
   let call = null, week = 0;
-  for (const w of [8, 7, 6, 5, 4, 3, 2]) { for (let seed = 1; seed <= 80 && !call; seed++) { const f = inSeason(w, seed); call = F.maybeTradeCall(f); if (call) week = w; } if (call) break; }
-  assert.ok(call, 'some club calls in the window'); assert.ok(week >= 2 && week <= 8);
-  // week 8 itself: the call is made and can be accepted
-  let f8 = null; for (let seed = 1; seed <= 200 && !f8; seed++) { const f = inSeason(8, seed); if (F.maybeTradeCall(f)) f8 = f; }
-  assert.ok(f8, 'a club calls in week 8'); const waiting = F.tradeCall(f8); assert.ok(waiting); assert.ok(F.callEffect(f8) !== undefined);
-  const reloaded = Save.importJson(Save.exportJson(f8)); assert.ok(F.tradeCall(reloaded), 'a reload in week 8 keeps the offer');
+  for (const w of [7, 6, 5, 4, 3, 2, 1]) { for (let seed = 1; seed <= 80 && !call; seed++) { const f = inSeason(w, seed); call = F.maybeTradeCall(f); if (call) week = w; } if (call) break; }
+  assert.ok(call, 'some club calls in the window'); assert.ok(week >= 1 && week <= 7);
+  // week 7, the last open week: the call is made and can be accepted
+  let f8 = null; for (let seed = 1; seed <= 200 && !f8; seed++) { const f = inSeason(7, seed); if (F.maybeTradeCall(f)) f8 = f; }
+  assert.ok(f8, 'a club calls in week 7'); const waiting = F.tradeCall(f8); assert.ok(waiting); assert.ok(F.callEffect(f8) !== undefined);
+  const reloaded = Save.importJson(Save.exportJson(f8)); assert.ok(F.tradeCall(reloaded), 'a reload in week 7 keeps the offer');
   const ok = F.answerTradeCall(JSON.parse(JSON.stringify(f8)), true); assert.equal(ok.ok, true, ok.reason);
-  // the week rolls over: the offer expires with its week
-  const f9 = JSON.parse(JSON.stringify(f8)); f9.season.week = 9; assert.equal(F.tradeCall(f9), null); assert.equal(F.answerTradeCall(f9, true).ok, false);
-  // a forged offer stamped for week 9, 10 or the postseason is refused and cleared, and nothing moves
-  for (const w of [9, 10, 11]) {
+  // week 8 begins: the offer expires with its week
+  const f9 = JSON.parse(JSON.stringify(f8)); f9.season.week = 8; assert.equal(F.tradeCall(f9), null); assert.equal(F.answerTradeCall(f9, true).ok, false);
+  // a forged offer stamped for week 8, 9, 10 or the postseason is refused and cleared, and nothing moves
+  for (const w of [8, 9, 10, 11]) {
     const f = JSON.parse(JSON.stringify(f8)); f.season.week = w; f.tradeCall.expires = `wk:${f.season.year}:${w}`;
     const before = f.roster.map((m) => m.id).join() + '|' + F.myTradablePicks(f).length;
     assert.equal(F.tradeCall(f), null, `week ${w}: no offer is shown`); const r = F.answerTradeCall(f, true); assert.equal(r.ok, false); assert.match(r.reason, /deadline/);
     assert.equal(f.tradeCall, null, 'the stale offer is cleared'); assert.equal(f.roster.map((m) => m.id).join() + '|' + F.myTradablePicks(f).length, before, 'nothing moved');
     const back = Save.importJson(Save.exportJson(f)); assert.equal(F.tradeCall(back), null, 'a reload does not bring it back');
   }
-  // nobody calls after the deadline or in week 1, whatever the seed
-  for (const w of [1, 9, 10, 11]) for (let seed = 1; seed <= 60; seed++) assert.equal(F.maybeTradeCall(inSeason(w, seed)), null, `no call in week ${w}`);
+  // nobody calls once week 8 begins, whatever the seed
+  for (const w of [8, 9, 10, 11]) for (let seed = 1; seed <= 60; seed++) assert.equal(F.maybeTradeCall(inSeason(w, seed)), null, `no call in week ${w}`);
 });
 
-test('trade deadline: the owner\'s proposals and counters respect the calendar all season, and the desk reopens with the offseason', () => {
+test('trade deadline: the owner proposes in weeks 1–7, is refused for the window from week 8 and in the postseason, and the desk reopens with the offseason', () => {
   const { team, m, pick } = sellable(played()); assert.ok(m && pick);
   const ask = { team, givePicks: [pick], getMonsters: [m.id] };
-  for (const w of [1, 2, 5, 8, 9, 10, 11]) {
+  for (const w of [1, 2, 5, 7]) {
+    const f = inSeason(w); assert.equal(F.tradeWindow(f).desk, true, `week ${w}: the desk is open`);
+    const r = F.deskPropose(f, ask); assert.equal(r.ok, true, `week ${w}: ${r.reason}`); assert.ok(!(r.reasons || []).some((x) => x.code === 'window'), `week ${w}: not refused for the window`);
+    if (r.accepted) { assert.ok(f.roster.some((x) => x.id === m.id), `week ${w}: the accepted deal moves the monster`); assert.deepEqual(validateClubs(f, { cap: tierById(f.tier).cap }).filter((x) => /cap|roster/i.test(String(x))), [], `week ${w}: cap and roster limits hold`); }
+  }
+  for (const w of [8, 9, 10, 11]) {
     const f = inSeason(w); const r = F.deskPropose(f, ask);
     assert.equal(r.ok, false, `week ${w}`); assert.ok((r.reasons || []).some((x) => x.code === 'window'), `week ${w}: refused for the window`); assert.ok(!r.counter, 'no counter in a closed window');
     assert.equal(F.deskPreview(f, ask).legal, false); assert.equal(F.tradeWindow(f).desk, false);
@@ -475,11 +481,11 @@ test('trade deadline: free agency keeps its own rules, and the protections of a 
   const s = F.signFreeAgent(f, mk[0].monster.id); assert.equal(s.ok, true, s.reason);
   const { team, pick } = sellable(played()); const g = played(); const prot = F.deskAssetsFor(g, team).theirs.find((x) => x.why);
   if (prot) { const r = F.deskPropose(g, { team, givePicks: [pick], getMonsters: [prot.id] }); assert.equal(r.accepted, false, 'a protected or locked monster still cannot be bought'); assert.ok(r.reasons.some((x) => x.code === 'immovable')); }
-  const w = inSeason(4); assert.equal(F.deskPropose(w, { team, givePicks: [pick], getMonsters: [F.deskAssetsFor(g, team).theirs[0].id] }).ok, false);
+  const w = inSeason(8); assert.equal(F.deskPropose(w, { team, givePicks: [pick], getMonsters: [F.deskAssetsFor(g, team).theirs[0].id] }).ok, false, 'closed once week 8 begins');
 });
 
-test('trade deadline: determinism — a played week-8 call and week-8 AI deals are the same on every run', () => {
-  const run = () => { const out = []; for (let seed = 1; seed <= 30; seed++) { const f = inSeason(8, seed); const c = F.maybeTradeCall(f); out.push(c ? `${c.kind}|${c.team}|${(c.sendIds || []).join(',')}` : '-'); } return out; };
+test('trade deadline: determinism — a played week-7 call and week-7 AI deals are the same on every run', () => {
+  const run = () => { const out = []; for (let seed = 1; seed <= 30; seed++) { const f = inSeason(7, seed); const c = F.maybeTradeCall(f); out.push(c ? `${c.kind}|${c.team}|${(c.sendIds || []).join(',')}` : '-'); } return out; };
   assert.deepEqual(run(), run());
 });
 

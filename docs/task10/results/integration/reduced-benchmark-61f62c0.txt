@@ -1,0 +1,5 @@
+
+== bench-B-1-5-61f62c0.json pro runs 5 × 10 seasons | integrity problems 0 | AI club-seasons 800: roster 28–38, with a lineup problem 2, negative cap room 0
+hands-off owner win % by seed: 51 24 52 38 29 | mean 38.8 | 0–21 results (forfeits) in owner games 139 of 450
+titles: top AI club / owner titles / distinct champions per run: 5/0/4 3/0/5 3/0/5 2/0/7 5/0/5
+AI arrivals by source {"other":3082} | generated 0 of 3082 {} | unsigned at market close (mean) 29.4
