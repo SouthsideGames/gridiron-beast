@@ -83,11 +83,15 @@ import { reviewFingerprint, reviewDigest } from '../src/dex/reviews.js';
 test('expanded editorial coverage is complete per family and passes world/content audit', () => {
   const audit = auditDexContent();
   assert.deepEqual(audit.errors, []);
-  assert.equal(audit.expanded, 14);
+  assert.equal(audit.expanded, audit.forms);
+  assert.equal(audit.remaining, 0);
+  assert.deepEqual(audit.missing, []);
   assert.equal(audit.expanded + audit.remaining, audit.forms);
+  const biographies = new Set();
   for (const id of audit.expandedIds) {
     const [family, stage] = id.split(':');
     const c = dexContent(family, Number(stage));
+    biographies.add(c.biography.join(' '));
     assert.ok(Object.isFrozen(c));
     assert.ok(Object.isFrozen(c.biography));
     assert.deepEqual(c.lore.map(x => x.games), [5,15,30]);
@@ -97,6 +101,7 @@ test('expanded editorial coverage is complete per family and passes world/conten
       assert.ok(!reaction.includes('{name}'));
     }
   }
+  assert.equal(biographies.size, audit.forms);
 });
 test('review revisions use compact, component-specific fingerprints', () => {
   assert.equal(reviewDigest('same'), reviewDigest('same'));
