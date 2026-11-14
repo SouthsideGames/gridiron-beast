@@ -14,7 +14,7 @@ function fixture({deferred=false}={}){
 test('approved tracks map to actual scenes; hubs share one song; football is quiet',()=>{
  for(const name of ['menu','hq','draft','offseason','training','roster','famarket','dex'])assert.equal(musicForScreen(name),'main');
  for(const [screen,id] of [['pregame','pregame'],['clash-battle','clash'],['ceremony','championship'],['match',null],['monster-cry-reviewer',null]])assert.equal(musicForScreen(screen),id);
- assert.equal(musicForScreen('settings'),undefined);for(const path of Object.values(MUSIC_TRACKS))assert.ok(fs.statSync(new URL('../'+path,import.meta.url)).size>100000);
+ assert.equal(musicForScreen('settings'),undefined);assert.equal(musicForScreen('developer'),undefined);for(const path of Object.values(MUSIC_TRACKS))assert.ok(fs.statSync(new URL('../'+path,import.meta.url)).size>100000);
 });
 test('same-track navigation never restarts; changed music fades both ways; silent scenes fade out',async()=>{
  const {player:p,media,ramps}=fixture();await p.select('main');const first=p.current;await p.select('main');assert.equal(media.length,1);await p.select('clash');assert.equal(p.outgoing,first);assert.ok(ramps.some(x=>x[0]===0));assert.ok(ramps.some(x=>x[0]===1));
@@ -45,4 +45,9 @@ test('sound-effects and crowd volume update their own buses and master mute cove
  globalThis.AudioContext=AC;const music=audioBus('music'),effects=audioBus('sfx'),crowd=audioBus('crowd'),cry=audioBus('cries');
  setAudioPreferences({sfx:.2,crowd:.3});assert.equal(effects.gain.value,.2);assert.equal(crowd.gain.value,.3);assert.equal(music.gain.value,.45);assert.equal(cry.gain.value,.65);
  setAudioPreferences({muted:true});assert.equal(nodes[0].gain.value,0);for(const n of [music,effects,crowd,cry])assert.equal(n.to,nodes[0]);setAudioPreferences({muted:false});assert.equal(nodes[0].gain.value,1);delete globalThis.AudioContext;
+});
+
+test('a suspended context requests resume and starts media immediately within the tap',async()=>{
+ const f=fixture();let resumes=0;f.context.state='suspended';f.context.resume=()=>{resumes++;return new Promise(()=>{});};
+ const run=f.player.select('main');assert.equal(resumes,1);assert.equal(f.media.length,1);assert.equal(f.media[0].paused,false);await run;f.player.pause();
 });
