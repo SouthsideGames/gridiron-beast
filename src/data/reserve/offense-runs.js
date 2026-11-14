@@ -145,7 +145,7 @@ export default function batch(b) {
 
   // ---- option family
   add(O('pistol_zone_read', 'Pistol Zone Read', 'pistol_pro', {
-    QB: OPTION([[-3.5, 0], [-3, -1.5], [0, -5], [6, -8], [20, -9]]), RB: CARRY([[-6.2, 0], [-3, 0.5], [1, 1.5], [8, 2], [20, 2]]),
+    QB: OPTION([[-3.5, 0], [-3.4, -0.3], [-3, -1.5], [0, -5], [6, -8], [20, -9]]), RB: CARRY([[-6.2, 0], [-3, 0.5], [1, 1.5], [8, 2], [20, 2]]), // Task 10: the QB rides the mesh (a short step) so a give is in reach
     LG: RUNBLOCK([2, 0]), RG: RUNBLOCK([2, 2.5]), TE: RUNBLOCK([2, 4.5]), WR1: STALK([4, -16]), WR2: STALK([4, 16]),
   }, { type: 'run', tags: ['run', 'option'], desc: 'From the pistol: give the zone to the right or keep it around the left end, depending on the end.' }),
   'With a mobile quarterback against defenses that crash the end.', 'Left end crashes on the back: keep. End sits: give.', 'Edge rushers who fire upfield, Fire Zone.', 'QB Spy and Edge Contain.');
@@ -163,7 +163,7 @@ export default function batch(b) {
   'With a strong runner at quarterback against defenses that widen to stop the sweep.', 'End widens with the back: the quarterback runs inside. End crashes: give the sweep.', 'Edge Contain and wide defensive ends.', 'QB Spy and Bear Front.');
 
   add(O('midline_read', 'Midline Read', 'tight_pistol', {
-    QB: OPTION([[-3.5, 0], [-2, -0.5], [1, -1], [6, -1.5], [20, -1.5]]), RB: CARRY([[-6.2, 0], [-3, 0.5], [1, 0.8], [6, 1], [20, 1]]),
+    QB: OPTION([[-3.5, 0], [-3.4, -0.3], [-2, -0.5], [1, -1], [6, -1.5], [20, -1.5]]), RB: CARRY([[-6.2, 0], [-3, 0.5], [1, 0.8], [6, 1], [20, 1]]), // Task 10: the QB rides the mesh (a short step) so a give is in reach
     LG: RUNBLOCK([3, -2.5]), C: RUNBLOCK([1.5, 0.5]), RG: RUNBLOCK([1.5, 2]), TE: RUNBLOCK([1.5, 4]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'option', 'inside'], desc: 'An inside option: the left guard climbs, leaving a lineman for the quarterback to read.' }),
   'Against an aggressive interior lineman.', 'The read is inside: lineman takes the back, the quarterback keeps up the middle.', 'Double A Mug and penetrating fronts.', 'QB Spy and Run Wall.');

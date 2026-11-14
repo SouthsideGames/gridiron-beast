@@ -990,15 +990,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       case 'handoff': { if (a === qb) qbHandoff(a); return; }
       case 'pitch': { if (a === qb) qbPitch(a); return; }
       case 'option': { qbOption(a); return; }
-      case 'keep': case 'carry': {
-        // Pin and Pull is a mandatory RB give, not a read option. Keep the back
-        // in the exchange pocket until the QB reaches him, then run his route.
-        if (asg.a === 'carry' && offensePlay.id === 'pin_pull' && a.slot === 'RB' && !handoffDone && qb) {
-          steer(a, qb.x, qb.y, 0.55, 0.3);
-          return;
-        }
-        followPath(a, asg.points, 0.9); return;
-      }
+      case 'keep': case 'carry': { followPath(a, asg.points, 0.9); return; }
       case 'pass': case 'play_action': case 'boot': { qbTick(a); return; }
       default: steer(a, a.x, a.y, 0, 0.2);
     }
@@ -1108,11 +1100,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const runner = offs.find((o) => o.assignment.a === 'carry');
     if (!handoffDone) {
       if (runner) {
-        // An end-around receiver starts wide and must travel behind the QB before
-        // the hand-to-hand exchange. Ordinary backfield handoffs develop faster.
+        // An end-around receiver starts wide and must travel behind the QB before the exchange, so the missed-mesh fallback waits
+        // longer for him (Task 10). Every other handoff keeps the 1.1 s fallback. (End Around itself is still held back: see the report.)
         const endAround = offensePlay.id === 'end_around' && /^WR/.test(runner.slot);
-        const pinPull = offensePlay.id === 'pin_pull' && runner.slot === 'RB';
-        const deadline = endAround ? 4.5 : pinPull ? 1.8 : 1.1;
+        const deadline = endAround ? 4.5 : 1.1;
         a.mesh ||= meshPoint({ x: a.assignment.points[0][0], y: a.assignment.points[0][1] }, runner);
         steer(a, a.mesh.x, a.mesh.y, 0.8, 0.3);
         if (dist(a, runner) < 1.5 && t > 0.2) giveBall(runner);
