@@ -106,3 +106,35 @@ link are unchanged). PR #114 stays a draft until the owner approves merging.
 - **Clash scouting lines** are the registry's short summaries, sentence-cased; plain-language Clash explanations would be new copy.
 - **New UI copy** is English only (not yet in `src/text/en.js`).
 - **Knowledge storage** grows about 12 KB per franchise season (0.3% of a 3.8 MB save); a cap at 30 per family would bound it if wanted.
+
+## Claude: plain-language pass validation (2026-11-14, evening)
+
+Preview build `v43.14.1-dev.dex2`, commit `d714e25`, published as a test build to the same private Beast Dex 2.0 link
+(https://claude.ai/artifact/XjRp8wPrCxenG8wCwKXvgK); main game link and shared test link unchanged. Builds on ChatGPT's
+`0a9e07b`–`20eb0de` (72 plain Clash explanations in `src/text/clash-simple.js`, simpler central text in `src/text/en.js`,
+regenerated `docs/text/GAME_TEXT.csv`, `docs/beast-dex/PLAYER_LANGUAGE.md`).
+
+### Fixes
+- The Beast Clash arena's tap caption (translated view) read the engine mechanic line; it now uses the same plain explanation.
+- In the native arena view (the game's normal path) tapping a fighter showed the raw ability id (e.g. `FIR-01-C`); it now shows the
+  ability name and plain line. One helper, `clashMove`, serves both views. Display text only; the engine and choreographer read
+  names and ids, not this text.
+
+### Checks
+- Full suite on `d714e25`: running at the time of this note; the result is recorded in PR #114 and below when it finishes.
+- `node tools/audit-dex-content.mjs --require-complete`: 222/222. `python3 tools/text-export.py --check`: current.
+- Deploy check on the preview folder: all pass (461 files, version and label, 3 saves load) except the expected "BUILD.test is false".
+- Every changed `en.js` line keeps its placeholders and HTML tags; 19 lines whose number words differ were read side by side and keep
+  the same rules (the differences are the word "one" used as a pronoun, or a number now spelled once instead of twice).
+- Browser (Chromium, preview build): a fresh preview with nothing discovered reaches Developer → Beast Dex Reviewer (Next through all
+  222 forms) and Developer → Beast Dex (everything revealed) (all 192 families, all 222 forms); discovery and knowledge stay empty,
+  including after a reload. The Dex shows the plain line for all 72 Clash abilities, with exact rules under View details; monster
+  details (roster) and the arena caption show the same plain line. At 320, 390 and 440 px: 32 screens plus the Clash help sheet,
+  a monster sheet and a sheet of all 234 changed lines show no horizontal overflow, clipped text, unfilled placeholders or visible tags.
+
+### Still open
+- Football ability summaries are still the dense engine wording (all 72 use `SPECS[...].expect`, about 21 words on average), and the
+  football "Full rules" sections read like engine notes; the plain-language pass has not reached them.
+- The Clash help sheet repeats "An exchange is one round of actions." in two consecutive paragraphs.
+- The Dex tab that holds both abilities is labelled "Football"; the Beast Clash ability sits under it.
+- Clash review verdicts return to pending for all 72 Clash abilities because the plain line is part of what a Clash verdict covers.
