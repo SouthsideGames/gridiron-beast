@@ -2320,7 +2320,7 @@ export function resetDevSlots(f) { delete f.devSlots; return { ok: true, slots: 
  * Gym badges (Task 10 owner clarification, 2026-11-13; GDD "Reclaimable Gym Badges"). Every counting game against a gym club, regular
  * season or playoff, played or forfeited, puts that club's badge at stake: a win earns it (or keeps it), a loss gives it back to the
  * gym if it is held, and a later win earns it again. Badge progress is the badges held now. Achievements already awarded stay.
- * f.season.badgesEarned lists the badges taken this season (the board's "win a gym badge" goal counts those, even one lost again).
+ * f.season.badgesEarned lists badges taken this season; the board goal counts only those still held at season end.
  */
 function settleGymBadge(f, m, won, myScore, oppScore) {
   const gym = GYM_BY_CLUB[m.opponent]; if (!gym) return;
@@ -2546,7 +2546,7 @@ function endSeason(f) {
   }
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
-  { const gymWinsThisYear = Array.isArray(s.badgesEarned) ? new Set(s.badgesEarned).size : Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length; // badges taken this season, even one lost again (older saves: the held ones)
+  { const gymWinsThisYear = Array.isArray(s.badgesEarned) ? [...new Set(s.badgesEarned)].filter((club) => !!f.campaign?.badges?.[club]).length : Object.values(f.campaign?.badges || {}).filter((badge) => badge.year === s.year).length; // must earn or reclaim this season AND still hold at season end; older saves fall back to current-year held badges
     const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club, forecastWins: boardForecastFor(f, s.schedule.filter((g) => !g.bye).length || 9).wins });
     if (verdict) { s.boardVerdict = verdict; news(f, verdict.met ? $L('franchise.board_goal_met_confidence_the_scouting', { label: fieldLine(verdict.goal, 'label'), confidence: verdict.confidence >= 0 ? '+' : '', confidence2: verdict.confidence, confidence3: confidenceLabel(verdict.confidence) }) : verdict.status === 'fired' ? $L('franchise.board_goal_missed_wins_forecast_the', { label: fieldLine(verdict.goal, 'label'), w: rec.w, forecastWins: verdict.goal.forecastWins ?? '?', reason: verdict.reason ? verdict.reason[0].toUpperCase() + verdict.reason.slice(1) + '.' : '' }) : verdict.status === 'warning' ? $L('franchise.board_goal_missed_narrowly_wins_forecast', { label: fieldLine(verdict.goal, 'label'), w: rec.w, forecastWins: verdict.goal.forecastWins ?? '?' }) : verdict.status === 'hot_seat' ? $L('franchise.board_goal_missed_you_are_on', { label: verdict.goal.label }) : $L('franchise.board_goal_missed_confidence', { label: fieldLine(verdict.goal, 'label'), confidence: verdict.confidence }), verdict.met ? 'win' : 'loss'); } }
   if (rec.w < rec.l || onHotSeat(f)) f.postseason = makePostseasonEvent(f); // a losing record, or the hot seat, makes one story event mandatory (GDD §15.7, §17.4)
