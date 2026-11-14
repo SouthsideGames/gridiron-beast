@@ -1,3 +1,4 @@
+import { CLASH_SIMPLE } from '../text/clash-simple.js';
 import { dexContent } from './content.js';
 import { familyById, formById, formsOf, abilitiesOf } from '../data/beast-dex.js';
 import { SPECIES_DEX } from '../data/species.js';
@@ -40,7 +41,7 @@ export function reviewFingerprint(id, component) {
   switch (component) {
     case 'audio': payload = cryRecipe(id); break;
     case 'visuals': payload = { appearance: evolvedSpec(speciesById.get(form.familyId), form.stage), reactions: content.reactions, motion: dexMotion(form.familyId, form.stage), version: 2 }; break; // the portrait motion is part of what a visuals verdict approves
-    case 'football': case 'clash': payload = { form, ability: abilitiesOf(form.familyId)?.[component], scouting: content.scouting, ...(component === 'football' ? { explanation: SPECS[form.familyId] } : {}) }; break;
+    case 'football': case 'clash': payload = { form, ability: abilitiesOf(form.familyId)?.[component], scouting: content.scouting, ...(component === 'football' ? { explanation: SPECS[form.familyId] } : { explanation: CLASH_SIMPLE[abilitiesOf(form.familyId)?.clash?.id] }) }; break;
     case 'progression': payload = { forms: formsOf(form.familyId).map(x => ({ id: x.id, name: x.name, level: x.evolutionLevel })), development: content.development, lore: content.lore, thresholds: [5,15,30], shared: true }; break;
     case 'lore': payload = { biography: content.biography, personality: content.personality, habitat: content.habitat, facts: content.funFacts, relationships: content.relationships, lore: content.lore }; break;
   }
