@@ -9,6 +9,7 @@ import { tOr } from './index.js';
 export const SECTION_SLUG = Object.freeze({ 'Trigger / eligibility': 'trigger', 'Targets / placement': 'targets', 'Core resolution': 'core', 'Recharge / frequency': 'recharge', 'Lifetime / persistence': 'lifetime', 'Exceptions / counterplay': 'exceptions', 'Progression / notes': 'progression', 'Ability story': 'story' });
 export const dexKey = Object.freeze({
   familyDescription: (familyId) => `dex.family.${familyId}.description`,
+  abilityPlain: (abilityId) => `dex.ability.${abilityId}.plain`,
   abilityName: (abilityId) => `dex.ability.${abilityId}.name`,
   abilityMechanic: (abilityId) => `dex.ability.${abilityId}.mechanic`,
   abilityRule: (abilityId, section) => `dex.ability.${abilityId}.${SECTION_SLUG[section] || 'rule'}`,
