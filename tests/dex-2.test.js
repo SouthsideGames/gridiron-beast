@@ -77,3 +77,46 @@ test('reviewer renders a catalog-based default and does not change franchise sta
   assert.match(html, /data-review-id=/);
   assert.equal((html.match(/data-review-component=/g) || []).length, 6);
 });
+
+import { auditDexContent } from '../src/dex/content-audit.js';
+import { reviewFingerprint, reviewDigest } from '../src/dex/reviews.js';
+test('expanded editorial coverage is complete per family and passes world/content audit', () => {
+  const audit = auditDexContent();
+  assert.deepEqual(audit.errors, []);
+  assert.equal(audit.expanded, 14);
+  assert.equal(audit.expanded + audit.remaining, audit.forms);
+  for (const id of audit.expandedIds) {
+    const [family, stage] = id.split(':');
+    const c = dexContent(family, Number(stage));
+    assert.ok(Object.isFrozen(c));
+    assert.ok(Object.isFrozen(c.biography));
+    assert.deepEqual(c.lore.map(x => x.games), [5,15,30]);
+    for (const kind of ['normal', 'rare']) {
+      const reaction = portraitReaction({ name: 'Nickname', reactions: c.reactions, rare: kind === 'rare', choice: 0 });
+      assert.ok(reaction.startsWith('Nickname'));
+      assert.ok(!reaction.includes('{name}'));
+    }
+  }
+});
+test('review revisions use compact, component-specific fingerprints', () => {
+  assert.equal(reviewDigest('same'), reviewDigest('same'));
+  assert.notEqual(reviewDigest('same'), reviewDigest('changed'));
+  for (const component of ['visuals','audio','lore','football','clash','progression']) {
+    const fingerprint = reviewFingerprint('emberfox:0', component);
+    assert.match(fingerprint, /^v2:[0-9a-f]{32}$/);
+    assert.notEqual(fingerprint, reviewFingerprint('emberfox:1', component));
+  }
+  assert.equal(reviewFingerprint('emberfox:0', 'invalid'), null);
+});
+test('profile exposes view switching only for real owned individuals and hides reviewer duplicate controls', () => {
+  const s = SPECIES_DEX.find(s => s.id === 'emberfox');
+  const f = { roster: [{ id: 'beast-1', name: '<Nickname>', species: s.id }] };
+  const before = JSON.stringify(f);
+  const html = speciesSheet(s, f, { revealAll: true });
+  assert.match(html, /data-dex-view/);
+  assert.match(html, /My Beast: &lt;Nickname&gt;/);
+  const preview = speciesSheet(s, f, { revealAll: true, stagePicker: false, viewPicker: false });
+  assert.ok(!preview.includes('data-dex-view'));
+  assert.ok(!preview.includes('data-dex-stage'));
+  assert.equal(JSON.stringify(f), before);
+});
