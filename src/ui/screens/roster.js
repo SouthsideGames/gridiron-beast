@@ -194,7 +194,7 @@ export function registerRosterScreens(Router, app) {
         'mon-go': (el) => Router.go('monster', { id: el.dataset.id }, { replace: true }), // replace: Back still returns to where you came from
         'career-jump': () => root.querySelector('#timeline')?.scrollIntoView({ block: 'start', behavior: app.f?.settings?.reducedMotion ? 'auto' : 'smooth' }),
         typechart: (el) => openTypeChart(el.dataset.type),
-        species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); playMonsterCry(m); const detail = sheet(speciesSheet(sp, ctx.f, { monster: m }), { title: sp.name, onClose: stopCry }); bindDexProfile(detail.el); },
+        species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); playMonsterCry(m); const detail = sheet(speciesSheet(sp, ctx.f, { monster: m }), { title: sp.name, onClose: stopCry }); bindDexProfile(detail.el, { f: ctx.f }); },
         'mastery-mode': (el) => { masteryMode = el.dataset.v === 'clash' ? 'clash' : 'football'; Router.render(); },
         'apex-replay': () => { const m = app.f.roster.find((x) => x.id === ctx.params.id); if (m && apexKnown(app.f, m) && !document.querySelector('.apex-scene')) openApexDiscovery({ monster: m, settings: app.settings }); },
         autospendone: () => { F.autoSpendAllPoints(app.f, { only: ctx.params.id }); app.save(); Router.render(); },
