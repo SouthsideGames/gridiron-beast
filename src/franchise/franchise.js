@@ -2359,9 +2359,20 @@ export function finishSunday(f, gameState) {
   // The pregame reply: a confident word backed up is remembered; one that wasn't rattles the room.
   if (f.week.pregameReply === 'confident') { if (won) news(f, $L('franchise.you_said_youd_take_it_and', { opponent: m.opponent }), 'win'); else { f.rattled = true; news(f, $L('franchise.the_confident_talk_before_the_game'), 'loss'); } }
   const gym = GYM_BY_CLUB[m.opponent];
-  if (gym && won) {
-    f.campaign.gymWins[m.opponent] = (f.campaign.gymWins[m.opponent] || 0) + 1;
-    if (!f.campaign.badges[m.opponent]) { f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}-${gameState.score[oppSide]}` }; f.campaign.lastBadge = { club: m.opponent, year: f.season.year, week: f.season.week, n: Object.keys(f.campaign.badges).length }; news(f, $L('franchise.badge_earned_the_badge_of_8', { badge: gym.badge, n: Object.keys(f.campaign.badges).length, name: gym.coach.name, opponent: m.opponent, club: f.club, score: gameState.score[side], score2: gameState.score[oppSide] }), 'win'); }
+  if (gym) {
+    if (won) {
+      f.campaign.gymWins[m.opponent] = (f.campaign.gymWins[m.opponent] || 0) + 1;
+      if (!f.campaign.badges[m.opponent]) {
+        f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}-${gameState.score[oppSide]}` };
+        f.campaign.lastBadge = { club: m.opponent, year: f.season.year, week: f.season.week, n: Object.keys(f.campaign.badges).length };
+        news(f, $L('franchise.badge_earned_the_badge_of_8', { badge: gym.badge, n: Object.keys(f.campaign.badges).length, name: gym.coach.name, opponent: m.opponent, club: f.club, score: gameState.score[side], score2: gameState.score[oppSide] }), 'win');
+      }
+    } else if (f.campaign.badges[m.opponent]) {
+      // Badge ownership is live: every loss to its gym leader puts the badge back in the gym.
+      delete f.campaign.badges[m.opponent];
+      f.campaign.lastBadge = null;
+      news(f, `${gym.coach.name} reclaimed the ${gym.badge} badge after defeating ${f.club}.`, 'loss');
+    }
   }
   // Level-ups are shown after the game and on the Career Timeline; the club log keeps evolutions and injuries.
   for (const e of events.filter((x) => x.kind !== 'xp' && x.kind !== 'levelup')) news(f, e.kind === 'levelup' ? $L('franchise.reached_level_ovr', { name: e.name, level: e.level, from: e.from, to: e.to, autoPoints: (f.settings.autoPoints ? '' : $L('franchise.2_attribute_points_to_spend_on'))}) : e.kind === 'evolve' ? $L('franchise.evolution_evolved_into_2', { from: e.from, to: e.to }) : e.kind === 'injury' ? $L('franchise.injured_out_weeks', { name: e.name, severity: e.severity, weeks: e.weeks, n: e.weeks }) : e.name, e.kind === 'evolve' ? 'win' : e.kind, e.id ? { mid: e.id, mname: e.kind === 'evolve' ? e.to : e.name } : null);
