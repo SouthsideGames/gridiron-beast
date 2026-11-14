@@ -1,3 +1,4 @@
+import { mergeHonours } from './career.js';
 // Task 9: deterministic, presentation-only annual Monster Hall of Fame ballot, decided by an anonymous Hall Board.
 // The existing GM Hall of Fame is separate. No gameplay RNG or attributes are modified.
 // Candidates must be supplied from preserved retired monster records, never invented.
@@ -155,7 +156,7 @@ export function monsterHofInductees(history = []) {
 /** The detail of a Hall case, read from a preserved career record: which awards, which kind of records, and the career's output. */
 export function caseFacts(stub) {
   const awardsBy = {}; const recordsBy = {};
-  for (const e of stub?.careerHonours || stub?.ev || []) {
+  for (const e of mergeHonours(stub?.careerHonours, stub?.ev)) { // Decision E: a legend's ledger, and the timeline of a legend preserved by an older save
     if (e?.t === 'award') { const k = String(e.k || '').split(':')[1] || e.x?.award || 'other'; awardsBy[k] = (awardsBy[k] || 0) + 1; }
     else if (e?.t === 'record') { const k = e.x?.scope || String(e.k || '').split(':')[1] || 'other'; recordsBy[k] = (recordsBy[k] || 0) + 1; }
   }

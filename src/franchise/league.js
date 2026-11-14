@@ -2,6 +2,7 @@
 // league's waiting room, and the exits (decision A: attrition first; decorated leavers keep a legend stub). The weekly and
 // offseason passes (league-season.js) are built from these. No UI, no club-log lines: League News tells these stories (Phase 4).
 
+import { honourEvents } from './career.js';
 import { monsterOverall, salaryFor, ROSTER_MAX } from '../data/monsters.js';
 import { ELEMENT_REGIONS } from '../data/species.js';
 import { REGIONS } from '../data/staff.js';
@@ -52,7 +53,7 @@ export function leaveLeague(f, m, { year, club = null }) {
 /** "two-time MVP, a Beast Bowl champion, a league record" — from the save's own records. */
 /** A monster's honours as data (Task 10: saved on the retirement event instead of a finished sentence, so the news follows the language). */
 export function honoursData(f, m) {
-  const ev = m.careerHonours || m.career?.ev || [];
+  const ev = honourEvents(m); // Decision E: the honour ledger, merged with an older save's timeline
   const awards = {}; for (const e of ev) if (e.t === 'award') awards[e.x?.key] = (awards[e.x?.key] || 0) + 1;
   for (const h of f.history || []) for (const [k, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && !ev.some((e) => e.t === 'award' && e.y === h.year && e.x?.key === k)) awards[k] = (awards[k] || 0) + 1;
   const titles = ev.filter((e) => e.t === 'champion').length, records = ev.filter((e) => e.t === 'record').length;
@@ -62,7 +63,7 @@ export function honoursData(f, m) {
 export function honoursText(h) {
   if (!h) return ''; if (typeof h === 'string') return h;
   const parts = []; const label = { mvp: 'MVP', opoy: $t('franchise.offensive_monster_of_the_year'), dpoy: $t('franchise.defensive_monster_of_the_year'), smoy: $t('franchise.signature_monster_of_the_year'), oroy: $t('franchise.offensive_rookie_of_the_year'), droy: $t('franchise.defensive_rookie_of_the_year') };
-  for (const [k, n] of Object.entries(h.awards || {})) if (label[k]) parts.push(`${n > 1 ? `${['', 'two', 'three', 'four', 'five'][n] || n}-time ` : ''}${label[k]}`);
+  for (const [k, n] of Object.entries(h.awards || {})) if (label[k]) parts.push(`${n > 1 ? `${['', '', 'two', 'three', 'four', 'five'][n] || n}-time ` : ''}${label[k]}`);
   if (h.titles) parts.push(h.titles === 1 ? $t('franchise.a_beast_bowl_champion') : `${$t('franchise.time_beast_bowl_champion', { titles: h.titles })}`);
   if (h.records) parts.push(h.records === 1 ? $t('franchise.a_league_record') : `${h.records} league records`);
   return parts.join(', ');

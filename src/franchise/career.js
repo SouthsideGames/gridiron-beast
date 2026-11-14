@@ -52,6 +52,9 @@ export function bigGame(l) {
 }
 
 const book = (m) => { const c = (m.career ||= { v: CAREER_VERSION, ev: [] }); c.ev ||= []; return c; };
+// Decision E: with the timeline writers off, the after-game and season-end passes still run (they find the championships, awards and
+// records the honour ledger keeps), on a throwaway copy of the book, so nothing is written to the timeline itself.
+const passBook = (m) => (enabled ? book(m) : { ...(m.career || { v: CAREER_VERSION }), ev: [...(m.career?.ev || [])] });
 export const careerEvents = (m) => m.career?.ev || [];
 export const hasEvent = (m, k) => careerEvents(m).some((e) => e.k === k);
 /** Add one event unless its key is already there. Returns true when added. */
@@ -60,14 +63,25 @@ let enabled = true;
 export function setCareerEnabled(on) { enabled = !!on; }
 /** A monster new to the league's records (founding, drafted, developer): nothing older to rebuild. */
 export function markCareerFresh(m) { if (!enabled) return; const b = book(m); b.bf = 1; b.lv = m.level || 1; }
+/**
+ * Decision E (owner, 2026-11-14): awards, championships and records are game facts (the Hall of Fame case and the retirement news read
+ * them), so each monster keeps a compact honour ledger, `m.careerHonours`, written whether or not the optional timeline writers are on.
+ * A monster from an older save has his honours only in the timeline: his ledger is seeded from it the first time it is written, and
+ * every reader goes through honourEvents(), which merges both by key, so nothing he won before the update is lost.
+ */
+const HONOUR_TYPES = new Set(['award', 'champion', 'record']);
+const honourCopy = (e) => ({ k: e.k, t: e.t, y: e.y ?? null, ...(e.x ? { x: { ...e.x } } : {}) });
+/** Merge honour lists by key (earlier lists win): the one way to read honours from a monster or a preserved legend record. */
+export function mergeHonours(...lists) {
+  const out = new Map(); for (const list of lists) for (const e of list || []) if (e && HONOUR_TYPES.has(e.t) && !out.has(e.k)) out.set(e.k, e);
+  return [...out.values()];
+}
+/** A monster's awards, championships and records: his ledger, plus anything an older save kept only in his timeline. */
+export const honourEvents = (m) => mergeHonours(m?.careerHonours, m?.career?.ev);
 export function addEvent(m, e) {
-  // Compact, timeline-independent historical evidence for Hall of Fame cases
-  // and retirement news. Kept even when the optional timeline writer is disabled.
-  if (['award', 'champion', 'record'].includes(e.t)) {
-    const ledger = (m.careerHonours ||= []);
-    if (!ledger.some((x) => x.k === e.k)) ledger.push({
-      k: e.k, t: e.t, y: e.y ?? null, ...(e.x ? { x: { ...e.x } } : {}),
-    });
+  if (HONOUR_TYPES.has(e.t)) {
+    if (!Array.isArray(m.careerHonours)) m.careerHonours = (m.career?.ev || []).filter((x) => HONOUR_TYPES.has(x.t)).map(honourCopy); // seeded once from an older save's timeline
+    if (!m.careerHonours.some((x) => x.k === e.k)) m.careerHonours.push(honourCopy(e));
   }
   if (!enabled) return false;
   const b = book(m); if (b.ev.some((x) => x.k === e.k)) return false;
@@ -104,7 +118,7 @@ export function fullRecord(m, year) {
 export function careerAfterGame(roster, ctx, { lineOf = null } = {}) {
   const { year, week, club } = ctx; let added = 0;
   for (const m of roster) {
-    const b = book(m);
+    const b = passBook(m);
     // Levels are tracked whether or not he played (a level is earned at the club); evolutions are noted where they happen.
     if (b.lv == null) b.lv = m.level || 1;
     for (const L of LEVEL_MARKS) if ((m.level || 1) >= L && b.lv < L) added += addEvent(m, { k: `lvl:${L}`, t: 'level', y: year, w: week, c: club, x: { level: L } });
@@ -154,7 +168,7 @@ export function noteEvolution(m, { year, week = null, club, from, to, level = nu
 export function careerSeasonEnd(roster, ctx) {
   const { year, club } = ctx; let added = 0;
   for (const m of roster) {
-    const b = book(m); const s = m.stats; const bookY = s?.season?.year === year ? s.season : (s?.seasons || []).find((x) => x.year === year);
+    const b = passBook(m); const s = m.stats; const bookY = s?.season?.year === year ? s.season : (s?.seasons || []).find((x) => x.year === year);
     const reg = withDerived(bookY?.reg || {}), post = bookY?.post || {};
     for (const [key, w] of Object.entries(ctx.awards?.league || {})) if (w && w.id === m.id && w.team === club && key !== 'coy') added += addEvent(m, { k: `${`award:${key}:${year}`}`, t: 'award', y: year, c: club, x: { key } });
     for (const [cat, r] of Object.entries(ctx.records?.season || {})) if (year >= RECORDS_FROM_SEASON && r && r.year === year && r.team === club && (r.id ? r.id === m.id : r.name === m.name) && (reg[cat] || 0) === r.value) added += addEvent(m, { k: `${`rec:season:${cat}:${year}`}`, t: 'record', y: year, c: club, x: { scope: 'season', cat, value: r.value } });
