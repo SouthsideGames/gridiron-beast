@@ -154,6 +154,7 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="go" data-screen="practice">${t('menu.practice_field')}</button>
         <button class="btn block" data-action="go" data-screen="ai-lab">${t('menu.ai_testing_lab_qb_decisions')}</button>
         <button class="btn block" data-action="go" data-screen="attr-lab">${t('menu.attribute_testing_lab')}</button>
+        <button class="btn block" data-action="go" data-screen="beast-dex-reviewer">Beast Dex Reviewer</button>
         <button class="btn block" data-action="go" data-screen="monster-cry-reviewer">Monster Cry Reviewer</button>
         <button class="btn block" data-action="go" data-screen="evo-preview">${t('menu.preview_evolution')}</button>
         <button class="btn block badge-host" data-action="go" data-screen="ability-reviewer">${t('menu.ability_reviewer')}${devBadge(app.settings, q.football.outstanding)}</button>
