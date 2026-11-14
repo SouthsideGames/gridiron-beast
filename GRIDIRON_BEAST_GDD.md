@@ -339,13 +339,15 @@ Fire (Pyroclast), Nature (Elderoot), Wind (Tempestra) and Psychic (Astralux) are
 * **Schedule (implemented, revised 2026-10-15):** the old rotation gave each club only six distinct opponents a season, so the campaign schedule replaces it. The sixteen clubs form two groups of eight (gym / ordinary, two of each per division). Each season an ordinary club plays **four gym clubs** and five clubs from its own group, alternating (ordinary, gym, ordinary, gym …) so **week 1 is never a badge game** and badge games never come back to back. The other four gyms come the season after, so all eight badges take at least two seasons on every difficulty; the starter clubs get the easier half first. Nine games and one bye in ten weeks. Standings, divisions, conferences, the rival and the playoff format are unchanged.
 * **Gym assignment (implemented, two per division):** North: Frostpeak Howlers (Ice), Ironpeak Rams (Metal). West: Thunder Mesa (Electric), Canyon Crushers (Earth). East: Harbor Sentinels (Water), Eastport Phantoms (Dark). South: Sunfire Lions (Light), Palmetto Vipers (Dragon). Sundown Drakes is ordinary. Starter clubs: Ember City Beasts, Stonehaven Titans, Glacier Guardians, Stormport Bolts.
 * **Strength:** gym clubs have a quality offset by tier (early 0, mid +2, late +4 on top of the difficulty offset) that rises +1.5 per season, plus +1 the first time the player beats them ("they studied tape"). Ordinary clubs rise +0.5 per season. Their legendary levels with the calendar and (once evolution is in) their signature monster evolves around season 3. On any difficulty the first two gym games are winnable with the starting roster; the last two are "come back next year" games for most first-season teams.
-* **No replays.** A loss stands, the season moves on, the standings matter. Nothing in the campaign offers a rematch outside the schedule and the bracket.
+* **No replays.** A loss stands, the season moves on, the standings matter. Nothing in the campaign offers a rematch outside the schedule and the bracket. (A gym club's badge is at stake in every one of those games: §15.4.)
 
 ### 15.4 Badges
 
-* Beating a gym club, in any game that counts (regular season or playoffs), earns its badge the first time. Badges are permanent for the franchise.
+* **Reclaimable badges (owner clarification, Task 10, 2026-11-13; replaces "badges are permanent").** Every game against a gym club that counts (regular season or playoffs, played or forfeited) puts its badge at stake. A win earns the badge, or keeps it if held; a loss gives it back to the gym if held; a later win earns it again.
+* Badge progress (the HQ badge row, "badge n of 8", the Hall of Fame checklist) counts the badges **held now**; there is no second lifetime badge counter. The other campaign milestones (wins, titles, awards) stay cumulative. An achievement already awarded (first badge, four badges, all eight, Hall of Fame eligible) is never taken back.
+* The board's season goal "win a gym badge" counts a badge taken that season even if it is lost again later in the season.
 * A gym club is **not** guaranteed a playoff place. If you lost to them in the season and they missed the bracket, that badge waits until next season. The schedule guarantee makes a missing badge always the player's own doing.
-* HQ shows the badge row: eight slots, dim until earned, with the coach's portrait and the season won. The pregame intro flags "Badge game" with the empty slot before the lineups.
+* HQ shows the badge row: eight slots, dim when not held, with the coach's portrait and the season won. The pregame intro flags "Badge game" with the empty slot before the lineups.
 
 ### 15.5 Pregame coach dialogue
 
@@ -4573,3 +4575,13 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 **Playbooks.** The reviewed reserve offense and defense plays are released into the normal game pools.
 
 **Beast Clash.** One continuous automatic battle with player-controlled substitutions: no stay/rotate prompts; the player taps a living reserve to switch; the four-exchange voluntary rotation cooldown is kept; knockout replacements are automatic and do not reset it.
+
+**Gym badges (owner clarification, 2026-11-13 evening).** Badges are reclaimable: see §15.4. Implemented in `src/franchise/franchise.js` (`settleGymBadge`, used by played and forfeited games); tests in `tests/task10-gym-badges.test.js`.
+
+**The four reserve run plays (owner, 2026-11-13 evening).**
+- **Pin and Pull:** a designed running-back handoff; the quarterback never keeps it. Corrected (a mesh waypoint on the back's path) and released.
+- **Midline Read** and **Pistol Zone Read:** genuine read options. A quarterback keep is a decision, not a broken play; a give must reach the back. Corrected (the quarterback rides the mesh with a short step) and released. QB Awareness improves the read.
+- **End Around:** held back. The receiver, aligned 18 yards wide, reaches the quarterback at about 2.7 s, so pressure usually arrives first. The fix is a play-design choice (a tighter split, motion, or the quarterback opening toward him) awaiting the owner.
+- Run-pass options (RPOs) are not implemented and are outside Task 10.
+
+**Optional feature backlog: head-coach substitution philosophy (deferred; not implemented, not part of Task 10).** A head coach could manage between-play substitutions with the existing fatigue and depth-chart systems: **Heavy Rotation** (fresher reserves, frequent bench use), **Balanced Rotation** (fatigue, relative quality and game situation) or **Starter-Focused** (starters preferred; unavailable players still replaced). A **gameplay setting** would choose automatic (head coach) or manual (player) substitutions. A possible companion change: **injuries during a game**, with an injured monster replaced whatever the philosophy. Interface, defaults, probabilities and formulas are undecided. Detail: `docs/GRIDIRON_BEAST_MASTER_GDD.md`, "Optional Feature Backlog".
