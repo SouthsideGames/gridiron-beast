@@ -55,8 +55,23 @@ export function cryRecipe(id) {
    {at:.88,dur:.35,points:[210,320,180],kind:'roar',amp:.85,rough:.22},
    {at:1.25,dur:.16,points:[390,500,270],kind:'rattle',amp:.55,rough:.08}];
  }
+ // Listening pilot: eight description-led voices. Other families keep their existing drafts.
+ const pilot={
+  gloamtoad:{kind:'throat',pitch:95,phrase:[[0,.48,1,.65],[.7,.22,.8,.6]],label:'Hollow throat croak with a shorter reply'},
+  gearwing:{kind:'clock',pitch:720,phrase:[[0,.08,1,1],[.14,.08,1.5,1.5],[.28,.08,1.2,1.2],[.46,.32,.8,1.8]],label:'Dry clock clicks followed by a winding whistle'},
+  sunwhistle:{kind:'flute',pitch:980,phrase:[[0,.22,1,1.2],[.27,.16,1.5,1.4],[.49,.36,1.25,.8]],label:'Breathy three-note birdsong'},
+  steelpaw:{kind:'squeal',pitch:390,phrase:[[0,.13,.8,1.7],[.25,.26,1.3,.65]],label:'Two short rubbery joint squeaks'},
+  emberfox:{kind:'yip',pitch:460,phrase:[[0,.09,1.5,.8],[.16,.10,1.8,.9],[.38,.25,1.1,.5]],label:'Restless double yip and a scratchy tail'},
+  pyroclast:{kind:'rumble',pitch:65,phrase:[[0,1.05,.7,1.1]],label:'Low volcanic pressure building into a gravel eruption'},
+  tidepaw:{kind:'bubble',pitch:240,phrase:[[0,.16,1,.8],[.23,.10,1.4,1.2],[.39,.30,.9,1.7]],label:'Playful liquid plops and a bubbling trill'},
+  pyrelynx:{kind:'hiss',pitch:180,phrase:[[0,.16,.8,1],[.24,.55,1,.65]],label:'A restrained spit followed by an airy feline hiss'}
+ }[f.id];
+ if(pilot){
+  const maturity=[1,.82,.63][stage]||1;
+  events=pilot.phrase.map(([at,dur,from,to],i)=>({at:at*(1+stage*.08),dur:dur*(1+stage*.14),points:[pilot.pitch*from*maturity,pilot.pitch*to*maturity],kind:pilot.kind,amp:.8,rough:0}));
+ }
  const notes=[`${a.size}, ${a.look} ${a.body}`,a.features.join(', '),shy?'Reserved delivery':eager?'Restless delivery':'Assertive delivery',`Voice: ${voice}`,stage?'Inherited cadence with independently composed adult articulation':'Species-specific cadence and articulation'];
- return {id,revision:CRY_REVISION,seed,voice,formants,element:f.type,features:a.features,description:f.description,notes,events};
+ return {id,revision:pilot?4:CRY_REVISION,seed:pilot?hash(seed+':pilot4'):seed,...(pilot?{pilot:true}:{}),voice:pilot?.kind||voice,formants,element:f.type,features:a.features,description:f.description,notes:pilot?[pilot.label,...notes]:notes,events};
 }
 export function renderCry(recipe,rate=CRY_RATE) {
  if(rate<8000||rate>48000) throw new Error('Unsupported sample rate');
@@ -67,7 +82,16 @@ export function renderCry(recipe,rate=CRY_RATE) {
    phase+=frequency*(1+.018*Math.sin(2*Math.PI*31*t))/rate;
    const ph=phase*2*Math.PI, tri=2/Math.PI*Math.asin(Math.sin(ph)), pulse=Math.sin(ph)>(.23+.1*Math.sin(t*39))?1:-1;
    let v;
-   switch(e.kind){case'chirrup':v=Math.sin(ph+1.8*Math.sin(ph*2))*.65+pulse*.25;break;
+   switch(e.kind){
+    case'throat':v=(Math.sin(ph)+.35*Math.sin(ph*2))*(.25+.75*Math.pow(Math.max(0,Math.sin(t*2*Math.PI*23)),3));break;
+    case'clock':v=(Math.sin(ph)+.5*Math.sin(ph*2.76)+.25*Math.sin(ph*4.13))*Math.exp(-u*9);break;
+    case'flute':v=Math.sin(ph+.09*Math.sin(t*2*Math.PI*7))*.8+(rnd()*2-1)*.07;break;
+    case'squeal':v=Math.sin(ph+5*Math.sin(ph*1.003))*(.6+.4*Math.sin(t*2*Math.PI*18));break;
+    case'yip':v=(Math.sin(ph)+.4*Math.sin(ph*3)+.2*Math.sin(ph*5))*Math.exp(-u*3);break;
+    case'rumble':low+=.025*((rnd()*2-1)-low);v=low*6+Math.sin(ph)*.25+Math.sin(ph*.49)*.3;break;
+    case'bubble':v=Math.sin(ph+7*Math.exp(-((u*7)%1)*8))*Math.exp(-((u*7)%1)*4);break;
+    case'hiss':{const noise=rnd()*2-1;low+=.12*(noise-low);v=(noise-low)*(.35+.65*Math.sin(Math.PI*u));break;}
+    case'chirrup' :v=Math.sin(ph+1.8*Math.sin(ph*2))*.65+pulse*.25;break;
     case'buzz':v=pulse*(.6+.4*Math.sin(t*380));break;
     case'mechanical':v=Math.sin(ph+3*Math.sin(ph*2.71))*.65+tri*.3;break;
     case'burble':v=Math.sin(ph+3*Math.sin(t*60))*(.6+.4*Math.sin(t*48));break;
@@ -80,12 +104,12 @@ export function renderCry(recipe,rate=CRY_RATE) {
     default:v=pulse*.45+Math.sin(ph+3*Math.sin(ph*1.01))*.55;
    }
    // Formant-related modulation, shaped noise, feature-specific articulations.
-   v*=.80+.12*Math.sin(2*Math.PI*recipe.formants[0]*t)+.08*Math.sin(2*Math.PI*recipe.formants[1]*t);
-   const [grit,flutter]=TYPES[recipe.element];v+= (rnd()*2-1)*(e.rough+grit)*(.6+.4*Math.sin(t*flutter));
+   if(!recipe.pilot)v*=.80+.12*Math.sin(2*Math.PI*recipe.formants[0]*t)+.08*Math.sin(2*Math.PI*recipe.formants[1]*t);
+   const [grit,flutter]=TYPES[recipe.element];if(!recipe.pilot)v+= (rnd()*2-1)*(e.rough+grit)*(.6+.4*Math.sin(t*flutter));
    if(recipe.features.includes('wings'))v*=.91+.09*Math.sin(t*81);
    if(recipe.features.includes('plates')||recipe.features.includes('shell'))v+=.05*Math.sin(ph*2.73)*Math.exp(-u*12);
    if(recipe.features.includes('spikes')||recipe.features.includes('fangs'))v+=.05*Math.sin(ph*3.9)*(.5+.5*Math.sin(t*103));
-   low+=.55*(v-low);const bright=low-.12*previous;previous=low;
+   let bright=v;if(!recipe.pilot){low+=.55*(v-low);bright=low-.12*previous;previous=low;}
    const env=Math.min(1,t/.007)*Math.min(1,(e.dur-t)/.025)*Math.exp(-u*.4);
    out[start+i]+=Math.round(Math.tanh(bright)*96)/96*env*e.amp;
   }
