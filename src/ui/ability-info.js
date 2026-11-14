@@ -46,12 +46,14 @@ export function masteryBarHtml(m, mode) {
   return `<div class="row between dim t8-bar-label" data-bar="mastery" data-mode="${mode}"><span>${$t('shared.mastery', { name: esc(a.name), modeLabel: MODE_LABEL[mode] })}</span><span><b>${k.tier}</b>${k.mastered ? $t('shared.max') : ` · ${k.credits}/${k.next} uses`}</span></div><div class="bar mastery" style="margin:2px 0 4px" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${k.pct}" aria-label="${esc(a.name)} mastery"><i style="width:${k.pct}%"></i></div>`;
 }
 
+/** A Dex 2.0 scouting line reads as a sentence (the registry's short Clash summaries are fragments). Wording is unchanged. */
+const sentence = (t) => { const x = String(t || '').trim(); return x ? x[0].toUpperCase() + x.slice(1) + (/[.!?]$/.test(x) ? '' : '.') : x; };
 /** One ability as a block: name, mode, summary, optional mastery line (for an individual) and the full Dex rules, collapsed. */
 export function abilityBlockHtml(x, mode, { monster = null, seeIt = false, dex2 = false } = {}) {
   const a = abilityInfo(x, mode); if (!a) return '';
   const k = monster?.dev ? masteryInfo(monster, mode) : null;
   return `<div class="ab-block" data-ability="${a.id}"><div class="row between" style="gap:6px"><b>${esc(a.name)}</b><span class="chip">${MODE_LABEL[mode]}</span></div>
-    <p class="muted" style="margin:2px 0">${esc(a.summary)}</p>${a.story ? `<p class="dim" style="margin:2px 0;font-style:italic">${esc(a.story)}</p>` : ''}
+    <p class="muted" style="margin:2px 0">${esc(dex2 ? sentence(a.summary) : a.summary)}</p>${a.story ? `<p class="dim" style="margin:2px 0;font-style:italic">${esc(a.story)}</p>` : ''}
     ${k ? `<div class="dim" style="font-size:12px">${$t('shared.mastery_b_b', { tier: k.tier })}${k.mastered ? $t('shared.highest_tier') : ` ${$t('shared.more_valid_uses_to', { need: k.need, nextTier: k.nextTier, n: k.need })}`}</div>` : ''}
     <details class="ab-rules"><summary class="muted" style="cursor:pointer">${dex2 ? 'Exact mechanics — View details' : $t('shared.full_rules')}</summary>${a.sections.map((s) => `<p style="margin:4px 0"><b>${s.label}.</b> <span class="muted">${esc(s.text)}</span></p>`).join('')}</details>
     ${seeIt && mode === 'football' ? `<button class="btn small see-it" data-see-it="${esc(familyIdOf(x))}" data-form="${monster?.stage ?? ''}" data-mastery="${k ? k.index : 0}">${$t('shared.see_it')}</button>` : ''}</div>`;
