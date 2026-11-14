@@ -54,8 +54,9 @@ Full-catalog editorial approval and any requested revisions; complete art/animat
 
 ## Claude: visual polish, motion and QA (2026-11-14)
 
-Preview build `v43.14.0-dev.dex2`, commit `e78c853`, published as a test build to a separate private Beast Dex 2.0 link (the main
-game link and the shared test link are unchanged). PR #114 stays a draft until the owner approves merging.
+Preview build `v43.14.0-dev.dex2`, commit `c1caf29`, published as a test build (`test: true` in the published `src/version.js` only)
+to a separate private Beast Dex 2.0 link, https://claude.ai/artifact/XjRp8wPrCxenG8wCwKXvgK (the main game link and the shared test
+link are unchanged). PR #114 stays a draft until the owner approves merging.
 
 ### What changed
 - **Profile presentation** (`src/ui/screens/dex.js`, `styles/app.css` "Beast Dex 2.0"): Species View (blue) and My Beast View (gold,
@@ -78,9 +79,15 @@ game link and the shared test link are unchanged). PR #114 stays a draft until t
 - **Fixes**: knowledge keys in the franchise save no longer embed the per-run franchise uid (the shared Dex adds the franchise when
   merging; an unattributed id never counts): `text-never-decides` was failing on the branch for this reason. Habitat repeated the
   first fun fact; the template development line repeated Personality (now hidden in the Dex, labelled in the reviewer). A beast that
-  joined already evolved said "No evolutions yet". Two inherited Title Case failures. Four repeated adjectives in drafts.
+  joined already evolved said "No evolutions yet". Two inherited Title Case failures. Four repeated adjectives in drafts. The Dex 2 sheet had dropped the old sheet's
+  gameplay lines (collection status and number on your roster, cornerstone, "from week", legendary unlock / Legend Tracks, "you
+  have seen this species evolve"), which left 13 `src/text/en.js` lines unused and failed `central-text`; they are back in the new
+  layout (Profile facts grid and "Where to find it", Evolution note).
 
 ### Checks
+- Full suite on `e78c853`: 2,165 of 2,166 passed; the one failure (`central-text`, the dropped lines above) also fails on ChatGPT's
+  `b7ce1f8` and is fixed in `c1caf29`. Deploy check on the preview folder: everything passes except "BUILD.test is false", which is
+  expected for a test build.
 - `node tools/audit-dex-content.mjs --require-complete`: 222/222. Targeted tests: dex-2, dex-text, task8-dex-collection, and the new
   `tests/dex-2-integration.test.js` (counting rule through replay/reload/import/cloud merge; no locked lore, title or relationship
   at 4/14/29 for any form; profiles and reviewer previews write nothing; samples have no career; motion matches anatomy).
