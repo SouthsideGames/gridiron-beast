@@ -345,7 +345,7 @@ Fire (Pyroclast), Nature (Elderoot), Wind (Tempestra) and Psychic (Astralux) are
 
 * **Reclaimable badges (owner clarification, Task 10, 2026-11-13; replaces "badges are permanent").** Every game against a gym club that counts (regular season or playoffs, played or forfeited) puts its badge at stake. A win earns the badge, or keeps it if held; a loss gives it back to the gym if held; a later win earns it again.
 * Badge progress (the HQ badge row, "badge n of 8", the Hall of Fame checklist) counts the badges **held now**; there is no second lifetime badge counter. The other campaign milestones (wins, titles, awards) stay cumulative. An achievement already awarded (first badge, four badges, all eight, Hall of Fame eligible) is never taken back.
-* The board's season goal "win a gym badge" counts a badge taken that season even if it is lost again later in the season.
+* The board's season goal "win a gym badge" (owner ruling 2026-11-14) counts a badge earned or reclaimed during that season only if it is still held at season's end, after the playoffs. A badge carried over from an earlier season counts only if it was lost and reclaimed this season. HQ's progress line uses the same count.
 * A gym club is **not** guaranteed a playoff place. If you lost to them in the season and they missed the bracket, that badge waits until next season. The schedule guarantee makes a missing badge always the player's own doing.
 * HQ shows the badge row: eight slots, dim when not held, with the coach's portrait and the season won. The pregame intro flags "Badge game" with the empty slot before the lineups.
 

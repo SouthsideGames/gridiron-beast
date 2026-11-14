@@ -1428,7 +1428,7 @@ export function chooseGoal(f, id) { const r = boardChooseGoal(f, id, commissione
 export function goalProgress(f) {
   const g = f.board?.goal; if (!g) return null; const rec = record(f);
   if (g.id === 'wins') return { text: `${$t('franchise.of_wins', { w: rec.w, target: g.target })}`, pct: Math.min(1, rec.w / g.target) };
-  if (g.id === 'badges') { const n = Object.values(f.campaign?.badges || {}).filter((b) => b.year === f.season.year).length; return { text: `${$t('franchise.of_badges', { n, target: g.target })}`, pct: Math.min(1, n / g.target) }; }
+  if (g.id === 'badges') { const n = badgesWonThisSeason(f); return { text: `${$t('franchise.of_badges', { n, target: g.target })}`, pct: Math.min(1, n / g.target) }; }
   if (g.id === 'playoffs') { const p = playoffPicture(f); return { text: p.inPlayoffs ? `In: ${p.text}` : p.text, pct: p.inPlayoffs ? 1 : 0.4 }; }
   if (g.id === 'title') return { text: f.season.champion === f.club ? 'Champions!' : inPlayoffs(f) ? $t('franchise.alive_in_the_playoffs') : `${rec.w}-${rec.l}`, pct: inPlayoffs(f) ? 0.7 : 0.3 };
   return null;
@@ -2322,6 +2322,16 @@ export function resetDevSlots(f) { delete f.devSlots; return { ok: true, slots: 
  * gym if it is held, and a later win earns it again. Badge progress is the badges held now. Achievements already awarded stay.
  * f.season.badgesEarned lists badges taken this season; the board goal counts only those still held at season end.
  */
+/**
+ * The board's "win a gym badge" count (owner ruling 2026-11-14): badges earned or reclaimed this season that are still held now (at
+ * season end, after the playoffs, when the goal is settled; mid-season for HQ's progress line). A badge carried over from an earlier
+ * season counts only if it was lost and reclaimed this season. Saves from before f.season.badgesEarned: held badges won this year.
+ */
+export function badgesWonThisSeason(f) {
+  const s = f.season, held = f.campaign?.badges || {};
+  if (Array.isArray(s?.badgesEarned)) return [...new Set(s.badgesEarned)].filter((club) => !!held[club]).length;
+  return Object.values(held).filter((b) => b.year === s?.year).length;
+}
 function settleGymBadge(f, m, won, myScore, oppScore) {
   const gym = GYM_BY_CLUB[m.opponent]; if (!gym) return;
   const c = f.campaign; c.badges ||= {}; c.gymWins ||= {};
@@ -2546,7 +2556,7 @@ function endSeason(f) {
   }
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
-  { const gymWinsThisYear = Array.isArray(s.badgesEarned) ? [...new Set(s.badgesEarned)].filter((club) => !!f.campaign?.badges?.[club]).length : Object.values(f.campaign?.badges || {}).filter((badge) => badge.year === s.year).length; // must earn or reclaim this season AND still hold at season end; older saves fall back to current-year held badges
+  { const gymWinsThisYear = badgesWonThisSeason(f); // earned or reclaimed this season AND still held at season end (owner 2026-11-14)
     const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club, forecastWins: boardForecastFor(f, s.schedule.filter((g) => !g.bye).length || 9).wins });
     if (verdict) { s.boardVerdict = verdict; news(f, verdict.met ? $L('franchise.board_goal_met_confidence_the_scouting', { label: fieldLine(verdict.goal, 'label'), confidence: verdict.confidence >= 0 ? '+' : '', confidence2: verdict.confidence, confidence3: confidenceLabel(verdict.confidence) }) : verdict.status === 'fired' ? $L('franchise.board_goal_missed_wins_forecast_the', { label: fieldLine(verdict.goal, 'label'), w: rec.w, forecastWins: verdict.goal.forecastWins ?? '?', reason: verdict.reason ? verdict.reason[0].toUpperCase() + verdict.reason.slice(1) + '.' : '' }) : verdict.status === 'warning' ? $L('franchise.board_goal_missed_narrowly_wins_forecast', { label: fieldLine(verdict.goal, 'label'), w: rec.w, forecastWins: verdict.goal.forecastWins ?? '?' }) : verdict.status === 'hot_seat' ? $L('franchise.board_goal_missed_you_are_on', { label: verdict.goal.label }) : $L('franchise.board_goal_missed_confidence', { label: fieldLine(verdict.goal, 'label'), confidence: verdict.confidence }), verdict.met ? 'win' : 'loss'); } }
   if (rec.w < rec.l || onHotSeat(f)) f.postseason = makePostseasonEvent(f); // a losing record, or the hot seat, makes one story event mandatory (GDD §15.7, §17.4)
