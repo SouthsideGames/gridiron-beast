@@ -26,3 +26,54 @@ test('every family renders four sections with one portrait and no source mutatio
     assert.equal(JSON.stringify(s), before);
   }
 });
+
+import { DEX_REVIEW_CATALOG, registerBeastDexReviewer } from '../src/ui/screens/beast-dex-reviewer.js';
+import { dexContent, individualQuirk, portraitReaction } from '../src/dex/content.js';
+import { dexReviews, saveDexReview, dexReviewStatus } from '../src/dex/reviews.js';
+test('all form previews render, lore stays locked until its threshold, identities are stable', () => {
+  for (const { species, form } of DEX_REVIEW_CATALOG) {
+    const monster = { id: 'test-individual', species: species.id, name: '<beast>', stage: form.stage, attributes: {} };
+    const snapshot = JSON.stringify(monster);
+    const html = speciesSheet(species, null, { monster, revealAll: true });
+    assert.ok(html.includes('My Beast View'));
+    assert.ok(html.includes('&lt;beast&gt;'));
+    assert.equal(JSON.stringify(monster), snapshot);
+    assert.equal(individualQuirk(monster), individualQuirk({ ...monster, stage: 0 }));
+    const content = dexContent(species.id, form.stage);
+    assert.ok(content.relationships.length <= 3);
+    for (const lore of content.lore) {
+      const locked = speciesSheet(species, null, { previewStage: form.stage, previewGames: lore.games - 1, revealAll: true });
+      const unlocked = speciesSheet(species, null, { previewStage: form.stage, previewGames: lore.games, revealAll: true });
+      assert.ok(!locked.includes(lore.text));
+      assert.ok(unlocked.includes(lore.text));
+    }
+  }
+  assert.match(portraitReaction({ name: 'Flaroo', features: ['ears'] }), /ears/);
+});
+test('review feedback survives unavailable storage, is form-specific, and rejects stale approval', () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const data = new Map(); let blocked = false;
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: k => data.get(k) || null, setItem: (k,v) => { if(blocked) throw Error('quota'); data.set(k,v); } } });
+  try {
+    assert.equal(saveDexReview('emberfox:0', 'lore', 'approved', 'Good'), true);
+    assert.equal(dexReviewStatus('emberfox:0', 'lore'), 'approved');
+    assert.equal(dexReviewStatus('emberfox:1', 'lore'), 'pending');
+    blocked = true;
+    assert.equal(saveDexReview('emberfox:0', 'lore', 'revision', 'Keep this note'), false);
+    assert.equal(dexReviews()['emberfox:0'].lore.notes, 'Keep this note');
+    assert.equal(dexReviewStatus('emberfox:0', 'lore'), 'revision');
+    data.set('gridiron-beast-dex-reviews-v1', JSON.stringify({ 'emberfox:2': { lore: { status: 'approved', fingerprint: 'old content', updatedAt: 1 } } }));
+    assert.equal(dexReviewStatus('emberfox:2', 'lore'), 'pending');
+    assert.equal(saveDexReview('missing:0', 'lore', 'approved'), false);
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'localStorage', original); else delete globalThis.localStorage;
+  }
+});
+test('reviewer renders a catalog-based default and does not change franchise state', () => {
+  let screen;
+  registerBeastDexReviewer({ registerScreen: (_id, value) => { screen = value; } });
+  const html = screen.render({ f: null });
+  assert.match(html, /Beast Dex|Review drafts/);
+  assert.match(html, /data-review-id=/);
+  assert.equal((html.match(/data-review-component=/g) || []).length, 6);
+});
