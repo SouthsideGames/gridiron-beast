@@ -17,7 +17,7 @@ import { apexEmblem, apexClass, apexFactsHtml, openApexDiscovery } from '../apex
 import { apexKnown } from '../../franchise/t8/discovery.js';
 import { trainingCost, attributeBar } from '../../franchise/t8/progression.js';
 import { reserveAward } from '../../franchise/t8/awards.js';
-import { speciesSheet, silhouette } from './dex.js';
+import { speciesSheet, bindDexProfile, silhouette } from './dex.js';
 import { buildDepthChart, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, borrowedSlots } from '../../franchise/roster.js';
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
 import { ROLE_LABEL, STAFF_ROLES, PLAYBOOKS, TRAINING_FOCI, STAFF, staffById } from '../../data/staff.js';
@@ -194,7 +194,7 @@ export function registerRosterScreens(Router, app) {
         'mon-go': (el) => Router.go('monster', { id: el.dataset.id }, { replace: true }), // replace: Back still returns to where you came from
         'career-jump': () => root.querySelector('#timeline')?.scrollIntoView({ block: 'start', behavior: app.f?.settings?.reducedMotion ? 'auto' : 'smooth' }),
         typechart: (el) => openTypeChart(el.dataset.type),
-        species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); playMonsterCry(m); sheet(speciesSheet(sp, ctx.f), { title: sp.name, onClose: stopCry }); },
+        species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); playMonsterCry(m); const detail = sheet(speciesSheet(sp, ctx.f, { monster: m }), { title: sp.name, onClose: stopCry }); bindDexProfile(detail.el); },
         'mastery-mode': (el) => { masteryMode = el.dataset.v === 'clash' ? 'clash' : 'football'; Router.render(); },
         'apex-replay': () => { const m = app.f.roster.find((x) => x.id === ctx.params.id); if (m && apexKnown(app.f, m) && !document.querySelector('.apex-scene')) openApexDiscovery({ monster: m, settings: app.settings }); },
         autospendone: () => { F.autoSpendAllPoints(app.f, { only: ctx.params.id }); app.save(); Router.render(); },
