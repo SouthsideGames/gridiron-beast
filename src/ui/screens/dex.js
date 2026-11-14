@@ -12,7 +12,9 @@ import { TYPES, evolvedSpec } from '../../data/monsters.js';
 export { evolvedSpec };
 import { sprite16 } from '../sprite16.js';
 import { dexStatus, dexCounts, dexFormSeen, DEX_GROUPS } from '../../franchise/franchise.js';
-import { dexCountsGlobal } from '../../franchise/dex-store.js';
+import { careerTimeline } from '../../franchise/career.js';
+import { fullProfile } from '../../franchise/career-profile.js';
+import { dexKnowledge, LORE_THRESHOLDS, dexCountsGlobal } from '../../franchise/dex-store.js';
 import { t as $t } from '../../text/index.js';
 
 const POS_NAME = { QB: $t('league.quarterback'), RB: $t('league.running_back'), WR: $t('league.receiver'), TE: $t('league.tight_end'), OL: $t('league.lineman'), DL: $t('league.pass_rusher'), LB: $t('league.linebacker'), CB: $t('league.cornerback'), S: $t('league.safety'), K: $t('league.kicker') };
@@ -59,39 +61,27 @@ export function registerDexScreens(Router, app) {
   });
 }
 
-function legacySpeciesSheet(s, f) {
-  const known = dexStatus(f, s.id) !== 'unknown';
-  const formSeen = dexFormSeen(f, s.id);
-  const evo = s.evolution.length ? `<h3>${$t('league.evolution')}</h3><div class="row" style="flex-wrap:wrap;gap:8px;align-items:flex-end">${sprite16(s, 40)}${s.evolution.map((e, i) => `<span class="dim">→</span><span class="center" style="font-size:12px">${formSeen >= i + 1 ? sprite16(evolvedSpec(s, i + 1), 40 + i * 8) : silhouette(evolvedSpec(s, i + 1), 40 + i * 8)}<br>${formSeen >= i + 1 ? esc(e.name) : '???'} <span class="dim">L${e.level}</span></span>`).join('')}</div><p class="dim">${formSeen ? `${$t('league.you_have_seen_this_species_evolve', { n: formSeen >= s.evolution.length ? ' fully' : '' })}` : $t('league.evolves_at_the_levels_shown_evolved')}</p>` : '';
-  const owned = f ? f.roster.filter((m) => m.species === s.id) : [];
-  const st = dexStatus(f, s.id);
-  return `<div class="row" style="align-items:flex-start">${sprite16(s, 96)}<div class="grow"><div class="muted">${$t('league.type_3', { element: esc(s.element) })} <span class="dex-r r-${s.rarity}">${RARITIES[s.rarity].label}</span>${s.cornerstone ? $t('league.cornerstone') : ''}</div>
-    <div class="muted">${POS_NAME[s.position]} (${s.position})</div>
-    <div class="muted">${esc(s.size)} ${esc(s.body)} · ${esc(s.look)}</div>
-    <div class="muted" style="margin-top:4px">${st === 'signed' ? `${$t('league.signed')}${f ? ` ${$t('league.on_your_roster', { n: owned.length })}` : ''}` : st === 'seen' ? $t('league.seen_never_signed') : $t('league.not_yet_discovered')}</div></div></div>
-    <p style="font-style:italic">“${esc(s.personality)}”</p>
-    <h3>${$t('league.signature_abilities')}</h3>${abilitiesHtml(s, { seeIt: known })}
-    <h3>${$t('league.where_to_find_it')}</h3><p class="muted">${esc((s.regions || ELEMENT_REGIONS[s.element]).join(', '))}${s.fromWeek ? ` ${$t('league.from_week', { fromWeek: s.fromWeek })}` : ''}${s.rarity === 'legendary' ? (f?.campaign?.unlocked?.[s.id] ? $t('league.unlocked_scoutable_there_now') : ` ${$t('league.legend_tracks_3', { tracks: f?.campaign?.tracks?.[s.id] || 0 })}`) : ''}</p>
-    ${evo}`;
-}
-
-
-/** Functional Dex 2 shell. Approved expanded lore is supplied separately. */
-export function speciesSheet(s, f, { monster = null } = {}) {
-  const legacy = legacySpeciesSheet(s, f);
-  const abilityStart = legacy.indexOf('<h3>' + $t('league.signature_abilities'));
-  const habitatStart = legacy.indexOf('<h3>' + $t('league.where_to_find_it'));
-  const evolutionStart = legacy.indexOf('<h3>' + $t('league.evolution'));
-  const profile = legacy.slice(0, abilityStart) + legacy.slice(habitatStart, evolutionStart < 0 ? undefined : evolutionStart);
-  const evolution = evolutionStart < 0 ? '<p>This species does not evolve.</p>' : legacy.slice(evolutionStart);
+/** Presentation reads existing records; it never backfills or mutates a monster. */
+export function speciesSheet(s, f, { monster = null, previewGames = null, revealAll = false } = {}) {
+  const stage = monster?.stage || 0;
+  const current = evolvedSpec(s, stage);
+  const knowledge = dexKnowledge(s.id);
+  const games = previewGames ?? knowledge.games;
+  const timeline = monster ? careerTimeline(monster, { club: f?.club }) : [];
+  const history = entries => entries.length ? entries.map(e => `<article><b>${esc(e.title)}</b><p>${esc(e.desc)}</p><span class="dim">${e.y == null ? 'Earlier career' : `Season ${esc(e.y)}`}${e.w == null ? '' : ` · Week ${esc(e.w)}`}</span></article>`).join('') : '<p>No history recorded yet.</p>';
+  const career = monster && f ? fullProfile(f, monster) : null;
+  const stats = career ? `<h3>Career statistics</h3><p>${career.stats.games} regular-season games · ${career.stats.postGames} playoff games</p>${career.stats.focus.map(x => `<p>${esc(x.label)}: ${esc(x.text)}</p>`).join('')}` : '';
   const attributes = monster ? Object.entries(monster.attributes || {}).map(([key, value]) => `<tr><th scope="row">${esc(key)}</th><td>${esc(value)}</td></tr>`).join('') : '';
+  const seen = revealAll ? s.evolution.length : dexFormSeen(f, s.id);
+  const evolution = `<div class="row" style="flex-wrap:wrap">${[s, ...s.evolution.map((_, i) => evolvedSpec(s, i + 1))].map((form, i) => `<div>${i <= seen ? sprite16(form, 64) : silhouette(form, 64)}<p>${i <= seen ? esc(form.name) : '???'}</p>${i ? `<p>Level ${esc(s.evolution[i - 1].level)}</p>` : ''}</div>`).join('')}</div>${s.evolution.length ? '' : '<p>This species does not evolve.</p>'}`;
+  const lore = LORE_THRESHOLDS.map(n => `<p>${games >= n ? 'Unlocked' : 'Locked'} · ${n} games${games >= n ? ' · Expanded lore awaiting content review.' : ''}</p>`).join('');
   const panels = {
-    Profile: profile + (monster ? `<h3>My Beast</h3><p>${esc(monster.name || s.name)}</p>` : ''),
-    Football: `<h3>${esc(POS_NAME[s.position] || s.position)}</h3>${monster ? `<table aria-label="Current attributes"><tbody>${attributes}</tbody></table>` : ''}${abilitiesHtml(s, { monster, seeIt: dexStatus(f, s.id) !== 'unknown' })}`,
-    Evolution: evolution + (monster ? `<p>Current evolution stage: ${esc((monster.stage || 0) + 1)}</p>` : ''),
-    Journal: `<p>${esc(monster ? 'Personal history' : 'Species discovery')}</p><p>${esc(dexStatus(f, s.id))}</p><p class="dim">Expanded lore and history are being prepared for Beast Dex 2.0.</p>`,
+    Profile: `<h3>${esc(monster?.name || current.name)}</h3><p>${esc(s.personality)}</p><p>${esc(s.element)} · ${esc(s.size)} · ${esc(s.body)}</p><h3>Habitat</h3><p>${esc((s.regions || ELEMENT_REGIONS[s.element] || []).join(', '))}</p>`,
+    Football: `<h3>${esc(POS_NAME[s.position] || s.position)}</h3>${monster ? `<table aria-label="Current attributes"><tbody>${attributes}</tbody></table>` : ''}${abilitiesHtml(s, { monster, seeIt: revealAll || dexStatus(f, s.id) !== 'unknown' })}${stats}`,
+    Evolution: evolution + (monster ? `<p>Current stage: ${stage + 1}</p>${history(timeline.filter(e => e.t === 'evolve'))}` : ''),
+    Journal: monster ? `<h3>Franchise accomplishments and personal history</h3>${history(timeline)}` : `<h3>Species knowledge</h3><p>${games} games · shared across individuals and franchises</p>${lore}`,
   };
-  return `<div data-dex-profile><p class="chip">${monster ? 'My Beast View' : 'Species View'}</p>${sprite16(monster ? evolvedSpec(s, monster.stage || 0) : s, 96)}<div role="tablist" aria-label="Beast Dex sections">${Object.keys(panels).map((name, i) => `<button type="button" role="tab" data-dex-tab="${name}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${name}</button>`).join('')}</div>${Object.entries(panels).map(([name, content], i) => `<section role="tabpanel" aria-label="${name}" data-dex-panel="${name}" ${i ? 'hidden' : ''}>${content}</section>`).join('')}</div>`;
+  return `<div data-dex-profile><p class="chip">${monster ? 'My Beast View' : 'Species View'}</p><div data-dex-portrait style="position:sticky;top:0;z-index:1;background:var(--panel,#15231f)">${sprite16(current, 96)}</div><div role="tablist" aria-label="Beast Dex sections">${Object.keys(panels).map((name, i) => `<button type="button" role="tab" data-dex-tab="${name}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${name}</button>`).join('')}</div>${Object.entries(panels).map(([name, content], i) => `<section role="tabpanel" aria-label="${name}" data-dex-panel="${name}" ${i ? 'hidden' : ''}>${content}</section>`).join('')}</div>`;
 }
 
 /** Bind locally to a sheet, including keyboard tab navigation. */
