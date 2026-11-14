@@ -51,3 +51,51 @@ Full-catalog editorial approval and any requested revisions; complete art/animat
 - The completeness gate, reference checks, distinct-profile check, and all-form lore-boundary tests pass. A regression caught and fixed a 30-game lore leak through development notes; development now reads always-visible character information instead.
 - All new writing remains review drafts. Existing reviews invalidate only for affected content; no review verdict has been automatically approved.
 - No balance values, positions, names, evolution levels, roster counts, music assets, or cry assets were changed by this content pass.
+
+## Claude: visual polish, motion and QA (2026-11-14)
+
+Preview build `v43.14.0-dev.dex2`, commit `e78c853`, published as a test build to a separate private Beast Dex 2.0 link (the main
+game link and the shared test link are unchanged). PR #114 stays a draft until the owner approves merging.
+
+### What changed
+- **Profile presentation** (`src/ui/screens/dex.js`, `styles/app.css` "Beast Dex 2.0"): Species View (blue) and My Beast View (gold,
+  star badge, nickname, level) are distinct; the portrait sits in an element-tinted pixel stage, stays on screen while reading and
+  shrinks once the reader scrolls (two-thirds or more of the sheet stays for text at 320 px, 82% at 440 px); segmented tabs; facts grid;
+  attribute bars (My Beast: current rating against the form's natural starting band); evolution chain with tappable forms; lore cards
+  with locked progress bars that show only the threshold and games left; relationship cards (kind, related sprite or silhouette).
+- **Abilities**: each ability opens with its readable scouting line (sentence-cased), then "Exact mechanics — View details" for
+  football and Beast Clash alike. No ability text or value changed.
+- **Motion** (`src/ui/dex-motion.js`): idle, tap and rare reactions per form from its sprite body plan, drawn features, look, size,
+  stage and Dex temperament; driven by the `beast-dex-reaction` hook; Web Animations cancelled on the next reaction and on close; idle
+  loops are CSS and stop with the element; off under the system preference or the game's reduced-motion setting (text still shows).
+  Serpents, blobs and shelled forms never hop on legs; only winged forms take off. The reviewer prints each form's motion line, and a
+  visuals verdict now covers the motion (its fingerprint includes it).
+- **Sheets**: Escape closes the top Dex sheet only; focus returns to the opener; keyboard openings focus the first tab, touch
+  openings the dialog; one listener controller per scroll host, aborted on rebind, close and route exit.
+- **Reviewer**: sticky Prev/Next with a six-component status strip, filters collapsed into one line, segmented View and Lore-games
+  controls, verdict cards with autosave state and a note when changed content returned a verdict to pending, and a persistent
+  storage-failure warning.
+- **Fixes**: knowledge keys in the franchise save no longer embed the per-run franchise uid (the shared Dex adds the franchise when
+  merging; an unattributed id never counts): `text-never-decides` was failing on the branch for this reason. Habitat repeated the
+  first fun fact; the template development line repeated Personality (now hidden in the Dex, labelled in the reviewer). A beast that
+  joined already evolved said "No evolutions yet". Two inherited Title Case failures. Four repeated adjectives in drafts.
+
+### Checks
+- `node tools/audit-dex-content.mjs --require-complete`: 222/222. Targeted tests: dex-2, dex-text, task8-dex-collection, and the new
+  `tests/dex-2-integration.test.js` (counting rule through replay/reload/import/cloud merge; no locked lore, title or relationship
+  at 4/14/29 for any form; profiles and reviewer previews write nothing; samples have no career; motion matches anatomy).
+- Browser (Chromium, 440×956 touch, plus 320, 375, 390, 820, 1280): 25 scripted checks (rendering of all 222 forms in both views,
+  context opening, view/form switching with the right individual's ratings, keyboard tabs, Escape and focus, multiple sheets, cries
+  per stage with mute/volume and stop on close/route exit, reduced motion, 25 open/close cycles with no extra listeners, animations
+  or audio, reviewer notes/verdicts through every navigation, export, content-change invalidation, storage failure, real vs sample
+  beasts, previews changing nothing). Layouts have no horizontal overflow and no touch target under 40 px.
+
+### Needs the owner's decision
+- **Template writing**: 208 forms' "personality development" line only restates Personality (hidden for now); the lore titles are
+  the same three for every templated form ("Getting to know X", "Behind the routine", "A closer bond"); the rare reaction reuses the
+  second fun fact word for word in 208 forms. Writing distinct lines is substantial new content and awaits the owner.
+- **Basic families' theme**: many Basic drafts share one arc (being judged by appearance, then understood); the 5- and 15-game Basic
+  lore entries are single short sentences.
+- **Clash scouting lines** are the registry's short summaries, sentence-cased; plain-language Clash explanations would be new copy.
+- **New UI copy** is English only (not yet in `src/text/en.js`).
+- **Knowledge storage** grows about 12 KB per franchise season (0.3% of a 3.8 MB save); a cap at 30 per family would bound it if wanted.
