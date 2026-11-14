@@ -144,6 +144,7 @@ All four attributes work in the right direction. One gap: **Strength plays no pa
 - **E. Hall of Fame record credit reads the career timeline.** `tests/career-timeline.test.js` ("the timeline never changes the game") fails whenever a retired monster holds a league record. The Hall case's record points come from the timeline events, so with the timeline writers switched off the case differs (`monsterHallOfFame.candidates[].recordsBy`).
   - This is a Task 9 weakness. The candidate review exposed it first; Task 10's changed seasons expose it again.
   - The game is unaffected (the writers are always on), but the Hall is not timeline-independent.
+  - **Second symptom (found 2026-11-13 evening):** a retiring monster's titles and records in his League News line also come from the timeline (§10.4).
   - **Proposed fix:** a small record ledger kept outside the timeline. It is a save-format addition, so it is left for approval.
 - **F. End Around's design (new).** The receiver lines up 18 yards wide and reaches the QB at about 2.7 seconds, so pressure usually gets there first (§10.2). Choose a tighter split, pre-snap motion, or the QB opening toward him, or leave the play held back.
 - **G. The board's "win a gym badge" goal (new; an interpretation, easy to reverse).** It now counts a badge taken during the season even if it is lost again later that season. Under the new rule it would otherwise silently fail for a badge won in week 2 and lost in week 9.
@@ -297,4 +298,10 @@ That is a change to the play's design, so the play stays held back. Its reserve 
 
 ### 10.4 Regression
 
-{{FULL2}}
+**Full suite on `fe0322b`:** 2,130 tests, **2,128 pass, 2 fail** (59 minutes). The 8 new tests are the badge and handoff tests.
+
+| Failing test | Cause | Status |
+|---|---|---|
+| `partnership-franchise`: the captain-pick fallback | An outdated test setup. The changed seasons left the club with one spare linebacker, and the test removed him, so the season correctly refused to start on the lineup gate. | **Fixed** in `932bada`: the test removes a captain whose position has depth to spare. Passes when rerun alone. |
+| `career-timeline`: "the timeline never changes the game" | **Pre-existing (decision E), with a second symptom.** A retiring monster's titles and records in his League News line are read from the career timeline (only awards fall back to the season history). With the writers off, a retiring Beast Bowl champion loses "a Beast Bowl champion" from that line. Game results are unaffected. Like the Hall record credit, the fix is a small title-and-record ledger outside the timeline: a save-format addition, left for approval. | **Open (decision E).** Whether it fails depends on the seed's seasons; it passed on `c84bb73`. |
+
