@@ -64,6 +64,8 @@ A Watch battle in Franchise Mode is now one engine session from the first exchan
 
 ### 4.1 Reclaimable gym badges: owner decision, nothing changed
 
+> **Superseded on 2026-11-13 (evening):** the owner approved reclaimable badges. They are implemented and verified; see §10.
+
 The current rules have no way to lose a badge.
 - GDD §15.4: "Badges are permanent for the franchise."
 - GDD §15.3: "No replays."
@@ -133,8 +135,8 @@ All four attributes work in the right direction. One gap: **Strength plays no pa
 
 ## 6. Owner decisions needed
 
-- **A. Gym badges:** keep them permanent (current GDD), or approve a rule under which a badge can be lost and won back. Nothing is implemented.
-- **B. The four held-back plays:** `end_around`, `pin_pull`, `pistol_zone_read`, `midline_read`.
+- **A. Gym badges:** ~~keep them permanent, or approve a losable rule~~ **Resolved:** the owner approved reclaimable badges (§10).
+- **B. The four held-back plays:** `end_around`, `pin_pull`, `pistol_zone_read`, `midline_read`. **Mostly resolved (§10):** three are corrected and released; **End Around still needs a design decision (F).**
   - **The defect:** they fail a live invariant. The ball carrier misses the mesh, or the handoff is out of reach.
   - **Options:** fix their play art in a follow-up, or leave them in reserve. They stay in reserve and are reviewable in the Playbook Audit.
 - **C. RPO:** the catalogue has no RPO plays, so none could be released. Authoring them would be new content.
@@ -143,6 +145,8 @@ All four attributes work in the right direction. One gap: **Strength plays no pa
   - This is a Task 9 weakness. The candidate review exposed it first; Task 10's changed seasons expose it again.
   - The game is unaffected (the writers are always on), but the Hall is not timeline-independent.
   - **Proposed fix:** a small record ledger kept outside the timeline. It is a save-format addition, so it is left for approval.
+- **F. End Around's design (new).** The receiver lines up 18 yards wide and reaches the QB at about 2.7 seconds, so pressure usually gets there first (§10.2). Choose a tighter split, pre-snap motion, or the QB opening toward him, or leave the play held back.
+- **G. The board's "win a gym badge" goal (new; an interpretation, easy to reverse).** It now counts a badge taken during the season even if it is lost again later that season. Under the new rule it would otherwise silently fail for a badge won in week 2 and lost in week 9.
 
 ## 7. Regression (Stage D)
 
@@ -210,3 +214,87 @@ Run time was 898 seconds.
 - The coach identities move every AI club's play mix toward the released book, so every franchise season differs from the baseline. Tests pinned to exact seeded seasons may move. The regression run above is the check.
 - Continuous Clash changes how a Watch battle is recorded. Unresolved old saves are upgraded (the prompt record becomes a player record, tested).
 - The Capacitor build has not been tested here. No device testing was done.
+- A requested Hall of Fame retirement still goes ahead at season end even if a badge is lost after the request (the checklist gates only the request).
+- The three released plays join the AI's coach-identity pools, so AI play mixes and franchise seasons shift slightly again.
+
+## 10. Gym badge reclaim and handoff corrections (ChatGPT `chatgpt/task10-gym-play-corrections` at `acc75ec`)
+
+The branch sat directly on `c3bad8b` and was integrated by fast-forward, so ChatGPT's five commits keep their own history. Every correction is its own commit.
+
+| Commit | What it does |
+|---|---|
+| `7ca8e81`, `af53200`, `cacc57c`, `c6c123d`, `acc75ec` | ChatGPT: reclaimable badges, GDD sections, End Around and Pin and Pull handoff changes |
+| `0c6d00a` | Gym badge corrections and tests |
+| `aeaf994` | Handoff play corrections, release of three plays, tests |
+| `fe0322b` | The authoritative GDD brought in line |
+
+### 10.1 Gym badges: verified, with three corrections
+
+**Verified** in `tests/task10-gym-badges.test.js`: three seasons of real games with gym results forced to alternate win, loss, win, and a save/load round trip after every game.
+
+| Check | Result |
+|---|---|
+| A win earns or keeps the badge | Yes, every game |
+| A loss removes a held badge | Yes, including playoff losses |
+| A later win restores it | Yes |
+| Regular season and playoffs both count | Yes, both directions |
+| Progress shows current ownership | Count, `badgeOf` and the Hall of Fame checklist always equal the badges held |
+| Achievements kept | First badge and four badges stay awarded after the count drops; they are not awarded twice when it returns |
+| Save/load and later seasons | Every game reloaded; three seasons; no problems |
+| A tie | Never costs a badge: a counted game always has a winner (the tiebreak runs first) |
+
+**Defects found and corrected:**
+1. **A forfeit to a gym club didn't touch the badge.** It is recorded as a 0–21 loss, but the rule ran only for played games. The rule now lives in one helper, `settleGymBadge`, used by both the played and the forfeited path.
+2. **The badge-lost news was hard-coded English.** It would not follow a language change and fails the text rules. It is now central text: "BADGE LOST: {coach}'s {club} take back the {badge} …".
+3. **Losing any badge cleared the HQ "new badge" banner**, even when the banner was about a different badge. Now only the lost badge's banner is cleared.
+
+**Interpretation flagged for you (decision G):** the board's season goal "win a gym badge" counts badges taken during the season, so a badge won and then lost the same season still counts. Older saves fall back to the previous calculation.
+
+### 10.2 The four plays
+
+Measured on the real engine: 12 defenses × 30 seeds, low (40) and high (90) Awareness quarterbacks.
+
+| Play | On ChatGPT's branch | After correction | Status |
+|---|---|---|---|
+| **Pin and Pull** | 100% handoffs to the back, but **he retraced his path to his starting spot for about 1.3 s after the exchange**; −0.02 yards per play | 100% handoffs (reach 1.4 yd, 0.5 s); runs his route at once behind the pulling guard; 2.59 yards per play; no QB keeps, no freezing, no overlap | **Released** |
+| **Midline Read** | Keeps fine; **0 of 168 gives reached the back** (all fell back to "missed the mesh") | Every give completes (reach about 0.9 yd, 0.7 s); keeps and gives both happen | **Released** |
+| **Pistol Zone Read** | Same as Midline Read | Same as Midline Read | **Released** |
+| **End Around** | Handoff on 46% of plays, at 2.65 s; **37% sacks**; 8 of 150 handoffs against blitzes | Unchanged: needs a design decision (F) | **Held back** |
+
+**Pin and Pull.** ChatGPT's added waypoint was the right fix. The engine special case that held the back near the QB was the cause of the backtracking: his waypoint counter stayed at his starting spot. Removing that special case fixes the route.
+
+**The read options.** In the pistol, the QB's first step carried him downfield, away from a back running directly behind him, so the two stayed about 2.5 yards apart. The QB now takes a short step that rides the mesh.
+- The deliberate keeps were never broken.
+- Yards per play fell, because the QB no longer has a running start before the read.
+- The results now sit alongside the live Read Option: keeps 2.6 / 2.2 yards against 3.1, gives 1.7 against 0.4.
+
+**Awareness**, scored against the defender the QB actually reads:
+
+| Play | 40 Awareness: right read | 90 Awareness: right read |
+|---|---|---|
+| Midline Read | 83–86% | 97% |
+| Pistol Zone Read | 82–86% | 96–97% |
+| Read Option (live reference) | 84% | 96–97% |
+
+**End Around.** ChatGPT's longer deadline removes the premature fallback, and when the receiver arrives the handoff is clean. But he is 18 yards wide, and the QB waits in place behind run blocking. An uncommitted experiment with a 9-yard slot split gave:
+- handoffs on 89% of plays, at 1.5 s;
+- 8% sacks;
+- 116 of 150 handoffs against blitzes.
+
+That is a change to the play's design, so the play stays held back. Its reserve walk-through test is exempted from the 7-second limit only while it is held back.
+
+**Other handoffs are unaffected.** All 37 live handoff, option and pitch plays give identical results, seed for seed, with the engine before and after this branch. The only engine change left is End Around's longer missed-mesh deadline.
+
+**Review fingerprints:** Pin and Pull, Midline Read and Pistol Zone Read changed, so they will show as changed since review in the Playbook Audit.
+
+**Tests:** `tests/task10-handoff-plays.test.js` (5 tests).
+
+### 10.3 GDD
+
+- **Head-coach feature:** `docs/GRIDIRON_BEAST_MASTER_GDD.md` has ChatGPT's deferred entry: Heavy Rotation, Balanced Rotation, Starter-Focused, an automatic or manual substitution setting, and possible in-game injuries. There is no code for it.
+- **The master document is superseded:** its header says the current design is the root `GRIDIRON_BEAST_GDD.md`, which still said badges are permanent.
+- **The root GDD is updated:** §15.3 and §15.4 now describe reclaimable badges, and its Task 10 section records the badge rule, the four plays' status and the deferred head-coach feature.
+
+### 10.4 Regression
+
+{{FULL2}}
