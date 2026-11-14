@@ -155,7 +155,7 @@ export function monsterHofInductees(history = []) {
 /** The detail of a Hall case, read from a preserved career record: which awards, which kind of records, and the career's output. */
 export function caseFacts(stub) {
   const awardsBy = {}; const recordsBy = {};
-  for (const e of stub?.ev || []) {
+  for (const e of stub?.careerHonours || stub?.ev || []) {
     if (e?.t === 'award') { const k = String(e.k || '').split(':')[1] || e.x?.award || 'other'; awardsBy[k] = (awardsBy[k] || 0) + 1; }
     else if (e?.t === 'record') { const k = e.x?.scope || String(e.k || '').split(':')[1] || 'other'; recordsBy[k] = (recordsBy[k] || 0) + 1; }
   }
