@@ -94,8 +94,11 @@ export function buildT8(sim, lookup, meta = null) {
     for (const f of fields) f.lead = 0;
     preroll = 0;
   }
+  // Owner revision 2026-11-15 (Prism Break): the zone a pre-snap line removed is no longer in the play's fields, so it is drawn as a
+  // ghost from the start of the pre-roll and dissolves as the beam fractures it (presentation only; the engine already removed it).
+  const ghosts = items.filter((it) => it.kind === 'pre' && it.ev?.rect && it.ev?.zoneType).map((it, i) => ({ id: `prism-ghost-${i}`, type: it.ev.zoneType, yard: [...it.ev.rect.yard], lat: [...it.ev.rect.lat], ghost: true, fadeAt: it.start + (it.look?.lead ?? 1.2) - 0.1, fadeDur: 0.4 }));
   const slots = frames.length ? { off: frames[0].off.map((q) => q[0]), def: frames[0].def.map((q) => q[0]) } : { off: [], def: [] };
-  return { items, badges, spends, fields, obstacles, last, preroll, slots, hud: meta?.hud || hudOf(view), names: sim?.names || null };
+  return { items, badges, spends, fields, ghosts, obstacles, last, preroll, slots, hud: meta?.hud || hudOf(view), names: sim?.names || null };
 }
 
 /** A fresh field's reveal progress 0..1 at time t (1 when it is not new this play). */
@@ -105,6 +108,7 @@ function revealK(f, t) { return f.fresh ? clamp01((t + f.lead) / ((FIELD_REVEAL[
  * its reveal (the raindrop lands before the strip shows), and one whose clock ran out at the whistle fades out in the end hold.
  */
 export function fieldAlpha(state, id, t) {
+  const g = state?.ghosts?.find((x) => x.id === id); if (g) return 1 - clamp01((t - g.fadeAt) / g.fadeDur);
   const f = state?.fields.find((x) => x.id === id); if (!f) return 1;
   const kin = f.fresh ? clamp01((revealK(f, t) - 0.35) / 0.65) : 1; const out = f.expiring ? 1 - clamp01((t - state.last) / 0.6) : 1;
   return kin * out;

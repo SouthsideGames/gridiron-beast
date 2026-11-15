@@ -4,8 +4,10 @@ import { registerAbility } from './registry.js';
 import { scrimmage, disabled, tier, BODY } from './earth-ice-util.js';
 import { E as $E } from '../../core/english.js';
 
-const PUSH = [5, 5, 5, 5];
-export const LANDSLIDE = Object.freeze({ front: 2, speed: 8 });
+// Owner revision 2026-11-15: front defenders are carried into the gap between the linebackers (median depth 4.5 yd) and the
+// safeties (12-15 yd), a target depth of 8 yards at every mastery tier (formerly 5, the linebacker line).
+export const LANDSLIDE = Object.freeze({ front: 2, speed: 8, depth: 8 });
+const PUSH = [LANDSLIDE.depth, LANDSLIDE.depth, LANDSLIDE.depth, LANDSLIDE.depth];
 const blocked = (ctx, x, y) => ctx.obstacles().some((o) => o.live && (o.kind === 'circle' ? Math.hypot(x - o.x, y - o.y) < o.r + BODY : x > o.x0 - BODY && x < o.x1 + BODY && y > o.y0 - BODY && y < o.y1 + BODY));
 
 export default registerAbility({
@@ -28,7 +30,7 @@ export default registerAbility({
       const adv = Math.min(ls.push, LANDSLIDE.speed * (ctx.t - ls.t0)); const B = ctx.bounds;
       for (const p of ls.targets) {
         if (p.stopped) continue; const d = p.d;
-        const k = d.displaceImmune ? 0 : ctx.resist(d); const want = Math.min(p.x0 + Math.max(0, 5 - p.x0) * (adv / ls.push) * k, B ? B.endLine - 0.3 : Infinity);
+        const k = d.displaceImmune ? 0 : ctx.resist(d); const want = Math.min(p.x0 + Math.max(0, LANDSLIDE.depth - p.x0) * (adv / ls.push) * k, B ? B.endLine - 0.3 : Infinity);
         if (d.x >= want) continue;
         if (blocked(ctx, want, d.y)) { p.stopped = true; continue; }
         d.x = want; if (d.vx < 0) d.vx = 0;

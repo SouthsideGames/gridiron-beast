@@ -16,7 +16,7 @@ import { toPlayFrame, placeRect } from './t8/fields.js';
 import { extraCooldownUnit, contractOf, abilityState, recordExecution, kickHook } from './abilities/registry.js';
 import { runGameHook } from './abilities/game.js';
 import { getPlay, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
-import { prismBreak } from './abilities/prism.js';
+import { prismBreak, prismTargets, targetType } from './abilities/prism.js';
 import * as ST from './special-teams.js';
 import { recordPerformance, mergePerformance } from './t8/performance.js';
 import { showBattery } from './t8/stamina.js';
@@ -334,11 +334,49 @@ export function predominantDefenseLook(plays = []) {
   for (const id of plays) { const n = counts.get(getPlay(id).formation); if (n > count) { best = id; count = n; } }
   return best || 'cover_3';
 }
-export function preparePreChoice(state, teams, looks = {}) {
+/** The Prism Break source point: 12 yards beyond the line in the defense's view (unchanged reading). */
+const prismOrigin = (state) => ({ yard: absYard(state, state.ballOn + 12), lat: absLat(state, state.ballLat || 0) });
+/** Fire one charged Prismara's Prism Break on `pick` (a candidate id) or, without a legal pick, the nearest zone. */
+function firePrism(state, t8, teams, record, m, slot, at, pick = null) {
+  const st = abilityState(t8, m.id, m.species, m.form || `${m.species}:0`, m.mastery || 0);
+  if (st.charges < 3) return false;
+  const zone = prismBreak(t8, prismOrigin(state), opponent(state.possession), teams, pick);
+  if (!zone) return false;
+  st.charges = 0; st.noCharge = true;
+  recordExecution(t8, m.id, m.species);
+  const removed = { kind: zone.kind, fields: zone.fields.map((f) => f.id), types: zone.fields.map((f) => f.type), yard: zone.rect.yard, lat: zone.rect.lat };
+  record.prism.push({ mid: m.id, slot, at, removed });
+  log(state, `${$E('sim.s_prism_break_shatters', { name: m.name, kind: zone.kind === 'base' ? $E('sim.an_enemy_field') : $E('sim.a_hybrid_overlap') })}`, 'ability', { ability: 'LIG-04-F', by: m.id, removed, preChoice: true });
+  return true;
+}
+/** A Prism Break waiting for its coach's target (record.prismChoice) fires now: on the saved pick, else on the nearest zone. */
+function resolvePrismChoice(state, t8, teams, record) {
+  const c = record?.prismChoice; if (!c) return;
+  delete record.prismChoice;
+  const m = Object.values(teams[opponent(state.possession)]?.defense || {}).find((x) => x?.id === c.mid); if (!m) return;
+  const pick = t8.prismPick?.key === record.key && t8.prismPick.mid === c.mid ? t8.prismPick.id : null;
+  firePrism(state, t8, teams, record, m, c.slot, c.at, pick);
+}
+/**
+ * Owner revision 2026-11-15: the player picks which enemy zone Prism Break shatters when there are several. `id` is one of
+ * record.prismChoice.options[].id, or null for the nearest (Auto). Returns the updated pre-choice record, or null if nothing waits.
+ */
+export function choosePrismTarget(state, teams, id = null) {
+  const t8 = state.t8; const record = t8?.preChoice; if (!record?.prismChoice) return null;
+  t8.prismPick = { key: record.key, mid: record.prismChoice.mid, id: id == null ? null : String(id) };
+  resolvePrismChoice(state, t8, teams, record);
+  return record;
+}
+/**
+ * `opts.chooser` (home | away): the club the player coaches. When that club defends with a charged Prismara and there are two or
+ * more legal enemy zones, Prism Break waits in record.prismChoice (the options, nearest first) for choosePrismTarget; any call
+ * without a chooser (the snap itself, simulated games, the AI) resolves a waiting choice on the nearest zone, as before.
+ */
+export function preparePreChoice(state, teams, looks = {}, opts = {}) {
   if (state.phase !== 'scrimmage' || state.finished) return null;
   const t8 = (state.t8 ||= { status: {} });
   const key = `${state.playCount || 0}|${state.possession}|${state.quarter}`;
-  if (t8.preChoice?.key === key) return t8.preChoice;
+  if (t8.preChoice?.key === key) { if (!(opts.chooser && opts.chooser === opponent(state.possession))) resolvePrismChoice(state, t8, teams, t8.preChoice); return t8.preChoice; }
   for (const old of t8.preChoice?.prism || []) if (t8.ability?.[old.mid]) t8.ability[old.mid].noCharge = false;
   const off = teams[state.possession], def = teams[opponent(state.possession)];
   if (!Object.values(off.offense || {}).some((m) => m?.species === 'cerebrix') && !Object.values(def.defense || {}).some((m) => m?.species === 'prism')) { delete t8.preChoice; return null; }
@@ -364,13 +402,15 @@ export function preparePreChoice(state, teams, looks = {}) {
     if (m?.species !== 'prism' || T8S.sitsOutPlay(state, m.id)) continue;
     const st = abilityState(t8, m.id, m.species, m.form || `${m.species}:0`, m.mastery || 0);
     if (st.charges < 3) continue;
-    const zone = prismBreak(t8, { yard: absYard(state, state.ballOn + 12), lat: absLat(state, state.ballLat || 0) }, opponent(state.possession), teams);
-    if (!zone) continue;
-    st.charges = 0; st.noCharge = true;
-    recordExecution(t8, m.id, m.species);
-    const removed = { kind: zone.kind, fields: zone.fields.map((f) => f.id), yard: zone.rect.yard, lat: zone.rect.lat };
-    record.prism.push({ mid: m.id, slot, at: dp.align[slot], removed });
-    log(state, `${$E('sim.s_prism_break_shatters', { name: m.name, kind: zone.kind === 'base' ? $E('sim.an_enemy_field') : $E('sim.a_hybrid_overlap') })}`, 'ability', { ability: 'LIG-04-F', by: m.id, removed, preChoice: true });
+    const pick = t8.prismPick?.key === key && t8.prismPick.mid === m.id ? t8.prismPick.id : t8.prismPick?.sticky ? t8.prismPick.id : null; // sticky: reviewer staging only
+    if (opts.chooser && opts.chooser === opponent(state.possession) && pick == null && !record.prismChoice) {
+      const targets = prismTargets(t8, prismOrigin(state), opponent(state.possession), teams);
+      if (targets.length > 1) {
+        record.prismChoice = { mid: m.id, slot, at: dp.align[slot], options: targets.map((z) => ({ id: z.id, kind: z.kind, type: targetType(z), dist: +z.dist.toFixed(1), yard: [...z.rect.yard], lat: [...z.rect.lat] })) };
+        continue;
+      }
+    }
+    firePrism(state, t8, teams, record, m, slot, dp.align[slot], pick);
   }
   return record;
 }
@@ -404,7 +444,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   // defender's slot stays vacant (no substitute) and he is not a participant (his status and stamina clocks pause)
   const serving = (t8.absences || []).filter((x) => x.serveOn === state.possession); let vacant = null;
   if (serving.length) { const gone = new Set(serving.map((x) => x.mid)); for (const [sl, p] of Object.entries(slots.defense)) if (p?.id && gone.has(p.id)) { delete slots.defense[sl]; (vacant ||= new Set()).add(sl); } t8.absences = t8.absences.filter((x) => !serving.includes(x)); }
-  const view = snapView(state, t8, slots, state.possession === 'home'); const preLines = [...(preSnapLines(state, logMark, slots) || []), ...(t8.preChoice?.prism || []).map((m) => { const [r] = toPlayFrame([{ ...m.removed, id: 'removed', type: 'removed' }], { home: state.possession === 'home', ballOn: state.ballOn, ballLat: state.ballLat || 0 }); return { ability: 'LIG-04-F', by: m.slot, side: 'def', rect: { yard: r.yard, lat: r.lat } }; })]; // Task 8 presentation (data only)
+  const view = snapView(state, t8, slots, state.possession === 'home'); const preLines = [...(preSnapLines(state, logMark, slots) || []), ...(t8.preChoice?.prism || []).map((m) => { const [r] = toPlayFrame([{ ...m.removed, id: 'removed', type: 'removed' }], { home: state.possession === 'home', ballOn: state.ballOn, ballLat: state.ballLat || 0 }); return { ability: 'LIG-04-F', by: m.slot, side: 'def', zoneType: (m.removed.types || [])[0] || null, rect: { yard: r.yard, lat: r.lat } }; })]; // Task 8 presentation (data only)
   const sim = simulatePlay({
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.

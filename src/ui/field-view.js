@@ -98,7 +98,8 @@ export function fieldLayers(o) {
     s += `<g opacity="0.95">${assignmentLines(presnap.play, proj, { limitX: B.endLine - 0.8, offenseAlign: presnap.offensePlay?.align || null, referenceOffense: presnap.offensePlay?.id })}</g>`;
   }
   // Task 8 fields (spec §11): the functional rectangles of the play (sim.fields, play-relative), outlined and tinted by element.
-  if (fields?.length) for (const f of fields) {
+  const drawn = fx?.t8?.ghosts?.length ? [...(fields || []), ...fx.t8.ghosts] : fields; // + a zone Prism Break shatters before the snap (fx/t8-fx.js)
+  if (drawn?.length) for (const f of drawn) {
     const c = FIELD_TINT[f.type] || '#ffffff', x0 = X(ballLat + f.lat[0]), x1 = X(ballLat + f.lat[1]), y0 = Y(ballOn + f.yard[1]), y1 = Y(ballOn + f.yard[0]);
     const fa = fx?.fieldAlpha ? fx.fieldAlpha(f.id, time ?? frame?.t ?? 0) : 1; if (fa <= 0.01) continue; // Task 8 fx hook: a field's reveal / dissolve
     s += `<rect class="t8-field" data-element="${f.type}"${fa < 1 ? ` opacity="${fa.toFixed(2)}"` : ''} x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="${c}" fill-opacity="0.16" stroke="${c}" stroke-width="0.3" stroke-opacity="0.85"><title>${f.type} zone${Number.isFinite(f.remaining) ? ` · ${f.remaining} relevant plays remaining` : ''}</title></rect>`;

@@ -3080,7 +3080,7 @@
     "name": "Landslide",
     "category": "Special action",
     "activation": "First eligible offensive snap each possession",
-    "mechanic": "Once per offensive possession, a stone wall pushes front-aligned defenders to a depth of 5 yards beyond the line of scrimmage.",
+    "mechanic": "Once per offensive possession, a stone wall pushes front-aligned defenders to a depth of 8 yards beyond the line of scrimmage, into the gap between the linebackers and the safeties.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -3095,7 +3095,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Eligible defenders aligned within 2 yards on the defensive side of the line are pushed toward a target depth of 5 yards beyond the original line of scrimmage. This is a target depth, not 5 additional yards for every defender. No Strength contest; explicit displacement resistance, obstacles and field boundaries still apply. The moving wall crumbles when the push completes.",
+        "rule": "Eligible defenders aligned within 2 yards on the defensive side of the line are pushed toward a target depth of 8 yards beyond the original line of scrimmage, the gap between the linebackers and the safeties. This is a target depth, not 8 additional yards for every defender. No Strength contest; explicit displacement resistance, obstacles and field boundaries still apply. The moving wall crumbles when the push completes.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3120,7 +3120,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Target depth is 5 yards at every mastery tier; once-per-possession frequency is unchanged.",
+        "rule": "Target depth is 8 yards at every mastery tier (owner revision 2026-11-15; formerly 5); once-per-possession frequency is unchanged.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       }
     ],

@@ -25,11 +25,11 @@ function pending(state, teams, side, id = 'MET-05-F') {
   state.t8.fields.pending.push(spec); return spec;
 }
 
-test('every football zone is reopened; Fortress Gate and Clash revisions are untouched', () => {
+test('every football zone is reopened; Fortress Gate untouched; only the five owner-revised Clash looks reopen', () => {
   assert.equal(ZONE_IDS.length, 19);
   for (const id of ZONE_IDS) assert.ok(FOOTBALL_REVISION[id] > 0, id);
   assert.equal(FOOTBALL_REVISION['MET-06-F'], undefined);
-  assert.deepEqual(CLASH_REVISION, {});
+  assert.deepEqual(Object.keys(CLASH_REVISION).sort(), ['DRA-01-C', 'DRA-05-C', 'EAR-01-C', 'EAR-05-C', 'EAR-06-C']); // owner art revision 2026-11-15 only
   assert.equal(abilityById('PSY-02-F').name, 'Mirror Rift');
   assert.equal(abilityById('LIG-03-F').category, 'Targeted effect');
 });

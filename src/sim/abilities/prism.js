@@ -48,12 +48,22 @@ export function candidateZones(fields, side, teams = null) {
   }
   return out;
 }
-/** Select and remove one zone for a source at point p; returns the removed zone or null (nothing eligible). Mutates t8.fields.list. */
-export function prismBreak(t8, p, side, teams = null) {
-  const list = t8.fields?.list || []; const cands = candidateZones(list, side, teams); if (!cands.length) return null;
+/** The legal targets for a source at point p, nearest first (distance to the nearest edge, then creation order, then id). */
+export function prismTargets(t8, p, side, teams = null) {
+  const cands = candidateZones(t8.fields?.list || [], side, teams);
   for (const c of cands) c.dist = zoneDistance(p, c.pieces);
-  cands.sort((x, y) => x.dist - y.dist || x.createdAt - y.createdAt || (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
-  const z = cands[0];
+  return cands.sort((x, y) => x.dist - y.dist || x.createdAt - y.createdAt || (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
+}
+/** The zone's display type: a base zone's element, or the two parents of an overlap (e.g. 'Wind + Water'). */
+export const targetType = (z) => z.fields.map((f) => f.type).join(' + ');
+/**
+ * Select and remove one zone for a source at point p; returns the removed zone or null (nothing eligible). Mutates t8.fields.list.
+ * `preferId` (owner revision 2026-11-15): the zone the coach chose among several; when it is no longer a legal target the nearest is
+ * used, exactly as without a choice.
+ */
+export function prismBreak(t8, p, side, teams = null, preferId = null) {
+  const list = t8.fields?.list || []; const cands = prismTargets(t8, p, side, teams); if (!cands.length) return null;
+  const z = (preferId != null && cands.find((c) => c.id === String(preferId))) || cands[0];
   if (z.kind === 'base') t8.fields.list = list.filter((f) => f !== z.fields[0]); // entirely (a hybrid it formed goes with it)
   else for (const f of z.fields) (f.holes ||= []).push({ yard: [...z.rect.yard], lat: [...z.rect.lat] }); // the overlap footprint only
   return z;
@@ -69,7 +79,7 @@ export default registerAbility({
       const zone = prismBreak(g.t8, data.toAbs(data.align || [12, 0]), data.side, data.teams);
       if (!zone) return;
       st.charges = 0; st.noCharge = true; g.executed(self);
-      const removed = { kind: zone.kind, fields: zone.fields.map((f) => f.id), yard: zone.rect.yard, lat: zone.rect.lat };
+      const removed = { kind: zone.kind, fields: zone.fields.map((f) => f.id), types: zone.fields.map((f) => f.type), yard: zone.rect.yard, lat: zone.rect.lat };
       const record = g.t8.preChoice; if (record) (record.prism ||= []).push({ mid: self.mid, slot: data.slot, at: data.align || [12, 0], removed });
       g.log(`${self.input?.name || 'Prismara'} shatters a newly placed enemy zone`, { ability: 'LIG-04-F', by: self.mid, removed, preChoice: true });
     },
