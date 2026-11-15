@@ -107,8 +107,8 @@ export const SPECS = {
     trigger: 'His first punt caught and returnable', resolve: 'The return is canceled at the catch spot', cleanup: 'Once per game: used', resolveFn: kickResult, spent: (s) => s.used === true, cooldown: false },
   terrabull: { targets: 'Pursuers on the wall side', expect: 'A secure reception 5+ yards past the line while ready raises a one-sided stone wall beside him that stops pursuers.',
     trigger: 'Ready and a secure reception 5+ yards past the line', resolve: 'The stone wall rises (and stops a pursuer or cracks)', cleanup: 'The wall goes at the whistle; cooldown, then ready' },
-  titanolith: { targets: 'The defenders aligned in front of the wall', expect: 'Once per possession at the first eligible snap a stone wall erupts across the front and pushes those defenders back.',
-    trigger: 'The first eligible offensive snap of the possession', resolve: 'The wall pushes the front back', cleanup: 'Used for this possession; no second wall on the next snap', spent: (s) => s.usedDrive != null },
+  titanolith: { targets: 'The defenders aligned in front of the wall', expect: 'Once per possession at the first eligible snap a stone wall erupts across the front and pushes those defenders back into the gap between the linebackers and the safeties (8 yards deep).',
+    trigger: 'The first eligible offensive snap of the possession', resolve: 'The wall pushes the front back to 8 yards deep', cleanup: 'Used for this possession; no second wall on the next snap', spent: (s) => s.usedDrive != null },
   // ------------------------------------------------------------------------------------------------------------------- Dark
   shadowkit: { targets: 'Non-Dark monsters on either team leaving the Dark smoke', expect: 'His own pass breakup while ready banks a Dark field; it is created at his next defensive snap.',
     trigger: 'Ready and his own pass breakup', resolve: 'The Shadow Patch is created at his next defensive snap', cleanup: 'The field expires after its lifetime; cooldown, then ready', field: true },
@@ -129,7 +129,7 @@ export const SPECS = {
     trigger: 'His club\'s successful extra point', resolve: 'Quickened applied on the kickoff', cleanup: 'Quickened clears at the whistle; support spent', status: true, spent: (s) => s.pending === false, cooldown: false },
   lumen: { targets: 'The receiver completing his next pass anywhere on the field', expect: 'His next completed pass is Shielded (one fumble save), with no distance gate.',
     trigger: 'Ready and an allied reception inside the radius', resolve: 'Shielded applied to the receiver', cleanup: 'Shielded expires after its duration; cooldown, then ready', status: true },
-  prism: { targets: 'The enemy Wind zone (removed)', expect: 'With the bar full, at his defensive pre-choice point he removes an enemy zone (Prism Break).',
+  prism: { targets: 'The nearest enemy zone: Wind (removed); the farther Fire zone stays', expect: 'With the bar full, at his defensive pre-choice point he removes the nearest enemy zone, or the one his coach picks (Prism Break).',
     trigger: 'The bar full and an enemy zone on the field', resolve: 'The enemy zone is removed', cleanup: 'Bar empty (no charge this play)', gameHook: true, spent: (s) => s.charges === 0,
     resolveFn: ({ A, act }) => { const gone = A.fieldsBefore.list.filter((f) => !f.own && !A.fieldsAfter.list.some((g) => g.id === f.id && g.holes === f.holes)); const line = A.gameLog.find((x) => x.kind === 'ability'); return gone.length || line ? { play: act, t: 0, text: `${line ? line.text : ''}${gone.length ? ` (field ${gone.map((f) => `${f.type} ${f.id}`).join(', ')} removed or cut)` : ''}` } : null; } },
   halofang: { targets: 'Himself (pursuit speed until his tackle)', expect: 'The mastery-required rushing tackles arm Radiant Pursuit; his next defensive snap lights it up until his tackle.',
@@ -223,6 +223,14 @@ export const VARIANTS = {
       scenario: { setup: ECLIPSE, seeds: 4, snaps: 6, how: 'ready; deep aimed passes inside an opposing Eclipse: the powered release cannot start' },
       spec: { blocked: blockedEval({ situation: (p, { slot }) => p.allEvents.find((e) => e.kind === 'field_blocked_start' && e.by === slot), reason: (p, { slot }) => { const e = p.allEvents.find((x) => x.kind === 'field_blocked_start' && x.by === slot); return e ? `${e.text} (the deep release tried to start)` : null; }, ordinary: (p) => p.allEvents.find((e) => ['catch', 'incomplete', 'interception'].includes(e.kind)), kept: (b, a) => a.cd === 0,
         labels: ['A deep aimed pass released while ready', 'Activation blocked by the Eclipse', 'Ordinary outcome: the pass resolves normally', 'Nothing spent: cooldown stays 0'] }) } },
+  ],
+  prism: [ // owner revision 2026-11-15: with several enemy zones the coach picks which one Prism Break shatters
+    { id: 'interaction-chosen-zone', kind: 'interaction', label: 'Interaction: the coach picks the farther Fire zone (the nearer Wind zone stays)',
+      scenario: { setup: (api) => { api.addField({ type: 'Wind', strength: 20, centerLat: 0, width: 12, yardFrom: 40, yardTo: 50, ownerTeam: 'away', ability: 'scenario-wind' });
+        api.addField({ type: 'Fire', strength: 20, centerLat: 18, width: 8, yardFrom: 22, yardTo: 28, ownerTeam: 'away', ability: 'scenario-fire' });
+        api.state.t8.prismPick = { sticky: true, id: 'RV2' }; }, how: 'charged; two enemy zones; the coach\'s pick is the Fire zone (in a match the play-call screen offers Nearest or each zone)' },
+      spec: { targets: 'The enemy Fire zone the coach chose', resolve: 'The chosen Fire zone is removed; the nearer Wind zone remains',
+        resolveFn: ({ A, act }) => { const gone = A.fieldsBefore.list.filter((f) => !A.fieldsAfter.list.some((g) => g.id === f.id)); return gone.length === 1 && gone[0].type === 'Fire' ? { play: act, t: 0, text: `the chosen Fire zone ${gone[0].id} shattered; Wind kept` } : null; } } },
   ],
   mossclaw: [
     { id: 'interaction-cold-snap', kind: 'interaction', label: 'Interaction: an opposing Cold Snap suppresses the vault',

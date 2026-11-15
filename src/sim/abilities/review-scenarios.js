@@ -35,6 +35,9 @@ const DEF_RUN = [['inside_zone', 'run_wall'], ['power_right', 'cover_3'], ['outs
 const DEF_PASS = [['quick_slants', 'cover_3'], ['deep_post', 'cover_2_man'], ['smash', 'man_press'], ['curl_flat', 'cover_4'], ['mesh', 'cover_1'], ['dagger', 'cover_3']];
 const DEF_MIX = [['inside_zone', 'cover_3'], ['quick_slants', 'cover_2_man'], ['power_right', 'run_wall'], ['deep_post', 'cover_3'], ['outside_zone', 'zone_blitz'], ['smash', 'man_press']];
 
+/** Prism Break staging: an enemy Wind zone near the line and an enemy Fire zone farther away and to the side (no overlap). */
+export const PRISM_ZONES = ({ addField }) => { addField({ type: 'Wind', strength: 20, centerLat: 0, width: 12, yardFrom: 40, yardTo: 50, ownerTeam: 'away', ability: 'scenario-wind' });
+  addField({ type: 'Fire', strength: 20, centerLat: 18, width: 8, yardFrom: 22, yardTo: 28, ownerTeam: 'away', ability: 'scenario-fire' }); };
 export const SCENARIOS = {
   // ---------------------------------------------------------------------------------------------------------------- Fire
   emberfox: { unit: 'offense', calls: RUN_O, prime: () => ({ charges: 0, ignited: true }), how: 'ignition primed (3 charges done); a rushing carry at his next snap' },
@@ -107,7 +110,7 @@ export const SCENARIOS = {
   sunwhistle: { unit: 'kick', kick: 'xp', how: 'an extra point (his club\'s try) banks the support, then his own kickoff plays with Quickened coverage' },
   lumen: { unit: 'offense', calls: [['stick', 'cover_3', 'TE'], ['curl_flat', 'cover_3', 'RB'], ['pa_boot', 'cover_3', 'TE'], ['curl_flat', 'cover_3', 'TE'], ['stick', 'cover_3', 'RB']],
     how: 'ready; short released throws (stick, curl-flat, the bootleg) to the TE or RB, so the reception is within his radius of the line-of-scrimmage spot (owner N8a)' },
-  prism: { unit: 'defense', calls: DEF_MIX, prime: () => ({ charges: 3, noCharge: false }), setup: ({ addField }) => addField({ type: 'Wind', strength: 20, centerLat: 0, width: 12, yardFrom: 40, yardTo: 50, ownerTeam: 'away', ability: 'scenario-wind' }),
+  prism: { unit: 'defense', calls: DEF_MIX, prime: () => ({ charges: 3, noCharge: false }), setup: PRISM_ZONES, // owner revision 2026-11-15: two enemy zones, so the replay shows one shattering and the other remaining
     how: 'bar primed full (3 charges); an enemy Wind zone placed on the field: removed at his next defensive pre-choice point' },
   halofang: { unit: 'defense', calls: DEF_RUN, how: 'run plays: the mastery-required rushing tackles arm the next defensive snap (played, nothing primed)' },
   aurelion: { unit: 'offense', calls: [['quick_slants', 'cover_3'], ['curl_flat', 'cover_4'], ['smash', 'cover_2_man']], target: true, setup: ({ state }) => { state.t8.touchdowns = { home: 0, away: 2 }; },

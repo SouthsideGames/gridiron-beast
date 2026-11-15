@@ -13,7 +13,7 @@ export const FOOTBALL_REVISION = Object.freeze({
   "DAR-05-F": 3,
   "DRA-02-F": 1,
   "DRA-03-F": 1,
-  "EAR-06-F": 1,
+  "EAR-06-F": 2, // owner revision 2026-11-15: push to 8 yards (between linebackers and safeties)
   "ELE-02-F": 3,
   "ELE-04-F": 3,
   "FIR-02-F": 3,
@@ -22,7 +22,7 @@ export const FOOTBALL_REVISION = Object.freeze({
   "ICE-04-F": 3,
   "LIG-01-F": 3,
   "LIG-03-F": 1,
-  "LIG-04-F": 1,
+  "LIG-04-F": 2, // owner revision 2026-11-15: the replay shows a zone breaking; the coach picks which zone
   "MET-02-F": 1,
   "MET-03-F": 3,
   "MET-05-F": 3,
@@ -38,4 +38,10 @@ export const FOOTBALL_REVISION = Object.freeze({
 });
 export const CLASH_REVISION = Object.freeze({
   // 'FIR-01-C': 1,
+  // Owner revision 2026-11-15: redrawn art (a real dragon; carved stone).
+  'DRA-01-C': 1,
+  'DRA-05-C': 1,
+  'EAR-01-C': 1,
+  'EAR-05-C': 1,
+  'EAR-06-C': 1,
 });

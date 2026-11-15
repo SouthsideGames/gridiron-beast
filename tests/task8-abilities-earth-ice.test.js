@@ -173,14 +173,14 @@ test('Stone Screen: a reception five or more yards past the line raises a 3 x 0.
 });
 
 // ------------------------------------------------------------------------------------------------ EAR-06-F Landslide (titanolith)
-test('Landslide: the first eligible snap pushes front defenders toward five-yard depth; once per possession', () => {
+test('Landslide: the first eligible snap pushes front defenders toward eight-yard depth (the gap between linebackers and safeties); once per possession', () => {
   for (const seed of range(30)) {
-    const m = seed % 4, push = 5; const t8 = { status: {}, ability: {} };
+    const m = seed % 4, push = 8; const t8 = { status: {}, ability: {} };
     const r = abilityPlay({ seed, off: ['quick_slants', 'inside_zone'][seed % 2], place: { off: { LG: { species: 'titanolith', mastery: m } } }, t8, options: { memory: { drive: 'home@0', used: {} } } });
     const e = evs(r, 'EAR-06-F', 'ability'); assert.equal(e.length, 1); assert.equal(e[0].push, push);
     const f0 = r.frames.find((f) => !f.motion); const fe = frameAt(r, push / 8 + 0.05);
     const front = f0.def.filter((d) => d[1] > 0 && d[1] <= 2).map((d) => d[0]); assert.deepEqual([...e[0].victims].sort(), front.sort());
-    for (const s of front) { const a = posOf(f0, 'def', s), b = posOf(fe, 'def', s); assert.ok(b.x >= 5 - 0.6, `seed ${seed} ${s}: ${a.x} -> ${b.x}`); }
+    for (const s of front) { const a = posOf(f0, 'def', s), b = posOf(fe, 'def', s); assert.ok(b.x >= 8 - 0.6, `seed ${seed} ${s}: ${a.x} -> ${b.x}`); }
     assert.equal(t8.ability.o_LG.usedDrive, 'home@0');
     const r2 = abilityPlay({ seed: seed + 100, place: { off: { LG: { species: 'titanolith', mastery: m } } }, t8, options: { memory: { drive: 'home@0', used: {} } } });
     assert.equal(evs(r2, 'EAR-06-F', 'ability').length, 0, 'spent for this possession');

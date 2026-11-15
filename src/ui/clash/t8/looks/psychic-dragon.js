@@ -11,6 +11,45 @@ const scales = (x, y, size, L, o, k = 1, n = 6, sid = 1) => { let s = ''; for (l
 const crown = (x, y, s, L, o) => poly([[x - s, y + s * 0.5], [x - s, y - s * 0.4], [x - s * 0.5, y], [x, y - s * 0.7], [x + s * 0.5, y], [x + s, y - s * 0.4], [x + s, y + s * 0.5]], L.a, o, ` stroke="${L.b}" stroke-width="1"`) + pixel(x, y - s * 0.1, s * 0.3, L.c, o);
 const wing = (x, y, s, L, o, flip) => `<path d="M ${f2(x)} ${f2(y)} Q ${f2(x + flip * s * 0.7)} ${f2(y - s * 1.1)} ${f2(x + flip * s * 1.5)} ${f2(y - s * 0.9)} Q ${f2(x + flip * s * 1.1)} ${f2(y - s * 0.5)} ${f2(x + flip * s * 1.3)} ${f2(y - s * 0.2)} Q ${f2(x + flip * s * 0.8)} ${f2(y - s * 0.15)} ${f2(x + flip * s * 0.9)} ${f2(y + s * 0.3)} Q ${f2(x + flip * s * 0.4)} ${f2(y + s * 0.05)} ${f2(x)} ${f2(y + s * 0.2)} Z" fill="${L.b}" fill-opacity="0.6" stroke="${L.a}" stroke-width="1.4" opacity="${op(o)}"/>`;
 
+
+// Owner revision 2026-11-15 (DRA-01-C, DRA-05-C): a real dragon. Drawn in local units facing +x and mirrored, never rotated
+// upside down: a horned crimson head with a hinged jaw, teeth, a glowing eye and neck spines; a whole spirit dragon for the pounce.
+const DRK = '#3a1020';
+const gl = (x, y, sc, face, ang, inner, o = 1) => `<g transform="translate(${f2(x)} ${f2(y)}) scale(${f2(sc * face)} ${f2(sc)}) rotate(${f2(ang)})" opacity="${op(o)}">${inner}</g>`;
+const P = (pts, fill, extra = '') => `<polygon points="${pts.map(([x, y]) => `${f2(x)},${f2(y)}`).join(' ')}" fill="${fill}"${extra}/>`;
+/** A dragon head (unit length 1, origin at the back of the skull), jaw 0..1 open. Local units; wrap with gl(). */
+function dragonSkull(L, jaw = 0, eyeGlow = 1) {
+  const st = ` stroke="${DRK}" stroke-width="0.035" stroke-linejoin="round"`; const ja = jaw * 28;
+  let s = P([[-0.05, -0.18], [-0.55, -0.62], [-0.32, -0.38], [-0.7, -0.42], [-0.12, -0.08]], L.a, st); // swept-back horns
+  s += P([[-0.02, -0.16], [-0.58, -0.04], [-0.78, 0.3], [-0.06, 0.18]], L.b, ` fill-opacity="0.9"${st}`); // neck
+  for (const [x0, y0] of [[-0.18, -0.12], [-0.36, -0.08], [-0.54, -0.04]]) s += P([[x0 - 0.07, y0 + 0.02], [x0 - 0.02, y0 - 0.16], [x0 + 0.06, y0]], L.a, st); // neck spines
+  s += `<g transform="rotate(${f2(ja)} 0.18 0.08)">${P([[0.16, 0.06], [0.88, 0.05], [0.84, 0.15], [0.3, 0.24], [0.08, 0.2]], L.b, st)}`; // lower jaw
+  for (const tx of [0.42, 0.58, 0.74]) s += P([[tx - 0.04, 0.06], [tx + 0.04, 0.06], [tx, -0.04]], '#fff8e8');
+  s += '</g>';
+  s += P([[-0.08, -0.22], [0.26, -0.34], [0.56, -0.26], [0.96, -0.16], [1.04, -0.06], [0.98, 0.03], [0.3, 0.05], [0.04, 0.16], [-0.12, 0.04]], L.b, st); // skull + upper jaw
+  s += P([[0.1, -0.25], [0.5, -0.24], [0.94, -0.13], [0.52, -0.16], [0.18, -0.12]], L.a, ' fill-opacity="0.55"'); // brow / snout ridge light
+  for (const tx of [0.46, 0.62, 0.78, 0.92]) s += P([[tx - 0.04, 0.03], [tx + 0.04, 0.03], [tx, 0.13 + jaw * 0.02]], '#fff8e8'); // upper fangs
+  s += `<circle cx="0.4" cy="-0.16" r="0.11" fill="#ffe680" opacity="${op(0.35 * eyeGlow)}"/>` + P([[0.29, -0.18], [0.4, -0.23], [0.51, -0.17], [0.4, -0.11]], '#ffe680', ` stroke="${DRK}" stroke-width="0.025" opacity="${op(eyeGlow)}"`) + P([[0.39, -0.22], [0.42, -0.22], [0.42, -0.12], [0.39, -0.12]], DRK); // glowing slit eye
+  s += `<circle cx="0.94" cy="-0.1" r="0.025" fill="${DRK}"/>`; // nostril
+  return s;
+}
+/** A whole spirit dragon (feet at origin, size 1, facing +x): body, near and far wing, tail, foreclaws, head. */
+function dragonSpirit(L, wingK = 1, jaw = 0.6) {
+  const st = ` stroke="${DRK}" stroke-width="0.025" stroke-linejoin="round"`;
+  const wingPts = (k) => [[-0.05, -0.62], [-0.2, -0.62 - 0.5 * k], [-0.02, -0.66 - 0.62 * k], [0.08, -0.62 - 0.36 * k], [0.18, -0.64 - 0.42 * k], [0.2, -0.6 - 0.14 * k], [0.14, -0.58]];
+  let s = P(wingPts(wingK * 0.85).map(([x, y]) => [x - 0.08, y + 0.02]), L.b, ` fill-opacity="0.55"${st}`); // far wing
+  s += P([[-0.3, -0.5], [-0.62, -0.42], [-0.92, -0.62], [-1.0, -0.56], [-0.66, -0.32], [-0.3, -0.36]], L.b, st) + P([[-0.92, -0.62], [-1.08, -0.72], [-1.0, -0.56]], L.a, st); // tail + tip
+  s += `<ellipse cx="0" cy="-0.46" rx="0.36" ry="0.17" fill="${L.b}" transform="rotate(-12 0 -0.46)"${st}/>` + `<ellipse cx="0.02" cy="-0.4" rx="0.24" ry="0.07" fill="${L.a}" fill-opacity="0.5" transform="rotate(-12 0 -0.4)"/>`; // body + belly
+  for (const [x0, y0] of [[0.2, -0.42], [0.1, -0.36]]) s += path(`M ${f2(x0)} ${f2(y0)} L ${f2(x0 + 0.24)} ${f2(y0 + 0.12)}`, L.b, 0.07) + P([[x0 + 0.22, y0 + 0.08], [x0 + 0.34, y0 + 0.12], [x0 + 0.24, y0 + 0.16]], '#fff8e8'); // foreclaws
+  s += path('M 0.24 -0.56 Q 0.36 -0.72 0.44 -0.76', L.b, 0.14); // neck
+  s += `<g transform="translate(0.38 -0.8) scale(0.36)">${dragonSkull(L, jaw)}</g>`;
+  s += P(wingPts(wingK), L.b, ` fill-opacity="0.85"${st}`) + path(pathOf(wingPts(wingK).slice(1, 6)), L.a, 0.03, 0.9); // near wing + gold edge
+  return s;
+}
+/** Expanding sound crescents in front of a mouth at (x, y), heading `ang` degrees. */
+const roarWaves = (x, y, r, ang, n, k, L, o) => { let s = ''; for (let i = 0; i < n; i++) { const kk = (k + i / n) % 1; const rr = r * (0.25 + kk); s += `<path d="M ${f2(x + rr * 0.55)} ${f2(y - rr)} Q ${f2(x + rr * 1.1)} ${f2(y)} ${f2(x + rr * 0.55)} ${f2(y + rr)}" fill="none" stroke="${i % 2 ? L.a : L.c}" stroke-width="${f2(4 * (1 - kk) + 1)}" stroke-linecap="round" transform="rotate(${f2(ang)} ${f2(x)} ${f2(y)})" opacity="${op(o * (1 - kk))}"/>`; } return s; };
+const clawSlash = (b, r, k, L, o) => { let s = ''; for (let i = -1; i <= 1; i++) { const kk = clamp01(k * 1.6 - (i + 1) * 0.15); if (kk <= 0) continue; const x0 = b[0] - r * 0.6 + i * r * 0.22, y0 = b[1] - r * 0.7; const x1 = x0 + r * 1.0 * kk, y1 = y0 + r * 1.3 * kk; s += path(`M ${f2(x0)} ${f2(y0)} Q ${f2(x0 + r * 0.6 * kk)} ${f2(y0 + r * 0.3 * kk)} ${f2(x1)} ${f2(y1)}`, L.c, 2.6 * (1 - kk * 0.5), o) + path(`M ${f2(x0)} ${f2(y0)} Q ${f2(x0 + r * 0.6 * kk)} ${f2(y0 + r * 0.3 * kk)} ${f2(x1)} ${f2(y1)}`, L.b, 1, o * 0.8); } return s; };
+
 export const PSYCHIC_DRAGON = {
   // PSY-01-C Mind Mend: a glowing orb leaves the source's chest; the source's HP falls, then the teammate's rises. No new status badge.
   'PSY-01-C': { id: 'PSY-01-C', name: $t('fx.mind_mend'), element: 'Psychic', dur: 1.2, lead: 0.3, move: true, na: ['persistence'], cue: () => $t('fx.mind_mend'),
@@ -51,7 +90,13 @@ export const PSYCHIC_DRAGON = {
 
   // DRA-01-C Dragon Pounce: the claws plant, a bright outline gathers, then the heavy dragon leap; the HP cost shows at launch.
   'DRA-01-C': { id: 'DRA-01-C', name: $t('fx.dragon_pounce'), element: 'Dragon', dur: 1.1, lead: 0.4, move: true, shake: true, cue: () => $t('fx.dragon_pounce_2'),
-    o: (c) => { const g = c.tgt; if (!g) return ''; const a = feet(c), b = [g.x + (c.cx > g.x ? 1 : -1) * g.size * 0.3, g.y]; if (c.age < 0) { const kk = 1 + c.age / 0.4; let s = outline(c.cx, c.cy, c.size * (0.95 + 0.1 * kk), c.L, kk * 0.9, '1 0', 0.25, 2.4); for (const sx of [-1, 1]) s += line(c.cx + sx * c.size * 0.25, c.cy, c.cx + sx * c.size * 0.3, c.cy + 5 * kk, c.L.a, 2, kk); return s; } const k = ease(clamp01(c.age / 0.45)); const p = along(a, b, k, c.size * 0.9); let s = outline(p[0], p[1], c.size, c.L, 0.95 * (1 - c.k * 0.6), '1 0', 0.55, 2.4) + dragonHead(p[0] + (g.x > c.cx ? 1 : -1) * c.size * 0.32, p[1] - c.size * 0.72, c.size * 0.22, c.L.a, g.x > c.cx ? 0 : 180, 0.95 * (1 - c.k * 0.6)); if (k >= 1) s += burst([b[0], b[1] - g.size * 0.4], g.size * 0.6, c.L, clamp01((c.age - 0.45) / 0.5), c.n(7), c.sid) + groundRing(b[0], b[1] + 2, g.size * 0.5 * clamp01((c.age - 0.45) / 0.4), c.L.a, 2, 1 - clamp01((c.age - 0.45) / 0.5)); return s; },
+    o: (c) => { const g = c.tgt; if (!g) return ''; const face = g.x >= c.cx ? 1 : -1; const a = feet(c), b = [g.x - face * g.size * 0.35, g.y];
+      if (c.age < 0) { const kk = 1 + c.age / 0.4; let s = gl(c.cx, c.cy, c.size * (0.75 + 0.1 * kk), face, 0, dragonSpirit(c.L, 0.25 + kk * 0.5, kk * 0.4), kk * 0.55) + groundRing(c.cx, c.cy + 2, c.size * 0.45 * kk, c.L.a, 2, kk * 0.8); for (const sx of [-1, 1]) s += line(c.cx + sx * c.size * 0.25, c.cy, c.cx + sx * c.size * 0.32, c.cy + 5 * kk, c.L.a, 2, kk); return s; }
+      const k = ease(clamp01(c.age / 0.45)); const p = along(a, b, k, c.size * 0.9); const tilt = k < 1 ? -18 + k * 30 : 12; const fade = 0.95 * (1 - clamp01((c.age - 0.5) / 0.5));
+      let s = ''; for (let i = 1; i <= 3 && k < 1; i++) { const q = along(a, b, Math.max(0, k - i * 0.09), c.size * 0.9); s += gl(q[0], q[1], c.size * 0.85, face, tilt, dragonSpirit(c.L, 1, 0.7), 0.22 / i); } // afterimages
+      s += gl(p[0], p[1], c.size * 0.85, face, tilt, dragonSpirit(c.L, k < 1 ? 1 : 0.6, 0.8), fade);
+      if (k >= 1) { const kk = clamp01((c.age - 0.45) / 0.5); s += clawSlash([g.x, g.y - g.size * 0.35], g.size * 0.6, kk * 1.4, c.L, 1 - kk) + burst([g.x, g.y - g.size * 0.45], g.size * 0.6, c.L, kk, c.n(7), c.sid) + groundRing(b[0], b[1] + 2, g.size * 0.6 * kk, c.L.a, 2, 1 - kk); }
+      return s; },
     sub: { hp_cost: { dur: 0.8, impact: true, o: (c) => label(c.cx, c.top - 2.8 * c.hu - c.k * 8, 1.3 * c.hu, '#ff6b6b', `−${c.ev.amount} HP`, 1 - c.k * c.k) },
       damage: { dur: 0.5, impact: true, o: (c) => (c.tgt ? sparks(c.tgt.x, c.tgt.y - c.tgt.size * 0.5, c.tgt.size * 0.5, c.n(6), c.sid, c.L, 1 - c.k, c.t) : '') } } },
   // DRA-02-C Coil Renewal: three segments fill beside the icon with each qualifying attack; the triggering impact sends green-gold energy into a coil around the chosen ally.
@@ -72,7 +117,16 @@ export const PSYCHIC_DRAGON = {
       damage: { dur: 0.5, impact: true, o: (c) => (c.tgt ? sparks(c.tgt.x, c.tgt.y - c.tgt.size * 0.5, c.tgt.size * 0.5, c.n(6), c.sid, c.L, 1 - c.k, c.t) : '') } } },
   // DRA-05-C Dragon Roar: a focused dragon-shaped sound wave strikes the active target; the standard cracked-fist (Weakened) badge on acceptance.
   'DRA-05-C': { id: 'DRA-05-C', name: $t('fx.dragon_roar'), element: 'Dragon', kind: 'trigger', stage: 'trigger', dur: 1.0, lead: 0.25, move: true, na: ['persistence'], cue: () => $t('fx.dragon_roar_2'),
-    o: (c) => { const g = c.tgt; if (!g) return ''; const a = chest(c), b = chest(g); const ang = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / PI; if (c.age < 0) { const kk = 1 + c.age / 0.25; return ring(a[0], a[1], c.size * 0.2 * kk, c.L.a, 1.4, kk); } const k = ease(clamp01(c.age / 0.45)); const p = along(a, b, k); let s = dragonHead(p[0], p[1], c.size * 0.3 * (0.6 + k * 0.6), c.L.a, ang, 1 - c.k * 0.5); for (let i = 1; i <= c.n(3); i++) { const q = along(a, p, 1 - i * 0.2); s += `<path d="M ${f2(q[0])} ${f2(q[1] - c.size * 0.22)} A ${f2(c.size * 0.22)} ${f2(c.size * 0.22)} 0 0 1 ${f2(q[0])} ${f2(q[1] + c.size * 0.22)}" fill="none" stroke="${c.L.b}" stroke-width="1.6" transform="rotate(${f2(ang)} ${f2(q[0])} ${f2(q[1])})" opacity="${op((1 - c.k) * (1 - i * 0.25))}"/>`; } if (k >= 1) s += burst(b, g.size * 0.5, c.L, clamp01((c.age - 0.45) / 0.5), c.n(6), c.sid); return s; },
+    o: (c) => { const g = c.tgt; if (!g) return ''; const a = chest(c), b = chest(g); const face = b[0] >= a[0] ? 1 : -1; const tilt = Math.max(-20, Math.min(20, Math.atan2(b[1] - a[1], Math.abs(b[0] - a[0])) * 180 / PI));
+      const hs = c.size * 0.72; const home = [a[0] - face * c.size * 0.1, a[1] - c.size * 0.62];
+      if (c.age < 0) { const kk = 1 + c.age / 0.25; return gl(home[0], home[1], hs * (0.6 + 0.4 * kk), face, tilt * 0.5, dragonSkull(c.L, kk * 0.35), kk * 0.9) + ring(a[0], a[1], c.size * 0.25 * kk, c.L.a, 1.4, kk * 0.6); }
+      const k = ease(clamp01(c.age / 0.45)); const lunge = along(home, along(a, b, 0.45), k * 0.6); const fade = 1 - clamp01((c.age - 0.55) / 0.45);
+      const mouth = [lunge[0] + face * hs * 1.0, lunge[1] + hs * 0.08]; const ang = (face === 1 ? 0 : 180) + face * tilt;
+      let s = gl(lunge[0], lunge[1], hs, face, tilt, dragonSkull(c.L, 1, 1), fade);
+      const reach = dist(mouth, b); s += roarWaves(mouth[0], mouth[1], Math.max(c.size * 0.35, reach * k * 0.55), ang, c.n(4), (c.t * 2.2) % 1, c.L, fade * 0.95);
+      { const e = along(mouth, b, k); const n = [-(e[1] - mouth[1]), e[0] - mouth[0]]; const nl = Math.hypot(n[0], n[1]) || 1; const w = g.size * 0.45 * k; s = `<polygon points="${f2(mouth[0])},${f2(mouth[1])} ${f2(e[0] + n[0] / nl * w)},${f2(e[1] + n[1] / nl * w)} ${f2(e[0] - n[0] / nl * w)},${f2(e[1] - n[1] / nl * w)}" fill="${c.L.a}" opacity="${op(fade * 0.22)}"/>` + s; }
+      if (k >= 1) { const kk = clamp01((c.age - 0.45) / 0.5); s += burst(b, g.size * 0.55, c.L, kk, c.n(6), c.sid) + ring(b[0], b[1], g.size * (0.3 + kk * 0.6), c.L.c, 2.4 * (1 - kk), 1 - kk); }
+      return s; },
     sub: { damage: { dur: 0.5, impact: true, o: (c) => (c.tgt ? ring(c.tgt.x, c.tgt.y - c.tgt.size * 0.5, c.tgt.size * 0.25 * (1 + c.k * 2), c.L.a, 1.4, 1 - c.k) : '') },
       status: { dur: 0.5, impact: true, o: (c) => (c.tgt ? sparks(c.tgt.x, c.tgt.y - c.tgt.size - 1.5 * c.hu, 2 * c.hu, c.n(3), c.sid, c.L, 1 - c.k, c.t) : '') } } },
   // DRA-06-C Sovereign Balance: a gold crown for the dragon-silhouette attack (high HP), a silver crown for the spectral-wing protection (low HP); the standard Guarded badge only.

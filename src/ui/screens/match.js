@@ -42,6 +42,20 @@ import { t as $t, lineText } from '../../text/index.js';
 /** Start Sunday's game from the settled pregame Clash (set by registerMatchScreens; the battle screen calls it). */
 export let startSundayGame = null;
 
+// Owner revision 2026-11-15 (Prism Break): when the player's charged Prismara faces two or more enemy zones, the play-call screen
+// lists them (nearest first) and outlines them on the field; nothing is removed until the player picks or snaps (Auto = nearest).
+function prismPickerHtml(s) {
+  const c = s.t8?.preChoice?.prismChoice; if (!c?.options?.length) return '';
+  const btn = (id, label, primary) => `<button class="btn small ${primary ? 'primary' : 'ghost'}" data-action="prismpick" data-choice="${esc(id)}" style="min-height:44px">${esc(label)}</button>`;
+  return `<div class="panel tight zone-planner" role="region" aria-label="Prism Break target"><b>◇ Prism Break is ready</b><p class="dim" style="font-size:12px;margin:4px 0">Choose which enemy zone to shatter. Snapping without a choice breaks the nearest one.</p><div class="row" style="gap:5px;flex-wrap:wrap">${btn('auto', `Nearest (Auto) · ${c.options[0].type}`, true)}${c.options.map((o, i) => btn(o.id, `${o.type}${o.kind === 'overlap' ? ' overlap' : ' zone'} · ${o.dist} yd${i === 0 ? ' · nearest' : ''}`, false)).join('')}</div></div>`;
+}
+function prismOverlay(s, camera) {
+  const c = s.t8?.preChoice?.prismChoice; if (!c?.options?.length) return '';
+  const dir = s.possession === 'home' ? 1 : -1;
+  return c.options.map((o, i) => { const ys = o.yard.map((y) => (dir === 1 ? y : 100 - y)), ls = o.lat.map((y) => dir * y);
+    const x = Math.min(...ls), y = camera.top - Math.max(...ys), w = Math.max(...ls) - x, h = Math.max(...ys) - Math.min(...ys); const col = i === 0 ? '#ffffff' : '#c9f0ff';
+    return `<g data-action="prismpick" data-choice="${esc(o.id)}" role="button" tabindex="0" aria-label="${esc(`Shatter the ${o.type} zone`)}" style="cursor:pointer"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}" fill-opacity="0.08" stroke="${col}" stroke-width="0.32" stroke-dasharray="0.6 0.4"/><text x="${x + w / 2}" y="${y + h / 2 + 0.5}" text-anchor="middle" fill="${col}" stroke="#14281f" stroke-width="0.12" paint-order="stroke" font-size="1.4" font-weight="bold" pointer-events="none">◇ ${esc(o.type)}</text></g>`; }).join('');
+}
 export function registerMatchScreens(Router, app) {
   // ------------------------------------------------------------ pregame
   Router.registerScreen('pregame', {
@@ -152,6 +166,7 @@ export function registerMatchScreens(Router, app) {
         pick: (el) => { const G = f.game; G.selected[el.dataset.side] = el.dataset.id; app.save(); refresh(f); },
         zonepick: (el) => { setZoneChoice(f.game.state, el.dataset.zone, el.dataset.choice); f.game.zoneFocus = el.dataset.zone; app.save(); refresh(f); },
         zonefocus: (el) => { f.game.zoneFocus = el.dataset.zone; refresh(f); },
+        prismpick: (el) => { R.choosePrismTarget(f.game.state, teamsFor(f), el.dataset.choice === 'auto' ? null : el.dataset.choice); app.save(); refresh(f); }, // Prism Break: the player's target zone
         snap: () => act(f, {}),
         go: () => act(f, { fourthDown: 'go' }),
         punt: () => act(f, { fourthDown: 'punt' }),
@@ -217,6 +232,7 @@ export function registerMatchScreens(Router, app) {
       const plan = plans.find((p) => p.key === G.zoneFocus) || plans[0];
       field.underlay = zonePlannerOverlay(plan, s, cameraFor(s.ballOn), { reducedMotion: !!f.settings.reducedMotion });
     }
+    if (!anim && s.phase === 'scrimmage' && s.possession !== me) field.underlay = (field.underlay || '') + prismOverlay(s, cameraFor(s.ballOn));
     if (presnapNow) presnapNow.field = field;
     // Task 8 (I4): who stands where in the drawn formation (the players' paint order: defense, then offense), for the inspect sheet
     inspectMap = null; inspectForm = null;
@@ -355,7 +371,7 @@ export function registerMatchScreens(Router, app) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
     if (s.phase !== 'scrimmage' || s.finished) return { presnap: null };
     const previousChoice = s.t8?.preChoice;
-    const preChoice = anim ? null : R.preparePreChoice(s, teams);
+    const preChoice = anim ? null : R.preparePreChoice(s, teams, {}, { chooser: me }); // a charged Prism Break with several enemy zones waits for the player's pick
     if (preChoice && preChoice !== previousChoice && (preChoice.foresight.length || preChoice.prism.length)) app.save();
     const ai = aiCall(f, teams, them);
     if (s.possession === me) {
@@ -467,7 +483,7 @@ export function registerMatchScreens(Router, app) {
       ${G.mode === 'key' ? `<button class="btn small good" data-action="keymoment">${$t('match.sim_to_key_moment')}</button>` : ''}</div>`;
     const clock = f.settings.liveClock && s.phase === 'scrimmage' ? `<div class="playclock">${$t('match.play_clock')} <b id="pc">40</b><div class="bar"><i id="pcbar" style="width:100%"></i></div></div>` : '';
     const plans = selected ? zonePlans(s, teams, me, myBall ? selected : look.presnap.offensePlay.id, myBall ? look.presnap.defensePlay.id : selected) : [];
-    return `${zonePlannerHtml(plans, { focus: G.zoneFocus })}<div class="match-actions">${primary}${secondary}${clock}</div>
+    return `${myBall ? '' : prismPickerHtml(s)}${zonePlannerHtml(plans, { focus: G.zoneFocus })}<div class="match-actions">${primary}${secondary}${clock}</div>
       <div class="muted" style="font-size:12px;margin:4px 0">${$t('match.coachs_suggestion_opponents_call_is_hidden', { myBall: myBall ? $t('match.your_offensive_plays') : $t('match.your_defensive_plays') })}${teams[me].blockedPlays?.length ? ` · <span style="color:var(--bad)">${$t('match.plays_unavailable_no_legal', { n: teams[me].blockedPlays.length })} ${teams[me].blockedSlots.join('/')})</span>` : ''}</div>
       ${cards(plan, side, selected, suggestion)}`;
   }
