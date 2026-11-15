@@ -1,6 +1,7 @@
 // Shared football zone policy. UI previews, reviewer scenarios, AI and the snap all
 // use these legal options; no opponent assignments or random simulation draws.
 import { placeRect, RECIPES, effectsCore, contains } from './fields.js';
+import { createRng } from '../../core/rng.js';
 import { ABILITIES } from '../../data/beast-dex.js';
 
 export const ZONE_IDS = Object.freeze(ABILITIES.filter((a) => a.mode === 'football' && a.category === 'Zone').map((a) => a.id));
@@ -86,7 +87,7 @@ export function zoneOptions({ state, spec, base, ownPlay = null, fields = state.
   return out;
 }
 /** A deterministic coach choice, using only the same public/legal options. */
-export function autoZoneOption(options, spec, ownPlay = null) {
+export function autoZoneOption(options, spec, ownPlay = null, state = null) {
   if (!options.length) return null;
   const jobs = Object.values(ownPlay?.assignments || {});
   const points = jobs.flatMap((j) => j.points?.length ? j.points.slice(1) : j.at ? [j.at] : []);
@@ -97,12 +98,16 @@ export function autoZoneOption(options, spec, ownPlay = null) {
     const lane = points.reduce((n, p) => n + p[1], 0) / points.length;
     preferred = lane < -4 ? 'left' : lane > 4 ? 'right' : 'middle';
   }
-  return options.find((o) => o.id.startsWith('overlap:')) || options.find((o) => o.id === preferred) || options[0];
+  // Stable for this snap/save, varied across snaps, games and creators. This
+  // private stream never advances the game dice; previews cannot reroll it.
+  let seed = 2166136261;
+  for (const ch of `${state?.seed || 0}|${state ? snapKey(state) : 0}|${zoneKey(spec)}|${ownPlay?.id || ''}`) { seed ^= ch.charCodeAt(0); seed = Math.imul(seed, 16777619); }
+  return createRng(seed >>> 0).weighted(options.map((o) => [o, 1 + (o.id === preferred ? 1 : 0) + (o.overlaps?.length ? 1.5 : 0)]));
 }
 export function selectedZoneOption(state, spec, options, ownPlay = null) {
   const saved = state.t8?.zoneChoices;
   const id = saved?.key === snapKey(state) ? saved.picks?.[zoneKey(spec)] : null;
-  return options.find((o) => o.id === id) || autoZoneOption(options, spec, ownPlay);
+  return options.find((o) => o.id === id) || autoZoneOption(options, spec, ownPlay, state);
 }
 export function setZoneChoice(state, key, choice) {
   const t8 = (state.t8 ||= { status: {} });

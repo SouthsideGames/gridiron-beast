@@ -733,7 +733,7 @@ export function registerMatchScreens(Router, app) {
     const mine = s.possession === G.playerSide;
     const calls = look.myPlay ? (mine ? { offense: look.myPlay, defense: look.aiDefense } : { offense: look.aiOffense, defense: look.myPlay }) : null;
     const drawn = look.presnap.offensePlay?.id && look.presnap.defensePlay?.id ? { offense: look.presnap.offensePlay.id, defense: look.presnap.defensePlay.id } : null; // the formations on screen before a play is chosen
-    const list = presnapFields(s, teams, calls, { hideDefenseAlign: mine, formation: drawn });
+    const list = presnapFields(s, teams, calls, { hideDefenseAlign: mine, formation: drawn, viewerSide: G.playerSide });
     const lookup = fxLookup(f, s.possession); const animate = !f.settings.reducedMotion; const dLook = look.presnap.defensePlay;
     const choiceKey = `${s.seed}|${s.t8?.preChoice?.key}`;
     if (choiceClock.key !== choiceKey) choiceClock = { key: choiceKey, start: performance.now() };

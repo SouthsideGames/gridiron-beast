@@ -9,7 +9,7 @@ import { simulatePlay, engagementAttrs } from '../src/sim/engine.js';
 import { PLAYS } from '../src/data/playbook.js';
 import { FIELD } from '../src/core/field.js';
 import { lineup } from './tools/lineup.js';
-import * as R from '../src/sim/rules.js';
+import * as R from './helpers/zone-rules.js';
 import * as T8F from '../src/sim/t8/field-runtime.js';
 import * as T8K from '../src/sim/t8/stamina-runtime.js';
 import * as Fr from '../src/core/fraction.js';

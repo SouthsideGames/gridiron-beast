@@ -52,7 +52,7 @@ export function kickPlay(ev, lookup, meta = null) {
  * the field); a banked field whose place may follow the calls is never guessed.
  * Returns [{ field, isNew, pending }]: `isNew` fields get a reveal.
  */
-export function presnapFields(state, teams, calls = null, { hideDefenseAlign = false, formation = null } = {}) {
+export function presnapFields(state, teams, calls = null, { hideDefenseAlign = false, formation = null, viewerSide = null } = {}) {
   if (!state || state.phase !== 'scrimmage' || state.finished) return [];
   const frame = { home: state.possession === 'home', ballOn: state.ballOn, ballLat: state.ballLat || 0 };
   const strip = ({ fresh, inSnap, callDependent, ...f }) => f; // eslint-disable-line no-unused-vars
@@ -62,6 +62,8 @@ export function presnapFields(state, teams, calls = null, { hideDefenseAlign = f
   if (using) {
     let banked = [];
     try { banked = previewPendingFields(state, teams, using.offense, using.defense, { inSnap: true }); } catch { banked = []; } // presentation never breaks the screen
+    // Already-created terrain remains public. Unspawned enemy placements are private.
+    if (viewerSide) banked = banked.filter((f) => f.ownerTeam === viewerSide);
     banked = banked.filter((f) => !f.callDependent && (chosen || f.inSnap));
     if (hideDefenseAlign) banked = banked.filter((f) => !f.usesDefenseAlign);
     const seq = state.t8?.fields?.seq || 0;

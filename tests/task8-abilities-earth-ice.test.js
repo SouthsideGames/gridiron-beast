@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { abilityPlay, evs } from './tools/ability-sim.js';
 import { lineup } from './tools/lineup.js';
-import * as R from '../src/sim/rules.js';
+import * as R from './helpers/zone-rules.js';
 import { OFFENSE_IDS, DEFENSE_IDS } from '../src/data/playbook.js';
 import { contractOf, registeredFamilies } from '../src/sim/abilities/registry.js';
 import '../src/sim/abilities/index.js';

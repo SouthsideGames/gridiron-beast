@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { simulatePlay } from '../src/sim/engine.js';
-import * as R from '../src/sim/rules.js';
+import * as R from './helpers/zone-rules.js';
 import { PLAYS, OFFENSE_IDS, DEFENSE_IDS } from '../src/data/playbook.js';
 import { lineup } from './tools/lineup.js';
 import { contractOf, hasContract } from '../src/sim/abilities/registry.js';

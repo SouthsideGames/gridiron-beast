@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import { simulatePlay } from '../src/sim/engine.js';
 import { PLAYS, OFFENSE_IDS } from '../src/data/playbook.js';
 import { lineup } from './tools/lineup.js';
-import * as R from '../src/sim/rules.js';
+import * as R from './helpers/zone-rules.js';
 import { contractOf } from '../src/sim/abilities/registry.js';
 import { pushSafely, BODY } from '../src/sim/abilities/common.js';
 import { createFieldPlay } from '../src/sim/t8/field-effects.js';
