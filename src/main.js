@@ -1,3 +1,4 @@
+import { syncDexReviews, onDexReviews } from './dex/reviews.js';
 import { registerBeastDexReviewer } from './ui/screens/beast-dex-reviewer.js';
 import { music, musicForScreen, installAudioLifecycle } from './audio/music.js';
 import { routeDetailAudio } from './audio/detail-audio.js';
@@ -265,7 +266,8 @@ export function start() {
   cloudLoadHof().then((remote) => { if (remote) mergeHof(remote); if (hallOfFame().length) cloudSaveHof(hallOfFame()); });
   boot();
   // Developer reviews (GDD §23.7): pull both review sets, then announce anything new once.
-  Promise.all([syncReviews('ability'), syncReviews('play'), syncReviews('fbability'), syncReviews('clashability')]).finally(() => setTimeout(() => { const msg = freshAnnouncement(app.settings); if (msg) toast(msg, 'good', 5000); Router.render(); }, 1200));
+  Promise.all([syncDexReviews(), syncReviews('ability'), syncReviews('play'), syncReviews('fbability'), syncReviews('clashability')]).finally(() => setTimeout(() => { const msg = freshAnnouncement(app.settings); if (msg) toast(msg, 'good', 5000); Router.render(); }, 1200));
+  onDexReviews(() => { const scr = Router.currentScreen()?.name; if (scr === 'menu' || scr === 'developer' || scr === 'more') Router.render(); });
   onReviews(() => { const scr = Router.currentScreen()?.name; if (scr === 'menu' || scr === 'developer' || scr === 'more') Router.render(); });
   // Leaving the page: the queued save starts at once, and a copy of what it still has to write goes to the unload journal
   // (localStorage, synchronous) in case the page is gone before the database commits.
