@@ -146,7 +146,7 @@ export function registerMenuScreens(Router, app) {
       const q = reviewQueue();
       return `<p class="muted">${t('menu.inspection_tools_that_work_without_a')}</p>
         ${q.plays.length ? `<div class="panel tight dev-queue">${t('menu.b_waiting_for_your_review_b')}<div class="muted" style="margin-top:2px">${t('menu.new_or_changed_since_you_last', { queue: esc(queueText(q)) })}</div></div>` : ''}
-        ${[q.football, q.clash].filter((r) => r.outstanding).map((r) => `<div class="panel tight dev-queue" data-review-notice="${r.ns}"><button class="dev-notice" data-action="reviewer" data-ns="${r.ns}" data-status="outstanding"><b>🔔 ${esc(abilityQueueText(r))}</b><span class="muted" style="display:block;margin-top:2px">${t('menu.of_approved_tap_to_open_the', { n: r.approved.length, total: r.total, title: esc(r.title) })}</span></button>
+        ${[q.football, q.clash, q.beastdex].filter((r) => r.outstanding).map((r) => `<div class="panel tight dev-queue" data-review-notice="${r.ns}"><button class="dev-notice" data-action="reviewer" data-ns="${r.ns}" data-status="outstanding"><b>🔔 ${esc(abilityQueueText(r))}</b><span class="muted" style="display:block;margin-top:2px">${t('menu.of_approved_tap_to_open_the', { n: r.approved.length, total: r.total, title: esc(r.title) })}</span></button>
           ${r.revision.length ? `<div class="chips" style="margin-top:6px">${r.revision.slice(0, 8).map((x) => `<button class="chip warn" data-action="reviewer" data-ns="${r.ns}" data-status="revision" data-id="${esc(x.id)}">✎ ${esc(x.name)}</button>`).join('')}${r.revision.length > 8 ? `<span class="dim">${t('menu.more', { n: r.revision.length - 8 })}</span>` : ''}</div>` : ''}</div>`).join('')}
         ${q.total ? '' : `<div class="panel tight dim">${t('menu.nothing_waiting_for_review')}</div>`}
         <div class="stack">
@@ -154,6 +154,7 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="go" data-screen="practice">${t('menu.practice_field')}</button>
         <button class="btn block" data-action="go" data-screen="ai-lab">${t('menu.ai_testing_lab_qb_decisions')}</button>
         <button class="btn block" data-action="go" data-screen="attr-lab">${t('menu.attribute_testing_lab')}</button>
+        <button class="btn block badge-host" data-action="go" data-screen="beast-dex-reviewer">Beast Dex Reviewer${devBadge(app.settings, q.beastdex.outstanding)}</button>
         <button class="btn block" data-action="go" data-screen="monster-cry-reviewer">Monster Cry Reviewer</button>
         <button class="btn block" data-action="go" data-screen="evo-preview">${t('menu.preview_evolution')}</button>
         <button class="btn block badge-host" data-action="go" data-screen="ability-reviewer">${t('menu.ability_reviewer')}${devBadge(app.settings, q.football.outstanding)}</button>
@@ -177,7 +178,7 @@ export function registerMenuScreens(Router, app) {
         devqbreads: (el) => { if (app.f) { app.f.settings.devQbReads = el.checked; app.save(); } else app.defaultSettings.devQbReads = el.checked; },
         qbreads: (el) => { if (app.f) { app.f.settings.qbReads = el.checked; app.save(); } else app.defaultSettings.qbReads = el.checked; },
         'dev-ceremony': () => Router.go('ceremony', { preview: true }), go: (el) => Router.go(el.dataset.screen),
-        reviewer: (el) => { const r = reviewQueue()[el.dataset.ns === 'clashability' ? 'clash' : 'football']; focusReviewer(r.ns, { status: el.dataset.status || 'outstanding', id: el.dataset.id || null }); Router.go(r.screen); }, // a review notification opens its own reviewer, on what is outstanding
+        reviewer: (el) => { const r = reviewQueue()[el.dataset.ns === 'beastdex' ? 'beastdex' : el.dataset.ns === 'clashability' ? 'clash' : 'football']; focusReviewer(r.ns, { status: el.dataset.status || 'outstanding', id: el.dataset.id || null }); Router.go(r.screen); }, // a review notification opens its own reviewer, on what is outstanding
         dexall: () => Router.go('dex', { all: true }), dexreset: async () => { if (await confirmSheet(t('menu.wipe_every_species_you_have_discovered'), { title: t('menu.reset_beast_dex'), okLabel: t('menu.reset'), danger: true })) { resetDex(); toast(t('menu.beast_dex_reset')); } } }); },
   });
 

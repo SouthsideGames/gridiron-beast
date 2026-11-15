@@ -85,7 +85,7 @@ test('the ceremony: nominees in name order with no votes shown, one reveal per i
   // nobody was eligible
   const early = offseason({ year: 3 }); const ce = hallCeremony(early, 3); assert.deepEqual([ce.nominees.length, ce.inductees.length], [0, 0]);
   assert.deepEqual(ceremonyStages(ce), ['opening', 'none', 'class']); assert.equal(hallCeremonyDue(early), true, 'the day is still held');
-  assert.match(screens.get('hofceremony').render({ f: early, params: { year: 3, step: 1 } }), /No retired monster was eligible this year/);
+  assert.match(screens.get('hofceremony').render({ f: early, params: { year: 3, step: 1 } }), /No retired monster met the requirements this year/); // plain-language wording (2026-11-14) of the no-eligible case
   assert.equal(hallNews(early, 3)[0].text, 'Hall of Fame Day: no retired monster was eligible this year');
   assert.match(screens.get('hofceremony').render({ f: early, params: { year: 44 } }), /No Hall of Fame election was held/);
   // reduced motion is carried by the screen

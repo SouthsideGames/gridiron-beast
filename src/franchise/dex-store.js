@@ -10,7 +10,7 @@ const storage = () => { try { return globalThis.localStorage || null; } catch { 
 let dex = null; // { seen: {id: stamp}, signed: {id: stamp}, franchises: n, updatedAt }
 let mirror = null; // (dex) => void, set by the cloud layer
 
-const blank = () => ({ seen: {}, signed: {}, forms: {}, franchises: 0, updatedAt: 0 });
+const blank = () => ({ seen: {}, signed: {}, forms: {}, knowledge: {}, franchises: 0, updatedAt: 0 });
 function load() {
   if (dex) return dex;
   const s = storage();
@@ -35,10 +35,16 @@ export function dexRecordGlobal(id, how, stamp) {
   return changed;
 }
 /** Merge another dex (a franchise's, or the cloud copy) into this one; earliest stamps win. */
-export function mergeDex(other) {
+/** The shared Dex's key for one franchise game. Franchise saves keep the bare activity id ("fb:…"); the shared Dex adds the franchise. */
+export const knowledgeEventId = (franchise, act) => (String(act).startsWith('fb:') ? `${franchise}:${act}` : String(act));
+/** Merge another Dex (cloud copy, or a franchise's own `f.dex` with `{ franchise }`) into this device's Dex by union. A franchise's bare
+ *  game ids are only counted when the franchise is named; without it they cannot be told apart from another franchise's games. */
+export function mergeDex(other, { franchise = null } = {}) {
   if (!other) return; const d = load(); let changed = false;
   for (const k of ['seen', 'signed']) for (const [id, stamp] of Object.entries(other[k] || {})) if (!d[k][id]) { d[k][id] = stamp; changed = true; }
   d.forms ||= {}; for (const [id, st] of Object.entries(other.forms || {})) if ((d.forms[id] || 0) < st) { d.forms[id] = st; changed = true; }
+  d.knowledge ||= {};
+  for (const [id, events] of Object.entries(other.knowledge || {})) { const own = d.knowledge[id] ||= {}; for (const raw of Object.keys(events || {})) { if (raw.startsWith('fb:') && !franchise) continue; const key = knowledgeEventId(franchise, raw); if (!own[key]) { own[key] = true; changed = true; } } }
   if ((other.franchises || 0) > d.franchises) { d.franchises = other.franchises; changed = true; }
   if (changed) persist();
 }
@@ -50,3 +56,22 @@ export function dexCountsGlobal() { const d = load(); return { seen: Object.keys
 export function noteNewFranchise() { const d = load(); d.franchises += 1; persist(); }
 /** Developer tool / tests: wipe the player's dex. */
 export function resetDex() { dex = blank(); persist(); }
+
+
+export const LORE_THRESHOLDS = Object.freeze([5, 15, 30]);
+/** A family earns one discovery credit per completed owner game, across all its individuals.
+ * Event identities make replay, save reload, and cloud merging idempotent. No simulation RNG. */
+export function dexKnowledgeGame(familyIds, eventId) {
+  if (!eventId) return false;
+  const d = load(); d.knowledge ||= {}; let changed = false;
+  for (const id of new Set(familyIds.filter(Boolean))) {
+    const events = d.knowledge[id] ||= {};
+    if (!events[eventId]) { events[eventId] = true; changed = true; }
+  }
+  if (changed) persist();
+  return changed;
+}
+export function dexKnowledge(id) {
+  const games = Object.keys(load().knowledge?.[id] || {}).length;
+  return { games, unlocked: LORE_THRESHOLDS.filter(n => games >= n), next: LORE_THRESHOLDS.find(n => games < n) ?? null };
+}

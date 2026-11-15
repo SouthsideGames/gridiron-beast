@@ -74,7 +74,7 @@ test('selection prefers an established partnership, but not a captain who no lon
 
 test('a side with no valid pair gets none, with a reason; the franchise is never given an invalid pair', () => {
   const s = P.suggestCaptains([C('qb1', 'QB', 70), C('s1', 'S', 60), C('lb1', 'LB', 60), C('lb2', 'LB', 60)]);
-  assert.equal(s.offense, null); assert.equal(s.defense, null); assert.match(s.reason.offense, /No eligible pair/); assert.match(s.reason.defense, /No eligible pair/);
+  assert.equal(s.offense, null); assert.equal(s.defense, null); assert.match(s.reason.offense, /No pair can be offense captains/); assert.match(s.reason.defense, /No pair can be defense captains/); // plain-language wording (2026-11-14)
   const t = P.suggestCaptains([C('qb1', 'QB', 70, 'bench'), C('rb1', 'RB', 60, 'bench')]); assert.equal(t.offense.type, 'QB-RB', 'falls back to anyone on the roster');
 });
 

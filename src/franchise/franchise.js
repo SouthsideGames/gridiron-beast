@@ -36,7 +36,7 @@ import { createRoster, generateMonster, monsterOverall, schemeFit, evolutionRead
 import { ELEMENT_REGIONS } from '../data/species.js';
 export { ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
-import { dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise } from './dex-store.js';
+import { dexKnowledgeGame, knowledgeEventId, dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise } from './dex-store.js';
 import { clubIdentity, identityCoach, lineupPreference, trainingPriority } from '../data/identities.js';
 import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, FREE_LEGENDARIES, gymGrowth } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
@@ -2362,6 +2362,13 @@ export function finishSunday(f, gameState) {
   const pg = f.week.pregame; const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: gameState.score.home, awayScore: gameState.score.away, ot: !!gameState.ot, player: true, winner: gameState.winner ? m[gameState.winner].name : null, clash: gameState.tiebreak || null, pregameClash: pg?.result ? { winner: gameState.coin?.winner || null, choice: gameState.coin?.choice || null, by: pg.result.by, exchanges: pg.result.exchanges, playerWon: pg.result.winner === 'a' } : null };
   const { r, save } = frng(f);
   const ledger = (f.rewardLedger ||= createRewardLedger()); const act = gameActivityId(f, f.club);
+  const knowledgePlayers = playedIds(m[side].chart);
+  // Beast Dex knowledge: the franchise records its own games by activity id alone (unique within the franchise, and the same in every
+  // run of the same season); the shared Dex keys them by franchise as well, so another franchise's week 1 is a different game.
+  const knowledgeFamilies = [...new Set(f.roster.filter(x => knowledgePlayers.has(x.id)).map(x => x.species))];
+  f.dex ||= { seen: {}, signed: {} }; f.dex.knowledge ||= {};
+  for (const id of knowledgeFamilies) (f.dex.knowledge[id] ||= {})[act] = true;
+  dexKnowledgeGame(knowledgeFamilies, knowledgeEventId(franchiseKey(f), act));
   const events = afterGame(f.roster, m[side].chart, gameState.stats[side].players, r, { won, autoSpend: !!f.settings.autoPoints, autoEvolve: false, ledger, activityId: act, mastery: gameState.t8?.mastery });
   { const played = playedIds(m[side].chart); const slots = ownerDevSlots(f, { notify: true }); events.push(...practiceAfterGame(f.roster, slots.ids, played, r, { autoSpend: !!f.settings.autoPoints, autoEvolve: false, ledger, activityId: `${act}:reserve` })); } // C1: the owner's development slots (Task 6 Phase C)
   aiAfterGame(f, m[oppSide], gameState, oppSide, r); // the persistent opponent develops from this game too (GDD §42.6)

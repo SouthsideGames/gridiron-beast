@@ -1,3 +1,4 @@
+import { abilityBlockHtml } from '../ability-info.js';
 // Developer → Clash Ability Reviewer (Task 8 M4 S15 UI; spec §13 and §25 "Both ability reviewers"). Every Dex Clash ability, each
 // form and each mastery tier (the engine's reviewMatrix: no silent missing entries). "▶ Scenario" runs the selected scenario on the
 // REAL t8 engine through src/clash/t8/review.js: staged prerequisites and controlled outcomes are labelled, the ability's own result is
@@ -66,7 +67,7 @@ export function registerClashAbilityReviewer(Router, app) {
           return `<div class="panel tight audit-row ${rv === 'approved' ? 'rv-approved' : rv === 'revision' ? 'rv-needswork' : ''}" id="cl-${c.abilityId}" data-status="${rv}">
             <div class="row between"><b style="color:${L.a}">${esc(c.name)}</b> ${abilityStateBadge(NS, c.abilityId)}<span class="chip" style="border-color:${L.a};color:${L.a}">${L.glyph} ${esc(c.element)} · ${ARCH_GLYPH[c.archetype] || ''} ${esc(c.archetype)} · ${esc(c.rarity)}</span></div>
             <div class="dim" style="font-size:12px">${esc(c.abilityId)} · ${esc(c.familyName)} (${esc(c.family)}) · ${esc(c.category)}${c.activation ? ` · ${esc(c.activation)}` : ''}</div>
-            ${c.mechanic ? `<div class="muted" style="font-size:12px;margin-top:2px">${esc(c.mechanic)}</div>` : ''}
+            ${abilityBlockHtml(c.family, 'clash', { dex2: true })}
             <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
               <select data-change="form" data-id="${c.abilityId}" aria-label="Form">${c.forms.map((f) => `<option value="${f.stage}" ${f.stage === p.stage ? 'selected' : ''}>${esc(f.name)} (stage ${f.stage + 1})</option>`).join('')}</select>
               <select data-change="tier" data-id="${c.abilityId}" aria-label="Mastery tier">${c.tiers.map((t) => `<option value="${t}" ${t === p.tier ? 'selected' : ''}>${TIERS[t]}</option>`).join('')}</select>

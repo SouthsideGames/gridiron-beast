@@ -1,3 +1,5 @@
+import { FORMS } from '../data/beast-dex.js';
+import { REVIEW_COMPONENTS, dexReviews, dexReviewStatus, reviewFingerprint as dexFingerprint, reviewDigest } from '../dex/reviews.js';
 // Developer review queue (GDD §23.7). Every signature ability and every play
 // has a fingerprint of what the owner would judge. An item needs the owner when
 // it has never been reviewed (NEW), when it changed after he approved it
@@ -40,7 +42,7 @@ export function setFootballFingerprint(id, data, meta = {}) { fbFingerprints.set
 export function setClashFingerprint(id, data, meta = {}) { fbFingerprints.set(`clashability:${id}`, abilityFp(data, meta.rev)); INVENTORY.clashability.set(id, { id, name: meta.name || id, anchor: meta.anchor || null }); }
 /** The reviewers, as the notifications name them. */
 export const ABILITY_REVIEWERS = Object.freeze({ fbability: { ns: 'fbability', title: 'Ability Reviewer', screen: 'ability-reviewer', icon: '🧪' }, clashability: { ns: 'clashability', title: 'Clash Ability Reviewer', screen: 'clash-ability-reviewer', icon: '⚔️' } });
-const fpOf = (ns, id) => { if (ns === 'fbability' || ns === 'clashability') return fbFingerprints.get(`${ns}:${id}`) || fbFingerprints.get(id) || null; const k = ns + ':' + id; if (!FP.has(k)) FP.set(k, ns === 'ability' ? abilityFingerprint(REVIEWABLE_ABILITIES.find((s) => s.id === id)) : playFingerprint(id)); return FP.get(k); };
+const fpOf = (ns, id) => { if (ns === 'beastdex') return dexNoticeFingerprint(id); if (ns === 'fbability' || ns === 'clashability') return fbFingerprints.get(`${ns}:${id}`) || fbFingerprints.get(id) || null; const k = ns + ':' + id; if (!FP.has(k)) FP.set(k, ns === 'ability' ? abilityFingerprint(REVIEWABLE_ABILITIES.find((s) => s.id === id)) : playFingerprint(id)); return FP.get(k); };
 
 /**
  * 'new' | 'changed' | 'updated' (all three need the owner) | 'approved' | 'needs_work' (waiting on the developer).
@@ -79,24 +81,41 @@ export function abilityReviewQueue(ns) {
 }
 /** "Ability Reviewer — 18 abilities need review · 2 need revision", or '' when nothing is outstanding. */
 export function abilityQueueText(q) {
-  const n = (k, w) => `${k} ${k === 1 ? 'ability needs' : 'abilities need'} ${w}`;
+  const unit = q.ns === 'beastdex' ? ['monster needs', 'monsters need'] : ['ability needs', 'abilities need'];
+  const n = (k, w) => `${k} ${k === 1 ? unit[0] : unit[1]} ${w}`;
   const parts = [q.pending.length ? n(q.pending.length, 'review') : '', q.revision.length ? (q.pending.length ? `${q.revision.length} need${q.revision.length === 1 ? 's' : ''} revision` : n(q.revision.length, 'revision')) : ''].filter(Boolean);
   return parts.length ? `${q.title} — ${parts.join(' · ')}` : '';
 }
 /** A notification can open a reviewer on a filter, and on one ability: the reviewer takes this once when it draws. */
 const focus = {};
-export function focusReviewer(ns, { status = null, id = null } = {}) { focus[ns] = { status, id, anchor: id ? INVENTORY[ns].get(id)?.anchor || null : null }; }
+export function focusReviewer(ns, { status = null, id = null } = {}) { focus[ns] = { status, id, anchor: id ? INVENTORY[ns]?.get(id)?.anchor || null : null }; }
 export function takeReviewerFocus(ns) { const f = focus[ns] || null; delete focus[ns]; return f; }
 /** Proposed new cards still waiting for the owner's yes or no (GDD §23.10). */
 export function proposalsPending() { const R = reviews('ability'); return Object.keys(CARD_PROPOSALS).filter((id) => !R[id]?.proposal); }
+const dexNoticeFP = new Map();
+function dexNoticeFingerprint(id) {
+  if (!dexNoticeFP.has(id)) dexNoticeFP.set(id, reviewDigest(JSON.stringify(REVIEW_COMPONENTS.map(c => dexFingerprint(id, c)))));
+  return dexNoticeFP.get(id);
+}
+export function beastDexReviewQueue() {
+  const snapshot = dexReviews();
+  const out = { ns: 'beastdex', title: 'Beast Dex Reviewer', screen: 'beast-dex-reviewer', icon: '📖', total: FORMS.length, pending: [], approved: [], revision: [] };
+  for (const form of FORMS) {
+    const states = REVIEW_COMPONENTS.map(component => ({ component, status: dexReviewStatus(form.id, component, snapshot) }));
+    const status = states.some(x => x.status === 'revision') ? 'revision' : states.some(x => x.status === 'pending') ? 'pending' : 'approved';
+    out[status].push({ id: form.id, name: form.name, components: states });
+  }
+  out.outstanding = out.pending.length + out.revision.length;
+  return out;
+}
 export function reviewQueue() {
   const pending = new Set(proposalsPending());
   // `abilities` is the retired Legacy Ability Audit's list. It is still computed for that screen's own code and tests, but it is
   // no longer part of the notification total: the screen left the Developer menu (owner 2026-11-11).
   const abilities = REVIEWABLE_ABILITIES.filter((sp) => pending.has(sp.id) || NEEDS_OWNER.has(reviewState('ability', sp.id))).map((sp) => sp.id);
   const plays = REVIEWABLE_PLAYS.filter((id) => NEEDS_OWNER.has(reviewState('play', id)));
-  const football = abilityReviewQueue('fbability'), clash = abilityReviewQueue('clashability');
-  return { abilities, plays, football, clash, total: plays.length + football.outstanding + clash.outstanding };
+  const football = abilityReviewQueue('fbability'), clash = abilityReviewQueue('clashability'), beastdex = beastDexReviewQueue();
+  return { abilities, plays, football, clash, beastdex, total: plays.length + football.outstanding + clash.outstanding + beastdex.outstanding };
 }
 /**
  * Card mismatches (GDD §23.9): abilities whose card says something the engine
@@ -138,7 +157,7 @@ export function freshAnnouncement(settings) {
   const freshPlays = q.plays.filter((id) => !seen.has(playKey(id)));
   const now = q.plays.map(playKey); const parts = [];
   if (freshPlays.length) parts.push(`🛠️ New to review in Developer: ${queueText({ plays: freshPlays })}`);
-  for (const r of [q.football, q.clash]) {
+  for (const r of [q.football, q.clash, q.beastdex]) {
     const keys = [...r.pending.map(abKey(r.ns, 'p')), ...r.revision.map(abKey(r.ns, 'r'))]; now.push(...keys);
     if (keys.some((k) => !seen.has(k))) parts.push(`${r.icon} ${abilityQueueText(r)}`); // the actual outstanding counts, as on the Developer screen
   }

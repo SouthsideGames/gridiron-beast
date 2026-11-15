@@ -1,3 +1,4 @@
+import { abilityBlockHtml } from '../ability-info.js';
 // Developer → Ability Reviewer (Task 8 M3, M3_PLAN.md item 6; Reviewer v2, spec §25 "Both ability reviewers"). Every Dex football
 // ability, each form and mastery tier. "▶ Scenario" (the default, deterministic) runs the complete-interaction sequence
 // (src/sim/abilities/review-sequence.js): the scenario stages charge, readiness, participants and the qualifying conditions on the real
@@ -49,7 +50,7 @@ export function registerAbilityReviewer(Router, app) {
           return `<div class="panel tight audit-row ${rv === 'approved' ? 'rv-approved' : rv === 'revision' ? 'rv-needswork' : ''}" id="fb-${c.family}" data-status="${rv}">
             <div class="row between"><b style="color:${L.a}">${esc(c.name)}</b> ${abilityStateBadge(NS, c.abilityId)}<span class="chip" style="border-color:${L.a};color:${L.a}">${L.glyph} ${esc(c.element)} · ${esc(c.position)} · ${esc(c.rarity)}</span></div>
             <div class="dim" style="font-size:12px">${esc(c.abilityId)} · ${esc(c.family)} · ${esc(a.category || '')}${a.activation ? ` · ${esc(a.activation)}` : ''}</div>
-            ${a.mechanic ? `<div class="muted" style="font-size:12px;margin-top:2px">${esc(a.mechanic)}</div>` : ''}
+            ${abilityBlockHtml(c.family, 'football', { dex2: true })}
             <div class="dim" style="font-size:11px;margin-top:2px">Kickoffs: ${esc(c.specialPlays.kickoff)} · Two-point conversions: ${esc(c.specialPlays.twoPoint)} <span class="dim">(owner N8b)</span></div>
             ${c.registered ? `<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
               <select data-change="form" data-f="${c.family}">${c.forms.map((f) => `<option value="${f}" ${f === p.form ? 'selected' : ''}>${FORM_LABEL(f)}</option>`).join('')}</select>
