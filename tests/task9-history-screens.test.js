@@ -100,7 +100,7 @@ test('Monster Hall of Fame: plaques for inductees, elections and candidates stay
   assert.equal((html.match(/class="hof-plaque/g) || []).length, hall.inductees.length);
   assert.deepEqual(links(html).sort(), hall.inductees.map((x) => String(x.id)).sort(), 'every plaque opens its monster, and only inductees have one');
   for (const x of hall.inductees) assert.ok(x.inductedYear - x.retiredYear >= WAIT_SEASONS);
-  assert.match(html, /the 15 strongest eligible careers are nominated, and an anonymous Board of 15 votes in private: 70% is needed, and at most 3 monsters/);
+  assert.match(html, /the top 15 qualifying careers are nominated\. A secret Board of 15 votes\. A monster needs 70% of the votes\. At most 3 monsters can enter each year/); // plain-language wording (2026-11-14); same four numbers
   const el = render('monsterhof', f, { view: 'elections' }); clean(el, 'elections');
   assert.equal((el.match(/data-action="hall-year"/g) || []).length, hall.elections.filter((e) => e.ballot.length).length, 'every election with a ballot can be opened');
   assert.equal((el.match(/hof-quiet/g) || []).length, hall.elections.filter((e) => !e.ballot.length).length);
