@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { plainAbilityRule } from '../src/text/ability-rules-plain.js';
 import { CLASH_SIMPLE } from '../src/text/clash-simple.js';
 // Every Beast Dex line the game shows, under the key a translator's file uses for it (src/text/dex.js).
 //   node tools/dex-text.mjs            prints { key: English line } as JSON
@@ -19,7 +20,7 @@ export function dexEnglish() {
   for (const a of ABILITIES) {
     out[dexKey.abilityName(a.id)] = a.name;
     if (a.mechanic) out[dexKey.abilityMechanic(a.id)] = tidyMechanic(a);
-    for (const d of a.details || []) if (SECTION_SLUG[d.section] && d.rule) out[dexKey.abilityRule(a.id, d.section)] = d.rule;
+    for (const d of a.details || []) if (SECTION_SLUG[d.section] && d.rule) { out[dexKey.abilityRule(a.id, d.section)] = d.rule; out[dexKey.abilityReadableRule(a.id, d.section)] = plainAbilityRule(d.rule); }
   }
   for (const [familyId, s] of Object.entries(SPECS)) if (s?.expect) out[dexKey.abilitySummary(familyId)] = s.expect;
   return out;
