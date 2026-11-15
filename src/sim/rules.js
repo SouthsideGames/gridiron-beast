@@ -1,3 +1,4 @@
+import { canPlaceZone, zoneOptions, selectedZoneOption, zoneKey } from './t8/zone-planning.js';
 // Game state machine: downs, distance, scoring, clock, quarters, special
 // teams phases and overtime (GDD §3). Pure functions on a plain state object
 // so the UI, Key Moments and headless league games share one rulebook.
@@ -173,7 +174,7 @@ function sitsOutOf(state, slots) { if (!state.t8) return null; const ids = [...O
 /** A field's absolute placement (home-goal frame; lat in the home frame) from the upcoming formation reference (spec §11). */
 const absYard = (state, y) => (state.possession === 'home' ? y : 100 - y);
 const absLat = (state, l) => (state.possession === 'home' ? l : -l);
-function fieldPlacement(state, p, offensePlay = null, alignOf = () => null) {
+function defaultFieldPlacement(state, p, offensePlay = null, alignOf = () => null) {
   if (p.span) { // M3 hook: (Psychic/Dragon batch) a span [from, to] from the line in the offense frame (negative: the backfield), shifted only enough to fit the field of play
     let lo = state.ballOn + Math.min(...p.span), hi = state.ballOn + Math.max(...p.span); const len = hi - lo;
     if (lo < 0) { lo = 0; hi = len; } if (hi > FIELD.length) { hi = FIELD.length; lo = hi - len; }
@@ -209,6 +210,13 @@ function fieldPlacement(state, p, offensePlay = null, alignOf = () => null) {
   const a = absYard(state, ref - p.length / 2), b = absYard(state, ref + p.length / 2); // the rectangle centred on the reference (placement choice, documented in M3_PLAN)
   return { centerLat, yardFrom: a, yardTo: b, width };
 }
+function fieldPlacement(state, p, offensePlay = null, alignOf = () => null, defensePlay = null) {
+  const base = defaultFieldPlacement(state, p, offensePlay, alignOf);
+  if (!canPlaceZone(p.ability)) return base;
+  const ownPlay = p.ownerTeam === state.possession ? offensePlay : defensePlay;
+  const options = zoneOptions({ state, spec: p, base, ownPlay });
+  return selectedZoneOption(state, p, options, ownPlay)?.placement || base;
+}
 /**
  * M3 hook: pre-choice producers. Before a scrimmage snap's fields are created, every on-field monster whose contract declares
  * `preSnap(api, self)` may read its game-scope state and queue fields for this snap (they are created right after, G3). `api.able`:
@@ -219,7 +227,7 @@ function preSnapContracts(state, t8, slots) {
     const c = x?.id && x.species ? contractOf(x.species) : null; if (!c?.preSnap) continue;
     const self = { mid: x.id, family: x.species, form: x.form || `${x.species}:0`, mastery: x.mastery || 0, slot, team: side, type: x.type || null, name: x.name || slot };
     c.preSnap({ side, teamSide: side === 'off' ? state.possession : opponent(state.possession), able: !T8S.sitsOutPlay(state, x.id), playIndex: state.playCount || 0,
-      state: () => abilityState(t8, x.id, x.species, self.form, self.mastery), queueField: (spec) => T8F.queueField(t8, { side, ...spec }),
+      state: () => abilityState(t8, x.id, x.species, self.form, self.mastery), queueField: (spec) => T8F.queueField(t8, { side, ownerTeam: side === 'off' ? state.possession : opponent(state.possession), ...spec }),
       fields: () => T8F.activeFields(t8), pending: () => t8.fields?.pending || [], executed: (opts) => recordExecution(t8, x.id, x.species, opts) }, self);
   }
 }
@@ -265,7 +273,7 @@ function preSnapHooks(state, t8, slots, offensePlay, defensePlay) {
     // play it was first due on, so a snap he sits out does not reroll them); stream(playIndex) is `rng` itself.
     const streamOf = (key) => { let h = 2166136261; for (const ch of `${state.seed}|${key}|${p.id}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return createRng((h >>> 0) || 23); };
     c.hooks.preSnap({ t8, rng: streamOf(state.playCount || 0), stream: streamOf, state: (a) => abilityState(t8, a.mid, a.family, a.form, a.mastery), executed: (a, o) => recordExecution(t8, a.mid, a.family, o),
-      queueField: (spec) => T8F.queueField(t8, spec), ballOn: state.ballOn, offensePlay, defensePlay, slots: { off: slots.offense, def: slots.defense }, playIndex: state.playCount || 0, sitsOut: T8S.sitsOutPlay(state, p.id) }, self);
+      queueField: (spec) => T8F.queueField(t8, { ownerTeam: team === 'off' ? state.possession : opponent(state.possession), ...spec }), ballOn: state.ballOn, offensePlay, defensePlay, slots: { off: slots.offense, def: slots.defense }, playIndex: state.playCount || 0, sitsOut: T8S.sitsOutPlay(state, p.id) }, self);
   }
 }
 /**
@@ -304,12 +312,13 @@ export function previewPendingFields(state, teams, offensePlayId, defensePlayId,
   const pending = t8.fields?.pending; if (!pending?.length || !Array.isArray(t8.fields.list)) return [];
   const out = [];
   for (const p of pending) {
+    if (t8.fields.list.some((f) => f.owner === p.owner && f.ability === p.ability)) continue;
     if ((!p.benchOk && !p.offField && !offIds.has(p.owner) && !defIds.has(p.owner)) || !pendingEligible(state, t8, p, offIds, defIds)) continue;
     if (p.maxOwn && out.some((f) => f.owner === p.owner && f.ability === p.ability)) continue; // the snap creates one; the next stays banked
     let usesDefenseAlign = false;
     const alignOf = (id) => { for (const [sl, x] of Object.entries(slots.offense)) if (x?.id === id) return offensePlay.align[sl] || null; for (const [sl, x] of Object.entries(slots.defense)) if (x?.id === id) { usesDefenseAlign = true; return defensePlay.align[sl] || null; } return null; };
-    const r = placeRect({ id: `P${out.length + 1}`, type: p.type, createdAt: state.playCount || 0, owner: p.owner, strength: p.strength ?? null, ...fieldPlacement(state, p, offensePlay, alignOf) });
-    out.push({ ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, ownerTeam: p.ownerTeam ?? null, payload: p.payload ?? null, usesDefenseAlign, ...(born.has(p) ? { inSnap: true, callDependent: !!born.get(p) } : {}) });
+    const r = placeRect({ id: `P${out.length + 1}`, type: p.type, createdAt: state.playCount || 0, owner: p.owner, strength: p.strength ?? null, ...fieldPlacement(state, p, offensePlay, alignOf, defensePlay) });
+    out.push({ ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, ownerTeam: p.ownerTeam ?? null, payload: p.payload ?? null, usesDefenseAlign, remaining: p.lifetime, clock: p.clock, placementKey: zoneKey(p), placementOptions: canPlaceZone(p.ability) ? zoneOptions({ state, spec: p, base: defaultFieldPlacement(state, p, offensePlay, alignOf), ownPlay: p.ownerTeam === state.possession ? offensePlay : defensePlay }) : [], ...(born.has(p) ? { inSnap: true, callDependent: !!born.get(p) } : {}) });
   }
   return out;
 }
@@ -383,7 +392,8 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const logMark = state.log[state.log.length - 1]; // Task 8 presentation: the pre-snap ability lines start after this entry
   preSnapContracts(state, t8, slots); // M3 hook: pre-choice producers that queue fields for this snap
   preSnapHooks(state, t8, slots, offensePlay, defensePlay); // M3 hook: (Nature / Electric) play-level preSnap hooks
-  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => pendingEligible(state, t8, p, offIds, defIds), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p, offensePlay, alignOf) }) : []; // G3
+  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => pendingEligible(state, t8, p, offIds, defIds), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p, offensePlay, alignOf, defensePlay) }) : []; // G3
+  delete t8.zoneChoices;
   // M3 hook: the snap's pre-choice point for every on-field contract (e.g. Prism Break), after this snap's fields exist
   for (const [team, play, map] of [['off', offensePlay, slots.offense], ['def', defensePlay, slots.defense]]) for (const [slot, m] of Object.entries(map)) {
     if (!m?.species) continue;

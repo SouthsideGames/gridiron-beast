@@ -38,8 +38,8 @@ const FP = new Map(); // the data is frozen for the life of the page: hash each 
  */
 const fbFingerprints = new Map(); const INVENTORY = { fbability: new Map(), clashability: new Map() };
 const abilityFp = (data, rev) => hash(JSON.stringify(rev ? [data, { rev }] : data));
-export function setFootballFingerprint(id, data, meta = {}) { fbFingerprints.set(id, abilityFp(data, meta.rev)); INVENTORY.fbability.set(id, { id, name: meta.name || id, anchor: meta.anchor || null }); }
-export function setClashFingerprint(id, data, meta = {}) { fbFingerprints.set(`clashability:${id}`, abilityFp(data, meta.rev)); INVENTORY.clashability.set(id, { id, name: meta.name || id, anchor: meta.anchor || null }); }
+export function setFootballFingerprint(id, data, meta = {}) { fbFingerprints.set(id, abilityFp(data, meta.rev)); INVENTORY.fbability.set(id, { id, name: meta.name || id, anchor: meta.anchor || null, requireReview: !!meta.rev }); }
+export function setClashFingerprint(id, data, meta = {}) { fbFingerprints.set(`clashability:${id}`, abilityFp(data, meta.rev)); INVENTORY.clashability.set(id, { id, name: meta.name || id, anchor: meta.anchor || null, requireReview: !!meta.rev }); }
 /** The reviewers, as the notifications name them. */
 export const ABILITY_REVIEWERS = Object.freeze({ fbability: { ns: 'fbability', title: 'Ability Reviewer', screen: 'ability-reviewer', icon: '🧪' }, clashability: { ns: 'clashability', title: 'Clash Ability Reviewer', screen: 'clash-ability-reviewer', icon: '⚔️' } });
 const fpOf = (ns, id) => { if (ns === 'beastdex') return dexNoticeFingerprint(id); if (ns === 'fbability' || ns === 'clashability') return fbFingerprints.get(`${ns}:${id}`) || fbFingerprints.get(id) || null; const k = ns + ':' + id; if (!FP.has(k)) FP.set(k, ns === 'ability' ? abilityFingerprint(REVIEWABLE_ABILITIES.find((s) => s.id === id)) : playFingerprint(id)); return FP.get(k); };
@@ -51,7 +51,7 @@ const fpOf = (ns, id) => { if (ns === 'beastdex') return dexNoticeFingerprint(id
 export function reviewState(ns, id) {
   const r = reviews(ns)[id]; if (!r?.status) return 'new';
   const cur = fpOf(ns, id); const alias = REVIEW_FP_ALIASES[ns]?.[id]; // a wording-only pass keeps earlier verdicts (review-fp-aliases.js)
-  const same = !r.fp || r.fp === cur || (!!alias && alias[0] === r.fp && alias[1] === cur);
+  const same = (!r.fp && !INVENTORY[ns]?.get(id)?.requireReview) || r.fp === cur || (!!alias && alias[0] === r.fp && alias[1] === cur);
   if (r.status === 'approved') return same ? 'approved' : 'changed';
   return same ? 'needs_work' : 'updated';
 }

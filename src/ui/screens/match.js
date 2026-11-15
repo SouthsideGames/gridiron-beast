@@ -1,3 +1,5 @@
+import { zonePlans, zonePlannerHtml, zonePlannerOverlay } from '../zone-planner.js';
+import { setZoneChoice } from '../../sim/t8/zone-planning.js';
 // Sunday: pregame lineups and the pregame Beast Clash for possession (GDD §26.2), then the live match screen.
 // The screen only collects the human's choices; rules.js and game-runner.js
 // do everything else, exactly as they do for the simulated league.
@@ -148,6 +150,8 @@ export function registerMatchScreens(Router, app) {
         hq: () => Router.go('hq', {}, { reset: true }),
         log: () => showLog(f),
         pick: (el) => { const G = f.game; G.selected[el.dataset.side] = el.dataset.id; app.save(); refresh(f); },
+        zonepick: (el) => { setZoneChoice(f.game.state, el.dataset.zone, el.dataset.choice); f.game.zoneFocus = el.dataset.zone; app.save(); refresh(f); },
+        zonefocus: (el) => { f.game.zoneFocus = el.dataset.zone; refresh(f); },
         snap: () => act(f, {}),
         go: () => act(f, { fourthDown: 'go' }),
         punt: () => act(f, { fourthDown: 'punt' }),
@@ -207,6 +211,12 @@ export function registerMatchScreens(Router, app) {
     const field = anim
       ? { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: anim.frames[anim.i], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, event: G.event, noLines: anim.follow, sprites: spritesFor(f, anim.ev.offenseSide), ...(anim.fx && !anim.replay ? { fields: anim.ev.sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), prevFrame: anim.frames[anim.i - 1] || null, ...(anim.pre && anim.i === 0 && !anim.key ? { time: -anim.pre } : {}) } : {}) }
       : { venue: G.state.venue, ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, typeIcons: typeIconsFor(f, teams, look), ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession), ...(pre8 ? { fields: pre8.fields.length ? pre8.fields : null, fx: pre8.fx, time: pre8.time, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings) } : {}) };
+    if (!anim && look.myPlay && s.phase === 'scrimmage') {
+      const mine = s.possession === me;
+      const plans = zonePlans(s, teams, me, mine ? look.myPlay : look.presnap.offensePlay.id, mine ? look.presnap.defensePlay.id : look.myPlay);
+      const plan = plans.find((p) => p.key === G.zoneFocus) || plans[0];
+      field.underlay = zonePlannerOverlay(plan, s, cameraFor(s.ballOn), { reducedMotion: !!f.settings.reducedMotion });
+    }
     if (presnapNow) presnapNow.field = field;
     // Task 8 (I4): who stands where in the drawn formation (the players' paint order: defense, then offense), for the inspect sheet
     inspectMap = null; inspectForm = null;
@@ -456,7 +466,8 @@ export function registerMatchScreens(Router, app) {
       ${lastReplay && lastReplay.gameKey === s.seed ? `<button class="btn small" data-action="replay" title="${$t('match.watch_the_last_big_play_again', { play: esc(lastReplay.reason.label.toLowerCase()) })}">${$t('match.replay_2')}</button>` : ''}
       ${G.mode === 'key' ? `<button class="btn small good" data-action="keymoment">${$t('match.sim_to_key_moment')}</button>` : ''}</div>`;
     const clock = f.settings.liveClock && s.phase === 'scrimmage' ? `<div class="playclock">${$t('match.play_clock')} <b id="pc">40</b><div class="bar"><i id="pcbar" style="width:100%"></i></div></div>` : '';
-    return `<div class="match-actions">${primary}${secondary}${clock}</div>
+    const plans = selected ? zonePlans(s, teams, me, myBall ? selected : look.presnap.offensePlay.id, myBall ? look.presnap.defensePlay.id : selected) : [];
+    return `${zonePlannerHtml(plans, { focus: G.zoneFocus })}<div class="match-actions">${primary}${secondary}${clock}</div>
       <div class="muted" style="font-size:12px;margin:4px 0">${$t('match.coachs_suggestion_opponents_call_is_hidden', { myBall: myBall ? $t('match.your_offensive_plays') : $t('match.your_defensive_plays') })}${teams[me].blockedPlays?.length ? ` · <span style="color:var(--bad)">${$t('match.plays_unavailable_no_legal', { n: teams[me].blockedPlays.length })} ${teams[me].blockedSlots.join('/')})</span>` : ''}</div>
       ${cards(plan, side, selected, suggestion)}`;
   }
@@ -561,7 +572,7 @@ export function registerMatchScreens(Router, app) {
     anim.raf = requestAnimationFrame(tick);
   }
   /** Kick plays follow the ball with the camera: the formula animations (kick-anim.js) and the live kickoff's engine frames. */
-  function followsBall(sim) { return !!(sim.kick || sim.kickoff); }
+  function followsBall(sim) { return !!(sim.kick || sim.kickoff || sim.events?.some((e) => e.ability === 'PSY-02-F' || e.ability === 'DRA-03-F')); }
   /** The end-of-play hold (an effect that fired at the whistle plays out): scrimmage plays, and a formula kick that carries a kick ability's cue (Stone Cradle's cuffs crumble after the whistle). */
   function holds(a) { return !a.follow || !!a.ev?.sim?.kickAbility; }
   /** Monster art for the field (null = simple circles/squares, per Settings). */
@@ -576,7 +587,7 @@ export function registerMatchScreens(Router, app) {
   }
   /** The midpoint between two sim frames: positions and the ball lerped, everything else (engagement, status, holder) from the first. Frames across a phase change are not blended. */
   function midFrame(a, b) {
-    if (!a || !b || a.phase !== b.phase || !a.ball || !b.ball || a.motion !== b.motion) return a;
+    if (!a || !b || a.phase !== b.phase || !a.ball || !b.ball || a.motion !== b.motion || a.ballHidden !== b.ballHidden) return a;
     const lerp = (p, q) => q && q[0] === p[0] ? [p[0], (p[1] + q[1]) / 2, (p[2] + q[2]) / 2, p[3], p[4]] : p;
     const byId = (list) => Object.fromEntries(list.map((p) => [p[0], p]));
     const bo = byId(b.off), bd = byId(b.def);

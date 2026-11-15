@@ -51,7 +51,7 @@ export const SCENARIOS = {
   wavehorn: { unit: 'offense', calls: RUN_O, how: 'passive aura; run plays give him a blocking assignment with opponents inside the aura (natural trigger)' },
   tsunarok: { seed0: 15, unit: 'defense', calls: [['deep_post', 'cover_3'], ['three_verticals', 'cover_3'], ['dagger', 'cover_4']], target: 'WR1', seeds: 24, snaps: 24,
     setup: ({ teams }) => { const qb = teams.away.offense.QB; qb.attrs = { ...qb.attrs, accuracy: 5, awareness: 5 }; },
-    after: { unit: (k, api) => (api.followUp < 3 ? 'offense' : 'defense'), calls: MIX_O, target: null, note: 'his club\'s offense snaps (the Tsunami Line lands before its first snap and lives two plays), then his defense snaps until the cooldown is ready' },
+    after: { unit: (k, api) => (api.followUp < 6 ? 'offense' : 'defense'), calls: MIX_O, target: null, note: 'his club\'s offense snaps (the Tsunami Line lands before its first snap and lives two plays), then his defense snaps until the cooldown is ready' },
     how: 'ready; an inaccurate opposing QB throws deep middle into his zone until he secures an interception' },
   // ---------------------------------------------------------------------------------------------------------------- Nature
   thornkit: { unit: 'offense', calls: PASS_O, target: 'WR1', how: 'ready; passes to him (chosen target): his designated route cut earns the next-play patches (natural trigger)' },
@@ -124,7 +124,7 @@ export const SCENARIOS = {
     how: 'bar primed full (3 plays allowing 3 yd or less done), use unspent this possession; the edge_contain front, where the panels have safe ground at every mastery width' },
   // ---------------------------------------------------------------------------------------------------------------- Psychic
   mindwing: { unit: 'defense', calls: DEF_PASS, how: 'ready; pass plays until his tackle or assist after a completion banks the Psychic zone; created at the next defensive pre-choice' },
-  shadewisp: { unit: 'defense', calls: DEF_PASS, how: 'ready; pass plays in man coverage until his receiver\'s first route cut in range (natural trigger)' },
+  shadewisp: { unit: 'defense', calls: DEF_PASS, how: 'ready; pass plays in man and zone coverage until an airborne pass activates Mirror Rift (random destination, ordinary catch resolution)' },
   cerebrix: { unit: 'offense', look: { offense: 'quick_slants', defense: 'mug_zero' }, calls: [['quick_slants', 'mug_zero'], ['inside_zone', 'goal_line'], ['smash', 'goal_line_man'], ['deep_post', 'double_a_mug']], how: 'ready; the defense calls the fronts that align an LB within 3 yd of the line (double_a_mug, goal_line, goal_line_man) until the marked LB blitzes' },
   echolot: { unit: 'kick', kick: 'kickoff', after: { kick: null, unit: 'defense', calls: DEF_MIX, note: 'his club on defense (the Echo Landing is created at the next opposing offensive snap)' }, how: 'his own kickoffs until one is caught and returned without a touchdown and banks the Psychic field' },
   enigmane: { unit: 'offense', calls: [['y_cross', 'cover_2_man'], ['stick', 'man_press'], ['flood', 'cover_1'], ['te_seam', 'cover_2_man']], prime: () => ({ bar: 4 }), how: 'bar primed full (4 plays without a reception done); man coverage on him until his first route cut with his man within 2 yd' },

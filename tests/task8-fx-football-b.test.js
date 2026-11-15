@@ -201,7 +201,7 @@ test('I4: the inspect sheet shows stamina, the Iron Lungs progress and hides an 
   assert.match(src, /data-inspect="/); assert.match(src, /openInspect\(app\.f, chip\.dataset\.inspect\)/); assert.match(src, /inspectMap\?\.\[Array\.prototype\.indexOf\.call/); assert.match(src, /inspectInfo\(G\.state, teams, mid, \{ formation: inspectForm/); assert.match(src, /data-sec="stamina"/); assert.match(src, /data-sec="awareness"/); assert.match(src, /sheet\(inspectHtml\(f, I\)/);
 });
 
-test('I4: the inspect sheet shows Night Watch\'s Dark-awareness protection on the allies inside the watch, as the engine protects them', () => {
+test('I4: the inspect sheet reports secondary-wide Night Watch protection and respects disabled sources', () => {
   const c = CAT.find((x) => x.family === 'nightowl'); let seen = 0;
   for (const form of c.forms) for (const mastery of c.tiers) {
     const r = reviewSequence({ family: c.family, form, mastery }); const slot = r.explain.source.slot; const R = NW_RADIUS[mastery];
@@ -211,12 +211,12 @@ test('I4: the inspect sheet shows Night Watch\'s Dark-awareness protection on th
       const I = inspectInfo(state, teams, last.watch[0], { formation, last }); assert.ok(I.awarenessNotes.some((n) => n.tick && /Night Watch kept his Awareness full/.test(n.text)), 'the last play\'s protection, ticked'); seen += 1;
       // the pre-snap note is exactly the radius test of the contract, at the alignment
       const d = (a, b) => Math.hypot(dp.align[a][0] - dp.align[b][0], dp.align[a][1] - dp.align[b][1]); const inside = [];
-      for (const [sl, m] of Object.entries(teams.away.defense)) { if (sl === slot || !dp.onField.includes(sl)) continue; const J = inspectInfo(state, teams, m.id, { formation }); const has = J.awarenessNotes.some((n) => /^Dark-awareness protection: inside .*Night Watch/.test(n.text));
-        assert.equal(has, m.type !== 'Dark' && d(sl, slot) <= R, `${sl}: ${m.type}, ${d(sl, slot).toFixed(1)} yd from the safety, radius ${R}`); if (has) { inside.push(m.name); assert.match(J.awarenessNotes[0].text, new RegExp(`\\(${R} yd\\) at the snap`)); assert.match(J.awarenessNotes[0].text, /A Dark field is on the field now/); } }
-      const S = inspectInfo(state, teams, `d_${slot}`, { formation }); if (inside.length) for (const n of inside) assert.ok(S.awarenessNotes[0].text.includes(n), 'the safety\'s own sheet lists whom he watches'); else assert.match(S.awarenessNotes[0].text, /no ally inside the watch/);
-      assert.match(inspectInfo({ ...state, t8: { status: {} } }, teams, `d_${slot}`, { formation }).awarenessNotes[0]?.text || 'No Dark field', /No Dark field|no ally/);
+      for (const [sl, m] of Object.entries(teams.away.defense)) { if (sl === slot || !dp.onField.includes(sl)) continue; const J = inspectInfo(state, teams, m.id, { formation }); const has = J.awarenessNotes.some((n) => /Protected by .*Night Watch/.test(n.text));
+        assert.equal(has, m.type !== 'Dark' && /^(CB|S|FS)/.test(sl), `${sl}: ${m.type}, ${d(sl, slot).toFixed(1)} yd from the safety, radius ${R}`); if (has) { inside.push(m.name); assert.match(J.awarenessNotes[0].text, /regardless of distance/); } }
+      const S = inspectInfo(state, teams, `d_${slot}`, { formation }); if (inside.length) for (const n of inside) assert.match(S.awarenessNotes[0].text, /every allied cornerback and safety/); else assert.match(S.awarenessNotes[0].text, /every allied cornerback and safety/);
+      assert.match(inspectInfo({ ...state, t8: { status: {} } }, teams, `d_${slot}`, { formation }).awarenessNotes[0]?.text || 'No Dark field', /every allied cornerback and safety/);
       // a stunned safety protects nobody; on offense nothing is claimed
-      const stunned = { ...state, t8: { ...state.t8, status: { [`d_${slot}`]: { id: 'stunned', remaining: 1 } } } }; for (const m of Object.values(teams.away.defense)) assert.ok(!inspectInfo(stunned, teams, m.id, { formation }).awarenessNotes.some((n) => !n.tick));
+      const stunned = { ...state, t8: { ...state.t8, status: Object.fromEntries(Object.values(teams.away.defense).filter((m) => m.species === 'nightowl').map((m) => [m.id, { id: 'stunned', remaining: 1 }])) } }; for (const m of Object.values(teams.away.defense)) assert.ok(!inspectInfo(stunned, teams, m.id, { formation }).awarenessNotes.some((n) => !n.tick), JSON.stringify({ m, notes: inspectInfo(stunned, teams, m.id, { formation }).awarenessNotes, slot }));
       for (const m of Object.values(teams.away.defense)) assert.deepEqual(inspectInfo(state, teams, m.id, { formation: { ...formation, defSide: 'home' } }).awarenessNotes, []);
       break;
     }

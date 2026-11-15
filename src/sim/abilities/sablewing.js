@@ -27,7 +27,7 @@ export default registerAbility({
       const recovery = 100 - Math.max(0, Math.min(100, ctx.ballOn + ctx.ball.x)); // where the recovery leaves his team's offense
       const spot = Math.max(HOARD_FLIGHT.spot, Math.round(recovery));
       ctx.turnoverSpot(Math.min(99, spot)); ctx.executed(self);
-      ctx.log(`${$E('sim.s_hoard_flight_carries_the_ball', { name: self.name, spot: 100 - spot })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DRA-03-F', spot, recovery: Math.round(recovery), x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
+      ctx.log(`${$E('sim.s_hoard_flight_carries_the_ball', { name: self.name, spot: 100 - spot })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DRA-03-F', spot, recovery: Math.round(recovery), destination: [100 - spot - ctx.ballOn, ctx.ball.y], x: +ctx.ball.x.toFixed(2), y: +ctx.ball.y.toFixed(2) });
     },
   },
 });

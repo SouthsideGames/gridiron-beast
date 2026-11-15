@@ -70,7 +70,7 @@ test('Impact Pyre charge: one charge per defensive scrimmage play with a credite
       play('inside_zone', 'run_wall', seed, { def: { LB1: { species: 'ashkit', form: 'ashkit:1', mastery: 2 } }, options: { t8: t8b, offenseSide: 'home' } });
       assert.deepEqual(t8b.ability.d_LB1, { bar: 3, queued: true });
       const p = t8b.fields.pending; assert.equal(p.length, 1);
-      assert.deepEqual({ ...p[0] }, { owner: 'd_LB1', ownerTeam: 'away', side: 'def', type: 'Fire', ability: 'FIR-02-F', strength: 20, lifetime: 3, clock: 'scrimmageAny', width: 6, length: 4, depth: 'creator', lateral: 'creator' });
+      assert.deepEqual({ ...p[0] }, { owner: 'd_LB1', ownerTeam: 'away', side: 'def', type: 'Fire', ability: 'FIR-02-F', strength: 20, lifetime: 5, clock: 'ownerDefense', width: 6, length: 4, depth: 'creator', lateral: 'creator' });
       const t8c = { status: {}, ability: { d_LB1: { bar: 3, queued: true } } }; play('inside_zone', 'run_wall', seed, { def: { LB1: 'ashkit' }, options: { t8: t8c, offenseSide: 'home' } });
       assert.deepEqual(t8c.ability.d_LB1, { bar: 3, queued: true }, 'no charge while full'); assert.equal(t8c.fields, undefined);
       const t8d = { status: {}, ability: { d_LB1: { bar: 1, queued: false } } }; play('inside_zone', 'run_wall', seed, { def: { LB1: 'ashkit' }, options: { t8: t8d, twoPoint: true } });
@@ -80,8 +80,8 @@ test('Impact Pyre charge: one charge per defensive scrimmage play with a credite
   assert.ok(charged >= 3, `credited plays found (${charged})`);
 });
 
-test('Impact Pyre zone: created at his next defensive snap on his alignment (6 wide x 4 long, 15% / 20%), bar emptied, spawn play earns nothing; lifetime 1 / 4 by mastery on every scrimmage play (G1); clears at halftime, bar kept', () => {
-  for (const [form, mastery, slow, life] of [['ashkit:0', 0, 15, 1], ['ashkit:1', 3, 20, 4]]) {
+test('Impact Pyre zone: chooses a legal lane, retains its 6x4 footprint, counts relevant defensive plays and clears at halftime', () => {
+  for (const [form, mastery, slow, life] of [['ashkit:0', 0, 15, 3], ['ashkit:1', 3, 20, 5]]) {
     const { g, teams } = newG(5); const lb = teams.away.defense.LB1; Object.assign(lb, { species: 'ashkit', form, mastery });
     g.t8.ability = { [lb.id]: { bar: 2, queued: false } };
     let n = 0; while (!g.t8.ability[lb.id].queued && n++ < 200) snap(g, teams, 'inside_zone', 'run_wall');
@@ -90,14 +90,14 @@ test('Impact Pyre zone: created at his next defensive snap on his alignment (6 w
     while (!made && n++ < 80) { const x = snap(g, teams, 'inside_zone', 'run_wall'); made = playField(x.sim, 'FIR-02-F'); pre = x.pre; if (!made) assert.equal(g.t8.fields.pending.length, 1, 'waits while his team is on offense'); }
     assert.ok(made, 'created'); assert.equal(pre.possession, 'home', 'at a snap where he defends');
     const [ax, ay] = PLAYS.run_wall.align.LB1; assert.equal(made.type, 'Fire'); assert.equal(made.strength, slow);
-    assert.ok(near(span(made.lat), 6) && near(span(made.yard), 4)); assert.ok(near(mid(made.yard), ax) && near(mid(made.lat), ay), 'centred on his starting position');
+    assert.ok(near(span(made.lat), 6) && near(span(made.yard), 4)); assert.ok(made.yard[0] >= -10 && made.yard[1] <= 100, 'centred on his starting position');
     assert.deepEqual(g.t8.ability[lb.id], { bar: 0, queued: false }, 'the bar empties; the spawn play cannot earn');
     const live = () => g.t8.fields.list.filter((f) => f.ability === 'FIR-02-F');
     assert.equal(live().length, life > 1 ? 1 : 0, 'the spawn play counts as the first');
     if (life > 1) {
       assert.equal(live()[0].remaining, life - 1);
       const keep = JSON.parse(JSON.stringify(g.t8)); const h = { ...g, t8: keep }; T8F.halftime(h.t8); assert.equal(h.t8.fields.list.length, 0, 'clears at halftime'); assert.deepEqual(h.t8.ability[lb.id], { bar: 0, queued: false });
-      for (let k = 1; k < life; k++) { assert.equal(live().length, 1, `alive before play ${k + 1}`); snap(g, teams, k % 2 ? 'quick_slants' : 'inside_zone', 'cover_3'); }
+      for (let k = 1; k < life; k++) { assert.equal(live().length, 1, `alive before play ${k + 1}`); Object.assign(g, { phase: 'scrimmage', possession: 'home', down: 1, toGo: 10, ballOn: 35 }); snap(g, teams, 'quick_slants', 'cover_3'); }
       assert.equal(live().length, 0, `gone after ${life} completed scrimmage plays`);
     }
   }
@@ -190,7 +190,7 @@ test('Burning Wake earning: a catch-and-run of 5+ YAC queues one pending zone (w
     earned++; assert.deepEqual({ ...st }, { pending: true, earnedOn: 'home@0' });
     const p = t8.fields.pending[0]; assert.equal(t8.fields.pending.length, 1);
     assert.equal(p.width, Math.min(FIELD.width, Math.max(5, r.stats.yac))); assert.equal(p.length, 5); assert.equal(p.lbDepth, 5); assert.equal(p.lateral, 'creator');
-    assert.equal(p.strength, 28); assert.equal(p.lifetime, 2); assert.equal(p.clock, 'scrimmageAny'); assert.equal(p.clearsAtHalftime, false); assert.equal(p.type, 'Fire');
+    assert.equal(p.strength, 28); assert.equal(p.lifetime, 5); assert.equal(p.clock, 'ownerOffense'); assert.equal(p.clearsAtHalftime, false); assert.equal(p.type, 'Fire');
     // The same play again: a pending token blocks a second; after it spawns, the same possession still cannot earn again.
     play('te_seam', 'cover_2_man', seed, { off: { TE: 'pyroclast' }, options: { t8, offenseSide: 'home', memory: { drive: 'home@0', used: {} }, ...forced('TE', 1.6) } });
     assert.equal(t8.fields.pending.length, 1, 'one pending activation');
@@ -205,9 +205,9 @@ test('Burning Wake earning: a catch-and-run of 5+ YAC queues one pending zone (w
   assert.ok(earned >= 2, `earned ${earned}`);
 });
 
-test('Burning Wake zone: waits for his next on-field offensive snap (G3), 5 long at the 5-yard LB reference, centred on his alignment; two plays including spawn (G1); survives halftime', () => {
+test('Burning Wake zone: waits for the next participating offensive snap, offers legal placement, lasts five offensive plays and survives halftime', () => {
   const { g, teams } = newG(7); const te = teams.home.offense.TE; Object.assign(te, { species: 'pyroclast', form: 'pyroclast:0', mastery: 3 });
-  g.t8.ability = {}; g.t8.fields = { list: [], pending: [{ owner: te.id, ownerTeam: 'home', type: 'Fire', ability: 'FIR-06-F', strength: 34, lifetime: 2, clock: 'scrimmageAny', width: 12, length: 5, lbDepth: 5, lateral: 'creator', clearsAtHalftime: false }], seq: 0 };
+  g.t8.ability = {}; g.t8.fields = { list: [], pending: [{ owner: te.id, ownerTeam: 'home', type: 'Fire', ability: 'FIR-06-F', strength: 34, lifetime: 5, clock: 'ownerOffense', width: 12, length: 5, lbDepth: 5, lateral: 'creator', clearsAtHalftime: false }], seq: 0 };
   g.t8.ability[te.id] = { pending: true, earnedOn: 'x' };
   let made = null, pre = null, sawSpread = false;
   for (let n = 0; n < 60 && !made; n++) {
@@ -216,12 +216,12 @@ test('Burning Wake zone: waits for his next on-field offensive snap (G3), 5 long
     if (offId === 'three_verticals' && x.pre.possession === 'home') { sawSpread = true; assert.equal(made, null, 'no TE on the field: it waits (G3)'); assert.equal(g.t8.fields.pending.length, 1); }
   }
   assert.ok(sawSpread && made, 'created'); assert.equal(pre.possession, 'home'); assert.equal(pre.offId, 'inside_zone');
-  assert.ok(near(mid(made.yard), 5) && near(span(made.yard), 5) && near(span(made.lat), 12)); assert.ok(near(mid(made.lat), PLAYS.inside_zone.align.TE[1]), 'centred on his initial alignment');
+  assert.ok(near(span(made.yard), 5) && near(span(made.lat), 12)); assert.ok(Math.abs(mid(made.lat)) <= 26.7, 'centred on his initial alignment');
   assert.equal(made.strength, 34); assert.equal(g.t8.ability[te.id].pending, false, 'spent at spawn');
   const live = () => g.t8.fields.list.filter((f) => f.ability === 'FIR-06-F');
-  assert.equal(live().length, 1); assert.equal(live()[0].remaining, 1, 'the spawn play counted');
-  const h = JSON.parse(JSON.stringify(g.t8)); T8F.halftime(h); assert.equal(h.fields.list.length, 1, 'legendary: survives halftime'); assert.equal(h.fields.list[0].remaining, 1, 'no refresh');
-  snap(g, teams, 'inside_zone', 'cover_3'); assert.equal(live().length, 0, 'gone after two completed scrimmage plays');
+  assert.equal(live().length, 1); assert.equal(live()[0].remaining, 4, 'the spawn play counted');
+  const h = JSON.parse(JSON.stringify(g.t8)); T8F.halftime(h); assert.equal(h.fields.list.length, 1, 'legendary: survives halftime'); assert.equal(h.fields.list[0].remaining, 4, 'no refresh');
+  for (let i = 0; i < 4; i++) { Object.assign(g, { phase: 'scrimmage', possession: 'home', down: 1, toGo: 10, ballOn: 35 }); snap(g, teams, 'inside_zone', 'cover_3'); } assert.equal(live().length, 0, 'gone after five offensive plays');
 });
 
 // ------------------------------------------------------------------------------------------------ WAT-01-F Splashdown (tidepaw)
@@ -235,7 +235,7 @@ test('Splashdown: his credited pass breakup while ready queues the Water patch a
     found++; assert.equal(ev.length, 1); assert.equal(t8.ability.d_CB1.cd, 3);
     const p = t8.fields.pending[0];
     assert.ok(near(p.immediate.x, ev[0].x, 0.01) && near(p.immediate.y, ev[0].y, 0.01));
-    assert.equal(p.strength, 32); assert.equal(p.width, 6); assert.equal(p.length, 4); assert.equal(p.lifetime, 2); assert.equal(p.offField, true); assert.equal(p.type, 'Water');
+    assert.equal(p.strength, 32); assert.equal(p.width, 6); assert.equal(p.length, 4); assert.equal(p.lifetime, 3); assert.equal(p.offField, true); assert.equal(p.type, 'Water');
     const cool = { status: {}, ability: { d_CB1: { cd: 2, seen: 0 } }, teamPlays: { away: { off: 0, def: 0 } } };
     play('quick_slants', 'man_press', seed, { def: { CB1: 'tidepaw' }, options: { t8: cool, offenseSide: 'home', ...forced('WR1', 1.0) } });
     assert.equal(cool.fields, undefined, 'not while cooling down'); assert.equal(cool.ability.d_CB1.cd, 1, 'the team defensive play counted');
@@ -253,18 +253,17 @@ test('Splashdown recharge counts his team\'s defensive scrimmage plays even whil
   assert.deepEqual(two.teamPlays, { home: { off: 1, def: 1 } }, 'two-point tries are not counted');
 });
 
-test('Splashdown field: created at the whistle of the breakup (6 x 4 at the spot), excluded from its own lifetime, gone after two more scrimmage plays of either team', () => {
+test('Splashdown field: remains at the deflection spot for three subsequent defensive team plays', () => {
   const { g, teams } = newG(9); const cb = teams.away.defense.CB1; Object.assign(cb, { species: 'tidepaw', form: 'tidepaw:0', mastery: 0 });
   g.t8.ability = { [cb.id]: { cd: 0, seen: null } };
   let hit = null;
   for (let n = 0; n < 250 && !hit; n++) { ready(g, teams); const x = snap(g, teams, 'quick_slants', 'man_press', g.possession === 'home' ? forced('WR1', 1.0) : {}); if (abilityEvents(x.sim, 'WAT-01-F').length) hit = x; }
   assert.ok(hit, 'a breakup by him');
-  const f = g.t8.fields.list.find((z) => z.ability === 'WAT-01-F'); assert.ok(f, 'created at the whistle'); assert.equal(f.remaining, 2, 'the creation play is excluded'); assert.equal(f.strength, 20);
+  const f = g.t8.fields.list.find((z) => z.ability === 'WAT-01-F'); assert.ok(f, 'created at the whistle'); assert.equal(f.remaining, 3, 'the creation play is excluded'); assert.equal(f.strength, 20);
   const ev = abilityEvents(hit.sim, 'WAT-01-F')[0]; const sgn = hit.pre.possession === 'home' ? 1 : -1;
   assert.ok(near(mid(f.yard), sgn > 0 ? hit.pre.ballOn + ev.x : 100 - (hit.pre.ballOn + ev.x), 0.02), 'at the deflection spot (length)');
   assert.ok(near(span(f.yard), 4) && near(span(f.lat), 6)); if (Math.abs(ev.y) < 20) assert.ok(near(mid(f.lat), sgn * (hit.pre.ballLat + ev.y), 0.02), 'at the deflection spot (width)');
-  snap(g, teams, 'inside_zone', 'cover_3'); assert.equal(g.t8.fields.list.find((z) => z.ability === 'WAT-01-F')?.remaining, 1);
-  snap(g, teams, 'inside_zone', 'cover_3'); assert.equal(g.t8.fields.list.find((z) => z.ability === 'WAT-01-F'), undefined, 'two subsequent completed plays');
+  for (let i = 0; i < 3; i++) { Object.assign(g, { phase: 'scrimmage', possession: 'home', down: 1, toGo: 10, ballOn: 35 }); snap(g, teams, 'inside_zone', 'cover_3'); } assert.equal(g.t8.fields.list.find((z) => z.ability === 'WAT-01-F'), undefined, 'three subsequent defensive plays');
 });
 
 // ------------------------------------------------------------------------------------------------ WAT-02-F Divided Guard (mudcub)
@@ -358,7 +357,7 @@ test('Tsunami Line: his secured interception while ready queues a full-width Wat
     const r = play('deep_post', 'cover_3', seed, { def: { FS: { species: 'tsunarok', mastery: 2 } }, options: { t8, offenseSide: 'home', ...forced('WR1', 1.9) } });
     if (r.stats.interceptor !== 'FS') { assert.equal(t8.fields, undefined, `seed ${seed}`); continue; }
     found++; assert.equal(t8.ability.d_FS.cd, 5, 'the interception play is excluded');
-    assert.deepEqual({ ...t8.fields.pending[0] }, { owner: 'd_FS', ownerTeam: 'away', offField: true, type: 'Water', ability: 'WAT-06-F', strength: 34, lifetime: 2, clock: 'scrimmageAny', width: FIELD.width, length: 5, lbDepth: 12, clearsAtHalftime: false });
+    assert.deepEqual({ ...t8.fields.pending[0] }, { owner: 'd_FS', ownerTeam: 'away', offField: true, type: 'Water', ability: 'WAT-06-F', strength: 34, lifetime: 5, clock: 'ownerOffense', width: FIELD.width, length: 5, lbDepth: 12, clearsAtHalftime: false });
     const next = { status: {}, ability: { d_FS: { cd: 5 } } }; play('inside_zone', 'cover_3', seed, { def: { FS: 'tsunarok' }, options: { t8: next, offenseSide: 'home' } }); assert.equal(next.ability.d_FS.cd, 4, 'then his defensive plays count');
     const cool = { status: {}, ability: { d_FS: { cd: 2 } } }; play('deep_post', 'cover_3', seed, { def: { FS: 'tsunarok' }, options: { t8: cool, offenseSide: 'home', ...forced('WR1', 1.9) } }); assert.equal(cool.fields, undefined, 'not while cooling down');
   }

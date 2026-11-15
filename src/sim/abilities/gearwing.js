@@ -1,26 +1,10 @@
-// MET-03-F Gear Grid (gearwing: Coglet; K). Task 8 M3, Metal batch (zone).
-// Contract (Dex; FIELD_CLOCKS.md; N7d G3 off-field permission): after his own punt of at least 35 net yards that is not a touchback,
-// he banks the next opponent scrimmage Metal field: 10 wide by 6 long at the upcoming opponent line of scrimmage plus the 5-yard LB
-// depth, centred on the ball's lateral position. The Metal effect (spec §11, field-effects.js defer): a non-Metal monster's first
-// changed automatic target / assignment / engagement decision inside it per play is adopted after one ordinary AI decision update
-// (the prior valid action is kept until then, otherwise he holds); player inputs, physics and started routes are never delayed. No
-// extra cooldown; one pending token and at most one own field (a queued token waits for the own field to expire). The punt return
-// completes before the next snap's geometry. A pending token carries over halftime; the created non-legendary field clears at
-// halftime. No bounce or roll is simulated; net yards are measured at the final opponent spot; the kicker keeps his legal role (he
-// need not be on the field: off-field creation is approved, N7d G3). Life 1 / 2 / 2 / 3 defensive scrimmage plays (his club's)
-// including the spawn play.
-// Readings where the contract is silent (documented, minimal):
-//   - Net yards = the final opponent spot (after any return) minus the line of scrimmage, in the kicking club's yards (special-teams.js
-//     punt: a fair catch or downed ball is its spot); blocked punts and punt-return touchdowns earn nothing.
-//   - The rectangle is centred on the LB reference (LOS + 5), as Beacon Lane's (rules.js fieldPlacement).
-//   - The mastery execution is recorded when the token is banked (as Beacon Lane).
-// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the punt game hook
-// (a formula kick) banks the field and the field is created at the opposing snap (both out of play); not gated.
+// Football revision approved 2026-11-15. The current exact contract is in
+// docs/beast-dex/data/abilities.json (and task8-overrides.json where applicable).
 import { registerAbility } from './registry.js';
 import { byMastery } from './common.js';
 import { E as $E } from '../../core/english.js';
 
-export const GEAR_GRID = Object.freeze({ minNet: 35, width: 10, length: 6, lbDepth: 5, life: [1, 2, 2, 3] });
+export const GEAR_GRID = Object.freeze({ minNet: 35, width: 10, length: 6, lbDepth: 5, life: [3, 4, 4, 5] });
 
 export default registerAbility({
   family: 'gearwing', abilityId: 'MET-03-F',

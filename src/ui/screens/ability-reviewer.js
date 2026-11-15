@@ -1,3 +1,5 @@
+import { openZoneReviewer } from '../zone-reviewer.js';
+import { ZONE_IDS } from '../../sim/t8/zone-planning.js';
 import { abilityBlockHtml } from '../ability-info.js';
 // Developer → Ability Reviewer (Task 8 M3, M3_PLAN.md item 6; Reviewer v2, spec §25 "Both ability reviewers"). Every Dex football
 // ability, each form and mastery tier. "▶ Scenario" (the default, deterministic) runs the complete-interaction sequence
@@ -56,6 +58,7 @@ export function registerAbilityReviewer(Router, app) {
               <select data-change="form" data-f="${c.family}">${c.forms.map((f) => `<option value="${f}" ${f === p.form ? 'selected' : ''}>${FORM_LABEL(f)}</option>`).join('')}</select>
               <select data-change="mastery" data-f="${c.family}">${c.tiers.map((t) => `<option value="${t}" ${t === p.mastery ? 'selected' : ''}>Mastery ${t}</option>`).join('')}</select>
               ${vars.length > 1 ? `<select data-change="variant" data-f="${c.family}" aria-label="Scenario variant">${vars.map((v) => `<option value="${v.id}" ${v.id === p.variant ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>` : ''}
+              ${ZONE_IDS.includes(c.abilityId) ? `<button class="btn small good" data-action="placement" data-f="${c.family}">◇ Test Placement</button>` : ''}
               <button class="btn small" data-action="scenario" data-f="${c.family}">▶ Scenario</button>
               <button class="btn small ghost" data-action="run" data-f="${c.family}">▶ Natural Game</button>
               <label class="row" style="gap:4px"><input type="checkbox" style="width:auto;min-height:0" data-change="primed" data-f="${c.family}" ${p.primed ? 'checked' : ''}> Primed</label></div>` : '<div class="chip warn" style="margin-top:6px">⏳ contract not built yet (legacy behavior until it is)</div>'}
@@ -71,6 +74,7 @@ export function registerAbilityReviewer(Router, app) {
         mastery: (el) => { st.pick[el.dataset.f].mastery = Number(el.value); },
         variant: (el) => { st.pick[el.dataset.f].variant = el.value; },
         primed: (el) => { st.pick[el.dataset.f].primed = el.checked; },
+        placement: (el) => { stop(); const c = cat.find((x) => x.family === el.dataset.f); const p = pickOf(c); openZoneReviewer(c, { form: p.form, mastery: p.mastery, reducedMotion: st.reducedFlash }); },
         scenario: (el) => go(el, 'scenario'),
         run: (el) => go(el, 'natural'),
         ...sharedHandlers(() => Router.render(), st.notesOpen, () => toast('Saved on this device; the cloud copy did not save.', 'bad')),

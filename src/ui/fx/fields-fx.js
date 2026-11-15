@@ -26,6 +26,22 @@ export function fieldDecor(f, r, c) {
   if (k > 0 && draw) under += draw(f, r, { ...c, L, k, sid });
   const rev = REVEAL[f.ability]; if (c.fresh && rev && k < 1) { const x = rev(f, r, { ...c, L, k, sid }); under += x.under || ''; over += x.over || ''; }
   else if (c.fresh && !rev && k < 1) under += genericReveal(r, L, k);
+  // Shadow Patch smoke is an intentional over-player occluder, at every quality.
+  // Removed footprints remain clear; the football is painted above this layer.
+  if (f.ability === 'DAR-01-F') {
+    const holes = r.holes || []; const pieces = [{ x0: r.x0, x1: r.x1, y0: r.y0, y1: r.y1 }];
+    let cells = pieces;
+    for (const h0 of holes) cells = cells.flatMap((p) => {
+      const x0 = Math.max(p.x0, h0.x0), x1 = Math.min(p.x1, h0.x1), y0 = Math.max(p.y0, h0.y0), y1 = Math.min(p.y1, h0.y1);
+      if (x1 <= x0 || y1 <= y0) return [p];
+      return [{ x0: p.x0, x1: x0, y0: p.y0, y1: p.y1 }, { x0: x1, x1: p.x1, y0: p.y0, y1: p.y1 }, { x0, x1, y0: p.y0, y1: y0 }, { x0, x1, y0: y1, y1: p.y1 }].filter((q) => q.x1 > q.x0 && q.y1 > q.y0);
+    });
+    for (const p of cells) over += rect(p.x0, p.y0, p.x1 - p.x0, p.y1 - p.y0, '#21152f', 0.96 * k, ' rx="0.2"');
+    for (let i = 0; i < countFor(8, q); i++) {
+      const [x, y] = pt(r, 0.1 + h(sid, i, 3) * 0.8, 0.1 + h(sid, i, 4) * 0.8);
+      if (!inHole(r, x, y)) over += disc(x, y, 0.65 + 0.2 * sin(c.t * 1.8 + i), 0.45, i % 2 ? '#49325f' : '#30203f', 0.7 * k);
+    }
+  }
   // Prism Break holes: the removed footprint, cracked and dark (the parent effect never returns there).
   for (const hh of r.holes || []) under += rect(hh.x0, hh.y0, hh.x1 - hh.x0, hh.y1 - hh.y0, '#0b1a14', 0.45) + rect(hh.x0, hh.y0, hh.x1 - hh.x0, hh.y1 - hh.y0, 'none', 0.8, ' stroke="#e9e9ee" stroke-width="0.14" stroke-dasharray="0.5 0.4"');
   return { under, over };

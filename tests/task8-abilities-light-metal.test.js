@@ -94,22 +94,22 @@ test('Dawn Signal: an existing different status blocks yet spends the token; a S
 });
 
 // ------------------------------------------------------------------------------------------------ LIG-03-F Guiding Halo
-test('Guiding Halo: a reception inside the mastery radius of the able QB attempts Shielded (one fumble save, 2 plays); cooldown 5 from the next play', () => {
+test('Guiding Halo: any completed pass shields its receiver, with no radius gate; subsequent-play cooldown and one fumble save', () => {
   let shielded = 0, outside = 0;
   for (const mastery of [0, 3]) for (let seed = 1; seed <= 30; seed++) {
     const t8 = { status: {} };
     const r = play('rb_screen', 'cover_3', seed, (o) => mon(o.QB, 'lumen', { mastery }), { t8, forcedTarget: 'RB' });
     if (r.stats.receiver !== 'RB') continue; const e = ev(r, 'LIG-03-F'); const R0 = [6, 8, 10, 12][mastery];
     if (e.length) {
-      assert.ok(e[0].dist <= R0, 'inside the radius'); assert.equal(e[0].target, 'RB'); shielded++;
+      assert.ok(Number.isFinite(e[0].dist), 'distance is reported but does not gate the shield'); assert.equal(e[0].target, 'RB'); shielded++;
       if (e[0].accepted) { const s = t8.status.o_RB; assert.equal(s?.id, 'shielded'); assert.equal(s.remaining, 2); assert.equal(s.payload.fumbleSaves, 1); assert.equal(s.payload.clashPoolPct, 15); }
       assert.equal(t8.ability.o_QB.cd, 5, 'spent; the application play excluded');
       play('inside_zone', 'cover_3', seed, (o) => mon(o.QB, 'lumen', { mastery }), { t8 }); assert.equal(t8.ability.o_QB.cd, 4, 'one subsequent offensive play');
     } else { outside++; assert.equal(t8.ability.o_QB.cd, 0); }
   }
-  assert.ok(shielded >= 4 && outside >= 1, `${shielded} shielded, ${outside} outside the 6-yard radius`);
+  assert.ok(shielded >= 4 && outside === 0, `${shielded} shielded, ${outside} outside the 6-yard radius`);
 });
-test('Guiding Halo (owner N8a): the radius is measured from the ball\'s line-of-scrimmage spot at the catch, not from the QB', () => {
+test('Guiding Halo: short and distant completed passes both trigger the shield', () => {
   let near = 0;
   for (const [call, tgt] of [['stick', 'TE'], ['curl_flat', 'RB'], ['pa_boot', 'TE'], ['curl_flat', 'TE'], ['stick', 'RB']]) for (let seed = 1; seed <= 25; seed++) {
     const t8 = { status: {} }; const r = play(call, 'cover_3', seed, (o) => mon(o.QB, 'lumen', { mastery: 0 }), { t8, forcedTarget: tgt });
@@ -117,7 +117,7 @@ test('Guiding Halo (owner N8a): the radius is measured from the ball\'s line-of-
     const rb = f.off.find((p) => p[0] === tgt), qb = f.off.find((p) => p[0] === 'QB'); const fromLos = Math.hypot(rb[1], rb[2]), fromQb = Math.hypot(rb[1] - qb[1], rb[2] - qb[2]);
     const e = ev(r, 'LIG-03-F');
     if (fromLos <= 5.5) { assert.equal(e.length, 1, `a catch ${fromLos.toFixed(1)} yd from the line qualifies at mastery 0`); near++; if (fromQb > 6) assert.ok(true, 'even when farther than 6 yd from the QB'); }
-    if (fromLos > 6.5) assert.equal(e.length, 0, `a catch ${fromLos.toFixed(1)} yd from the line does not`);
+    if (fromLos > 6.5) assert.equal(e.length, 1, 'distance no longer gates a completed pass');
   }
   assert.ok(near >= 1, `catches near the line observed (${near})`);
 });
@@ -286,7 +286,7 @@ test('Iron Lungs: himself and the nearest ally within the radius at the snap; ev
 });
 
 // ------------------------------------------------------------------------------------------------ MET-03-F Gear Grid
-test('Gear Grid: a punt of 35+ net yards (no touchback) banks one Metal field, created off the field at the opponent snap, 10x6 at LOS+5, life 1 / 2 / 2 / 3 on his club\'s defensive plays', () => {
+test('Gear Grid: qualifying punt banks one off-field defensive zone; placement and extended lifetime use the shared planner', () => {
   let banked = 0, short = 0;
   for (let seed = 1; seed <= 30 && (banked < 2 || short < 1); seed++) {
     const { g, teams } = game(seed, { kicking: seed % 3 ? 99 : 1 }); mon(teams.home.kicker, 'gearwing', { mastery: 3 }); g.phase = 'scrimmage'; g.possession = 'home'; g.ballOn = 20;
@@ -299,9 +299,9 @@ test('Gear Grid: a punt of 35+ net yards (no touchback) banks one Metal field, c
     punt(); assert.equal(g.t8.fields.pending.length, 1, 'one pending token at most');
     snap();
     const f = g.t8.fields.list.find((x) => x.ability === 'MET-03-F'); assert.ok(f, 'created at the opponent snap with the kicker off the field'); assert.equal(g.t8.fields.pending.length, 0);
-    assert.equal(f.type, 'Metal'); assert.deepEqual(f.lat, [-5, 5]); assert.deepEqual(f.yard, [100 - 48, 100 - 42], '6 long centred on the opponent LOS + 5 (away frame)'); assert.equal(f.remaining, 2, 'life 3 at mastery 3, the spawn play counted');
+    assert.equal(f.type, 'Metal'); assert.deepEqual(f.lat, [-5, 5]); assert.equal(f.yard[1] - f.yard[0], 6, 'unchanged six-yard length at a legal suggested location'); assert.equal(f.remaining, 4, 'life 3 at mastery 3, the spawn play counted');
     for (let i = 0; i < 6 && !g.t8.fields.pending.length; i++) punt();
-    if (g.t8.fields.pending.length) { snap(); assert.equal(f.remaining, 1, "his club's defensive play counted"); assert.equal(g.t8.fields.pending.length, 1, 'a new token waits while his own field is active'); assert.equal(g.t8.fields.list.filter((x) => x.ability === 'MET-03-F').length, 1); }
+    if (g.t8.fields.pending.length) { snap(); assert.equal(f.remaining, 3, "his club's defensive play counted"); assert.equal(g.t8.fields.pending.length, 1, 'a new token waits while his own field is active'); assert.equal(g.t8.fields.list.filter((x) => x.ability === 'MET-03-F').length, 1); }
   }
   assert.ok(banked >= 1 && short >= 1, `banked ${banked}, short ${short}`);
 });
@@ -332,7 +332,7 @@ test('Ball Clamp: his own sack earns the token; a successful tackle spends it on
 });
 
 // ------------------------------------------------------------------------------------------------ MET-05-F Bulwark Grid
-test('Bulwark Grid: a receiving first down while ready banks an 8x4 Metal field from the LOS into the backfield, created at his next offensive snap; cooldown 6 / 5 / 4 / 3 from creation; life 1 / 1 / 2 / 2', () => {
+test('Bulwark Grid: first down or pancake banks an 8x4 zone with selectable placement and extended lifetime; cooldown unchanged', () => {
   let checked = 0;
   for (let seed = 1; seed <= 40 && checked < 2; seed++) {
     const { g, teams } = game(seed); g.phase = 'scrimmage'; g.possession = 'home'; g.ballOn = 30; g.toGo = 1;
@@ -342,7 +342,7 @@ test('Bulwark Grid: a receiving first down while ready banks an 8x4 Metal field 
     const st = g.t8.ability.Ho_TE; assert.equal(st.banked, true); assert.equal(g.t8.fields.pending.length, 1); assert.equal(g.t8.fields.list.length, 0, 'not yet created');
     const los = g.ballOn; R.runScrimmagePlay(g, teams, 'inside_zone', 'cover_3');
     assert.equal(st.cd, 4, 'mastery 2 cooldown 4, started at creation'); assert.equal(st.banked, false);
-    const f = g.t8.fields.list[0]; assert.ok(f); assert.equal(f.type, 'Metal'); assert.deepEqual(f.yard, [los - 4, los]); assert.deepEqual(f.lat, [-4, 4]); assert.equal(f.remaining, 1, 'life 2, the spawn play counted');
+    const f = g.t8.fields.list[0]; assert.ok(f); assert.equal(f.type, 'Metal'); assert.equal(f.yard[1] - f.yard[0], 4); assert.deepEqual(f.lat, [-4, 4]); assert.equal(f.remaining, 3, 'life 4 at mastery 2, the spawn play counted');
     checked++;
   }
   assert.ok(checked >= 1, `observed ${checked}`);

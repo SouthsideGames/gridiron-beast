@@ -1,3 +1,5 @@
+> Football zones were revised on 2026-11-15. The placement and lifetime rules in [FOOTBALL_ZONE_REVISIONS_2026-11-15.md](FOOTBALL_ZONE_REVISIONS_2026-11-15.md) supersede the older G1/G2 lifetime and placement rules below. The history is retained for context.
+
 # Per-ability field clocks and creation eligibility (B20)
 
 **Scope.** All 19 football abilities that create a field, built from the approved contracts: Dex v18 with the N7b and N7c
