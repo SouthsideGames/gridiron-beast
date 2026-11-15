@@ -1,3 +1,4 @@
+import { takeReviewerFocus } from '../dev-review.js';
 import { SPECIES_DEX } from '../../data/species.js';
 import { formsOf } from '../../data/beast-dex.js';
 import { dexContent, templateDevelopment } from '../../dex/content.js';
@@ -37,10 +38,20 @@ export function registerBeastDexReviewer(Router) {
     if (!saved) { storageFailed = true; root.querySelector('[data-storage-warning]')?.removeAttribute('hidden'); }
     return saved;
   }
-  const saveAndWarn = root => { if (!saveDraft(root)) toast('Device storage unavailable. Your notes are kept for this session only: export feedback before leaving.'); };
+  const saveAndWarn = root => { if (!saveDraft(root)) toast('Device storage unavailable. Local saving failed. Export feedback before leaving to keep a copy.'); };
   Router.registerScreen('beast-dex-reviewer', {
     title: 'Beast Dex Reviewer', tabs: false,
     render({ f }) {
+      const focus = takeReviewerFocus('beastdex');
+      if (focus) {
+        element = 'All'; search = ''; contentFilter = 'all';
+        const snapshot = dexReviews();
+        const wanted = ['revision', 'pending'].includes(focus.status) ? focus.status : null;
+        const matches = (id, c) => { const status = dexReviewStatus(id, c, snapshot); return wanted ? status === wanted : status !== 'approved'; };
+        const form = DEX_REVIEW_CATALOG.find(x => x.form.id === focus.id) || DEX_REVIEW_CATALOG.find(x => REVIEW_COMPONENTS.some(c => matches(x.form.id, c)));
+        if (form) { selected = form.form.id; component = REVIEW_COMPONENTS.find(c => matches(selected, c)) || 'lore'; filter = dexReviewStatus(selected, component, snapshot); }
+        else filter = wanted || 'all';
+      }
       const snapshot = dexReviews(), available = rows(snapshot);
       if (!available.some(row => row.form.id === selected)) selected = available[0]?.form.id || '';
       const row = DEX_REVIEW_CATALOG.find(row => row.form.id === selected);
@@ -48,8 +59,8 @@ export function registerBeastDexReviewer(Router) {
       for (const item of DEX_REVIEW_CATALOG) counts[dexReviewStatus(item.form.id, component, snapshot)]++;
       const selection = `<label class="dexp-field">Search forms<input data-change="search" value="${esc(search)}" placeholder="Name or family ID" enterkeyhint="search"></label><label class="dexp-field">Element<select data-change="element">${['All', ...new Set(SPECIES_DEX.map(s => s.element))].map(v => `<option ${v === element ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></label><label class="dexp-field">Review component<select data-change="component">${REVIEW_COMPONENTS.map(c => `<option value="${c}" ${c === component ? 'selected' : ''}>${esc(LABEL[c])}</option>`).join('')}</select></label><label class="dexp-field">Status<select data-change="filter">${['all','pending','approved','revision'].map(v => `<option value="${v}" ${v === filter ? 'selected' : ''}>${v === 'all' ? 'Any status' : STATUS_LABEL[v]}</option>`).join('')}</select></label><label class="dexp-field">Content<select data-change="content">${[['all','All content'],['expanded','Expanded drafts'],['remaining','Writing backlog']].map(([v,label]) => `<option value="${v}" ${v === contentFilter ? 'selected' : ''}>${label}</option>`).join('')}</select></label>`;
       const active = [search && `“${search}”`, element !== 'All' && element, filter !== 'all' && `${LABEL[component]}: ${STATUS_LABEL[filter]}`, contentFilter !== 'all' && (contentFilter === 'expanded' ? 'expanded drafts' : 'writing backlog')].filter(Boolean);
-      const warning = `<p class="dexr-warn" data-storage-warning role="alert" ${storageFailed ? '' : 'hidden'}>Device storage is unavailable. Your notes and verdicts are kept for this session only. Export feedback before leaving.</p>`;
-      const header = `<div class="dexr-intro"><p class="muted">Review drafts without changing franchise unlocks, saves or progression. Feedback stays on this device; export to share it. Changed content returns to pending. The sample My Beast uses preview attributes and has no career.</p>
+      const warning = `<p class="dexr-warn" data-storage-warning role="alert" ${storageFailed ? '' : 'hidden'}>Device storage is unavailable. Cloud backup may still be available, but local saving failed. Export feedback before leaving to keep a copy.</p>`;
+      const header = `<div class="dexr-intro"><p class="muted">Review drafts without changing franchise unlocks, saves or progression. Feedback saves on this device and syncs to this game link’s cloud store when available. Export to share it. Changed content returns to pending. The sample My Beast uses preview attributes and has no career.</p>
         <div class="dexr-summary"><span><b>${coverage.expanded}/${coverage.forms}</b> forms drafted${coverage.remaining ? ` · ${coverage.remaining} awaiting writing` : ''}</span><span>${esc(LABEL[component])}: <b class="st-approved">${counts.approved}</b> approved · <b class="st-revision">${counts.revision}</b> revision · <b>${counts.pending}</b> pending</span></div>
         ${warning}
         <details class="dexr-filters" data-filters ${filtersOpen ? 'open' : ''}><summary>Filters and search${active.length ? ` · ${esc(active.join(' · '))}` : ''} <span class="dim">(${available.length} of ${DEX_REVIEW_CATALOG.length})</span></summary><div class="dexr-filter-grid">${selection}</div></details>
@@ -117,7 +128,7 @@ export function registerBeastDexReviewer(Router) {
         jump: el => { const card = root.querySelector(`#dexr-${el.dataset.id}`); const nav = root.querySelector('.dexr-nav'); if (card) window.scrollTo({ top: card.getBoundingClientRect().top + window.scrollY - (document.querySelector('.topbar')?.offsetHeight || 48) - (nav?.offsetHeight || 92) - 8, behavior: 'smooth' }); card?.querySelector('[data-review-status]:checked')?.focus({ preventScroll: true }); },
         previous: () => step(-1), next: () => step(1), reaction: () => react(false), 'rare-reaction': () => react(true),
         cry: () => { const row = DEX_REVIEW_CATALOG.find(x => x.form.id === selected); if (row) playMonsterCry({ species: row.species.id, stage: row.form.stage }); },
-        save: () => toast(saveDraft(root) ? 'Review saved.' : 'Device storage unavailable. Your notes are kept for this session only: export feedback before leaving.'),
+        save: () => toast(saveDraft(root) ? 'Review saved.' : 'Device storage unavailable. Local saving failed. Export feedback before leaving to keep a copy.'),
         report: () => { saveDraft(root); sheet(`<textarea readonly rows="15" style="width:100%">${esc(JSON.stringify({ version: 2, coverage, reviews: dexReviews() }, null, 2))}</textarea>`, { title: 'Beast Dex Feedback — Copy to Share' }); },
       });
     },
