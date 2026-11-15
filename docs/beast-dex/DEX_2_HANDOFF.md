@@ -132,7 +132,7 @@ instruction, so it was not acted on and has been put to the owner.
 
 ### Checks
 - Full suite on `b137605` (the preview build): 2,173 of 2,174 passed; the one failure was the History screens wording pin, fixed in
-  `0032404` (that file 7/7). Full suite on the final commit `0032404`: running at the time of this note (result in PR #114).
+  `0032404` (that file 7/7). A further full run on `0032404` was stopped at the owner's request; game code there is identical to `b137605`.
 - `node tools/audit-dex-content.mjs --require-complete`: 222/222. `python3 tools/text-export.py --check`: current.
 - Deploy check on the preview folder: all pass (462 files, version and label, 3 saves load) except the expected "BUILD.test is false".
   Published files read back and match the build.
