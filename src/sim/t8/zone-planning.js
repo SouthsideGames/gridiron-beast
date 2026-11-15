@@ -1,13 +1,14 @@
 // Shared football zone policy. UI previews, reviewer scenarios, AI and the snap all
 // use these legal options; no opponent assignments or random simulation draws.
 import { placeRect, RECIPES, effectsCore, contains } from './fields.js';
+import { createRng } from '../../core/rng.js';
 import { ABILITIES } from '../../data/beast-dex.js';
 
 export const ZONE_IDS = Object.freeze(ABILITIES.filter((a) => a.mode === 'football' && a.category === 'Zone').map((a) => a.id));
-// These are created by a specific action/alignment: their location IS the effect.
-export const FIXED_ZONES = Object.freeze(['WAT-01-F', 'NAT-05-F', 'ELE-02-F', 'ELE-04-F']);
+// Every football zone supports a coach choice, including action-earned zones.
+export const FIXED_ZONES = Object.freeze([]);
 export const canPlaceZone = (id) => ZONE_IDS.includes(id) && !FIXED_ZONES.includes(id);
-export const zoneKey = (p) => `${p.owner}|${p.ability}`;
+export const zoneKey = (p) => `${p.owner}|${p.ability}|${p.placementIndex ?? 0}`;
 export const snapKey = (state) => `${state.playCount || 0}|${state.possession}|${state.quarter}`;
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const intersect = (a, b) => ({ yard: [Math.max(a.yard[0], b.yard[0]), Math.min(a.yard[1], b.yard[1])], lat: [Math.max(a.lat[0], b.lat[0]), Math.min(a.lat[1], b.lat[1])] });
@@ -59,23 +60,21 @@ export function zoneOptions({ state, spec, base, ownPlay = null, fields = state.
     return Math.abs(nearest - fallback) <= width / 2 ? fallback : nearest;
   };
   const make = (id, label, lat, dep) => {
-    // Bloom Break's two six-yard patches move as a pair with a one-yard gap.
-    // Clamping the pair's center keeps both legal and prevents self-overlap.
-    if (spec.ability === 'NAT-01-F' && Number.isFinite(spec.placementOffset)) lat = clamp(lat, -80 / 3 + 6.5, 80 / 3 - 6.5) + spec.placementOffset;
+    // Parts have independent choices. Keep a small separation when both use the
+    // same lane, while clamping each part within the sidelines.
+    if (Number.isFinite(spec.placementOffset)) { const half = width / 2 + Math.abs(spec.placementOffset); lat = clamp(lat, -80 / 3 + half, 80 / 3 - half) + spec.placementOffset; }
 
     const cy = clamp(ballYard + dir * dep, length / 2, 100 - length / 2);
     const rect = placeRect({ type: spec.type, width, centerLat: lat, yardFrom: cy - length / 2, yardTo: cy + length / 2 });
     return { id, label, rect: { yard: [...rect.yard], lat: [...rect.lat] }, placement: { centerLat: (rect.lat[0] + rect.lat[1]) / 2, yardFrom: rect.yard[0], yardTo: rect.yard[1], width },
       overlaps: zoneOverlaps(rect, spec.type, fields, spec.lifetime, spec.clock, spec.ownerTeam) };
   };
-  // The paired sideline lanes keep their lateral identity; the choice moves both to the same depth band.
-  let out = spec.ability === 'WIN-04-F'
-    ? [make('left', 'Short lanes', (original.lat[0] + original.lat[1]) / 2, 4), make('middle', 'Middle lanes', (original.lat[0] + original.lat[1]) / 2, 8.5), make('right', 'Deep lanes', (original.lat[0] + original.lat[1]) / 2, 15)]
-    : width >= 160 / 3 - 0.01
-      ? [make('left', 'Short band', ballLat, depth - 6), make('middle', 'Middle band', ballLat, depth), make('right', 'Deep band', ballLat, depth + 6)]
-      : [make('left', 'Left', ballLat + dir * chooseLane('left', -18), depth), make('middle', 'Middle', ballLat + dir * chooseLane('middle', 0), depth), make('right', 'Right', ballLat + dir * chooseLane('right', 18), depth)];
+  // Full-width zones offer depth bands; narrower parts each offer lateral lanes.
+  let out = width >= 160 / 3 - 0.01
+    ? [make('left', 'Short band', ballLat, depth - 6), make('middle', 'Middle band', ballLat, depth), make('right', 'Deep band', ballLat, depth + 6)]
+    : [make('left', 'Left', ballLat + dir * chooseLane('left', -18), depth), make('middle', 'Middle', ballLat + dir * chooseLane('middle', 0), depth), make('right', 'Right', ballLat + dir * chooseLane('right', 18), depth)];
   const seen = new Set(); out = out.filter((o) => { const k = JSON.stringify(o.rect); if (seen.has(k)) return false; seen.add(k); return true; });
-  if (spec.ability !== 'WIN-04-F') for (const f of fields) {
+  for (const f of fields) {
     if (!RECIPES.some((r) => spec.type !== f.type && r.parents.includes(spec.type) && r.parents.includes(f.type))) continue;
     const dep = ((f.yard[0] + f.yard[1]) / 2 - ballYard) * dir;
     // A zone left far behind the live play is not a useful placement suggestion.
@@ -86,7 +85,7 @@ export function zoneOptions({ state, spec, base, ownPlay = null, fields = state.
   return out;
 }
 /** A deterministic coach choice, using only the same public/legal options. */
-export function autoZoneOption(options, spec, ownPlay = null) {
+export function autoZoneOption(options, spec, ownPlay = null, state = null) {
   if (!options.length) return null;
   const jobs = Object.values(ownPlay?.assignments || {});
   const points = jobs.flatMap((j) => j.points?.length ? j.points.slice(1) : j.at ? [j.at] : []);
@@ -97,12 +96,16 @@ export function autoZoneOption(options, spec, ownPlay = null) {
     const lane = points.reduce((n, p) => n + p[1], 0) / points.length;
     preferred = lane < -4 ? 'left' : lane > 4 ? 'right' : 'middle';
   }
-  return options.find((o) => o.id.startsWith('overlap:')) || options.find((o) => o.id === preferred) || options[0];
+  // Stable for this snap/save, varied across snaps, games and creators. This
+  // private stream never advances the game dice; previews cannot reroll it.
+  let seed = 2166136261;
+  for (const ch of `${state?.seed || 0}|${state ? snapKey(state) : 0}|${zoneKey(spec)}|${ownPlay?.id || ''}`) { seed ^= ch.charCodeAt(0); seed = Math.imul(seed, 16777619); }
+  return createRng(seed >>> 0).weighted(options.map((o) => [o, 1 + (o.id === preferred ? 1 : 0) + (o.overlaps?.length ? 1.5 : 0)]));
 }
 export function selectedZoneOption(state, spec, options, ownPlay = null) {
   const saved = state.t8?.zoneChoices;
   const id = saved?.key === snapKey(state) ? saved.picks?.[zoneKey(spec)] : null;
-  return options.find((o) => o.id === id) || autoZoneOption(options, spec, ownPlay);
+  return options.find((o) => o.id === id) || autoZoneOption(options, spec, ownPlay, state);
 }
 export function setZoneChoice(state, key, choice) {
   const t8 = (state.t8 ||= { status: {} });

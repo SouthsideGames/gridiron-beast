@@ -255,7 +255,7 @@ function afterPlayFields(state, t8, slots, sim, offIds) {
  *  opposing offense's snap, offensive ones at the creator's club's offensive snap; the creator must be on the field on that side unless
  *  the contract allows off-field creation (benchOk / offField, N7d G3); maxOwn: one own active field of that ability at a time. */
 function pendingEligible(state, t8, p, offIds, defIds) {
-  if (p.immediate) return false; // Fire/Water: an immediate field (Splashdown) is placed at the whistle, not at a snap
+  if (p.immediate) return false; // Legacy immediate specs are placed at the whistle, not at a snap
   const def = p.side === 'def' || p.side === 'defense' || p.createOn === 'ownerDefense'; // 'defense': the Nature / Electric batch's spelling
   if (p.ownerTeam && (def ? state.possession === p.ownerTeam : state.possession !== p.ownerTeam)) return false;
   if (!p.offField && !p.benchOk && !(def ? defIds : offIds).has(p.owner)) return false;
@@ -318,7 +318,7 @@ export function previewPendingFields(state, teams, offensePlayId, defensePlayId,
     let usesDefenseAlign = false;
     const alignOf = (id) => { for (const [sl, x] of Object.entries(slots.offense)) if (x?.id === id) return offensePlay.align[sl] || null; for (const [sl, x] of Object.entries(slots.defense)) if (x?.id === id) { usesDefenseAlign = true; return defensePlay.align[sl] || null; } return null; };
     const r = placeRect({ id: `P${out.length + 1}`, type: p.type, createdAt: state.playCount || 0, owner: p.owner, strength: p.strength ?? null, ...fieldPlacement(state, p, offensePlay, alignOf, defensePlay) });
-    out.push({ ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, ownerTeam: p.ownerTeam ?? null, payload: p.payload ?? null, usesDefenseAlign, remaining: p.lifetime, clock: p.clock, placementKey: zoneKey(p), placementOptions: canPlaceZone(p.ability) ? zoneOptions({ state, spec: p, base: defaultFieldPlacement(state, p, offensePlay, alignOf), ownPlay: p.ownerTeam === state.possession ? offensePlay : defensePlay }) : [], ...(born.has(p) ? { inSnap: true, callDependent: !!born.get(p) } : {}) });
+    out.push({ ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, ownerTeam: p.ownerTeam ?? null, payload: p.payload ?? null, usesDefenseAlign, remaining: p.lifetime, clock: p.clock, placementIndex: p.placementIndex ?? 0, placementKey: zoneKey(p), placementOptions: canPlaceZone(p.ability) ? zoneOptions({ state, spec: p, base: defaultFieldPlacement(state, p, offensePlay, alignOf), ownPlay: p.ownerTeam === state.possession ? offensePlay : defensePlay }) : [], ...(born.has(p) ? { inSnap: true, callDependent: !!born.get(p) } : {}) });
   }
   return out;
 }

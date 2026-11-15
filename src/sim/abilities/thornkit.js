@@ -31,7 +31,7 @@ export default registerAbility({
       if (!st.token) return;
       const strength = TURN[stageOf(self.form)] ?? TURN[0];
       const rng = st.drawKey != null && pctx.stream ? pctx.stream(st.drawKey) : pctx.rng; // the choices fixed when it was earned (N9c: never rerolled)
-      for (const [i, r] of drawPatches(rng, pctx.ballOn).entries()) pctx.queueField({ placementOffset: i ? 3.5 : -3.5, owner: self.mid, type: 'Nature', ability: 'NAT-01-F', strength, lifetime: 3, clock: 'ownerOffense', width: PATCH.width, rect: r });
+      for (const [i, r] of drawPatches(rng, pctx.ballOn).entries()) pctx.queueField({ placementIndex: i, placementOffset: i ? 3.5 : -3.5, owner: self.mid, type: 'Nature', ability: 'NAT-01-F', strength, lifetime: 3, clock: 'ownerOffense', width: PATCH.width, rect: r });
       st.token = false; delete st.drawKey; spend(st, byMastery(CD_5432, self.mastery));
     },
     playStart(ctx, self) { self.bb = { wp: 0 }; },

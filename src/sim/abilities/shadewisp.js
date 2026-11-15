@@ -1,3 +1,5 @@
+// Football revision approved 2026-11-15. The current exact contract is in
+// docs/beast-dex/data/abilities.json (and task8-overrides.json where applicable).
 // PSY-02-F Mirror Rift: redirect a live pass to a seeded random legal location.
 // The destination is near a randomly selected eligible receiver/defender or open
 // grass. No outcome is selected: the real catch/interception checks resolve it.

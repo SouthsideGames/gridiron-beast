@@ -9,7 +9,7 @@ import { simulatePlay, engagementAttrs } from '../src/sim/engine.js';
 import { PLAYS } from '../src/data/playbook.js';
 import { FIELD } from '../src/core/field.js';
 import { lineup } from './tools/lineup.js';
-import * as R from '../src/sim/rules.js';
+import * as R from './helpers/zone-rules.js';
 import * as T8F from '../src/sim/t8/field-runtime.js';
 import * as T8K from '../src/sim/t8/stamina-runtime.js';
 import * as Fr from '../src/core/fraction.js';
@@ -225,7 +225,7 @@ test('Burning Wake zone: waits for the next participating offensive snap, offers
 });
 
 // ------------------------------------------------------------------------------------------------ WAT-01-F Splashdown (tidepaw)
-test('Splashdown: his credited pass breakup while ready queues the Water patch at the deflection spot (slip by form and mastery); never on interceptions or while cooling down', () => {
+test('Splashdown: his credited pass breakup while ready banks a selectable Water patch for the next defensive snap (slip by form and mastery); never on interceptions or while cooling down', () => {
   let found = 0;
   for (let seed = 1; seed <= 150 && found < 3; seed++) {
     const t8 = { status: {}, ability: { d_CB1: { cd: 0, seen: null } } };
@@ -234,7 +234,7 @@ test('Splashdown: his credited pass breakup while ready queues the Water patch a
     if (r.stats.pbuBy !== 'CB1' || r.stats.interceptor) { assert.equal(ev.length, 0, `seed ${seed}`); continue; }
     found++; assert.equal(ev.length, 1); assert.equal(t8.ability.d_CB1.cd, 3);
     const p = t8.fields.pending[0];
-    assert.ok(near(p.immediate.x, ev[0].x, 0.01) && near(p.immediate.y, ev[0].y, 0.01));
+    assert.equal(p.immediate, undefined); assert.equal(p.side, 'def'); assert.equal(p.lbDepth, 5);
     assert.equal(p.strength, 32); assert.equal(p.width, 6); assert.equal(p.length, 4); assert.equal(p.lifetime, 3); assert.equal(p.offField, true); assert.equal(p.type, 'Water');
     const cool = { status: {}, ability: { d_CB1: { cd: 2, seen: 0 } }, teamPlays: { away: { off: 0, def: 0 } } };
     play('quick_slants', 'man_press', seed, { def: { CB1: 'tidepaw' }, options: { t8: cool, offenseSide: 'home', ...forced('WR1', 1.0) } });
@@ -253,17 +253,26 @@ test('Splashdown recharge counts his team\'s defensive scrimmage plays even whil
   assert.deepEqual(two.teamPlays, { home: { off: 1, def: 1 } }, 'two-point tries are not counted');
 });
 
-test('Splashdown field: remains at the deflection spot for three subsequent defensive team plays', () => {
+test('Splashdown field: waits for a selectable defensive snap, then lasts three defensive team plays', () => {
   const { g, teams } = newG(9); const cb = teams.away.defense.CB1; Object.assign(cb, { species: 'tidepaw', form: 'tidepaw:0', mastery: 0 });
   g.t8.ability = { [cb.id]: { cd: 0, seen: null } };
   let hit = null;
   for (let n = 0; n < 250 && !hit; n++) { ready(g, teams); const x = snap(g, teams, 'quick_slants', 'man_press', g.possession === 'home' ? forced('WR1', 1.0) : {}); if (abilityEvents(x.sim, 'WAT-01-F').length) hit = x; }
   assert.ok(hit, 'a breakup by him');
-  const f = g.t8.fields.list.find((z) => z.ability === 'WAT-01-F'); assert.ok(f, 'created at the whistle'); assert.equal(f.remaining, 3, 'the creation play is excluded'); assert.equal(f.strength, 20);
-  const ev = abilityEvents(hit.sim, 'WAT-01-F')[0]; const sgn = hit.pre.possession === 'home' ? 1 : -1;
-  assert.ok(near(mid(f.yard), sgn > 0 ? hit.pre.ballOn + ev.x : 100 - (hit.pre.ballOn + ev.x), 0.02), 'at the deflection spot (length)');
-  assert.ok(near(span(f.yard), 4) && near(span(f.lat), 6)); if (Math.abs(ev.y) < 20) assert.ok(near(mid(f.lat), sgn * (hit.pre.ballLat + ev.y), 0.02), 'at the deflection spot (width)');
-  for (let i = 0; i < 3; i++) { Object.assign(g, { phase: 'scrimmage', possession: 'home', down: 1, toGo: 10, ballOn: 35 }); snap(g, teams, 'inside_zone', 'cover_3'); } assert.equal(g.t8.fields.list.find((z) => z.ability === 'WAT-01-F'), undefined, 'three subsequent defensive plays');
+  assert.equal(g.t8.fields.list.some(z=>z.ability==='WAT-01-F'),false,'no automatic whistle location');
+  assert.equal(g.t8.fields.pending.filter(z=>z.ability==='WAT-01-F').length,1);
+  Object.assign(g,{phase:'scrimmage',possession:'away',down:1,toGo:10,ballOn:35});
+  snap(g,teams,'inside_zone','cover_3');
+  assert.equal(g.t8.fields.pending.filter(z=>z.ability==='WAT-01-F').length,1,'waits through own offense');
+  Object.assign(g,{phase:'scrimmage',possession:'home',down:1,toGo:10,ballOn:35});
+  const preview=R.previewPendingFields(g,teams,'inside_zone','cover_3').find(z=>z.ability==='WAT-01-F');
+  assert.deepEqual(preview.placementOptions.map(o=>o.id),['left','middle','right']);
+  snap(g,teams,'inside_zone','cover_3');
+  const f=g.t8.fields.list.find(z=>z.ability==='WAT-01-F');
+  assert.equal(f.remaining,2,'creation snap counts');assert.equal(f.strength,20);
+  assert.ok(near(span(f.yard),4)&&near(span(f.lat),6));
+  for(let i=0;i<2;i++){Object.assign(g,{phase:'scrimmage',possession:'home',down:1,toGo:10,ballOn:35});snap(g,teams,'inside_zone','cover_3');}
+  assert.equal(g.t8.fields.list.find(z=>z.ability==='WAT-01-F'),undefined,'expires after three defensive snaps');
 });
 
 // ------------------------------------------------------------------------------------------------ WAT-02-F Divided Guard (mudcub)

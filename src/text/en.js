@@ -6092,7 +6092,7 @@ export default {
   'sim.earns_a_bramble_trap': '{name} earns a Bramble Trap',
   'sim.earns_a_bloom_break': '{name} earns a Bloom Break',
   'sim.bobbles_it_and_reaches_again': '{name} bobbles it and reaches again',
-  'sim.s_splashdown_soaks_the_spot': '{name}\'s Splashdown soaks the spot',
+  'sim.s_splashdown_soaks_the_spot': '{name}\'s Splashdown banks a Water zone for the next defensive snap',
   'sim.s_landslide_a_stone_wall_erupts': '{name}\'s Landslide: a stone wall erupts across the front',
   'sim.s_landslide_crumbles': '{name}\'s Landslide crumbles',
   'sim.calls_down_a_tsunami_line': '{name} calls down a Tsunami Line',

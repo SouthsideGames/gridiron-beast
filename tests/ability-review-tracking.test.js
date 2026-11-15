@@ -79,7 +79,7 @@ test('a materially changed ability returns to Pending Review; unrelated approval
   // (2) a change the contract text does not show: the revision number. Only that ability's fingerprint moves.
   const row = inv.football.find((x) => x.abilityId === b); const ab = Dex.abilityById(b); const data = [ab.name, ab.category, ab.activation, ab.mechanic, ab.details, ab.ruling, ab.values, row.registered];
   D.setFootballFingerprint(b, data, { name: row.name, rev: 99 }); assert.equal(D.abilityStatus('fbability', b), 'pending', 'revision 1: approval lapsed');
-  D.setFootballFingerprint(b, data, { name: row.name, rev: 1 }); assert.equal(D.abilityStatus('fbability', b), 'approved', 'no revision entry: the fingerprint is the one the approval was saved with');
+  D.setFootballFingerprint(b, data, { name: row.name, rev: (await import('../src/data/ability-review-revisions.js')).FOOTBALL_REVISION[b] }); assert.equal(D.abilityStatus('fbability', b), 'approved', 'no revision entry: the fingerprint is the one the approval was saved with');
   // (3) an approval saved by the reviewer before this change (same fingerprint data) is still valid
   await S.setReview('fbability', a, { status: 'approved' }, savedFp); assert.equal(D.abilityStatus('fbability', a), 'approved');
   const { FOOTBALL_REVISION, CLASH_REVISION } = await import('../src/data/ability-review-revisions.js');

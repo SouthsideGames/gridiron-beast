@@ -11,7 +11,9 @@ export function zonePlans(state, teams, side, offense, defense) {
     if (groups.has(key)) { groups.get(key).parts.push(p); continue; }
     const saved = state.t8?.zoneChoices;
     const picked = saved?.key === snapKey(state) ? saved.picks?.[key] || 'auto' : 'auto';
-    groups.set(key, { ...p, key, parts: [p], picked, name: abilityById(p.ability)?.name || p.type });
+    const siblings = fields.filter((f) => f.owner === p.owner && f.ability === p.ability);
+    const label = abilityById(p.ability)?.name || p.type;
+    groups.set(key, { ...p, key, parts: [p], picked, name: siblings.length > 1 ? `${label} — Zone ${(p.placementIndex ?? 0) + 1}` : label });
   }
   return [...groups.values()];
 }

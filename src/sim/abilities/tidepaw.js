@@ -25,7 +25,7 @@ export default registerAbility({
       if (!ctx.canStartSignature(self)) return;
       st.cd = SPLASH.cooldown; ctx.executed(self);
       const x = ctx.ball.x, y = ctx.ball.y;
-      ctx.queueField({ owner: self.mid, ownerTeam: ctx.sideOf(self), offField: true, immediate: { x, y }, type: 'Water', ability: 'WAT-01-F',
+      ctx.queueField({ owner: self.mid, ownerTeam: ctx.sideOf(self), offField: true, side: 'def', lbDepth: 5, type: 'Water', ability: 'WAT-01-F',
         strength: byMastery(SPLASH.slipByStage[stageOf(self.form)] || SPLASH.slipByStage[0], self.mastery), lifetime: SPLASH.lifetime, clock: 'ownerDefense', width: SPLASH.width, length: SPLASH.length });
       ctx.log(`${$E('sim.s_splashdown_soaks_the_spot', { name: self.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WAT-01-F', x: +x.toFixed(2), y: +y.toFixed(2) });
     },

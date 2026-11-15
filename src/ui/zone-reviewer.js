@@ -6,6 +6,7 @@ import { zonePlans, zonePlannerHtml, zonePlannerOverlay } from './zone-planner.j
 import { setZoneChoice } from '../sim/t8/zone-planning.js';
 import { SCENARIOS } from '../sim/abilities/review-scenarios.js';
 import { stageScenario } from '../sim/abilities/review.js';
+import { stageZoneReadiness } from './zone-review-ready.js';
 import { contractOf } from '../sim/abilities/registry.js';
 import { familyById } from '../data/beast-dex.js';
 import { PLAYS } from '../data/playbook.js';
@@ -35,7 +36,7 @@ export function openZoneReviewer(c, { form, mastery, reducedMotion = false } = {
   }
   function render() {
     const calls = prepare(), state = G.state, cam = cameraFor(state.ballOn);
-    const plans = calls.kick ? [] : zonePlans(state, G.teams, 'home', calls.offense, calls.defense);
+    const plans = calls.kick ? [] : zonePlans(state, G.teams, 'home', calls.offense, calls.defense).filter((p) => p.owner === G.subject.id);
     const plan = plans.find((p) => p.key === focus) || plans[0];
     const look = { play: PLAYS[G.at.side === 'offense' ? calls.offense : calls.defense], offensePlay: PLAYS[calls.offense], defensePlay: PLAYS[calls.defense] };
     const other = state.possession === 'home' ? 'away' : 'home';
@@ -62,15 +63,16 @@ export function openZoneReviewer(c, { form, mastery, reducedMotion = false } = {
     zonesnap: () => { if (playing) return; const cfg = config(), index = n++; replay = G.snap(index, cfg); if (replay.executed && activationAt == null) activationAt = index; animate(replay); },
     zoneprepare: () => {
       if (playing) return;
+      const staged = stageZoneReadiness(G, c.family, form || c.forms[0], mastery || 0);
       let attempts = 0;
       while (attempts < 48) {
         const calls = prepare();
-        if (!calls.kick && zonePlans(G.state, G.teams, 'home', calls.offense, calls.defense).length) break;
+        if (!calls.kick && zonePlans(G.state, G.teams, 'home', calls.offense, calls.defense).some((p) => p.owner === G.subject.id && p.placementOptions.length)) break;
         const cfg = config(), index = n++, rec = G.snap(index, cfg); replay = rec; attempts++;
         if (rec.executed && activationAt == null) activationAt = index;
-        if ((G.state.t8.fields?.list || []).some((f) => f.owner === G.subject.id)) break;
+
       }
-      preparedNote = attempts ? `Played ${attempts} real staged prerequisites. Charges and outcomes came from the engine.` : 'This zone is already ready for placement.';
+      preparedNote = staged ? 'Ready state staged for placement testing only. Restart Test to replay the natural trigger.' : attempts ? `Played ${attempts} real staged prerequisites. Charges and outcomes came from the engine.` : 'Select a placement for each zone below, then press Snap / Confirm Placement.';
       render();
     },
     zonereset: () => { if (playing) return; close(); openZoneReviewer(c, { form, mastery, reducedMotion }); },

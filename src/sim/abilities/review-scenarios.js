@@ -44,7 +44,7 @@ export const SCENARIOS = {
   pyrelynx: { unit: 'defense', calls: DEF_PASS, how: 'passive aura; pass plays put receivers near him' },
   pyroclast: { unit: 'offense', calls: [['stick', 'cover_3'], ['y_cross', 'cover_4'], ['flood', 'cover_2_man'], ['te_seam', 'cover_3']], target: true, snaps: 24, how: 'passes to him (chosen target) until a catch-and-run of 5+ yards after the catch earns the Burning Wake; it is created at his next offensive snap' },
   // ---------------------------------------------------------------------------------------------------------------- Water
-  tidepaw: { seed0: 6, unit: 'defense', calls: DEF_PASS, how: 'ready; pass plays into his coverage until his personal pass breakup creates the Water patch (natural trigger)' },
+  tidepaw: { seed0: 6, unit: 'defense', calls: DEF_PASS, how: 'ready; pass plays into his coverage until his personal pass breakup banks the Water patch for next-snap placement (natural trigger)' },
   mudcub: { unit: 'offense', calls: [['quick_slants', 'zone_blitz'], ['smash', 'double_a_mug'], ['deep_post', 'zone_blitz'], ['curl_flat', 'double_a_mug']], seeds: 24, how: 'ready; pass-protection snaps against blitzing fronts (zone_blitz, double_a_mug), so two rushers reach his reach: the automatic snap activation holds two at once (natural trigger)' },
   reefclaw: { unit: 'defense', calls: DEF_MIX, how: 'ready; mixed snaps until his first block engagement drains the blocker (natural trigger)' },
   tidefin: { seed0: 3, unit: 'offense', calls: [['quick_slants', 'cover_3'], ['curl_flat', 'cover_2_man'], ['smash', 'cover_4']], target: 'WR1', how: 'ready; passes to him (chosen target) until one he reaches falls' },
