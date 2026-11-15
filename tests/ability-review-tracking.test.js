@@ -37,7 +37,7 @@ test('initial status: with no recorded approval every ability is Pending Review,
   reset(); const q = D.reviewQueue();
   for (const r of [q.football, q.clash]) { assert.equal(r.pending.length, r.total); assert.equal(r.approved.length, 0); assert.equal(r.revision.length, 0); assert.equal(r.outstanding, r.total); }
   assert.equal(D.abilityStatus('fbability', inv.football[0].abilityId), 'pending'); assert.match(D.abilityStateBadge('fbability', inv.football[0].abilityId), /PENDING REVIEW/);
-  assert.equal(q.total, q.plays.length + q.football.total + q.clash.total, 'the notification total: plays plus both ability reviewers (the retired legacy audit is not counted)');
+  assert.equal(q.total, q.plays.length + q.football.total + q.clash.total + q.beastdex.outstanding, 'the notification total: plays plus both ability reviewers and Beast Dex (the retired legacy audit is not counted)');
   assert.equal(D.abilityQueueText(q.football), `Ability Reviewer — ${q.football.total} abilities need review`);
   assert.equal(D.abilityQueueText(q.clash), `Clash Ability Reviewer — ${q.clash.total} abilities need review`);
 });
