@@ -112,7 +112,7 @@
     "name": "Impact Pyre",
     "category": "Zone",
     "activation": "Three tackle-play charges -> next defensive snap",
-    "mechanic": "Tackle-earned charge creates stationary Fire at owner next snap",
+    "mechanic": "Tackle-earned charge creates stationary Fire at owner next snap Zone revision: 3/4/5/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -122,7 +122,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Stationary field-aligned Fire rectangle centered at linebacker STARTING position on activation snap;6wide x4long. It does not follow owner.",
+        "rule": "6 yards wide by 4 long, at the front defender reference. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -137,7 +137,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "1/2/3/4 completed plays by mastery, counting SPAWN play as first. Partial/full bar survives possession changes and halftime; created nonlegendary zone clears halftime, all game state clears actual game end.",
+        "rule": "Lasts 3/4/5/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -152,7 +152,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Cindruff15% slowdown/Magmaul20%;6x4 footprint; mastery1/2/3/4plays including spawn. No separate cooldown. Placement no longer centered on prior tackle.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/4/5/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       }
     ],
@@ -536,7 +536,7 @@
     "name": "Eruption — Burning Wake",
     "category": "Zone",
     "activation": "Five YAC earns next-offensive-play zone",
-    "mechanic": "Total-YAC-width Fire rectangle at upcoming LB depth",
+    "mechanic": "Total-YAC-width Fire rectangle at upcoming LB depth Zone revision: 5/5/5/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -546,7 +546,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Before play selection create fixed5-yard-long rectangle centered at LB REFERENCE DEPTH, always FIVE yards beyond upcoming LOS regardless actual linebackers. Center laterally on Pyroclast INITIAL pre-play position. Width TOTAL earned YAC, min5/cap FIELD.width; symmetric lateral expansion and inward boundary shift. Later play/formation changes do not move it.",
+        "rule": "5 yards long; width equals total earned yards after the catch, minimum 5 and capped at the field width. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -561,7 +561,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "TWO completed plays INCLUDING SPAWN play as play1. Pending token and already-created legendary field preserve remaining state through halftime without refresh. Hold pending token across possession changes; all clear actual game end. Earlier suggestion to exclude spawn play was explicitly withdrawn by owner.",
+        "rule": "Lasts 5/5/5/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -576,7 +576,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Slow25/28/31/34%, fixed5length; width TOTALYAC at least5 cappedfullfield. Not extra yards beyond5, not previous live-anchor footprint.",
+        "rule": "Zone duration by mastery 0/1/2/3: 5/5/5/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       }
     ],
@@ -642,7 +642,7 @@
     "name": "Splashdown",
     "category": "Zone",
     "activation": "Personal pass breakup",
-    "mechanic": "PBU-created small Water slip patch",
+    "mechanic": "PBU-created small Water slip patch Zone revision: 3/3/3/3 relevant team plays by mastery; action location retained.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -652,7 +652,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Water rectangle centered on deflection spot; 6 yards wide sideline-to-sideline by 4 yards long end-zone-to-end-zone, fixed field alignment.",
+        "rule": "Water rectangle centered on deflection spot; 6 yards wide sideline-to-sideline by 4 yards long end-zone-to-end-zone, fixed field alignment. This zone retains its action/alignment placement; it cannot be freely relocated.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -667,7 +667,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Creation play excluded; lasts TWO subsequent completed football plays regardless possession/creator participation. Clear halftime/actual game end. Slip Stumbled clears at current whistle, not carried into next snap: explicit application-play exception.",
+        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -682,7 +682,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Aquip slip chances 20/22/24/26%; Aquarrel 25/27/29/31%; Abyssin 30/32/34/36%. Duration, footprint and slip loss fixed.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/3/3/3 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       }
     ],
@@ -1172,7 +1172,7 @@
     "name": "Tsunami Line",
     "category": "Zone",
     "activation": "Secured interception; post-play slam",
-    "mechanic": "Interception earns full-width next-play Water at safety depth",
+    "mechanic": "Interception earns full-width next-play Water at safety depth Zone revision: 5/5/5/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -1182,7 +1182,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "FULL field width x5yards long, centered at SAFETY REFERENCE DEPTH, always TWELVE yards beyond upcoming LOS regardless actual safeties or missing safety positions. Use initial pre-play snapshot, reveal before play selection, never follow later defensive changes. Keep within playable bounds.",
+        "rule": "Full field width by 5 yards long, with short/middle/deep bands around the 12-yard safety reference. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -1197,7 +1197,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "TWO completed plays including FIRST OFFENSIVE SPAWN PLAY as play1. Preserve remaining duration over halftime, no refresh; actual game end clear. Wait for next offensive scrimmage snap, not specialteams.",
+        "rule": "Lasts 5/5/5/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -1212,7 +1212,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Legendary S; full-width x5long Water at fixed12-yard safety reference; giant raindrop before next offensive play. Two plays INCLUDING spawn. Five subsequent defensive-play cooldown; slip30/32/34/36%. Actual-safety averaging and return-end slam are superseded.",
+        "rule": "Zone duration by mastery 0/1/2/3: 5/5/5/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       }
     ],
@@ -1278,7 +1278,7 @@
     "name": "Bloom Break",
     "category": "Zone",
     "activation": "Designed route cut earns next-play patches",
-    "mechanic": "Two seeded random Nature patches earned by designated route cut",
+    "mechanic": "A designated route cut earns two Nature patches for the next offensive snap. Choose their lane before the snap; the pair remains separate with a one-yard lateral gap. Lasts three offensive team plays.",
     "sourceDesignStatus": "Approved; engine work required",
     "details": [
       {
@@ -1288,7 +1288,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Before play selection use initial pre-play formation snapshot. Create TWO recorded random, non-overlapping 6-yard-wide x 4-yard-long rectangles between initial defensive line and FIXED safety-reference depth 12 yards beyond upcoming LOS. Use that reference even if actual safeties differ or none exist. Both teams see patches before choosing plays; later changes never move/reroll them. Near goal line extend eligible band toward end line just enough to fit, within playable bounds.",
+        "rule": "Two 6-by-4-yard Nature patches. The route cut earns the next-snap pair. Choose a legal left/middle/right area after selecting a play, or Auto Place. Both patches use that choice, stay in bounds, and remain separated by a one-yard lateral gap. Available legal parent zones offer hybrid overlap options. Their longitudinal bands retain the seeded 0-to-12-yard placement. No selection spends the token until the actual snap.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
@@ -1303,7 +1303,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Pending activation: at most ONE; wait through punts, possession changes and halftime. Spawned patches last ONE completed play INCLUDING spawn play, all outcomes, then clear whistle. No bonus attempt after incompletion. No new token earned on spawn play or while cooldown/pending activation prevents eligibility.",
+        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
@@ -1318,7 +1318,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Common WR family, Support Clash. Form turning 15/20/25%; mastery cooldown 5/4/3/2. Does not use old immediate cut-centered patch.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/3/3/3 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       }
     ],
@@ -1702,7 +1702,7 @@
     "name": "Bramble Trap",
     "category": "Zone",
     "activation": "Break receiving tackle earns next-play target-centered patch",
-    "mechanic": "Random non-Nature defender-centered next-play Nature zone",
+    "mechanic": "Random non-Nature defender-centered next-play Nature zone Zone revision: 3/3/3/3 relevant team plays by mastery; action location retained.",
     "sourceDesignStatus": "Approved; engine work required",
     "details": [
       {
@@ -1712,7 +1712,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Before play selection choose uniformly from participating NON-NATURE defenders in initial pre-play formation. Center stationary8wide x6long patch on chosen defender INITIAL position. Shift inward at boundaries to preserve size. No eligible defender -> hold pending readiness. Later formation/play changes do not reroll target or move zone. Fixed5/12-yard reference bands do NOT replace this explicitly defender-centered placement.",
+        "rule": "Before play selection choose uniformly from participating NON-NATURE defenders in initial pre-play formation. Center stationary8wide x6long patch on chosen defender INITIAL position. Shift inward at boundaries to preserve size. No eligible defender -> hold pending readiness. Later formation/play changes do not reroll target or move zone. Fixed5/12-yard reference bands do NOT replace this explicitly defender-centered placement. This zone retains its action/alignment placement; it cannot be freely relocated.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
@@ -1727,12 +1727,12 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "ONE completed play including spawn play, all outcomes. Pending activation survives possession changes/HALFTIME. Spawned nonlegendary zone clears whistle/halftime.",
+        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Recorded target and initial position are locked before both teams choose plays; no reload/audible reroll. Three subsequent offensive-play cooldown starts spawn; no re-earn on spawn play or while unavailable. One pending activation persists possession/halftime. Bramble Lane rejected.",
+        "rule": "Recorded target and initial position are locked at the snap; no reload/audible reroll. Three subsequent offensive-play cooldown starts spawn; no re-earn on spawn play or while unavailable. One pending activation persists possession/halftime. Bramble Lane rejected.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
@@ -1742,7 +1742,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Rare standalone TE; Zone. Size8x6 fixed; mastery turning25/30/35/40%.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/3/3/3 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       }
     ],
@@ -2020,7 +2020,7 @@
     "name": "Charge Strip",
     "category": "Zone",
     "activation": "Rushing first down earns next-snap field",
-    "mechanic": "Rushing-first-down token creates LOS-to-LB Electric rectangle on next offensive snap",
+    "mechanic": "Rushing-first-down token creates LOS-to-LB Electric rectangle on next offensive snap Zone revision: 3/3/3/3 relevant team plays by mastery; action location retained.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -2030,7 +2030,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Next participating offensive scrimmage pre-play: eight yards sideline-to-sideline by five yards longitudinal, from LOS to the fixed five-yard LB reference. Lateral center uses Volcoil’s initial alignment; shift inward to preserve width and apply normal field boundaries.",
+        "rule": "Next participating offensive scrimmage pre-play: eight yards sideline-to-sideline by five yards longitudinal, from LOS to the fixed five-yard LB reference. Lateral center uses Volcoil’s initial alignment; shift inward to preserve width and apply normal field boundaries. This zone retains its action/alignment placement; it cannot be freely relocated.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2045,7 +2045,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "One completed play INCLUDING spawn. Accepted Stunned lasts the remainder of that play and clears at whistle. Pending max one carries possession and halftime; actual game end clears it. Nonlegendary field follows normal halftime clearing.",
+        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2055,12 +2055,12 @@
       },
       {
         "section": "Visuals",
-        "rule": "Two electrical nodes at rectangle edges, readable ground arcs and boundary. Reveal before both teams select plays, then lock placement.",
+        "rule": "Two electrical nodes at rectangle edges, readable ground arcs and boundary. Reveal at the snap, then lock placement.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
         "section": "Progression / notes",
-        "rule": "Rectangles and squares are legal zone shapes. Duration and stun chance do not scale with mastery; cooldown does.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/3/3/3 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       }
     ],
@@ -2232,7 +2232,7 @@
     "name": "Static Field",
     "category": "Zone",
     "activation": "Ready defensive pre-play including first",
-    "mechanic": "Ready safety field spans fixed LB-to-safety depth band with entry stun",
+    "mechanic": "Ready safety field spans fixed LB-to-safety depth band with entry stun Zone revision: 3/3/3/3 relevant team plays by mastery; action location retained.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -2242,7 +2242,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Twelve yards wide by seven yards long. Depth runs from five to twelve yards beyond upcoming LOS. Lateral center is Statyx initial alignment. Normal inward shift / boundary rules apply.",
+        "rule": "Twelve yards wide by seven yards long. Depth runs from five to twelve yards beyond upcoming LOS. Lateral center is Statyx initial alignment. Normal inward shift / boundary rules apply. This zone retains its action/alignment placement; it cannot be freely relocated.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2257,7 +2257,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "One completed play INCLUDING spawn. Accepted Stunned lasts remainder of play and clears at whistle; normal status gate applies. Nonlegendary zone clears halftime / actual game end under normal rules.",
+        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2267,12 +2267,12 @@
       },
       {
         "section": "Visuals",
-        "rule": "Ground electrical lines, clear rectangle boundary and small sparks. Reveal before both teams select plays and lock initial placement. Screenshot preview was illustrative, not implementation.",
+        "rule": "Ground electrical lines, clear rectangle boundary and small sparks. Reveal at the snap and lock initial placement. Screenshot preview was illustrative, not implementation.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
         "section": "Progression / notes",
-        "rule": "Chance and geometry fixed across mastery; cooldown scales. Ask before creating future visual mockups.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/3/3/3 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       }
     ],
@@ -3080,7 +3080,7 @@
     "name": "Landslide",
     "category": "Special action",
     "activation": "First eligible offensive snap each possession",
-    "mechanic": "Snap slam creates advancing full-front rock wall with guaranteed bounded displacement",
+    "mechanic": "Once per offensive possession, a stone wall pushes front-aligned defenders to a depth of 5 yards beyond the line of scrimmage.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -3095,7 +3095,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Guaranteed push 2 / 2.5 / 3 / 3.5 yards toward defenders own end zone by mastery. NO Strength contest. Explicit displacement immunity and physical obstructions still apply.",
+        "rule": "Eligible defenders aligned within 2 yards on the defensive side of the line are pushed toward a target depth of 5 yards beyond the original line of scrimmage. This is a target depth, not 5 additional yards for every defender. No Strength contest; explicit displacement resistance, obstacles and field boundaries still apply. The moving wall crumbles when the push completes.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3120,7 +3120,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Legendary standalone OL. Owner approved two-yard snap-alignment frontline definition. Keep guaranteed bounded push at 2 / 2.5 / 3 / 3.5 yards and explicit obstruction/immunity handling.",
+        "rule": "Target depth is 5 yards at every mastery tier; once-per-possession frequency is unchanged.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       }
     ],
@@ -3186,7 +3186,7 @@
     "name": "Frostmark",
     "category": "Zone",
     "activation": "Made field goal earns next opposing-offense field",
-    "mechanic": "Made field goal banks fixed-size random Ice braking patch for later defensive series",
+    "mechanic": "A made field goal banks an Ice braking patch for the next defensive series. Choose a legal lane before it appears; lasts 3/4/5/5 defensive team plays by mastery.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -3196,7 +3196,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Eight yards WIDE by six yards LONG. Randomize lateral and depth placement, keeping ENTIRE rectangle between opponent upcoming LOS and fixed 12-yard safety-depth reference. Normal playable boundaries. This replaces fixed-center and 5-to-11-depth proposals.",
+        "rule": "8 yards wide by 6 long, in the first 12 yards of the defensive side. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3211,7 +3211,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Next opposing offensive scrimmage pre-play, even while kicker benched. Reveal BEFORE both play choices and lock; formation changes do not reroll. 1/2/3/4 completed opposing offensive scrimmage plays INCLUDING spawn; stationary world location after spawn.",
+        "rule": "Lasts 3/4/5/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3226,7 +3226,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Common K family, rarity fixed across evolution. Owner explicitly likes FG-vs-touchdown trade-off and team-neutral risk. Braking change is environmental, not shared status.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/4/5/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       }
     ],
@@ -3504,7 +3504,7 @@
     "name": "Permafrost",
     "category": "Zone",
     "activation": "Personal TFL or sack earns later backfield Ice zone",
-    "mechanic": "Personal negative-yardage stop banks fixed quarterback-aligned backfield braking patch",
+    "mechanic": "A personal sack or tackle for loss banks a 10-by-6-yard Ice braking patch in the opposing backfield. Choose its lane; lasts 3 defensive team plays.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -3514,7 +3514,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Next participating defensive scrimmage pre-play: TEN yards wide by SIX yards long, from upcoming LOS SIX yards into OFFENSIVE BACKFIELD. Lateral center QB initial alignment. Reveal before both play choices, then lock; ordinary boundary rules.",
+        "rule": "10 yards wide by 6 long, in the opposing offensive backfield. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3529,7 +3529,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "TWO completed defensive scrimmage plays INCLUDING creation. Stationary world location after spawn, not moved with later LOS.",
+        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3544,7 +3544,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Zone exception permits same Ice effect as Frostmark; distinct stop trigger and fixed backfield placement. Remove old subtract-one-yard Permafrost.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/3/3/3 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       }
     ],
@@ -3822,17 +3822,17 @@
     "name": "Runway",
     "category": "Zone",
     "activation": "Gustling; common; WR; Before BOTH play choices on next participating offensive scrimmage snap while ready. Activate regardless of later route-running or blocking assignment; never read future selected play.",
-    "mechanic": "Pre-choice receiver-aligned Wind speed corridor with evolution-scaled bonus",
+    "mechanic": "While ready, create a 6-by-10-yard Wind speed corridor at the next participating offensive snap. Choose a legal lane after selecting the play; lasts 3/3/4/5 offensive team plays by mastery.",
     "sourceDesignStatus": "Approved design; implementation required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Gustling; common; WR; Before BOTH play choices on next participating offensive scrimmage snap while ready. Activate regardless of later route-running or blocking assignment; never read future selected play.",
+        "rule": "Gustling; common; WR; At the next participating offensive scrimmage snap while ready. After selecting a play, choose a legal placement. Route-running or blocking assignments both qualify.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
         "section": "Targets / placement",
-        "rule": "Stationary Wind rectangle at upcoming LOS: 6 yards wide, 10 long into defense, centered on initial receiver lateral alignment. Clip to legal field; do not follow routes.",
+        "rule": "6 yards wide by 10 long, from the line into the defense. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -3847,7 +3847,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Spawn play counts for field life. Pending readiness carries possessions/halftime; created common field clears halftime. No special-team activation.",
+        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -3862,7 +3862,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Lifetime 1 / 1 / 2 / 2 participating offensive scrimmage plays by mastery. Form changes strength only. Needs pre-choice field creation and seeded geometry snapshot; existing actor movement must aggregate max-speed modifiers.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/3/4/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       }
     ],
@@ -4140,7 +4140,7 @@
     "name": "Crosswind Rescue",
     "category": "Zone",
     "activation": "Galyx; uncommon Wind Safety.2 personal pass breakups charge bar; one credit per breakup event. Next eligible defensive scrimmage pre-play creates lanes while source able, before BOTH play selections.",
-    "mechanic": "PBU charge creates paired stationary sideline Wind lanes at next eligible defensive snap",
+    "mechanic": "PBU charge creates paired stationary sideline Wind lanes at next eligible defensive snap Zone revision: 3/4/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
     "sourceDesignStatus": "Approved design; implementation required",
     "details": [
       {
@@ -4150,7 +4150,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "TWO stationary sideline rectangles: EACH4 yards WIDE sideline direction ×7 yards LONG endzone direction. Left/right outer edges meet playable sidelines; longitudinal band upcoming LOS+5 throughLOS+12. Normal field-boundary clipping; locked after reveal.",
+        "rule": "Two 4-by-7-yard sideline lanes; choose their shared short/middle/deep band. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4165,7 +4165,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Partial/full charge survives possession/half/OT; created nonlegendary lanes clear halftime. Incompletions still count field lifetime. Stationary after creation; no pre-choice reroll/audible reposition.",
+        "rule": "Lasts 3/4/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4180,7 +4180,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Lifetime1 /2 /2 /3 completed defensive scrimmage plays by mastery INCLUDING creation play. Charge2 PBUs, geometry and20% strength fixed. Requires PBU charge, source availability, field-pair lifetime, snap geometry/reveal and halftime cleanup. Design closed; bounds, replay and balance testing remain.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/4/4/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       }
     ],
@@ -4458,7 +4458,7 @@
     "name": "Shadow Patch",
     "category": "Zone",
     "activation": "Umbrikit; common; CB; After own pass breakup while ready, bank field for next defensive scrimmage pre-choice. Interceptions excluded.",
-    "mechanic": "DAR-01-F: Shadow Patch; Non-Dark on both teams -15 / -20% effective Awareness by Umbrikit / Obscurat while inside. Essential ball/controls truthful.",
+    "mechanic": "After his own pass breakup, bank a 6-by-6-yard Dark smoke zone. Choose its lane before the next defensive snap; lasts 3/3/4/5 defensive team plays by mastery. Non-Dark monsters on either team leave its smoke Confused for the rest of that play.",
     "sourceDesignStatus": "Approved",
     "details": [
       {
@@ -4468,12 +4468,12 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "6-wide by 6-long Dark rectangle centered at upcoming LOS plus 5-yard LB reference, lateral at breakup location projected into new snap.",
+        "rule": "6 yards wide by 6 long near linebacker depth. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
         "section": "Core resolution",
-        "rule": "Non-Dark on both teams -15 / -20% effective Awareness by Umbrikit / Obscurat while inside. Essential ball/controls truthful.",
+        "rule": "The smoke visually conceals monsters inside. On leaving the base Dark smoke, a non-Dark monster attempts Confused through the normal single-status gate for the remainder of that play. Confused reduces Awareness by 20% and sends the monster toward a wrong assignment point; it does not replace player QB controls. This replaces this zone's old environmental Awareness penalty. Dark types and Night Watch-protected secondary defenders are immune. Cleanses and harmful-status wards apply. A hybrid replaces its parent effects inside the overlap.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4483,7 +4483,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Pending carries halves/possessions; created field clears halftime; no reanchor after creation.",
+        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4498,7 +4498,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Lifetime 1 / 1 / 2 / 2 defensive scrimmage plays including spawn. Requires Dark modifier consumers in reads/reactions with stored stats unchanged.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/3/4/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       }
     ],
@@ -4564,22 +4564,22 @@
     "name": "Night Watch",
     "category": "Aura",
     "activation": "Noctlet; common; S; While active safety is able, allies within 4-yard moving radius benefit on defensive scrimmage plays.",
-    "mechanic": "DAR-02-F: Night Watch; Ignore only Awareness reductions from Dark ENVIRONMENTAL field. No bonus outside field, no status cleanse or protection from Confused.",
+    "mechanic": "While able on defense, protect every allied cornerback and safety from Dark-field Awareness loss and Shadow Patch confusion, regardless of distance.",
     "sourceDesignStatus": "Approved",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Noctlet; common; S; While active safety is able, allies within 4-yard moving radius benefit on defensive scrimmage plays.",
+        "rule": "While the safety is on the field and able during a defensive scrimmage play, all allied cornerbacks and safeties qualify regardless of distance.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
         "section": "Targets / placement",
-        "rule": "Moving radius 4 / 5 / 6 / 7 yards by mastery. Real allied non-Dark defenders inside ignore only the Dark base-field Awareness penalty. No redundant self bonus; Noctlet and Strixen already have same-type field neutrality.",
+        "rule": "All allied cornerbacks and safeties on the field, anywhere on the field; no proximity requirement. Non-secondary defenders receive no protection.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
         "section": "Core resolution",
-        "rule": "Ignore only Awareness reductions from Dark ENVIRONMENTAL field. No bonus outside field, no status cleanse or protection from Confused.",
+        "rule": "While the source can act, protected secondary defenders ignore environmental Dark Awareness reduction and new Shadow Patch confusion. Does not cleanse an existing Confused status, cancel other harmful statuses or disable Eclipse. Dark types already have their normal immunity.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4589,7 +4589,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Only while in radius and source able. Leaves no lasting status and no cross-mode payload.",
+        "rule": "Passive protection lasts while the source is on the field and able. No cooldown or lingering protection after the source leaves.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4604,7 +4604,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Aura radius 4 / 5 / 6 / 7 yards by mastery. Protection has no additional stat bonus. Need modifier provenance to filter base Dark Awareness term only.",
+        "rule": "Protection covers the whole secondary at every mastery. It blocks only environmental Dark Awareness loss and new Shadow Patch confusion; it adds no other ratings bonus.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       }
     ],
@@ -4705,7 +4705,7 @@
       },
       {
         "section": "Visuals",
-        "rule": "A dark afterimage peels away; actual runner/ball keep bright readable outline.",
+        "rule": "A dense violet smoke burst overlays the juke location, briefly obscuring the runner and nearby defender. A shared Dark smoke style connects this to Shadow Patch. The existing next-tackle avoidance rule is unchanged.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4776,7 +4776,7 @@
     "name": "Ambush Tag",
     "category": "Targeted effect",
     "activation": "Three own participating defensive scrimmage plays allowing at most 4 net yards fill the bar, maximum one credit per play. Incompletions and losses qualify. Touchdowns, special teams and two-point plays do not.",
-    "mechanic": "DAR-04-F: Ambush Tag; At snap launch shadow claw attempting Weakened Strength reduction15 / 20 / 25 / 30% by mastery for CURRENT play on selected RB. No damage, movement pull or tackle guarantee.",
+    "mechanic": "Three defensive plays allowing at most 4 yards arm a visible shadow claw. The next defensive snap attempts Weakened on the opposing running back for two subsequent participating offensive plays.",
     "sourceDesignStatus": "Approved",
     "details": [
       {
@@ -4786,12 +4786,12 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Next participating defensive pre-choice selects opposing RB by stable lineup. If no RB, hold full charge.",
+        "rule": "Opposing running back, unchanged.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
         "section": "Core resolution",
-        "rule": "At snap launch shadow claw attempting Weakened Strength reduction15 / 20 / 25 / 30% by mastery for CURRENT play on selected RB. No damage, movement pull or tackle guarantee.",
+        "rule": "Weakened reduces Strength by 15/20/25/30% by mastery through the normal single-status gate.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4801,7 +4801,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Partial/full bar carries halves and possessions. Application ends whistle; no seconds duration.",
+        "rule": "Applies during the activation play and lasts for two subsequent plays in which that running back participates. Bench time pauses the status clock; normal stronger-status and cleanse rules apply.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4811,7 +4811,7 @@
       },
       {
         "section": "Visuals",
-        "rule": "Three scratch marks fill bar; snap shadow claw grips target silhouette briefly then standard fist badge.",
+        "rule": "A large, high-contrast shadow claw grips the running back, followed by the Weakened badge and remaining-play count.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4882,7 +4882,7 @@
     "name": "Blackout Pocket",
     "category": "Zone",
     "activation": "Nocturne; rare; QB; After own completed pass gains at least 15 net yards while ready, bank next offensive field.",
-    "mechanic": "DAR-05-F: Blackout Pocket; Both teams non-Dark -25% effective Awareness. Covers front pressure reads but also own blockers, no concealed essential UI.",
+    "mechanic": "DAR-05-F: Blackout Pocket; Both teams non-Dark -25% effective Awareness. Covers front pressure reads but also own blockers, no concealed essential UI. Zone revision: 3/4/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
     "sourceDesignStatus": "Approved",
     "details": [
       {
@@ -4892,7 +4892,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Next offensive pre-choice: 12-wide by 5-long Dark rectangle from LOS into defensive side, centered upcoming QB initial lateral alignment.",
+        "rule": "12 yards wide by 5 long at the front of the defensive side. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4907,7 +4907,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Pending carries half; created nonlegendary clears half. No growth from YAC or full-field coverage.",
+        "rule": "Lasts 3/4/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4922,7 +4922,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Lifetime 1 / 2 / 2 / 3 offensive scrimmage plays including spawn. Nocturne approved WR-to-QB move needs later permanent stat profile; new next-snap offensive producer.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/4/4/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       }
     ],
@@ -5094,7 +5094,7 @@
     "name": "Beacon Lane",
     "category": "Zone",
     "activation": "Lumini; common; WR; After own reception that gains a first down while ready, bank next offensive field.",
-    "mechanic": "Non-Light finishing a participating scrimmage play inside Light gets one extra cooldown unit after ordinary decrement on shortest-running positive repeatable signature cooldown. One benefit per monster per play. No charge-bar or once-use restoration. Same-type neutrality and bench pause apply.",
+    "mechanic": "Non-Light finishing a participating scrimmage play inside Light gets one extra cooldown unit after ordinary decrement on shortest-running positive repeatable signature cooldown. One benefit per monster per play. No charge-bar or once-use restoration. Same-type neutrality and bench pause apply. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
     "sourceDesignStatus": "Design approved and closeout recorded; implementation pending",
     "details": [
       {
@@ -5104,7 +5104,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "8-wide by 6-long Light rectangle at upcoming fixed 5-yard LB reference, centered on initial ball lateral position.",
+        "rule": "8 yards wide by 6 long near linebacker depth. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5119,7 +5119,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Pending carries halves; created common field clears half. Spawn play counts.",
+        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5134,7 +5134,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Approved Light field exposure cadence finalized in closeout10. Keep existing creator lifetime/placement/mastery.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/3/4/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner approved final closeout all22 A, November4,2026."
       }
     ],
@@ -5304,49 +5304,49 @@
     "familyId": "lumen",
     "mode": "Football",
     "name": "Guiding Halo",
-    "category": "Aura",
-    "activation": "Lumen; uncommon; QB; While QB able on offensive scrimmage play, first allied reception within6 yards of current QB position while ready.",
-    "mechanic": "Guiding Halo: Attempt Shielded with one football fumble save for2 subsequent participating plays. Does not improve catch or tackle resistance; normal one-status gate.",
+    "category": "Targeted effect",
+    "activation": "Next completed pass while ready",
+    "mechanic": "When ready, Lumen's next completed pass shields its receiver anywhere on the field: one fumble save for two subsequent participating plays, then a five-play recharge.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Lumen; uncommon; QB; While QB able on offensive scrimmage play, first allied reception within6 yards of current QB position while ready.",
+        "rule": "While ready and able at QB, the first allied completed reception of his pass on an offensive scrimmage play triggers the ability. No distance gate.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
         "section": "Targets / placement",
-        "rule": "That allied receiver only, no QB self target, construct or interceptor.",
+        "rule": "The receiver who actually completes his pass, anywhere on the field. Does not shield an interceptor or improve a failed catch.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
         "section": "Core resolution",
-        "rule": "Attempt Shielded with one football fumble save for2 subsequent participating plays. Does not improve catch or tackle resistance; normal one-status gate.",
+        "rule": "Attempt Shielded through the normal single-status gate immediately after the completed catch and before contact. One football fumble save; no catching or tackle bonus.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
         "section": "Recharge / frequency",
-        "rule": "Cooldown5 subsequent participating offensive plays; spent on application attempt even blocked. App play excluded.",
+        "rule": "Five subsequent participating offensive plays after the application attempt. A denied activation keeps readiness; a status application blocked by the normal status gate spends the use.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Shield carries halves/possessions and turns1:1. Clash conversion pool15% recipient maxHP; no refill equal stacking, no restored depleted pool under G09.",
+        "rule": "Shielded lasts for two subsequent participating plays and is consumed by one saved fumble. Radius-free triggered ability, not an aura.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "QB Stunned/Knocked Down prevents. Receiver must catch within radius; later leaving does not remove accepted status. Once-fumble-save consumes whole episode.",
+        "rule": "A Stunned or Knocked Down QB cannot trigger it. A completed allied catch qualifies anywhere on the field. A fumble save consumes the Shielded episode; normal status conflicts and cleanses apply.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
         "section": "Visuals",
-        "rule": "Thin gold halo connects QB to short-catch receiver, then standard Shielded badge appears.",
+        "rule": "A gold halo connects the QB to the actual completed-pass receiver, then the Shielded badge appears.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
         "section": "Progression / notes",
-        "rule": "Aura radius6 / 8 / 10 / 12 yards by mastery. Shield duration2 fixed. Needs post-catch aura-distance hook and shared cross-mode Shielded payload. No bonus on already-failed catch.",
+        "rule": "No radius at any mastery. Shield duration is two subsequent participating plays; cooldown is five subsequent participating offensive plays. No benefit on a failed catch.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       }
     ],
@@ -5412,12 +5412,12 @@
     "name": "Prism Break",
     "category": "Special action",
     "activation": "Personal tackles and pass breakups grant one charge per participating play, maximum one total per play. Three charges arm Prism Break for the next eligible defensive pre-choice opportunity. Activation play cannot recharge.",
-    "mechanic": "Prism Break: Remove one selected base zone entirely. For a selected hybrid overlap, remove the hybrid and contributing parent effects within that overlap footprint only; no underlying parent effect returns there. Remaining parent portions stay intact.",
+    "mechanic": "Three personal tackles or pass breakups arm Prism Break. Keep the full bar until an enemy zone exists, then remove one nearest legal enemy zone.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Personal tackles and pass breakups grant one charge per participating play, maximum one total per play. Three charges arm Prism Break for the next eligible defensive pre-choice opportunity. Activation play cannot recharge.",
+        "rule": "At a defensive pre-choice opportunity, attempt removal if fully charged. If none exists, retain the full bar and check again after new fields are placed before the snap.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5432,7 +5432,7 @@
       },
       {
         "section": "Recharge / frequency",
-        "rule": "Spend all three charges only on legal removal; repeatable after three more qualifying plays. Maximum one full bar. No extra cooldown or once-possession limit.",
+        "rule": "One charge per qualifying personal tackle/pass-breakup play; three charges arm it. Spend only on a successful legal removal. The activation play cannot recharge.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5447,7 +5447,7 @@
       },
       {
         "section": "Visuals",
-        "rule": "Floating prism fires rainbow beam; selected field fractures into fading light before play choices.",
+        "rule": "The full charge bar displays Ready while waiting. A rainbow beam and fracture mark the actual removed footprint.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5836,22 +5836,22 @@
     "name": "Iron Lungs",
     "category": "Aura",
     "activation": "Steelpaw; common; LB; While linebacker able, allied defenders within 3 yards at snap qualify this play.",
-    "mechanic": "Iron Lungs: Every SECOND qualifying participating play for each protected ally reduces that play's ordinary stamina drain by1 point, minimum0. Count per protected monster, not per source, and do not stack copies. Ability drain unchanged; no stamina restoration.",
+    "mechanic": "Steelpaw steadies himself and his nearest eligible ally at the snap. The ally keeps protection for three participating defensive plays after leaving the radius; every second protected play saves one ordinary stamina.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Steelpaw; common; LB; While linebacker able, allied defenders within 3 yards at snap qualify this play.",
+        "rule": "While able at linebacker on a defensive scrimmage snap, qualify the nearest allied defender inside the mastery radius for a three-participating-play protection episode.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
         "section": "Targets / placement",
-        "rule": "Self and nearest ONE living allied defender in radius; no constructs, tie lineup order.",
+        "rule": "Steelpaw and the nearest allied defender within 3/4/5/6 yards by mastery at qualification. Keep that recipient for its current three-play episode.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
         "section": "Core resolution",
-        "rule": "Every SECOND qualifying participating play for each protected ally reduces that play's ordinary stamina drain by1 point, minimum0. Count per protected monster, not per source, and do not stack copies. Ability drain unchanged; no stamina restoration.",
+        "rule": "A recipient's shared game ledger counts protected defensive plays. Every second one reduces ordinary participation stamina drain by 1, minimum 0; ability/status stamina costs remain. Copies never stack.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5861,7 +5861,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Protection eligibility sampled at snap. Each monster retains0/1 qualified-play progress across bench/halftime; nonqualifying plays pause it. At second eligible play consume counter even baseline drain0; actual game end clears. No effect on Exhausted.",
+        "rule": "A qualified ally retains protection for three participating defensive snaps including qualification, even after moving away or after the source is substituted. Bench time pauses its protection countdown. Self protection is evaluated while Steelpaw is able at linebacker. A continuing episode is not extended every snap.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5942,7 +5942,7 @@
     "name": "Gear Grid",
     "category": "Zone",
     "activation": "Coglet; uncommon; K; After own punt of at least35 net yards that is not touchback, bank next opponent scrimmage Metal field.",
-    "mechanic": "Non-Metal first changed automatic target/assignment/engagement decision inside Metal per play adopts after one normal AI decision update. Preserve prior valid action until then, otherwise hold stance. Never delay player inputs, normal physics or an already-started route.",
+    "mechanic": "Non-Metal first changed automatic target/assignment/engagement decision inside Metal per play adopts after one normal AI decision update. Preserve prior valid action until then, otherwise hold stance. Never delay player inputs, normal physics or an already-started route. Zone revision: 3/4/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
     "sourceDesignStatus": "Design approved and closeout recorded; implementation pending",
     "details": [
       {
@@ -5952,7 +5952,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "10-wide by 6-long at upcoming opponent LOS plus5 LB depth, centered ball lateral position.",
+        "rule": "10 yards wide by 6 long near linebacker depth. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5967,7 +5967,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Punt return completes BEFORE next snap geometry. Pending carries halftime; created nonlegendary field clears half.",
+        "rule": "Lasts 3/4/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5982,7 +5982,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Life 1 / 2 / 2 / 3 defensive scrimmage plays including spawn. Needs punt final-spot/net-distance event, current return sim sufficient without bounce physics.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/4/4/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       }
     ],
@@ -6154,7 +6154,7 @@
     "name": "Bulwark Grid",
     "category": "Zone",
     "activation": "Ferrhorn; rare; TE; While ready, after own successful receiving first down OR own successful pancake on blocking play, earn one next offensive field.",
-    "mechanic": "Non-Metal first changed automatic target/assignment/engagement decision inside Metal per play adopts after one normal AI decision update. Preserve prior valid action until then, otherwise hold stance. Never delay player inputs, normal physics or an already-started route.",
+    "mechanic": "Non-Metal first changed automatic target/assignment/engagement decision inside Metal per play adopts after one normal AI decision update. Preserve prior valid action until then, otherwise hold stance. Never delay player inputs, normal physics or an already-started route. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
     "sourceDesignStatus": "Design approved and closeout recorded; implementation pending",
     "details": [
       {
@@ -6164,7 +6164,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "8-wide by4-long Metal rectangle from upcoming LOS into offense backfield, centered initial QB lateral alignment.",
+        "rule": "8 yards wide by 4 long, with a backfield lane reference. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -6179,7 +6179,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Pending carries halftime; created rare field clears half. No activation on failed catch or ordinary block hold.",
+        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -6194,7 +6194,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Life 1 / 1 / 2 / 2 offensive scrimmage plays including spawn. Approved OL-to-TE reassignment requires permanent profile authoring later; reaction modifier needs snap-decision classification.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/3/4/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       }
     ],
@@ -6366,7 +6366,7 @@
     "name": "Mind Bend",
     "category": "Zone",
     "activation": "Personal tackle or assist after an opponent completed pass while ready banks a Psychic zone for the next eligible defensive pre-choice opportunity.",
-    "mechanic": "Mind Bend / Non-Psychic monsters of both teams inside receive inward movement vector at 20% of applicable maximum speed. Stop pull within 1 yard of center. Ordinary movement can overcome pull. Psychic monsters have same-type neutrality.",
+    "mechanic": "Mind Bend / Non-Psychic monsters of both teams inside receive inward movement vector at 20% of applicable maximum speed. Stop pull within 1 yard of center. Ordinary movement can overcome pull. Psychic monsters have same-type neutrality. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
     "sourceDesignStatus": "Approved design; implementation and interaction audit pending",
     "details": [
       {
@@ -6376,7 +6376,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "8 yards wide sideline-to-sideline and 6 yards long endzone-to-endzone. At upcoming snap place from LOS+3 to LOS+9 toward opponent goal, centered laterally on ball. Near endzone shift toward LOS only enough to fit in field of play.",
+        "rule": "8 yards wide by 6 long in the opposing backfield, initially 3 to 9 yards behind the line. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
@@ -6391,12 +6391,12 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Created zone life 1 / 1 / 2 / 2 defensive scrimmage plays by mastery including creation play and incompletions. Pending survives possessions and halftime. Created zone clears at halftime and remains stationary after creation.",
+        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "No status application, automatic stun, player-targeted dragging or football displacement. Physical collision and field bounds apply. Placement revealed before both choices and cannot move on audible.",
+        "rule": "No status application, automatic stun, player-targeted dragging or football displacement. Physical collision and field bounds apply. Placement revealed at the snap and cannot move on audible.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
@@ -6406,7 +6406,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Same dimensions and effect by form. Mastery controls life and cooldown only. Approved in chat all ten A.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/3/4/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
@@ -6479,55 +6479,55 @@
     "id": "PSY-02-F",
     "familyId": "shadewisp",
     "mode": "Football",
-    "name": "Mirror Step",
-    "category": "Self enhancement",
-    "activation": "While ready and able on man coverage, assigned receiver first designated route cut before pass release can activate if in range.",
-    "mechanic": "Mirror Step / Psychically mirror receiver new route direction without ordinary turning slowdown, retaining current movement speed. Existing separation still must be covered with ordinary movement.",
+    "name": "Mirror Rift",
+    "category": "Special action",
+    "activation": "Triggered on an airborne pass while ready",
+    "mechanic": "Mirror Rift makes a live pass vanish, then reappear airborne at a seeded random in-bounds location near an eligible receiver, a defender, or open grass. Normal play determines completion, interception or incompletion.",
     "sourceDesignStatus": "Approved design; implementation and interaction audit pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "While ready and able on man coverage, assigned receiver first designated route cut before pass release can activate if in range.",
+        "rule": "While ready and able on a defensive scrimmage play, claim the first airborne pass. Works in man and zone coverage. One Mirror Rift per pass, even with multiple copies.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Targets / placement",
-        "rule": "Assigned man receiver only. Wispira within 3 yards, Mirageist within 4 yards at cut. No zone coverage fallback.",
+        "rule": "The live football. Select uniformly among eligible receiver and defender vicinities plus four open-grass options; a player vicinity gets a random offset of up to 2 yards on each axis. Destinations stay between the goal lines and within the sidelines. No player is awarded possession.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Core resolution",
-        "rule": "Psychically mirror receiver new route direction without ordinary turning slowdown, retaining current movement speed. Existing separation still must be covered with ordinary movement.",
+        "rule": "After release, the ball vanishes for 0.15 seconds, then reappears at the random location and remains airborne for 0.85 seconds of reaction time. Eligible receivers and defenders can move to the ball. The nearest eligible offensive receiver at arrival enters the normal catch contest; normal catching, coverage, interception and incomplete-pass rules decide the outcome. No guaranteed completion, interception or catch.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Recharge / frequency",
-        "rule": "Cooldown 5 / 4 / 3 / 2 subsequent participating defensive plays by mastery after activation. No qualifying cut, out of range or unable source preserves readiness.",
+        "rule": "Cooldown 6/5/4/3 subsequent participating defensive plays by mastery. Spend on the actual relocation; an incomplete pass before relocation or a disabled source keeps readiness.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "One cut resolution only. No timed buff, status or ongoing attribute modification. Ordinary game persistence applies to running cooldown.",
+        "rule": "One live pass only; cooldown persists normally across possessions and halves.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Normal bodies, walls, environmental movement penalties and existing immobilization apply. Only ordinary turning slowdown is bypassed. No teleport, collision bypass or guaranteed breakup.",
+        "rule": "No activation on kicks or two-point attempts. Ability denial and disabling statuses prevent activation. Existing catch protection and interception prevention still apply. The random result may help the offense.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Visuals",
-        "rule": "Psychic ripple links receiver and cornerback briefly. Curved lavender afterimage marks the mirrored turn, with no extra actor or status badge.",
+        "rule": "Purple portals mark the original ball location and the destination. The football briefly disappears, then reappears airborne; no false continuous trail links the portals.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Progression / notes",
-        "rule": "Form improves range from 3 to 4 yards. Mastery changes cooldown. Approved all ten A. Family remains CB and Common through evolution.",
+        "rule": "Both forms use the same random destination rules. Mastery shortens the cooldown from 6 to 5 to 4 to 3 subsequent participating defensive plays.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Ability story",
-        "rule": "Wispira listens to the receiver intent through a psychic connection, matching one sharp cut before ordinary footwork can slow it.",
+        "rule": "Wispira folds the passing lane through a fractured mirror. The ball emerges somewhere unexpected, leaving both teams racing to claim it.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       }
     ],
@@ -6714,7 +6714,7 @@
     "name": "Echo Landing",
     "category": "Zone",
     "activation": "Own legal kickoff caught in field of play and returned without touchdown while ready banks next opposing offensive scrimmage Psychic field. Touchback, out-of-bounds kick and return touchdown give no reward.",
-    "mechanic": "Echo Landing / Standard Psychic field: both teams non-Psychic inward pull 20% applicable maximum speed, 1-yard center deadband, same-type neutrality. Echolot can be benched when pending field appears.",
+    "mechanic": "Echo Landing / Standard Psychic field: both teams non-Psychic inward pull 20% applicable maximum speed, 1-yard center deadband, same-type neutrality. Echolot can be benched when pending field appears. Zone revision: 3/4/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
     "sourceDesignStatus": "Approved design; implementation and interaction audit pending",
     "details": [
       {
@@ -6724,7 +6724,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "6 yards wide by 8 yards long, extending from upcoming LOS into offensive backfield, centered laterally on initial opposing QB. Shift only enough to fit field-of-play boundaries.",
+        "rule": "6 yards wide by 8 long in the opposing backfield, initially from the line to 8 yards behind it. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
@@ -6739,22 +6739,22 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Life 1 / 2 / 2 / 3 defensive scrimmage plays by mastery including creation and incomplete passes. Kickoff consumes no life. Pending survives possessions/half, created zone clears half. Stationary after creation.",
+        "rule": "Lasts 3/4/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Reveal before both choices. Audibles do not reposition zone. Ordinary collision and boundaries, no altered kick physics or guaranteed return stop. Source bench does not prevent creation.",
+        "rule": "Reveal at the snap. Audibles do not reposition zone. Ordinary collision and boundaries, no altered kick physics or guaranteed return stop. Source bench does not prevent creation.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Visuals",
-        "rule": "Psychic ripples beneath ball at return end reform into magenta backfield rectangle before next play choices. Zone does not remain at kickoff landing spot.",
+        "rule": "Psychic ripples beneath ball at return end reform into magenta backfield rectangle before the next snap. Zone does not remain at kickoff landing spot.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Progression / notes",
-        "rule": "Mastery improves created lifetime only. All eleven A approved. Approved K reassignment retained.",
+        "rule": "Zone duration by mastery 0/1/2/3: 3/4/4/5 relevant team plays. Creation counts unless the zone is created after the whistle. Effects and trigger thresholds remain as stated in Core resolution and Trigger / eligibility. Only one active episode per creator and ability; pending readiness is retained while the previous zone remains.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
@@ -7213,7 +7213,7 @@
       },
       {
         "section": "Visuals",
-        "rule": "Golden pulse expands from dragon. Removed badges crack and disappear. Protected recipients have subtle gold outline until whistle.",
+        "rule": "A strong golden pulse expands to the true radius. Cleansed recipients flash visibly, and every protected recipient retains a golden protection marker until the whistle. Normal rules and radius remain unchanged.",
         "provenance": "Owner Dragon chat approvals and all22 A closeout, November4,2026."
       },
       {
@@ -7329,7 +7329,7 @@
       },
       {
         "section": "Visuals",
-        "rule": "Sablewing clutches recovered ball, launches into flight and lands at opponent 35 before offense enters. Preserve clear possession and spot indicator.",
+        "rule": "A dragon carries the recovered football along the actual path toward the awarded opponent-35 spot, or the better recovery position. A destination marker labels the awarded spot; the visual never moves the ball backward.",
         "provenance": "Owner Dragon chat approvals and all22 A closeout, November4,2026."
       },
       {

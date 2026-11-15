@@ -1,3 +1,4 @@
+import { hybridRegions } from '../sim/t8/zone-planning.js';
 // Live match field: vertical, the offense always attacks UP. A camera
 // window of 46 yards follows the ball. Draws field markings, pre-snap play
 // art (transformed to the real ball spot and compressed before the end
@@ -49,7 +50,8 @@ const FIELD_TINT = { Fire: '#ff7a3d', Water: '#5fb6ff', Nature: '#7ad35a', Elect
  */
 export function fieldLayers(o) {
   const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null, qbRead = false, fields = null, fxOptions = null} = o;
-  const cam = camera || cameraFor(ballOn);
+  const portalFrame = frame && (frame.hoardFlight || fx?.t8?.items?.some((i) => i.id === 'PSY-02-F' && (frame.t ?? 0) >= i.t0));
+  const cam = portalFrame ? cameraFor(ballOn + frame.ball[0]) : camera || cameraFor(ballOn);
   const Y = (yard) => cam.top - yard; // yards → svg y
   const X = (lat) => lat; // lateral yards → svg x (centred)
   let s = '';
@@ -99,7 +101,12 @@ export function fieldLayers(o) {
   if (fields?.length) for (const f of fields) {
     const c = FIELD_TINT[f.type] || '#ffffff', x0 = X(ballLat + f.lat[0]), x1 = X(ballLat + f.lat[1]), y0 = Y(ballOn + f.yard[1]), y1 = Y(ballOn + f.yard[0]);
     const fa = fx?.fieldAlpha ? fx.fieldAlpha(f.id, time ?? frame?.t ?? 0) : 1; if (fa <= 0.01) continue; // Task 8 fx hook: a field's reveal / dissolve
-    s += `<rect class="t8-field" data-element="${f.type}"${fa < 1 ? ` opacity="${fa.toFixed(2)}"` : ''} x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="${c}" fill-opacity="0.16" stroke="${c}" stroke-width="0.3" stroke-opacity="0.85"/>`;
+    s += `<rect class="t8-field" data-element="${f.type}"${fa < 1 ? ` opacity="${fa.toFixed(2)}"` : ''} x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="${c}" fill-opacity="0.16" stroke="${c}" stroke-width="0.3" stroke-opacity="0.85"><title>${f.type} zone${Number.isFinite(f.remaining) ? ` · ${f.remaining} relevant plays remaining` : ''}</title></rect>`;
+  }
+  for (const h of hybridRegions(fields)) {
+    const x0 = X(ballLat + h.lat[0]), x1 = X(ballLat + h.lat[1]), y0 = Y(ballOn + h.yard[1]), y1 = Y(ballOn + h.yard[0]);
+    const color = h.name === 'Steam' ? '#e9f7ff' : h.name === 'Eclipse' ? '#c9a4ff' : '#c9f4da';
+    s += `<g class="t8-hybrid" data-hybrid="${h.name}"><rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="${color}" fill-opacity="0.24" stroke="${color}" stroke-width="0.24" stroke-dasharray="0.5 0.35"/><text x="${(x0+x1)/2}" y="${(y0+y1)/2}" text-anchor="middle" font-size="1.35" font-weight="bold" fill="${color}" stroke="#14281f" stroke-width="0.17" paint-order="stroke">${h.name}${h.remaining == null ? '' : ` · ${h.remaining}`}</text></g>`;
   }
   if (underlay) s += underlay; // caller-drawn layer under the players (Playbook Audit paths)
   const statics = s; s = '';
@@ -147,7 +154,7 @@ export function fieldLayers(o) {
     // Ability effects: the ground layer goes under the monsters, the rest over them (owner's note: monsters on top).
     const toSvg = (x, y) => [X(ballLat + y), Y(ballOn + x)];
     const lift = (b) => (b[2] ? 1.4 : 0.7); // the ball is drawn lifted off the turf
-    const bsvg = frame.ball ? (([x, y]) => [x, y - lift(frame.ball), frame.ball[2]])(toSvg(frame.ball[0], frame.ball[1])) : null; const pbsvg = prevFrame?.ball ? (([x, y]) => [x, y - lift(prevFrame.ball)])(toSvg(prevFrame.ball[0], prevFrame.ball[1])) : null;
+    const bsvg = frame.ball ? (([x, y]) => [x, y - lift(frame.ball), frame.ball[2]])(toSvg(frame.ball[0], frame.ball[1])) : null; const pbsvg = !frame.ballHidden && !prevFrame?.ballHidden && prevFrame?.ball ? (([x, y]) => [x, y - lift(prevFrame.ball)])(toSvg(prevFrame.ball[0], prevFrame.ball[1])) : null;
     const layers = fx ? fxSvg(fx, ft, posOf, { quality: fxQuality, halfWidth: HW, toSvg, ball: bsvg, pball: pbsvg, ...(fxOptions || {}) }) : { under: '', over: '', ball: '' }; // Task 8 fx hook
     s += layers.under;
     pre = s; s = '';
@@ -160,12 +167,12 @@ export function fieldLayers(o) {
     const [bx, by, air] = frame.ball;
     const cx = X(ballLat + by), cy = Y(ballOn + bx);
     s += layers.ball; // fire or wind on a ball in the air, just under the ball
-    s += `<ellipse cx="${(cx + (air ? 0 : 0.9)).toFixed(2)}" cy="${(cy - (air ? 1.4 : 0.7)).toFixed(2)}" rx="${air ? 0.95 : 0.7}" ry="${air ? 0.6 : 0.45}" fill="#d9924f" stroke="#fff" stroke-width="0.18"/>`;
+    const ballArt = `<ellipse cx="${(cx + (air ? 0 : 0.9)).toFixed(2)}" cy="${(cy - (air ? 1.4 : 0.7)).toFixed(2)}" rx="${air ? 0.95 : 0.7}" ry="${air ? 0.6 : 0.45}" fill="#d9924f" stroke="#fff" stroke-width="0.18"/>`;
     // Ability presentation over the sprites: icons, badges, outcome labels; then status marks on top of everything.
     // QB read indicator (GDD §53, opt-in): a thin dashed ring on the receiver the quarterback is reading. Draws only; the frame's
     // `read` is what the engine recorded.
     if (qbRead && frame.read) { const p = posOf('off', frame.read); if (p) s += `<circle class="qb-read-ring" cx="${p[0].toFixed(2)}" cy="${p[1].toFixed(2)}" r="2.3" fill="none" stroke="#ffe26c" stroke-width="0.28" stroke-dasharray="0.9 0.6" opacity="0.85"/><circle cx="${p[0].toFixed(2)}" cy="${(p[1] - 2.9).toFixed(2)}" r="0.45" fill="#ffe26c" opacity="0.9"/>`; }
-    s += layers.over + statusOver;
+    s += layers.over + (frame.ballHidden ? '' : ballArt) + statusOver;
   } else if (presnap?.offensePlay || presnap?.defensePlay) {
     const dp = presnap.defensePlay; const op = presnap.offensePlay;
     // Task 8 fx hook (I2): the fields visible before the snap, with their element decoration and, once, their reveal (`time` is the

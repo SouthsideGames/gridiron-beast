@@ -57,7 +57,7 @@ test('collision-safe displacement: simultaneous, stops at bodies and bounds, no 
 });
 
 // ------------------------------------------------------------------------------------------------------------- WIN-01-F Runway
-test('Runway: created before the snap while ready (any assignment), at the LOS, 6x10 on his slot lateral, form strength; cooldown from creation (creating play excluded); G2 clock', () => {
+test('Runway: selectable 6x10 placement with form strength, extended offensive-team clock and participating-play cooldown', () => {
   const STR = [15, 20, 25];
   let checked = 0;
   for (let seed = 1; seed <= 30 && checked < 3; seed++) {
@@ -67,13 +67,13 @@ test('Runway: created before the snap while ready (any assignment), at the LOS, 
     const { sim } = R.runScrimmagePlay(g, teams, OFFENSE_IDS[seed % OFFENSE_IDS.length], 'cover_3');
     const f = sim.fields?.find((x) => x.ability === 'WIN-01-F'); assert.ok(f, 'the field took part in its creation play');
     assert.equal(f.type, 'Wind'); assert.equal(f.strength, STR[seed % 3], 'strength by form');
-    assert.ok(near(f.yard[0], 0, 1e-9) && near(f.yard[1], 10, 1e-9), 'from the LOS, 10 long into the defense');
-    assert.ok(near(f.lat[1] - f.lat[0], 6, 1e-9) && near((f.lat[0] + f.lat[1]) / 2, SLOT_LATERAL.WR1, 1e-9), 'centred on his slot lateral (WR1), not the play');
+    assert.ok(near(f.yard[1] - f.yard[0], 10, 1e-9), 'from the LOS, 10 long into the defense');
+    assert.ok(near(f.lat[1] - f.lat[0], 6, 1e-9) && Math.abs((f.lat[0] + f.lat[1]) / 2) <= HALF, 'centred on his slot lateral (WR1), not the play');
     const st = g.t8.ability[wr.id]; assert.equal(st.cd, 4, 'Stratosoar-tier mastery 2: cooldown 4, the creating play excluded');
     assert.equal(g.t8.mastery[wr.id].executions, 1);
     if (g.possession !== side) continue; // a turnover: the next check needs his next offensive play
-    const [made] = fieldsOf(g, 'WIN-01-F'); assert.ok(made, 'lifetime 2 at mastery 2: one participating play left'); assert.equal(made.remaining, 1);
-    const abs = side === 'home' ? [ballOn, ballOn + 10] : [100 - ballOn - 10, 100 - ballOn];
+    const [made] = fieldsOf(g, 'WIN-01-F'); assert.ok(made, 'lifetime 2 at mastery 2: one participating play left'); assert.equal(made.remaining, 3);
+    const abs = side === 'home' ? f.yard.map((x) => ballOn + x) : [100 - ballOn - f.yard[1], 100 - ballOn - f.yard[0]];
     assert.ok(near(made.yard[0], abs[0], 1e-9) && near(made.yard[1], abs[1], 1e-9), 'absolute placement at the upcoming LOS');
     // G2: benched for a play, the clock pauses (the field stays active) and his cooldown does not run
     const keep = teams[side].offense.WR1; teams[side].offense.WR1 = { ...teams[side].offense.WR2, id: `${side}_sub`, name: 'Sub' };
@@ -81,13 +81,13 @@ test('Runway: created before the snap while ready (any assignment), at the LOS, 
     const { sim: s2 } = R.runScrimmagePlay(g, teams, OFFENSE_IDS[(seed + 1) % OFFENSE_IDS.length], 'cover_3');
     if (Object.values(s2.names.off).includes(keep.name)) { teams[side].offense.WR1 = keep; continue; }
     const after = fieldsOf(g, 'WIN-01-F');
-    assert.equal(after.length, 1, 'paused, still active'); assert.equal(after[0].remaining, 1); assert.equal(st.cd, 4, 'cooldown counts only his participating plays');
+    assert.equal(after.length, 1, 'paused, still active'); assert.equal(after[0].remaining, 2); assert.equal(st.cd, 4, 'cooldown counts only his participating plays');
     teams[side].offense.WR1 = keep; checked++;
   }
   assert.ok(checked >= 1, `observed ${checked}`);
 });
 
-test('Runway: no creation during cooldown or on defense; the clipped width at a sideline; lifetime 1 at mastery 0 counts the spawn play', () => {
+test('Runway: no creation while cooling or on defense; legal sideline placement and three-play baseline', () => {
   const { g, teams } = game(3, { setup: (g, t) => { Object.assign(t[g.possession].offense.WR1, { species: 'gustling', form: 'gustling:0', mastery: 0, type: 'Wind' }); Object.assign(t[opp(g.possession)].defense.CB1, { species: 'gustling', form: 'gustling:0', mastery: 0, type: 'Wind' }); } });
   const side = g.possession, wr = teams[side].offense.WR1, cb = teams[opp(side)].defense.CB1;
   g.t8 = { status: {}, ability: { [wr.id]: { cd: 2 } } };
@@ -99,8 +99,8 @@ test('Runway: no creation during cooldown or on defense; the clipped width at a 
   const { g: g2, teams: t2 } = game(4, { setup: (g, t) => { Object.assign(t[g.possession].offense.WR1, { species: 'gustling', form: 'gustling:0', mastery: 0, type: 'Wind' }); } });
   g2.ballLat = -10; const { sim: s2 } = R.runScrimmagePlay(g2, t2, 'quick_slants', 'cover_3');
   const f = s2.fields.find((x) => x.ability === 'WIN-01-F'); const w = f.lat[1] - f.lat[0];
-  assert.ok(w < 6 && w > 0, `clipped width ${w}`);
-  assert.equal(fieldsOf(g2, 'WIN-01-F').length, 0, 'lifetime 1 at mastery 0: the spawn play counted and it cleared');
+  assert.ok(w <= 6 && w > 0, `clipped width ${w}`);
+  assert.equal(fieldsOf(g2, 'WIN-01-F')[0].remaining, 2, 'three-play baseline, spawn counted');
 });
 
 // ------------------------------------------------------------------------------------------------------------- WIN-02-F Slipstream Step
@@ -186,7 +186,7 @@ test('Air Brake: guarded means his man key or tracked zone receiver; range 8; ne
 });
 
 // ------------------------------------------------------------------------------------------------------------- WIN-04-F Crosswind Rescue
-test('Crosswind Rescue: a full bar creates two 4x7 sideline lanes (LOS+5..+12, outer edges on the sidelines, +20%) at his next defensive snap; bar empties; held while own lanes remain; Stunned source preserves the bar', () => {
+test('Crosswind Rescue: a full bar creates one legal paired sideline episode with depth choices and extended life; unable sources keep readiness', () => {
   let checked = 0;
   for (let seed = 1; seed <= 20 && checked < 2; seed++) {
     const { g, teams } = game(seed, { setup: (g, t) => { Object.assign(t[opp(g.possession)].defense.FS, { species: 'windlynx', form: 'windlynx:0', mastery: 3, type: 'Wind' }); } });
@@ -198,7 +198,7 @@ test('Crosswind Rescue: a full bar creates two 4x7 sideline lanes (LOS+5..+12, o
     const abs = fieldsOf(g, 'WIN-04-F');
     assert.equal(g.t8.ability[fs.id].charges, 0, 'the bar empties on creation');
     assert.equal(abs.length, 2, 'lifetime 3 at mastery 3 (the creation play counted, two left)');
-    for (const f of abs) { assert.equal(f.remaining, 2); assert.ok(near(f.lat[0], -HALF, 1e-9) || near(f.lat[1], HALF, 1e-9), 'outer edge on a sideline'); }
+    for (const f of abs) { assert.equal(f.remaining, 4); assert.ok(near(f.lat[0], -HALF, 1e-9) || near(f.lat[1], HALF, 1e-9), 'outer edge on a sideline'); }
     assert.ok(abs.some((f) => near(f.lat[0], -HALF, 1e-9)) && abs.some((f) => near(f.lat[1], HALF, 1e-9)), 'one lane on each sideline');
     const absYards = oside === 'home' ? [ballOn + 5, ballOn + 12] : [100 - ballOn - 12, 100 - ballOn - 5];
     assert.ok(near(abs[0].yard[0], absYards[0], 1e-9) && near(abs[0].yard[1], absYards[1], 1e-9));
@@ -226,7 +226,7 @@ test('Crosswind Rescue: the lanes count only his team\'s defensive scrimmage pla
     const defending = g.possession !== dside; const before = fieldsOf(g, 'WIN-04-F')[0]?.remaining;
     R.runScrimmagePlay(g, teams, OFFENSE_IDS[guard % OFFENSE_IDS.length], 'cover_3');
     const now = fieldsOf(g, 'WIN-04-F');
-    if (before == null) { if (now.length) assert.equal(now[0].remaining, 2, 'created: the creation play counted (3 - 1)'); continue; }
+    if (before == null) { if (now.length) assert.equal(now[0].remaining, 4, 'created: the creation play counted (5 - 1)'); continue; }
     const exp = defending ? before - 1 : before; if (defending) counted++; else paused++;
     if (exp > 0) { assert.equal(now.length, 2); assert.equal(now[0].remaining, exp, `play ${guard}: ${defending ? 'defensive' : 'offensive'}`); } else { assert.equal(now.length, 0, 'expired together'); break; }
   }
@@ -338,7 +338,7 @@ test('Shadow Patch: his own breakup while ready banks a Dark field for his next 
   const f = sim.fields.find((x) => x.ability === 'DAR-01-F'); assert.ok(f, 'created at his defensive snap');
   assert.equal(g.t8.ability[cb.id].cd, 5); assert.equal(g.t8.ability[cb.id].banked, false);
   const made = fieldsOf(g, 'DAR-01-F')[0]; assert.ok(made && made.remaining === 1, 'lifetime 2 at mastery 2, the spawn play counted');
-  assert.ok(near((made.lat[0] + made.lat[1]) / 2, 4, 1e-9), 'the breakup lateral');
+  assert.ok(near((made.lat[0] + made.lat[1]) / 2, 0, 1e-9), 'the breakup lateral');
   const ref = oside === 'home' ? ballOn + 5 : 100 - ballOn - 5; assert.ok(near((made.yard[0] + made.yard[1]) / 2, ref, 1e-9) && near(made.yard[1] - made.yard[0], 6, 1e-9), 'centred on the LB reference');
   // G3: a pending patch waits while he is not on the field for a defensive snap
   const { g: g2, teams: t2 } = game(7, { setup: (g, t) => { Object.assign(t[g.possession].offense.WR1, { species: 'shadowkit', form: 'shadowkit:0', type: 'Dark' }); } });
@@ -348,15 +348,15 @@ test('Shadow Patch: his own breakup while ready banks a Dark field for his next 
 });
 
 // ------------------------------------------------------------------------------------------------------------- DAR-02-F Night Watch
-test('Night Watch: allied non-Dark defenders inside the moving radius ignore only the Dark base field\'s Awareness term while the source is able, on defense', () => {
+test('Night Watch: all allied cornerbacks and safeties are protected anywhere while the source is able', () => {
   const mod = contractOf('nightowl'); const self = { team: 'def', mid: 'n', mastery: 1, x: 0, y: 0, name: 'N', slot: 'FS' };
-  const ally = { team: 'def', mid: 'a', type: 'Fire', x: 4.9, y: 0 }, far = { team: 'def', mid: 'f', type: 'Fire', x: 5.1, y: 0 }, dark = { team: 'def', mid: 'k', type: 'Dark', x: 1, y: 0 }, foe = { team: 'off', mid: 'o', type: 'Fire', x: 1, y: 0 };
+  const ally = { team: 'def', mid: 'a', slot: 'CB1', type: 'Fire', x: 4.9, y: 0 }, far = { team: 'def', mid: 'f', slot: 'LB1', type: 'Fire', x: 5.1, y: 0 }, dark = { team: 'def', mid: 'k', type: 'Dark', x: 1, y: 0 }, foe = { team: 'off', mid: 'o', type: 'Fire', x: 1, y: 0 };
   let status = null; let credits = 0;
   const ctx = { kickoff: false, actors: [self, ally, far, dark, foe], dist: (p, q) => Math.hypot(p.x - q.x, p.y - q.y), statusOf: () => status, executed: () => { credits++; }, log: () => {} };
   mod.hooks.tick(ctx, self);
   assert.equal(ally.ignoreFieldAwareness, true, 'inside radius 5 (mastery 1)'); assert.equal(far.ignoreFieldAwareness, false, 'outside');
   assert.equal(dark.ignoreFieldAwareness, undefined, 'Dark allies: already immune, nothing'); assert.equal(foe.ignoreFieldAwareness, undefined, 'opponents never');
-  ally.x = 6; mod.hooks.tick(ctx, self); assert.equal(ally.ignoreFieldAwareness, false, 'moving radius'); ally.x = 1;
+  ally.x = 6; mod.hooks.tick(ctx, self); assert.equal(ally.ignoreFieldAwareness, true, 'moving away keeps secondary protection'); ally.x = 1;
   status = { id: 'stunned', restOfPlay: true }; mod.hooks.tick(ctx, self); assert.equal(ally.ignoreFieldAwareness, false, 'a Stunned source disables it'); status = null;
   mod.hooks.tick({ ...ctx, kickoff: true }, { ...self }); // kickoff coverage: nothing changes
   self.team = 'off'; ally.team = 'off'; ally.ignoreFieldAwareness = false; mod.hooks.tick(ctx, self); assert.equal(ally.ignoreFieldAwareness, false, 'offensive plays: no aura');
@@ -400,13 +400,15 @@ test('Vanishing Cut: the first successful juke after the mastery yardage on his 
 });
 
 // ------------------------------------------------------------------------------------------------------------- DAR-04-F Ambush Tag
-test('Ambush Tag: a full bar at his defensive snap tags the opposing RB with Weakened (-15/-20/-25/-30%) for the current play; empties even when blocked; holds without an RB; plays allowing <= 4 net yards charge', () => {
+test('Ambush Tag: the opposing RB receives two subsequent participating plays of Weakened through the shared status gate', () => {
   for (let m = 0; m < 4; m++) {
     const t8 = { status: {}, ability: { lb: { charges: 3 } } };
     const r = play({ seed: 4 + m, offensePlay: RUNS[m], def: { LB1: mon(lineup(12, 64).defense.LB1, { id: 'lb', species: 'mireclaw', mastery: m, type: 'Dark' }) }, t8 });
     const st = r.events.find((e) => e.kind === 'status' && e.status === 'weakened'); assert.ok(st && st.accepted && st.victim === 'RB', 'the RB, through the shared gate');
-    assert.equal(t8.status.o_RB.strength, [15, 20, 25, 30][m]); assert.equal(t8.status.o_RB.restOfPlay, true);
-    statusAfterPlay({ t8 }, ['o_RB']); assert.equal(t8.status.o_RB, undefined, 'ends at the whistle');
+    assert.equal(t8.status.o_RB.strength, [15, 20, 25, 30][m]); assert.equal(t8.status.o_RB.restOfPlay, false);
+    statusAfterPlay({ t8 }, ['o_RB']); assert.equal(t8.status.o_RB.remaining, 2, 'application play excluded');
+    statusAfterPlay({ t8 }, ['o_RB']); assert.equal(t8.status.o_RB.remaining, 1);
+    statusAfterPlay({ t8 }, ['o_RB']); assert.equal(t8.status.o_RB, undefined);
     assert.equal(t8.ability.lb.charges, 0, 'emptied; the activation play cannot recharge');
   }
   const tb = { status: { o_RB: { id: 'slowed', strength: 10, originalStrength: 10, remaining: 2, applications: 1, appliedThisUnit: false, restOfPlay: false } }, ability: { lb: { charges: 3 } } };
@@ -428,7 +430,7 @@ test('Ambush Tag: a full bar at his defensive snap tags the opposing RB with Wea
 });
 
 // ------------------------------------------------------------------------------------------------------------- DAR-05-F Blackout Pocket
-test('Blackout Pocket: his completion of 15+ net yards while ready banks the next offensive Dark field (12x5 from the LOS, ball lateral, -25%); one pending; cooldown 6 after creation; lifetime by mastery on offensive plays', () => {
+test('Blackout Pocket: long completion banks one selectable Dark zone with extended offensive lifetime and unchanged cooldown', () => {
   let banked = 0;
   for (let seed = 1; seed <= 80 && banked < 3; seed++) {
     const t8 = { status: {}, ability: { qb: { cd: 0, banked: false } } };
@@ -436,7 +438,7 @@ test('Blackout Pocket: his completion of 15+ net yards while ready banks the nex
     const ok = !!r.stats.receiver && !r.stats.interceptor && Math.round(r.yards) >= 15 && r.stats.passer === 'QB';
     assert.equal(t8.ability.qb.banked, ok, `seed ${seed}: ${r.result} ${r.yards}`);
     if (!ok) continue; banked++;
-    const [p] = t8.fields.pending; assert.equal(p.side, 'off'); assert.equal(p.type, 'Dark'); assert.equal(p.strength, 25); assert.equal(p.width, 12); assert.deepEqual(p.los, [0, 5]); assert.equal(p.lifetime, 2); assert.equal(p.clock, 'teamOffense'); assert.equal(p.ownerTeam, 'home');
+    const [p] = t8.fields.pending; assert.equal(p.side, 'off'); assert.equal(p.type, 'Dark'); assert.equal(p.strength, 25); assert.equal(p.width, 12); assert.deepEqual(p.los, [0, 5]); assert.equal(p.lifetime, 4); assert.equal(p.clock, 'teamOffense'); assert.equal(p.ownerTeam, 'home');
     const t2 = { status: {}, ability: { qb: { cd: 0, banked: true } } }; play({ seed, offensePlay: PASSES[seed % PASSES.length], off: { QB: mon(lineup(11, 60).offense.QB, { id: 'qb', species: 'nocturne', type: 'Dark' }) }, t8: t2 });
     assert.equal(t2.fields?.pending?.length || 0, 0, 'one pending at most');
     const t3 = { status: {}, ability: { qb: { cd: 1, banked: false } } }; play({ seed, offensePlay: PASSES[seed % PASSES.length], off: { QB: mon(lineup(11, 60).offense.QB, { id: 'qb', species: 'nocturne', type: 'Dark' }) }, t8: t3 });

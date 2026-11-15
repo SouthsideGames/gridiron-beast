@@ -1,25 +1,10 @@
-// PSY-04-F Echo Landing (echolot, K). Task 8 M3 (zone, defensive, earned by a kick result).
-// Contract (Dex; FIELD_CLOCKS.md): his own legal kickoff caught in the field of play and returned without a touchdown, while ready,
-// banks a Psychic field for the next opposing offensive scrimmage play; a touchback, an out-of-bounds kick and a return touchdown give
-// nothing. The field is created at that snap even with Echolot on the bench ("Source bench does not prevent creation"): 6 yards wide by
-// 8 long, from the upcoming line into the offensive backfield, centred laterally on the opposing QB's initial position, shifted only
-// enough to fit the field of play; revealed before both choices, never moved by an audible, stationary. Standard Psychic field (spec
-// §11): both teams' non-Psychic monsters are pulled inward at 20% of applicable maximum speed, 1-yard centre deadband, Psychic neutral;
-// ordinary collisions and bounds; no change to the kick's physics and no guaranteed return stop. Life 1 / 2 / 2 / 3 defensive
-// scrimmage plays by mastery, the creation play and incomplete passes included; a kickoff consumes no life; it clears at halftime (a
-// pending field carries). Cooldown: six subsequent team defensive scrimmage plays after creation, counted while the kicker is benched
-// (rules.js keeps each team's scrimmage play counts); at most one pending field.
-// Choices where the contract is silent (minimal readings): "ready" is no pending field and the cooldown run out; "returned without a
-// touchdown" includes a return the kicking team recovers by fumble short of the end zone, and excludes one it recovers in the end zone
-// (a kicking-team touchdown); live kickoffs only (an onside or free kick is a formula kick with no catch). Mastery changes life only.
-// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the field is
-// created at the opposing offensive snap, even benched (out of play: not gated); banking it from the live kickoff's result is an in-
-// play charge gain (gated).
+// Football revision approved 2026-11-15. The current exact contract is in
+// docs/beast-dex/data/abilities.json (and task8-overrides.json where applicable).
 import { registerAbility } from './registry.js';
 import { E as $E } from '../../core/english.js';
 
 export const ECHO_LANDING = Object.freeze({ width: 6, length: 8, span: [-8, 0], pull: 20, cooldown: 6 });
-const LIFETIME = [1, 2, 2, 3];
+const LIFETIME = [3, 4, 4, 5];
 const other = (side) => (side === 'home' ? 'away' : side === 'away' ? 'home' : null);
 
 export default registerAbility({

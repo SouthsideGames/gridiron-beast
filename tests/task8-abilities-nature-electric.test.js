@@ -73,7 +73,7 @@ test('Bloom Break: a designated cut of 45 degrees or more on a pass route earns 
   }
 });
 
-test('Bloom Break spawn: two recorded non-overlapping 6x4 Nature patches inside the 0-12 yard band, form strength, one play including the spawn; cooldown from spawn', () => {
+test('Bloom Break spawn: two legal separated 6x4 Nature patches persist for three offensive team plays', () => {
   const TURN = { 'thornkit:0': 15, 'thornkit:1': 20, 'thornkit:2': 25 };
   for (const [form, mastery] of [['thornkit:0', 0], ['thornkit:1', 2], ['thornkit:2', 3]]) {
     const { g, teams, side } = game(3, (T, s) => Object.assign(T[s].offense.WR1, { species: 'thornkit', form, mastery, type: 'Nature' }));
@@ -82,7 +82,7 @@ test('Bloom Break spawn: two recorded non-overlapping 6x4 Nature patches inside 
     const made = sim.fields.filter((f) => f.ability === 'NAT-01-F'); assert.equal(made.length, 2);
     for (const f of made) { assert.equal(f.strength, TURN[form]); assert.equal(f.type, 'Nature'); assert.ok(Math.abs(f.lat[1] - f.lat[0] - 6) < 1e-6); assert.ok(Math.abs(f.yard[1] - f.yard[0] - 4) < 1e-6); assert.ok(f.yard[0] >= -1e-6 && f.yard[1] <= 12 + 1e-6, `band ${f.yard}`); }
     const [a, b] = made; assert.ok(!(a.yard[0] < b.yard[1] && b.yard[0] < a.yard[1] && a.lat[0] < b.lat[1] && b.lat[0] < a.lat[1]), 'no overlap');
-    assert.equal(fieldsOf(g, 'NAT-01-F').length, 0, 'one completed play including the spawn');
+    assert.equal(fieldsOf(g, 'NAT-01-F').length, 2, 'three offensive plays including the spawn');
     const st = g.t8.ability[id]; assert.equal(st.token, false); assert.equal(st.cd, [5, 4, 3, 2][mastery], 'cooldown starts on spawn'); assert.equal(st.fresh, false);
   }
   // cooldown units: subsequent offensive plays he takes part in
@@ -277,7 +277,7 @@ test('Charge Strip: a rushing first down while ready earns one token (not a rece
     const f = sim.fields.find((x) => x.ability === 'ELE-02-F'); assert.ok(f);
     assert.equal(f.strength, form === 'voltfin:0' ? 20 : 30); assert.equal(f.type, 'Electric');
     assert.ok(Math.abs(f.yard[0]) < 1e-6 && Math.abs(f.yard[1] - 5) < 1e-6, `${f.yard}`); assert.ok(Math.abs((f.lat[0] + f.lat[1]) / 2 - PLAYS.inside_zone.align.RB[1]) < 1e-6 && Math.abs(f.lat[1] - f.lat[0] - 8) < 1e-6);
-    assert.equal(fieldsOf(g, 'ELE-02-F').length, 0); assert.equal(g.t8.ability[id].cd, [5, 4, 3, 2][mastery]); assert.equal(g.t8.ability[id].token, false);
+    assert.equal(fieldsOf(g, 'ELE-02-F').length, 1); assert.equal(g.t8.ability[id].cd, [5, 4, 3, 2][mastery]); assert.equal(g.t8.ability[id].token, false);
     assert.ok(!sim.events.some((e) => e.kind === 'field_stun' && e.by === 'RB' && e.side === 'off'), 'Electric immune');
   }
 });
@@ -298,13 +298,13 @@ test('Phase Release: phased from a ready route snap (spends even without contact
   const r2 = play('voltfang', 'off', 'WR2', 2, { t8: { status: { X: { id: 'stunned', strength: 1, remaining: 1, applications: 1 } }, ability: { X: { cd: 0 } } } }); assert.equal(ab(r2, 'ELE-03-F').length, 0, 'Stunned prevents activation');
 });
 
-test('Static Field: created before every ready defensive scrimmage play including the first, 12 wide from 5 to 12 yards on his alignment, 15% entry stun, one play; cooldown 5/4/3/2 on his defensive plays', () => {
+test('Static Field: alignment-based placement, 15% entry stun, three defensive team plays; mastery cooldown unchanged', () => {
   const { g, teams, other } = game(11, (T, s, o) => Object.assign(T[o].defense.FS, { species: 'stormlynx', form: 'stormlynx:0', mastery: 2, type: 'Electric' }));
   const id = teams[other].defense.FS.id;
   const { sim } = R.runScrimmagePlay(g, teams, 'slant_flat', 'cover_3');
   const f = sim.fields.find((x) => x.ability === 'ELE-04-F'); assert.ok(f, 'created on his first defensive play');
   assert.equal(f.strength, 15); assert.ok(Math.abs(f.yard[0] - 5) < 1e-6 && Math.abs(f.yard[1] - 12) < 1e-6); assert.ok(Math.abs(f.lat[1] - f.lat[0] - 12) < 1e-6 && Math.abs((f.lat[0] + f.lat[1]) / 2 - PLAYS.cover_3.align.FS[1]) < 1e-6);
-  assert.equal(fieldsOf(g, 'ELE-04-F').length, 0, 'one completed play');
+  assert.equal(fieldsOf(g, 'ELE-04-F').length, 1, 'three defensive plays including the spawn');
   assert.equal(g.t8.ability[id].cd, 3, 'mastery 2: 3 subsequent defensive plays');
   // stun rate on the engine (frozen: 30 plays with a field over the whole box; at least 80 first entries; tolerance 0.08 of 15%)
   let entries = 0, stuns = 0;

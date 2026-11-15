@@ -18,7 +18,6 @@ import { toNumber } from '../../core/fraction.js';
 import { statusOf, sitsOutPlay } from '../../sim/t8/status-runtime.js';
 import { familyById, abilityById } from '../../data/beast-dex.js';
 import { IRON_LUNGS } from '../../sim/abilities/steelpaw.js';
-import { RADIUS as NIGHT_WATCH_RADIUS } from '../../sim/abilities/nightowl.js';
 import { FIELD_REVEAL } from './fields-fx.js';
 import { LOOKS } from './looks/index.js';
 import { t as $t } from '../../text/index.js';
@@ -272,7 +271,7 @@ export function inspectInfo(state, teams, mid, { formation = null, last = null, 
   const st = state?.t8 ? statusOf(state, mid) : null; const abs = (state?.t8?.absences || []).find((a) => a.mid === mid) || null; const abId = footballAbility(m);
   const out = { monster: m, team, slot: null, full: !!full, stamina: full ? { now: cur, capacity: cap, frac: cap ? Math.max(0, Math.min(1, cur / cap)) : 0, low, exhausted, played: !!rec } : { low, exhausted },
     status: st ? { id: st.id, remaining: st.restOfPlay ? null : st.remaining ?? null } : null, absent: abs ? { serveOn: abs.serveOn || null, ability: abs.ability || null } : null,
-    ability: abId ? { id: abId, name: dexAbilityName(abId) || abilityById(abId)?.name || abId, text: abId === 'MET-02-F' ? $t('fx.steadies_nearby_teammates_every_second_qualifyin') : abId === 'DAR-02-F' ? $t('fx.protects_nearby_teammates_from_dark_field') : abilityById(abId)?.mechanic || '' } : null, staminaNotes: [], awarenessNotes: [] };
+    ability: abId ? { id: abId, name: dexAbilityName(abId) || abilityById(abId)?.name || abId, text: abilityById(abId)?.mechanic || '' } : null, staminaNotes: [], awarenessNotes: [] };
   if (last?.lungs?.includes(mid)) out.staminaNotes.push({ tick: true, text: $t('fx.iron_lungs_saved_1_stamina_on') });
   if (last?.watch?.includes(mid)) out.awarenessNotes.push({ tick: true, text: $t('fx.night_watch_kept_his_awareness_full') });
   const progress = state?.t8?.ironLungs?.progress?.[mid] || 0; let lungsNow = false;
@@ -294,14 +293,16 @@ export function inspectInfo(state, teams, mid, { formation = null, last = null, 
         else out.staminaNotes.push({ tick: false, text: `${$t('fx.steadied_by_every_second_qualifying_play', { whose })}` });
       }
       const dark = (state.t8?.fields?.list || []).some((f) => f.type === 'Dark') ? $t('fx.a_dark_field_is_on_the') : $t('fx.no_dark_field_is_on_the');
-      for (const src of here) { // Night Watch (nightowl.js): non-Dark allies inside the safety's radius
-        if (footballAbility(src.m) !== 'DAR-02-F' || !ableNow(src)) continue; const R = tier(NIGHT_WATCH_RADIUS, src.m.mastery);
-        if (src === me) { const kept = here.filter((x) => x !== src && x.m.type !== 'Dark' && dist(x, src) <= R).map((x) => x.m.name);
-          out.awarenessNotes.push({ tick: false, text: kept.length ? `${$t('fx.night_watch_yd_watching_over', { r: R })} ${kept.join(', ')}${$t('fx.they_ignore_a_dark_fields_awareness', { where, dark })}` : `${$t('fx.night_watch_yd_no_ally_inside', { r: R, where })}` }); }
-        else if (m.type !== 'Dark' && dist(me, src) <= R) out.awarenessNotes.push({ tick: false, text: `${$t('fx.dark_awareness_protection_inside_s_night', { name: src.m.name, r: R, where, dark })}` });
+      for (const src of here) {
+        if (footballAbility(src.m) !== 'DAR-02-F' || !ableNow(src)) continue;
+        if (src === me) out.awarenessNotes.push({ tick: false, text: 'Night Watch protects every allied cornerback and safety against Dark-field Awareness loss and Shadow Patch confusion, anywhere on the field.' });
+        else if (m.type !== 'Dark' && /^(CB|S|FS)/.test(me.slot)) out.awarenessNotes.push({ tick: false, text: `Protected by ${src.m.name}'s Night Watch, regardless of distance.` });
       }
+
     }
   }
+  const retained = state?.t8?.ironLungs?.protection?.[mid] || 0;
+  if (retained > 0) out.staminaNotes.push({ tick: false, text: `Iron Lungs protection: ${retained} participating defensive plays remain; moving away does not remove it.` });
   if (full && !lungsNow && progress >= 1) out.staminaNotes.push({ tick: false, text: $t('fx.iron_lungs_one_qualifying_play_counted') });
   return out;
 }

@@ -34,6 +34,7 @@ export function chargeBar(x, y, c, colour, t, o = 1, drain = 0) {
     s += rect(sx, y - H / 2, segW, H, '#0b1a14', 0.75, ' rx="0.14" stroke="#e9e9ee" stroke-width="0.1"');
     if (fill > 0) s += rect(sx + 0.07, y - H / 2 + 0.07, Math.max(0.01, (segW - 0.14) * fill), H - 0.14, colour, 0.95 * fill, ' rx="0.1"');
   }
+  if (c.ready && drain <= 0) s += `<text x="${f2(x)}" y="${f2(y - 0.9)}" text-anchor="middle" font-size="0.85" fill="${colour}" stroke="#0b1a14" stroke-width="0.15" paint-order="stroke">READY</text>`;
   if (c.ready && drain <= 0) { const pulse = 0.55 + 0.45 * Math.sin(t * 6); s += rect(x0 - 0.15, y - H / 2 - 0.15, W + 0.3, H + 0.3, 'none', pulse, ` rx="0.25" stroke="${colour}" stroke-width="0.14"`) + star(x + W / 2 + 0.75, y, 0.45, colour, pulse); }
   if (c.spent) s += `<text x="${f2(x + W / 2 + 0.75)}" y="${f2(y + 0.3)}" text-anchor="middle" font-size="0.8" font-weight="900" fill="#e9e9ee" opacity="0.8">✓</text>`;
   return s + '</g>';

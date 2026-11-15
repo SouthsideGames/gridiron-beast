@@ -1,3 +1,4 @@
+import { abilitiesOf, familyById } from '../../data/beast-dex.js';
 // Task 8 Reviewer v2 (spec §25): the four-phase checklist of a complete-interaction run, evaluated from engine records only.
 //   trigger met     the qualifying condition: built up in earlier plays (the contract's charge / ready events), held by the staged
 //                   or built game-scope state at the activation snap, and (where the spec names one) the engine event that met it
@@ -155,5 +156,9 @@ function collectTargets(plays, slot, abilityId, family, teams) {
 // cleanup = it expired). `status`: resolution is the status application attempt. `resolveEvents`: the engine / contract event kinds
 // that evidence the resolution. `spent(state)`: the game-scope state at the activation play's whistle shows the spend. `absence`: an
 // absence must be served and the absentee return. `cooldown: false`: no recharge to wait for.
-export function phaseSpec(family, variant = null) { const s = SPECS[family] || {}; return variant?.spec ? { ...s, ...variant.spec } : s; }
+export function phaseSpec(family, variant = null) {
+  const base = SPECS[family] || {}, ability = abilitiesOf(family)?.football;
+  const s = ability?.category === 'Zone' ? { ...base, expect: ability.mechanic, targets: `Monsters of either team inside the zone; ${familyById(family)?.type} types are immune. Placement and duration follow the current Beast Dex rules.` } : base;
+  return variant?.spec ? { ...s, ...variant.spec } : s;
+}
 export const variantsOf = (family) => VARIANTS[family] || [];

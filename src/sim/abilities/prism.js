@@ -1,29 +1,5 @@
-// N9d: removal now runs once in rules.preparePreChoice, before calls and before pending fields. Historical placement notes below are superseded.
-// LIG-04-F Prism Break (prism: Prismara; S). Task 8 M3, Light batch (special action).
-// Contract (Dex; spec §11 "Prism Break removes exactly its selected approved zone/overlap region and corresponding parent
-// contributions; do not remove all fields"): his personal tackles and pass breakups grant one charge per participating play, at most
-// one per play; three charges (at every mastery; one full bar at most) arm Prism Break for his next eligible defensive pre-choice
-// opportunity. It selects the nearest existing enemy-created environmental zone anywhere on the field (distance to its nearest edge,
-// creation order breaking ties; base, legendary-created and overlap zones are eligible) and removes it: a base zone entirely; a hybrid
-// overlap as the hybrid plus the contributing parents' effects within the overlap footprint only (the rest of each parent stays; no
-// parent effect returns there, and the removed footprint is never reconstituted when overlaps are recomputed: fields.js holes). All
-// three charges are spent only on a legal removal; no target keeps the full bar. The activation play cannot recharge. Charge
-// persists over possessions, halftime and overtime and clears at game end (game-scope state). Physical obstacles, walls, clones,
-// auras and statuses are never removed (only fields are candidates). An unable source keeps his readiness.
-// Readings where the contract is silent (documented, minimal):
-//   - The pre-choice opportunity is the pre-choice point of a defensive scrimmage snap he is on the field for (rules.js preSnap, after
-//     this snap's pending fields are created); "nearest" is measured from his alignment spot for that snap.
-//   - The zones are the effective footprints on the field: a hybrid overlap is the recipe intersection of two fields; a base zone is
-//     its rectangle less the hybrid overlaps it is a parent of (there the hybrid replaces it, §11) and less removed footprints
-//     (rectangle subtraction). "Distance to nearest edge" is the distance from him to the footprint's nearest edge, 0 when he stands
-//     inside it (the zone he stands in is the nearest). Measured on whole rectangles instead, an overlap could never be nearer than
-//     its own parents and overlap selection would never happen.
-//   - An overlap is eligible only when both contributing parents are enemy-created; its creation order is the later parent's. Ties
-//     after creation order: the zone id. Removing a base zone entirely also ends any hybrid it formed (one parent is gone).
-//   - Charges come from defensive scrimmage plays only (tackles as the stat sheet credits them, pass breakups as pbuBy).
-// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): Prism Break
-// resolves at the pre-choice point (rules.js game preSnap: out of play, not gated); tackle and breakup charges are in-play charge
-// gains (gated).
+// Football revision approved 2026-11-15. The current exact contract is in
+// docs/beast-dex/data/abilities.json (and task8-overrides.json where applicable).
 import { registerAbility } from './registry.js';
 import { RECIPES } from '../t8/fields.js';
 import { scrimmage } from './common.js';
@@ -86,6 +62,18 @@ export function prismBreak(t8, p, side, teams = null) {
 export default registerAbility({
   family: 'prism', abilityId: 'LIG-04-F',
   initGame: () => ({ charges: 0, noCharge: false }),
+  game: {
+    preSnap(g, self, data) {
+      if (data.team !== 'def' || data.sitsOut) return;
+      const st = g.state(self); if (st.charges < PRISM.charges) return;
+      const zone = prismBreak(g.t8, data.toAbs(data.align || [12, 0]), data.side, data.teams);
+      if (!zone) return;
+      st.charges = 0; st.noCharge = true; g.executed(self);
+      const removed = { kind: zone.kind, fields: zone.fields.map((f) => f.id), yard: zone.rect.yard, lat: zone.rect.lat };
+      const record = g.t8.preChoice; if (record) (record.prism ||= []).push({ mid: self.mid, slot: data.slot, at: data.align || [12, 0], removed });
+      g.log(`${self.input?.name || 'Prismara'} shatters a newly placed enemy zone`, { ability: 'LIG-04-F', by: self.mid, removed, preChoice: true });
+    },
+  },
   hooks: {
     playEnd(ctx, self, s) {
       if (self.team !== 'def' || !scrimmage(ctx)) return; const st = ctx.state(self);

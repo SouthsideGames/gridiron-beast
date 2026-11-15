@@ -12,7 +12,9 @@ export function queueField(t8, spec) { book(t8).pending.push({ ...spec }); }
  */
 export function createPending(t8, { onField, eligible = () => true, place, playIndex }) {
   const b = book(t8); const made = []; const keep = [];
+  const prior = [...b.list];
   for (const p of b.pending) {
+    if (prior.some((f) => f.owner === p.owner && f.ability === p.ability)) { keep.push(p); continue; }
     if ((!p.benchOk && !p.offField && !onField.has(p.owner)) || !eligible(p)) { keep.push(p); continue; } // M3 hook: benchOk / offField (approved off-field creation, e.g. Frostmark, Gear Grid; N7d G3)
     const r = placeRect({ id: `F${++b.seq}`, type: p.type, createdAt: playIndex, owner: p.owner, strength: p.strength ?? null, ...place(p) });
     // `payload`: the producing ability's approved per-field data the in-play effects read (src/sim/t8/field-effects.js)

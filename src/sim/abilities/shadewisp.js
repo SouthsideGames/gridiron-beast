@@ -1,47 +1,41 @@
-// PSY-02-F Mirror Step (shadewisp: Wispira / Mirageist, CB). Task 8 M3 (self enhancement).
-// Contract (Dex): while ready (no cooldown running) and able, in man coverage, his assigned receiver's first designated route cut before
-// the pass is released activates it if he is within range at the cut: Wispira 3 yards, Mirageist 4. He psychically mirrors the
-// receiver's new route direction without the ordinary turning slowdown, keeping his current movement speed: his velocity turns onto the
-// new route direction at once, at the speed he had. Separation he already gave up still has to be made up with ordinary movement.
-// Assigned man receiver only; no zone fallback. One cut resolution; no timed buff, status or attribute change. Bodies, walls,
-// environmental movement penalties and existing immobilisation apply (an immobilised or engaged defender cannot activate); no teleport,
-// collision bypass or guaranteed breakup. Cooldown 5 / 4 / 3 / 2 subsequent participating defensive plays by mastery after activation;
-// no qualifying cut, out of range or an unable source preserves readiness. Persistence: the running cooldown is game-scope state.
-// Choices where the contract is silent (minimal readings): the "first designated route cut" is the receiver reaching the first break of
-// a drawn route of three or more points (the engine's planned cut; the same break the legacy Cyclone and Mind Game cards used); it is
-// read at the tick after he takes it. Only that first cut qualifies on a play (a later cut never does). Two-point tries and kickoffs
-// are not defensive plays here (scrimmage plays only), so they neither activate nor count the cooldown.
-// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the mirror at the
-// first cut is the live activation (gated: readiness kept); cooldown only.
+// PSY-02-F Mirror Rift: redirect a live pass to a seeded random legal location.
+// The destination is near a randomly selected eligible receiver/defender or open
+// grass. No outcome is selected: the real catch/interception checks resolve it.
 import { registerAbility } from './registry.js';
-import { E as $E } from '../../core/english.js';
-
-export const RANGE = [3, 4]; // by form
-const COOLDOWN = [5, 4, 3, 2];
-const stageOf = (form) => Number(String(form).split(':')[1] || 0);
-
+import { able, scrimmage, byMastery } from './common.js';
+export const RANGE = [3, 4]; // historical export; Mirror Rift has no proximity gate
+export const RIFT = Object.freeze({ cooldown: [6, 5, 4, 3], reaction: 0.85, hidden: 0.15 });
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 export default registerAbility({
   family: 'shadewisp', abilityId: 'PSY-02-F', repeatableCooldown: true,
   initGame: () => ({ cd: 0 }),
   hooks: {
-    playStart(ctx, self) { self.ms = { seen: false, fired: false }; },
+    playStart(ctx, self) { self.riftAt = null; self.riftFresh = false; },
+    passRelease(ctx, self, { ball }) {
+      if (self.team !== 'def' || !scrimmage(ctx) || ctx.state(self).cd > 0 || !able(ctx, self) || ball.riftClaimed) return;
+      if (!ctx.canStartSignature(self)) return;
+      ball.riftClaimed = self.mid; self.riftAt = ctx.t + Math.min(0.15, ball.flightTime * 0.25);
+    },
     tick(ctx, self) {
-      const ms = self.ms; if (!ms || ms.seen || self.team !== 'def' || ctx.kickoff || ctx.twoPoint) return;
-      const r = ctx.manTarget(self); const pts = r?.assignment?.a === 'route' ? r.assignment.points : null;
-      if (!pts || pts.length < 3 || r.wp < 2) return;
-      ms.seen = true; // the first designated cut has happened: it is the only one that can qualify
-      const st = ctx.state(self);
-      if (st.cd > 0 || ctx.stats.passer || ctx.ball.inAir || self.stun > 0 || self.engaged || self.knockedDown) return; // not ready, released, or unable: readiness kept
-      if (ctx.dist(self, r) > (RANGE[stageOf(self.form)] ?? RANGE[0])) return; // out of range: readiness kept
-      if (!ctx.canStartSignature(self)) return; // denied: readiness kept
-      const dx = pts[2][0] - pts[1][0], dy = pts[2][1] - pts[1][1], L = Math.hypot(dx, dy) || 1; const sp = Math.hypot(self.vx, self.vy);
-      self.vx = (dx / L) * sp; self.vy = (dy / L) * sp; ms.fired = true;
-      st.cd = COOLDOWN[self.mastery] ?? COOLDOWN[0]; st.fresh = true; ctx.executed(self);
-      ctx.log(`${$E('sim.mirrors_s_cut', { name: self.name, name2: r.name })}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'PSY-02-F', victim: r.slot, mirror: [+(dx / L).toFixed(3), +(dy / L).toFixed(3)], speed: +sp.toFixed(2), x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
+      if (self.riftAt == null || ctx.t < self.riftAt) return;
+      self.riftAt = null; const ball = ctx.ball;
+      if (!ball.inAir || !able(ctx, self) || !ctx.canStartSignature(self)) return;
+      const B = ctx.bounds;
+      const eligible = ctx.actors.filter((a) => !a.temp && !a.noBall && !a.sitsOut && (a.team === 'def' || ['route', 'release'].includes(a.assignment?.a)));
+      const options = [...eligible, null, null, null, null]; const anchor = ctx.rng.pick(options);
+      const x = clamp(anchor ? anchor.x + ctx.rng.range(-2, 2) : ctx.rng.range(B.ownGoal + 1, B.goal - 1), B.ownGoal + 0.5, B.goal - 0.5);
+      const y = clamp(anchor ? anchor.y + ctx.rng.range(-2, 2) : ctx.rng.range(B.left + 1, B.right - 1), B.left + 0.5, B.right - 0.5);
+      const from = [ball.x, ball.y];
+      ball.mirrorRift = true; ball.hiddenUntil = ctx.t + RIFT.hidden;
+      ball.from = { x, y }; ball.landing = ball.to = { x, y }; ball.aim = { x, y };
+      ball.x = x; ball.y = y; ball.flight = 0; ball.flightTime = RIFT.reaction; ball.thrownAt = ball.hiddenUntil;
+      ball.airYards = x;
+      const catchers = eligible.filter((a) => a.team === 'off');
+      ball.target = catchers.sort((a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y))[0] || ball.target;
+      ctx.stats.airYards = Math.round(x);
+      const st = ctx.state(self); st.cd = byMastery(RIFT.cooldown, self.mastery); self.riftFresh = true; ctx.executed(self);
+      ctx.log(`${self.name}'s Mirror Rift sends the pass through a random portal`, { kind: 'ability', ability: 'PSY-02-F', by: self.slot, side: self.team, from, destination: [x, y], hidden: RIFT.hidden, reaction: RIFT.reaction, x: from[0], y: from[1] });
     },
-    playEnd(ctx, self) {
-      const st = ctx.state(self); if (self.team !== 'def' || ctx.kickoff || ctx.twoPoint) return;
-      if (st.cd > 0 && !st.fresh) st.cd -= 1; st.fresh = false; // subsequent participating defensive plays; the activation play is not one
-    },
+    playEnd(ctx, self) { if (self.team !== 'def' || !scrimmage(ctx)) return; const st = ctx.state(self); if (st.cd > 0 && !self.riftFresh) st.cd -= 1; },
   },
 });

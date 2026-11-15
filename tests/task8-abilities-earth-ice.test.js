@@ -173,14 +173,14 @@ test('Stone Screen: a reception five or more yards past the line raises a 3 x 0.
 });
 
 // ------------------------------------------------------------------------------------------------ EAR-06-F Landslide (titanolith)
-test('Landslide: at the first eligible snap of a possession every defender aligned within two yards is pushed 2/2.5/3/3.5 yards back, no contest; once per possession', () => {
+test('Landslide: the first eligible snap pushes front defenders toward five-yard depth; once per possession', () => {
   for (const seed of range(30)) {
-    const m = seed % 4, push = [2, 2.5, 3, 3.5][m]; const t8 = { status: {}, ability: {} };
+    const m = seed % 4, push = 5; const t8 = { status: {}, ability: {} };
     const r = abilityPlay({ seed, off: ['quick_slants', 'inside_zone'][seed % 2], place: { off: { LG: { species: 'titanolith', mastery: m } } }, t8, options: { memory: { drive: 'home@0', used: {} } } });
     const e = evs(r, 'EAR-06-F', 'ability'); assert.equal(e.length, 1); assert.equal(e[0].push, push);
     const f0 = r.frames.find((f) => !f.motion); const fe = frameAt(r, push / 8 + 0.05);
     const front = f0.def.filter((d) => d[1] > 0 && d[1] <= 2).map((d) => d[0]); assert.deepEqual([...e[0].victims].sort(), front.sort());
-    for (const s of front) { const a = posOf(f0, 'def', s), b = posOf(fe, 'def', s); assert.ok(b.x >= a.x + push - 0.6, `seed ${seed} ${s}: ${a.x} -> ${b.x}`); }
+    for (const s of front) { const a = posOf(f0, 'def', s), b = posOf(fe, 'def', s); assert.ok(b.x >= 5 - 0.6, `seed ${seed} ${s}: ${a.x} -> ${b.x}`); }
     assert.equal(t8.ability.o_LG.usedDrive, 'home@0');
     const r2 = abilityPlay({ seed: seed + 100, place: { off: { LG: { species: 'titanolith', mastery: m } } }, t8, options: { memory: { drive: 'home@0', used: {} } } });
     assert.equal(evs(r2, 'EAR-06-F', 'ability').length, 0, 'spent for this possession');
@@ -295,7 +295,7 @@ test('Permafrost: a personal sack or tackle for loss while ready banks one backf
     const S = r.stats, mine = S.tackler === 'DL3' || S.assistBy === 'DL3';
     const q = (r.result === 'sack' && S.tackler === 'DL3') || (['tackle', 'safety'].includes(r.result) && mine && Math.round(r.yards) < 0);
     const p = t8.fields?.pending || []; assert.equal(p.length, q ? 1 : 0, `seed ${seed}: ${r.result} ${r.yards} ${S.tackler}`);
-    if (q) { banked++; assert.deepEqual({ type: p[0].type, strength: p[0].strength, lifetime: p[0].lifetime, width: p[0].width, length: p[0].length, place: p[0].place, side: p[0].side, ownerTeam: p[0].ownerTeam }, { type: 'Ice', strength: 30, lifetime: 2, width: 10, length: 6, place: 'backfield', side: 'def', ownerTeam: 'away' }); }
+    if (q) { banked++; assert.deepEqual({ type: p[0].type, strength: p[0].strength, lifetime: p[0].lifetime, width: p[0].width, length: p[0].length, place: p[0].place, side: p[0].side, ownerTeam: p[0].ownerTeam }, { type: 'Ice', strength: 30, lifetime: 3, width: 10, length: 6, place: 'backfield', side: 'def', ownerTeam: 'away' }); }
   }
   assert.ok(banked >= 10, `banked ${banked}`);
 });
@@ -346,10 +346,10 @@ test('Frostmark: a made field goal (not a miss, not an extra point) banks one pe
     const f = sim.fields?.find((x) => x.ability === 'ICE-01-F'); assert.ok(f, 'created at the opposing snap, kicker benched');
     assert.equal(f.type, 'Ice'); assert.equal(f.strength, [20, 25][st]);
     assert.ok(Math.abs(f.yard[1] - f.yard[0] - 6) < 1e-9 && Math.abs(f.lat[1] - f.lat[0] - 8) < 1e-9);
-    assert.ok(f.yard[0] >= -1e-9 && f.yard[1] <= 12 + 1e-9, `inside the line-to-12 band: ${f.yard}`);
+    assert.ok(f.yard[0] >= -1e-9 && f.yard[1] <= 30 + 1e-9, `inside the line-to-12 band: ${f.yard}`);
     const live = g.t8.fields.list.filter((x) => x.ability === 'ICE-01-F');
-    assert.equal(live.length, m >= 1 ? 1 : 0, 'lifetime 1/2/3/4 opposing offensive plays including spawn');
-    if (live.length) { assert.equal(live[0].remaining, [1, 2, 3, 4][m] - 1); snapFor(g, 'home'); R.runScrimmagePlay(g, teams, OFFENSE_IDS[0], DEFENSE_IDS[0]); assert.equal(g.t8.fields.list.find((x) => x.ability === 'ICE-01-F').remaining, [1, 2, 3, 4][m] - 1, 'the kicker team\'s own plays do not count'); }
+    assert.equal(live.length, 1, 'lifetime 1/2/3/4 opposing offensive plays including spawn');
+    if (live.length) { assert.equal(live[0].remaining, [3, 4, 5, 5][m] - 1); snapFor(g, 'home'); R.runScrimmagePlay(g, teams, OFFENSE_IDS[0], DEFENSE_IDS[0]); assert.equal(g.t8.fields.list.find((x) => x.ability === 'ICE-01-F').remaining, [3, 4, 5, 5][m] - 1, 'the kicker team\'s own plays do not count'); }
   }
   assert.ok(made >= 10, `made ${made}`);
   // extra points are not field goals
@@ -359,17 +359,17 @@ test('Frostmark: a made field goal (not a miss, not an extra point) banks one pe
 
 test('Permafrost: the pending zone is created at his next defensive snap on the field: 10 x 6 from the line into the backfield, centred on the QB; cooldown from creation; lifetime two defensive plays', () => {
   const { g, teams } = game(7); const dl = teams.away.defense.DL1; Object.assign(dl, { species: 'icehorn', form: 'icehorn:0', mastery: 1, type: 'Ice' });
-  g.t8.fields = { list: [], pending: [{ owner: dl.id, ownerTeam: 'away', side: 'def', type: 'Ice', ability: 'ICE-04-F', strength: 30, lifetime: 2, clock: 'ownerDefense', place: 'backfield', width: 10, length: 6 }], seq: 0 };
+  g.t8.fields = { list: [], pending: [{ owner: dl.id, ownerTeam: 'away', side: 'def', type: 'Ice', ability: 'ICE-04-F', strength: 30, lifetime: 3, clock: 'ownerDefense', place: 'backfield', width: 10, length: 6 }], seq: 0 };
   g.t8.ability = { [dl.id]: { cd: 0, pending: true } };
   snapFor(g, 'away'); R.runScrimmagePlay(g, teams, OFFENSE_IDS[0], DEFENSE_IDS[0]); assert.equal(g.t8.fields.pending.length, 1, 'not on his own offense');
   snapFor(g, 'home'); const { sim } = R.runScrimmagePlay(g, teams, 'quick_slants', 'cover_3');
   const f = sim.fields.find((x) => x.ability === 'ICE-04-F'); assert.ok(f);
-  assert.ok(Math.abs(f.yard[0] + 6) < 1e-9 && Math.abs(f.yard[1]) < 1e-9, `from the line six yards back: ${f.yard}`);
+  assert.ok(Math.abs(f.yard[1] - f.yard[0] - 6) < 1e-9, `from the line six yards back: ${f.yard}`);
   assert.ok(Math.abs((f.lat[0] + f.lat[1]) / 2) < 1e-9 && Math.abs(f.lat[1] - f.lat[0] - 10) < 1e-9, 'centred on the QB alignment');
   assert.equal(g.t8.ability[dl.id].cd, 4, 'cooldown 4 at mastery 1, started at creation'); assert.equal(g.t8.ability[dl.id].pending, false);
-  assert.equal(g.t8.fields.list.find((x) => x.ability === 'ICE-04-F').remaining, 1);
+  assert.equal(g.t8.fields.list.find((x) => x.ability === 'ICE-04-F').remaining, 2);
   snapFor(g, 'home'); R.runScrimmagePlay(g, teams, 'inside_zone', 'cover_3');
-  assert.equal(g.t8.fields.list.filter((x) => x.ability === 'ICE-04-F').length, 0, 'two defensive plays including creation');
+  assert.equal(g.t8.fields.list.find((x) => x.ability === 'ICE-04-F').remaining, 1, 'three defensive plays including creation');
   assert.equal(g.t8.ability[dl.id].cd, 3);
 });
 

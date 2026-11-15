@@ -34,7 +34,7 @@ const hyp = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
  *        o.t8 the game's Task 8 block (shared status gate); o.setStatus the renderer status; o.bounds the play bounds; o.dt the tick.
  * @returns null without fields, else the per-play effect functions.
  */
-export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 = { status: {} }, setStatus = () => {}, bounds: B, dt = 0.05, refreshMaxSpeed = null }) {
+export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 = { status: {} }, setStatus = () => {}, bounds: B, dt = 0.05, refreshMaxSpeed = null, applySharedStatus = null }) {
   if (!fields?.length) return null;
   const rng = createRng(((Number(seed) >>> 0) ^ 0x1b873593) >>> 0 || 17); // the fields' own draws: other plays keep theirs
   const byId = new Map(fields.map((f) => [f.id, f]));
@@ -122,7 +122,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
       // The type-independent half of effectsAt is resolved once per set of containing fields (cores) and shared by every monster type.
       let core = cores.get(k); if (!core) { core = effectsCore(fields, a.x, a.y); cores.set(k, core); }
       const e = effectsFor(core, a.type); const base = baseOf(e), hybrid = e.hybrid?.name || null;
-      m = { e, base, hybrid, water: base.Water, ms: (-(base.Fire?.strength ?? 0) + (base.Wind?.strength ?? 0)) || 0, dark: pct(base.Dark?.strength), steam: hybrid === 'Steam', mind: hybrid === 'Mindstorm' };
+      m = { e, base, hybrid, water: base.Water, ms: (-(base.Fire?.strength ?? 0) + (base.Wind?.strength ?? 0)) || 0, dark: base.Dark?.field.ability === 'DAR-01-F' ? 0 : pct(base.Dark?.strength), steam: hybrid === 'Steam', mind: hybrid === 'Mindstorm' };
       byType.set(k, m);
     }
     return m;
@@ -145,6 +145,12 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
       // The entry checks run only when his resolved lookup is not the one of his previous tick (third pass): after one pass over a
       // lookup every one of its field ids and its hybrid name is in `seen`, so with the same lookup again every test below would be
       // false: no entry event, no Electric roll.
+      const departedSmoke = st.base?.Dark?.field?.ability === 'DAR-01-F' && st.base.Dark.field.id !== m.base.Dark?.field.id ? st.base.Dark.field : null;
+      if (departedSmoke && !a.ignoreDarkConfusion && a.type !== 'Dark') {
+        const attempt = { id: 'confused', strength: 20, duration: 0, restOfPlay: true, sourceId: departedSmoke.owner, abilityId: departedSmoke.ability, payload: { pct: 20, wrongAssignment: true } };
+        const res = applySharedStatus ? applySharedStatus(a, attempt) : applyStatus(state, a.mid, attempt);
+        if (res.accepted) ev(a, 'field_confused', `${a.name} leaves the smoke Confused`, { field: departedSmoke.id, ability: departedSmoke.ability, status: 'confused' });
+      }
       if (m !== st.m) {
         st.m = m; st.base = m.base; st.hybrid = m.hybrid; if (m.hybrid === 'Magnetic Storm') magEver = true;
         for (const b of m.e.base) if (!st.seen.has(b.fieldId)) {
@@ -255,7 +261,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
     ev(a, 'field_blocked_start', `${$E('sim.s_signature_cannot_start_inside_the', { name: a.name })}`, { hybrid: 'Eclipse' }); return false;
   }
   // M3 hook: a field's Prism Break removed footprints (holes) go out with it
-  const output = () => ({ fields: fields.map((f) => ({ id: f.id, type: f.type, strength: f.strength, owner: f.owner, ability: f.ability, yard: [...f.yard], lat: [...f.lat], ...(f.fresh ? { fresh: true } : {}), /* Task 8 presentation: created at this snap (the reveal) */ ...(f.holes?.length ? { holes: f.holes.map((h) => ({ yard: [...h.yard], lat: [...h.lat] })) } : {}) })), clumps: clumps.map((c) => ({ x: +c.x.toFixed(2), y: +c.y.toFixed(2), d: LIVING_TERRAIN.diameter })) });
+  const output = () => ({ fields: fields.map((f) => ({ id: f.id, type: f.type, strength: f.strength, owner: f.owner, ability: f.ability, payload: f.payload, remaining: f.remaining, ownerTeam: f.ownerTeam, clock: f.clock, yard: [...f.yard], lat: [...f.lat], ...(f.fresh ? { fresh: true } : {}), /* Task 8 presentation: created at this snap (the reveal) */ ...(f.holes?.length ? { holes: f.holes.map((h) => ({ yard: [...h.yard], lat: [...h.lat] })) } : {}) })), clumps: clumps.map((c) => ({ x: +c.x.toFixed(2), y: +c.y.toFixed(2), d: LIVING_TERRAIN.diameter })) });
   // hasEarth: does any field of this play have the Earth type? Without one no lookup ever carries an Earth entry, so resist() is
   // exactly 1 for everyone (the engine's separation pass uses this to take its plain loop).
   const hasEarth = fields.some((f) => f.type === 'Earth');

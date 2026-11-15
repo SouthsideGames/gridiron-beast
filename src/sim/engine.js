@@ -129,6 +129,7 @@ function actorRecord(v) {
   a.vv = undefined; a.haze = undefined; a.ss = undefined; a.vc = undefined; a.call = undefined; a.gate = undefined; a.sov = undefined;
   a.cy = undefined; a.sx = undefined; a.br = undefined; a.touch = undefined; a.ms = undefined; a.ab = undefined; a.breakwater = undefined;
   a.halo = undefined; a.plate = undefined; a.clamp = undefined; a.bt = undefined; a.cold = undefined; a.sc = undefined; a.tw = undefined;
+  a.riftAt = undefined; a.riftFresh = undefined; a.shadowWrong = undefined; a.ignoreDarkConfusion = undefined;
   a.pr = undefined; a.rp = undefined; a.pounce = undefined; a.mg = undefined; a.blink = undefined;
   return a;
 }
@@ -226,7 +227,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // cooldowns) lives in options.t8 (the football game state's Task 8 block); without one (labs, previews) it is per play only.
   const t8g = options.t8 || { status: {} };
   // Task 8 M3 fields (spec §11): options.fields in this play's frame (fields.js toPlayFrame); null without fields (src/sim/t8/field-effects.js)
-  const FX = createFieldPlay({ fields: options.fields, actors, seed, log: (...x) => log(...x), t8: t8g, setStatus: (a, c, d) => setStatus(a, c, d), bounds: B, dt: DT, refreshMaxSpeed: (a) => refreshMaxSpeed(a) });
+  const FX = createFieldPlay({ fields: options.fields, actors, seed, log: (...x) => log(...x), t8: t8g, setStatus: (a, c, d) => setStatus(a, c, d), bounds: B, dt: DT, refreshMaxSpeed: (a) => refreshMaxSpeed(a), applySharedStatus: (a, spec) => t8Apply(a, spec) });
   // Perf (outcome-identical): the contract context (and the ability stream, a pure function of the seed that only it draws from)
   // is built at the first contract hook call, so a play where no contract acts never allocates it.
   let abilityCtx = null;
@@ -345,6 +346,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     a.attrs.awareness = a.baseAwareness = effectiveAttr(slot, 'awareness', a.t8Base.awareness); // Confused
     a.attrs.durability = effectiveAttr(slot, 'durability', a.t8Base.durability); // Afflicted (stamina drain: stamina-runtime.js, B10)
     if (slot?.id === 'stunned' && !slot.restOfPlay) { a.stun = 1e6; a.noEngage = 1e6; a.sitsOut = true; } // B18 carryover (rules.js also passes sitsOut)
+    if (slot?.id === 'confused' && slot.payload?.wrongAssignment) {
+      if (!a.shadowWrong) { const sign = a.y >= 0 ? -1 : 1; a.shadowWrong = { x: Math.max(B.ownGoal + 1, Math.min(B.goal - 1, a.x + (a.team === 'off' ? -6 : 6))), y: Math.max(B.left + 1, Math.min(B.right - 1, a.y + sign * 9)) }; }
+    } else a.shadowWrong = null;
     if (!live || !slot) return;
     if (disablesRestOfPlay(slot)) { // Stunned (rest of play) / Knocked Down: movement stops; cannot move, block or tackle
       t8Disengage(a); a.stun = 1e6; a.noEngage = 1e6; a.vx = 0; a.vy = 0;
@@ -423,6 +427,22 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const frames = [];
   if (qb && qb.assignment.a === 'keep') { phase = 'carry'; stats.carrier = 'QB'; handoffDone = true; }
   for (const a of actors) hook('playStart', a); // Task 8 M3: contracts see the snap (after the ball and the stat sheet exist)
+  // Iron Lungs' qualified ally keeps protection for three participating defensive
+  // snaps, even when its source or recipient moves away. Copies never stack.
+  if (!SPECIAL_PLAY && t8g.ironLungs?.protection) {
+    const L = t8g.ironLungs;
+    for (const a of defs) {
+      if (!(L.protection[a.mid] > 0) || a.temp) continue;
+      L.protection[a.mid] -= 1;
+      if ((L.progress[a.mid] || 0) >= 1) {
+        L.progress[a.mid] = 0; (t8g.drainRelief ||= {})[a.mid] = 1;
+        const owner = L.sources?.[a.mid] || a.mid, source = actors.find((p) => p.mid === owner);
+        recordExecution(t8g, owner, 'steelpaw', { passive: true });
+        log(`Iron Lungs saves 1 stamina for ${a.name}`, { kind: 'ability', ability: 'MET-02-F', by: source?.slot || null, side: 'def', targets: [a.slot] });
+      } else L.progress[a.mid] = 1;
+    }
+  }
+
 
   const carrierTeam = () => ball.holder?.team || null;
   const opponents = (team) => (team === 'off' ? defs : offs);
@@ -921,6 +941,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function offenseTick(a) {
     if (a.moveOverride) { a.moveOverride(moveApi(a)); return; } // M3 hook: a contract's per-play behaviour override
     const asg = a.assignment;
+    if (a.shadowWrong && !(a.stun > 0) && !a.engaged && a !== qb) { steer(a, a.shadowWrong.x, a.shadowWrong.y, 0.8, 0.3); return; }
     if (a.fixedJob) { if (a.engaged) resolveEngagement(a); else passBlock(a); return; } // M3 hook: a summoned pass protector keeps that job only
     if (KO && asg?.a === 'ko_block') { kickoffBlock(a); return; }
     if (KO && ball.inAir) { kickoffFlightOffense(a); return; }
@@ -942,7 +963,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       // there as the ball does, and brakes into it (the old code ran there flat out and stopped only inside 0.2 yards, so a
       // fast receiver overran the spot by his braking distance). Behind the ball he still sprints; a ball thrown past him is
       // still past him.
-      if (ball.target === a) {
+      if (ball.target === a || (ball.mirrorRift && receivers.includes(a.slot) && asg.a === 'route')) {
         const L = ball.landing; const dL = dist(a, L); const tLeft = Math.max(0.05, ball.flightTime - ball.flight);
         const pace = dL / tLeft; // the speed that arrives with the ball
         const vCatch = a.maxSpeed * 0.75; // he can take the ball at a run; he only must not sail past it
@@ -1978,6 +1999,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     return { pick, second: sec, split, verticalNear, splitWeight: split ? clamp(0.5 + (pick.score - sec.score) * 1.5, 0.5, 0.8) : 1, inZone, overload, switched, why };
   }
   function defenseTick(d) {
+    if (d.shadowWrong && !(d.stun > 0) && !d.engaged) { steer(d, d.shadowWrong.x, d.shadowWrong.y, 0.8, 0.3); return; }
     const asg = d.assignment;
     const mark = TRACE ? (m, x) => { d.why = m; d.why2 = x ?? null; } : () => {}; // developer trace: the branch he acted on
     if (d.moveOverride) { mark('override'); d.moveOverride(moveApi(d)); return; } // M3 hook: a contract's per-play behaviour override
@@ -2383,8 +2405,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     result = kind; ball.holder = ball.holder || null; ball.x = x; ball.y = y; Object.assign(stats, extra);
   }
   function resolveArrival() {
-    const r = ball.target;
     const L = ball.landing;
+    // A redirected ball is live for every eligible receiver, including a receiver
+    // other than the original target. Position determines who contests it.
+    if (ball.mirrorRift) {
+      const eligible = receivers.map((sl) => bySlot.off[sl]).filter((a) => a && !a.noBall && !a.temp && !a.sitsOut && !(a.stun > 0));
+      if (eligible.length) ball.target = eligible.sort((a, b) => dist(a, L) - dist(b, L))[0];
+    }
+    const r = ball.target;
     const catchRadius = 1.4 + 0.9 * norm(r.attrs.agility) + (ball.tailwind ? 0.6 : 0);
     const dr = dist(r, L);
     const defendersNear = defs.filter((d) => !d.engaged).map((d) => ({ d, dd: dist(d, L) })).sort((p, q) => p.dd - q.dd);
@@ -2481,6 +2509,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       off: offs.map((a) => [a.slot, +a.x.toFixed(2), +a.y.toFixed(2), a.engaged ? 1 : 0, statusOf(a)]),
       def: defs.map((a) => [a.slot, +a.x.toFixed(2), +a.y.toFixed(2), a.engaged ? 1 : 0, statusOf(a)]),
       ball: [+ball.x.toFixed(2), +ball.y.toFixed(2), ball.inAir ? 1 : 0],
+      ...(ball.hiddenUntil > t ? { ballHidden: true } : {}),
       holder: ball.holder ? ball.holder.slot : null, holderTeam: ball.holder ? ball.holder.team : null, phase,
       ...(phase === 'dropback' && ball.holder === qb && !scrambled && (qb.windup || (qr.cur && !qr.decision)) ? { read: qb.windup ? qb.windup.r.slot : qr.cur.slot } : {}),
       ...(TRACE ? { dbg: defs.map((d) => [d.slot, d.why || null, d.why2 || null, d.aim ? +d.aim[0].toFixed(2) : null, d.aim ? +d.aim[1].toFixed(2) : null, d.recognised ? 1 : 0, d.why === 'zone' && d.zoneInfo || null, d.pursuitAt === t && d.pursuitInfo || null, d.read ? { b: +d.read.b.toFixed(2), line: d.read.cues?.line ?? null, qb: d.read.cues?.qb ?? null, mesh: d.read.cues?.mesh ? 1 : 0, ball: d.read.cues?.handSeen ? 1 : 0, release: d.read.cues?.release ? 1 : 0, manKey: d.read.cues?.manKey ? 1 : 0, conflict: d.read.cues?.conflict ? 1 : 0, delay: d.read.cues?.delay ?? null, state: d.read.committed ? 'run' : passShown(d) ? 'pass' : 'reading' } : null]) } : {}), // developer trace: decision, detail, aim, run recognised // the QB's current read, then his target through the wind-up (live indicator, GDD §53)
@@ -2581,7 +2610,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     // Ball
     if (ball.inAir) {
-      ball.flight += DT;
+      if (!(ball.hiddenUntil > t)) ball.flight += DT;
       const k = clamp(ball.flight / Math.max(0.05, ball.flightTime), 0, 1);
       ball.x = ball.from.x + (ball.landing.x - ball.from.x) * k; ball.y = ball.from.y + (ball.landing.y - ball.from.y) * k;
       if (k >= 1) { if (KO) kickoffCatch(); else resolveArrival(); }
@@ -2654,6 +2683,16 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   if (obstacles.length) out.obstacles = obstacles.map(({ blocks, ...o }) => ({ ...o })); // M3 hook: contract obstacles (field view, replays)
   if (turnoverSpot != null) out.turnoverSpot = turnoverSpot; // M3 hook: rules.js places the next offense here
   if (KO) out.kickoff = { returner: KO.returner, catchX: stats.kickCatchX ?? null, hang: ball.flightTime };
+  // Hoard Flight's post-whistle trip is presentation only: elapsed time, scoring,
+  // recovery statistics and the awarded turnover spot remain the real result.
+  const flight = events.find((e) => e.ability === 'DRA-03-F' && e.destination);
+  if (flight && frames.length) {
+    const last = frames[frames.length - 1];
+    for (let i = 1; i <= 16; i++) { const k = i / 16;
+      frames.push({ ...last, t: +(last.t + i * 0.1).toFixed(2), presentationOnly: true, hoardFlight: true,
+        ball: [flight.x + (flight.destination[0] - flight.x) * k, flight.y + (flight.destination[1] - flight.y) * k, 1], ballHidden: true });
+    }
+  }
   // Developer trace only (Phase C1 tests): each offensive player's Blocking after auras, kept out of the play's data (not enumerable,
   // so a traced play still serialises exactly as an untraced one).
   if (TRACE) Object.defineProperty(out, 'blockingAtSnap', { value: Object.fromEntries(offs.map((a) => [a.slot, a.attrs.blocking])), enumerable: false });

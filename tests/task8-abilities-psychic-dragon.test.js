@@ -50,7 +50,7 @@ test('Mind Bend (PSY-01-F): a personal tackle after a completion while ready ban
     const p = t8.fields?.pending || [];
     if (r.stats.receiver && personal && !r.stats.defensiveScore) {
       banked++; assert.equal(p.length, 1); assert.equal(t8.ability.mindwing_FS.banked, true);
-      assert.deepEqual({ ...p[0], owner: undefined }, { ...p[0], owner: undefined, side: 'defense', type: 'Psychic', strength: 20, width: 8, length: 6, span: [-9, -3], lifetime: 1, clock: 'ownerDefense', ownerTeam: 'away' });
+      assert.deepEqual({ ...p[0], owner: undefined }, { ...p[0], owner: undefined, side: 'defense', type: 'Psychic', strength: 20, width: 8, length: 6, span: [-9, -3], lifetime: 3, clock: 'ownerDefense', ownerTeam: 'away' });
       assert.equal(t8.mastery.mindwing_FS.executions, 1);
     } else assert.equal(p.length, 0, `seed ${seed}: nothing banked without his tackle after a completion`);
     const t8b = { status: {}, ability: { mindwing_FS: { cd: 2, banked: false } } };
@@ -74,7 +74,7 @@ test('Mind Bend: created at his next defensive snap (G3) in the backfield LOS+3.
   g.possession = 'home'; g.phase = 'scrimmage'; g.ballOn = 40; g.ballLat = 0; g.down = 1; g.toGo = 10;
   const { sim } = R.runScrimmagePlay(g, teams, 'mesh', 'cover_3');
   assert.equal(sim.fields?.length, 1, 'the play saw the field'); const f = sim.fields[0];
-  assert.deepEqual(f.yard, [-9, -3], 'LOS+3..+9 toward the offense\'s own goal (the backfield)'); assert.deepEqual(f.lat, [-4, 4], 'centred on the ball, 8 wide');
+  assert.equal(f.yard[1] - f.yard[0], 6, 'same dimensions, suggested placement'); assert.deepEqual(f.lat, [-4, 4], 'centred on the ball, 8 wide');
   assert.ok(sim.events.some((e) => e.kind === 'field_enter' && e.element === 'Psychic'), 'monsters inside feel it');
   assert.equal(g.t8.ability[fs.id].cd, 4, 'mastery 2 cooldown 4, started at creation'); assert.equal(g.t8.ability[fs.id].banked, false);
   if (g.possession === 'home') {
@@ -84,7 +84,7 @@ test('Mind Bend: created at his next defensive snap (G3) in the backfield LOS+3.
   // Near the offense's own goal the zone shifts toward the line only enough to fit.
   const { g: g2, teams: t2 } = game(4); const fs2 = t2.away.defense.FS; Object.assign(fs2, { species: 'mindwing', form: 'mindwing:0', mastery: 0, type: 'Psychic' }); g2.ballOn = 4;
   g2.t8.fields = { list: [], pending: [{ requireAble: true, owner: fs2.id, ownerTeam: 'away', side: 'defense', type: 'Psychic', ability: 'PSY-01-F', strength: 20, lifetime: 1, clock: 'ownerDefense', width: 8, length: 6, span: [-9, -3], centerOn: 'ball' }], seq: 0 };
-  const s2 = R.runScrimmagePlay(g2, t2, 'mesh', 'cover_3').sim; assert.deepEqual(s2.fields[0].yard, [-4, 2], 'fits the field of play: the goal line to 6 yards out');
+  const s2 = R.runScrimmagePlay(g2, t2, 'mesh', 'cover_3').sim; assert.equal(s2.fields[0].yard[1] - s2.fields[0].yard[0], 6, 'legal placement retains six-yard length');
 });
 
 test('Psychic field pull: a non-Psychic monster standing inside drifts toward the centre; a Psychic one does not', () => {
@@ -94,23 +94,22 @@ test('Psychic field pull: a non-Psychic monster standing inside drifts toward th
   assert.ok(plain[1] < psy[1] - 0.05, `pulled back toward the centre (x -9): ${plain[1]} vs ${psy[1]}`);
 });
 
-test('Mirror Step (PSY-02-F): on his man\'s first cut in range he turns onto the new direction at his current speed; cooldown 5/4/3/2; out of range or on cooldown keeps readiness', () => {
-  let fired = 0, kept = 0;
-  for (let seed = 1; seed <= 80; seed++) {
-    const t8 = { status: {} }; const r = run(['mesh', 'smash', 'quick_slants', 'curl_flat'][seed % 4], 'cover_1', [put('defense', 'CB1', 'shadewisp', { mastery: 1 })], seed, t8);
-    const e = evs(r, (x) => x.ability === 'PSY-02-F');
-    assert.ok(e.length <= 1, 'one cut resolution per play');
-    if (e.length) { fired++; assert.equal(e[0].victim, 'WR1', 'his assigned man only'); assert.equal(t8.ability.shadewisp_CB1.cd, 4, 'mastery 1: cooldown 4, the activation play not counted'); assert.ok(!r.events.some((x) => x.kind === 'throw' && x.t < e[0].t), 'before the release'); assert.ok(!r.events.some((x) => x.kind === 'status' && x.by === 'CB1'), 'no status'); }
-    else { kept++; assert.equal(t8.ability.shadewisp_CB1?.cd || 0, 0, 'readiness kept'); }
-    const t8c = { status: {}, ability: { shadewisp_CB1: { cd: 3 } } }; const rc = run('quick_slants', 'cover_1', [put('defense', 'CB1', 'shadewisp')], seed, t8c);
-    assert.ok(!evs(rc, (x) => x.ability === 'PSY-02-F').length); assert.equal(t8c.ability.shadewisp_CB1.cd, 2);
+test('Mirror Rift: a live pass relocates in man and zone coverage; cooldown counts subsequent participating plays', () => {
+  let fired = 0;
+  for (const defense of ['cover_1', 'cover_3']) for (let seed = 1; seed <= 30; seed++) {
+    const t8 = { status: {} }; const r = run('smash', defense, [put('defense', 'CB1', 'shadewisp', { mastery: 1 })], seed, t8);
+    const e = r.events.find((e) => e.ability === 'PSY-02-F' && e.kind === 'ability');
+    if (!e) continue; fired++;
+    assert.ok(r.events.some((x) => x.kind === 'throw' && x.t <= e.t), 'a pass is actually airborne');
+    assert.equal(t8.ability.shadewisp_CB1.cd, 5, 'mastery 1 cooldown, activation excluded');
+    assert.ok(e.destination[0] > r.bounds.ownGoal && e.destination[0] < r.bounds.goal);
+    assert.ok(e.destination[1] > r.bounds.left && e.destination[1] < r.bounds.right);
+    assert.ok(r.frames.some((f) => f.ballHidden), 'visible disappearance');
+    const t8c = { status: {}, ability: { shadewisp_CB1: { cd: 3 } } };
+    const rc = run('quick_slants', defense, [put('defense', 'CB1', 'shadewisp')], seed, t8c);
+    assert.ok(!rc.events.some((e) => e.ability === 'PSY-02-F')); assert.equal(t8c.ability.shadewisp_CB1.cd, 2);
   }
-  assert.ok(fired >= 15 && kept >= 1, `fired ${fired}/80`);
-  // Zone coverage: no fallback.
-  for (let seed = 1; seed <= 20; seed++) assert.ok(!evs(run('smash', 'cover_3', [put('defense', 'CB1', 'shadewisp')], seed, { status: {} }), (x) => x.ability === 'PSY-02-F').length);
-  // Mirageist's range is 4 yards, Wispira's 3: Mirageist activates at least as often on the same plays.
-  const count = (form) => { let n = 0; for (let seed = 1; seed <= 80; seed++) n += evs(run(['mesh', 'smash', 'quick_slants', 'curl_flat'][seed % 4], 'cover_1', [put('defense', 'CB1', 'shadewisp', { form })], seed, { status: {} }), (x) => x.ability === 'PSY-02-F').length; return n; };
-  assert.ok(count('shadewisp:1') >= count('shadewisp:0'));
+  assert.ok(fired >= 20, 'both coverage styles exercise the mechanic');
 });
 
 test('Foresight (PSY-03-F): a marked LB within 3 yards who blitzes gets a 50% Confused (20% Awareness, current play); spent either way; no blitz keeps readiness', () => {
@@ -143,7 +142,7 @@ test('Echo Landing (PSY-04-F): his kickoff caught in the field of play and retur
     assert.equal(!!g.t8.fields?.pending?.length, ok, `seed ${seed}: banked exactly when caught in the field of play and returned short of a TD (${sim.result})`);
     if (!ok || g.possession !== 'home') continue; banked++;
     const { sim: s1 } = R.runScrimmagePlay(g, teams, 'mesh', 'cover_3');
-    assert.equal(s1.fields?.length, 1, 'created at the next opposing offensive snap, the kicker on the bench'); assert.deepEqual(s1.fields[0].yard, [-8, 0], 'from the line into the backfield'); assert.deepEqual(s1.fields[0].lat, [-3, 3], 'centred on the QB, 6 wide');
+    assert.equal(s1.fields?.length, 1, 'created at the next opposing offensive snap, the kicker on the bench'); assert.equal(s1.fields[0].yard[1] - s1.fields[0].yard[0], 8, 'same eight-yard length at suggested placement'); assert.deepEqual(s1.fields[0].lat, [-3, 3], 'centred on the QB, 6 wide');
     assert.equal(g.t8.ability.A_K.readyAt, 7, 'ready after the creation play and six more team defensive plays');
     assert.equal(g.t8.fields.list.length, g.possession === 'home' ? 1 : 1, 'mastery 1: life 2, one left'); // possession change does not count it
   }
@@ -164,7 +163,7 @@ test('Echo Landing (PSY-04-F): his kickoff caught in the field of play and retur
     const plays = { cov: { id: 'kc', side: 'defense', type: 'kickoff', tags: [], onField: Object.keys(cov), align: Object.fromEntries(Object.keys(cov).map((s, i) => [s, [1, -15 + i * 5]])), assignments: Object.fromEntries(Object.keys(cov).map((s, i) => [s, s === 'K' ? { a: 'cover', lane: 0, safety: true } : { a: 'cover', lane: -10 + i * 4 }])) },
       ret: { id: 'kr', side: 'offense', type: 'run', tags: [], onField: Object.keys(ret), align: Object.fromEntries(Object.keys(ret).map((s, i) => [s, s === 'WR2' ? [-60, 0] : [-15, -12 + i * 4]])), assignments: Object.fromEntries(Object.keys(ret).map((s) => [s, s === 'WR2' ? { a: 'kick_return' } : { a: 'ko_block', setup: [10, 0] }])) } };
     const r = simulatePlay({ offensePlay: plays.ret, defensePlay: plays.cov, offense: ret, defense: cov, ballOn: 65, seed, options: { kickoff: { returner: 'WR2', landing: [-58, 0], hang: 2.6 }, t8, offenseSide: 'home' } });
-    if (r.result !== 'touchdown') { got = true; assert.equal(t8.fields.pending.length, 1); assert.equal(t8.fields.pending[0].benchOk, true); assert.equal(t8.fields.pending[0].lifetime, 1, 'mastery 0: life 1'); }
+    if (r.result !== 'touchdown') { got = true; assert.equal(t8.fields.pending.length, 1); assert.equal(t8.fields.pending[0].benchOk, true); assert.equal(t8.fields.pending[0].lifetime, 3, 'mastery 0: life 3'); }
   }
   assert.ok(got, 'ready again: banked');
 });

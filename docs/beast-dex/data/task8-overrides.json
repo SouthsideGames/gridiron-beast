@@ -48,16 +48,13 @@
     },
     "LIG-01-F": {
       "ruling": "N7b P3, P4",
-      "sections": {
-        "Lifetime / persistence": "Created field lasts 1 / 1 / 2 / 2 participating offensive scrimmage plays by mastery, counting its creation play, for both forms. Created field clears at halftime. Pending creation carries through halftime under its approved carryover rule.",
-        "Progression / notes": "Approved Light field exposure cadence finalized in closeout10. Lifetime by mastery as above; placement and creator cooldown as approved."
-      },
+      "sections": {},
       "values": {
         "lifetimePlaysByMastery": [
-          1,
-          1,
-          2,
-          2
+          3,
+          3,
+          4,
+          5
         ]
       }
     },

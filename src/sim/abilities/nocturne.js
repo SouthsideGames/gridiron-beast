@@ -1,27 +1,11 @@
-// DAR-05-F Blackout Pocket (nocturne: Nocturne). Task 8 M3 Dark batch (zone).
-// Contract (Dex): after his own completed pass gains at least 15 net yards while ready, he banks the next offensive field. At the next
-// offensive pre-choice: a 12-wide by 5-long Dark rectangle from the LOS into the defensive side, centred on his upcoming initial (QB)
-// lateral alignment. Non-Dark monsters of BOTH teams inside have -25% effective Awareness (the Dark field effect: it covers the front
-// pressure reads but also his own blockers; no essential UI is concealed). Cooldown 6 subsequent offensive plays after creation; one
-// pending. The pending field carries across the half; the created (non-legendary) field clears at halftime. No growth from YAC, no
-// full-field coverage, no auto-completion, guaranteed escape or field-following; formation or audible does not reposition it after
-// the reveal. Lifetime 1 / 2 / 2 / 3 offensive scrimmage plays by mastery including the spawn play.
-//
-// Choices where the contract is silent (documented, minimal):
-// - "Net yards": the play's gain on a completion he threw (fumbles after the catch end it at the fumble spot); interceptions and
-//   two-point tries never bank. "Ready": no cooldown running and nothing pending.
-// - The QB aligns on the ball (every formation: lateral 0), so the field is centred on the ball's lateral; created at his next
-//   on-field offensive snap (a QB is in every package). Cooldown plays are his participating offensive scrimmage plays, the
-//   creation play excluded; the lifetime counts his team's offensive scrimmage plays (clock 'teamOffense').
-// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the pocket is
-// created at the next offensive pre-choice (out of play: not gated); banking it from a 15-yard completion is an in-play charge gain
-// (gated).
+// Football revision approved 2026-11-15. The current exact contract is in
+// docs/beast-dex/data/abilities.json (and task8-overrides.json where applicable).
 import { registerAbility } from './registry.js';
 import { byMastery, scrimmage, sideOf } from './common.js';
 import { E as $E } from '../../core/english.js';
 
 export const MIN_GAIN = 15, STRENGTH = 25, COOLDOWN = 6;
-export const LIFETIME = [1, 2, 2, 3]; // by mastery
+export const LIFETIME = [3, 4, 4, 5]; // by mastery
 export const POCKET = Object.freeze({ width: 12, length: 5 });
 
 export default registerAbility({
