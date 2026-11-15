@@ -12,6 +12,7 @@ export const dexKey = Object.freeze({
   abilityPlain: (abilityId) => `dex.ability.${abilityId}.plain`,
   abilityName: (abilityId) => `dex.ability.${abilityId}.name`,
   abilityMechanic: (abilityId) => `dex.ability.${abilityId}.mechanic`,
+  abilityReadableRule: (abilityId, section) => `dex.ability.${abilityId}.readable_${SECTION_SLUG[section] || 'rule'}`,
   abilityRule: (abilityId, section) => `dex.ability.${abilityId}.${SECTION_SLUG[section] || 'rule'}`,
   abilitySummary: (familyId) => `dex.summary.${familyId}`,
 });
