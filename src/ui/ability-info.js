@@ -1,3 +1,4 @@
+import { plainAbilityRule } from '../text/ability-rules-plain.js';
 import { CLASH_SIMPLE } from '../text/clash-simple.js';
 // Player-facing ability information (Task 8 M6). One source for every screen that names a monster's abilities: the Beast Dex
 // ability records (src/data/beast-dex.js), never the retired legacy cards or shared traits. Each family has one football and one
@@ -10,6 +11,23 @@ import { THRESHOLDS, TIERS, tierIndex } from '../franchise/t8/mastery.js';
 import { SPECS } from '../sim/abilities/review-texts.js';
 import { t as $t } from '../text/index.js';
 import { dexLine, dexKey } from '../text/dex.js';
+
+const ABILITY_TERMS = Object.freeze([
+  [$t('shared.ability_term_0_name'), $t('shared.ability_term_0_help')],
+  [$t('shared.ability_term_1_name'), $t('shared.ability_term_1_help')],
+  [$t('shared.ability_term_2_name'), $t('shared.ability_term_2_help')],
+  [$t('shared.ability_term_3_name'), $t('shared.ability_term_3_help')],
+  [$t('shared.ability_term_4_name'), $t('shared.ability_term_4_help')],
+  [$t('shared.ability_term_5_name'), $t('shared.ability_term_5_help')],
+  [$t('shared.ability_term_6_name'), $t('shared.ability_term_6_help')],
+  [$t('shared.ability_term_7_name'), $t('shared.ability_term_7_help')],
+  [$t('shared.ability_term_8_name'), $t('shared.ability_term_8_help')],
+  [$t('shared.ability_term_9_name'), $t('shared.ability_term_9_help')],
+  [$t('shared.ability_term_10_name'), $t('shared.ability_term_10_help')],
+  [$t('shared.ability_term_11_name'), $t('shared.ability_term_11_help')],
+  [$t('shared.ability_term_12_name'), $t('shared.ability_term_12_help')],
+  [$t('shared.ability_term_13_name'), $t('shared.ability_term_13_help')],
+]);
 
 export const MODES = Object.freeze(['football', 'clash']);
 export const MODE_LABEL = Object.freeze({ football: $t('shared.football'), clash: $t('shared.beast_clash') });
@@ -28,7 +46,7 @@ export function abilityInfo(x, mode = 'football') {
   const rule = (section) => { const d = a.details?.find((x2) => x2.section === section); return d ? dexLine(dexKey.abilityRule(a.id, section), d.rule) : null; }; // shown through the central text (src/text/dex.js)
   const story = rule('Ability story');
   const summary = mode === 'clash' && CLASH_SIMPLE[a.id] ? dexLine(dexKey.abilityPlain(a.id), CLASH_SIMPLE[a.id]) : mode === 'football' && SPECS[id]?.expect ? dexLine(dexKey.abilitySummary(id), SPECS[id].expect) : dexLine(dexKey.abilityMechanic(a.id), tidy(a));
-  const sections = SHOWN_SECTIONS.map((s) => { const text = rule(s); return text ? { label: SECTION_LABEL[s], text } : null; }).filter(Boolean);
+  const sections = SHOWN_SECTIONS.map((s) => { const raw = a.details?.find(d => d.section === s)?.rule; const text = raw ? dexLine(dexKey.abilityReadableRule(a.id, s), plainAbilityRule(raw)) : null; return text ? { label: SECTION_LABEL[s], text } : null; }).filter(Boolean);
   return { id: a.id, name: dexLine(dexKey.abilityName(a.id), a.name), mode, category: a.category, summary, story, sections };
 }
 /** True when the family has no abilities (a Basic). */
@@ -56,7 +74,7 @@ export function abilityBlockHtml(x, mode, { monster = null, seeIt = false, dex2 
   return `<div class="ab-block" data-ability="${a.id}"><div class="row between" style="gap:6px"><b>${esc(a.name)}</b><span class="chip">${MODE_LABEL[mode]}</span></div>
     <p class="muted" style="margin:2px 0">${esc(dex2 ? sentence(a.summary) : a.summary)}</p>${a.story && mode !== 'clash' ? `<p class="dim" style="margin:2px 0;font-style:italic">${esc(a.story)}</p>` : ''}
     ${k ? `<div class="dim" style="font-size:12px">${$t('shared.mastery_b_b', { tier: k.tier })}${k.mastered ? $t('shared.highest_tier') : ` ${$t('shared.more_valid_uses_to', { need: k.need, nextTier: k.nextTier, n: k.need })}`}</div>` : ''}
-    <details class="ab-rules"><summary class="muted" style="cursor:pointer">${dex2 ? 'Exact mechanics — View details' : $t('shared.full_rules')}</summary>${mode === 'clash' && a.story ? `<p class="dim">${esc(a.story)}</p>` : ''}${a.sections.map((s) => `<p style="margin:4px 0"><b>${s.label}.</b> <span class="muted">${esc(s.text)}</span></p>`).join('')}</details>
+    <details class="ab-rules"><summary class="muted" style="cursor:pointer">${dex2 ? 'Exact mechanics — View details' : $t('shared.full_rules')}</summary>${mode === 'clash' && a.story ? `<p class="dim">${esc(a.story)}</p>` : ''}${a.sections.map(s => `<section class="ab-detail-section"><h4>${s.label}</h4><ul>${s.text.split('\n').filter(Boolean).map(line => `<li>${esc(line)}</li>`).join('')}</ul></section>`).join('')}<details><summary>${$t('shared.ability_words_mean')}</summary>${ABILITY_TERMS.map(([term, meaning]) => `<p><b>${esc(term)}:</b> ${esc(meaning)}</p>`).join('')}</details></details>
     ${seeIt && mode === 'football' ? `<button class="btn small see-it" data-see-it="${esc(familyIdOf(x))}" data-form="${monster?.stage ?? ''}" data-mastery="${k ? k.index : 0}">${$t('shared.see_it')}</button>` : ''}</div>`;
 }
 /** Both abilities of a family or monster, or the plain statement that a Basic has none. */
