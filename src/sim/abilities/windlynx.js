@@ -15,7 +15,7 @@ export default registerAbility({
   preSnap(api, self) {
     if (api.side !== 'def' || !api.able) return; const st = api.state(); if (st.charges < PBUS) return;
     if (api.fields().some((f) => f.owner === self.mid && f.ability === 'WIN-04-F')) return; // own lanes remain: hold the full bar
-    for (const side of [-1, 1]) api.queueField({ owner: self.mid, ownerTeam: api.teamSide, type: 'Wind', ability: 'WIN-04-F', strength: STRENGTH, lifetime: byMastery(LIFETIME, self.mastery),
+    for (const side of [-1, 1]) api.queueField({ placementIndex: side < 0 ? 0 : 1, placementOffset: side * 2.5, owner: self.mid, ownerTeam: api.teamSide, type: 'Wind', ability: 'WIN-04-F', strength: STRENGTH, lifetime: byMastery(LIFETIME, self.mastery),
       clock: 'teamDefense', width: LANE.width, los: [LANE.from, LANE.to], latOff: side * HALF }); // centred on the sideline: placeRect shifts it inward, outer edge on the sideline
     st.charges = 0; st.fresh = true; api.executed();
   },

@@ -23,9 +23,14 @@ test('preferred overlaps remain optional, and a player choice takes precedence o
  const state={seed:7,playCount:0,possession:'home',quarter:1,t8:{}};
  setZoneChoice(state,zoneKey(spec),'right');assert.equal(selectedZoneOption(state,spec,choices).id,'right');
 });
-test('paired field parts share the same coach choice',()=>{
- const state={seed:8,playCount:4,possession:'away',quarter:2};
- assert.equal(selectedZoneOption(state,{...spec,placementOffset:-3.5},options).id,selectedZoneOption(state,{...spec,placementOffset:3.5},options).id);
+test('AI independently varies both parts of a multi-zone ability',()=>{
+ const pairs=new Set();
+ for(let seed=1;seed<=100;seed++){
+  const state={seed,playCount:4,possession:'away',quarter:2};
+  const picks=[0,1].map(placementIndex=>selectedZoneOption(state,{...spec,placementIndex},options).id);
+  pairs.add(picks.join('/'));
+ }
+ assert.equal(pairs.size,9);
 });
 test('both clubs see their own pending zones but enemy placement only becomes public after the snap',()=>{
  for(const possession of ['home','away']){
@@ -41,4 +46,28 @@ test('both clubs see their own pending zones but enemy placement only becomes pu
  state.t8.fields.list=[{id:'old',ownerTeam:'away',owner:'old-owner',ability:'MET-05-F',type:'Metal',yard:[39,43],lat:[-4,4],remaining:2,createdAt:0}];
  const shown=presnapFields(state,teams,calls,{viewerSide:'home'});assert.ok(shown.some(x=>x.field.id==='old'));
  }
+});
+
+test('multi-zone selections are independent and every zone ability offers placement controls',async()=>{
+ const {stageScenario}=await import('../src/sim/abilities/review.js');
+ const {SCENARIOS}=await import('../src/sim/abilities/review-scenarios.js');
+ const {familyById}=await import('../src/data/beast-dex.js');
+ const {contractOf}=await import('../src/sim/abilities/registry.js');
+ const {zonePlans,zonePlannerHtml}=await import('../src/ui/zone-planner.js');
+ for(const family of ['thornkit','windlynx']){
+  const fam=familyById(family),sc={...SCENARIOS[family],prime:()=>family==='thornkit'?{cd:0,token:true}:{charges:2}};
+  const G=stageScenario({sc,fam,contract:contractOf(family),form:`${family}:0`,mastery:0,seed:1});
+  Object.assign(G.state,{phase:'scrimmage',possession:family==='thornkit'?'home':'away',ballOn:35,ballLat:0,down:1,toGo:10});
+  const plans=zonePlans(G.state,G.teams,'home','quick_slants','cover_3').filter(p=>p.owner===G.subject.id);
+  assert.equal(plans.length,2);assert.notEqual(plans[0].key,plans[1].key);
+  setZoneChoice(G.state,plans[0].key,'left');setZoneChoice(G.state,plans[1].key,'right');
+  const ready=zonePlans(G.state,G.teams,'home','quick_slants','cover_3').filter(p=>p.owner===G.subject.id);
+  assert.equal(ready[0].picked,'left');assert.equal(ready[1].picked,'right');
+  assert.match(zonePlannerHtml(ready),/Zone 1/);assert.match(zonePlannerHtml(ready),/Zone 2/);
+  const {sim}=R.runScrimmagePlay(G.state,G.teams,'quick_slants','cover_3');
+  const fields=sim.fields.filter(f=>f.owner===G.subject.id);
+  assert.equal(fields.length,2);assert.ok(fields.some(f=>f.lat[1]<0));assert.ok(fields.some(f=>f.lat[0]>0));
+ }
+ const {ZONE_IDS,canPlaceZone}=await import('../src/sim/t8/zone-planning.js');
+ for(const id of ZONE_IDS)assert.equal(canPlaceZone(id),true,id);
 });

@@ -170,7 +170,7 @@ test('Surefoot Canopy: before each defensive scrimmage snap one other non-Floran
   assert.ok(blocked >= 1 && others >= 1, `blocked ${blocked}, others slipped ${others}`);
 });
 
-test('Bramble Trap: a broken tackle after his own reception while ready earns one activation (never on a rushing carry); spawn centred on a non-Nature defender, 8x6, mastery strength; all-Nature defense keeps it pending; cooldown 3', () => {
+test('Bramble Trap: a broken tackle after his own reception while ready earns one activation (never on a rushing carry); spawn at an eligible defender depth with chosen lane, 8x6, mastery strength; all-Nature defense keeps it pending; cooldown 3', () => {
   let earned = 0;
   for (let seed = 1; seed <= 200 && earned < 4; seed++) {
     const t8 = { status: {}, ability: { X: { cd: 0 } } };
@@ -187,7 +187,7 @@ test('Bramble Trap: a broken tackle after his own reception while ready earns on
     const { sim } = R.runScrimmagePlay(g, teams, 'slant_flat', 'cover_3');
     const f = sim.fields.find((x) => x.ability === 'NAT-05-F'); assert.ok(f, 'spawned');
     assert.equal(f.strength, [25, 30, 35, 40][mastery]); assert.ok(Math.abs(f.lat[1] - f.lat[0] - 8) < 1e-6 && Math.abs(f.yard[1] - f.yard[0] - 6) < 1e-6);
-    const centres = PLAYS.cover_3.onField.map((s) => PLAYS.cover_3.align[s]); assert.ok(centres.some(([x, y]) => Math.abs((f.yard[0] + f.yard[1]) / 2 - x) < 1e-6 && Math.abs((f.lat[0] + f.lat[1]) / 2 - y) < 1e-6), 'centred on a defender\'s initial position');
+    const centres = PLAYS.cover_3.onField.map((s) => PLAYS.cover_3.align[s]); assert.ok(centres.some(([x, y]) => Math.abs((f.yard[0] + f.yard[1]) / 2 - x) < 1e-6 ), 'depth from an eligible defender'); assert.ok(Math.abs((f.lat[0]+f.lat[1])/2)<1e-6,'selected Middle lane');
     assert.equal(g.t8.ability[id].cd, 3); assert.equal(g.t8.ability[id].token, false); void other;
   }
   const { g, teams, side, other } = game(8, (T, s, o) => { Object.assign(T[s].offense.TE, { species: 'thornback', form: 'thornback:0', type: 'Nature' }); for (const p of Object.values(T[o].defense)) p.type = 'Nature'; });
@@ -257,7 +257,7 @@ test('Crossed Wires: at a ready route snap with an allied WR/TE route runner wit
   const s = Object.values(t8.status).find((x) => x.id === 'confused'); assert.ok(s, 'a Confused was applied'); assert.equal(s.strength, 20); assert.equal(s.remaining, 1);
 });
 
-test('Charge Strip: a rushing first down while ready earns one token (not a reception, a touchdown, a two-point try, or the spawn play); spawn LOS to 5 yards, 8 wide on his alignment, 20/30% by form; cooldown from spawn', () => {
+test('Charge Strip: a rushing first down while ready earns one token (not a reception, a touchdown, a two-point try, or the spawn play); spawn LOS to 5 yards, 8 wide at selected lane, 20/30% by form; cooldown from spawn', () => {
   let earned = 0;
   for (let seed = 1; seed <= 40; seed++) {
     const t8 = { status: {}, ability: { X: { cd: 0 } } };
@@ -276,7 +276,7 @@ test('Charge Strip: a rushing first down while ready earns one token (not a rece
     const { sim } = R.runScrimmagePlay(g, teams, 'inside_zone', 'cover_3');
     const f = sim.fields.find((x) => x.ability === 'ELE-02-F'); assert.ok(f);
     assert.equal(f.strength, form === 'voltfin:0' ? 20 : 30); assert.equal(f.type, 'Electric');
-    assert.ok(Math.abs(f.yard[0]) < 1e-6 && Math.abs(f.yard[1] - 5) < 1e-6, `${f.yard}`); assert.ok(Math.abs((f.lat[0] + f.lat[1]) / 2 - PLAYS.inside_zone.align.RB[1]) < 1e-6 && Math.abs(f.lat[1] - f.lat[0] - 8) < 1e-6);
+    assert.ok(Math.abs(f.yard[0]) < 1e-6 && Math.abs(f.yard[1] - 5) < 1e-6, `${f.yard}`); assert.ok(Math.abs((f.lat[0] + f.lat[1]) / 2) < 1e-6 && Math.abs(f.lat[1] - f.lat[0] - 8) < 1e-6);
     assert.equal(fieldsOf(g, 'ELE-02-F').length, 1); assert.equal(g.t8.ability[id].cd, [5, 4, 3, 2][mastery]); assert.equal(g.t8.ability[id].token, false);
     assert.ok(!sim.events.some((e) => e.kind === 'field_stun' && e.by === 'RB' && e.side === 'off'), 'Electric immune');
   }
@@ -298,12 +298,12 @@ test('Phase Release: phased from a ready route snap (spends even without contact
   const r2 = play('voltfang', 'off', 'WR2', 2, { t8: { status: { X: { id: 'stunned', strength: 1, remaining: 1, applications: 1 } }, ability: { X: { cd: 0 } } } }); assert.equal(ab(r2, 'ELE-03-F').length, 0, 'Stunned prevents activation');
 });
 
-test('Static Field: alignment-based placement, 15% entry stun, three defensive team plays; mastery cooldown unchanged', () => {
+test('Static Field: selected lane placement, 15% entry stun, three defensive team plays; mastery cooldown unchanged', () => {
   const { g, teams, other } = game(11, (T, s, o) => Object.assign(T[o].defense.FS, { species: 'stormlynx', form: 'stormlynx:0', mastery: 2, type: 'Electric' }));
   const id = teams[other].defense.FS.id;
   const { sim } = R.runScrimmagePlay(g, teams, 'slant_flat', 'cover_3');
   const f = sim.fields.find((x) => x.ability === 'ELE-04-F'); assert.ok(f, 'created on his first defensive play');
-  assert.equal(f.strength, 15); assert.ok(Math.abs(f.yard[0] - 5) < 1e-6 && Math.abs(f.yard[1] - 12) < 1e-6); assert.ok(Math.abs(f.lat[1] - f.lat[0] - 12) < 1e-6 && Math.abs((f.lat[0] + f.lat[1]) / 2 - PLAYS.cover_3.align.FS[1]) < 1e-6);
+  assert.equal(f.strength, 15); assert.ok(Math.abs(f.yard[0] - 5) < 1e-6 && Math.abs(f.yard[1] - 12) < 1e-6); assert.ok(Math.abs(f.lat[1] - f.lat[0] - 12) < 1e-6 && Math.abs((f.lat[0] + f.lat[1]) / 2) < 1e-6);
   assert.equal(fieldsOf(g, 'ELE-04-F').length, 1, 'three defensive plays including the spawn');
   assert.equal(g.t8.ability[id].cd, 3, 'mastery 2: 3 subsequent defensive plays');
   // stun rate on the engine (frozen: 30 plays with a field over the whole box; at least 80 first entries; tolerance 0.08 of 15%)

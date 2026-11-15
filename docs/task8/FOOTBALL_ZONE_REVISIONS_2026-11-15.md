@@ -1,5 +1,7 @@
 # Football ability and zone revisions — 2026-11-15
 
+Placement corrections in [INDEPENDENT_ZONE_PLACEMENT_2026-11-15.md](INDEPENDENT_ZONE_PLACEMENT_2026-11-15.md) supersede this document's fixed-location exceptions, shared-pair choices, and Splashdown timing.
+
 Approved by Kareem in the football ability review conversation. Build: **v43.16.0-zone-review**. This branch implements the revision; publishing the existing main Claude artifact remains a separate release step.
 
 ## Placement

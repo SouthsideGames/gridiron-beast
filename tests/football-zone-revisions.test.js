@@ -55,12 +55,12 @@ test('every offered placement matches the actual snap, both clubs and both units
   assert.ok(checked >= 150);
 });
 
-test('event/alignment zones keep their own position and have no manual controls', () => {
-  for (const id of FIXED_ZONES) {
-    const { state, teams } = game(); pending(state, teams, 'home', id);
-    const [p] = zonePlans(state, teams, 'home', 'inside_zone', 'cover_3');
-    assert.deepEqual(p.placementOptions, []); assert.match(zonePlannerHtml([p]), /action or alignment/);
-  }
+test('action-earned and alignment-based zones also offer manual placement',()=>{
+ assert.deepEqual(FIXED_ZONES,[]);
+ for(const ability of ZONE_IDS){
+  const options=zoneOptions({state:{possession:'home',ballOn:35},spec:{ability,type:'Water',width:6,length:4},base:{type:'Water',width:6,centerLat:0,yardFrom:38,yardTo:42}});
+  assert.deepEqual(options.map(o=>o.id),['left','middle','right'],ability);
+ }
 });
 
 test('overlap choices show Steam and use the same parent footprints and clocks; removed holes do not reappear', () => {

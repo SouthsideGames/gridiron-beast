@@ -31,7 +31,7 @@ const GATES = {
   pyrelynx: [[], [], "a passive aura (Dex category Aura) with no readiness, charge or cooldown: Eclipse leaves passives running and Cold Snap denies only new activations; not gated."],
   pyroclast: [[], ["playEnd"], "the field is created before his next offensive snap from the banked token (out of play: not gated); earning the token on the YAC run is an in-play charge gain (gated)."],
   mudcub: [["playStart"], [], "the automatic snap activation is the live activation (gated); cooldown only, no charge."],
-  tidepaw: [["playEnd"], [], "the breakup creates the zone at once at the deflection spot: the live activation (gated at the whistle, where the breakup is known); cooldown only."],
+  tidepaw: [["playEnd"], [], "the breakup banks a selectable zone for the next defensive snap (gated at the whistle); cooldown only."],
   reefclaw: [["engage"], [], "the drain at his first engagement is the live activation (gated); cooldown only."],
   tidefin: [["dropped"], [], "the second catch attempt is the live activation (gated); cooldown only."],
   wavehorn: [[], [], "a passive aura decided by the snap assignment, no readiness: not gated."],
@@ -114,7 +114,8 @@ test('static: every contract module is in the gate table; each gate is checked e
   for (const [fam, [start, charge, why]] of Object.entries(GATES)) {
     const src = fs.readFileSync(path.join(DIR, `${fam}.js`), 'utf8');
     assert.ok(why.length > 20, fam);
-    assert.ok(/^\/\/ Activation gates \(M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap/m.test(src.split('\nimport ')[0]), `${fam}: the reading is written in the module header`);
+    const header = src.split('\nimport ')[0];
+    assert.ok(/^\/\/ Activation gates \(M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap/m.test(header) || (/^\/\/ Football revision approved 2026-11-15/m.test(header) && header.includes('docs/beast-dex/data/abilities.json')), `${fam}: the header documents the gates or links its superseding exact contract`);
     for (const [gate, hooks] of [['canStartSignature', start], ['canGainCharge', charge]]) {
       const calls = (src.match(new RegExp(`ctx\\.${gate}\\(self\\)`, 'g')) || []).length;
       if (!hooks.length) { assert.equal(calls, 0, `${fam}: ${gate} is not gated`); continue; }

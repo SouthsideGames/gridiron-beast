@@ -186,7 +186,7 @@ test('Air Brake: guarded means his man key or tracked zone receiver; range 8; ne
 });
 
 // ------------------------------------------------------------------------------------------------------------- WIN-04-F Crosswind Rescue
-test('Crosswind Rescue: a full bar creates one legal paired sideline episode with depth choices and extended life; unable sources keep readiness', () => {
+test('Crosswind Rescue: a full bar creates one legal independently placed pair and extended life; unable sources keep readiness', () => {
   let checked = 0;
   for (let seed = 1; seed <= 20 && checked < 2; seed++) {
     const { g, teams } = game(seed, { setup: (g, t) => { Object.assign(t[opp(g.possession)].defense.FS, { species: 'windlynx', form: 'windlynx:0', mastery: 3, type: 'Wind' }); } });
@@ -198,8 +198,8 @@ test('Crosswind Rescue: a full bar creates one legal paired sideline episode wit
     const abs = fieldsOf(g, 'WIN-04-F');
     assert.equal(g.t8.ability[fs.id].charges, 0, 'the bar empties on creation');
     assert.equal(abs.length, 2, 'lifetime 3 at mastery 3 (the creation play counted, two left)');
-    for (const f of abs) { assert.equal(f.remaining, 4); assert.ok(near(f.lat[0], -HALF, 1e-9) || near(f.lat[1], HALF, 1e-9), 'outer edge on a sideline'); }
-    assert.ok(abs.some((f) => near(f.lat[0], -HALF, 1e-9)) && abs.some((f) => near(f.lat[1], HALF, 1e-9)), 'one lane on each sideline');
+    for (const f of abs) { assert.equal(f.remaining, 4); assert.ok(f.lat[0]>=-HALF&&f.lat[1]<=HALF,'inside sidelines'); }
+    assert.ok(abs.some(f=>near((f.lat[0]+f.lat[1])/2,-2.5,1e-9))&&abs.some(f=>near((f.lat[0]+f.lat[1])/2,2.5,1e-9)),'same-lane Middle choices keep a one-yard gap');
     const absYards = oside === 'home' ? [ballOn + 5, ballOn + 12] : [100 - ballOn - 12, 100 - ballOn - 5];
     assert.ok(near(abs[0].yard[0], absYards[0], 1e-9) && near(abs[0].yard[1], absYards[1], 1e-9));
     // held while his lanes remain: a full bar does not make a second pair

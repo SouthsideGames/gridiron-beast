@@ -122,8 +122,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "6 yards wide by 4 long, at the front defender reference. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Approved conversation decisions; unresolved points explicitly marked"
+        "rule": "6 yards wide by 4 long, at the front defender reference. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -238,7 +238,7 @@
       },
       {
         "section": "Recharge / frequency",
-        "rule": "Three completed offensive scrimmage plays: fires 1, unavailable 2–4, ready 5. Commit at powered release even on failure. Two-point attempts neither activate nor advance cooldown.",
+        "rule": "Three completed offensive scrimmage plays: fires 1, unavailable 2\u20134, ready 5. Commit at powered release even on failure. Two-point attempts neither activate nor advance cooldown.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -271,7 +271,7 @@
     "name": "Falling Star",
     "category": "Delayed attack",
     "activation": "Normal action replaced by launch",
-    "mechanic": "Delayed slot meteor; one hit on the marked position’s occupant",
+    "mechanic": "Delayed slot meteor; one hit on the marked position\u2019s occupant",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -286,7 +286,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Impact at end of following exchange after rotations. Freeze the target identity when impact begins: the marked occupant. Resolve the target’s eligible reactions immediately after the hit.",
+        "rule": "Impact at end of following exchange after rotations. Freeze the target identity when impact begins: the marked occupant. Resolve the target\u2019s eligible reactions immediately after the hit.",
         "provenance": "Owner-approved Task 10 revision (2026-11-13)."
       },
       {
@@ -321,7 +321,7 @@
     "id": "FIR-04-F",
     "familyId": "cinderclaw",
     "mode": "Football",
-    "name": "Ember Grip — Scorch Mark",
+    "name": "Ember Grip \u2014 Scorch Mark",
     "category": "Targeted effect",
     "activation": "Immediate first blocking engagement while ready",
     "mechanic": "Pair-specific effective Strength and Blocking debuff",
@@ -339,12 +339,12 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Reduce marked blocker’s effective Strength and Blocking by mastery percentage only in engagements versus this Scorchulk. Never alter stored ratings or other matchups. No separate push-speed bonus.",
+        "rule": "Reduce marked blocker\u2019s effective Strength and Blocking by mastery percentage only in engagements versus this Scorchulk. Never alter stored ratings or other matchups. No separate push-speed bonus.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
         "section": "Recharge / frequency",
-        "rule": "Three defensive plays: fires 1, unavailable 2–4, ready 5; one marked blocker per activation.",
+        "rule": "Three defensive plays: fires 1, unavailable 2\u20134, ready 5; one marked blocker per activation.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -533,7 +533,7 @@
     "id": "FIR-06-F",
     "familyId": "pyroclast",
     "mode": "Football",
-    "name": "Eruption — Burning Wake",
+    "name": "Eruption \u2014 Burning Wake",
     "category": "Zone",
     "activation": "Five YAC earns next-offensive-play zone",
     "mechanic": "Total-YAC-width Fire rectangle at upcoming LB depth Zone revision: 5/5/5/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
@@ -546,8 +546,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "5 yards long; width equals total earned yards after the catch, minimum 5 and capped at the field width. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Approved conversation decisions; unresolved points explicitly marked"
+        "rule": "5 yards long; width equals total earned yards after the catch, minimum 5 and capped at the field width. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -566,7 +566,7 @@
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Fire types immune; other types on both teams slowed. Use fixed5-yard LB reference, not actual LB count/depth. Show before play selection and lock placement. Only one pending activation; existing boundary/overlap rules apply.",
+        "rule": "Fire types immune; other types on both teams slowed. Use the five-yard LB depth reference. Coach chooses a legal placement after selecting a play; enemy selection is revealed at the snap. Only one pending activation; existing boundary/overlap rules apply.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -642,18 +642,18 @@
     "name": "Splashdown",
     "category": "Zone",
     "activation": "Personal pass breakup",
-    "mechanic": "PBU-created small Water slip patch Zone revision: 3/3/3/3 relevant team plays by mastery; action location retained.",
+    "mechanic": "Personal pass breakup banks a selectable Water patch for the next defensive snap; lasts three defensive team plays.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Personally credited pass breakup only; interceptions do NOT trigger. Automatic when ready.",
+        "rule": "Personal pass breakup while ready banks the patch for placement before the next defensive scrimmage snap. Interceptions do not trigger.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
         "section": "Targets / placement",
-        "rule": "Water rectangle centered on deflection spot; 6 yards wide sideline-to-sideline by 4 yards long end-zone-to-end-zone, fixed field alignment. This zone retains its action/alignment placement; it cannot be freely relocated.",
-        "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
+        "rule": "A personal pass breakup banks one 6-by-4-yard Water patch for the next defensive scrimmage snap, around the five-yard linebacker depth. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -662,7 +662,7 @@
       },
       {
         "section": "Recharge / frequency",
-        "rule": "Three subsequent defensive plays: trigger play 1, unavailable 2–4, ready 5. Recharge even if creator benched; no seconds timer.",
+        "rule": "Three subsequent defensive plays: trigger play 1, unavailable 2\u20134, ready 5. Recharge even if creator benched; no seconds timer.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -1182,8 +1182,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Full field width by 5 yards long, with short/middle/deep bands around the 12-yard safety reference. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
+        "rule": "Full field width by 5 yards long, with short/middle/deep bands around the 12-yard safety reference. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -1278,7 +1278,7 @@
     "name": "Bloom Break",
     "category": "Zone",
     "activation": "Designed route cut earns next-play patches",
-    "mechanic": "A designated route cut earns two Nature patches for the next offensive snap. Choose their lane before the snap; the pair remains separate with a one-yard lateral gap. Lasts three offensive team plays.",
+    "mechanic": "A designed route cut earns two independently selectable Nature patches for the next offensive snap; lasts three offensive team plays.",
     "sourceDesignStatus": "Approved; engine work required",
     "details": [
       {
@@ -1288,8 +1288,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Two 6-by-4-yard Nature patches. The route cut earns the next-snap pair. Choose a legal left/middle/right area after selecting a play, or Auto Place. Both patches use that choice, stay in bounds, and remain separated by a one-yard lateral gap. Available legal parent zones offer hybrid overlap options. Their longitudinal bands retain the seeded 0-to-12-yard placement. No selection spends the token until the actual snap.",
-        "provenance": "Owner-approved Nature review; final audit questions flagged separately."
+        "rule": "Two 6-by-4-yard Nature patches, each with its own Zone 1 / Zone 2 selection. They may use different lanes, such as left and right. When both use the same lane, keep their one-yard lateral gap. Preserve their seeded 0-to-12-yard depths. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -1308,7 +1308,7 @@
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Show recorded placement to BOTH teams before choosing plays. Fixed pre-play formation snapshot and safety reference12yards; later defensive changes cannot reroll/move patches. Two patches must not overlap each other. Nature immunity and normal field overlap rules apply.",
+        "rule": "Each patch is independently selected and locks at the snap. Same-lane patches remain separated. Nature immunity and normal overlap rules apply. Enemy selections stay hidden until the snap.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
@@ -1701,8 +1701,8 @@
     "mode": "Football",
     "name": "Bramble Trap",
     "category": "Zone",
-    "activation": "Break receiving tackle earns next-play target-centered patch",
-    "mechanic": "Random non-Nature defender-centered next-play Nature zone Zone revision: 3/3/3/3 relevant team plays by mastery; action location retained.",
+    "activation": "Break receiving tackle earns next-play selectable patch",
+    "mechanic": "Broken receiving tackle earns a selectable Nature patch using an eligible defender depth reference; lasts three offensive team plays.",
     "sourceDesignStatus": "Approved; engine work required",
     "details": [
       {
@@ -1712,8 +1712,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Before play selection choose uniformly from participating NON-NATURE defenders in initial pre-play formation. Center stationary8wide x6long patch on chosen defender INITIAL position. Shift inward at boundaries to preserve size. No eligible defender -> hold pending readiness. Later formation/play changes do not reroll target or move zone. Fixed5/12-yard reference bands do NOT replace this explicitly defender-centered placement. This zone retains its action/alignment placement; it cannot be freely relocated.",
-        "provenance": "Owner-approved Nature review; final audit questions flagged separately."
+        "rule": "One 8-by-6-yard Nature patch. The initial eligible non-Nature defender supplies its depth reference; the coach chooses its lateral lane. No eligible defender holds readiness. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -1732,12 +1732,12 @@
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Recorded target and initial position are locked at the snap; no reload/audible reroll. Three subsequent offensive-play cooldown starts spawn; no re-earn on spawn play or while unavailable. One pending activation persists possession/halftime. Bramble Lane rejected.",
+        "rule": "Eligible target depth is recorded before calls; coach selects lateral placement. No reload/audible target reroll. Three subsequent offensive-play cooldown starts spawn; no re-earn while unavailable. One pending activation persists possession/halftime.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
         "section": "Visuals",
-        "rule": "Both teams see target/patch before snap; seed drops beneath chosen defender and blooms.",
+        "rule": "Ground seed blooms at the selected patch location. Owner previews the location; opponent sees it at the snap.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
@@ -1929,7 +1929,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Exchange remaining routes: each receiver heads toward the other route’s next waypoint and follows its remaining path; no teleportation. QB targets remain attached to the monster and use its actual new route. Each collected defender gets one Confused roll: Zippit 35%, Zaptera 45%.",
+        "rule": "Exchange remaining routes: each receiver heads toward the other route\u2019s next waypoint and follows its remaining path; no teleportation. QB targets remain attached to the monster and use its actual new route. Each collected defender gets one Confused roll: Zippit 35%, Zaptera 45%.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -1997,7 +1997,7 @@
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Exclude uncleansable statuses. No heal, damage or retaliation. Do not reset the transferred episode’s stack cap.",
+        "rule": "Exclude uncleansable statuses. No heal, damage or retaliation. Do not reset the transferred episode\u2019s stack cap.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2020,7 +2020,7 @@
     "name": "Charge Strip",
     "category": "Zone",
     "activation": "Rushing first down earns next-snap field",
-    "mechanic": "Rushing-first-down token creates LOS-to-LB Electric rectangle on next offensive snap Zone revision: 3/3/3/3 relevant team plays by mastery; action location retained.",
+    "mechanic": "Rushing first down earns a selectable LOS-to-LB Electric zone for the next offensive snap; lasts three offensive team plays.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -2030,12 +2030,12 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Next participating offensive scrimmage pre-play: eight yards sideline-to-sideline by five yards longitudinal, from LOS to the fixed five-yard LB reference. Lateral center uses Volcoil’s initial alignment; shift inward to preserve width and apply normal field boundaries. This zone retains its action/alignment placement; it cannot be freely relocated.",
-        "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
+        "rule": "An 8-by-5-yard Electric rectangle from LOS to the five-yard linebacker reference. The coach chooses its lateral lane. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
-        "rule": "Electric zone: Volcoil 20%, Eelectra 30% chance to apply Stunned on each non-Electric monster’s first entry that play. Starting inside counts; one roll per monster, no re-entry reroll. Both teams affected, Electric immune, no total stun cap.",
+        "rule": "Electric zone: Volcoil 20%, Eelectra 30% chance to apply Stunned on each non-Electric monster\u2019s first entry that play. Starting inside counts; one roll per monster, no re-entry reroll. Both teams affected, Electric immune, no total stun cap.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2232,7 +2232,7 @@
     "name": "Static Field",
     "category": "Zone",
     "activation": "Ready defensive pre-play including first",
-    "mechanic": "Ready safety field spans fixed LB-to-safety depth band with entry stun Zone revision: 3/3/3/3 relevant team plays by mastery; action location retained.",
+    "mechanic": "Ready defensive pre-play offers a selectable Electric zone in the LB-to-safety depth band; lasts three defensive team plays.",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -2242,8 +2242,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Twelve yards wide by seven yards long. Depth runs from five to twelve yards beyond upcoming LOS. Lateral center is Statyx initial alignment. Normal inward shift / boundary rules apply. This zone retains its action/alignment placement; it cannot be freely relocated.",
-        "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
+        "rule": "A 12-by-7-yard Electric rectangle from five to twelve yards beyond LOS. The coach chooses its lateral lane. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -2295,12 +2295,12 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Among the active enemy’s currently running ability cooldowns, extend the one with the LEAST time remaining. Not limited to its signature. No running cooldown: ordinary attack, preserve use.",
+        "rule": "Among the active enemy\u2019s currently running ability cooldowns, extend the one with the LEAST time remaining. Not limited to its signature. No running cooldown: ordinary attack, preserve use.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
         "section": "Core resolution",
-        "rule": "Deal 100% / 110% / 120% / 130% normal attack damage by mastery. Connected hit adds TWO of target’s own normal turns to its remaining cooldown.",
+        "rule": "Deal 100% / 110% / 120% / 130% normal attack damage by mastery. Connected hit adds TWO of target\u2019s own normal turns to its remaining cooldown.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2325,7 +2325,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Disruptor retained. Fixed two-turn extension; mastery scales attack damage only. Owner approved least-remaining running cooldown selection (2B). Stable tie handling must use the implementation’s deterministic ability ordering.",
+        "rule": "Disruptor retained. Fixed two-turn extension; mastery scales attack damage only. Owner approved least-remaining running cooldown selection (2B). Stable tie handling must use the implementation\u2019s deterministic ability ordering.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       }
     ],
@@ -2368,7 +2368,7 @@
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Target’s existing block continues normally; no automatic second shed. A stationary blocker loses no movement speed immediately. No hidden Strength or Blocking penalty.",
+        "rule": "Target\u2019s existing block continues normally; no automatic second shed. A stationary blocker loses no movement speed immediately. No hidden Strength or Blocking penalty.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2512,7 +2512,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Guard bolt deals 40% / 50% / 60% / 70% normal attack damage. Launch ONLY if Voltarch’s normal attack deals actual HP damage. Miss or full shield absorption preserves guard. Bolt uses separate evasion, type, shield and damage-reduction checks; launching spends it even if the bolt misses.",
+        "rule": "Guard bolt deals 40% / 50% / 60% / 70% normal attack damage. Launch ONLY if Voltarch\u2019s normal attack deals actual HP damage. Miss or full shield absorption preserves guard. Bolt uses separate evasion, type, shield and damage-reduction checks; launching spends it even if the bolt misses.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -3196,8 +3196,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "8 yards wide by 6 long, in the first 12 yards of the defensive side. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
+        "rule": "8 yards wide by 6 long, in the first 12 yards of the defensive side. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -3514,8 +3514,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "10 yards wide by 6 long, in the opposing offensive backfield. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
+        "rule": "10 yards wide by 6 long, in the opposing offensive backfield. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -3832,8 +3832,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "6 yards wide by 10 long, from the line into the defense. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
+        "rule": "6 yards wide by 10 long, from the line into the defense. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -3980,13 +3980,13 @@
     "mode": "Beast Clash",
     "name": "Gust Hop",
     "category": "Signature action",
-    "activation": "Zephyroo; common; RB; Clash archetype Balanced → Balanced. Every third performed normal attack, replacing that attack with a two-hit leap.",
+    "activation": "Zephyroo; common; RB; Clash archetype Balanced \u2192 Balanced. Every third performed normal attack, replacing that attack with a two-hit leap.",
     "mechanic": "Every third performed attack becomes two independently evadable same-target hits",
     "sourceDesignStatus": "Approved design; implementation required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Zephyroo; common; RB; Clash archetype Balanced → Balanced. Every third performed normal attack, replacing that attack with a two-hit leap.",
+        "rule": "Zephyroo; common; RB; Clash archetype Balanced \u2192 Balanced. Every third performed normal attack, replacing that attack with a two-hit leap.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4139,19 +4139,19 @@
     "mode": "Football",
     "name": "Crosswind Rescue",
     "category": "Zone",
-    "activation": "Galyx; uncommon Wind Safety.2 personal pass breakups charge bar; one credit per breakup event. Next eligible defensive scrimmage pre-play creates lanes while source able, before BOTH play selections.",
-    "mechanic": "PBU charge creates paired stationary sideline Wind lanes at next eligible defensive snap Zone revision: 3/4/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
+    "activation": "Two personal pass breakups earn next-snap selectable lanes",
+    "mechanic": "Two personal pass breakups earn two independently selectable Wind lanes; lasts 3/4/4/5 defensive team plays by mastery.",
     "sourceDesignStatus": "Approved design; implementation required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Galyx; uncommon Wind Safety.2 personal pass breakups charge bar; one credit per breakup event. Next eligible defensive scrimmage pre-play creates lanes while source able, before BOTH play selections.",
+        "rule": "Two personal pass breakups charge the bar; one credit per breakup event. Next eligible defensive scrimmage snap creates lanes while source able, at the selected locations.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
         "section": "Targets / placement",
-        "rule": "Two 4-by-7-yard sideline lanes; choose their shared short/middle/deep band. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
+        "rule": "Two 4-by-7-yard Wind lanes around the five-yard linebacker depth, each with a separate Zone 1 / Zone 2 selection. Choose left/right separately or put both in the same lane with a one-yard gap. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -4175,7 +4175,7 @@
       },
       {
         "section": "Visuals",
-        "rule": "Two pale teal bordered gust lanes along sidelines; readable ball, yard marks and routes. Charge/status display alternates.",
+        "rule": "Two pale teal bordered gust lanes at their individually selected locations; readable ball, yard marks and routes. Charge/status display alternates.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4298,13 +4298,13 @@
     "mode": "Beast Clash",
     "name": "Tailwind Pact",
     "category": "Signature action",
-    "activation": "Zephiro; rare; QB; Clash archetype Support → Support. Once per Clash on own normal action when at least two living allies have empty slots; replaces attack.",
+    "activation": "Zephiro; rare; QB; Clash archetype Support \u2192 Support. Once per Clash on own normal action when at least two living allies have empty slots; replaces attack.",
     "mechanic": "Once normal action attempts gated team Empowered without healing or override",
     "sourceDesignStatus": "Approved design; implementation required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Zephiro; rare; QB; Clash archetype Support → Support. Once per Clash on own normal action when at least two living allies have empty slots; replaces attack.",
+        "rule": "Zephiro; rare; QB; Clash archetype Support \u2192 Support. Once per Clash on own normal action when at least two living allies have empty slots; replaces attack.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4404,13 +4404,13 @@
     "mode": "Beast Clash",
     "name": "Eye of the Storm",
     "category": "Signature action",
-    "activation": "Tempestra; legendary; WR; Clash archetype Disruptor → Disruptor. Once per Clash own normal action replaces attack if enemy front active has a ready, repeatable signature.",
+    "activation": "Tempestra; legendary; WR; Clash archetype Disruptor \u2192 Disruptor. Once per Clash own normal action replaces attack if enemy front active has a ready, repeatable signature.",
     "mechanic": "Once normal action temporarily restricts enemy active to ordinary attacks without cooldown extension",
     "sourceDesignStatus": "Approved design; implementation required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Tempestra; legendary; WR; Clash archetype Disruptor → Disruptor. Once per Clash own normal action replaces attack if enemy front active has a ready, repeatable signature.",
+        "rule": "Tempestra; legendary; WR; Clash archetype Disruptor \u2192 Disruptor. Once per Clash own normal action replaces attack if enemy front active has a ready, repeatable signature.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4468,8 +4468,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "6 yards wide by 6 long near linebacker depth. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
+        "rule": "6 yards wide by 6 long near linebacker depth. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -4616,13 +4616,13 @@
     "mode": "Beast Clash",
     "name": "Night Swoop",
     "category": "Clash ability",
-    "activation": "Noctlet; common; S; Clash archetype Balanced → Striker. First performed normal attack of each Clash.",
+    "activation": "Noctlet; common; S; Clash archetype Balanced \u2192 Striker. First performed normal attack of each Clash.",
     "mechanic": "DAR-02-C: Night Swoop; Resolve this first normal attack before opponents scheduled in same round at 110 / 120% normal damage by Noctlet / Strixen. It is still evadable and can be Stunned before action scheduling.",
     "sourceDesignStatus": "Approved",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Noctlet; common; S; Clash archetype Balanced → Striker. First performed normal attack of each Clash.",
+        "rule": "Noctlet; common; S; Clash archetype Balanced \u2192 Striker. First performed normal attack of each Clash.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4722,13 +4722,13 @@
     "mode": "Beast Clash",
     "name": "Predator Rhythm",
     "category": "Clash ability",
-    "activation": "Duskyre; uncommon; RB; Clash archetype Striker → Striker. After two consecutive performed normal attacks damage the SAME enemy monster HP, next own normal attack on that monster is empowered.",
+    "activation": "Duskyre; uncommon; RB; Clash archetype Striker \u2192 Striker. After two consecutive performed normal attacks damage the SAME enemy monster HP, next own normal attack on that monster is empowered.",
     "mechanic": "DAR-03-C: Predator Rhythm; Third strike deals140 / 150 / 160 / 170% normal damage by mastery. Miss, shield-only hit, change of target or target departure resets sequence; no bonus dodge.",
     "sourceDesignStatus": "Approved",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Duskyre; uncommon; RB; Clash archetype Striker → Striker. After two consecutive performed normal attacks damage the SAME enemy monster HP, next own normal attack on that monster is empowered.",
+        "rule": "Duskyre; uncommon; RB; Clash archetype Striker \u2192 Striker. After two consecutive performed normal attacks damage the SAME enemy monster HP, next own normal attack on that monster is empowered.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4828,13 +4828,13 @@
     "mode": "Beast Clash",
     "name": "Ambush",
     "category": "Clash ability",
-    "activation": "Murklaw; uncommon; LB; Clash archetype Striker → Striker. First ACTIVE entry per Clash including opening lineup arms one bonus on next performed normal attack.",
+    "activation": "Murklaw; uncommon; LB; Clash archetype Striker \u2192 Striker. First ACTIVE entry per Clash including opening lineup arms one bonus on next performed normal attack.",
     "mechanic": "DAR-04-C: Ambush; Attack at130 / 145 / 160 / 175% normal damage by mastery if HP still at least75% max; otherwise ordinary attack preserves armed state until eligible or Clash end.",
     "sourceDesignStatus": "Approved",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Murklaw; uncommon; LB; Clash archetype Striker → Striker. First ACTIVE entry per Clash including opening lineup arms one bonus on next performed normal attack.",
+        "rule": "Murklaw; uncommon; LB; Clash archetype Striker \u2192 Striker. First ACTIVE entry per Clash including opening lineup arms one bonus on next performed normal attack.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4892,8 +4892,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "12 yards wide by 5 long at the front of the defensive side. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
+        "rule": "12 yards wide by 5 long at the front of the defensive side. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -5104,8 +5104,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "8 yards wide by 6 long near linebacker depth. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
+        "rule": "8 yards wide by 6 long near linebacker depth. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -5146,13 +5146,13 @@
     "mode": "Beast Clash",
     "name": "Glow Mend",
     "category": "Signature action",
-    "activation": "Lumini; common; WR; Clash archetype Support → Support. Ready own normal action replaces attack if at least two living allies are injured.",
+    "activation": "Lumini; common; WR; Clash archetype Support \u2192 Support. Ready own normal action replaces attack if at least two living allies are injured.",
     "mechanic": "Glow Mend: Heal each 7 / 10% own max HP by Lumini / Photara. No surplus shield, cleanse or HP equalization.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Lumini; common; WR; Clash archetype Support → Support. Ready own normal action replaces attack if at least two living allies are injured.",
+        "rule": "Lumini; common; WR; Clash archetype Support \u2192 Support. Ready own normal action replaces attack if at least two living allies are injured.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5252,13 +5252,13 @@
     "mode": "Beast Clash",
     "name": "Dawn Song",
     "category": "Signature action",
-    "activation": "Solchirp; common; K; Clash archetype Support → Support. Ready own normal action replaces attack if active front ally is injured and has empty status slot.",
+    "activation": "Solchirp; common; K; Clash archetype Support \u2192 Support. Ready own normal action replaces attack if active front ally is injured and has empty status slot.",
     "mechanic": "Dawn Song: Heal5 / 6 / 7 / 8% maxHP by mastery immediately, then same amount at end of NEXT2 owner normal turns. This is ability-linked healing schedule, not new status; empty status slot gates initial cast only.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Solchirp; common; K; Clash archetype Support → Support. Ready own normal action replaces attack if active front ally is injured and has empty status slot.",
+        "rule": "Solchirp; common; K; Clash archetype Support \u2192 Support. Ready own normal action replaces attack if active front ally is injured and has empty status slot.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5358,13 +5358,13 @@
     "mode": "Beast Clash",
     "name": "Clear Light",
     "category": "Signature action",
-    "activation": "Lumen; uncommon; QB; Clash archetype Support → Support. Ready own normal action replaces attack when another living ally has removable harmful status.",
+    "activation": "Lumen; uncommon; QB; Clash archetype Support \u2192 Support. Ready own normal action replaces attack when another living ally has removable harmful status.",
     "mechanic": "Clear Light: Remove harmful status first, then heal 10% maxHP. If status cannot be removed, no cast; no generic heal fallback.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Lumen; uncommon; QB; Clash archetype Support → Support. Ready own normal action replaces attack when another living ally has removable harmful status.",
+        "rule": "Lumen; uncommon; QB; Clash archetype Support \u2192 Support. Ready own normal action replaces attack when another living ally has removable harmful status.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5464,13 +5464,13 @@
     "mode": "Beast Clash",
     "name": "Refraction",
     "category": "Signature action",
-    "activation": "Prismara; uncommon; S; Clash archetype Disruptor → Disruptor. Every third performed normal attack becomes refracted.",
+    "activation": "Prismara; uncommon; S; Clash archetype Disruptor \u2192 Disruptor. Every third performed normal attack becomes refracted.",
     "mechanic": "Primary100% normal attack, then secondary30/40/50/60% by mastery against first living reserve only if primary connects. Independent secondary evasion. Normal shields/type/reduction, shared single Confused redirect to own side target set. No ordinary-only archetype bonus.",
     "sourceDesignStatus": "Design approved and closeout recorded; implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Prismara; uncommon; S; Clash archetype Disruptor → Disruptor. Every third performed normal attack becomes refracted.",
+        "rule": "Prismara; uncommon; S; Clash archetype Disruptor \u2192 Disruptor. Every third performed normal attack becomes refracted.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5570,13 +5570,13 @@
     "mode": "Beast Clash",
     "name": "Radiant Pursuit",
     "category": "Signature action",
-    "activation": "Haloryx; rare; LB; Clash archetype Striker → Striker. Own normal attack when enemy target HP is below 35% at action commit.",
+    "activation": "Haloryx; rare; LB; Clash archetype Striker \u2192 Striker. Own normal attack when enemy target HP is below 35% at action commit.",
     "mechanic": "Radiant Pursuit: Deal115 / 125 / 135 / 145% normal damage by mastery, no auto-KO, healing or extra hit.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Haloryx; rare; LB; Clash archetype Striker → Striker. Own normal attack when enemy target HP is below 35% at action commit.",
+        "rule": "Haloryx; rare; LB; Clash archetype Striker \u2192 Striker. Own normal attack when enemy target HP is below 35% at action commit.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5676,13 +5676,13 @@
     "mode": "Beast Clash",
     "name": "Daybreak Lance",
     "category": "Signature action",
-    "activation": "Aurelion; legendary; WR; Clash archetype Striker → Striker. Once per Clash on own ready normal action; replaces attack.",
+    "activation": "Aurelion; legendary; WR; Clash archetype Striker \u2192 Striker. Once per Clash on own ready normal action; replaces attack.",
     "mechanic": "Daybreak Lance: 160% normal damage, standard evasion/shield/DR. Suppress only ATTACK retaliation caused by this strike; passive damage auras and attached status responses still resolve. No skipped enemy normal turn.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Aurelion; legendary; WR; Clash archetype Striker → Striker. Once per Clash on own ready normal action; replaces attack.",
+        "rule": "Aurelion; legendary; WR; Clash archetype Striker \u2192 Striker. Once per Clash on own ready normal action; replaces attack.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5782,13 +5782,13 @@
     "mode": "Beast Clash",
     "name": "Forge Swipe",
     "category": "Signature action",
-    "activation": "Ferrcub; common; OL; Clash archetype Balanced → Balanced. Every third performed normal attack attempts self Empowered AFTER full attack resolves if alive.",
+    "activation": "Ferrcub; common; OL; Clash archetype Balanced \u2192 Balanced. Every third performed normal attack attempts self Empowered AFTER full attack resolves if alive.",
     "mechanic": "Forge Swipe: Attempt Empowered +10 / +15% outgoing damage by Ferrcub / Forgursa for 2 owner normal turns. Repeated equal application extends duration, never adds strength. No instant bonus on triggering attack.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Ferrcub; common; OL; Clash archetype Balanced → Balanced. Every third performed normal attack attempts self Empowered AFTER full attack resolves if alive.",
+        "rule": "Ferrcub; common; OL; Clash archetype Balanced \u2192 Balanced. Every third performed normal attack attempts self Empowered AFTER full attack resolves if alive.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5888,13 +5888,13 @@
     "mode": "Beast Clash",
     "name": "Tempered Guard",
     "category": "Signature action",
-    "activation": "Steelpaw; common; LB; Clash archetype Balanced → Tank. On own ready normal action when HP above50% and no status; replaces attack.",
+    "activation": "Steelpaw; common; LB; Clash archetype Balanced \u2192 Tank. On own ready normal action when HP above50% and no status; replaces attack.",
     "mechanic": "Tempered Guard: Attempt Guarded25 / 30 / 35 / 40% by mastery for next2 owner normal turns. While this OWN Guarded episode exists, enemy direct HP hit cannot exceed30% maxHP per individual hit. Cap is source payload, not another status.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Steelpaw; common; LB; Clash archetype Balanced → Tank. On own ready normal action when HP above50% and no status; replaces attack.",
+        "rule": "Steelpaw; common; LB; Clash archetype Balanced \u2192 Tank. On own ready normal action when HP above50% and no status; replaces attack.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5952,8 +5952,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "10 yards wide by 6 long near linebacker depth. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
+        "rule": "10 yards wide by 6 long near linebacker depth. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -5994,13 +5994,13 @@
     "mode": "Beast Clash",
     "name": "Gear Shot",
     "category": "Signature action",
-    "activation": "Coglet; uncommon; K; Clash archetype Balanced → Balanced. Every performed normal attack.",
+    "activation": "Coglet; uncommon; K; Clash archetype Balanced \u2192 Balanced. Every performed normal attack.",
     "mechanic": "Gear Shot: Clamp random base-damage variance floor to0.95 / 1.00 / 1.05 / 1.10 by mastery, never above configured upper variance. Evasion, type, shield, Guarded/Tank and critical system if any remain ordinary.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Coglet; uncommon; K; Clash archetype Balanced → Balanced. Every performed normal attack.",
+        "rule": "Coglet; uncommon; K; Clash archetype Balanced \u2192 Balanced. Every performed normal attack.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -6100,13 +6100,13 @@
     "mode": "Beast Clash",
     "name": "Iron Bite",
     "category": "Signature action",
-    "activation": "Ferronox; uncommon; DL; Clash archetype Striker → Striker. Ready own normal action replaces attack if enemy active has Shielded with positive pool.",
+    "activation": "Ferronox; uncommon; DL; Clash archetype Striker \u2192 Striker. Ready own normal action replaces attack if enemy active has Shielded with positive pool.",
     "mechanic": "120% normal damage, shield multiplier1.5/1.75/2/2.25, HP overflow retains ordinary budget under approved closeout13.",
     "sourceDesignStatus": "Design approved and closeout recorded; implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Ferronox; uncommon; DL; Clash archetype Striker → Striker. Ready own normal action replaces attack if enemy active has Shielded with positive pool.",
+        "rule": "Ferronox; uncommon; DL; Clash archetype Striker \u2192 Striker. Ready own normal action replaces attack if enemy active has Shielded with positive pool.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -6164,8 +6164,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "8 yards wide by 4 long, with a backfield lane reference. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
+        "rule": "8 yards wide by 4 long, with a backfield lane reference. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -6206,13 +6206,13 @@
     "mode": "Beast Clash",
     "name": "Shield Wall",
     "category": "Signature action",
-    "activation": "Ferrhorn; rare; TE; Clash archetype Support → Support. Ready own normal action replaces attack when a living RESERVE ally has empty status slot.",
+    "activation": "Ferrhorn; rare; TE; Clash archetype Support \u2192 Support. Ready own normal action replaces attack when a living RESERVE ally has empty status slot.",
     "mechanic": "Shield Wall: Attempt Shielded12 / 15 / 18 / 21% target maxHP by mastery for3 recipient normal turns. No healing, cleanse or active target option.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Ferrhorn; rare; TE; Clash archetype Support → Support. Ready own normal action replaces attack when a living RESERVE ally has empty status slot.",
+        "rule": "Ferrhorn; rare; TE; Clash archetype Support \u2192 Support. Ready own normal action replaces attack when a living RESERVE ally has empty status slot.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -6312,13 +6312,13 @@
     "mode": "Beast Clash",
     "name": "Fortress",
     "category": "Signature action",
-    "activation": "Aegistron; legendary; DL; Clash archetype Tank → Tank. Once per Clash own normal action replaces attack if no status and HP below60%.",
+    "activation": "Aegistron; legendary; DL; Clash archetype Tank \u2192 Tank. Once per Clash own normal action replaces attack if no status and HP below60%.",
     "mechanic": "Fortress: Attempt Guarded50% for2 owner normal turns; while own episode active, store prevented HP damage up to20% maxHP. At natural expiry heal stored amount, subject Healing Reduced. No healing if removed/replaced/KO.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Aegistron; legendary; DL; Clash archetype Tank → Tank. Once per Clash own normal action replaces attack if no status and HP below60%.",
+        "rule": "Aegistron; legendary; DL; Clash archetype Tank \u2192 Tank. Once per Clash own normal action replaces attack if no status and HP below60%.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -6376,8 +6376,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "8 yards wide by 6 long in the opposing backfield, initially 3 to 9 yards behind the line. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
+        "rule": "8 yards wide by 6 long in the opposing backfield, initially 3 to 9 yards behind the line. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -6724,8 +6724,8 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "6 yards wide by 8 long in the opposing backfield, initially from the line to 8 yards behind it. After selecting a play, choose one highlighted legal location, or Auto Place. Lane choices follow the owner's own play; full-width zones and the paired sideline lanes offer depth bands. An existing compatible zone offers a legal overlap option. AI and simulated games use the same options. The snap confirms placement; existing zones remain fixed on the field.",
-        "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
+        "rule": "6 yards wide by 8 long in the opposing backfield, initially from the line to 8 yards behind it. After selecting a play, choose a highlighted legal location for each zone independently, or Auto Place. Narrow zones offer left/middle/right lanes following the owner's own play; full-width zones offer short/middle/deep bands. Compatible existing zones offer overlap options. AI uses the same options with varied choices. Each choice locks at the snap; enemy choices stay hidden until then. Existing zones remain fixed.",
+        "provenance": "Owner-requested placement correction, November 15, 2026; supersedes previous placement restrictions."
       },
       {
         "section": "Core resolution",
@@ -6870,7 +6870,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "All recommended secondary rules resolved by owner closeout2–4. Four-play nonconsecutive charge, guaranteed2-yard man-cut activation and no extra cooldown. No unapproved mastery scaling.",
+        "rule": "All recommended secondary rules resolved by owner closeout2\u20134. Four-play nonconsecutive charge, guaranteed2-yard man-cut activation and no extra cooldown. No unapproved mastery scaling.",
         "provenance": "Owner approved final closeout all22 A, November4,2026."
       },
       {
@@ -7044,7 +7044,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Striker retained. Commanded damage50/60/70/80%, own attack100%. Owner closeout5–6 resolves Confused self-hit and defenses. All ten original A remain applicable.",
+        "rule": "Striker retained. Commanded damage50/60/70/80%, own attack100%. Owner closeout5\u20136 resolves Confused self-hit and defenses. All ten original A remain applicable.",
         "provenance": "Owner approved final closeout all22 A, November4,2026."
       },
       {
