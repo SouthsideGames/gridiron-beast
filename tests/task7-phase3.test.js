@@ -39,7 +39,7 @@ test('offers move in 100s; a full roster cannot offer (with an actionable reason
   const f = openMarket(); exactRoom(f, 1); const m = cheapest(f)[0];
   const first = F.offerFreeAgent(f, m.id, { salary: 12345, years: 2 }); assert.equal(first.ok, true, first.reason); assert.equal(first.offer.salary, 12300, 'rounded to the step');
   const [m2] = cheapest(f, (x) => x.id !== m.id);
-  const full = F.offerFreeAgent(f, m2.id, { salary: E.askOf(f, m2).salary, years: 2 }); assert.equal(full.ok, false); assert.equal(full.code, 'roster'); assert.match(full.reason, /Release a monster or withdraw an offer/);
+  const full = F.offerFreeAgent(f, m2.id, { salary: E.askOf(f, m2).salary, years: 2 }); assert.equal(full.ok, false); assert.equal(full.code, 'roster'); assert.match(full.reason, /Your roster is full/); assert.match(full.reason, /Release a monster or cancel an offer/); // plain-language wording (2026-11-14)
   makeRoom(f, 2); const big = F.offerFreeAgent(f, m2.id, { salary: 900000, years: 2 }); assert.equal(big.ok, false); assert.equal(big.code, 'cap');
 });
 
