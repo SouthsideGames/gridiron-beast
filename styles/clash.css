@@ -35,7 +35,7 @@
 .cl-mon .cl-ground svg { position: absolute; left: 0; bottom: 0; width: 100%; height: auto; }
 .cl-mon .cl-ground .cl-pad { bottom: -3px; }
 .cl-mon.front .cl-ground .cl-pad { animation: cl-pad 1.8s ease-in-out infinite; transform-origin: 50% 50%; }
-.cl-mon .cl-ring-wrap { position: absolute; left: 50%; bottom: -8px; width: calc(var(--size) * 1.05); transform: translateX(-50%); z-index: 3; pointer-events: none; }
+.cl-mon .cl-ring-wrap { position: absolute; left: 50%; bottom: -8px; width: calc(var(--size) * 1.05); transform: translateX(-50%); z-index: 1; pointer-events: none; } /* owner 2026-11-15: the shield ring sits behind the sprite (.cl-body is z-index 2) */
 .cl-mon .cl-ring-wrap svg { width: 100%; height: auto; display: block; }
 .cl-mon.bench { opacity: .94; }
 /* acting marker: a chevron above the head */

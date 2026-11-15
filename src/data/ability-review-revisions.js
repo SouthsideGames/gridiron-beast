@@ -57,4 +57,17 @@ export const CLASH_REVISION = Object.freeze({
   'ICE-01-C': 1,
   'ICE-04-C': 1,
   'ICE-06-C': 1,
+  // Owner revision 2026-11-15 (third pass): every Light and Metal look redrawn.
+  'LIG-01-C': 1,
+  'LIG-02-C': 1,
+  'LIG-03-C': 1,
+  'LIG-04-C': 1,
+  'LIG-05-C': 1,
+  'LIG-06-C': 1,
+  'MET-01-C': 1,
+  'MET-02-C': 1,
+  'MET-03-C': 1,
+  'MET-04-C': 1,
+  'MET-05-C': 1,
+  'MET-06-C': 1,
 });
