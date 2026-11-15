@@ -93,7 +93,7 @@ export const PSYCHIC_DRAGON = {
     o: (c) => { const g = c.tgt; if (!g) return ''; const face = g.x >= c.cx ? 1 : -1; const a = feet(c), b = [g.x - face * g.size * 0.35, g.y];
       if (c.age < 0) { const kk = 1 + c.age / 0.4; let s = gl(c.cx, c.cy, c.size * (0.75 + 0.1 * kk), face, 0, dragonSpirit(c.L, 0.25 + kk * 0.5, kk * 0.4), kk * 0.55) + groundRing(c.cx, c.cy + 2, c.size * 0.45 * kk, c.L.a, 2, kk * 0.8); for (const sx of [-1, 1]) s += line(c.cx + sx * c.size * 0.25, c.cy, c.cx + sx * c.size * 0.32, c.cy + 5 * kk, c.L.a, 2, kk); return s; }
       const k = ease(clamp01(c.age / 0.45)); const p = along(a, b, k, c.size * 0.9); const tilt = k < 1 ? -18 + k * 30 : 12; const fade = 0.95 * (1 - clamp01((c.age - 0.5) / 0.5));
-      let s = ''; for (let i = 1; i <= 3 && k < 1; i++) { const q = along(a, b, Math.max(0, k - i * 0.09), c.size * 0.9); s += gl(q[0], q[1], c.size * 0.85, face, tilt, dragonSpirit(c.L, 1, 0.7), 0.22 / i); } // afterimages
+      let s = ''; if (k < 1) { const q = along(a, b, Math.max(0, k - 0.12), c.size * 0.9); for (let i = 0; i < 3; i++) s += line(q[0] - face * c.size * (0.3 + i * 0.1), q[1] - c.size * (0.3 + i * 0.15), p[0] - face * c.size * 0.35, p[1] - c.size * (0.3 + i * 0.15), c.L.a, 2 - i * 0.4, 0.5); } // speed streaks (an element budget of 60 per frame)
       s += gl(p[0], p[1], c.size * 0.85, face, tilt, dragonSpirit(c.L, k < 1 ? 1 : 0.6, 0.8), fade);
       if (k >= 1) { const kk = clamp01((c.age - 0.45) / 0.5); s += clawSlash([g.x, g.y - g.size * 0.35], g.size * 0.6, kk * 1.4, c.L, 1 - kk) + burst([g.x, g.y - g.size * 0.45], g.size * 0.6, c.L, kk, c.n(7), c.sid) + groundRing(b[0], b[1] + 2, g.size * 0.6 * kk, c.L.a, 2, 1 - kk); }
       return s; },

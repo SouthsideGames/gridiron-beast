@@ -193,9 +193,10 @@ export function createArena(root, result, opts = {}) {
   // ---- the t8 ability presentation layer: a playback clock in seconds (1x), redrawn per frame while anything is live
   const t8clock = { base: 0, start: 0, end: 0, override: null, raf: 0 };
   const t8Time = () => (t8clock.override != null ? t8clock.override : playing ? Math.min(t8clock.end, t8clock.base + (performance.now() - t8clock.start) / 1000 * speed) : t8clock.end);
+  const spriteSvgCache = {}; // the monster's own 16x16 sprite (xmlns'd), for looks that draw the body itself (Heat Mirage's outline)
   function t8Geom() {
     const W = stage.clientWidth || 390, H = stage.clientHeight || 487; const land = isLandscape();
-    return { W, H, landscape: land, reduced: reduced(), pos: (id) => { const el = monEl[id]; if (!el || el.classList.contains('gone')) return null; return { x: parseFloat(el.style.left) / 100 * W, y: parseFloat(el.style.top) / 100 * H, size: sizeOf(id), side: id[0], active: el.classList.contains('front'), ko: false, id }; },
+    return { W, H, landscape: land, reduced: reduced(), sprite: (id) => { const x = byId[id]; return x ? spriteSvgCache[id] ||= monsterSprite(mon(x), 16, { flip: id[0] === 'b' }).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ') : null; }, pos: (id) => { const el = monEl[id]; if (!el || el.classList.contains('gone')) return null; return { x: parseFloat(el.style.left) / 100 * W, y: parseFloat(el.style.top) / 100 * H, size: sizeOf(id), side: id[0], active: el.classList.contains('front'), ko: false, id }; },
       slot: (side, i) => { const map = (land ? (W < 420 ? LANDSCAPE_TIGHT : LANDSCAPE) : side === 'b' ? PORTRAIT_B : PORTRAIT)[Math.max(1, Math.min(5, result.lines[side].length))]; const [x, y] = map[Math.min(i, map.length - 1)]; const sizes = sizesFor(sizeKey, H, land); return { x: (side === 'b' && land ? 100 - x : x) / 100 * W, y: y / 100 * H, size: i === 0 ? sizes.front : sizes.bench }; } };
   }
   function t8Draw(t = t8Time()) {

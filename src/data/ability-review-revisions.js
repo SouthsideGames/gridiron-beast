@@ -44,4 +44,17 @@ export const CLASH_REVISION = Object.freeze({
   'EAR-01-C': 1,
   'EAR-05-C': 1,
   'EAR-06-C': 1,
+  // Owner revision 2026-11-15 (second pass): Electric looks drawn as real lightning; the other Needs Work notes.
+  'ELE-01-C': 1,
+  'ELE-02-C': 1,
+  'ELE-03-C': 1,
+  'ELE-04-C': 1,
+  'ELE-05-C': 1,
+  'ELE-06-C': 1,
+  'FIR-02-C': 1,
+  'FIR-03-C': 1,
+  'FIR-05-C': 1,
+  'ICE-01-C': 1,
+  'ICE-04-C': 1,
+  'ICE-06-C': 1,
 });
