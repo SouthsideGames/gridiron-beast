@@ -1,7 +1,34 @@
 // Presentation only. Apply the same vocabulary to every original rule without
 // changing the contracts used by either game engine. Numeric tokens are preserved.
 export const ABILITY_RULE_LANGUAGE_VERSION = 1;
+// Phrases where an engine word is used as another part of speech (a verb "recharge", an adjective "activation", a noun "KO").
+// They run before the general vocabulary below so the sentence stays grammatical (Claude QA, 2026-11-14).
+const GRAMMAR_FIRST = [
+  [/activation[- ]play cannot recharge/gi, "the play that uses the ability cannot add charge"],
+  [/activation reception cannot recharge/gi, "the catch that uses the ability cannot add charge"],
+  [/cannot recharge/gi, "cannot add charge"],
+  [/recharge\/cooldown/gi, "wait between uses"],
+  [/activation[- ](play|snap|reception)/gi, "the $1 that uses the ability"],
+  [/immediately activate/gi, "start right away"],
+  [/stationary field-aligned/gi, "fixed, field-aligned"],
+  [/((?:offensive|defensive)-play|offensive|mastery) cooldown(?= \d)/gi, "$1 wait of"],
+  [/cooldown(?= (?:\d|one|two|three|four|five|six)\b)/gi, "wait of"],
+  [/(can|would|may|then|or) KO/g, "$1 knock out"],
+  [/becomes KO/g, "becomes knocked out"],
+  [/KO (monsters|replacement)/g, "knocked-out $1"],
+  [/runtime KO state/g, "knocked-out state"],
+  [/KO ordering/g, "knockout order"],
+  [/(normal|ordinary) attack preserves?(?=\.)/gi, "$1 attack, and the ability stays unused"],
+  [/reserve pauses cooldown\/status/gi, "time on the bench pauses the wait and the effect timer"],
+  [/preserves?(?=\.)/gi, "keeps its progress"],
+  [/activation\/cooldown/gi, "the use and the wait"],
+  [/to recharge/gi, "to charge the ability again"],
+  [/cooldown(?=\/)|(?<=\/)cooldown/gi, "wait"],
+  [/recharge(?=\/)|(?<=\/)recharge/gi, "wait"],
+  [/activation(?=\/)|(?<=\/)activation/gi, "use"],
+];
 const PHRASES = [
+  ...GRAMMAR_FIRST,
   [/Ready own normal action replaces attack if/gi, "When ready, use this instead of a normal attack if"],
   [/While active/gi, "While this monster is fighting"],
   [/Self only/gi, "Only this monster"],
@@ -182,7 +209,7 @@ const PHRASES = [
   [/owner knockout/gi, "knockout of the monster using this ability"],
   [/owner-KO/gi, "user-knockout"],
   [/post-KO/gi, "after-knockout"],
-  [/\bKO\b/g, "knocked-out"],
+  [/\bKO\b/g, "knockout"],
 ];
 const RULE_CACHE = new Map();
 const BOUNDED_PHRASES = PHRASES.map(([pattern, replacement]) => [new RegExp(String.raw`(?<![\w])(?:${pattern.source})(?![\w])`, pattern.flags), replacement]);
@@ -199,7 +226,7 @@ export function plainAbilityRule(rule) {
   };
   if (exact[text]) { RULE_CACHE.set(original, exact[text]); return exact[text]; }
   // Word boundaries keep changes out of names and other words.
-  for (const [pattern, replacement] of BOUNDED_PHRASES) text = text.replace(pattern, replacement);
+  for (const [pattern, replacement] of BOUNDED_PHRASES) text = text.replace(pattern, (...m) => { const out = replacement.replace(/\$(\d)/g, (_, i) => m[+i] ?? ''); return /^[a-z]/.test(m[0]) && /^[A-Z][a-z]/.test(out) ? out[0].toLowerCase() + out.slice(1) : out; }); // a phrase found mid-sentence stays lowercase
   text = text.replace(/Invalid attacker redirects to opposing active monster\./g, 'If the original attacker is no longer a valid target, hit the enemy fighting now instead.');
   text = text.replace(/(mastery|damage|heal|cooldown|for|at|old)(?=\d)/gi, '$1 ').replace(/(\d)(?=(?:plays|turns|yards|wide|long|charge)\b)/gi, '$1 ').replace(/<=/g, ' at most ').replace(/>=/g, ' at least ');
   text = text.replace(/;\s*/g, '. ').replace(/\.\s*\./g, '.');

@@ -36,3 +36,15 @@ test('word replacements do not damage longer words or names', () => {
   assert.match(text, /Shadow Pounce/);
   assert.ok(!text.includes('lastence'));
 });
+
+test('engine words used as another part of speech still read as sentences (no mangled replacements)', () => {
+  const BAD = [/(?:cannot|can|to|not|never) time before the ability is ready again/i, /use of the ability (?:play|reception|snap)\b/i, /[a-z,] (?:While this monster|Only this monster)/,
+    /right away start/i, /ready again\/|\/wait before|wait before using this ability again \d/i, /\b(?:attack|DL|tackle|switch) keeps\.$/m, /place-aligned/];
+  for (const a of ABILITIES) for (const d of a.details.filter(d => sections.includes(d.section))) {
+    const plain = plainAbilityRule(d.rule);
+    for (const re of BAD) assert.ok(!re.test(plain), `${a.id} ${d.section}: ${re} in "${plain}"`);
+  }
+  assert.equal(plainAbilityRule('Activation play cannot recharge.'), 'The play that uses the ability cannot add charge.');
+  assert.equal(plainAbilityRule('Cooldown 5 / 4 / 3 / 2 subsequent offensive plays.'), 'Wait of 5 / 4 / 3 / 2 later offensive plays.');
+  assert.match(plainAbilityRule('Front ally, self only if actually front.'), /, only this monster/);
+});
