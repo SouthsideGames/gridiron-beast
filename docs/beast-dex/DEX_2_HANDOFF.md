@@ -109,36 +109,53 @@ link are unchanged). PR #114 stays a draft until the owner approves merging.
 
 ## Claude: plain-language pass validation (2026-11-14, evening)
 
-Preview build `v43.14.1-dev.dex2`, commit `d714e25`, published as a test build to the same private Beast Dex 2.0 link
-(https://claude.ai/artifact/XjRp8wPrCxenG8wCwKXvgK); main game link and shared test link unchanged. Builds on ChatGPT's
-`0a9e07b`–`20eb0de` (72 plain Clash explanations in `src/text/clash-simple.js`, simpler central text in `src/text/en.js`,
-regenerated `docs/text/GAME_TEXT.csv`, `docs/beast-dex/PLAYER_LANGUAGE.md`).
+Preview build `v43.14.2-dev.dex2`, commit `b137605`, published as a test build to the same private Beast Dex 2.0 link
+(https://claude.ai/artifact/XjRp8wPrCxenG8wCwKXvgK); main game link and shared test link unchanged. It includes ChatGPT's
+`0a9e07b`–`20eb0de` (72 plain Clash explanations, simpler central text, regenerated `docs/text/GAME_TEXT.csv`,
+`docs/beast-dex/PLAYER_LANGUAGE.md`) and the owner-account commits `df97988`–`5b3e169` (readable ability details for all 144
+abilities, ability glossary, Beast Dex review notices and cloud-mirrored Dex reviews). Later commits change tests or notes only.
+
+**Not merged, main link not updated.** The owner's chat instruction for this pass is "Do not merge into main, update the main game
+link, or replace the shared test link." The section below says main deployment is authorised; that conflicts with the chat
+instruction, so it was not acted on and has been put to the owner.
 
 ### Fixes
-- The Beast Clash arena's tap caption (translated view) read the engine mechanic line; it now uses the same plain explanation.
-- In the native arena view (the game's normal path) tapping a fighter showed the raw ability id (e.g. `FIR-01-C`); it now shows the
-  ability name and plain line. One helper, `clashMove`, serves both views. Display text only; the engine and choreographer read
-  names and ids, not this text.
+- Beast Clash arena tap caption: the translated view read the engine mechanic line, and the native view (the game's normal path)
+  showed the raw ability id (e.g. `FIR-01-C`). Both now show the ability name and the shared plain line (`clashMove`). Display only.
+- Readable ability details: the word-for-word vocabulary broke about 80 of the 1,008 shown rule sections where an engine word was
+  another part of speech ("Activation play cannot recharge" read "Use of the ability play cannot time before the ability is ready
+  again"; "Cooldown 5 / 4 / 3 / 2" read "Wait before using this ability again 5 / 4 / 3 / 2"; mid-sentence phrases were capitalised).
+  Targeted phrase rules run first, a mid-sentence match stays lowercase, and a new test fails on each pattern for all 144 abilities.
+  Every number is still preserved (existing test).
+- Six tests pinned the old central-text wording word for word (Coach Assist, Hall of Fame Day, Partnerships, Task 7 phase 3,
+  Task 7 roster floor, History screens). Each now checks the same rule in the new wording; no check was removed, several gained one.
 
 ### Checks
-- Full suite on `d714e25`: running at the time of this note; the result is recorded in PR #114 and below when it finishes.
+- Full suite on `b137605` (the preview build): 2,173 of 2,174 passed; the one failure was the History screens wording pin, fixed in
+  `0032404` (that file 7/7). Full suite on the final commit `0032404`: running at the time of this note (result in PR #114).
 - `node tools/audit-dex-content.mjs --require-complete`: 222/222. `python3 tools/text-export.py --check`: current.
-- Deploy check on the preview folder: all pass (461 files, version and label, 3 saves load) except the expected "BUILD.test is false".
-- Every changed `en.js` line keeps its placeholders and HTML tags; 19 lines whose number words differ were read side by side and keep
-  the same rules (the differences are the word "one" used as a pronoun, or a number now spelled once instead of twice).
+- Deploy check on the preview folder: all pass (462 files, version and label, 3 saves load) except the expected "BUILD.test is false".
+  Published files read back and match the build.
+- Every changed `en.js` line keeps its placeholders and HTML tags; lines whose numbers differ were read side by side and keep the
+  same rules.
 - Browser (Chromium, preview build): a fresh preview with nothing discovered reaches Developer → Beast Dex Reviewer (Next through all
   222 forms) and Developer → Beast Dex (everything revealed) (all 192 families, all 222 forms); discovery and knowledge stay empty,
-  including after a reload. The Dex shows the plain line for all 72 Clash abilities, with exact rules under View details; monster
-  details (roster) and the arena caption show the same plain line. At 320, 390 and 440 px: 32 screens plus the Clash help sheet,
-  a monster sheet and a sheet of all 234 changed lines show no horizontal overflow, clipped text, unfilled placeholders or visible tags.
+  including after a reload. The Dex shows the plain line for all 72 Clash abilities with exact rules under View details; monster
+  details and the arena caption show the same plain line. At 320, 390 and 440 px: 32 screens, the Clash help sheet, a monster sheet,
+  the readable details with the glossary, and a sheet of all 129 changed or new central lines show no horizontal overflow, clipped
+  text, unfilled placeholders or visible tags.
 
-### Still open
-- Football ability summaries are still the dense engine wording (all 72 use `SPECS[...].expect`, about 21 words on average), and the
-  football "Full rules" sections read like engine notes; the plain-language pass has not reached them.
-- The Clash help sheet repeats "An exchange is one round of actions." in two consecutive paragraphs.
+### Still open (owner)
+- The readable details remain engine notes in shorter clauses ("Fireimmune, both teams others affected", "Design values approved
+  all-A") rather than fifth-grade sentences; "Progression / notes" still shows development notes to players.
+- Football ability summaries are still the dense engine wording (all 72 use `SPECS[...].expect`, about 21 words on average).
+- Wording to confirm: "Very low offers can end the talks" (in code every low offer costs patience; two at low patience refuse the
+  club for the league year); "Choose a QB with…" in the no-captain-pair message (shown when no such pair exists); the Hall of Fame
+  screen says "met the requirements" while its news headline says "was eligible"; the Board help mixes "estimate" and "forecast";
+  the Clash help repeats "An exchange is one round of actions." in two consecutive paragraphs.
 - The Dex tab that holds both abilities is labelled "Football"; the Beast Clash ability sits under it.
-- Clash review verdicts return to pending for all 72 Clash abilities because the plain line is part of what a Clash verdict covers.
-
+- Football and Clash Dex review verdicts return to pending (the readable rules and plain line are part of what those verdicts cover);
+  the Developer screen now announces 222 monsters needing review.
 
 ## Latest owner handoff: detailed wording, saved reviews and main release
 
