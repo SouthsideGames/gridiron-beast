@@ -1,6 +1,6 @@
 # Beast Dex 2.0 — implementation checkpoint
 
-Branch: `codex/beast-dex-2`. Do not merge before the owner's review.
+Branch: `codex/beast-dex-2`. Latest owner instruction: Claude is authorized to merge to main and update the EXISTING main game link after validation. Earlier no-merge instructions below describe the previous preview phase.
 
 ## Implemented behavior
 
@@ -138,3 +138,16 @@ regenerated `docs/text/GAME_TEXT.csv`, `docs/beast-dex/PLAYER_LANGUAGE.md`).
 - The Clash help sheet repeats "An exchange is one round of actions." in two consecutive paragraphs.
 - The Dex tab that holds both abilities is labelled "Football"; the Beast Clash ability sits under it.
 - Clash review verdicts return to pending for all 72 Clash abilities because the plain line is part of what a Clash verdict covers.
+
+
+## Latest owner handoff: detailed wording, saved reviews and main release
+
+The owner reviewed the private preview and explicitly requested main deployment so review notes can be kept on the stable main game artifact. No second merge approval is required after the requested checks pass. Keep the existing main artifact identity, local save keys, cloud save namespace and existing review collections. Never substitute a new preview link for the main game link.
+
+Changes since the previous preview:
+- All 144 abilities use shorter-clause details and shared vocabulary/glossary. Original gameplay contracts are unchanged. All 1,008 displayed rule sections retain their numeric tokens. Both ability reviewers now use the shared cards.
+- Beast Dex review counts, pending/revision notices, badges, one-time announcements and targeted navigation use the existing Developer review notification flow.
+- Dex reviews additionally mirror to beast_dex_reviews using the existing cloud-review API. Startup merges each component by updatedAt and uploads local-only notes. Existing local notes, per-component approvals and original fingerprints remain readable. Main and private previews still have separate host cloud stores.
+- Main deployment is authorized, but no automatic content/motion approvals are authorized.
+
+Validation on the source branch: 127 relevant review, Dex, cloud, central-text, language-isolation and style tests passed. Dedicated new tests cover all numeric values, turn timing, word boundaries, form-level notification totals, verdict independence, announcements and cloud merge. These are targeted checks, not the complete release suite. Claude must run the complete suite, strict content audit and export check on the actual release build, review the detailed wording for awkward grammar and semantic accuracy, then merge and publish the existing main link. Update the release label/manifest through the established process and verify the hosted build and review persistence.
