@@ -65,7 +65,12 @@ Reviewed from `685513c`. Defects found by testing and fixed, each with a regress
 4. **Stale dead money on a return.** Returning to a former club restored its old `deadCap`, `pendingDeadCap` and staff raises, so they would be charged again (and showed in the market preview). They now reset on return.
 5. **Raw season numbers on the job market.** Contract ends, draft picks and career club history showed `1`, `2` instead of `1201`, `1202`; a new stint showed `2–1`.
 
-Test updated to the approved rule (not weakened): `dex-2-integration` treated every non-chart monster as benched. With rotation, a reserve who takes snaps plays and earns its family's knowledge credit; the test now asserts that such reserves have real snaps and earn exactly one credit, and that monsters who never entered still earn none.
+6. **Ability Review clubs rotated and took injuries.** Every built team carries a rotation, including the reviewer's staged clubs, so fatigue rotation rested the staged subject or targets and the reserve pool still held abilities the scenarios strip (~17 reviewer/FX tests: element budgets, scenarios not executing, readiness). Staged review clubs now play their staged units (`rotation: null`).
+7. **AI coach philosophy needed season state.** `aiCoach` built a full inherited-staff record (contracts from `f.season.year`, a clone of a former club's saved state) to read one head coach; it crashed on franchises without a season. It now reads `GM.clubStaff`, a read-only staff lookup.
+
+Full-suite on `178b02f` found the last two (2,186/2,216; 30 failures). Comparing the 13 affected files on clean base `5bebfff`, `685513c` and the fix: base 7 failures, `685513c` 56, fix 7 — identical to base.
+
+Tests updated to the approved rule (not weakened): kickoff tests read stat lines through `statKey` (lines are keyed by the monster who played; after a whole game the kickoff count is summed over every line); AI coaches carry a `substitution` philosophy, asserted to be one of the three; the compaction test's lookup also searches the free-agent pools, where an AI club's released winner (Infernox, released to make room for a draftee) keeps his intact season book. `dex-2-integration` treated every non-chart monster as benched. With rotation, a reserve who takes snaps plays and earns its family's knowledge credit; the test now asserts that such reserves have real snaps and earn exactly one credit, and that monsters who never entered still earn none.
 
 Studies on the fixed tree:
 

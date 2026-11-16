@@ -160,7 +160,8 @@ test('a full game with live kickoffs finishes; kickoffs are credited; every kick
   } });
   assert.equal(g.finished, true); assert.ok(!g.guard, 'no runner guard');
   assert.ok(kicks >= 2 && live >= 1, `${live} live of ${kicks} kickoffs`);
-  const koByK = ['home', 'away'].reduce((n, side) => n + (line(g, side, 'K')?.kickoffs || 0), 0);
+  // after a whole game statKey holds each side's last unit only, so count every line (the K's is keyed by his id)
+  const koByK = ['home', 'away'].reduce((n, side) => n + Object.values(g.stats[side].players).reduce((m, p) => m + (p.kickoffs || 0), 0), 0);
   assert.equal(koByK, kicks, 'one kickoff credited per kick');
   for (const side of ['home', 'away']) assert.ok(Object.values(g.stats[side].players).some((p) => p.stSnaps > 0), `${side} special-teams snaps`);
 });
