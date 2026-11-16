@@ -1,3 +1,4 @@
+import { trace, tracing } from '../../testing/trace.js';
 // Task 8 M3: the in-play effects of element fields (spec §11). One instance per simulated play, built by the engine from
 // options.fields (already in the play-relative frame: x from the line of scrimmage toward the offense's goal, y lateral; see
 // fields.js toPlayFrame). Every tick the engine asks what each monster experiences where he stands (fields.js effectsAt: same-type
@@ -36,6 +37,7 @@ const hyp = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
  */
 export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 = { status: {} }, setStatus = () => {}, bounds: B, dt = 0.05, refreshMaxSpeed = null, applySharedStatus = null }) {
   if (!fields?.length) return null;
+  const recording = tracing(t8); const reported = recording ? new Map() : null;
   const rng = createRng(((Number(seed) >>> 0) ^ 0x1b873593) >>> 0 || 17); // the fields' own draws: other plays keep theirs
   const byId = new Map(fields.map((f) => [f.id, f]));
   const state = { t8 };
@@ -166,6 +168,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
       // One aggregation with the statuses (§11). st.fms is the entry this function last left in maxSpeedMods.field (0: none; tick is its
       // only writer and both start empty with the play), so an unchanged sum touches nothing, exactly as before.
       if (ms !== st.fms) { if (ms) (a.maxSpeedMods ||= {}).field = ms; else if (a.maxSpeedMods) delete a.maxSpeedMods.field; st.fms = ms; refreshMaxSpeed?.(a); }
+      if (recording && reported.get(a) !== m) { reported.set(a, m); trace(t8, 'field-speed', { target: a.mid, type: a.type, t, x: a.x, y: a.y, expected: ms, actual: a.maxSpeedMods?.field || 0, ...(refreshMaxSpeed && a.baseMaxSpeed != null ? { expectedMax: a.baseMaxSpeed * maxSpeedFactor(a.maxSpeedMods), actualMax: a.maxSpeed } : {}), base: m.e.base, hybrid: m.hybrid }); }
       layer(a, 'awareness', a.ignoreFieldAwareness ? 0 : m.dark); // M3 hook: a.ignoreFieldAwareness (set by a contract's tick) ignores only the Dark base field's Awareness term
       if (m.steam || st.attr.catching || st.attr.blocking) { layer(a, 'catching', m.steam ? STEAM.catching : 0); layer(a, 'blocking', m.steam ? STEAM.blocking : 0); }
       if (m.mind || st.echo) {

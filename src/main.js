@@ -1,3 +1,6 @@
+import { recorder } from './testing/recorder.js';
+import { installRecorder } from './testing/browser.js';
+import { registerTestSession, flagProblem } from './ui/screens/test-session.js';
 import { syncDexReviews, onDexReviews } from './dex/reviews.js';
 import { registerBeastDexReviewer } from './ui/screens/beast-dex-reviewer.js';
 import { music, musicForScreen, installAudioLifecycle } from './audio/music.js';
@@ -72,6 +75,7 @@ const app = {
   save({ immediate = false, archive = false } = {}) {
     if (!this.f) return Promise.resolve({ ok: false, error: { code: 'none', message: $t('franchises.no_franchise') } });
     const f = this.f;
+    recorder.observeFranchise(f);
     if (isArchived(f) && !archive) return Promise.resolve({ ok: false, error: { code: 'read-only', message: $t('franchises.this_franchise_is_a_read_only') } }); // GDD §42.4 step 7
     // A finished game or a new day is written at once; everything else is batched.
     const sig = `${f.season?.year}|${f.season?.week}|${f.season?.day}|${f.game ? (f.game.state?.finished ? 'done' : 'live') : 'none'}|${f.roster?.length}`;
@@ -81,7 +85,7 @@ const app = {
     else if (this.storage.mode === 'legacy') { const ok = Save.save(f); const json = ok ? JSON.stringify(f) : null; p = Promise.resolve(ok ? { ok: true, savedAt: f.savedAt, snapshot: { savedAt: f.savedAt, uid: f.uid ?? null, schemaVersion: f.schemaVersion, json: () => json } } : { ok: false, error: { code: 'legacy', message: $t('franchises.saving_to_this_device_failed_browser') } }); }
     else p = Promise.resolve({ ok: false, error: { code: 'starting', message: $t('franchises.storage_is_still_starting') } });
     // Invariant A: the cloud receives only what was committed locally: the committed snapshot, never the live object.
-    return p.then((r) => { saveOutcome(r); if (shouldMirror(r) && r.snapshot) cloudSave(r.snapshot, { immediate: important || archive, createdAt: f.createdAt, archive, meta: cloudMeta(f) }); return r; });
+    return p.then((r) => { recorder.observeSave(r); saveOutcome(r); if (shouldMirror(r) && r.snapshot) cloudSave(r.snapshot, { immediate: important || archive, createdAt: f.createdAt, archive, meta: cloudMeta(f) }); return r; });
   },
   /**
    * Start playing a new franchise `f` (onboarding, the prototype import). The same commit-first path as every other
@@ -214,6 +218,7 @@ function tabs(ctx, screenName) {
 
 export function start() {
   if (globalThis.__gbRefreshing) return; // src/fresh.js is refreshing an older release's cached files: nothing is read or saved first
+  installRecorder({ app, currentScreen: Router.currentScreen });
   globalThis.__gb = app; // test hook: the UI check reaches the franchise state through it
   // Task 8 M6 (spec §5): the player's discovery records are brought up to date before every franchise screen is drawn (so a screen
   // never shows an Apex it has not recorded), and a pending first-discovery panel opens once the screen is up, outside live play.
@@ -221,10 +226,12 @@ export function start() {
   app.findMonster = (id) => { const f = app.f; if (!f) return null; return f.roster.find((m) => m.id === id) || f.draft?.class?.find((m) => m.id === id) || f.week?.prospects?.map((p) => p.monster).find((m) => m?.id === id) || app.apexSeen?.get(id) || null; };
   app.playApex = (name = Router.currentScreen()?.name) => { if (!app.f || APEX_QUIET.has(name)) return false; return playPendingApex({ f: app.f, find: app.findMonster, settings: app.settings, save: () => app.save({ immediate: true }), onDone: () => Router.render() }); };
   Router.init({ root: $('#app'), context: () => { if (app.f) syncDiscovery(app.f); return { app, f: app.f, inFranchise: !!app.f, tabOf: TAB_OF }; }, tabs,
-    tip: (ctx, name) => (ctx.f ? tipHtml(ctx.f, name) : ''), mounted: (ctx, name) => { const track = musicForScreen(name); if (track !== undefined) void music.select(track).catch(() => {}); routeDetailAudio(name, ctx); if (ctx.f) { maybeSheetTip(ctx.f, name, () => app.save()); app.playApex(name); } }, help: (ctx, name) => (ctx.f ? helpButtonHtml(name) : '') });
+    tip: (ctx, name) => (ctx.f ? tipHtml(ctx.f, name) : ''), mounted: (ctx, name) => { recorder.setContext({ screen: name }); recorder.record('screen', { name }); const track = musicForScreen(name); if (track !== undefined) void music.select(track).catch(() => {}); routeDetailAudio(name, ctx); if (ctx.f) { maybeSheetTip(ctx.f, name, () => app.save()); app.playApex(name); } }, help: (ctx, name) => (ctx.f ? helpButtonHtml(name) : '') });
   initTutorial({ app, Router, openStats: () => openStatGuide() });
   installAudioLifecycle();
   registerMenuScreens(Router, app);
+  registerTestSession(Router, app);
+  document.addEventListener('click', (e) => { if (e.target.closest?.('[data-action="test-report-issue"]')) flagProblem(); });
   registerOnboardingScreens(Router, app);
   registerHqScreens(Router, app);
   registerFaScreens(Router, app); // Task 7: the year-round free-agent market
@@ -404,7 +411,7 @@ export const TAB_OF = {
   roster: 'roster', monster: 'roster', assign: 'roster', contracts: 'roster', famarket: 'roster', staff: 'more',
   playbook: 'playbook', playdetail: 'playbook', practice: 'playbook', audit: 'more',
   league: 'league', schedule: 'league', standings: 'league', history: 'league',
-  more: 'more', settings: 'more', developer: 'more', about: 'more', dex: 'more', hof: 'more', achievements: 'more',
+  more: 'more', settings: 'more', developer: 'more', 'test-session': 'more', about: 'more', dex: 'more', hof: 'more', achievements: 'more',
 };
 
 start();

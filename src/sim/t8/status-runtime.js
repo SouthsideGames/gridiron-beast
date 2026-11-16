@@ -1,3 +1,4 @@
+import { trace } from '../../testing/trace.js';
 // Task 8 M2 (WP5): the shared status slot in a football game (spec §10; R1 item 16; N7c B18). One slot per monster, kept in the
 // game state across plays. Producers are abilities (M3) and pancakes (within-play only, see engine.js); this module is the shared
 // gate and the clocks. Football clocks count completed plays the monster actually participates in; the application play does not
@@ -9,8 +10,8 @@ const book = (state) => (state.t8 ||= { status: {} }).status;
 export const statusOf = (state, mid) => book(state)[mid] || null;
 /** Apply through the shared gate (football). Returns { accepted, reason, slot }. */
 export function applyStatus(state, mid, attempt) {
-  if (state.t8?.ward?.[mid] && STATUS[attempt.id]?.kind === 'harmful') return { slot: statusOf(state, mid), accepted: false, reason: 'protected this play' }; // M3 hook: per-play ward (Dragon Call)
-  const r = tryApply(statusOf(state, mid), { ...attempt, mode: 'football' }); if (r.accepted) book(state)[mid] = r.slot; return r;
+  if (state.t8?.ward?.[mid] && STATUS[attempt.id]?.kind === 'harmful') { trace(state.t8, 'status', { target: mid, requested: attempt.id, ability: attempt.abilityId, accepted: false, reason: 'protected this play' }); return { slot: statusOf(state, mid), accepted: false, reason: 'protected this play' }; } // M3 hook: per-play ward (Dragon Call)
+  const r = tryApply(statusOf(state, mid), { ...attempt, mode: 'football' }); if (r.accepted) book(state)[mid] = r.slot; trace(state.t8, 'status', { target: mid, source: attempt.sourceId, ability: attempt.abilityId, requested: attempt.id, actual: statusOf(state, mid)?.id, accepted: r.accepted, reason: r.reason, duration: r.slot?.remaining }); return r;
 }
 /** Is this monster disabled for the whole coming play by a counted Stunned carried over (B18)? */
 export const sitsOutPlay = (state, mid) => disablesPlay(statusOf(state, mid));
