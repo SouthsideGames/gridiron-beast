@@ -1,3 +1,4 @@
+import { trace } from '../../testing/trace.js';
 // Task 8 M3: the football ability contract registry (M3_PLAN.md). Each Dex family with a football ability registers one module
 // (src/sim/abilities/<family>.js) that declares its handlers for the engine's named hook points, its game-scope state, and its
 // mastery execution boundary. The engine calls hooks by name and never names an ability; a family's legacy effect key is removed
@@ -86,6 +87,7 @@ export function abilityState(t8, monsterId, family, form, mastery = 0) { // t8: 
 
 /** Mastery execution events (credits are awarded by M5; M3 records them). One credit per valid execution; passive one per game. */
 export function recordExecution(t8, monsterId, family, { passive = false } = {}) {
+  trace(t8, 'ability-execution', { monsterId, family, ability: contractOf(family)?.abilityId, passive });
   const log = (t8.mastery ||= {});
   const rec = (log[monsterId] ||= { family, executions: 0, passiveCredited: false });
   if (passive) { if (rec.passiveCredited) return false; rec.passiveCredited = true; rec.executions += 1; return true; }

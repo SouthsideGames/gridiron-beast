@@ -151,6 +151,7 @@ export function registerMenuScreens(Router, app) {
           ${r.revision.length ? `<div class="chips" style="margin-top:6px">${r.revision.slice(0, 8).map((x) => `<button class="chip warn" data-action="reviewer" data-ns="${r.ns}" data-status="revision" data-id="${esc(x.id)}">✎ ${esc(x.name)}</button>`).join('')}${r.revision.length > 8 ? `<span class="dim">${t('menu.more', { n: r.revision.length - 8 })}</span>` : ''}</div>` : ''}</div>`).join('')}
         ${q.total ? '' : `<div class="panel tight dim">${t('menu.nothing_waiting_for_review')}</div>`}
         <div class="stack">
+        <button class="btn block" data-action="go" data-screen="test-session">Test Session · Problem Recorder</button>
         <button class="btn block badge-host" data-action="go" data-screen="audit">${t('menu.playbook_audit')}${devBadge(app.settings, q.plays.length)}</button>
         <button class="btn block" data-action="go" data-screen="practice">${t('menu.practice_field')}</button>
         <button class="btn block" data-action="go" data-screen="ai-lab">${t('menu.ai_testing_lab_qb_decisions')}</button>

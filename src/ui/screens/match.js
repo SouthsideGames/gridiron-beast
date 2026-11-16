@@ -1,3 +1,4 @@
+import { recorder } from '../../testing/recorder.js';
 import { eligiblePlays } from '../../sim/substitutions.js';
 import { substitutionStrip, openSubstitutions } from '../coaching-substitutions.js';
 import { zonePlans, zonePlannerHtml, zonePlannerOverlay } from '../zone-planner.js';
@@ -149,7 +150,7 @@ export function registerMatchScreens(Router, app) {
 
   Router.registerScreen('match', {
     title: ({ f }) => f?.game ? `${f.game.state.away.abbr} ${f.game.state.score.away}-${f.game.state.score.home} ${f.game.state.home.abbr}` : $t('match.match'), back: false, tabs: false, help: false, // the ⓘ button is this screen's help (it links to Coach Assist)
-    topRight: () => `<button class="btn ghost small" data-action="box" aria-label="${$t('match.box_score')}">📊</button><button class="btn ghost small" data-action="log" aria-label="${$t('match.play_log')}">📋</button><button class="btn ghost small" data-action="help" aria-label="${$t('match.how_a_match_works')}">ⓘ</button>`,
+    topRight: () => `${recorder.active() ? '<button class="btn ghost small" data-action="test-report-issue" aria-label="Report Last Play">⚑</button>' : ''}<button class="btn ghost small" data-action="box" aria-label="${$t('match.box_score')}">📊</button><button class="btn ghost small" data-action="log" aria-label="${$t('match.play_log')}">📋</button><button class="btn ghost small" data-action="help" aria-label="${$t('match.how_a_match_works')}">ⓘ</button>`,
     render({ f }) {
       const G = f.game; if (!G) return `<div class="panel"><p>${$t('match.no_game_in_progress')}</p><button class="btn block" data-action="hq">${$t('match.headquarters')}</button></div>`;
       const P = screenParts(f);
@@ -527,7 +528,7 @@ export function registerMatchScreens(Router, app) {
     const rpT = globalThis.__gbRenderPerf?.onStep ? performance.now() : 0; // render-perf harness only (inert otherwise): times the simulation step
     const shownPre = s.phase === 'scrimmage' ? presnapNow?.shown || null : null; // presentation only: the fields revealed on this play-call screen
     const servedNow = s.phase === 'scrimmage' ? absentMonsters(s, teams).filter((a) => a.serveOn === offenseSide) : []; // presentation only (I5): absences this snap serves
-    const ev = step(s, teams, controllers, G.tendencies, c);
+    const ev = recorder.runStep(s, teams, G.tendencies, c, () => step(s, teams, controllers, G.tendencies, c), { mode: 'human', playerSide: me, tempo: G.tempo || 'normal' });
     if (rpT) globalThis.__gbRenderPerf.onStep(rpT, performance.now() - rpT, ev);
     if (ev) { ev.offenseSide = offenseSide; ev.toGo = toGo; ev.down = down; if (shownPre?.length) ev.fxRevealed = shownPre; if (servedNow.length && ev.sim) { const vac = servedVacancies(servedNow, ev.sim, teams, R.opponent(offenseSide)); if (vac.length) ev.fxStaged = vac; } }
     afterStep(f, ev);
@@ -832,7 +833,7 @@ export function registerMatchScreens(Router, app) {
     };
     G.aiCall = null;
     while (n < 40) {
-      const ev = step(s, teams, controllers, G.tendencies, {});
+      const ev = recorder.runStep(s, teams, G.tendencies, {}, () => step(s, teams, controllers, G.tendencies, {}), 'ai');
       n++; if (ev) lines.push(ev.text);
       if (!ev) break;
       if (ev.scored || KEY_RESULTS.has(ev.sim?.result) || isKey()) break;
@@ -849,7 +850,7 @@ export function registerMatchScreens(Router, app) {
     const G = f.game; const s = G.state; if (s.finished) return;
     const teams = teamsFor(f); const me = G.playerSide, them = R.opponent(me);
     const controllers = { [me]: aiController(me), [them]: aiController(them) };
-    let n = 0; while (!s.finished && n++ < 600) { const ev = step(s, teams, controllers, G.tendencies, {}); if (!ev) break; }
+    let n = 0; while (!s.finished && n++ < 600) { const ev = recorder.runStep(s, teams, G.tendencies, {}, () => step(s, teams, controllers, G.tendencies, {}), 'ai'); if (!ev) break; }
     stopAnim(); clearTimeout(autoTimer); autoTimer = null; G.auto = false;
     G.lastEvent = { text: `${$t('match.simulated_to_the_final_whistle', { name: s[me].name, score: s.score[me], name2: s[them].name, score2: s.score[them] })}`, important: true };
     G.selected = { offense: null, defense: null }; G.aiCall = null;

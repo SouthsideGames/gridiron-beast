@@ -1,3 +1,4 @@
+import { trace } from '../../testing/trace.js';
 // Task 8 M3: fields in a football game (spec §11; FIELD_CLOCKS.md G1–G3). Kept in the game state's Task 8 block. Producers are the
 // zone abilities (src/sim/abilities/*); this module places, ages and clears fields, holds pending creations until their creator's
 // next eligible snap (G3), and answers which fields contain a point. Field effects by element live with their consumers.
@@ -19,7 +20,7 @@ export function createPending(t8, { onField, eligible = () => true, place, playI
     const r = placeRect({ id: `F${++b.seq}`, type: p.type, createdAt: playIndex, owner: p.owner, strength: p.strength ?? null, ...place(p) });
     // `payload`: the producing ability's approved per-field data the in-play effects read (src/sim/t8/field-effects.js)
     const f = { ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, ownerTeam: p.ownerTeam ?? null, payload: p.payload ?? null, remaining: p.lifetime, clock: p.clock, clearsAtHalftime: p.clearsAtHalftime !== false, createdThisPlay: true };
-    b.list.push(f); made.push(f);
+    b.list.push(f); made.push(f); trace(t8, 'field-created', { field: f });
   }
   b.pending = keep; return made;
 }
