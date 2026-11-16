@@ -44,6 +44,24 @@ function feathers(fs, o = 1, fill = MINT) { if (o <= 0 || !fs.length) return '';
     v += `M ${f2(base[0])} ${f2(base[1])} Q ${f2(x + nx * s * 0.45)} ${f2(y + ny * s * 0.45)} ${f2(tip[0])} ${f2(tip[1])} Q ${f2(x - nx * s * 0.35)} ${f2(y - ny * s * 0.35)} ${f2(base[0])} ${f2(base[1])} Z `; q += `M ${f2(base[0] - ux * s * 0.25)} ${f2(base[1] - uy * s * 0.25)} L ${f2(tip[0])} ${f2(tip[1])} `; }
   return `<path d="${v}" fill="${fill}" stroke="${TEAL}" stroke-width="0.9" opacity="${op(o)}"/><path d="${q}" fill="none" stroke="#5aa89a" stroke-width="0.8" opacity="${op(o)}"/>`; }
 
+
+// Owner revision 2026-11-15 (WIN-06-C Eye of the Storm, a legendary ability): a full storm. Tempestra gathers thunderheads; a hurricane
+// (layered dark spiral arms, a cloud canopy, slanting rain, forked lightning) engulfs the target, then condenses onto its ability icon,
+// where a small living storm keeps circling a glowing calm eye for as long as the restriction holds, with a raincloud over the target.
+const CLOUD_D = '#3a3050', CLOUD_M = '#5a4a78', CLOUD_L = '#8a7ab0', BOLT = '#fff6a8';
+/** A storm cloud (overlapping puffs, a darker belly, a lit top): three paths. */
+function stormCloud(x, y, w, o = 1, sid = 1) { if (o <= 0 || w <= 0) return ''; let d = '', top = ''; const n = 6; for (let i = 0; i < n; i++) { const f = i / (n - 1); const r = w * (0.16 + 0.1 * sin(f * PI)) * (0.85 + 0.3 * h(sid, i)); const cx = x - w * 0.45 + f * w * 0.9, cy = y - sin(f * PI) * w * 0.12;
+    d += `M ${f2(cx - r)} ${f2(cy)} a ${f2(r)} ${f2(r)} 0 1 0 ${f2(r * 2)} 0 a ${f2(r)} ${f2(r)} 0 1 0 ${f2(-r * 2)} 0 `; top += `M ${f2(cx - r * 0.6)} ${f2(cy - r * 0.45)} a ${f2(r * 0.6)} ${f2(r * 0.4)} 0 0 1 ${f2(r * 1.2)} 0 `; }
+  return `<path d="${d}" fill="${CLOUD_M}" opacity="${op(o * 0.95)}"/><ellipse cx="${f2(x)}" cy="${f2(y + w * 0.08)}" rx="${f2(w * 0.5)}" ry="${f2(w * 0.1)}" fill="${CLOUD_D}" opacity="${op(o * 0.9)}"/><path d="${top}" fill="none" stroke="${CLOUD_L}" stroke-width="${f2(Math.max(1, w * 0.03))}" stroke-linecap="round" opacity="${op(o * 0.8)}"/>`; }
+/** A forked lightning bolt from a to b (glow + core, one fork). */
+function stormBolt(a, b, seed, o = 1, w = 1.6) { if (o <= 0) return ''; const pts = [a]; const n = 6; for (let i = 1; i < n; i++) { const k = i / n; pts.push([lerp(a[0], b[0], k) + (h(seed, i) - 0.5) * Math.abs(b[1] - a[1]) * 0.3, lerp(a[1], b[1], k)]); } pts.push(b);
+  const j = pts[3]; const fk = [j, [j[0] + (h(seed, 9) - 0.5) * Math.abs(b[1] - a[1]) * 0.5, j[1] + Math.abs(b[1] - a[1]) * 0.25]]; const d = pathOf(pts) + ' ' + pathOf(fk);
+  return path(d, '#b48cff', w * 3.2, o * 0.45) + path(d, BOLT, w, o); }
+/** Slanting rain (one path) over a box. */
+function rain(x, y, w, hh, t, o = 1, n = 12, sid = 1) { if (o <= 0) return ''; let d = ''; for (let i = 0; i < n; i++) { const f = (h(sid, i) + t * 1.8) % 1; const rx = x - w / 2 + h(sid, i, 1) * w + f * hh * 0.25, ry = y + f * hh; d += `M ${f2(rx)} ${f2(ry)} l ${f2(-hh * 0.05)} ${f2(hh * 0.12)} `; } return `<path d="${d}" stroke="#bcd8ff" stroke-width="1.1" stroke-linecap="round" opacity="${op(o * 0.85)}"/>`; }
+/** A hurricane centred at (x, y), radius r: two counter-shaded layers of spiral arms around a glowing eye. */
+const hurricane = (x, y, r, t, o = 1) => (o <= 0 || r <= 0 ? '' : `<ellipse cx="${f2(x)}" cy="${f2(y)}" rx="${f2(r * 1.1)}" ry="${f2(r * 0.82)}" fill="${CLOUD_D}" opacity="${op(o * 0.4)}"/>` + vortex(x, y, r, t * 1.6, o, CLOUD_M, CLOUD_L, 5) + vortex(x, y, r * 0.72, t * 2.4 + 0.6, o * 0.9, '#7a6aa0', '#e6defa', 4) + `<circle cx="${f2(x)}" cy="${f2(y)}" r="${f2(r * 0.2)}" fill="#f2fffc" opacity="${op(o * 0.25)}"/><circle cx="${f2(x)}" cy="${f2(y)}" r="${f2(r * 0.11)}" fill="#f2fffc" opacity="${op(o * 0.9)}"/>`);
+
 export const WIND_DARK = {
   // WIN-01-C Feather Relay: a soft feather ring escorts the departing fighter to reserve; the green heal number shows on it; the incoming ally gets the normal entry visuals. No new badge.
   'WIN-01-C': { id: 'WIN-01-C', name: $t('fx.feather_relay'), element: 'Wind', dur: 1.2, lead: 0.3, na: ['persistence'], cue: () => $t('fx.feather_relay'),
@@ -100,13 +118,26 @@ export const WIND_DARK = {
       return `<path d="${d1}" fill="${TEAL}" opacity="${op(o * 0.4)}" transform="translate(1.5 2)"/><path d="${d1}" fill="${MINT}" opacity="${op(o * 0.9)}"/>${d2 ? `<path d="${d2}" stroke="${WHITE_W}" stroke-width="1.6" stroke-linecap="round" opacity="${op(o)}"/>` : ''}` + feathers(riders, o); },
     sub: { status: { dur: 0.6, impact: true, o: (c) => (c.tgt ? vortex(c.tgt.x, c.tgt.y - c.tgt.size - 1.5 * c.hu, 2.2 * c.hu * (1 + c.k * 0.5), c.t, 1 - c.k) : '') } } },
   // WIN-06-C Eye of the Storm: a clear eye inside a ring of dark wind around the target's ability icon for as long as the restriction holds; the icon shows the cross (inspect shows the restriction). No extra status badge.
-  'WIN-06-C': { id: 'WIN-06-C', name: $t('fx.eye_of_the_storm'), element: 'Wind', until: ['signature_restriction_end', 'ko', 'end'], untilMatch: (x, e) => x.kind === 'end' || (x.kind === 'ko' && x.target === e.target) || (x.kind === 'signature_restriction_end' && x.target === e.target), tail: 0.7, persist: true, lead: 0.3, move: true, cue: () => $t('fx.eye_of_the_storm_2'),
-    // A dark storm vortex (thunder-grey spiral arms, a flicker of lightning) whirls around the target's ability icon with a clear calm eye at its centre.
-    o: (c) => { const g = c.tgt; if (!g) return ''; const hu = Math.max(g.size / 16, 4.5); const [ix, iy] = iconAt(g, hu);
-      if (c.age < 0) { const kk = 1 + c.age / 0.3; return vortex(c.cx, c.cy - c.size * 0.5, c.size * 0.5 * kk, c.t, kk, STORM, '#9a8ac0'); }
-      const k = ease(clamp01(c.age / 0.5)); let s = ''; if (c.age < 0.6) { const p = along(chest(c), [ix, iy], ease(c.age / 0.6), 20); s += vortex(p[0], p[1], c.size * 0.28, c.t, 1, STORM, '#9a8ac0', 3); }
-      const R = 4.6 * hu * k; s += `<circle cx="${f2(ix)}" cy="${f2(iy)}" r="${f2(R * 1.05)}" fill="${STORM_D}" opacity="${op(0.35 * c.fade)}"/>` + vortex(ix, iy, R, c.t * 1.4, 0.95 * c.fade, STORM, '#b8a8e0', 5) + `<circle cx="${f2(ix)}" cy="${f2(iy)}" r="${f2(1.35 * hu * k)}" fill="none" stroke="#f2fffc" stroke-width="1.4" opacity="${op(0.9 * c.fade)}"/>`;
-      if (Math.floor(c.t * 3) % 3 === 0) { const a0 = h(c.sid, Math.floor(c.t * 3)) * 2 * PI; s += path(pathOf([[ix + cos(a0) * R * 1.1, iy + sin(a0) * R * 0.85], [ix + cos(a0 + 0.2) * R * 0.75, iy + sin(a0 + 0.2) * R * 0.55], [ix + cos(a0 - 0.1) * R * 0.55, iy + sin(a0 - 0.1) * R * 0.4]]), '#fff6a8', 1.4, 0.9 * c.fade); }
+  'WIN-06-C': { id: 'WIN-06-C', name: $t('fx.eye_of_the_storm'), element: 'Wind', until: ['signature_restriction_end', 'ko', 'end'], untilMatch: (x, e) => x.kind === 'end' || (x.kind === 'ko' && x.target === e.target) || (x.kind === 'signature_restriction_end' && x.target === e.target), tail: 0.9, persist: true, lead: 0.6, move: true, shake: true, cue: () => $t('fx.eye_of_the_storm_2'),
+    // Legendary (owner revision 2026-11-15): Tempestra raises thunderheads; a hurricane with rain and forked lightning engulfs the target,
+    // then condenses onto its ability icon as a small living storm around a calm glowing eye, with a raincloud over the target, for as long
+    // as the restriction holds; at the end the storm unwinds and the eye flashes clear.
+    o: (c) => { const g = c.tgt; if (!g) return ''; const hu = Math.max(g.size / 16, 4.5); const [ix, iy] = iconAt(g, hu); const sid = c.sid;
+      if (c.age < 0) { const kk = 1 + c.age / 0.6; let s = stormCloud(c.cx, c.top - c.size * 0.35, c.size * 1.2 * (0.6 + 0.4 * kk), kk, sid) + vortex(c.cx, c.cy - c.size * 0.45, c.size * 0.6 * kk, c.t * 1.5, kk, CLOUD_M, CLOUD_L, 4);
+        if (kk > 0.5 && Math.floor(c.t * 8) % 3 === 0) s += stormBolt([c.cx - c.size * 0.2, c.top - c.size * 0.3], [c.cx + c.size * 0.1, c.cy - c.size * 0.2], sid + Math.floor(c.t * 8), kk); return s; }
+      const ch = [g.x, g.y - g.size * 0.55]; let s = '';
+      if (c.age < 1.3 && !c.stopped) { const grow = ease(clamp01(c.age / 0.4)); const cond = ease(clamp01((c.age - 0.9) / 0.4)); const R = g.size * 1.15 * grow * (1 - cond * 0.75); const p = along(ch, [ix, iy], cond, 20);
+        s += hurricane(p[0], p[1], R, c.t, 1 - cond * 0.3);
+        if (cond < 0.5) { const o2 = 1 - cond * 2; const ct = Math.max(6, g.y - g.size * 1.9); s += stormCloud(g.x, ct, g.size * 2.2 * grow, o2, sid) + rain(g.x, ct + g.size * 0.15, g.size * 2, g.size * 1.6, c.t, o2, c.n(14), sid);
+          if (Math.floor(c.t * 10) % 2 === 0) s += stormBolt([g.x + (h(sid, Math.floor(c.t * 10)) - 0.5) * g.size, ct + g.size * 0.1], [g.x + (h(sid, Math.floor(c.t * 10), 2) - 0.5) * g.size * 0.4, g.y - g.size * 0.3], sid + Math.floor(c.t * 10), o2, 2) + flash(ch, g.size * 0.35, '#e6defa', o2 * 0.35); }
+        if (c.age < 0.15) s += flash(ch, g.size * 0.8 * (1 - c.age / 0.15), '#ffffff', (1 - c.age / 0.15) * 0.6);
+        return s; }
+      const o = c.fade; const un = c.stopped ? c.stopK : 0; const R = 4.6 * hu * (1 + un * 0.8);
+      const cy0 = g.y - g.size - 3.2 * hu; s += stormCloud(g.x, cy0, g.size * 0.9, o * 0.85 * (1 - un), sid) + rain(g.x, cy0 + g.size * 0.08, g.size * 0.8, g.size * 0.35, c.t, o * 0.7 * (1 - un), c.n(7), sid + 5);
+      s += hurricane(ix, iy, R, c.t, o * (1 - un * 0.7));
+      const pulse = 0.6 + 0.4 * sin(c.t * 4); s += `<circle cx="${f2(ix)}" cy="${f2(iy)}" r="${f2(1.6 * hu)}" fill="none" stroke="#f2fffc" stroke-width="1.6" opacity="${op(0.9 * o * pulse)}"/><circle cx="${f2(ix)}" cy="${f2(iy)}" r="${f2(2.1 * hu)}" fill="none" stroke="#e6defa" stroke-width="1" opacity="${op(0.5 * o * pulse)}"/>`;
+      if (!c.stopped && Math.floor(c.t * 2.5) % 4 === 0) { const a0 = h(sid, Math.floor(c.t * 2.5)) * 2 * PI; s += stormBolt([ix + cos(a0) * R * 1.05, iy + sin(a0) * R * 0.8], [ix + cos(a0 + 0.4) * R * 0.45, iy + sin(a0 + 0.4) * R * 0.35], sid + Math.floor(c.t * 2.5), 0.9 * o, 1.2); }
+      if (un > 0) s += flash([ix, iy], 2.4 * hu * (1 - un), '#ffffff', (1 - un) * 0.8);
       return s; },
     sub: { signature_restricted: { match: (e) => e.actor === e.target || !e.target, owner: 'actor', dur: 0.8, impact: true, o: (c) => label(c.cx, c.top - 2.6 * c.hu, 1.1 * c.hu, '#f2fffc', 'ordinary attack only', 1 - c.k * c.k) } } },
 

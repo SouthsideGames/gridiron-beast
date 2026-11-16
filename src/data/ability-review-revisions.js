@@ -90,5 +90,5 @@ export const CLASH_REVISION = Object.freeze({
   'WIN-03-C': 1,
   'WIN-04-C': 1,
   'WIN-05-C': 1,
-  'WIN-06-C': 1,
+  'WIN-06-C': 2, // legendary storm redraw (owner 2026-11-15, second Wind pass)
 });
