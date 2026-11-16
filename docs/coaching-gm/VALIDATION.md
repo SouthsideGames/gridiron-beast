@@ -1,7 +1,8 @@
 # Candidate validation
 
-Source commit: `260932b` on `codex/coaching-gm-careers`.
+Source commit: `088584eaeee730a27e5b02d2daec9b7bfd42e516` on `codex/coaching-gm-careers`.
 Base: `5bebfff`.
+The uploaded candidate tree was verified byte-for-byte against the locally tested tree (`f6449d98d5bcffee2c3d313f809b5582d75c5486`). Subsequent validation-reference changes affect documentation only.
 Build: `v43.17.0-coaching-gm-preview`.
 
 ## Automated checks
