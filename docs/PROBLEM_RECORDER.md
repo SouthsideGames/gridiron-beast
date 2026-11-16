@@ -5,9 +5,9 @@ The recorder is an opt-in local testing tool for franchise play. It ships in the
 ## Using it
 
 1. Open **Developer Tools → Test Session · Problem Recorder**.
-2. Tap **Start new test session**, then continue your franchise normally.
+2. Tap **Start New Test Session**, then continue your franchise normally.
 3. During a match, tap **⚑** in the top bar to report the last play. Add an optional note about what you expected and what happened. The report stays linked to the play that was current when you opened the sheet, even if auto-play advances.
-4. Return to Test Session and tap **Export problem report (.json)**. Attach that JSON file for investigation. Optionally include your current full franchise save if the issue concerns progression or a larger franchise state.
+4. Return to Test Session and tap **Export Problem Report (.json)**. Attach that JSON file for investigation. Optionally include your current full franchise save if the issue concerns progression or a larger franchise state.
 5. Stop recording when finished. A stopped report can still be exported. Starting a new session replaces the previous report after confirmation; deleting it does not delete the franchise.
 
 Nothing is uploaded automatically. Reports contain device details, game identifiers, recent simulation state, lineups, events, and notes. Typed form fields and credentials are not collected by the action listener. The complete franchise save is included only when its export checkbox is selected. Recent simulation inputs already include the players and game state needed for that play.

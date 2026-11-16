@@ -150,7 +150,7 @@ export function registerMatchScreens(Router, app) {
 
   Router.registerScreen('match', {
     title: ({ f }) => f?.game ? `${f.game.state.away.abbr} ${f.game.state.score.away}-${f.game.state.score.home} ${f.game.state.home.abbr}` : $t('match.match'), back: false, tabs: false, help: false, // the ⓘ button is this screen's help (it links to Coach Assist)
-    topRight: () => `${recorder.active() ? '<button class="btn ghost small" data-action="test-report-issue" aria-label="Report last play">⚑</button>' : ''}<button class="btn ghost small" data-action="box" aria-label="${$t('match.box_score')}">📊</button><button class="btn ghost small" data-action="log" aria-label="${$t('match.play_log')}">📋</button><button class="btn ghost small" data-action="help" aria-label="${$t('match.how_a_match_works')}">ⓘ</button>`,
+    topRight: () => `${recorder.active() ? '<button class="btn ghost small" data-action="test-report-issue" aria-label="Report Last Play">⚑</button>' : ''}<button class="btn ghost small" data-action="box" aria-label="${$t('match.box_score')}">📊</button><button class="btn ghost small" data-action="log" aria-label="${$t('match.play_log')}">📋</button><button class="btn ghost small" data-action="help" aria-label="${$t('match.how_a_match_works')}">ⓘ</button>`,
     render({ f }) {
       const G = f.game; if (!G) return `<div class="panel"><p>${$t('match.no_game_in_progress')}</p><button class="btn block" data-action="hq">${$t('match.headquarters')}</button></div>`;
       const P = screenParts(f);
