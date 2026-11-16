@@ -86,13 +86,13 @@ export function nextMode(cur, raw, year, { gym = false } = {}) {
   return { mode, modeSince: cur.modeSince ?? year, modePending: { mode: target, n }, changed: false };
 }
 /** Every AI club's evaluation as the offseason opens. Returns [{ club, mode, from, why }] for the clubs whose mode changed. */
-export function evaluateStrategies(f, { year, cap, teamOf }) {
+export function evaluateStrategies(f, { year, cap, teamOf, only = null }) {
   if (!hasLeague(f)) return []; const clubs = leagueClubs(f).slice().sort();
   const ovr = Object.fromEntries(clubs.map((c) => [c, teamOverall(teamOf(c))])); const aiMean = clubs.reduce((s, c) => s + ovr[c], 0) / (clubs.length || 1);
   const changes = []; const inputs = Object.fromEntries(clubs.map((c) => [c, strategyInputs(f, c, { year, cap, teamOf, aiMean })]));
   const ageingBar = STRATEGY.ageingShare;
   const median = (() => { const sh = clubs.map((c) => inputs[c].ageingShare).sort((a, b) => a - b); return sh[Math.floor(sh.length / 2)] ?? 0; })();
-  for (const club of clubs) {
+  for (const club of only || clubs) { // `only`: evaluate these clubs against the whole league (a club the GM just left)
     const st = clubRecord(f, club).strategy; const x = inputs[club]; const raw = rawMode(x, { ageingBar: st.mode === 'rebuild' ? Math.max(ageingBar, median) : ageingBar }); // F1 (owner-approved 2026-11-03): a club already rebuilding stays "old" only while its ageing share is at or above the league median
     const before = st.mode || null; const n = nextMode(st, raw.mode, year, { gym: isGymClub(club) });
     st.mode = n.mode; st.modeSince = n.modeSince; st.modePending = n.modePending; st.modeLastWin = Math.round(x.win * 1000) / 1000; Object.assign(st, lineField('modeWhy', fieldLine(raw, 'why'))); if (!raw.whyL) delete st.modeWhyL;

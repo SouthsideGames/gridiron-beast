@@ -108,3 +108,9 @@ test('names stay in English in every language: stadium and reporter names cannot
   try { setLanguage('fr', { [some]: 'Traduit', 'menu.week': 'Semaine {week}', 'not.a_key': 'x' }); assert.equal(t(some), en[some], 'the name is kept'); assert.equal(t('menu.week', { week: 2 }), 'Semaine 2'); assert.equal(t('not.a_key'), 'not.a_key'); }
   finally { setLanguage('en'); }
 });
+
+test('a saved line whose key was retired with its ability (Mirror Step, the old Night Watch and Iron Lungs lines) still shows its stored wording', async () => {
+  const { lineText, lineEnglish } = await import('../src/text/index.js');
+  const saved = { text: 'Mirrix mirrors Dash\'s cut', tk: 'sim.mirrors_s_cut', tv: { name: 'Mirrix', name2: 'Dash' } };
+  assert.equal(lineText(saved), saved.text); assert.equal(lineEnglish(saved), saved.text);
+});

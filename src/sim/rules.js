@@ -1,3 +1,4 @@
+import { selectUnit, setStatInputs, statKey, contactInjuries, specialTeamView } from './substitutions.js';
 import { canPlaceZone, zoneOptions, selectedZoneOption, zoneKey } from './t8/zone-planning.js';
 // Game state machine: downs, distance, scoring, clock, quarters, special
 // teams phases and overtime (GDD §3). Pure functions on a plain state object
@@ -289,15 +290,15 @@ function preSnapHooks(state, t8, slots, offensePlay, defensePlay) {
  * exactly as at the snap (the same order, the same per-monster seeded stream: seed, play index, monster; never the game's dice), but
  * on a structured copy of the Task 8 block, so the game is still only read. Such an entry carries `inSnap: true` and `callDependent`:
  * true when its producer read an alignment of either chosen play (its place then follows the calls and is not fixed before them:
- * Static Field, Charge Strip, Bramble Trap); false when the calls decide only whether its creator is on the field (Runway, Crosswind
- * Rescue, Bloom Break: the rectangle is the same for every call he takes part in).
+ * Static Field, Charge Strip, Bramble Trap); false when no alignment was read (Runway, Crosswind Rescue, Bloom Break). Every zone is then
+ * placed at its coach's lane (zone-planning.js, owner revision 2026-11-15), read from its own club's play only, never the opponent's.
  */
 export function previewPendingFields(state, teams, offensePlayId, defensePlayId, { inSnap = false } = {}) {
   let t8 = state?.t8; if (!t8 || state.phase !== 'scrimmage' || state.finished) return [];
   if (!inSnap && (!t8.fields?.pending?.length || !Array.isArray(t8.fields.list))) return [];
   const offense = teams[state.possession], defense = teams[opponent(state.possession)];
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
-  const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
+  const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay, state, state.possession), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay, state, opponent(state.possession)) };
   const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean)), defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean));
   const born = new Map(); // a field queued by this dry run -> whether its producer read a chosen play's alignment
   if (inSnap && [...Object.values(slots.offense), ...Object.values(slots.defense)].some((x) => { const c = x?.id && x.species ? contractOf(x.species) : null; return !!(c?.preSnap || c?.hooks?.preSnap); })) {
@@ -384,7 +385,7 @@ export function preparePreChoice(state, teams, looks = {}, opts = {}) {
   const defId = looks.defense || predominantDefenseLook(def.defensePlays);
   const look = (id) => { const p = getPlay(id), f = (p.side === 'defense' ? DEFENSE_FORMATIONS : OFFENSE_FORMATIONS)[p.formation]; return { ...p, align: Object.fromEntries(p.onField.map((slot) => [slot, f?.align?.[slot] || p.align[slot]])) }; };
   const op = look(offId), dp = look(defId);
-  const os = pickSlots(off.offense, op.onField, off, op), ds = pickSlots(def.defense, dp.onField, def, dp);
+  const os = pickSlots(off.offense, op.onField, off, op, state, state.possession), ds = pickSlots(def.defense, dp.onField, def, dp, state, opponent(state.possession));
   const record = t8.preChoice = { key, play: state.playCount || 0, offense: offId, defense: defId, foresight: [], prism: [] };
   for (const [slot, m] of Object.entries(os)) {
     if (m?.species !== 'cerebrix') continue;
@@ -414,6 +415,11 @@ export function preparePreChoice(state, teams, looks = {}, opts = {}) {
   }
   return record;
 }
+export function lineupForfeit(state, side) {
+  state.finished=true; state.phase='final'; state.winner=opponent(side);
+  state.forfeit={side,reason:'no-legal-lineup'}; state.score[side]=0; state.score[opponent(side)]=21;
+  const text=$E('rotation.forfeit'); log(state,text,'info'); state.lastPlay={text,finished:true}; return state.lastPlay;
+}
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
   preparePreChoice(state, teams);
@@ -424,7 +430,12 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
   const call = { side: state.possession, off: offensePlayId, def: defensePlayId };
   (state.calls ||= []).push(call);
-  const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
+  const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay, state, state.possession), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay, state, opponent(state.possession)) };
+  if (offense.rotation || defense.rotation) {
+    setStatInputs(state, state.possession, slots.offense); setStatInputs(state, opponent(state.possession), slots.defense);
+    const missing = ['offense','defense'].find(k => Object.values(slots[k]).some(p => !p?.id));
+    if (missing) return {sim:null,outcome:lineupForfeit(state,missing === 'offense' ? state.possession : opponent(state.possession))};
+  }
   const P = state.partners; const pre = P ? { down: state.down, toGo: state.toGo, quarter: state.quarter, score: { ...state.score } } : null;
   const t8 = (state.t8 ||= { status: {} }); const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean));
   const defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean));
@@ -461,7 +472,9 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   rememberAbilities(state, sim);
   call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;
   save();
+  const offenseSide = state.possession; // before the result can change possession
   const outcome = applyScrimmageResult(state, sim, offensePlayId, defensePlayId);
+  if (offense.rotation || defense.rotation) contactInjuries(state, slots, sim, { offenseSide });
   return { sim, outcome };
 }
 /** The kickoff snapshot of each side's active partnerships ({ offense, defense } of { type, a, b, level, cap }), or null. */
@@ -494,7 +507,7 @@ export function creditPartnerships(state, slots, sim, pre) {
  * bench monster first, then a lineup monster who sits out in this package.
  * Nobody is ever on the field twice; nobody plays as an empty shell.
  */
-export function pickSlots(lineup, slots, team = null, play = null) {
+export function pickSlots(lineup, slots, team = null, play = null, state = null, side = null) {
   const out = {}; const onField = new Set();
   for (const s of slots) { const p = lineup[s]; if (p?.id && !onField.has(p.id)) { out[s] = p; onField.add(p.id); } }
   for (const s of slots) {
@@ -513,6 +526,7 @@ export function pickSlots(lineup, slots, team = null, play = null) {
     if (on) { const prev = out[L.slot]; out[L.slot] = on[1]; out[on[0]] = prev; }
     else { const pool = [...Object.values(lineup || {}), ...(team?.bench || [])]; const c = pool.find((p) => p?.species === L.species && p.id); if (c) out[L.slot] = c; }
   }
+  if (state && team?.rotation) { const unit = selectUnit(state, team, side, slots, out, { pinned: L && out[L.slot]?.species === L.species ? [L.slot] : [] }); setStatInputs(state, side, unit); return unit; }
   return out;
 }
 
@@ -600,8 +614,8 @@ function playerName(sim, team, slot) { return slot ? (sim.names?.[team]?.[slot] 
  * a back who throws gets passing stats, a quarterback who scrambles gets a carry.
  */
 export function recordPlayerStats(state, sim, off, def, { toGo = 10 } = {}) {
-  const bump = (team, slot, key, n = 1) => { if (!slot || !n) return; const p = (state.stats[team].players[slot] ||= {}); p[key] = (p[key] || 0) + n; };
-  const maxOf = (team, slot, key, v) => { if (!slot) return; const p = (state.stats[team].players[slot] ||= {}); if ((p[key] || 0) < v) p[key] = v; };
+  const bump = (team, slot, key, n = 1) => { if (!slot || !n) return; const p = (state.stats[team].players[statKey(state, team, slot)] ||= {}); p[key] = (p[key] || 0) + n; };
+  const maxOf = (team, slot, key, v) => { if (!slot) return; const p = (state.stats[team].players[statKey(state, team, slot)] ||= {}); if ((p[key] || 0) < v) p[key] = v; };
   const st = sim.stats || {}; const res = sim.result; const gain = sim.yards;
   const isTurnover = ['interception', 'fumble', 'touchback_return'].includes(res);
   const offTd = res === 'touchdown' && !st.defensiveScore;
@@ -668,8 +682,8 @@ export function recordPlayerStats(state, sim, off, def, { toGo = 10 } = {}) {
       bump(team, e.by, 'abilityPlays'); bump(team, e.by, 'abilityImpact', Math.round(impact)); } }
 }
 
-function kickerPerformance(state, side, category, entries) { const p = (state.stats[side].players.K ||= {}); p.performance = mergePerformance(p.performance, { [category]: entries }); }
-function kickerStat(state, side, key, n = 1) { const p = (state.stats[side].players.K ||= {}); p[key] = (p[key] || 0) + n; }
+function kickerPerformance(state, side, category, entries) { const p = (state.stats[side].players[statKey(state,side,'K')] ||= {}); p.performance = mergePerformance(p.performance, { [category]: entries }); }
+function kickerStat(state, side, key, n = 1) { const p = (state.stats[side].players[statKey(state,side,'K')] ||= {}); p[key] = (p[key] || 0) + n; }
 function nextDown(state, gain, lines) {
   state.ballOn = clamp(state.ballOn + gain, 1, 99);
   state.ballLat = 0;
@@ -725,12 +739,14 @@ export function attemptTwoPoint(state, teams, offensePlayId, defensePlayId) {
   const { r, save } = rng(state);
   const offense = teams[state.tryTeam], defense = teams[opponent(state.tryTeam)];
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
-  const sim = simulatePlay({ offensePlay, defensePlay, offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay), ballOn: 100 - FIELD.twoPointSpot, seed: r.seed(), options: { memory: abilityMemory(state, { drive: `try@${state.playCount || 0}` }), envType: state.venue?.type || null, twoPoint: true, t8: (state.t8 ||= { status: {} }) } });
+  const os=pickSlots(offense.offense,offensePlay.onField,offense,offensePlay,state,state.tryTeam), ds=pickSlots(defense.defense,defensePlay.onField,defense,defensePlay,state,opponent(state.tryTeam));
+  if ((offense.rotation && Object.values(os).some(p=>!p?.id)) || (defense.rotation && Object.values(ds).some(p=>!p?.id))) return {...lineupForfeit(state,Object.values(os).some(p=>!p?.id)?state.tryTeam:opponent(state.tryTeam)),sim:null};
+  const sim = simulatePlay({ offensePlay, defensePlay, offense: os, defense: ds, ballOn: 100 - FIELD.twoPointSpot, seed: r.seed(), options: { memory: abilityMemory(state, { drive: `try@${state.playCount || 0}` }), envType: state.venue?.type || null, twoPoint: true, t8: (state.t8 ||= { status: {} }) } });
   rememberAbilities(state, sim);
   save();
   const good = sim.touchdown && !sim.stats.defensiveScore;
   if (good) state.score[state.tryTeam] += 2;
-  { const bumpTwo = (slot) => { if (!slot) return; const p = (state.stats[state.tryTeam].players[slot] ||= {}); p.twoPtAtt = (p.twoPtAtt || 0) + 1; if (good) p.twoPt = (p.twoPt || 0) + 1; }; bumpTwo(sim.stats.passer); if (sim.stats.carrier && sim.stats.carrier !== sim.stats.passer) bumpTwo(sim.stats.carrier); }
+  { const bumpTwo = (slot) => { if (!slot) return; const p = (state.stats[state.tryTeam].players[statKey(state, state.tryTeam, slot)] ||= {}); p.twoPtAtt = (p.twoPtAtt || 0) + 1; if (good) p.twoPt = (p.twoPt || 0) + 1; }; bumpTwo(sim.stats.passer); if (sim.stats.carrier && sim.stats.carrier !== sim.stats.passer) bumpTwo(sim.stats.carrier); }
   const text = good ? $E('sim.two_point_conversion_is_good') : sim.stats.defensiveScore ? $E('sim.conversion_returned_the_other_way_two') : $E('sim.two_point_conversion_fails');
   if (sim.stats.defensiveScore) state.score[opponent(state.tryTeam)] += 2;
   finishTry(state, text);
@@ -807,7 +823,11 @@ export function doKickoff(state, teams, { onside = false } = {}) {
   } else if (onside) res = ST.kickoff(r, { kicker: teams[kicking].kicker, returner: teams[receiving].returner, onside });
   else {
     // Live kickoff (N7b P7): the flight and the touchback come from the approved kicking formula; the return is played in the engine.
-    units = kickoffUnits(teams[kicking], teams[receiving]);
+    units = kickoffUnits(specialTeamView(state,teams[kicking],kicking), specialTeamView(state,teams[receiving],receiving));
+    if (teams[kicking].rotation) units.coverage = selectUnit(state, teams[kicking], kicking, Object.keys(units.coverage), units.coverage);
+    if (teams[receiving].rotation) units.ret = selectUnit(state, teams[receiving], receiving, Object.keys(units.ret), units.ret);
+    if (teams[kicking].rotation || teams[receiving].rotation) { setStatInputs(state,kicking,units.coverage); setStatInputs(state,receiving,units.ret); }
+    if ((teams[kicking].rotation && (Object.keys(units.coverage).length < KICKOFF_UNIT || Object.values(units.coverage).some(p=>!p?.id))) || (teams[receiving].rotation && (Object.keys(units.ret).length < KICKOFF_UNIT || Object.values(units.ret).some(p=>!p?.id)))) { const loser=Object.keys(units.coverage).length < KICKOFF_UNIT || Object.values(units.coverage).some(p=>!p?.id)?kicking:receiving; const outcome=lineupForfeit(state,loser); return {text:outcome.text,res:{forfeit:true}}; }
     const target = Math.max(-9, 13 - 18 * Math.max(1, Math.min(99, teams[kicking].kicker?.attrs?.kicking ?? 60)) / 99);
     const flight = ST.kickoffFlight(r, { kicker: teams[kicking].kicker });
     kickerPerformance(state, kicking, 'kickoffs', [{ error: target <= 0 && flight.touchback ? 0 : Math.abs(flight.landingFromGoal - target), target }]);
@@ -863,7 +883,7 @@ function kickoffOutcome(sim, catchAt, team, who) {
  * tackles), fumbles, and the engine's juke, broken-tackle, shed and pancake events.
  */
 export function recordKickoffStats(state, kicking, receiving, units, sim, res) {
-  const bump = (team, slot, key, n = 1) => { if (!slot || !n) return; const p = (state.stats[team].players[slot] ||= {}); p[key] = (p[key] || 0) + n; };
+  const bump = (team, slot, key, n = 1) => { if (!slot || !n) return; const p = (state.stats[team].players[statKey(state, team, slot)] ||= {}); p[key] = (p[key] || 0) + n; };
   for (const slot of Object.keys(units.coverage)) bump(kicking, slot, 'stSnaps');
   for (const slot of Object.keys(units.ret)) bump(receiving, slot, 'stSnaps');
   kickerStat(state, kicking, 'kickoffs');
@@ -871,7 +891,7 @@ export function recordKickoffStats(state, kicking, receiving, units, sim, res) {
   if (!sim) return;
   const st = sim.stats || {}; const rs = units.returnerSlot;
   bump(receiving, rs, 'krAtt'); bump(receiving, rs, 'krYds', res.returnYards || 0);
-  { const p = (state.stats[receiving].players[rs] ||= {}); if ((p.krLong ?? -Infinity) < (res.returnYards || 0)) p.krLong = res.returnYards || 0; }
+  { const p = (state.stats[receiving].players[statKey(state, receiving, rs)] ||= {}); if ((p.krLong ?? -Infinity) < (res.returnYards || 0)) p.krLong = res.returnYards || 0; }
   if (res.touchdown) { bump(receiving, rs, 'krTd'); bump(receiving, rs, 'td'); }
   if (st.tackler && !res.touchdown) { bump(kicking, st.tackler, 'stTackles'); if (st.assistBy && st.assistBy !== st.tackler) bump(kicking, st.assistBy, 'stAssists'); }
   if (st.fumbledBy) { bump(receiving, st.fumbledBy, 'fum'); if (st.recoveredTeam === 'def') bump(receiving, st.fumbledBy, 'fumLost'); }
@@ -897,9 +917,11 @@ export function formulaUnits(kickTeam, otherTeam, kind) {
  * countdown, rewards through participation) without fabricated performance events.
  */
 function creditFormulaUnits(state, teams, kicking, kind) {
-  const other = opponent(kicking); const u = formulaUnits(teams[kicking], teams[other], kind);
-  const bump = (team, slot) => { const p = (state.stats[team].players[slot] ||= {}); p.stSnaps = (p.stSnaps || 0) + 1; };
-  for (const slot of Object.keys(u.kicking)) bump(kicking, slot); for (const slot of Object.keys(u.other)) bump(other, slot);
+  const other = opponent(kicking); const u = formulaUnits(specialTeamView(state,teams[kicking],kicking), specialTeamView(state,teams[other],other), kind);
+  if (teams[kicking].rotation) { u.kicking = selectUnit(state,teams[kicking],kicking,Object.keys(u.kicking),u.kicking); setStatInputs(state,kicking,u.kicking); }
+  if (teams[other].rotation) { u.other = selectUnit(state,teams[other],other,Object.keys(u.other),u.other); setStatInputs(state,other,u.other); }
+  const bump = (team, slot) => { const p = (state.stats[team].players[statKey(state, team, slot)] ||= {}); p.stSnaps = (p.stSnaps || 0) + 1; };
+  for (const [slot,p] of Object.entries(u.kicking)) if(p?.id || !teams[kicking].rotation) bump(kicking, slot); for (const [slot,p] of Object.entries(u.other)) if(p?.id || !teams[other].rotation) bump(other, slot);
   T8K.afterPlay(state, [...Object.values(u.kicking), ...Object.values(u.other)]); // B5: participation drains stamina (before the status clocks)
   T8S.afterPlay(state, [...Object.values(u.kicking), ...Object.values(u.other)].map((x) => x?.id).filter(Boolean));
 }
@@ -959,7 +981,7 @@ export function doFieldGoal(state, teams, { signature = false } = {}) {
   creditFormulaUnits(state, teams, kicking, 'fg'); // B5
   { const bin = res.distance < 30 ? 'fg0' : res.distance < 40 ? 'fg30' : res.distance < 50 ? 'fg40' : 'fg50';
     for (let i = 0; i < (res.checks?.length || 1); i++) { // M3 hook: a Second Chance play records both checks as attempts
-      kickerStat(state, kicking, 'fga'); kickerStat(state, kicking, bin + 'a'); } if (res.good) { kickerStat(state, kicking, 'fgm'); kickerStat(state, kicking, bin + 'm'); const p = state.stats[kicking].players.K; if ((p.fgLong || 0) < res.distance) p.fgLong = res.distance; } }
+      kickerStat(state, kicking, 'fga'); kickerStat(state, kicking, bin + 'a'); } if (res.good) { kickerStat(state, kicking, 'fgm'); kickerStat(state, kicking, bin + 'm'); const p = state.stats[kicking].players[statKey(state,kicking,'K')]; if ((p.fgLong || 0) < res.distance) p.fgLong = res.distance; } }
   runClock(state, 5);
   const lines = [res.text];
   let scored = null;

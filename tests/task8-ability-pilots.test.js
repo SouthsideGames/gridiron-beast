@@ -66,7 +66,11 @@ test('Beacon Lane: a first-down reception while ready banks a Light field, creat
     R.runScrimmagePlay(g, teams, (await import('../src/data/playbook.js')).OFFENSE_IDS[1], (await import('../src/data/playbook.js')).DEFENSE_IDS[1]);
     if (g.possession !== side) continue;
     assert.equal(st.cd, 6, 'Lumini cooldown 6, started at creation'); assert.equal(st.banked, false);
-    assert.equal(g.t8.fields.list.length, 0, 'lifetime 1 at mastery 0: the creation play counted and the field cleared');
+    // Lifetime 3 / 3 / 4 / 5 by mastery (owner revision 2026-11-15, FOOTBALL_ZONE_REVISIONS): the creation play counts, then it clocks on his offensive plays
+    const life = (await import('../src/data/approved-values.js')).beaconLaneLifetime('glimmer:0', 'Developing'); assert.equal(life, 3);
+    assert.equal(g.t8.fields.list.length, 1, 'the field outlives its creation play'); assert.equal(g.t8.fields.list[0].remaining, life - 1, 'the creation play counted');
+    for (let k = 1; k < life && g.possession === side; k++) R.runScrimmagePlay(g, teams, (await import('../src/data/playbook.js')).OFFENSE_IDS[2], (await import('../src/data/playbook.js')).DEFENSE_IDS[2]);
+    if (g.possession === side) assert.equal(g.t8.fields.list.length, 0, 'cleared after its lifetime of owner offensive plays');
     checked++;
   }
   assert.ok(checked >= 1, `observed ${checked}`);

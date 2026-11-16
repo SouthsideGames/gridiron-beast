@@ -237,9 +237,9 @@ export function recordGame(f, state, teams, { playoff = false, week = f.season.w
     const won = state.winner ? state.winner === side : state.score[side] > state.score[side === 'home' ? 'away' : 'home'];
     const byId = {};
     for (const [slot, line] of Object.entries(state.stats[side].players || {})) {
-      const p = team.offense?.[slot] || team.defense?.[slot] || (slot === 'K' ? team.kicker : null); if (!p?.id) continue;
+      const p = state.rotation?.inputs?.[slot] || team.offense?.[slot] || team.defense?.[slot] || (slot === 'K' ? team.kicker : null); if (!p?.id) continue;
       const e = (byId[p.id] ||= { p, line: {}, start: false });
-      addInto(e.line, line); if (BASE_STARTERS.has(slot)) e.start = true;
+      addInto(e.line, line); if ((team.chart ? Object.entries(team.chart).some(([sl,id])=>BASE_STARTERS.has(sl)&&id===p.id) : BASE_STARTERS.has(p.slot || slot))) e.start = true;
     }
     const T = (table[team.name] ||= {});
     for (const [id, e] of Object.entries(byId)) {
@@ -328,7 +328,7 @@ export function updateGameRecords(f, state, teams, { year, week, playoff }) {
   for (const side of ['home', 'away']) {
     const team = teams[side]; const opp = teams[side === 'home' ? 'away' : 'home'];
     const byId = {};
-    for (const [slot, line] of Object.entries(state.stats[side].players || {})) { const p = team.offense?.[slot] || team.defense?.[slot] || (slot === 'K' ? team.kicker : null); if (!p?.id) continue; addInto((byId[p.id] ||= { p, line: {} }).line, line); }
+    for (const [slot, line] of Object.entries(state.stats[side].players || {})) { const p = state.rotation?.inputs?.[slot] || team.offense?.[slot] || team.defense?.[slot] || (slot === 'K' ? team.kicker : null); if (!p?.id) continue; addInto((byId[p.id] ||= { p, line: {} }).line, line); }
     for (const { p, line } of Object.values(byId)) {
       const d = withDerived(line);
       for (const c of RECORD_CATEGORIES) { const v = d[c.key]; if (better(R.game[c.id], v)) R.game[c.id] = { value: v, id: p.id, name: p.name, position: p.position, species: p.species, type: p.type, team: team.name, opp: opp.name, year, week, playoff: !!playoff, prev: prevOf(R.game[c.id], year, week) }; }

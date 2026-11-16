@@ -39,7 +39,7 @@ const empty = (text) => `<div class="panel hh-empty"><p class="dim" style="margi
 function historyHtml(f, params) {
   const seasons = franchiseSeasonHistory(f); const tot = franchiseTotals(f); const hall = historicalHallOfFame(f); const champs = championshipHistory(f);
   const raw = new Map((f.history || []).map((h) => [h.year, h]));
-  const head = `<div class="panel hh-head" style="--club:${clubColor(f.club)}"><div class="hh-club"><i></i><b>${esc(f.club)}</b></div>
+  const head = `<div class="panel hh-head" style="--club:${clubColor(f.club)}"><div class="hh-club"><i></i><b>${f.gmCareer?.stints?.length ? $t('gm.career') : esc(f.club)}</b></div>
       <div class="dim hh-owner">${f.owner ? `${esc(f.owner.first)} ${esc(f.owner.last)}${f.owner.hometown ? ` · ${esc(f.owner.hometown)}` : ''}` : ''}</div>
       ${glance([[tot.seasons, $t('history.seasons')], [tot.seasons ? rec(tot) : '—', $t('history.all_time_record')], [tot.titleYears.length, $t('history.titles')], [tot.playoffs, $t('history.playoff_trips')], [tot.clubAwards.length, $t('history.league_awards')], [hall.inductees.length, $t('history.hall_of_famers')]])}
       ${f.badges ? `<div class="dim hh-tiers">${$t('hq.challenger_vanguard_sovereign', { challenger: f.badges.challenger, vanguard: f.badges.vanguard, sovereign: f.badges.sovereign })}</div>` : ''}</div>`;
@@ -59,7 +59,7 @@ function historyHtml(f, params) {
   const inductedIn = (year) => hall.elections.find((e) => e.year === year)?.inductees || [];
   const row = (s) => { const h = raw.get(s.year) || {}; const mine = s.champion != null && s.champion === s.club; const lm = s.awards.mvp?.[0]; const cm = h.awards?.mvp; const ind = inductedIn(s.year);
     return `<div class="item static hh-season ${mine ? 'champ' : ''}"><div class="grow">
-        <div class="name"><span class="mono">${yearOf(s.year)}</span> · <span class="mono">${rec(s.record)}</span>${s.place ? ` <span class="dim">${$t('history.place_overall', { place: ord(s.place) })}</span>` : ''} ${mine ? `<span class="chip accent">🏆 ${$t('history.champions')}</span>` : s.playoffs ? `<span class="chip">${$t('history.playoffs')}</span>` : ''}${h.legacy ? ` <span class="chip">${$t('history.imported')}</span>` : ''}</div>
+        <div class="name"><span class="mono">${yearOf(s.year)}</span>${f.gmCareer?.stints?.length ? ` · ${esc(s.club)}` : ''} · <span class="mono">${rec(s.record)}</span>${s.place ? ` <span class="dim">${$t('history.place_overall', { place: ord(s.place) })}</span>` : ''} ${mine ? `<span class="chip accent">🏆 ${$t('history.champions')}</span>` : s.playoffs ? `<span class="chip">${$t('history.playoffs')}</span>` : ''}${h.legacy ? ` <span class="chip">${$t('history.imported')}</span>` : ''}</div>
         <div class="sub">${esc(s.club)}${s.champion && !mine ? ` · ${$t('history.champion_was', { champion: esc(s.champion) })}` : ''}</div>
         ${lm || cm ? `<div class="sub">${lm ? `${$t('history.league_mvp')} ${lm.id ? careerLink(lm.id, lm.name) : esc(lm.name || '')}` : ''}${lm && cm ? ' · ' : ''}${cm ? `${$t('history.club_mvp')} ${cm.id ? careerLink(cm.id, cm.name) : esc(cm.name || '')}` : ''}</div>` : ''}
         ${ind.length ? `<div class="sub">🏛️ ${$t('history.hall_class')} ${ind.map((x) => careerLink(x.id, x.name)).join(', ')}</div>` : ''}</div>

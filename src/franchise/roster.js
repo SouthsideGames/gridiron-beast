@@ -123,9 +123,11 @@ export function buildTeam({ id, name, abbr, color, roster, manual = {}, depth = 
   const lineup = lineupFromChart(roster, chart, { trainingBonus });
   const onChart = new Set(Object.values(chart).filter(Boolean));
   const bench = roster.filter((m) => available(m) && !onChart.has(m.id)).sort((a, b) => monsterOverall(b) - monsterOverall(a))
-    .map((m) => ({ attrs: effectiveAttributes(m), ability: m.ability || null, name: m.name, id: m.id, type: m.type, species: m.species, age: m.age, position: m.position, yearsPro: m.yearsPro ?? null }));
+    .map((m) => ({ permDurability: m.dev?.current?.durability ?? m.attributes?.durability, form: m.dev?.form || null, mastery: tierIndex(m.dev?.mastery?.football ?? 0), attrs: effectiveAttributes(m), ability: m.ability || null, name: m.name, id: m.id, type: m.type, species: m.species, age: m.age, position: m.position, yearsPro: m.yearsPro ?? null }));
   return {
     id, name, abbr, color, roster, chart, bench, ...lineup,
+    rotationInputs: [...Object.values(lineup.offense), ...Object.values(lineup.defense), ...bench, lineup.kicker].filter(p=>p?.id),
+    rotation: { mode: coach?.substitutionMode || 'auto', philosophy: coach?.substitution || ['heavy', 'balanced', 'starters'][String(coach?.name || name || id || '').length % 3], depth },
     offensePlays: offensePlays || DEFAULT_OFFENSE, defensePlays: defensePlays || DEFAULT_DEFENSE,
     coach: coach || { aggression: 0.5, passBias: null },
   };

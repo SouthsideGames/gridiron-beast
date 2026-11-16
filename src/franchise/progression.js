@@ -50,16 +50,16 @@ const kicksOf = (st) => (st?.fga || 0) + (st?.xpa || 0) + (st?.kickoffs || 0) + 
  * once per activity through the reward ledger when one is given. M5 grades verified performance telemetry before applying the
  * bounded positional adjustment and training bonus. Participation: min(1, live snaps / 10); a kicker qualifies with one kick.
  */
-export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false, autoEvolve = true, xpScale = 1, ledger = null, activityId = null, train = null, mastery = null } = {}) {
+export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false, autoEvolve = true, xpScale = 1, ledger = null, activityId = null, train = null, mastery = null, liveInjuries = false } = {}) {
   const events = [];
   const byId = Object.fromEntries(roster.map((m) => [m.id, m]));
   const slots = [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K'];
   // aggregate participation by monster across the slots he filled
   const part = new Map(); const counted = Object.keys(playerStats || {}).length > 0;
-  for (const slot of slots) {
-    const m = byId[chart[slot]]; if (!m) continue; const st = playerStats?.[slot] || {};
+  for (const slot of (counted ? Object.keys(playerStats) : slots)) {
+    const m = byId[slot] || byId[chart[slot]]; if (!m) continue; const st = playerStats?.[slot] || {};
     const p = part.get(m.id) || { monsterId: m.id, m, liveSnaps: 0, kicks: 0, performance: {} };
-    p.liveSnaps += (st.snapsOff || 0) + (st.snapsDef || 0) + (st.stSnaps || 0); if (slot === 'K') p.kicks += kicksOf(st);
+    p.liveSnaps += (st.snapsOff || 0) + (st.snapsDef || 0) + (st.stSnaps || 0); if (slot === 'K' || m.position === 'K') p.kicks += kicksOf(st);
     if (!counted) { p.liveSnaps = Math.max(p.liveSnaps, snaps); if (slot === 'K') p.kicks = Math.max(p.kicks, 1); } // no per-slot counts at all (tools, labs): full participation
     mergePerformance(p.performance, st.performance);
     part.set(m.id, p);
@@ -74,15 +74,16 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
   };
   const entries = [...part.values()].filter((p) => p.m.dev); // a lab's synthetic monster (no development record) earns nothing; its fatigue and injury roll below still run
   if (ledger && activityId) applyActivity(ledger, activityId, entries, award); else for (const p of entries) award(p);
-  for (const slot of slots) {
-    const m = byId[chart[slot]]; if (!m) continue;
+  for (const { m, liveSnaps, kicks } of part.values()) {
+    if (counted && !liveSnaps && !kicks) continue;
+    const slot = m.position;
     // Fatigue and injury risk.
     const dur = norm(m.attributes.durability);
     const stamina = speciesEffect(m)?.effect?.fatigue || 1; // Iron Lungs: tires slower
-    m.fatigue = Math.min(100, m.fatigue + Math.round((16 + (1 - dur) * 10 + rng.int(6)) * stamina));
+    m.fatigue = Math.min(100, m.fatigue + Math.round((16 + (1 - dur) * 10 + rng.int(6)) * stamina * (liveInjuries ? Math.min(1, (liveSnaps + kicks) / 45) : 1)));
     const outOfPosition = slot !== 'K' && positionOf(slot) !== m.position;
     const risk = (0.012 + (m.fatigue / 100) * 0.03 + (1 - dur) * 0.03) * (outOfPosition ? OUT_OF_POSITION_RISK : 1); // a body doing unfamiliar work breaks more (GDD §17.2)
-    if (slot !== 'K' && rng.chance(risk)) {
+    if (!liveInjuries && slot !== 'K' && !m.injury && rng.chance(risk)) {
       const roll = rng.next();
       const severity = roll < 0.6 ? 'Minor' : roll < 0.9 ? 'Moderate' : 'Severe';
       const weeks = severity === 'Minor' ? 1 : severity === 'Moderate' ? 2 + rng.int(2) : 4 + rng.int(3);

@@ -189,7 +189,9 @@ test('no boosts: an identity team plays its monsters\' own ratings, and building
     for (const slot of [...OFFENSE_SLOTS, ...DEFENSE_SLOTS]) { const m = byId[team.chart[slot]]; if (!m) continue; assert.deepEqual(team[OFFENSE_SLOTS.includes(slot) ? 'offense' : 'defense'][slot].attrs, effectiveAttributes(m, { slotPosition: positionOf(slot), trainingBonus: null }), `${club} ${slot}: the monster's own ratings`); }
     assert.equal(snap(), before, `${club}: building the team changed no monster`);
     assert.ok(team.coach.identity, `${club}: the coach carries the identity`);
-    assert.deepEqual(Object.keys(team.coach).sort(), ['aggression', 'identity', 'iq', 'passBias'], 'tendencies only: no rating on the coach');
+    // Coaching GM: every AI club's coach also carries his fixed substitution philosophy (a tendency, not a rating).
+    assert.deepEqual(Object.keys(team.coach).sort(), ['aggression', 'identity', 'iq', 'passBias', 'substitution'], 'tendencies only: no rating on the coach');
+    assert.ok(['heavy', 'balanced', 'starters'].includes(team.coach.substitution), `${club}: a known philosophy`);
   }
 });
 

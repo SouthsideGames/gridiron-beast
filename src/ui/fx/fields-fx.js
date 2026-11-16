@@ -88,9 +88,11 @@ const DECOR = {
       s += `<g opacity="${op(0.95 * c.k)}"><circle cx="${f2(x)}" cy="${f2(y)}" r="0.42" fill="#fff6c8" stroke="#8a6a1a" stroke-width="0.08"/><line x1="${f2(x)}" y1="${f2(y)}" x2="${f2(x + cos(c.t * 4 + i) * 0.28)}" y2="${f2(y + sin(c.t * 4 + i) * 0.28)}" stroke="#8a6a1a" stroke-width="0.09"/></g>`; }
     return s; },
   Metal(f, r, c) { // a flat iron grid assembling line by line; slow gears turning
-    let s = ''; const cols = Math.max(2, Math.round(W(r) / 2)), rows = Math.max(1, Math.round(H(r) / 2)); const total = cols + rows + 2; let i = 0;
-    for (let cx = 0; cx <= cols; cx++, i++) { const reach = clamp01(c.k * total - i); if (reach <= 0) continue; const x = r.x0 + W(r) * (cx / cols); s += line(x, r.y0, x, r.y0 + H(r) * reach, '#3e4452', 0.24, 0.75) + line(x, r.y0, x, r.y0 + H(r) * reach, '#e4e8f0', 0.08, 0.8); }
-    for (let ry = 0; ry <= rows; ry++, i++) { const reach = clamp01(c.k * total - i); if (reach <= 0) continue; const y = r.y0 + H(r) * (ry / rows); s += line(r.x0, y, r.x0 + W(r) * reach, y, '#3e4452', 0.24, 0.75) + line(r.x0, y, r.x0 + W(r) * reach, y, '#e4e8f0', 0.08, 0.8); }
+    // The grid is one dark path and one highlight path (the same strokes as a line pair per bar, in two elements: frame budget)
+    let s = '', d = ''; const cols = Math.max(2, Math.round(W(r) / 2)), rows = Math.max(1, Math.round(H(r) / 2)); const total = cols + rows + 2; let i = 0;
+    for (let cx = 0; cx <= cols; cx++, i++) { const reach = clamp01(c.k * total - i); if (reach <= 0) continue; const x = r.x0 + W(r) * (cx / cols); d += `M ${f2(x)} ${f2(r.y0)} L ${f2(x)} ${f2(r.y0 + H(r) * reach)} `; }
+    for (let ry = 0; ry <= rows; ry++, i++) { const reach = clamp01(c.k * total - i); if (reach <= 0) continue; const y = r.y0 + H(r) * (ry / rows); d += `M ${f2(r.x0)} ${f2(y)} L ${f2(r.x0 + W(r) * reach)} ${f2(y)} `; }
+    if (d) s += path(d.trim(), '#3e4452', 0.24, 0.75) + path(d.trim(), '#e4e8f0', 0.08, 0.8);
     const n = countFor(3, c.quality); for (let g = 0; g < n; g++) { const [x, y] = pt(r, 0.2 + 0.6 * h(c.sid, g, 1), 0.2 + 0.6 * h(c.sid, g, 2)); if (inHole(r, x, y)) continue; const ang = c.t * (g % 2 ? 40 : -40); let gear = ''; for (let tth = 0; tth < 6; tth++) { const a = (tth * PI) / 3; gear += `<rect x="${f2(x - 0.12)}" y="${f2(y - 0.62)}" width="0.24" height="0.36" fill="#cfd5e2" stroke="#3e4452" stroke-width="0.06" transform="rotate(${f2((a * 180) / PI)} ${f2(x)} ${f2(y)})"/>`; } s += `<g opacity="${op(0.85 * c.k)}" transform="rotate(${f2(ang)} ${f2(x)} ${f2(y)})"><circle cx="${f2(x)}" cy="${f2(y)}" r="0.55" fill="#cfd5e2" stroke="#3e4452" stroke-width="0.12"/><circle cx="${f2(x)}" cy="${f2(y)}" r="0.18" fill="#3e4452"/>${gear}</g>`; }
     return s; },
   Psychic(f, r, c) { // concentric rings and inward-flowing particles toward the centre

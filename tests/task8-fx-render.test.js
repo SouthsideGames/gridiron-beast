@@ -11,6 +11,7 @@ import { buildFx, buildKickFx, fxSvg, endHold, shakeBetween, kickSim } from '../
 import { statusBadge, chargeBar, battery } from '../src/ui/fx/overhead.js';
 import { readiness } from '../src/ui/fx/charge.js';
 import { prepare, fieldAt } from './helpers/fx-football.js';
+import { setZoneChoice } from '../src/sim/t8/zone-planning.js';
 
 const CAT = reviewCatalog();
 const VOID = new Set(['circle', 'ellipse', 'rect', 'line', 'polyline', 'polygon', 'path', 'stop', 'use', 'image']);
@@ -149,7 +150,9 @@ test('I2: nothing hidden is shown: a field placed from a defender\'s alignment i
   assert.equal(presnapFields(g, teams, calls, { hideDefenseAlign: false }).length, 1, 'your own defense: you know your call');
   assert.equal(presnapFields(g, teams, calls, { hideDefenseAlign: true }).length, 0, 'the opponent\'s defense: not shown before the snap');
   for (const p of Object.values(PLAYS)) if (p.side === 'offense') { const look = presnapLook(p.id); for (const s of p.onField) assert.deepEqual(look.align[s], p.align[s], `${p.id} ${s}: the offense lines up as its formation shows`); }
-  assert.match(MATCH_SRC, /presnapFields\(s, teams, calls, \{ hideDefenseAlign: mine, formation: drawn \}\)/);
+  // AI zone placement (2026-11-15, PR #116): an opponent's pending placement is not revealed before the snap either
+  assert.equal(presnapFields(g, teams, calls, { viewerSide: g.possession }).length, 0, 'the offense does not see the defense\'s banked field'); assert.equal(presnapFields(g, teams, calls, { viewerSide: dside }).length, 1);
+  assert.match(MATCH_SRC, /presnapFields\(s, teams, calls, \{ hideDefenseAlign: mine, formation: drawn, viewerSide: G\.playerSide \}\)/);
 });
 
 test('I6: the match screen opts into the pre-roll and starts the play before the snap', () => {
@@ -197,17 +200,24 @@ test('in-snap fields: the dry-run preview is exactly the field the snap creates,
   }
 });
 
-test('in-snap fields: Runway, Crosswind Rescue and Bloom Break sit in the same place whatever is called; the other three move with the calls', () => {
+// Owner revision 2026-11-15 (INDEPENDENT_ZONE_PLACEMENT, AI_ZONE_PLACEMENT; supersedes N9c's fixed places): every zone is placed by
+// its coach among legal lanes read from the owner's own play, never from the opponent's call. So Runway, Crosswind Rescue and Bloom
+// Break follow only their own club's call (the opponent's call never moves them: nothing hidden is read), and the other three still
+// follow a chosen play's alignment.
+test('in-snap fields: Runway, Crosswind Rescue and Bloom Break follow only their own club\'s call, at a legal coach lane; the other three move with the calls', () => {
   const offs = Object.values(PLAYS).filter((p) => p.side === 'offense' && !p.legendary).map((p) => p.id), defs = Object.values(PLAYS).filter((p) => p.side === 'defense' && !p.legendary).map((p) => p.id);
   for (const x of IN_SNAP) {
     const { g, teams } = inSnapGame(x, 9); const before = JSON.stringify(g); const places = new Set(); let listed = 0, flagged = 0;
     const pairs = x.unit === 'offense' && x.id !== 'NAT-05-F' ? offs.map((o) => [o, 'cover_3']) : x.unit === 'defense' ? defs.map((d) => ['quick_slants', d]) : [...offs.slice(0, 6).map((o) => [o, 'cover_3']), ...defs.map((d) => ['quick_slants', d])];
-    for (const [o, d] of pairs) { const pv = R.previewPendingFields(g, teams, o, d, { inSnap: true }).filter((f) => f.ability === x.id); if (!pv.length) continue; listed += 1; if (pv.some((f) => f.callDependent)) flagged += 1; places.add(JSON.stringify(pv.map((f) => [f.yard, f.lat]))); }
+    for (const [o, d] of pairs) { const pv = R.previewPendingFields(g, teams, o, d, { inSnap: true }).filter((f) => f.ability === x.id); if (!pv.length) continue; listed += 1; if (pv.some((f) => f.callDependent)) flagged += 1; places.add(JSON.stringify(pv.map((f) => [f.yard, f.lat])));
+      if (!x.dependent) for (const f of pv) assert.ok(f.placementOptions.some((q) => JSON.stringify(q.rect.lat.map((v) => +v.toFixed(6))) === JSON.stringify(f.lat.map((v) => +v.toFixed(6)))), `${x.id} ${o}/${d}: at one of the coach's legal lanes`);
+      if (!x.dependent) { const own = x.unit === 'offense' ? o : d; for (const other of (x.unit === 'offense' ? defs : offs).slice(0, 8)) { const q = R.previewPendingFields(g, teams, x.unit === 'offense' ? own : other, x.unit === 'offense' ? other : own, { inSnap: true }).filter((f) => f.ability === x.id);
+        if (q.length) assert.deepEqual(q.map((f) => [f.yard, f.lat]), pv.map((f) => [f.yard, f.lat]), `${x.id}: the opponent's call (${other}) never moves it`); } } }
     assert.equal(JSON.stringify(g), before); assert.ok(listed >= 3, `${x.id}: previewed for ${listed} call pairs`);
     if (x.dependent) { assert.equal(flagged, listed, `${x.id}: always flagged as following the calls`); assert.ok(places.size > 1, `${x.id}: ${places.size} different places over the playbook: it is not fixed before the choice`); }
-    else { assert.equal(flagged, 0); assert.equal(places.size, 1, `${x.id}: one place for every call that has him on the field`); }
+    else assert.equal(flagged, 0);
   }
-  assert.match(MATCH_SRC, /presnapFields\(s, teams, calls, \{ hideDefenseAlign: mine, formation: drawn \}\)/);
+  assert.match(MATCH_SRC, /presnapFields\(s, teams, calls, \{ hideDefenseAlign: mine, formation: drawn, viewerSide: G\.playerSide \}\)/);
 });
 
 test('in-snap fields: before a play is chosen, the formation on screen already shows the ones whose place does not follow the calls; nothing else is guessed', () => {
@@ -257,17 +267,20 @@ test('N9c: Bloom Break is never rerolled: the choices fixed when it was earned a
   const X = { ...N9C('NAT-01-F'), slot: 'WR2' }; const B = ['quick_slants', 'cover_3'], A = ['power_right', 'cover_3'];
   const rel = (list, g) => list.map((x) => [+(x.field.yard[0]).toFixed(6), +(x.field.yard[1]).toFixed(6), +(x.field.lat[0] + (g.ballLat || 0)).toFixed(6), +(x.field.lat[1] + (g.ballLat || 0)).toFixed(6)]); // play frame: yards beyond the LOS; lateral back to the field's own
   const checked = { again: 0, moved: 0 };
+  // The coach's lane is chosen for each snap (owner revision 2026-11-15); the same lane each time isolates the earned draw (its depth,
+  // N9c: never rerolled), so the patches keep their place relative to the line.
+  const lane = (g, m) => { for (const i of [0, 1]) setZoneChoice(g, `${m.id}|NAT-01-F|${i}`, 'middle'); };
   for (const seed of [5, 6, 7, 8]) {
-    const { g, teams, m } = inSnapGame(X, seed); g.t8.ability[m.id].drawKey = (g.playCount || 0); // earned on the play before: the choices of this play index
+    const { g, teams, m } = inSnapGame(X, seed); g.t8.ability[m.id].drawKey = (g.playCount || 0); lane(g, m); // earned on the play before: the choices of this play index
     const first = presnapFields(g, teams, { offense: B[0], defense: B[1] }); assert.equal(first.length, 2); const want = rel(first, g); const los0 = g.ballOn;
     // legacy equivalence: on the play right after the earning play the stored choices are that play's own stream (what it always drew)
-    { const h = inSnapGame(X, seed); assert.deepEqual(rel(presnapFields(h.g, h.teams, { offense: B[0], defense: B[1] }), h.g), want, 'the stored key of the next play draws exactly what the play itself drew before'); }
+    { const h = inSnapGame(X, seed); lane(h.g, h.m); assert.deepEqual(rel(presnapFields(h.g, h.teams, { offense: B[0], defense: B[1] }), h.g), want, 'the stored key of the next play draws exactly what the play itself drew before'); }
     // he sits a snap out: the ball moves, the play index moves, the patches do not change relative to the new line
     let moved = false;
     for (let i = 0; i < 3 && g.phase === 'scrimmage' && g.possession === 'home'; i++) { const before = g.ballOn; R.runScrimmagePlay(g, teams, A[0], A[1]); assert.equal(g.t8.ability[m.id].token, true); assert.equal(g.t8.ability[m.id].drawKey, 1 * JSON.parse(JSON.stringify(g.t8.ability[m.id].drawKey))); if (g.ballOn !== before) moved = true;
       if (g.phase !== 'scrimmage' || g.possession !== 'home') break;
-      const again = presnapFields(g, teams, { offense: B[0], defense: B[1] }); checked.again += 1; if (g.ballOn <= 98) assert.deepEqual(rel(again, g), want, `seed ${seed}: after a snap without him (ball ${los0} -> ${g.ballOn}) the same patches, the same distance beyond the new line, the same place across the field`); }
-    if (g.phase === 'scrimmage' && g.possession === 'home' && g.ballOn <= 98) { const pv = presnapFields(g, teams, { offense: B[0], defense: B[1] }); const ev = R.runScrimmagePlay(g, teams, B[0], B[1]); const made = ev.sim.fields.filter((f) => f.ability === 'NAT-01-F');
+      lane(g, m); const again = presnapFields(g, teams, { offense: B[0], defense: B[1] }); checked.again += 1; if (g.ballOn + Math.max(...want.map((w) => w[1])) <= 100) assert.deepEqual(rel(again, g), want, `seed ${seed}: after a snap without him (ball ${los0} -> ${g.ballOn}) the same patches, the same distance beyond the new line, the same place across the field`); }
+    if (g.phase === 'scrimmage' && g.possession === 'home' && g.ballOn <= 98) { lane(g, m); const pv = presnapFields(g, teams, { offense: B[0], defense: B[1] }); const ev = R.runScrimmagePlay(g, teams, B[0], B[1]); const made = ev.sim.fields.filter((f) => f.ability === 'NAT-01-F');
       assert.equal(made.length, 2); made.forEach((f, i) => { assert.deepEqual(f.yard, pv[i].field.yard); assert.deepEqual(f.lat, pv[i].field.lat); }); assert.equal(g.t8.ability[m.id].drawKey, undefined, 'the stored choices are dropped at the spawn'); assert.equal(g.t8.ability[m.id].token, false); }
     if (moved) checked.moved += 1;
   }
@@ -276,15 +289,15 @@ test('N9c: Bloom Break is never rerolled: the choices fixed when it was earned a
   const { g, teams } = inSnapGame(X, 9); assert.equal(presnapFields(g, teams, { offense: B[0], defense: B[1] }).length, 2);
 });
 
-test('N9c: Charge Strip and Static Field are revealed after both calls, before the snap, on the creator\'s actual alignment; Bramble Trap blooms under its chosen defender before the snap', () => {
+test('N9c: Charge Strip and Static Field are revealed after both calls, before the snap, at their coach\'s placement (owner revision 2026-11-15); Bramble Trap blooms under its chosen defender before the snap', () => {
   for (const [id, off, def] of [['ELE-02-F', 'quick_slants', 'cover_3'], ['ELE-02-F', 'toss_sweep', 'cover_1'], ['ELE-04-F', 'quick_slants', 'cover_3'], ['ELE-04-F', 'curl_flat', 'cover_1'], ['NAT-05-F', 'quick_slants', 'cover_3'], ['NAT-05-F', 'curl_flat', 'cover_2_man']]) for (const seed of [5, 6]) {
     const x = N9C(id); const { g, teams, m } = inSnapGame(x, seed); assert.deepEqual(presnapFields(g, teams, { offense: off, defense: def }), [], `${id}: nothing before the calls are final`);
     const dry = R.previewPendingFields(g, teams, off, def, { inSnap: true }).find((q) => q.ability === id); // what the snap is about to do (read only)
     const ev = R.runScrimmagePlay(g, teams, off, def); const f = ev.sim.fields.find((q) => q.ability === id); assert.ok(f?.fresh, `${id}: created at the snap`);
-    const centre = (f.lat[0] + f.lat[1]) / 2; const width = f.lat[1] - f.lat[0];
-    if (id === 'NAT-05-F') { const t = dry?.payload?.target || null; assert.ok(t, 'the chosen defender is recorded'); const at = PLAYS[def].align[t]; assert.ok(PLAYS[def].onField.includes(t)); assert.notEqual(teams[R.opponent('home')].defense[t]?.type, 'Nature');
-      if (Math.abs(at[1]) + width / 2 <= 26.6) assert.ok(Math.abs(centre - at[1]) < 1e-6, `${id}: centred on ${t}'s own alignment (${at[1]})`); assert.ok(f.yard[0] <= at[0] + 1e-6 && f.yard[1] >= at[0] - 1e-6, 'around his depth'); }
-    else { const at = (id === 'ELE-02-F' ? PLAYS[off] : PLAYS[def]).align[x.slot]; if (Math.abs(at[1]) + width / 2 <= 26.6) assert.ok(Math.abs(centre - at[1]) < 1e-6, `${id}: centred on ${m.name}'s actual alignment in the play that was called (${at[1]}), not on a fixed reference`); }
+    // Placement: the snap creates exactly the dry run's field, which is one of the coach's legal options (2026-11-15: every zone offers
+    // placement; supersedes the N9c fixed alignment). The depth role still comes from the chosen play.
+    assert.ok(dry, `${id}: the dry run previews it`); assert.ok(dry.placementOptions.some((q) => JSON.stringify(q.rect.lat.map((v) => +v.toFixed(6))) === JSON.stringify(dry.lat.map((v) => +v.toFixed(6))) && JSON.stringify(q.rect.yard.map((v) => +v.toFixed(6))) === JSON.stringify(dry.yard.map((v) => +v.toFixed(6)))), `${id}: at one of the coach's legal options`);
+    if (id === 'NAT-05-F') { const t = dry?.payload?.target || null; assert.ok(t, 'the chosen defender is recorded'); assert.ok(PLAYS[def].onField.includes(t)); assert.notEqual(teams[R.opponent('home')].defense[t]?.type, 'Nature'); }
     // the reveal is part of the time before the snap (the match pre-rolls it), after both calls
     const live = buildFx(ev.sim, () => null, { preroll: true }); const shownF = live.t8.fields.find((q) => q.ability === id); assert.ok(shownF.fresh && live.preroll >= (FIELD_REVEAL[id]?.lead ?? 0) && live.preroll > 0, `${id}: its reveal is pre-rolled before the snap (${live.preroll.toFixed(2)} s)`);
     assert.ok(live.fieldAlpha(f.id, -live.preroll) < live.fieldAlpha(f.id, 0) || live.fieldAlpha(f.id, -live.preroll) < 1, `${id}: it fades in during the pre-roll`);

@@ -1,3 +1,4 @@
+import { statKey } from '../substitutions.js';
 // Individual performance telemetry, separate from the ordinary box score. A clone's
 // credited stats remain in that box score but never enter its owner's grade.
 export function mergePerformance(a = {}, b = {}) {
@@ -54,7 +55,7 @@ export function recordPerformance(state, sim, off, def, { toGo = 10, down = 1 } 
     if ((st.gradeCoverBy ?? st.coverBy) === slot && st.passer && !st.unavoidableOverride && !st.coverageOverrides?.[slot] && !cp.coverBy && !st.dropped && st.catchableTarget !== false && !['sack', 'throwaway'].includes(res)) add('def', slot, { coverage: { targets: 1, completions: +!!st.receiver, yards: st.receiver ? gain : 0, firstDownOrTd: +((first || td) && !!st.receiver), touchdowns: +(td && !!st.receiver) }, coverageScores: [interception ? 2 : breakup ? 1 : st.receiver ? first || td ? -2 : -1 : 0] });
   }
   for (const [relative, side] of [['off', off], ['def', def]]) for (const [slot, data] of Object.entries(table[relative])) {
-    const p = (state.stats[side].players[slot] ||= {});
+    const p = (state.stats[side].players[statKey(state, side, slot)] ||= {});
     p.performance = mergePerformance(p.performance, data);
   }
 }
