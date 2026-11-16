@@ -955,8 +955,8 @@ This register is the **current planning index** for Franchise Mode. The detailed
 | Smarter AI long-term management (Task 6, AI Franchise Intelligence: ageing, roster plan, development, strategy modes, F1–F4) | RELEASED v42.21.0-ai-franchise, 2026-11-03 (PRs #83–#91, `main` `d2159f8`, artifact version 116) | §§55–58, §58.8; `docs/TASK6_FINAL_RELEASE_REPORT.md` | Task 6 closed. Accepted exceptions for this release only (§58.8): Rookie owner balance and drift, Pro drift, All-Star owner balance and drift uncertainty, the unmet franchise-balance targets. These do not lower future acceptance criteria |
 | **Task 7 — Free Agency Overhaul** | **TASK 7 — COMPLETE AND RELEASED** (v42.22.0-free-agency, 2026-11-05; owner's final authorization) | §59 (incl. §59.9 the lineup safeguard and §59.10 the Task 7 → Task 8 dependency); `docs/TASK7_*` | **Comprehensive franchise AI and difficulty balance testing is PENDING until Task 8** (owner decision, §59.10); the Task 7 results are kept as historical reference |
 | **Task 8 — Monster catalogue expansion and Nature/Temper** | **NEXT** | §59.10 | Expand and balance the catalogue across positions; then the mandatory validation of §59.10 |
-| Coaching substitution philosophies | APPROVED FOR ACTIVE DESIGN; NOT IMPLEMENTED | §27.5D; owner decision 2026-11-15 | Define automatic/manual controls, philosophy rules, AI use and acceptance criteria before implementation |
-| GM job changes / career mobility | APPROVED FOR ACTIVE DESIGN; NOT IMPLEMENTED | §27.5E; owner decision 2026-11-15 | Define job availability, offers, transitions, persistent career history and lifecycle rules before implementation |
+| Coaching substitution philosophies and in-game injuries | APPROVED FOR IMPLEMENTATION; NOT IMPLEMENTED | §27.5D; owner approval 2026-11-15 | Implement fixed coach philosophies, automatic/manual substitutions, AI parity and injury replacement; validate tunable thresholds |
+| GM job changes / career mobility | APPROVED FOR IMPLEMENTATION; NOT IMPLEMENTED | §27.5E; owner approval 2026-11-15 | Implement job market and persistent GM stints with a 15-season total career; reconcile existing 20-season runtime and old saves |
 | Football penalties | REMOVED FROM DESIGN | §3; owner decision 2026-11-15 | No expanded penalty system; separately remove existing delay-of-game enforcement after defining non-penalty clock expiry |
 | Stadium management, mentorship, weather, 32 clubs, separate Battle Room/Career Mode | DEFERRED | §§24, 27.6–27.7 | No implementation without separate approval |
 
@@ -1046,31 +1046,44 @@ Use **one trade engine, two interfaces**:
 
 **C. Free agency:** keep the existing offseason market approachable. Improve clarity and AI decisions before adding complexity; no advanced contract clauses required for franchise completion.
 
-### 27.5D Coaching substitution philosophies — active design (owner, 2026-11-15)
+### 27.5D Coaching substitution philosophies — approved rules (owner, 2026-11-15)
 
-**Status:** moved out of the optional/deferred backlog into the active Franchise roadmap. Design work is approved; detailed rules are not locked and gameplay implementation has not started.
+**Status:** owner approved all eight recommendations in the design discussion. Approved for implementation; not yet implemented by this documentation update.
 
-The starting design uses the existing fatigue, availability and depth-chart systems for football substitutions between plays:
-- **Heavy Rotation:** favor fresher reserves and more frequent bench participation.
-- **Balanced Rotation:** weigh fatigue, relative quality and the game situation.
-- **Starter-Focused:** prefer starters while still replacing unavailable monsters.
-- Provide **automatic (head coach)** and **manual (player)** substitution controls. Every choice must preserve legal personnel, canonical positions and healthy-player eligibility. This is football substitution behavior, separate from Beast Clash rotation rules.
+1. Each head coach has a fixed philosophy visible before hiring: **Heavy Rotation**, **Balanced Rotation** or **Starter-Focused**.
+2. **Automatic substitutions are the default.** Manual controls are available; the player can override an automatic selection for the next play.
+3. Replacements follow the player's depth-chart order, considering availability and fatigue. Only canonical-position-eligible monsters can enter.
+4. Heavy Rotation substitutes earlier and accepts a larger quality drop for freshness. Balanced weighs freshness against quality and situation. Starter-Focused keeps starters longer, rotating mainly when heavily fatigued. Exact thresholds are implementation tunables to verify through testing.
+5. In close fourth quarters and overtime, Balanced and Starter-Focused favor starters. Heavy Rotation continues prioritizing freshness.
+6. **In-game injuries are included in the approved scope**, with immediate replacement. Injury frequency and recovery values must be specified and checked against the existing health system before adoption.
+7. AI clubs use the same philosophies, fatigue, eligibility and substitution rules.
+8. Brief notices explain substitutions; an optional lineup panel shows fatigue and current participants. No confirmation prompt for every substitution.
 
-**Decisions still to define:** whether philosophy belongs to a hired coach or is chosen by the player; defaults; fatigue thresholds; quality and situation weights; substitution frequency; player overrides; AI-club use; transparent explanations; and save compatibility. In-game injuries remain a separate proposed companion feature, not approved automatically by this scope change.
+**Mandatory eligibility:** unavailable monsters must be replaced whenever a legal replacement exists, including in manual mode. Manual controls cannot bypass injury or exhaustion restrictions. Football substitutions remain separate from Beast Clash rotations.
 
-**Acceptance direction:** philosophies produce observably different, understandable bench usage; automatic and manual choices obey the same eligibility rules; no invalid lineups or progression blockers; participation, fatigue and statistics reflect who actually played.
+**Acceptance:** observable differences in bench usage; legal lineups; accurate participation, statistics and fatigue; consistent player/AI rules; saved coach identity and settings; clear controls on phones. Exact weights, fatigue thresholds and rotation frequency remain implementation choices within the approved behavior, not additional feature approvals.
 
-### 27.5E GM job changes / career mobility — active design (owner, 2026-11-15)
+### 27.5E GM job changes / career mobility — approved rules (owner, 2026-11-15)
 
-**Status:** moved from long-term/deferred possibilities into the active Franchise roadmap. Design work is approved; detailed rules are not locked and gameplay implementation has not started. This extends Franchise Mode, not the separate proposed Career Mode.
+**Status:** owner approved recommendations 9–19, with a **15-season total GM career** replacing the proposed 20-season figure. Approved for implementation; not yet implemented by this documentation update. This extends Franchise Mode, not the separate proposed Career Mode.
 
-**Feature direction:** a GM can change clubs while retaining a persistent GM career and its accomplishments. Design must cover job opportunities/offers, leaving a club, joining the next club, and preserving the history of each club run.
+1. The player is a **hired GM accountable to each club's Board**. Do not introduce club purchases or a franchise-selling economy.
+2. Job changes occur **only in the offseason**, after season awards/results are finalized and before contract decisions or free agency begin.
+3. A **Job Market** lists available positions. The player can apply and clubs can approach the player; applications do not guarantee offers.
+4. Interest depends on career performance, recent results, championships and achievement relative to team expectations. Strong clubs generally require stronger credentials.
+5. Firing opens the job market rather than ending the career. Guarantee at least one rebuilding opportunity while career seasons remain.
+6. The destination keeps its actual roster, picks, contracts, staff, injuries and financial situation. The GM begins a fresh Board evaluation with goals appropriate to that club.
+7. The former club continues in the **same persistent league**, keeping its roster and history under AI management; future meetings are possible.
+8. No automatic transfer of monsters or staff. Monsters require ordinary trades/free agency; staff may be pursued when available.
+9. The career is **15 total seasons across all club stints**. Moving or being fired does not reset the season counter or create another 15-season allowance. No new job extends play beyond the cap.
+10. GM accomplishments accumulate across clubs, with separate records for each stint. GM Hall of Fame eligibility uses the whole career. Club and monster history retain correct attribution.
+11. Before acceptance, show the destination roster, cap, staff, picks and Board expectations. Require confirmation; the accepted move is final within the save.
 
-**Decisions still to define:** when moves are allowed; how jobs become available; offer eligibility and reputation; voluntary moves versus firing; whether selling a franchise is included; the new club's roster, staff, contracts and Board state; what continues in the existing league; treatment of the former club and future meetings; save-slot ownership; retirement and GM Hall of Fame eligibility; and whether the existing 20-season limit applies to a club stint or the whole GM career. None of these choices is implicitly approved by the feature direction.
+**Season-limit reconciliation:** the repository checked on 2026-11-15 still has `SEASON_CAP = 20` in `src/franchise/lifecycle.js`. The owner's intended limit for this feature is **15**, not a claim that the runtime already enforces 15. Implementation must update the cap, UI, tests, retirement and job-market gates together. Existing saves at or beyond the new cap require a non-destructive compatibility rule; do not truncate recorded history or interrupt an in-progress season. Historical 20-season measurements elsewhere remain historical evidence.
 
-**Acceptance direction:** a move preserves GM accomplishments and historical records without duplicating monsters, picks or contracts; the destination is playable; the former club has a coherent continuing state; reload/import/export preserve the transition.
+**Acceptance:** preserve career and club records through moves; maintain one coherent league; never duplicate monsters, picks or contracts; destination remains playable; former club management continues; reload, backup, import/export and cloud saves preserve stints and the career-wide season counter.
 
-**Scope consequence:** the earlier assessment that the existing major franchise systems are present describes the pre-change scope. These two additions are now outstanding active roadmap features; neither may be called implemented or feature-complete until its agreed rules are built and verified.
+**Scope consequence:** these are outstanding approved major features. The earlier feature-complete assessment describes the scope before these additions.
 
 ### 27.6 Phase 5 — Long-term possibilities (NOT APPROVED FOR IMPLEMENTATION)
 
@@ -4614,4 +4627,4 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 - **End Around:** held back. The receiver, aligned 18 yards wide, reaches the quarterback at about 2.7 s, so pressure usually arrives first. The fix is a play-design choice (a tighter split, motion, or the quarterback opening toward him) awaiting the owner.
 - Run-pass options (RPOs) are not implemented and are outside Task 10.
 
-**Head-coach substitution philosophy — active design (owner, 2026-11-15).** The earlier deferred status is superseded by §27.5D. Heavy Rotation, Balanced Rotation, Starter-Focused and automatic/manual controls are the starting design; details remain to be defined. GM job changes are also active design work (§27.5E). Neither feature is implemented by this documentation update. In-game injuries remain a separate proposal.
+**Head-coach substitution philosophy — active design (owner, 2026-11-15).** The earlier deferred status is superseded by the owner's approved rules in §27.5D, including in-game injuries. GM job changes and a 15-season total GM career are approved in §27.5E. Both are approved for implementation; neither is implemented by this documentation update.
