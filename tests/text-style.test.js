@@ -81,3 +81,19 @@ test('a wording-only change keeps earlier review verdicts; a later real change s
   await S.setReview('play', untouched, { status: null });
   for (const ns of Object.keys(REVIEW_FP_ALIASES)) assert.ok(['play', 'fbability', 'clashability'].includes(ns));
 });
+
+test('GM onboarding labels use Title Case and unknown Temper uses a concise placeholder', async () => {
+  const { BACKGROUNDS } = await import('../src/data/staff.js');
+  const { englishText } = await import('../src/text/index.js');
+  const { temperSummary, temperEfficiency } = await import('../src/data/temper.js');
+  assert.equal(BACKGROUNDS.player.label, 'Former Player');
+  assert.equal(BACKGROUNDS.scout.label, 'Former Scout');
+  assert.equal(BACKGROUNDS.business.label, 'Agent');
+  assert.equal(BACKGROUNDS.business.perk, 'cap', 'existing business background id and benefit are preserved');
+  assert.equal(englishText()['onboarding.his_temper_how_efficiently_he_trains'], 'Temper: ???');
+  for (const value of [null, undefined, 'not-known']) {
+    assert.deepEqual(temperSummary(value), { name: '???', text: '' });
+  }
+  assert.equal(temperSummary('swift').name, 'Swift');
+  assert.equal(temperEfficiency('swift', 'speed'), 2);
+});
