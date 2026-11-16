@@ -63,3 +63,15 @@ export function setFlashSoft(on) { flashSoft = !!on; }
 export const flash = (p, r, fill, o = 1) => (flashSoft ? blob(p[0], p[1], r * 0.75, fill, o * 0.4) : blob(p[0], p[1], r, fill, o));
 /** A hit burst ring + rays at p (the primary impact shape). */
 export function burst(p, r, L, k, n, sid, o = 1) { let s = ring(p[0], p[1], r * (0.3 + k), L.a, Math.max(1, r * 0.12 * (1 - k)), (1 - k) * o); for (let i = 0; i < n; i++) { const a = h(sid, i) * 2 * PI; const d = r * (0.4 + k * 0.9); s += pixel(p[0] + cos(a) * d, p[1] + sin(a) * d, 3 - k * 1.5, i % 2 ? L.a : L.c, (1 - k) * o); } return s; }
+/**
+ * The monster's own sprite traced as a glowing outline (owner revision 2026-11-15: psychic echoes, the canopy helper): `c.sprite(id)`
+ * from the arena; null when the host gives no sprite (then the caller draws its fallback). Two elements (filter defs and the image).
+ */
+export function spriteGhost(c, id, x, y, size, line, glow, o = 1, fill = null) {
+  const svg = c.sprite ? c.sprite(id) : null; if (!svg || o <= 0) return null; const px = size / 16;
+  const fid = `gb-ghost-${String(id).replace(/[^A-Za-z0-9_-]/g, '_')}-${line.replace('#', '')}${fill ? 'f' : ''}`;
+  const body = fill ? `<feFlood flood-color="${fill}" flood-opacity="0.28"/><feComposite in2="SourceAlpha" operator="in" result="body"/>` : '';
+  const merge = `<feMerge><feMergeNode in="g2"/>${fill ? '<feMergeNode in="body"/>' : ''}<feMergeNode in="ln"/></feMerge>`;
+  return `<defs><filter id="${fid}" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB"><feMorphology in="SourceAlpha" operator="dilate" radius="${f2(px * 0.6)}" result="d"/><feComposite in="d" in2="SourceAlpha" operator="out" result="ol"/><feFlood flood-color="${line}"/><feComposite in2="ol" operator="in" result="ln"/><feGaussianBlur in="ln" stdDeviation="${f2(px)}" result="bl"/><feFlood flood-color="${glow}"/><feComposite in2="bl" operator="in" result="g2"/>${body}${merge}</filter></defs>`
+    + `<image href="data:image/svg+xml;utf8,${encodeURIComponent(svg)}" x="${f2(x - size / 2)}" y="${f2(y - size)}" width="${f2(size)}" height="${f2(size)}" filter="url(#${fid})" opacity="${op(o)}" style="image-rendering:pixelated"/>`;
+}

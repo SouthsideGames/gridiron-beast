@@ -70,4 +70,18 @@ export const CLASH_REVISION = Object.freeze({
   'MET-04-C': 1,
   'MET-05-C': 1,
   'MET-06-C': 1,
+  // Owner revision 2026-11-15 (fourth pass): Needs Work Nature, Psychic and Water looks redrawn (richer art).
+  'NAT-02-C': 1,
+  'NAT-04-C': 1,
+  'NAT-05-C': 1,
+  'PSY-02-C': 1,
+  'PSY-03-C': 1,
+  'PSY-04-C': 1,
+  'PSY-05-C': 1,
+  'PSY-06-C': 1,
+  'WAT-02-C': 1,
+  'WAT-03-C': 1,
+  'WAT-04-C': 1,
+  'WAT-05-C': 1,
+  'WAT-06-C': 1,
 });
