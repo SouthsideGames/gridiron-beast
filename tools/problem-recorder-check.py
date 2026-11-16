@@ -44,12 +44,18 @@ with sync_playwright() as p:
     assert 'The zone looked wrong' in page.locator('main').inner_text()
     page.evaluate("() => window.dispatchEvent(new ErrorEvent('error', {message: 'Recorder check: synthetic error'}))")
     page.evaluate("async () => { const {recorder} = await import('/src/testing/recorder.js'); recorder.observeSave({ok:false,error:{code:'quota',message:'Synthetic save failure'}}); recorder.flush(); }")
-    page.reload(); page.wait_for_selector('main.screen')
+    # main.screen is already in index.html's loading placeholder: wait for the app itself to start, then navigate by taps.
+    page.reload(); page.wait_for_function("() => window.__gb && __gb.storage.mode !== 'starting'")
     assert page.evaluate("async () => (await import('/src/testing/recorder.js')).recorder.active()")
-    page.evaluate("async () => (await import('/src/ui/router.js')).go('test-session')")
+    page.locator('[data-screen="developer"]').tap()
+    page.locator('[data-screen="test-session"]').tap()
     with page.expect_download() as download:
         page.locator('[data-action="test-export"]').tap()
     payload = json.load(open(download.value.path()))
+    # Phone layout: the include-save checkbox sits on the same line as its label (it took the 44px input height before)
+    cb = page.locator('#test-include-save').bounding_box(); lab = page.locator('label:has(#test-include-save)').bounding_box()
+    assert abs((cb['y'] + cb['height'] / 2) - (lab['y'] + lab['height'] / 2)) < 6 and lab['height'] < 40, (cb, lab)
+    assert page.evaluate("() => document.documentElement.scrollWidth <= innerWidth"), 'Test Session scrolls sideways'
     assert payload['schemaVersion'] == 1
     assert payload['build']['version'] == 'v43.18.0-problem-recorder-preview'
     assert {x['code'] for x in payload['findings']} >= {'player-report','runtime-error','save-failed'}
