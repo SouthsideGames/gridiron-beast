@@ -40,7 +40,7 @@ This principle governs every gameplay system, now and in every future change. Fo
 - **Existing randomness is preserved.** Changes refine how players decide and move; they do not remove the variance that comes from contact, reads and execution.
 - **Different seeds vary; identical seeds reproduce.** The same seed replays the same play exactly (developer traces included); different seeds give different plays.
 - **Exceptional outcomes are never suppressed to hit statistics.** Calibration targets are diagnostics: a long run, a sack, a broken tackle or a perfect throw is never removed or capped to bring an average into a band.
-- **No artificial yardage caps, and the game's rules stay the rules.** Results come from football events (tackles, forward progress, the sideline, the end zone, penalties as the rules define them), never from a limiter.
+- **No artificial yardage caps, and the game's rules stay the rules.** Results come from football events (tackles, forward progress, the sideline, the end zone and other non-penalty football events), never from a limiter.
 
 Fixing a gameplay problem means fixing the decision or the positioning that causes it (who reads what, who stands where, who moves when), never adjusting the final yardage.
 
@@ -101,7 +101,7 @@ Every defender may blitz. The defense lines up in its package's base alignment p
 | Clock | Runs during plays. Stops on incomplete, score, change of possession, timeout, end of quarter; on out of bounds only in the last 2:00 of each half. Between plays a running clock loses 25 s (Hurry-up 12 s, Milk 38 s) |
 | End of quarter | A play snapped with time on the clock always finishes. A touchdown's try is always attempted |
 | Overtime | One overtime period, college format: each team gets one possession from the opponent 25. Still tied after that: an **overtime Beast Clash** decides the game (3v3 in the season, 5v5 in the playoffs; §26.3). The football score stands; no points are invented. (The engine's classic repeat-until-untied rule remains available when `otPeriods` is unset.) |
-| Penalties | Delay of game only (real-time play clock, optional). Others LATER |
+| Penalties | **REMOVED from the design (owner, 2026-11-15):** no football penalties, including delay of game. This is the target design; any existing delay-of-game code still needs a separate implementation change. Play-clock expiry behavior without a penalty must be specified before that change. |
 
 **Field orientation (LOCKED):** the match field is vertical and the team with the ball always attacks **up** the screen. Yard labels show `OWN 30` / `OPP 30`. This keeps play art, cards and the live field in one orientation.
 
@@ -259,7 +259,7 @@ Read from what the football engine actually uses (`src/sim`), plus each position
 
 ## 11. Out of scope for this build (LATER)
 
-**CURRENT SCOPE:** Multiplayer, standalone Battle Room/Draft Clash, Career Mode, custom play editor, expanded penalties, wind/weather, equipment and audio remain outside the approved Franchise completion scope. Drafting, trades (first pass), free agency, contracts and evolution are already implemented in Prototype 2; do not list them as unbuilt. Trading second pass and other planned improvements are tracked in §26.
+**CURRENT SCOPE:** Multiplayer, standalone Battle Room/Draft Clash, Career Mode, custom play editor, wind/weather, equipment and audio remain outside the approved Franchise completion scope. Drafting, trades (first pass), free agency, contracts and evolution are already implemented in Prototype 2; do not list them as unbuilt. Trading second pass and other planned improvements are tracked in §26.
 
 ## 9a. Personnel (revised)
 
@@ -931,7 +931,7 @@ Football plays **one** overtime period (`otPeriods: 1` in every franchise game, 
 
 **Status:** The feature direction and priority order below are owner-approved for the roadmap. This section does **not** authorize implementation, alter Beast Clash's existing approval gates, or authorize new game modes. Finish the Beast Clash engine, integrate it into Franchise Mode, and validate the existing franchise before building new roadmap features. UI polish is secondary to feature correctness.
 
-### 27.0 Current roadmap register (updated 2026-11-04; Task 7 alignment)
+### 27.0 Current roadmap register (updated 2026-11-15; owner scope changes)
 
 This register is the **current planning index** for Franchise Mode. The detailed specifications in §§25–27 and the implementation history in §§28–53 remain intact. Historical phase headings, old branch labels, old release snapshots and superseded next-step notes are not instructions to redo shipped work. Status here describes the repository documentation and must be checked against the live deployment before claiming a release. No new feature or implementation approval is granted by this register.
 
@@ -955,7 +955,10 @@ This register is the **current planning index** for Franchise Mode. The detailed
 | Smarter AI long-term management (Task 6, AI Franchise Intelligence: ageing, roster plan, development, strategy modes, F1–F4) | RELEASED v42.21.0-ai-franchise, 2026-11-03 (PRs #83–#91, `main` `d2159f8`, artifact version 116) | §§55–58, §58.8; `docs/TASK6_FINAL_RELEASE_REPORT.md` | Task 6 closed. Accepted exceptions for this release only (§58.8): Rookie owner balance and drift, Pro drift, All-Star owner balance and drift uncertainty, the unmet franchise-balance targets. These do not lower future acceptance criteria |
 | **Task 7 — Free Agency Overhaul** | **TASK 7 — COMPLETE AND RELEASED** (v42.22.0-free-agency, 2026-11-05; owner's final authorization) | §59 (incl. §59.9 the lineup safeguard and §59.10 the Task 7 → Task 8 dependency); `docs/TASK7_*` | **Comprehensive franchise AI and difficulty balance testing is PENDING until Task 8** (owner decision, §59.10); the Task 7 results are kept as historical reference |
 | **Task 8 — Monster catalogue expansion and Nature/Temper** | **NEXT** | §59.10 | Expand and balance the catalogue across positions; then the mandatory validation of §59.10 |
-| GM mobility, stadium management, mentorship, weather/expanded penalties, 32 clubs, separate Battle Room/Career Mode | DEFERRED | §§24, 27.6–27.7 | No implementation without separate approval |
+| Coaching substitution philosophies | APPROVED FOR ACTIVE DESIGN; NOT IMPLEMENTED | §27.5D; owner decision 2026-11-15 | Define automatic/manual controls, philosophy rules, AI use and acceptance criteria before implementation |
+| GM job changes / career mobility | APPROVED FOR ACTIVE DESIGN; NOT IMPLEMENTED | §27.5E; owner decision 2026-11-15 | Define job availability, offers, transitions, persistent career history and lifecycle rules before implementation |
+| Football penalties | REMOVED FROM DESIGN | §3; owner decision 2026-11-15 | No expanded penalty system; separately remove existing delay-of-game enforcement after defining non-penalty clock expiry |
+| Stadium management, mentorship, weather, 32 clubs, separate Battle Room/Career Mode | DEFERRED | §§24, 27.6–27.7 | No implementation without separate approval |
 
 **Status update (2026-11-05): TASK 7 — COMPLETE AND RELEASED (v42.22.0-free-agency, §59). Next: Task 8 (§59.10). Comprehensive franchise AI and difficulty balance testing is pending until Task 8. The paragraph below is the historical 2026-11-04 entry.**
 
@@ -1043,16 +1046,43 @@ Use **one trade engine, two interfaces**:
 
 **C. Free agency:** keep the existing offseason market approachable. Improve clarity and AI decisions before adding complexity; no advanced contract clauses required for franchise completion.
 
+### 27.5D Coaching substitution philosophies — active design (owner, 2026-11-15)
+
+**Status:** moved out of the optional/deferred backlog into the active Franchise roadmap. Design work is approved; detailed rules are not locked and gameplay implementation has not started.
+
+The starting design uses the existing fatigue, availability and depth-chart systems for football substitutions between plays:
+- **Heavy Rotation:** favor fresher reserves and more frequent bench participation.
+- **Balanced Rotation:** weigh fatigue, relative quality and the game situation.
+- **Starter-Focused:** prefer starters while still replacing unavailable monsters.
+- Provide **automatic (head coach)** and **manual (player)** substitution controls. Every choice must preserve legal personnel, canonical positions and healthy-player eligibility. This is football substitution behavior, separate from Beast Clash rotation rules.
+
+**Decisions still to define:** whether philosophy belongs to a hired coach or is chosen by the player; defaults; fatigue thresholds; quality and situation weights; substitution frequency; player overrides; AI-club use; transparent explanations; and save compatibility. In-game injuries remain a separate proposed companion feature, not approved automatically by this scope change.
+
+**Acceptance direction:** philosophies produce observably different, understandable bench usage; automatic and manual choices obey the same eligibility rules; no invalid lineups or progression blockers; participation, fatigue and statistics reflect who actually played.
+
+### 27.5E GM job changes / career mobility — active design (owner, 2026-11-15)
+
+**Status:** moved from long-term/deferred possibilities into the active Franchise roadmap. Design work is approved; detailed rules are not locked and gameplay implementation has not started. This extends Franchise Mode, not the separate proposed Career Mode.
+
+**Feature direction:** a GM can change clubs while retaining a persistent GM career and its accomplishments. Design must cover job opportunities/offers, leaving a club, joining the next club, and preserving the history of each club run.
+
+**Decisions still to define:** when moves are allowed; how jobs become available; offer eligibility and reputation; voluntary moves versus firing; whether selling a franchise is included; the new club's roster, staff, contracts and Board state; what continues in the existing league; treatment of the former club and future meetings; save-slot ownership; retirement and GM Hall of Fame eligibility; and whether the existing 20-season limit applies to a club stint or the whole GM career. None of these choices is implicitly approved by the feature direction.
+
+**Acceptance direction:** a move preserves GM accomplishments and historical records without duplicating monsters, picks or contracts; the destination is playable; the former club has a coherent continuing state; reload/import/export preserve the transition.
+
+**Scope consequence:** the earlier assessment that the existing major franchise systems are present describes the pre-change scope. These two additions are now outstanding active roadmap features; neither may be called implemented or feature-complete until its agreed rules are built and verified.
+
 ### 27.6 Phase 5 — Long-term possibilities (NOT APPROVED FOR IMPLEMENTATION)
 
-- **GM career mobility:** selling/leaving a club, job offers, carrying a GM career to another club, preserving personal accomplishments after firing or retirement. Worth revisiting after core franchise validation; no new mandatory management layer now.
 - **Stadium management:** optional hybrid owner feature, deferred; no stadium economy or construction requirements now.
 - **Mentorship:** possible small training interaction between veterans and rookies; fold into existing training if pursued, not a new weekly chore.
-- **Weather and expanded penalties:** future football realism only if playtests justify the learning and balance costs.
+- **Weather:** future football realism only if playtests justify the learning and balance costs. **Football penalties are removed from the design, not deferred.**
 - **League expansion to 32 clubs:** **owner-confirmed long-term intention, not cancelled**. The current active league remains **16 clubs, four divisions, two conferences, one competition/campaign**. A future design phase may expand to **32 clubs** and revisit divisional alignment, schedules, playoff scarcity, AI rosters, statistics, franchise migrations, gym-club distribution, and performance. **No target release or implementation authorization exists.** Do not confuse expansion with the abandoned three-tier promotion/relegation pyramid.
 - **Separate modes:** a possible Battle Room (Draft Clash first; Custom Clash later) and Career Mode are future proposals only. Franchise Mode remains the development priority.
 
 ### 27.7 Explicit exclusions and documentation policy
+
+**Football penalties (owner, 2026-11-15):** removed from the design, including delay of game; do not reintroduce them as a future requirement without a new owner decision. This does not remove attribute modifiers, training repetition effects, fatigue, contract consequences or other mechanics that happen to use the word “penalty.” Documentation changes do not disable existing runtime enforcement.
 
 **Not part of the active franchise design:** 11-on-11 play, Challenger/Vanguard/Sovereign tiers, promotion/relegation challenges, tier-specific salary caps, and a 48-club three-tier pyramid. These are legacy concepts, **not** future prerequisites for Career Mode or the 32-club expansion. Do not reintroduce them without a new owner decision.
 
@@ -4584,4 +4614,4 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 - **End Around:** held back. The receiver, aligned 18 yards wide, reaches the quarterback at about 2.7 s, so pressure usually arrives first. The fix is a play-design choice (a tighter split, motion, or the quarterback opening toward him) awaiting the owner.
 - Run-pass options (RPOs) are not implemented and are outside Task 10.
 
-**Optional feature backlog: head-coach substitution philosophy (deferred; not implemented, not part of Task 10).** A head coach could manage between-play substitutions with the existing fatigue and depth-chart systems: **Heavy Rotation** (fresher reserves, frequent bench use), **Balanced Rotation** (fatigue, relative quality and game situation) or **Starter-Focused** (starters preferred; unavailable players still replaced). A **gameplay setting** would choose automatic (head coach) or manual (player) substitutions. A possible companion change: **injuries during a game**, with an injured monster replaced whatever the philosophy. Interface, defaults, probabilities and formulas are undecided. Detail: `docs/GRIDIRON_BEAST_MASTER_GDD.md`, "Optional Feature Backlog".
+**Head-coach substitution philosophy — active design (owner, 2026-11-15).** The earlier deferred status is superseded by §27.5D. Heavy Rotation, Balanced Rotation, Starter-Focused and automatic/manual controls are the starting design; details remain to be defined. GM job changes are also active design work (§27.5E). Neither feature is implemented by this documentation update. In-game injuries remain a separate proposal.
