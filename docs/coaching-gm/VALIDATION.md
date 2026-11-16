@@ -86,5 +86,5 @@ Notes, not changed: when the GM leaves, the former club's expiring contracts are
 ## Not yet verified
 
 - No physical iPhone/Android walkthrough is claimed; phone checks above are emulated Chromium.
-- The full-suite result for the reviewed candidate is reported with the review, against its exact commit.
+- Full suite on `26a544c`: 2,216 tests, **2,208 passed, 8 failed**, 0 cancelled/skipped (69 min). All 8 also fail on clean base `5bebfff`: `central-text` orphan keys, Beacon Lane, approved rulings (N7b), Metal presentation phases, I2 nothing hidden, in-snap fields, N9c Bloom Break, N9c Charge Strip. No candidate-only failure remains.
 - No merge, deployment or main-game-link update occurred. This is a draft implementation for review.
