@@ -1,3 +1,4 @@
+import { registerGmJobs } from '../gm-jobs-ui.js';
 import { playMonsterCry } from '../../audio/detail-audio.js';
 import { stopCry } from '../../audio/monster-cries.js';
 // Franchise Headquarters and the weekly action screens, plus playbook
@@ -53,6 +54,7 @@ export function weekStrip(f) {
 }
 
 export function registerHqScreens(Router, app) {
+  registerGmJobs(Router, app);
   // Answering a call works wherever the panel shows.
   document.addEventListener('click', async (e) => {
     const b = e.target.closest?.('[data-call]'); if (!b || !app.f) return; e.preventDefault();
@@ -83,7 +85,7 @@ export function registerHqScreens(Router, app) {
       const offPending = f.season.finished && (!F.offseasonReady(f) || !F.draftDone(f) || f.roster.length < F.ROSTER_MIN || F.nextStaffRole(f));
       const due = retirementDue(f);
       const hofDue = due !== 'fired' && hallCeremonyDue(f) && !F.postseasonEvent(f) && !(f.legendPick && !f.legendPick.resolved);
-      const next = due === 'fired' ? { label: $t('hq.the_board_has_let_you_go'), action: 'fired', icon: '🚪' } : hofDue ? { label: $t('hq.hall_of_fame_day_attend'), action: 'hofday', icon: '🏛️' } : due === 'season-cap' ? { label: `${$t('hq.season_complete_retire_to_the_franchise', { seasonCap: SEASON_CAP })}`, action: 'retire-now', icon: '🏛️' } : due === 'voluntary' ? { label: $t('hq.retirement_complete_it_now'), action: 'retire-now', icon: '🏛️' } : f.season.finished ? (F.postseasonEvent(f) ? { label: `${$t('hq.postseason', { title: F.postseasonEvent(f).title })}`, action: 'postseason', icon: '📞' } : f.legendPick && !f.legendPick.resolved ? { label: $t('hq.choose_your_legend_track'), action: 'legend', icon: '🌟' } : { label: offPending ? `${$t('hq.offseason')} ${F.offseasonPending(f).length ? F.offseasonPending(f).length + ' contract decision' + (F.offseasonPending(f).length === 1 ? '' : 's') : !F.draftDone(f) ? $t('hq.the_draft') : f.roster.length < F.ROSTER_MIN ? $t('hq.sign_to') + F.ROSTER_MIN + ' monsters' : 'hire staff'}` : $t('hq.continue_to_the_offseason'), action: 'offseason', icon: '📋' }) : nextAction(f);
+      const next = f.board?.fired && F.gmJobWindow(f) ? { label: $t('gm.find_job'), action: 'gmjobs', icon: '💼' } : due === 'fired' ? { label: $t('hq.the_board_has_let_you_go'), action: 'fired', icon: '🚪' } : hofDue ? { label: $t('hq.hall_of_fame_day_attend'), action: 'hofday', icon: '🏛️' } : due === 'season-cap' ? { label: `${$t('hq.season_complete_retire_to_the_franchise', { seasonCap: SEASON_CAP })}`, action: 'retire-now', icon: '🏛️' } : due === 'voluntary' ? { label: $t('hq.retirement_complete_it_now'), action: 'retire-now', icon: '🏛️' } : f.season.finished ? (F.postseasonEvent(f) ? { label: `${$t('hq.postseason', { title: F.postseasonEvent(f).title })}`, action: 'postseason', icon: '📞' } : f.legendPick && !f.legendPick.resolved ? { label: $t('hq.choose_your_legend_track'), action: 'legend', icon: '🌟' } : { label: offPending ? `${$t('hq.offseason')} ${F.offseasonPending(f).length ? F.offseasonPending(f).length + ' contract decision' + (F.offseasonPending(f).length === 1 ? '' : 's') : !F.draftDone(f) ? $t('hq.the_draft') : f.roster.length < F.ROSTER_MIN ? $t('hq.sign_to') + F.ROSTER_MIN + ' monsters' : 'hire staff'}` : $t('hq.continue_to_the_offseason'), action: 'offseason', icon: '📋' }) : nextAction(f);
       const race = f.season.week >= 5 && !f.season.finished && !F.inPlayoffs(f) ? `<div class="muted" style="margin-top:4px">${$t('hq.playoff_race_b_b', { text: esc(F.playoffPicture(f).text) })}</div>` : '';
       const gameLine = f.season.finished ? `${$t('hq.b_season_complete_b', { year: yearOf(f.season.year), club: f.season.champion === f.club ? $t('hq.beast_bowl_champions') : f.season.champion ? $t('hq.won_the_beast_bowl_2', { club: esc(f.season.champion) }) : '' })} <button class="btn small" data-action="awards">${$t('hq.how_we_finished')}</button>`
         : po ? `<b>${esc(po.tag)}</b> · ${po.home === f.club ? 'vs' : '@'} ${esc(opp)}`
@@ -97,7 +99,7 @@ export function registerHqScreens(Router, app) {
       return `${badgeBanner}${callPanelHtml(f)}${tradeLineHtml(f)}${lastGame}
         <div class="panel tight"><div class="row between"><div><b>${yearOf(F.displayYear(f))}</b> · ${phaseLabel(f)}</div><div class="chip accent">${$t('hq.team_ovr', { overall: s.overall })}</div></div>
           <div class="row between" style="margin-top:4px"><span>${f.season.playoffs ? playoffStatus(f) : `${$t('hq.record')} <b class="mono">${s.record}</b>${rival ? ` · <span class="dim">${$t('hq.rival_2', { team: esc(rival.team) })}</span>` : ''}`}</span><span class="muted">${$t('hq.cap_room')} <b style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(cap.remaining)}</b></span></div>${race}</div>
-        ${weekStrip(f)}
+        ${weekStrip(f)}<button class="btn block" data-action="gmjobs" style="margin:8px 0">${$t('gm.career')}</button>
         <div class="panel"><div class="muted" style="font-size:12px">${$t('hq.this_week')}</div><div style="margin:4px 0 8px">${gameLine}${(() => { const g = opp && GYM_BY_CLUB[opp]; if (!g || f.season.finished) return ''; const b = F.badgeOf(f, opp); return `<div class="muted" style="margin-top:4px">${b ? `${$t('hq.you_hold_the', { badge: esc(g.badge), year: yearOf(b.year) })}` : `${$t('hq.b_badge_game_b_beat_s', { name: esc(g.coach.name), opp: esc(opp), badge: esc(g.badge) })}`}</div>`; })()}</div>
           ${next ? `<button class="btn primary big block ${next.action === 'forfeit' || next.action === 'lineupgate' ? 'danger' : ''}" data-action="${next.action}">${next.icon} ${esc(next.label)}</button>${next.note ? `<p class="dim" style="margin:4px 0 0;color:var(--bad)">${$t('hq.fix_the_depth_chart_or_sign', { note: esc(next.note) })}</p>` : ''}${next.skip ? `<button class="btn block" data-action="skipplayoffs" style="margin-top:8px">${$t('hq.skip_to_the_offseason')}</button>` : ''}` : ''}
           ${!f.season.finished && day < 6 && !f.week.commissioner && !(F.inPlayoffs(f) && !F.playoffFixture(f)) && !F.needsGoal(f) ? `<button class="btn block" data-action="autorun" style="margin-top:8px">${$t('hq.let_the_staff_run_the_week')}</button>` : ''}
@@ -133,6 +135,8 @@ export function registerHqScreens(Router, app) {
         commissioner: () => Router.go('commissioner'),
         restbye: () => { F.skipToByeIfIdle(app.f); app.save(); Router.render(); },
         postseason: () => Router.go('postseason'),
+        gmjobs: () => Router.go('gm-jobs'),
+        stayjob: () => { const r=F.stayAtClub(app.f); if(!r.ok){toast(r.reason,'bad');return;} app.save(); Router.render(); },
         hofday: () => Router.go('hofceremony', { year: app.f.season.year, step: 0 }),
         legend: () => Router.go('legend'),
         // Retirement (GDD §42.4, decision R): available once the Hall of Fame checklist is met; it takes effect after the season.
@@ -184,6 +188,7 @@ export function registerHqScreens(Router, app) {
   Router.registerScreen('offseason', {
     title: ({ f }) => `${$t('hq.offseason_2', { year: yearOf(f ? F.displayYear(f) : 1) })}`,
     render({ f }) {
+      if (F.gmJobWindow(f)) return `<div class="panel"><h2>${$t('gm.next_job')}</h2><p>${$t('gm.offseason_prompt')}</p><button class="btn primary block" data-action="gmjobs">${$t('gm.market')}</button>${!f.board?.fired ? `<button class="btn block" data-action="stayjob">${$t('gm.stay',{club:esc(f.club)})}</button>` : ''}</div>`;
       const items = f.offseason?.items || []; const pending = F.offseasonPending(f);
       const cap = F.salarySummary(f); const usage = Math.min(100, Math.round(cap.total / cap.cap * 100));
       const fmt = (n) => n.toLocaleString('en-US');
@@ -218,6 +223,8 @@ export function registerHqScreens(Router, app) {
     },
     mount(root) {
       delegate(root, {
+        gmjobs: () => Router.go('gm-jobs'),
+        stayjob: () => { const r=F.stayAtClub(app.f); if(!r.ok){toast(r.reason,'bad');return;} app.save(); Router.render(); },
         hofday: () => Router.go('hofceremony', { year: app.f.season.year, step: 0, from: 'offseason' }),
         yrs: (el) => { yrs[el.dataset.id] = Number(el.dataset.v); Router.render(); },
         c: async (el) => { const v = el.dataset.v; const item = (app.f.offseason?.items || []).find((i) => i.id === el.dataset.id); if (v === 'acceptcounter') { const r = F.resolveContract(app.f, el.dataset.id, 'acceptcounter'); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); return; } if (v === 'walk' && !(await confirmSheet(`${$t('hq.let_walk_2', { name: item?.name, item: item?.kind === 'staff' ? $t('hq.you_will_need_to_hire_a') : $t('hq.they_go_to_the_free_agent') })}`, { title: $t('hq.let_walk'), okLabel: $t('hq.let_walk'), danger: true }))) return; const r = F.resolveContract(app.f, el.dataset.id, v, { years: yrs[el.dataset.id] || 2 }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); if (r.status === 'rejected') toast(r.reason, 'bad'); else if (r.status === 'walked' && fieldText(r, 'why')) toast(`${$t('hq.leaves', { name: item?.name, why: fieldText(r, 'why') })}`, 'bad'); else if (r.status === 'countered') toast(`${$t('hq.he_counters_yr_for', { toLocaleString: r.counter.salary.toLocaleString('en-US'), years: r.counter.years })}`, 'info'); else if (r.status === 'declined') toast($t('hq.he_turned_it_down_a_free'), 'bad'); else if (r.status === 'signed') toast('Re-signed.', 'good'); else if (v === 'counter') toast(r.countered === 'accepted' ? $t('hq.they_took_the_counter') : $t('hq.they_refused_and_walked'), r.countered === 'accepted' ? 'good' : 'bad'); Router.render(); },

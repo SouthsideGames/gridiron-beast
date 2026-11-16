@@ -1,3 +1,4 @@
+import { eligiblePlays } from './substitutions.js';
 // Drives a game forward one decision at a time. Used headless for league
 // games and tests, and by the UI (which supplies the human's choices).
 //
@@ -43,6 +44,8 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
   const done = () => { state.rngState = rng.state; };
   const ctrl = (s) => controllers[s];
   const offTeam = teams[side], defTeam = teams[R.opponent(side)];
+  const legalOff=eligiblePlays(state,offTeam,offTeam.offensePlays,PLAYS), legalDef=eligiblePlays(state,defTeam,defTeam.defensePlays,PLAYS);
+  if (state.phase === 'scrimmage' && (!legalOff.length || !legalDef.length)) return {kind:'forfeit',text:R.lineupForfeit(state,!legalOff.length?side:R.opponent(side)).text};
 
   if (state.phase === 'kickoff' || state.phase === 'free_kick') {
     const kicking = state.kickingTeam;
@@ -57,10 +60,11 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
     const tryTeam = state.tryTeam;
     const choice = choices.tryChoice || ctrl(tryTeam).tryChoice(state);
     if (choice === 'two') {
-      const offAvail = goalLinePlays(teams[tryTeam].offensePlays);
-      const defAvail = teams[R.opponent(tryTeam)].defensePlays;
-      const offId = choices.offensePlayId || ctrl(tryTeam).offensePlay(state, teams[tryTeam], offAvail, tendencies[tryTeam], rng, teams[R.opponent(tryTeam)]);
-      const defId = choices.defensePlayId || ctrl(R.opponent(tryTeam)).defensePlay(state, teams[R.opponent(tryTeam)], defAvail, tendencies[tryTeam], rng, teams[tryTeam], tendencies[R.opponent(tryTeam)]);
+      const offAvail = goalLinePlays(eligiblePlays(state,teams[tryTeam],teams[tryTeam].offensePlays,PLAYS));
+      const defAvail = eligiblePlays(state,teams[R.opponent(tryTeam)],teams[R.opponent(tryTeam)].defensePlays,PLAYS);
+      if(!offAvail.length || !defAvail.length) return {kind:'forfeit',text:R.lineupForfeit(state,!offAvail.length?tryTeam:R.opponent(tryTeam)).text};
+      const offId = (offAvail.includes(choices.offensePlayId) ? choices.offensePlayId : null) || ctrl(tryTeam).offensePlay(state, teams[tryTeam], offAvail, tendencies[tryTeam], rng, teams[R.opponent(tryTeam)]);
+      const defId = (defAvail.includes(choices.defensePlayId) ? choices.defensePlayId : null) || ctrl(R.opponent(tryTeam)).defensePlay(state, teams[R.opponent(tryTeam)], defAvail, tendencies[tryTeam], rng, teams[tryTeam], tendencies[R.opponent(tryTeam)]);
       done();
       const res = R.attemptTwoPoint(state, teams, offId, defId);
       return { kind: 'try', text: res.text, sim: res.sim, offensePlayId: offId, defensePlayId: defId };
@@ -99,8 +103,8 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
   }
 
   // Scrimmage play.
-  const offId = choices.offensePlayId || ctrl(side).offensePlay(state, offTeam, offTeam.offensePlays, tendencies[side], rng, defTeam);
-  const defId = choices.defensePlayId || ctrl(defSide).defensePlay(state, defTeam, defTeam.defensePlays, tendencies[side], rng, offTeam, tendencies[defSide]);
+  const offId = (choices.offensePlayId && eligiblePlays(state,offTeam,[choices.offensePlayId],PLAYS).length ? choices.offensePlayId : null) || ctrl(side).offensePlay(state, offTeam, legalOff, tendencies[side], rng, defTeam);
+  const defId = (choices.defensePlayId && eligiblePlays(state,defTeam,[choices.defensePlayId],PLAYS).length ? choices.defensePlayId : null) || ctrl(defSide).defensePlay(state, defTeam, legalDef, tendencies[side], rng, offTeam, tendencies[defSide]);
   done();
   noteOffense(tendencies[side], offId, PLAYS[offId]?.type === 'pass');
   noteDefense(tendencies[defSide], defId);

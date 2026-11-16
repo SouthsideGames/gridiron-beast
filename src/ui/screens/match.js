@@ -1,3 +1,5 @@
+import { eligiblePlays } from '../../sim/substitutions.js';
+import { substitutionStrip, openSubstitutions } from '../coaching-substitutions.js';
 import { zonePlans, zonePlannerHtml, zonePlannerOverlay } from '../zone-planner.js';
 import { setZoneChoice } from '../../sim/t8/zone-planning.js';
 // Sunday: pregame lineups and the pregame Beast Clash for possession (GDD §26.2), then the live match screen.
@@ -163,6 +165,7 @@ export function registerMatchScreens(Router, app) {
       delegate(root, {
         hq: () => Router.go('hq', {}, { reset: true }),
         log: () => showLog(f),
+        substitutions: () => { if(anim) return; openSubstitutions(f,teamsFor(f),{save:()=>app.save(),refresh:()=>refresh(f)}); },
         pick: (el) => { const G = f.game; G.selected[el.dataset.side] = el.dataset.id; app.save(); refresh(f); },
         zonepick: (el) => { setZoneChoice(f.game.state, el.dataset.zone, el.dataset.choice); f.game.zoneFocus = el.dataset.zone; app.save(); refresh(f); },
         zonefocus: (el) => { f.game.zoneFocus = el.dataset.zone; refresh(f); },
@@ -352,7 +355,18 @@ export function registerMatchScreens(Router, app) {
     if (ballOn === 50) return 'MIDFIELD';
     return ballOn < 50 ? `${$t('match.their', { ballOn })}` : `${$t('match.your', { ballOn: 100 - ballOn })}`;
   }
-  function teamsFor(f) { const m = F.sundayMatchup(f); return { home: m.home, away: m.away }; }
+  function teamsFor(f) {
+    const m = F.sundayMatchup(f), teams = { home: m.home, away: m.away }, s=f.game?.state;
+    if(s)for(const side of ['home','away'])for(const unit of ['offense','defense']) teams[side][`${unit}Plays`]=eligiblePlays(s,teams[side],teams[side][`${unit}Plays`],PLAYS);
+    if(s && !s.finished && ['scrimmage','try'].includes(s.phase)) for(const side of ['home','away']) {
+      const unit=(s.phase==='try'?s.tryTeam:s.possession)===side?'offense':'defense';
+      const offered=teams[side][`${unit}Plays`], chosen=side===f.game.playerSide ? f.game.selected?.[unit] : null;
+      if(chosen && !offered.includes(chosen)) f.game.selected[unit]=null;
+      const id=(offered.includes(chosen)?chosen:null) || offered[0];
+      const play=PLAYS[id]; if(play) Object.assign(teams[side][unit],R.pickSlots(teams[side][unit],play.onField,teams[side],play,s,side));
+    }
+    return teams;
+  }
 
   /** The AI's call for the current situation is fixed once per situation so the pre-snap look matches the snap. */
   function aiCall(f, teams, side) {
@@ -449,9 +463,9 @@ export function registerMatchScreens(Router, app) {
       return `<div class="match-actions">${autoBar}${rpRow}${weKick ? `<div class="primary-row ${s.phase === 'kickoff' ? 'three' : ''}" style="grid-template-columns:${s.phase === 'kickoff' ? '2fr 1fr' : '1fr'}"><button class="btn primary big" data-action="kickoff">${s.phase === 'free_kick' ? $t('match.free_kick_2') : $t('match.kick_off')}</button>${s.phase === 'kickoff' ? `<button class="btn" data-action="onside">${$t('match.onside')}</button>` : ''}</div>` : `<button class="btn primary big block" data-action="kickoff">${$t('match.receive_the_kick')}</button>`}</div>`;
     }
     if (s.phase === 'try') {
-      if (s.tryTeam !== me) return `<div class="match-actions">${autoBar}${rpRow}<button class="btn primary big block" data-action="continue">${$t('match.opponents_try_continue')}</button></div>`;
+      if (s.tryTeam !== me) return `<div class="match-actions">${substitutionStrip(f)}${autoBar}${rpRow}<button class="btn primary big block" data-action="continue">${$t('match.opponents_try_continue')}</button></div>`;
       const two = PLAYS; const plays = teams[me].offensePlays.filter((id) => PLAYS[id].tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t)));
-      return `<div class="match-actions">${autoBar}${rpRow}<p class="muted center" style="margin:0">${$t('match.touchdown_kick', { tryDecision: AI.tryDecision(s) === 'two' ? 'coach suggests two' : $t('match.coach_suggests_the_kick') })}</p>
+      return `<div class="match-actions">${substitutionStrip(f)}${autoBar}${rpRow}<p class="muted center" style="margin:0">${$t('match.touchdown_kick', { tryDecision: AI.tryDecision(s) === 'two' ? 'coach suggests two' : $t('match.coach_suggests_the_kick') })}</p>
         <div class="primary-row" style="grid-template-columns:1fr 1fr"><button class="btn primary big" data-action="trykick">${$t('match.kick_pat_1')}</button><button class="btn big" data-action="trytwo">${$t('match.go_for_two')}</button></div>
         ${cards(plays, 'offense', G.selected.offense, null)}</div>`;
     }
@@ -481,9 +495,10 @@ export function registerMatchScreens(Router, app) {
       <button class="btn small" data-action="simfinal" title="${$t('match.skip_the_rest_of_the_game')}">${$t('match.sim_to_final_2')}</button>
       ${lastReplay && lastReplay.gameKey === s.seed ? `<button class="btn small" data-action="replay" title="${$t('match.watch_the_last_big_play_again', { play: esc(lastReplay.reason.label.toLowerCase()) })}">${$t('match.replay_2')}</button>` : ''}
       ${G.mode === 'key' ? `<button class="btn small good" data-action="keymoment">${$t('match.sim_to_key_moment')}</button>` : ''}</div>`;
+    const subPanel = substitutionStrip(f);
     const clock = f.settings.liveClock && s.phase === 'scrimmage' ? `<div class="playclock">${$t('match.play_clock')} <b id="pc">40</b><div class="bar"><i id="pcbar" style="width:100%"></i></div></div>` : '';
     const plans = selected ? zonePlans(s, teams, me, myBall ? selected : look.presnap.offensePlay.id, myBall ? look.presnap.defensePlay.id : selected) : [];
-    return `${myBall ? '' : prismPickerHtml(s)}${zonePlannerHtml(plans, { focus: G.zoneFocus })}<div class="match-actions">${primary}${secondary}${clock}</div>
+    return `${myBall ? '' : prismPickerHtml(s)}${zonePlannerHtml(plans, { focus: G.zoneFocus })}<div class="match-actions">${primary}${secondary}${subPanel}${clock}</div>
       <div class="muted" style="font-size:12px;margin:4px 0">${$t('match.coachs_suggestion_opponents_call_is_hidden', { myBall: myBall ? $t('match.your_offensive_plays') : $t('match.your_defensive_plays') })}${teams[me].blockedPlays?.length ? ` · <span style="color:var(--bad)">${$t('match.plays_unavailable_no_legal', { n: teams[me].blockedPlays.length })} ${teams[me].blockedSlots.join('/')})</span>` : ''}</div>
       ${cards(plan, side, selected, suggestion)}`;
   }
@@ -922,10 +937,8 @@ export function registerMatchScreens(Router, app) {
       const now = performance.now(); left -= (now - last) / 1000; last = now;
       const pc = root.querySelector('#pc'), bar = root.querySelector('#pcbar');
       if (pc) pc.textContent = Math.max(0, Math.ceil(left)); if (bar) bar.style.width = `${Math.max(0, left / 40 * 100)}%`;
-      if (left <= 0 && G.state.possession === G.playerSide) {
-        left = 40; const s = G.state; s.ballOn = Math.max(1, s.ballOn - 5); s.toGo += 5; s.clockRunning = false;
-        R.log(s, $t('match.delay_of_game_5_yard_penalty'), 'info'); G.lastEvent = { text: $t('match.delay_of_game_5_yard_penalty_2'), important: false }; G.aiCall = null; app.save(); Router.render();
-      } else if (left <= 0) left = 40;
+      // Advisory only: expiry resets the display and never changes yards, downs, clocks or possession.
+      if (left <= 0) left = 40;
     }, 250);
   }
 }

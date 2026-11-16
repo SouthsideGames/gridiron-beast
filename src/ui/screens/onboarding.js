@@ -1,3 +1,4 @@
+import { philosophyLabel } from '../../sim/substitutions.js';
 // Commissioner's office: owner creation, club choice, rival reveal,
 // cornerstone monsters, then the five staff hires.
 
@@ -24,7 +25,7 @@ const STEPS = ['name', 'look', 'background', 'club', 'difficulty', 'offense'];
 const LINES = {
   name: t('onboarding.ah_there_you_are_i_knew'),
   look: t('onboarding.lets_get_your_picture_for_the'),
-  background: t('onboarding.every_owner_comes_from_somewhere_where'),
+  background: t('gm.role') + ' ' + t('onboarding.every_owner_comes_from_somewhere_where'),
   club: t('onboarding.the_top_franchises_arent_for_sale'),
   difficulty: t('onboarding.how_hard_do_you_want_this'),
   offense: t('onboarding.last_thing_three_monsters_have_agreed'),
@@ -149,7 +150,7 @@ export function registerOnboardingScreens(Router, app) {
       : c.role.includes('coordinator') ? `<div class="muted">${t('onboarding.plays_scheme_fit_with_b_b', { playbooks: (PLAYBOOKS[c.id] || []).length, hc: hc ? esc(hc.name) : 'head coach', hc2: hc ? alignmentFor(hc, c) : '·' })}</div><button class="btn small" data-action="plays" data-id="${c.id}" data-name="${esc(c.name)}">${t('onboarding.view_playbook')}</button>`
       : c.role === 'head_scout' ? `<div class="muted">${t('onboarding.volcanic_coastal_forest_frost', { fire: c.biomes.fire, water: c.biomes.water, forest: c.biomes.forest, ice: c.biomes.ice })}</div>`
       : `<div class="muted">${t('onboarding.focus_strength_passing_rushing_coverage_pass', { passing: c.bonus.passing, rushing: c.bonus.rushing, coverage: c.bonus.coverage, passrush: c.bonus.pass_rush })}</div>`;
-    return `<div class="panel"><div class="row">${portraitSprite(c.id, 44)}<div class="grow"><b>${esc(c.name)}</b> <span class="chip">${esc(c.style)}</span><div class="muted">${t('onboarding.ovr', { strength: esc(c.strength), overall: c.overall })}</div></div></div>
+    return `<div class="panel"><div class="row">${portraitSprite(c.id, 44)}<div class="grow"><b>${esc(c.name)}</b> <span class="chip">${esc(c.style)}${c.role === 'head_coach' ? ` · ${esc(philosophyLabel(c.substitution))}` : ''}</span><div class="muted">${t('onboarding.ovr', { strength: esc(c.strength), overall: c.overall })}</div></div></div>
       <div style="margin:8px 0">${extra}</div>
       <div class="row between"><span class="muted">${t('onboarding.yr_room_after', { amount: fmtMoney(c.salary) })} <b style="color:${after.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(after.remaining)}</b></span><button class="btn primary" data-action="hire" data-id="${c.id}" data-name="${esc(c.name)}" ${after.over ? 'disabled' : ''}>${t('onboarding.hire')}</button></div></div>`;
   }

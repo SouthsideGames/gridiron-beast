@@ -3,18 +3,19 @@
 // anything: an archive keeps its history, roster, awards, records and careers, and stays in its slot until the owner deletes
 // it (export first, §42.5).
 //
-// Rules: at most SEASON_CAP complete seasons (retirement is mandatory after Season 20, once that season has run in full);
+// Rules: at most SEASON_CAP complete seasons (retirement is mandatory after Season 15, once that season has run in full);
 // voluntary retirement is available once the Hall of Fame checklist is met (decision R); a franchise already beyond the cap
 // finishes its current season first (decision M); a Hall of Fame card is written only when the checklist is met (decision L);
 // every mutating entry point refuses an archived franchise (`assertActive`).
 
+import { CAREER_SEASONS } from './gm-career.js';
 import { monsterOverall } from '../data/monsters.js';
 import { divisionOf, TIERS } from '../data/league.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
 import { careerSnapshot } from './career-profile.js';
 import { t as $t } from '../text/index.js';
 
-export const SEASON_CAP = 20;
+export const SEASON_CAP = CAREER_SEASONS;
 export const ARCHIVE_STATUSES = Object.freeze(['retired', 'fired']);
 
 export const seasonsCompleted = (f) => (f?.history || []).length;
@@ -45,8 +46,9 @@ export const guarded = (fn) => function guardedMutator(f, ...rest) { assertActiv
  */
 export function retirementDue(f) {
   if (!f || isArchived(f) || !f.season?.finished) return null;
-  if (f.board?.fired) return 'fired';
   if (seasonsCompleted(f) >= SEASON_CAP) return 'season-cap';
+  // A dismissal opens the job market while career seasons remain. It no longer forces archival.
+  if (f.board?.fired && !f.league?.clubs) return 'fired';
   if (f.lifecycle?.pendingRetirement) return 'voluntary';
   return null;
 }
@@ -107,6 +109,7 @@ export function buildLegacy(f, { now = Date.now(), reason = 'retired' } = {}) {
     bestMonsters: best, rosterSize: roster.length,
     rival: rival ? { team: rival.team, gm: rival.gm, headToHead: { ...(rival.headToHead || {}) } } : null,
     board: f.board ? { confidence: f.board.confidence ?? null, fired: !!f.board.fired, history: (f.board.history || []).map((g) => ({ ...g })) } : null,
+    gmStints: structuredClone(f.gmCareer?.stints || []),
     hallOfFame: null, // the card id, set by the archive step when a card was written
     seasons,
   };

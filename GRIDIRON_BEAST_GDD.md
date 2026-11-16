@@ -101,7 +101,7 @@ Every defender may blitz. The defense lines up in its package's base alignment p
 | Clock | Runs during plays. Stops on incomplete, score, change of possession, timeout, end of quarter; on out of bounds only in the last 2:00 of each half. Between plays a running clock loses 25 s (Hurry-up 12 s, Milk 38 s) |
 | End of quarter | A play snapped with time on the clock always finishes. A touchdown's try is always attempted |
 | Overtime | One overtime period, college format: each team gets one possession from the opponent 25. Still tied after that: an **overtime Beast Clash** decides the game (3v3 in the season, 5v5 in the playoffs; §26.3). The football score stands; no points are invented. (The engine's classic repeat-until-untied rule remains available when `otPeriods` is unset.) |
-| Penalties | **REMOVED from the design (owner, 2026-11-15):** no football penalties, including delay of game. This is the target design; any existing delay-of-game code still needs a separate implementation change. Play-clock expiry behavior without a penalty must be specified before that change. |
+| Penalties | **REMOVED from the design (owner, 2026-11-15):** no football penalties, including delay of game. Implemented in the review candidate: the optional 40-second play clock resets its display at expiry, without changing yards, downs, game clock or possession. |
 
 **Field orientation (LOCKED):** the match field is vertical and the team with the ball always attacks **up** the screen. Yard labels show `OWN 30` / `OPP 30`. This keeps play art, cards and the live field in one orientation.
 
@@ -948,16 +948,16 @@ This register is the **current planning index** for Franchise Mode. The detailed
 | Captain Partnerships (replaces original generic partnership proposal) | RELEASED | §49 | Long-term balance and clarity checks |
 | Monster career injury history | IMPLEMENTED; release status requires reconciliation | §§50, 52 (earlier §50 says not released; later release history may supersede it) | Verify main-link deployment; update this row with evidence |
 | Evolution presentation overhaul | RELEASED | §§51–52 | Verify real-device animation, audio and reduced motion |
-| Three save slots, 20-season lifecycle, retirement and Hall of Fame | RELEASED | §§42–44, 47 | Full-lifecycle, recovery and migration validation |
+| Three save slots, retirement and Hall of Fame; 15-season career limit | FOUNDATION RELEASED; 15-SEASON CHANGE IN CANDIDATE | §§42–44, 47 | Full-lifecycle, recovery and migration validation |
 | Persistent AI rosters, league-wide careers, AI–AI trades | RELEASED | §§45–47 | Multi-season balance and integrity validation |
 | QB intelligence, AI testing lab, defensive AI corrections | IMPLEMENTED; release status requires reconciliation | §53 historical implementation entries; recent main commits | Verify latest merged release and deployment; do not rely on §53's original NOT MERGED heading |
 | Broader owner trading: monster-for-monster, monster-plus-pick, incoming offers, Simple/Advanced | APPROVED | §27.5A | Define exact scope, implement and test; in-season trading remains conditional on rules |
 | Smarter AI long-term management (Task 6, AI Franchise Intelligence: ageing, roster plan, development, strategy modes, F1–F4) | RELEASED v42.21.0-ai-franchise, 2026-11-03 (PRs #83–#91, `main` `d2159f8`, artifact version 116) | §§55–58, §58.8; `docs/TASK6_FINAL_RELEASE_REPORT.md` | Task 6 closed. Accepted exceptions for this release only (§58.8): Rookie owner balance and drift, Pro drift, All-Star owner balance and drift uncertainty, the unmet franchise-balance targets. These do not lower future acceptance criteria |
 | **Task 7 — Free Agency Overhaul** | **TASK 7 — COMPLETE AND RELEASED** (v42.22.0-free-agency, 2026-11-05; owner's final authorization) | §59 (incl. §59.9 the lineup safeguard and §59.10 the Task 7 → Task 8 dependency); `docs/TASK7_*` | **Comprehensive franchise AI and difficulty balance testing is PENDING until Task 8** (owner decision, §59.10); the Task 7 results are kept as historical reference |
 | **Task 8 — Monster catalogue expansion and Nature/Temper** | **NEXT** | §59.10 | Expand and balance the catalogue across positions; then the mandatory validation of §59.10 |
-| Coaching substitution philosophies and in-game injuries | APPROVED FOR IMPLEMENTATION; NOT IMPLEMENTED | §27.5D; owner approval 2026-11-15 | Implement fixed coach philosophies, automatic/manual substitutions, AI parity and injury replacement; validate tunable thresholds |
-| GM job changes / career mobility | APPROVED FOR IMPLEMENTATION; NOT IMPLEMENTED | §27.5E; owner approval 2026-11-15 | Implement job market and persistent GM stints with a 15-season total career; reconcile existing 20-season runtime and old saves |
-| Football penalties | REMOVED FROM DESIGN | §3; owner decision 2026-11-15 | No expanded penalty system; separately remove existing delay-of-game enforcement after defining non-penalty clock expiry |
+| Coaching substitution philosophies and in-game injuries | IMPLEMENTED CANDIDATE; NOT RELEASED | §27.5D; owner approval 2026-11-15 | Validate fixed philosophies, automatic/manual substitutions, AI parity, injury replacement and initial tunables |
+| GM job changes / career mobility | IMPLEMENTED CANDIDATE; NOT RELEASED | §27.5E; owner approval 2026-11-15 | Validate job moves, firing, returns, old saves and the 15-season total career before release |
+| Football penalties | REMOVED IN CANDIDATE | §3; owner decision 2026-11-15 | The optional 40-second clock is advisory; expiry resets its display with no gameplay consequence |
 | Stadium management, mentorship, weather, 32 clubs, separate Battle Room/Career Mode | DEFERRED | §§24, 27.6–27.7 | No implementation without separate approval |
 
 **Status update (2026-11-05): TASK 7 — COMPLETE AND RELEASED (v42.22.0-free-agency, §59). Next: Task 8 (§59.10). Comprehensive franchise AI and difficulty balance testing is pending until Task 8. The paragraph below is the historical 2026-11-04 entry.**
@@ -1048,7 +1048,7 @@ Use **one trade engine, two interfaces**:
 
 ### 27.5D Coaching substitution philosophies — approved rules (owner, 2026-11-15)
 
-**Status:** owner approved all eight recommendations in the design discussion. Approved for implementation; not yet implemented by this documentation update.
+**Status:** owner approved all eight recommendations. Implemented as a review candidate on `codex/coaching-gm-careers`; not merged or published. Full acceptance and device testing remain with Claude/owner.
 
 1. Each head coach has a fixed philosophy visible before hiring: **Heavy Rotation**, **Balanced Rotation** or **Starter-Focused**.
 2. **Automatic substitutions are the default.** Manual controls are available; the player can override an automatic selection for the next play.
@@ -1065,7 +1065,7 @@ Use **one trade engine, two interfaces**:
 
 ### 27.5E GM job changes / career mobility — approved rules (owner, 2026-11-15)
 
-**Status:** owner approved recommendations 9–19, with a **15-season total GM career** replacing the proposed 20-season figure. Approved for implementation; not yet implemented by this documentation update. This extends Franchise Mode, not the separate proposed Career Mode.
+**Status:** owner approved recommendations 9–19, with a **15-season total GM career**. Implemented as a review candidate on `codex/coaching-gm-careers`; not merged or published. This extends Franchise Mode, not the separate proposed Career Mode.
 
 1. The player is a **hired GM accountable to each club's Board**. Do not introduce club purchases or a franchise-selling economy.
 2. Job changes occur **only in the offseason**, after season awards/results are finalized and before contract decisions or free agency begin.
@@ -1079,7 +1079,7 @@ Use **one trade engine, two interfaces**:
 10. GM accomplishments accumulate across clubs, with separate records for each stint. GM Hall of Fame eligibility uses the whole career. Club and monster history retain correct attribution.
 11. Before acceptance, show the destination roster, cap, staff, picks and Board expectations. Require confirmation; the accepted move is final within the save.
 
-**Season-limit reconciliation:** the repository checked on 2026-11-15 still has `SEASON_CAP = 20` in `src/franchise/lifecycle.js`. The owner's intended limit for this feature is **15**, not a claim that the runtime already enforces 15. Implementation must update the cap, UI, tests, retirement and job-market gates together. Existing saves at or beyond the new cap require a non-destructive compatibility rule; do not truncate recorded history or interrupt an in-progress season. Historical 20-season measurements elsewhere remain historical evidence.
+**Season-limit reconciliation:** the implementation candidate now uses a shared **15-season** career limit in the lifecycle and job market. Changing clubs keeps the same save UID and all completed season history, so it cannot reset the clock. Older saves already in progress at or past the limit can finish that season; recorded history is never truncated. Existing archives stay read-only. Historical 20-season measurements elsewhere remain historical evidence, not the new limit.
 
 **Acceptance:** preserve career and club records through moves; maintain one coherent league; never duplicate monsters, picks or contracts; destination remains playable; former club management continues; reload, backup, import/export and cloud saves preserve stints and the career-wide season counter.
 
@@ -1095,7 +1095,7 @@ Use **one trade engine, two interfaces**:
 
 ### 27.7 Explicit exclusions and documentation policy
 
-**Football penalties (owner, 2026-11-15):** removed from the design, including delay of game; do not reintroduce them as a future requirement without a new owner decision. This does not remove attribute modifiers, training repetition effects, fatigue, contract consequences or other mechanics that happen to use the word “penalty.” Documentation changes do not disable existing runtime enforcement.
+**Football penalties (owner, 2026-11-15):** removed from the design, including delay of game; do not reintroduce them as a future requirement without a new owner decision. This does not remove attribute modifiers, training repetition effects, fatigue, contract consequences or other mechanics that happen to use the word “penalty.” The review candidate removes the prior runtime delay-of-game enforcement; the main deployed game remains unchanged until release.
 
 **Not part of the active franchise design:** 11-on-11 play, Challenger/Vanguard/Sovereign tiers, promotion/relegation challenges, tier-specific salary caps, and a 48-club three-tier pyramid. These are legacy concepts, **not** future prerequisites for Career Mode or the 32-club expansion. Do not reintroduce them without a new owner decision.
 
@@ -4628,3 +4628,19 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 - Run-pass options (RPOs) are not implemented and are outside Task 10.
 
 **Head-coach substitution philosophy — active design (owner, 2026-11-15).** The earlier deferred status is superseded by the owner's approved rules in §27.5D, including in-game injuries. GM job changes and a 15-season total GM career are approved in §27.5E. Both are approved for implementation; neither is implemented by this documentation update.
+
+
+## Coaching substitutions and GM job changes — implementation candidate (2026-11-15)
+
+Branch `codex/coaching-gm-careers`, build `v43.17.0-coaching-gm-preview`. This is implementation for Claude testing, not release acceptance. Details and the exact testing handoff: `docs/COACHING_GM_IMPLEMENTATION.md`.
+
+- Football rotations are shared by live games and the headless runner. Each head coach has a fixed philosophy; automatic/manual controls live in Settings and the match lineup panel. Overrides last one play. Injured monsters cannot reenter; exhausted monsters yield to non-exhausted position-legal reserves, retaining the existing half-strength fallback only if none exist.
+- Initial tunables: Heavy rotates below 72% stamina, tolerating up to a 22-point average-attribute gap; Balanced 45%/12; Starter-Focused 20%/6. A reserve must be at least 15 percentage points fresher. Close fourth quarters/overtime lower Balanced/Starter thresholds to 60% of normal. There is no new bench stamina regeneration; existing halftime recovery remains.
+- Live contact injuries use a deterministic per-play/per-monster stream. Initial base probability .0015 per eligible contact participant, multiplied by durability and depleted-stamina terms. Existing Minor/Moderate/Severe recovery bands are reused. Injuries remove unavailable package calls while legal equipped alternatives remain. A team with no legal equipped lineup forfeits 0–21; no out-of-position monster is invented. Injured football players are excluded from the deciding Clash. These probabilities and forfeit frequency require Claude's longer studies.
+- Individual stat keys preserve actual substitute participation, performance grades, rewards and box-score attribution. Old saves' slot-keyed lines remain readable. Per-game stamina, injuries and manual choices serialize inside the game state.
+- The GM Job Market opens after finalized season awards and before owner contract/free-agency decisions. Ordinary franchises supply job vacancies; the eight fixed gym clubs remain campaign opponents under the existing ordinary-club player model. There is always a rebuilding vacancy/accepted application, and a fired GM receives a direct rebuilding offer. Stronger offers depend deterministically on wins relative to expectations, recent record and career titles. Reapplying cannot reroll an offer.
+- A move exchanges control with the persistent AI registry. The same universe, save slot/UID, season history and pick ownership continue. Staff, order, finances and club campaign records are saved per club; the former club remains AI-managed. The incoming roster is taken from its current registry, never from an old snapshot. Duplicate display names receive the existing numeral treatment and incoming career records are normalized before saving, so a reload cannot silently change them. No monster physically transfers clubs because the GM moved.
+- Career accomplishments and separate club stints are retained; only accomplishments earned while managing a club count for the GM. Destination Board confidence resets. The 15-season total and Hall eligibility follow the career. The acceptance dialog previews roster, contracts, injuries, staff, cap and actual next-class pick ownership. A failed persistent save restores the pre-move state.
+- The old delay-of-game yardage mutation is removed. The optional live play clock is advisory only. Other attribute/training/fatigue modifiers remain unchanged in meaning.
+
+Remaining release work: full policy-required suite on the final candidate, browser/phone walkthroughs, expanded multi-season job/firing/return checks and rotation/injury balance measurement. Do not mark this released or update the main link before that review.

@@ -19,9 +19,9 @@ export const PLAYBOOKS = Object.freeze({
 });
 
 export const STAFF = Object.freeze([
-  { id: 'hc_flint', name: 'Marcus Flint', role: 'head_coach', overall: 82, style: $t('data.physical'), strength: $t('data.power_running_and_toughness'), salary: 108000, identity: { offense: 'run', defense: 'pressure', aggression: 0.65, passBias: 0.42 } },
-  { id: 'hc_vale', name: 'Avery Vale', role: 'head_coach', overall: 80, style: $t('data.balanced'), strength: $t('data.adaptable_game_plans'), salary: 96000, identity: { offense: 'balanced', defense: 'balanced', aggression: 0.5, passBias: 0.55 } },
-  { id: 'hc_reyes', name: 'Jordan Reyes', role: 'head_coach', overall: 84, style: $t('data.speed'), strength: $t('data.tempo_and_passing_preparation'), salary: 117000, identity: { offense: 'pass', defense: 'coverage', aggression: 0.55, passBias: 0.66 } },
+  { id: 'hc_flint', substitution: 'starters', name: 'Marcus Flint', role: 'head_coach', overall: 82, style: $t('data.physical'), strength: $t('data.power_running_and_toughness'), salary: 108000, identity: { offense: 'run', defense: 'pressure', aggression: 0.65, passBias: 0.42 } },
+  { id: 'hc_vale', substitution: 'balanced', name: 'Avery Vale', role: 'head_coach', overall: 80, style: $t('data.balanced'), strength: $t('data.adaptable_game_plans'), salary: 96000, identity: { offense: 'balanced', defense: 'balanced', aggression: 0.5, passBias: 0.55 } },
+  { id: 'hc_reyes', substitution: 'heavy', name: 'Jordan Reyes', role: 'head_coach', overall: 84, style: $t('data.speed'), strength: $t('data.tempo_and_passing_preparation'), salary: 117000, identity: { offense: 'pass', defense: 'coverage', aggression: 0.55, passBias: 0.66 } },
   { id: 'oc_swift', name: 'Elena Swift', role: 'offensive_coordinator', overall: 86, style: $t('data.air_raid'), strength: $t('data.passing_and_receiver_development'), salary: 90000, scheme: 'pass' },
   { id: 'oc_brock', name: 'Tobias Brock', role: 'offensive_coordinator', overall: 83, style: $t('data.ground_attack'), strength: $t('data.power_and_outside_runs'), salary: 78000, scheme: 'run' },
   { id: 'oc_park', name: 'Nia Park', role: 'offensive_coordinator', overall: 80, style: $t('data.balanced'), strength: $t('data.flexible_run_pass_approach'), salary: 75000, scheme: 'balanced' },

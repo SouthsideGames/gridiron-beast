@@ -67,7 +67,7 @@ const liveOwnerOffers = (f) => Object.values(f.freeAgency?.offers || {}).filter(
 let triedT7 = null;
 /** Recording only (Task 7 owner rule 2026-11-04): releases the hands-off owner made to reach the minimum within the cap, cumulative. */
 export const floorLog = { owner: 0 };
-export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null, legacy = false, from = null, onOffseason = null, contractChoice = null, negotiate = null, beforeGame = null, alterGame = null, afterGame = null } = {}) {
+export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null, legacy = false, from = null, onOffseason = null, beforeOffseason = null, contractChoice = null, negotiate = null, beforeGame = null, alterGame = null, afterGame = null } = {}) {
   let f = from || newFranchise(seed, { difficulty, legacy });
   const problems = [...check(f, from ? 'loaded' : 'created')];
   if (from && f.season?.finished) { const n = F.startNextSeason(f, { acceptForfeits: true }); if (!n.ok) problems.push(`loaded save: next season blocked (${n.reason})`); else problems.push(...check(f, 'loaded: next season'));} const log = { seasons: [], clash: { encounters: 0, encounterWins: 0, signed: 0, pregame: 0, pregameWins: 0, ot: 0, otWins: 0 }, fired: false };
@@ -98,6 +98,7 @@ export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, chec
     if (!f.season.finished) { problems.push(`season ${s}: did not finish (week ${f.season.week}, day ${f.season.day})`); break; }
     problems.push(...check(f, `season ${s} end`)); // the season may have ended inside a skipped playoff round, after the last weekly check
     const rec = F.record(f); log.seasons.push({ year: f.season.year, w: rec.w, l: rec.l, champion: f.season.champion, club: f.club, roster: f.roster.length });
+    beforeOffseason?.(f, s); // Job-market policies act after awards and before any contract decision.
     if (F.isFired(f)) { log.fired = true; break; }
     // offseason
     if (f.postseason && !f.postseason.resolved) { const ev = F.postseasonEvent(f); const r = F.resolvePostseason(f, ev.options[0].id); if (!r.ok) problems.push(`season ${s}: postseason ${r.reason}`); }
