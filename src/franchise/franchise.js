@@ -787,7 +787,7 @@ export function difficultyQuality(D, gym) { return gym && D === DIFFICULTY.rooki
  *  may change, N8b) but his tendencies are centred on the identity. The owner's club has no identity (the hash-shaped coach as before). */
 export function aiCoach(f, name, year) {
   const h = hashString(`${name}|${year}|${f.seed}`); const D = difficultyOf(f); const gym = GYM_BY_CLUB[name]; const id = clubIdentity(f, name);
-  const substitution = staffById(GM.inheritedStaff(f,name).staff.head_coach)?.substitution || 'balanced';
+  const substitution = staffById(GM.clubStaff(f,name).head_coach)?.substitution || 'balanced';
   const identity = id ? { offense: id.offense, defense: id.defense, passStyle: id.passStyle || null, runStyle: id.runStyle || null, runFront: !!id.runFront, style: id.style || null } : null;
   if (gym) return { substitution, aggression: gym.coach.aggression, passBias: gym.coach.passBias, iq: D.iq + 0.2, identity: identity || { offense: gym.coach.offense, defense: gym.coach.defense } };
   if (id) return { ...identityCoach(id, h), iq: D.iq, identity, substitution };

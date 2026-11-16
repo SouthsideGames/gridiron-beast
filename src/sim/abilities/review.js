@@ -51,6 +51,9 @@ export function subjectSlot(position) {
 function clubs(seed) {
   const home = generatedTeam(seed * 2 + 1, { id: 'RVH', name: 'Review', abbr: 'RVW', quality: 62 });
   const away = generatedTeam(seed * 2 + 2, { id: 'RVA', name: 'Opponent', abbr: 'OPP', quality: 62 });
+  // Staged review clubs play the units they were staged with: no fatigue rotation, no contact injuries. Rotation would rest the
+  // subject or a staged target, and its reserve pool still carries the abilities a scenario strips from the lineup.
+  for (const t of [home, away]) t.rotation = null;
   return { home, away };
 }
 /** Put the subject into the home club's lineup at his slot (and the returner slot when he is the returner). */

@@ -38,12 +38,18 @@ export function jobWindow(f) {
 }
 // Saves from before GM careers have no gmCareer yet; any owner transaction must still close their window.
 export function closeJobWindow(f) { if(f.season?.finished && !archived(f)) ensureGmCareer(f).closedYear=f.season.year; }
+/** A club's staff ids (role -> id): a formerly managed club keeps its stored staff, any other club has a stable hashed staff.
+ *  Read-only and season-independent, so an AI club's coach can be built from any franchise shape. */
+export function clubStaff(f,club) {
+  const saved=f?.gmCareer?.clubs?.[club]?.staff; if(saved) return {...saved};
+  const h=hashString(`${f?.seed}|staff|${club}`), staff={};
+  for(const [i,role] of STAFF_ROLES.entries()) { const c=STAFF.filter(x=>x.role===role); staff[role]=c[(h+i)%c.length].id; }
+  return staff;
+}
 export function inheritedStaff(f,club) {
   // Dead money and agreed raises saved when the GM left belong to seasons that are over; a return must not charge them again.
   const saved=f.gmCareer?.clubs?.[club]; if(saved?.staff) return {...structuredClone(saved),deadCap:0,pendingDeadCap:0,staffRaise:{}};
-  const h=hashString(`${f.seed}|staff|${club}`), staff={};
-  for(const [i,role] of STAFF_ROLES.entries()) { const c=STAFF.filter(x=>x.role===role); staff[role]=c[(h+i)%c.length].id; }
-  return {staff,staffContracts:Object.fromEntries(STAFF_ROLES.map(role=>[role,newContract(f.season.year,2)])),staffRaise:{},campaign:emptyCampaign(),depth:{},lineupManual:{},deadCap:0,pendingDeadCap:0};
+  return {staff:clubStaff(f,club),staffContracts:Object.fromEntries(STAFF_ROLES.map(role=>[role,newContract(f.season.year,2)])),staffRaise:{},campaign:emptyCampaign(),depth:{},lineupManual:{},deadCap:0,pendingDeadCap:0};
 }
 const strength = roster => roster.length ? roster.reduce((a,m)=>a+monsterOverall(m),0)/roster.length : 0;
 export function jobMarket(f) {

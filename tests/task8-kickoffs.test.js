@@ -6,6 +6,9 @@ import * as S from '../src/sim/t8/status-runtime.js';
 import { playGame } from '../src/sim/game-runner.js';
 import { generatedTeam } from '../src/franchise/roster.js';
 import { kickFrames } from '../src/ui/kick-anim.js';
+import { statKey } from '../src/sim/substitutions.js';
+// Coaching GM: a game's stat lines are keyed by the monster who played the snap (statKey: slot -> id), so a reserve keeps his own line.
+const line = (s, side, slot) => s.stats[side].players[statKey(s, side, slot)];
 
 const home = generatedTeam(11, { id: 'h', name: 'Ember City Beasts', abbr: 'EMB' });
 const away = generatedTeam(51, { id: 'a', name: 'Stonehaven Titans', abbr: 'STO' });
@@ -60,10 +63,10 @@ test('the coverage tackles and the returner\'s yards are the events credited; lo
   for (let seed = 1; seed <= 200; seed++) { // 200 kicks (Task 8 M3: with the legacy kicking boosts retired, more kicks are returned and
     // 80 seeds' returns spanned 18-28 yards only; over 200 they span 17-36)
     const s = kickoffState(seed); const { sim, res } = R.doKickoff(s, teams); if (!sim) continue; returns++;
-    const P = s.stats.home.players, K = s.stats.away.players;
-    assert.equal(P[sim.kickoff.returner].krAtt, 1); assert.equal(P[sim.kickoff.returner].krYds ?? 0, res.returnYards || 0);
-    if (res.touchdown) assert.equal(P[sim.kickoff.returner].krTd, 1);
-    if (sim.result === 'tackle' && sim.stats.tackler) { tackles++; assert.equal(K[sim.stats.tackler].stTackles, 1); seen.add(sim.stats.tackler); }
+    const P = (slot) => line(s, 'home', slot), K = (slot) => line(s, 'away', slot);
+    assert.equal(P(sim.kickoff.returner).krAtt, 1); assert.equal(P(sim.kickoff.returner).krYds ?? 0, res.returnYards || 0);
+    if (res.touchdown) assert.equal(P(sim.kickoff.returner).krTd, 1);
+    if (sim.result === 'tackle' && sim.stats.tackler) { tackles++; assert.equal(K(sim.stats.tackler).stTackles, 1); seen.add(sim.stats.tackler); }
     yards.push(res.returnYards);
   }
   assert.ok(returns >= 20 && tackles >= returns * 0.8, `${tackles} tackles in ${returns} returns`);
@@ -91,16 +94,16 @@ test('return blockers acquire coverage players and block them; the coverage hold
 test('participants are credited: a special-teams snap for every monster on both units, a kickoff for the kicker', () => {
   const { s, out } = returnedKickoff();
   const names = out.sim.names;
-  for (const slot of Object.keys(names.off)) assert.equal(s.stats.home.players[slot].stSnaps, 1, `return ${slot}`);
-  for (const slot of Object.keys(names.def)) assert.equal(s.stats.away.players[slot].stSnaps, 1, `coverage ${slot}`);
+  for (const slot of Object.keys(names.off)) assert.equal(line(s, 'home', slot).stSnaps, 1, `return ${slot}`);
+  for (const slot of Object.keys(names.def)) assert.equal(line(s, 'away', slot).stSnaps, 1, `coverage ${slot}`);
   assert.equal(Object.keys(names.off).length, 7); assert.equal(Object.keys(names.def).length, 7);
-  assert.equal(s.stats.away.players.K.kickoffs, 1);
+  assert.equal(line(s, 'away', 'K').kickoffs, 1);
   // a touchback is still a kickoff both units played: snaps and the kick, no return
   const tb = touchbackKickoff();
-  assert.equal(tb.s.stats.away.players.K.kickoffs, 1); assert.equal(tb.s.stats.away.players.K.koTouchbacks, 1);
+  assert.equal(line(tb.s, 'away', 'K').kickoffs, 1); assert.equal(line(tb.s, 'away', 'K').koTouchbacks, 1);
   const u = R.kickoffUnits(away, home);
-  for (const slot of Object.keys(u.coverage)) assert.equal(tb.s.stats.away.players[slot].stSnaps, 1);
-  for (const slot of Object.keys(u.ret)) assert.equal(tb.s.stats.home.players[slot].stSnaps, 1);
+  for (const slot of Object.keys(u.coverage)) assert.equal(line(tb.s, 'away', slot).stSnaps, 1);
+  for (const slot of Object.keys(u.ret)) assert.equal(line(tb.s, 'home', slot).stSnaps, 1);
   assert.equal(Object.values(tb.s.stats.home.players).some((p) => p.krAtt), false, 'no return on a touchback');
 });
 
@@ -141,7 +144,7 @@ test('onside kicks and free kicks stay on their formula paths', () => {
     const s = kickoffState(seed); const out = R.doKickoff(s, teams, { onside: true });
     assert.equal(out.res.onside, true); assert.equal(out.sim, null); assert.equal(s.phase, 'scrimmage');
     if (out.res.recovered) { recovered++; assert.equal(s.possession, 'away'); } else assert.equal(s.possession, 'home');
-    assert.equal(s.stats.away.players.K.kickoffs, 1, 'the kick is credited');
+    assert.equal(line(s, 'away', 'K').kickoffs, 1, 'the kick is credited');
   }
   assert.ok(recovered > 0 && recovered < 40);
   const fk = kickoffState(3); fk.phase = 'free_kick'; fk.kickingTeam = 'home'; fk.possession = 'home';
@@ -157,7 +160,7 @@ test('a full game with live kickoffs finishes; kickoffs are credited; every kick
   } });
   assert.equal(g.finished, true); assert.ok(!g.guard, 'no runner guard');
   assert.ok(kicks >= 2 && live >= 1, `${live} live of ${kicks} kickoffs`);
-  const koByK = ['home', 'away'].reduce((n, side) => n + (g.stats[side].players.K?.kickoffs || 0), 0);
+  const koByK = ['home', 'away'].reduce((n, side) => n + (line(g, side, 'K')?.kickoffs || 0), 0);
   assert.equal(koByK, kicks, 'one kickoff credited per kick');
   for (const side of ['home', 'away']) assert.ok(Object.values(g.stats[side].players).some((p) => p.stSnaps > 0), `${side} special-teams snaps`);
 });
@@ -174,5 +177,5 @@ test('B5: punts, field goals and extra points credit their units with a special-
   const other = k === 'home' ? 'away' : 'home'; assert.ok(Object.values(g.stats[other].players).filter((p) => p.stSnaps).length >= 7, 'the block unit of 7');
   assert.ok(!Object.values(g.stats[k].players).some((p) => (p.snapsOff || 0) > 0 && p.stSnaps && p.rec), 'no fabricated receptions');
   const g2 = R.newGame({ home: teams.home, away: teams.away, seed: 4, quarterLength: 120 }); R.doKickoff(g2, teams); const kk = g2.possession; g2.ballOn = 30; R.doPunt(g2, teams);
-  assert.equal(g2.stats[kk].players.K.punts, 1, 'the K is credited with the punt');
+  assert.equal(line(g2, kk, 'K').punts, 1, 'the K is credited with the punt');
 });
