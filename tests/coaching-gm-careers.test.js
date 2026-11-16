@@ -25,7 +25,7 @@ test('injury and exhaustion cannot be bypassed in manual mode',()=>{const team=r
 test('no monster can occupy two slots and no illegal-position fallback exists',()=>{const team=rotation(),s=state();const u=selectUnit(s,team,'home',['RB','WR1'],team.offense);assert.equal(u.WR1.id,null);assert.equal(u.RB.id,'starter');});
 test('stat writers credit the actual reserve, including performance',()=>{const team=rotation(),s=R.newGame({home:{...team,id:'h',name:'Home'},away:{...team,id:'a',name:'Away'}});setStatInputs(s,'home',{RB:team.bench[0]});R.recordPlayerStats(s,{names:{off:{RB:'reserve'},def:{}},result:'tackle',yards:5,stats:{carrier:'RB'},events:[]},'home','away');assert.equal(s.stats.home.players.reserve.rushYds,5);assert.equal(s.stats.home.players.starter,undefined);});
 test('a fired GM has at least one real offer and career cap still ends at 15',()=>{const f=closed();f.board={fired:true};const offers=GM.jobMarket(f);assert.ok(offers.some(o=>o.rebuilding&&o.offered));assert.equal(L.retirementDue(f),null);while(f.history.length<15)f.history.push({...f.history[0],year:f.history.length+1});assert.equal(L.SEASON_CAP,15);assert.equal(L.retirementDue(f),'season-cap');assert.equal(GM.jobMarket(f).length,0);});
-test('GM move transfers control without duplicating identities or altering contracts/picks/history',()=>{const f=closed();const job=GM.jobMarket(f).find(o=>o.rebuilding);assert.ok(GM.applyForJob(f,job.club).offered);const source=f.club,oldIds=f.roster.map(m=>m.id),newIds=job.roster.map(m=>m.id),contracts=JSON.stringify(job.roster.map(m=>m.contract)),uid=f.uid,history=JSON.stringify(f.history),rng=f.rngState;const r=F.acceptGmJob(f,job.club);assert.ok(r.ok,r.reason);assert.equal(f.uid,uid);assert.equal(f.rngState,rng);assert.deepEqual(f.roster.map(m=>m.id),newIds);assert.deepEqual(clubRoster(f,source).map(m=>m.id),oldIds);assert.equal(JSON.stringify(f.roster.map(m=>m.contract)),contracts);assert.equal(JSON.stringify(f.history),history);assert.equal(f.board.fired,false);assert.deepEqual(verifyLeague(f),[]);assert.equal(GM.jobMarket(f).length,0);const loaded=JSON.parse(JSON.stringify(f));assert.deepEqual(verifyLeague(loaded),[]);assert.equal(loaded.gmCareer.stints[0].club,source);});
+test('GM move transfers control without duplicating identities or altering contracts/picks/history',()=>{const f=closed();const job=GM.jobMarket(f).find(o=>o.rebuilding);assert.ok(GM.applyForJob(f,job.club).offered);const source=f.club,oldIds=f.roster.map(m=>m.id),expiring=new Set(f.roster.filter(m=>m.contract?.ends===f.season.year).map(m=>m.id)),newIds=job.roster.map(m=>m.id),contracts=JSON.stringify(job.roster.map(m=>m.contract)),uid=f.uid,history=JSON.stringify(f.history),rng=f.rngState;const r=F.acceptGmJob(f,job.club);assert.ok(r.ok,r.reason);assert.equal(f.uid,uid);assert.equal(f.rngState,rng);assert.deepEqual(f.roster.map(m=>m.id),newIds);{const left=new Set(clubRoster(f,source).map(m=>m.id)),gone=oldIds.filter(id=>!left.has(id)),dep=f.gmCareer.stints.at(-1).departure;assert.deepEqual(clubRoster(f,source).map(m=>m.id),oldIds.filter(id=>left.has(id)),'the former club keeps its roster in order');assert.equal(gone.length,dep.walked+dep.released,'only the departure contract settlement removes anyone');assert.ok(gone.every(id=>expiring.has(id)||dep.released),'walkers had expiring contracts');}assert.equal(JSON.stringify(f.roster.map(m=>m.contract)),contracts);assert.equal(JSON.stringify(f.history),history);assert.equal(f.board.fired,false);assert.deepEqual(verifyLeague(f),[]);assert.equal(GM.jobMarket(f).length,0);const loaded=JSON.parse(JSON.stringify(f));assert.deepEqual(verifyLeague(loaded),[]);assert.equal(loaded.gmCareer.stints[0].club,source);});
 test('moves close after a contract decision and archives cannot mutate',()=>{const f=closed();f.offseason.items=[{status:'signed'}];assert.equal(GM.jobWindow(f),false);f.offseason.items=[];f.lifecycle={legacy:{},status:'retired'};const before=JSON.stringify(f);assert.equal(F.applyForGmJob(f,'Glacier Guardians').ok,false);assert.equal(JSON.stringify(f),before);});
 test('career Hall totals span stints but club campaign stays separate',()=>{const f=closed();f.gmCareer.stints=[{campaign:{wins:20,titles:2,awards:1,badges:{old:{year:1}}}}];f.campaign={wins:5,titles:0,awards:2,badges:{new:{year:2}}};assert.deepEqual(GM.careerTotals(f),{wins:25,titles:2,awards:3,badges:{old:{year:1},new:{year:2}}});assert.equal(f.campaign.wins,5);});
 
@@ -100,7 +100,8 @@ test('roster, staff and market transactions after the season commit the GM; a di
 });
 test('returning to a former club does not charge its old dead money again',()=>{
   const f=closed();f.gmCareer.clubs['Glacier Guardians']={...GM.inheritedStaff(f,'Glacier Guardians'),deadCap:900,pendingDeadCap:1200,staffRaise:{head_coach:1.2}};
-  const back=GM.inheritedStaff(f,'Glacier Guardians');assert.equal(back.deadCap,0);assert.equal(back.pendingDeadCap,0);assert.deepEqual(back.staffRaise,{});
+  const back=GM.inheritedStaff(f,'Glacier Guardians');assert.equal(back.deadCap,0);assert.equal(back.pendingDeadCap,0);
+  assert.deepEqual(back.staffRaise,{head_coach:1.2},'a running staff contract keeps its agreed salary');
   assert.equal(f.gmCareer.clubs['Glacier Guardians'].pendingDeadCap,1200,'the stored stint record is not changed');
 });
 test('a dismissed GM is never stuck: a refusal at offseason open and refused transactions leave the job market open with an offer',()=>{
@@ -116,4 +117,58 @@ test('rotation starts from the engine choice: a Legendary Play keeps its Legenda
   const t2=rotation();t2.chart={RB:'starter'};assert.equal(selectUnit(state(),t2,'home',['RB'],{RB:t2.bench[0]}).RB.id,'reserve','the lineup the engine was given wins over the stored chart');
   const t3=rotation(),borrowed={...t3.bench[0],borrowed:true};const u3=selectUnit(state(),t3,'home',['RB','TE'],{RB:t3.offense.RB,TE:borrowed});
   assert.equal(u3.TE.id,'reserve','a monster the engine placed outside its listed position is not dropped (no empty slot, no forfeit)');assert.equal(u3.RB.id,'starter');
+});
+test('the club the GM leaves settles its expiring contracts by the AI renewal negotiation, in the same offseason', {timeout:180000}, () => {
+  let checked=false;
+  runFranchise(37,{difficulty:'rookie',seasons:1,beforeOffseason:(f,n)=>{
+    if(n!==1)return;
+    const year=f.season.year, from=f.club, expiring=f.roster.filter(m=>m.contract?.ends===year&&!m.legendary);
+    assert.ok(expiring.length>=2,'the owner club has expiring contracts');
+    // the first refuses to talk to his club this window: under the AI rules he walks, however valuable
+    const refuser=expiring[0];F.gmJobMarket(f);
+    const key=`${refuser.id}|${from}|${refuser.contract.ends}|renew`;f.freeAgency.talks ||= {};f.freeAgency.talks[key]={...(f.freeAgency.talks[key]||{key,mid:refuser.id,club:from,window:'renew',offers:[]}),state:'no-talks'};
+    const offer=F.gmJobMarket(f).find(o=>o.rebuilding);F.applyForGmJob(f,offer.club);const r=F.acceptGmJob(f,offer.club);assert.ok(r.ok,r.reason);
+    const roster=new Map(clubRoster(f,from).map(m=>[m.id,m]));
+    assert.equal(roster.has(refuser.id),false,'a monster who will not talk is not re-signed');
+    for(const m of expiring.slice(1)) { const now=roster.get(m.id); if(now) assert.ok(now.contract.ends>year,`${m.name} re-signed into next season`); }
+    assert.ok(f.league.clubs[from].strategy.mode,'the former club has a strategy mode for its renewals');
+    assert.equal(f.gmCareer.stints.at(-1).club,from);assert.ok(f.gmCareer.stints.at(-1).departure.walked>=1);
+    assert.deepEqual(verifyLeague(f),[]);checked=true;
+  }});
+  assert.ok(checked);
+});
+test('returning to a former club keeps staff contract dates: only expired contracts come up for renewal', () => {
+  const f=closed();f.board={fired:true};const year=f.season.year;
+  const safety=GM.jobMarket(f).find(o=>o.rebuilding).club, base=GM.inheritedStaff(f,safety), roles=Object.keys(base.staff);
+  const contracts=Object.fromEntries(roles.map((role,i)=>[role,i===0?{signed:year-2,ends:year,years:2}:{signed:year,ends:year+1,years:2}]));
+  const raise=Object.fromEntries(roles.map(role=>[role,1.2]));
+  f.gmCareer.clubs[safety]={...base,staffContracts:contracts,staffRaise:raise};
+  assert.ok(F.acceptGmJob(f,safety).ok);
+  const staffItems=(f.offseason?.items||[]).filter(i=>i.kind==='staff').map(i=>i.role);
+  assert.deepEqual(staffItems,[roles[0]],'only the expired contract needs renewal');
+  for(const role of roles.slice(1)) { assert.deepEqual(f.staffContracts[role],contracts[role],`${role} keeps its expiration`); assert.equal(f.staffRaise[role],1.2,`${role} keeps its agreed salary`); }
+  assert.equal(f.staffRaise[roles[0]],1.2,'the expired contract renews from its last salary, as a normal renewal');
+});
+test('rotation notices: one brief line per play for routine changes, injuries and their replacements at once, details in the panel', async () => {
+  const { substitutionStrip } = await import('../src/ui/coaching-substitutions.js');
+  const { playNotices } = await import('../src/sim/substitutions.js');
+  const mk=(id,pos,q=70)=>({id,name:id,position:pos,attrs:{speed:q,durability:60},permDurability:60});
+  const a=[mk('rb1','RB'),mk('wr1','WR'),mk('wr2','WR')], b=[mk('rb2','RB'),mk('wr3','WR'),mk('wr4','WR')];
+  const team={roster:[...a,...b],offense:{RB:a[0],WR1:a[1],WR2:a[2]},defense:{},bench:b,rotation:{mode:'auto',philosophy:'heavy',depth:{RB:['rb1','rb2'],WR:['wr1','wr2','wr3','wr4']}}};
+  const slots=['RB','WR1','WR2'], s=state(); s.t8.stamina={}; s.phase='scrimmage';
+  selectUnit(s,team,'home',slots,team.offense); // play 1: the starters
+  s.playCount=2; for(const p of a) s.t8.stamina[p.id]={capacity:60,stamina:frac(20),exhausted:false};
+  selectUnit(s,team,'home',slots,team.offense); // play 2: three tired starters rest
+  const f={game:{state:s,playerSide:'home'}};
+  let html=substitutionStrip(f), n=playNotices(s,'home');
+  assert.equal(n.routine.length,3);assert.equal((html.match(/<p/g)||[]).length,1,'three routine changes are one line');assert.match(html,/changes for this play: 3\./);
+  // play 3: the reserve RB is hurt on contact; the injury and his replacement show before the next snap, one line each
+  s.playCount=3; contactInjuries(s,{offense:{RB:{...b[0]}},defense:{}},{result:'tackle',stats:{carrier:'RB'},events:[]},{offenseSide:'home'});
+  if(!s.rotation.injuries.rb2) { s.rotation.injuries.rb2={severity:'Minor',weeks:1}; s.rotation.notices.push({side:'home',slot:'RB',id:'rb2',name:'rb2',reason:'injury',play:3}); }
+  assert.equal(substitutionStrip(f).match(/is injured/g).length,1,'the injury is shown at once');
+  selectUnit(s,team,'home',slots,team.offense); // the screen chooses the coming snap's lineup
+  n=playNotices(s,'home'); html=substitutionStrip(f);
+  assert.equal(n.replacements.length,1);assert.equal(n.replacements[0].slot,'RB');assert.match(html,/replacing an injured teammate/);
+  assert.doesNotMatch(html,/play: 3\./,'earlier plays are not repeated');
+  assert.equal(n.injuries[0].side,'home','an injury records its club');
 });

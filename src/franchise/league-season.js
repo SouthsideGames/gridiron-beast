@@ -99,11 +99,11 @@ export function leagueSeasonEnd(f, { year, awards, records, champion }) {
  */
 /** Task 7: `accepts(club, m, { salary, years })` — the monster's own answer to the renewal (fa-engine rateOffer, the same evaluation the
  *  owner's renewals get); declined, he walks to the market. Absent (pre-Task-7 offseasons): every renewal the club wants happens. */
-export function leagueContracts(f, { year, cap, excessOf = null, accepts = null }) {
+export function leagueContracts(f, { year, cap, excessOf = null, accepts = null, clubs = null }) {
   if (!hasLeague(f)) return null;
   const out = { resigned: 0, walked: 0, released: 0, overCap: [], runaway: [], lengths: { 1: 0, 2: 0, 3: 0 }, byMode: {} };
   const bench = leagueBenchOf(f);
-  for (const club of order(f)) {
+  for (const club of clubs || order(f)) { // `clubs`: only these (a club the GM just left, settled in the same offseason by the same rules)
     const roster = clubRoster(f, club); const starters = starterIds(roster);
     const plan = rosterPlan(roster, bench, { starters });
     const med = median(roster.map(monsterOverall));

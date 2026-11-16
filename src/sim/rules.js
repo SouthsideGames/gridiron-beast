@@ -290,8 +290,8 @@ function preSnapHooks(state, t8, slots, offensePlay, defensePlay) {
  * exactly as at the snap (the same order, the same per-monster seeded stream: seed, play index, monster; never the game's dice), but
  * on a structured copy of the Task 8 block, so the game is still only read. Such an entry carries `inSnap: true` and `callDependent`:
  * true when its producer read an alignment of either chosen play (its place then follows the calls and is not fixed before them:
- * Static Field, Charge Strip, Bramble Trap); false when the calls decide only whether its creator is on the field (Runway, Crosswind
- * Rescue, Bloom Break: the rectangle is the same for every call he takes part in).
+ * Static Field, Charge Strip, Bramble Trap); false when no alignment was read (Runway, Crosswind Rescue, Bloom Break). Every zone is then
+ * placed at its coach's lane (zone-planning.js, owner revision 2026-11-15), read from its own club's play only, never the opponent's.
  */
 export function previewPendingFields(state, teams, offensePlayId, defensePlayId, { inSnap = false } = {}) {
   let t8 = state?.t8; if (!t8 || state.phase !== 'scrimmage' || state.finished) return [];
@@ -472,8 +472,9 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   rememberAbilities(state, sim);
   call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;
   save();
+  const offenseSide = state.possession; // before the result can change possession
   const outcome = applyScrimmageResult(state, sim, offensePlayId, defensePlayId);
-  if (offense.rotation || defense.rotation) contactInjuries(state, slots, sim);
+  if (offense.rotation || defense.rotation) contactInjuries(state, slots, sim, { offenseSide });
   return { sim, outcome };
 }
 /** The kickoff snapshot of each side's active partnerships ({ offense, defense } of { type, a, b, level, cap }), or null. */

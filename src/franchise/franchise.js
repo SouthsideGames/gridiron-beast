@@ -3057,11 +3057,17 @@ export function applyForGmJob(f, club) { if (isArchived(f)) return {ok:false,rea
 export function stayAtClub(f) { if (isArchived(f) || isFired(f)) return {ok:false,reason:$t('gm.must_choose')}; GM.ensureGmCareer(f); GM.closeJobWindow(f); return {ok:true}; }
 export function acceptGmJob(f, club) {
   if (isArchived(f)) return {ok:false,reason:$t('gm.read_only')};
-  const result = GM.acceptJob(f,club,{reopenContracts: (x) => {
+  const result = GM.acceptJob(f,club,{reopenContracts: (x,{from}) => {
     for (const m of x.roster) { uniqueName(x,m); backfillCareer(x,m); } // inherited AI rosters may share species names; keep owner display names reload-stable
-    openOffseason(x,{year:x.season.year,awardWinnerIds:new Set(),winningRecord:false});
-    staffDemands(x,x.season.year); monsterRenewals(x);
-    leagueContracts(x,{year:x.season.year,cap:tierById(x.tier).cap});
+    const year=x.season.year, cap=tierById(x.tier).cap;
+    openOffseason(x,{year,awardWinnerIds:new Set(),winningRecord:false});
+    staffDemands(x,year); monsterRenewals(x);
+    // The club the GM left becomes an AI club in this same offseason: it gets its strategy mode, then its expiring contracts go through
+    // the AI renewal the other clubs had at season close (each monster answers; Task 7 negotiation where this offseason runs Task 7).
+    evaluateStrategies(x,{year,cap,teamOf:(c)=>aiTeam(x,c,year),only:[from]});
+    let bench=null; const accepts=task7Offseason(x,year) ? (c,m,terms,o)=>aiRenewalAnswer(x,c,m,terms,cap,{...o,bench:(bench ||= leagueBenchOf(x))}) : null;
+    const settled=leagueContracts(x,{year,cap,excessOf:()=>0,accepts,clubs:[from]});
+    const stint=x.gmCareer.stints.at(-1); if(stint && settled) stint.departure={walked:settled.walked,resigned:settled.resigned,released:settled.released,declined:settled.declined||0}; // the club's settlement, on the record of the stint that ended
   }});
   if(result.ok) news(f,$L('gm.incoming_news',{owner:`${f.owner.first} ${f.owner.last}`,from:result.from,club}), 'info');
   return result;

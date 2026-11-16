@@ -47,19 +47,21 @@ export function selectUnit(s, team, side, slots, initial, { pinned = [] } = {}) 
     }
     // Exhaustion cannot be overridden to avoid a healthy alternative; with no alternative retain the engine's half-strength fallback.
     if (!pick || s.t8?.stamina?.[pick.id]?.exhausted) pick = fresh[0] || candidates[0];
+    if (reason === 'fatigue' && pick && pick.id === base?.id) reason = 'lineup'; // the listed monster returns (rested, or after a one-play selection)
     if (pick) {
       used.add(pick.id); out[slot] = pick;
-      if (saved?.id && saved.id !== pick.id) { b.notices.push({ side, slot, from: saved.id, to: pick.id, name: pick.name, reason, play: s.playCount || 0 }); b.notices = b.notices.slice(-24); }
+      if (saved?.id && saved.id !== pick.id) { b.notices.push({ side, slot, from: saved.id, to: pick.id, name: pick.name, reason, play: s.playCount || 0, ...(s.rotation?.injuries?.[saved.id] ? { injured: true } : {}) }); b.notices = b.notices.slice(-24); }
       active[slot] = { id: pick.id, key };
     } else out[slot] = { id: null, name: slot, attrs: {} };
   }
   return out;
 }
 /** Deterministic contact injury rolls, independent of animation and UI rerenders. No mutation of the persistent roster until settlement. */
-export function contactInjuries(s, slots, sim) {
+export function contactInjuries(s, slots, sim, { offenseSide = s.possession } = {}) {
   const b = book(s); const contact = new Set([sim.stats?.carrier, sim.stats?.receiver, sim.stats?.tackler, sim.stats?.assistBy, ...Object.keys(sim.stats?.blockers || {})].filter(Boolean));
   if (!['tackle','sack','fumble','safety','touchdown'].includes(sim.result)) return;
-  for (const p of [...Object.entries(slots.offense), ...Object.entries(slots.defense)].filter(([slot]) => contact.has(slot)).map(([,p])=>p)) {
+  const defenseSide = offenseSide === 'home' ? 'away' : 'home';
+  for (const [slot, p, side] of [...Object.entries(slots.offense).map(([k,v])=>[k,v,offenseSide]), ...Object.entries(slots.defense).map(([k,v])=>[k,v,defenseSide])].filter(([slot]) => contact.has(slot))) {
     if (unavailable(s,p)) continue;
     const r = createRng(hashString(`${s.seed}|injury|${s.playCount}|${p.id}`));
     const durability = p.permDurability ?? p.attrs?.durability ?? 60;
@@ -67,8 +69,16 @@ export function contactInjuries(s, slots, sim) {
     if (!r.chance(risk)) continue;
     const n = r.next(), severity = n < .6 ? 'Minor' : n < .9 ? 'Moderate' : 'Severe';
     b.injuries[p.id] = { severity, weeks: severity === 'Minor' ? 1 : severity === 'Moderate' ? 2+r.int(2) : 4+r.int(3), type: r.pick(['hamstring','ankle','shoulder','knee','ribs','wrist']), inGame: true };
-    b.notices.push({ name:p.name, id:p.id, reason:'injury', play:s.playCount || 0 }); b.notices = b.notices.slice(-24);
+    b.notices.push({ side, slot, name:p.name, id:p.id, reason:'injury', play:s.playCount || 0 }); b.notices = b.notices.slice(-24);
   }
+}
+/** The notices for the coming snap (`s.playCount`): injuries on the play just run (both clubs' are public), the replacements of
+ *  `side`'s injured monsters, and `side`'s routine changes (rotation, your selections). The lineup is chosen for the coming snap
+ *  as soon as the screen shows it, so these are known before the snap. Read-only. */
+export function playNotices(s, side) {
+  const now = (s.rotation?.notices || []).filter(n => n.play === (s.playCount || 0));
+  const mine = now.filter(n => n.side === side && n.reason !== 'injury');
+  return { injuries: now.filter(n => n.reason === 'injury'), replacements: mine.filter(n => n.injured), routine: mine.filter(n => !n.injured) };
 }
 /** Persist individual stat keys for rotating players while retaining old saves' slot keys. */
 export function statKey(s, side, slot) { return s.rotation?.statKeys?.[side]?.[slot] || slot; }

@@ -77,7 +77,7 @@ export const fieldText = (rec, field) => (rec && rec[`${field}L`] ? lineText(rec
 
 /** A saved line as English, whatever language is shown: for the few rules that sort old notices by their wording (never show this). */
 export function lineEnglish(x) { const tE = (key, vars) => { let v = en[key]; if (v === undefined) return key; if (typeof v === 'object') v = v[vars?.n === undefined ? 'other' : new Intl.PluralRules('en').select(Number(vars.n))] ?? v.other ?? ''; return vars ? v.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : v; };
-  return typeof x === 'string' ? x : !x ? '' : x.tk ? tE(x.tk, shown(x.tv, lineEnglish)) : x.tp ? x.tp.map(lineEnglish).join('') : (x.text ?? ''); }
+  return typeof x === 'string' ? x : !x ? '' : x.tk && !(x.tk in en) && x.text != null ? x.text : x.tk ? tE(x.tk, shown(x.tv, lineEnglish)) : x.tp ? x.tp.map(lineEnglish).join('') : (x.text ?? ''); }
 /** The saved fields of a line, to spread into a record that already has its own `text`: { tk, tv } or { tp }, or nothing for a plain string. */
 export const lineFields = (x) => (x && typeof x === 'object' ? (x.tp ? { tp: x.tp } : x.tk ? { tk: x.tk, ...(x.tv ? { tv: x.tv } : {}) } : {}) : {});
 

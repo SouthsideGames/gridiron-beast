@@ -47,8 +47,9 @@ export function clubStaff(f,club) {
   return staff;
 }
 export function inheritedStaff(f,club) {
-  // Dead money and agreed raises saved when the GM left belong to seasons that are over; a return must not charge them again.
-  const saved=f.gmCareer?.clubs?.[club]; if(saved?.staff) return {...structuredClone(saved),deadCap:0,pendingDeadCap:0,staffRaise:{}};
+  // Dead money saved when the GM left belongs to seasons that are over; a return must not charge it again. Staff contracts keep their
+  // real expiration dates and agreed salaries, so only a contract that has ended by now comes up for renewal (by the normal rules).
+  const saved=f.gmCareer?.clubs?.[club]; if(saved?.staff) return {...structuredClone(saved),deadCap:0,pendingDeadCap:0};
   return {staff:clubStaff(f,club),staffContracts:Object.fromEntries(STAFF_ROLES.map(role=>[role,newContract(f.season.year,2)])),staffRaise:{},campaign:emptyCampaign(),depth:{},lineupManual:{},deadCap:0,pendingDeadCap:0};
 }
 const strength = roster => roster.length ? roster.reduce((a,m)=>a+monsterOverall(m),0)/roster.length : 0;
@@ -108,7 +109,7 @@ export function acceptJob(f,club,{reopenContracts}={}) {
     // Retain all completed league results, awards and season history. Only future owner decisions are regenerated.
     f.offseason=null; f.draft=null; f.pickAsks={}; f.pendingTrades=[]; f.tradeDesk=null; f.devSlots={manual:[],excluded:[]};
     if(f.freeAgency) { for(const k of Object.keys(f.freeAgency.offers || {})) { const x=f.freeAgency.offers[k]; if(x.club===from && !['signed','rejected'].includes(x.status)) delete f.freeAgency.offers[k]; } }
-    if(reopenContracts) reopenContracts(f);
+    if(reopenContracts) reopenContracts(f,{from,club});
     const problems=verifyLeague(f); if(problems.length) throw Error(problems[0]);
     return {ok:true,from,club};
   } catch(e) { for(const k of Object.keys(f)) delete f[k]; Object.assign(f,before); return {ok:false,reason:e.message}; }

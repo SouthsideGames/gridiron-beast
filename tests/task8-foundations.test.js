@@ -95,7 +95,7 @@ test('approved rulings: overrides applied, source text kept, values exposed (N7b
   assert.equal(v.blazingResolveQualifies('emberfox:0', 7), false); assert.equal(v.blazingResolveQualifies('emberfox:0', 8), true);
   assert.equal(v.blazingResolveQualifies('emberfox:1', 4), false); assert.equal(v.blazingResolveQualifies('emberfox:1', 5), true);
   assert.equal(v.blazingResolveQualifies('emberfox:2', 0), false); assert.equal(v.blazingResolveQualifies('emberfox:2', 1), true);
-  assert.deepEqual(['Developing', 'Practiced', 'Expert', 'Mastered'].map((t) => v.beaconLaneLifetime('glimmer:1', t)), [1, 1, 2, 2]);
+  assert.deepEqual(['Developing', 'Practiced', 'Expert', 'Mastered'].map((t) => v.beaconLaneLifetime('glimmer:1', t)), [3, 3, 4, 5]); // owner revision 2026-11-15 (FOOTBALL_ZONE_REVISIONS_2026-11-15.md), superseding N7b P3's 1 / 1 / 2 / 2
   assert.equal(v.shadowPounceDodgePct('shadowkit:0', false), 15); assert.equal(v.shadowPounceDodgePct('shadowkit:1', false), 20); assert.equal(v.shadowPounceDodgePct('shadowkit:1', true), 0);
   assert.equal(v.mindGameAfterimagePct(false), 15); assert.equal(v.mindGameAfterimagePct(true), 0);
   assert.deepEqual(v.rotationEntryPenalty({ firstAfterVoluntaryRotation: true }), { factor: 0.5, spent: true });

@@ -32,7 +32,7 @@ with sync_playwright() as pw:
     b = pw.chromium.launch()
     ctx = b.new_context(viewport={'width': W, 'height': H}, device_scale_factor=1, is_mobile=True, has_touch=True, reduced_motion='reduce' if REDUCED else 'no-preference')
     page = ctx.new_page(); page.set_default_timeout(20000)
-    page.on('pageerror', lambda e: errors.append(str(e)))
+    page.on('pageerror', lambda e: errors.append(str(e) + ' @ ' + (e.stack or '')[:600]))
     page.on('console', lambda m: errors.append('console: ' + m.text) if m.type == 'error' and 'favicon' not in m.text else None)
     page.goto(f'http://127.0.0.1:{port}/'); page.wait_for_selector('#app'); page.evaluate('() => localStorage.clear()'); page.reload(); page.wait_for_selector('main.screen')
     page.evaluate(f"""async () => {{
@@ -87,6 +87,45 @@ with sync_playwright() as pw:
         page.evaluate("async () => { await __gb.save({ immediate: true }); }"); page.reload(); page.wait_for_selector('main.screen'); page.wait_for_timeout(500)
         after = page.evaluate("() => JSON.stringify(__gb.f?.game?.state?.rotation?.manual || {})")
         if before != after: problems.append(f'next-play pick lost on reload: {before} -> {after}')
+        # ---------------- rotation notices over live plays: one brief routine line per play, injuries and replacements at once
+        close_sheets(page)
+        if not page.locator('main.screen-match').count(): go(page, 'match')
+        page.wait_for_selector('main.screen-match'); close_sheets(page)
+        def strip_lines(): return page.evaluate("() => [...document.querySelectorAll('.match-actions [role=status] p')].map(p => p.textContent)")
+        plays, most, summaries, e0 = 0, 0, 0, len(errors)
+        for _ in range(240):
+            st = page.evaluate("() => ({ done: !!__gb.f.game?.state?.finished, pc: __gb.f.game?.state?.playCount || 0 })")
+            if st['done'] or st['pc'] >= 40: break
+            if page.locator('[data-action=skip]').count(): tap(page, '[data-action=skip]'); page.wait_for_timeout(150); continue
+            close_sheets(page)
+            if page.locator('[data-action=pick]').count():
+                ls = strip_lines(); most = max(most, len(ls)); n = sum('Rotation changes' in x for x in ls); summaries += n
+                if n > 1: problems.append(f'more than one routine rotation line: {ls}')
+                tap(page, '[data-action=pick]'); page.wait_for_timeout(60)
+            for a in ['snap', 'continue', 'kick', 'kickoff', 'choosepossession', 'receive', 'punt']:
+                if page.locator(f'[data-action={a}]').count(): tap(page, f'[data-action={a}]'); break
+            page.wait_for_timeout(150); plays = st['pc']
+        if len(errors) > e0: problems.append('page errors during live plays')
+        notes.append(f'{plays} live plays: at most {most} strip lines, {summaries} routine summaries shown')
+        # an injury on the unit about to take the field: the injury and its replacement show before the next snap
+        while page.locator('[data-action=skip]').count(): tap(page, '[data-action=skip]'); page.wait_for_timeout(200)
+        close_sheets(page); e1 = len(errors)
+        hurt = page.evaluate("""async () => { const s = __gb.f.game.state, me = __gb.f.game.playerSide; if (s.finished || s.phase !== 'scrimmage') return null;
+          const act = s.rotation?.active?.[me] || {}; const want = s.possession === me ? ['RB', 'WR1', 'WR2', 'TE'] : ['CB1', 'CB2', 'LB1', 'S1']; const slot = want.find(k => act[k]); if (!slot) return null;
+          const id = act[slot].id; s.rotation.injuries[id] = { severity: 'Minor', weeks: 1, type: 'ankle', inGame: true };
+          s.rotation.notices.push({ side: me, slot, id, name: 'Tester', reason: 'injury', play: s.playCount || 0 });
+          const M = await import('/src/ui/router.js'); M.go('match', {}, { reset: true }); return slot; }""")
+        if len(errors) > e1: problems.append('page error while re-rendering after an injury')
+        page.wait_for_timeout(400)
+        for _ in range(10):
+            if not page.locator('[data-action=skip]').count(): break
+            tap(page, '[data-action=skip]'); page.wait_for_timeout(250)
+        if hurt:
+            ls = strip_lines(); notes.append(f'injury at {hurt}: {ls}')
+            if not any('is injured' in x for x in ls): problems.append(f'injury not shown at once: {ls}')
+            on_unit = page.evaluate(f"() => Object.values(__gb.f.game.state.rotation.notices).some(n => n.play === (__gb.f.game.state.playCount||0) && n.injured && n.slot === '{hurt}')")
+            if not on_unit or not any('replacing an injured teammate' in x for x in ls): problems.append(f'injury replacement not shown at once: {ls}')
+            shot(page, '4b-injury'); check_overflow(page, 'match with injury notices')
     # ---------------- season end: GM job market
     page.evaluate("""async () => {
       const S = await import('/tools/franchise-soak.mjs'); const STOP = {};
@@ -104,7 +143,10 @@ with sync_playwright() as pw:
     for d in page.locator('details').all(): d.locator('summary').click()
     page.wait_for_timeout(150); check_overflow(page, 'job market (previews open)'); shot(page, '8-market-open')
     club0 = page.evaluate("() => __gb.f.club")
-    if page.locator('[data-action=applyjob]:not([disabled])').count(): tap(page, '[data-action=applyjob]:not([disabled])'); page.wait_for_timeout(300)
+    if page.locator('[data-action=applyjob]:not([disabled])').count():
+        tap(page, '[data-action=applyjob]:not([disabled])')
+        try: page.wait_for_selector('[data-action=acceptjob]', timeout=5000)
+        except Exception: pass
     if not page.locator('[data-action=acceptjob]').count(): problems.append('no offer to accept on the job market')
     else:
         target = page.locator('[data-action=acceptjob]').first.get_attribute('data-club')
