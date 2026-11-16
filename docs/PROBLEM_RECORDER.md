@@ -73,9 +73,8 @@ The browser check exercises a real seeded franchise at a phone viewport: Develop
 | Commit | Tests | Pass | Fail | Cancelled | Skipped | Duration |
 |---|---|---|---|---|---|---|
 | `035ec3f` | 2,239 | 2,238 | 1 | 0 | 0 | 78.5 min |
-| `9f66bb2` | running | | | | | |
 
-The one failure on `035ec3f` was real: `tests/text-style.test.js` ("Title Case on buttons and screen titles") flagged four Test Session titles and dialog buttons. Fixed in `9f66bb2` (Title Case on all Test Session titles and buttons); because that touches `src/`, the full suite was repeated.
+The one failure on `035ec3f` was real: `tests/text-style.test.js` ("Title Case on buttons and screen titles") flagged four Test Session titles and dialog buttons. Fixed in `9f66bb2` (Title Case on all Test Session titles and buttons). After the fix, `tests/text-style.test.js` and `tests/problem-recorder.test.js` pass (22/22), and `tools/problem-recorder-check.py` and `tools/navigation-check.py` pass. **The full suite was not repeated on `9f66bb2`**: the owner waived the repeat because the fix only changes label text. This is a deliberate exception to `docs/TESTING_POLICY.md` §4 step 4. `git diff 035ec3f 9f66bb2 -- src index.html` touches only `src/ui/screens/test-session.js` and the ⚑ button's `aria-label` in `src/ui/screens/match.js`.
 
 **`tools/problem-recorder-check.py`**: passes (after a harness fix: it navigated before the app finished starting after the reload). Findings in the export: `player-report`, `runtime-error`, `save-failed`.
 
