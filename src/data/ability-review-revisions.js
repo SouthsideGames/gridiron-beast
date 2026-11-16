@@ -84,4 +84,11 @@ export const CLASH_REVISION = Object.freeze({
   'WAT-04-C': 1,
   'WAT-05-C': 1,
   'WAT-06-C': 1,
+  // Owner revision 2026-11-15 (fifth pass): every Wind look redrawn.
+  'WIN-01-C': 1,
+  'WIN-02-C': 1,
+  'WIN-03-C': 1,
+  'WIN-04-C': 1,
+  'WIN-05-C': 1,
+  'WIN-06-C': 1,
 });
