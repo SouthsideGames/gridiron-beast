@@ -79,3 +79,41 @@ test('an injured optional-package receiver removes that call, not a playable tea
   const ev=step(s,{home,away},{home:aiController('home'),away:aiController('away')},{home:newTendencies(),away:newTendencies()},{offensePlayId:blocked.id});
   assert.equal(ev.offensePlayId,fallback.id);assert.equal(s.forfeit,undefined);assert.ok(ev.sim);
 });
+
+// Review fixes (PR #125 handoff)
+test('a monster refusing to talk when the offseason opens does not close the job window; an owner decision does',()=>{
+  const f=closed();f.offseason.items=[{kind:'monster',id:f.roster[0].id,status:'declined',talks:'closed'}];
+  assert.equal(GM.jobWindow(f),true,'automatic refusal is not an owner transaction');assert.ok(GM.jobMarket(f).length);
+  f.offseason.items[0].countered='refused';assert.equal(GM.jobWindow(f),false,'a refused counter is an owner negotiation');
+});
+test('roster, staff and market transactions after the season commit the GM; a dismissed GM cannot make them',()=>{
+  const pick=f=>[...f.roster].sort((a,b)=>b.salary-a.salary).find(m=>f.roster.filter(x=>x.position===m.position).length>1);
+  const other=f=>STAFF.find(c=>c.role==='head_coach'&&c.id!==f.staff.head_coach).id;
+  for(const [name,act] of [['release',f=>F.releaseMonster(f,pick(f).id)],['staff',f=>F.replaceStaff(f,other(f))]]) {
+    const f=closed();assert.equal(F.gmJobWindow(f),true);const r=act(f);assert.ok(r.ok,`${name}: ${r.reason}`);
+    assert.equal(F.gmJobWindow(f),false,`${name} closes the window`);assert.equal(F.gmJobMarket(f).length,0);
+    const fired=closed();fired.board={fired:true};const ids=JSON.stringify(fired.roster.map(m=>m.id)),staff=JSON.stringify(fired.staff);
+    assert.equal(act(fired).ok,false,`${name} refused for a dismissed GM`);assert.equal(JSON.stringify(fired.roster.map(m=>m.id)),ids);assert.equal(JSON.stringify(fired.staff),staff);
+    assert.equal(F.gmJobWindow(fired),true,'the dismissed GM can still find a job');
+  }
+  const legacy=closed();delete legacy.gmCareer;assert.ok(F.releaseMonster(legacy,pick(legacy).id).ok);assert.equal(F.gmJobWindow(legacy),false,'a save from before GM careers closes too');
+});
+test('returning to a former club does not charge its old dead money again',()=>{
+  const f=closed();f.gmCareer.clubs['Glacier Guardians']={...GM.inheritedStaff(f,'Glacier Guardians'),deadCap:900,pendingDeadCap:1200,staffRaise:{head_coach:1.2}};
+  const back=GM.inheritedStaff(f,'Glacier Guardians');assert.equal(back.deadCap,0);assert.equal(back.pendingDeadCap,0);assert.deepEqual(back.staffRaise,{});
+  assert.equal(f.gmCareer.clubs['Glacier Guardians'].pendingDeadCap,1200,'the stored stint record is not changed');
+});
+test('a dismissed GM is never stuck: a refusal at offseason open and refused transactions leave the job market open with an offer',()=>{
+  const f=closed();f.board={fired:true};f.offseason.items=[{kind:'monster',id:f.roster[0].id,status:'declined',talks:'closed'}];
+  assert.equal(F.releaseMonster(f,f.roster.find(m=>f.roster.filter(x=>x.position===m.position).length>1).id).ok,false);
+  assert.equal(F.resolveContract(f,f.roster[0].id,'sign').ok,false);
+  assert.equal(L.retirementDue(f),null);assert.equal(F.gmJobWindow(f),true);assert.ok(F.gmJobMarket(f).some(o=>o.offered),'the safety club offers a job');
+});
+test('rotation starts from the engine choice: a Legendary Play keeps its Legendary, and a monster the engine placed (a staged Ability Review subject) stays',()=>{
+  const team=rotation('auto','heavy');team.roster[0].species='legend';
+  const s=state();assert.equal(selectUnit(s,team,'home',['RB'],team.offense).RB.id,'reserve','a tired starter rests under Heavy Rotation');
+  const unit=R.pickSlots(team.offense,['RB'],team,{legendary:{slot:'RB',species:'legend'}},state(),'home');assert.equal(unit.RB.id,'starter','the Legendary the play is built around stays on');
+  const t2=rotation();t2.chart={RB:'starter'};assert.equal(selectUnit(state(),t2,'home',['RB'],{RB:t2.bench[0]}).RB.id,'reserve','the lineup the engine was given wins over the stored chart');
+  const t3=rotation(),borrowed={...t3.bench[0],borrowed:true};const u3=selectUnit(state(),t3,'home',['RB','TE'],{RB:t3.offense.RB,TE:borrowed});
+  assert.equal(u3.TE.id,'reserve','a monster the engine placed outside its listed position is not dropped (no empty slot, no forfeit)');assert.equal(u3.RB.id,'starter');
+});

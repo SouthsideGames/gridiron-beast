@@ -525,7 +525,7 @@ export function pickSlots(lineup, slots, team = null, play = null, state = null,
     if (on) { const prev = out[L.slot]; out[L.slot] = on[1]; out[on[0]] = prev; }
     else { const pool = [...Object.values(lineup || {}), ...(team?.bench || [])]; const c = pool.find((p) => p?.species === L.species && p.id); if (c) out[L.slot] = c; }
   }
-  if (state && team?.rotation) { const unit = selectUnit(state, team, side, slots, out); setStatInputs(state, side, unit); return unit; }
+  if (state && team?.rotation) { const unit = selectUnit(state, team, side, slots, out, { pinned: L && out[L.slot]?.species === L.species ? [L.slot] : [] }); setStatInputs(state, side, unit); return unit; }
   return out;
 }
 

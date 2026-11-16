@@ -55,9 +55,31 @@ Other regressions found during development and corrected: duplicate inherited di
 
 This failure is recorded, not waived or classified as flaky. It is unrelated to the new feature keys. Old retired penalty log keys were removed with runtime enforcement; saved log lines retain their stored-English fallback.
 
+## Independent review (Claude, 2026-11-16)
+
+Reviewed from `685513c`. Defects found by testing and fixed, each with a regression test that fails on `685513c`:
+
+1. **Job window closed by a monster's own refusal.** A renewal the monster refuses to discuss when the offseason opens (`status: 'declined'`, `talks: 'closed'`) counted as an owner decision, so the window closed in many seasons. A dismissed GM in that state had no job, could not stay, and could not act on the offseason (seen at Season 11 of a real career run). Automatic refusals no longer close the window.
+2. **Moves after management transactions.** Releasing, signing a free agent, trading, accepting a trade call, extending, or replacing staff after the season left the window open, and a dismissed GM could make all of them before leaving. These now commit the GM to the club (`closeJobWindow`, which now also works for saves without `gmCareer`), and a dismissed GM is refused them. Depth-chart edits do not close the window.
+3. **Rotation undid the engine's slot choice.** `selectUnit` started from the stored chart, not from the unit `pickSlots` built, so a Legendary Play could lose its Legendary to fatigue rotation and Ability Review staging lost its subject (`ai-zone-placement` regression). Rotation now starts from the engine's choice and never rests the Legendary of a Legendary Play.
+4. **Stale dead money on a return.** Returning to a former club restored its old `deadCap`, `pendingDeadCap` and staff raises, so they would be charged again (and showed in the market preview). They now reset on return.
+5. **Raw season numbers on the job market.** Contract ends, draft picks and career club history showed `1`, `2` instead of `1201`, `1202`; a new stint showed `2–1`.
+
+Test updated to the approved rule (not weakened): `dex-2-integration` treated every non-chart monster as benched. With rotation, a reserve who takes snaps plays and earns its family's knowledge credit; the test now asserts that such reserves have real snaps and earn exactly one credit, and that monsters who never entered still earn none.
+
+Studies on the fixed tree:
+
+| Study | Result |
+|---|---|
+| 15-season career (seed 37, pro): 9 moves, 6 returns to former clubs, 3 natural firings + 1 forced, rejected and incoming offers | Window opened every season; no duplicate identities, `verifyLeague` clean, uid/history/pick ownership unchanged by moves, save round trip after each move, market closed at 15, Season 16 refused |
+| Rotation/injury/forfeit, 120 owner games (one season each) | Reserve snap share: Heavy 10.3%, Balanced 1.9%, Starter-Focused 0.9%. Contact injuries 0.17–0.43 per game (both sides). **0 forfeits**, 0 empty slots |
+| Old saves (after Season 1, mid-season, Dex save) | Load, round trip and play on cleanly; mid-season save padded to 17 seasons finishes its season, then cap retirement, no market |
+| `tools/coaching-gm-ui-check.py` (new): staff labels, Settings, in-game substitution panel with reload, job market apply/cancel/accept/reload | Pass at 320×568, 390×844, 440×956, 956×440 landscape, reduced motion. Emulated Chromium only |
+
+Notes, not changed: when the GM leaves, the former club's expiring contracts are settled immediately by the AI's simple keep rule (without the AI renewal negotiation other clubs had at season end), so some former-club monsters walk at the move. On a return, the old staff contracts have expired, so all five staff come up for renewal. Balanced and Starter-Focused rotation are close (1.9% vs 0.9% reserve share); tuning is a gameplay call.
+
 ## Not yet verified
 
-- No full `npm test` run is claimed. Claude must run the policy-required full suite on the final reviewed candidate before approval.
-- No interactive browser or physical iPhone/Android walkthrough is claimed. The available remote browser could not reach the local HTTP server; browser access failed before the game loaded. Only module parsing and pure HTML-rendering checks were completed here.
-- No 15-season multi-job/firing/return study or rotation/injury balance study is claimed. Those are part of the independent handoff.
+- No physical iPhone/Android walkthrough is claimed; phone checks above are emulated Chromium.
+- The full-suite result for the reviewed candidate is reported with the review, against its exact commit.
 - No merge, deployment or main-game-link update occurred. This is a draft implementation for review.

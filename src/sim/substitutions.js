@@ -19,7 +19,7 @@ export function requestSubstitution(s, teams, side, slot, id) {
   const b = book(s); (b.manual[side] ||= {})[slot] = { id, play: s.playCount || 0 }; delete s.t8?.preChoice;
   return { ok: true };
 }
-export function selectUnit(s, team, side, slots, initial) {
+export function selectUnit(s, team, side, slots, initial, { pinned = [] } = {}) {
   if (!team.rotation || !team.roster?.length) return initial; // synthetic Lab teams preserve their existing behavior
   const b = book(s), key = `${s.playCount || 0}:${s.phase}:${slots.join(',')}`;
   const active = (b.active[side] ||= {}), used = new Set(), out = {}, pool = teamInputs(team);
@@ -29,13 +29,17 @@ export function selectUnit(s, team, side, slots, initial) {
     const candidates = pool.filter(p => p.position === positionOf(slot) && !used.has(p.id) && !unavailable(s, p));
     const order = team.rotation.depth?.[positionOf(slot)] || [];
     candidates.sort((a,b) => { const rank = p => order.includes(p.id) ? order.indexOf(p.id) : 1000 + pool.indexOf(p); return rank(a)-rank(b); });
+    // The engine's own choice for the slot (the lineup, a package borrow, a Legendary Play's monster, a staged Ability Review
+    // subject) is the starting point; rotation only rests or replaces it, it never undoes that choice.
+    const engine = initial[slot]?.id && !used.has(initial[slot].id) && !unavailable(s, initial[slot]) ? initial[slot] : null;
+    if (engine && !candidates.some(p => p.id === engine.id)) candidates.unshift(engine);
     const saved = active[slot], override = b.manual[side]?.[slot];
-    const base = candidates.find(p => p.id === (team.chart?.[slot] || initial[slot]?.id)) || candidates[0];
+    const base = (engine && candidates.find(p => p.id === engine.id)) || candidates.find(p => p.id === team.chart?.[slot]) || candidates[0];
     let pick = saved?.key === key ? candidates.find(p => p.id === saved.id) : base;
     let reason = unavailable(s, initial[slot]) ? 'availability' : 'fatigue';
     const fresh = candidates.filter(p => !s.t8?.stamina?.[p.id]?.exhausted);
     if (override?.play === (s.playCount || 0)) { const p = fresh.find(p => p.id === override.id); if (p) { pick = p; reason = 'manual'; } }
-    else if (team.rotation.mode !== 'manual' && base && saved?.key !== key) {
+    else if (team.rotation.mode !== 'manual' && base && saved?.key !== key && !pinned.includes(slot)) {
       const threshold = close && philosophy !== 'heavy' ? R.threshold * .6 : R.threshold;
       if (staminaRatio(s, base) <= threshold || s.t8?.stamina?.[base.id]?.exhausted) {
         pick = fresh.find(p => p.id !== base.id && staminaRatio(s,p) >= staminaRatio(s,base)+.15 && rating(p) >= rating(base)-R.gap) || base;

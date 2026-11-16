@@ -26,17 +26,21 @@ export function ensureGmCareer(f) {
   if(archived(f)) return null;
   return (f.gmCareer ||= {v:1,startedYear:f.history?.[0]?.year || f.season?.year || 1,stintStart:f.history?.[0]?.year || f.season?.year || 1,stints:[],clubs:{},applications:{},movedYear:null});
 }
+const autoDeclined = x => x.kind==='monster' && x.status==='declined' && x.talks==='closed' && !x.countered && !x.counter;
 export function jobWindow(f) {
   if(archived(f) || !f.league?.clubs) return false;
   const s=f.season, last=f.history?.at(-1);
   if(!s?.finished || !s.awards || last?.year!==s.year || !last.awards || careerSeasons(f)>=CAREER_SEASONS || f.lifecycle?.pendingRetirement || f.gmCareer?.movedYear===s.year) return false;
   // Existing saves partway through an offseason can finish it; no rewind of any transaction is permitted.
-  if(f.offseason?.items?.some(x=>x.status || x.counter || x.countered) || f.freeAgency?.period != null || f.draft?.started || f.gmCareer?.closedYear===s.year) return false;
+  // A monster who refuses to talk when the offseason opens is the monster's decision, not the owner's, so it does not close the window.
+  if(f.offseason?.items?.some(x=>(x.status && !autoDeclined(x)) || x.counter || x.countered) || f.freeAgency?.period != null || f.draft?.started || f.gmCareer?.closedYear===s.year) return false;
   return true;
 }
-export function closeJobWindow(f) { if(f.season?.finished && f.gmCareer) f.gmCareer.closedYear=f.season.year; }
+// Saves from before GM careers have no gmCareer yet; any owner transaction must still close their window.
+export function closeJobWindow(f) { if(f.season?.finished && !archived(f)) ensureGmCareer(f).closedYear=f.season.year; }
 export function inheritedStaff(f,club) {
-  const saved=f.gmCareer?.clubs?.[club]; if(saved?.staff) return structuredClone(saved);
+  // Dead money and agreed raises saved when the GM left belong to seasons that are over; a return must not charge them again.
+  const saved=f.gmCareer?.clubs?.[club]; if(saved?.staff) return {...structuredClone(saved),deadCap:0,pendingDeadCap:0,staffRaise:{}};
   const h=hashString(`${f.seed}|staff|${club}`), staff={};
   for(const [i,role] of STAFF_ROLES.entries()) { const c=STAFF.filter(x=>x.role===role); staff[role]=c[(h+i)%c.length].id; }
   return {staff,staffContracts:Object.fromEntries(STAFF_ROLES.map(role=>[role,newContract(f.season.year,2)])),staffRaise:{},campaign:emptyCampaign(),depth:{},lineupManual:{},deadCap:0,pendingDeadCap:0};

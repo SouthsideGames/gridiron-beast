@@ -3105,4 +3105,13 @@ resolveContract = guarded(resolveContract); signFreeAgent = guarded(signFreeAgen
 chooseGoal = guarded(chooseGoal); commissionerReview = guarded(commissionerReview); commissionerRelease = guarded(commissionerRelease); resolvePostseason = guarded(resolvePostseason); chooseLegendTrack = guarded(chooseLegendTrack); replyToCoach = guarded(replyToCoach);
 checkAchievements = guarded(checkAchievements); backfillAchievements = guarded(backfillAchievements); nextScene = guarded(nextScene); dismissScene = guarded(dismissScene); hallOfFameNotice = guarded(hallOfFameNotice); dexRecord = guarded(dexRecord); news = guarded(news); retire = guarded(retire);
 ensureLeague = guarded(ensureLeague);
+// GM careers: once the season is over, a roster, staff or trade transaction commits the GM to this club for the offseason, and a
+// dismissed GM may not reshape a club they are leaving. Depth-chart edits are not transactions and leave the job window alone.
+const managed = (fn) => function managedTransaction(f, ...rest) {
+  if (f?.season?.finished && isFired(f)) return { ok: false, reason: $t('gm.dismissed') };
+  const r = fn.call(this, f, ...rest);
+  if (r && r.ok !== false && f?.season?.finished) GM.closeJobWindow(f);
+  return r;
+};
+releaseMonster = managed(releaseMonster); replaceStaff = managed(replaceStaff); signFreeAgent = managed(signFreeAgent); acceptTrade = managed(acceptTrade); { const answer = answerTradeCall, take = managed(answer); answerTradeCall = function (f, accept, ...rest) { return accept ? take.call(this, f, accept, ...rest) : answer.call(this, f, accept, ...rest); }; } extendContract = managed(extendContract);
 /* eslint-enable no-func-assign */
