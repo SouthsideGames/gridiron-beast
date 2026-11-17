@@ -58,10 +58,21 @@ export function toast(text, kind = 'info', ms = 2600) {
  * move the page. A body observer keeps the lock in step with the sheets actually present, however they are closed.
  */
 let sheetWatch = null;
+let lastSheetTap = null; // where the tap that closed the last sheet landed, and when
+/** A second tap of a quick double tap on a sheet's button (Confirm, Make Offer) lands on whatever lay beneath the closed sheet,
+ * often the tab bar. Drop a tap at the same spot within a moment of the closing tap; any other tap goes through untouched. */
+export function swallowsRepeatTap(e, last = lastSheetTap, now = Date.now()) {
+  if (!last || now - last.t > 450 || !(e.clientX || e.clientY)) return false;
+  if (document.querySelector('.sheet-backdrop') || e.target?.closest?.('.sheet-backdrop')) return false;
+  return Math.abs(e.clientX - last.x) <= 28 && Math.abs(e.clientY - last.y) <= 28;
+}
 function watchSheets() {
   if (sheetWatch || typeof MutationObserver === 'undefined') return;
   const sync = () => document.documentElement.classList.toggle('sheet-open', !!document.querySelector('.sheet-backdrop'));
   sheetWatch = new MutationObserver(sync); sheetWatch.observe(document.body, { childList: true }); sync();
+  document.addEventListener('click', (e) => { if (swallowsRepeatTap(e)) { e.preventDefault(); e.stopImmediatePropagation(); lastSheetTap = null; } }, true);
+  // Escape closes the top sheet even when focus is not inside it (a tap on plain text moves focus to the page).
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !e.defaultPrevented && closeTopSheet()) e.preventDefault(); });
 }
 export function closeTopSheet() {
   const layers = [...document.querySelectorAll('.sheet-backdrop')];
@@ -74,8 +85,10 @@ export function sheet(contentHtml, { title = '', onClose = null } = {}) {
   const el = html(`<div class="sheet-backdrop" role="dialog" aria-modal="true" aria-label="${esc(title || $t('shared.dialog'))}"><div class="sheet"><div class="sheet-head"><strong>${esc(title)}</strong><button class="btn ghost" data-action="sheet-close" aria-label="${$t('shared.close')}">✕</button></div><div class="sheet-body">${contentHtml}</div></div></div>`);
   const opener = document.activeElement;
   let closed = false; let cleanup = () => {};
+  let tapAt = null; el.addEventListener('click', (e) => { tapAt = { x: e.clientX, y: e.clientY, t: Date.now() }; }, true);
   const close = () => {
     if (closed) return; closed = true; cleanup(); el.remove(); onClose?.();
+    if (tapAt && Date.now() - tapAt.t < 450) lastSheetTap = tapAt;
     if (opener?.isConnected) opener.focus?.({ preventScroll: true });
   };
   el.__closeSheet = close;

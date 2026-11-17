@@ -546,7 +546,7 @@ export function registerHqScreens(Router, app) {
         back: () => Router.back(),
         clashhelp: () => sheet(CLASH_HELP, { title: $t('hq.how_beast_clash_works') }),
         skip: () => { F.skipEncounter(app.f); app.save(); toast($t('hq.encounter_skipped_on_to_wednesday')); Router.go('hq', {}, { reset: true }); },
-        compare: (el) => { const p = app.f.week.prospects[Number(el.dataset.i)]; if (p) compareBeast(app.f, p.monster, { ovrKnown: p.revealed >= 4, attrsKnown: p.revealed >= 6, potentialKnown: !!p.potentialKnown }); },
+        compare: (el) => { const p = app.f.week.prospects[Number(el.dataset.i)]; if (p) compareBeast(app.f, p.monster, { ovrKnown: p.revealed >= 4, attrsKnown: p.revealed >= 6, potentialKnown: !!p.potentialKnown, salaryKnown: p.revealed >= 4 && !!p.potentialKnown }); },
         enter: (el) => { const i = Number(el.dataset.i); const pv = F.encounterPreview(app.f, i); if (!pv.ok) { toast(pv.reason, 'bad'); return; } Router.go('clash-battle', { kind: 'encounter', i }); },
       });
     },

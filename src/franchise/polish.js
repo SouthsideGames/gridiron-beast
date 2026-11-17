@@ -69,3 +69,16 @@ export function replacementFor(f, candidate) {
   starters.sort((a,b)=>monsterOverall(a.m)-monsterOverall(b.m));
   return starters[0]?.m || f.roster.filter(x=>x.position===candidate.position&&x.id!==candidate.id&&!x.injury).sort((a,b)=>monsterOverall(b)-monsterOverall(a))[0] || null;
 }
+/**
+ * Where a short-position warning's Review leads (QOL-02). A slot someone healthy can fill opens that slot's assignment list; a
+ * position nobody healthy can play opens the free-agent market at that position, the club's signing route, rather than a list
+ * with nothing to choose. `fallback` is the warning's own screen for clubs without the year-round market. Never decides anything.
+ */
+export function shortPositionRoute(f, need, fallback = 'roster') {
+  if (!need) return { screen: fallback, params: {} };
+  const slots = GROUP_SLOTS[need.position] || [need.position];
+  const slot = slots.find((s) => f.roster.some((m) => !m.injury && canPlay(m.position, s))) || null;
+  if (slot) return { screen: 'assign', params: { slot } };
+  if (f.freeAgency?.v) return { screen: 'famarket', params: {}, browse: { position: need.position } };
+  return { screen: fallback, params: {} };
+}

@@ -32,9 +32,17 @@ try:
               f.scenes=[];f.achievementsBackfilled=true;f.guide={enabled:false};
               await __gb.setFranchise(f);
             }""")
+            def dismiss_scenes():
+                # A first sighting of an Apex beast plays its discovery scene over the screen; close it the way a player does.
+                for _ in range(4):
+                    scene = page.locator('.apex-scene')
+                    if not scene.count(): return
+                    for control in ['[data-apex="skip"]', '[data-apex="continue"]']:
+                        if scene.locator(control).count() and scene.locator(control).first.is_visible(): scene.locator(control).first.click(); break
+                    page.wait_for_timeout(300)
             def go(name):
                 page.evaluate("async name => (await import('/src/ui/router.js')).go(name,{}, {reset:true})",name)
-                page.wait_for_timeout(150)
+                page.wait_for_timeout(150); dismiss_scenes()
             def close_sheet():
                 page.locator('.sheet-backdrop').last.locator('[data-action="sheet-close"]').click()
             def no_overflow():
@@ -83,8 +91,71 @@ try:
             page.locator('[data-action="plan"]').click()
             assert 'selected' not in page.locator('[data-action="toggle"][data-id='+json.dumps(play_id)+']').get_attribute('class')
             no_overflow()
+            page.evaluate('__gb.f.season.day=0')
+            def toast_text(): return page.evaluate("() => document.querySelector('#toast.show')?.innerText || ''")
+            def sheets(): return page.locator('.sheet-backdrop').count()
+            # The shortlist page's own Review and Remove work (the shared header listener must not swallow them).
+            go('shortlist')
+            assert page.locator('[data-polish="shortlist-remove"]').count()==1
+            page.locator('[data-polish="shortlist-open"]').click(); page.wait_for_timeout(150)
+            assert page.locator('.sheet .polish-comparison').count()==1, 'shortlist Review opens the comparison'
+            close_sheet(); page.locator('[data-polish="shortlist-remove"]').click(); page.wait_for_timeout(150)
+            assert page.locator('[data-polish="shortlist-remove"]').count()==0 and not page.evaluate('__gb.f.polish.shortlist.length'), 'shortlist Remove removes'
+            # A staged point plan is refused once the beast has changed; nothing is committed.
+            page.evaluate("async id => { const {frac}=await import('/src/core/fraction.js'); const m=__gb.f.roster.find(m=>m.id===id); m.dev.bank=frac(3); m.points=3; await (await import('/src/ui/router.js')).go('monster',{id}); }", beast['id'])
+            page.wait_for_timeout(150); page.locator('[data-polish="points"]').click()
+            page.locator('[data-polish="point-add"][data-id='+json.dumps(beast['attr'])+']').click()
+            page.evaluate('id => { __gb.f.roster.find(m=>m.id===id).fatigue += 5; }', beast['id'])
+            snapshot=page.evaluate('JSON.stringify(__gb.f.roster.find(m=>m.id==='+json.dumps(beast['id'])+'))')
+            page.locator('[data-polish="point-confirm"]').click(); page.wait_for_timeout(150)
+            assert page.evaluate('JSON.stringify(__gb.f.roster.find(m=>m.id==='+json.dumps(beast['id'])+'))')==snapshot, 'a stale point preview was committed'
+            # Escape closes the top sheet even after a tap on plain text moved focus out of its controls.
+            page.locator('.sheet-body p').first.click(); page.keyboard.press('Escape'); page.wait_for_timeout(100)
+            assert sheets()==0, 'Escape after tapping plain sheet text'
+            # A quick double tap on Confirm commits once and the second tap does not fall through to the tab bar beneath.
+            page.locator('[data-polish="points"]').click(); page.locator('[data-polish="point-add"][data-id='+json.dumps(beast['attr'])+']').tap()
+            box=page.locator('[data-polish="point-confirm"]').bounding_box()
+            page.touchscreen.tap(box['x']+box['width']/2, box['y']+box['height']/2); page.touchscreen.tap(box['x']+box['width']/2, box['y']+box['height']/2); page.wait_for_timeout(300)
+            assert page.evaluate("async () => (await import('/src/ui/router.js')).currentScreen().name")=='monster', 'the second tap of a double tap navigated away'
+            # Typing an amount and tapping the offer button at once: the tap is not lost, and a mistyped amount never sends old terms.
+            go('famarket'); row=page.locator('main.screen .item[data-action="faopen"]').first
+            if row.count():
+                row.locator('.name').click(); page.wait_for_timeout(200)
+                act=page.locator('.sheet [data-act]').first; field=page.locator('.sheet [data-terms="salary"]')
+                ask=int(field.input_value()); before_terms=page.evaluate("() => JSON.stringify(__gb.f.freeAgency || null) + __gb.f.roster.length")
+                field.fill('12345'); act.tap(); page.wait_for_timeout(250)
+                assert 'steps of' in toast_text() and page.evaluate("() => JSON.stringify(__gb.f.freeAgency || null) + __gb.f.roster.length")==before_terms, 'a mistyped amount must not send the previous terms'
+                page.locator('.sheet [data-terms="salary"]').fill(str(ask+1000)); page.locator('.sheet [data-act]').first.tap(); page.wait_for_timeout(350)
+                assert toast_text() or sheets()==0, 'the offer tap after typing was lost'
+                if sheets(): assert page.locator('.sheet [data-terms="salary"]').input_value()==str(ask+1000)
+                while sheets(): close_sheet(); page.wait_for_timeout(80)
+            # Trade desk: Send (pinned in the footer) asks for confirmation; Cancel returns to the intact desk; the choice survives closing.
+            page.evaluate("async () => (await import('/src/ui/trade-desk-ui.js')).openTradeDesk(window.__gb, { onDone: () => {} })"); page.wait_for_timeout(250)
+            mine=page.locator('.sheet [data-m^="mine:"]').first; theirs=page.locator('.sheet [data-m^="theirs:"]').first
+            if mine.count() and theirs.count():
+                chosen=[mine.get_attribute('data-m'), theirs.get_attribute('data-m')]; mine.click(); page.locator('.sheet [data-m^="theirs:"]').first.click(); page.wait_for_timeout(150)
+                send=page.locator('.sheet [data-send]')
+                if send.is_enabled():
+                    send.click(); page.wait_for_timeout(200); assert page.locator('.sheet-backdrop [data-action="no"]').count()==1, 'Send the Proposal asked for no confirmation'
+                    page.locator('.sheet-backdrop [data-action="no"]').click(); page.wait_for_timeout(150); assert sheets()==1 and page.locator('.sheet [data-send]').count()==1
+                close_sheet(); page.evaluate("async () => (await import('/src/ui/trade-desk-ui.js')).openTradeDesk(window.__gb, { onDone: () => {} })"); page.wait_for_timeout(250)
+                assert page.evaluate("() => JSON.stringify([__gb.f.polish.tradeDraft.state.giveM.length, __gb.f.polish.tradeDraft.state.getM.length])")=='[1,1]', 'trade draft kept'
+                close_sheet()
+            # Larger Text applies as soon as it is ticked in Settings, and unticking restores the normal size.
+            go('settings'); box=page.locator('main.screen [data-change="comfortable"]'); box.scroll_into_view_if_needed(); box.tap(); page.wait_for_timeout(150)
+            assert page.evaluate("() => document.documentElement.dataset.comfortableText + getComputedStyle(document.documentElement).fontSize")=='118px', 'Larger Text did not apply at once'
+            no_overflow(); box.tap(); page.wait_for_timeout(150)
+            assert page.evaluate("() => document.documentElement.dataset.comfortableText")=='0'
+            # Export through a phone share sheet: a cancelled share says so and never claims a saved file; a completed share is not called a save.
+            page.evaluate("() => { window.Capacitor = { isNativePlatform: () => true }; navigator.canShare = () => true; navigator.share = async () => { throw new DOMException('cancelled', 'AbortError'); }; }")
+            go('settings'); page.locator('main.screen [data-action="export"]').click(); page.wait_for_timeout(600)
+            assert 'canceled' in toast_text().lower() and 'saved as' not in toast_text().lower(), f'cancelled share message: {toast_text()}'
+            page.evaluate("() => { navigator.share = async () => {}; }"); page.wait_for_timeout(5200); page.locator('main.screen [data-action="export"]').click(); page.wait_for_timeout(600)
+            assert 'saved as' not in toast_text().lower() and 'share' in toast_text().lower(), f'completed share message: {toast_text()}'
+            page.evaluate("() => { delete window.Capacitor; }")
+            no_overflow()
             assert not errors, errors
-            print(json.dumps({'width':width,'result':'pass','checks':['shortlist','hidden-knowledge','all-prospects','presets','point-preview','plan-draft','overflow']}))
+            print(json.dumps({'width':width,'result':'pass','checks':['shortlist','hidden-knowledge','all-prospects','presets','point-preview','plan-draft','overflow','shortlist-page','stale-points','escape','double-tap','typed-offer','trade-desk-send','share-export']}))
             page.close()
         browser.close()
 finally:

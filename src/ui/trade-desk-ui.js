@@ -81,7 +81,7 @@ export function openTradeDesk(app, { onDone = null, team = null } = {}) {
     if (t.dataset.f === 'team') { state.team = t.value; state.giveM = []; state.getM = []; state.giveP = []; state.getP = []; state.fPosTheirs = 'all'; } else state[t.dataset.f] = t.value;
     state.result = null; render();
   });
-  body.addEventListener('click', async (e) => {
+  el.addEventListener('click', async (e) => { // the whole sheet: Send the Proposal is pinned in the footer, outside the body
     const m = e.target.closest('[data-m]'); const p = e.target.closest('[data-p]');
     if (m) { const [side, id] = m.dataset.m.split(':'); toggle(side === 'mine' ? state.giveM : state.getM, id); state.result = null; render(); return; }
     if (p) { const [side, k] = p.dataset.p.split(/:(.+)/); const assets = F.deskAssetsFor(f, state.team); const pick = (side === 'mine' ? assets.myPicks : assets.theirPicks).find((x) => key(x) === k); if (pick) toggle(side === 'mine' ? state.giveP : state.getP, pick, (a, b) => key(a) === key(b)); state.result = null; render(); return; }

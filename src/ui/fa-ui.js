@@ -172,14 +172,22 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
   const root = () => el;
   const redraw = () => { const body = el.querySelector('.sheet-body') || el; advOpen = !!el.querySelector('details')?.open; body.innerHTML = draw(); if (advOpen) el.querySelector('details')?.setAttribute('open', ''); };
   const done = (msg, kind = 'good') => { delete drafts[key]; app.save({ immediate: true }); toast(msg, kind); close(); onDone?.(); };
+  // Typing an amount and tapping Make Offer straight away: the tap blurs the field (a change event) before the click. Redrawing
+  // then would replace the button under the finger and lose the tap, so while a tap is in progress the redraw waits until it ends.
+  let tapping=false, pending=false, refused=false; // refused: the amount just typed was invalid, so the tap's action must not run
+  const settle=()=>{tapping=false;refused=false;if(pending){pending=false;if(el.isConnected)redraw();}};
+  el.addEventListener('pointerdown',()=>{tapping=true;},true);
+  el.addEventListener('click',()=>setTimeout(settle,0),true);
+  el.addEventListener('pointercancel',()=>setTimeout(settle,0),true);
   root()?.addEventListener('change', ev => {
     const field=ev.target.dataset.terms; if(!['salary','bonus'].includes(field))return;
     const value=Number(ev.target.value), minimum=field==='salary'?OFFER_STEP:0;
-    if(!ev.target.value.trim() || !Number.isSafeInteger(value) || value<minimum || value%OFFER_STEP!==0){toast($t('polish.invalid_amount',{step:OFFER_STEP}),'bad');redraw();return;}
-    t[field]=value;remember();redraw();
+    if(!ev.target.value.trim() || !Number.isSafeInteger(value) || value<minimum || value%OFFER_STEP!==0){toast($t('polish.invalid_amount',{step:OFFER_STEP}),'bad');if(tapping){ev.target.value=String(t[field]);pending=true;refused=true;}else redraw();return;}
+    t[field]=value;remember();if(tapping)pending=true;else redraw();
   });
   root()?.addEventListener('click', async (ev) => {
     const b = ev.target.closest('button'); if (!b) return;
+    if (refused && b.dataset.act) return; // never send the previous terms in place of an amount the player mistyped
     if (b.dataset.action === 'polish-compare') { compareBeast(f,m,{salary:t.salary}); return; }
     if (b.dataset.t === 'sal') { t.salary = Math.max(OFFER_STEP, t.salary + Number(b.dataset.d)); remember(); redraw(); return; }
     if (b.dataset.t === 'bon') { t.bonus = Math.max(0, t.bonus + Number(b.dataset.d)); remember(); redraw(); return; }

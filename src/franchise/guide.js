@@ -53,7 +53,7 @@ function syncOnce(f) {
 export function allowedScreens(f) {
   const l = currentLesson(f); if (!l) return null;
   if (f.guide.skipPending) return null;
-  const shared = ['onboarding', 'welcome', 'hq', 'scene', 'commissioner', 'captains', 'guidebook', 'menu', 'settings', 'test-session'];
+  const shared = ['onboarding', 'welcome', 'hq', 'scene', 'commissioner', 'captains', 'guidebook', 'menu', 'settings', 'test-session', 'shortlist']; // the shortlist only plans
   const routes = {
     roster: ['roster', 'monster', 'assign'], monster: ['roster', 'monster', 'assign'], staff: ['staff', 'interview', 'hire'],
     scout: ['scout', 'recruit'], recruit: ['recruit', 'clash-battle'], training: ['training', 'roster', 'monster'],

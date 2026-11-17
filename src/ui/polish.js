@@ -2,7 +2,7 @@ import * as FR from '../core/fraction.js';
 import { isArchived } from '../franchise/lifecycle.js';
 // Shared phone-first franchise controls. Game decisions still use existing engine APIs.
 import * as F from '../franchise/franchise.js';
-import { editPolish, polishState, toggleShortlist, shortlisted, draftScope, browsePreferences, setBrowsePreferences, matchesSearch, previewInvestment, commitInvestment, savePreset, lineupPresetPreview, replacementFor } from '../franchise/polish.js';
+import { editPolish, polishState, toggleShortlist, shortlisted, draftScope, browsePreferences, setBrowsePreferences, matchesSearch, previewInvestment, commitInvestment, savePreset, lineupPresetPreview, replacementFor, shortPositionRoute } from '../franchise/polish.js';
 import { rookieCharge } from '../franchise/draft.js';
 import { monsterOverall } from '../data/monsters.js';
 import { ATTRIBUTES } from '../data/personnel.js';
@@ -17,19 +17,24 @@ import { activityPaused, pauseActivity, resumeActivity } from './activity.js';
 const buttons = (action,label,id='') => `<button class="btn small" data-polish="${action}" data-id="${esc(id)}" ${action==='point-add'?`aria-label="${esc(t('roster.invest_1_point_in',{attr:ATTR_NAME[id],cost:''}))}"`:''}>${label}</button>`;
 const unknown = () => t('shared.unknown_value');
 const attrOrder = {QB:['accuracy','arm','awareness','speed'],RB:['speed','agility','strength','catching'],WR:['catching','speed','agility','awareness'],TE:['catching','blocking','strength','speed'],OL:['blocking','strength','awareness','durability'],DL:['strength','tackling','speed','awareness'],LB:['tackling','awareness','coverage','speed'],CB:['coverage','speed','agility','awareness'],S:['coverage','tackling','awareness','speed'],K:['kicking','accuracy','awareness','durability']};
-export function compareBeast(f, m, { ovrKnown=true, attrsKnown=true, potentialKnown=true, salary=null }={}) {
-  let against=replacementFor(f,m);
-  const choices=f.roster.filter(x=>x.position===m.position&&x.id!==m.id);
+/** The comparison table's rows: [label, candidate, current beast]. Unknown candidate values stay ???; a salary appears only when
+ * the caller's own card would show it (`salaryKnown`, which defaults to `ovrKnown`, since an asking price follows the ratings). */
+export function comparisonRows(f, m, against, { ovrKnown=true, attrsKnown=true, potentialKnown=true, salaryKnown=ovrKnown, salary=null }={}) {
   const cell=(value,known=true)=>known&&value!=null?esc(value):unknown();
-  const {el}=sheet('',{title:t('hq.vs_your_s', { name: m.name, position: m.position })});
-  const draw=()=>{
-    const rows=[[t('polish.overall'),ovrKnown?cell(monsterOverall(m)):unknown(),against?cell(monsterOverall(against)):unknown()],
+  return [[t('polish.overall'),ovrKnown?cell(monsterOverall(m)):unknown(),against?cell(monsterOverall(against)):unknown()],
       [t('polish.age'),cell(m.age),cell(against?.age)],
-      [t('polish.salary'),ovrKnown?fmtMoney(salary??m.salary):unknown(),against?fmtMoney(against.salary):unknown()],
+      [t('polish.salary'),salaryKnown?fmtMoney(salary??m.salary):unknown(),against?fmtMoney(against.salary):unknown()],
       [t('polish.potential'),potentialKnown?cell(m.potential):unknown(),cell(against?.potential)],
       [t('polish.fatigue'),cell(m.fatigue),cell(against?.fatigue)],
       [t('polish.scheme_fit'), attrsKnown ? (F.fitFor(f,m)?.fits ? t('polish.fits') : t('polish.off_scheme')) : unknown(), against ? (F.fitFor(f,against)?.fits ? t('polish.fits') : t('polish.off_scheme')) : unknown()],
       ... (attrOrder[m.position]||[]).map(a=>[ATTR_NAME[a],attrsKnown?cell(m.attributes?.[a]):unknown(),cell(against?.attributes?.[a])])];
+}
+export function compareBeast(f, m, opts={}) {
+  let against=replacementFor(f,m);
+  const choices=f.roster.filter(x=>x.position===m.position&&x.id!==m.id);
+  const {el}=sheet('',{title:t('hq.vs_your_s', { name: m.name, position: m.position })});
+  const draw=()=>{
+    const rows=comparisonRows(f,m,against,opts);
     el.querySelector('.sheet-body').innerHTML=`<label>${t('polish.compare_with')}<select data-compare-target>${choices.map(x=>`<option value="${esc(x.id)}" ${x.id===against?.id?'selected':''}>${esc(x.name)}${x.injury?' · '+t('polish.injured'):''}</option>`).join('')}</select></label><table class="polish-comparison"><thead><tr><th>${esc(m.position)}</th><th>${esc(m.name)}</th><th>${against?esc(against.name):t('polish.no_starter')}</th></tr></thead><tbody>${rows.map(([label,a,b])=>`<tr><th>${label}</th><td>${a}</td><td>${b}</td></tr>`).join('')}</tbody></table>`;
   };
   el.addEventListener('change',e=>{if(e.target.matches('[data-compare-target]')){against=choices.find(x=>x.id===e.target.value);draw();}});draw();
@@ -37,9 +42,10 @@ export function compareBeast(f, m, { ovrKnown=true, attrsKnown=true, potentialKn
 export function pointPlanner(app,id,initialAttribute=null) {
   const f=app.f;if(isArchived(f))return; let attrs=initialAttribute&&previewInvestment(f,id,[initialAttribute]).ok?[initialAttribute]:[]; let committed=false;
   const {el,close}=sheet('',{title:t('polish.plan_points')});
+  let shown=null; // the preview on screen: Confirm commits this one, so a change to the beast since it was drawn is refused
   const draw=()=>{
     const m=f.roster.find(x=>x.id===id);if(!m){close();return;}
-    const pv=previewInvestment(f,id,attrs);const after=pv.monster||m;
+    const pv=previewInvestment(f,id,attrs);shown=pv;const after=pv.monster||m;
     const body=el.querySelector('.sheet-body');
     body.innerHTML=`<b>${esc(m.name)}</b><p>${t('polish.preview_only')}</p><p>${t('polish.points_left',{points:FR.toNumber(after.dev.bank).toLocaleString('en-US',{maximumFractionDigits:2})})}</p><div class="stack">${ATTRIBUTES.map(a=>`<div class="row between"><span>${ATTR_NAME[a]}: ${m.attributes[a]} → <b>${after.attributes[a]}</b></span>${buttons('point-add','+',a)}</div>`).join('')}</div><div class="polish-actions"><span>${t('polish.investments',{n:attrs.length})}</span>${buttons('point-undo',t('polish.undo'))}${buttons('point-confirm',t('polish.confirm'))}</div>`;
   };
@@ -48,7 +54,7 @@ export function pointPlanner(app,id,initialAttribute=null) {
     if(b.dataset.polish==='point-add') {const next=previewInvestment(f,id,[...attrs,b.dataset.id]);if(!next.ok){toast(next.reason,'bad');return;}attrs.push(b.dataset.id);draw();}
     if(b.dataset.polish==='point-undo'){attrs.pop();draw();}
     if(b.dataset.polish==='point-confirm'){
-      const r=commitInvestment(f,previewInvestment(f,id,attrs),{locked:app.f!==f||isArchived(f)||F.pointsLocked(f)});
+      const r=commitInvestment(f,shown,{locked:app.f!==f||isArchived(f)||F.pointsLocked(f)});
       if(!r.ok){toast(r.reason,'bad');return;}committed=true;app.save();close();app.polishRefresh?.();
     }
   });draw();
@@ -121,6 +127,7 @@ export function polishHeader(ctx,name) {
   }
   return out;
 }
+export const POLISH_ROOT_ACTIONS=new Set(['explain','resume','go','clear-filters','shortlist','compare','shortlist-page','presets-lineup','presets-plan','points','next-points']);
 export function mountPolish(root,ctx,name,Router) {
   const {app,f}=ctx;if(!f?.roster||!app||isArchived(f))return;app.polishRefresh=()=>Router.render();
   const scope=['draft','draftclass'].includes(name)?draftScope(f):'market';
@@ -168,7 +175,9 @@ export function mountPolish(root,ctx,name,Router) {
   const search=root.querySelector('[data-polish-search]');search?.addEventListener('input',()=>{setBrowsePreferences(f,name,{query:search.value});applyFilters();app.save();});
   root.querySelectorAll('[data-polish-filter]').forEach(el=>el.addEventListener('change',()=>{setBrowsePreferences(f,name,{[el.dataset.polishFilter]:el.checked});applyFilters();app.save();}));
   root.addEventListener('click',e=>{
-    const b=e.target.closest('[data-polish]');if(!b)return;e.preventDefault();e.stopPropagation();
+    // Only the shared header/row actions are handled here; a screen's own data-polish controls (the shortlist page's Review and
+    // Remove) must reach that screen's listener, so they are never claimed or stopped.
+    const b=e.target.closest('[data-polish]');if(!b||!POLISH_ROOT_ACTIONS.has(b.dataset.polish))return;e.preventDefault();e.stopPropagation();
     const action=b.dataset.polish,id=b.dataset.id,m=candidates.get(id);
     if(action==='explain')sheet(`<p>${esc(b.dataset.info)}</p>`,{title:t('polish.explanation')});
     if(action==='resume'){delete editPolish(f).playbackPaused;app.save();resumeActivity();globalThis.dispatchEvent?.(new Event('gb-playback-resume'));Router.render();}
@@ -176,8 +185,8 @@ export function mountPolish(root,ctx,name,Router) {
       let screen=b.dataset.screen,params=b.dataset.slot?{slot:b.dataset.slot}:id?{id}:{};
       if(b.dataset.kind==='call'&&name==='hq'){const deals=root.querySelector('.polish-deals');if(deals){deals.open=true;deals.scrollIntoView({block:'center'});return;}}
       if(b.dataset.warning==='depth'||b.dataset.warning==='forfeit'){
-        const need=F.depthNeeds(f).find(x=>x.status==='short');
-        if(need){screen='assign';params={slot:F.GROUP_SLOTS[need.position]?.[0]||need.position};}
+        const route=shortPositionRoute(f,F.depthNeeds(f).find(x=>x.status==='short'),screen);
+        screen=route.screen;params=route.params;if(route.browse){setBrowsePreferences(f,'famarket',route.browse);app.save();}
       }
       Router.go(screen,params);
     }

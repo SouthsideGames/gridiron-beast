@@ -125,7 +125,7 @@ export function registerMenuScreens(Router, app) {
       fillStorageMeter(root, app);
       const audioSet = patch => { if (!setAudioPreferences(patch)) toast('Audio setting could not be saved on this device.', 'bad'); };
       root.querySelectorAll('[data-change^="audio-"]').forEach(el => el.addEventListener('input', () => audioSet(el.dataset.change === 'audio-mute' ? { muted: el.checked } : { [el.dataset.change.slice(6)]: Number(el.value) })));
-      const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); };
+      const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.comfortableText = app.settings.comfortableText ? '1' : '0'; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); };
       delegate(root, {
         quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), speed: (el) => set('speed', Number(el.value)),
         clashmode: (el) => set('clash', { ...clashSettings(app.settings), mode: el.value }), clashspeed: (el) => set('clash', { ...clashSettings(app.settings), speed: Number(el.value) }),

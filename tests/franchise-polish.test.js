@@ -100,3 +100,46 @@ test('planning state survives the real franchise export/import path without chan
  const loaded=importJson(exportJson(f));const restored=loaded.franchise||loaded;
  assert.deepEqual(restored.polish,f.polish);assert.equal(restored.rngState,rng);
 });
+
+test('comparison rows show a candidate salary only where the caller\'s card does; unknown values stay ???', async () => {
+ const { comparisonRows } = await import('../src/ui/polish.js');
+ const f=fresh(),m=structuredClone(f.roster.find(x=>x.position==='WR')),against=f.roster.find(x=>x.position==='WR'&&x.id!==m.id);m.id='recruit';m.salary=31234;
+ const salary=(opts)=>comparisonRows(f,m,against,opts).find(r=>/salary/i.test(r[0]))[1];
+ // A Tuesday recruit with the overall revealed but not the potential: his card hides the salary, so must the comparison.
+ assert.equal(salary({ovrKnown:true,attrsKnown:false,potentialKnown:false,salaryKnown:false}),'???');
+ assert.match(salary({ovrKnown:true,attrsKnown:true,potentialKnown:true,salaryKnown:true}),/31,234/);
+ assert.match(salary({ovrKnown:true,salary:22400}),/22,400/,'an explicit price (rookie deal, ask, typed offer) is shown');
+ assert.equal(salary({ovrKnown:false}),'???','by default a salary follows the overall');
+ const rows=comparisonRows(f,m,against,{ovrKnown:false,attrsKnown:false,potentialKnown:false});
+ for(const r of rows.filter(r=>!/age|fatigue/i.test(r[0])))assert.equal(r[1],'???',`${r[0]} leaks`);
+});
+test('the shared polish listener claims only its own actions, leaving a screen\'s Review and Remove to that screen', async () => {
+ const { POLISH_ROOT_ACTIONS } = await import('../src/ui/polish.js');
+ for (const own of ['compare','shortlist','go','resume','points','clear-filters']) assert.ok(POLISH_ROOT_ACTIONS.has(own), own);
+ for (const screenAction of ['shortlist-open','shortlist-remove','point-add','point-confirm','preset-load']) assert.ok(!POLISH_ROOT_ACTIONS.has(screenAction), screenAction);
+});
+test('a quick second tap at the spot that closed a sheet is dropped; other taps go through', async () => {
+ const prev=globalThis.document;globalThis.document={querySelector:()=>null};
+ try{
+  const { swallowsRepeatTap } = await import('../src/ui/dom.js');
+  const last={x:200,y:800,t:1000},tapAt=(x,y,extra={})=>({clientX:x,clientY:y,target:{closest:()=>null},...extra});
+  assert.equal(swallowsRepeatTap(tapAt(205,795),last,1200),true,'the double tap\'s second half');
+  assert.equal(swallowsRepeatTap(tapAt(205,795),last,1600),false,'a later deliberate tap');
+  assert.equal(swallowsRepeatTap(tapAt(60,300),last,1200),false,'a tap elsewhere');
+  assert.equal(swallowsRepeatTap(tapAt(0,0),last,1200),false,'keyboard activation has no position');
+  assert.equal(swallowsRepeatTap(tapAt(205,795),null,1200),false);
+  globalThis.document={querySelector:()=>({})};assert.equal(swallowsRepeatTap(tapAt(205,795),last,1200),false,'never while another sheet is open');
+ }finally{if(prev)globalThis.document=prev;else delete globalThis.document;}
+});
+test('a short-position warning leads to a slot someone healthy can fill, otherwise to the market at that position', async () => {
+ const { shortPositionRoute } = await import('../src/franchise/polish.js');
+ const hurt={weeks:3,name:'test',severity:'moderate'},need={position:'CB',status:'short'};
+ const h=fresh();const before=JSON.stringify(h);
+ assert.deepEqual(shortPositionRoute(h,need,'scout'),{screen:'assign',params:{slot:'CB1'}},'a healthy CB: his slot');
+ assert.equal(JSON.stringify(h),before,'reading a route changes nothing');
+ // Nobody healthy can play the position (every beast hurt): an empty assignment list would be a dead end.
+ const g=fresh();for(const m of g.roster)m.injury=hurt;g.freeAgency={v:1};
+ assert.deepEqual(shortPositionRoute(g,need,'scout'),{screen:'famarket',params:{},browse:{position:'CB'}});
+ delete g.freeAgency;assert.deepEqual(shortPositionRoute(g,need,'scout'),{screen:'scout',params:{}},'no year-round market: the warning\'s own screen');
+ assert.deepEqual(shortPositionRoute(h,null,'roster'),{screen:'roster',params:{}});
+});

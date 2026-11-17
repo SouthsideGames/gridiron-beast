@@ -112,3 +112,12 @@ test('the Board forecast sentence reads cleanly with whole wins', () => {
   const withHistory = t('hq.the_forecast_has_at_wins_against', { year: 1202, club: 'X', toFixed: 4 }) + t('hq.last_year_you', { n: 'delivered' }) + t('hq.tell_me_what_you_are_promising');
   assert.doesNotMatch(withHistory, /\.\.|[“”]/);
 });
+
+test('the polish shortlist page stays reachable in every lesson, so its header button is never a dead control', () => {
+  const f = createFranchise({ owner: { first: 'Short', last: 'List' }, club: 'Ember City Beasts', seed: 64 }); hireDefaultStaff(f); startGuide(f);
+  for (let i = 0; i < LESSONS.length && guideActive(f); i++) {
+    const allowed = allowedScreens(f);
+    if (allowed) assert.ok(allowed.includes('shortlist'), `lesson ${currentLesson(f).id} blocks the shortlist`);
+    advanceGuide(f, { skip: true });
+  }
+});
