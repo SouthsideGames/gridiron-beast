@@ -1852,3 +1852,21 @@ html[data-reduced-motion="1"] .dexp-spark { display: none; }
 .guide-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 .guide-buttons .btn { max-width: 100%; min-height: 44px; white-space: normal; }
 .guide-target { outline: 3px solid var(--accent, #ffd700); outline-offset: 3px; }
+
+/* Bundled vector UI artwork is identical on iOS, Android and web. */
+.ui-icon { display: inline-block; width: 1.15em; height: 1.15em; flex: none; vertical-align: -.18em; fill: currentColor; pointer-events: none; }
+.tab-icon > .ui-icon { width: 22px; height: 22px; }
+/* The same preview follows the user through onboarding and My Office. No nested scrolling region. */
+.coach-editor .ce-sticky { position: sticky; top: calc(48px + var(--sat)); z-index: 15; background: var(--bg); border-bottom: 2px solid var(--line); padding: 8px 0; }
+.coach-editor .ce-sticky .ce-top { grid-template-columns: 96px minmax(0, 1fr); gap: 12px; justify-items: stretch; }
+.coach-editor .ce-sticky .ce-preview { width: 96px; height: 96px; }
+.coach-editor .ce-sticky .ce-preview > svg { width: 80px; height: 80px; }
+.coach-editor .ce-sticky .ce-side { text-align: left; align-self: center; }
+.coach-editor .ce-sticky .ce-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; margin: 8px 0 0; }
+.coach-editor .ce-sticky .ce-tab { padding: 6px 2px; font-size: 12px; border-radius: 8px; }
+.coach-editor .ce-team-note { font-size: 11px; }
+@media (max-height: 650px) {
+  .coach-editor .ce-sticky .ce-top { grid-template-columns: 72px minmax(0, 1fr); }
+  .coach-editor .ce-sticky .ce-preview { width: 72px; height: 72px; padding: 4px; }
+  .coach-editor .ce-sticky .ce-preview > svg { width: 60px; height: 60px; }
+}

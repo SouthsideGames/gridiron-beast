@@ -1,3 +1,4 @@
+import { iconifyMarkup } from './icons.js';
 // Tiny DOM helpers: escape, element creation from HTML, delegation.
 import { t as $t } from '../text/index.js';
 
@@ -8,7 +9,7 @@ export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel
 /** Build an element from an HTML string. */
 export function html(str) {
   const t = document.createElement('template');
-  t.innerHTML = str.trim();
+  t.innerHTML = iconifyMarkup(str.trim());
   return t.content.firstElementChild;
 }
 

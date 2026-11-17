@@ -1,3 +1,4 @@
+import { iconifyMarkup } from './icons.js';
 // Screen router: a stack of screens rendered into #app with a top bar and,
 // inside the franchise, a bottom tab bar. Screens are {render(ctx) -> html,
 // mount?(root, ctx), unmount?()} objects registered by name.
@@ -50,14 +51,14 @@ export function render() {
   const title = typeof screen.title === 'function' ? screen.title(ctx) : screen.title || $t('shared.gridiron_beast');
   const showBack = stack.length > 1 && screen.back !== false;
   const tabs = screen.tabs === false ? null : tabsProvider(ctx, top.name);
-  app.innerHTML = `
+  app.innerHTML = iconifyMarkup(`
     <header class="topbar" role="banner">
       ${showBack ? `<button class="btn ghost back" data-action="router-back" aria-label="${$t('shared.back')}">‹</button>` : `<span class="back-spacer"></span>`}
       <h1 class="title">${esc(title)}</h1>
       <span class="topbar-right">${screen.topRight ? screen.topRight(ctx) : ''}${helpProvider && screen.help !== false ? helpProvider(ctx, top.name) : ''}</span>
     </header>
     <main class="screen screen-${esc(top.name)} ${tabs ? 'with-tabs' : ''} ${entering ? 'enter' : ''}" id="screen">${tipProvider ? tipProvider(ctx, top.name) : ''}${screen.render(ctx)}</main>
-    ${tabs ? `<nav class="tabbar" aria-label="${$t('shared.franchise_sections')}">${tabs.map((t) => `<button class="tab ${t.active ? 'active' : ''}" data-action="router-tab" data-screen="${t.screen}" aria-current="${t.active ? 'page' : 'false'}"><span class="tab-icon">${t.icon}${t.badge ? `<span class="tab-badge" aria-label="${t.badge} notices">${t.badge > 9 ? '9+' : t.badge}</span>` : ''}</span><span>${esc(t.label)}</span></button>`).join('')}</nav>` : ''}`;
+    ${tabs ? `<nav class="tabbar" aria-label="${$t('shared.franchise_sections')}">${tabs.map((t) => `<button class="tab ${t.active ? 'active' : ''}" data-action="router-tab" data-screen="${t.screen}" aria-current="${t.active ? 'page' : 'false'}"><span class="tab-icon">${t.icon}${t.badge ? `<span class="tab-badge" aria-label="${t.badge} notices">${t.badge > 9 ? '9+' : t.badge}</span>` : ''}</span><span>${esc(t.label)}</span></button>`).join('')}</nav>` : ''}`);
   app.querySelector('[data-action="router-back"]')?.addEventListener('click', back);
   for (const b of app.querySelectorAll('[data-action="router-tab"]')) b.addEventListener('click', () => go(b.dataset.screen, {}, { reset: true }));
   screen.mount?.($('#screen'), ctx);

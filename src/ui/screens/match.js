@@ -1,3 +1,4 @@
+import { iconifyMarkup } from '../icons.js';
 import { guideFootball, guideMoment } from '../guided-week.js';
 import { recorder } from '../../testing/recorder.js';
 import { eligiblePlays } from '../../sim/substitutions.js';
@@ -295,14 +296,14 @@ export function registerMatchScreens(Router, app) {
     if (Router.currentScreen()?.name !== 'match' || !f?.game || !svg || !head || !after || !controls) { Router.render(); return; }
     const P = screenParts(f);
     const h1 = document.querySelector('.topbar .title'); if (h1) h1.textContent = P.title;
-    const put = (el, html) => { if (el.__html !== html) { el.innerHTML = html; el.__html = html; } }; // unchanged regions are not rebuilt
+    const put = (el, html) => { if (el.__html !== html) { el.innerHTML = iconifyMarkup(html); el.__html = html; } }; // unchanged regions are not rebuilt
     put(head, P.head);
     wrap.className = P.wrapClass;
     fieldDraw(svg, P.field);
     while (svg.nextSibling) svg.nextSibling.remove();
     svg.insertAdjacentHTML('afterend', P.over);
     put(after, P.after);
-    if (f.settings.liveClock) { controls.innerHTML = P.controls; controls.__html = null; } else put(controls, P.controls); // the live play clock's digits are reset by a rebuild
+    if (f.settings.liveClock) { controls.innerHTML = iconifyMarkup(P.controls); controls.__html = null; } else put(controls, P.controls); // the live play clock's digits are reset by a rebuild
     afterRender(f, root);
     momentSheets(f);
     if (!anim && f.game?.lastEvent?.sim?.events?.some(e => e.kind === 'ability' || e.kind === 'status')) guideMoment(f, 'status', () => app.save());

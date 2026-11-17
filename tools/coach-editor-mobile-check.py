@@ -26,22 +26,27 @@ try:
         launch = {'executable_path': os.environ['CHROMIUM_EXECUTABLE']} if os.environ.get('CHROMIUM_EXECUTABLE') else {}
         browser = pw.chromium.launch(**launch)
         checks = []
-        for width in [320, 375, 390, 440, 768]:
-            page = browser.new_page(viewport={'width': width, 'height': 900}, is_mobile=True, has_touch=True)
+        for width, height in [(320, 568), (375, 667), (390, 844), (440, 900), (768, 900)]:
+            page = browser.new_page(viewport={'width': width, 'height': height}, is_mobile=True, has_touch=True)
             # Serve a minimal page using the real stylesheet and shared renderer.
             # Avoid unrelated startup/network behavior masking editor geometry failures.
             page.route('**/__coach_editor_check__', lambda route: route.fulfill(
                 content_type='text/html',
-                body='<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/styles/app.css"></head><body><div id="app"><main class="screen" id="fixture"></main></div></body></html>'))
+                body='<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/styles/app.css"></head><body><div id="app"><header class="topbar"><h1>Appearance</h1></header><main class="screen"><div style="height:180px"></div><div id="fixture"></div><div style="height:300px"></div></main></div></body></html>'))
             page.goto(url + '__coach_editor_check__')
             for tab in ['face', 'hair', 'outfit', 'extras', 'build']:
                 page.evaluate("""async (tab) => {
-                  const {coachEditorHtml} = await import('/src/ui/coach-editor.js');
+                  const {coachEditorHtml, coachEditorActions} = await import('/src/ui/coach-editor.js');
                   const {DEFAULT_LOOK} = await import('/src/ui/coach-portrait.js');
-                  document.querySelector('#fixture').innerHTML = coachEditorHtml(DEFAULT_LOOK, {
+                  window.scrollTo(0, 0);
+                  const state = { look: { ...DEFAULT_LOOK }, tab };
+                  const redraw = () => { const y = window.scrollY; document.querySelector('#fixture').innerHTML = coachEditorHtml(state.look, {
                     tab, teamColor: '#2255aa',
                     teamNote: 'Team colors follow the club you pick next. You can change your look any time from My Office.'
-                  });
+                  }); window.scrollTo(0, y); };
+                  const actions = coachEditorActions(state, redraw);
+                  document.querySelector('#fixture').onclick = (e) => { const b = e.target.closest('[data-action]'); if (b) actions[b.dataset.action]?.(b); };
+                  redraw();
                 }""", tab)
                 page.evaluate('() => document.fonts.ready')
                 result = page.evaluate("""() => {
@@ -62,7 +67,20 @@ try:
                   };
                 }""")
                 assert all(result.values()), (width, tab, result)
-                checks.append({'width': width, 'tab': tab})
+                if tab == 'face':
+                    page.locator('.ce-body').evaluate('(el) => window.scrollTo(0, el.offsetTop + 100)')
+                    pinned = page.evaluate("""() => {
+                      const header = document.querySelector('.topbar').getBoundingClientRect();
+                      const p = document.querySelector('.ce-preview').getBoundingClientRect();
+                      return p.top >= header.bottom - 1 && p.bottom < innerHeight / 2;
+                    }""")
+                    assert pinned, (width, height, 'portrait must stay below the header while scrolling')
+                    before = page.locator('.ce-preview').inner_html()
+                    page.locator('[data-action="ce-set"][data-k="nose"]').last.click()
+                    after = page.locator('.ce-preview').inner_html()
+                    assert before != after, (width, 'preview updates while scrolled')
+                    assert page.locator('.ce-preview').evaluate('(el) => el.getBoundingClientRect().top >= 48')
+                checks.append({'width': width, 'height': height, 'tab': tab})
             labels = page.evaluate("""async () => {
               const {BACKGROUNDS} = await import('/src/data/staff.js');
               const {temperSummary} = await import('/src/data/temper.js');
