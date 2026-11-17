@@ -28,7 +28,7 @@ Tested from PR head `f6038fe`; fixes in `6c2da9b` and `16fc205`. **All browser r
 
 ### Full regression suite
 
-Running on `16fc205` (result to follow in this section).
+`node --test "tests/**/*.test.js"` (the `npm test` command) on `16fc205`, with nothing else running: **2,253 tests, 2,253 pass, 0 fail, 0 cancelled, 0 skipped, 73.6 min** (06:02–07:16 UTC). `npm test` itself exits 216 in this checkout because the tracked `node_modules` symlink points at itself. Later commits change documentation only: `git diff 16fc205 -- src index.html styles` is empty.
 
 ### Complete new-franchise playthrough (by taps, one continuous session)
 
