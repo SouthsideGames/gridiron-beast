@@ -1,3 +1,4 @@
+import { guideFootball, guideMoment } from '../guided-week.js';
 import { recorder } from '../../testing/recorder.js';
 import { eligiblePlays } from '../../sim/substitutions.js';
 import { substitutionStrip, openSubstitutions } from '../coaching-substitutions.js';
@@ -209,6 +210,7 @@ export function registerMatchScreens(Router, app) {
       document.querySelector('.topbar [data-action="log"]')?.addEventListener('click', () => showLog(f));
       document.querySelector('.topbar [data-action="help"]')?.addEventListener('click', () => sheet(`${matchHelpHtml(f)}<button class="btn small" data-action="assist-help" data-screen="match" style="margin-top:8px">${$t('match.more_help_coach_assist')}</button>`, { title: $t('match.how_a_match_works_2') }));
       momentSheets(f);
+      if (!anim && f.game?.lastEvent?.sim?.events?.some(e => e.kind === 'ability' || e.kind === 'status')) guideMoment(f, 'status', () => app.save());
       document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: f.game.state.finished ? $t('match.final_3') : `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: $t('match.box_score_2') }));
     },
     unmount() { settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
@@ -272,6 +274,7 @@ export function registerMatchScreens(Router, app) {
   /** What mount() does after the markup is in place; refresh() repeats it (the play clock restarts, Auto is rescheduled, the halftime sheet opens). */
   function afterRender(f, root) {
     { const G = f.game, st = G.state; if (!anim && !st.finished && st.quarter >= 3 && !G.halftimeShown) { G.halftimeShown = true; app.save(); sheet(boxScoreHtml(st, teamsFor(f), { title: $t('match.halftime') }), { title: $t('match.halftime') }); } }
+    if (!anim) guideFootball(f, () => app.save());
     startPlayClock(f, root);
     runPresnapReveal(f);
     scheduleAuto(f);
@@ -302,6 +305,7 @@ export function registerMatchScreens(Router, app) {
     if (f.settings.liveClock) { controls.innerHTML = P.controls; controls.__html = null; } else put(controls, P.controls); // the live play clock's digits are reset by a rebuild
     afterRender(f, root);
     momentSheets(f);
+    if (!anim && f.game?.lastEvent?.sim?.events?.some(e => e.kind === 'ability' || e.kind === 'status')) guideMoment(f, 'status', () => app.save());
   }
 
   // ------------------------------------------------------------ the end-of-play save (docs/task8/RENDER_OPT.md)
@@ -883,7 +887,8 @@ export function registerMatchScreens(Router, app) {
   }
 
   function finishGame(f) {
-    if (!f.game?.state?.finished || finishGame.busy) return; // a second tap (the button stays under the result sheet) must not run the final whistle twice
+    if (!f.game?.state?.finished || finishGame.busy) return; // protect against a second tap
+    if (f.guide?.enabled) { f.guide.evidence.gameFinished = true; app.save(); }
     finishGame.busy = true; setTimeout(() => { finishGame.busy = false; }, 0);
     const G = f.game; const s = G.state; const me = G.playerSide;
     const won = s.winner === me;
@@ -934,7 +939,7 @@ export function registerMatchScreens(Router, app) {
     if (!f.settings.liveClock) return;
     let left = 40; let last = performance.now();
     playClockTimer = setInterval(() => {
-      const G = f.game; if (!G || G.state.finished || G.state.phase !== 'scrimmage' || anim || G.lastEvent?.needsContinue) { last = performance.now(); return; }
+      const G = f.game; if (!G || G.state.finished || G.state.phase !== 'scrimmage' || anim || G.lastEvent?.needsContinue || document.querySelector('.sheet')) { last = performance.now(); return; }
       const now = performance.now(); left -= (now - last) / 1000; last = now;
       const pc = root.querySelector('#pc'), bar = root.querySelector('#pcbar');
       if (pc) pc.textContent = Math.max(0, Math.ceil(left)); if (bar) bar.style.width = `${Math.max(0, left / 40 * 100)}%`;

@@ -616,9 +616,14 @@ test('board goals: three scaled offers, one commitment per season, settled at se
   g.board.goal = { id: 'title', label: 'Title', year: 1, weight: 2 }; v = B.settleGoal(g, { champion: true }); assert.equal(g.board.confidence, 2, 'a met goal resets the hole and the title counts double'); assert.equal(g.board.scoutBonusYear, 2);
   g.board.goal = { id: 'wins', target: 9, label: 'Win 9', year: 1, weight: 1 }; B.settleGoal(g, { wins: 0 }); g.board.goal = { id: 'wins', target: 9, label: 'Win 9', year: 1, weight: 1 }; B.settleGoal(g, { wins: 0 }); g.board.goal = { id: 'wins', target: 9, label: 'Win 9', year: 1, weight: 1 }; B.settleGoal(g, { wins: 0 }); g.board.goal = { id: 'wins', target: 9, label: 'Win 9', year: 1, weight: 1 }; v = B.settleGoal(g, { wins: 0 });
   assert.equal(v.status, 'fired'); assert.equal(g.board.fired, true);
-  // A full season settles the real goal and a fired owner cannot start the next season.
+  // A full season settles the real goal and a fired owner cannot start the next season. Starting on the hot seat with a
+  // fractional forecast, a missed goal's news quotes the forecast: it is shown as whole wins (2026-11 guided-week review).
+  f.board.confidence = -1; f.board.goal.forecastWins = 4.6;
   for (let guard = 0; guard < 40 && !f.season.finished; guard++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); }
   assert.ok(f.season.boardVerdict && typeof f.season.boardVerdict.met === 'boolean'); assert.equal(f.board.goal, null); assert.equal(f.board.history.length, 1);
+  const boardNews = f.news.map((n) => String(n.text ?? n)).filter((t) => /^BOARD: goal missed/.test(t));
+  if (!f.season.boardVerdict.met) { assert.ok(boardNews.some((t) => /forecast 5\)/.test(t)), boardNews.join(' | ')); }
+  assert.ok(boardNews.every((t) => !/\d\.\d/.test(t)), boardNews.join(' | '));
   f.board.fired = true; assert.equal(F.startNextSeason(f).ok, false);
 });
 

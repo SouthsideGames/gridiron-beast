@@ -134,6 +134,7 @@ export function registerClashBattle(Router, app) {
   const saveSettings = (patch) => { if (!app.f) return; app.f.settings.clash = { ...settings(), ...patch }; app.save(); };
   const stop = () => { if (st.arena) { st.cursor = st.arena.cursor; st.arena.destroy(); st.arena = null; } st.session = null; };
   const B = () => BINDINGS[st.kind];
+  function playWhenReady() { if (!st.arena) return; if (document.querySelector('.sheet')) { setTimeout(playWhenReady, 100); return; } st.arena.play(); }
 
   // ---------- the one selection phase (before the seed is drawn): the monsters and their order of entry
   function setupHtml(f) {
@@ -183,7 +184,7 @@ export function registerClashBattle(Router, app) {
     st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, looks: app.clashLooks || null, onCursor: (i) => { st.cursor = i; }, onEnd: () => atEnd(f) });
     if (st.cursor) st.arena.setCursor(Math.min(st.cursor, end));
     if (st.cursor >= end) { atEnd(f); return; }
-    setTimeout(() => st.arena?.play(), 300);
+    setTimeout(playWhenReady, 300);
   }
   // ---------- Task 10: the live continuous battle (Watch)
   function mountLive(root, host, f, e, s) {
@@ -196,7 +197,7 @@ export function registerClashBattle(Router, app) {
     if (at > 0) st.arena.setCursor(at);
     drawSubs(root);
     root.querySelector('#cl-subs')?.addEventListener('click', (ev) => { const b = ev.target.closest('[data-sub]'); if (b) tapSub(root, b.dataset.sub); });
-    setTimeout(() => st.arena?.play(), 300);
+    setTimeout(playWhenReady, 300);
   }
   /** The arena reached the end of what the session has computed: run the next boundary (with the player's tap, if any) and play on. */
   function liveNext(root, f) {
@@ -346,7 +347,7 @@ export function registerClashBattle(Router, app) {
       });
       root.classList.toggle('cl-wide', !!(e && (e.status === 'battle' || st.replaying)));
       if (e && e.status === 'battle' && e.mode !== 'skip') mountBattle(root, f, e);
-      else if (e && st.replaying) { st.result = b.battle(f); const host = root.querySelector('#fb-arena'); if (host && st.result) { st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, onCursor: (i) => { st.cursor = i; } }); setTimeout(() => st.arena?.play(), 300); } }
+      else if (e && st.replaying) { st.result = b.battle(f); const host = root.querySelector('#fb-arena'); if (host && st.result) { st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, onCursor: (i) => { st.cursor = i; } }); setTimeout(playWhenReady, 300); } }
     },
     unmount() { stop(); st.replaying = false; },
   });

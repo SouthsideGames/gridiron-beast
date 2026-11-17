@@ -1,3 +1,4 @@
+import { guideActive } from '../franchise/guide.js';
 // Coach Assist UI (GDD §27.3; replaces the first-week tutorial of §15.13). What to show is decided in src/franchise/assist.js;
 // this file draws it: the first-use tip panel at the top of a screen, sheet tips for the match screen and for moments, the
 // "? Help" sheet every complex screen carries in every mode, and the football primer.
@@ -24,11 +25,13 @@ export function tipHtml(f, screen) {
 
 /** Sheet-style tips (the match screen, moments such as the clock): open once, then remembered. */
 export function maybeSheetTip(f, screen, save) {
+  if (guideActive(f)) return false;
   const t = autoTip(f, screen); if (!t || !t.sheet) return false;
   openTipSheet(f, t, save); return true;
 }
 /** A moment tip by topic key (clock, decisions, overtime): once, never in Expert. Returns true when shown. */
 export function momentSheet(f, key, save) {
+  if (guideActive(f)) return false;
   const t = momentTip(f, key); if (!t) return false; openTipSheet(f, t, save); return true;
 }
 function openTipSheet(f, t, save) {
@@ -56,7 +59,7 @@ function topicHtml(k, open = false) {
 export function helpHtml(f, screen) {
   const here = helpTopics(screen); const a = f ? assistSettings(f) : null;
   const rest = TOPIC_KEYS.filter((k) => !here.includes(k));
-  return `${here.length ? `<h3 style="margin-top:0">${$t('shared.on_this_screen')}</h3>${here.map((k, i) => topicHtml(k, i === 0)).join('')}` : ''}
+  return `${f?.guide ? `<button class="btn block" data-action="guide-book">${$t('guide.book')}</button>` : ''}${here.length ? `<h3 style="margin-top:0">${$t('shared.on_this_screen')}</h3>${here.map((k, i) => topicHtml(k, i === 0)).join('')}` : ''}
     ${a ? `<h3>${$t('shared.coach_assist')}</h3><div class="chips" role="radiogroup" aria-label="${$t('shared.coach_assist_mode')}">${ASSIST_MODES.map((m) => `<button class="chip ${a.mode === m ? 'on accent' : ''}" role="radio" aria-checked="${a.mode === m}" data-action="assist-mode" data-v="${m}">${ASSIST_MODE_TEXT[m].label}</button>`).join('')}</div><p class="dim" style="margin:4px 0 0">${$t('shared.change_it_any_time_here_or', { text: esc(ASSIST_MODE_TEXT[a.mode].text) })}</p>` : ''}
     <h3>${$t('shared.all_topics')}</h3>${AREAS.map((area) => { const ks = rest.filter((k) => TOPICS[k].area === area); return ks.length ? `<div class="dim" style="margin:8px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:.04em">${esc(area)}</div>${ks.map((k) => topicHtml(k)).join('')}` : ''; }).join('')}
     <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn small" data-action="tut-primer">${$t('shared.how_football_works')}</button><button class="btn small" data-action="assist-stats">${$t('shared.what_the_stats_mean')}</button></div>`;

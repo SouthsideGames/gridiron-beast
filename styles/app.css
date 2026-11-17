@@ -1845,3 +1845,10 @@ html[data-reduced-motion="1"] .dexp-spark { display: none; }
 .dexr-status .v-revision input:checked + span { background: #3b2a12; border-color: #a0611a; color: var(--warn); }
 .dexr-card textarea { width: 100%; min-height: 72px; font: inherit; font-size: 15px; text-transform: none; letter-spacing: 0; resize: vertical; }
 .dexr-card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; }
+
+/* One compact lesson at a time, with controls that wrap on phone screens. */
+.commissioner-guide { border-color: var(--accent, #ffd700); overflow-wrap: anywhere; }
+.commissioner-guide h2 { font-size: 1.05rem; margin: 8px 0; }
+.guide-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.guide-buttons .btn { max-width: 100%; min-height: 44px; white-space: normal; }
+.guide-target { outline: 3px solid var(--accent, #ffd700); outline-offset: 3px; }

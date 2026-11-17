@@ -47,6 +47,9 @@ def step(page, n):
         page.keyboard.press('Escape'); page.wait_for_timeout(100)
         if visible(page, '.sheet'): page.evaluate("() => document.querySelectorAll('.sheet-backdrop').forEach(e => e.remove())")
         return 'sheet:closed'
+    # A new franchise starts the Commissioner's guided first week (tools/guided-week-check.py covers it). This walker plays
+    # unguided, as a player who turns guidance off, so the rest of the game is walked exactly as before.
+    if visible(page, '[data-action="guide-off"]'): return 'guide:off' if click(page, '[data-action="guide-off"]') else None
     if sn == 'menu':
         if click(page, '[data-action="continue"]'): return 'continue'
         return 'menu:new' if click(page, '[data-action="new"]') else None

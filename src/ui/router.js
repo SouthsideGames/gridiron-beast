@@ -6,6 +6,8 @@ import { $, html, esc } from './dom.js';
 import { t as $t } from '../text/index.js';
 
 const screens = new Map();
+let navigationGuard = null;
+export function setGuard(guard) { navigationGuard = guard; }
 let stack = [];
 let current = null;
 let app = null;
@@ -22,6 +24,7 @@ export function init({ root, context, tabs, tip = null, mounted = null, help = n
 export function currentScreen() { return stack[stack.length - 1] || null; }
 
 export function go(name, params = {}, { replace = false, reset = false } = {}) {
+  if (navigationGuard && !navigationGuard(name)) return;
   if (!screens.has(name)) throw new Error(`${$t('shared.no_screen', { name })}`);
   if (reset) stack = [];
   else if (stack.length && !replace) stack[stack.length - 1].scroll = window.scrollY; // remembered for the way back
@@ -31,7 +34,7 @@ export function go(name, params = {}, { replace = false, reset = false } = {}) {
 }
 let restoreTo = null;
 export function back() {
-  if (stack.length > 1) stack.pop();
+  if (stack.length > 1) stack.pop(); // the guard is for going forward: Back only returns to a screen already visited, so a lesson that completes on a sub-screen never strands the player there
   restoreTo = stack[stack.length - 1]?.scroll ?? null; // back to where the thumb left the previous screen (GDD §40.5)
   navigating = true; render();
 }
