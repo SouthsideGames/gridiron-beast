@@ -1261,7 +1261,6 @@ export default {
   'hq.no_pro_seasons': 'no pro seasons',
   'hq.played_for_you_you_know_everything': 'Played for you: you know everything about him',
   'hq.free_agent_his_pro_record_and': 'Free agent: his pro record and full card are public.',
-  'hq.not_scouted_yet': 'Not scouted yet.',
   'hq.headline_ratings_and_the': { one: '{headlineKnown} headline rating and the', other: '{headlineKnown} headline ratings and the' },
   'hq.the': 'The',
   'hq.full_attribute_sheet_need_a_complete': 'full attribute sheet need a complete scout report.',
@@ -4339,7 +4338,6 @@ export default {
   'data.calm': 'Calm',
   'data.steady': 'Steady',
   'data.unknown_temper': 'unknown Temper "{temperId}"',
-  'data.unknown': 'Unknown',
   'data.trains_at_double_efficiency_and_at': 'Trains {attrWord} at double efficiency and {attrWord2} at half; every other attribute at normal cost.',
   // ── Playbook: formations, plays and lessons [plays]
   'plays.i_form': 'I-Form',
