@@ -134,4 +134,29 @@ The new regression tests in `tests/guided-week.test.js` (four) and the board-new
 - **Skipped lessons:** after a Sunday lesson is skipped, the panel keeps showing it until the milestone happens.
 - **Text listing:** `docs/text/GAME_TEXT.csv` is already out of date on `main` and was not regenerated.
 
+## Merge with main after PR #127 (2026-11-17)
+
+`main` at `15c1b08` (PR #127 mobile onboarding fixes) was merged into this branch in `2a45945`. This was a merge commit, not a rebase.
+
+- **`src/text/en.js`:** the only text conflict. It is resolved with main's `shared.unknown_value` line first, followed by the guide lines.
+  - A three-way comparison of all 6,987 keys found no lost or changed wording and no duplicate keys.
+  - #127's GM, Temper and HQ wording is kept, and so are this branch's guide and forecast wording.
+- **Unused lines removed** (`8814d31`): `hq.not_scouted_yet` and `data.unknown`. #127 stopped showing them, so the central-text check fails on `main` itself.
+- **`src/version.js`:** keeps the newer `v43.20.0-guided-first-week-preview`. Main was on v43.19.0.
+- **`index.html`:** regenerated with `node tools/stamp-release.mjs` (467 modules), not combined by hand. `--check` passes.
+- **Auto-merged from #127:** `src/data/temper.js`, `src/ui/screens/hq.js`, `styles/app.css`, `tests/text-style.test.js`, `tools/coach-editor-mobile-check.py`.
+
+Checks on `8814d31` (browser checks emulated):
+
+| Check | Result |
+|---|---|
+| Targeted tests (guided-week, text-style, central-text, release-stamp, board-balance) | 35/35 pass |
+| coach-editor-mobile-check | Pass |
+| guided-week-check at 320, 390 and 440 px | Pass |
+| navigation, final-whistle | Pass |
+| New-franchise playthrough at 320 px, lineup changed | 48/48 |
+| New-franchise playthrough at 440 px, lineup kept | 50/50 |
+| cache-upgrade-check | Pre-existing stale assertion: it hardcodes `v42.4.1`. The new build loads in all 3 scenarios. |
+| Full suite (`node --test "tests/**/*.test.js"`) | 2,254/2,254 pass, 0 fail, 0 cancelled, 0 skipped, 72.8 min |
+
 No merge, deployment or Capacitor build has been performed.
