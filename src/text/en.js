@@ -3770,7 +3770,7 @@ export default {
   'shared.continue': 'Continue',
   'shared.sound_on_2': '🔊 Sound on',
   'shared.sound_off_2': '🔇 Sound off',
-  'shared.surprise_me': '🎲 Surprise Me',
+  'shared.surprise_me': 'Surprise Me',
   'shared.buzz_cut': 'Buzz cut',
   'shared.short_fade': 'Short fade',
   'shared.high_top_fade': 'High-top fade',
