@@ -232,6 +232,10 @@ export function start() {
   initGuidedWeek({ app, Router });
   initTutorial({ app, Router, openStats: () => openStatGuide() });
   installAudioLifecycle();
+  // Begin fetching/playing the title song before asynchronous save recovery.
+  // Browsers may reject autoplay; the existing first-tap lifecycle retries it.
+  music.prepare('main');
+  void music.select('main').catch(() => {});
   registerMenuScreens(Router, app);
   registerTestSession(Router, app);
   document.addEventListener('click', (e) => { if (e.target.closest?.('[data-action="test-report-issue"]')) flagProblem(); });
