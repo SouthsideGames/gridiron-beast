@@ -49,7 +49,7 @@ export function drawTemper(rng, { apex = false } = {}) { const pool = apex ? NEU
 const ATTR_WORD = Object.freeze({ speed: 'Speed', strength: 'Strength', blocking: 'Blocking', awareness: 'Awareness', accuracy: 'Accuracy', arm: 'Arm', durability: 'Durability', tackling: 'Tackling', coverage: 'Coverage', catching: 'Catching', agility: 'Agility', kicking: 'Kicking' });
 /** Display text for a Temper (UI): its name and what it does to training. A Temper never changes ratings or ceilings. */
 export function temperSummary(temperId) {
-  const t = TEMPERS[temperId]; if (!t) return { name: $t('data.unknown'), text: '' };
+  const t = TEMPERS[temperId]; if (!t) return { name: $t('shared.unknown_value'), text: '' };
   const text = t.favored ? `${$t('data.trains_at_double_efficiency_and_at', { attrWord: ATTR_WORD[t.favored], attrWord2: ATTR_WORD[t.unfavored] })}` : 'Trains every attribute at normal cost.';
   return { name: t.name, text, favored: t.favored, unfavored: t.unfavored };
 }

@@ -1427,23 +1427,34 @@ html.apex-open, html.apex-open body { overflow: hidden; }
 .newspaper .np-kicker { margin-top: 6px; font-size: 12px; opacity: .75; }
 @keyframes np-drop { from { transform: translateY(-14px) rotate(-2.5deg) scale(.94); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .newspaper { animation: none; } }
-/* Coach appearance editor */
-.coach-editor .ce-top { display: flex; gap: 12px; align-items: center; }
-.coach-editor .ce-preview { background: var(--panel); border: 2px solid var(--line); border-radius: var(--r); padding: 6px; line-height: 0; }
-.coach-editor .ce-tabs { display: flex; gap: 6px; overflow-x: auto; margin: 10px 0 6px; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
-.coach-editor .ce-tab { appearance: none; flex: 0 0 auto; min-height: var(--tap); padding: 0 12px; border-radius: 999px; border: 2px solid var(--line); background: var(--panel); color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+/* Shared appearance editor: keep the fixed-size portrait inside its own grid track. */
+.coach-editor { min-width: 0; }
+.coach-editor .ce-top { display: grid; grid-template-columns: 144px minmax(0, 1fr); gap: 12px; align-items: center; }
+.coach-editor .ce-preview { box-sizing: border-box; width: 144px; height: 144px; display: grid; place-items: center; background: var(--panel); border: 2px solid var(--line); border-radius: var(--r); padding: 6px; line-height: 0; }
+.coach-editor .ce-preview > svg { display: block; width: 128px; height: 128px; max-width: 100%; max-height: 100%; }
+.coach-editor .ce-side { min-width: 0; overflow-wrap: anywhere; }
+.coach-editor .ce-side .btn { max-width: 100%; white-space: normal; }
+.coach-editor .ce-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 6px; margin: 12px 0 8px; }
+.coach-editor .ce-tab { appearance: none; min-width: 0; min-height: var(--tap); padding: 8px 6px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel); color: inherit; font: inherit; font-size: 13px; font-weight: 700; white-space: normal; cursor: pointer; }
 .coach-editor .ce-tab.on { border-color: var(--accent); background: #2a2a12; }
-.coach-editor .ce-option { padding: 8px 0; border-top: 1px solid var(--line); }
-.coach-editor .ce-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.coach-editor .ce-label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #9fb3a8); }
-.coach-editor .ce-stepper { display: flex; align-items: center; gap: 6px; }
-.coach-editor .ce-stepper .btn { min-width: var(--tap); min-height: var(--tap); }
-.coach-editor .ce-value { min-width: 96px; text-align: center; font-weight: 700; }
-.coach-editor .ce-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.coach-editor .ce-chip { appearance: none; min-height: 36px; padding: 4px 10px; border-radius: 8px; border: 2px solid var(--line); background: var(--panel); color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+.coach-editor .ce-option { padding: 10px 0; border-top: 1px solid var(--line); min-width: 0; }
+.coach-editor .ce-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 220px); align-items: center; gap: 8px; }
+.coach-editor .ce-label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #9fb3a8); overflow-wrap: anywhere; }
+.coach-editor .ce-stepper { display: grid; grid-template-columns: var(--tap) minmax(0, 1fr) var(--tap); align-items: center; gap: 6px; min-width: 0; }
+.coach-editor .ce-stepper .btn { min-width: var(--tap); min-height: var(--tap); padding: 4px; }
+.coach-editor .ce-value { min-width: 0; text-align: center; font-weight: 700; overflow-wrap: anywhere; }
+.coach-editor .ce-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.coach-editor .ce-chip { appearance: none; min-height: var(--tap); max-width: 100%; padding: 4px 10px; border-radius: 8px; border: 2px solid var(--line); background: var(--panel); color: inherit; font: inherit; font-size: 13px; cursor: pointer; overflow-wrap: anywhere; }
 .coach-editor .ce-chip.selected { border-color: var(--accent); background: #2a2a12; }
-.coach-editor .ce-chip.ce-swatch { padding: 3px; min-width: 36px; }
+.coach-editor .ce-chip.ce-swatch { padding: 3px; min-width: var(--tap); display: grid; place-items: center; }
 .coach-editor .ce-chip.ce-swatch span { display: block; width: 26px; height: 26px; border-radius: 6px; }
+@media (max-width: 440px) {
+  .coach-editor .ce-top { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 10px; }
+  .coach-editor .ce-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .coach-editor .ce-side { width: 100%; text-align: center; }
+  .coach-editor .ce-side .dim { max-width: 38ch; margin-left: auto; margin-right: auto; }
+  .coach-editor .ce-row { grid-template-columns: minmax(0, 1fr); }
+}
 .skip-wed { border-style: dashed; }
 
 /* Developer: an ability-review notice is one large tap target that opens its reviewer (same panel look as the play-review notice). */
