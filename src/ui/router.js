@@ -34,7 +34,7 @@ export function go(name, params = {}, { replace = false, reset = false } = {}) {
 }
 let restoreTo = null;
 export function back() {
-  if (stack.length > 1) { if (navigationGuard && !navigationGuard(stack[stack.length - 2].name)) return; stack.pop(); }
+  if (stack.length > 1) stack.pop(); // the guard is for going forward: Back only returns to a screen already visited, so a lesson that completes on a sub-screen never strands the player there
   restoreTo = stack[stack.length - 1]?.scroll ?? null; // back to where the thumb left the previous screen (GDD §40.5)
   navigating = true; render();
 }

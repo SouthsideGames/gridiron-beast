@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { startGuide, guideActive, currentLesson, advanceGuide, syncGuide, guideEvent, finishIndependent, allowedScreens, LESSONS, lineupStamp, skipLesson } from '../src/franchise/guide.js';
+import { startGuide, guideActive, currentLesson, advanceGuide, syncGuide, guideEvent, finishIndependent, allowedScreens, LESSONS, lineupStamp, skipLesson, footballLessonKey } from '../src/franchise/guide.js';
+import { t } from '../src/text/index.js';
 import { createFranchise, hireDefaultStaff, assignSlot } from '../src/franchise/franchise.js';
 import { migrate, exportJson, importJson } from '../src/franchise/save.js';
 import { goalOffers } from '../src/franchise/board.js';
@@ -32,7 +33,7 @@ test('draft and Board goals precede Monday; day 2 recruiting precedes training',
   const f = fresh(); at(f, 'draft'); assert.equal(syncGuide(f), false); f.draft.done = true;
   syncGuide(f); assert.equal(currentLesson(f).id, 'board'); assert.equal(syncGuide(f), false);
   f.board = { goal: { id: 'wins' } }; syncGuide(f); assert.equal(currentLesson(f).id, 'monday');
-  f.season.day = 1; syncGuide(f); assert.equal(currentLesson(f).id, 'prospect');
+  f.season.day = 1; f.week.prospects = [{ monster: { id: 'scouted' } }]; syncGuide(f); assert.equal(currentLesson(f).id, 'prospect'); // Monday's scouting found someone
   guideEvent(f, 'compare'); assert.equal(syncGuide(f), false);
   f.season.day = 2; syncGuide(f); assert.equal(currentLesson(f).id, 'wednesday');
 });
@@ -73,4 +74,41 @@ test('skipping a daily lesson unlocks navigation without spending the day or adv
 test('no available prospects adapts the comparison lesson instead of trapping the player', () => {
   const f = fresh(); at(f, 'prospect'); f.season.day = 1; f.week.prospects = [];
   assert.equal(syncGuide(f), true); assert.equal(currentLesson(f).id, 'clash'); assert.ok(f.guide.skipped.includes('prospect'));
+});
+
+// Found in the 2026-11-17 browser playthrough of a new franchise.
+test('one save can finish two checkpoints: skipping Tuesday\'s encounter ends the prospect and Clash lessons together', () => {
+  const f = fresh(); at(f, 'prospect'); f.season.day = 1; f.week.prospects = [{ monster: { id: 'scouted' } }];
+  assert.equal(syncGuide(f), false, 'Tuesday has not ended yet');
+  f.season.day = 2; // Skip the Encounter: Wednesday begins without a comparison or a battle
+  assert.equal(syncGuide(f), true); assert.equal(currentLesson(f).id, 'wednesday', 'Wednesday\'s training is not blocked by a finished Tuesday');
+  assert.deepEqual(f.guide.skipped, ['prospect']); assert.ok(f.guide.completed.includes('clash'));
+  assert.ok(allowedScreens(f).includes('training'));
+});
+test('a forfeited Sunday keeps the football lesson for the next real game without locking the new week', () => {
+  const f = fresh(); at(f, 'sunday'); f.season.day = 6;
+  const sunday = allowedScreens(f);
+  for (const repair of ['famarket', 'contracts', 'lineup']) assert.ok(sunday.includes(repair), `the lineup safeguard's ${repair} repair is reachable`);
+  assert.ok(!sunday.includes('scout'), 'Sunday still points at the game');
+  f.season.week = 2; f.season.day = 0; // forfeitSunday: the week ended without a played game
+  assert.equal(syncGuide(f), false); assert.equal(currentLesson(f).id, 'sunday', 'a forfeit is not a played game');
+  assert.equal(allowedScreens(f), null, 'Monday of the new week is reachable');
+  f.season.day = 6; assert.ok(allowedScreens(f), 'the next Sunday leads to the game again');
+  f.guide.evidence.gameFinished = true; syncGuide(f); assert.equal(currentLesson(f).id, 'review');
+});
+test('football lessons follow the player\'s own options: no Fourth Down or extra-point lesson on the opponent\'s snap', () => {
+  const f = fresh(); at(f, 'sunday'); f.guide.moments.push('football');
+  const game = (state) => { f.game = { playerSide: 'home', state: { phase: 'scrimmage', down: 1, finished: false, possession: 'home', ...state } }; return footballLessonKey(f); };
+  assert.equal(game({ down: 4 }), 'fourth'); assert.equal(game({ down: 4, possession: 'away' }), 'defense');
+  assert.equal(game({}), 'offense'); assert.equal(game({ possession: 'away' }), 'defense');
+  assert.equal(game({ phase: 'try' }), 'kick'); assert.equal(game({ phase: 'try', possession: 'away' }), null);
+  assert.equal(game({ phase: 'kickoff', possession: 'away' }), 'kick'); assert.equal(game({ finished: true }), null);
+  f.guide.moments = []; assert.equal(game({ down: 4 }), 'football', 'the introduction comes first');
+  assert.equal(footballLessonKey(f, (k) => k === 'football'), 'fourth', 'an introduction closed unread does not hold back the rest');
+});
+test('the Board forecast sentence reads cleanly with whole wins', () => {
+  const line = t('hq.the_forecast_has_at_wins_against', { year: 1201, club: 'Ember City Beasts', toFixed: 3 }) + t('hq.tell_me_what_you_are_promising');
+  assert.equal(line, '1201: Ember City Beasts is expected to win 3 games. Tell me what you are promising the board this year.');
+  const withHistory = t('hq.the_forecast_has_at_wins_against', { year: 1202, club: 'X', toFixed: 4 }) + t('hq.last_year_you', { n: 'delivered' }) + t('hq.tell_me_what_you_are_promising');
+  assert.doesNotMatch(withHistory, /\.\.|[“”]/);
 });

@@ -10,6 +10,14 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
 server = socketserver.TCPServer(('127.0.0.1', 0), lambda *a, **k: Quiet(*a, directory=ROOT, **k))
 threading.Thread(target=server.serve_forever, daemon=True).start()
 url = f'http://127.0.0.1:{server.server_address[1]}'
+def clear_scenes(page):
+    # First-discovery (Apex) panels open over HQ for a new club's beasts; a player taps Skip, then Continue.
+    for _ in range(20):
+        if not page.locator('.apex-scene').count(): return
+        page.locator('.apex-scene [data-apex="skip"]').first.click(); page.locator('.apex-scene [data-apex="continue"]').first.click()
+    raise AssertionError('Apex panels did not close')
+def click(page, selector, nth=0):
+    clear_scenes(page); page.locator(selector).nth(nth).click()
 with sync_playwright() as pw:
     browser = pw.chromium.launch(**({'executable_path': os.environ['CHROMIUM_PATH']} if os.getenv('CHROMIUM_PATH') else {}))
     for width in [320, 390, 440]:
@@ -26,37 +34,41 @@ with sync_playwright() as pw:
         assert page.locator('.commissioner-guide h2').inner_text() == 'Let Me Show You Around'
         assert page.locator('[data-screen="practice"]').count() == 0
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'overflow at {width}'
-        page.locator('[data-action="guide-next"]').click()
-        page.locator('[data-action="guide-open"]').first.click()
+        click(page, '[data-action="guide-next"]')
+        click(page, '[data-action="guide-open"]')
         page.wait_for_selector('.screen-roster')
         page.evaluate("async () => (await import('/src/ui/router.js')).go('league')")
         assert page.locator('.screen-roster').count() == 1, 'required sequence was bypassed'
-        page.locator('[data-action="slot"]').first.click()
-        page.locator('[data-action="monster"]').first.click()
+        click(page, '[data-action="slot"]')
+        click(page, '[data-action="monster"]')
         page.wait_for_selector('.screen-monster')
         assert page.locator('.commissioner-guide h2').inner_text() == 'Know Your Beast'
-        page.locator('[data-action="guide-next"]').click()
-        page.locator('[data-action="guide-open"]').first.click()
+        click(page, '[data-action="guide-next"]')
+        click(page, '[data-action="guide-open"]')
         # Pick an eligible alternate using real assign controls; never auto-complete from a click alone.
         slots = page.locator('[data-action="slot"]')
         changed = False
         for index in range(slots.count()):
-            page.locator('[data-action="slot"]').nth(index).click()
+            click(page, '[data-action="slot"]', index)
             candidates = page.locator('[data-action="assign"]:enabled')
-            if candidates.count(): candidates.first.click(); changed = True; break
+            if candidates.count():
+                candidates.first.click(); changed = True
+                # The completed lesson must not strand the player on the assignment screen (Back used to be refused by the lesson gate).
+                page.wait_for_selector('.screen-roster'); assert 'Finish or skip' not in (page.locator('#toast').inner_text() if page.locator('#toast.show').count() else '')
+                break
             page.evaluate("async () => (await import('/src/ui/router.js')).back()")
         assert changed
         assert page.locator('.commissioner-guide h2').inner_text() == 'Meet Your Coaches'
-        page.locator('[data-action="guide-open"]').first.click()
-        page.locator('[data-action="guide-next"]').click()
+        click(page, '[data-action="guide-open"]')
+        click(page, '[data-action="guide-next"]')
         assert page.locator('.commissioner-guide h2').inner_text() == 'Your First Draft'
-        page.locator('[data-action="guide-book"]').click()
+        click(page, '[data-action="guide-book"]')
         assert 'Meet Your Coaches' in page.locator('main').inner_text()
         # Persistence uses the application's actual save and reload path.
-        page.evaluate('() => __gb.save()'); page.wait_for_timeout(1500); page.reload(); page.wait_for_selector('main.screen')
+        page.evaluate('() => __gb.save()'); page.wait_for_timeout(1500); page.reload(); page.wait_for_function('() => window.__gb && __gb.storage.mode !== "starting" && __gb.f')  # main.screen is already in the loading placeholder
         assert page.evaluate('() => __gb.f.guide.index') == 5
         page.evaluate("async () => (await import('/src/ui/router.js')).go('hq', {}, {reset:true})")
-        page.locator('[data-action="guide-off"]').click()
+        click(page, '[data-action="guide-off"]')
         page.evaluate("async () => (await import('/src/ui/router.js')).go('league')")
         page.wait_for_selector('.screen-league')
         assert not errors, errors
