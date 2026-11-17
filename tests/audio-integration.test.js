@@ -93,3 +93,12 @@ test('ambient policy is selected before a media player or audio context can clai
  try {await f.player.select('main');f.player.pause();}
  finally {if(descriptor)Object.defineProperty(globalThis,'navigator',descriptor);else delete globalThis.navigator;}
 });
+test('a tap after an interruption that paused the current song resumes that same element where it stopped',async()=>{
+ const f=fixture();await f.player.select('main');const first=f.player.current;first.media.currentTime=42;
+ first.media.pause();f.context.state='interrupted';let resumes=0;f.context.resume=()=>{resumes++;return Promise.resolve();};
+ await f.player.select('main');
+ assert.equal(resumes,1);assert.equal(f.player.current,first,'same track object');assert.equal(f.media.length,1,'no new element');
+ assert.equal(first.media.paused,false,'the paused element plays again');assert.equal(first.media.currentTime,42,'from where it stopped');
+ first.media.ended=true;first.media.pause();await f.player.select('main');assert.equal(first.media.paused,true,'an ended song is left to the loop handler');
+ f.player.pause();
+});

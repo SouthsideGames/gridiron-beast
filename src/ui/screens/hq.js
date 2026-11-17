@@ -346,7 +346,8 @@ export function registerHqScreens(Router, app) {
   function picksLine(f) {
     const mine = F.myTradablePicks(f); const led = F.pickLedger(f);
     const byYear = {}; for (const p of mine) (byYear[p.year] ||= []).push(p);
-    return `${Object.entries(byYear).map(([y, ps]) => `<b>${yearOf(y)}</b> ${ps.map((p) => `${pickOrder(p)}${p.original !== f.club ? '*' : ''}`).join(' ')}`).join(' · ')}${led.gone.length ? ` · <span class="dim">${$t('hq.sent_away')} ${led.gone.map((p) => `${yearOf(p.year)} R${p.round} → ${esc(p.owner.split(' ').pop())}`).join(', ')}</span>` : ''}${led.acquired.length ? ` <span class="dim">${$t('hq.acquired')}</span>` : ''}`;
+    // One line per class and commas between picks: the labels themselves contain "·" ("Round 1 · Pick 4 Overall").
+    return `${Object.entries(byYear).map(([y, ps]) => `<div class="draft-pick-year"><b>${yearOf(y)}</b> ${ps.map((p) => `${pickOrder(p)}${p.original !== f.club ? '*' : ''}`).join(', ')}</div>`).join('')}${led.gone.length ? `<div class="dim">${$t('hq.sent_away')} ${led.gone.map((p) => `${yearOf(p.year)} ${$t('hq.round_only', { round: p.round })} → ${esc(p.owner.split(' ').pop())}`).join(', ')}</div>` : ''}${led.acquired.length ? `<div class="dim">${$t('hq.acquired')}</div>` : ''}`;
   }
   /** The phone: choose what to give, ask for a player or for picks, see up to three offers. */
   function tradeSheet(f, { lead = null, onDone = null } = {}) {

@@ -12,7 +12,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }`;
 test('native audio patch is idempotent and preserves the launch method and existing app configuration',()=>{
  const out=configureIosAudio(source);
- assert.match(out,/import AVFAudio/);assert.match(out,/setCategory\(\.ambient, mode: \.default\)/);
+ assert.match(out,/^import AVFoundation$/m);assert.doesNotMatch(out,/import AVFAudio/,'AVFAudio.framework is iOS 14.5+ only: importing it breaks launch on older supported iPhones');assert.match(out,/setCategory\(\.ambient, mode: \.default\)/);
  assert.match(out,/return true/);assert.match(out,/var window: UIWindow\?/);
  assert.equal(configureIosAudio(out),out);assert.doesNotMatch(out,/setActive|\.playback|duckOthers/);
 });

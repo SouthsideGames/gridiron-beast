@@ -20,7 +20,9 @@ export function configureIosAudio(source) {
             NSLog("Gridiron Beast audio session setup failed: %@", String(describing: error))
         }
 ` + source.slice(at);
-  if (!/^import (AVFAudio|AVFoundation)\b/m.test(source)) source = 'import AVFAudio\n' + source;
+  // AVFoundation, not AVFAudio: AVFAudio.framework exists only from iOS 14.5, so importing it would stop the app launching on older
+  // supported iPhones (Capacitor 6 supports iOS 13). AVFoundation re-exports AVAudioSession on every version.
+  if (!/^import (AVFAudio|AVFoundation)\b/m.test(source)) source = 'import AVFoundation\n' + source;
   return source;
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

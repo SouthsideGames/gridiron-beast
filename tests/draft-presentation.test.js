@@ -80,3 +80,19 @@ test('real draft screen shows every available prospect, explicit pick order and 
   for(const p of d.picks.slice(-6)) assert.ok(html.includes(`Round ${p.round} · Pick ${p.overall} Overall`));
   assert.doesNotMatch(html, /class="name">#\d|R\d #\d/);
 });
+test('the pick list separates each selection and each class, since the labels themselves contain "·"', () => {
+  const f = createFranchise({ owner:{first:'Draft',last:'Test'},club:'Ember City Beasts',seed:82 });
+  const screens = new Map(), previous = globalThis.document;
+  globalThis.document = {addEventListener(){}};
+  try { registerHqScreens({registerScreen:(name,screen)=>screens.set(name,screen)}, {f,settings:{}}); }
+  finally { if(previous)globalThis.document=previous;else delete globalThis.document; }
+  const html = screens.get('draft').render({f});
+  const years = [...html.matchAll(/<div class="draft-pick-year"><b>(\d+)<\/b> ([^<]*)<\/div>/g)];
+  assert.ok(years.length >= 2, 'this class and future classes each get a line');
+  assert.equal(new Set(years.map((y) => y[1])).size, years.length, 'one line per class');
+  for (const [, , list] of years) {
+    const labels = list.split(', ');
+    assert.ok(labels.every((l) => /^Round \d( · Pick \d+ Overall)?\*?$/.test(l)), `each pick is its own comma-separated label: ${list}`);
+  }
+  assert.doesNotMatch(html, /Overall\*? Round \d|Round \d\*? Round \d/, 'no two pick labels run together');
+});

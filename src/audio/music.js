@@ -27,6 +27,8 @@ export class MusicPlayer {
   // Keep this synchronous with the gesture; do not wait before media.play().
   const ac=this.getContext();if(!ac)return;
   if(ac.state!=='running')void ac.resume().catch(()=>{});
+  // An interruption (a call, Siri) can pause the element while the page stays visible: resume it here, in the gesture, where it stopped.
+  if(id!==null&&this.current?.id===id&&this.current.media.paused&&!this.current.media.ended)try{this.current.media.play()?.catch?.(()=>{});}catch{}
   if(!restart&&previous===id&&(id===null||this.current?.id===id||this.pending?.id===id))return;
   if(!restart&&this.pending?.id===id)return;
   if(!restart&&this.current?.id===id){++this.ticket;clearTimeout(this.timer);this.dispose(this.pending);this.pending=null;this.dispose(this.outgoing);this.outgoing=null;this.ramp(this.current,1,fadeMs);return;}
