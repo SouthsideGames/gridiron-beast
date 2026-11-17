@@ -118,7 +118,7 @@ export async function deleteFlow(app, { slot, f, bytes = 0, onDone = null }) {
     el.addEventListener('click', async (e) => {
       const a = e.target.closest('[data-action]')?.dataset.action; if (!a) return;
       if (a === 'cancel') { el.remove(); resolve(false); }
-      if (a === 'export') { const r = await offerExport(f); const line = el.querySelector('#del-export'); if (line) line.textContent = r?.how === 'browser' ? $t('franchises.export_offered_to_your_browser_check') : r?.ok ? `${$t('franchises.saved_as', { name: r.name })}` : $t('franchises.no_file_was_saved'); }
+      if (a === 'export') { const r = await offerExport(f); const line = el.querySelector('#del-export'); if (line) line.textContent = r?.how !== 'browser' && r?.ok === null ? $t('polish.share_offered') : r?.how === 'browser' ? $t('franchises.export_offered_to_your_browser_check') : r?.ok ? `${$t('franchises.saved_as', { name: r.name })}` : $t('franchises.no_file_was_saved'); }
       if (a === 'delete') {
         if (!matches()) return; btn.disabled = true; btn.textContent = $t('franchises.deleting');
         const r = await app.deleteSlot(slot);

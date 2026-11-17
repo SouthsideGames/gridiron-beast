@@ -62,7 +62,7 @@ export function installAudioLifecycle(){
  document.addEventListener('click',unlock,{capture:true});
  document.addEventListener('visibilitychange',()=>{if(document.hidden){music.pause();audioContext()?.suspend().catch(()=>{});}else unlock();});
  globalThis.addEventListener?.('pagehide',()=>music.pause());
- const nativeApp=globalThis.Capacitor?.Plugins?.App;if(nativeApp?.addListener)try{Promise.resolve(nativeApp.addListener('appStateChange',state=>globalThis.dispatchEvent(new CustomEvent('gb-app-state',{detail:state})))).catch(()=>{});}catch{}
+ const nativeApp=!globalThis.gbNativeBridgeInstalled&&globalThis.Capacitor?.Plugins?.App;if(nativeApp?.addListener)try{Promise.resolve(nativeApp.addListener('appStateChange',state=>globalThis.dispatchEvent(new CustomEvent('gb-app-state',{detail:state})))).catch(()=>{});}catch{}
  // Capacitor is optional in this web build; its App plugin can forward native lifecycle events here.
  globalThis.addEventListener?.('gb-app-state',event=>{if(event.detail?.isActive===false){music.pause();audioContext()?.suspend().catch(()=>{});}else unlock();});
 }

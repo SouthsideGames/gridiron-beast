@@ -34,3 +34,15 @@ test('the Settings export uses it, and never claims a file was saved without the
   const src = fs.readFileSync(new URL('../src/ui/storage-ui.js', import.meta.url), 'utf8');
   assert.ok(/offerFile\(/.test(src), 'export goes through offerFile'); assert.ok(!/a\.download\s*=/.test(src), 'no direct download left in the export');
 });
+
+test('installed native bridge receives the actual export and cancellation never claims a save',async()=>{
+ const cap=globalThis.Capacitor,share=globalThis.gbNativeShare;let received;
+ globalThis.Capacitor={isNativePlatform:()=>true};
+ globalThis.gbNativeShare=async request=>{received=request;return{ok:false,how:'capacitor-share',code:'cancelled-or-unavailable',name:request.name};};
+ try {
+   const r=await offerFile({name:'test.gbfranchise',text,use:undefined,doc:null});
+   assert.deepEqual(received,{name:'test.gbfranchise',text});assert.equal(r.ok,false);assert.equal(r.how,'capacitor-share');
+   globalThis.gbNativeShare=async()=>({ok:null,how:'capacitor-share'});
+   assert.equal((await offerFile({name:'test.json',text,use:undefined,doc:null})).ok,null,'unknown completion stays unknown');
+ }finally{if(cap)globalThis.Capacitor=cap;else delete globalThis.Capacitor;if(share)globalThis.gbNativeShare=share;else delete globalThis.gbNativeShare;}
+});
