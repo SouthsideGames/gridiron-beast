@@ -39,7 +39,7 @@ export function goalOffers(f, { expectedWinPct = 0.5, gamesInSeason = 9, gymsThi
     ? { id: 'playoffs', ...lineField('label', captured(() => $t('franchise.make_the_playoffs'))), ...lineField('text', captured(() => $t('franchise.finish_in_a_playoff_spot_standings'))), weight: 1 }
     : { id: 'badges', ...lineField('label', captured(() => $t('franchise.win_a_gym_badge'))), target: 1, ...lineField('text', captured(() => `${$t('franchise.take_a_badge_off_one_of', { gymsThisSeason, n: gymsThisSeason })}`)), weight: 1 };
   return [
-    { id: 'wins', ...lineField('label', captured(() => `${$t('franchise.win_games', { safeWins })}`)), target: safeWins, forecastWins: +exp.toFixed(1), ...lineField('text', captured(() => `${$t('franchise.the_forecast_says_match_it', { toFixed: exp.toFixed(1) })}`)), weight: 1, tier: 'safe' },
+    { id: 'wins', ...lineField('label', captured(() => `${$t('franchise.win_games', { safeWins })}`)), target: safeWins, forecastWins: +exp.toFixed(1), ...lineField('text', captured(() => `${$t('franchise.the_forecast_says_match_it', { toFixed: Math.round(exp) })}`)), weight: 1, tier: 'safe' },
     { ...medium, forecastWins: +exp.toFixed(1), tier: 'medium' },
     { id: 'title', ...lineField('label', captured(() => $t('franchise.win_the_beast_bowl'))), forecastWins: +exp.toFixed(1), ...lineField('text', captured(() => $t('franchise.everything_hit_this_and_the_board'))), weight: 2, tier: 'stretch' },
   ];

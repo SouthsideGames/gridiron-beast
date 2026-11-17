@@ -1,3 +1,4 @@
+import { startGuide } from '../../franchise/guide.js';
 import { philosophyLabel } from '../../sim/substitutions.js';
 // Commissioner's office: owner creation, club choice, rival reveal,
 // cornerstone monsters, then the five staff hires.
@@ -84,7 +85,7 @@ export function registerOnboardingScreens(Router, app) {
           if (STEPS[draft.step] === 'offense') {
             const offer = cornerstoneOffers(draft.offerSeed).find((x) => x.name === draft.offense);
             const f = createFranchise({ owner: { first: draft.first, last: draft.last, gender: draft.gender, portrait: spec(), hometown: draft.hometown, background: draft.background }, club: draft.club, rival: draft.rival, cornerstone: offer, settings: { ...app.defaultSettings, difficulty: draft.difficulty } });
-            hireDefaultStaff(f); firstWeekWelcome(f);
+            hireDefaultStaff(f); firstWeekWelcome(f); startGuide(f);
             if (creating) return; creating = true; // one franchise per tap, however impatient the thumb
             const r = await app.setFranchise(f).finally(() => { creating = false; }); // committed before it becomes the active franchise
             if (!r.ok) { err(`${t('onboarding.your_new_franchise_could_not_be', { message: r.error?.message || 'unknown error', f: app.f ? t('onboarding.your_current_franchise_is_unchanged') : '' })}`); return; }

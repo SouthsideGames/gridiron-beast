@@ -1,3 +1,5 @@
+import { guideHtml, initGuidedWeek, mountGuide } from './ui/guided-week.js';
+import { guideActive } from './franchise/guide.js';
 import { recorder } from './testing/recorder.js';
 import { installRecorder } from './testing/browser.js';
 import { registerTestSession, flagProblem } from './ui/screens/test-session.js';
@@ -226,7 +228,8 @@ export function start() {
   app.findMonster = (id) => { const f = app.f; if (!f) return null; return f.roster.find((m) => m.id === id) || f.draft?.class?.find((m) => m.id === id) || f.week?.prospects?.map((p) => p.monster).find((m) => m?.id === id) || app.apexSeen?.get(id) || null; };
   app.playApex = (name = Router.currentScreen()?.name) => { if (!app.f || APEX_QUIET.has(name)) return false; return playPendingApex({ f: app.f, find: app.findMonster, settings: app.settings, save: () => app.save({ immediate: true }), onDone: () => Router.render() }); };
   Router.init({ root: $('#app'), context: () => { if (app.f) syncDiscovery(app.f); return { app, f: app.f, inFranchise: !!app.f, tabOf: TAB_OF }; }, tabs,
-    tip: (ctx, name) => (ctx.f ? tipHtml(ctx.f, name) : ''), mounted: (ctx, name) => { recorder.setContext({ screen: name }); recorder.record('screen', { name }); const track = musicForScreen(name); if (track !== undefined) void music.select(track).catch(() => {}); routeDetailAudio(name, ctx); if (ctx.f) { maybeSheetTip(ctx.f, name, () => app.save()); app.playApex(name); } }, help: (ctx, name) => (ctx.f ? helpButtonHtml(name) : '') });
+    tip: (ctx, name) => (ctx.f ? guideHtml(ctx.f, name) + (guideActive(ctx.f) ? '' : tipHtml(ctx.f, name)) : ''), mounted: (ctx, name) => { recorder.setContext({ screen: name }); recorder.record('screen', { name }); const track = musicForScreen(name); if (track !== undefined) void music.select(track).catch(() => {}); routeDetailAudio(name, ctx); if (ctx.f) { mountGuide(ctx.f, name, () => app.save()); if (!guideActive(ctx.f)) maybeSheetTip(ctx.f, name, () => app.save()); app.playApex(name); } }, help: (ctx, name) => (ctx.f ? helpButtonHtml(name) : '') });
+  initGuidedWeek({ app, Router });
   initTutorial({ app, Router, openStats: () => openStatGuide() });
   installAudioLifecycle();
   registerMenuScreens(Router, app);

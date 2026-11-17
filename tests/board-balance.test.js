@@ -15,7 +15,7 @@ test('the forecast compares the club with this league, not with a fixed number',
   // In the franchise: a club exactly at the league average is forecast 4.5 of 9.
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 3 });
   for (const t of ALL_TEAMS) f.season.expectations[t].talent = 63;
-  assert.equal(F.boardForecastFor(f).wins, 4.5); assert.match(F.commissionerGoals(f)[0].text, /4\.5/);
+  assert.equal(F.boardForecastFor(f).wins, 4.5); assert.equal(F.commissionerGoals(f)[0].text, 'Your team is expected to win 5 games.');
 });
 
 test('the safe goal matches the forecast (rounded), at least two and never more than seven of nine', () => {
