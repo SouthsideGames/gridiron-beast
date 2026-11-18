@@ -1,3 +1,4 @@
+import { activityPaused } from '../activity.js';
 // Beast Clash arena: the battle screen. A player of the engine's record: it reads result.log through the
 // choreographer and animates exactly what each event says. It never calls the engine and holds no battle
 // logic. Monsters are the game's own 16x16 sprites (rasterised once as <img>, integer-scaled, crisp) on a
@@ -420,6 +421,7 @@ export function createArena(root, result, opts = {}) {
   function cancelAll() { for (const a of live) a.cancel(); live.clear(); fx.clear(); settle(); setActing(null, false); for (const b of $$('.cl-banner, .cl-float')) b.remove(); }
   function setCursor(i, { animate = false } = {}) { cancelAll(); cursor = Math.max(0, Math.min(n - 1, i)); if (t8) { t8clock.override = null; t8clock.end = cues[cursor].end; t8clock.base = cues[cursor].at; } applyState(stateOf(cursor), { instant: !animate }); opts.onCursor?.(cursor); const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(cursor); setButtons(); }
   async function runTo(target) {
+    if (activityPaused()) return;
     if (playing) return; playing = true; const my = ++token; setButtons();
     while (playing && my === token && cursor < target) { cursor += 1; await playCue(cues[cursor]); if (my !== token) return; opts.onCursor?.(cursor); const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(cursor); }
     if (my === token) { playing = false; setButtons(); if (cursor >= n - 1) opts.onEnd?.(); }

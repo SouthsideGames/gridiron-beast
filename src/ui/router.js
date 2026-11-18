@@ -1,9 +1,10 @@
+import { polishHeader, mountPolish } from './polish.js';
 import { iconifyMarkup } from './icons.js';
 // Screen router: a stack of screens rendered into #app with a top bar and,
 // inside the franchise, a bottom tab bar. Screens are {render(ctx) -> html,
 // mount?(root, ctx), unmount?()} objects registered by name.
 
-import { $, html, esc } from './dom.js';
+import { $, html, esc, closeTopSheet } from './dom.js';
 import { t as $t } from '../text/index.js';
 
 const screens = new Map();
@@ -21,7 +22,16 @@ let helpProvider = null; // (ctx, screenName) => html for the top bar's "? Help"
 export function registerScreen(name, screen) { screens.set(name, screen); }
 /** Every registered screen name (tools and checks that walk the whole game use it). */
 export const screenNames = () => [...screens.keys()];
-export function init({ root, context, tabs, tip = null, mounted = null, help = null }) { app = root; ctxProvider = context; tabsProvider = tabs; tipProvider = tip; afterMount = mounted; helpProvider = help; }
+let nativeBackInstalled = false;
+globalThis.addEventListener?.('gb-native-back', () => back());
+export function init({ root, context, tabs, tip = null, mounted = null, help = null }) {
+  if (!nativeBackInstalled) {
+    const nativeApp = globalThis.Capacitor?.Plugins?.App;
+    if (!globalThis.gbNativeBridgeInstalled && nativeApp?.addListener) {
+      nativeBackInstalled = true;
+      try { Promise.resolve(nativeApp.addListener('backButton', () => back())).catch(() => {}); } catch {}
+    }
+  } app = root; ctxProvider = context; tabsProvider = tabs; tipProvider = tip; afterMount = mounted; helpProvider = help; }
 export function currentScreen() { return stack[stack.length - 1] || null; }
 
 export function go(name, params = {}, { replace = false, reset = false } = {}) {
@@ -35,6 +45,7 @@ export function go(name, params = {}, { replace = false, reset = false } = {}) {
 }
 let restoreTo = null;
 export function back() {
+  if (closeTopSheet()) return;
   if (stack.length > 1) stack.pop(); // the guard is for going forward: Back only returns to a screen already visited, so a lesson that completes on a sub-screen never strands the player there
   restoreTo = stack[stack.length - 1]?.scroll ?? null; // back to where the thumb left the previous screen (GDD §40.5)
   navigating = true; render();
@@ -57,11 +68,12 @@ export function render() {
       <h1 class="title">${esc(title)}</h1>
       <span class="topbar-right">${screen.topRight ? screen.topRight(ctx) : ''}${helpProvider && screen.help !== false ? helpProvider(ctx, top.name) : ''}</span>
     </header>
-    <main class="screen screen-${esc(top.name)} ${tabs ? 'with-tabs' : ''} ${entering ? 'enter' : ''}" id="screen">${tipProvider ? tipProvider(ctx, top.name) : ''}${screen.render(ctx)}</main>
+    <main class="screen screen-${esc(top.name)} ${tabs ? 'with-tabs' : ''} ${entering ? 'enter' : ''}" id="screen">${tipProvider ? tipProvider(ctx, top.name) : ''}${polishHeader(ctx, top.name)}${screen.render(ctx)}</main>
     ${tabs ? `<nav class="tabbar" aria-label="${$t('shared.franchise_sections')}">${tabs.map((t) => `<button class="tab ${t.active ? 'active' : ''}" data-action="router-tab" data-screen="${t.screen}" aria-current="${t.active ? 'page' : 'false'}"><span class="tab-icon">${t.icon}${t.badge ? `<span class="tab-badge" aria-label="${t.badge} notices">${t.badge > 9 ? '9+' : t.badge}</span>` : ''}</span><span>${esc(t.label)}</span></button>`).join('')}</nav>` : ''}`);
   app.querySelector('[data-action="router-back"]')?.addEventListener('click', back);
   for (const b of app.querySelectorAll('[data-action="router-tab"]')) b.addEventListener('click', () => go(b.dataset.screen, {}, { reset: true }));
   screen.mount?.($('#screen'), ctx);
+  mountPolish($('#screen'), ctx, top.name, { go, back, render });
   afterMount?.(ctx, top.name);
   if (keepScroll) window.scrollTo(0, y); else if (restore != null) window.scrollTo(0, restore); else window.scrollTo(0, 0);
 }

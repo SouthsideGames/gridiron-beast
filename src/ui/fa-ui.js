@@ -1,3 +1,5 @@
+import { compareBeast, offerResolutionText } from './polish.js';
+import { editPolish, browsePreferences, setBrowsePreferences } from '../franchise/polish.js';
 import { playMonsterCry } from '../audio/detail-audio.js';
 import { stopCry } from '../audio/monster-cries.js';
 // Task 7 — the free-agency market screens (decisions 11, 12, 14, 19, 29, 30; specification "Interface").
@@ -11,7 +13,7 @@ import { monsterSprite } from './pixel-monster.js';
 import * as F from '../franchise/franchise.js';
 import * as E from '../franchise/fa-engine.js';
 import { personaOf, PRIORITY_LABEL, responseWindow } from '../franchise/fa-personality.js';
-import { allocateBonus, OFFER_STEP } from '../franchise/fa-contracts.js';
+import { allocateBonus, reservationFor, OFFER_STEP } from '../franchise/fa-contracts.js';
 import { legendSide } from '../franchise/fa-legendary.js';
 import { monsterOverall, resolveSpecies } from '../data/monsters.js';
 import { lineupProblems, buildDepthChart } from '../franchise/roster.js';
@@ -108,6 +110,7 @@ export function floorPanelHtml(f) {
 
 /** The free-agency section of the Task 7 offseason screen. */
 export function faOffseasonHtml(f) {
+  const prefs=browsePreferences(f,'famarket');filter=prefs.position||'';keenOnly=!!prefs.keen;showAll=!!prefs.all;
   if (!F.task7Offseason(f)) return null;
   const pending = F.offseasonPending(f).length; const open = F.freeAgencyOpen(f); const done = F.freeAgencyDone(f); const p = f.freeAgency.period;
   const comp = F.legendCompliance(f);
@@ -133,6 +136,12 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
   const talks = () => (mode === 'extend' ? F.extensionTalks(f, id) : mode === 'renew' ? F.renewalTalks(f, id) : null); // the negotiation as it stands (owner 2026-11-05, 13:23)
   const n0 = talks();
   const t = { salary: mine?.salary ?? n0?.demand?.salary ?? ask.salary, years: mine?.years ?? n0?.demand?.years ?? ask.years, bonus: mine?.bonus ?? n0?.demand?.bonus ?? 0 };
+  const key = [f.club, f.freeAgency?.leagueYear || f.season.year, id, mode].join('|');
+  const drafts = editPolish(f).offerDrafts ||= {};
+  for(const previous of Object.keys(drafts))if(!previous.startsWith([f.club,f.freeAgency?.leagueYear||f.season.year].join('|')+'|'))delete drafts[previous];
+  if (drafts[key]) Object.assign(t, drafts[key]);
+  while(Object.keys(drafts).length>30)delete drafts[Object.keys(drafts)[0]];
+  const remember = () => { drafts[key] = { ...t }; app.save(); };
   const p = personaOf(m);
   const draw = () => {
     const neg = talks(); const negHtml = neg ? negotiationPanel(neg) : '';
@@ -143,31 +152,46 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
     const deadline = mine ? mine.expires : mode === 'offer' ? E.deadlineFor(f, m) : null;
     const blockHtml = block ? `<div class="panel tight" style="border-color:var(--bad)">${$t('market.b_cant_yet_b', { mode: mode === 'offer' ? 'offer' : 'sign' })}<div class="muted">${esc(block.reason)}</div>${block.code === 'roster' ? `<button class="btn small" data-action="goroster">${$t('market.salary_contracts')}</button>` : block.code === 'legendary' ? `<button class="btn small" data-action="goroster">${$t('market.release_a_legendary')}</button>` : ''}</div>` : '';
     return `<div class="row" style="gap:12px">${monsterSprite(m, 56)}<div class="grow"><div style="font-size:18px;font-weight:900">${legendSide(m) ? '🌟 ' : ''}${esc(m.name)}</div><div class="muted">${esc(m.position)} · ${monsterOverall(m)} OVR · age ${m.age} · ${esc(rarityOf(m))}</div><div class="muted">${$t('market.asks_yr_for_seasons', { amount: fmt(ask.salary), years: ask.years, n: ask.years })}</div></div></div>
-      <div class="panel tight"><div class="row between">${$t('market.b_salary_per_season_b')}<span><button class="btn small" data-t="sal" data-d="-1000">−1k</button> <b>${fmt(t.salary)}</b> <button class="btn small" data-t="sal" data-d="1000">+1k</button></span></div>
+      <div class="panel tight"><div class="row between">${$t('market.b_salary_per_season_b')}<span><button class="btn small" data-t="sal" data-d="-1000">−1k</button> <input class="polish-money" type="number" inputmode="numeric" min="${OFFER_STEP}" step="${OFFER_STEP}" data-terms="salary" aria-label="${$t('polish.salary')}" value="${t.salary}"> <button class="btn small" data-t="sal" data-d="1000">+1k</button></span></div>
         <div class="row between" style="margin-top:6px">${$t('market.b_seasons_b')}<span class="seg">${[1, 2, 3].map((y) => `<button class="btn small ${t.years === y ? 'primary' : ''}" data-t="yrs" data-v="${y}">${y}</button>`).join('')}</span></div>
         <div class="row between" style="margin-top:6px">${$t('market.b_interest_b')}<span class="chip ${it.cls}">${it.label}</span></div><ul class="dim" style="margin:4px 0 0 16px;padding:0">${fieldText(it, 'why').map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
         ${deadline ? `<div class="dim" style="margin-top:4px">${$t('market.he_answers_by_b_period_b', { deadline, mine: mode === 'offer' && !mine ? $t('market.his_patience_sets_it_revisions_keep') : '' })}</div>` : mode === 'now' ? `<div class="dim" style="margin-top:4px">${$t('market.outside_the_periods_he_answers_at')}</div>` : ''}</div>
       ${negHtml}${blockHtml}
       <details class="panel tight"><summary>${$t('market.b_advanced_b')} <span class="dim">${$t('market.bonus_priorities_competing_offers_cap_schedule')}</span></summary>
-        <div class="row between" style="margin-top:6px">${$t('market.b_signing_bonus_b')}<span><button class="btn small" data-t="bon" data-d="-1000">−1k</button> <b>${fmt(t.bonus)}</b> <button class="btn small" data-t="bon" data-d="1000">+1k</button></span></div>
+        <div class="row between" style="margin-top:6px">${$t('market.b_signing_bonus_b')}<span><button class="btn small" data-t="bon" data-d="-1000">−1k</button> <input class="polish-money" type="number" inputmode="numeric" min="0" step="${OFFER_STEP}" data-terms="bonus" aria-label="${$t('polish.bonus')}" value="${t.bonus}"> <button class="btn small" data-t="bon" data-d="1000">+1k</button></span></div>
         <div class="dim" style="font-size:12px">${$t('market.paid_once_spread_over_the_seasons')}</div>
         <b style="display:block;margin-top:8px">${$t('market.what_he_wants_b')}${['money', 'security', 'role', 'winning', 'patience', 'timing'].map((k) => `<div class="attr"><span>${PRIORITY_LABEL[k]}</span><div class="bar"><i style="width:${p[k]}%"></i></div><b>${p[k]}</b></div>`).join('')}<div class="dim">${$t('market.career_stage_answers_within_periods', { stage: p.stage, responseWindow: responseWindow(m), n: responseWindow(m) })}</div>
         <b style="display:block;margin-top:8px">${$t('market.competing_offers_b')}${rivals.length ? rivals.map((o) => `<div class="muted">${esc(o.club)}: ${fmt(o.salary)}/yr × ${o.years}${o.bonus ? ` + ${fmt(o.bonus)}` : ''} · ${o.state}</div>`).join('') : `<div class="dim">${$t('market.none_from_other_clubs')}</div>`}
         <b style="display:block;margin-top:8px">${$t('market.cap_schedule_b')}${sched.map((r) => `<div class="row between muted"><span>${yearOf(r.year)}</span><span>${fmt(r.salary)} + ${fmt(r.bonus)} = <b>${fmt(r.total)}</b></span></div>`).join('')}
         ${hist.length ? `<b style="display:block;margin-top:8px">${$t('market.history_b')}${hist.map((h) => `<div class="dim">P${h.p ?? '–'} ${esc(h.act)}${h.salary ? ` · ${fmt(h.salary)} × ${h.years}${h.bonus ? ` + ${fmt(h.bonus)}` : ''}` : ''}</div>`).join('')}` : ''}
       </details>
-      <div class="row" style="gap:6px;margin-top:8px">${mode === 'offer' ? (mine ? `<button class="btn primary grow" data-act="revise">${$t('market.revise_offer')}</button>${mine.state === 'countered' ? `<button class="btn grow" data-act="counter">${$t('market.accept_his_counter')}</button>` : ''}<button class="btn danger" data-act="withdraw">${$t('market.withdraw')}</button>` : `<button class="btn primary grow" data-act="offer" ${block ? 'disabled' : ''}>${$t('market.make_offer')}</button>`) : mode === 'extend' || mode === 'renew' ? negButtons(neg, mode) : `<button class="btn primary grow" data-act="now" ${block ? 'disabled' : ''}>${$t('market.offer_now')}</button>`}</div>`;
+      <div class="polish-actions"><span>${$t('polish.cap_after')} ${fmt(mode === 'offer' ? E.usableCap(f,f.club) + (mine?.reserved || 0) - reservationFor(t) : F.salarySummary(f, reservationFor(t) - (inRoster?.salary || 0)).remaining)}</span><button class="btn small" data-action="polish-compare">${$t('polish.compare')}</button></div><div class="row polish-actions" style="gap:6px;margin-top:8px">${mode === 'offer' ? (mine ? `<button class="btn primary grow" data-act="revise">${$t('market.revise_offer')}</button>${mine.state === 'countered' ? `<button class="btn grow" data-act="counter">${$t('market.accept_his_counter')}</button>` : ''}<button class="btn danger" data-act="withdraw">${$t('market.withdraw')}</button>` : `<button class="btn primary grow" data-act="offer" ${block ? 'disabled' : ''}>${$t('market.make_offer')}</button>`) : mode === 'extend' || mode === 'renew' ? negButtons(neg, mode) : `<button class="btn primary grow" data-act="now" ${block ? 'disabled' : ''}>${$t('market.offer_now')}</button>`}</div>`;
   };
   playMonsterCry(m);
   const { el, close } = sheet(draw(), { title: mode === 'extend' ? $t('market.contract_extension') : mode === 'renew' ? $t('market.contract_renewal') : $t('market.free_agent'), onClose: stopCry }); let advOpen = false;
   const root = () => el;
   const redraw = () => { const body = el.querySelector('.sheet-body') || el; advOpen = !!el.querySelector('details')?.open; body.innerHTML = draw(); if (advOpen) el.querySelector('details')?.setAttribute('open', ''); };
-  const done = (msg, kind = 'good') => { app.save({ immediate: true }); toast(msg, kind); close(); onDone?.(); };
+  const done = (msg, kind = 'good') => { delete drafts[key]; app.save({ immediate: true }); toast(msg, kind); close(); onDone?.(); };
+  // Typing an amount and tapping Make Offer straight away: the tap blurs the field (a change event) before the click. Redrawing
+  // then would replace the button under the finger and lose the tap, so while a tap is in progress the redraw waits until it ends.
+  let tapping=false, pending=false, refused=false; // refused: the amount just typed was invalid, so the tap's action must not run
+  const settle=()=>{tapping=false;refused=false;if(pending){pending=false;if(el.isConnected)redraw();}};
+  el.addEventListener('pointerdown',()=>{tapping=true;},true);
+  el.addEventListener('click',()=>setTimeout(settle,0),true);
+  el.addEventListener('pointercancel',()=>setTimeout(settle,0),true);
+  root()?.addEventListener('change', ev => {
+    const field=ev.target.dataset.terms; if(!['salary','bonus'].includes(field))return;
+    const value=Number(ev.target.value), minimum=field==='salary'?OFFER_STEP:0;
+    if(!ev.target.value.trim() || !Number.isSafeInteger(value) || value<minimum || value%OFFER_STEP!==0){toast($t('polish.invalid_amount',{step:OFFER_STEP}),'bad');if(tapping){ev.target.value=String(t[field]);pending=true;refused=true;}else redraw();return;}
+    t[field]=value;remember();if(tapping)pending=true;else redraw();
+  });
   root()?.addEventListener('click', async (ev) => {
     const b = ev.target.closest('button'); if (!b) return;
-    if (b.dataset.t === 'sal') { t.salary = Math.max(OFFER_STEP, t.salary + Number(b.dataset.d)); redraw(); return; }
-    if (b.dataset.t === 'bon') { t.bonus = Math.max(0, t.bonus + Number(b.dataset.d)); redraw(); return; }
-    if (b.dataset.t === 'yrs') { t.years = Number(b.dataset.v); redraw(); return; }
+    if (refused && b.dataset.act) return; // never send the previous terms in place of an amount the player mistyped
+    if (b.dataset.action === 'polish-compare') { compareBeast(f,m,{salary:t.salary}); return; }
+    if (b.dataset.t === 'sal') { t.salary = Math.max(OFFER_STEP, t.salary + Number(b.dataset.d)); remember(); redraw(); return; }
+    if (b.dataset.t === 'bon') { t.bonus = Math.max(0, t.bonus + Number(b.dataset.d)); remember(); redraw(); return; }
+    if (b.dataset.t === 'yrs') { t.years = Number(b.dataset.v); remember(); redraw(); return; }
     if (b.dataset.action === 'goroster') { close(); Router.go('contracts'); return; }
     const act = b.dataset.act; if (!act) return; let r;
     if (act === 'offer') { r = F.offerFreeAgent(f, id, t); if (r.ok) return done(`${$t('market.offer_made_he_answers_by_period', { expires: r.offer.expires })}`); }
@@ -217,18 +241,18 @@ export function faHandlers(app, Router) {
       if (!(await confirmSheet(`${$t('market.release_ovr_his_cr_charge_leaves', { name: x.name, position: x.position, ovr: x.ovr, amount: fmt(x.saving) })}`, { title: $t('market.release_to_make_cap_room'), okLabel: $t('market.release_2') }))) return;
       const r = F.releaseMonster(app.f, x.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save({ immediate: true }); toast(`${$t('market.released_cr_freed', { name: x.name, amount: fmt(x.saving) })}`, 'info'); Router.render();
     },
-    fafilter: (el) => { filter = el.dataset.v || ''; Router.render(); },
-    faall: () => { showAll = true; Router.render(); },
-    fakeen: () => { keenOnly = !keenOnly; Router.render(); },
+    fafilter: (el) => { filter = el.dataset.v || '';setBrowsePreferences(app.f,'famarket',{position:filter});app.save(); Router.render(); },
+    faall: () => { showAll = true;setBrowsePreferences(app.f,'famarket',{all:true});app.save(); Router.render(); },
+    fakeen: () => { keenOnly = !keenOnly;setBrowsePreferences(app.f,'famarket',{keen:keenOnly});app.save(); Router.render(); },
     faassist: () => { app.f.settings ||= {}; app.f.settings.gmAssistant = !app.f.settings.gmAssistant; app.save(); Router.render(); },
     faadvance: async () => {
       const w = F.advanceWarning(app.f); const last = app.f.freeAgency.period >= E.FA_RULES.periods;
-      if (w.length && !(await confirmSheet(`${$t('market.of_your_offers_will_be_answered', { n: w.length, last: last ? $t('market.and_the_market_closes') : '' })}`, { title: $t('market.pending_offers'), okLabel: $t('market.advance') }))) return;
+      if (w.length && !(await confirmSheet(`${$t('market.of_your_offers_will_be_answered', { n: w.length, last: last ? $t('market.and_the_market_closes') : '' })}\n${offerResolutionText(app.f, w.map(x => E.liveOffers(app.f).find(o => o.id === x.id)).filter(Boolean))}`, { title: $t('market.pending_offers'), okLabel: $t('market.advance') }))) return;
       const r = F.advanceFreeAgency(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save({ immediate: true });
       const mine = r.signed.filter((x) => x.club === app.f.club); for (const s of r.signed) { const m = app.f.roster.find((x) => x.id === s.mid) || null; if (m && legendSide(m)) toast(`${$t('market.legendary_signing_joins', { name: m.name, club: s.club })}`, 'good', 4000); }
       toast(mine.length ? `${$t('market.signed')} ${mine.map((x) => x.name).join(', ')}.` : r.period ? `${$t('market.period_of', { period: r.period, periods: E.FA_RULES.periods })}` : $t('market.free_agency_closed_the_draft_is'), mine.length ? 'good' : 'info'); Router.render();
     },
-    fafinish: async () => { const w = E.liveOffers(app.f, (o) => o.club === app.f.club); /* finishing settles every live offer, not only those due this period */ if (!(await confirmSheet(`${$t('market.finish_free_agency_now_every_remaining')}${w.length ? `${$t('market.live_offers_of_yours_will_be', { n: w.length })}` : ''}.`, { title: $t('market.finish_free_agency'), okLabel: $t('market.finish') }))) return; F.finishFreeAgency(app.f); app.save({ immediate: true }); Router.render(); },
+    fafinish: async () => { const w = E.liveOffers(app.f, (o) => o.club === app.f.club); /* finishing settles every live offer, not only those due this period */ if (!(await confirmSheet(`${$t('market.finish_free_agency_now_every_remaining')}${w.length ? `${$t('market.live_offers_of_yours_will_be', { n: w.length })}` : ''}.\n${offerResolutionText(app.f,w)}`, { title: $t('market.finish_free_agency'), okLabel: $t('market.finish') }))) return; F.finishFreeAgency(app.f); app.save({ immediate: true }); Router.render(); },
   };
 }
 
@@ -246,6 +270,7 @@ export function registerFaScreens(R, app) {
   });
 }
 function marketListHtml(f) {
+  const prefs=browsePreferences(f,'famarket');filter=prefs.position||'';keenOnly=!!prefs.keen;showAll=!!prefs.all;
   const list = F.freeAgentMarket(f).filter((x) => !filter || x.monster.position === filter).map((x) => ({ x, i: interestOf(f, x.monster, x.ask) })).filter(({ i }) => !keenOnly || i.ratio >= 1).sort((a, b) => monsterOverall(b.x.monster) - monsterOverall(a.x.monster));
   const shown = showAll ? list : list.slice(0, 25);
   return `<div class="row" style="gap:4px;flex-wrap:wrap;margin:6px 0"><button class="btn small ${filter ? '' : 'primary'}" data-action="fafilter" data-v="">${$t('market.all')}</button>${POS.map((x) => `<button class="btn small ${filter === x ? 'primary' : ''}" data-action="fafilter" data-v="${x}">${x}</button>`).join('')}<button class="btn small ${keenOnly ? 'primary' : ''}" data-action="fakeen" aria-pressed="${keenOnly}">${$t('market.interested_in_you')}</button><button class="btn small ${f.settings?.gmAssistant ? 'primary' : ''}" data-action="faassist" aria-pressed="${f.settings?.gmAssistant ? 'true' : 'false'}" style="margin-left:auto">${$t('market.gm_assistant', { settings: f.settings?.gmAssistant ? 'On' : $t('market.off') })}</button></div>

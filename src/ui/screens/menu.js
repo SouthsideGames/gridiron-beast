@@ -1,3 +1,4 @@
+import { returnSummary } from '../polish.js';
 import { audioPreferences, setAudioPreferences } from '../../audio/context.js';
 // Main menu, settings, developer tools, about.
 
@@ -50,7 +51,7 @@ export function registerMenuScreens(Router, app) {
             <div class="mf-club">${esc(s.club)}</div>
             <div class="muted">GM ${esc(f.owner.first)} ${esc(f.owner.last)}</div>
             <div class="mf-meta"><span class="chip">${yearOf(s.year)}</span>${archived ? `<span class="chip">${t('menu.legacy')}</span>` : `<span class="chip">${t('menu.week', { week: s.week })}</span><span class="chip accent">${s.record}</span>`}</div></div></div>
-          <button class="btn primary big block" style="margin-top:14px" data-action="continue">${archived ? t('menu.view_franchise_legacy') : t('menu.continue')}</button>
+          ${returnSummary(f)}<button class="btn primary big block" style="margin-top:14px" data-action="continue">${archived ? t('menu.view_franchise_legacy') : t('menu.continue')}</button>
           <button class="mf-switch" data-action="go" data-screen="franchises"><span>${t('menu.switch_or_start_a_franchise')}</span><span class="dim">›</span></button>
         </div>` : `<div class="panel menu-franchise">
           <div class="mf-club" style="text-align:center">${t('menu.build_a_monster_dynasty')}</div>
@@ -92,7 +93,7 @@ export function registerMenuScreens(Router, app) {
       const s = app.settings;
       return `
         <div class="panel">
-          <label class="field">${t('menu.game_length')}<select data-change="quarter"><option value="180" ${s.quarterLength === 180 ? 'selected' : ''}>${t('menu.standard_3_minute_quarters_25_plays')}</option><option value="300" ${s.quarterLength === 300 ? 'selected' : ''}>${t('menu.long_5_minute_quarters_45_plays')}</option><option value="420" ${s.quarterLength === 420 ? 'selected' : ''}>${t('menu.full_7_minute_quarters_60_plays')}</option></select></label>
+          <label class="field row"><input type="checkbox" style="width:auto" data-change="comfortable" ${s.comfortableText ? 'checked' : ''}> ${t('polish.comfortable_text')}</label><label class="field">${t('menu.game_length')}<select data-change="quarter"><option value="180" ${s.quarterLength === 180 ? 'selected' : ''}>${t('menu.standard_3_minute_quarters_25_plays')}</option><option value="300" ${s.quarterLength === 300 ? 'selected' : ''}>${t('menu.long_5_minute_quarters_45_plays')}</option><option value="420" ${s.quarterLength === 420 ? 'selected' : ''}>${t('menu.full_7_minute_quarters_60_plays')}</option></select></label>
           ${app.f ? `<div class="field"><span>${t('menu.difficulty')}</span><div class="muted">${t('menu.b_b_set_when_the_franchise', { label: esc(DIFFICULTY[s.difficulty]?.label || t('menu.pro')) })}</div></div>` : ''}
           <label class="field">${t('menu.coaching_mode')}<select data-change="mode"><option value="key" ${s.mode === 'key' ? 'selected' : ''}>${t('menu.key_moments_you_coach_the_big')}</option><option value="full" ${s.mode === 'full' ? 'selected' : ''}>${t('menu.full_coaching_call_every_play')}</option></select></label>
           <p class="dim">${t('menu.times_assume_key_moments_full_coaching')}</p>
@@ -124,11 +125,11 @@ export function registerMenuScreens(Router, app) {
       fillStorageMeter(root, app);
       const audioSet = patch => { if (!setAudioPreferences(patch)) toast('Audio setting could not be saved on this device.', 'bad'); };
       root.querySelectorAll('[data-change^="audio-"]').forEach(el => el.addEventListener('input', () => audioSet(el.dataset.change === 'audio-mute' ? { muted: el.checked } : { [el.dataset.change.slice(6)]: Number(el.value) })));
-      const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); };
+      const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.comfortableText = app.settings.comfortableText ? '1' : '0'; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); };
       delegate(root, {
         quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), speed: (el) => set('speed', Number(el.value)),
         clashmode: (el) => set('clash', { ...clashSettings(app.settings), mode: el.value }), clashspeed: (el) => set('clash', { ...clashSettings(app.settings), speed: Number(el.value) }),
-        reduced: (el) => set('reducedMotion', el.checked), reducedflash: (el) => set('reducedFlash', el.checked), framerate: (el) => set('frameRate', Number(el.value) === 30 ? 30 : 60), shake: (el) => set('screenShake', el.checked), evosound: (el) => set('evoSound', el.checked), qbreads: (el) => set('qbReads', el.checked), devnotices: (el) => set('devNotices', el.checked), markers: (el) => set('fieldMarkers', el.value), typeicons: (el) => set('typeIcons', el.checked), replays: (el) => set('replays', el.checked), autopoints: (el) => set('autoPoints', el.checked), 'assist-hints': (el) => { setAssist(app.f, { hints: el.checked }); app.save(); }, 'assist-consequences': (el) => { setAssist(app.f, { consequences: el.checked }); app.save(); }, 'assist-mode': (el) => { setAssist(app.f, { mode: el.dataset.v }); app.save(); toast(`${t('menu.coach_assist', { label: ASSIST_MODE_TEXT[el.dataset.v].label })}`, 'good'); Router.render(); }, liveclock: (el) => set('liveClock', el.checked), submode: (el) => set('substitutionMode', el.value === 'manual' ? 'manual' : 'auto'),
+        comfortable: (el) => set('comfortableText', el.checked), reduced: (el) => set('reducedMotion', el.checked), reducedflash: (el) => set('reducedFlash', el.checked), framerate: (el) => set('frameRate', Number(el.value) === 30 ? 30 : 60), shake: (el) => set('screenShake', el.checked), evosound: (el) => set('evoSound', el.checked), qbreads: (el) => set('qbReads', el.checked), devnotices: (el) => set('devNotices', el.checked), markers: (el) => set('fieldMarkers', el.value), typeicons: (el) => set('typeIcons', el.checked), replays: (el) => set('replays', el.checked), autopoints: (el) => set('autoPoints', el.checked), 'assist-hints': (el) => { setAssist(app.f, { hints: el.checked }); app.save(); }, 'assist-consequences': (el) => { setAssist(app.f, { consequences: el.checked }); app.save(); }, 'assist-mode': (el) => { setAssist(app.f, { mode: el.dataset.v }); app.save(); toast(`${t('menu.coach_assist', { label: ASSIST_MODE_TEXT[el.dataset.v].label })}`, 'good'); Router.render(); }, liveclock: (el) => set('liveClock', el.checked), submode: (el) => set('substitutionMode', el.value === 'manual' ? 'manual' : 'auto'),
         tutreset: () => { resetTutorial(app.f); if (assistSettings(app.f).mode === 'expert') setAssist(app.f, { mode: 'standard' }); app.save(); toast(t('menu.tips_will_show_again_on_each'), 'good'); Router.render(); },
         primer: () => sheet(primerHtml(), { title: t('menu.how_football_works') }),
         export: () => { if (app.f) offerExport(app.f); },

@@ -1,3 +1,5 @@
+import { browsePreferences, setBrowsePreferences } from '../../franchise/polish.js';
+import { getPlanDraft, storePlanDraft, compareBeast } from '../polish.js';
 import { draftProspectRankings } from '../../franchise/draft.js';
 import { registerGmJobs } from '../gm-jobs-ui.js';
 import { playMonsterCry } from '../../audio/detail-audio.js';
@@ -97,25 +99,28 @@ export function registerHqScreens(Router, app) {
       const lastGame = lgFresh ? `<div class="panel tight last-game ${lg.won ? 'won' : 'lost'}"><div class="row between"><span><b>${lg.forfeit ? $t('hq.forfeit') : lg.won ? $t('hq.win') : $t('hq.loss')}</b> ${lg.playerScore}–${lg.oppScore} vs ${esc(lg.opponent)}</span><span class="dim">week ${lg.week}</span></div>${lgLvl.length || lgInj.length ? `<div class="dim" style="margin-top:2px">${lgLvl.map((e) => e.kind === 'evolve' ? `✨ ${esc(e.from)} → ${esc(e.to)}` : `⬆️ ${esc(e.name)} Lv ${e.level}`).join(' · ')}${lgLvl.length && lgInj.length ? ' · ' : ''}${lgInj.map((e) => `<span style="color:var(--bad)">🩹 ${esc(e.name)} ${e.weeks}w</span>`).join(' · ')}</div>` : ''}</div>` : '';
       const lb = f.campaign?.lastBadge; const lbGym = lb && lb.year === f.season.year && f.season.week - lb.week <= 1 ? GYM_BY_CLUB[lb.club] : null;
       const badgeBanner = lbGym ? `<div class="badge-banner" style="--hue:${TYPES[lbGym.element]?.hue ?? 120}"><span class="badge-banner-star">★</span><div>${$t('hq.b_earned_b_badge_of_8', { badge: esc(lbGym.badge), n: lb.n })}<div class="dim">${$t('hq.s_beaten_in_week', { name: esc(lbGym.coach.name), club: esc(lb.club), lb: lb.week })} ${lb.n === 8 ? $t('hq.all_eight_the_gyms_are_yours') : `${$t('hq.to_go', { n: 8 - lb.n })}`}</div></div></div>` : '';
-      return `${badgeBanner}${callPanelHtml(f)}${tradeLineHtml(f)}${lastGame}
+      return `${badgeBanner}
         <div class="panel tight"><div class="row between"><div><b>${yearOf(F.displayYear(f))}</b> · ${phaseLabel(f)}</div><div class="chip accent">${$t('hq.team_ovr', { overall: s.overall })}</div></div>
           <div class="row between" style="margin-top:4px"><span>${f.season.playoffs ? playoffStatus(f) : `${$t('hq.record')} <b class="mono">${s.record}</b>${rival ? ` · <span class="dim">${$t('hq.rival_2', { team: esc(rival.team) })}</span>` : ''}`}</span><span class="muted">${$t('hq.cap_room')} <b style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(cap.remaining)}</b></span></div>${race}</div>
-        ${weekStrip(f)}<button class="btn block" data-action="gmjobs" style="margin:8px 0">${$t('gm.career')}</button>
+        ${weekStrip(f)}
         <div class="panel"><div class="muted" style="font-size:12px">${$t('hq.this_week')}</div><div style="margin:4px 0 8px">${gameLine}${(() => { const g = opp && GYM_BY_CLUB[opp]; if (!g || f.season.finished) return ''; const b = F.badgeOf(f, opp); return `<div class="muted" style="margin-top:4px">${b ? `${$t('hq.you_hold_the', { badge: esc(g.badge), year: yearOf(b.year) })}` : `${$t('hq.b_badge_game_b_beat_s', { name: esc(g.coach.name), opp: esc(opp), badge: esc(g.badge) })}`}</div>`; })()}</div>
           ${next ? `<button class="btn primary big block ${next.action === 'forfeit' || next.action === 'lineupgate' ? 'danger' : ''}" data-action="${next.action}">${next.icon} ${esc(next.label)}</button>${next.note ? `<p class="dim" style="margin:4px 0 0;color:var(--bad)">${$t('hq.fix_the_depth_chart_or_sign', { note: esc(next.note) })}</p>` : ''}${next.skip ? `<button class="btn block" data-action="skipplayoffs" style="margin-top:8px">${$t('hq.skip_to_the_offseason')}</button>` : ''}` : ''}
           ${!f.season.finished && day < 6 && !f.week.commissioner && !(F.inPlayoffs(f) && !F.playoffFixture(f)) && !F.needsGoal(f) ? `<button class="btn block" data-action="autorun" style="margin-top:8px">${$t('hq.let_the_staff_run_the_week')}</button>` : ''}
           ${cap.over && !f.week.commissioner ? `<p class="muted" style="color:var(--warn);margin-top:8px">${$t('hq.over_the_cap_by_the_commissioner', { amount: fmtMoney(-cap.remaining) })} <button class="btn small" data-action="releasemon">${$t('hq.release_a_monster')}</button></p>` : ''}
           ${f.week.commissioner ? `<p class="muted" style="color:var(--bad);margin-top:8px">${$t('hq.the_commissioner_is_waiting_over_the', { amount: fmtMoney(f.week.commissioner.over) })}</p>` : ''}${warningsHtml(f, { max: 2, only: ['min', 'depth', 'hurt', 'tight', 'points'] })}</div>
-        ${captainCard(f)}
+        <details class="polish-secondary polish-deals"><summary>${$t('polish.trades')}</summary>${callPanelHtml(f)}${tradeLineHtml(f)}</details>
+        ${lastGame ? `<details class="polish-secondary"><summary>${$t('polish.last_game')}</summary>${lastGame}</details>` : ''}
+        <details class="polish-secondary"><summary>${$t('gm.career')}</summary><button class="btn block" data-action="gmjobs">${$t('gm.career')}</button></details>
+        <details class="polish-secondary"><summary>${$t('polish.team_story')}</summary>${captainCard(f)}
         ${rivalCard(f)}
         ${boardPanel(f)}
-        ${campaignPanel(f)}
+        ${campaignPanel(f)}</details>
         ${f.week.gameResult && !f.week.gameResult.bye && day === 0 ? '' : ''}
         <div class="grid2" style="margin-bottom:var(--s3)">
           <button class="btn block" data-action="go" data-screen="schedule">${$t('hq.schedule')}</button><button class="btn block" data-action="go" data-screen="standings">${$t('hq.standings')}</button>
           <button class="btn block" data-action="go" data-screen="league">${$t('hq.league_hub')}</button><button class="btn block" data-action="go" data-screen="history">${$t('hq.history_and_records')}</button>
           <button class="btn block" data-action="go" data-screen="staff">${$t('hq.coaching_staff')}</button></div>
-        ${leagueNewsPanel(f, { clubLog: f.news })}`;
+        <details class="polish-secondary"><summary>${$t('polish.league_news')}</summary>${leagueNewsPanel(f, { clubLog: f.news })}</details>`;
     },
     mount(root) {
       if (app.f && !app.f.achievementsBackfilled && F.backfillAchievements(app.f).length) app.save();
@@ -265,7 +270,7 @@ export function registerHqScreens(Router, app) {
     const bars = v.headline ? HEADLINE.slice(0, 4).map((x, i) => `<span class="dim" style="font-size:11px">${i < v.headline ? `${x.label.slice(0, 3)} ${h[x.key]}` : `${x.label.slice(0, 3)} ??`}</span>`).join(' · ') : '<span class="dim" style="font-size:11px">unscouted</span>';
     const scouted = v.level >= 6; const fit = scouted ? F.fitFor(f, m) : null; // scheme fit shows only once the scout has the full picture (GDD §19.4)
     const pf = taken ? null : F.positionFit(f, m, { ovr: v.ovr ?? null });
-    return `<div class="item ${scouted ? 'tappable' : 'static'} ${taken ? 'done' : ''} ${fit?.fits ? 'fit' : ''} ${fitClass(pf)}" style="align-items:flex-start" ${scouted ? `data-action="prospect" data-id="${m.id}" role="button" tabindex="0"` : ''}>${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)}${fit?.fits ? ` <span class="fit-star" title="${$t('hq.fits_your_scheme')}">✦</span>` : ''} <span class="dim">${esc(m.position)} · age ${m.age} · ${esc(m.origin || '')}</span>${scouted ? ` <span class="chip good">${$t('hq.scouted_tap_for_the_report')}</span>` : v.level > 0 ? ` <span class="chip">glanced</span>` : ''}</div>
+    return `<div data-prospect-id="${esc(m.id)}" class="item ${scouted ? 'tappable' : 'static'} ${taken ? 'done' : ''} ${fit?.fits ? 'fit' : ''} ${fitClass(pf)}" style="align-items:flex-start" ${scouted ? `data-action="prospect" data-id="${m.id}" role="button" tabindex="0"` : ''}>${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)}${fit?.fits ? ` <span class="fit-star" title="${$t('hq.fits_your_scheme')}">✦</span>` : ''} <span class="dim">${esc(m.position)} · age ${m.age} · ${esc(m.origin || '')}</span>${scouted ? ` <span class="chip good">${$t('hq.scouted_tap_for_the_report')}</span>` : v.level > 0 ? ` <span class="chip">glanced</span>` : ''}</div>
       ${prospectRanks(f, m)}<div class="sub">${v.ovr != null ? `${$t('hq.b_ovr_b', { ovr: v.ovr })}` : `<b>${$t('hq.ovr_3')}</b>`}${v.potential != null ? ` ${$t('hq.potential', { potential: v.potential })}` : ''}${apexEmblem(f, m) ? ` ${apexEmblem(f, m)}` : ''}${v.natureKnown ? ` ${$t('hq.temper', { name: esc(temperSummary(m.temper).name) })}` : ''} ${$t('hq.rookie_deal_yr', { ovr: (Math.round((18000 + 280 * (v.ovr ?? 52)) * F.ROOKIE_SCALE / 100) * 100).toLocaleString('en-US') })}</div>${pickable ? (() => { const a = F.draftAffordability(f, m.id); return a ? `<div class="sub" style="color:var(--bad)">${$t('hq.over_your_cap_his_rookie_deal', { toLocaleString: (a.charge).toLocaleString('en-US'), toLocaleString2: Math.max(0, a.usable).toLocaleString('en-US') })}</div>` : ''; })() : ''}<div>${bars}</div>${fitLine(pf)}</div>${pickable ? `<button class="btn small primary" data-action="pick" data-id="${m.id}">${$t('hq.pick')}</button>` : ''}</div>`;
   }
   /** The scout's full report on a fully scouted prospect (GDD §19.4): bio, nature, ability, all twelve attributes, and how they compare with the owner's best at the position. */
@@ -318,6 +323,7 @@ export function registerHqScreens(Router, app) {
   Router.registerScreen('draftclass', {
     title: $t('hq.draft_class'),
     render({ f }) {
+      const browse=browsePreferences(f,'draft');draftFocus=browse.position||'';draftSort=browse.sort||'board';
       const d = F.ensureDraftClass(f); if (!d) return `<p class="dim">${$t('hq.the_draft_class_arrives_in_the')}</p>`;
       const monday = f.season.day === 0 && F.draftWindow(f) && !f.season.finished;
       const scout = F.staffMember(f, 'head_scout');
@@ -333,10 +339,10 @@ export function registerHqScreens(Router, app) {
     mount(root) {
       delegate(root, {
         study: () => { const focus = root.querySelector('#draft-focus')?.value || null; const r = F.scoutDraft(app.f, { focus }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); sheet(`<p><b>${esc(r.scout)}</b> studied <b>${r.studied.map((m) => esc(m.name) + ' (' + m.position + ')').join(', ') || 'nobody new'}${$t('hq.b_and_glanced_at_more', { n: r.glanced.length })}</p>`, { title: $t('hq.draft_scouting'), onClose: () => Router.go('hq', {}, { reset: true }) }); },
-        sort: (el) => { draftSort = el.dataset.v; Router.render(); },
+        sort: (el) => { draftSort = el.dataset.v;setBrowsePreferences(app.f,'draft',{sort:draftSort});app.save(); Router.render(); },
         prospect: (el) => { const m = app.f.draft?.class.find((x) => x.id === el.dataset.id); if (m) prospectSheet(app.f, m); },
       });
-      root.querySelector('#draft-filter')?.addEventListener('change', (e) => { draftFocus = e.target.value; Router.render(); });
+      root.querySelector('#draft-filter')?.addEventListener('change', (e) => { draftFocus = e.target.value;setBrowsePreferences(app.f,'draft',{position:draftFocus});app.save(); Router.render(); });
       root.querySelector('#draft-focus')?.addEventListener('change', (e) => { draftFocus = e.target.value; });
     },
   });
@@ -395,6 +401,7 @@ export function registerHqScreens(Router, app) {
   Router.registerScreen('draft', {
     title: ({ f }) => `${$t('hq.draft_class_2', { year: yearOf(f?.draft?.creation ? f.season.year : (f?.season.year || 0) + 1) })}`,
     render({ f }) {
+      const browse=browsePreferences(f,'draft');draftFocus=browse.position||'';draftSort=browse.sort||'board';
       const d = f.draft; if (!d?.started) return `<div class="panel"><p>${$t('hq.contracts_first_then_the_draft')}</p><button class="btn primary block" data-action="begin" ${F.offseasonReady(f) ? '' : 'disabled'}>${$t('hq.open_the_draft_2')}</button></div>`;
       const intro = d.creation && !d.done ? `<div class="talk" style="margin-bottom:8px"><div class="row" style="gap:12px;align-items:flex-start">${portraitSprite('commissioner', 48, { hue: 40 })}<div class="grow"><div class="talk-name">${$t('hq.the_commissioner')}</div><p class="talk-line">${$t('hq.fast_i_know_welcome_to_the', { club: esc(f.club), lotterySlot: d.lotterySlot })}</p></div></div></div>` : '';
       const clock = F.onTheClock(f); const mine = clock === f.club;
@@ -420,13 +427,13 @@ export function registerHqScreens(Router, app) {
         pick: async (el) => { const m = app.f.draft.class.find((x) => x.id === el.dataset.id); if (!(await confirmSheet(`${$t('hq.draft', { name: m.name, position: m.position })}${(() => { const c = consequence(app.f, 'draft', { salary: Math.round(salaryFor(m) * F.ROOKIE_SCALE / 100) * 100 }); return c ? ' ' + c : ''; })()}`, { title: $t('hq.your_pick'), okLabel: $t('hq.draft_2') }))) return; const r = F.myDraftPick(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${$t('hq.joins_the', { name: r.monster.name, club: app.f.club })}`, 'good'); Router.render(); },
         pass: async () => { if (!(await confirmSheet($t('hq.forfeit_this_pick_nobody_is_drafted'), { title: $t('hq.forfeit_pick'), okLabel: $t('hq.forfeit_2'), danger: true }))) return; F.passDraftPick(app.f); app.save(); Router.render(); },
         trade: () => { const lead = F.myTradablePicks(app.f).find((p) => p.onClock) || null; tradeSheet(app.f, { lead, onDone: () => Router.render() }); },
-        sort: (el) => { draftSort = el.dataset.v; Router.render(); },
+        sort: (el) => { draftSort = el.dataset.v;setBrowsePreferences(app.f,'draft',{sort:draftSort});app.save(); Router.render(); },
         back: () => Router.go(app.f.draft?.creation ? 'hq' : 'offseason', {}, { reset: true }),
         prospect: (el) => { const m = app.f.draft?.class.find((x) => x.id === el.dataset.id); if (m) prospectSheet(app.f, m); },
         picks: () => { const d = app.f.draft; const rows = d.picks.slice().reverse().map((p) => `<div class="item ${p.id && F.prospectView(app.f, d.class.find((x) => x.id === p.id) || {}).level >= 6 ? 'tappable' : 'static'} ${p.mine ? 'mine' : ''}" ${p.id ? `data-action="prospect" data-id="${p.id}"` : ''}><div class="grow"><div class="name">${selectionLabel(p.round, p.overall)} · ${esc(p.team)}</div><div class="sub">${p.id ? careerLink(p.id, p.name) : esc(p.name)}${p.position ? ` · ${esc(p.position)} · ${p.ovr} OVR` : ''}</div>${prospectRanks(app.f, d.class.find((m) => m.id === p.id))}</div></div>`).join('');
           const { el: el2 } = sheet(`<p class="dim">${$t('hq.of_picks_made_newest_first', { n: d.picks.length, n2: d.order.length })}</p><div class="list">${rows || `<p class="dim">${$t('hq.no_picks_yet')}</p>`}</div>`, { title: $t('hq.draft_board_picks_so_far') }); el2.addEventListener('click', (e) => { const b = e.target.closest('[data-action="prospect"]'); if (!b) return; const m = d.class.find((x) => x.id === b.dataset.id); if (m) prospectSheet(app.f, m); }); },
       });
-      root.querySelector('#draft-filter')?.addEventListener('change', (e) => { draftFocus = e.target.value; Router.render(); });
+      root.querySelector('#draft-filter')?.addEventListener('change', (e) => { draftFocus = e.target.value;setBrowsePreferences(app.f,'draft',{position:draftFocus});app.save(); Router.render(); });
     },
   });
   // ---------------------------------------------------------------- The commissioner's goals (GDD §17.4)
@@ -539,7 +546,7 @@ export function registerHqScreens(Router, app) {
         back: () => Router.back(),
         clashhelp: () => sheet(CLASH_HELP, { title: $t('hq.how_beast_clash_works') }),
         skip: () => { F.skipEncounter(app.f); app.save(); toast($t('hq.encounter_skipped_on_to_wednesday')); Router.go('hq', {}, { reset: true }); },
-        compare: (el) => { const p = app.f.week.prospects[Number(el.dataset.i)]; if (p) sheet(compareHtml(app.f, p), { title: `${$t('hq.vs_your_s', { name: p.monster.name, position: p.monster.position })}` }); },
+        compare: (el) => { const p = app.f.week.prospects[Number(el.dataset.i)]; if (p) compareBeast(app.f, p.monster, { ovrKnown: p.revealed >= 4, attrsKnown: p.revealed >= 6, potentialKnown: !!p.potentialKnown, salaryKnown: p.revealed >= 4 && !!p.potentialKnown }); },
         enter: (el) => { const i = Number(el.dataset.i); const pv = F.encounterPreview(app.f, i); if (!pv.ok) { toast(pv.reason, 'bad'); return; } Router.go('clash-battle', { kind: 'encounter', i }); },
       });
     },
@@ -594,7 +601,7 @@ export function registerHqScreens(Router, app) {
   });
   function trainingResultHtml(t) {
     const label = TRAINING_FOCI[t.focus]?.label || t.focus;
-    return `<h2 style="margin-top:0">${t.success ? $t('hq.good_practice') : $t('hq.sloppy_practice')}</h2><p>${t.success ? `${$t('hq.work_paid_off_b_b_to', { label: esc(label), amount: t.amount })} ${esc(TRAINING_FOCI[t.focus].attrs.map((a) => ATTR_LABEL[a]).join(', '))} ${$t('hq.on_sunday')}` : `${$t('hq.work_didnt_stick_this_week_no', { label: esc(label) })}`}</p>${t.injury ? `<p style="color:var(--bad)">${$t('hq.was_hurt_out_weeks_the_next', { name: esc(t.injury.name), severity: esc(t.injury.severity), weeks: t.injury.weeks, n: t.injury.weeks })}</p>` : `<p class="muted">${$t('hq.everyone_came_out_healthy')}</p>`}${t.fatigue ? `<p class="dim">${$t('hq.practice_added_fatigue_fatigue_comes_off', { fatigue: t.fatigue })}</p>` : ''}`;
+    return `<span class="chip">${$t('polish.this_week')}</span><h2 style="margin-top:0">${t.success ? $t('hq.good_practice') : $t('hq.sloppy_practice')}</h2><p>${t.success ? `${$t('hq.work_paid_off_b_b_to', { label: esc(label), amount: t.amount })} ${esc(TRAINING_FOCI[t.focus].attrs.map((a) => ATTR_LABEL[a]).join(', '))} ${$t('hq.on_sunday')}` : `${$t('hq.work_didnt_stick_this_week_no', { label: esc(label) })}`}</p>${t.injury ? `<p style="color:var(--bad)">${$t('hq.was_hurt_out_weeks_the_next', { name: esc(t.injury.name), severity: esc(t.injury.severity), weeks: t.injury.weeks, n: t.injury.weeks })}</p>` : `<p class="muted">${$t('hq.everyone_came_out_healthy')}</p>`}${t.fatigue ? `<p class="dim">${$t('hq.practice_added_fatigue_fatigue_comes_off', { fatigue: t.fatigue })}</p>` : ''}`;
   }
 
   // ---------------------------------------------------------------- Thursday
@@ -628,7 +635,7 @@ export function registerHqScreens(Router, app) {
     title: $t('hq.friday_game_plan'),
     render({ f }) {
       if (f.season.day !== 4) return `<div class="panel"><p>${$t('hq.the_game_plan_is_set_on')} ${f.week.plan.offense.length ? f.week.plan.offense.map((id) => esc(PLAYS[id].name)).join(', ') : $t('hq.coachs_default')} · ${f.week.plan.defense.length ? f.week.plan.defense.map((id) => esc(PLAYS[id].name)).join(', ') : $t('hq.coachs_default')}.</p><button class="btn block" data-action="back">${$t('hq.back')}</button></div>`;
-      const sel = { offense: new Set(F.startingPlan(f, 'offense')), defense: new Set(F.startingPlan(f, 'defense')) };
+      const draftPlan = getPlanDraft(f); const sel = { offense: new Set(draftPlan.offense), defense: new Set(draftPlan.defense) };
       const rep = f.week.scoutReport; const hintsOn = f.settings.hints !== false;
       const hintSide = rep?.side === 'defense' ? 'offense' : rep?.side === 'offense' ? 'defense' : null;
       const hints = hintsOn && hintSide ? counterPlays(F.catalog(f, hintSide), rep.plays || []) : [];
@@ -639,16 +646,16 @@ export function registerHqScreens(Router, app) {
       const side = (s) => `<h3>${s === 'offense' ? $t('hq.offense') : $t('hq.defense')} · <span id="count-${s}">${sel[s].size}</span>${$t('hq.equipped', { planSize: F.PLAN_SIZE })}</h3><div class="play-grid" data-side="${s}">${F.catalog(f, s).map((id) => `<button class="card ${sel[s].has(id) ? 'selected' : ''} ${hintMap[id] ? 'hint' : ''} ${avail.blocked[id] ? 'blocked' : ''}" title="${avail.blocked[id] ? esc($t('hq.needs_nobody_legal_to_fill_it', { position: avail.blocked[id] })) : hintMap[id] ? esc($t('hq.counters', { plays: hintMap[id].beats.join(', ') })) : ''}" data-action="toggle" data-side="${s}" data-id="${id}" aria-pressed="${sel[s].has(id)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}${LEGENDARY_IDS.filter((id) => PLAYS[id].side === s).map((id) => legendaryCardHtml(f, id, { selected: sel[s].has(id), side: s })).join('')}</div>`;
       return `<p class="muted">${$t('hq.equip_offensive_and_defensive_plays_for', { planSize: F.PLAN_SIZE, planSize2: F.PLAN_SIZE })}</p>${availNote}${hintNote}
         ${side('offense')}${legendHtml('offense')}${side('defense')}${legendHtml('defense')}
-        <div class="row between" style="margin-top:12px"><button class="btn" data-action="details">${$t('hq.play_details')}</button><button class="btn primary" data-action="save">${$t('hq.save_game_plan')}</button></div>`;
+        <div class="row between polish-actions" style="margin-top:12px"><button class="btn" data-action="details">${$t('hq.play_details')}</button><button class="btn primary" data-action="save">${$t('hq.save_game_plan')}</button></div>`;
     },
     mount(root) {
-      const f0 = app.f; const sel = { offense: new Set(F.startingPlan(f0, 'offense')), defense: new Set(F.startingPlan(f0, 'defense')) };
+      const f0 = app.f; const draftPlan = getPlanDraft(f0); const sel = { offense: new Set(draftPlan.offense), defense: new Set(draftPlan.defense) };
       delegate(root, {
         back: () => Router.back(),
-        toggle: (el) => { const s = el.dataset.side, id = el.dataset.id; if (sel[s].has(id)) sel[s].delete(id); else if (sel[s].size >= F.PLAN_SIZE) { toast(`${$t('hq.only_plays_remove_one_first', { planSize: F.PLAN_SIZE, s })}`); return; } else sel[s].add(id); el.classList.toggle('selected', sel[s].has(id)); el.setAttribute('aria-pressed', sel[s].has(id)); root.querySelector(`#count-${s}`).textContent = sel[s].size; },
+        toggle: (el) => { const s = el.dataset.side, id = el.dataset.id; if (sel[s].has(id)) sel[s].delete(id); else if (sel[s].size >= F.PLAN_SIZE) { toast(`${$t('hq.only_plays_remove_one_first', { planSize: F.PLAN_SIZE, s })}`); return; } else sel[s].add(id); el.classList.toggle('selected', sel[s].has(id)); el.setAttribute('aria-pressed', sel[s].has(id)); root.querySelector(`#count-${s}`).textContent = sel[s].size; storePlanDraft(app.f, sel); app.save(); },
         details: () => Router.go('playbook'),
         'lp-info': (el) => openLegendarySheet(app.f, el.dataset.id),
-        save: () => { const r = F.setGamePlan(app.f, [...sel.offense], [...sel.defense]); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast($t('hq.game_plan_saved'), 'good'); Router.go('hq', {}, { reset: true }); },
+        save: () => { const r = F.setGamePlan(app.f, [...sel.offense], [...sel.defense]); if (!r.ok) { toast(r.reason, 'bad'); return; } if (app.f.polish) delete app.f.polish.planDraft; app.save(); toast($t('hq.game_plan_saved'), 'good'); Router.go('hq', {}, { reset: true }); },
       });
     },
   });

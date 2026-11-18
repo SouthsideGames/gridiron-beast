@@ -36,7 +36,9 @@ function monsterRow(m, side, on) {
 export function openTradeDesk(app, { onDone = null, team = null } = {}) {
   const f = app.f; const partners = F.deskPartners(f);
   const state = { team: team || partners.slice().sort((a, b) => b.clubLeft - a.clubLeft || (a.team < b.team ? -1 : 1))[0].team, giveM: [], getM: [], giveP: [], getP: [], fPos: 'all', fPosTheirs: 'all', result: null };
-  const { el } = sheet('', { title: $t('market.trade_desk_2'), onClose: () => onDone?.() });
+  const drafts = (f.polish ||= {}); const saved = drafts.tradeDraft;
+  if(saved?.club===f.club && saved?.year===f.season.year && saved?.week===f.season.week)Object.assign(state,saved.state);
+  const { el } = sheet('', { title: $t('market.trade_desk_2'), onClose: () => { drafts.tradeDraft={club:f.club,year:f.season.year,week:f.season.week,state:{...state,result:null}};app.save();onDone?.(); } });
   const body = el.querySelector('.sheet-body');
   const prop = () => ({ team: state.team, giveMonsters: state.giveM, givePicks: state.giveP, getMonsters: state.getM, getPicks: state.getP });
   const toggle = (arr, v, match = (a, b) => a === b) => { const i = arr.findIndex((x) => match(x, v)); if (i >= 0) arr.splice(i, 1); else arr.push(v); };
@@ -72,14 +74,14 @@ export function openTradeDesk(app, { onDone = null, team = null } = {}) {
       <div class="panel tight" style="margin-top:8px">${list('mine', assets.mine, state.giveM, state.fPos)}${picks('mine', assets.myPicks, state.giveP)}</div>
       <div class="panel tight">${list('theirs', assets.theirs, state.getM, state.fPosTheirs)}${picks('theirs', assets.theirPicks, state.getP)}</div>
       ${summary}
-      <button type="button" class="btn primary big block" data-send="1" ${canSend ? '' : 'disabled'} style="margin-top:8px">${$t('market.send_the_proposal')}</button>${result}`;
+      <div class="polish-actions"><button type="button" class="btn primary big block" data-send="1" ${canSend ? '' : 'disabled'} style="margin-top:8px">${$t('market.send_the_proposal')}</button></div>${result}`;
   };
   body.addEventListener('change', (e) => {
     const t = e.target; if (!t.dataset.f) return;
     if (t.dataset.f === 'team') { state.team = t.value; state.giveM = []; state.getM = []; state.giveP = []; state.getP = []; state.fPosTheirs = 'all'; } else state[t.dataset.f] = t.value;
     state.result = null; render();
   });
-  body.addEventListener('click', async (e) => {
+  el.addEventListener('click', async (e) => { // the whole sheet: Send the Proposal is pinned in the footer, outside the body
     const m = e.target.closest('[data-m]'); const p = e.target.closest('[data-p]');
     if (m) { const [side, id] = m.dataset.m.split(':'); toggle(side === 'mine' ? state.giveM : state.getM, id); state.result = null; render(); return; }
     if (p) { const [side, k] = p.dataset.p.split(/:(.+)/); const assets = F.deskAssetsFor(f, state.team); const pick = (side === 'mine' ? assets.myPicks : assets.theirPicks).find((x) => key(x) === k); if (pick) toggle(side === 'mine' ? state.giveP : state.getP, pick, (a, b) => key(a) === key(b)); state.result = null; render(); return; }
