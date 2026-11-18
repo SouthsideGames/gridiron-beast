@@ -124,7 +124,7 @@ test('a quick second tap at the spot that closed a sheet is dropped; other taps 
   const { swallowsRepeatTap } = await import('../src/ui/dom.js');
   const last={x:200,y:800,t:1000},tapAt=(x,y,extra={})=>({clientX:x,clientY:y,target:{closest:()=>null},...extra});
   assert.equal(swallowsRepeatTap(tapAt(205,795),last,1200),true,'the double tap\'s second half');
-  assert.equal(swallowsRepeatTap(tapAt(205,795),last,1600),false,'a later deliberate tap');
+  assert.equal(swallowsRepeatTap(tapAt(205,795),last,1400),false,'a later deliberate tap');
   assert.equal(swallowsRepeatTap(tapAt(60,300),last,1200),false,'a tap elsewhere');
   assert.equal(swallowsRepeatTap(tapAt(0,0),last,1200),false,'keyboard activation has no position');
   assert.equal(swallowsRepeatTap(tapAt(205,795),null,1200),false);

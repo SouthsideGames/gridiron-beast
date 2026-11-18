@@ -117,6 +117,13 @@ try:
             box=page.locator('[data-polish="point-confirm"]').bounding_box()
             page.touchscreen.tap(box['x']+box['width']/2, box['y']+box['height']/2); page.touchscreen.tap(box['x']+box['width']/2, box['y']+box['height']/2); page.wait_for_timeout(300)
             assert page.evaluate("async () => (await import('/src/ui/router.js')).currentScreen().name")=='monster', 'the second tap of a double tap navigated away'
+            # Closing a sheet with ✕ never blocks a quick tap on what lay beneath it (the guard is only for action buttons).
+            page.locator('[data-polish="points"]').click(); xb=page.locator('.sheet [data-action="sheet-close"]').bounding_box()
+            page.touchscreen.tap(xb['x']+xb['width']/2, xb['y']+xb['height']/2); armed=page.evaluate("async () => { const d = await import('/src/ui/dom.js'); return d.swallowsRepeatTap({ clientX: 1, clientY: 1, target: document.body }) }")
+            assert sheets()==0 and armed is False
+            # Every attribute + on the beast page is tappable at its centre (two columns used to overlap at 320 px).
+            covered=page.evaluate("""() => [...document.querySelectorAll('main.screen [data-attr-row] .plus')].filter(b => { b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect(); return !b.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)); }).map(b => b.dataset.attr)""")
+            assert not covered, f'attribute + buttons covered at {width}: {covered}'
             # Typing an amount and tapping the offer button at once: the tap is not lost, and a mistyped amount never sends old terms.
             go('famarket'); row=page.locator('main.screen .item[data-action="faopen"]').first
             if row.count():
@@ -157,6 +164,19 @@ try:
             assert not errors, errors
             print(json.dumps({'width':width,'result':'pass','checks':['shortlist','hidden-knowledge','all-prospects','presets','point-preview','plan-draft','overflow','shortlist-page','stale-points','escape','double-tap','typed-offer','trade-desk-send','share-export']}))
             page.close()
+        # A short landscape phone: the Apex discovery summary scrolls, so its Continue button can be reached (it sat below the screen).
+        page = browser.new_page(viewport={'width':844,'height':390},is_mobile=True,has_touch=True)
+        page.goto(f'http://127.0.0.1:{server.server_address[1]}/'); page.wait_for_function('globalThis.__gb && document.querySelector("main.screen")')
+        page.evaluate("""async () => { const F=await import('/src/franchise/franchise.js'); const A=await import('/src/ui/apex-ui.js');
+          const f=F.createFranchise({owner:{first:'Phone',last:'Polish'},club:'Ember City Beasts',seed:312}); A.openApexDiscovery({ monster: f.roster[0], settings: {} }); }""")
+        for _ in range(12):
+            if page.evaluate("() => document.querySelector('.apex-scene')?.dataset.stage") == 'summary': break
+            skip = page.locator('.apex-scene [data-apex="skip"]')
+            if skip.count() and skip.first.is_visible(): skip.first.click()
+            page.wait_for_timeout(400)
+        page.locator('.apex-scene [data-apex="continue"]').click(timeout=5000); page.wait_for_timeout(300)
+        assert page.locator('.apex-scene').count()==0, 'Apex summary Continue unreachable in landscape'
+        print(json.dumps({'width':844,'height':390,'result':'pass','checks':['apex-landscape-continue']})); page.close()
         browser.close()
 finally:
     server.shutdown();server.server_close()

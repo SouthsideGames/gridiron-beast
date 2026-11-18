@@ -62,7 +62,7 @@ let lastSheetTap = null; // where the tap that closed the last sheet landed, and
 /** A second tap of a quick double tap on a sheet's button (Confirm, Make Offer) lands on whatever lay beneath the closed sheet,
  * often the tab bar. Drop a tap at the same spot within a moment of the closing tap; any other tap goes through untouched. */
 export function swallowsRepeatTap(e, last = lastSheetTap, now = Date.now()) {
-  if (!last || now - last.t > 450 || !(e.clientX || e.clientY)) return false;
+  if (!last || now - last.t > 350 || !(e.clientX || e.clientY)) return false;
   if (document.querySelector('.sheet-backdrop') || e.target?.closest?.('.sheet-backdrop')) return false;
   return Math.abs(e.clientX - last.x) <= 28 && Math.abs(e.clientY - last.y) <= 28;
 }
@@ -85,10 +85,12 @@ export function sheet(contentHtml, { title = '', onClose = null } = {}) {
   const el = html(`<div class="sheet-backdrop" role="dialog" aria-modal="true" aria-label="${esc(title || $t('shared.dialog'))}"><div class="sheet"><div class="sheet-head"><strong>${esc(title)}</strong><button class="btn ghost" data-action="sheet-close" aria-label="${$t('shared.close')}">✕</button></div><div class="sheet-body">${contentHtml}</div></div></div>`);
   const opener = document.activeElement;
   let closed = false; let cleanup = () => {};
-  let tapAt = null; el.addEventListener('click', (e) => { tapAt = { x: e.clientX, y: e.clientY, t: Date.now() }; }, true);
+  // Only a tap on one of the sheet's own action buttons (Confirm, Make Offer) arms the double-tap guard; closing with ✕ or the
+  // backdrop never does, so a quick tap on whatever lay beneath the ✕ goes through.
+  let tapAt = null; el.addEventListener('click', (e) => { const b = e.target.closest?.('button'); tapAt = b && b.dataset.action !== 'sheet-close' ? { x: e.clientX, y: e.clientY, t: Date.now() } : null; }, true);
   const close = () => {
     if (closed) return; closed = true; cleanup(); el.remove(); onClose?.();
-    if (tapAt && Date.now() - tapAt.t < 450) lastSheetTap = tapAt;
+    if (tapAt && Date.now() - tapAt.t < 350) lastSheetTap = tapAt;
     if (opener?.isConnected) opener.focus?.({ preventScroll: true });
   };
   el.__closeSheet = close;
