@@ -1,3 +1,4 @@
+import { autoSpeed, cycleAutoSpeed } from '../phone-navigation.js';
 import { matchLogMatches } from '../match-log-filter.js';
 import { activityPaused } from '../activity.js';
 import { iconifyMarkup } from '../icons.js';
@@ -189,7 +190,7 @@ export function registerMatchScreens(Router, app) {
         tempo: (el) => { f.game.tempo = el.value; app.save(); },
         mode: () => { const G = f.game; G.mode = G.mode === 'key' ? 'full' : 'key'; app.save(); Router.render(); },
         auto: () => { const G = f.game; G.auto = !G.auto; app.save(); if (!G.auto) { clearTimeout(autoTimer); autoTimer = null; } Router.render(); },
-        autospeed: () => { const G = f.game; G.autoSpeed = (G.autoSpeed || 1) === 2 ? 1 : 2; app.save(); Router.render(); },
+        autospeed: () => { cycleAutoSpeed(f); if(anim){const now=performance.now(),frames=(now-anim.start)/anim.msPerFrame;anim.msPerFrame=100/((f.settings.speed||1)*autoSpeed(f));anim.start=now-frames*anim.msPerFrame;} app.save(); Router.render(); },
         keymoment: () => simToKeyMoment(f),
         simfinal: async () => { if (!(await confirmSheet($t('match.let_the_coach_play_the_rest'), { title: $t('match.sim_to_final'), okLabel: $t('match.sim_it') }))) return; simToFinal(f); },
         skip: () => { if (anim) finishAnim(f, true); },
@@ -416,7 +417,7 @@ export function registerMatchScreens(Router, app) {
       if (document.querySelector('.sheet')) { scheduleAuto(app.f); return; } // a halftime or tutorial sheet is open: wait
       if (replayTimer) { scheduleAuto(app.f); return; } // an instant replay is about to start: Auto waits for it
       autoStep(app.f);
-    }, (G.autoSpeed || 1) === 2 ? 300 : 700);
+    }, Math.round(700 / autoSpeed(f)));
   }
   function autoStep(f) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me); const teams = teamsFor(f);
@@ -456,11 +457,11 @@ export function registerMatchScreens(Router, app) {
   }
   function controlsHtml(f, teams, look) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
-    // While a play animates in Auto, keep the Auto controls on screen so it can be stopped at any moment (no Skip: Auto is already watching the game for you).
-    if (anim && G.auto) return `<div class="match-actions"><div class="secondary"><button class="btn primary big" data-action="auto" style="flex:2">${$t('match.auto_stop')}</button><button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed" title="${$t('match.auto_speed')}">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button></div><p class="dim center" style="margin:4px 0 0">${$t('match.auto_is_calling_the_coachs_plays')}</p>${anim.replay ? `<button class="btn block" data-action="skip" style="margin-top:6px">${$t('match.skip_replay')}</button>` : ''}</div>`;
+    // While a play animates in Auto, keep the Auto controls on screen so it can be stopped or its current animation skipped.
+    if (anim && G.auto) return `<div class="match-actions"><div class="secondary"><button class="btn primary big" data-action="auto" style="flex:2">${$t('match.auto_stop')}</button><button class="btn small ${autoSpeed(f) > 1 ? 'primary' : ''}" data-action="autospeed" title="${$t('match.auto_speed')}">${`${autoSpeed(f)}× ▶`}</button></div><p class="dim center" style="margin:4px 0 0">${$t('match.auto_is_calling_the_coachs_plays')}</p><button class="btn block" data-action="skip" style="margin-top:6px">${anim.replay ? $t('match.skip_replay') : 'Skip Animation'}</button></div>`;
     if (anim) return `<div class="match-actions"><button class="btn block ${anim.replay ? 'primary' : ''}" data-action="skip">${anim.replay ? $t('match.skip_replay') : $t('match.skip')}</button></div>`;
     // Auto stays stoppable in every phase it plays through (continues, kickoffs, tries), not only at the snap.
-    const autoBar = G.auto && !s.finished ? `<div class="secondary" style="margin-bottom:6px"><button class="btn primary" data-action="auto" style="flex:2">${$t('match.auto_stop')}</button><button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button></div>` : '';
+    const autoBar = G.auto && !s.finished ? `<div class="secondary" style="margin-bottom:6px"><button class="btn primary" data-action="auto" style="flex:2">${$t('match.auto_stop')}</button><button class="btn small ${autoSpeed(f) > 1 ? 'primary' : ''}" data-action="autospeed">${`${autoSpeed(f)}× ▶`}</button></div>` : '';
     // 📼 the last big play again (GDD §34.4): offered between plays, on kickoffs and tries too (right after a touchdown).
     const rpRow = lastReplay && lastReplay.gameKey === s.seed && !s.finished && s.phase !== 'scrimmage' ? `<div class="secondary" style="margin-bottom:6px"><button class="btn small" data-action="replay">${$t('match.replay', { toLowerCase: esc(lastReplay.reason.label.toLowerCase()) })}</button></div>` : '';
     if (s.finished && s.needsTiebreak && !s.winner) { const n = F.inPlayoffs(f) ? 5 : 3; return `<div class="match-actions"><div class="panel center"><h2>${$t('match.still_tied')}</h2><div class="muted">${$t('match.after_overtime', { name: esc(s.away.name), away: s.score.away, home: s.score.home, name2: esc(s.home.name) })}</div><p class="muted" style="margin:6px 0 0">${$t('match.a_b_v_beast_clash_b', { n, n2: n })}</p></div><button class="btn primary big block" data-action="otclash">${$t('match.overtime_beast_clash')}</button></div>`; }
@@ -498,7 +499,7 @@ export function registerMatchScreens(Router, app) {
       ${myBall && s.phase === 'scrimmage' ? (() => { const sg = R.fieldGoalSignature(s, teams); return sg?.available ? `<button class="btn small good" data-action="fgsig" title="${$t('match.once_per_game_the_signature_kicks')}">${esc(sg.label)} ${sg.distance} yd · ${Math.round(sg.chance * 100)}%</button>` : ''; })() : ''}
       ${myBall && AI.shouldKneel(s) ? `<button class="btn small" data-action="kneel">${$t('match.kneel')}</button>` : ''}${myBall && !s.ot && s.clockRunning && s.quarter >= 2 && s.clock < 60 ? `<button class="btn small" data-action="spike">${$t('match.spike')}</button>` : ''}
       <button class="btn small ${G.auto ? 'primary' : ''}" data-action="auto" title="${$t('match.auto_the_coachs_suggested_plays_are')}">${G.auto ? $t('match.auto_stop') : $t('match.auto')}</button>
-      ${G.auto ? `<button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed" title="${$t('match.auto_speed')}">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button>` : ''}
+      ${G.auto ? `<button class="btn small ${autoSpeed(f) > 1 ? 'primary' : ''}" data-action="autospeed" title="${$t('match.auto_speed')}">${`${autoSpeed(f)}× ▶`}</button>` : ''}
       <button class="btn small" data-action="mode">${G.mode === 'key' ? $t('match.key_moments_3') : $t('match.full_coaching_2')}</button>
       <button class="btn small" data-action="simfinal" title="${$t('match.skip_the_rest_of_the_game')}">${$t('match.sim_to_final_2')}</button>
       ${lastReplay && lastReplay.gameKey === s.seed ? `<button class="btn small" data-action="replay" title="${$t('match.watch_the_last_big_play_again', { play: esc(lastReplay.reason.label.toLowerCase()) })}">${$t('match.replay_2')}</button>` : ''}
@@ -562,7 +563,7 @@ export function registerMatchScreens(Router, app) {
   function startAnim(f, ev, opts = {}) {
     settleSave(); // every way into a play (snap, kneel/spike, harness): no queued save may fire inside the animation
     const G = f.game; const sim = ev.sim;
-    anim = { frames: sim.frames, i: 0, ev, camera: followsBall(sim) ? cameraFor(Math.max(0, (sim.ballOn || 0) + sim.frames[0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, start: performance.now(), msPerFrame: 100 / ((f.settings.speed || 1) * (G.auto ? (G.autoSpeed || 1) : 1)), follow: followsBall(sim), sprites: spritesFor(f, ev.offenseSide || G.state.possession) };
+    anim = { frames: sim.frames, i: 0, ev, camera: followsBall(sim) ? cameraFor(Math.max(0, (sim.ballOn || 0) + sim.frames[0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, start: performance.now(), msPerFrame: 100 / ((f.settings.speed || 1) * (G.auto ? autoSpeed(f) : 1)), follow: followsBall(sim), sprites: spritesFor(f, ev.offenseSide || G.state.possession) };
     anim.fx = opts.lookup && (!sim.kick || sim.kickAbility) ? buildFx(sim, opts.lookup, fxMeta(ev, true)) : fxFor(f, ev, true);
     // Task 8 (I6): effects that begin before the snap (gates rising, Foresight's eye, a field's reveal, Dragon Roar's roar) get their
     // time before it: the first frame is held for fx.preroll seconds of play time while they draw, then the play runs as recorded.
@@ -645,7 +646,7 @@ export function registerMatchScreens(Router, app) {
     // Instant replay (GDD §34): the outcome is final and saved above; the replay only re-draws this play's recorded frames.
     const reason = replayReason(ev, G.state, G.playerSide);
     if (reason) lastReplay = { ev, reason, gameKey: G.state.seed };
-    if (reason && f.settings.replays !== false) { pendingTip = ev; clearTimeout(replayTimer); replayTimer = setTimeout(() => { replayTimer = null; const G2 = app.f?.game; if (!anim && G2 && G2.state.seed === lastReplay?.gameKey && document.querySelector('#fieldwrap') && !document.querySelector('.sheet')) startReplay(app.f, lastReplay); else { firstAbilityTip(app.f, ev); pendingTip = null; } }, 350); return; }
+    if (reason && !skipped && f.settings.replays !== false) { pendingTip = ev; clearTimeout(replayTimer); replayTimer = setTimeout(() => { replayTimer = null; const G2 = app.f?.game; if (!anim && G2 && G2.state.seed === lastReplay?.gameKey && document.querySelector('#fieldwrap') && !document.querySelector('.sheet')) startReplay(app.f, lastReplay); else { firstAbilityTip(app.f, ev); pendingTip = null; } }, 350); return; }
     firstAbilityTip(f, ev);
   }
 

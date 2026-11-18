@@ -1,3 +1,4 @@
+import { offseasonSteps } from './phone-navigation.js';
 import { trackRosterReviews, rosterReviewHtml } from './followup-polish.js';
 import * as FR from '../core/fraction.js';
 import { isArchived } from '../franchise/lifecycle.js';
@@ -102,8 +103,8 @@ export function offerResolutionText(f,offers) {
 }
 export function offseasonTracker(f) {
   if(!f.offseason)return '';
-  const stages=[[t('polish.contracts'),F.offseasonReady(f)],[t('polish.free_agency'),F.freeAgencyDone(f)],[t('polish.draft'),F.draftDone(f)],[t('polish.team_ready'),f.roster.length>=F.ROSTER_MIN&&!F.nextStaffRole(f)&&!F.legendCompliance(f)?.due]];
-  return `<div class="panel tight polish-progress">${stages.map(([name,done])=>`<span class="chip ${done?'good':''}">${done?'✓ ':''}${name}</span>`).join('')}</div>`;
+  const stages=offseasonSteps(f);
+  return `<section class="panel tight phone-offseason" aria-label="Offseason Checklist"><h3>Offseason Checklist</h3><p>${stages.every(x=>x.done)?t('polish.team_ready'):`${stages.filter(x=>!x.done).length} Steps Left`}</p><div class="stack">${stages.map(x=>`<button class="btn block" data-polish="offseason-step" data-step="${x.id}">${x.done?'✓ Done: ':'○ To Do: '}${esc(x.label)}</button>`).join('')}</div></section>`;
 }
 export function polishHeader(ctx,name) {
   const {f}=ctx;if(!f?.roster||isArchived(f))return '';
@@ -130,9 +131,13 @@ export function polishHeader(ctx,name) {
   }
   return out;
 }
-export const POLISH_ROOT_ACTIONS=new Set(['review-lineup','dismiss-roster-review','explain','resume','go','clear-filters','shortlist','compare','shortlist-page','presets-lineup','presets-plan','points','next-points']);
+export const POLISH_ROOT_ACTIONS=new Set(['offseason-step','review-lineup','dismiss-roster-review','explain','resume','go','clear-filters','shortlist','compare','shortlist-page','presets-lineup','presets-plan','points','next-points']);
 export function mountPolish(root,ctx,name,Router) {
   const {app,f}=ctx;if(!f?.roster||!app||isArchived(f))return;app.polishRefresh=()=>Router.render();
+  if(name==='hq'){
+    const next=root.querySelector('[data-phone-next]');
+    if(next){const bar=document.createElement('div');bar.className='phone-hq-next';bar.appendChild(next);root.appendChild(bar);root.classList.add('phone-has-next');}
+  }
   const scope=['draft','draftclass'].includes(name)?draftScope(f):'market';
   const candidates=new Map();
   const marketEntries=['famarket','offseason'].includes(name)?F.freeAgentMarket(f):[];
@@ -183,6 +188,11 @@ export function mountPolish(root,ctx,name,Router) {
     const b=e.target.closest('[data-polish]');if(!b||!POLISH_ROOT_ACTIONS.has(b.dataset.polish))return;e.preventDefault();e.stopPropagation();
     const action=b.dataset.polish,id=b.dataset.id,m=candidates.get(id);
     if(action==='review-lineup'||action==='dismiss-roster-review'){f.polish.rosterReviews=[];app.save();if(action==='review-lineup')Router.go('roster');else Router.render();}
+    if(action==='offseason-step'){
+      const step=offseasonSteps(f).find(x=>x.id===b.dataset.step);if(!step)return;
+      if(step.section){const target=root.querySelector('#phone-'+step.section);if(target){target.scrollIntoView({block:'start'});target.setAttribute('tabindex','-1');target.focus({preventScroll:true});}return;}
+      Router.go(step.screen,step.screen==='hofceremony'?{year:f.season.year,step:0,from:'offseason'}:{});return;
+    }
     if(action==='explain')sheet(`<p>${esc(b.dataset.info)}</p>`,{title:t('polish.explanation')});
     if(action==='resume'){if(resumePlayback(app))Router.render();}
     if(action==='go'){
