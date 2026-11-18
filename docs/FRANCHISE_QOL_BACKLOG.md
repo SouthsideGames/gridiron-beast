@@ -268,3 +268,117 @@ Claude's PR #130 audit found that a full 38-beast AI club can select a prospect,
 Run the new polish browser harness, then guided-week, navigation, roster/feature/league checks and the affected save/export checks. Compare every failure with the tested base. Exercise all twenty checklist items, not only the new helper unit tests. Specifically test point cancellation/stale confirmation, named preset changes and missing beasts, unscouted comparisons/filters, nested modal Back/Escape/focus, plan details-return/reload, salary editing/cancel/reopen, due-offer names/terms, short/landscape/larger-text layouts, and app interruptions during Auto/live Clash.
 
 Run the full suite on final source with no heavy parallel jobs. Fix defects with regression coverage; record the exact final source commit, test counts/duration and real-device limitations. Keep the polish PR unmerged and do not deploy or update the phone installation.
+
+## Claude validation — 2026-11-17
+
+**Code tested: `c5372e6`.** It is stacked on #130's head `7d31600`. #130 is still open and unmerged, so #131 keeps #130 as its base and nothing was retargeted.
+
+All browser testing used emulated phones in headless Chromium. Nothing was tested on a real device.
+
+### Defects found and fixed
+
+Each fix has a regression test that fails before the fix: a unit test in `tests/franchise-polish.test.js` or `tests/guided-week.test.js`, or a step in `tools/franchise-polish-check.py`.
+
+| # | Defect | Fix |
+|---|---|---|
+| 1 | **Trade Desk: Send the Proposal did nothing.** Pinning it into the sheet footer moved it outside the desk's click listener. `trade-desk-check` failed here and passes on #130. | The desk now listens on the whole sheet. |
+| 2 | **Shortlist page: Review and Remove did nothing.** The shared polish listener claimed every `data-polish` click. | The listener handles only its own actions (`POLISH_ROOT_ACTIONS`). |
+| 3 | **My Shortlist was blocked in the guided draft lesson.** It showed the toast "Finish or skip the current lesson first." | The shortlist page is reachable in every lesson. |
+| 4 | **Typing an amount and tapping Make Offer straight away lost the tap.** The blur redrew the sheet under the finger. | The redraw waits until the tap finishes. A mistyped amount now blocks the action, so the previous terms are never sent by mistake. |
+| 5 | **The point planner's stale check never fired.** Confirm built a fresh preview instead of using the one on screen. | Confirm commits exactly the preview on screen. A change to the beast in between is refused. |
+| 6 | **The second tap of a quick double tap on a pinned sheet button landed on the tab bar.** After a confirmed point plan this navigated away. | A short guard (350 ms, same spot) drops it. Only a sheet's own action buttons arm the guard; ✕ and the backdrop never do. |
+| 7 | **Escape did nothing after a tap on plain sheet text.** | Escape closes the top sheet wherever focus is. |
+| 8 | **Larger Text applied only after a reload.** | It applies as soon as it is ticked. |
+| 9 | **A short-position warning with nobody healthy to play the position opened an assignment list with nothing to choose.** | It now opens the market filtered to that position. Without the market it uses the warning's own screen. |
+| 10 | **A recruit comparison showed the salary while the recruit card hid it.** The card waits for the potential too. | The comparison follows the card's rule (`salaryKnown`). |
+| 11 | **A completed phone share was reported as "Export saved", and a cancelled share as an error.** | A completed share says the share sheet opened. A cancel says no file was saved. |
+| 12 | **At 320 px the left-column attribute "+" buttons were covered by the right-hand labels** (also on #130). | One attribute column below 360 px. |
+| 13 | **On a short landscape phone, the Apex discovery summary's Continue button was below the screen and could not be reached** (also on #130). | The scene scrolls on short screens. |
+
+The harness `tools/franchise-polish-check.py` also needed to close Apex discovery scenes the way a player does. Without that it timed out before its first tap.
+
+### The twenty items, tested by taps
+
+Play-throughs ran at 320×568, 390×844 and 440×900, plus 844×390 landscape for the draft and free agency. Larger Text was tested both in its own run and in the layout sweep.
+
+- **01 HQ:** the next action stays above the fold at 320×568. Secondary sections fold.
+- **02 Warnings:** an injured starter's notice opens his assignment slot. A short position opens a usable slot, or the market at that position (fix 9).
+- **03 Shortlist:** stores only public identity and spends no RNG or draft pick. A drafted entry shows as "Taken". Review and Remove now work (fix 2).
+- **04 Comparison:**
+  - Unscouted prospects show `???` for overall, potential, salary, fit and attributes.
+  - Fully scouted prospects match their card.
+  - The draft comparison price equals the contract actually signed (22,400 = 22,400).
+  - The market comparison price equals the free agent's ask.
+- **05 Growth:** the training result is labelled This Week Only, and the beast page explains the growth categories.
+- **06 Notices:** Needs Your Decision is separate from Team Updates.
+- **07 Point planner:**
+  - The Temper cost (÷2) preview matches the engine.
+  - Undo and ✕ leave the beast byte-identical.
+  - A double tap on Confirm commits once.
+  - A stale preview is refused (fix 5), and the ceiling is explained.
+  - Next Beast With Points opens the right beast.
+- **08 Continue summary:** after a reload mid-game it reads "Ember City Beasts 0 – 0 Bayou Stalkers · Quarter 1 · 2:51 · EMB Ball · Down 1, 10 to go", which matches the game.
+- **09 Offseason tracker:** Contracts are ticked once renewals are decided, and Free Agency once the market closes.
+- **10 Advance and Finish previews:** both list exactly the engine's due offers, by name and terms. Cancel changes nothing.
+- **11 Salary entry:**
+  - Blank, 12345, −5000 and 99.5 are rejected and the field resets.
+  - Cap Room After Offer equals the engine's figure.
+  - Unsent terms survive closing and reopening, and closing sends nothing.
+  - Typing then tapping straight away now works (fix 4).
+- **12 Pinned actions:** the footer is on screen and below 36% of the height at every size, including landscape (136 of 390 px). Buttons are 44 px tall.
+- **13 Unsaved choices:**
+  - Play choices survive Play Details, other tabs and a reload, without changing the committed plan.
+  - Save commits the plan and clears the draft.
+  - Trade desk selections survive closing the desk.
+- **14 Presets:**
+  - A lineup review lists the changes. Cancel changes nothing; Confirm applies.
+  - An injured or released beast is reported and replaced legally. A missing kicker is refused.
+  - The limit is five. A play set with an unavailable play is refused.
+- **15 Search and filters:**
+  - Search combined with position, or with shortlist-only, shows exactly the expected rows.
+  - Search, position and the market position filter are remembered after a reload. Clear Filters restores the full list.
+  - Affordable never shows a prospect or free agent the engine would refuse.
+  - Overall ranks are unchanged throughout.
+- **16 Interruptions:**
+  - Auto made no progress while the page was hidden or after it returned. It stayed paused after a reload and continued only on Resume Play.
+  - The first 14 recorded plays were identical to an uninterrupted control run.
+  - A live Clash stopped while hidden and continued only on Resume, with the same outcome as the control.
+- **17 Mobile:** the layout sweep found no sideways overflow and no undersized polish controls on 8 screens and 6 sheets, at four sizes, with and without Larger Text. Explanation buttons open their text.
+- **18 Match log:** each filter's row count equals the entries it matches, and opening the log changes nothing.
+- **19 Export:**
+  - A browser download of the save imports back with its planning data, RNG and identity intact.
+  - Stubbed phone share results show honest messages (fix 11).
+- **20 Dialogs:**
+  - Escape and the native Back close only the top sheet. Focus returns to Compare.
+  - Cancelling a nested confirmation returns to the intact offer or desk.
+
+**Existing saves:** saves from v43.12.3, v43.16.8 and #130's base load and show the Continue summary. Their presets, shortlists and searches persist. On #130 and on this branch, finishing their drafts gives identical picks, RNG, rosters and clubs.
+
+### Policy checks on `c5372e6`
+
+- **Pass:**
+  - franchise-polish (320/390/440 and landscape)
+  - navigation
+  - guided-week
+  - trade-desk (failed before fix 1)
+  - card-export
+  - final-whistle
+  - coach-editor-mobile
+- **Fail with output identical to #130 `7d31600`:** roster-nav, feature-ui, league-hub, storage, release, fa-ui, problem-recorder, and cache-upgrade. cache-upgrade fails on its stale `v42.4.1` condition; the new build loads.
+- **Targeted unit run:** 111/111.
+
+**Full suite on `c5372e6`:** **2,291/2,291 passed**, 0 failed, cancelled or skipped. It took 64.3 minutes (`node --test "tests/**/*.test.js"`, 00:58–02:02 UTC on 18 November), with no other heavy jobs running.
+
+### Still pending (no devices were available)
+
+- Phone share sheet and cancellation on iPhone and Android
+- Android Back
+- Real background, lock and app-kill pause and resume during Auto and Clash
+- External music, picture-in-picture, the silent switch and audio focus
+- Swift and Gradle builds with `prepare-mobile.mjs`
+
+**Known and unchanged:**
+- AI draftees can disappear when the club cannot make room. Per the owner, the AI roster rules were not changed here.
+- On a game screen while play is paused, the arena's own Watch button does nothing until Resume Play is tapped.
+
+No merge, deployment or phone update was performed.
