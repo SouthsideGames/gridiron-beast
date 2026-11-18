@@ -1932,3 +1932,15 @@ html[data-comfortable-text="1"] .item .sub, html[data-comfortable-text="1"] .dim
 #toast > span { flex:1; min-width:100px; }
 .phone-manage { margin-top:12px; padding-top:8px; border-top:1px solid var(--line); }
 .phone-manage summary { cursor:pointer; font-weight:700; padding:8px 0; }
+
+/* Keep editable controls readable at focus in iPhone WebViews. Some compact
+   panels and inline field styles otherwise inherit text smaller than 16px. */
+html input:not([type]),
+html input:is([type="text"], [type="search"], [type="email"], [type="password"], [type="url"], [type="tel"], [type="number"], [type="date"], [type="datetime-local"], [type="month"], [type="time"], [type="week"]),
+html textarea,
+html select,
+html [contenteditable=""],
+html [contenteditable="true"],
+html [contenteditable="plaintext-only"] {
+  font-size: max(16px, 1rem) !important;
+}
