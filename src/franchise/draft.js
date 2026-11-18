@@ -165,9 +165,22 @@ export function advanceDraft(f, rng, { playerClub, onAiPick = null, persist = tr
     if (!m && afford && d.available.length) { if (makeRoom?.(team)) m = aiDraftPick(f, team, rng, { plan: planOf ? planOf(team) : null, afford: affordOf(team) });
       if (!m) { const why = $t('franchise.no_prospect_fits_its_salary_cap'); d.picks.push({ round: d.order[d.index].round, overall: d.index + 1, team, id: null, name: '(passed)', position: '', ovr: 0, mine: false, passed: true, why }); d.index += 1; d.round = d.order[d.index]?.round || d.round; if (d.index >= d.order.length) d.done = true; onAiPass?.(team, why); continue; } }
     if (!m) { d.done = true; break; }
-    recordPick(f, team, m, { mine: false }); { const pk = d.picks[d.picks.length - 1]; m.drafted = { year: d.year, round: pk.round, overall: pk.overall, club: team }; } made.push({ team, m });
+    // Transfer ownership before committing the pick. A protected full roster may
+    // refuse the rookie; recording first used to remove that rookie from the league.
+    const previousDrafted = m.drafted;
+    m.drafted = { year: d.year, round: d.order[d.index].round, overall: d.index + 1, club: team };
+    const joined = onAiPick?.(team, m);
+    if (joined?.ok === false) {
+      if (previousDrafted === undefined) delete m.drafted; else m.drafted = previousDrafted;
+      const why = joined.reason || 'No roster space for this prospect.';
+      d.picks.push({ round: d.order[d.index].round, overall: d.index + 1, team, id: null, name: '(passed)', position: '', ovr: 0, mine: false, passed: true, why });
+      d.index += 1; d.round = d.order[d.index]?.round || d.round;
+      if (d.index >= d.order.length) d.done = true;
+      onAiPass?.(team, why);
+      continue;
+    }
+    recordPick(f, team, m, { mine: false }); made.push({ team, m });
     if (persist) { (f.draftResults ||= {}); (f.draftResults[f.draft.year] ||= {}); (f.draftResults[f.draft.year][team] ||= []).push(m); }
-    onAiPick?.(team, m);
   }
   return made;
 }

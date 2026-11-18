@@ -1870,3 +1870,52 @@ html[data-reduced-motion="1"] .dexp-spark { display: none; }
   .coach-editor .ce-sticky .ce-preview { width: 72px; height: 72px; padding: 4px; }
   .coach-editor .ce-sticky .ce-preview > svg { width: 60px; height: 60px; }
 }
+
+/* Franchise polish: comfortable controls and reachable actions on short phones. */
+[hidden] { display: none !important; }
+.polish-actions { position: sticky; bottom: 0; z-index: 3; background: var(--bg-2); padding: 10px 0 calc(10px + var(--sab)); display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-top: 1px solid var(--line); }
+.screen-gameplan > .polish-actions { bottom: calc(64px + var(--sab)); }
+.polish-secondary { border: 1px solid var(--line); border-radius: var(--r); padding: 8px; margin: 10px 0; }
+.polish-secondary > summary, .polish-notices > summary { min-height: 44px; cursor: pointer; font-weight: 700; }
+.polish-progress, .wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.polish-browse input[type=checkbox] { width: auto; margin-right: 4px; }
+.polish-browse .row > label { display: inline-flex; align-items: center; gap: 4px; }
+.polish-candidate-actions { margin-top: 8px; }
+.polish-money { width: 110px; max-width: 40vw; margin: 0; }
+.polish-comparison { width: 100%; table-layout: fixed; }
+.polish-comparison th, .polish-comparison td { overflow-wrap: anywhere; white-space: normal; padding: 8px 4px; }
+.polish-paused { border-color: var(--accent); position: sticky; top: calc(48px + var(--sat)); z-index: 8; }
+.polish-return { overflow-wrap: anywhere; }
+[data-busy] { opacity: .65; pointer-events: none; }
+@media (pointer: coarse) {
+  .btn.small, .attr .plus, .assist-topic summary, .dc-move .btn { min-height: 44px; }
+  .attr .plus { min-width: 44px; }
+  .dc-name { min-height: 40px; }
+  .item .sub, th, .hl-l { font-size: 13px; }
+}
+html[data-comfortable-text="1"] { font-size: 18px; }
+html[data-comfortable-text="1"] .item .sub, html[data-comfortable-text="1"] .dim, html[data-comfortable-text="1"] .muted { font-size: max(14px, .85rem); }
+.sheet-actions { flex: none; padding: 0 var(--s3); max-height: 35dvh; overflow-y: auto; }
+.sheet-actions .polish-actions { position: static; margin: 0; }
+.sheet-body { min-height: 0; }
+.polish-money { font-size: 16px; }
+.polish-info { padding: 0 8px; min-width: 32px; margin-left: 4px; border-radius: 50%; }
+.polish-candidate-actions .btn { flex: 0 1 auto; }
+.screen-draft .item > .grow, .screen-draftclass .item > .grow { min-width: 0; overflow-wrap: anywhere; }
+/* At 320 px two attribute columns are narrower than a row (label, bar, value, 44 px +), so the left + slid under the right label. */
+@media (max-width: 359px) { .attr-grid { grid-template-columns: 1fr; } }
+/* A short landscape phone: the Apex discovery summary is taller than the screen, so let it scroll to its Continue button. */
+@media (max-height: 520px) { .apex-scene { overflow-y: auto; justify-content: flex-start; } }
+
+/* Phone status must be readable without relying on color. */
+.polish-empty { display:block; padding:10px 0; font-weight:700; }
+.polish-rating-change { display:block; font-size:11px; white-space:nowrap; }
+.btn:disabled { cursor:not-allowed; border-style:dashed; }
+.ce-chip.selected::after, .ce-tab.on::after { content:' ✓'; font-weight:900; }
+.ce-swatch.selected::after { position:absolute; color:#fff; text-shadow:0 1px 3px #000,0 0 3px #000; }
+.ce-swatch { position:relative; }
+.dc-row.injured, .dc-row.out { border-left:3px dashed var(--bad); }
+.coach-editor .ce-sticky .ce-side { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }
+.coach-editor .ce-sticky .ce-side [data-action="ce-random"] { grid-column:1/-1; }
+.coach-editor .ce-side .btn { white-space:normal; }
+.seg .btn.primary, .choice.selected { outline:2px solid currentColor; outline-offset:-5px; }

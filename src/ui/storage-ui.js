@@ -85,7 +85,12 @@ export async function offerExport(f) {
   const name = check.ok ? exportFileName(f) : exportFileName(f).replace(/\.gbfranchise$/, '-unverified.gbfranchise');
   const r = await offerFile({ name, text });
   const what = check.ok ? `${$t('franchises.verified', { kb: kb(text.length) })}` : `${$t('franchises.did_not_pass_its_own_check', { kb: kb(text.length), problems: check.problems[0] })}`;
-  if (r.how === 'browser') {
+  const shared = r.how === 'native-share' || r.how === 'capacitor-share';
+  if (shared && r.ok !== false) toast($t('polish.share_offered'), 'info', 5000); // the share sheet cannot tell whether a file was kept
+  else if (shared && /cancel/.test(r.code || '')) toast($t('franchises.export_canceled_no_file_was_saved'), 'info', 5000);
+  else if (r.how !== 'browser' && r.ok === null) {
+    toast($t('polish.share_offered'), 'info', 5000);
+  } else if (r.how === 'browser') {
     if (check.ok) toast(`${$t('franchises.export_file_prepared_check_that_your', { what })}`, 'good', 4500);
     else toast(`${$t('franchises.export_file_prepared_keep_it_it', { what })}`, 'bad', 7000);
   } else if (r.ok) toast(`${$t('franchises.export_saved_as', { what, name: r.name })}`, check.ok ? 'good' : 'bad', 5000);

@@ -1,3 +1,4 @@
+import { activityPaused } from '../activity.js';
 // Beast Clash arena: the battle screen. A player of the engine's record: it reads result.log through the
 // choreographer and animates exactly what each event says. It never calls the engine and holds no battle
 // logic. Monsters are the game's own 16x16 sprites (rasterised once as <img>, integer-scaled, crisp) on a
@@ -420,6 +421,7 @@ export function createArena(root, result, opts = {}) {
   function cancelAll() { for (const a of live) a.cancel(); live.clear(); fx.clear(); settle(); setActing(null, false); for (const b of $$('.cl-banner, .cl-float')) b.remove(); }
   function setCursor(i, { animate = false } = {}) { cancelAll(); cursor = Math.max(0, Math.min(n - 1, i)); if (t8) { t8clock.override = null; t8clock.end = cues[cursor].end; t8clock.base = cues[cursor].at; } applyState(stateOf(cursor), { instant: !animate }); opts.onCursor?.(cursor); const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(cursor); setButtons(); }
   async function runTo(target) {
+    if (activityPaused()) return;
     if (playing) return; playing = true; const my = ++token; setButtons();
     while (playing && my === token && cursor < target) { cursor += 1; await playCue(cues[cursor]); if (my !== token) return; opts.onCursor?.(cursor); const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(cursor); }
     if (my === token) { playing = false; setButtons(); if (cursor >= n - 1) opts.onEnd?.(); }
@@ -427,12 +429,12 @@ export function createArena(root, result, opts = {}) {
   function pause() { playing = false; token++; cancelAll(); if (t8) { t8clock.override = null; t8clock.end = cues[cursor].end; } applyState(stateOf(cursor), { instant: true }); setButtons(); }
   /** t8 (reviewer / check tool): show the arena exactly as at playback time t (seconds at 1x): the state after the cue playing then, the layer drawn at t. */
   function seek(t) { if (!t8) return; pause(); let k = 0; for (let j = 0; j < cues.length; j++) if (cues[j].at <= t + 1e-9) k = j; cursor = k; t8clock.override = t; applyState(stateOf(cursor), { instant: true }); opts.onCursor?.(cursor); const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(cursor); t8Draw(t); }
-  function setButtons() { const w = $('[data-cl="watch"]'); if (w) w.textContent = playing ? $t('clash.pause') : cursor >= n - 1 ? $t('clash.replay') : $t('clash.watch'); }
+  function setButtons() { const w = $('[data-cl="watch"]'); if (w) { w.disabled = activityPaused() && !opts.onResumePlayback; w.title = activityPaused() ? 'Resume Play to Watch' : ''; w.textContent = activityPaused() ? 'Resume Play to Watch' : playing ? $t('clash.pause') : cursor >= n - 1 ? $t('clash.replay') : $t('clash.watch'); } }
   function inspect(id) { const st = stateOf(cursor); const s = st.S[id[0]][id]; const x = byId[id]; const t8s = t8 ? t8StateAt(result, cursor).S[id] : null; caption.textContent = `${x.name} · ${x.archetype} · ${x.type} · HP ${s.hp}/${s.maxHp}${s.shield ? ` ${$t('clash.shield', { shield: s.shield })}` : ''}${s.cond ? ` · ${s.cond}` : s.paused ? ` ${$t('clash.paused', { paused: s.paused })}` : ''}${s.t8status ? ` · ${STATUS_NAME[s.t8status.id] || s.t8status.id}${s.t8status.remaining != null ? ` ${$t('clash.turns', { remaining: s.t8status.remaining })}` : ''}` : ''}${t8s?.restricted ? ` ${$t('clash.restricted_to_ordinary_attacks', { abilityId: t8s.restricted.abilityId })}` : ''}${t8s && Object.keys(t8s.clocks).length ? ` ${$t('clash.cooldown')} ${Object.values(t8s.clocks).map((k) => `${k.id} ${k.left}`).join(', ')}` : ''}${s.ko ? $t('clash.knocked_out') : ''}${x.combatant?.move ? ` · ${x.combatant.move.name}: ${x.combatant.move.text}` : x.abilityId ? ((mv) => ` · ${mv.name}: ${mv.text}`)(clashMove(x)) : ''}`; }
   root.addEventListener('click', (ev) => {
     const m = ev.target.closest('.cl-mon, .cl-card'); if (m) { inspect(m.dataset.id || m.dataset.card); return; }
     const b = ev.target.closest('[data-cl]'); if (!b) return; const k = b.dataset.cl;
-    if (k === 'watch') { if (playing) pause(); else { if (cursor >= n - 1) setCursor(0); runTo(n - 1); } }
+    if (k === 'watch') { if (activityPaused() && !opts.onResumePlayback?.()) return; if (playing) pause(); else { if (cursor >= n - 1) setCursor(0); runTo(n - 1); } }
     if (k === 'step') { if (playing) pause(); else if (cursor < n - 1) runTo(cursor + 1); }
     if (k === 'nextex') { if (playing) pause(); else if (cursor < n - 1) runTo(Math.max(cursor + 1, nextEx(cursor + 1))); }
     if (k === 'skip') { if (opts.onSkip) { opts.onSkip(); return; } pause(); setCursor(n - 1); if (cursor >= n - 1) opts.onEnd?.(); }

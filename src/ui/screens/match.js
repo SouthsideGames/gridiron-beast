@@ -1,3 +1,5 @@
+import { matchLogMatches } from '../match-log-filter.js';
+import { activityPaused } from '../activity.js';
 import { iconifyMarkup } from '../icons.js';
 import { guideFootball, guideMoment } from '../guided-week.js';
 import { recorder } from '../../testing/recorder.js';
@@ -408,9 +410,9 @@ export function registerMatchScreens(Router, app) {
   /** With Auto on, after each render take the next action the coach would: suggested play, the coach's fourth-down and try calls. */
   function scheduleAuto(f) {
     clearTimeout(autoTimer); autoTimer = null;
-    const G = f.game; if (!G?.auto || !G.state || G.state.finished || anim) return;
+    const G = f.game; if (activityPaused() || !G?.auto || !G.state || G.state.finished || anim) return;
     autoTimer = setTimeout(() => {
-      autoTimer = null; const G2 = app.f?.game; if (!G2?.auto || G2.state.finished || anim) return;
+      autoTimer = null; const G2 = app.f?.game; if (activityPaused() || !G2?.auto || G2.state.finished || anim) return;
       if (document.querySelector('.sheet')) { scheduleAuto(app.f); return; } // a halftime or tutorial sheet is open: wait
       if (replayTimer) { scheduleAuto(app.f); return; } // an instant replay is about to start: Auto waits for it
       autoStep(app.f);
@@ -569,6 +571,8 @@ export function registerMatchScreens(Router, app) {
     refresh(f);
     const tick = (rafNow) => {
       if (!anim) return;
+      if (activityPaused()) { anim.pausedAt ??= rafNow; anim.raf = requestAnimationFrame(tick); return; }
+      if (anim.pausedAt != null) { anim.start += rafNow - anim.pausedAt; delete anim.pausedAt; }
       const now = RP_CLOCK ? RP_CLOCK(rafNow) : rafNow; // render-perf harness only (inert otherwise): a fixed clock for frame-exact screenshots
       // requestAnimationFrame timestamps can sit a hair before the performance.now() taken at start: clamp at frame 0, never finish early.
       if (anim.pre && now < anim.start && sim.frames.length) { // the pre-roll: the snap is at anim.start
@@ -661,6 +665,8 @@ export function registerMatchScreens(Router, app) {
     const zoomOn = !f.settings.reducedMotion;
     const tick = (rafNow) => {
       if (!anim?.replay) return;
+      if (activityPaused()) { anim.pausedAt ??= rafNow; anim.raf = requestAnimationFrame(tick); return; }
+      if (anim.pausedAt != null) { anim.start += rafNow - anim.pausedAt; delete anim.pausedAt; }
       const now = RP_CLOCK ? RP_CLOCK(rafNow) : rafNow; // render-perf harness only (inert otherwise)
       const pos = replayPosition(plan, now - anim.start);
       if (pos.done) { endReplay(f); return; }
@@ -867,7 +873,7 @@ export function registerMatchScreens(Router, app) {
    * distance and spot it started from, who had the ball and the play that was called. The technical view (a toggle in the sheet)
    * adds the engine's own detail for testing: the result code, the yards, both play ids and the repro code that replays the play.
    */
-  function showLog(f, technical = showLog.technical || false) {
+  function showLog(f, technical = showLog.technical || false, filter = 'all') {
     const s = f.game?.state; if (!s) return;
     showLog.technical = technical;
     const abbr = (side) => s[side]?.abbr || '';
@@ -879,12 +885,14 @@ export function registerMatchScreens(Router, app) {
       const tech = technical && (e.result || e.repro) ? `<br><small class="dim mono">${esc([e.result, e.yards != null ? `${e.yards} yds` : null, e.off && e.def ? `${e.off} vs ${e.def}` : null, e.kind].filter(Boolean).join(' · '))}${e.repro ? `<br>repro ${esc(e.repro)}` : ''}</small>` : '';
       return `<div class="entry ${e.important ? 'important' : ''} ${e.kind}"><span class="t">${fmtClock(e.clock)}</span><span>${sit ? `<small class="pbp-sit">${esc(sit)}${call ? ` · ${esc(call)}` : ''}</small><br>` : ''}${esc(lineText(e))}${tech}</span></div>`;
     };
-    const groups = []; for (const e of s.log.slice().reverse()) { const q = R.quarterText({ quarter: e.q }); if (groups.at(-1)?.q !== q) groups.push({ q, rows: [] }); groups.at(-1).rows.push(e); }
+    const groups = []; for (const e of s.log.slice().reverse().filter(e => matchLogMatches(e, filter))) { const q = R.quarterText({ quarter: e.q }); if (groups.at(-1)?.q !== q) groups.push({ q, rows: [] }); groups.at(-1).rows.push(e); }
     const body = groups.map((g) => `<h4 class="pbp-q">${esc(g.q)}</h4>${g.rows.map(row).join('')}`).join('');
     const toggle = `<div class="row" style="justify-content:flex-end"><button class="btn ghost small" data-action="pbp-view" aria-pressed="${technical}">${technical ? $t('match.pbp_simple_view') : $t('match.pbp_technical_view')}</button></div>`;
     const foot = technical ? `<p class="dim">${$t('match.a_repro_code_replays_that_exact')} <span class="mono">node tests/tools/replay.js CODE</span>.</p>` : '';
-    const sh = sheet(`${toggle}<div class="log pbp">${body}</div>${foot}`, { title: $t('match.play_by_play') });
-    sh.el.querySelector('[data-action="pbp-view"]')?.addEventListener('click', () => { sh.close(); showLog(f, !technical); });
+    const filters = `<div class="row wrap">${[['all',$t('polish.all')],['scoring',$t('polish.scoring')],['turnovers',$t('polish.turnovers')],['injuries',$t('polish.injuries')],['abilities',$t('polish.abilities')]].map(([id,label])=>`<button class="btn small ${filter===id?'primary':''}" data-log-filter="${id}">${label}</button>`).join('')}</div>`;
+    const sh = sheet(`${toggle}${filters}<div class="log pbp">${body}</div>${foot}`, { title: $t('match.play_by_play') });
+    sh.el.querySelectorAll('[data-log-filter]').forEach(b=>b.addEventListener('click',()=>{sh.close();showLog(f,technical,b.dataset.logFilter);}));
+    sh.el.querySelector('[data-action="pbp-view"]')?.addEventListener('click', () => { sh.close(); showLog(f, !technical, filter); });
   }
 
   function finishGame(f) {
@@ -940,7 +948,7 @@ export function registerMatchScreens(Router, app) {
     if (!f.settings.liveClock) return;
     let left = 40; let last = performance.now();
     playClockTimer = setInterval(() => {
-      const G = f.game; if (!G || G.state.finished || G.state.phase !== 'scrimmage' || anim || G.lastEvent?.needsContinue || document.querySelector('.sheet')) { last = performance.now(); return; }
+      const G = f.game; if (activityPaused() || !G || G.state.finished || G.state.phase !== 'scrimmage' || anim || G.lastEvent?.needsContinue || document.querySelector('.sheet')) { last = performance.now(); return; }
       const now = performance.now(); left -= (now - last) / 1000; last = now;
       const pc = root.querySelector('#pc'), bar = root.querySelector('#pcbar');
       if (pc) pc.textContent = Math.max(0, Math.ceil(left)); if (bar) bar.style.width = `${Math.max(0, left / 40 * 100)}%`;

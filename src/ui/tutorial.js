@@ -42,7 +42,7 @@ function openTipSheet(f, t, save) {
 /** Roster and cap warnings as short notes: critical ones always, the rest when contextual hints are on. `max` keeps HQ short. */
 export function warningsHtml(f, { max = 3, only = null } = {}) {
   const ws = rosterWarnings(f).filter((w) => !only || only.includes(w.key)).slice(0, max);
-  return ws.map((w) => `<div class="assist-note ${w.level === 'critical' ? 'critical' : ''}" role="${w.level === 'critical' ? 'alert' : 'note'}">${w.level === 'critical' ? '⚠️' : '💡'} ${esc(w.text)}</div>`).join('');
+  return ws.map((w) => `<div class="assist-note ${w.level === 'critical' ? 'critical' : ''}" role="${w.level === 'critical' ? 'alert' : 'note'}">${w.level === 'critical' ? '⚠️' : '💡'} ${esc(w.text)} <button class="btn small" data-polish="go" data-warning="${esc(w.key)}" data-screen="${esc(w.screen || 'roster')}">${$t('polish.review')}</button></div>`).join('');
 }
 /** A Guided suggestion or a consequence line, ready to drop into a screen ('' when off). */
 export function noteHtml(text, kind = '') { return text ? `<p class="assist-note ${kind}">${kind === 'suggest' ? '🧭 ' : ''}${esc(text)}</p>` : ''; }

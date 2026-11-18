@@ -1,3 +1,5 @@
+import { registerPolishScreens } from './ui/polish.js';
+import { installActivityLifecycle } from './ui/activity.js';
 import { guideHtml, initGuidedWeek, mountGuide } from './ui/guided-week.js';
 import { guideActive } from './franchise/guide.js';
 import { recorder } from './testing/recorder.js';
@@ -208,13 +210,14 @@ function saveOutcome(r) {
   failing = true; showSaveFailure(app, r.error);
 }
 
-function applySettings() { document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); }
+function applySettings() { document.documentElement.dataset.comfortableText = app.settings.comfortableText ? '1' : '0'; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); }
 
 function tabs(ctx, screenName) {
   if (!app.f || !ctx.inFranchise || isArchived(app.f)) return null; // an archive shows the Legacy shell, not the weekly tabs
   const items = [['hq', 'HQ', '🏠'], ['roster', $t('franchises.roster'), '🐾'], ['playbook', $t('franchises.plays'), '📋'], ['league', $t('franchises.league'), '🏆'], ['more', $t('franchises.more'), '☰']];
   const counts = {}; for (const n of F.notices(app.f)) counts[n.screen] = (counts[n.screen] || 0) + 1;
-  if (devNoticesOn(app.settings)) counts.more = (counts.more || 0) + reviewQueue().total; // developer reviews (GDD §23.7)
+  // Developer review counts stay on Developer Tools, separate from franchise decisions.
+  // // developer reviews (GDD §23.7)
   return items.map(([screen, label, icon]) => ({ screen, label, icon, badge: counts[screen] || 0, active: screenName === screen || (ctx.tabOf?.[screenName] === screen) }));
 }
 
@@ -240,6 +243,8 @@ export function start() {
   registerTestSession(Router, app);
   document.addEventListener('click', (e) => { if (e.target.closest?.('[data-action="test-report-issue"]')) flagProblem(); });
   registerOnboardingScreens(Router, app);
+  registerPolishScreens(Router, app);
+  installActivityLifecycle({ app, Router });
   registerHqScreens(Router, app);
   registerFaScreens(Router, app); // Task 7: the year-round free-agent market
   registerRosterScreens(Router, app);
