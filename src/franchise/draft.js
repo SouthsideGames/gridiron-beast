@@ -51,6 +51,23 @@ export function generateDraftClass(rng, { year, uniqueName }) {
   return out;
 }
 
+/** Public consensus ranks across the whole class, including already drafted prospects.
+ * Never re-score hidden attributes or use availability/scouting/filter order. Stable
+ * class order breaks malformed legacy rank ties without producing duplicate ranks. */
+export function draftProspectRankings(draft, prospect) {
+  if (!prospect || !Array.isArray(draft?.class)) return null;
+  const board = draft.class.map((m, index) => ({ m, index })).sort((a, b) =>
+    (Number.isFinite(a.m.boardRank) ? a.m.boardRank : Infinity) -
+    (Number.isFinite(b.m.boardRank) ? b.m.boardRank : Infinity) || a.index - b.index);
+  const overallIndex = board.findIndex(({ m }) => m.id === prospect.id);
+  if (overallIndex < 0) return null;
+  const position = board[overallIndex].m.position;
+  const group = board.filter(({ m }) => m.position === position);
+  return { overall: overallIndex + 1, total: board.length,
+    positionRank: group.findIndex(({ m }) => m.id === prospect.id) + 1,
+    positionTotal: group.length, position };
+}
+
 export function openDraftClass(f, rng, { uniqueName }) {
   if (f.draft && f.draft.year === f.season.year) return f.draft;
   f.draft = { year: f.season.year, class: generateDraftClass(rng, { year: f.season.year, uniqueName }), revealed: {}, picks: [], order: [], round: 0, index: 0, done: false, started: false, scoutWeeks: 0 };

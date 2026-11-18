@@ -51,3 +51,54 @@ test('a suspended context requests resume and starts media immediately within th
  const f=fixture();let resumes=0;f.context.state='suspended';f.context.resume=()=>{resumes++;return new Promise(()=>{});};
  const run=f.player.select('main');assert.equal(resumes,1);assert.equal(f.media.length,1);assert.equal(f.media[0].paused,false);await run;f.player.pause();
 });
+
+test('ambient session is feature detected, idempotent and tolerates unavailable WebView APIs',async()=>{
+ const {configureAudioSession}=await import('../src/audio/context.js');
+ let type='auto',writes=0;const session={get type(){return type;},set type(v){writes++;type=v;}};
+ assert.equal(configureAudioSession({audioSession:session}),true);assert.equal(type,'ambient');
+ assert.equal(configureAudioSession({audioSession:session}),true);assert.equal(writes,1);
+ assert.equal(configureAudioSession({}),false);
+ assert.equal(configureAudioSession({get audioSession(){throw new Error('unsupported');}}),false);
+ assert.equal(configureAudioSession({audioSession:Object.freeze({type:'auto'})}),false);
+});
+test('preloading does not activate audio, reuses downloaded media, and first entrance is faster than crossfades',async()=>{
+ const f=fixture();let contexts=0;const get=f.player.getContext;
+ f.player.getContext=()=>{contexts++;return get();};f.player.fadeMs=900;
+ f.player.prepare('main');f.player.prepare('main');assert.equal(contexts,0);assert.equal(f.media.length,1);assert.equal(f.media[0].paused,true);
+ await f.player.select('main');assert.equal(f.media.length,1);assert.ok(f.ramps.some(([v,t])=>v===1&&t===.12));
+ await f.player.select('clash');assert.ok(f.ramps.some(([v,t])=>v===1&&t===.9));f.player.pause();
+});
+test('same pending/current song resumes interrupted context without restarting the track',async()=>{
+ const f=fixture();await f.player.select('main');const first=f.player.current;let resumes=0;
+ f.context.state='interrupted';f.context.resume=()=>{resumes++;return Promise.resolve();};
+ await f.player.select('main');assert.equal(resumes,1);assert.equal(f.player.current,first);assert.equal(f.media.length,1);f.player.pause();
+ const pending=fixture({deferred:true});const run=pending.player.select('main');
+ pending.context.state='suspended';pending.context.resume=()=>{resumes++;return Promise.resolve();};
+ await pending.player.select('main');assert.equal(resumes,2);assert.equal(pending.media.length,1);
+ pending.media[0].resolve();await run;pending.player.pause();
+});
+test('blocked autoplay retries on a later gesture and hidden scenes never start or resume audio',async()=>{
+ const f=fixture();const create=f.player.createMedia;let attempts=0;
+ f.player.createMedia=()=>{const m=create();const play=m.play;m.play=function(){attempts++;if(attempts===1)return Promise.reject(new Error('NotAllowedError'));return play.call(this);};return m;};
+ await f.player.select('main');assert.equal(f.player.current,null);assert.equal(f.player.pending,null);
+ await f.player.select('main');assert.equal(attempts,2);assert.equal(f.player.current.id,'main');
+ f.hide();let contexts=0;f.player.getContext=()=>{contexts++;throw new Error('hidden playback');};
+ await f.player.select('clash');assert.equal(contexts,0);f.player.pause();
+});
+test('ambient policy is selected before a media player or audio context can claim playback',async()=>{
+ const descriptor=Object.getOwnPropertyDescriptor(globalThis,'navigator');const session={type:'auto'};
+ Object.defineProperty(globalThis,'navigator',{configurable:true,value:{audioSession:session}});
+ const f=fixture(),get=f.player.getContext;
+ f.player.getContext=()=>{assert.equal(session.type,'ambient');return get();};
+ try {await f.player.select('main');f.player.pause();}
+ finally {if(descriptor)Object.defineProperty(globalThis,'navigator',descriptor);else delete globalThis.navigator;}
+});
+test('a tap after an interruption that paused the current song resumes that same element where it stopped',async()=>{
+ const f=fixture();await f.player.select('main');const first=f.player.current;first.media.currentTime=42;
+ first.media.pause();f.context.state='interrupted';let resumes=0;f.context.resume=()=>{resumes++;return Promise.resolve();};
+ await f.player.select('main');
+ assert.equal(resumes,1);assert.equal(f.player.current,first,'same track object');assert.equal(f.media.length,1,'no new element');
+ assert.equal(first.media.paused,false,'the paused element plays again');assert.equal(first.media.currentTime,42,'from where it stopped');
+ first.media.ended=true;first.media.pause();await f.player.select('main');assert.equal(first.media.paused,true,'an ended song is left to the loop handler');
+ f.player.pause();
+});
