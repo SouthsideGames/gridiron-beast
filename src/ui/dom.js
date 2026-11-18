@@ -1,3 +1,4 @@
+import { createToastQueue } from './toast-queue.js';
 import { iconifyMarkup } from './icons.js';
 // Tiny DOM helpers: escape, element creation from HTML, delegation.
 import { t as $t } from '../text/index.js';
@@ -44,12 +45,18 @@ export const ordinal = (n) => `${n}${['th', 'st', 'nd', 'rd'][(n % 100 > 10 && n
 export const pct = (v) => `${Math.round(v * 100)}%`;
 
 /** Simple non-blocking toast. */
-let toastTimer = null;
-export function toast(text, kind = 'info', ms = 2600) {
-  let el = $('#toast');
-  if (!el) { el = html('<div id="toast" role="status" aria-live="polite"></div>'); document.body.appendChild(el); }
-  el.textContent = text; el.dataset.kind = kind; el.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+let toastQueue = null;
+export function toast(text, kind = 'info', ms = 2600, { undo = null } = {}) {
+  if (!toastQueue) toastQueue = createToastQueue(message => {
+    let el = $('#toast');
+    if (!el) { el = html('<div id="toast" role="status" aria-live="polite"></div>'); document.body.appendChild(el); }
+    el.replaceChildren(); const label = document.createElement('span'); label.textContent = message.text; el.appendChild(label);
+    if (message.undo) { const button = document.createElement('button'); button.className='btn small'; button.textContent='Undo';
+      button.addEventListener('click',()=>{button.disabled=true; const undo=message.undo;toastQueue.dismiss();undo();},{once:true});el.appendChild(button); }
+    const dismiss=document.createElement('button');dismiss.className='btn ghost small';dismiss.textContent='×';dismiss.setAttribute('aria-label','Dismiss Message');dismiss.addEventListener('click',()=>toastQueue.dismiss());el.appendChild(dismiss);
+    el.dataset.kind=message.kind;el.classList.add('show');
+  },()=>$('#toast')?.classList.remove('show'));
+  toastQueue.push({text,kind,ms:Math.max(1000,Number(ms)||2600),undo});
 }
 
 /** Modal sheet. Returns a close function. */

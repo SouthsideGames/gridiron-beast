@@ -1921,3 +1921,14 @@ html[data-comfortable-text="1"] .item .sub, html[data-comfortable-text="1"] .dim
 .coach-editor .ce-sticky .ce-side [data-action="ce-random"] { grid-column:1/-1; }
 .coach-editor .ce-side .btn { white-space:normal; }
 .seg .btn.primary, .choice.selected { outline:2px solid currentColor; outline-offset:-5px; }
+
+/* The main HQ action stays above the tab bar and safe area. */
+.phone-hq-next { position:fixed; bottom:var(--phone-tab-height,calc(74px + var(--sab))); left:0; right:0; z-index:20; padding:8px max(12px,env(safe-area-inset-left)); background:var(--bg); border-top:1px solid var(--line); }
+.phone-hq-next .btn { max-width:720px; margin:0 auto; }
+.screen-hq.phone-has-next { padding-bottom:calc(var(--phone-tab-height,76px) + var(--phone-next-height,90px) + 24px); }
+.phone-offseason .btn { text-align:left; white-space:normal; }
+[id^="phone-"] { scroll-margin-top:calc(70px + var(--sat)); }
+#toast { display:flex; align-items:center; gap:8px; flex-wrap:wrap; max-width:min(92vw,640px); bottom:calc(160px + var(--sab)); }
+#toast > span { flex:1; min-width:100px; }
+.phone-manage { margin-top:12px; padding-top:8px; border-top:1px solid var(--line); }
+.phone-manage summary { cursor:pointer; font-weight:700; padding:8px 0; }
