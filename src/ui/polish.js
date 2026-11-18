@@ -1,3 +1,4 @@
+import { draftShowPick } from './draft-show.js';
 import { offseasonSteps } from './phone-navigation.js';
 import { trackRosterReviews, rosterReviewHtml } from './followup-polish.js';
 import * as FR from '../core/fraction.js';
@@ -107,6 +108,7 @@ export function offseasonTracker(f) {
   return `<section class="panel tight phone-offseason" aria-label="Offseason Checklist"><h3>Offseason Checklist</h3><p>${stages.every(x=>x.done)?t('polish.team_ready'):`${stages.filter(x=>!x.done).length} Steps Left`}</p><div class="stack">${stages.map(x=>`<button class="btn block" data-polish="offseason-step" data-step="${x.id}">${x.done?'✓ Done: ':'○ To Do: '}${esc(x.label)}</button>`).join('')}</div></section>`;
 }
 export function polishHeader(ctx,name) {
+  if(name==='draft'&&draftShowPick(ctx.f?.draft))return '';
   const {f}=ctx;if(!f?.roster||isArchived(f))return '';
   let out='';
   if(polishState(f).playbackPaused && ['match','clash-battle'].includes(name))pauseActivity();
@@ -127,17 +129,19 @@ export function polishHeader(ctx,name) {
   if(name==='gameplan')out+=buttons('presets-plan',t('polish.plan_presets'));
   if(name==='monster'){
     const next=f.roster.find(x=>x.id!==ctx.params.id&&(x.points||0)>0);
-    out+=buttons('points',t('polish.plan_points'),ctx.params.id)+(next?buttons('next-points',t('polish.next_points'),next.id):'');
+    out+=`<div class="beast-point-tools row">${buttons('points',t('polish.plan_points'),ctx.params.id)}${next?buttons('next-points',t('polish.next_points'),next.id):''}</div>`;
   }
   return out;
 }
 export const POLISH_ROOT_ACTIONS=new Set(['offseason-step','review-lineup','dismiss-roster-review','explain','resume','go','clear-filters','shortlist','compare','shortlist-page','presets-lineup','presets-plan','points','next-points']);
 export function mountPolish(root,ctx,name,Router) {
-  const {app,f}=ctx;if(!f?.roster||!app||isArchived(f))return;app.polishRefresh=()=>Router.render();
+  const {app,f}=ctx;if(!f?.roster||!app||isArchived(f))return;
+  if(name==='draft'&&draftShowPick(f.draft))return;app.polishRefresh=()=>Router.render();
   if(name==='hq'){
     const next=root.querySelector('[data-phone-next]');
     if(next){const bar=document.createElement('div');bar.className='phone-hq-next';bar.appendChild(next);root.appendChild(bar);root.classList.add('phone-has-next');}
   }
+  if(name==='monster'){ const tools=root.querySelector('.beast-point-tools'),nav=root.querySelector('.mon-nav'); if(tools&&nav)nav.after(tools); }
   const scope=['draft','draftclass'].includes(name)?draftScope(f):'market';
   const candidates=new Map();
   const marketEntries=['famarket','offseason'].includes(name)?F.freeAgentMarket(f):[];
@@ -163,7 +167,7 @@ export function mountPolish(root,ctx,name,Router) {
   }
   for(const node of root.querySelectorAll('.hl[title], .chip[title], .fat-pip[title], .boost[title]')){
     if(node.closest('button'))continue;
-    const help=document.createElement('button');help.className='btn small polish-info';help.type='button';help.dataset.polish='explain';help.dataset.info=node.title;help.textContent='i';help.setAttribute('aria-label',node.title);node.appendChild(help);
+    const help=document.createElement('button');help.className='btn small polish-info';help.type='button';help.dataset.polish='explain';help.dataset.info=node.title;help.textContent='i';help.setAttribute('aria-label',node.title);node.after(help);
   }
   const applyFilters=()=>{
     const p=browsePreferences(f,name);let n=0;

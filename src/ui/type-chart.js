@@ -40,7 +40,7 @@ export function typeChartHtml(selected = 'Fire') {
       ${$t('league.b_in_football_b')}
       <p>${$t('league.only_when_two_monsters_meet_head')} <b class="tc-up">${$t('league.b_when_strong', { percent: pct(V.strong) })} <b class="tc-down">${$t('league.b_when_weak_nothing_when_neutral', { percent: pct(V.weak) })}${sel === 'Dragon' ? `${$t('league.for_dragon_against_neutral_types', { percent: pct(V.dragonNeutral) })}` : ''}${$t('league.it_never_changes_ratings_or_overall')}</p>
       ${$t('league.b_in_beast_clash_b')}
-      <p>${$t('league.damage_when_strong_when_weak', { strong: CLASH_VALUES.types.strong, clashPct: clashPct(CLASH_VALUES.types.strong), weak: CLASH_VALUES.types.weak, clashPct2: clashPct(CLASH_VALUES.types.weak) })}</p>
+      <p>${$t('presentation.clash_types')}</p><details><summary>${$t('presentation.exact_values')}</summary><p>${$t('league.damage_when_strong_when_weak', { strong: CLASH_VALUES.types.strong, clashPct: clashPct(CLASH_VALUES.types.strong), weak: CLASH_VALUES.types.weak, clashPct2: clashPct(CLASH_VALUES.types.weak) })}</p></details>
     </div>
     <details class="tc-all"><summary>${$t('league.all_matchups')}</summary>
       <table class="tc-table"><thead><tr><th>${$t('league.type')}</th><th>${$t('league.strong_against')}</th><th>${$t('league.weak_against')}</th></tr></thead><tbody>

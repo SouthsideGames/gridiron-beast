@@ -1,3 +1,5 @@
+import { draftShowPick, startDraftShow, nextDraftShow, draftShowHtml } from '../draft-show.js';
+import { activityPaused } from '../activity.js';
 import { browsePreferences, setBrowsePreferences } from '../../franchise/polish.js';
 import { getPlanDraft, storePlanDraft, compareBeast } from '../polish.js';
 import { draftProspectRankings } from '../../franchise/draft.js';
@@ -57,6 +59,10 @@ export function weekStrip(f) {
 }
 
 export function registerHqScreens(Router, app) {
+  let draftTimer=null, draftPlaying=false;
+  const stopDraftTimer=()=>{if(draftTimer)clearTimeout(draftTimer);draftTimer=null;};
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){draftPlaying=false;stopDraftTimer();}});
+  globalThis.addEventListener?.('gb-app-state',e=>{if(e.detail?.isActive===false){draftPlaying=false;stopDraftTimer();}});
   registerGmJobs(Router, app);
   // Answering a call works wherever the panel shows.
   document.addEventListener('click', async (e) => {
@@ -403,6 +409,7 @@ export function registerHqScreens(Router, app) {
     render({ f }) {
       const browse=browsePreferences(f,'draft');draftFocus=browse.position||'';draftSort=browse.sort||'board';
       const d = f.draft; if (!d?.started) return `<div class="panel"><p>${$t('hq.contracts_first_then_the_draft')}</p><button class="btn primary block" data-action="begin" ${F.offseasonReady(f) ? '' : 'disabled'}>${$t('hq.open_the_draft_2')}</button></div>`;
+      if(draftShowPick(d)) return draftShowHtml(d,draftPlaying);
       const intro = d.creation && !d.done ? `<div class="talk" style="margin-bottom:8px"><div class="row" style="gap:12px;align-items:flex-start">${portraitSprite('commissioner', 48, { hue: 40 })}<div class="grow"><div class="talk-name">${$t('hq.the_commissioner')}</div><p class="talk-line">${$t('hq.fast_i_know_welcome_to_the', { club: esc(f.club), lotterySlot: d.lotterySlot })}</p></div></div></div>` : '';
       const clock = F.onTheClock(f); const mine = clock === f.club;
       const myPicks = d.picks.filter((p) => p.mine);
@@ -411,7 +418,7 @@ export function registerHqScreens(Router, app) {
       const sorted = draftSort === 'known' ? avail.slice().sort((a, b) => (F.prospectView(f, b).level - F.prospectView(f, a).level) || (a.boardRank - b.boardRank)) : avail;
       const mySlots = d.order.map((o, i) => ({ ...o, i })).filter((o) => o.team === f.club);
       const lastPick = d.picks[d.picks.length - 1];
-      return `${intro}<div class="panel tight"><div class="row between" style="flex-wrap:wrap"><b>${d.done ? $t('hq.draft_complete') : `${$t('hq.round_pick_of', { round: d.round, index: d.index + 1, n: d.order.length })}`}</b><span class="chip ${mine ? 'accent' : ''}">${d.done ? '' : mine ? $t('hq.you_are_on_the_clock', { overall: d.index + 1 }) : esc(clock || '')}</span></div>
+      return `${intro}<div class="draft-watch-bar"><button class="btn block" data-action="draft-watch" ${d.picks.length?'':'disabled'}>${$t('presentation.watch_draft')}</button></div><div class="panel tight"><div class="row between" style="flex-wrap:wrap"><b>${d.done ? $t('hq.draft_complete') : `${$t('hq.round_pick_of', { round: d.round, index: d.index + 1, n: d.order.length })}`}</b><span class="chip ${mine ? 'accent' : ''}">${d.done ? '' : mine ? $t('hq.you_are_on_the_clock', { overall: d.index + 1 }) : esc(clock || '')}</span></div>
         <div class="dim">${$t('hq.your_picks')} ${mySlots.map((o) => selectionLabel(o.round, o.i + 1)).join(', ') || 'none left'} ${$t('hq.worst_record_picks_first_snake_order', { n: f.roster.length, rosterMax: F.ROSTER_MAX })}</div><div class="dim" style="margin-top:2px">${picksLine(f)}</div>
         <div class="row between" style="margin-top:6px"><span class="dim">${lastPick ? `${$t('hq.last_pick_b_b', { name: esc(lastPick.name) })}${lastPick.position ? ` (${esc(lastPick.position)}, ${lastPick.ovr} OVR)` : ''} → ${esc(lastPick.team)}` : $t('hq.no_picks_yet')}</span><button class="btn small" data-action="picks">${$t('hq.all_picks', { n: d.picks.length })}</button></div></div>
         ${d.done ? '' : needsBanner(f)}
@@ -421,10 +428,26 @@ export function registerHqScreens(Router, app) {
         ${d.done ? `<button class="btn primary big block" data-action="back">${d.creation ? $t('hq.to_headquarters') : $t('hq.back_to_the_offseason')}</button>` : mine ? `<div class="row between" style="margin:8px 0"><div class="seg"><button class="btn small ${draftSort === 'board' ? 'primary' : ''}" data-action="sort" data-v="board">${$t('hq.board')}</button><button class="btn small ${draftSort === 'known' ? 'primary' : ''}" data-action="sort" data-v="known">${$t('hq.scouted_first')}</button></div><select class="input" id="draft-filter" style="width:auto">${[['', $t('hq.all_positions')], ...Object.keys(F.GROUP_SLOTS).map((g) => [g, g])].map(([v, l]) => `<option value="${v}" ${draftFocus === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div><button class="btn block" data-action="trade" style="margin-bottom:8px">${$t('hq.shop_this_pick_trade')}</button><div class="list">${sorted.map((m) => prospectRow(f, m, { pickable: true })).join('')}</div><p class="center" style="margin-top:10px"><button class="btn small ghost" data-action="pass">${$t('hq.forfeit_this_pick')}</button></p>` : ''}
         <h3>${$t('hq.recent_picks')}</h3><div class="list">${recent.map((p) => `<div class="item static ${p.mine ? 'mine' : ''}"><div class="grow"><div class="name">${selectionLabel(p.round, p.overall)} · ${esc(p.team)}</div><div class="sub">${p.id ? careerLink(p.id, p.name) : `${esc(p.name)}${p.why ? ` · ${esc(p.why)}` : ''}`}${p.position ? ` · ${esc(p.position)} · ${p.ovr} OVR` : ''}</div>${prospectRanks(f, d.class.find((m) => m.id === p.id))}</div></div>`).join('') || `<p class="dim">${$t('hq.no_picks_yet')}</p>`}</div>`;
     },
+    unmount() { stopDraftTimer(); draftPlaying=false; },
     mount(root) {
+      stopDraftTimer();
+      const stepShow=(cursor,skip=false)=>{if(nextDraftShow(app.f.draft,cursor,skip)){app.save();Router.render();}};
+      const current=draftShowPick(app.f.draft);
+      if(current && draftPlaying){
+        draftTimer=setTimeout(()=>{
+          draftTimer=null;
+          if(!root.isConnected)return;
+          if(activityPaused() || document.querySelector('.sheet')){draftPlaying=false;Router.render();return;}
+          stepShow(current.cursor);
+        },current.pick.round===1&&!current.pick.passed?3200:1600);
+      }
       delegate(root, {
+        'draft-watch':()=>{startDraftShow(app.f.draft);draftPlaying=true;app.save();Router.render();},
+        'draft-next':el=>{draftPlaying=false;stepShow(Number(el.dataset.cursor));},
+        'draft-pause':()=>{draftPlaying=!draftPlaying;Router.render();},
+        'draft-skip':el=>{draftPlaying=false;stepShow(Number(el.dataset.cursor),true);},
         begin: () => { const r = F.beginDraft(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); },
-        pick: async (el) => { const m = app.f.draft.class.find((x) => x.id === el.dataset.id); if (!(await confirmSheet(`${$t('hq.draft', { name: m.name, position: m.position })}${(() => { const c = consequence(app.f, 'draft', { salary: Math.round(salaryFor(m) * F.ROOKIE_SCALE / 100) * 100 }); return c ? ' ' + c : ''; })()}`, { title: $t('hq.your_pick'), okLabel: $t('hq.draft_2') }))) return; const r = F.myDraftPick(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${$t('hq.joins_the', { name: r.monster.name, club: app.f.club })}`, 'good'); Router.render(); },
+        pick: async (el) => { const m = app.f.draft.class.find((x) => x.id === el.dataset.id); if (!(await confirmSheet(`${$t('hq.draft', { name: m.name, position: m.position })}${(() => { const c = consequence(app.f, 'draft', { salary: Math.round(salaryFor(m) * F.ROOKIE_SCALE / 100) * 100 }); return c ? ' ' + c : ''; })()}`, { title: $t('hq.your_pick'), okLabel: $t('hq.draft_2') }))) return; const showFrom=app.f.draft.picks.length; const r = F.myDraftPick(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } startDraftShow(app.f.draft,showFrom); draftPlaying=false; app.save(); toast(`${$t('hq.joins_the', { name: r.monster.name, club: app.f.club })}`, 'good'); Router.render(); },
         pass: async () => { if (!(await confirmSheet($t('hq.forfeit_this_pick_nobody_is_drafted'), { title: $t('hq.forfeit_pick'), okLabel: $t('hq.forfeit_2'), danger: true }))) return; F.passDraftPick(app.f); app.save(); Router.render(); },
         trade: () => { const lead = F.myTradablePicks(app.f).find((p) => p.onClock) || null; tradeSheet(app.f, { lead, onDone: () => Router.render() }); },
         sort: (el) => { draftSort = el.dataset.v;setBrowsePreferences(app.f,'draft',{sort:draftSort});app.save(); Router.render(); },
