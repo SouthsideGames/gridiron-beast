@@ -21,6 +21,16 @@ export async function offerFile({ name, text, use = globalThis.claude?.use, doc 
     try { const r = await dl.save({ filename, data: text }); return { ok: true, how: 'claude', status: r?.status || 'saved', name: filename }; }
     catch (e) { return { ok: false, how: 'claude', code: e?.code || 'unavailable' }; }
   }
+  // Use the system share sheet where supported. Cancellation is not a successful export.
+  const native = globalThis.Capacitor?.isNativePlatform?.() === true;
+  if (native && typeof globalThis.gbNativeShare === 'function') return globalThis.gbNativeShare({ name, text });
+  if (native && typeof globalThis.File === 'function' && globalThis.navigator?.share) {
+    const file = new File([text], name, { type: 'application/json' });
+    if (navigator.canShare?.({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: name }); return { ok: true, how: 'native-share', name }; }
+      catch (error) { if (error?.name === 'AbortError') return { ok: false, how: 'native-share', code: 'cancelled', name }; }
+    }
+  }
   const blob = new Blob([text], { type: 'application/json' }); const url = URL.createObjectURL(blob);
   const a = doc.createElement('a'); a.href = url; a.download = name; doc.body.appendChild(a); a.click(); a.remove();
   const t = setTimeout(() => URL.revokeObjectURL(url), 60000); t?.unref?.(); // never keeps a test runner alive

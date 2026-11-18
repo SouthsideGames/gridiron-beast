@@ -5,7 +5,7 @@ import { COACH_CATEGORIES, coachPortrait, coachSpec, labelOf, randomLook, DEFAUL
 import { t as $t } from '../text/index.js';
 
 /** Editor HTML: a live preview, category tabs, and for each option a ◀ name ▶ stepper plus tappable choices. */
-export function coachEditorHtml(look, { tab = 'face', teamColor = null, teamNote = '' } = {}) {
+export function coachEditorHtml(look, { tab = 'face', teamColor = null, teamNote = '', canUndo = false } = {}) {
   const L = { ...DEFAULT_LOOK, ...look }; const cat = COACH_CATEGORIES.find((c) => c.id === tab) || COACH_CATEGORIES[0];
   const name = (o, v) => (o.name ? o.name(v) : '') || (o.swatch ? '' : labelOf(v));
   const option = (o) => {
@@ -17,20 +17,26 @@ export function coachEditorHtml(look, { tab = 'face', teamColor = null, teamNote
   return `<div class="coach-editor">
     ${teamNote ? `<p class="ce-team-note dim">${esc(teamNote)}</p>` : ''}
     <div class="ce-sticky"><div class="ce-top"><div class="ce-preview">${coachPortrait(L, 128, { teamColor })}</div>
-      <div class="ce-side"><button class="btn small" data-action="ce-random">${$t('shared.surprise_me')}</button></div></div>
+      <div class="ce-side"><button class="btn small" data-action="ce-random">${$t('shared.surprise_me')}</button><button class="btn small" data-action="ce-undo" ${canUndo ? '' : 'disabled title="No changes to undo"'}>Undo</button><button class="btn small" data-action="ce-restore">Restore Original</button></div></div>
     <div class="ce-tabs" role="tablist">${COACH_CATEGORIES.map((c) => `<button class="ce-tab ${c.id === cat.id ? 'on' : ''}" role="tab" aria-selected="${c.id === cat.id}" data-action="ce-tab" data-v="${c.id}">${esc(c.label)}</button>`).join('')}</div></div>
     <div class="ce-body">${cat.options.map(option).join('')}</div>
   </div>`;
 }
 /** Editor actions for a `delegate` map. `state` is { look, tab }; `redraw` re-renders the host screen. */
 export function coachEditorActions(state, redraw) {
+  state.originalLook ||= { ...state.look };
+  const same = (a, b) => JSON.stringify({ ...DEFAULT_LOOK, ...a }) === JSON.stringify({ ...DEFAULT_LOOK, ...b });
+  // Only a real change is an undo step: re-tapping the current choice or restoring an unchanged look adds nothing to undo.
+  const change = (next) => { if (same(next, state.look)) return; (state.lookHistory ||= []).push({ ...state.look }); if (state.lookHistory.length > 30) state.lookHistory.shift(); state.look = next; };
   const find = (k) => COACH_CATEGORIES.flatMap((c) => c.options).find((o) => o.key === k);
   const coerce = (o, raw) => o.values.find((v) => String(v) === String(raw));
   return {
     'ce-tab': (el) => { state.tab = el.dataset.v; redraw(); },
-    'ce-set': (el) => { const o = find(el.dataset.k); if (!o) return; const v = coerce(o, el.dataset.v); if (v === undefined) return; state.look = { ...state.look, [o.key]: v }; redraw(); },
-    'ce-step': (el) => { const o = find(el.dataset.k); if (!o) return; const i = Math.max(0, o.values.findIndex((v) => String(v) === String(state.look[o.key]))); const n = o.values.length; state.look = { ...state.look, [o.key]: o.values[(i + Number(el.dataset.d) + n) % n] }; redraw(); },
-    'ce-random': () => { state.look = randomLook((Math.random() * 0xffffffff) >>> 0); redraw(); },
+    'ce-set': (el) => { const o = find(el.dataset.k); if (!o) return; const v = coerce(o, el.dataset.v); if (v === undefined) return; change({ ...state.look, [o.key]: v }); redraw(); },
+    'ce-step': (el) => { const o = find(el.dataset.k); if (!o) return; const i = Math.max(0, o.values.findIndex((v) => String(v) === String(state.look[o.key]))); const n = o.values.length; change({ ...state.look, [o.key]: o.values[(i + Number(el.dataset.d) + n) % n] }); redraw(); },
+    'ce-undo': () => { const before = state.lookHistory?.pop(); if (before) { state.look = before; redraw(); } },
+    'ce-restore': () => { change({ ...state.originalLook }); redraw(); },
+    'ce-random': () => { change(randomLook((Math.random() * 0xffffffff) >>> 0)); redraw(); },
   };
 }
 export const specOf = (state) => coachSpec(state.look);

@@ -1,3 +1,4 @@
+import { activityPaused, resumePlayback } from '../activity.js';
 // Beast Clash in Franchise Mode: the one battle screen for Tuesday encounters, the pregame Clash and the overtime Clash (GDD §26).
 // The screen never decides a battle: the franchise module draws the seed and fixes the lineups, the engine plays the battle, and
 // this screen shows the record (through the arena player). Revised 2026-10-22 (owner brief): ONE selection phase (the monsters
@@ -134,7 +135,9 @@ export function registerClashBattle(Router, app) {
   const saveSettings = (patch) => { if (!app.f) return; app.f.settings.clash = { ...settings(), ...patch }; app.save(); };
   const stop = () => { if (st.arena) { st.cursor = st.arena.cursor; st.arena.destroy(); st.arena = null; } st.session = null; };
   const B = () => BINDINGS[st.kind];
-  function playWhenReady() { if (!st.arena) return; if (document.querySelector('.sheet')) { setTimeout(playWhenReady, 100); return; } st.arena.play(); }
+  globalThis.addEventListener?.('gb-playback-pause', () => st.arena?.pause());
+  globalThis.addEventListener?.('gb-playback-resume', () => playWhenReady());
+  function playWhenReady() { if (!st.arena || activityPaused()) return; if (document.querySelector('.sheet')) { setTimeout(playWhenReady, 100); return; } st.arena.play(); }
 
   // ---------- the one selection phase (before the seed is drawn): the monsters and their order of entry
   function setupHtml(f) {
@@ -181,7 +184,7 @@ export function registerClashBattle(Router, app) {
     const end = st.result.log.length - 1;
     // Looks hook (Task 8 M4): the Clash looks module (src/ui/fx/clash*, branch task8-fx-clash) plugs in here as `looks` once it exists;
     // until then the arena plays its functional cues. See src/ui/clash/t8-record.js for the contract.
-    st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, looks: app.clashLooks || null, onCursor: (i) => { st.cursor = i; }, onEnd: () => atEnd(f) });
+    st.arena = createArena(host, st.result, { onResumePlayback: () => resumePlayback(app, { notify: false }), speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, looks: app.clashLooks || null, onCursor: (i) => { st.cursor = i; }, onEnd: () => atEnd(f) });
     if (st.cursor) st.arena.setCursor(Math.min(st.cursor, end));
     if (st.cursor >= end) { atEnd(f); return; }
     setTimeout(playWhenReady, 300);
@@ -189,7 +192,7 @@ export function registerClashBattle(Router, app) {
   // ---------- Task 10: the live continuous battle (Watch)
   function mountLive(root, host, f, e, s) {
     st.session = s; st.result = s.view; st.subNote = null;
-    st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, live: true, looks: app.clashLooks || null,
+    st.arena = createArena(host, st.result, { onResumePlayback: () => resumePlayback(app, { notify: false }), speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, live: true, looks: app.clashLooks || null,
       onCursor: (i) => { st.cursor = i; drawSubs(root); }, onEnd: () => liveNext(root, f), onSkip: () => liveSkip(root, f) });
     // Resume where the player was: the same cursor in this visit, or (after a reload) the start of the last exchange reached.
     const last = st.result.log.length - 1;
@@ -208,7 +211,7 @@ export function registerClashBattle(Router, app) {
     if (recordSessionStep(e, { ex: r.ex, asked, view: v })) app.save();
     if (s.lastRefusal) st.subNote = { kind: 'bad', text: $t('clash.sub_blocked', { name: s.view.lines.a.find((x) => x.id === r.activeId)?.name || '' }) };
     else if (asked && asked !== 'auto') st.subNote = null;
-    st.result = v; st.arena.extend(v); drawSubs(root); st.arena.play();
+    st.result = v; st.arena.extend(v); drawSubs(root); if (!activityPaused()) st.arena.play();
   }
   /** Skip during a live battle: the rest of the SAME battle, with the switches the player already made and no new ones. */
   function liveSkip(root, f) {
@@ -347,7 +350,7 @@ export function registerClashBattle(Router, app) {
       });
       root.classList.toggle('cl-wide', !!(e && (e.status === 'battle' || st.replaying)));
       if (e && e.status === 'battle' && e.mode !== 'skip') mountBattle(root, f, e);
-      else if (e && st.replaying) { st.result = b.battle(f); const host = root.querySelector('#fb-arena'); if (host && st.result) { st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, onCursor: (i) => { st.cursor = i; } }); setTimeout(playWhenReady, 300); } }
+      else if (e && st.replaying) { st.result = b.battle(f); const host = root.querySelector('#fb-arena'); if (host && st.result) { st.arena = createArena(host, st.result, { onResumePlayback: () => resumePlayback(app, { notify: false }), speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, onCursor: (i) => { st.cursor = i; } }); setTimeout(playWhenReady, 300); } }
     },
     unmount() { stop(); st.replaying = false; },
   });
