@@ -1903,7 +1903,9 @@ html[data-comfortable-text="1"] .item .sub, html[data-comfortable-text="1"] .dim
 .polish-candidate-actions .btn { flex: 0 1 auto; }
 .screen-draft .item > .grow, .screen-draftclass .item > .grow { min-width: 0; overflow-wrap: anywhere; }
 /* At 320 px two attribute columns are narrower than a row (label, bar, value, 44 px +), so the left + slid under the right label. */
-@media (max-width: 359px) { .attr-grid { grid-template-columns: 1fr; } }
+@media (max-width: 519px) { .attr-grid { grid-template-columns: 1fr; } }
+/* The value column grows for a "-2 Now" note instead of running under the + button. */
+.attr { grid-template-columns: 84px 1fr minmax(32px, auto) auto; }
 /* A short landscape phone: the Apex discovery summary is taller than the screen, so let it scroll to its Continue button. */
 @media (max-height: 520px) { .apex-scene { overflow-y: auto; justify-content: flex-start; } }
 

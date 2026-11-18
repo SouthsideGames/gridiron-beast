@@ -17,6 +17,11 @@ server = socketserver.ThreadingTCPServer(('127.0.0.1', 0), Handler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
 try:
     with sync_playwright() as pw:
+        GRID_CHECK = """() => { const out = { problems: [] }; const doc = document.documentElement.scrollWidth - innerWidth; if (doc > 1) out.problems.push('sideways scroll ' + doc);
+          for (const r of document.querySelectorAll('main.screen [data-attr-row]')) { const bar = r.querySelector('.bar'); if (bar && bar.getBoundingClientRect().width < 24) out.problems.push(r.dataset.attrRow + ' bar ' + Math.round(bar.getBoundingClientRect().width));
+            const kids = [...r.children].filter(e => e.offsetParent && !e.matches('i.invest')); for (let i = 0; i < kids.length; i++) for (let j = i + 1; j < kids.length; j++) { const a = kids[i].getBoundingClientRect(), b = kids[j].getBoundingClientRect(); if (a.right > b.left + 1 && b.right > a.left + 1 && a.bottom > b.top + 1 && b.bottom > a.top + 1) out.problems.push(r.dataset.attrRow + ' overlap'); }
+            const gr = r.getBoundingClientRect(); for (const o of document.querySelectorAll('main.screen [data-attr-row]')) { if (o === r) continue; const ob = o.getBoundingClientRect(); if (gr.right > ob.left + 1 && ob.right > gr.left + 1 && gr.bottom > ob.top + 1 && ob.bottom > gr.top + 1) out.problems.push(r.dataset.attrRow + ' overlaps ' + o.dataset.attrRow); } }
+          const sp = document.querySelector('main.screen [data-attr-row="speed"]'); out.speedNow = sp?.querySelector('.polish-rating-change')?.innerText || ''; out.speedButton = sp?.querySelector('.plus')?.innerText.trim() || ''; return out; }"""
         args = {'executable_path': os.environ['CHROMIUM_EXECUTABLE']} if os.environ.get('CHROMIUM_EXECUTABLE') else {}
         browser = pw.chromium.launch(**args)
         for width, height in [(320,568),(390,844),(440,900)]:
@@ -124,6 +129,13 @@ try:
             # Every attribute + on the beast page is tappable at its centre (two columns used to overlap at 320 px).
             covered=page.evaluate("""() => [...document.querySelectorAll('main.screen [data-attr-row] .plus')].filter(b => { b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect(); return !b.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)); }).map(b => b.dataset.attr)""")
             assert not covered, f'attribute + buttons covered at {width}: {covered}'
+            # The attribute grid fits a phone: no sideways scroll, rating bars keep a width, nothing in a row overlaps,
+            # and a fatigued attribute at its training limit says "Now" and "Limit" in words, not colour alone.
+            page.evaluate("async id => { const m=__gb.f.roster.find(m=>m.id===id); m.fatigue=60; m.dev.current.speed=m.dev.potential.speed; m.attributes.speed=m.dev.potential.speed; await (await import('/src/ui/router.js')).go('monster',{id}); }", beast['id'])
+            page.wait_for_timeout(200); page.evaluate("() => document.querySelectorAll('main.screen details').forEach(d => d.open = true)")
+            grid=page.evaluate(GRID_CHECK)
+            assert not grid['problems'], f'attribute grid at {width}: {grid}'
+            assert 'Now' in grid['speedNow'] and grid['speedButton']=='Limit', f'Now/Limit at {width}: {grid}'
             # Typing an amount and tapping the offer button at once: the tap is not lost, and a mistyped amount never sends old terms.
             go('famarket'); row=page.locator('main.screen .item[data-action="faopen"]').first
             if row.count():
@@ -172,6 +184,18 @@ try:
             page.locator('[data-action="ce-restore"]').tap(); page.wait_for_timeout(500)
             assert page.locator('.ce-preview').inner_html()==original, 'restore original appearance'
             no_overflow()
+            # Restoring an unchanged look, or re-choosing the selected option, is not an undo step.
+            go('office'); page.locator('main.screen [data-action="editlook"]').tap(); page.wait_for_timeout(200)
+            assert page.locator('[data-action="ce-undo"]').is_disabled(), 'a fresh editor offers Undo'
+            page.locator('[data-action="ce-restore"]').tap(); page.wait_for_timeout(200)
+            sel=page.locator('.ce-body [data-action="ce-set"].selected')
+            if sel.count(): sel.first.tap(); page.wait_for_timeout(200)
+            assert page.locator('[data-action="ce-undo"]').is_disabled(), 'a no-op created an undo step'
+            # An AI pass names its reason in the pick lists.
+            page.evaluate("() => { __gb.f.draft.picks.push({ round: 3, overall: 99, team: 'Test Club', id: null, name: '(passed)', position: '', ovr: 0, mine: false, passed: true, why: 'Test Club cannot make room.' }) }")
+            go('draft'); page.locator('main.screen [data-action="picks"]').click(); page.wait_for_timeout(200)
+            assert 'Test Club cannot make room.' in page.locator('.sheet').last.inner_text(), 'AI pass reason missing from All Picks'
+            close_sheet(); page.evaluate("() => { __gb.f.draft.picks.pop() }")
             go('hq')
             page.evaluate("""async () => {
               const R=await import('/src/ui/router.js');
@@ -185,7 +209,25 @@ try:
             go('settings')
             assert page.locator('[data-action="audio-preview"]').count()==4
             no_overflow()
-            print(json.dumps({'width':width,'result':'pass','checks':['shortlist','hidden-knowledge','all-prospects','presets','point-preview','plan-draft','overflow','shortlist-page','stale-points','escape','double-tap','typed-offer','trade-desk-send','share-export']}))
+            print(json.dumps({'width':width,'result':'pass','checks':['shortlist','hidden-knowledge','all-prospects','presets','point-preview','plan-draft','overflow','shortlist-page','stale-points','escape','double-tap','typed-offer','trade-desk-send','share-export','attribute-grid','coach-undo','pass-reason','followup']}))
+            page.close()
+        # Common phone widths between the main sizes: the attribute grid used to scroll sideways at 360 and 375 px.
+        for width in [360, 375, 414]:
+            page = browser.new_page(viewport={'width':width,'height':780},is_mobile=True,has_touch=True)
+            page.goto(f'http://127.0.0.1:{server.server_address[1]}/'); page.wait_for_function('globalThis.__gb && document.querySelector("main.screen")')
+            page.evaluate("""async () => { const F=await import('/src/franchise/franchise.js'); const f=F.createFranchise({owner:{first:'Phone',last:'Polish'},club:'Ember City Beasts',seed:312});
+              F.hireDefaultStaff(f); f.scenes=[]; f.achievementsBackfilled=true; f.guide={enabled:false}; const m=f.roster.find(m=>m.dev); m.dev.bank=3; m.fatigue=60; m.dev.current.speed=m.dev.potential.speed; m.attributes.speed=m.dev.potential.speed;
+              await __gb.setFranchise(f); (await import('/src/ui/apex-ui.js')).closeApex?.(); await (await import('/src/ui/router.js')).go('monster',{id:m.id},{reset:true}); }""")
+            page.wait_for_timeout(300)
+            for _ in range(4):
+                if not page.locator('.apex-scene').count(): break
+                for control in ['[data-apex="skip"]', '[data-apex="continue"]']:
+                    if page.locator('.apex-scene ' + control).count() and page.locator('.apex-scene ' + control).first.is_visible(): page.locator('.apex-scene ' + control).first.click(); break
+                page.wait_for_timeout(300)
+            page.evaluate("() => document.querySelectorAll('main.screen details').forEach(d => d.open = true)")
+            grid=page.evaluate(GRID_CHECK)
+            assert not grid['problems'], f'attribute grid at {width}: {grid}'
+            print(json.dumps({'width':width,'result':'pass','checks':['attribute-grid']}))
             page.close()
         # A short landscape phone: the Apex discovery summary scrolls, so its Continue button can be reached (it sat below the screen).
         page = browser.new_page(viewport={'width':844,'height':390},is_mobile=True,has_touch=True)

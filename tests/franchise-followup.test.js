@@ -7,7 +7,8 @@ import { createFranchise } from '../src/franchise/franchise.js';
 import { clubRoster, leagueClubs, verifyLeague } from '../src/franchise/league-registry.js';
 import { trackRosterReviews, rosterReviewHtml, bestLineupChanges, bestLineupMessage } from '../src/ui/followup-polish.js';
 import { coachEditorActions, coachEditorHtml } from '../src/ui/coach-editor.js';
-import { DEFAULT_LOOK } from '../src/ui/coach-portrait.js';
+import { DEFAULT_LOOK, COACH_CATEGORIES } from '../src/ui/coach-portrait.js';
+const COACH_OPTION = () => COACH_CATEGORIES.flatMap((c) => c.options).find((o) => o.values.length > 2);
 const base = createFranchise({owner:{first:'Followup',last:'Test'},club:'Ember City Beasts',seed:398});
 const fresh = () => structuredClone(base);
 test('a rejected AI rookie becomes a pass, stays available, and can be drafted later', () => {
@@ -103,4 +104,20 @@ test('completed real creation drafts account for every recorded rookie and survi
   }
   assert.deepEqual(verifyLeague(f),[]);
  }
+});
+
+test('a cap-checked offseason pick refused by a full club reports the refusal as the pass reason, with no extra release', () => {
+ const f={roster:[],draft:{year:1,class:generateDraftClass(createRng(31),{year:1}),revealed:{},picks:[]}};startDraft(f,['Mine','AI']);
+ const passes=[];let roomCalls=0;
+ advanceDraft(f,createRng(9),{playerClub:'Mine',affordOf:()=>()=>true,makeRoom:()=>{roomCalls++;return true;},onAiPass:(team,why)=>passes.push({team,why}),onAiPick:()=>({ok:false,reason:'AI cannot make room.'})});
+ assert.deepEqual(passes,[{team:'AI',why:'AI cannot make room.'}]);assert.equal(roomCalls,0,'an affordable prospect needs no cap release');
+ assert.equal(f.draft.picks[0].why,'AI cannot make room.');assert.equal(f.draft.available.length,f.draft.class.length);
+});
+test('coach undo records only real changes and keeps the last 30', () => {
+ const state={look:{...DEFAULT_LOOK},tab:'face'};const a=coachEditorActions(state,()=>{});
+ a['ce-restore']();assert.equal(state.lookHistory?.length||0,0,'restoring an unchanged look is not an undo step');
+ const o=COACH_OPTION();a['ce-set']({dataset:{k:o.key,v:String(state.look[o.key])}});assert.equal(state.lookHistory?.length||0,0,'re-choosing the current option is not an undo step');
+ const seen=[];for(let i=0;i<32;i++){a['ce-step']({dataset:{k:o.key,d:'1'}});seen.push({...state.look});}
+ assert.equal(state.lookHistory.length,30);
+ for(let i=0;i<30;i++)a['ce-undo']();assert.deepEqual(state.look,seen[1]);a['ce-undo']();assert.deepEqual(state.look,seen[1]);
 });

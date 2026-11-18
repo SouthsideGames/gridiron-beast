@@ -173,7 +173,7 @@ export function mountPolish(root,ctx,name,Router) {
       row.hidden=!visible;if(visible)visibleIds.add(m.id);
     }
     const searchList=root.querySelector('.polish-roster-search');if(searchList)searchList.hidden=!p.query&&!p.needed;
-    const count=root.querySelector('[data-polish-count]');if(count){count.textContent=visibleIds.size?t('polish.results',{n:visibleIds.size,total:new Set(rows.map(x=>x.m.id)).size}):'No beasts match these filters. Try Clear Filters.';count.classList.toggle('polish-empty',visibleIds.size===0);}
+    const count=root.querySelector('[data-polish-count]');if(count){const total=new Set(rows.map(x=>x.m.id)).size,empty=total>0&&visibleIds.size===0;count.textContent=empty?t('polish.no_matches'):t('polish.results',{n:visibleIds.size,total});count.classList.toggle('polish-empty',empty);}
   };
   const search=root.querySelector('[data-polish-search]');search?.addEventListener('input',()=>{setBrowsePreferences(f,name,{query:search.value});applyFilters();app.save();});
   root.querySelectorAll('[data-polish-filter]').forEach(el=>el.addEventListener('change',()=>{setBrowsePreferences(f,name,{[el.dataset.polishFilter]:el.checked});applyFilters();app.save();}));
