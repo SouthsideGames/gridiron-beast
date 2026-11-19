@@ -2044,3 +2044,12 @@ html[data-reduced-motion="1"] .draft-stage > :last-child { animation:none; }
   .match-console #controls { grid-column:2; grid-row:3; max-height:none; }
   .match-console #field-after { grid-column:2; grid-row:4; }
 }
+
+/* Teach the real navigation control. No movement or flashing is required. */
+.guide-target { outline:3px solid var(--accent, #ffd700); outline-offset:-3px; animation:guide-control-pulse 1.8s ease-in-out infinite; }
+@keyframes guide-control-pulse { 0%,100% { box-shadow:inset 0 0 0 1px #ffd70033; } 50% { box-shadow:inset 0 0 0 5px #ffd70066; } }
+.guide-sendoff { display:flex; align-items:center; gap:8px; padding:5px 8px; border:1px solid var(--accent); border-radius:6px; background:var(--panel); font-size:12px; }
+.guide-sendoff p { margin:2px 0 0; }
+.guide-sendoff .btn { min-width:44px; min-height:44px; }
+@media (prefers-reduced-motion:reduce) { .guide-target { animation:none; } }
+:root[data-reduced-motion="1"] .guide-target { animation:none; }

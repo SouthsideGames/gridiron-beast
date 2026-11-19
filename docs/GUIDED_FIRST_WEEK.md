@@ -2,21 +2,31 @@
 
 Implementation branch: `codex/guided-first-week`. Preview version: `v43.20.0-guided-first-week-preview`.
 
-## Player experience
+## Current player experience (PR #136 follow-up)
 
-Only newly created franchises enroll, explicitly in onboarding. Existing saves never acquire tutorial state on load. The Commissioner's introduction ends with “Let me show you around.” Nervous Board humor appears in the introduction; lesson instructions use normal language.
+Only newly created franchises enroll, explicitly in onboarding. Existing saves never enroll on load. The required tour now has **15 checkpoints**, ending when the first football game starts. It still teaches the roster, a real starter change, coaches, the creation draft, Board goals and each weekday, including recruiting and the pregame Clash.
 
-Eighteen saved checkpoints cover HQ, inspecting a beast, ratings/Temper/abilities and readiness, a real lineup assignment, staff, the creation draft, Board goals, Monday scouting, Tuesday prospect comparison and recruiting/Clash, Wednesday training, Thursday opponent scouting, Friday both game plans, Saturday media, Sunday football, results, independent team preparation, and graduation. Each offers skip and opt out. A Guidebook retains completed and skipped lessons and acknowledged situation lessons.
+At kickoff a compact, dismissible Commissioner note says: “You’re on your own now. Do your best, and remember your goal—the board will!” It is not a blocking sheet and does not pause or simulate a play. It appears once and stays dismissed through re-renders/reloads. Automatic offense, defense, fourth-down, kicking, result and status lessons stop. The previous result-review/Week 2 preparation/graduation sequence is retired. The older Coach Assist auto-tip system does not restart afterwards; Help and the Guidebook remain on demand.
 
-Routes and HQ day shortcuts enforce the current task while guidance is active. Inspection and comparison require their actual controls; lineup completion compares the real starting chart before and after a successful change. Daily actions use the franchise calendar, not a “Got It” button. Recruiting never requires signing. A missing prospect or unavailable alternate adapts the relevant lesson. Skipping a daily lesson unlocks navigation but never advances the calendar or simulates a battle: the next checkpoint begins when the normal day completes.
+Each navigation lesson highlights its actual game control, including the bottom Roster tab and direct screen buttons. A clear inset gold outline stays visible while a gentle inset pulse calls attention to the control without changing its size or position. Reduced Motion removes the animation and retains the outline. Local inspection, lineup-slot and comparison lessons highlight an applicable local control. Targets refresh with the lesson and clear when guidance ends.
 
-The independent check permits free navigation. Players inspect a beast and either change the starting lineup or explicitly keep it. A completed football game is required for the football milestone; merely advancing past a bye does not count. Normal victories/losses, RNG, costs and injuries remain in force.
-
-Football situation sheets cover the objective, offense, defense, fourth down, kicks, results, and abilities/statuses. They appear at idle boundaries, not during animations. Auto waits on sheets and the advisory play clock pauses. Clash setup explains automatic combat, lineup order, type edges and reserve switching; startup waits on any open lesson sheet. Later help covers injuries, evolution, contracts and the offseason when relevant. The first version's lessons are concise explanations: real-device review must assess how much additional guided interaction the match lessons need.
+Required ordering, skip/opt out, missing-prospect handling, actual assignment/comparison evidence and day progression remain intact before kickoff. No win protection, costs, injuries, gameplay RNG or match outcomes change. A bye/forfeit alone does not count as starting football. Saves already in a guided match retire the tour on load/save; saves on the old review/Week 2 lessons retire quietly without showing a late send-off.
 
 ## Saved data
 
-Optional additive `f.guide` version 1: enabled/done, index, completed/skipped IDs, acknowledged moments, starting season/week, lineup snapshot, evidence and optional skipPending. No schema break. Existing JSON export/import carries it. No global completion flag is inferred and no random draws are consumed.
+The optional version-1 guide remains compatible. New additive fields: endedAtFootball, sendoffPending and sendoffShown; evidence.gameStarted records the handoff. Old lesson IDs remain available for save/Guidebook compatibility; they are not forced onto new players. The original enabled flag and Coach Assist preference are not overwritten.
+
+## Current validation
+
+- Guided-week tests: **19/19 pass**, including kickoff completion, midgame/old-review saves, no enrollment/opt-out, unchanged RNG, real navigation targets, clearing targets, suppression of legacy automatic tips, manual Help availability and one-time non-blocking send-off behavior.
+- Central text and release stamp: **10/10 pass**.
+- Coach Assist: **11/11 pass**.
+- PR #136 terrain integration: **11/11 pass**.
+- Football type tests: **10/10 pass** after correcting two assertions from the initial implementation: the stronger candidate can outweigh a modest rating gap (a large gap still wins in the AI forecast), and floating-point bonus sums require a tolerance while still asserting the cap.
+- The browser harness now checks the real pulsing Roster tab, kickoff handoff, no recurring football tips, dismissal and reload at 320/390/440px. It could not run: the packaged browser was absent and system Chromium failed before navigation with socket() Operation not permitted. **No visual/browser pass is claimed.**
+- Full regression, seeded balance measurement and native/device validation remain pending. No merge, deployment or phone installation was performed.
+
+The results below are historical validation of the old 18-lesson flow, not this follow-up.
 
 ## Other approved changes
 

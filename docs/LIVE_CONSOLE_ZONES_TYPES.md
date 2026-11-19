@@ -48,3 +48,10 @@ Keep this PR draft and unmerged. Record the exact tested commit and add regressi
 5. Run node tools/type-balance.mjs --games=200 --plays=600 --seed=1. It now compares types-off/no-lean, types-off/lean, previous4% and candidate values with identical league teams/seeds. Also run its environment/Dragon studies. Record equal-rating favorable/neutral/unfavorable outcomes and rating-gap outcomes; exercise gym counter lineups, all-Fire vs Water and mixed rosters. Counters should matter without guaranteeing that a much weaker monster wins. If measurements warrant tuning, update shared values, tests and report together.
 6. Compare recorder on/off with identical seeds; verify old-save/RNG behavior and interruption resumes. Native Swift/Gradle builds and real iPhone/Android checks remain pending until devices/tooling are available.
 7. Do not change Beast Clash damage/chart, roster rules, zone lifetimes or unrelated abilities to hide failures. Do not merge, deploy or rebuild the phone app during validation.
+
+
+## Tutorial follow-up (owner request)
+
+Guidance now ends at the first football game start, before any football situation lesson. A compact one-time Commissioner note replaces the in-game tutorial. Actual game navigation controls, including the Roster tab, get a gold outline and a gentle pulse; Reduced Motion keeps only the outline. Existing midgame/old postgame tutorial saves retire safely. Legacy Coach Assist automatic tips do not restart after this handoff, while manual Help remains.
+
+The executor became available for this follow-up. Targeted checks now pass: guided-week19, central-text8, release-stamp2, Coach Assist11, live-console-fields11 and type-matchups10 (61 checks across targeted runs). The type test corrections preserve the new intended counter effect and use numeric tolerance for the floating-point cap sum. These results replace the earlier “repository tests have not run” statement only for the listed files. Full regression, browser visuals, native builds and seeded balance simulations are still pending. The updated guided-week browser harness could not launch system Chromium (socket() Operation not permitted).

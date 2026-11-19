@@ -150,7 +150,7 @@ test('pre-snap expected matchups: one opponent per monster, from the call and th
   assert.ok(shown.every((x) => x.off.mod || x.def.mod), 'neutral matchups carry no icon');
 });
 
-test('AI: the same numbers, a capped lean toward winning matchups, and ratings outweigh types', () => {
+test('AI: the stronger shared edge can outweigh a modest gap; a large rating lead still wins', () => {
   const lu = lineup(2, 62); const state = { down: 1, toGo: 10, ballOn: 40, score: { home: 0, away: 0 }, possession: 'home', quarter: 1, clock: 180, quarterLength: 180, timeouts: { home: 3, away: 3 } };
   const mk = (offT, defT, offQ = 0, defQ = 0) => {
     const T = typed(lu, offT, defT);
@@ -162,10 +162,15 @@ test('AI: the same numbers, a capped lean toward winning matchups, and ratings o
   const fav = Object.fromEntries(weighOffense(state, mk('Fire', 'Nature').team, PASS, null, mk('Fire', 'Nature').opp));
   const unf = Object.fromEntries(weighOffense(state, mk('Nature', 'Fire').team, PASS, null, mk('Nature', 'Fire').opp));
   for (const id of PASS) { assert.ok(fav[id] >= unf[id] - 1e-9, id); assert.ok(fav[id] <= base[id] * 1.2 + 1e-9 && unf[id] >= base[id] * 0.85 - 1e-9, `${id} lean capped`); }
-  // matchupScore: rating first. A receiver 15 points better with the type disadvantage still scores above a 15-points-worse one with the advantage.
-  const r = { attrs: { catching: 80, speed: 80, agility: 80 }, type: 'Nature' }, d = { attrs: { coverage: 65, speed: 65, agility: 65 }, type: 'Fire' };
-  assert.ok(matchupScore(r, d, 'pass') > 0); assert.ok(matchupScore({ ...r, type: 'Fire' }, { ...d, type: 'Nature' }, 'pass') > matchupScore(r, d, 'pass'));
-  assert.ok(matchupScore({ attrs: { catching: 65, speed: 65, agility: 65 }, type: 'Fire' }, { attrs: { coverage: 80, speed: 80, agility: 80 }, type: 'Nature' }, 'pass') < 0);
+  // The approved 12% edge may change a modest-gap forecast; it must not
+  // make a 30-point weaker receiver the AI's favorite just because of type.
+  const modest = { attrs: { catching: 80, speed: 80, agility: 80 }, type: 'Nature' };
+  const counter = { attrs: { coverage: 65, speed: 65, agility: 65 }, type: 'Fire' };
+  assert.ok(matchupScore(modest, counter, 'pass') < 0, 'the type counter matters at a modest rating gap');
+  const r = { attrs: { catching: 90, speed: 90, agility: 90 }, type: 'Nature' }, d = { attrs: { coverage: 60, speed: 60, agility: 60 }, type: 'Fire' };
+  assert.ok(matchupScore(r, d, 'pass') > 0);
+  assert.ok(matchupScore({ ...r, type: 'Fire' }, { ...d, type: 'Nature' }, 'pass') > matchupScore(r, d, 'pass'));
+  assert.ok(matchupScore({ attrs: { catching: 60, speed: 60, agility: 60 }, type: 'Fire' }, { attrs: { coverage: 90, speed: 90, agility: 90 }, type: 'Nature' }, 'pass') < 0);
   const defW = weighDefense(state, mk('Fire', 'Nature').team, DEFENSE_IDS, null, mk('Fire', 'Nature').opp); assert.equal(defW.length, DEFENSE_IDS.length);
   assert.deepEqual(Object.keys(USUAL_OPPONENT).sort(), ['C', 'LG', 'RB', 'RG', 'TE', 'WR1', 'WR2', 'WR3']);
 });
@@ -181,7 +186,8 @@ test('presentation: the field draws a tappable icon beside each edged monster an
 test('football counter and field bonus combine at the candidate cap without changing Clash',()=>{
   assert.equal(typeMod('Earth','Electric'),0.12);
   assert.equal(typeMod('Electric','Earth'),-0.12);
-  assert.equal(contestMod('Earth','Electric','Earth'),0.14);
+  assert.ok(Math.abs(contestMod('Earth','Electric','Earth')-0.14)<1e-10);
+  assert.ok(contestMod('Earth','Electric','Earth')<=0.14, 'combined bonus stays capped');
   assert.ok(Math.abs(contestMod('Electric','Earth','Electric')+0.10)<1e-10);
   assert.equal(ClashTypes.typeFactor('Earth','Electric'),1.05);
   assert.equal(ClashTypes.typeFactor('Electric','Earth'),0.952);

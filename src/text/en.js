@@ -3410,7 +3410,7 @@ export default {
   'guide.saturday_title': "Saturday: Media Day",
   'guide.saturday_text': "Choose your answers at the press conference. Check the boosts and risks. Before moving on, review the lineup for injuries and tired beasts.",
   'guide.sunday_title': "Sunday: Game Day",
-  'guide.sunday_text': "Check your starters and open today’s game. The opening Beast Clash decides who chooses possession. Then we’ll learn football as situations appear.",
+  'guide.sunday_text': "Check your starters and open today’s game. The opening Beast Clash decides who chooses possession. Once football starts, you’re in charge.",
   'guide.review_title': "Learn From the Result",
   'guide.review_text': "Win or lose, review the final score, stats, and rewards. A loss does not mean you did everything wrong. Look for one thing to improve.",
   'guide.independent_title': "Your Turn",
@@ -7192,4 +7192,6 @@ export default {
   'playview.expected_matchups': 'Expected Type Matchups',
   'playview.forecast_only': 'These are likely matchups. Plays and coverages can change who faces whom.',
   'playview.zone_policy': 'Zones move with the line between plays. A change of possession clears them before the next snap.',
+  // The guided tour ends at the first football game.
+  'guide.football_sendoff': 'You’re on your own now. Do your best, and remember your goal—the board will!',
 };

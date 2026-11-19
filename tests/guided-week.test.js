@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { startGuide, guideActive, currentLesson, advanceGuide, syncGuide, guideEvent, finishIndependent, allowedScreens, LESSONS, lineupStamp, skipLesson, footballLessonKey } from '../src/franchise/guide.js';
+import { startGuide, guideActive, currentLesson, advanceGuide, syncGuide, guideEvent, finishIndependent, allowedScreens, LESSONS, lineupStamp, skipLesson, footballLessonKey, finishGuideAtFootball, GUIDE_LESSON_COUNT } from '../src/franchise/guide.js';
 import { t } from '../src/text/index.js';
 import { createFranchise, hireDefaultStaff, assignSlot } from '../src/franchise/franchise.js';
 import { migrate, exportJson, importJson } from '../src/franchise/save.js';
@@ -37,10 +37,10 @@ test('draft and Board goals precede Monday; day 2 recruiting precedes training',
   guideEvent(f, 'compare'); assert.equal(syncGuide(f), false);
   f.season.day = 2; syncGuide(f); assert.equal(currentLesson(f).id, 'wednesday');
 });
-test('losses and byes do not force victory or prematurely finish the football lesson', () => {
+test('byes do not finish guidance; an older played-game checkpoint retires it without a result lesson', () => {
   const f = fresh(); at(f, 'sunday'); f.season.week++;
   assert.equal(syncGuide(f), false, 'a bye alone does not count as playing football');
-  f.guide.evidence.gameFinished = true; syncGuide(f); assert.equal(currentLesson(f).id, 'review');
+  f.guide.evidence.gameFinished = true; syncGuide(f); assert.equal(currentLesson(f), null); assert.equal(f.guide.endedAtFootball, true);
 });
 test('independent preparation needs inspection plus a decision, and permits free navigation', () => {
   const f = fresh(); at(f, 'independent'); assert.equal(allowedScreens(f), null);
@@ -94,17 +94,34 @@ test('a forfeited Sunday keeps the football lesson for the next real game withou
   assert.equal(syncGuide(f), false); assert.equal(currentLesson(f).id, 'sunday', 'a forfeit is not a played game');
   assert.equal(allowedScreens(f), null, 'Monday of the new week is reachable');
   f.season.day = 6; assert.ok(allowedScreens(f), 'the next Sunday leads to the game again');
-  f.guide.evidence.gameFinished = true; syncGuide(f); assert.equal(currentLesson(f).id, 'review');
+  f.guide.evidence.gameFinished = true; syncGuide(f); assert.equal(currentLesson(f), null); assert.equal(f.guide.endedAtFootball, true);
 });
-test('football lessons follow the player\'s own options: no Fourth Down or extra-point lesson on the opponent\'s snap', () => {
-  const f = fresh(); at(f, 'sunday'); f.guide.moments.push('football');
-  const game = (state) => { f.game = { playerSide: 'home', state: { phase: 'scrimmage', down: 1, finished: false, possession: 'home', ...state } }; return footballLessonKey(f); };
-  assert.equal(game({ down: 4 }), 'fourth'); assert.equal(game({ down: 4, possession: 'away' }), 'defense');
-  assert.equal(game({}), 'offense'); assert.equal(game({ possession: 'away' }), 'defense');
-  assert.equal(game({ phase: 'try' }), 'kick'); assert.equal(game({ phase: 'try', possession: 'away' }), null);
-  assert.equal(game({ phase: 'kickoff', possession: 'away' }), 'kick'); assert.equal(game({ finished: true }), null);
-  f.guide.moments = []; assert.equal(game({ down: 4 }), 'football', 'the introduction comes first');
-  assert.equal(footballLessonKey(f, (k) => k === 'football'), 'fourth', 'an introduction closed unread does not hold back the rest');
+test('the first football game ends guidance before kickoff, with one pending send-off and no restrictions', () => {
+  const f = fresh(); at(f, 'sunday'); f.season.day = 6; skipLesson(f);
+  const rng = f.rngState;
+  assert.equal(finishGuideAtFootball(f), false, 'pregame alone is not the football game');
+  f.game = { playerSide: 'home', state: { phase: 'kickoff', possession: 'home', finished: false } };
+  assert.equal(syncGuide(f), true); assert.equal(f.guide.done, true); assert.equal(f.guide.endedAtFootball, true);
+  assert.equal(f.guide.sendoffPending, true); assert.equal(f.guide.skipPending, undefined);
+  assert.equal(guideActive(f), false); assert.equal(currentLesson(f), null); assert.equal(allowedScreens(f), null);
+  assert.equal(f.guide.index, GUIDE_LESSON_COUNT); assert.equal(f.rngState, rng);
+  assert.equal(syncGuide(f), false, 'idempotent');
+  const loaded = JSON.parse(JSON.stringify(f)); loaded.guide.sendoffPending = false;
+  assert.equal(syncGuide(loaded), false); assert.equal(loaded.guide.sendoffPending, false, 'reload cannot rearm it');
+  for (const state of [{phase:'scrimmage',down:1},{phase:'scrimmage',down:4},{phase:'try'},{phase:'kickoff'},{finished:true}]) {
+    f.game.state = state; assert.equal(footballLessonKey(f), null);
+  }
+});
+test('existing midgame guides end too; old review/Week 2 guides retire quietly and opt-outs stay opted out', () => {
+  const mid = fresh(); at(mid, 'sunday'); mid.game = {state:{phase:'scrimmage',down:3,finished:false}};
+  assert.equal(finishGuideAtFootball(mid), true); assert.equal(mid.guide.sendoffPending, true);
+  for (const id of ['review','independent','complete']) {
+    const f = fresh(); at(f,id); assert.equal(syncGuide(f),true); assert.equal(guideActive(f),false);
+    assert.equal(f.guide.sendoffPending,false); assert.equal(allowedScreens(f),null);
+  }
+  const off = fresh(); startGuide(off); off.guide.enabled = false; off.game = {state:{phase:'kickoff'}};
+  assert.equal(finishGuideAtFootball(off),false); assert.equal(off.guide.sendoffPending,undefined);
+  const old = fresh(); old.game = {state:{phase:'kickoff'}}; assert.equal(finishGuideAtFootball(old),false); assert.equal(old.guide,undefined);
 });
 test('the Board forecast sentence reads cleanly with whole wins', () => {
   const line = t('hq.the_forecast_has_at_wins_against', { year: 1201, club: 'Ember City Beasts', toFixed: 3 }) + t('hq.tell_me_what_you_are_promising');
@@ -120,4 +137,49 @@ test('the polish shortlist page stays reachable in every lesson, so its header b
     if (allowed) assert.ok(allowed.includes('shortlist'), `lesson ${currentLesson(f).id} blocks the shortlist`);
     advanceGuide(f, { skip: true });
   }
+});
+
+// Real route controls must be teachable; the old matcher only looked for data-action="roster"
+// and therefore missed the bottom tab (data-action="router-tab", data-screen="roster").
+test('guide targets include real Roster navigation and local action controls', async () => {
+  const { guideTargetSelectors, guideHtml, highlightGuideTarget } = await import('../src/ui/guided-week.js');
+  const f = fresh(); at(f,'roster');
+  assert.ok(guideTargetSelectors(f,'hq').includes('[data-action="router-tab"][data-screen="roster"]'));
+  assert.ok(guideTargetSelectors(f,'hq').includes('[data-action="go"][data-screen="roster"]'));
+  assert.ok(guideTargetSelectors(f,'roster').includes('[data-action="slot"]'));
+  const marks = new Set(); const tab = {disabled:false,closest:()=>null,getClientRects:()=>[{}],classList:{add:k=>marks.add(k),remove:k=>marks.delete(k)}};
+  const fakeRoot = {querySelectorAll:selector=>selector === '.guide-target' ? (marks.size?[tab]:[]) : selector === '[data-action="router-tab"][data-screen="roster"]'?[tab]:[],querySelector:()=>null};
+  highlightGuideTarget(f,'hq',fakeRoot); assert.ok(marks.has('guide-target'));
+  f.game = {state:{phase:'kickoff'}}; syncGuide(f);
+  highlightGuideTarget(f,'match',fakeRoot); assert.equal(marks.size,0);
+  assert.deepEqual(guideTargetSelectors(f,'hq'),[]); assert.equal(guideHtml(f,'match'),'');
+});
+test('Coach Assist cannot restart automatic lessons after the Commissioner send-off; manual Help remains', async () => {
+  const {autoTip,momentTip,helpTopics} = await import('../src/franchise/assist.js');
+  const f = fresh(); at(f,'sunday'); f.game = {state:{phase:'kickoff'}}; syncGuide(f);
+  for(const screen of ['match','hq','roster','training','clash-battle']) assert.equal(autoTip(f,screen),null);
+  for(const key of ['clock','overtime','match']) assert.equal(momentTip(f,key),null);
+  assert.ok(helpTopics('match').length>0);
+});
+
+test('the compact Commissioner send-off appears once, does not pause or change the game, and stays dismissed', async () => {
+  const { guideFootball } = await import('../src/ui/guided-week.js');
+  const f = fresh(); at(f,'sunday'); f.game = {state:{phase:'kickoff',score:{home:0,away:0}}};
+  const gameBefore = JSON.stringify(f.game), rng = f.rngState;
+  const previous = globalThis.document; const children = [];
+  const host = {appendChild:node=>children.push(node)};
+  let mounted = false;
+  globalThis.document = {
+    querySelector:()=>mounted?host:null,
+    createElement:()=>{const button={};const node={setAttribute(){},querySelector:()=>button,remove(){children.splice(children.indexOf(node),1);}};return node;},
+  };
+  try {
+    guideFootball(f,()=>{}); assert.equal(f.guide.sendoffPending,true,'wait for the compact status host');
+    mounted=true; guideFootball(f,()=>{}); assert.equal(children.length,1);
+    assert.match(children[0].innerHTML,/the board will/); assert.equal(f.guide.sendoffShown,true);
+    assert.equal(f.guide.sendoffPending,false); assert.equal(JSON.stringify(f.game),gameBefore); assert.equal(f.rngState,rng);
+    children[0].querySelector('button').onclick(); assert.equal(children.length,0);
+    guideFootball(f,()=>{}); assert.equal(children.length,0);
+    guideFootball(JSON.parse(JSON.stringify(f)),()=>{}); assert.equal(children.length,0);
+  } finally { if(previous===undefined) delete globalThis.document; else globalThis.document=previous; }
 });
