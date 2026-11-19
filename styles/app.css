@@ -2209,3 +2209,11 @@ html[data-comfortable-text="1"] .screen-settings .set-assist .field .muted, html
 .screen-settings .save-data > h3 { margin: 10px 0 8px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
 .screen-settings .save-data .dim, .screen-settings .save-data p { font-size: 12.5px; line-height: 1.4; }
 html[data-comfortable-text="1"] .screen-settings .save-data .dim, html[data-comfortable-text="1"] .screen-settings .save-data p { font-size: 14px; }
+
+/* Small scroll lessons reserve end space and never block taps on the card. */
+.screen-assign .row.guide-target { border-radius:6px; cursor:pointer; }
+.screen-monster.guide-section-tour { padding-bottom:calc(220px + var(--phone-tab-height, 76px) + var(--sab)); }
+.beast-section-tip { position:fixed; z-index:19; bottom:calc(var(--phone-tab-height, 76px) + 8px); left:12px; right:12px; max-width:616px; margin:auto; display:flex; align-items:start; gap:8px; padding:10px; border:2px solid var(--accent); border-radius:8px; background:var(--panel); box-shadow:0 3px 12px #0006; max-height:26dvh; overflow:auto; font-size:13px; }
+.beast-section-tip[hidden] { display:none; }
+.beast-section-tip p { margin:4px 0 0; }
+.beast-section-tip .btn { min-width:44px; min-height:44px; flex:none; }
