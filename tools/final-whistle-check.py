@@ -53,6 +53,12 @@ with sync_playwright() as pw:
                 if loc.count() and loc.first.is_visible():
                     try: loc.first.tap(timeout=2000); hit = True; break
                     except Exception: pass
+            if not hit and p.locator('[data-action="match-panel"][data-panel="more"]').count() and not p.locator('.sheet').count():
+                # PR #136 live console: Sim to Final lives in the More sheet, whose copies forward to the original control.
+                try:
+                    p.locator('[data-action="match-panel"][data-panel="more"]').first.tap(timeout=2000); p.wait_for_timeout(200)
+                    p.locator('.sheet [data-live-control]').filter(has_text='Sim to Final').first.tap(timeout=2000); hit = True
+                except Exception: pass
             p.wait_for_timeout(300 if hit else 500)
         if not check(p.locator('[data-action="finish"]').count() == 1, f'{label}: the game reaches the final whistle'): p.close(); continue
         if SHOTS: os.makedirs(SHOTS, exist_ok=True); p.screenshot(path=os.path.join(SHOTS, f'final-{label[:3]}-1.png'))
