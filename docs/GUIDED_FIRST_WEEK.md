@@ -18,13 +18,12 @@ The optional version-1 guide remains compatible. New additive fields: endedAtFoo
 
 ## Current validation
 
-- Guided-week tests: **19/19 pass**, including kickoff completion, midgame/old-review saves, no enrollment/opt-out, unchanged RNG, real navigation targets, clearing targets, suppression of legacy automatic tips, manual Help availability and one-time non-blocking send-off behavior.
-- Central text and release stamp: **10/10 pass**.
-- Coach Assist: **11/11 pass**.
-- PR #136 terrain integration: **11/11 pass**.
-- Football type tests: **10/10 pass** after correcting two assertions from the initial implementation: the stronger candidate can outweigh a modest rating gap (a large gap still wins in the AI forecast), and floating-point bonus sums require a tolerance while still asserting the cap.
-- The browser harness now checks the real pulsing Roster tab, kickoff handoff, no recurring football tips, dismissal and reload at 320/390/440px. It could not run: the packaged browser was absent and system Chromium failed before navigation with socket() Operation not permitted. **No visual/browser pass is claimed.**
-- Full regression, seeded balance measurement and native/device validation remain pending. No merge, deployment or phone installation was performed.
+**Validated 2026-11-18 on `468203e`.** The full report is under "Claude validation — 2026-11-18" in `docs/LIVE_CONSOLE_ZONES_TYPES.md`. Summary (all browser work emulated in headless Chromium with touch; no real device):
+- Three full new-franchise playthroughs by taps, at 390×844, 320×568 and 440×956 with Reduced Motion: **60 of 60 checks each**. Every checkpoint was reached through the highlighted real control (outline and pulse; outline only with Reduced Motion).
+- The tour ends as the first game opens, at kickoff. The one-time Commissioner note shows the exact text, does not pause the game, and stays dismissed after a re-render and a reload. No lesson, status sheet or Coach Assist tip appears afterwards; Help and the Guidebook remain.
+- Fixed during validation: the match's first-ability tip still appeared after the handoff (now off with `automaticTipsOff`), and the highlighted HQ tab was refused when it remembered a sub-screen the lesson closes (now opens at its root). Both have regression coverage (`guided-week.test.js`, `tools/guided-week-check.py`).
+- Existing saves are not enrolled; older guided saves retire safely.
+- Full regression: one run on `b6f43d8`, 2,332 tests, 3 reviewer-demonstration failures unrelated to the guide, fixed in `468203e` and rerun. Native builds and real devices remain pending. No merge, deployment or phone installation was performed.
 
 The results below are historical validation of the old 18-lesson flow, not this follow-up.
 
