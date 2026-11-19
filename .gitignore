@@ -115,3 +115,7 @@ tools/out/gateb2/*.json
 tools/out/gateb3/*.json
 tools/out/gateb4/*.json
 tools/out/gateb5/*.json
+
+# Node dependencies are never committed (a tracked node_modules link broke the Pages deploy, 2026-11-18)
+node_modules/
+node_modules

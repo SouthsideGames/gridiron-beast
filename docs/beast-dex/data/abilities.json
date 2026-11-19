@@ -137,7 +137,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/4/5/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/4/5/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -561,7 +561,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 5/5/5/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 5/5/5/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -667,7 +667,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -1197,7 +1197,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 5/5/5/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 5/5/5/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -1303,7 +1303,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
@@ -1727,7 +1727,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
@@ -2045,7 +2045,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2257,7 +2257,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -3211,7 +3211,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/4/5/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/4/5/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3529,7 +3529,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/3/3/3 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3847,7 +3847,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4165,7 +4165,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/4/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/4/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4483,7 +4483,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4907,7 +4907,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/4/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/4/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -5119,7 +5119,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5967,7 +5967,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/4/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/4/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -6179,7 +6179,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -6391,7 +6391,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/3/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
@@ -6739,7 +6739,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Lasts 3/4/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Stored locations remain fixed on the field; normal halftime clearing and explicit legendary exceptions remain. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
+        "rule": "Lasts 3/4/4/5 of the owner's relevant scrimmage plays by mastery (0/1/2/3). Offensive zones count the owner's offensive snaps; defensive zones count the owner's defensive snaps. The creation play counts; a zone created after the whistle begins counting on the following snap. Bench time of the creator does not pause the team clock. Zones keep their place relative to the line of scrimmage between plays; every zone on the field clears at halftime and when possession changes, while an earned zone not yet placed waits for its snap. Hybrids exist only while both parent footprints overlap; no independent hybrid lifetime.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {

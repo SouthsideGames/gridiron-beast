@@ -112,3 +112,45 @@ test('a safety ends the possession for terrain even if the free kick returns to 
   assert.equal(s.phase,'free_kick');Object.assign(s,{phase:'scrimmage',possession:'home',ballOn:40});
   prepareFieldsForSnap(s);assert.deepEqual(s.t8.fields.list,[]);
 });
+
+// Halftime (owner decision 2026-11-19): every zone already on the field clears before the second-half kickoff, legendary
+// ones included, whichever club receives or recovers it. Banked creations wait for their own snap; nothing is refunded.
+const legendary=(patch={})=>zone({id:'L1',type:'Fire',ability:'FIR-06-F',ownerTeam:'home',clearsAtHalftime:false,remaining:4,...patch});
+const toHalftime=(s)=>{
+  s.quarter=2;s.clock=0;s.t8.fields.list=[zone(),legendary(),zone({id:'F3',ownerTeam:'away',type:'Water',ability:'WAT-06-F',clearsAtHalftime:false,yard:[30,35],lat:[-26.6,26.6]})];
+  s.t8.fields.pending=[{owner:'a_FS',ownerTeam:'away',offField:true,type:'Water',ability:'WAT-06-F',lifetime:5,clock:'ownerOffense',clearsAtHalftime:false}];
+  s.t8.ability={h_TE:{pending:false,cd:3},a_FS:{pending:true,cd:5}};prepareFieldsForSnap(s);
+  const firstHalfPicture=structuredClone(s.t8.fields.list);R.endOfPeriod(s);return firstHalfPicture;
+};
+for(const receiver of ['home','away'])test(`halftime clears every zone on the field (legendary too) when ${receiver} receives; banked creations and ability state are untouched`,()=>{
+  const {s,teams}=game();s.secondHalfReceiver=receiver;const before=toHalftime(s);
+  assert.equal(s.quarter,3);assert.equal(s.phase,'kickoff');assert.equal(s.possession,receiver);
+  assert.deepEqual(s.t8.fields.list,[],'nothing on the field at the second-half kickoff');
+  assert.equal(s.t8.fields.pending.length,1,'the banked Tsunami Line still waits for its snap');assert.equal(s.t8.fields.pending[0].lifetime,5,'its duration unchanged');
+  assert.deepEqual(s.t8.ability,{h_TE:{pending:false,cd:3},a_FS:{pending:true,cd:5}},'no refund, no cooldown reset');
+  assert.equal(before.length,3,'the first-half picture held three zones (kept by its recorded play)');
+  R.doKickoff(s,teams);if(s.phase==='scrimmage'){prepareFieldsForSnap(s);assert.deepEqual(s.t8.fields.list,[]);}
+});
+test('halftime clears zones even when the kicking club recovers an onside kick and keeps its first-half zone owner',()=>{
+  let checked=0;
+  for(let seed=1;seed<600&&!checked;seed++){
+    const {s,teams}=game();s.rngState=seed*7919;s.secondHalfReceiver='away';toHalftime(s);
+    R.doKickoff(s,teams,{onside:true});if(!(s.phase==='scrimmage'&&s.possession==='home'))continue;
+    checked++;prepareFieldsForSnap(s);
+    assert.deepEqual(s.t8.fields.list,[],'the kicking club\'s own first-half zones do not return');
+    assert.equal(s.t8.fields.pending.length,1);
+  }
+  assert.equal(checked,1,'an onside recovery by the kicking club was found');
+});
+test('halftime survives a save and reload on either side of the whistle without bringing zones back',()=>{
+  const {s,teams}=game();s.secondHalfReceiver='home';
+  s.quarter=2;s.clock=0;s.t8.fields.list=[legendary()];s.t8.fields.pending=[{owner:'h_TE',ownerTeam:'home',type:'Nature',ability:'NAT-01-F',lifetime:3,clock:'ownerOffense'}];prepareFieldsForSnap(s);
+  const reloadedBefore=JSON.parse(JSON.stringify(s));            // saved just before the whistle, reloaded, then the whistle
+  R.endOfPeriod(s);R.endOfPeriod(reloadedBefore);
+  const reloadedAfter=JSON.parse(JSON.stringify(s));             // saved at halftime, reloaded
+  for(const g of [s,reloadedBefore,reloadedAfter]){assert.deepEqual(g.t8.fields.list,[]);assert.equal(g.t8.fields.pending.length,1);}
+  assert.equal(JSON.stringify(reloadedBefore),JSON.stringify(s),'reload before the whistle gives the same halftime');
+  R.doKickoff(s,teams);R.doKickoff(reloadedAfter,teams);
+  assert.equal(JSON.stringify(reloadedAfter),JSON.stringify(s),'reload at halftime gives the same kickoff');
+  if(s.phase==='scrimmage'){prepareFieldsForSnap(s);assert.deepEqual(s.t8.fields.list,[]);}
+});

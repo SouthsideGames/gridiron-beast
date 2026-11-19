@@ -230,6 +230,9 @@ export function createArena(root, result, opts = {}) {
 
   // ---- animation helpers (Web Animations API; every duration is divided by the speed; reduced motion skips motion)
   const dur = (ms) => (reduced() ? 0 : ms / speed);
+  // Pacing between events is reading time, not motion: Reduced Motion keeps it (it used to play the whole battle instantly,
+  // validation 2026-11-19). Only animations (anim, dur) drop to zero.
+  const pace = (ms) => ms / speed;
   function anim(el, frames, ms, easing = 'ease-out') { if (!el || dur(ms) <= 0) return Promise.resolve(); if (softFlash()) frames = calm(frames); const a = el.animate(frames, { duration: dur(ms), easing, fill: 'none' }); live.add(a); return a.finished.catch(() => {}).finally(() => live.delete(a)); }
   const rig = (id) => monEl[id]?.querySelector('.cl-rig');
   const body = (id) => monEl[id]?.querySelector('.cl-body');
@@ -289,7 +292,7 @@ export function createArena(root, result, opts = {}) {
     await anim(A, [{ transform: 'translate(0,0) scale(1,1)' }, { transform: `${`translate(${-dx * back}px, ${-dy * back}px) scale(1.06, 0.92)`}` }], cue.duration * (heavy ? 0.28 : 0.16), 'ease-in');
     return { back };
   }
-  const hitStop = (cue) => wait(dur(cue.tier === 'major' ? 130 : cue.tier === 'power' ? 90 : 40));
+  const hitStop = (cue) => wait(pace(cue.tier === 'major' ? 130 : cue.tier === 'power' ? 90 : 40));
 
   // ---- one cue
   async function playCue(cue) {
@@ -299,7 +302,7 @@ export function createArena(root, result, opts = {}) {
     if (t8) { t8clock.base = cue.at; t8clock.start = performance.now(); t8clock.end = cue.end; t8clock.override = null; t8Kick(); }
     // the looks hook (override point): a truthy return (a Promise) takes the cue over; the arena then only applies the state
     if (opts.looks) { let took = null; try { took = opts.looks(cue, looksApi()); } catch (err) { console.error('clash looks hook', err); took = null; } if (took) { await took; applyState(st); return; } }
-    if (cue.tier === 'silent') { applyState(st); if (dur(D) > 0) await wait(dur(D)); return; } // bookkeeping (turn / round starts, clocks, rolls): nothing to show
+    if (cue.tier === 'silent') { applyState(st); if (pace(D) > 0) await wait(pace(D)); return; } // bookkeeping (turn / round starts, clocks, rolls): nothing to show
     if (t8) { const own = t8state.items.find((it) => it.seq === cue.i && it.main && it.look.shake); if (own && !reduced()) camera({ ...(cue.camera || { focus: [e.actor, e.target], zoom: 1 }), shake: Math.max(cue.camera?.shake || 0, 5) }); }
     camera(cue.camera); setActing(e.actor && ['damage', 'heal', 'shield', 'miss', 'skip', 'buff', 'debuff', 'ability', 'delayed_launch'].includes(e.kind) ? e.actor : null, true);
     const name = cue.named ? byId[e.actor]?.combatant?.move?.name : null;
@@ -312,7 +315,7 @@ export function createArena(root, result, opts = {}) {
         const from = `${`translate(${-dx * back}px, ${-dy * back}px) scale(1.06, 0.92)`}`;
         if (cue.delivery === 'ability') { // t8: the ability's look draws the travel and the impact; the body recoils and the hit lands on the look's beat
           anim(A, [{ transform: from }, { transform: `${`translate(${dx * 0.06}px, ${dy * 0.06}px) scale(0.98, 1.03)`}`, offset: 0.4 }, { transform: 'translate(0,0) scale(1,1)' }], D * 0.4, 'ease-out');
-          await wait(dur(D * 0.3)); await hitStop(cue); await impact(cue, st, { heavy });
+          await wait(pace(D * 0.3)); await hitStop(cue); await impact(cue, st, { heavy });
         } else if (cue.delivery === 'melee') {
           const c = contact(e.actor, e.target); const to = `${`translate(${c.dx}px, ${c.dy}px) scale(0.96, 1.06)`}`;
           await anim(A, [{ transform: from }, { transform: to }], D * (heavy ? 0.16 : 0.2), 'cubic-bezier(.2,.8,.3,1)');
@@ -325,8 +328,8 @@ export function createArena(root, result, opts = {}) {
           const a = chest(e.actor), b = chest(e.target); const ms = cue.tier === 'major' ? 420 : cue.tier === 'power' ? 340 : 260;
           if (cue.delivery === 'projectile') await fx.projectile(a, b, cue.element, { ms, tier: cue.tier, seed: cue.i });
           else if (cue.delivery === 'lob') await fx.projectile(a, b, cue.element, { ms: ms + 80, tier: cue.tier, seed: cue.i, lob: true });
-          else if (cue.delivery === 'arc') { fx.zigzag(a, b, cue.element, 260, cue.i); fx.zigzag(a, b, cue.element, 260, cue.i + 1); await wait(dur(120)); }
-          else if (cue.delivery === 'beam') { fx.beam(a, b, cue.element, 360); await wait(dur(140)); }
+          else if (cue.delivery === 'arc') { fx.zigzag(a, b, cue.element, 260, cue.i); fx.zigzag(a, b, cue.element, 260, cue.i + 1); await wait(pace(120)); }
+          else if (cue.delivery === 'beam') { fx.beam(a, b, cue.element, 360); await wait(pace(140)); }
           else if (cue.delivery === 'wave') { fx.ring(a, '#ff9ae6', 6, 50, 400); await fx.projectile(a, b, cue.element, { ms, tier: cue.tier, seed: cue.i }); }
           else await fx.projectile(a, b, cue.element, { ms, tier: cue.tier, seed: cue.i });
           await hitStop(cue); await Promise.all([impact(cue, st, { heavy }), rel]);
@@ -334,42 +337,42 @@ export function createArena(root, result, opts = {}) {
         break;
       }
       case 'burst': { // splash onto a second target, or a retaliation from the defender
-        const a = e.actor && monEl[e.actor] ? chest(e.actor) : null; if (a && e.target && !looked) await fx.projectile(a, chest(e.target), cue.element, { ms: 200, tier: 'routine', seed: cue.i }); else if (looked) await wait(dur(D * 0.35));
+        const a = e.actor && monEl[e.actor] ? chest(e.actor) : null; if (a && e.target && !looked) await fx.projectile(a, chest(e.target), cue.element, { ms: 200, tier: 'routine', seed: cue.i }); else if (looked) await wait(pace(D * 0.35));
         await impact(cue, st, { heavy: false }); break;
       }
       case 'burn-tick': { fx.condition(chest(e.target), 'burn', { seed: cue.i }); applyState(st); floatText(e.target, `-${cue.number.value}`, 'dmg burn', 700); await anim(body(e.target), [{ filter: 'sepia(1) saturate(4) hue-rotate(-20deg)' }, { filter: 'none' }], D); break; }
       case 'mend': {
-        if (!e.target || !monEl[e.target]) { applyState(st); await wait(dur(D)); break; }
-        if (e.actor && e.actor !== e.target && monEl[e.actor]) { if (!looked) fx.healBeam(chest(e.actor), chest(e.target)); anim(body(e.actor), [{ filter: 'brightness(1)' }, { filter: 'brightness(1.5) drop-shadow(0 0 6px #4ade80)' }, { filter: 'brightness(1)' }], D * 0.6); await wait(dur(D * 0.25)); }
+        if (!e.target || !monEl[e.target]) { applyState(st); await wait(pace(D)); break; }
+        if (e.actor && e.actor !== e.target && monEl[e.actor]) { if (!looked) fx.healBeam(chest(e.actor), chest(e.target)); anim(body(e.actor), [{ filter: 'brightness(1)' }, { filter: 'brightness(1.5) drop-shadow(0 0 6px #4ade80)' }, { filter: 'brightness(1)' }], D * 0.6); await wait(pace(D * 0.25)); }
         if (!looked) fx.heal(chest(e.target), { seed: cue.i }); applyState(st);
         if (cue.number.value > 0) floatText(e.target, `+${cue.number.value}`, 'heal'); else floatText(e.target, 'full', 'note', 600);
         await anim(body(e.target), [{ filter: 'brightness(1)' }, { filter: 'brightness(1.6) drop-shadow(0 0 8px #4ade80)' }, { filter: 'brightness(1)' }], D * 0.75); break;
       }
       case 'shield': {
-        if (e.actor && e.actor !== e.target && monEl[e.actor]) { fx.healBeam(chest(e.actor), chest(e.target)); await wait(dur(D * 0.2)); }
+        if (e.actor && e.actor !== e.target && monEl[e.actor]) { fx.healBeam(chest(e.actor), chest(e.target)); await wait(pace(D * 0.2)); }
         fx.shieldUp(chest(e.target), { seed: cue.i }); applyState(st); floatText(e.target, `🛡+${cue.number.value}`, 'shield');
         await anim(monEl[e.target]?.querySelector('.cl-ring-wrap'), [{ transform: $t('clash.translatex_50_scale_1_6'), opacity: 0 }, { transform: $t('clash.translatex_50_scale_1'), opacity: 1 }], D * 0.8); break;
       }
       case 'shatter': { fx.shieldBreak(chest(e.target), { seed: cue.i }); const r = monEl[e.target]?.querySelector('.cl-ring-wrap'); await anim(r, [{ transform: $t('clash.translatex_50_scale_1'), opacity: 1 }, { transform: $t('clash.translatex_50_scale_1_5'), opacity: 0 }], D * 0.6); applyState(st); floatText(e.target, 'shield broken', 'shield', 700); break; }
-      case 'dodge': { const { dx, dy } = towards(e.actor, e.target); const T = rig(e.target); floatText(e.target, cue.label || 'miss', 'note', 700); const c = contact(e.actor, e.target); anim(rig(e.actor), [{ transform: 'translate(0,0)' }, { transform: `${`translate(${c.dx * 0.7}px,${c.dy * 0.7}px)`}`, offset: 0.4 }, { transform: 'translate(0,0)' }], D * 0.9); await wait(dur(D * 0.3)); await anim(T, [{ transform: 'translate(0,0)', filter: 'blur(0)' }, { transform: `${`translate(${dx > 0 ? 22 : -22}px,${dy > 0 ? 6 : -6}px)`}`, filter: 'blur(1px)' }, { transform: 'translate(0,0)', filter: 'blur(0)' }], D * 0.5); applyState(st); break; }
+      case 'dodge': { const { dx, dy } = towards(e.actor, e.target); const T = rig(e.target); floatText(e.target, cue.label || 'miss', 'note', 700); const c = contact(e.actor, e.target); anim(rig(e.actor), [{ transform: 'translate(0,0)' }, { transform: `${`translate(${c.dx * 0.7}px,${c.dy * 0.7}px)`}`, offset: 0.4 }, { transform: 'translate(0,0)' }], D * 0.9); await wait(pace(D * 0.3)); await anim(T, [{ transform: 'translate(0,0)', filter: 'blur(0)' }, { transform: `${`translate(${dx > 0 ? 22 : -22}px,${dy > 0 ? 6 : -6}px)`}`, filter: 'blur(1px)' }, { transform: 'translate(0,0)', filter: 'blur(0)' }], D * 0.5); applyState(st); break; }
       case 'afflict': { if (t8) { applyState(st); floatText(e.target, `${t8Glyph(e.status)} ${cue.label}`, 'cond', 900); await anim(body(e.target), [{ filter: 'brightness(1)' }, { filter: 'brightness(1.5)' }, { filter: 'none' }], D * 0.6); break; } fx.condition(chest(e.target), e.condition, { seed: cue.i, strong: cue.tier !== 'routine' }); applyState(st); const col = COND_COLOR[e.condition] || '#fff'; floatText(e.target, `${COND_ICON[e.condition] || ''} ${cue.label}`, 'cond', 900); await anim(body(e.target), [{ filter: `${`drop-shadow(0 0 0 ${col})`}` }, { filter: `${`drop-shadow(0 0 10px ${col}) brightness(1.4)`}` }, { filter: 'none' }], D); break; }
       case 'resist': { applyState(st); const t = e.target || e.actor; floatText(t, cue.label || 'resisted', 'note', 600); fx.dust(chest(t), 4, cue.i); await anim(body(t), [{ transform: 'rotate(0)' }, { transform: 'rotate(-4deg)' }, { transform: 'rotate(4deg)' }, { transform: 'rotate(0)' }], D); break; }
-      case 'clear': { applyState(st); if (e.target && monEl[e.target] && !monEl[e.target].classList.contains('gone')) { if (cue.label) floatText(e.target, cue.label, 'note', 600); if (!looked) fx.ring(chest(e.target), '#ffffff', 2, 24, 300); } await wait(dur(D)); break; }
+      case 'clear': { applyState(st); if (e.target && monEl[e.target] && !monEl[e.target].classList.contains('gone')) { if (cue.label) floatText(e.target, cue.label, 'note', 600); if (!looked) fx.ring(chest(e.target), '#ffffff', 2, 24, 300); } await wait(pace(D)); break; }
       case 'skip': { if (/shock/i.test(cue.label || '')) fx.skipShock(chest(e.actor), { seed: cue.i }); applyState(st); floatText(e.actor, cue.label, 'cond', 900); await anim(rig(e.actor), [{ transform: 'translate(0,0)' }, { transform: 'translate(-5px,0) rotate(-3deg)' }, { transform: 'translate(5px,0) rotate(3deg)' }, { transform: 'translate(-4px,0)' }, { transform: 'translate(3px,0)' }, { transform: 'translate(0,0)' }], D * 0.6, 'linear'); break; }
       case 'yank': {
         const out = e.out; banner(e.text.split(':')[0], 'power', D * 0.8); const { dx, dy } = towards(e.actor || out, out);
         fx.dust(feet(out), 8, cue.i);
         await anim(rig(out), [{ transform: 'translate(0,0) rotate(0)' }, { transform: `${`translate(${(dx || 1) > 0 ? 24 : -24}px,-34px) rotate(-25deg)`}` }], D * 0.28, 'ease-in');
         applyState(st); if (e.in && monEl[e.in]) { fx.enterPuff(feet(e.in), { seed: cue.i }); anim(rig(e.in), [{ transform: 'translateY(-16px)' }, { transform: 'translateY(0)' }], D * 0.4); }
-        await wait(dur(D * 0.6)); break;
+        await wait(pace(D * 0.6)); break;
       }
-      case 'walk': { applyState(st); if (e.out && monEl[e.out]) fx.dust(feet(e.out), 5, cue.i); await wait(dur(D * 0.5)); if (e.in && monEl[e.in]) fx.enterPuff(feet(e.in), { seed: cue.i }); await wait(dur(D * 0.5)); break; }
+      case 'walk': { applyState(st); if (e.out && monEl[e.out]) fx.dust(feet(e.out), 5, cue.i); await wait(pace(D * 0.5)); if (e.in && monEl[e.in]) fx.enterPuff(feet(e.in), { seed: cue.i }); await wait(pace(D * 0.5)); break; }
       case 'enter': {
         applyState(st);
-        if (e.ex > 0 && monEl[e.actor]) { await wait(dur(D * 0.35)); fx.enterPuff(feet(e.actor), { seed: cue.i }); floatText(e.actor, `${byId[e.actor]?.name || ''} enters!`, 'note', 800, 1.05); await anim(rig(e.actor), [{ transform: $t('clash.translatey_14px_scale_1_04') }, { transform: $t('clash.translatey_0_scale_1') }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], D * 0.65); }
-        else await wait(dur(D)); break;
+        if (e.ex > 0 && monEl[e.actor]) { await wait(pace(D * 0.35)); fx.enterPuff(feet(e.actor), { seed: cue.i }); floatText(e.actor, `${byId[e.actor]?.name || ''} enters!`, 'note', 800, 1.05); await anim(rig(e.actor), [{ transform: $t('clash.translatey_14px_scale_1_04') }, { transform: $t('clash.translatey_0_scale_1') }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], D * 0.65); }
+        else await wait(pace(D)); break;
       }
-      case 'walk-back': { applyState(st); await wait(dur(D)); break; }
+      case 'walk-back': { applyState(st); await wait(pace(D)); break; }
       case 'ko': {
         const T = body(e.target); const R = rig(e.target); const major = cue.tier === 'major';
         await anim(T, softFlash() ? [{ filter: 'brightness(1)' }, { filter: 'brightness(1.5)' }, { filter: 'brightness(1)' }] : [{ filter: 'brightness(1)' }, { filter: 'brightness(4)' }, { filter: 'brightness(1)' }, { filter: 'brightness(4)' }, { filter: 'brightness(1)' }], D * 0.22, 'linear'); // reduce flashes: one soft pulse instead of the double strobe
@@ -377,10 +380,10 @@ export function createArena(root, result, opts = {}) {
         fx.koPuff(chest(e.target), { seed: cue.i }); monEl[e.target].classList.add('falling');
         const { dx } = towards(e.actor && e.actor !== e.target ? e.actor : e.target, e.target); const away = dx >= 0 ? 1 : -1;
         await anim(R, [{ transform: 'translate(0,0) rotate(0)', opacity: 1 }, { transform: `${`translate(${away * 12}px,-10px) rotate(${away * 20}deg)`}`, opacity: 1, offset: 0.3 }, { transform: `${`translate(${away * 26}px,8px) rotate(${away * 80}deg)`}`, opacity: 0.8, offset: 0.7 }, { transform: `${`translate(${away * 34}px,26px) rotate(${away * 90}deg) scale(0.7)`}`, opacity: 0 }], D * (major ? 0.7 : 0.6), 'ease-in');
-        monEl[e.target].classList.remove('falling'); applyState(st); if (major) await wait(dur(D * 0.15)); break;
+        monEl[e.target].classList.remove('falling'); applyState(st); if (major) await wait(pace(D * 0.15)); break;
       }
-      case 'sudden-death': { banner($t('clash.sudden_death_2'), 'sd', D); applyState(st); fx.ring([stage.clientWidth / 2, stage.clientHeight / 2], '#f87171', 8, Math.max(stage.clientWidth, stage.clientHeight) * 0.6, 700); await wait(dur(D * 0.8)); break; }
-      case 'cap': case 'coin': { banner(cue.label, 'major', D); applyState(st); await wait(dur(D * 0.8)); break; }
+      case 'sudden-death': { banner($t('clash.sudden_death_2'), 'sd', D); applyState(st); fx.ring([stage.clientWidth / 2, stage.clientHeight / 2], '#f87171', 8, Math.max(stage.clientWidth, stage.clientHeight) * 0.6, 700); await wait(pace(D * 0.8)); break; }
+      case 'cap': case 'coin': { banner(cue.label, 'major', D); applyState(st); await wait(pace(D * 0.8)); break; }
       case 'victory': {
         applyState(st); const side = e.winner; banner(simple ? (side === 'a' ? `${names.a} win!` : `${names.b} win`) : `${$t('clash.side_wins', { toUpperCase: side.toUpperCase() })}`, `major win ${side === 'a' ? 'mine' : 'theirs'} ${isLandscape() ? '' : side === 'b' ? 'low' : 'high'}`, D * 1.4);
         const standing = st.order[side].filter((id) => !st.S[side][id].ko);
@@ -388,33 +391,33 @@ export function createArena(root, result, opts = {}) {
         const hop = (id) => anim(rig(id), [{ transform: 'translateY(0)' }, { transform: 'translateY(-16px)' }, { transform: 'translateY(0)' }, { transform: 'translateY(-12px)' }, { transform: 'translateY(0)' }], D, 'ease-in-out');
         await Promise.all(standing.map(hop)); break;
       }
-      case 'buff': case 'debuff': { applyState(st); const t = e.target || e.actor; floatText(t, e.text.split(':').slice(1).join(':').trim().slice(0, 28) || cue.kind, 'note', 800); fx.ring(chest(t), cue.kind === 'buff' ? '#facc15' : '#9a7ad6', 3, 28, 400); await wait(dur(D)); break; }
-      case 'refused': { applyState(st); floatText(e.target || e.actor, 'held', 'note', 600); await wait(dur(D * 0.6)); break; }
-      case 'dim': { dimEl.classList.add('on'); applyState(st); await wait(dur(D)); dimEl.classList.remove('on'); break; }
-      case 'coin-small': { applyState(st); floatText(e.actor, 'coin flip', 'note', 500); await wait(dur(D)); break; }
+      case 'buff': case 'debuff': { applyState(st); const t = e.target || e.actor; floatText(t, e.text.split(':').slice(1).join(':').trim().slice(0, 28) || cue.kind, 'note', 800); fx.ring(chest(t), cue.kind === 'buff' ? '#facc15' : '#9a7ad6', 3, 28, 400); await wait(pace(D)); break; }
+      case 'refused': { applyState(st); floatText(e.target || e.actor, 'held', 'note', 600); await wait(pace(D * 0.6)); break; }
+      case 'dim': { dimEl.classList.add('on'); applyState(st); await wait(pace(D)); dimEl.classList.remove('on'); break; }
+      case 'coin-small': { applyState(st); floatText(e.actor, 'coin flip', 'note', 500); await wait(pace(D)); break; }
       // ---- t8 moves (the ability look draws the distinctive part; these keep the state, numbers and body feedback honest)
       case 'self-hit': { applyState(st); const T = e.target; floatText(T, `-${cue.number.value}`, 'dmg'); floatText(T, 'hits itself', 'note', 800, 0.15); await anim(body(T), [{ filter: 'brightness(1)' }, { filter: 'brightness(2.5)' }, { filter: 'brightness(1)' }], D * 0.5); break; }
       case 'dot-tick': { applyState(st); floatText(e.target, `-${cue.number.value}`, 'dmg burn', 700); await anim(body(e.target), [{ filter: 'brightness(1)' }, { filter: 'brightness(0.6) saturate(0.5)' }, { filter: 'none' }], D); break; }
-      case 'hp-set': { applyState(st); const T = e.target; if (cue.number.value) floatText(T, `${cue.number.kind === 'heal' ? '+' : '-'}${cue.number.value}`, cue.number.kind === 'heal' ? 'heal' : 'dmg'); await wait(dur(D)); break; }
-      case 'hp-cost': { applyState(st); floatText(e.actor, `-${cue.number.value} HP`, 'dmg', 700, 0.9); await wait(dur(D)); break; }
-      case 'freeze': { applyState(st); floatText(e.target, cue.label, 'note', 700, 1.1); await wait(dur(D)); break; }
-      case 'intercept': { applyState(st); if (e.actor && e.actor !== e.target) floatText(e.actor, 'intercepts!', 'note', 800); await wait(dur(D)); break; }
-      case 'cover': { applyState(st); floatText(e.actor, $t('clash.takes_the_hit'), 'note', 900, 1.05); await wait(dur(D)); break; }
+      case 'hp-set': { applyState(st); const T = e.target; if (cue.number.value) floatText(T, `${cue.number.kind === 'heal' ? '+' : '-'}${cue.number.value}`, cue.number.kind === 'heal' ? 'heal' : 'dmg'); await wait(pace(D)); break; }
+      case 'hp-cost': { applyState(st); floatText(e.actor, `-${cue.number.value} HP`, 'dmg', 700, 0.9); await wait(pace(D)); break; }
+      case 'freeze': { applyState(st); floatText(e.target, cue.label, 'note', 700, 1.1); await wait(pace(D)); break; }
+      case 'intercept': { applyState(st); if (e.actor && e.actor !== e.target) floatText(e.actor, 'intercepts!', 'note', 800); await wait(pace(D)); break; }
+      case 'cover': { applyState(st); floatText(e.actor, $t('clash.takes_the_hit'), 'note', 900, 1.05); await wait(pace(D)); break; }
       case 'survive': { applyState(st); floatText(e.actor, '1 HP!', 'cond', 900); await anim(rig(e.actor), [{ transform: 'translate(0,0) rotate(0)' }, { transform: 'translate(-4px,0) rotate(-6deg)', offset: 0.4 }, { transform: 'translate(0,0) rotate(0)' }], D * 0.6); break; }
-      case 'split': { applyState(st); if (e.actor) floatText(e.actor, `shares ${e.sourceShare}`, 'shield', 900); await wait(dur(D)); break; }
+      case 'split': { applyState(st); if (e.actor) floatText(e.actor, `shares ${e.sourceShare}`, 'shield', 900); await wait(pace(D)); break; }
       case 'shake-off': { applyState(st); floatText(e.actor, cue.label, 'note', 700); await anim(body(e.actor), [{ transform: 'rotate(0)' }, { transform: 'rotate(-5deg)' }, { transform: 'rotate(5deg)' }, { transform: 'rotate(0)' }], D); break; }
-      case 'held': { applyState(st); floatText(e.actor, cue.label, 'note', 900, 1.1); await wait(dur(D)); break; }
-      case 'restrict': { applyState(st); if (e.target && e.actor !== e.target) floatText(e.target, 'signature restricted', 'cond', 900, 1.1); await wait(dur(D)); break; }
-      case 'clock': { applyState(st); if (e.target) floatText(e.target, `cooldown ${cue.label}`, 'note', 900, 1.1); await wait(dur(D)); break; }
-      case 'order': { applyState(st); await wait(dur(D)); break; }
-      case 'ability': case 'launch': { applyState(st); if (e.actor && monEl[e.actor] && e.stage === 'activation') anim(rig(e.actor), [{ transform: 'translate(0,0) scale(1,1)' }, { transform: 'translate(0,-6px) scale(1.04, 0.98)', offset: 0.3 }, { transform: 'translate(0,0) scale(1,1)' }], D * 0.6); await wait(dur(D)); break; }
-      case 'impact': { applyState(st); await wait(dur(D)); break; }
-      case 'revive': { applyState(st); if (e.target && monEl[e.target]) { fx.enterPuff(feet(e.target), { seed: cue.i }); floatText(e.target, `${byId[e.target]?.name || ''} returns!`, 'heal', 1000, 1.05); await anim(rig(e.target), [{ transform: $t('clash.translatey_14px_scale_1_04'), opacity: 0 }, { transform: $t('clash.translatey_0_scale_1'), opacity: 1 }], D * 0.7); } else await wait(dur(D)); break; }
-      case 'note': { applyState(st); await wait(dur(D)); break; }
-      default: { applyState(st); await wait(dur(D)); }
+      case 'held': { applyState(st); floatText(e.actor, cue.label, 'note', 900, 1.1); await wait(pace(D)); break; }
+      case 'restrict': { applyState(st); if (e.target && e.actor !== e.target) floatText(e.target, 'signature restricted', 'cond', 900, 1.1); await wait(pace(D)); break; }
+      case 'clock': { applyState(st); if (e.target) floatText(e.target, `cooldown ${cue.label}`, 'note', 900, 1.1); await wait(pace(D)); break; }
+      case 'order': { applyState(st); await wait(pace(D)); break; }
+      case 'ability': case 'launch': { applyState(st); if (e.actor && monEl[e.actor] && e.stage === 'activation') anim(rig(e.actor), [{ transform: 'translate(0,0) scale(1,1)' }, { transform: 'translate(0,-6px) scale(1.04, 0.98)', offset: 0.3 }, { transform: 'translate(0,0) scale(1,1)' }], D * 0.6); await wait(pace(D)); break; }
+      case 'impact': { applyState(st); await wait(pace(D)); break; }
+      case 'revive': { applyState(st); if (e.target && monEl[e.target]) { fx.enterPuff(feet(e.target), { seed: cue.i }); floatText(e.target, `${byId[e.target]?.name || ''} returns!`, 'heal', 1000, 1.05); await anim(rig(e.target), [{ transform: $t('clash.translatey_14px_scale_1_04'), opacity: 0 }, { transform: $t('clash.translatey_0_scale_1'), opacity: 1 }], D * 0.7); } else await wait(pace(D)); break; }
+      case 'note': { applyState(st); await wait(pace(D)); break; }
+      default: { applyState(st); await wait(pace(D)); }
     }
     setActing(null, false);
-    if (cue.camera?.zoom > 1 || cue.camera?.dim) { await wait(dur(100)); settle(); }
+    if (cue.camera?.zoom > 1 || cue.camera?.dim) { await wait(pace(100)); settle(); }
   }
 
   // ---- playback

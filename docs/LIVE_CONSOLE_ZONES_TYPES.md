@@ -15,7 +15,7 @@ All persistent zones preserve their placement relative to the line and ball spot
 
 Whistle-created terrain anchors at the new spot so it is not advanced twice. The pre-snap picture and authoritative next snap use the same projection.
 
-A possession change clears both teams' terrain already on the field before the next scrimmage snap. Banked creations (an ability's zone waiting for its own snap) are kept and placed fresh at the new line (owner decision during validation, 2026-11-18). Touchdowns, made field goals, safeties and each overtime possession also end the possession for terrain, so a club that keeps the ball after a score (an onside recovery) or across overtime starts clean. Returns and replay evidence retain the original play's zones. Interceptions/fumbles/defensive scores are covered, as are possession changes following downs, kicks or scoring. No spent charge, cooldown or readiness is refunded. Fresh abilities can create fresh terrain after the new possession begins.
+A possession change clears both teams' terrain already on the field before the next scrimmage snap. Halftime does the same before the second-half kickoff, for every zone including legendary ones (owner decision 2026-11-19). Banked creations (an ability's zone waiting for its own snap) are kept and placed fresh at the new line (owner decision during validation, 2026-11-18). Touchdowns, made field goals, safeties and each overtime possession also end the possession for terrain, so a club that keeps the ball after a score (an onside recovery) or across overtime starts clean. Returns and replay evidence retain the original play's zones. Interceptions/fumbles/defensive scores are covered, as are possession changes following downs, kicks or scoring. No spent charge, cooldown or readiness is refunded. Fresh abilities can create fresh terrain after the new possession begins.
 
 Legacy zones without saved offsets adopt their current position once; their unsaved original placement cannot be reconstructed. No save migration or random draw is needed.
 
@@ -287,7 +287,60 @@ The 6-weaker row has two numbers per cell: requested qualities 44 and 38 both pr
 - **Clash at 568×320 landscape while paused or replaying:** the speed buttons are partly covered by the reserve strip until you resume. The Resume Play banner and Skip remain reachable.
 - **Clash at 320×568 while the pause banner shows:** the arena shrinks to about 100 px.
 - **Player demo, Larger Text at 320×568:** opening About shrinks the demo field to 140 px. Closing it restores the field.
-- **Halftime:** legendary-zone carry-over is an open owner question (see section 3).
+- **Halftime:** legendary-zone carry-over was an open owner question; resolved 2026-11-19 (every zone clears at halftime, see the follow-up below).
 - **Lateral ball spots:** non-zero spots are unit-tested only, because live play always spots the ball in the middle.
 - **Coach suggestion text:** the try's "coach suggests two" is hard-coded English (pre-existing).
 - **ai-lab:** the 390-px situation is clock-seeded and should be pinned (pre-existing).
+
+## Follow-up after the PR #136 merge — 2026-11-19
+
+**Code tested: `90987c5`** on branch `codex/pr136-followup`, from main `770f320` (the PR #136 merge). Nothing was merged, deployed, published to the game link or installed on a phone. **All browser results are emulated** (headless Chromium with touch); no iPhone or Android device was used.
+
+### Changes
+
+| # | Change | Coverage |
+|---|---|---|
+| 1 | **Halftime clears every zone on the field**, legendary ones included (Burning Wake, Tsunami Line), whichever club receives or recovers the second-half kickoff (owner decision 2026-11-19). Earned zones not yet placed keep waiting for their snap. No charge, cooldown or duration changes. The recorded first-half plays keep their own zone pictures, so their replays are unchanged. | Four new tests in `live-console-fields.test.js` (all fail on main): home receives, away receives, onside recovery by the kicking club, save/reload before and after the whistle. The Burning Wake and Tsunami Line tests now expect the zone to clear. |
+| 2 | **Deployment blocker:** the tracked `node_modules` link (committed by mistake in `6d3c816`) is removed and `node_modules` is ignored. `package.json` is unchanged; the project has no lockfile. | See "Deployment" below. |
+| 3 | **Clash, 320×568 paused:** the arena was ~100 px. The pause banner is one slim row, the HP strips step aside on short screens (HP stays on the name plates and the lineup bar), and on very short portrait Help and Guide & Notices share the scoreboard row. Arena now 165–200 px. | `q_clash136` |
+| 4 | **Clash, 568×320 paused or replaying:** the speed buttons were covered by the lineup bar. Short landscape is now one grid: the arena fills the left; the pause banner, Help, playback controls and lineup bar stack on the right. Auto Rotations stays visible everywhere; lineup cards keep one row and scroll sideways inside it when there are more. | `q_clash136` |
+| 5 | **Clash with Reduced Motion (also on main):** every pause between events was zero, so a watched battle finished in a moment and could not be watched or paused. Pacing between events is reading time and now stays; only animation is removed. | `q_clash136 … rm` (fails on main), Clash suite 881/881 |
+| 6 | **Ability demo, Larger Text at 320×568:** opening About shrank the field to 140 px. On short portrait the playback controls stay in one row that scrolls sideways inside itself, and About scrolls under a lower cap. Field now 281 px. | `q_demo` |
+| 7 | **Beast Clash look** (owner: "very boring"): framed, lit arena with each club's glow on its half; scoreboard header; VS plaque with team-coloured name pills; name plates and heavier segmented HP bars; segmented speed control; lineup cards; lit result banner. Same markup, controls and order. | screenshots + `q_clash136` |
+| 8 | **Match Day look** (owner: "looks bad"): floodlit matchup hero in both clubs' colours with a VS medallion; calmer stadium card; the coach's words as a speech bubble; segmented lineup switch; two-column lineup cards (one column below 360 px) where the whole card opens the beast; lit Beast Clash button. The live scoreboard glows in each club's colour and keeps its size. Reduced Motion turns off the hero's light sweep. | `q_pregame` (new) |
+| 9 | The Dex's shared zone rule text said zones stay fixed and legendary zones are exempt at halftime; it now describes the line-relative, possession and halftime rules. | `build-beast-dex --check`, Dex tests |
+
+### Results on `90987c5`
+
+- **Full suite:** not rerun. The last full run is the one recorded above: **2,329 of 2,332 passed** on `b6f43d8`, before the reviewer fixes, followed by passing reruns of the affected files. That is not a full-suite pass.
+- **Targeted tests** (engine set per `docs/TESTING_POLICY.md` plus every zone, ability, reviewer, presentation and Dex file): **357/357**. Beast Clash suite: **881/881**. Tests that read the changed UI files: **208/208**.
+- **Studies** (gameplay change): `passing-calibration` (60 games) and `defense-fix-compare` (120 games) are **identical** to the PR #136 numbers (completion 55.6% / 56.5%, points 12.9 / 13.7 per team game).
+- **Browser checks:** `live-console-check`, `guided-week-check` and `final-whistle-check` pass.
+- **Emulated tap-throughs**, all with 0 problems:
+  - Clash: 320×568 (plain, Larger Text, safe areas, Reduced Motion), 375×667, 390×844 (Larger Text + safe areas + Reduced Motion), 440×956 (Reduced Motion), 568×320 (plain, Larger Text, safe areas, Reduced Motion), 844×390 (Larger Text + safe areas).
+  - Live football: 320×568, 568×320 with Larger Text, 390×844 with safe areas.
+  - Ability demo: 320×568 (with and without Larger Text), 390×844 and 568×320 with Larger Text.
+  - Match Day: 320×568 (plain; Larger Text + Reduced Motion), 390×844 safe areas, 440×956 Larger Text, 568×320, 844×390 (Larger Text + Reduced Motion).
+
+### Deployment
+
+- **Clean checkout:** a fresh clone of `90987c5` contains no symbolic links, and archiving the site the way the Pages build does succeeds (117 MB). Every Pages build on main since 2026-11-14 failed at exactly that step on `./node_modules`. It still fails on main until this branch is merged.
+- **Release checks:**
+  - `tools/release-files.py`: **OK, 488 files**. The publish folder built from `git archive` is byte-identical to the commit for all 488 files.
+  - `tools/release-files-check.py`: 20/21, failing **identically on main**. Its "lists exactly the published files" case compares against the v43.13.0 manifest, and 41 files have been added since then.
+  - `tools/deploy-check.py` on the publish folder: both saves import. It then stops at "Developer Tools → AI Testing Lab" (the tap times out), **identically on main**.
+- **The live game link is not fixed yet.** It needs this branch merged and a Pages build that succeeds. No deployment was attempted.
+
+### Remaining limitations
+
+- **Real devices: pending.** This covers:
+  - safe areas and the notch in landscape;
+  - touch timing on double taps;
+  - native background and lock;
+  - app-kill recovery during Auto, Clash and replays;
+  - audio focus;
+  - Swift and Gradle builds;
+  - how the new looks render on real screens.
+- **320×568 with notch-sized safe areas** is a synthetic case: no 320-wide phone has a notch. It passes, with the arena at about 140 px.
+- **Sideways-scrolling rows on short screens:** the demo's playback controls and the Clash lineup cards (with 4–5 beasts) scroll sideways inside their row instead of wrapping.
+- **Pre-existing, unchanged:** lateral ball spots are unit-tested only; the "coach suggests two" text is hard-coded English; the ai-lab 390-px situation is clock-seeded; and `deploy-check`'s AI Testing Lab step fails on main too.

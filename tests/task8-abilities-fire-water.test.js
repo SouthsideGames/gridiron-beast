@@ -205,7 +205,7 @@ test('Burning Wake earning: a catch-and-run of 5+ YAC queues one pending zone (w
   assert.ok(earned >= 2, `earned ${earned}`);
 });
 
-test('Burning Wake zone: waits for the next participating offensive snap, offers legal placement, lasts five offensive plays and survives halftime', () => {
+test('Burning Wake zone: waits for the next participating offensive snap, offers legal placement, lasts five offensive plays and clears at halftime like every zone', () => {
   const { g, teams } = newG(7); const te = teams.home.offense.TE; Object.assign(te, { species: 'pyroclast', form: 'pyroclast:0', mastery: 3 });
   g.t8.ability = {}; g.t8.fields = { list: [], pending: [{ owner: te.id, ownerTeam: 'home', type: 'Fire', ability: 'FIR-06-F', strength: 34, lifetime: 5, clock: 'ownerOffense', width: 12, length: 5, lbDepth: 5, lateral: 'creator', clearsAtHalftime: false }], seq: 0 };
   g.t8.ability[te.id] = { pending: true, earnedOn: 'x' };
@@ -220,7 +220,7 @@ test('Burning Wake zone: waits for the next participating offensive snap, offers
   assert.equal(made.strength, 34); assert.equal(g.t8.ability[te.id].pending, false, 'spent at spawn');
   const live = () => g.t8.fields.list.filter((f) => f.ability === 'FIR-06-F');
   assert.equal(live().length, 1); assert.equal(live()[0].remaining, 4, 'the spawn play counted');
-  const h = JSON.parse(JSON.stringify(g.t8)); T8F.halftime(h); assert.equal(h.fields.list.length, 1, 'legendary: survives halftime'); assert.equal(h.fields.list[0].remaining, 4, 'no refresh');
+  const h = JSON.parse(JSON.stringify(g.t8)); T8F.halftime(h); assert.equal(h.fields.list.length, 0, 'legendary too: cleared at halftime (owner 2026-11-19)'); assert.equal(h.ability[te.id].pending, false, 'no refund: the spent creation stays spent');
   for (let i = 0; i < 4; i++) { Object.assign(g, { phase: 'scrimmage', possession: 'home', down: 1, toGo: 10, ballOn: 35 }); snap(g, teams, 'inside_zone', 'cover_3'); } assert.equal(live().length, 0, 'gone after five offensive plays');
 });
 
@@ -359,7 +359,7 @@ test('Breakwater: only on a blocking snap assignment; opponents within 3 yards l
 });
 
 // ------------------------------------------------------------------------------------------------ WAT-06-F Tsunami Line (tsunarok)
-test('Tsunami Line: his secured interception while ready queues a full-width Water band (safety reference 12, 5 long, 30-36% slip, survives halftime); cooldown 5 with the interception play excluded', () => {
+test('Tsunami Line: his secured interception while ready queues a full-width Water band (safety reference 12, 5 long, 30-36% slip, cleared at halftime like every zone); cooldown 5 with the interception play excluded', () => {
   let found = 0;
   for (let seed = 1; seed <= 300 && found < 2; seed++) {
     const t8 = { status: {}, ability: { d_FS: { cd: 0 } } };
@@ -378,6 +378,6 @@ test('Tsunami Line: his secured interception while ready queues a full-width Wat
   for (let n = 0; n < 80 && !made; n++) { const x = snap(g, teams, 'inside_zone', 'cover_3'); made = playField(x.sim, 'WAT-06-F'); pre = x.pre; if (!made) assert.equal(x.pre.possession, 'home', 'only at his team\'s offensive snap'); }
   assert.ok(made); assert.equal(pre.possession, 'away'); assert.ok(near(mid(made.yard), 12) && near(span(made.yard), 5) && near(span(made.lat), FIELD.width, 1e-6), 'full width at the 12-yard safety reference');
   assert.equal(made.strength, 30); const live = () => g.t8.fields.list.filter((f) => f.ability === 'WAT-06-F'); assert.equal(live()[0].remaining, 1);
-  const h = JSON.parse(JSON.stringify(g.t8)); T8F.halftime(h); assert.equal(h.fields.list.length, 1, 'legendary: kept over halftime without refresh');
+  const h = JSON.parse(JSON.stringify(g.t8)); T8F.halftime(h); assert.equal(h.fields.list.length, 0, 'legendary too: cleared at halftime (owner 2026-11-19)');
   snap(g, teams, 'inside_zone', 'cover_3'); assert.equal(live().length, 0);
 });

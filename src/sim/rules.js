@@ -1044,7 +1044,7 @@ export function endOfPeriod(state) {
   state.quarter += 1; state.clock = state.quarterLength; state.clockRunning = false;
   if (state.quarter === 3) {
     T8K.halftime(state); // Task 8 §12: halftime restores 50% of each stamina capacity (exhaustion stays)
-    if (state.t8) T8F.halftime(state.t8); // Task 8 §11: non-legendary fields clear at halftime (pending creations carry)
+    if (state.t8) T8F.halftime(state.t8); // every zone on the field clears at halftime, legendary included (owner 2026-11-19); banked creations carry
     state.timeouts = { home: 3, away: 3 };
     state.phase = 'kickoff'; state.possession = state.secondHalfReceiver; state.kickingTeam = opponent(state.secondHalfReceiver);
     log(state, `${$E('sim.halftime_receive_the_second_half_kickoff', { abbr: state.home.abbr, home: state.score.home, away: state.score.away, abbr2: state.away.abbr, name: state[state.secondHalfReceiver].name })}`, 'period', { important: true });
