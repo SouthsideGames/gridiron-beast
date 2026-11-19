@@ -300,7 +300,7 @@ export function registerMatchScreens(Router, app) {
     }
     const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? $t('match.try') : s.phase === 'kickoff' ? $t('match.kickoff') : s.phase === 'free_kick' ? $t('match.free_kick') : '';
     const ab = G.lastEvent?.abilities?.length ? `<div class="ability-strip">${G.lastEvent.abilities.slice(0, 3).map((x) => `<span class="${x.team === me ? 'mine' : ''} ${x.trait ? 'trait' : ''}"${x.mid ? ` role="button" tabindex="0" data-inspect="${esc(x.mid)}" aria-label="Inspect ${esc(x.who)}"` : ''}>${x.trait ? '·' : '⚡'} ${esc(x.who)} · ${esc(x.what)}${x.tick ? ` <i class="ability-tick">✓ ${esc(x.tick)}</i>` : ''}</span>`).join('')}</div>` : '';
-    const contact=G.lastEvent?.sim?.typeContests?.find(x=>x.mod>0);
+    const contact=G.lastEvent?.sim?.typeContests?.find(x=>x.mod>(x.env?0.02:0));
     const contactNames=G.lastEvent?.sim?.names;
     const typeNote=contact&&contactNames?.[contact.team]?.[contact.a]&&contactNames?.[contact.team==='off'?'def':'off']?.[contact.b] ? $t('playview.type_contact',{name:esc(contactNames[contact.team][contact.a]),opponent:esc(contactNames[contact.team==='off'?'def':'off'][contact.b])}):'';
     const co = G.lastEvent?.callout; const fresh = !!G.lastEvent?.fresh; if (G.lastEvent) G.lastEvent.fresh = false; // the pop plays once, not on every re-render

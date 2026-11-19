@@ -13,7 +13,7 @@ import { manKeyTargets, eligibleReceivers } from '../data/playbook.js';
 import { positionOf } from '../data/personnel.js';
 import { E as $E } from '../core/english.js';
 
-/** Football strengths (initial values from the owner's brief, 2026-10-22). Separate from the Clash's 1.05 / 0.952. */
+/** Football strengths (candidate for meaningful matchups, 2026-11-18; balance validation pending). Separate from the Clash's 1.05 / 0.952. */
 export const FOOTBALL_TYPE_VALUES = Object.freeze({ version: 'f1.2-candidate', strong: 0.12, weak: -0.12, dragonNeutral: 0.02, envMatch: 0.02, positiveCap: 0.14 });
 let active = FOOTBALL_TYPE_VALUES;
 /** Run `fn` with other strengths (balance tools only; the game never calls this). `{ strong: 0, weak: 0, dragonNeutral: 0 }` turns types off. */
