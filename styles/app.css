@@ -2067,7 +2067,7 @@ html[data-reduced-motion="1"] .draft-stage > :last-child { animation:none; }
 
 /* Teach the real navigation control. No movement or flashing is required. */
 .guide-target { outline:3px solid var(--accent, #ffd700); outline-offset:-3px; animation:guide-control-pulse 1.8s ease-in-out infinite; }
-@keyframes guide-control-pulse { 0%,100% { box-shadow:inset 0 0 0 1px #ffd70033; } 50% { box-shadow:inset 0 0 0 5px #ffd70066; } }
+@keyframes guide-control-pulse { 0%,100% { outline-width:3px; outline-color:#ffd700; box-shadow:inset 0 0 0 1px #ffd70033, 0 0 0 0 #ffd70000; } 50% { outline-width:5px; outline-color:#fff19a; box-shadow:inset 0 0 0 3px #ffd70066, 0 0 0 5px #ffd70033; } }
 .guide-sendoff { display:flex; align-items:center; gap:8px; padding:5px 8px; border:1px solid var(--accent); border-radius:6px; background:var(--panel); font-size:12px; }
 .guide-sendoff p { margin:2px 0 0; }
 .guide-sendoff .btn { min-width:44px; min-height:44px; }
@@ -2210,10 +2210,9 @@ html[data-comfortable-text="1"] .screen-settings .set-assist .field .muted, html
 .screen-settings .save-data .dim, .screen-settings .save-data p { font-size: 12.5px; line-height: 1.4; }
 html[data-comfortable-text="1"] .screen-settings .save-data .dim, html[data-comfortable-text="1"] .screen-settings .save-data p { font-size: 14px; }
 
-/* Small scroll lessons reserve end space and never block taps on the card. */
+/* Assignment cards remain the real tap target during Meet Your Team. */
 .screen-assign .row.guide-target { border-radius:6px; cursor:pointer; }
-.screen-monster.guide-section-tour { padding-bottom:calc(220px + var(--phone-tab-height, 76px) + var(--sab)); }
-.beast-section-tip { position:fixed; z-index:19; bottom:calc(var(--phone-tab-height, 76px) + 8px); left:12px; right:12px; max-width:616px; margin:auto; display:flex; align-items:start; gap:8px; padding:10px; border:2px solid var(--accent); border-radius:8px; background:var(--panel); box-shadow:0 3px 12px #0006; max-height:26dvh; overflow:auto; font-size:13px; }
-.beast-section-tip[hidden] { display:none; }
-.beast-section-tip p { margin:4px 0 0; }
-.beast-section-tip .btn { min-width:44px; min-height:44px; flex:none; }
+/* The section lesson uses the shared modal so the page waits for dismissal. */
+.guide-section-focus { outline:3px solid var(--accent, #ffd700); outline-offset:3px; }
+.beast-section-tour .sheet { border-color:var(--accent, #ffd700); }
+.beast-section-tour .sheet-body { font-size:16px; line-height:1.5; }
