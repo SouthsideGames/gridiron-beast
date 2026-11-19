@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { BEATS, CHART_TYPES, chartEdge, typeProfile } from '../src/data/type-chart.js';
 import * as ClashTypes from '../src/clash/types.js';
 import { CLASH_VALUES } from '../src/clash/values.js';
-import { footballEdge, typeMod, typeScale, withTypeValues, FOOTBALL_TYPE_VALUES, expectedMatchups, matchupEdges, describeMatchup, matchupScore, edgeReason, USUAL_OPPONENT } from '../src/sim/type-matchups.js';
+import { footballEdge, typeMod, typeScale, contestMod, withTypeValues, FOOTBALL_TYPE_VALUES, expectedMatchups, matchupEdges, describeMatchup, matchupScore, edgeReason, USUAL_OPPONENT } from '../src/sim/type-matchups.js';
 import { simulatePlay } from '../src/sim/engine.js';
 import { weighOffense, weighDefense } from '../src/sim/coach-ai.js';
 import { PLAYS, OFFENSE_IDS, DEFENSE_IDS, manKeyTargets } from '../src/data/playbook.js';
@@ -35,20 +35,20 @@ test('one chart: Beast Clash and football read the same table, and the Clash cha
   }
 });
 
-test('football strengths: ±4% from the chart, Dragon +2% against neutral types, 0 otherwise; separate from the Clash', () => {
-  assert.equal(typeMod('Fire', 'Nature'), 0.04); assert.equal(typeMod('Nature', 'Fire'), -0.04);
-  assert.equal(typeMod('Fire', 'Water'), -0.04); assert.equal(typeMod('Fire', 'Psychic'), 0);
-  assert.equal(typeMod('Dragon', 'Metal'), 0.04); assert.equal(typeMod('Dragon', 'Ice'), -0.04);
+test('football strengths: ±12% from the chart, Dragon +2% against neutral types, 0 otherwise; separate from the Clash', () => {
+  assert.equal(typeMod('Fire', 'Nature'), 0.12); assert.equal(typeMod('Nature', 'Fire'), -0.12);
+  assert.equal(typeMod('Fire', 'Water'), -0.12); assert.equal(typeMod('Fire', 'Psychic'), 0);
+  assert.equal(typeMod('Dragon', 'Metal'), 0.12); assert.equal(typeMod('Dragon', 'Ice'), -0.12);
   assert.equal(typeMod('Dragon', 'Fire'), 0.02); assert.equal(footballEdge('Dragon', 'Fire'), 'wild');
   assert.equal(typeMod('Fire', 'Dragon'), 0, 'the wildcard edge is Dragon\'s own; the opponent loses nothing');
   assert.equal(typeMod('Dragon', 'Dragon'), 0); assert.equal(typeMod(null, 'Fire'), 0); assert.equal(typeMod('Fire', undefined), 0); assert.equal(typeMod('Dragon', null), 0);
-  assert.equal(typeScale('Fire', 'Nature'), 1.04);
+  assert.equal(typeScale('Fire', 'Nature'), 1.12);
   assert.notEqual(FOOTBALL_TYPE_VALUES.strong + 1, CLASH_VALUES.types.strong, 'football and the Clash keep their own strengths');
   withTypeValues({ strong: 0, weak: 0, dragonNeutral: 0 }, () => { assert.equal(typeMod('Fire', 'Nature'), 0); assert.equal(typeMod('Dragon', 'Fire'), 0); });
-  assert.equal(typeMod('Fire', 'Nature'), 0.04, 'values restored after a balance run');
+  assert.equal(typeMod('Fire', 'Nature'), 0.12, 'values restored after a balance run');
   assert.match(edgeReason('Fire', 'Nature'), /Fire is strong against Nature/);
-  // Every type: two +4%, two −4%; Dragon additionally +2% against its seven neutral opponents.
-  for (const t of CHART_TYPES) { const mods = CHART_TYPES.map((b) => typeMod(t, b)); assert.equal(mods.filter((m) => m === 0.04).length, 2); assert.equal(mods.filter((m) => m === -0.04).length, 2); assert.equal(mods.filter((m) => m === 0.02).length, t === 'Dragon' ? 7 : 0); }
+  // Every type: two +12%, two −12%; Dragon additionally +2% against its seven neutral opponents.
+  for (const t of CHART_TYPES) { const mods = CHART_TYPES.map((b) => typeMod(t, b)); assert.equal(mods.filter((m) => m === 0.12).length, 2); assert.equal(mods.filter((m) => m === -0.12).length, 2); assert.equal(mods.filter((m) => m === 0.02).length, t === 'Dragon' ? 7 : 0); }
 });
 
 // Typed lineups for engine runs.
@@ -104,7 +104,7 @@ test('engine: a tackle uses the tackler and the carrier only (gang helpers never
     const r = simulatePlay({ offensePlay: op, defensePlay: dp, offense: T.offense, defense: T.defense, seed: 70 + k, ballOn: 30 });
     const tackles = r.typeContests.filter((c) => c.contest === 'tackle');
     if (r.result === 'tackle' && r.stats.tackler && tackles.length) assert.ok(tackles.some((c) => c.a === r.stats.tackler), 'the tackler is recorded against the carrier');
-    for (const c of tackles) assert.ok(['off', 'def'].includes(c.team) && c.mod === -0.04);
+    for (const c of tackles) assert.ok(['off', 'def'].includes(c.team) && c.mod === -0.12);
   }
   assert.equal(JSON.stringify(T), before, 'no attribute, rating or type is written back to the monsters');
 });
@@ -145,7 +145,7 @@ test('pre-snap expected matchups: one opponent per monster, from the call and th
   rec.forEach((s, i) => { T.offense[s] = { ...T.offense[s], type: recTypes[i] }; });
   for (const d of Object.keys(T.defense)) T.defense[d] = { ...T.defense[d], type: 'Nature' };
   const edges = expectedMatchups({ offensePlay: three, defensePlay: dp }).filter((x) => rec.includes(x.off)).map((x) => describeMatchup(x, T.offense, T.defense).off.mod);
-  assert.deepEqual(new Set(edges), new Set([0.04, 0, -0.04]), 'Fire vs Nature +4%, Nature vs Nature 0, Water vs Nature −4%');
+  assert.deepEqual(new Set(edges), new Set([0.12, 0, -0.12]), 'Fire vs Nature +12%, Nature vs Nature 0, Water vs Nature −12%');
   const shown = matchupEdges({ offensePlay: three, defensePlay: dp }, T.offense, T.defense);
   assert.ok(shown.every((x) => x.off.mod || x.def.mod), 'neutral matchups carry no icon');
 });
@@ -176,4 +176,13 @@ test('presentation: the field draws a tappable icon beside each edged monster an
   assert.equal((svg.match(/class="tm-icon"/g) || []).length, op.onField.includes('TE') ? 2 : 1);
   assert.match(svg, /data-tm="off:WR1"/); assert.match(svg, /#22c55e/);
   assert.doesNotMatch(fieldSvg({ ballOn: 30, presnap: { play: op, offensePlay: op, defensePlay: dp } }), /tm-icon/);
+});
+
+test('football counter and field bonus combine at the candidate cap without changing Clash',()=>{
+  assert.equal(typeMod('Earth','Electric'),0.12);
+  assert.equal(typeMod('Electric','Earth'),-0.12);
+  assert.equal(contestMod('Earth','Electric','Earth'),0.14);
+  assert.ok(Math.abs(contestMod('Electric','Earth','Electric')+0.10)<1e-10);
+  assert.equal(ClashTypes.typeFactor('Earth','Electric'),1.05);
+  assert.equal(ClashTypes.typeFactor('Electric','Earth'),0.952);
 });

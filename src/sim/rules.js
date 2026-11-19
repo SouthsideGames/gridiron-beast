@@ -296,6 +296,7 @@ function preSnapHooks(state, t8, slots, offensePlay, defensePlay) {
 export function previewPendingFields(state, teams, offensePlayId, defensePlayId, { inSnap = false } = {}) {
   let t8 = state?.t8; if (!t8 || state.phase !== 'scrimmage' || state.finished) return [];
   if (!inSnap && (!t8.fields?.pending?.length || !Array.isArray(t8.fields.list))) return [];
+  t8=structuredClone(t8); state={...state,t8}; T8F.prepareFieldsForSnap(state);
   const offense = teams[state.possession], defense = teams[opponent(state.possession)];
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
   const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay, state, state.possession), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay, state, opponent(state.possession)) };
@@ -376,6 +377,7 @@ export function choosePrismTarget(state, teams, id = null) {
 export function preparePreChoice(state, teams, looks = {}, opts = {}) {
   if (state.phase !== 'scrimmage' || state.finished) return null;
   const t8 = (state.t8 ||= { status: {} });
+  T8F.prepareFieldsForSnap(state);
   const key = `${state.playCount || 0}|${state.possession}|${state.quarter}`;
   if (t8.preChoice?.key === key) { if (!(opts.chooser && opts.chooser === opponent(state.possession))) resolvePrismChoice(state, t8, teams, t8.preChoice); return t8.preChoice; }
   for (const old of t8.preChoice?.prism || []) if (t8.ability?.[old.mid]) t8.ability[old.mid].noCharge = false;
@@ -474,6 +476,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   save();
   const offenseSide = state.possession; // before the result can change possession
   const outcome = applyScrimmageResult(state, sim, offensePlayId, defensePlayId);
+  T8F.anchorWhistleFields(state);
   if (offense.rotation || defense.rotation) contactInjuries(state, slots, sim, { offenseSide });
   return { sim, outcome };
 }
@@ -532,6 +535,7 @@ export function pickSlots(lineup, slots, team = null, play = null, state = null,
 
 /** Apply an engine result to the game state. Pure state update; `sim` comes from the engine. */
 export function applyScrimmageResult(state, sim, offensePlayId = null, defensePlayId = null) {
+  if(sim.turnover)T8F.clearFieldsOnNextSnap(state);
   const off = state.possession, def = opponent(off);
   const S = state.stats[off];
   const lines = [];
@@ -694,6 +698,7 @@ function nextDown(state, gain, lines) {
 }
 function firstDown(state) { state.down = 1; state.toGo = Math.min(10, 100 - state.ballOn); }
 function changePossession(state, newBallOn, lines, note = null) {
+  T8F.clearFieldsOnNextSnap(state);
   const prev = state.possession;
   state.possession = opponent(prev);
   state.ballOn = clamp(Math.round(newBallOn), 1, 99); state.ballLat = 0;

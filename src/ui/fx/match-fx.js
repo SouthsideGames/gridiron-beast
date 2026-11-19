@@ -1,3 +1,4 @@
+import { fieldsForNextSnap } from '../../sim/t8/field-runtime.js';
 // Task 8 presentation on the match screen (docs/task8/FX_FOOTBALL_MATRIX.md, integration items I1, I2, I6). No DOM here: the match
 // screen (screens/match.js) calls these and draws the result through field-view.js. Everything is presentation: it reads the game
 // state and a finished play's record, never writes them, and nothing here is read by the simulation.
@@ -56,7 +57,7 @@ export function presnapFields(state, teams, calls = null, { hideDefenseAlign = f
   if (!state || state.phase !== 'scrimmage' || state.finished) return [];
   const frame = { home: state.possession === 'home', ballOn: state.ballOn, ballLat: state.ballLat || 0 };
   const strip = ({ fresh, inSnap, callDependent, ...f }) => f; // eslint-disable-line no-unused-vars
-  const active = state.t8?.fields?.list || [];
+  const active = fieldsForNextSnap(state).list;
   const out = toPlayFrame(active, frame).map((f, i) => ({ field: strip(f), isNew: !!active[i].createdThisPlay, pending: false }));
   const chosen = !!(calls?.offense && calls?.defense); const using = chosen ? calls : formation?.offense && formation?.defense ? formation : null;
   if (using) {
