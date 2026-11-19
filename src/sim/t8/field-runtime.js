@@ -35,8 +35,11 @@ export function afterPlay(t8, counts) {
   const b = book(t8);
   b.list = b.list.filter((f) => { if (counts(f)) f.remaining -= 1; f.createdThisPlay = false; return f.remaining > 0; });
 }
-/** Halftime: fields that clear at halftime go (approved legendary exceptions keep theirs: clearsAtHalftime false). */
-export function halftime(t8) { const b = book(t8); b.list = b.list.filter((f) => !f.clearsAtHalftime); }
+/** Halftime: every zone already on the field goes before the second-half kickoff, legendary ones included, whichever club
+ *  receives or recovers the kickoff (owner decision 2026-11-19; the old clearsAtHalftime exception is no longer honoured).
+ *  Banked creations (pending) are not on the field yet: they keep waiting for their own snap. No charge, cooldown or lifetime
+ *  changes; the first half's recorded plays keep their own zone pictures. */
+export function halftime(t8) { const b = book(t8); b.list = []; b.clearOnNextSnap = false; }
 
 // Persistent terrain follows the next line of scrimmage, never the live carrier.
 const snapPose = state => ({ possession: state.possession, yard: state.possession === 'home' ? state.ballOn : 100 - state.ballOn, lat: (state.ballLat || 0) * (state.possession === 'home' ? 1 : -1) });
