@@ -73,6 +73,7 @@ export function render() {
   const restore = restoreTo; restoreTo = null; // consumed by this render only: never carried into a later, unrelated one
   const screen = screens.get(top.name);
   const keepScroll = !navigating && current === screen; const y = window.scrollY; const entering = navigating; navigating = false; // a go/back slides the new screen in; a re-render of the same screen stays put
+  globalThis.dispatchEvent?.(new Event('gb-before-screen-render'));
   const ctx = { ...ctxProvider(), params: top.params, entering, go, back, render };
   if (current && current !== screen) current.unmount?.();
   current = screen;

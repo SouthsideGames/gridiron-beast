@@ -43,10 +43,21 @@ with sync_playwright() as pw:
         page.evaluate("async () => (await import('/src/ui/router.js')).go('league')")
         assert page.locator('.screen-roster').count() == 1, 'required sequence was bypassed'
         click(page, '[data-action="slot"]')
+        assert page.locator('.screen-assign [data-action="monster"].guide-target').count() == page.locator('.screen-assign [data-action="monster"]').count()
+        assert page.locator('.screen-assign [data-action="assign"].guide-target, .screen-assign [data-action="compare"].guide-target').count() == 0
+        assert 'guide-target' not in roster_tab.get_attribute('class')
         click(page, '[data-action="monster"]')
         page.wait_for_selector('.screen-monster')
         assert page.locator('.commissioner-guide h2').inner_text() == 'Know Your Beast'
+        page.locator('[data-guide-section="ratings"]').scroll_into_view_if_needed()
+        page.wait_for_timeout(350)
+        assert page.locator('.beast-section-tip:not([hidden])').count() == 1
+        assert 'Individual Ratings' in page.locator('.beast-section-tip').inner_text()
+        page.locator('.beast-section-tip button').click()
+        page.wait_for_timeout(250)
+        assert page.locator('.beast-section-tip:not([hidden])').count() == 0
         click(page, '[data-action="guide-next"]')
+        assert page.locator('.beast-section-tip').count() == 0
         click(page, '[data-action="guide-open"]')
         # Pick an eligible alternate using real assign controls; never auto-complete from a click alone.
         slots = page.locator('[data-action="slot"]')

@@ -191,3 +191,39 @@ test('the compact Commissioner send-off appears once, does not pause or change t
     guideFootball(JSON.parse(JSON.stringify(f)),()=>{}); assert.equal(children.length,0);
   } finally { if(previous===undefined) delete globalThis.document; else globalThis.document=previous; }
 });
+
+
+test('assignment guidance outlines beast-open controls, not Compare, Start or navigation', async () => {
+  const {guideTargetSelectors,highlightGuideTarget}=await import('../src/ui/guided-week.js');
+  const f=fresh();at(f,'roster');
+  assert.deepEqual(guideTargetSelectors(f,'assign'),['[data-action="monster"]']);
+  const nodes=Array.from({length:3},()=>{const marked=new Set();return {marked,disabled:false,closest:()=>null,getClientRects:()=>[{}],classList:{add:k=>marked.add(k),remove:k=>marked.delete(k)}};});
+  const root={querySelectorAll:s=>s==='[data-action="monster"]'?nodes:[],querySelector:()=>null};
+  highlightGuideTarget(f,'assign',root);assert.ok(nodes.every(n=>n.marked.has('guide-target')));
+});
+test('beast section guidance is limited to the early card lesson', async () => {
+  const {beastSectionTourActive,visibleBeastSection}=await import('../src/ui/guided-week.js');
+  const f=fresh();assert.equal(beastSectionTourActive(f),false);at(f,'beast');assert.equal(beastSectionTourActive(f),true);
+  f.guide.skipPending=true;assert.equal(beastSectionTourActive(f),false);delete f.guide.skipPending;
+  advanceGuide(f);assert.equal(beastSectionTourActive(f),false);
+  assert.equal(visibleBeastSection([{id:'past',top:-300,bottom:20},{id:'ratings',top:100,bottom:140},{id:'below',top:800,bottom:900}],60,400),'ratings');
+});
+test('section tips persist once per section, dismiss without advancing, and clean up listeners', async () => {
+  const {mountBeastSectionTips}=await import('../src/ui/guided-week.js');
+  const f=fresh();at(f,'beast');const index=f.guide.index,rng=f.rngState;
+  const listeners=new Map(),docListeners=new Map(),children=[];let pending=null,modal=false,active='overview',saves=0;
+  const button={};const panel={hidden:true,setAttribute(){},querySelector:()=>button,remove(){children.splice(children.indexOf(panel),1);}};
+  const doc={createElement:()=>panel,querySelector:s=>s==='.sheet-backdrop'?(modal?{}:null):null,addEventListener:(k,v)=>docListeners.set(k,v),removeEventListener:k=>docListeners.delete(k)};
+  const sections=['overview','ratings'].map(id=>({dataset:{guideSection:id},getBoundingClientRect:()=>({top:active===id?100:900,bottom:active===id?200:1000})}));
+  const root={ownerDocument:doc,isConnected:true,querySelectorAll:()=>sections,appendChild:n=>children.push(n),classList:{add(){},remove(){}}};
+  const env={innerHeight:844,setTimeout:fn=>(pending=fn,1),clearTimeout:()=>{pending=null;},addEventListener:(k,v)=>listeners.set(k,v),removeEventListener:k=>listeners.delete(k)};
+  const flush=()=>{const fn=pending;pending=null;fn?.();};
+  let cleanup=mountBeastSectionTips(f,root,()=>saves++,env);flush();assert.equal(panel.hidden,false);assert.equal(saves,1);
+  button.onclick();assert.equal(panel.hidden,true);assert.equal(f.guide.index,index);
+  active='ratings';modal=true;listeners.get('scroll')();flush();assert.equal(f.guide.cardSectionsSeen.ratings,undefined);
+  modal=false;docListeners.get('click')();flush();assert.equal(panel.hidden,false);assert.equal(saves,2);
+  active='overview';listeners.get('scroll')();flush();assert.equal(panel.hidden,true,'seen sections do not repeat');
+  cleanup();assert.equal(children.length,0);assert.equal(listeners.size,0);assert.equal(docListeners.size,0);
+  cleanup=mountBeastSectionTips(JSON.parse(JSON.stringify(f)),root,()=>saves++,env);flush();assert.equal(panel.hidden,true);assert.equal(saves,2,'reload retains seen flags');
+  cleanup();assert.equal(f.rngState,rng);assert.equal(f.guide.index,index);
+});
