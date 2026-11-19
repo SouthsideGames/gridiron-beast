@@ -99,7 +99,7 @@ export function initGuidedWeek({ app, Router }) {
     if (a === 'guide-keep') { if (finishIndependent(f, true)) { app.save(); Router.go('hq'); } else toast(t('guide.inspect_first')); }
   }, true);
   const originalGo = Router.setGuard;
-  originalGo?.((name) => { const allowed = allowedScreens(app.f); if (allowed && !allowed.includes(name)) { toast(t('guide.blocked')); return false; } return true; });
+  originalGo?.((name, { silent = false } = {}) => { const allowed = allowedScreens(app.f); if (allowed && !allowed.includes(name)) { if (!silent) toast(t('guide.blocked')); return false; } return true; });
 }
 export function mountGuide(f, screen, save) {
   highlightGuideTarget(f, screen);

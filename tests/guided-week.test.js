@@ -160,6 +160,14 @@ test('Coach Assist cannot restart automatic lessons after the Commissioner send-
   for(const screen of ['match','hq','roster','training','clash-battle']) assert.equal(autoTip(f,screen),null);
   for(const key of ['clock','overtime','match']) assert.equal(momentTip(f,key),null);
   assert.ok(helpTopics('match').length>0);
+  // Validation 2026-11-18: the match's first-ability tip (a blocking sheet the first time each ability is seen) is a Coach Assist
+  // automatic tip too; it uses the same switch. Unguided and older franchises keep it outside Expert.
+  const {automaticTipsOff} = await import('../src/franchise/assist.js');
+  assert.equal(automaticTipsOff(f),true);
+  const old = createFranchise({owner:{first:'Old',last:'GM'},club:'Ember City Beasts',seed:41}); assert.equal(automaticTipsOff(old),false);
+  old.settings.assist = {...(old.settings.assist||{}), mode:'expert'}; assert.equal(automaticTipsOff(old),true);
+  const src = (await import('node:fs')).readFileSync(new URL('../src/ui/screens/match.js', import.meta.url), 'utf8');
+  assert.match(src, /function firstAbilityTip\(f, ev\) \{\n    if \(automaticTipsOff\(f\)/, 'the match ability tip reads the shared switch');
 });
 
 test('the compact Commissioner send-off appears once, does not pause or change the game, and stays dismissed', async () => {

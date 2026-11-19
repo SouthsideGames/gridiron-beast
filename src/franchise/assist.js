@@ -34,6 +34,8 @@ export function setAssist(f, patch = {}) {
 }
 export const isGuided = (f) => assistSettings(f).mode === 'guided';
 export const isExpert = (f) => assistSettings(f).mode === 'expert';
+/** No automatic Coach Assist tips: Expert mode, or a guided tour that handed over at the first kickoff (manual Help stays). */
+export const automaticTipsOff = (f) => !!f?.guide?.endedAtFootball || isExpert(f);
 /** Contextual hints (counter plays, upgrade badges, "who fits" notes): a switch of their own, in every mode. */
 export const hintsOn = (f) => assistSettings(f).hints;
 /** Routine consequence lines ("this costs 42,000 of cap room"): a switch of their own. Confirmations for irreversible actions do not depend on it. */

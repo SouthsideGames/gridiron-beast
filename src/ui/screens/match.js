@@ -17,7 +17,7 @@ import { esc, delegate, toast, sheet, fmtClock, confirmSheet } from '../dom.js';
 import * as F from '../../franchise/franchise.js';
 import * as R from '../../sim/rules.js';
 import { momentSheet } from '../tutorial.js';
-import { isExpert } from '../../franchise/assist.js';
+import { automaticTipsOff } from '../../franchise/assist.js';
 import * as AI from '../../sim/coach-ai.js';
 import { step, aiController, newTendencies } from '../../sim/game-runner.js';
 import { rngFromState } from '../../core/rng.js';
@@ -522,11 +522,14 @@ export function registerMatchScreens(Router, app) {
       return `<div class="match-actions">${autoBar}${rpRow}${weKick ? `<div class="primary-row ${s.phase === 'kickoff' ? 'three' : ''}" style="grid-template-columns:${s.phase === 'kickoff' ? '2fr 1fr' : '1fr'}"><button class="btn primary big" data-action="kickoff">${s.phase === 'free_kick' ? $t('match.free_kick_2') : $t('match.kick_off')}</button>${s.phase === 'kickoff' ? `<button class="btn" data-action="onside">${$t('match.onside')}</button>` : ''}</div>` : `<button class="btn primary big block" data-action="kickoff">${$t('match.receive_the_kick')}</button>`}</div>`;
     }
     if (s.phase === 'try') {
-      if (s.tryTeam !== me) return `<div class="match-actions">${substitutionStrip(f)}${autoBar}${rpRow}<button class="btn primary big block" data-action="continue">${$t('match.opponents_try_continue')}</button></div>`;
+      // Live console: the try's decision comes first; lineup changes and the replay sit in the More sheet, so the field and the
+      // choice stay on screen together on short phones (validation 2026-11-18: at 320 x 568 Choose Play fell below the screen).
+      const tryMore = (sub) => sub || rpRow ? `<button class="btn small" data-action="match-panel" data-panel="more">${$t('playview.more_controls')}</button><div hidden data-match-panel="more">${rpRow}${sub}</div>` : '';
+      if (s.tryTeam !== me) { const more = tryMore(substitutionStrip(f)); return `<div class="match-actions compact-actions">${autoBar}<button class="btn primary big block" data-action="continue">${$t('match.opponents_try_continue')}</button>${more ? `<div class="match-quick-actions">${more}</div>` : ''}</div>`; }
       const two = PLAYS; const plays = teams[me].offensePlays.filter((id) => PLAYS[id].tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t)));
-      return `<div class="match-actions">${substitutionStrip(f)}${autoBar}${rpRow}<p class="muted center" style="margin:0">${$t('match.touchdown_kick', { tryDecision: AI.tryDecision(s) === 'two' ? 'coach suggests two' : $t('match.coach_suggests_the_kick') })}</p>
+      return `<div class="match-actions compact-actions">${autoBar}<p class="muted center" style="margin:0;font-size:12px">${$t('match.touchdown_kick', { tryDecision: AI.tryDecision(s) === 'two' ? 'coach suggests two' : $t('match.coach_suggests_the_kick') })}</p>
         <div class="primary-row" style="grid-template-columns:1fr 1fr"><button class="btn primary big" data-action="trykick">${$t('match.kick_pat_1')}</button><button class="btn big" data-action="trytwo">${$t('match.go_for_two')}</button></div>
-        <button class="btn block" data-action="match-panel" data-panel="plays">${$t('playview.choose_play')}</button><div hidden data-match-panel="plays">${cards(plays, 'offense', G.selected.offense, null)}</div></div>`;
+        <div class="match-quick-actions"><button class="btn small" data-action="match-panel" data-panel="plays">${$t('playview.choose_play')}</button>${tryMore(substitutionStrip(f))}</div><div hidden data-match-panel="plays">${cards(plays, 'offense', G.selected.offense, null)}</div></div>`;
     }
     // Scrimmage.
     const myBall = s.possession === me;
@@ -758,7 +761,7 @@ export function registerMatchScreens(Router, app) {
    * During Auto it is a toast, so the game keeps moving.
    */
   function firstAbilityTip(f, ev) {
-    if (isExpert(f) || !ev.sim) return; // Coach Assist: Expert has no automatic tips
+    if (automaticTipsOff(f) || !ev.sim) return; // Coach Assist: no automatic tips in Expert or after the guided tour's kickoff handoff
     const G = f.game; const seen = (f.abilityTips ||= {}); const off = ev.offenseSide || G.state.possession; const look = fxLookup(f, off);
     for (const e of (Array.isArray(ev.sim.events) ? ev.sim.events : [])) {
       if (e.kind !== 'ability' || e.trait) continue;

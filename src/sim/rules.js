@@ -709,6 +709,7 @@ function changePossession(state, newBallOn, lines, note = null) {
   lines.push(`${$E('sim.ball_at_the', { name: state[state.possession].name, toLowerCase: yardLabel(state.ballOn).toLowerCase() })}`);
 }
 function touchdown(state, side, lines) {
+  T8F.clearFieldsOnNextSnap(state); // a score ends the possession, even when the scoring club keeps the ball after its kickoff
   state.score[side] += 6; state.stats[side].td += 1;
   { const L = ((state.t8 ||= { status: {} }).touchdowns ||= { home: 0, away: 0 }); L[side] += 1; } // M3 hook: the touchdown ledger by scoring club (offense, defense, returns)
   state.phase = 'try'; state.tryTeam = side; state.ballOn = 100 - FIELD.twoPointSpot; state.down = 1; state.toGo = FIELD.twoPointSpot;
@@ -717,6 +718,7 @@ function touchdown(state, side, lines) {
   return { team: side, points: 6, kind: 'touchdown' };
 }
 function safety(state, lines) {
+  T8F.clearFieldsOnNextSnap(state);
   const scoringSide = opponent(state.possession);
   state.score[scoringSide] += 2;
   lines.push(`${$E('sim.safety', { name: state[scoringSide].name, home: state.score.home, away: state.score.away })}`);
@@ -991,7 +993,7 @@ export function doFieldGoal(state, teams, { signature = false } = {}) {
   const lines = [res.text];
   let scored = null;
   if (res.good) {
-    state.score[kicking] += 3; state.stats[kicking].fg += 1; scored = { team: kicking, points: 3, kind: 'field_goal' };
+    T8F.clearFieldsOnNextSnap(state); state.score[kicking] += 3; state.stats[kicking].fg += 1; scored = { team: kicking, points: 3, kind: 'field_goal' };
     lines.push(`${state.home.abbr} ${state.score.home}-${state.score.away} ${state.away.abbr}.`);
     if (state.ot) { state.lastPlay = { text: lines.join(' '), result: 'field_goal' }; log(state, lines.join(' '), 'score', { important: true }); otAfterPossession(state); return { res, text: lines.join(' '), scored }; }
     state.phase = 'kickoff'; state.kickingTeam = kicking; state.possession = opponent(kicking); state.clockRunning = false;
@@ -1066,6 +1068,7 @@ function startOvertime(state) {
   otPossession(state, first);
 }
 function otPossession(state, side) {
+  T8F.clearFieldsOnNextSnap(state); // every overtime possession starts on fresh terrain, even for the club that ended regulation with the ball
   state.possession = side; state.phase = 'scrimmage'; state.ballOn = 75; state.ballLat = 0; firstDown(state); state.clockRunning = false;
   state.drive = { team: side, plays: 0, yards: 0, start: 75 };
   if (state.ot.period >= 3) { state.phase = 'try'; state.tryTeam = side; state.ballOn = 100 - FIELD.twoPointSpot; state.toGo = FIELD.twoPointSpot; }

@@ -75,16 +75,22 @@ test('overlap choices show Steam and use the same parent footprints and clocks; 
   assert.deepEqual(zoneOverlaps(mix.rect, spec.type, [f], 3, spec.clock, 'home'), []);
 });
 
-test('zones stay fixed across line movement and creator bench time; only relevant team plays age them', () => {
+// PR #136 (owner revision 2026-11-18): persistent zones keep their placement relative to the line BETWEEN plays (they were
+// fixed to the field before). Creator bench time and the relevant-team clock are unchanged.
+test('zones move with the line between plays, keep their size and lane through creator bench time; only relevant team plays age them', () => {
   const { state, teams } = game(); const spec = pending(state, teams, 'home');
   const [p] = zonePlans(state, teams, 'home', 'inside_zone', 'cover_3'); setZoneChoice(state, p.key, 'right');
-  R.runScrimmagePlay(state, teams, 'inside_zone', 'cover_3');
-  const f = state.t8.fields.list[0], rect = JSON.stringify([f.yard, f.lat]); assert.equal(f.remaining, 2);
+  const line0 = state.ballOn; R.runScrimmagePlay(state, teams, 'inside_zone', 'cover_3');
+  const f = state.t8.fields.list[0], id = f.id, yard0 = [...f.yard], lat0 = [...f.lat]; assert.equal(f.remaining, 2);
   afterPlay(state.t8, ()=>false); assert.equal(f.remaining, 2);
   delete teams.home.offense.TE;
   Object.assign(state, { possession: 'home', phase: 'scrimmage', down: 1, toGo: 10, ballOn: 55 });
-  R.runScrimmagePlay(state, teams, 'three_verticals', 'cover_3');
-  assert.equal(f.remaining, 1); assert.equal(JSON.stringify([f.yard,f.lat]), rect);
+  const { sim } = R.runScrimmagePlay(state, teams, 'three_verticals', 'cover_3');
+  const g = state.t8.fields.list.find((x) => x.id === id); assert.ok(g, 'still on the field with its creator benched');
+  assert.equal(g.remaining, 1, 'one relevant team play aged it');
+  const shift = 55 - line0; assert.ok(Math.abs(shift) > 0);
+  assert.deepEqual(g.yard.map((y) => +y.toFixed(6)), yard0.map((y) => +(y + shift).toFixed(6)), 'moved with the line');
+  assert.deepEqual(g.lat, lat0, 'same lane'); assert.ok(sim.fields.some((x) => x.id === id), 'in play at the new spot');
 });
 
 test('stale and forged choices fall back to a legal coach placement; own options do not read opponent assignments', () => {

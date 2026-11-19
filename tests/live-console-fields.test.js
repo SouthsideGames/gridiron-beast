@@ -41,12 +41,12 @@ test('projection is read-only and repeated preparation and reload do not drift o
   const once=JSON.stringify(saved);prepareFieldsForSnap(saved);assert.equal(JSON.stringify(saved),once);
   assert.deepEqual(saved.t8.fields.list,projected.list);assert.equal(saved.rngState,123);
 });
-test('turnover leaves live/replay terrain intact but clears both clubs and banked terrain next snap',()=>{
+test('turnover leaves live/replay terrain intact, clears both clubs\' field terrain next snap and keeps banked creations',()=>{
   const s=state();s.t8.fields.list.push(zone({id:'F2',ownerTeam:'away',type:'Fire'}));s.t8.fields.pending.push({owner:'a_FS',type:'Fire'});
   prepareFieldsForSnap(s);const replay=structuredClone(s.t8.fields.list);clearFieldsOnNextSnap(s);
   assert.equal(s.t8.fields.list.length,2);s.possession='away';s.ballOn=60;
   assert.deepEqual(fieldsForNextSnap(s).list,[]);assert.equal(s.t8.fields.list.length,2);
-  prepareFieldsForSnap(s);assert.deepEqual(s.t8.fields.list,[]);assert.deepEqual(s.t8.fields.pending,[]);
+  prepareFieldsForSnap(s);assert.deepEqual(s.t8.fields.list,[]);assert.deepEqual(s.t8.fields.pending,[{owner:'a_FS',type:'Fire'}],'a banked creation waits for its own snap (owner decision 2026-11-18)');
   assert.equal(replay.length,2);assert.equal(replay[1].type,'Fire');
 });
 test('a possession change clears terrain even if an older caller did not flag it explicitly',()=>{
@@ -82,4 +82,33 @@ test('an authoritative interception flags old Fire terrain before the new offens
   const {s}=game();s.t8.fields.list=[zone({type:'Fire',ownerTeam:'away'})];prepareFieldsForSnap(s);
   R.applyScrimmageResult(s,{result:'interception',turnover:true,yards:0,endYard:35,elapsed:3,stats:{passer:'QB',interceptor:'CB1'},events:[],names:{off:{QB:'QB'},def:{CB1:'CB'}}});
   assert.equal(s.possession,'away');assert.equal(s.t8.fields.list.length,1);prepareFieldsForSnap(s);assert.deepEqual(s.t8.fields.list,[]);
+});
+
+// Validation (2026-11-18): a score, safety or overtime possession ends the possession even when the same club has the ball
+// at the next scrimmage snap (its onside kick recovered, its own muffed kickoff, the first overtime possession).
+test('the scoring club recovering its own kickoff starts on fresh terrain; banked creations survive',()=>{
+  let checked=0;
+  for(let seed=1;seed<400&&checked<1;seed++){
+    const {s,teams}=game();s.rngState=seed*7919;s.ballOn=95;s.t8.fields.list=[zone({yard:[96,100]})];s.t8.fields.pending=[{owner:'h_TE',ability:'NAT-01-F',type:'Nature',lifetime:3,clock:'ownerOffense'}];prepareFieldsForSnap(s);
+    R.applyScrimmageResult(s,{result:'touchdown',yards:5,endYard:100,elapsed:4,stats:{carrier:'RB'},events:[],names:{off:{RB:'RB'},def:{}}});
+    assert.equal(s.phase,'try');R.attemptTryKick(s,teams);assert.equal(s.phase,'kickoff');
+    R.doKickoff(s,teams,{onside:true});
+    if(!(s.phase==='scrimmage'&&s.possession==='home'))continue;
+    checked++;prepareFieldsForSnap(s);
+    assert.deepEqual(s.t8.fields.list,[],'the scoring drive\'s zone does not carry into the new possession');
+    assert.equal(s.t8.fields.pending.length,1);
+  }
+  assert.equal(checked,1,'an onside recovery was found');
+});
+test('every overtime possession starts on fresh terrain, also for the club that ended regulation with the ball',()=>{
+  const {s}=game();s.t8.fields.list=[zone()];prepareFieldsForSnap(s);
+  s.score={home:7,away:7};s.quarter=5;s.ot={period:1,first:'away',possessionsLeft:2,scoreAtStart:{home:7,away:7}};
+  R.otAfterPossession(s);assert.equal(s.possession,'home');
+  prepareFieldsForSnap(s);assert.deepEqual(s.t8.fields.list,[]);
+});
+test('a safety ends the possession for terrain even if the free kick returns to the conceding club',()=>{
+  const {s}=game();s.t8.fields.list=[zone()];prepareFieldsForSnap(s);s.ballOn=3;
+  R.applyScrimmageResult(s,{result:'safety',yards:-4,endYard:-1,elapsed:4,stats:{carrier:'RB',tackler:'DL1'},events:[],names:{off:{RB:'RB'},def:{DL1:'DL'}}});
+  assert.equal(s.phase,'free_kick');Object.assign(s,{phase:'scrimmage',possession:'home',ballOn:40});
+  prepareFieldsForSnap(s);assert.deepEqual(s.t8.fields.list,[]);
 });

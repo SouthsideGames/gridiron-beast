@@ -74,6 +74,26 @@ with sync_playwright() as pw:
         click(page, '[data-action="guide-off"]')
         page.evaluate("async () => (await import('/src/ui/router.js')).go('league')")
         page.wait_for_selector('.screen-league')
+        # The highlighted HQ tab must open HQ even when the HQ tab remembers a sub-screen the current lesson closes
+        # (validation 2026-11-18: on Saturday's media screen the highlighted HQ tab was refused with "Finish or skip").
+        page.evaluate("""async () => {
+          const F = await import('/src/franchise/franchise.js'); const G = await import('/src/franchise/guide.js'); const R = await import('/src/ui/router.js');
+          const f = F.createFranchise({owner:{first:'Tab',last:'GM',background:'player'},club:'Ember City Beasts',seed:313});
+          F.hireDefaultStaff(f); f.welcomed=true; f.scenes=[];
+          while (!f.draft.done) { if (F.onTheClock(f) === f.club) F.myDraftPick(f, f.draft.available[0]); }
+          if (F.needsGoal(f)) F.chooseGoal(f, F.commissionerGoals(f)[0]?.id);
+          G.startGuide(f); f.guide.index=G.LESSONS.findIndex(l=>l.id==='wednesday'); f.season.day=2;
+          await __gb.setFranchise(f); R.go('hq', {}, {reset:true});
+        }""")
+        page.wait_for_selector('.screen-hq'); click(page, '.screen-hq [data-action="training"]'); page.wait_for_selector('.screen-training')
+        click(page, '.tabbar [data-screen="roster"]'); page.wait_for_selector('.screen-roster')  # the HQ tab now remembers Training
+        page.evaluate("""async () => { const G = await import('/src/franchise/guide.js'); const f = __gb.f;
+          f.guide.index=G.LESSONS.findIndex(l=>l.id==='sunday'); f.season.day=6; (await import('/src/ui/router.js')).go('lineup'); }""")
+        page.wait_for_selector('.screen-lineup'); clear_scenes(page)
+        assert 'guide-target' in page.locator('.tabbar [data-screen="hq"]').get_attribute('class'), 'the HQ tab is not highlighted on the media screen'
+        click(page, '.tabbar [data-screen="hq"]'); page.wait_for_timeout(200)
+        assert page.locator('.screen-hq').count() == 1, 'the highlighted HQ tab was refused'
+        assert page.locator('.screen-hq .guide-target').count() >= 1, 'HQ does not highlight the way to the game'
         # A new player's real match transition ends the guide before kickoff.
         page.evaluate("""async () => {
           const F = await import('/src/franchise/franchise.js'); const G = await import('/src/franchise/guide.js');
@@ -104,7 +124,7 @@ with sync_playwright() as pw:
         page.evaluate("async () => (await import('/src/ui/router.js')).go('match', {}, {reset:true})")
         assert page.locator('.guide-sendoff,.commissioner-guide,.guide-compact').count() == 0
         assert not errors, errors
-        print(f'PASS {width}px: real highlighted navigation, tour, lineup, kickoff handoff, no match tips, reload, opt out')
+        print(f'PASS {width}px: real highlighted navigation, gated tab history, tour, lineup, kickoff handoff, no match tips, reload, opt out')
         page.close()
     browser.close()
 server.shutdown()

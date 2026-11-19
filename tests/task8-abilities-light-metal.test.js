@@ -300,8 +300,11 @@ test('Gear Grid: qualifying punt banks one off-field defensive zone; placement a
     snap();
     const f = g.t8.fields.list.find((x) => x.ability === 'MET-03-F'); assert.ok(f, 'created at the opponent snap with the kicker off the field'); assert.equal(g.t8.fields.pending.length, 0);
     assert.equal(f.type, 'Metal'); assert.deepEqual(f.lat, [-5, 5]); assert.equal(f.yard[1] - f.yard[0], 6, 'unchanged six-yard length at a legal suggested location'); assert.equal(f.remaining, 4, 'life 3 at mastery 3, the spawn play counted');
+    // PR #136 (owner decision 2026-11-18): each punt is a new possession, so his earlier field is cleared; the new token is
+    // created fresh at the next opposing snap (the "waits while his own field is active" case can no longer arise across a punt).
+    snap(); { const live = g.t8.fields.list.find((x) => x.ability === 'MET-03-F'); assert.equal(live.remaining, 3, "his club's defensive play counted"); }
     for (let i = 0; i < 6 && !g.t8.fields.pending.length; i++) punt();
-    if (g.t8.fields.pending.length) { snap(); assert.equal(f.remaining, 3, "his club's defensive play counted"); assert.equal(g.t8.fields.pending.length, 1, 'a new token waits while his own field is active'); assert.equal(g.t8.fields.list.filter((x) => x.ability === 'MET-03-F').length, 1); }
+    if (g.t8.fields.pending.length) { snap(); const live = g.t8.fields.list.filter((x) => x.ability === 'MET-03-F'); assert.equal(live.length, 1, 'only the fresh field'); assert.equal(live[0].remaining, 4, 'the old field was cleared by the punt; the new one starts its full life'); assert.notEqual(live[0].id, f.id); assert.equal(g.t8.fields.pending.length, 0); }
   }
   assert.ok(banked >= 1 && short >= 1, `banked ${banked}, short ${short}`);
 });

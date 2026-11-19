@@ -349,7 +349,11 @@ test('Frostmark: a made field goal (not a miss, not an extra point) banks one pe
     assert.ok(f.yard[0] >= -1e-9 && f.yard[1] <= 30 + 1e-9, `inside the line-to-12 band: ${f.yard}`);
     const live = g.t8.fields.list.filter((x) => x.ability === 'ICE-01-F');
     assert.equal(live.length, 1, 'lifetime 1/2/3/4 opposing offensive plays including spawn');
-    if (live.length) { assert.equal(live[0].remaining, [3, 4, 5, 5][m] - 1); snapFor(g, 'home'); R.runScrimmagePlay(g, teams, OFFENSE_IDS[0], DEFENSE_IDS[0]); assert.equal(g.t8.fields.list.find((x) => x.ability === 'ICE-01-F').remaining, [3, 4, 5, 5][m] - 1, 'the kicker team\'s own plays do not count'); }
+    if (live.length) { assert.equal(live[0].remaining, [3, 4, 5, 5][m] - 1);
+      // PR #136 (owner decision 2026-11-18): it lives only on the opposing possession: another opposing play ages it, and the
+      // kicker club's next possession clears it (before, it waited on the field through the kicker club's own plays).
+      if (live[0].remaining > 1) { snapFor(g, 'away'); R.runScrimmagePlay(g, teams, OFFENSE_IDS[1], DEFENSE_IDS[1]); assert.equal(g.t8.fields.list.find((x) => x.ability === 'ICE-01-F').remaining, [3, 4, 5, 5][m] - 2, 'each opposing offensive play counts'); }
+      snapFor(g, 'home'); R.runScrimmagePlay(g, teams, OFFENSE_IDS[0], DEFENSE_IDS[0]); assert.equal(g.t8.fields.list.some((x) => x.ability === 'ICE-01-F'), false, 'a new possession clears it'); }
   }
   assert.ok(made >= 10, `made ${made}`);
   // extra points are not field goals

@@ -335,6 +335,8 @@ export function registerClashBattle(Router, app) {
         for(const child of [...root.children])if(child!==console){
           const paused=child.matches('.polish-paused')?child:child.querySelector('.polish-paused');
           if(paused)console.querySelector('#live-status').appendChild(paused);
+          // A replay's way back to the result is an essential control: it stays in the console (validation 2026-11-18).
+          if(child.matches?.('[data-action="endreplay"]')){child.classList.add('clash-endreplay');console.appendChild(child);continue;}
           if(child!==paused)notices.appendChild(child);
         }
         root.appendChild(notices);

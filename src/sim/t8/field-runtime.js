@@ -50,8 +50,11 @@ function fitRange(range, lo, hi) {
 export function fieldsForNextSnap(state) {
   const b=state.t8?.fields, pose=snapPose(state);
   if(!b)return {list:[],pending:[],seq:0,snap:pose};
+  // A new possession clears every zone on the field (both clubs). Banked creations (pending) are not on the field yet:
+  // each waits for its own approved snap (Frostmark, Gear Grid, Tsunami Line, Splashdown, Permafrost) and is placed fresh
+  // at the new line, so it survives (owner decision 2026-11-18; clearing it stranded the creator's ability).
   if(b.clearOnNextSnap || (b.snap && b.snap.possession!==pose.possession))
-    return {...b,list:[],pending:[],snap:pose,clearOnNextSnap:false};
+    return {...b,list:[],pending:b.pending||[],seq:b.seq||0,snap:pose,clearOnNextSnap:false};
   const list=(b.list||[]).map(f=>{
     // Legacy fields adopt their current reference once; their old offset was not saved.
     const followLOS=f.followLOS||relativeToSnap(f,b.snap||pose);
