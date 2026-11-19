@@ -10,6 +10,23 @@ export function startGuide(f) {
   f.guide = { v: 1, enabled: true, index: 0, completed: [], skipped: [], moments: [], year: f.season.year, week: f.season.week, lineup: lineupStamp(f), evidence: {} };
 }
 export const currentLesson = (f) => guideActive(f) ? LESSONS[f.guide.index] || null : null;
+// Later lesson IDs stay in the archive for older saves and the Guidebook. The
+// actual required tour now ends as soon as the first football game starts.
+const footballIndex = LESSONS.findIndex(l => l.kind === 'game');
+export const GUIDE_LESSON_COUNT = footballIndex + 1;
+export function finishGuideAtFootball(f) {
+  if (!guideActive(f)) return false;
+  const g = f.guide;
+  if (!f.game?.state && !g.evidence?.gameFinished && g.index <= footballIndex) return false;
+  const showSendoff = !!f.game?.state && !f.game.state.finished && g.index <= footballIndex;
+  if (g.index === footballIndex && !g.completed.includes('sunday') && !g.skipped.includes('sunday')) g.completed.push('sunday');
+  g.done = true; g.endedAtFootball = true;
+  g.index = Math.max(g.index, GUIDE_LESSON_COUNT);
+  (g.evidence ||= {}).gameStarted = true;
+  g.sendoffPending = showSendoff;
+  delete g.skipPending;
+  return true;
+}
 export function advanceGuide(f, { skip = false } = {}) {
   const l = currentLesson(f); if (!l) return false;
   f.guide[skip ? 'skipped' : 'completed'].push(l.id);
@@ -27,6 +44,7 @@ export function guideEvent(f, event) {
 // One save can complete more than one checkpoint (skipping Tuesday's encounter ends both the prospect and Clash lessons),
 // so keep advancing until the current lesson is not yet done. Never more than one pass per lesson.
 export function syncGuide(f) {
+  if (finishGuideAtFootball(f)) return true;
   let advanced = false;
   for (let i = 0; i <= LESSONS.length && syncOnce(f); i++) advanced = true;
   return advanced;
@@ -69,18 +87,10 @@ export function allowedScreens(f) {
   if (l.kind === 'game') return [...shared, 'pregame', 'clash-battle', 'match', 'roster', 'assign', 'monster', 'goals', 'famarket', 'contracts', 'lineup'];
   return [...shared, ...(routes[l.screen] || [])];
 }
-/**
- * Which football lesson fits the match as it stands, or null. Fourth Down and the extra-point choice describe the player's
- * own options, so they wait for the player's own fourth down or touchdown; the opponent's fourth down is a defensive snap.
- * `snoozed(key)` marks a lesson closed without reading in this session: the first-game introduction then stops holding the rest back.
- */
+/** Retained API for older callers. Automatic football lessons have been retired. */
 export function footballLessonKey(f, snoozed = () => false) {
-  const s = f.game?.state; if (!s) return null; const mine = s.possession === f.game.playerSide;
-  if (!f.guide.moments.includes('football') && !snoozed('football')) return 'football';
-  if (s.finished) return null;
-  if (s.phase === 'kickoff' || (s.phase === 'try' && mine)) return 'kick';
-  if (s.phase === 'try') return null;
-  return s.down === 4 && mine ? 'fourth' : mine ? 'offense' : 'defense';
+  // Compatibility for callers and older saves: football is independent play.
+  return null;
 }
 export function lessonCanRead(f, screen) {
   const l = currentLesson(f); return !!l && l.kind === 'read' && l.screen === screen;

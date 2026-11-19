@@ -13,8 +13,8 @@ import { manKeyTargets, eligibleReceivers } from '../data/playbook.js';
 import { positionOf } from '../data/personnel.js';
 import { E as $E } from '../core/english.js';
 
-/** Football strengths (initial values from the owner's brief, 2026-10-22). Separate from the Clash's 1.05 / 0.952. */
-export const FOOTBALL_TYPE_VALUES = Object.freeze({ version: 'f1.1', strong: 0.04, weak: -0.04, dragonNeutral: 0.02, envMatch: 0.02, positiveCap: 0.06 });
+/** Football strengths (candidate for meaningful matchups, 2026-11-18; balance validation pending). Separate from the Clash's 1.05 / 0.952. */
+export const FOOTBALL_TYPE_VALUES = Object.freeze({ version: 'f1.2-candidate', strong: 0.12, weak: -0.12, dragonNeutral: 0.02, envMatch: 0.02, positiveCap: 0.14 });
 let active = FOOTBALL_TYPE_VALUES;
 /** Run `fn` with other strengths (balance tools only; the game never calls this). `{ strong: 0, weak: 0, dragonNeutral: 0 }` turns types off. */
 export function withTypeValues(values, fn) {
@@ -33,19 +33,19 @@ export function footballEdge(a, b) {
   if (a === 'Dragon' && b && b !== 'Dragon' && BEATS[b]) return 'wild';
   return 'even';
 }
-/** The fraction added to a's contest score against b (+0.04, −0.04, +0.02 or 0). */
+/** The fraction added to a's contest score against b (+0.12, −0.12, +0.02 or 0). */
 export function typeMod(a, b) {
   const e = footballEdge(a, b);
   return e === 'strong' ? active.strong : e === 'weak' ? active.weak : e === 'wild' ? active.dragonNeutral : 0;
 }
-/** Multiplier for a's contest score against b (1.04, 0.96, 1.02 or 1). Missing types are neutral. */
+/** Multiplier for a's contest score against b (1.12, 0.88, 1.02 or 1). Missing types are neutral. */
 export const typeScale = (a, b) => 1 + typeMod(a, b);
 
 /** Stadium environment (GDD §33.2): +2% for a monster whose type matches the field's, whichever team he plays for. */
 export function envMod(type, envType) { return type && envType && type === envType ? active.envMatch : 0; }
 /**
  * Everything situational on a's side of one contest against b: the type edge plus the field, with the positive total
- * capped (+6%). Negative edges are never softened by the cap, and nothing here is stored anywhere.
+ * capped (+14%). Negative edges are never softened by the cap, and nothing here is stored anywhere.
  */
 export function contestMod(a, b, envType = null) {
   const total = typeMod(a, b) + envMod(a, envType);
@@ -149,7 +149,7 @@ export function describeMatchup(m, offense = {}, defense = {}) {
 export function matchupEdges(plays, offense, defense) {
   return expectedMatchups(plays).map((m) => describeMatchup(m, offense, defense)).filter((x) => x.off.mod || x.def.mod);
 }
-/** "+4%" / "−4%" / "+2%". */
+/** "+12%" / "−12%" / "+2%". */
 export const pct = (mod) => `${mod > 0 ? '+' : mod < 0 ? '−' : ''}${Math.round(Math.abs(mod) * 100)}%`;
 
 // ------------------------------------------------------------ the coach AI's view (same numbers, no peeking)

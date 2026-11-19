@@ -46,7 +46,11 @@ with sync_playwright() as pw:
             sel_now = page.evaluate("() => { const G = __gb.f.game; return G.selected.offense || G.selected.defense }")
             snap = page.query_selector('[data-action=snap]')
             if cards and (not sel_now or i % 3 == 2):
-                cards[(i // 3) % len(cards)].click()  # try another call: different calls give different matchups
+                k = (i // 3) % len(cards)  # try another call: different calls give different matchups
+                if cards[k].is_visible(): cards[k].click()
+                else:  # PR #136 live console: the plays are in the Choose Play sheet, whose copies forward to the original card
+                    page.click('[data-action=match-panel][data-panel=plays]'); page.wait_for_timeout(150)
+                    page.locator('.sheet .play-grid [data-live-control]').nth(k).click()
             elif snap and snap.is_visible() and snap.is_enabled(): snap.click()
         page.wait_for_timeout(250)
         if page.query_selector('.sheet-backdrop'): page.evaluate("() => document.querySelectorAll('.sheet-backdrop').forEach(e => e.remove())")

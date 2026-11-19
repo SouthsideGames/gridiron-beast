@@ -1,3 +1,4 @@
+import { t as $t } from '../../text/index.js';
 import { openZoneReviewer } from '../zone-reviewer.js';
 import { ZONE_IDS } from '../../sim/t8/zone-planning.js';
 import { abilityBlockHtml } from '../ability-info.js';
@@ -133,20 +134,22 @@ export function registerAbilityReviewer(Router, app) {
 
   // ------------------------------------------------------------------------------------------------------------- the player
   function openPlayer(c, { title, head, intro, plays, phases, ok, natural = false, r = null, player = false }) {
-    const checklist = phases.length ? `<div class="panel tight" data-rv2="phases" style="margin-top:6px"><b>Phases</b>${phases.map((ph, i) => `<div class="rv2-phase" data-phase="${ph.id}" data-i="${i}" style="font-size:13px;margin-top:3px"><span class="rv2-box">☐</span> ${esc(ph.label)}${ph.play != null ? ` <span class="dim" style="font-size:11px">· play ${ph.play + 1}</span>` : ""}<div class="dim rv2-ev" style="font-size:11px;display:none">${esc(ph.evidence || '')}</div></div>`).join('')}
+    const checklist = !player && phases.length ? `<div class="panel tight" data-rv2="phases" style="margin-top:6px"><b>Phases</b>${phases.map((ph, i) => `<div class="rv2-phase" data-phase="${ph.id}" data-i="${i}" style="font-size:13px;margin-top:3px"><span class="rv2-box">☐</span> ${esc(ph.label)}${ph.play != null ? ` <span class="dim" style="font-size:11px">· play ${ph.play + 1}</span>` : ""}<div class="dim rv2-ev" style="font-size:11px;display:none">${esc(ph.evidence || '')}</div></div>`).join('')}
       <div class="dim" data-rv2="verdict" style="font-size:12px;margin-top:4px">${ok ? 'Playing…' : 'Not every phase was observed (see above).'}</div></div>` : '';
     const controls = `<div class="row rv2-controls" style="gap:4px;flex-wrap:wrap;margin:6px 0">
         <button class="btn small" data-pb="toggle" aria-label="Pause">⏸</button><button class="btn small ghost" data-pb="replay" aria-label="Replay">↺</button>
         ${SPEEDS.map((s) => `<button class="btn small ghost" data-pb="speed" data-v="${s}" aria-label="Speed ${s}x">${s}×</button>`).join('')}
         <button class="btn small ghost" data-pb="prevplay" aria-label="Previous play">⏮</button><button class="btn small ghost" data-pb="event" aria-label="Next event">▸ Event</button><button class="btn small ghost" data-pb="play" aria-label="Next play">⏭ Play</button>
         <span class="dim" style="font-size:11px;margin-left:4px">FX</span>${['full', 'low', 'min'].map((q) => `<button class="btn small ghost" data-pb="quality" data-v="${q}" aria-label="Effect quality ${q}">${q}</button>`).join('')}<button class="btn small ghost" data-pb="flash" aria-label="Reduced flash">☼ Reduced Flash</button></div>`;
-    const html = `<p class="muted" style="margin:0 0 6px">${head}</p>${intro}${checklist}
-      <div class="dim" data-rv2="playinfo" style="font-size:12px;margin-top:6px"></div>
+    const html = `<div class="ability-play-console ${player?'player-demo':'developer-demo'}">
+      <details class="demo-information"><summary>${$t('playview.about_ability')}</summary><p class="muted">${head}</p>${intro}${checklist}</details>
       <div class="field-wrap"><svg id="fbreview" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet"></svg></div>
-      <div class="dim" data-rv2="kicktext" style="font-size:12px;display:none"></div>${controls}
-      <div class="log" data-rv2="log" style="margin-top:6px;max-height:180px;overflow:auto"></div>
-      ${player ? '' : `<div class="sheet-review" style="margin-top:10px">${reviewHtml(NS, c.abilityId, { open: true })}</div>`}`;
+      <div class="dim" data-rv2="playinfo"></div><div class="dim" data-rv2="kicktext" style="display:none"></div>${controls}
+      <details class="demo-log" ${player?'hidden':''}><summary>${$t('playview.play_log')}</summary><div class="log" data-rv2="log"></div></details>
+      ${player?'':`<details class="demo-review"><summary>${$t('playview.review_tools')}</summary><div class="sheet-review">${reviewHtml(NS,c.abilityId,{open:true})}</div></details>`}
+      </div>`;
     const { el } = sheet(html, { title, onClose: stop });
+    el.querySelector('.sheet').classList.add('ability-play-sheet');
     if (!player) bindReview(c, el.querySelector('.sheet-review'));
     const svg = el.querySelector('#fbreview'); const info = el.querySelector('[data-rv2="playinfo"]'); const logBox = el.querySelector('[data-rv2="log"]'); const kickBox = el.querySelector('[data-rv2="kicktext"]');
     const prepared = plays.map((p, pi) => {

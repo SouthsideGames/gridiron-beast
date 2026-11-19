@@ -83,7 +83,11 @@ with sync_playwright() as pw:
         btn = page.query_selector('[data-action=replay]')
         if not btn: notes.append('no manual Replay button on this screen state (phase without the scrimmage bar)')
         else:
-            btn.click(); page.wait_for_timeout(500)
+            if btn.is_visible(): btn.click()
+            else:  # PR #136 live console: Replay is in the More sheet, whose copy forwards to the original button
+                page.click('[data-action=match-panel][data-panel=more]'); page.wait_for_timeout(150)
+                page.locator('.sheet [data-live-control]').filter(has_text='Replay').first.click()
+            page.wait_for_timeout(500)
             if not page.query_selector('.replay-badge'): problems.append('manual replay did not start')
             t1 = time.time()
             while page.query_selector('.replay-badge') and time.time() - t1 < 20: page.wait_for_timeout(200)

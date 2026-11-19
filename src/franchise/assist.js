@@ -34,6 +34,8 @@ export function setAssist(f, patch = {}) {
 }
 export const isGuided = (f) => assistSettings(f).mode === 'guided';
 export const isExpert = (f) => assistSettings(f).mode === 'expert';
+/** No automatic Coach Assist tips: Expert mode, or a guided tour that handed over at the first kickoff (manual Help stays). */
+export const automaticTipsOff = (f) => !!f?.guide?.endedAtFootball || isExpert(f);
 /** Contextual hints (counter plays, upgrade badges, "who fits" notes): a switch of their own, in every mode. */
 export const hintsOn = (f) => assistSettings(f).hints;
 /** Routine consequence lines ("this costs 42,000 of cap room"): a switch of their own. Confirmations for irreversible actions do not depend on it. */
@@ -106,13 +108,13 @@ function firstUseKey(f, screen) {
  * step list. A tip with `sheet: true` opens as an overlay (the match screen has no room for a panel).
  */
 export function autoTip(f, screen) {
-  if (!f) return null; const a = assistSettings(f); if (a.mode === 'expert') return null;
+  if (!f || f.guide?.endedAtFootball) return null; const a = assistSettings(f); if (a.mode === 'expert') return null;
   const key = firstUseKey(f, screen); if (!key) return null; const t = TOPICS[key];
   return { key, title: t.title, text: t.brief, steps: a.mode === 'guided' ? (t.steps || []) : [], sheet: !!t.sheet, primer: !!t.primer, guided: a.mode === 'guided' };
 }
 /** A tip tied to a moment rather than a screen (the clock late in a half, the first overtime Clash). */
 export function momentTip(f, key) {
-  if (!f || !TOPICS[key] || assistSettings(f).mode === 'expert' || f.tutorial?.seen?.[key]) return null; const t = TOPICS[key]; const g = assistSettings(f).mode === 'guided';
+  if (!f || f.guide?.endedAtFootball || !TOPICS[key] || assistSettings(f).mode === 'expert' || f.tutorial?.seen?.[key]) return null; const t = TOPICS[key]; const g = assistSettings(f).mode === 'guided';
   return { key, title: t.title, text: t.brief, steps: g ? (t.steps || []) : [], sheet: true, primer: !!t.primer, guided: g };
 }
 /** Saves from before Coach Assist remembered tips under older names: carry them over so nothing already dismissed comes back. */

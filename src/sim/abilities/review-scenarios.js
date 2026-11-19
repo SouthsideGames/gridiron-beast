@@ -98,7 +98,7 @@ export const SCENARIOS = {
   shadowkit: { seed0: 6, unit: 'defense', calls: DEF_PASS, how: 'ready; pass plays into his coverage until his own pass breakup banks the Dark field; created at his next defensive snap' },
   nightowl: { unit: 'defense', calls: DEF_MIX, setup: ({ addField }) => addField({ type: 'Dark', strength: 25, centerLat: 0, width: 53.3, yardFrom: 0, yardTo: 100, ownerTeam: 'away', ability: 'scenario-dark' }),
     how: 'an opposing Dark base field placed over the whole field (natural: only an opposing Nocturne or an allied Shadowkit makes one): a non-Dark ally inside his radius stands in it' },
-  duskrunner: { unit: 'offense', calls: RUN_O, how: 'ready; rushing carries until his first ordinary juke after the mastery-required rushing yards (natural trigger)' },
+  duskrunner: { unit: 'offense', calls: RUN_O, seeds: 40, how: 'ready; rushing carries until his first ordinary juke after the mastery-required rushing yards (natural trigger)' },
   mireclaw: { unit: 'defense', calls: DEF_MIX, how: 'mixed defensive snaps: three plays allowing 4 yards or less fill the bar and the next snap launches the claw (played, nothing primed)' },
   nocturne: { unit: 'offense', calls: PASS_O, how: 'ready; pass plays until a completion of 15+ yards banks the field; created at his next offensive snap' },
   nyxshade: { unit: 'defense', prime: () => ({ charges: 2 }),

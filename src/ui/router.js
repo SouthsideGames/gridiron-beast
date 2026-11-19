@@ -60,7 +60,9 @@ export function switchTab(name) {
   if (closeTopSheet()) return;
   tabHistory.reset(ctx.f);
   tabHistory.active=items.find(t=>t.active)?.screen || tabHistory.active;
-  const proposed=tabHistory.active===name?[{name,params:{}}]:tabHistory.saved.get(name)||[{name,params:{}}];
+  let proposed=tabHistory.active===name?[{name,params:{}}]:tabHistory.saved.get(name)||[{name,params:{}}];
+  // A tab whose remembered sub-screen is closed right now (a guided lesson) opens at its own root instead of refusing the tab.
+  if (navigationGuard && proposed.length>1 && !navigationGuard(proposed.at(-1).name,{silent:true}) && navigationGuard(name,{silent:true})) { tabHistory.saved.delete(name); proposed=[{name,params:{}}]; }
   if (navigationGuard && !navigationGuard(proposed.at(-1).name)) return;
   stack=tabHistory.switchTo(name,stack,window.scrollY);
   restoreTo=stack.at(-1)?.scroll??0;navigating=true;render();

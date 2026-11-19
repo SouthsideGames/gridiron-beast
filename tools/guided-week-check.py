@@ -35,7 +35,10 @@ with sync_playwright() as pw:
         assert page.locator('[data-screen="practice"]').count() == 0
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'overflow at {width}'
         click(page, '[data-action="guide-next"]')
-        click(page, '[data-action="guide-open"]')
+        roster_tab = page.locator('.tabbar [data-screen="roster"]')
+        assert 'guide-target' in roster_tab.get_attribute('class'), 'real Roster tab is not highlighted'
+        assert roster_tab.evaluate('(el) => getComputedStyle(el).animationName') == 'guide-control-pulse'
+        click(page, '.tabbar [data-screen="roster"]')
         page.wait_for_selector('.screen-roster')
         page.evaluate("async () => (await import('/src/ui/router.js')).go('league')")
         assert page.locator('.screen-roster').count() == 1, 'required sequence was bypassed'
@@ -71,8 +74,57 @@ with sync_playwright() as pw:
         click(page, '[data-action="guide-off"]')
         page.evaluate("async () => (await import('/src/ui/router.js')).go('league')")
         page.wait_for_selector('.screen-league')
+        # The highlighted HQ tab must open HQ even when the HQ tab remembers a sub-screen the current lesson closes
+        # (validation 2026-11-18: on Saturday's media screen the highlighted HQ tab was refused with "Finish or skip").
+        page.evaluate("""async () => {
+          const F = await import('/src/franchise/franchise.js'); const G = await import('/src/franchise/guide.js'); const R = await import('/src/ui/router.js');
+          const f = F.createFranchise({owner:{first:'Tab',last:'GM',background:'player'},club:'Ember City Beasts',seed:313});
+          F.hireDefaultStaff(f); f.welcomed=true; f.scenes=[];
+          while (!f.draft.done) { if (F.onTheClock(f) === f.club) F.myDraftPick(f, f.draft.available[0]); }
+          if (F.needsGoal(f)) F.chooseGoal(f, F.commissionerGoals(f)[0]?.id);
+          G.startGuide(f); f.guide.index=G.LESSONS.findIndex(l=>l.id==='wednesday'); f.season.day=2;
+          await __gb.setFranchise(f); R.go('hq', {}, {reset:true});
+        }""")
+        page.wait_for_selector('.screen-hq'); click(page, '.screen-hq [data-action="training"]'); page.wait_for_selector('.screen-training')
+        click(page, '.tabbar [data-screen="roster"]'); page.wait_for_selector('.screen-roster')  # the HQ tab now remembers Training
+        page.evaluate("""async () => { const G = await import('/src/franchise/guide.js'); const f = __gb.f;
+          f.guide.index=G.LESSONS.findIndex(l=>l.id==='sunday'); f.season.day=6; (await import('/src/ui/router.js')).go('lineup'); }""")
+        page.wait_for_selector('.screen-lineup'); clear_scenes(page)
+        assert 'guide-target' in page.locator('.tabbar [data-screen="hq"]').get_attribute('class'), 'the HQ tab is not highlighted on the media screen'
+        click(page, '.tabbar [data-screen="hq"]'); page.wait_for_timeout(200)
+        assert page.locator('.screen-hq').count() == 1, 'the highlighted HQ tab was refused'
+        assert page.locator('.screen-hq .guide-target').count() >= 1, 'HQ does not highlight the way to the game'
+        # A new player's real match transition ends the guide before kickoff.
+        page.evaluate("""async () => {
+          const F = await import('/src/franchise/franchise.js'); const G = await import('/src/franchise/guide.js');
+          const f = F.createFranchise({owner:{first:'Kickoff',last:'GM',background:'player'},club:'Ember City Beasts',seed:312});
+          F.hireDefaultStaff(f); f.welcomed=true; f.scenes=[]; G.startGuide(f);
+          f.guide.index=G.LESSONS.findIndex(l=>l.kind==='game'); f.season.day=6;
+          const m=F.sundayMatchup(f); f.week.pregame={status:'done',side:m.playerSide,result:{winner:'a'},choice:'receive'};
+          __gb.f=f; (await import('/src/ui/screens/match.js')).startSundayGame(f);
+        }""")
+        page.wait_for_selector('.screen-match'); clear_scenes(page)
+        assert page.locator('.guide-sendoff').count() == 1
+        assert 'the board will' in page.locator('.guide-sendoff').inner_text()
+        assert page.evaluate('__gb.f.guide.done && __gb.f.guide.endedAtFootball')
+        assert page.locator('.commissioner-guide,.guide-compact,.guide-target').count() == 0
+        assert page.locator('.sheet-backdrop').count() == 0, 'a legacy football lesson replaced the guide'
+        click(page, '.guide-sendoff button')
+        page.evaluate("async () => (await import('/src/ui/router.js')).render()")
+        assert page.locator('.guide-sendoff').count() == 0, 'send-off repeated after rerender'
+        page.evaluate("""async () => {
+          const g=await import('/src/ui/guided-week.js'); const t=await import('/src/ui/tutorial.js');
+          __gb.f.game.state.down=4; g.guideFootball(__gb.f,()=>__gb.save());
+          g.guideMoment(__gb.f,'status',()=>__gb.save()); t.momentSheet(__gb.f,'clock',()=>__gb.save());
+          __gb.save();
+        }""")
+        assert page.locator('.sheet-backdrop').count() == 0
+        page.wait_for_timeout(1500); page.reload()
+        page.wait_for_function('() => window.__gb && __gb.storage.mode !== "starting" && __gb.f')
+        page.evaluate("async () => (await import('/src/ui/router.js')).go('match', {}, {reset:true})")
+        assert page.locator('.guide-sendoff,.commissioner-guide,.guide-compact').count() == 0
         assert not errors, errors
-        print(f'PASS {width}px: tour, gate, real lineup change, Guidebook, reload, opt out')
+        print(f'PASS {width}px: real highlighted navigation, gated tab history, tour, lineup, kickoff handoff, no match tips, reload, opt out')
         page.close()
     browser.close()
 server.shutdown()

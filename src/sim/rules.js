@@ -296,6 +296,7 @@ function preSnapHooks(state, t8, slots, offensePlay, defensePlay) {
 export function previewPendingFields(state, teams, offensePlayId, defensePlayId, { inSnap = false } = {}) {
   let t8 = state?.t8; if (!t8 || state.phase !== 'scrimmage' || state.finished) return [];
   if (!inSnap && (!t8.fields?.pending?.length || !Array.isArray(t8.fields.list))) return [];
+  t8=structuredClone(t8); state={...state,t8}; T8F.prepareFieldsForSnap(state);
   const offense = teams[state.possession], defense = teams[opponent(state.possession)];
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
   const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay, state, state.possession), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay, state, opponent(state.possession)) };
@@ -376,6 +377,7 @@ export function choosePrismTarget(state, teams, id = null) {
 export function preparePreChoice(state, teams, looks = {}, opts = {}) {
   if (state.phase !== 'scrimmage' || state.finished) return null;
   const t8 = (state.t8 ||= { status: {} });
+  T8F.prepareFieldsForSnap(state);
   const key = `${state.playCount || 0}|${state.possession}|${state.quarter}`;
   if (t8.preChoice?.key === key) { if (!(opts.chooser && opts.chooser === opponent(state.possession))) resolvePrismChoice(state, t8, teams, t8.preChoice); return t8.preChoice; }
   for (const old of t8.preChoice?.prism || []) if (t8.ability?.[old.mid]) t8.ability[old.mid].noCharge = false;
@@ -474,6 +476,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   save();
   const offenseSide = state.possession; // before the result can change possession
   const outcome = applyScrimmageResult(state, sim, offensePlayId, defensePlayId);
+  T8F.anchorWhistleFields(state);
   if (offense.rotation || defense.rotation) contactInjuries(state, slots, sim, { offenseSide });
   return { sim, outcome };
 }
@@ -532,6 +535,7 @@ export function pickSlots(lineup, slots, team = null, play = null, state = null,
 
 /** Apply an engine result to the game state. Pure state update; `sim` comes from the engine. */
 export function applyScrimmageResult(state, sim, offensePlayId = null, defensePlayId = null) {
+  if(sim.turnover)T8F.clearFieldsOnNextSnap(state);
   const off = state.possession, def = opponent(off);
   const S = state.stats[off];
   const lines = [];
@@ -694,6 +698,7 @@ function nextDown(state, gain, lines) {
 }
 function firstDown(state) { state.down = 1; state.toGo = Math.min(10, 100 - state.ballOn); }
 function changePossession(state, newBallOn, lines, note = null) {
+  T8F.clearFieldsOnNextSnap(state);
   const prev = state.possession;
   state.possession = opponent(prev);
   state.ballOn = clamp(Math.round(newBallOn), 1, 99); state.ballLat = 0;
@@ -704,6 +709,7 @@ function changePossession(state, newBallOn, lines, note = null) {
   lines.push(`${$E('sim.ball_at_the', { name: state[state.possession].name, toLowerCase: yardLabel(state.ballOn).toLowerCase() })}`);
 }
 function touchdown(state, side, lines) {
+  T8F.clearFieldsOnNextSnap(state); // a score ends the possession, even when the scoring club keeps the ball after its kickoff
   state.score[side] += 6; state.stats[side].td += 1;
   { const L = ((state.t8 ||= { status: {} }).touchdowns ||= { home: 0, away: 0 }); L[side] += 1; } // M3 hook: the touchdown ledger by scoring club (offense, defense, returns)
   state.phase = 'try'; state.tryTeam = side; state.ballOn = 100 - FIELD.twoPointSpot; state.down = 1; state.toGo = FIELD.twoPointSpot;
@@ -712,6 +718,7 @@ function touchdown(state, side, lines) {
   return { team: side, points: 6, kind: 'touchdown' };
 }
 function safety(state, lines) {
+  T8F.clearFieldsOnNextSnap(state);
   const scoringSide = opponent(state.possession);
   state.score[scoringSide] += 2;
   lines.push(`${$E('sim.safety', { name: state[scoringSide].name, home: state.score.home, away: state.score.away })}`);
@@ -986,7 +993,7 @@ export function doFieldGoal(state, teams, { signature = false } = {}) {
   const lines = [res.text];
   let scored = null;
   if (res.good) {
-    state.score[kicking] += 3; state.stats[kicking].fg += 1; scored = { team: kicking, points: 3, kind: 'field_goal' };
+    T8F.clearFieldsOnNextSnap(state); state.score[kicking] += 3; state.stats[kicking].fg += 1; scored = { team: kicking, points: 3, kind: 'field_goal' };
     lines.push(`${state.home.abbr} ${state.score.home}-${state.score.away} ${state.away.abbr}.`);
     if (state.ot) { state.lastPlay = { text: lines.join(' '), result: 'field_goal' }; log(state, lines.join(' '), 'score', { important: true }); otAfterPossession(state); return { res, text: lines.join(' '), scored }; }
     state.phase = 'kickoff'; state.kickingTeam = kicking; state.possession = opponent(kicking); state.clockRunning = false;
@@ -1061,6 +1068,7 @@ function startOvertime(state) {
   otPossession(state, first);
 }
 function otPossession(state, side) {
+  T8F.clearFieldsOnNextSnap(state); // every overtime possession starts on fresh terrain, even for the club that ended regulation with the ball
   state.possession = side; state.phase = 'scrimmage'; state.ballOn = 75; state.ballLat = 0; firstDown(state); state.clockRunning = false;
   state.drive = { team: side, plays: 0, yards: 0, start: 75 };
   if (state.ot.period >= 3) { state.phase = 'try'; state.tryTeam = side; state.ballOn = 100 - FIELD.twoPointSpot; state.toGo = FIELD.twoPointSpot; }

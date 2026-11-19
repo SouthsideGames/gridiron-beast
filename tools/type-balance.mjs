@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// Type effectiveness balance study (GDD §32.6). Same games, same seeds, three ways:
+// Type effectiveness balance study (GDD §32.6). Same games, same seeds, four ways:
 //   before  types off, no matchup lean in the coach AI (the game before §32)
 //   lean    types off, the coach AI's matchup lean on (ratings only)
-//   types   the shipped game: football type edges and the lean (ratings + types)
+//   classic the previous 4% football values with the same AI
+//   types   the candidate football values and the lean (ratings + types)
 // Then a rating × type grid on single plays, a one-on-one receiver check, and a Dragon check.
 //   node tools/type-balance.mjs [--games=200] [--plays=600] [--seed=1]
 //   node tools/type-balance.mjs --only=env --games=300   (stadium field bonus, GDD §33.2: same games with the bonus off and on)
@@ -48,8 +49,8 @@ const ONLY = args.only || null;
 if (ONLY === 'dragon') { dragonStudy(); process.exit(0); }
 if (ONLY === 'env') { envStudy(); process.exit(0); }
 
-// ---- A. league games, three ways
-const variants = { before: newAgg(), lean: newAgg(), types: newAgg() };
+// ---- A. league games, four ways
+const variants = { before: newAgg(), lean: newAgg(), classic: newAgg(), types: newAgg() };
 const rng = createRng(SEED);
 for (let g = 0; g < GAMES; g++) {
   const qa = 50 + rng.int(18), qb = 50 + rng.int(18), sa = rng.int(1e9), sb = rng.int(1e9), gs = rng.int(1e9);
@@ -57,7 +58,7 @@ for (let g = 0; g < GAMES; g++) {
   for (const v of Object.keys(variants)) {
     const T = mk(); const ovr = { home: teamOverall(T.home), away: teamOverall(T.away) }; const evs = [];
     const run = () => playGame({ home: T.home, away: T.away, seed: gs, onStep: (ev) => evs.push(ev) });
-    const st = v === 'before' ? withTypeValues(OFF, () => withoutMatchupLean(run)) : v === 'lean' ? withTypeValues(OFF, run) : run();
+    const st = v === 'before' ? withTypeValues(OFF, () => withoutMatchupLean(run)) : v === 'lean' ? withTypeValues(OFF, run) : v === 'classic' ? withTypeValues({ strong: 0.04, weak: -0.04, positiveCap: 0.06 }, run) : run();
     addGame(variants[v], st, evs, ovr);
   }
 }
