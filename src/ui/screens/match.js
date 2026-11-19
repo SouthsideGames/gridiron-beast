@@ -66,6 +66,15 @@ function prismOverlay(s, camera) {
 }
 export function registerMatchScreens(Router, app) {
   let pregameTeam = 'mine';
+
+  function pregameTypeReport(mine,theirs) {
+    const publicLook=p=>p?{onField:p.onField,align:p.align}:null;
+    const ownAttack=PLAYS[mine.offensePlays?.[0]], ownDefense=PLAYS[mine.defensePlays?.[0]];
+    const theirAttack=publicLook(PLAYS[theirs.offensePlays?.[0]]),theirDefense=publicLook(PLAYS[theirs.defensePlays?.[0]]);
+    const pairs=[...matchupEdges({offensePlay:ownAttack,defensePlay:theirDefense},mine.offense,theirs.defense).map(x=>({me:x.off,them:x.def})),...matchupEdges({offensePlay:theirAttack,defensePlay:publicLook(ownDefense)},theirs.offense,mine.defense).map(x=>({me:x.def,them:x.off}))].filter(x=>x.me.mod);
+    return pairs.length?`<details class="panel tight pregame-types"><summary>${$t('playview.expected_matchups')}</summary><p class="muted">${$t('playview.forecast_only')}</p>${pairs.map(x=>`<p>${x.me.mod>0?$t('playview.good_matchup',{name:esc(x.me.name),opponent:esc(x.them.name)}):$t('playview.tough_matchup',{name:esc(x.me.name),opponent:esc(x.them.name)})}</p>`).join('')}</details>`:'';
+  }
+
   // ------------------------------------------------------------ pregame
   Router.registerScreen('pregame', {
     title: $t('match.match_day'), tabs: false,
@@ -85,7 +94,7 @@ export function registerMatchScreens(Router, app) {
         ${(() => { const rec = (t) => { const r = f.season.records[t]; return r ? `${r.w}-${r.l}` : ''; }; const side = (team, label) => `<div class="mu-club"><div class="mu-abbr" style="color:${team.color}">${esc(team.abbr)}</div><div class="mu-name">${esc(team.name)}</div><div class="dim mono">${$t('match.ovr', { rec: esc(rec(team.name)), teamOverall: teamOverall(team) })}</div><div class="chip">${label}</div></div>`;
           return `<div class="matchup-head ${m.playoff ? 'playoff' : ''}">${side(mine, m.playerSide === 'home' ? $t('match.home') : $t('match.away'))}<div class="mu-vs"><div class="mu-vs-word">VS</div><div class="dim" style="font-size:11px">${esc(m.tag || '')}</div></div>${side(theirs, m.playerSide === 'home' ? $t('match.away') : $t('match.home'))}</div>`; })()}
         ${(() => { const v = F.sundayVenue(f); if (!v) return ''; const n = (team) => v.type ? Object.values({ ...team.offense, ...team.defense }).filter((p, i, arr) => p?.type === v.type && arr.findIndex((q) => q?.id === p.id) === i).length : null; return venueHtml(v, { mine: n(mine), theirs: n(theirs) }); })()}
-        ${talkHtml(f)}
+        ${pregameTypeReport(mine,theirs)}${talkHtml(f)}
         <div class="pregame-team-tabs" role="group" aria-label="${$t('presentation.lineups')}"><button class="btn ${pregameTeam==='mine'?'primary':''}" data-action="pregame-team" data-team="mine" aria-pressed="${pregameTeam==='mine'}">${$t('presentation.your_team')}</button><button class="btn ${pregameTeam==='theirs'?'primary':''}" data-action="pregame-team" data-team="theirs" aria-pressed="${pregameTeam==='theirs'}">${$t('presentation.opponent')}</button></div>${pregameTeam==='mine'?col(mine,m.playerSide==='home'?$t('match.home'):$t('match.away')):col(theirs,m.playerSide==='home'?$t('match.away'):$t('match.home'))}
         ${(() => { const nMedia = Object.values(mine.boosts || {}).filter((b) => b.media).length; const tr = f.week.trainingFocus; return nMedia || tr ? `<div class="panel tight" style="margin-top:8px">${$t('match.b_todays_boosts_b')}<div class="muted" style="font-size:13px">${tr ? `<span class="boost train">T</span> ${$t('match.training', { label: esc(TRAINING_FOCI[tr]?.label || tr), amount: f.week.training?.amount ?? '' })} ${esc((TRAINING_FOCI[tr]?.attrs || []).join(', '))} ${$t('match.for_every_starter')}` : ''}${tr && nMedia ? '<br>' : ''}${nMedia ? `<span class="boost media">+</span> ${$t('match.media_day_monsters_fired_up', { nMedia, n: nMedia })}` : ''}</div></div>` : ''; })()}
         <p class="dim" style="margin-top:8px">${$t('match.coaching_mode_b_b_change_in', { mode: f.settings.mode === 'key' ? $t('match.key_moments') : $t('match.full_coaching') })}</p>
@@ -159,20 +168,30 @@ export function registerMatchScreens(Router, app) {
 
   Router.registerScreen('match', {
     title: ({ f }) => f?.game ? `${f.game.state.away.abbr} ${f.game.state.score.away}-${f.game.state.score.home} ${f.game.state.home.abbr}` : $t('match.match'), back: false, tabs: false, help: false, // the ⓘ button is this screen's help (it links to Coach Assist)
-    topRight: () => `${recorder.active() ? '<button class="btn ghost small" data-action="test-report-issue" aria-label="Report Last Play">⚑</button>' : ''}<button class="btn ghost small" data-action="box" aria-label="${$t('match.box_score')}">📊</button><button class="btn ghost small" data-action="log" aria-label="${$t('match.play_log')}">📋</button><button class="btn ghost small" data-action="help" aria-label="${$t('match.how_a_match_works')}">ⓘ</button>`,
+    topRight: () => `${recorder.active() ? '<button class="btn ghost small" data-action="test-report-issue" aria-label="Report Last Play">⚑</button>' : ''}<button class="btn ghost small" data-action="box" aria-label="${$t('match.box_score')}">📊</button><button class="btn ghost small" data-action="log" aria-label="${$t('match.play_log')}">📋</button><button class="btn ghost small" data-action="help" aria-label="${$t('match.how_a_match_works')}" title="${$t('playview.guide_notices')}">ⓘ</button>`,
     render({ f }) {
       const G = f.game; if (!G) return `<div class="panel"><p>${$t('match.no_game_in_progress')}</p><button class="btn block" data-action="hq">${$t('match.headquarters')}</button></div>`;
       const P = screenParts(f);
       // Three in-place regions (refresh(): a play's start and end update them without rebuilding the screen): the head, the field
       // with what lies over it, the panels under the field; then the controls. display:contents wrappers add no box of their own.
-      return `<div id="match-head" style="display:contents">${P.head}</div>
-        <div class="${P.wrapClass}" id="fieldwrap" aria-label="${$t('match.football_field')}"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldSvg(P.field)}</svg>${P.over}</div><div id="field-after" style="display:contents">${P.after}</div>
-        <div id="controls">${P.controls}</div>`;
+      return `<div class="match-console"><div id="live-status"></div><div id="match-head">${P.head}</div>
+        <div class="${P.wrapClass}" id="fieldwrap" aria-label="${$t('match.football_field')}"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldSvg(P.field)}</svg>${P.over}</div><div id="field-after">${P.after}</div>
+        <div id="controls">${P.controls}</div></div>`;
     },
     mount(root, ctx) {
       const f = app.f; if (!f?.game) { delegate(root, { hq: () => Router.go('hq', {}, { reset: true }) }); return; }
+      const notices=document.createElement('div'); notices.id='match-notices'; notices.hidden=true;
+      for(const child of [...root.children])if(!child.classList.contains('match-console')) {
+        const paused=child.matches('.polish-paused')?child:child.querySelector('.polish-paused');
+        if(paused)root.querySelector('#live-status').appendChild(paused);
+        if(child!==paused)notices.appendChild(child);
+      }
+      notices.insertAdjacentHTML('beforeend', `<details><summary>${$t('match.how_a_match_works_2')}</summary>${matchHelpHtml(f)}<button class="btn small" data-action="assist-help" data-screen="match">${$t('match.more_help_coach_assist')}</button></details>`);
+      root.appendChild(notices);
       afterRender(f, root);
       delegate(root, {
+        'match-panel': el => openMatchPanel(root, el.dataset.panel),
+        matchup: el => {const x=presnapEdges[Number(el.dataset.i)];if(x)openMatchupPanel(x,presnapMe);},
         hq: () => Router.go('hq', {}, { reset: true }),
         log: () => showLog(f),
         substitutions: () => { if(anim) return; openSubstitutions(f,teamsFor(f),{save:()=>app.save(),refresh:()=>refresh(f)}); },
@@ -216,7 +235,7 @@ export function registerMatchScreens(Router, app) {
       root.querySelector('#fieldwrap')?.addEventListener('keydown', (e) => { if (e.key !== 'Enter' && e.key !== ' ') return; const icon = e.target.closest?.('.tm-icon'); if (icon) { e.preventDefault(); e.stopPropagation(); openTypeIcon(icon); return; }
         const chip = !anim && e.target.closest?.('[data-inspect]'); if (chip) { e.preventDefault(); e.stopPropagation(); openInspect(app.f, chip.dataset.inspect); } });
       document.querySelector('.topbar [data-action="log"]')?.addEventListener('click', () => showLog(f));
-      document.querySelector('.topbar [data-action="help"]')?.addEventListener('click', () => sheet(`${matchHelpHtml(f)}<button class="btn small" data-action="assist-help" data-screen="match" style="margin-top:8px">${$t('match.more_help_coach_assist')}</button>`, { title: $t('match.how_a_match_works_2') }));
+      document.querySelector('.topbar [data-action="help"]')?.addEventListener('click', () => openMatchPanel(root,'notices'));
       momentSheets(f);
       if (!anim && f.game?.lastEvent?.sim?.events?.some(e => e.kind === 'ability' || e.kind === 'status')) guideMoment(f, 'status', () => app.save());
       document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: f.game.state.finished ? $t('match.final_3') : `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: $t('match.box_score_2') }));
@@ -225,6 +244,30 @@ export function registerMatchScreens(Router, app) {
   });
 
   /** Everything the match screen shows, as the strings render() and refresh() place: title, head, field options, overlays, panels, controls. */
+
+  // Sheet copies carry no game datasets. Document capture sees exactly one
+  // original action, including tutorial progress, pause resumes and substitutions.
+  function openMatchPanel(root,kind) {
+    const host=kind==='notices'?root.querySelector('#match-notices'):root.querySelector('[data-match-panel="'+kind+'"]');
+    if(!host)return;
+    const title=kind==='plays'?$t('playview.choose_play'):kind==='zones'?$t('playview.zones'):kind==='notices'?$t('playview.guide_notices'):$t('playview.more_controls');
+    const source=[...host.querySelectorAll('button,select,input')];
+    const {el,close}=sheet(host.innerHTML,{title});
+    [...el.querySelector('.sheet-body').querySelectorAll('button,select,input')].forEach((copy,i)=>{
+      for(const k of Object.keys(copy.dataset))delete copy.dataset[k];
+      copy.dataset.liveControl=String(i);
+    });
+    const forward=event=>{
+      const control=event.target.closest('[data-live-control]');if(!control)return;
+      const original=source[Number(control.dataset.liveControl)];if(!original)return;
+      event.stopPropagation();
+      if(original.disabled){event.preventDefault();return;}
+      if(event.type==='change'){original.value=control.value;close();original.dispatchEvent(new Event('change',{bubbles:true}));}
+      else if(control.tagName==='BUTTON'){event.preventDefault();close();original.click();}
+    };
+    el.addEventListener('click',forward);el.addEventListener('change',forward);
+  }
+
   function screenParts(f) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
     const myBall = s.possession === me;
@@ -257,8 +300,11 @@ export function registerMatchScreens(Router, app) {
     }
     const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? $t('match.try') : s.phase === 'kickoff' ? $t('match.kickoff') : s.phase === 'free_kick' ? $t('match.free_kick') : '';
     const ab = G.lastEvent?.abilities?.length ? `<div class="ability-strip">${G.lastEvent.abilities.slice(0, 3).map((x) => `<span class="${x.team === me ? 'mine' : ''} ${x.trait ? 'trait' : ''}"${x.mid ? ` role="button" tabindex="0" data-inspect="${esc(x.mid)}" aria-label="Inspect ${esc(x.who)}"` : ''}>${x.trait ? '·' : '⚡'} ${esc(x.who)} · ${esc(x.what)}${x.tick ? ` <i class="ability-tick">✓ ${esc(x.tick)}</i>` : ''}</span>`).join('')}</div>` : '';
+    const contact=G.lastEvent?.sim?.typeContests?.find(x=>x.mod>0);
+    const contactNames=G.lastEvent?.sim?.names;
+    const typeNote=contact&&contactNames?.[contact.team]?.[contact.a]&&contactNames?.[contact.team==='off'?'def':'off']?.[contact.b] ? $t('playview.type_contact',{name:esc(contactNames[contact.team][contact.a]),opponent:esc(contactNames[contact.team==='off'?'def':'off'][contact.b])}):'';
     const co = G.lastEvent?.callout; const fresh = !!G.lastEvent?.fresh; if (G.lastEvent) G.lastEvent.fresh = false; // the pop plays once, not on every re-render
-    const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''} ${co ? `tier-${co.tier} ${co.mine === true ? 'mine' : co.mine === false ? 'theirs' : ''}` : ''} ${fresh ? 'fresh' : ''}" id="banner">${co && co.tier !== 'routine' ? `<div class="callout">${esc(co.text)}</div>` : co ? `<span class="callout small">${esc(co.text)}</span> ` : ''}${esc(G.lastEvent.text)}${ab}</div>` : '';
+    const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''} ${co ? `tier-${co.tier} ${co.mine === true ? 'mine' : co.mine === false ? 'theirs' : ''}` : ''} ${fresh ? 'fresh' : ''}" id="banner">${co && co.tier !== 'routine' ? `<div class="callout">${esc(co.text)}</div>` : co ? `<span class="callout small">${esc(co.text)}</span> ` : ''}${esc(G.lastEvent.text)}${typeNote?`<div class="type-contact-note">${typeNote}</div>`:''}${ab}</div>` : '';
     const tdFlash = reducedFlash(f.settings) ? '' : fresh && co?.tier === 'td' ? ` td-flash ${co.mine ? 'mine' : 'theirs'}` : fresh && co?.tier === 'turnover' ? ' to-flash' : '';
     const bump = (side) => (G.scoreSeen?.[side] != null && G.scoreSeen[side] !== s.score[side]) ? 'bump' : ''; const bumpA = bump('away'), bumpH = bump('home'); G.scoreSeen = { ...s.score };
     const eventBanner = G.event === 'rival' ? `<div class="rival-banner compact">${$t('match.rivalry_game_gm', { name: esc(s[them].name), gm: esc(f.rivals[f.tier]?.gm || '') })}</div>` : G.event === 'playoff' ? `<div class="rival-banner compact" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">${$t('match.playoffs', { tag: esc(G.tag || $t('match.win_or_go_home')) })}</div>` : '';
@@ -480,7 +526,7 @@ export function registerMatchScreens(Router, app) {
       const two = PLAYS; const plays = teams[me].offensePlays.filter((id) => PLAYS[id].tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t)));
       return `<div class="match-actions">${substitutionStrip(f)}${autoBar}${rpRow}<p class="muted center" style="margin:0">${$t('match.touchdown_kick', { tryDecision: AI.tryDecision(s) === 'two' ? 'coach suggests two' : $t('match.coach_suggests_the_kick') })}</p>
         <div class="primary-row" style="grid-template-columns:1fr 1fr"><button class="btn primary big" data-action="trykick">${$t('match.kick_pat_1')}</button><button class="btn big" data-action="trytwo">${$t('match.go_for_two')}</button></div>
-        ${cards(plays, 'offense', G.selected.offense, null)}</div>`;
+        <button class="btn block" data-action="match-panel" data-panel="plays">${$t('playview.choose_play')}</button><div hidden data-match-panel="plays">${cards(plays, 'offense', G.selected.offense, null)}</div></div>`;
     }
     // Scrimmage.
     const myBall = s.possession === me;
@@ -511,9 +557,15 @@ export function registerMatchScreens(Router, app) {
     const subPanel = substitutionStrip(f);
     const clock = f.settings.liveClock && s.phase === 'scrimmage' ? `<div class="playclock">${$t('match.play_clock')} <b id="pc">40</b><div class="bar"><i id="pcbar" style="width:100%"></i></div></div>` : '';
     const plans = selected ? zonePlans(s, teams, me, myBall ? selected : look.presnap.offensePlay.id, myBall ? look.presnap.defensePlay.id : selected) : [];
-    return `${myBall ? '' : prismPickerHtml(s)}${zonePlannerHtml(plans, { focus: G.zoneFocus })}<div class="match-actions">${primary}${secondary}${subPanel}${clock}</div>
-      <div class="muted" style="font-size:12px;margin:4px 0">${$t('match.coachs_suggestion_opponents_call_is_hidden', { myBall: myBall ? $t('match.your_offensive_plays') : $t('match.your_defensive_plays') })}${teams[me].blockedPlays?.length ? ` · <span style="color:var(--bad)">${$t('match.plays_unavailable_no_legal', { n: teams[me].blockedPlays.length })} ${teams[me].blockedSlots.join('/')})</span>` : ''}</div>
-      ${cards(plan, side, selected, suggestion)}`;
+    return `<div class="match-actions compact-actions">${primary}<div class="match-quick-actions">
+      <button class="btn small" data-action="match-panel" data-panel="plays">${$t('playview.choose_play')}</button>
+      ${plans.length || s.t8?.preChoice?.prismChoice ? `<button class="btn small" data-action="match-panel" data-panel="zones">${$t('playview.zones')}</button>`:''}
+      <button class="btn small" data-action="match-panel" data-panel="more">${$t('playview.more_controls')}</button>
+      <button class="btn small" data-action="match-panel" data-panel="notices">${$t('playview.guide_notices')}</button></div>${clock}
+      ${presnapEdges.slice(0,2).map((x,i)=>`<button class="match-type-note" data-action="matchup" data-i="${i}">${x[presnapMe].mod>0?$t('playview.good_matchup',{name:esc(x[presnapMe].name),opponent:esc(x[presnapMe==='off'?'def':'off'].name)}):$t('playview.tough_matchup',{name:esc(x[presnapMe].name),opponent:esc(x[presnapMe==='off'?'def':'off'].name)})}</button>`).join('')}</div>
+      <div hidden data-match-panel="zones">${myBall?'':prismPickerHtml(s)}${zonePlannerHtml(plans,{focus:G.zoneFocus})}</div>
+      <div hidden data-match-panel="more">${secondary}${subPanel}<div class="muted">${$t('match.coachs_suggestion_opponents_call_is_hidden',{myBall:myBall?$t('match.your_offensive_plays'):$t('match.your_defensive_plays')})}${teams[me].blockedPlays?.length?` · ${$t('match.plays_unavailable_no_legal',{n:teams[me].blockedPlays.length})} ${teams[me].blockedSlots.join('/')})`:''}</div></div>
+      <div hidden data-match-panel="plays">${cards(plan,side,selected,suggestion)}</div>`;
   }
   function cards(ids, side, selected, suggestion) {
     return `<div class="play-grid">${ids.slice(0, 6).map((id) => `<button class="card ${selected === id ? 'selected' : ''} ${suggestion === id ? 'suggested' : ''} ${PLAYS[id].legendary ? 'legendary' : ''}" data-action="pick" data-side="${side}" data-id="${id}" aria-pressed="${selected === id}" aria-label="${esc(PLAYS[id].name)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;

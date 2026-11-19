@@ -171,8 +171,8 @@ export function registerClashBattle(Router, app) {
   function battleHtml(f, e) {
     const live = isT8Record(e) && policiesOf(e).a === 'player';
     const pend = !live && isT8Record(e) && st.result?.pending ? pendingDecision(st.result) : null; // old prompt-model saves only
-    return `<div class="row between" style="margin-bottom:4px"><span class="muted">${e.size}v${e.size} · ${esc(B().title.split('·').pop().trim())}</span><span class="row" style="gap:6px">${pend ? `<button class="btn small primary" data-action="rotprompt">${$t('clash.rotation_your_call')}</button>` : ''}<button class="btn small ghost" data-action="help">${$t('clash.help')}</button></span></div>
-      <div id="fb-arena"></div>${live ? '<div id="cl-subs" class="panel tight cl-subs" role="group" aria-live="polite"></div>' : ''}`;
+    return `<div class="clash-live-console"><div id="live-status"></div><div class="row between clash-live-heading" style="margin-bottom:4px"><span class="muted">${e.size}v${e.size} · ${esc(B().title.split('·').pop().trim())}</span><span class="row" style="gap:6px">${pend ? `<button class="btn small primary" data-action="rotprompt">${$t('clash.rotation_your_call')}</button>` : ''}<button class="btn small ghost" data-action="help">${$t('clash.help')}</button><button class="btn small ghost" data-action="clash-notices">${$t('playview.guide_notices')}</button></span></div>
+      <div id="fb-arena"></div>${live ? '<div id="cl-subs" class="panel tight cl-subs" role="group" aria-live="polite"></div>' : ''}</div>`;
   }
   function teamNames(f, e) { const theirs = st.kind === 'encounter' ? $t('clash.the_wild') : (e.opponent || $t('clash.the_opponent_2')); return { a: f.club.split(' ').pop(), b: theirs }; }
   function mountBattle(root, f, e) {
@@ -329,8 +329,32 @@ export function registerClashBattle(Router, app) {
     },
     mount(root) {
       const f = app.f; const b = B(); if (!b || !f) return; const e = b.record(f);
+      const console=root.querySelector('.clash-live-console');
+      if(console){
+        const notices=document.createElement('div');notices.id='clash-notices';notices.hidden=true;
+        for(const child of [...root.children])if(child!==console){
+          const paused=child.matches('.polish-paused')?child:child.querySelector('.polish-paused');
+          if(paused)console.querySelector('#live-status').appendChild(paused);
+          if(child!==paused)notices.appendChild(child);
+        }
+        root.appendChild(notices);
+      }
       const rerender = () => Router.render();
       delegate(root, {
+        'clash-notices':()=>{
+          const host=root.querySelector('#clash-notices');if(!host)return;
+          const source=[...host.querySelectorAll('button')];
+          const {el,close}=sheet(host.innerHTML,{title:$t('playview.guide_notices')});
+          [...el.querySelector('.sheet-body').querySelectorAll('button')].forEach((copy,i)=>{
+            for(const k of Object.keys(copy.dataset))delete copy.dataset[k];
+            copy.dataset.liveControl=String(i);
+          });
+          el.addEventListener('click',event=>{
+            const control=event.target.closest('[data-live-control]');if(!control)return;
+            const original=source[Number(control.dataset.liveControl)];if(!original)return;
+            event.preventDefault();event.stopPropagation();close();original.click();
+          });
+        },
         back: () => Router.back(),
         help: () => sheet(HELP_HTML, { title: $t('clash.how_beast_clash_works') }),
         rotprompt: () => atEnd(f),

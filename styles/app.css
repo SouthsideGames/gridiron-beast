@@ -1992,3 +1992,55 @@ html[data-reduced-motion="1"] .draft-stage > :last-child { animation:none; }
 
 .screen.screen-pregame { padding-bottom:calc(100px + var(--sab)); }
 .pregame-start { position:fixed; left:0; right:0; bottom:0; max-width:640px; margin:0 auto; padding:10px 16px calc(10px + var(--sab)); }
+
+/* The live loop fits the phone; secondary information uses sheets/disclosures. */
+.screen.screen-match:has(.match-console), .screen.screen-clash-battle:has(.clash-live-console) {
+  flex:none; height:calc(100dvh - 48px - var(--sat)); padding:6px 8px calc(6px + var(--sab)); overflow:hidden;
+}
+.match-console { height:100%; min-height:0; display:grid; grid-template-rows:auto auto minmax(0,1fr) auto auto; gap:4px; }
+.match-console #live-status, .clash-live-console #live-status { grid-row:1; }
+.match-console #match-head, .clash-live-console .clash-live-heading { grid-row:2; min-height:0; }
+.match-console #fieldwrap, .clash-live-console #fb-arena { grid-row:3; min-height:0; }
+.match-console #field-after, .clash-live-console #cl-subs { grid-row:4; }
+.match-console #controls { grid-row:5; min-height:0; max-height:43dvh; overflow:auto; }
+.match-console .scoreboard { padding:4px 6px; margin-bottom:2px; }
+.match-console .situation { display:none; }
+.match-console .rival-banner, .match-console .edge-strip { max-height:34px; overflow:auto; margin:0; padding:3px 6px; }
+.match-console #fieldwrap { height:100%; margin:0; }
+.match-console #field { width:100%; height:100%; }
+.match-console .field-banner { max-height:35%; overflow:auto; padding:4px 6px; font-size:12px; }
+.match-console #field-after { max-height:48px; overflow:auto; font-size:12px; }
+.match-console #field-after .tm-legend { display:none; }
+.match-console .match-actions { margin:0; gap:4px; }
+.match-console .match-actions .big { min-height:44px; padding:6px; font-size:15px; }
+.match-quick-actions { display:flex; gap:4px; flex-wrap:wrap; }
+.match-quick-actions .btn { flex:1 1 auto; min-height:44px; padding:4px 8px; }
+.match-type-note { appearance:none; border:0; background:transparent; color:var(--ink-2); padding:2px; text-align:left; font:inherit; font-size:12px; cursor:pointer; }
+.type-contact-note { font-size:12px; color:var(--accent); }
+.match-console [hidden], .clash-live-console [hidden] { display:none!important; }
+#live-status:empty { display:none; }
+#live-status .polish-paused { margin:0; padding:4px 6px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; }
+#live-status .polish-paused .btn { min-height:44px; padding:4px 8px; }
+.ability-play-sheet { height:calc(100dvh - var(--sat)); max-height:calc(100dvh - var(--sat)); }
+.ability-play-sheet .sheet-body { flex:1; min-height:0; padding:6px 8px; overflow:hidden; }
+.ability-play-console { height:100%; display:flex; flex-direction:column; gap:4px; min-height:0; }
+.ability-play-console .field-wrap { flex:1; min-height:80px; margin:0; }
+.ability-play-console .field-wrap > svg { width:100%; height:100%; }
+.ability-play-console [data-rv2="playinfo"] { flex:none; font-size:12px; }
+.ability-play-console details { flex:none; font-size:13px; }
+.ability-play-console details[open] { max-height:28dvh; overflow:auto; }
+.ability-play-console summary { min-height:44px; align-content:center; cursor:pointer; }
+.ability-play-console .rv2-controls { flex:none; margin:0!important; }
+.ability-play-console .rv2-controls .btn { min-height:44px; padding:4px 7px; }
+.clash-live-console { min-height:0; height:100%; display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; gap:4px; }
+.clash-live-heading { margin:0!important; font-size:12px; }
+.clash-live-console #fb-arena { overflow:hidden; }
+.clash-live-console #cl-subs { max-height:112px; overflow:auto; margin:0; padding:4px; }
+.clash-live-console #cl-subs .cl-sub-hint { font-size:11px; }
+@media (orientation:landscape) and (min-width:600px) {
+  .match-console { grid-template-columns:minmax(0,1fr) minmax(220px,.7fr); grid-template-rows:auto auto minmax(0,1fr) auto; }
+  .match-console #live-status, .match-console #match-head { grid-column:1/-1; }
+  .match-console #fieldwrap { grid-column:1; grid-row:3/5; }
+  .match-console #controls { grid-column:2; grid-row:3; max-height:none; }
+  .match-console #field-after { grid-column:2; grid-row:4; }
+}

@@ -231,3 +231,26 @@ html[data-reduced-motion="1"] .cl-result-head { animation: none; }
 .cl-sub-note { display: block; margin-top: 4px; font-size: 12px; font-weight: 700; }
 .cl-sub-note.good { color: var(--good, #4caf50); } .cl-sub-note.bad { color: var(--bad, #e57373); }
 @media (max-width: 380px) { .cl-sub-row { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); } .cl-sub { padding: 5px 6px; } }
+
+/* Setup and results scroll normally; the live arena keeps its controls in view. */
+.clash-live-console .cl-arena { height:100%; min-height:0; grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto minmax(0,1fr) auto auto; gap:3px; }
+.clash-live-console .cl-viewport { width:100%; height:100%; min-height:0; max-height:none; aspect-ratio:auto; grid-column:1; grid-row:3; }
+.clash-live-console .cl-hud { grid-column:1; grid-row:1; font-size:11px; gap:4px; padding:2px 4px; max-height:36px; overflow:auto; }
+.clash-live-console .cl-matchup { grid-column:1; grid-row:2; font-size:12px; }
+.clash-live-console .cl-strips { grid-column:1; grid-row:4; display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+.clash-live-console .cl-strip { grid-auto-flow:column; grid-template-columns:none; }
+.clash-live-console .cl-card { padding:2px; flex-direction:column; gap:0; }
+.clash-live-console .cl-card-name, .clash-live-console .cl-card .cl-sprite { display:none; }
+.clash-live-console .cl-card-body { width:100%; }
+.clash-live-console .cl-controls { grid-column:1; grid-row:5; position:static; padding:0; margin:0; }
+.clash-live-console .cl-btnrow { gap:3px; flex-wrap:wrap; }
+.clash-live-console .cl-btnrow .btn { min-height:44px; padding:4px 7px; }
+.clash-live-console .cl-caption { max-height:32px; overflow:auto; }
+@media (orientation:landscape) and (min-width:600px) {
+  .clash-live-console .cl-arena { grid-template-columns:minmax(0,1fr) minmax(220px,.8fr); grid-template-rows:auto auto minmax(0,1fr) auto; }
+  .clash-live-console .cl-hud { grid-column:1/-1; grid-row:1; }
+  .clash-live-console .cl-matchup { grid-column:2; grid-row:2; }
+  .clash-live-console .cl-viewport { grid-column:1; grid-row:2/5; }
+  .clash-live-console .cl-strips { grid-column:2; grid-row:3; align-content:start; }
+  .clash-live-console .cl-controls { grid-column:2; grid-row:4; }
+}
