@@ -117,7 +117,7 @@ export function polishHeader(ctx,name) {
     if(trackRosterReviews(f))ctx.app?.save();
     out+=rosterReviewHtml(f);
     const warnings=rosterWarnings(f,{all:true});const notes=F.notices(f).concat(f.roster.filter(m=>m.injury).map(m=>({screen:'assign',slot:F.GROUP_SLOTS[m.position]?.[0]||m.position,kind:'injury',text:t('polish.injury_action',{name:m.name,position:m.position})})));const unique=[...new Map([...warnings.map(w=>({...w,text:w.text})),...notes].map(x=>[x.text,x])).values()];
-    out+=`<details class="panel tight polish-notices"><summary>${t('polish.decisions',{n:unique.length})}</summary><div class="stack">${unique.map(x=>`<button class="btn block" data-polish="go" data-screen="${esc(x.id?'monster':x.screen||'roster')}" data-id="${esc(x.id||'')}" data-slot="${esc(x.slot||'')}" data-kind="${esc(x.kind||'')}">${esc(x.text)}</button>`).join('')}</div><details><summary>${t('polish.team_updates')}</summary>${(f.news||[]).slice(-5).reverse().map(x=>`<p>${esc(lineText(x))}</p>`).join('')}</details></details>`;
+    if(unique.length)out+=`<details class="panel tight polish-notices" open><summary>${t('polish.decisions',{n:unique.length})}</summary><div class="stack">${unique.map(x=>`<button class="btn block" data-polish="go" data-screen="${esc(x.id?'monster':x.screen||'roster')}" data-id="${esc(x.id||'')}" data-slot="${esc(x.slot||'')}" data-kind="${esc(x.kind||'')}">${esc(x.text)}</button>`).join('')}</div><details><summary>${t('polish.team_updates')}</summary>${(f.news||[]).slice(-5).reverse().map(x=>`<p>${esc(lineText(x))}</p>`).join('')}</details></details>`;
   }
   if(name==='offseason')out+=offseasonTracker(f);
   if(['roster','contracts','famarket','draft','draftclass'].includes(name)){

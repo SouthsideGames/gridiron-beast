@@ -105,6 +105,7 @@ export function registerHqScreens(Router, app) {
       const lastGame = lgFresh ? `<div class="panel tight last-game ${lg.won ? 'won' : 'lost'}"><div class="row between"><span><b>${lg.forfeit ? $t('hq.forfeit') : lg.won ? $t('hq.win') : $t('hq.loss')}</b> ${lg.playerScore}–${lg.oppScore} vs ${esc(lg.opponent)}</span><span class="dim">week ${lg.week}</span></div>${lgLvl.length || lgInj.length ? `<div class="dim" style="margin-top:2px">${lgLvl.map((e) => e.kind === 'evolve' ? `✨ ${esc(e.from)} → ${esc(e.to)}` : `⬆️ ${esc(e.name)} Lv ${e.level}`).join(' · ')}${lgLvl.length && lgInj.length ? ' · ' : ''}${lgInj.map((e) => `<span style="color:var(--bad)">🩹 ${esc(e.name)} ${e.weeks}w</span>`).join(' · ')}</div>` : ''}</div>` : '';
       const lb = f.campaign?.lastBadge; const lbGym = lb && lb.year === f.season.year && f.season.week - lb.week <= 1 ? GYM_BY_CLUB[lb.club] : null;
       const badgeBanner = lbGym ? `<div class="badge-banner" style="--hue:${TYPES[lbGym.element]?.hue ?? 120}"><span class="badge-banner-star">★</span><div>${$t('hq.b_earned_b_badge_of_8', { badge: esc(lbGym.badge), n: lb.n })}<div class="dim">${$t('hq.s_beaten_in_week', { name: esc(lbGym.coach.name), club: esc(lb.club), lb: lb.week })} ${lb.n === 8 ? $t('hq.all_eight_the_gyms_are_yours') : `${$t('hq.to_go', { n: 8 - lb.n })}`}</div></div></div>` : '';
+      const waitingCall = callPanelHtml(f);
       return `${badgeBanner}
         <div class="panel tight"><div class="row between"><div><b>${yearOf(F.displayYear(f))}</b> · ${phaseLabel(f)}</div><div class="chip accent">${$t('hq.team_ovr', { overall: s.overall })}</div></div>
           <div class="row between" style="margin-top:4px"><span>${f.season.playoffs ? playoffStatus(f) : `${$t('hq.record')} <b class="mono">${s.record}</b>${rival ? ` · <span class="dim">${$t('hq.rival_2', { team: esc(rival.team) })}</span>` : ''}`}</span><span class="muted">${$t('hq.cap_room')} <b style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(cap.remaining)}</b></span></div>${race}</div>
@@ -114,9 +115,8 @@ export function registerHqScreens(Router, app) {
           ${!f.season.finished && day < 6 && !f.week.commissioner && !(F.inPlayoffs(f) && !F.playoffFixture(f)) && !F.needsGoal(f) ? `<button class="btn block" data-action="autorun" style="margin-top:8px">${$t('hq.let_the_staff_run_the_week')}</button>` : ''}
           ${cap.over && !f.week.commissioner ? `<p class="muted" style="color:var(--warn);margin-top:8px">${$t('hq.over_the_cap_by_the_commissioner', { amount: fmtMoney(-cap.remaining) })} <button class="btn small" data-action="releasemon">${$t('hq.release_a_monster')}</button></p>` : ''}
           ${f.week.commissioner ? `<p class="muted" style="color:var(--bad);margin-top:8px">${$t('hq.the_commissioner_is_waiting_over_the', { amount: fmtMoney(f.week.commissioner.over) })}</p>` : ''}${warningsHtml(f, { max: 2, only: ['min', 'depth', 'hurt', 'tight', 'points'] })}</div>
-        <details class="polish-secondary polish-deals"><summary>${$t('polish.trades')}</summary>${callPanelHtml(f)}${tradeLineHtml(f)}</details>
+        ${waitingCall ? `<details class="polish-secondary polish-deals" open><summary>${$t('polish.trades')}</summary>${waitingCall}${tradeLineHtml(f)}</details>` : ''}
         ${lastGame ? `<details class="polish-secondary"><summary>${$t('polish.last_game')}</summary>${lastGame}</details>` : ''}
-        <details class="polish-secondary"><summary>${$t('gm.career')}</summary><button class="btn block" data-action="gmjobs">${$t('gm.career')}</button></details>
         <details class="polish-secondary"><summary>${$t('polish.team_story')}</summary>${captainCard(f)}
         ${rivalCard(f)}
         ${boardPanel(f)}
@@ -712,7 +712,7 @@ export function registerHqScreens(Router, app) {
 
   // ---------------------------------------------------------------- Playbook browsing
   Router.registerScreen('playbook', {
-    title: $t('hq.playbook'), back: false,
+    title: $t('hq.playbook'),
     render({ f }) {
       const oc = F.staffMember(f, 'offensive_coordinator'), dc = F.staffMember(f, 'defensive_coordinator');
       const grid = (s) => `<div class="play-grid">${F.catalog(f, s).map((id) => { const st = F.playStat(f, id); return `<button class="card ${f.week.plan[s].includes(id) ? 'selected' : ''}" data-action="open" data-id="${id}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span><span class="card-stat">${st.used ? `${st.used}× · ${st.avg.toFixed(1)} yd` : $t('hq.not_used_yet')}</span></button>`; }).join('')}</div>`;

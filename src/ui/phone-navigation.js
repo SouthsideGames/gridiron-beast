@@ -1,8 +1,24 @@
 import { t } from '../text/index.js';
 // Presentation preferences, read-only checklists, and bounded in-session navigation.
 import * as F from '../franchise/franchise.js';
-import { mayStartSeason } from '../franchise/lifecycle.js';
+import { isArchived, mayStartSeason } from '../franchise/lifecycle.js';
 import { hallCeremonyDue } from '../franchise/hall-ceremony.js';
+/** Which primary tab owns each franchise screen. Plays are reached through Game Plan, not a tab. */
+export const TAB_OF = {
+  hq: 'hq', commissioner: 'hq', postseason: 'hq', legend: 'hq', scout: 'hq', recruit: 'hq', training: 'hq', scoutopp: 'hq', gameplan: 'hq', lineup: 'roster', pregame: 'hq', match: 'hq',
+  roster: 'roster', monster: 'roster', assign: 'roster', contracts: 'roster', famarket: 'roster', staff: 'more',
+  playbook: 'hq', playdetail: 'hq', practice: 'more', audit: 'more',
+  office: 'office', 'coach-look': 'office', 'gm-jobs': 'office',
+  league: 'league', schedule: 'league', standings: 'league', history: 'league',
+  more: 'more', settings: 'more', developer: 'more', 'test-session': 'more', about: 'more', dex: 'more', hof: 'more', achievements: 'more',
+};
+export function franchiseTabs(f, screenName) {
+  if (!f || isArchived(f)) return null;
+  const items = [['hq', 'HQ', '🏠'], ['roster', t('franchises.roster'), '🐾'], ['office', t('menu.my_office'), '📋'], ['league', t('franchises.league'), '🏆'], ['more', t('franchises.more'), '☰']];
+  const counts = {};
+  for (const notice of F.notices(f)) counts[notice.screen] = (counts[notice.screen] || 0) + 1;
+  return items.map(([screen, label, icon]) => ({ screen, label, icon, badge: counts[screen] || 0, active: screenName === screen || TAB_OF[screenName] === screen }));
+}
 export const AUTO_SPEEDS = [1, 2, 4];
 export function autoSpeed(f) { return AUTO_SPEEDS.includes(f.settings?.autoSpeed) ? f.settings.autoSpeed : AUTO_SPEEDS.includes(f.game?.autoSpeed) ? f.game.autoSpeed : 1; }
 export function cycleAutoSpeed(f) { const speed = AUTO_SPEEDS[(AUTO_SPEEDS.indexOf(autoSpeed(f)) + 1) % AUTO_SPEEDS.length]; (f.settings ||= {}).autoSpeed = speed; if (f.game) f.game.autoSpeed = speed; return speed; }
