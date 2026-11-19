@@ -32,13 +32,15 @@ test('weather: deterministic per game, drawn from the environment, never indoors
   const seen = new Set(Array.from({ length: 80 }, (_, k) => weatherFor('frozen', k))); assert.ok(seen.size >= 3, 'weather varies from game to game');
 });
 
-test('field bonus: +2% for the field\'s type on either team, nothing on neutral grass, capped at +6% with a type edge; never negative help', () => {
+// PR #136: the candidate football values (strong/weak ±12%, cap 14%) replace ±4% / cap 6%; the stadium bonus stays +2%.
+const near = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-9, `${msg || ''} ${a} vs ${b}`);
+test('field bonus: +2% for the field\'s type on either team, nothing on neutral grass, capped at +14% with a type edge; never negative help', () => {
   assert.equal(envMod('Fire', 'Fire'), 0.02); assert.equal(envMod('Water', 'Fire'), 0); assert.equal(envMod('Fire', null), 0);
-  assert.equal(contestMod('Fire', 'Nature', 'Fire'), 0.06, '+4 type +2 field = the cap'); assert.equal(contestMod('Fire', 'Psychic', 'Fire'), 0.02);
-  assert.equal(contestMod('Nature', 'Fire', 'Fire'), -0.04, 'the opponent is not penalised by the field'); assert.equal(contestMod('Fire', 'Water', 'Fire'), -0.02, 'field +2 against a type disadvantage −4');
+  near(contestMod('Fire', 'Nature', 'Fire'), 0.14, '+12 type +2 field = the cap'); assert.ok(contestMod('Fire', 'Nature', 'Fire') <= FOOTBALL_TYPE_VALUES.positiveCap + 1e-12); assert.equal(contestMod('Fire', 'Psychic', 'Fire'), 0.02);
+  near(contestMod('Nature', 'Fire', 'Fire'), -0.12, 'the opponent is not penalised by the field'); near(contestMod('Fire', 'Water', 'Fire'), -0.10, 'field +2 against a type disadvantage −12');
   assert.equal(contestMod('Fire', 'Nature', null), typeMod('Fire', 'Nature'));
   withTypeValues({ positiveCap: 0.05 }, () => assert.equal(contestMod('Fire', 'Nature', 'Fire'), 0.05, 'the cap binds'));
-  assert.equal(FOOTBALL_TYPE_VALUES.envMatch, 0.02); assert.equal(FOOTBALL_TYPE_VALUES.positiveCap, 0.06);
+  assert.equal(FOOTBALL_TYPE_VALUES.envMatch, 0.02); assert.equal(FOOTBALL_TYPE_VALUES.positiveCap, 0.14);
 });
 
 const typed = (lu, offT, defT) => ({ offense: Object.fromEntries(Object.entries(lu.offense).map(([s, p]) => [s, { ...p, type: offT }])), defense: Object.fromEntries(Object.entries(lu.defense).map(([s, p]) => [s, { ...p, type: defT }])) });
