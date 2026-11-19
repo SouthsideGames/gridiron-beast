@@ -119,3 +119,15 @@ test('isolation: the reviewer writes no progression, save, reward, mastery or br
   // the run's own game is local: the subject's executions stay in the result's play records, nothing is returned that references a roster
   const r = reviewSequence({ family: 'glimmer' }); assert.ok(r.plays.every((p) => !('teams' in p)), 'no club objects leak out of the run');
 });
+
+// Validation 2026-11-18 (PR #136): with the candidate type values the first Vanishing Cut seed showed the juke but no later attempt
+// by the juked defender, so the resolution ("the juked defender loses him") was claimed from the activation line alone and the
+// Ability Reviewer had no impact moment to draw. The resolution is now the defender's excluded attempt itself.
+test('Vanishing Cut: the demonstrated resolution is the juked defender failing to find him, at every tier', () => {
+  for (const mastery of TIERS) {
+    const tag = `duskrunner m${mastery}`; const r = assertComplete(reviewSequence({ family: 'duskrunner', mastery }), tag); const A = r.plays[r.activation];
+    const cut = A.allEvents.find((e) => e.ability === 'DAR-03-F' && e.kind === 'ability'); const miss = A.allEvents.find((e) => e.ability === 'DAR-03-F' && e.kind === 'ability_hit');
+    assert.ok(cut && miss, `${tag}: the juke and the excluded attempt`); assert.equal(miss.victim, cut.victim, `${tag}: the same defender`);
+    assert.ok((miss.t ?? 0) >= (cut.t ?? 0), tag); assert.match(r.phases[2].evidence, /cannot find/, `${tag}: resolution evidence`);
+  }
+});

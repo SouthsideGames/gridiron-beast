@@ -115,7 +115,9 @@ export const SPECS = {
   nightowl: { targets: 'Allied cornerbacks and safeties anywhere on the field', expect: 'All allied cornerbacks and safeties ignore Dark-field Awareness loss and Shadow Patch confusion while he is able.',
     trigger: 'An allied secondary defender stands in a Dark field', resolve: 'The ally keeps his sight', cleanup: 'Protection ends when its source cannot act or leaves the field', cooldown: false },
   duskrunner: { targets: 'The defender he jukes', expect: 'After the mastery-required rushing yards, his first ordinary juke while ready leaves the defender unable to find him.',
-    trigger: 'Ready, the required rushing yards, and an ordinary juke', resolve: 'The juked defender loses him', cleanup: 'Cooldown, then ready' },
+    trigger: 'Ready, the required rushing yards, and an ordinary juke', resolve: 'The juked defender loses him', cleanup: 'Cooldown, then ready',
+    // the resolution is the juked defender's excluded attempt ("cannot find"), not the activation line itself (validation 2026-11-18)
+    resolveFn: after(['ability_hit'], (e) => e.ability === 'DAR-03-F') },
   mireclaw: { targets: 'The opposing ball carrier', expect: 'Three plays allowing 4 yards or less fill the bar; the next snap launches the claw: the running back is Weakened for two subsequent participating plays.',
     trigger: 'The bar full', resolve: 'The claw tags the carrier (Weakened attempt)', cleanup: 'Weakened counts down over two subsequent participating plays; the bar refills', status: true, spent: (s) => s.charges === 0 },
   nocturne: { targets: 'Allied receivers in the Blackout Pocket', expect: 'His completion of 15+ yards while ready banks a Dark field created at his next offensive snap.',
@@ -207,7 +209,7 @@ export const VARIANTS = {
   ],
   ironjaw: [
     { id: 'interaction-jarred-loose', kind: 'interaction', label: 'Interaction: the extra check jars the ball loose (natural roll, fixed seed)',
-      scenario: { prime: () => ({ token: true }), calls: RUNS, seeds: 1, snaps: 12, seed0: (form, mastery) => (mastery === 3 ? 57 : 123), how: 'token primed; run plays; the fixed seed (123; 57 at mastery 3) is the first where the extra check\'s own roll on the abilities\' random stream comes up fumble: a natural outcome, not forced (found by an offline search of seeds 1-3000)' },
+      scenario: { prime: () => ({ token: true }), calls: RUNS, seeds: 1, snaps: 12, seed0: (form, mastery) => ([968, 130, 130, 57][mastery]), how: 'token primed; run plays; the fixed seed (968 at mastery 0, 130 at mastery 1-2, 57 at mastery 3; re-searched for the candidate type values) is the first where the extra check\'s own roll on the abilities\' random stream comes up fumble: a natural outcome, not forced (found by an offline search of seeds 1-3000)' },
       spec: { cleanupFn: null, resolveFn: (x) => { const r = SPECS.ironjaw.resolveFn(x); return r && x.aEv?.fumble ? r : null; }, resolve: 'The extra fumble check jars the ball loose (the fumble and its ordinary recovery)' } },
     { id: 'failure-no-token', kind: 'failure', label: 'Failure: no token (an ordinary tackle, no extra check)',
       scenario: { prime: () => ({ token: false }), calls: RUNS, seeds: 6, snaps: 12, how: 'no token: his tackles are ordinary' },
