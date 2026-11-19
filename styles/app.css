@@ -2034,6 +2034,15 @@ html[data-reduced-motion="1"] .draft-stage > :last-child { animation:none; }
 .ability-play-console summary { min-height:44px; align-content:center; cursor:pointer; }
 .ability-play-console .rv2-controls { flex:none; margin:0!important; }
 .ability-play-console .rv2-controls .btn { min-height:44px; padding:4px 7px; }
+/* Short portrait (validation 2026-11-19): the playback controls stay one row that scrolls sideways inside itself instead of
+   wrapping into three, and an opened About panel scrolls within a shorter cap, so the demo field keeps at least ~45% of the sheet. */
+@media (orientation:portrait) and (max-height:700px) {
+  .ability-play-console .rv2-controls { flex-wrap:nowrap!important; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none; }
+  .ability-play-console .rv2-controls::-webkit-scrollbar { display:none; }
+  .ability-play-console .rv2-controls > * { flex:none; }
+  .ability-play-console details[open] { max-height:20dvh; }
+  .ability-play-console .field-wrap { min-height:min(45dvh, 260px); }
+}
 /* Short landscape: the demo field keeps the left column; information and playback controls share the right one. */
 @media (orientation:landscape) and (max-height:500px) {
   .ability-play-sheet { max-width:none; }

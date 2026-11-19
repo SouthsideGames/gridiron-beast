@@ -267,3 +267,156 @@ html[data-reduced-motion="1"] .cl-result-head { animation: none; }
   .clash-live-console { gap:2px; }
   .clash-live-console #cl-subs { max-height:46px; padding:2px 4px; }
 }
+
+/* ===========================================================================================================================
+   Beast Clash look (2026-11-19, owner: "they just look very boring"). Presentation only: the same markup, controls, order and
+   data. A framed arena with light and depth, a scoreboard header, a VS plaque, name plates with heavier HP bars, a segmented
+   speed control and lineup cards. Reduced Motion removes every animation below; Larger Text keeps the sizes it sets.
+   =========================================================================================================================== */
+.cl-arena.simple { --cl-mine: var(--accent); --cl-theirs: #ff7a6b; --cl-frame: #3a6a58; }
+/* scoreboard header */
+.cl-arena.simple .cl-hud { background: linear-gradient(180deg, #1d3a31, #12241d); border: 1px solid var(--cl-frame); border-left: 3px solid var(--cl-mine); border-radius: 10px; box-shadow: 0 2px 0 rgba(0,0,0,.35); }
+.cl-arena.simple .cl-hud .cl-ex { font-weight: 800; letter-spacing: .02em; text-transform: uppercase; font-size: 10px; color: var(--ink-2); }
+.cl-arena.simple .cl-hud .cl-ex b { color: var(--accent); font-size: 13px; margin-left: 2px; }
+.cl-arena.simple .cl-hud .cl-standing { background: rgba(0,0,0,.28); border-radius: 999px; padding: 1px 8px; font-variant-numeric: tabular-nums; }
+.cl-arena.simple .cl-hud .cl-theme { margin-left: auto; font-style: italic; }
+.cl-arena.simple .cl-exbar { height: 3px; border-radius: 2px; background: rgba(0,0,0,.4); }
+.cl-arena.simple .cl-exbar i { background: linear-gradient(90deg, #fde68a, var(--accent)); box-shadow: 0 0 6px rgba(250,204,21,.6); }
+/* VS plaque */
+.cl-arena.simple .cl-matchup { gap: 6px; padding: 0; }
+.cl-arena.simple .cl-matchup .mu-side { padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.3); border: 1px solid transparent; }
+.cl-arena.simple .cl-matchup .mu-side.a { border-color: rgba(250,204,21,.55); }
+.cl-arena.simple .cl-matchup .mu-side.b { border-color: rgba(255,122,107,.55); }
+.cl-arena.simple .cl-matchup .mu-side.a .mu-name { color: #fff3c4; }
+.cl-arena.simple .cl-matchup .mu-side.b .mu-name { color: #ffd2cc; }
+.cl-arena.simple .cl-matchup .mu-vs { display: grid; place-items: center; width: 22px; height: 22px; flex: none; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #4b3a0a, #1a1400); border: 2px solid var(--accent); color: var(--accent); font-size: 9px; text-transform: uppercase; }
+.cl-arena.simple .cl-matchup.a-up .mu-side.a { background: rgba(74,222,128,.14); }
+.cl-arena.simple .cl-matchup.b-up .mu-side.b { background: rgba(248,113,113,.14); }
+/* the arena: a lit frame, a sky wash over the far side, a vignette at the edges, and each club's glow on its own half */
+.cl-arena.simple .cl-viewport { border: 3px solid var(--cl-frame); border-radius: 14px; box-shadow: 0 0 0 1px #0a1611, 0 6px 18px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.06); background: #0a1611; }
+.cl-arena.simple .cl-viewport::before { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.10), transparent 22%), radial-gradient(ellipse at 50% 55%, transparent 55%, rgba(0,0,0,.42) 100%); }
+.cl-arena.simple .cl-viewport::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(0deg, rgba(250,204,21,.13), transparent 30%), linear-gradient(180deg, rgba(255,122,107,.12), transparent 30%); }
+.cl-arena.simple .cl-viewport.sudden { border-color: var(--bad); box-shadow: 0 0 0 1px #0a1611, 0 0 22px rgba(248,113,113,.45), inset 0 0 40px rgba(248,113,113,.4); }
+.cl-arena.simple .cl-mid { opacity: .7; }
+/* name plates and HP bars */
+.cl-arena.simple .cl-tag { gap: 1px; }
+.cl-arena.simple .cl-name { display: inline-block; justify-self: center; max-width: 100%; padding: 0 5px; border-radius: 4px; background: rgba(6,14,10,.72); text-shadow: none; line-height: 14px; }
+.cl-arena.simple .cl-mon.front .cl-name { box-shadow: inset 0 -2px 0 var(--cl-mine); }
+.cl-arena.simple .cl-bar .cl-hp { height: 8px; border-radius: 4px; background: #0b1712; border: 1px solid rgba(0,0,0,.85);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+.cl-arena.simple .cl-bar .cl-hp::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.28), transparent 55%), repeating-linear-gradient(90deg, transparent 0 calc(25% - 1px), rgba(0,0,0,.45) calc(25% - 1px) 25%); }
+.cl-arena.simple .cl-bar .cl-hp-fill { background: linear-gradient(90deg, #22c55e, #86efac); }
+.cl-arena.simple .cl-bar .cl-hp-fill.mid { background: linear-gradient(90deg, #f97316, #fdba74); }
+.cl-arena.simple .cl-bar .cl-hp-fill.low { background: linear-gradient(90deg, #dc2626, #fca5a5); }
+.cl-arena.simple .cl-mon.bench .cl-bar .cl-hp { height: 6px; }
+/* strips: each club's label in its colour; cards as chips with an HP stripe */
+.cl-arena.simple .cl-strip-label { color: var(--cl-theirs); }
+.cl-arena.simple .cl-strip-label.mine { color: var(--cl-mine); }
+.cl-arena.simple .cl-card { border-radius: 8px; background: linear-gradient(180deg, #1c362e, #142a23); }
+.cl-arena.simple .cl-strip-b .cl-card { border-style: solid; border-color: rgba(255,122,107,.35); }
+.cl-arena.simple .cl-card.front { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(250,204,21,.35) inset, 0 0 8px rgba(250,204,21,.25); }
+.cl-arena.simple .cl-strip-b .cl-card.front { border-color: var(--cl-theirs); box-shadow: 0 0 0 1px rgba(255,122,107,.35) inset, 0 0 8px rgba(255,122,107,.25); }
+/* controls: the main action a full gold pill, Skip an outline, speed a segmented control */
+.cl-arena.simple .cl-btnrow.simple > .btn { border-radius: 12px; font-weight: 800; }
+.cl-arena.simple .cl-btnrow.simple > .btn.primary { box-shadow: 0 3px 0 #a58407, 0 0 14px rgba(250,204,21,.25); }
+.cl-arena.simple .cl-btnrow.simple > [data-cl="skip"] { background: transparent; border: 2px solid var(--line-2); }
+.cl-arena.simple .cl-speedrow { gap: 0 !important; }
+.cl-arena.simple .cl-speedrow > .muted { margin-right: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.cl-arena.simple .cl-speedrow .btn.small { border-radius: 0; margin: 0 0 0 -1px; background: #10221b; border: 1px solid var(--line-2); color: var(--ink-2); box-shadow: none; }
+.cl-arena.simple .cl-speedrow .btn.small:first-of-type { border-radius: 10px 0 0 10px; margin-left: 0; }
+.cl-arena.simple .cl-speedrow .btn.small:last-of-type { border-radius: 0 10px 10px 0; }
+.cl-arena.simple .cl-speedrow .btn.small.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); position: relative; z-index: 1; }
+.cl-arena.simple .cl-caption { font-weight: 700; color: var(--ink); }
+/* the lineup bar: cards with the monster's state as a coloured tag */
+.cl-subs { background: linear-gradient(180deg, #17302a, #112520); border-color: var(--cl-frame, #3a6a58); }
+.cl-sub { background: rgba(0,0,0,.22); border-width: 1px; border-top-width: 3px; }
+.cl-sub.active { border-color: var(--accent); background: rgba(250,204,21,.08); }
+.cl-sub-hp { height: 5px; }
+/* the result: a lit banner */
+.cl-result.won::before { content: ''; position: absolute; left: 50%; top: -60px; width: 320px; height: 160px; transform: translateX(-50%); pointer-events: none;
+  background: radial-gradient(ellipse at 50% 60%, rgba(250,204,21,.28), transparent 65%); }
+.cl-result.lost::before { content: ''; position: absolute; left: 50%; top: -60px; width: 320px; height: 160px; transform: translateX(-50%); pointer-events: none;
+  background: radial-gradient(ellipse at 50% 60%, rgba(248,113,113,.18), transparent 65%); }
+.cl-result-head { font-size: 30px; }
+.cl-result .mono { font-family: var(--font); }
+
+/* ---- short screens (validation 2026-11-19): the paused banner is one slim row; the arena keeps its room ---- */
+.clash-live-console #live-status .polish-paused { flex-wrap: nowrap; padding: 2px 4px 2px 8px; font-size: 12px; }
+.clash-live-console #live-status .polish-paused b { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clash-live-console #live-status .polish-paused .btn { flex: none; min-height: 40px; }
+@media (max-height: 700px) and (orientation: portrait) {
+  /* both clubs' HP is on the name plates and the lineup bar: the strips step aside while the arena needs the room */
+  .clash-live-console .cl-arena.simple .cl-strips { display: none; }
+  .clash-live-console .clash-live-heading { margin-bottom: 0 !important; }
+  .clash-live-console .clash-live-heading .btn.small { min-height: 36px; padding: 2px 8px; }
+  .clash-live-console .cl-caption { min-height: 0; font-size: 11px; }
+}
+@media (max-height: 600px) and (orientation: portrait) {
+  /* one grid for the console: Help and Guide & Notices share the scoreboard's row */
+  .clash-live-console { grid-template-columns: minmax(0,1fr) auto; grid-template-rows: auto auto auto minmax(0,1fr) auto auto auto; column-gap: 4px; row-gap: 3px; }
+  .clash-live-console #fb-arena, .clash-live-console .cl-arena.simple { display: contents; }
+  .clash-live-console #live-status { grid-column: 1 / -1; grid-row: 1; }
+  .clash-live-console .cl-arena.simple .cl-hud { grid-column: 1; grid-row: 2; align-self: center; flex-wrap: nowrap; overflow: hidden; min-width: 0; }
+  .clash-live-console .cl-arena.simple .cl-hud > span { white-space: nowrap; flex: none; }
+  .clash-live-console .cl-arena.simple .cl-hud > .cl-standing { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .clash-live-console .clash-live-heading { grid-column: 2; grid-row: 2; }
+  .clash-live-console .cl-arena.simple .cl-matchup { grid-column: 1 / -1; grid-row: 3; }
+  .clash-live-console .cl-arena.simple .cl-viewport { grid-column: 1 / -1; grid-row: 4; height: 100%; min-height: 0; }
+  .clash-live-console .cl-arena.simple .cl-controls { grid-column: 1 / -1; grid-row: 5; }
+  .clash-live-console #cl-subs { grid-column: 1 / -1; grid-row: 6; }
+  .clash-live-console .clash-endreplay { grid-column: 1 / -1; grid-row: 7; }
+  .clash-live-console .clash-live-heading .btn.small { min-height: 40px; padding: 2px 6px; font-size: 12px; }
+  .clash-live-console .cl-arena.simple .cl-matchup .mu-type { display: none; }
+  .clash-live-console .cl-arena.simple .cl-hud .cl-theme, .clash-live-console .cl-arena.simple .cl-hud .cl-order { display: none; }
+  .clash-live-console .clash-live-heading > .muted { display: none; }
+  .clash-live-console .clash-live-heading { justify-content: flex-end; }
+  .clash-live-console .cl-caption { display: none; }
+  .clash-live-console .cl-btnrow.simple .cl-speedrow > .muted { display: none; }
+  .clash-live-console .cl-btnrow.simple .cl-speedrow .btn.small { min-height: 36px; }
+  .clash-live-console #cl-subs { max-height: 60px; }
+  .clash-live-console .cl-sub { min-height: 44px; padding: 3px 6px; }
+  .clash-live-console .cl-sub-hint { display: none; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  /* short landscape: one grid for the whole console. The arena fills the left; the paused banner, Help, the playback controls
+     and the lineup bar stack in a right-hand column. (The arena's own wrappers dissolve into this grid.) */
+  .clash-live-console { grid-template-columns: minmax(0,1fr) minmax(210px, 34%); grid-template-rows: auto auto minmax(0,1fr) auto; column-gap: 6px; row-gap: 3px; }
+  .clash-live-console #fb-arena, .clash-live-console .cl-arena.simple { display: contents; }
+  .clash-live-console #live-status { grid-column: 2; grid-row: 1; }
+  .clash-live-console .clash-live-heading { grid-column: 2; grid-row: 2; margin-bottom: 0 !important; }
+  .clash-live-console .clash-live-heading > .muted { display: none; }
+  .clash-live-console .clash-live-heading .btn.small { min-height: 32px; padding: 2px 8px; }
+  .clash-live-console .cl-arena.simple .cl-hud { grid-column: 1; grid-row: 1; }
+  .clash-live-console .cl-arena.simple .cl-matchup, .clash-live-console .cl-arena.simple .cl-strips { display: none; }
+  .clash-live-console .cl-arena.simple .cl-viewport { grid-column: 1; grid-row: 2 / 5; height: 100%; min-height: 0; }
+  .clash-live-console .cl-arena.simple .cl-controls { grid-column: 2; grid-row: 3; align-self: end; }
+  .clash-live-console .cl-btnrow.simple { grid-template-columns: 1fr 1fr; }
+  .clash-live-console .cl-btnrow.simple .cl-speedrow { grid-column: 1 / -1; order: 3; justify-content: center; }
+  .clash-live-console .cl-btnrow.simple .cl-speedrow .btn.small { min-height: 34px; padding: 2px 8px; }
+  .clash-live-console .cl-caption { max-height: 18px; font-size: 11px; }
+  .clash-live-console #cl-subs { grid-column: 2; grid-row: 4; max-height: 60px; }
+  .clash-live-console #cl-subs .cl-sub-hint { display: none; }
+  .clash-live-console #cl-subs .cl-sub-row { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 3px; }
+  .clash-live-console #cl-subs .cl-sub { min-height: 44px; padding: 2px 4px; }
+  .clash-live-console #cl-subs .cl-sub-name { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
+  .clash-live-console #cl-subs .cl-sub-num { display: none; }
+  .clash-live-console #cl-subs .cl-sub { gap: 2px; justify-content: center; }
+  .clash-live-console .clash-endreplay { grid-column: 2; grid-row: 4; }
+}
+/* Short screens: Auto Rotations stays (it is a control); only the "Your lineup" label steps aside and the button sits beside the cards. */
+@media (max-height: 600px) and (orientation: portrait), (orientation: landscape) and (max-height: 500px) {
+  .clash-live-console #cl-subs { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; column-gap: 4px; }
+  .clash-live-console #cl-subs .cl-sub-head { margin: 0; }
+  .clash-live-console #cl-subs .cl-sub-head > b { display: none; }
+  .clash-live-console #cl-subs .cl-sub-head .btn { min-height: 44px; padding: 2px 6px; font-size: 11px; white-space: normal; max-width: 72px; line-height: 1.1; }
+  .clash-live-console #cl-subs > :not(.cl-sub-head):not(.cl-sub-row) { grid-column: 1 / -1; }
+  .clash-live-console #cl-subs .cl-sub-row { grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: minmax(64px, 1fr); overflow-x: auto; scrollbar-width: none; }
+  .clash-live-console #cl-subs .cl-sub-row::-webkit-scrollbar { display: none; }
+  .clash-live-console #cl-subs .cl-sub { min-height: 44px; padding: 2px 4px; gap: 2px; justify-content: center; }
+  .clash-live-console #cl-subs .cl-sub-name { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
+  .clash-live-console #cl-subs .cl-sub-num { display: none; }
+}
+html[data-reduced-motion="1"] .cl-arena.simple .cl-exbar i { transition: none; }
