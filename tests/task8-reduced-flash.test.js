@@ -34,8 +34,8 @@ test('the setting: off by default, one boolean saved with the settings, schema 1
 
 test('the setting is offered beside Reduce motion, passed to the football and Clash effect layers, and is not a quality preset', () => {
   const menu = src('src/ui/screens/menu.js');
-  { const m = menu.match(/data-change="reducedflash" \$\{s\.reducedFlash \? 'checked' : ''\}> \$\{t\('([\w.]+)'\)\}/); assert.ok(m, 'the Reduce flashes switch is in Settings'); assert.match(EN[m[1]], /^Reduce flashes/, 'its label, from src/text/en.js'); } assert.match(menu, /reducedflash: \(el\) => set\('reducedFlash', el\.checked\)/);
-  assert.ok(menu.indexOf('data-change="reducedflash"') > menu.indexOf('data-change="reduced"') && menu.indexOf('data-change="reducedflash"') < menu.indexOf('data-change="shake"'), 'right after Reduce motion');
+  { const m = menu.match(/toggle\('reducedflash', s\.reducedFlash, t\('([\w.]+)'\)\)/); assert.ok(m, 'the Reduce flashes switch is in Settings'); assert.match(EN[m[1]], /^Reduce flashes/, 'its label, from src/text/en.js'); } assert.match(menu, /reducedflash: \(el\) => set\('reducedFlash', el\.checked\)/);
+  { const at = (k) => menu.indexOf(`toggle('${k}',`); assert.ok(at('reduced') > 0 && at('reducedflash') > at('reduced') && at('reducedflash') < at('shake'), 'right after Reduce motion'); }
   assert.ok(!/fxQuality|data-change="quality"/.test(menu), 'no graphics-quality preset in Settings');
   const match = src('src/ui/screens/match.js'); assert.ok((match.match(/fxOptions: fxOptionsFor\(f\.settings\)/g) || []).length >= 5, 'every match draw with effects passes fxOptions'); assert.match(match, /const tdFlash = reducedFlash\(f\.settings\) \? ''/);
   for (const f of ['src/ui/screens/practice.js', 'src/ui/screens/ability-audit.js']) assert.match(src(f), /fxOptions: fxOptionsFor\(app\.settings\)/, f);

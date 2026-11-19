@@ -92,37 +92,48 @@ export function registerMenuScreens(Router, app) {
     unmount: stopAudioPreview,
     title: t('menu.settings_2'),
     render({ app }) {
-      const s = app.settings;
+      const s = app.settings; const c = clashSettings(s); const ap = audioPreferences();
+      // Settings, grouped (owner 2026-11-19: "it just looks messy"). Same settings, keys and behaviour; each on/off setting is a
+      // switch with its title and, under it, the explanation that used to sit in brackets.
+      const split = (text) => { const m = String(text).match(/^(.*?)\s*\((.*)\)\s*$/); return m ? [m[1], m[2]] : [String(text), '']; };
+      const hint = (h) => h ? `<small class="set-hint">${h}</small>` : '';
+      const toggle = (key, on, text) => { const [title, detail] = split(text); return `<label class="set-row set-toggle"><span class="set-text"><b>${title}</b>${hint(detail)}</span><input type="checkbox" role="switch" data-change="${key}" ${on ? 'checked' : ''}></label>`; };
+      const choice = (key, label, options, detail = '') => `<label class="set-row set-choice"><span class="set-text"><b>${label}</b>${hint(detail)}</span><select data-change="${key}">${options.map(([v, text, sel]) => `<option value="${v}" ${sel ? 'selected' : ''}>${text}</option>`).join('')}</select></label>`;
+      const group = (id, title, body) => `<section class="panel set-group set-${id}"><h3>${title}</h3>${body}</section>`;
       return `
-        <div class="panel">
-          <label class="field row"><input type="checkbox" style="width:auto" data-change="comfortable" ${s.comfortableText ? 'checked' : ''}> ${t('polish.comfortable_text')}</label><label class="field">${t('menu.game_length')}<select data-change="quarter"><option value="180" ${s.quarterLength === 180 ? 'selected' : ''}>${t('menu.standard_3_minute_quarters_25_plays')}</option><option value="300" ${s.quarterLength === 300 ? 'selected' : ''}>${t('menu.long_5_minute_quarters_45_plays')}</option><option value="420" ${s.quarterLength === 420 ? 'selected' : ''}>${t('menu.full_7_minute_quarters_60_plays')}</option></select></label>
-          ${app.f ? `<div class="field"><span>${t('menu.difficulty')}</span><div class="muted">${t('menu.b_b_set_when_the_franchise', { label: esc(DIFFICULTY[s.difficulty]?.label || t('menu.pro')) })}</div></div>` : ''}
-          <label class="field">${t('menu.coaching_mode')}<select data-change="mode"><option value="key" ${s.mode === 'key' ? 'selected' : ''}>${t('menu.key_moments_you_coach_the_big')}</option><option value="full" ${s.mode === 'full' ? 'selected' : ''}>${t('menu.full_coaching_call_every_play')}</option></select></label>
-          <p class="dim">${t('menu.times_assume_key_moments_full_coaching')}</p>
-          <label class="field">${t('menu.animation_speed')}<select data-change="speed"><option value="0.7" ${s.speed === 0.7 ? 'selected' : ''}>${t('menu.slow')}</option><option value="1" ${s.speed === 1 ? 'selected' : ''}>${t('menu.normal')}</option><option value="1.6" ${s.speed === 1.6 ? 'selected' : ''}>${t('menu.fast')}</option></select></label>
-          ${(() => { const c = clashSettings(s); return `<label class="field">${t('menu.beast_clash_battles')}<select data-change="clashmode"><option value="ask" ${c.mode === 'ask' ? 'selected' : ''}>${t('menu.ask_every_time_default')}</option><option value="watch" ${c.mode === 'watch' ? 'selected' : ''}>${t('menu.suggest_watch_battle')}</option><option value="skip" ${c.mode === 'skip' ? 'selected' : ''}>${t('menu.suggest_skip_to_results')}</option></select></label>
-          <label class="field">${t('menu.beast_clash_speed')}<select data-change="clashspeed"><option value="1" ${c.speed === 1 ? 'selected' : ''}>${t('menu.normal')}</option><option value="2" ${c.speed === 2 ? 'selected' : ''}>${t('menu.fast_default')}</option><option value="4" ${c.speed === 4 ? 'selected' : ''}>${t('menu.fastest')}</option></select></label>
-          <p class="dim">${t('menu.tuesday_encounters_the_pregame_clash_and')}</p>`; })()}
-          <label class="field">${t('menu.players_on_the_field')}<select data-change="markers"><option value="sprites" ${s.fieldMarkers !== 'simple' ? 'selected' : ''}>${t('menu.monster_art')}</option><option value="simple" ${s.fieldMarkers === 'simple' ? 'selected' : ''}>${t('menu.simple_circles_and_squares')}</option></select></label>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="replays" ${s.replays !== false ? 'checked' : ''}> ${t('menu.instant_replays_of_big_plays_touchdowns')}</label>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="typeicons" ${s.typeIcons !== false ? 'checked' : ''}> ${t('menu.type_matchup_icons_before_the_snap')}</label>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="autopoints" ${s.autoPoints ? 'checked' : ''}> ${t('menu.trainer_invests_training_points_for_me')}</label>
-          ${app.f ? assistSettingsHtml(app.f) : ''}
-          <label class="field">${t('menu.frame_rate')}<select data-change="framerate"><option value="60" ${frameRateOf(s) === 60 ? 'selected' : ''}>${t('menu.60_fps_default')}</option><option value="30" ${frameRateOf(s) === 30 ? 'selected' : ''}>${t('menu.30_fps_battery_saver')}</option></select></label>
-          <p class="dim" style="margin-top:0">${t('menu.30_fps_redraws_effects_less_often')}</p>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reduced" ${s.reducedMotion ? 'checked' : ''}> ${t('menu.reduce_motion_no_play_animation_no')}</label>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reducedflash" ${s.reducedFlash ? 'checked' : ''}> ${t('menu.reduce_flashes_softer_ability_and_score')}</label>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="shake" ${s.screenShake !== false ? 'checked' : ''}> ${t('menu.screen_shake_on_big_hits_and')}</label>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="evosound" ${s.evoSound ? 'checked' : ''}> ${t('menu.evolution_sounds_off_by_default_the')}</label>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="devnotices" ${s.devNotices !== false ? 'checked' : ''}> ${t('menu.developer_review_notices_new_or_changed')}</label>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="liveclock" ${s.liveClock ? 'checked' : ''}> ${t('menu.live_40_second_play_clock_off')}</label>
-          <label class="field">${t('rotation.control')}<select class="input" data-change="submode"><option value="auto" ${s.substitutionMode!=='manual'?'selected':''}>${t('rotation.auto')}</option><option value="manual" ${s.substitutionMode==='manual'?'selected':''}>${t('rotation.manual')}</option></select></label>
-        </div>
-        <div class="panel"><label class="field">Auto Playback Speed<select class="input" data-change="autospeed">${[1,2,4].map(n=>`<option value="${n}" ${(s.autoSpeed||1)===n?'selected':''}>${n}×</option>`).join('')}</select></label></div>
-        <div class="panel"><h3>Audio</h3><label class="field row"><input type="checkbox" style="width:auto" data-change="audio-mute" ${audioPreferences().muted ? 'checked' : ''}> Mute all audio</label>${[['music','Music volume'],['sfx','Sound effects volume'],['crowd','Crowd volume'],['cries','Monster cry volume']].map(([key,label]) => `<label class="field">${label}<input type="range" min="0" max="1" step="0.05" data-change="audio-${key}" value="${audioPreferences()[key]}"><button class="btn small" data-action="audio-preview" data-channel="${key}">${key==='music'?'Play Music':key==='cries'?'Play Cry':'Test Volume'}</button></label>`).join('')}<p class="dim">Audio starts after a tap. These settings apply across franchises.</p></div>
+        ${group('game', 'Game Day', `
+          ${choice('quarter', t('menu.game_length'), [[180, t('menu.standard_3_minute_quarters_25_plays'), s.quarterLength === 180], [300, t('menu.long_5_minute_quarters_45_plays'), s.quarterLength === 300], [420, t('menu.full_7_minute_quarters_60_plays'), s.quarterLength === 420]])}
+          ${choice('mode', t('menu.coaching_mode'), [['key', t('menu.key_moments_you_coach_the_big'), s.mode === 'key'], ['full', t('menu.full_coaching_call_every_play'), s.mode === 'full']], t('menu.times_assume_key_moments_full_coaching'))}
+          ${app.f ? `<div class="set-row set-info"><span class="set-text"><b>${t('menu.difficulty')}</b><small class="set-hint">${t('menu.b_b_set_when_the_franchise', { label: esc(DIFFICULTY[s.difficulty]?.label || t('menu.pro')) })}</small></span></div>` : ''}
+          ${choice('speed', t('menu.animation_speed'), [[0.7, t('menu.slow'), s.speed === 0.7], [1, t('menu.normal'), s.speed === 1], [1.6, t('menu.fast'), s.speed === 1.6]])}
+          ${choice('autospeed', 'Auto Playback Speed', [1, 2, 4].map((n) => [n, `${n}×`, (s.autoSpeed || 1) === n]))}
+          ${choice('submode', t('rotation.control'), [['auto', t('rotation.auto'), s.substitutionMode !== 'manual'], ['manual', t('rotation.manual'), s.substitutionMode === 'manual']])}
+          ${choice('markers', t('menu.players_on_the_field'), [['sprites', t('menu.monster_art'), s.fieldMarkers !== 'simple'], ['simple', t('menu.simple_circles_and_squares'), s.fieldMarkers === 'simple']])}
+          ${toggle('replays', s.replays !== false, t('menu.instant_replays_of_big_plays_touchdowns'))}
+          ${toggle('typeicons', s.typeIcons !== false, t('menu.type_matchup_icons_before_the_snap'))}
+          ${toggle('liveclock', s.liveClock, t('menu.live_40_second_play_clock_off'))}`)}
+        ${group('clash', 'Beast Clash', `
+          ${choice('clashmode', t('menu.beast_clash_battles'), [['ask', t('menu.ask_every_time_default'), c.mode === 'ask'], ['watch', t('menu.suggest_watch_battle'), c.mode === 'watch'], ['skip', t('menu.suggest_skip_to_results'), c.mode === 'skip']])}
+          ${choice('clashspeed', t('menu.beast_clash_speed'), [[1, t('menu.normal'), c.speed === 1], [2, t('menu.fast_default'), c.speed === 2], [4, t('menu.fastest'), c.speed === 4]])}
+          <p class="set-note">${t('menu.tuesday_encounters_the_pregame_clash_and')}</p>`)}
+        ${group('help', 'Coaching Help', `
+          ${toggle('autopoints', s.autoPoints, t('menu.trainer_invests_training_points_for_me'))}
+          ${app.f ? `<div class="set-assist">${assistSettingsHtml(app.f)}</div>` : ''}`)}
+        ${group('display', 'Display & Accessibility', `
+          ${toggle('comfortable', s.comfortableText, t('polish.comfortable_text'))}
+          ${toggle('reduced', s.reducedMotion, t('menu.reduce_motion_no_play_animation_no'))}
+          ${toggle('reducedflash', s.reducedFlash, t('menu.reduce_flashes_softer_ability_and_score'))}
+          ${toggle('shake', s.screenShake !== false, t('menu.screen_shake_on_big_hits_and'))}
+          ${choice('framerate', t('menu.frame_rate'), [[60, t('menu.60_fps_default'), frameRateOf(s) === 60], [30, t('menu.30_fps_battery_saver'), frameRateOf(s) === 30]], t('menu.30_fps_redraws_effects_less_often'))}`)}
+        ${group('audio', 'Audio', `
+          <label class="set-row set-toggle"><span class="set-text"><b>Mute all audio</b></span><input type="checkbox" role="switch" data-change="audio-mute" ${ap.muted ? 'checked' : ''}></label>
+          ${[['music', 'Music', 'Play Music'], ['sfx', 'Sound effects', 'Test'], ['crowd', 'Crowd', 'Test'], ['cries', 'Monster cries', 'Play Cry']].map(([key, label, test]) => `<div class="set-row set-volume"><label class="set-text" for="vol-${key}"><b>${label}</b></label><div class="set-volume-line"><input id="vol-${key}" type="range" min="0" max="1" step="0.05" data-change="audio-${key}" value="${ap[key]}" aria-label="${label} volume"><button class="btn small" data-action="audio-preview" data-channel="${key}">${test}</button></div></div>`).join('')}
+          ${toggle('evosound', s.evoSound, t('menu.evolution_sounds_off_by_default_the'))}
+          <p class="set-note">Audio starts after a tap. These settings apply across franchises.</p>`)}
         ${savePanelHtml(app)}
-        <p class="dim">${t('menu.saves_from_earlier_versions_are_never')}</p>
-        <p class="center dim">${t('menu.build_files_if_this_does_not', { build: esc(buildLabel()), gbFiles: globalThis.__gbFiles === 'mapped' ? t('menu.up_to_date') : globalThis.__gbFiles === 'refreshed' ? 'refreshed' : 'checking' })}</p>`;
+        ${group('dev', 'Developer', toggle('devnotices', s.devNotices !== false, t('menu.developer_review_notices_new_or_changed')))}
+        <p class="dim set-foot">${t('menu.saves_from_earlier_versions_are_never')}</p>
+        <p class="center dim set-foot">${t('menu.build_files_if_this_does_not', { build: esc(buildLabel()), gbFiles: globalThis.__gbFiles === 'mapped' ? t('menu.up_to_date') : globalThis.__gbFiles === 'refreshed' ? 'refreshed' : 'checking' })}</p>`;
     },
     mount(root, ctx) {
       fillStorageMeter(root, app);
