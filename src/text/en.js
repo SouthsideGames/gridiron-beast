@@ -5583,6 +5583,7 @@ export default {
   'onboarding.not_what_you_had_in_mind': 'Not what you had in mind?',
   'onboarding.show_three_others_left': 'Show Three Others ({rerolls} Left)',
   'onboarding.league_commissioner': 'LEAGUE COMMISSIONER · {step} / {n}',
+  'onboarding.random_name': 'Random Name',
   'onboarding.back': '‹ Back',
   'onboarding.enter_the_league': 'Enter the League →',
   'onboarding.continue': 'Continue →',

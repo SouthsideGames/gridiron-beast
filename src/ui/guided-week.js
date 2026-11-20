@@ -6,8 +6,9 @@ import { MOMENTS } from '../franchise/guide-lessons.js';
 
 /** The screen "Show Me Where" opens for the current lesson. */
 const lessonScreen = (f, l) => l.kind === 'draft' ? 'draft' : l.kind === 'board' ? 'goals' : l.kind === 'game' ? (f.game ? 'match' : f.season.day === 6 ? 'pregame' : 'hq') : l.screen;
+const outsideFranchise = screen => ['menu', 'onboarding', 'welcome', 'settings', 'developer', 'dex', 'achievements', 'hof', 'about', 'franchises'].includes(screen);
 export function guideHtml(f, screen) {
-  const l = currentLesson(f); if (!l || ['onboarding', 'welcome', 'match'].includes(screen)) return '';
+  const l = currentLesson(f); if (!l || outsideFranchise(screen) || screen === 'match') return '';
   // Already there: "Show Me Where" would do nothing, so it is not offered (the lesson's own control is highlighted instead).
   const away = lessonScreen(f, l) !== screen;
   const compact = ['match', 'clash-battle'].includes(screen);
@@ -49,7 +50,7 @@ export function guideFootball(f, save) {
 
 /** Real game controls, including tab navigation, rather than the guide's shortcut. */
 export function guideTargetSelectors(f, screen) {
-  const l = currentLesson(f); if (!l || screen === 'match') return [];
+  const l = currentLesson(f); if (!l || outsideFranchise(screen) || screen === 'match') return [];
   if (l.kind === 'monster' && screen === 'assign') return ['[data-action="monster"]'];
   // Coaches live on HQ: teach that route rather than a shortcut from a beast card.
   if (l.id === 'coaches' && screen !== 'staff') return screen === 'hq'
@@ -72,7 +73,7 @@ export function highlightGuideTarget(f, screen, root = document) {
   // Show a single local choice; while navigating, mark both the direct button
   // and the real tab if both are present. HQ contains the day/staff shortcuts;
   // point back there when the current page has no direct route to the lesson.
-  if (!targets.length && currentLesson(f) && screen !== 'hq' && screen !== lessonScreen(f, currentLesson(f))) {
+  if (!outsideFranchise(screen) && !targets.length && currentLesson(f) && screen !== 'hq' && screen !== lessonScreen(f, currentLesson(f))) {
     const hq = root.querySelector('[data-action="router-tab"][data-screen="hq"]');
     if (hq && visible(hq)) targets.push(hq);
   }
@@ -112,6 +113,7 @@ export function initGuidedWeek({ app, Router }) {
 }
 export function mountGuide(f, screen, save) {
   stopSectionTips();
+  if (outsideFranchise(screen)) { highlightGuideTarget(f, screen); return; }
   if (screen === 'monster') stopSectionTips = mountBeastSectionTips(f, document.querySelector('#screen'), save);
   highlightGuideTarget(f, screen);
   if (!f?.guide?.enabled || f.guide.endedAtFootball) return;
