@@ -413,12 +413,13 @@ export function resolveRecordHolder(f, r, { scope = 'game', cat } = {}) {
 export function legacyHofProfile(card, i) {
   const b = card?.bestMonsters?.[i]; if (!b) return null;
   const sp = SPECIES_BY_ID[b.species]; const base = String(b.name || '').replace(/ (II|III|IV|V|VI|\d+)$/, '');
-  const stage = sp ? (sp.evolution || []).findIndex((e) => e.name === base) + 1 : 0;
+  const stage = sp ? (Number.isInteger(b.stage) ? Math.max(0, Math.min(b.stage, sp.evolution.length)) : (sp.evolution || []).findIndex((e) => e.name === base) + 1) : 0;
+  const formName = stage > 0 ? sp.evolution[stage - 1]?.name : sp?.name;
   const years = (card.seasonsList || []).map((s) => s.year).filter((y) => y != null);
   const last = years.length ? Math.max(...years) : null; const titles = (card.seasonsList || []).filter((s) => s.champion).map((s) => s.year);
   const notes = ['Partial history: this Hall of Fame card was written before careers were kept (v39.0). It records his name, position, rating and level at retirement; his games, honors and earlier clubs were not saved.'];
   notes.push(`${$t('franchise.under_seasons', { club: card.club, owner: card.owner, seasons: card.seasons, w: card.record?.w ?? 0, l: card.record?.l ?? 0, n: card.seasons })}${titles.length ? `${$t('franchise.the_club_won_the_beast_bowl')} ${titles.map((y) => yearOf(y)).join(', ')}${$t('franchise.the_card_does_not_record_which')}` : ''}.`);
-  return { v: PROFILE_VERSION, kind: 'snapshot', legacy: true, where: 'hof', id: `${card.id}:${i}`, name: b.name, species: b.species, stage: Math.max(0, stage), speciesName: stage > 0 ? base : sp?.name || b.species, type: sp?.element || null, position: b.position, level: b.level ?? null, ovr: b.ovr ?? null, yearsPro: null,
+  return { v: PROFILE_VERSION, kind: 'snapshot', legacy: true, where: 'hof', id: `${card.id}:${i}`, name: b.name, species: b.species, stage: Math.max(0, stage), speciesName: formName || b.species, type: sp?.element || null, position: b.position, level: b.level ?? null, ovr: b.ovr ?? null, yearsPro: null,
     club: card.club, clubs: [{ club: card.club, from: null, to: null }], seasons: null, onRecord: 0, complete: false,
     stats: { career: {}, season: {}, games: 0, focus: [], seasonFocus: null }, books: [], honours: { titles: 0, awards: 0, records: 0, hof: true }, tier: 'hof',
     trophies: [{ kind: 'hof', ...TROPHY_META.hof, count: 1, entries: [{ key: 'hof:card', year: last, club: card.club, owner: card.owner }] }],

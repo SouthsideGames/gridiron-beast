@@ -1,3 +1,4 @@
+import { ensureIndividualNames } from '../data/individual-names.js';
 // Persistence: localStorage key `gridiron-beast-v6`, JSON export/import and
 // a one-way import of the v5 (11v11) prototype's owner, club, staff, rival
 // and records. The legacy key is never modified.
@@ -66,18 +67,8 @@ export function migrate(f) {
   if (hasLeague(f) && f.season?.finished && migrationDue(f)) migratePositions(f); // the final single-position rule: a save opened in an offseason is at the boundary (owner 2026-11-05)
   return f;
 }
-/** Saves from before the duplicate-name fix (2026-10-22) may hold two roster monsters with one name: the later one gets a numeral. Stats and history are keyed by id, so nothing else changes. */
-export function dedupeRosterNames(f) {
-  const all = new Set((f.roster || []).map((m) => m.name)); const kept = new Set();
-  for (const m of f.roster || []) {
-    if (!kept.has(m.name)) { kept.add(m.name); continue; }
-    const base = String(m.name).replace(/ (II|III|IV|V|VI|\d+)$/, '');
-    const free = (c) => !all.has(c) && !kept.has(c);
-    let cand = ['II', 'III', 'IV', 'V', 'VI'].map((n) => `${base} ${n}`).find(free);
-    for (let k = 7; !cand; k++) if (free(`${base} ${k}`)) cand = `${base} ${k}`;
-    m.name = cand; kept.add(cand); all.add(cand);
-  }
-}
+/** Compatibility entry point: personal names replace legacy catalogue labels and numeral suffixes. */
+export function dedupeRosterNames(f) { ensureIndividualNames(f); }
 /** Saves from before the species dex stored old display names: map every monster onto a dex species and rename it (numerals kept). */
 export function migrateSpecies(f) {
   const fix = (m) => {

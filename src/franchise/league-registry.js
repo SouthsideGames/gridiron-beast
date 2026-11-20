@@ -1,3 +1,4 @@
+import { reserveIndividualName } from '../data/individual-names.js';
 // The league registry (GDD §42.6, Phase 3): the 15 AI clubs' rosters as persistent monsters inside one franchise universe.
 // Pure data functions over `f.league`; the game's own rules (development, contracts, the draft, the pools) act on these
 // monsters exactly as they act on the owner's. Nothing here draws a random number except where an rng is passed in.
@@ -63,9 +64,9 @@ export function issueId(f, rng) {
  */
 export function claimMonster(f, m, salt = '') {
   if (!hasLeague(f) || !m?.id) return null;
-  if (registerId(f, m.id)) return null;
+  if (registerId(f, m.id)) { reserveIndividualName(f, m); return null; }
   const from = m.id;
-  for (let n = 0; ; n++) { const id = `m_${hashString(`${from}|${salt}|${n}`).toString(36)}`; if (registerId(f, id)) { m.id = id; return { from, to: id }; } }
+  for (let n = 0; ; n++) { const id = `m_${hashString(`${from}|${salt}|${n}`).toString(36)}`; if (registerId(f, id)) { m.id = id; reserveIndividualName(f, m); return { from, to: id }; } }
 }
 /** Record ids that exist already (the owner's monsters, pools, classes): never re-keyed, only remembered. */
 export function noteExistingIds(f, monsters) { let n = 0; for (const m of monsters || []) if (m?.id && registerId(f, m.id)) n++; return n; }

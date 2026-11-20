@@ -51,7 +51,8 @@ test('the evolution itself is exactly the approved rule: same id, form, ratings 
   }
   assert.equal(m.potential, overall(m.dev.potential, m.position)); assert.ok(m.potential > before.potential, 'the evolved form raises the ceiling');
   assert.equal(m.salary, before.salary, 'salary unchanged until renewal'); assert.equal(m.level, before.level, 'level unchanged');
-  assert.equal(m.id, before.id); assert.equal(m.name, nextEvolution(before).name + (before.name.match(/ (II|III|IV|V|VI|\d+)$/)?.[0] || ''));
+  assert.equal(m.id, before.id); assert.equal(m.name, before.name, 'personal name survives evolution');
+  assert.equal(formOf(m).name, nextEvolution(before).name);
 });
 
 test('the original and evolved forms and their sprites are the real ones', () => {
@@ -87,12 +88,12 @@ test('the report shows only real changes: an unchanged attribute is not an impro
 });
 
 test('the Career Timeline records the evolution once, with the forms, season, week, level and overall; earlier records kept', () => {
-  const f = fresh(); const m = ready(evolvable(f)); const evBefore = copy(careerEvents(m)); const ovr0 = monsterOverall(m); const name0 = m.name; const stats0 = copy(m.stats);
+  const f = fresh(); const m = ready(evolvable(f)); const evBefore = copy(careerEvents(m)); const ovr0 = monsterOverall(m); const name0 = formOf(m).name; const personalName = m.name; const stats0 = copy(m.stats);
   assert.equal(F.evolveMonster(f, m.id).ok, true);
   const ev = careerEvents(m); assert.deepEqual(ev.slice(0, evBefore.length), evBefore, 'pre-evolution events preserved');
   const evo = ev.filter((e) => e.t === 'evolve'); assert.equal(evo.length, 1);
   assert.equal(evo[0].y, f.season.year); assert.equal(evo[0].w, f.season.week); assert.equal(evo[0].x.from, name0);
-  assert.equal(evo[0].x.to, m.name); assert.equal(evo[0].x.lvl, m.level); assert.deepEqual(evo[0].x.ovr, [ovr0, monsterOverall(m)]);
+  assert.equal(evo[0].x.to, formOf(m).name); assert.equal(m.name, personalName); assert.equal(evo[0].x.lvl, m.level); assert.deepEqual(evo[0].x.ovr, [ovr0, monsterOverall(m)]);
   assert.deepEqual(m.stats, stats0, 'career statistics continue untouched');
   const tl = careerTimeline(m, { club: f.club }); assert.ok(tl.some((i) => /Evolved into/.test(i.title || '')), 'shown on the timeline');
 });
