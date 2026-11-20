@@ -1,3 +1,4 @@
+import { reserveIndividualName } from '../data/individual-names.js';
 // The league's season transition for the 15 persistent AI clubs (GDD §42.6, Phase 3), in the owner's order of play:
 //   at season end     career season-end events · contracts (re-sign or walk) · the cap (trim the unprotected)
 //   at the next start ageing (legendaries and the rival's signature never age) · free agency after the owner (decision F) ·
@@ -324,9 +325,7 @@ export function generateArrival(f, r, { club, position, quality, room, floor = f
 }
 /** No two names on one club: the roster rule of createRoster, applied to an arrival. */
 export function clubUniqueName(f, club, m) {
-  const taken = new Set(clubRoster(f, club).filter((x) => x !== m).map((x) => x.name)); if (!taken.has(m.name)) return m;
-  const base = resolveSpecies(m).name; for (const sfx of ['II', 'III', 'IV', 'V', 'VI', '7', '8', '9']) { const c = `${base} ${sfx}`; if (!taken.has(c)) { m.name = c; return m; } }
-  return m;
+  return reserveIndividualName(f, m, clubRoster(f, club).filter(x => x.id !== m.id).map(x => x.name));
 }
 
 /**

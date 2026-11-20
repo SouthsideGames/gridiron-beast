@@ -7,7 +7,7 @@ import { isArchived } from '../franchise/lifecycle.js';
 import * as F from '../franchise/franchise.js';
 import { editPolish, polishState, toggleShortlist, shortlisted, draftScope, browsePreferences, setBrowsePreferences, matchesSearch, previewInvestment, commitInvestment, savePreset, lineupPresetPreview, replacementFor, shortPositionRoute } from '../franchise/polish.js';
 import { rookieCharge } from '../franchise/draft.js';
-import { monsterOverall } from '../data/monsters.js';
+import { monsterOverall, formOf, speciesName } from '../data/monsters.js';
 import { ATTRIBUTES } from '../data/personnel.js';
 import { ATTR_NAME } from '../data/stat-guide.js';
 import { PLAYS } from '../data/playbook.js';
@@ -178,7 +178,7 @@ export function mountPolish(root,ctx,name,Router) {
       let charge=m.salary;
       if(scope.startsWith('draft:')){const v=F.prospectView(f,m);charge=v.ovr!=null?rookieCharge(m):null;}
       if(name==='famarket')charge=asking.get(m.id);
-      const visible=matchesSearch(m.name,p.query)&&(!p.shortlist||shortlisted(f,scope,m.id))&&(!p.needed||needs.has(m.position))&&(!p.affordable||charge!=null&&charge<=room);
+      const visible=matchesSearch(`${m.name} ${formOf(m).name} ${speciesName(m)}`,p.query)&&(!p.shortlist||shortlisted(f,scope,m.id))&&(!p.needed||needs.has(m.position))&&(!p.affordable||charge!=null&&charge<=room);
       row.hidden=!visible;if(visible)visibleIds.add(m.id);
     }
     const searchList=root.querySelector('.polish-roster-search');if(searchList)searchList.hidden=!p.query&&!p.needed;

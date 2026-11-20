@@ -26,7 +26,7 @@ export const TIMING = Object.freeze({
 export const STAGES = ['A', 'B', 'C', 'D', 'E'];
 /** Plain words for a form's stage (the game has no stage names of its own). */
 export const stageLabel = (n) => [$t('shared.base_form'), $t('shared.first_evolution'), $t('shared.second_evolution'), $t('shared.third_evolution')][n] || `${$t('shared.evolution', { n })}`;
-const CAPTION = { A: (r) => `${$t('shared.is_evolving', { fromName: r.fromName })}`, B: () => $t('shared.energy_is_surging'), C: () => $t('shared.transforming'), D: (r) => `${$t('shared.evolved_into', { fromName: r.fromName, toName: r.toName })}` };
+const CAPTION = { A: (r) => `${$t('shared.is_evolving', { fromName: r.individualName || r.fromName })}`, B: () => $t('shared.energy_is_surging'), C: () => $t('shared.transforming'), D: (r) => `${$t('shared.evolved_into', { fromName: r.fromName, toName: r.toName })}` };
 
 /** Sprite size for the stage: as large as the screen allows, in whole multiples of 16 so every art pixel stays crisp. */
 export function stageSpriteSize(vw = window.innerWidth, vh = window.innerHeight) {
@@ -84,7 +84,7 @@ export function openEvolutionScene({ report: r, beforeMon, afterMon, settings = 
   el.innerHTML = `<div class="evo-bg" aria-hidden="true"></div><div class="evo-rays" aria-hidden="true"></div><canvas class="evo-fx" aria-hidden="true"></canvas>
     <div class="evo-top"><button class="evo-btn ghost evo-sound" data-evo="sound" aria-pressed="${sound}">${sound ? $t('shared.sound_on') : $t('shared.sound_off')}</button><button class="evo-btn ghost evo-skip" data-evo="skip">${$t('shared.skip')}</button></div>
     <div class="evo-show">
-      <div class="evo-head"><div class="evo-kicker">${$t('shared.evolution_2')}</div><div class="evo-name">${esc(r.fromName)}</div></div>
+      <div class="evo-head"><div class="evo-kicker">${$t('shared.evolution_2')}</div><div class="evo-name">${esc(r.individualName || r.fromName)}</div></div>
       <div class="evo-figure"><div class="evo-rings" aria-hidden="true"><i></i><i></i><i></i></div><div class="evo-glow" aria-hidden="true"></div>
         <div class="evo-sprite from">${monsterSprite(beforeMon, size)}</div><div class="evo-sprite to">${monsterSprite(afterMon, size)}</div></div>
       <div class="evo-banner" aria-hidden="true"><div class="evo-banner-main">${$t('shared.evolved_into_2', { toUpperCase: esc(r.fromName.toUpperCase()) })} <span>${esc(r.toName.toUpperCase())}</span>!</div><div class="evo-banner-sub"><span class="evo-type">${esc(r.type || '')}</span><span>${esc(r.position)}</span><span>${esc(stageLabel(r.toStage))}</span></div></div>

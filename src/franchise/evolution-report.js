@@ -3,7 +3,7 @@
 // scene only presents the difference between two snapshots. Nothing here is invented: unchanged attributes are not
 // improvements, an ability is listed only if it differs, salary follows the contract rule (unchanged until renewal).
 import { ATTRIBUTES } from '../data/personnel.js';
-import { monsterOverall, nextEvolution, resolveSpecies } from '../data/monsters.js';
+import { monsterOverall, formOf, nextEvolution, resolveSpecies } from '../data/monsters.js';
 import { familyById, abilityById } from '../data/beast-dex.js';
 /** The monster's Dex football ability (Task 8 M3), for the scene's label. */
 const footballAbilityOf = (m) => { const f = familyById(resolveSpecies(m)?.id || m.species); const a = f?.abilities?.football ? abilityById(f.abilities.football) : null; return a ? { name: a.name, kind: 'ability' } : null; };
@@ -13,7 +13,7 @@ import { ATTR_NAME } from '../data/stat-guide.js';
 export function evolutionSnapshot(m) {
   const eff = footballAbilityOf(m);
   return {
-    id: m.id, name: m.name, species: m.species, stage: m.stage || 0, type: m.type || resolveSpecies(m).element || null, position: m.position,
+    id: m.id, name: m.name, formName: formOf(m).name, personalName: !!m.personalName, species: m.species, stage: m.stage || 0, type: m.type || resolveSpecies(m).element || null, position: m.position,
     level: m.level || 1, overall: monsterOverall(m), potential: m.potential ?? null, salary: m.salary ?? null,
     attributes: Object.fromEntries(ATTRIBUTES.map((k) => [k, m.attributes?.[k] ?? 0])), ability: eff ? { name: eff.name, kind: eff.kind } : null,
   };
@@ -26,7 +26,7 @@ export function evolutionReport(before, after, ctx = {}) {
   const abilityChanged = (before.ability?.name || null) !== (after.ability?.name || null);
   const next = nextEvolution({ species: after.species, stage: after.stage, level: after.level, name: after.name });
   return {
-    id: after.id, fromName: before.name, toName: after.name, type: after.type, position: after.position,
+    id: after.id, individualName: after.personalName ? after.name : null, fromName: before.formName || before.name, toName: after.formName || after.name, type: after.type, position: after.position,
     fromStage: before.stage, toStage: after.stage, level: after.level,
     overall: { from: before.overall, to: after.overall, delta: after.overall - before.overall },
     potential: before.potential != null && after.potential != null ? { from: before.potential, to: after.potential, delta: after.potential - before.potential } : null,

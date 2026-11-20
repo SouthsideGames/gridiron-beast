@@ -1,3 +1,4 @@
+import { reserveIndividualName, ensureIndividualNames } from '../data/individual-names.js';
 import { commitGameInjuries } from '../sim/substitutions.js';
 import * as GM from './gm-career.js';
 // The franchise: owner, club, staff, roster, weekly loop, season, league
@@ -111,6 +112,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
     tutorial: { seen: {} },
     pool: {}, staffContracts: {}, staffRaise: {}, offseason: null,
   };
+  for (const m of roster) reserveIndividualName(f, m);
   // Contracts (GDD §18.1): about 35% of the founding roster, never a cornerstone, is on a one-year deal, so the first
   // offseason already brings renewals, walks and the market. Chosen by a hash of the id, so no rng is consumed.
   const expiring = roster.filter((m) => !m.cornerstone).sort((a, b) => hashString(`${a.id}|1yr`) - hashString(`${b.id}|1yr`)).slice(0, Math.round(roster.length * FOUNDING_ONE_YEAR_SHARE));
@@ -120,7 +122,9 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   for (const m of roster) dexRecord(f, m, 'signed');
   for (const m of roster) { noteJoin(f, m, 'founding', m.cornerstone ? { cornerstone: 1 } : {}); markCareerFresh(m); } // Career Timeline (GDD §38)
   if (persistentLeague) ensureLeague(f, { qualityDelta: -CREATION_LIFT, fresh: true }); // a new universe starts persistent (GDD §42.6): rosters open a little under today's year-1 quality because they will grow by playing (league-season.js calibration)
+  ensureIndividualNames(f);
   openCreationDraft(f);
+  ensureIndividualNames(f);
   return f;
 }
 /** A new GM arrives on draft day (GDD §19.2): a lottery pick 1-5 (15% for #1), the outgoing staff's scouting notes, the rest of the league slotted by their natural level. */
@@ -315,10 +319,10 @@ export function monsterBio(f, m) {
 export function evolveMonster(f, id) {
   const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: $t('franchise.not_on_roster') };
   if (!evolutionReady(m)) { const n = nextEvolution(m); return { ok: false, reason: n ? `${$t('franchise.evolves_at_level', { name: m.name, level: n.level })}` : `${$t('franchise.is_fully_evolved', { name: m.name })}` }; }
-  const from = m.name; const ovr0 = monsterOverall(m); const ev = tryEvolve(m); if (!ev) return { ok: false, reason: $t('franchise.nothing_happened') };
-  noteEvolution(m, { year: f.season.year, week: f.season.week, club: f.club, from, to: m.name, level: m.level, ovr: [ovr0, monsterOverall(m)] }); // Career Timeline (level and overall: GDD §51.6)
+  const ovr0 = monsterOverall(m); const ev = tryEvolve(m); if (!ev) return { ok: false, reason: $t('franchise.nothing_happened') };
+  noteEvolution(m, { year: f.season.year, week: f.season.week, club: f.club, from: ev.from, to: ev.to, level: m.level, ovr: [ovr0, monsterOverall(m)] }); // Career Timeline (level and overall: GDD §51.6)
   dexRecord(f, m, 'signed');
-  news(f, $L('franchise.evolution_evolved_into', { from, name: m.name }), 'win', { mid: m.id, mname: m.name });
+  news(f, $L('franchise.evolution_evolved_into', { from: `${m.name} (${ev.from})`, name: ev.to }), 'win', { mid: m.id, mname: m.name });
   return { ok: true, event: ev, monster: m };
 }
 /**
@@ -421,7 +425,7 @@ export function retire(f) {
   const p = hallOfFameProgress(f); if (!p.eligible) return { ok: false, reason: $t('franchise.not_yet_eligible_for_the_hall') };
   const seasons = f.history.map((h) => ({ year: h.year, w: h.record.w, l: h.record.l, place: h.place, champion: h.champion === h.club, playoffs: h.playoffs }));
   const wins = seasons.reduce((a, h) => a + h.w, 0), losses = seasons.reduce((a, h) => a + h.l, 0);
-  const best = f.roster.slice().sort((a, b) => monsterOverall(b) - monsterOverall(a)).slice(0, 5).map((m) => ({ id: m.id, name: m.name, species: m.species, position: m.position, ovr: monsterOverall(m), level: m.level }));
+  const best = f.roster.slice().sort((a, b) => monsterOverall(b) - monsterOverall(a)).slice(0, 5).map((m) => ({ id: m.id, name: m.name, species: m.species, stage: m.stage || 0, position: m.position, ovr: monsterOverall(m), level: m.level }));
   const card = {
     id: `hof_${franchiseKey(f)}_${Date.now().toString(36)}`, uid: f.uid || null, seed: f.seed ?? null, owner: `${f.owner.first} ${f.owner.last}`, portrait: f.owner.portrait, club: f.club, difficulty: f.settings?.difficulty || 'pro',
     seasons: seasons.length, record: { w: wins, l: losses }, gmStints: structuredClone(f.gmCareer?.stints || []), titles: GM.careerTotals(f).titles || 0, badges: Object.keys(GM.careerTotals(f).badges || {}).map((club) => GYM_BY_CLUB[club]?.badge || club), awards: GM.careerTotals(f).awards || 0,
@@ -1778,15 +1782,8 @@ export const RECRUIT_APPROACHES = Object.freeze([
   { id: 'facilities', label: $t('franchise.showcase_facilities'), text: $t('franchise.show_off_the_training_complex'), weight: { strong: 0.2 } },
   { id: 'playing_time', label: $t('franchise.promise_playing_time'), text: $t('franchise.a_starting_role_right_away'), weight: { need: 0.3 } },
 ]);
-/** No two monsters on one club share a display name (the species name gets a numeral). */
-export function uniqueName(f, m, extra = []) {
-  const taken = new Set([...f.roster.filter((x) => x !== m && x.id !== m.id).map((x) => x.name), ...extra]);
-  if (!taken.has(m.name)) return m;
-  const roman = ['II', 'III', 'IV', 'V', 'VI'];
-  const base = speciesName(m);
-  for (const n of roman) { const cand = `${base} ${n}`; if (!taken.has(cand)) { m.name = cand; return m; } }
-  for (let k = 7; ; k++) { const cand = `${base} ${k}`; if (!taken.has(cand)) { m.name = cand; return m; } }
-}
+/** Personal names are reserved league-wide, rather than numbered within one club. */
+export function uniqueName(f, m, extra = []) { return reserveIndividualName(f, m, extra); }
 /** Who could be released to make room/cap for a prospect (never the only one at a position, never a cornerstone). */
 export function releaseCandidates(f, prospect) {
   const m = prospect.monster; const need = f.roster.length >= ROSTER_MAX;
@@ -1916,7 +1913,7 @@ export function encounterCompanions(f, prospectIndex, n = CLASH_SIZE.encounter -
     let y = 0; m = gen(q, 0);
     while (monsterOverall(m) < target - 1 && y < COMPANION_MAX_SEASONS && m.dev.level < 50) { y += 1; m = gen(q, y); }
     for (let k = 0; k < 4 && monsterOverall(m) > target + 1 && !m.dev.apex; k++) { q -= monsterOverall(m) - target; m = gen(q, y); }
-    m.companion = true; m.name = `${$t('franchise.wild', { species: speciesName(m) })}`; out.push(m);
+    m.companion = true; reserveIndividualName(f, m); out.push(m);
   }
   return out;
 }
@@ -2414,7 +2411,7 @@ export function finishSunday(f, gameState) {
   if (f.week.pregameReply === 'confident') { if (won) news(f, $L('franchise.you_said_youd_take_it_and', { opponent: m.opponent }), 'win'); else { f.rattled = true; news(f, $L('franchise.the_confident_talk_before_the_game'), 'loss'); } }
   settleGymBadge(f, m, won, gameState.score[side], gameState.score[oppSide]);
   // Level-ups are shown after the game and on the Career Timeline; the club log keeps evolutions and injuries.
-  for (const e of events.filter((x) => x.kind !== 'xp' && x.kind !== 'levelup')) news(f, e.kind === 'levelup' ? $L('franchise.reached_level_ovr', { name: e.name, level: e.level, from: e.from, to: e.to, autoPoints: (f.settings.autoPoints ? '' : $L('franchise.2_attribute_points_to_spend_on'))}) : e.kind === 'evolve' ? $L('franchise.evolution_evolved_into_2', { from: e.from, to: e.to }) : e.kind === 'injury' ? $L('franchise.injured_out_weeks', { name: e.name, severity: e.severity, weeks: e.weeks, n: e.weeks }) : e.name, e.kind === 'evolve' ? 'win' : e.kind, e.id ? { mid: e.id, mname: e.kind === 'evolve' ? e.to : e.name } : null);
+  for (const e of events.filter((x) => x.kind !== 'xp' && x.kind !== 'levelup')) news(f, e.kind === 'levelup' ? $L('franchise.reached_level_ovr', { name: e.name, level: e.level, from: e.from, to: e.to, autoPoints: (f.settings.autoPoints ? '' : $L('franchise.2_attribute_points_to_spend_on'))}) : e.kind === 'evolve' ? $L('franchise.evolution_evolved_into_2', { from: `${e.name} (${e.from})`, to: e.to }) : e.kind === 'injury' ? $L('franchise.injured_out_weeks', { name: e.name, severity: e.severity, weeks: e.weeks, n: e.weeks }) : e.name, e.kind === 'evolve' ? 'win' : e.kind, e.id ? { mid: e.id, mname: e.name } : null);
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
   f.game = null;
   recordPlayStats(f, gameState, side);

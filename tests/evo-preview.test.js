@@ -28,7 +28,7 @@ test('a preview is the real evolution: tryEvolve on a copy, evolutionReport from
     const m = generateMonster(createRng(hashString(`evo-preview|${t.species}|${t.fromStage}|1`)), { species: t.species, quality: 62, id: `preview_${t.species}_${t.fromStage}`, age: 20, yearsPro: 0 }); // a level-1 individual
     // Task 8: level and stage live on the development record; earlier stages are reached through the real evolution rule
     { const sp = resolveSpecies(t.species); for (let i = 0; i < t.fromStage; i++) { raiseToLevel(m, sp.evolution[i].level); assert.ok(tryEvolve(m)); } }
-    raiseToLevel(m, t.level); assert.equal(m.stage, t.fromStage); m.name = t.fromName; m.xp = 0; m.potential = m.potential ?? 72; m.salary = m.salary ?? null; m.fatigue = 0; m.injury = null;
+    raiseToLevel(m, t.level); assert.equal(m.stage, t.fromStage); m.name = t.fromName; m.personalName = false; m.xp = 0; m.potential = m.potential ?? 72; m.salary = m.salary ?? null; m.fatigue = 0; m.injury = null;
     assert.ok(evolutionReady(m), 'the temporary monster is at the evolution level'); const before = evolutionSnapshot(m); tryEvolve(m);
     assert.deepEqual(p.report, evolutionReport(before, evolutionSnapshot(m), {}));
   }
@@ -54,6 +54,6 @@ test('normal evolution gameplay is unchanged: evolveMonster still evolves once, 
   const f = newFranchise(44); const m = f.roster.find((x) => { const sp = SPECIES_DEX.find((s) => s.id === x.species); return sp?.evolution?.length && sp.rarity !== 'legendary' && !x.stage; });
   assert.equal(m.stage || 0, 0); raiseToLevel(m, SPECIES_DEX.find((s) => s.id === m.species).evolution[0].level); const name0 = m.name; // Task 8: raiseToLevel, not m.level
   for (const t of previewTransitions()) buildPreview(t.species, t.fromStage); // previews first, then the real thing
-  const r = F.evolveMonster(f, m.id); assert.equal(r.ok, true); assert.equal(m.stage, 1); assert.notEqual(m.name, name0);
+  const r = F.evolveMonster(f, m.id); assert.equal(r.ok, true); assert.equal(m.stage, 1); assert.equal(m.name, name0, 'evolution keeps the personal name');
   assert.ok((m.career?.ev || []).some((e) => e.t === 'evolve'), 'Career Timeline entry'); assert.equal(F.evolveMonster(f, m.id).ok, false, 'not twice');
 });

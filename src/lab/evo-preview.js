@@ -37,7 +37,7 @@ export function buildPreview(speciesId, fromStage = 0, { seed = 1, when = {} } =
   const t = previewTransitions().find((x) => x.species === speciesId && x.fromStage === fromStage); if (!t) return null;
   const m = generateMonster(createRng(hashString(`evo-preview|${speciesId}|${fromStage}|${seed}`)), { species: speciesId, quality: 62, id: `preview_${speciesId}_${fromStage}`, age: 20, yearsPro: 0 }); // a level-1 individual (no prior career, which could already have evolved him)
   { const sp = resolveSpecies(speciesId); for (let i = 0; i < fromStage; i++) { raiseToLevel(m, sp.evolution[i].level); tryEvolve(m); } } // Task 8: earlier stages through the real evolution rule
-  raiseToLevel(m, t.level); m.name = t.fromName; m.xp = 0; m.potential = m.potential ?? 72; m.salary = m.salary ?? null; m.fatigue = 0; m.injury = null;
+  raiseToLevel(m, t.level); m.name = t.fromName; m.personalName = false; m.xp = 0; m.potential = m.potential ?? 72; m.salary = m.salary ?? null; m.fatigue = 0; m.injury = null;
   const before = evolutionSnapshot(m);
   const beforeMon = structuredClone(m);
   const afterMon = structuredClone(m);

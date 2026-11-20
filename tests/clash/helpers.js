@@ -1,6 +1,6 @@
 // Shared helpers for the Beast Clash tests: synthetic monsters only, from species data and fixed seeds.
 import { createRng } from '../../src/core/rng.js';
-import { generateMonster } from '../../src/data/monsters.js';
+import { generateMonster, formOf } from '../../src/data/monsters.js';
 import { SPECIES_DEX } from '../../src/data/species.js';
 import { SPECIES_DEX as ORIGINAL_72 } from '../../src/data/species-legacy.js'; // pre-Task 8 balance fixtures are defined over the original 72
 import { archetypeOf } from '../../src/clash/stats.js';
@@ -8,6 +8,8 @@ import { archetypeOf } from '../../src/clash/stats.js';
 export const SP = Object.fromEntries(SPECIES_DEX.map((s) => [s.id, s]));
 export function mon(id, seed = 1, { overall = 65, fatigue = 0, stage = 0, nature = null } = {}) {
   const s = SP[id]; const m = generateMonster(createRng(seed), { species: id, position: s.position, quality: overall, type: s.element, nature });
+  // Historic balance assertions match catalogue names in log prose; freeze those fixture labels explicitly.
+  m.name = formOf(m).name; m.personalName = false;
   m.fatigue = fatigue; if (stage) m.stage = stage; return m;
 }
 export const byArch = (a) => ORIGINAL_72.filter((s) => archetypeOf(s.id) === a).map((s) => s.id);

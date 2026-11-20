@@ -2216,3 +2216,8 @@ html[data-comfortable-text="1"] .screen-settings .save-data .dim, html[data-comf
 .guide-section-focus { outline:3px solid var(--accent, #ffd700); outline-offset:3px; }
 .beast-section-tour .sheet { border-color:var(--accent, #ffd700); }
 .beast-section-tour .sheet-body { font-size:16px; line-height:1.5; }
+
+/* Individual identity stays primary; species is readable without stretching narrow lineup slots. */
+.beast-species { font-size:12px; color:var(--muted, #a7c5b6); font-weight:500; overflow-wrap:anywhere; }
+.slot > .beast-species { font-size:10px; line-height:1.15; }
+.dc-name .beast-species { display:block; font-size:11px; }

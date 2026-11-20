@@ -1,3 +1,4 @@
+import { individualName, catalogueName } from './individual-names.js';
 // Monster data model: attributes, natures, elemental types, abilities,
 // generation and OVR. Everything here feeds the simulation (GDD §5.1).
 
@@ -123,8 +124,9 @@ const SUFFIX = (name) => String(name || '').match(/ (II|III|IV|V|VI|\d+)$/)?.[0]
 /** Evolve a monster one stage if its level allows (Task 8: the approved evolution rule on its development record). Returns the event or null. */
 export function tryEvolve(m) {
   const d = devOf(m); const fromForm = d.form; const next = evolveDev(d); if (!next) return null;
-  const from = m.name; const suffix = SUFFIX(m.name); const sp = resolveSpecies(m);
-  syncFromDev(m); m.name = formById(next).name + suffix;
+  const from = m.personalName ? formById(fromForm).name : m.name; const suffix = SUFFIX(m.name); const sp = resolveSpecies(m);
+  syncFromDev(m);
+  if (!m.personalName) m.name = formById(next).name + suffix;
   return { kind: 'evolve', id: m.id, name: m.name, from, to: formById(next).name, stage: m.stage, species: sp.id, fromForm };
 }
 /** The legacy engine effect a monster carries. Task 8 M3 is complete: every football ability is its Dex contract
@@ -244,7 +246,9 @@ export function generateMonster(rng, { position = null, quality = 58, name = nul
     if (m.dev.apex) m.age = probe.age; // Apex is ageless (spec §5)
   }
   syncFromDev(m);
-  if (!name && m.stage) m.name = formById(m.dev.form).name;
+  if (!name || catalogueName(name)) m.name = individualName(m.id);
+  m.personalName = true;
+  if (name && !catalogueName(name)) m.customName = true;
   m.salary = salaryFor(m);
   assignAmbition(m); // Task 7: one hidden career Ambition, from the seeded id
   return m;
@@ -312,7 +316,7 @@ export function cornerstoneOffers(seed) {
     const sp = rng.pick(pool);
     if (positions.has(sp.position) || elements.has(sp.element)) continue;
     positions.add(sp.position); elements.add(sp.element);
-    offers.push({ name: sp.name, species: sp.id, position: sp.position, type: sp.element, ability: null, quality: 68 + rng.int(3), archetype: ARCHETYPE[sp.position], abilityName: sp.ability?.name, abilityText: sp.ability?.text, rarity: sp.rarity });
+    offers.push({ name: sp.name, givenName: individualName(`offer|${seed}|${sp.id}`), species: sp.id, position: sp.position, type: sp.element, ability: null, quality: 68 + rng.int(3), archetype: ARCHETYPE[sp.position], abilityName: sp.ability?.name, abilityText: sp.ability?.text, rarity: sp.rarity });
   }
   return offers;
 }
@@ -359,8 +363,8 @@ export function createRoster(seed, { cornerstone = null, cornerstoneOffense, cor
       roster.push(generateMonster(rng, { position, quality: q, species: sp.id, postHistory: true })); // N8b D1: post-history percentile
     }
   }
-  const seen = {}; const roman = ['', ' II', ' III', ' IV', ' V', ' VI'];
-  for (const m of roster) { const n = seen[m.name] = (seen[m.name] || 0) + 1; if (n > 1) m.name = `${m.name}${roman[n - 1] || ' ' + n}`; }
+  const names = new Set();
+  for (const m of roster) { if (names.has(m.name)) m.name = individualName(m.id, names); names.add(m.name); }
   // Later seasons: AI clubs field evolved commons (the league grows with the calendar).
   if (evolveStage > 0) for (const m of roster) { const sp = SPECIES_BY_ID[m.species]; const st = Math.min(evolveStage, sp.evolution.length); for (let i = 0; i < st; i++) { raiseToLevel(m, sp.evolution[i].level); tryEvolve(m); } }
   // A gym club's legendary takes the first spot at its natural position, a cut above the rest of the roster.
@@ -385,6 +389,7 @@ export function createRoster(seed, { cornerstone = null, cornerstoneOffense, cor
     const c = cornerstoneByName(null, cornerstone) || cornerstone;
     const target = roster.find((m) => m.position === c.position) || roster[0];
     const star = generateMonster(rng, { position: c.position, quality: c.quality || 69, species: c.species || c.name, id: target.id });
+    if (c.givenName) star.name = c.givenName;
     star.archetype = c.archetype; star.cornerstone = true; star.salary = salaryFor(star) + 3000;
     Object.assign(target, star);
     return roster;
@@ -398,6 +403,7 @@ export function createRoster(seed, { cornerstone = null, cornerstoneOffense, cor
     const c = cornerstoneByName(side, choice); if (!c) continue; // B15: no fixed default list
     const target = roster.find((m) => m.position === c.position && !m.cornerstone); if (!target) continue;
     const star = generateMonster(rng, { position: c.position, quality: c.quality, species: c.species, id: target.id });
+    if (c.givenName) star.name = c.givenName;
     star.archetype = c.archetype; star.cornerstone = true; star.salary = salaryFor(star) + 3000;
     Object.assign(target, star);
   }

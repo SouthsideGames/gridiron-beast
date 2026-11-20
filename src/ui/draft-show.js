@@ -1,3 +1,4 @@
+import { beastSpeciesLabel } from './beast-identity.js';
 // Presentation reads only committed picks. Skipping never runs the engine or changes ownership/RNG.
 import { esc } from './dom.js';
 import { monsterSprite, portraitSprite } from './pixel-monster.js';
@@ -27,7 +28,7 @@ export function draftShowHtml(d, playing=false) {
     <h2>${esc(p.team)}</h2>
     <div class="draft-stage" aria-hidden="true">${ceremony?portraitSprite('commissioner',88,{hue:40}):''}${beast?monsterSprite(beast,ceremony?112:72):''}</div>
     <div class="draft-announcement" role="status">${p.passed?t('presentation.draft_pass',{team:esc(p.team)}):t('presentation.draft_selected',{team:esc(p.team),name:esc(p.name)})}</div>
-    <p class="muted">${p.passed?esc(p.why||''):esc(p.position)}</p>
+    <p class="muted">${p.passed?esc(p.why||''):`${esc(beastSpeciesLabel(beast || p))} · ${esc(p.position)}`}</p>
     <div class="draft-show-controls"><button class="btn primary" data-action="draft-next" data-cursor="${cursor}">${t('presentation.next_pick')}</button><button class="btn" data-action="draft-pause">${playing?t('presentation.pause'):t('presentation.resume')}</button><button class="btn ghost" data-action="draft-skip" data-cursor="${cursor}">${t('presentation.skip_to_turn')}</button></div>
   </section>`;
 }
