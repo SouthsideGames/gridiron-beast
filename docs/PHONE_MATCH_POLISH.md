@@ -28,3 +28,9 @@ No full-suite run is claimed. Because this includes an engine correction, full r
 `CHROMIUM_PATH=/usr/bin/chromium python3 tools/live-console-check.py` cannot launch Chromium here: socket() Operation not permitted. No browser or real-device pass is claimed. Review 320/390/440 px, short landscape, Larger Text, Reduced Motion and safe areas; especially setup tabs, 3/5-beast lineup wrapping, info-sheet controls, More sheet spacing, off-camera clipping and made/missed extra-point playback. Extremely short screens and accessibility text may still need layout tuning; do not treat this as a certified no-scroll layout until the phone review passes.
 
 Nothing merged, deployed or installed.
+
+## Merge resolution — November 20
+
+Merged main at `1c1d4c5` (approved UI sounds, PR #143) into this PR branch. The only conflict was generated `index.html`; regenerated it with `tools/stamp-release.mjs` for 43.30.0 and all 480 modules, including `src/audio/ui-sounds.js`. The Clash reward-sound hooks merged automatically and remain alongside the phone UI work. All other sound code and audio assets are retained unchanged from main.
+
+Combined-code targeted validation: 29/29 pass (UI sounds, audio integration, new phone regressions, arena reconciliation, release stamping). No unresolved index entries or whitespace errors. Full regression and real-phone visual checks remain pending as described above. No merge to main or deployment.

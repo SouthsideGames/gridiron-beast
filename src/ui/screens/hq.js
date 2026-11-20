@@ -71,7 +71,7 @@ export function registerHqScreens(Router, app) {
     const yes = b.dataset.call === 'yes'; const c = F.tradeCall(app.f); if (!c) return;
     if (yes && !(await confirmSheet(callConfirmText(app.f, c), { title: $t('hq.accept_the_trade'), okLabel: $t('hq.trade') }))) return;
     const r = F.answerTradeCall(app.f, yes); if (!r.ok) { toast(r.reason, 'bad'); Router.render(); return; }
-    app.save(); toast(yes ? (c.kind === 'buy' ? $t('hq.deal_done') : `${r.got?.player?.name || $t('hq.deal')} ${r.got?.player ? $t('hq.is_yours') : 'done.'}`) : $t('hq.offer_declined'), yes ? 'good' : 'info'); Router.render();
+    app.save(); toast(yes ? (c.kind === 'buy' ? $t('hq.deal_done') : `${r.got?.player?.name || $t('hq.deal')} ${r.got?.player ? $t('hq.is_yours') : 'done.'}`) : $t('hq.offer_declined'), yes ? 'good' : 'info', 2600, { sound: yes ? 'reward' : null }); Router.render();
   });
   const need = () => app.f;
 
@@ -448,7 +448,7 @@ export function registerHqScreens(Router, app) {
         'draft-pause':()=>{draftPlaying=!draftPlaying;Router.render();},
         'draft-skip':el=>{draftPlaying=false;stepShow(Number(el.dataset.cursor),true);},
         begin: () => { const r = F.beginDraft(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); },
-        pick: async (el) => { const m = app.f.draft.class.find((x) => x.id === el.dataset.id); if (!(await confirmSheet(`${$t('hq.draft', { name: m.name, position: m.position })}${(() => { const c = consequence(app.f, 'draft', { salary: Math.round(salaryFor(m) * F.ROOKIE_SCALE / 100) * 100 }); return c ? ' ' + c : ''; })()}`, { title: $t('hq.your_pick'), okLabel: $t('hq.draft_2') }))) return; const showFrom=app.f.draft.picks.length; const r = F.myDraftPick(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } startDraftShow(app.f.draft,showFrom); draftPlaying=false; app.save(); toast(`${$t('hq.joins_the', { name: r.monster.name, club: app.f.club })}`, 'good'); Router.render(); },
+        pick: async (el) => { const m = app.f.draft.class.find((x) => x.id === el.dataset.id); if (!(await confirmSheet(`${$t('hq.draft', { name: m.name, position: m.position })}${(() => { const c = consequence(app.f, 'draft', { salary: Math.round(salaryFor(m) * F.ROOKIE_SCALE / 100) * 100 }); return c ? ' ' + c : ''; })()}`, { title: $t('hq.your_pick'), okLabel: $t('hq.draft_2') }))) return; const showFrom=app.f.draft.picks.length; const r = F.myDraftPick(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } startDraftShow(app.f.draft,showFrom); draftPlaying=false; app.save(); toast(`${$t('hq.joins_the', { name: r.monster.name, club: app.f.club })}`, 'good', 2600, { sound: 'reward' }); Router.render(); },
         pass: async () => { if (!(await confirmSheet($t('hq.forfeit_this_pick_nobody_is_drafted'), { title: $t('hq.forfeit_pick'), okLabel: $t('hq.forfeit_2'), danger: true }))) return; F.passDraftPick(app.f); app.save(); Router.render(); },
         trade: () => { const lead = F.myTradablePicks(app.f).find((p) => p.onClock) || null; tradeSheet(app.f, { lead, onDone: () => Router.render() }); },
         sort: (el) => { draftSort = el.dataset.v;setBrowsePreferences(app.f,'draft',{sort:draftSort});app.save(); Router.render(); },
