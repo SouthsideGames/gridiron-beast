@@ -2221,3 +2221,24 @@ html[data-comfortable-text="1"] .screen-settings .save-data .dim, html[data-comf
 .beast-species { font-size:12px; color:var(--muted, #a7c5b6); font-weight:500; overflow-wrap:anywhere; }
 .slot > .beast-species { font-size:10px; line-height:1.15; }
 .dc-name .beast-species { display:block; font-size:11px; }
+
+/* Phone match controls: deliberate spacing rather than packed inline buttons. */
+.match-more-sheet .sheet-body { min-height:min(48dvh,440px); }
+.match-more-sheet .sheet-body > .row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
+.match-more-sheet .btn { min-height:48px; white-space:normal; line-height:1.25; margin:0; }
+.match-more-sheet .substitution-strip { margin-top:12px; }
+/* Setup keeps one lineup on screen; opponent details remain one tap away. */
+.clash-presentation .clash-faceoff { min-height:60px; padding:6px; margin-bottom:6px; }
+.clash-presentation .clash-faceoff .sprite { width:48px; height:48px; }
+.clash-presentation .clash-intro { font-size:12px; margin:4px 0; }
+.clash-presentation .clash-intro > .muted { display:none; }
+.clash-presentation .cl-setup { padding:8px; margin:6px 0; }
+.clash-presentation .cl-pick { padding:6px; min-height:58px; }
+.clash-presentation .cl-setup > p.dim { display:none; }
+.clash-presentation .cl-setup-actions { padding:6px; }
+.clash-presentation .cl-mode-help { display:none; }
+.clash-presentation .cl-setup-actions .stack { display:flex; gap:6px; }
+.clash-presentation .cl-setup-actions .cl-mode { flex:1; min-width:0; padding:8px; min-height:44px; }
+.match-more-sheet .secondary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+.match-more-sheet .secondary > * { width:100%; min-width:0; }
+@media (max-width:360px) { .match-more-sheet .secondary { grid-template-columns:1fr; } }

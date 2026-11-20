@@ -2278,7 +2278,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Off the block (Phase C1, F4): on a designed run, a defender held up by a block can still reach out for a carrier who runs
     // right past him, once a play, at a fraction of a clean tackle's chance (Awareness: he sees him coming). Blocks that work no
     // longer make the man they hold invisible, which is what had turned an aware linebacker into a worse one once pullers arrived.
-    if (d.noTackle) return false; // M3 hook: a summoned blocker never tackles
+    if (d.noTackle || d.knockedDown || d.sitsOut) return false; // M3 hook: a summoned blocker never tackles
     const offBlock = !!d.engaged && isRun && !d.armTried && dist(d, c) <= 1.0;
     if (d.noContact) return false; // M3 hook: a contract's per-play override initiates no tackle
     if (d.stun > 0 || (d.engaged && !offBlock) || dist(d, c) > 1.25) return false;
@@ -2343,7 +2343,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (c.team === 'off' && c.x >= B.goal) { stats.tackler = d.slot; endPlay('touchdown', Math.max(c.x, B.goal), c.y); log(`${$E('sim.is_dragged_down_past_the_goal', { name: c.name })}`, { kind: 'touchdown' }); return true; }
       if (c.team === 'def' && c.x <= B.ownGoal) { stats.tackler = d.slot; endPlay('touchdown', Math.min(c.x, B.ownGoal), c.y, { defensiveScore: true }); log(`${$E('sim.falls_into_the_end_zone_touchdown', { name: c.name })}`, { kind: 'touchdown' }); return true; }
       if ((rng.chance(fumbleP) || (d.contract && !!hook('tackleMade', d, c, { fumbleP })?.fumble)) && !fumbleSaved(c)) { // M3 hook: a tackler's contract may add a fumble check after the first did not fumble
-        const near = actors.filter((a) => dist(a, c) < 2.5 && !a.noBall); // M3 hook: noBall
+        const near = actors.filter((a) => dist(a, c) < 2.5 && !a.noBall && !a.knockedDown && !a.sitsOut && !(a.stun > 0)); // M3 hook: noBall
         const recoverer = near.length ? rng.pick(near) : d;
         stats.forcedBy = d.slot; stats.tackler = d.slot; stats.fumbledBy = c.slot; stats.recoveredSlot = recoverer.slot; stats.recoveredTeam = recoverer.team;
         if (d.ability?.forceFumble) abilityUsed(d, 'forceFumble'); log(`${$E('sim.forces_a_fumble_by_recovers', { name: d.name, name2: c.name, name3: recoverer.name })}`, { kind: 'fumble', by: d.slot, side: d.team, victim: c.slot, recoveredBy: recoverer.slot, team: recoverer.team, ability: fired(d, 'forceFumble') });
@@ -2372,7 +2372,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     endPlay('safety', c.x, c.y); log(`${$E('sim.tackles_in_the_end_zone_safety', { name: d.name, name2: c.name })}`, { kind: 'safety' });
   }
   function trySack(d) {
-    if (d.noContact || d.noTackle || d.stun > 0 || d.engaged || dist(d, qb) > 0.95) return false; // M3 hook: noContact (a per-play override), noTackle
+    if (d.knockedDown || d.sitsOut || d.noContact || d.noTackle || d.stun > 0 || d.engaged || dist(d, qb) > 0.95) return false; // M3 hook: noContact (a per-play override), noTackle
     if (d.contract) hook('tackling', d, qb); // M3 hook
     const p = clamp(0.62 + 0.3 * norm(d.attrs.tackling * scaleVs(d, qb, 'sack')) - 0.35 * norm(qb.attrs.agility * scaleVs(qb, d, 'escape')), 0.25, 0.92);
     if (rng.chance(p)) {
@@ -2384,7 +2384,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       }
       stats.tackler = d.slot; recordPressure(qb, d);
       if (qb.windup && (rng.chance(0.25) || (d.contract && !!hook('tackleMade', d, qb, { fumbleP: 0.25, sack: true })?.fumble)) && !fumbleSaved(qb)) { // M3 hook: as on a tackle // strip sack on the wind-up (Task 8 B3: a Shielded QB's save first)
-        const near = actors.filter((x) => dist(x, qb) < 2.5 && !x.noBall); const rec = near.length ? rng.pick(near) : d;
+        const near = actors.filter((x) => dist(x, qb) < 2.5 && !x.noBall && !x.knockedDown && !x.sitsOut && !(x.stun > 0)); const rec = near.length ? rng.pick(near) : d;
         qb.windup = null; stats.forcedBy = d.slot; stats.fumbledBy = qb.slot; stats.recoveredSlot = rec.slot; stats.recoveredTeam = rec.team;
         log(`${$E('sim.strips_as_he_throws_recovers', { name: d.name, name2: qb.name, name3: rec.name })}`, { kind: 'fumble', by: d.slot, recoveredBy: rec.slot, team: rec.team });
         if (rec.team === 'def') endPlay('fumble', qb.x, qb.y, { recoveredBy: 'def' }); else endPlay('sack', qb.x, qb.y, { fumbleRecovered: true });
@@ -2415,7 +2415,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const r = ball.target;
     const catchRadius = 1.4 + 0.9 * norm(r.attrs.agility) + (ball.tailwind ? 0.6 : 0);
     const dr = dist(r, L);
-    const defendersNear = defs.filter((d) => !d.engaged).map((d) => ({ d, dd: dist(d, L) })).sort((p, q) => p.dd - q.dd);
+    const defendersNear = defs.filter((d) => !d.engaged && !d.knockedDown && !d.sitsOut && !(d.stun > 0)).map((d) => ({ d, dd: dist(d, L) })).sort((p, q) => p.dd - q.dd);
     const nearest = defendersNear[0];
     const deep = (ball.airYards || 0) > 20;
     // Route separation (type edge, GDD §32.2): the receiver's edge against the defender actually nearest the ball shrinks the

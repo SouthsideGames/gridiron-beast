@@ -130,7 +130,7 @@ function bindings(app, Router) {
 
 export function registerClashBattle(Router, app) {
   const BINDINGS = bindings(app, Router);
-  const st = { kind: null, i: 0, arena: null, cursor: 0, result: null, lineup: null, editing: false, replaying: false, session: null, subNote: null };
+  const st = { kind: null, i: 0, arena: null, cursor: 0, result: null, lineup: null, editing: false, replaying: false, session: null, subNote: null, setupSide: 'a' };
   const settings = () => clashSettings(app.f?.settings);
   const saveSettings = (patch) => { if (!app.f) return; app.f.settings.clash = { ...settings(), ...patch }; app.save(); };
   const stop = () => { if (st.arena) { st.cursor = st.arena.cursor; st.arena.destroy(); st.arena = null; } st.session = null; };
@@ -156,12 +156,12 @@ export function registerClashBattle(Router, app) {
     const rest = pv.eligible.filter((m) => !st.lineup.includes(m.id));
     const picker = st.lineup.length < pv.size || st.editing ? `<div class="list" style="margin-top:6px;max-height:280px;overflow:auto">${rest.map((m) => `<button class="item" style="min-height:0;padding:6px 8px" data-action="add" data-id="${m.id}" ${st.lineup.length >= pv.size ? 'disabled' : ''}>${monsterSprite(m, 28)}<div class="grow" style="font-size:12px;min-width:0"><b>${esc(m.name)}</b> <span class="dim">${ARCH_GLYPH[archetypeOf(m.species)] || ''} ${esc(archetypeOf(m.species) || '')} · ${esc(m.type)} · ${monsterOverall(m)} OVR${m.fatigue >= 30 ? ` ${$t('clash.tired_2', { fatigue: m.fatigue })}` : ''}</span> ${edge(m, theirs[0])}</div><span class="chip">${st.lineup.length >= pv.size ? 'full' : 'add'}</span></button>`).join('') || `<p class="dim">${$t('clash.everyone_healthy_is_in_the_lineup')}</p>`}</div>` : '';
     return `<div class="clash-presentation"><div class="clash-faceoff" aria-hidden="true">${mine[0] ? monsterSprite(mine[0], 88) : ''}<span>VS</span>${theirs[0] ? monsterSprite(theirs[0], 88) : ''}</div><div class="clash-intro"><div class="muted">${b.introText ? b.introText(f) : `${$t('clash.you_met_b_b_in_the', { name: esc(pv.wild[0].name) })}${pv.wild.length > 1 ? ` ${$t('clash.with_wild_companion_matched_to_your', { n: pv.wild.length - 1, wild: pv.wild.length > 2 ? 's' : '' })}` : ''}${$t('clash.win_the_v_and_will_want', { size: pv.size, size2: pv.size, name: esc(pv.wild[0].name) })}`}</div><button class="btn small ghost" data-action="help">${$t('clash.help')}</button></div>${pv.basicBonus?.active ? `<p class="panel tight" style="margin:6px 0"><b>✨ ${esc(pv.basicBonus.label)}</b><span class="dim"> ${$t('clash.for_every_battler_if_you_win', { name: esc(pv.wild[0].name) })}</span></p>` : ''}
-      <div class="panel cl-setup"><div class="row between">${$t('clash.b_your_lineup_b')}<span class="dim">${$t('clash.of_in_order_of_entry', { n: mine.length, size: pv.size })}</span></div>
+      <div class="seg cl-setup-tabs"><button class="btn small ${st.setupSide==='a'?'primary':''}" data-action="setup-side" data-side="a">${$t('presentation.your_team')}</button><button class="btn small ${st.setupSide==='b'?'primary':''}" data-action="setup-side" data-side="b">${$t('presentation.opponent')}</button></div><div class="panel cl-setup" ${st.setupSide==='b'?'hidden':''}><div class="row between">${$t('clash.b_your_lineup_b')}<span class="dim">${$t('clash.of_in_order_of_entry', { n: mine.length, size: pv.size })}</span></div>
         <div class="list" style="margin-top:6px">${mine.map((m, i) => card(m, i, 'a', mine.length)).join('')}${!mine.length ? `<p class="dim" style="margin:4px 0">${$t('clash.no_monsters_picked_add_up_to', { size: pv.size })}</p>` : mine.length < pv.size ? `<p class="dim" style="margin:4px 0">${$t('clash.slots_open_add_more_or_enter', { n: pv.size - mine.length, n2: mine.length, n3: mine.length, n4: mine.length })}</p>` : ''}</div>
         <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small" data-action="edit">${st.editing ? $t('clash.done') : $t('clash.change_a_monster')}</button><button class="btn small ghost" data-action="autol">${$t('clash.auto_lineup')}</button></div>${picker}
         <p class="dim" style="margin:6px 0 0">${$t('clash.the_first_monster_fights_until_it')}</p></div>
-      <div class="panel cl-setup theirs"><div class="row between"><b>${esc(b.theirName?.(f) || $t('clash.their_team'))}</b><span class="dim">${$t('clash.in_order_of_entry', { n: theirs.length })}</span></div><div class="list" style="margin-top:6px">${theirs.map((m, i) => card(m, i, 'b', theirs.length)).join('')}</div></div>
-      <div class="panel" style="margin-top:8px"><div class="row between" style="flex-wrap:wrap;gap:6px">${$t('clash.b_speed_b')}<span class="chips">${CLASH_SPEEDS.map((x) => `<button class="chip ${s.speed === x ? 'on accent' : ''}" data-action="speed" data-v="${x}">${SPEED_LABEL[x]}</button>`).join('')}</span></div>
+      <div class="panel cl-setup theirs" ${st.setupSide!=='b'?'hidden':''}><div class="row between"><b>${esc(b.theirName?.(f) || $t('clash.their_team'))}</b><span class="dim">${$t('clash.in_order_of_entry', { n: theirs.length })}</span></div><div class="list" style="margin-top:6px">${theirs.map((m, i) => card(m, i, 'b', theirs.length)).join('')}</div></div>
+      <div class="panel cl-setup-actions" style="margin-top:8px"><div class="row between" style="flex-wrap:wrap;gap:6px">${$t('clash.b_speed_b')}<span class="chips">${CLASH_SPEEDS.map((x) => `<button class="chip ${s.speed === x ? 'on accent' : ''}" data-action="speed" data-v="${x}">${SPEED_LABEL[x]}</button>`).join('')}</span></div>
         <div class="stack" style="margin-top:8px;gap:6px">${CLASH_MODES.map((k) => `<button class="btn big block cl-mode ${preferred === k ? 'primary' : ''}" data-action="enter" data-v="${k}" ${mine.length ? '' : 'disabled'}><span class="cl-mode-label">${k === 'watch' ? '▶ ' : '⏭ '}${MODE_TEXT[k].label}</span><span class="cl-mode-help">${MODE_TEXT[k].help}</span></button>`).join('')}</div>
         ${b.skipLabel ? `<button class="btn block" data-action="skipenc" style="margin-top:6px">${esc(b.skipLabel)}</button><p class="dim" style="margin:6px 0 0">${b.skipHelp}</p>` : ''}
       </div></div>`;
@@ -171,7 +171,7 @@ export function registerClashBattle(Router, app) {
   function battleHtml(f, e) {
     const live = isT8Record(e) && policiesOf(e).a === 'player';
     const pend = !live && isT8Record(e) && st.result?.pending ? pendingDecision(st.result) : null; // old prompt-model saves only
-    return `<div class="clash-live-console"><div id="live-status"></div><div class="row between clash-live-heading" style="margin-bottom:4px"><span class="muted">${e.size}v${e.size} · ${esc(B().title.split('·').pop().trim())}</span><span class="row" style="gap:6px">${pend ? `<button class="btn small primary" data-action="rotprompt">${$t('clash.rotation_your_call')}</button>` : ''}<button class="btn small ghost" data-action="help">${$t('clash.help')}</button><button class="btn small ghost" data-action="clash-notices">${$t('playview.guide_notices')}</button></span></div>
+    return `<div class="clash-live-console"><div id="live-status"></div>${pend ? `<div class="clash-live-heading"><button class="btn small primary" data-action="rotprompt">${$t('clash.rotation_your_call')}</button></div>` : ''}
       <div id="fb-arena"></div>${live ? '<div id="cl-subs" class="panel tight cl-subs" role="group" aria-live="polite"></div>' : ''}</div>`;
   }
   function teamNames(f, e) { const theirs = st.kind === 'encounter' ? $t('clash.the_wild') : (e.opponent || $t('clash.the_opponent_2')); return { a: f.club.split(' ').pop(), b: theirs }; }
@@ -184,7 +184,7 @@ export function registerClashBattle(Router, app) {
     const end = st.result.log.length - 1;
     // Looks hook (Task 8 M4): the Clash looks module (src/ui/fx/clash*, branch task8-fx-clash) plugs in here as `looks` once it exists;
     // until then the arena plays its functional cues. See src/ui/clash/t8-record.js for the contract.
-    st.arena = createArena(host, st.result, { onResumePlayback: () => resumePlayback(app, { notify: false }), speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, looks: app.clashLooks || null, onCursor: (i) => { st.cursor = i; }, onEnd: () => atEnd(f) });
+    st.arena = createArena(host, st.result, { onResumePlayback: () => resumePlayback(app, { notify: false }), speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, infoButton: true, looks: app.clashLooks || null, onCursor: (i) => { st.cursor = i; }, onEnd: () => atEnd(f) });
     if (st.cursor) st.arena.setCursor(Math.min(st.cursor, end));
     if (st.cursor >= end) { atEnd(f); return; }
     setTimeout(playWhenReady, 300);
@@ -192,7 +192,7 @@ export function registerClashBattle(Router, app) {
   // ---------- Task 10: the live continuous battle (Watch)
   function mountLive(root, host, f, e, s) {
     st.session = s; st.result = s.view; st.subNote = null;
-    st.arena = createArena(host, st.result, { onResumePlayback: () => resumePlayback(app, { notify: false }), speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, live: true, looks: app.clashLooks || null,
+    st.arena = createArena(host, st.result, { onResumePlayback: () => resumePlayback(app, { notify: false }), speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, infoButton: true, live: true, looks: app.clashLooks || null,
       onCursor: (i) => { st.cursor = i; drawSubs(root); }, onEnd: () => liveNext(root, f), onSkip: () => liveSkip(root, f) });
     // Resume where the player was: the same cursor in this visit, or (after a reload) the start of the last exchange reached.
     const last = st.result.log.length - 1;
@@ -346,7 +346,7 @@ export function registerClashBattle(Router, app) {
         'clash-notices':()=>{
           const host=root.querySelector('#clash-notices');if(!host)return;
           const source=[...host.querySelectorAll('button')];
-          const {el,close}=sheet(host.innerHTML,{title:$t('playview.guide_notices')});
+          const {el,close}=sheet(`${HELP_HTML}${host.innerHTML}`,{title:$t('playview.guide_notices')});
           [...el.querySelector('.sheet-body').querySelectorAll('button')].forEach((copy,i)=>{
             for(const k of Object.keys(copy.dataset))delete copy.dataset[k];
             copy.dataset.liveControl=String(i);
@@ -360,6 +360,7 @@ export function registerClashBattle(Router, app) {
         back: () => Router.back(),
         help: () => sheet(HELP_HTML, { title: $t('clash.how_beast_clash_works') }),
         rotprompt: () => atEnd(f),
+        'setup-side': el => { st.setupSide=el.dataset.side; Router.render(); },
         edit: () => { st.editing = !st.editing; Router.render(); },
         autol: () => { st.lineup = null; st.editing = false; Router.render(); },
         add: (el) => { const id = el.dataset.id; const pv = b.preview(f, st.i); if (!st.lineup.includes(id) && st.lineup.length < pv.size) st.lineup.push(id); else if (st.lineup.length >= pv.size) toast(`${$t('clash.up_to_monsters', { size: pv.size })}`, 'info'); Router.render(); },
@@ -376,7 +377,7 @@ export function registerClashBattle(Router, app) {
       });
       root.classList.toggle('cl-wide', !!(e && (e.status === 'battle' || st.replaying)));
       if (e && e.status === 'battle' && e.mode !== 'skip') mountBattle(root, f, e);
-      else if (e && st.replaying) { st.result = b.battle(f); const host = root.querySelector('#fb-arena'); if (host && st.result) { st.arena = createArena(host, st.result, { onResumePlayback: () => resumePlayback(app, { notify: false }), speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, onCursor: (i) => { st.cursor = i; } }); setTimeout(playWhenReady, 300); } }
+      else if (e && st.replaying) { st.result = b.battle(f); const host = root.querySelector('#fb-arena'); if (host && st.result) { st.arena = createArena(host, st.result, { onResumePlayback: () => resumePlayback(app, { notify: false }), speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, infoButton: true, onCursor: (i) => { st.cursor = i; } }); setTimeout(playWhenReady, 300); } }
     },
     unmount() { stop(); st.replaying = false; },
   });
