@@ -101,7 +101,7 @@ export function kickFrames(ev) {
     def[0].x = Math.min(104, landing + 6);
     return kickSequence({ kickFrom: puntFrom, landing, returnTo, catchIt, fairCatch: fair, touchdown: !!res.touchdown, off, def, kicker: off[0], returner: def[0], flight: 2.4 });
   }
-  if (ev.kind === 'field_goal') {
+  if (ev.kind === 'field_goal' || (ev.kind === 'try' && ev.res)) {
     const b = ev.from; const spot = b - 7;
     const off = [P('K', spot - 2, -1.5), P('H', spot, 0.4), P('L1', b - 0.6, -2), P('C', b - 0.4, 0), P('L2', b - 0.6, 2), P('W1', b - 1, -4), P('W2', b - 1, 4)];
     const def = [P('D1', b + 1, -1), P('D2', b + 1, 1), P('D3', b + 1, -3.5), P('D4', b + 1, 3.5), P('D5', b + 1.5, -6), P('D6', b + 1.5, 6), P('D7', b + 9, 0)];

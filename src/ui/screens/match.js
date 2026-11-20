@@ -1,3 +1,4 @@
+import { beastSpeciesHtml } from '../beast-identity.js';
 import { autoSpeed, cycleAutoSpeed } from '../phone-navigation.js';
 import { matchLogMatches } from '../match-log-filter.js';
 import { activityPaused } from '../activity.js';
@@ -103,7 +104,7 @@ export function registerMatchScreens(Router, app) {
     },
     mount(root) {
       delegate(root, {
-        'pregame-detail': el => { const m=F.sundayMatchup(app.f); if(!m)return; const team=pregameTeam==='mine'?m[m.playerSide]:m[m.playerSide==='home'?'away':'home']; const beast=team.offense[el.dataset.slot]||team.defense[el.dataset.slot]; if(!beast)return; const boost=team.boosts?.[beast.id]; sheet(`<div class="row">${monsterSprite(beast,64)}<div><b>${esc(beast.name)}</b><p>${esc(beast.position)} · ${esc(beast.type)}</p></div></div>${boost?.media?`<p>${$t('match.media_day',{amount:boost.media.amount,attr:esc(boost.media.attr)})}</p>`:''}${boost?.training?`<p>${$t('presentation.training_boost',{attributes:esc(boost.training.join(', '))})}</p>`:''}`,{title:beast.name}); },
+        'pregame-detail': el => { const m=F.sundayMatchup(app.f); if(!m)return; const team=pregameTeam==='mine'?m[m.playerSide]:m[m.playerSide==='home'?'away':'home']; const beast=team.offense[el.dataset.slot]||team.defense[el.dataset.slot]; if(!beast)return; const boost=team.boosts?.[beast.id]; sheet(`<div class="row">${monsterSprite(beast,64)}<div><b>${esc(beast.name)}</b><p>${beastSpeciesHtml(beast)} · ${esc(beast.position)} · ${esc(beast.type)}</p></div></div>${boost?.media?`<p>${$t('match.media_day',{amount:boost.media.amount,attr:esc(boost.media.attr)})}</p>`:''}${boost?.training?`<p>${$t('presentation.training_boost',{attributes:esc(boost.training.join(', '))})}</p>`:''}`,{title:beast.name}); },
         'pregame-team': (el) => { pregameTeam=el.dataset.team==='theirs'?'theirs':'mine'; Router.render(); },
         reply: (el) => { const r = F.replyToCoach(app.f, el.dataset.v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); },
         toss: () => { const pv = F.pregamePreview(app.f); if (!pv.ok) { toast(pv.reason, 'bad'); return; } Router.go('clash-battle', { kind: 'pregame' }); },
@@ -253,6 +254,8 @@ export function registerMatchScreens(Router, app) {
     const title=kind==='plays'?$t('playview.choose_play'):kind==='zones'?$t('playview.zones'):kind==='notices'?$t('playview.guide_notices'):$t('playview.more_controls');
     const source=[...host.querySelectorAll('button,select,input')];
     const {el,close}=sheet(host.innerHTML,{title});
+    el.classList.add('match-control-sheet');
+    el.classList.toggle('match-more-sheet',kind==='more');
     [...el.querySelector('.sheet-body').querySelectorAll('button,select,input')].forEach((copy,i)=>{
       for(const k of Object.keys(copy.dataset))delete copy.dataset[k];
       copy.dataset.liveControl=String(i);
@@ -610,7 +613,7 @@ export function registerMatchScreens(Router, app) {
     if (!ev) { app.save(); refresh(f); return; }
     if (ev.kind === 'kickoff' && ev.sim) ev.offenseSide = R.opponent(ev.kicking); // a live kickoff (Task 8 M2): the return unit is the engine's offense
     if (ev.sim && ev.sim.frames?.length > 1 && !f.settings.reducedMotion) { startAnim(f, ev); return; }
-    if (!ev.sim && !f.settings.reducedMotion && (ev.kind === 'kickoff' || ev.kind === 'punt' || ev.kind === 'field_goal')) {
+    if (!ev.sim && !f.settings.reducedMotion && (ev.kind === 'kickoff' || ev.kind === 'punt' || ev.kind === 'field_goal' || (ev.kind === 'try' && ev.res))) {
       // Task 8 (I1): the formula kick as the reviewer draws it (buildKickFx: the kick animation plus the kick ability's cue derived from
       // the final result: Second Chance, Dragon Roar, Stone Cradle). An ordinary kick has no cue and plays exactly as before (no fx).
       const K = kickPlay(ev, kickLookup(f, ev.kicking), fxMeta(ev, true));
@@ -807,7 +810,7 @@ export function registerMatchScreens(Router, app) {
     const bar = I.full ? `<div class="inspect-bar ${st.exhausted ? 'out' : st.low ? 'low' : ''}" role="img" aria-label="${$t('match.stamina_of', { now: num(st.now), capacity: st.capacity })}"><i style="width:${Math.round(st.frac * 100)}%"></i></div>` : '';
     const stamLine = I.full ? `${num(st.now)} / ${st.capacity}${st.played ? '' : $t('match.has_not_played_yet')}` : st.exhausted ? $t('match.exhausted') : st.low ? $t('match.low') : $t('match.not_low');
     return `<div class="inspect" data-inspect-sheet="${esc(m.id)}">
-      <div class="row" style="gap:10px;align-items:center">${monsterSprite(m, 44)}<div class="grow"><b>${esc(m.name)}</b><div class="muted" style="font-size:12px">${esc(m.type || '')} ${esc(m.position || '')}${I.slot ? ` ${$t('match.lined_up_at', { slot: esc(I.slot) })}` : ''} · ${esc(s[I.team].abbr)}${I.full ? '' : ' (opponent)'}</div></div></div>
+      <div class="row" style="gap:10px;align-items:center">${monsterSprite(m, 44)}<div class="grow"><b>${esc(m.name)}</b><div class="muted" style="font-size:12px">${beastSpeciesHtml(m)} · ${esc(m.position || '')} · ${esc(m.type || '')}${I.slot ? ` ${$t('match.lined_up_at', { slot: esc(I.slot) })}` : ''} · ${esc(s[I.team].abbr)}${I.full ? '' : ' (opponent)'}</div></div></div>
       ${I.absent ? `<div class="inspect-note tick">${$t('match.swallowed_by_sovereign_arm_he_misses', { abbr: esc(s[I.absent.serveOn]?.abbr || $t('match.the_offense')) })}</div>` : ''}
       <div class="inspect-sec" data-sec="stamina"><div class="row between">${$t('match.b_stamina_b')}<span>${stamLine}</span></div>${bar}
         ${st.exhausted ? `<div class="inspect-note">${$t('match.exhausted_for_the_rest_of_the')}</div>` : st.low ? `<div class="inspect-note">${$t('match.low_the_battery_shows_over_his')}</div>` : ''}${I.staminaNotes.map(note).join('')}</div>

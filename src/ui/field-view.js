@@ -112,7 +112,7 @@ export function fieldLayers(o) {
   if (underlay) s += underlay; // caller-drawn layer under the players (Playbook Audit paths)
   const statics = s; s = '';
   // ---------------------------------------------------------------- dynamic layer
-  const symbols = []; const seen = new Set(); let pre = '';
+  const symbols = [{ id: 'fv-clip', symbol: `<clipPath id="fv-clip" clipPathUnits="userSpaceOnUse"><rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}"/></clipPath>` }]; const seen = new Set(); let pre = '';
   // Players.
   const simpleMarker = (slot, x, y, team, engaged, holder) => {
     const cx = X(ballLat + y), cy = Y(ballOn + x);
@@ -208,7 +208,7 @@ export function fieldLayers(o) {
 /** The whole field as one SVG inner string: sprite definitions, the static layer, the dynamic layer. */
 export function fieldSvg(o) {
   const L = fieldLayers(o);
-  return `<defs class="fv-defs">${L.symbols.map((x) => x.symbol).join('')}</defs><g class="fv-static">${L.statics}</g><g class="fv-dyn">${L.dynamic}</g>`;
+  return `<defs class="fv-defs">${L.symbols.map((x) => x.symbol).join('')}</defs><g class="fv-static" clip-path="url(#fv-clip)">${L.statics}</g><g class="fv-dyn" clip-path="url(#fv-clip)">${L.dynamic}</g>`;
 }
 
 /**
@@ -224,11 +224,12 @@ export function fieldDraw(svg, o) {
   if (!st || st.defs.parentNode !== svg || st.statics.parentNode !== svg || st.dyn.parentNode !== svg) {
     let defs = null, statics = null, dyn = null;
     for (const c of svg.children) { const cl = c.getAttribute('class'); if (cl === 'fv-defs') defs = c; else if (cl === 'fv-static') statics = c; else if (cl === 'fv-dyn') dyn = c; }
-    if (!defs || !statics || !dyn) { svg.innerHTML = '<defs class="fv-defs"></defs><g class="fv-static"></g><g class="fv-dyn"></g>'; [defs, statics, dyn] = svg.children; }
+    if (!defs || !statics || !dyn) { svg.innerHTML = '<defs class="fv-defs"></defs><g class="fv-static" clip-path="url(#fv-clip)"></g><g class="fv-dyn" clip-path="url(#fv-clip)"></g>'; [defs, statics, dyn] = svg.children; }
     if (!(dyn.children.length === 3 && dyn.children[0].getAttribute('class') === 'fv-pre' && dyn.children[1].getAttribute('class') === 'fv-pl' && dyn.children[2].getAttribute('class') === 'fv-post')) dyn.innerHTML = '<g class="fv-pre"></g><g class="fv-pl"></g><g class="fv-post"></g>';
     const ids = new Set(); for (const c of defs.children) if (c.id) ids.add(c.id);
     st = svg.__fv = { defs, statics, dyn, pre: dyn.children[0], pl: dyn.children[1], post: dyn.children[2], ids, staticStr: null, dynStr: null, preStr: null, postStr: null, keys: null, recs: [], draws: 0, skipped: 0 };
   }
+  st.statics.setAttribute('clip-path', 'url(#fv-clip)'); st.dyn.setAttribute('clip-path', 'url(#fv-clip)');
   for (const x of L.symbols) if (!st.ids.has(x.id)) { st.ids.add(x.id); st.defs.insertAdjacentHTML('beforeend', x.symbol); }
   const staticRedrawn = L.statics !== st.staticStr;
   if (staticRedrawn) { st.statics.innerHTML = L.statics; st.staticStr = L.statics; }

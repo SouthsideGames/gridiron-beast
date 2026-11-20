@@ -1,3 +1,4 @@
+import { FIELD } from '../core/field.js';
 import { eligiblePlays } from './substitutions.js';
 // Drives a game forward one decision at a time. Used headless for league
 // games and tests, and by the UI (which supplies the human's choices).
@@ -70,8 +71,9 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
       return { kind: 'try', text: res.text, sim: res.sim, offensePlayId: offId, defensePlayId: defId };
     }
     done();
+    const kicking = state.tryTeam;
     const res = R.attemptTryKick(state, teams);
-    return { kind: 'try', text: res.text };
+    return { kind: 'try', text: res.text, kicking, from: 100 - FIELD.patSpot, res };
   }
   if (state.phase !== 'scrimmage') { done(); return null; }
 
