@@ -47,7 +47,7 @@ export const pct = (v) => `${Math.round(v * 100)}%`;
 
 /** Simple non-blocking toast. */
 let toastQueue = null;
-export function toast(text, kind = 'info', ms = 2600, { undo = null, sound = kind === 'bad' ? 'unavailable' : kind === 'good' ? 'confirm' : null } = {}) {
+export function toast(text, kind = 'info', ms = 2600, { undo = null, sound = kind === 'bad' ? 'unavailable' : kind === 'good' ? 'confirm' : 'notification' } = {}) {
   if (!toastQueue) toastQueue = createToastQueue(message => {
     let el = $('#toast');
     if (!el) { el = html('<div id="toast" role="status" aria-live="polite"></div>'); document.body.appendChild(el); }

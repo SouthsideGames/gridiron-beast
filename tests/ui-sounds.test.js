@@ -39,3 +39,42 @@ test('control semantics keep disabled/busy/muted controls silent and close/confi
  assert.equal(soundForControl(el('router-back')),'back');assert.equal(soundForControl(el('sheet-close')),'back');assert.equal(soundForControl(el('yes')),'confirm');assert.equal(soundForControl(el('go')),'tap');
  assert.equal(soundForControl(el('go',{disabled:true})),null);assert.equal(soundForControl(el('go',{dataset:{busy:'1'}})),null);assert.equal(soundForControl(el('go',{closest:()=>({})})),null);
 });
+
+test('a tap survives WebKit asynchronous resume, and a reward replaces its generic tap',async()=>{
+ const f=fixture();let resume;f.ac.state='suspended';f.ac.resume=()=>new Promise(r=>resume=()=>{f.ac.state='running';r();});
+ f.p.request('tap');f.p.request('reward');f.flush();assert.deepEqual(f.played,[]);
+ resume();await new Promise(r=>setImmediate(r));assert.deepEqual(f.played,['reward']);
+});
+test('late audio unlocks never play stale, hidden, muted or canceled feedback',async()=>{
+ for(const cancel of [f=>f.hide(),f=>f.prefs.muted=true,f=>f.p.stop(),f=>{f.tick();f.tick();f.tick();}]){
+  const f=fixture();let resume;f.ac.state='suspended';f.ac.resume=()=>new Promise(r=>resume=()=>{f.ac.state='running';r();});
+  f.p.request('notification');f.flush();cancel(f);resume();await new Promise(r=>setImmediate(r));assert.deepEqual(f.played,[]);
+ }
+});
+test('all approved semantic cues use the shared SFX bus, and explicit preview plays approved audio',async()=>{
+ const f=fixture();f.ac.resume=async()=>{};
+ for(const id of Object.keys(UI_SOUNDS)){f.tick();f.p.request(id);f.flush();}
+ assert.deepEqual(f.played,Object.keys(UI_SOUNDS));
+ f.tick();await f.p.preview();assert.equal(f.played.at(-1),'confirm');
+});
+test('installed click handling starts actual UI sources and follows live SFX settings',async()=>{
+ const {installUiSounds,uiSounds}=await import('../src/audio/ui-sounds.js');
+ const {setAudioPreferences}=await import('../src/audio/context.js');
+ const previous=globalThis.AudioContext,played=[],listeners={};
+ class AC {
+  constructor(){this.state='running';this.currentTime=0;this.destination={};}
+  createGain(){return{gain:{value:1,setTargetAtTime(v){this.value=v;}},connect(){}};}
+  createBufferSource(){return{connect(bus){this.bus=bus;},disconnect(){},stop(){},start(){played.push({id:this.buffer,volume:this.bus.gain.value});}};}
+ }
+ try{
+  globalThis.AudioContext=AC;setAudioPreferences({muted:false,sfx:.7});
+  for(const id of Object.keys(UI_SOUNDS))uiSounds.buffers.set(id,id);
+  uiSounds.loading=Promise.resolve();
+  installUiSounds({addEventListener(name,fn){listeners[name]=fn;}});
+  const click=async action=>{listeners.click({target:{closest:()=>({dataset:{action},getAttribute:()=>null,closest:()=>null})}});await new Promise(r=>setImmediate(r));};
+  await click('go');assert.deepEqual(played,[{id:'tap',volume:.7}]);
+  setAudioPreferences({sfx:0});await click('yes');assert.equal(played.length,1);
+  setAudioPreferences({sfx:.3});await click('yes');assert.deepEqual(played.at(-1),{id:'confirm',volume:.3});
+  setAudioPreferences({muted:true});await click('back');assert.equal(played.length,2);
+ }finally{uiSounds.stop();setAudioPreferences({muted:false,sfx:.7});if(previous===undefined)delete globalThis.AudioContext;else globalThis.AudioContext=previous;}
+});

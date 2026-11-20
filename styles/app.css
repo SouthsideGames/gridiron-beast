@@ -2242,3 +2242,7 @@ html[data-comfortable-text="1"] .screen-settings .save-data .dim, html[data-comf
 .match-more-sheet .secondary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
 .match-more-sheet .secondary > * { width:100%; min-width:0; }
 @media (max-width:360px) { .match-more-sheet .secondary { grid-template-columns:1fr; } }
+
+/* Auto keeps Stop, speed and camera within reach without adding a control row. */
+.match-console .secondary.auto-camera-controls { grid-template-columns:minmax(0,1.1fr) minmax(0,.65fr) minmax(0,1fr); }
+.match-console .auto-camera-controls .btn { min-width:0; min-height:44px; padding:5px 3px; font-size:13px; line-height:1.15; }

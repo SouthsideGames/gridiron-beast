@@ -25,6 +25,7 @@ import { rngFromState } from '../../core/rng.js';
 import { PLAYS } from '../../data/playbook.js';
 import { TRAINING_FOCI } from '../../data/staff.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
+import { MatchCamera } from '../match-camera.js';
 import { fieldSvg, fieldDraw, FIELD_VIEWBOX, presnapLook, cameraFor } from '../field-view.js';
 import { playCardSvg } from '../play-art.js';
 import { monsterSprite, portraitSprite } from '../pixel-monster.js';
@@ -67,6 +68,33 @@ function prismOverlay(s, camera) {
 }
 export function registerMatchScreens(Router, app) {
   let pregameTeam = 'mine';
+  const autoCamera = new MatchCamera();
+  let cameraRaf = null, cameraField = null, cameraSvg = null, cameraLastDraw = 0;
+  function cameraOptions(f, field) {
+    const G = f.game;
+    const portal = field.frame && (field.frame.hoardFlight || field.fx?.t8?.items?.some(i => i.id === 'PSY-02-F' && (field.frame.t ?? 0) >= i.t0));
+    const close = portal ? cameraFor(field.ballOn + field.frame.ball[0]) : field.camera || cameraFor(field.ballOn);
+    const viewCamera = autoCamera.sample(close, { key: G.state, auto: G.auto && !G.state.finished && !anim?.replay, closeView: G.autoCloseView, reducedMotion: f.settings.reducedMotion || !!anim?.replay });
+    // Planner art is caller-projected in the close camera's coordinate space.
+    const underlay = field.underlay ? `<g transform="translate(0 ${viewCamera.top - close.top})">${field.underlay}</g>` : '';
+    return { ...field, viewCamera, underlay };
+  }
+  function drawMatchField(svg, field) {
+    cameraField = field; cameraSvg = svg; cameraLastDraw = performance.now();
+    const result = fieldDraw(svg, cameraOptions(app.f, field));
+    if (autoCamera.moving && cameraRaf == null) cameraRaf = requestAnimationFrame(tickCamera);
+    return result;
+  }
+  function tickCamera(now) {
+    cameraRaf = null;
+    if (!cameraSvg?.isConnected || Router.currentScreen()?.name !== 'match' || !app.f?.game) return;
+    if (now - cameraLastDraw < 32) { cameraRaf = requestAnimationFrame(tickCamera); return; }
+    drawMatchField(cameraSvg, cameraField);
+  }
+  function cameraButton(f) {
+    return f.game.auto ? `<button class="btn small" data-action="autocamera" aria-pressed="${!!f.game.autoCloseView}">${f.game.autoCloseView ? $t('match.camera_full_field') : $t('match.camera_close_view')}</button>` : '';
+  }
+
 
   function pregameTypeReport(mine,theirs) {
     const publicLook=p=>p?{onField:p.onField,align:p.align}:null;
@@ -189,6 +217,7 @@ export function registerMatchScreens(Router, app) {
       }
       notices.insertAdjacentHTML('beforeend', `<details><summary>${$t('match.how_a_match_works_2')}</summary>${matchHelpHtml(f)}<button class="btn small" data-action="assist-help" data-screen="match">${$t('match.more_help_coach_assist')}</button></details>`);
       root.appendChild(notices);
+      drawMatchField(root.querySelector('#field'), screenParts(f).field);
       afterRender(f, root);
       delegate(root, {
         'match-panel': el => openMatchPanel(root, el.dataset.panel),
@@ -213,7 +242,8 @@ export function registerMatchScreens(Router, app) {
         timeout: () => { const G = f.game; if (R.timeout(G.state, G.playerSide)) { G.lastEvent = { text: `${$t('match.timeout', { name: G.state[G.playerSide].name })}` }; app.save(); Router.render(); } else toast($t('match.no_timeouts_left')); },
         tempo: (el) => { f.game.tempo = el.value; app.save(); },
         mode: () => { const G = f.game; G.mode = G.mode === 'key' ? 'full' : 'key'; app.save(); Router.render(); },
-        auto: () => { const G = f.game; G.auto = !G.auto; app.save(); if (!G.auto) { clearTimeout(autoTimer); autoTimer = null; } Router.render(); },
+        auto: () => { const G = f.game; G.auto = !G.auto; G.autoCloseView = false; app.save(); if (!G.auto) { clearTimeout(autoTimer); autoTimer = null; } Router.render(); },
+        autocamera: () => { f.game.autoCloseView = !f.game.autoCloseView; app.save(); refresh(f); },
         autospeed: () => { cycleAutoSpeed(f); if(anim){const now=performance.now(),frames=(now-anim.start)/anim.msPerFrame;anim.msPerFrame=100/((f.settings.speed||1)*autoSpeed(f));anim.start=now-frames*anim.msPerFrame;} app.save(); Router.render(); },
         keymoment: () => simToKeyMoment(f),
         simfinal: async () => { if (!(await confirmSheet($t('match.let_the_coach_play_the_rest'), { title: $t('match.sim_to_final'), okLabel: $t('match.sim_it') }))) return; simToFinal(f); },
@@ -241,7 +271,7 @@ export function registerMatchScreens(Router, app) {
       if (!anim && f.game?.lastEvent?.sim?.events?.some(e => e.kind === 'ability' || e.kind === 'status')) guideMoment(f, 'status', () => app.save());
       document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: f.game.state.finished ? $t('match.final_3') : `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: $t('match.box_score_2') }));
     },
-    unmount() { settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
+    unmount() { cancelAnimationFrame(cameraRaf); cameraRaf = null; cameraField = cameraSvg = null; autoCamera.reset(null); settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
   });
 
   /** Everything the match screen shows, as the strings render() and refresh() place: title, head, field options, overlays, panels, controls. */
@@ -355,7 +385,7 @@ export function registerMatchScreens(Router, app) {
     const put = (el, html) => { if (el.__html !== html) { el.innerHTML = iconifyMarkup(html); el.__html = html; } }; // unchanged regions are not rebuilt
     put(head, P.head);
     wrap.className = P.wrapClass;
-    fieldDraw(svg, P.field);
+    drawMatchField(svg, P.field);
     while (svg.nextSibling) svg.nextSibling.remove();
     svg.insertAdjacentHTML('afterend', P.over);
     put(after, P.after);
@@ -511,10 +541,10 @@ export function registerMatchScreens(Router, app) {
   function controlsHtml(f, teams, look) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
     // While a play animates in Auto, keep the Auto controls on screen so it can be stopped or its current animation skipped.
-    if (anim && G.auto) return `<div class="match-actions"><div class="secondary"><button class="btn primary big" data-action="auto" style="flex:2">${$t('match.auto_stop')}</button><button class="btn small ${autoSpeed(f) > 1 ? 'primary' : ''}" data-action="autospeed" title="${$t('match.auto_speed')}">${`${autoSpeed(f)}× ▶`}</button></div><p class="dim center" style="margin:4px 0 0">${$t('match.auto_is_calling_the_coachs_plays')}</p><button class="btn block" data-action="skip" style="margin-top:6px">${anim.replay ? $t('match.skip_replay') : 'Skip Animation'}</button></div>`;
+    if (anim && G.auto) return `<div class="match-actions"><div class="secondary auto-camera-controls"><button class="btn primary big" data-action="auto" style="flex:2">${$t('match.auto_stop')}</button><button class="btn small ${autoSpeed(f) > 1 ? 'primary' : ''}" data-action="autospeed" title="${$t('match.auto_speed')}">${`${autoSpeed(f)}× ▶`}</button>${cameraButton(f)}</div><p class="dim center" style="margin:4px 0 0">${$t('match.auto_is_calling_the_coachs_plays')}</p><button class="btn block" data-action="skip" style="margin-top:6px">${anim.replay ? $t('match.skip_replay') : 'Skip Animation'}</button></div>`;
     if (anim) return `<div class="match-actions"><button class="btn block ${anim.replay ? 'primary' : ''}" data-action="skip">${anim.replay ? $t('match.skip_replay') : $t('match.skip')}</button></div>`;
     // Auto stays stoppable in every phase it plays through (continues, kickoffs, tries), not only at the snap.
-    const autoBar = G.auto && !s.finished ? `<div class="secondary" style="margin-bottom:6px"><button class="btn primary" data-action="auto" style="flex:2">${$t('match.auto_stop')}</button><button class="btn small ${autoSpeed(f) > 1 ? 'primary' : ''}" data-action="autospeed">${`${autoSpeed(f)}× ▶`}</button></div>` : '';
+    const autoBar = G.auto && !s.finished ? `<div class="secondary auto-camera-controls" style="margin-bottom:6px"><button class="btn primary" data-action="auto" style="flex:2">${$t('match.auto_stop')}</button><button class="btn small ${autoSpeed(f) > 1 ? 'primary' : ''}" data-action="autospeed">${`${autoSpeed(f)}× ▶`}</button>${cameraButton(f)}</div>` : '';
     // 📼 the last big play again (GDD §34.4): offered between plays, on kickoffs and tries too (right after a touchdown).
     const rpRow = lastReplay && lastReplay.gameKey === s.seed && !s.finished && s.phase !== 'scrimmage' ? `<div class="secondary" style="margin-bottom:6px"><button class="btn small" data-action="replay">${$t('match.replay', { toLowerCase: esc(lastReplay.reason.label.toLowerCase()) })}</button></div>` : '';
     if (s.finished && s.needsTiebreak && !s.winner) { const n = F.inPlayoffs(f) ? 5 : 3; return `<div class="match-actions"><div class="panel center"><h2>${$t('match.still_tied')}</h2><div class="muted">${$t('match.after_overtime', { name: esc(s.away.name), away: s.score.away, home: s.score.home, name2: esc(s.home.name) })}</div><p class="muted" style="margin:6px 0 0">${$t('match.a_b_v_beast_clash_b', { n, n2: n })}</p></div><button class="btn primary big block" data-action="otclash">${$t('match.overtime_beast_clash')}</button></div>`; }
@@ -555,7 +585,7 @@ export function registerMatchScreens(Router, app) {
       ${myBall && s.phase === 'scrimmage' ? (() => { const sg = R.fieldGoalSignature(s, teams); return sg?.available ? `<button class="btn small good" data-action="fgsig" title="${$t('match.once_per_game_the_signature_kicks')}">${esc(sg.label)} ${sg.distance} yd · ${Math.round(sg.chance * 100)}%</button>` : ''; })() : ''}
       ${myBall && AI.shouldKneel(s) ? `<button class="btn small" data-action="kneel">${$t('match.kneel')}</button>` : ''}${myBall && !s.ot && s.clockRunning && s.quarter >= 2 && s.clock < 60 ? `<button class="btn small" data-action="spike">${$t('match.spike')}</button>` : ''}
       <button class="btn small ${G.auto ? 'primary' : ''}" data-action="auto" title="${$t('match.auto_the_coachs_suggested_plays_are')}">${G.auto ? $t('match.auto_stop') : $t('match.auto')}</button>
-      ${G.auto ? `<button class="btn small ${autoSpeed(f) > 1 ? 'primary' : ''}" data-action="autospeed" title="${$t('match.auto_speed')}">${`${autoSpeed(f)}× ▶`}</button>` : ''}
+      ${G.auto ? `<button class="btn small ${autoSpeed(f) > 1 ? 'primary' : ''}" data-action="autospeed" title="${$t('match.auto_speed')}">${`${autoSpeed(f)}× ▶`}</button>${cameraButton(f)}` : ''}
       <button class="btn small" data-action="mode">${G.mode === 'key' ? $t('match.key_moments_3') : $t('match.full_coaching_2')}</button>
       <button class="btn small" data-action="simfinal" title="${$t('match.skip_the_rest_of_the_game')}">${$t('match.sim_to_final_2')}</button>
       ${lastReplay && lastReplay.gameKey === s.seed ? `<button class="btn small" data-action="replay" title="${$t('match.watch_the_last_big_play_again', { play: esc(lastReplay.reason.label.toLowerCase()) })}">${$t('match.replay_2')}</button>` : ''}
@@ -563,7 +593,7 @@ export function registerMatchScreens(Router, app) {
     const subPanel = substitutionStrip(f);
     const clock = f.settings.liveClock && s.phase === 'scrimmage' ? `<div class="playclock">${$t('match.play_clock')} <b id="pc">40</b><div class="bar"><i id="pcbar" style="width:100%"></i></div></div>` : '';
     const plans = selected ? zonePlans(s, teams, me, myBall ? selected : look.presnap.offensePlay.id, myBall ? look.presnap.defensePlay.id : selected) : [];
-    return `<div class="match-actions compact-actions">${primary}<div class="match-quick-actions">
+    return `<div class="match-actions compact-actions">${autoBar}${primary}<div class="match-quick-actions">
       <button class="btn small" data-action="match-panel" data-panel="plays">${$t('playview.choose_play')}</button>
       ${plans.length || s.t8?.preChoice?.prismChoice ? `<button class="btn small" data-action="match-panel" data-panel="zones">${$t('playview.zones')}</button>`:''}
       <button class="btn small" data-action="match-panel" data-panel="more">${$t('playview.more_controls')}</button>
@@ -640,7 +670,7 @@ export function registerMatchScreens(Router, app) {
       // requestAnimationFrame timestamps can sit a hair before the performance.now() taken at start: clamp at frame 0, never finish early.
       if (anim.pre && now < anim.start && sim.frames.length) { // the pre-roll: the snap is at anim.start
         const svg0 = document.querySelector('#field');
-        if (svg0 && now - (anim.preDrawn || 0) >= 33) { anim.preDrawn = now; const s0 = G.state; fieldDraw(svg0, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s0, anim.ev), frame: sim.frames[0], prevFrame: null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), time: Math.max(-anim.pre, (now - anim.start) / anim.msPerFrame * 0.1), ownLabel: s0[anim.ev.offenseSide].abbr, oppLabel: s0[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites }); }
+        if (svg0 && now - (anim.preDrawn || 0) >= 33) { anim.preDrawn = now; const s0 = G.state; drawMatchField(svg0, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s0, anim.ev), frame: sim.frames[0], prevFrame: null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), time: Math.max(-anim.pre, (now - anim.start) / anim.msPerFrame * 0.1), ownLabel: s0[anim.ev.offenseSide].abbr, oppLabel: s0[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites }); }
         anim.raf = requestAnimationFrame(tick); return;
       }
       const raw = Math.max(0, Math.floor((now - anim.start) / anim.msPerFrame));
@@ -650,7 +680,7 @@ export function registerMatchScreens(Router, app) {
       if (raw > sim.frames.length - 1 && anim.fx && holds(anim)) {
         const last = sim.frames[sim.frames.length - 1]; const extra = (raw - (sim.frames.length - 1)) * 0.1; const hold = anim.hold ??= endHold(anim.fx, last.t ?? 0);
         const svg2 = document.querySelector('#field');
-        if (extra < hold && svg2 && now - (anim.holdDrawn || 0) >= 33) { anim.holdDrawn = now; const s2 = G.state; fieldDraw(svg2, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame: last, prevFrame: last, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), time: (last.t ?? 0) + extra, ownLabel: s2[anim.ev.offenseSide].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites }); anim.raf = requestAnimationFrame(tick); return; }
+        if (extra < hold && svg2 && now - (anim.holdDrawn || 0) >= 33) { anim.holdDrawn = now; const s2 = G.state; drawMatchField(svg2, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame: last, prevFrame: last, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), time: (last.t ?? 0) + extra, ownLabel: s2[anim.ev.offenseSide].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites }); anim.raf = requestAnimationFrame(tick); return; }
         if (extra < hold) { anim.raf = requestAnimationFrame(tick); return; }
         finishAnim(f, false); return;
       }
@@ -666,7 +696,7 @@ export function registerMatchScreens(Router, app) {
         if (anim.follow) { const target = cameraFor((sim.ballOn || 0) + sim.frames[idx].ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
         const prevT = sim.frames[Math.max(0, idx - 1)].t ?? 0, ft = sim.frames[idx].t ?? 0;
         const drawFrame = half ? midFrame(sim.frames[idx], sim.frames[idx + 1]) : sim.frames[idx];
-        fieldDraw(svg, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: drawFrame, prevFrame: sim.frames[idx - 1] || null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), qbRead: qbReadsShown(f.settings, { live: true }), ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
+        drawMatchField(svg, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: drawFrame, prevFrame: sim.frames[idx - 1] || null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), qbRead: qbReadsShown(f.settings, { live: true }), ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
         if (idx > 0 && !half && shakeBetween(anim.fx, prevT, ft)) shakeField(f);
         if (performance.now() - t0 > 18 && !(RP_CLOCK && globalThis.__gbRenderPerf.clock)) anim.slow = true; // this device cannot afford half-steps: back off for the rest of the play (never under the harness's fixed clock: frame-exact screenshots)
       }
@@ -741,7 +771,7 @@ export function registerMatchScreens(Router, app) {
         const frame = pos.k >= 0.5 && b !== a ? midFrame(a, b) : a;
         if (anim.follow) { const target = cameraFor((sim.ballOn || 0) + a.ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
         const s2 = G.state;
-        fieldDraw(svg, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame, prevFrame: sim.frames[pos.i - 1] || null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), qbRead: qbReadsShown(f.settings), ownLabel: s2[anim.ev.offenseSide || s2.possession].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide || s2.possession)].abbr, camera: anim.camera, event: G.event, noLines: true, sprites: anim.sprites, time: frame.t });
+        drawMatchField(svg, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame, prevFrame: sim.frames[pos.i - 1] || null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), qbRead: qbReadsShown(f.settings), ownLabel: s2[anim.ev.offenseSide || s2.possession].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide || s2.possession)].abbr, camera: anim.camera, event: G.event, noLines: true, sprites: anim.sprites, time: frame.t });
         // Camera: a slight zoom that tracks the ball (CSS transform on the svg; the wrap clips it).
         if (zoomOn) { const bx = (anim.ballLat + frame.ball[1] - VB[0]) / VB[2], by = (anim.camera.top - (anim.ballOn + frame.ball[0])) / VB[3]; svg.style.transformOrigin = `${(Math.max(0.15, Math.min(0.85, bx)) * 100).toFixed(1)}% ${(Math.max(0.15, Math.min(0.85, by)) * 100).toFixed(1)}%`; svg.style.transform = `${`scale(${REPLAY.zoom})`}`; }
         wrap?.classList.toggle('slowmo', !!pos.slow);
@@ -862,7 +892,7 @@ export function registerMatchScreens(Router, app) {
     const tick = (now) => {
       presnapRaf = null; const svg = document.querySelector('#field');
       if (anim || presnapNow !== P0 || !svg || Router.currentScreen()?.name !== 'match') return;
-      if (now - last >= 33) { last = now; const C = P0.at(performance.now()); fieldDraw(svg, { ...P0.field, fields: C.fields.length ? C.fields : null, fx: C.fx, time: C.time }); if (!C.until) return; }
+      if (now - last >= 33) { last = now; const C = P0.at(performance.now()); drawMatchField(svg, { ...P0.field, fields: C.fields.length ? C.fields : null, fx: C.fx, time: C.time }); if (!C.until) return; }
       presnapRaf = requestAnimationFrame(tick);
     };
     presnapRaf = requestAnimationFrame(tick);

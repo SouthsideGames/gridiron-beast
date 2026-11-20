@@ -4911,6 +4911,8 @@ export default {
   'market.forfeit': 'Forfeit',
 
   // SECTION: FOOTBALL — pre-game, live match and results
+  'match.camera_full_field': 'Full Field',
+  'match.camera_close_view': 'Close View',
   'match.well_played_dont_get_used_to': 'Well played. Don’t get used to it.',
   'match.you_earned_that_one_keep_it': 'You earned that one. Keep it polished for me.',
   'match.i_had_you_beaten_on_tape': 'I had you beaten on tape. Tape lies, apparently.',
@@ -5360,6 +5362,7 @@ export default {
   'menu.practice_field': '🎯 Practice Field',
   'menu.ai_testing_lab_qb_decisions': '🧠 AI Testing Lab (QB Decisions)',
   'menu.attribute_testing_lab': '📊 Attribute Testing Lab',
+  'menu.ui_sound_unavailable': 'UI sound could not play. Try again.',
   'menu.preview_evolution': '✨ Preview Evolution',
   'menu.ability_reviewer': '🧪 Ability Reviewer',
   'menu.ability_balance': '⚖️ Ability Balance',
