@@ -172,7 +172,7 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
   const { el, close } = sheet(draw(), { title: mode === 'extend' ? $t('market.contract_extension') : mode === 'renew' ? $t('market.contract_renewal') : $t('market.free_agent'), onClose: stopCry }); let advOpen = false;
   const root = () => el;
   const redraw = () => { const body = el.querySelector('.sheet-body') || el; advOpen = !!el.querySelector('details')?.open; body.innerHTML = draw(); if (advOpen) el.querySelector('details')?.setAttribute('open', ''); };
-  const done = (msg, kind = 'good') => { delete drafts[key]; app.save({ immediate: true }); toast(msg, kind); close(); onDone?.(); };
+  const done = (msg, kind = 'good', sound = undefined) => { delete drafts[key]; app.save({ immediate: true }); toast(msg, kind, 2600, { sound }); close(); onDone?.(); };
   // Typing an amount and tapping Make Offer straight away: the tap blurs the field (a change event) before the click. Redrawing
   // then would replace the button under the finger and lose the tap, so while a tap is in progress the redraw waits until it ends.
   let tapping=false, pending=false, refused=false; // refused: the amount just typed was invalid, so the tap's action must not run
@@ -201,13 +201,13 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
     if (act === 'withdraw') { if (!(await confirmSheet(`${$t('market.withdraw_your_offer_to_the_reserved', { name: m.name })}`, { title: $t('market.withdraw'), okLabel: $t('market.withdraw'), danger: true }))) return; r = F.withdrawFreeAgentOffer(f, mine.id); if (r.ok) return done($t('market.offer_withdrawn'), 'info'); }
     if (act === 'acceptdemand' || act === 'renewoffer') {
       r = mode === 'extend' ? F.extendContract(f, id, t, { accept: act === 'acceptdemand' }) : F.resolveContract(f, id, act === 'acceptdemand' ? 'sign' : 'offer', act === 'acceptdemand' ? {} : { salary: t.salary, years: t.years, bonus: t.bonus });
-      if (r.ok && (r.outcome === 'signed' || r.status === 'signed')) return done(mode === 'extend' ? `${m.name} extended.` : `${$t('market.re_signed', { name: m.name })}`);
+      if (r.ok && (r.outcome === 'signed' || r.status === 'signed')) return done(mode === 'extend' ? `${m.name} extended.` : `${$t('market.re_signed', { name: m.name })}`, 'good', 'reward');
       if (r.ok && (r.outcome === 'countered' || r.status === 'countered')) { Object.assign(t, r.counter); toast(`${$t('market.he_counters_yr_for', { amount: fmt(r.counter.salary), years: r.counter.years })}`, 'info'); redraw(); return; }
       if (r.ok) { toast(r.reason || (r.status === 'declined' ? $t('market.he_ends_the_talks_and_will') : $t('market.he_ends_the_talks_for_now')), 'bad'); redraw(); onDone?.(); return; }
     }
     if (act === 'now' || act === 'extend') {
       r = act === 'now' ? F.negotiateFreeAgent(f, id, t) : F.extendContract(f, id, t);
-      if (r.ok && r.outcome === 'signed') return done(act === 'now' ? `${m.name} signed.` : `${m.name} extended.`);
+      if (r.ok && r.outcome === 'signed') return done(act === 'now' ? `${m.name} signed.` : `${m.name} extended.`, 'good', 'reward');
       if (r.ok && r.outcome === 'countered') { Object.assign(t, r.counter); toast(`${$t('market.he_counters_yr_for', { amount: fmt(r.counter.salary), years: r.counter.years })}`, 'info'); redraw(); return; }
       if (r.ok) { toast(r.reason || $t('market.he_turned_it_down'), 'bad'); redraw(); return; }
     }

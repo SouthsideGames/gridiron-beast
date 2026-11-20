@@ -96,7 +96,7 @@ export function openTradeDesk(app, { onDone = null, team = null } = {}) {
       const sends = [...nm(pr.giveMonsters, assets.mine), ...pr.givePicks.map(pickLabel)].join(', '), gets = [...nm(pr.getMonsters, assets.theirs), ...pr.getPicks.map(pickLabel)].join(', ');
       if (!(await confirmSheet(`${$t('market.send_to_the_for_if_they', { sends, team: state.team, gets })}`, { title: $t('market.send_the_proposal_2'), okLabel: $t('market.send') }))) return;
       const r = F.deskPropose(f, pr); state.result = r; app.save();
-      if (r.ok && r.accepted) { state.giveM = []; state.getM = []; state.giveP = []; state.getP = []; toast($t('market.deal_done'), 'good'); }
+      if (r.ok && r.accepted) { state.giveM = []; state.getM = []; state.giveP = []; state.getP = []; toast($t('market.deal_done'), 'good', 2600, { sound: 'reward' }); }
       render(); return;
     }
   });

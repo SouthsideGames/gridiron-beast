@@ -1,3 +1,4 @@
+import { uiSound } from '../audio/ui-sounds.js';
 import { createToastQueue } from './toast-queue.js';
 import { iconifyMarkup } from './icons.js';
 // Tiny DOM helpers: escape, element creation from HTML, delegation.
@@ -46,7 +47,7 @@ export const pct = (v) => `${Math.round(v * 100)}%`;
 
 /** Simple non-blocking toast. */
 let toastQueue = null;
-export function toast(text, kind = 'info', ms = 2600, { undo = null } = {}) {
+export function toast(text, kind = 'info', ms = 2600, { undo = null, sound = kind === 'bad' ? 'unavailable' : kind === 'good' ? 'confirm' : null } = {}) {
   if (!toastQueue) toastQueue = createToastQueue(message => {
     let el = $('#toast');
     if (!el) { el = html('<div id="toast" role="status" aria-live="polite"></div>'); document.body.appendChild(el); }
@@ -56,6 +57,7 @@ export function toast(text, kind = 'info', ms = 2600, { undo = null } = {}) {
     const dismiss=document.createElement('button');dismiss.className='btn ghost small';dismiss.textContent='×';dismiss.setAttribute('aria-label','Dismiss Message');dismiss.addEventListener('click',()=>toastQueue.dismiss());el.appendChild(dismiss);
     el.dataset.kind=message.kind;el.classList.add('show');
   },()=>$('#toast')?.classList.remove('show'));
+  if (sound) uiSound(sound);
   toastQueue.push({text,kind,ms:Math.max(1000,Number(ms)||2600),undo});
 }
 
