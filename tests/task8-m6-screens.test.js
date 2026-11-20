@@ -50,12 +50,16 @@ test('collection achievements: the original 72, the 120 Basics and all 192, sepa
   assert.equal(ACHIEVEMENTS.length, 24);
   resetDex(); const f = newFranchise(3, { difficulty: 'pro' }); f.scenes = []; f.achievements = {};
   const earned = (ids) => ids.filter((id) => id.startsWith('dex_'));
+  // Isolate the exact collection boundaries from the random starting roster.
+  resetDex();f.dex={seen:{},signed:{}};
   assert.deepEqual(earned(checkAchievements(f, 'sunday', {})), [], 'nothing at the start');
-  for (const id of DEX_GROUPS.original) for (const stage of [0, 1, 2]) dexRecord(f, { species: id, stage }, 'seen'); // every form: still one family each
+  for (const id of DEX_GROUPS.all) dexRecord(f, { species: id, stage: 2 }, 'seen');
+  assert.deepEqual(earned(checkAchievements(f, 'sunday', {})), [], 'seeing every species grants no collection achievements');
+  for (const id of DEX_GROUPS.original) for (const stage of [0, 1, 2]) dexRecord(f, { species: id, stage }, 'signed'); // every acquired form: still one family each
   assert.deepEqual(earned(checkAchievements(f, 'sunday', {})), ['dex_original']);
-  for (const id of DEX_GROUPS.basic.slice(0, 119)) dexRecord(f, { species: id }, 'seen');
+  for (const id of DEX_GROUPS.basic.slice(0, 119)) dexRecord(f, { species: id }, 'signed');
   assert.deepEqual(earned(checkAchievements(f, 'sunday', {})), [], '119 Basics is not all of them');
-  dexRecord(f, { species: DEX_GROUPS.basic[119] }, 'seen');
+  dexRecord(f, { species: DEX_GROUPS.basic[119] }, 'signed');
   assert.deepEqual(earned(checkAchievements(f, 'sunday', {})).sort(), ['dex_all', 'dex_basic']);
   assert.deepEqual(earned(checkAchievements(f, 'sunday', {})), [], 'once each');
   resetDex();

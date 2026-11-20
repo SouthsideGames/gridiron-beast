@@ -49,21 +49,21 @@ test('original, Basic and all tally separately and the top-level numbers are the
   for (const id of orig) dexRecord(f, { species: id }, 'seen');
   for (const id of basic) dexRecord(f, { species: id }, 'signed');
   const c = dexCounts(f);
-  assert.deepEqual(c.original, { seen: 5, signed: 0, total: 72 });
+  assert.deepEqual(c.original, { seen: 0, signed: 0, total: 72 });
   assert.deepEqual(c.basic, { seen: 7, signed: 7, total: 120 });
-  assert.deepEqual(c.all, { seen: 12, signed: 7, total: 192 });
-  assert.equal(c.seen, 12); assert.equal(c.signed, 7);
+  assert.deepEqual(c.all, { seen: 7, signed: 7, total: 192 });
+  assert.equal(c.seen, 7); assert.equal(c.signed, 7);
 });
 
-test('recording every form of every family fills each group exactly, never past its total', () => {
+test('acquiring every form of every family fills each group exactly, never past its total', () => {
   const f = fresh();
-  for (const fam of FAMILIES) for (const fm of formsOf(fam.id)) dexRecord(f, { species: fam.id, stage: fm.stage }, 'seen');
+  for (const fam of FAMILIES) for (const fm of formsOf(fam.id)) dexRecord(f, { species: fam.id, stage: fm.stage }, 'signed');
   const c = dexCounts(f);
   assert.deepEqual([c.original.seen, c.basic.seen, c.all.seen], [72, 120, 192]);
 });
 
 test('the career collection (another franchise) counts by family too', () => {
-  const a = fresh(); dexRecord(a, { species: DEX_GROUPS.original[0], stage: 2 }, 'seen'); dexRecord(a, { species: DEX_GROUPS.basic[0] }, 'seen');
+  const a = fresh(); dexRecord(a, { species: DEX_GROUPS.original[0], stage: 2 }, 'signed'); dexRecord(a, { species: DEX_GROUPS.basic[0] }, 'signed');
   const b = blankFranchise(); // a second franchise: it sees the player's career collection
   const c = dexCounts(b);
   assert.deepEqual([c.original.seen, c.basic.seen, c.all.seen], [1, 1, 2]);

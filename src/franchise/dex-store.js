@@ -1,5 +1,6 @@
 // The player's Beast Dex, kept outside any franchise (GDD §15.1): species seen
-// and signed across every franchise this player has run. localStorage is the
+// and signed across every franchise this player has run. Sightings are history only;
+// acquisition is required to unlock entries and count collection progress. localStorage is the
 // primary copy; inside claude.ai it is also mirrored to the per-viewer cloud
 // document `dex`. Franchises keep their own f.dex too (for "on your roster"
 // and per-franchise milestones); the Beast Dex screen shows the union.
@@ -10,7 +11,7 @@ const storage = () => { try { return globalThis.localStorage || null; } catch { 
 let dex = null; // { seen: {id: stamp}, signed: {id: stamp}, franchises: n, updatedAt }
 let mirror = null; // (dex) => void, set by the cloud layer
 
-const blank = () => ({ seen: {}, signed: {}, forms: {}, knowledge: {}, franchises: 0, updatedAt: 0 });
+const blank = () => ({ seen: {}, signed: {}, forms: {}, ownedForms: {}, knowledge: {}, franchises: 0, updatedAt: 0 });
 function load() {
   if (dex) return dex;
   const s = storage();
@@ -42,17 +43,18 @@ export const knowledgeEventId = (franchise, act) => (String(act).startsWith('fb:
 export function mergeDex(other, { franchise = null } = {}) {
   if (!other) return; const d = load(); let changed = false;
   for (const k of ['seen', 'signed']) for (const [id, stamp] of Object.entries(other[k] || {})) if (!d[k][id]) { d[k][id] = stamp; changed = true; }
-  d.forms ||= {}; for (const [id, st] of Object.entries(other.forms || {})) if ((d.forms[id] || 0) < st) { d.forms[id] = st; changed = true; }
+  // Legacy forms include opponent sightings; only explicit owned-form records are proof of acquisition.
+  d.ownedForms ||= {}; for (const [id, st] of Object.entries(other.ownedForms || {})) if (d.signed[id] && (d.ownedForms[id] || 0) < st) { d.ownedForms[id] = st; changed = true; }
   d.knowledge ||= {};
   for (const [id, events] of Object.entries(other.knowledge || {})) { const own = d.knowledge[id] ||= {}; for (const raw of Object.keys(events || {})) { if (raw.startsWith('fb:') && !franchise) continue; const key = knowledgeEventId(franchise, raw); if (!own[key]) { own[key] = true; changed = true; } } }
   if ((other.franchises || 0) > d.franchises) { d.franchises = other.franchises; changed = true; }
   if (changed) persist();
 }
-/** Record an evolved form seen (stage 1 or 2). */
-export function dexFormGlobal(id, stage) { const d = load(); d.forms ||= {}; if ((d.forms[id] || 0) < stage) { d.forms[id] = stage; persist(); } }
-export function dexFormsGlobal() { return load().forms || {}; }
-export function dexStatusGlobal(id) { const d = load(); return d.signed[id] ? 'signed' : d.seen[id] ? 'seen' : 'unknown'; }
-export function dexCountsGlobal() { const d = load(); return { seen: Object.keys(d.seen).length, signed: Object.keys(d.signed).length, franchises: d.franchises }; }
+/** Record an evolved form acquired by the player (stage 1 or 2). */
+export function dexFormGlobal(id, stage) { const d = load(); if (!d.signed[id]) return; d.ownedForms ||= {}; if ((d.ownedForms[id] || 0) < stage) { d.ownedForms[id] = stage; persist(); } }
+export function dexFormsGlobal() { return load().ownedForms || {}; }
+export function dexStatusGlobal(id) { const d = load(); return d.signed[id] ? 'signed' : 'unknown'; }
+export function dexCountsGlobal() { const d = load(); return { seen: Object.keys(d.signed).length, signed: Object.keys(d.signed).length, franchises: d.franchises }; }
 export function noteNewFranchise() { const d = load(); d.franchises += 1; persist(); }
 /** Developer tool / tests: wipe the player's dex. */
 export function resetDex() { dex = blank(); persist(); }
