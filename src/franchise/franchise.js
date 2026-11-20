@@ -438,24 +438,24 @@ export function retire(f) {
 }
 
 // ------------------------------------------------------------ Beast Dex
-/** Mark a species as seen (scouted or faced) or signed; first time only, with the week it happened. */
+/** Keep sightings for history; only acquisition unlocks a Beast Dex family or evolved form. */
 export function dexRecord(f, m, how = 'seen') {
   f.dex ||= { seen: {}, signed: {} };
   const id = dexFamilyOf(m); const stamp = { year: f.season?.year || 1, week: f.season?.week || 1, club: f.club };
   if (!f.dex.seen[id]) f.dex.seen[id] = stamp;
   if (how === 'signed' && !f.dex.signed[id]) f.dex.signed[id] = stamp;
   dexRecordGlobal(id, how, stamp); // the player's dex outlives this franchise
-  if (m?.stage) { f.dex.forms ||= {}; if ((f.dex.forms[id] || 0) < m.stage) f.dex.forms[id] = m.stage; dexFormGlobal(id, m.stage); }
+  if (how === 'signed' && m?.stage) { f.dex.ownedForms ||= {}; if ((f.dex.ownedForms[id] || 0) < m.stage) f.dex.ownedForms[id] = m.stage; dexFormGlobal(id, m.stage); }
 }
 /** Status across the player's whole career (every franchise), or this franchise only with `{ franchiseOnly: true }`. */
 export function dexStatus(f, id, { franchiseOnly = false } = {}) {
-  const mine = !f?.dex ? 'unknown' : f.dex.signed[id] ? 'signed' : f.dex.seen[id] ? 'seen' : 'unknown';
+  const mine = f?.dex?.signed?.[id] ? 'signed' : 'unknown';
   if (franchiseOnly) return mine;
   const all = dexStatusGlobal(id);
-  return all === 'signed' || mine === 'signed' ? 'signed' : all === 'seen' || mine === 'seen' ? 'seen' : 'unknown';
+  return all === 'signed' || mine === 'signed' ? 'signed' : 'unknown';
 }
-/** Highest evolved stage of a species the player has seen (any franchise). */
-export function dexFormSeen(f, id) { return Math.max(f?.dex?.forms?.[id] || 0, dexFormsGlobal()[id] || 0); }
+/** Highest evolved stage the player acquired, including evolution on their own roster. */
+export function dexFormSeen(f, id) { return Math.max(f?.dex?.ownedForms?.[id] || 0, dexFormsGlobal()[id] || 0); }
 // Beast Dex collection groups (owner ruling 2026-11-07: the original 72 families, the 120 Basics and all 192 are tallied separately;
 // evolutions do not add family counts). Every record is keyed by family, so an evolved form counts once, as its family.
 export const DEX_GROUPS = Object.freeze({
@@ -474,7 +474,7 @@ function tally(ids, statusOf) {
   for (const id of ids) { const st = statusOf(id); if (st !== 'unknown') seen++; if (st === 'signed') signed++; }
   return { seen, signed, total: ids.length };
 }
-/** Family-based collection counts: `original` (72), `basic` (120) and `all` (192). `seen`/`signed` at the top are the all-192 tally. */
+/** Family-based collection counts: `original` (72), `basic` (120) and `all` (192). `seen` is the legacy counter name; both counters now tally acquired families only. */
 export function dexCounts(f, { career = false } = {}) {
   const statusOf = career ? (id) => dexStatusGlobal(id) : (id) => dexStatus(f, id);
   const groups = Object.fromEntries(Object.entries(DEX_GROUPS).map(([k, ids]) => [k, tally(ids, statusOf)]));
@@ -3066,7 +3066,7 @@ export function acceptGmJob(f, club) {
     const settled=leagueContracts(x,{year,cap,excessOf:()=>0,accepts,clubs:[from]});
     const stint=x.gmCareer.stints.at(-1); if(stint && settled) stint.departure={walked:settled.walked,resigned:settled.resigned,released:settled.released,declined:settled.declined||0}; // the club's settlement, on the record of the stint that ended
   }});
-  if(result.ok) news(f,$L('gm.incoming_news',{owner:`${f.owner.first} ${f.owner.last}`,from:result.from,club}), 'info');
+  if(result.ok) { for(const m of f.roster) dexRecord(f,m,'signed'); news(f,$L('gm.incoming_news',{owner:`${f.owner.first} ${f.owner.last}`,from:result.from,club}), 'info'); }
   return result;
 }
 

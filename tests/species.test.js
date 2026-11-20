@@ -64,6 +64,7 @@ test('recruiting follows the dex: region elements only, rares in their home regi
   for (let seed = 1; seed <= 40; seed++) {
     const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed });
     f.staff.head_scout = 'sc_ash';
+    const unlockedBefore = new Map(SPECIES_DEX.map(s => [s.id,F.dexStatus(f,s.id)]));
     const r = F.scoutRegion(f, 'Volcanic Fields'); assert.ok(r.ok);
     for (const p of r.prospects) {
       const sp = SPECIES_BY_ID[p.monster.species]; assert.ok(sp, 'prospect has a dex species');
@@ -72,7 +73,7 @@ test('recruiting follows the dex: region elements only, rares in their home regi
       assert.ok([sp.position, sp.secondary].includes(p.monster.position));
       assert.notEqual(sp.rarity, 'rare', 'no rares in week 1');
       assert.notEqual(sp.rarity, 'legendary');
-      assert.equal(F.dexStatus(f, sp.id) === 'unknown', false, 'scouted prospects enter the dex');
+      assert.equal(F.dexStatus(f, sp.id), unlockedBefore.get(sp.id), 'scouting cannot unlock an unacquired family');
       seen.rarities.add(sp.rarity);
     }
   }
@@ -145,7 +146,7 @@ test('the Beast Dex outlives a franchise: discoveries merge into the player stor
   assert.equal(F.dexStatus(b, signedA[0], { franchiseOnly: true }) === 'signed', b.dex.signed[signedA[0]] != null);
   assert.equal(D.dexCountsGlobal().franchises, 2);
   D.mergeDex({ seen: { aurodrax: { year: 3, week: 2, club: 'x' } } });
-  assert.equal(F.dexStatus(b, 'aurodrax'), 'seen');
+  assert.equal(F.dexStatus(b, 'aurodrax'), 'unknown', 'a cloud sighting does not unlock an unacquired beast');
   D.resetDex();
   assert.equal(D.dexCountsGlobal().seen, 0);
 });
@@ -166,13 +167,14 @@ test('evolution: commons evolve at their level, keep personal names, grow, and t
   assert.equal(formOf(m).name, 'Blazynx'); assert.equal(formOf(m).size, 'medium');
   raiseToLevel(m, 20); const e2 = tryEvolve(m); assert.equal(e2.to, 'Infernox'); assert.equal(m.name, 'Rocco'); assert.equal(tryEvolve(m), null, 'no third evolution');
   const u = generateMonster(rng, { species: 'voltfang', position: 'WR', quality: 58, age: 20, yearsPro: 0 }); raiseToLevel(u, 30); assert.equal(tryEvolve(u), null, 'uncommons do not evolve');
-  // AI rosters in later seasons field evolved commons; the dex remembers forms the player has faced.
+  // Facing an evolved AI monster does not unlock its form; acquiring one does.
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed: 77 });
   f.season.year = 4;
   const t = F.legacyAiTeam(f, 'Harbor Sentinels'); // the generated rosters of v40 saves; persistent rosters evolve by level as they play (GDD §42.6)
   assert.ok(t.roster.some((x) => x.stage >= 1), 'season 4 gym club fields evolved monsters');
-  const evolved = t.roster.find((x) => x.stage >= 1); F.dexRecord(f, evolved, 'seen');
-  assert.ok(F.dexFormSeen(f, evolved.species) >= 1);
+  const evolved = t.roster.find((x) => x.stage >= 1); const previousForm = F.dexFormSeen(f, evolved.species); F.dexRecord(f, evolved, 'seen');
+  assert.equal(F.dexFormSeen(f, evolved.species), previousForm);
+  F.dexRecord(f, evolved, 'signed');assert.ok(F.dexFormSeen(f, evolved.species) >= evolved.stage);
 });
 
 // Owner's rule (GDD §23.10): a signature ability belongs to one monster (one species line) and is never given to another.

@@ -1,3 +1,4 @@
+import { FacingTracker } from './match-camera.js';
 import { hybridRegions } from '../sim/t8/zone-planning.js';
 // Live match field: vertical, the offense always attacks UP. A camera
 // window of 46 yards follows the ball. Draws field markings, pre-snap play
@@ -29,6 +30,7 @@ import { t as $t } from '../text/index.js';
 
 const SPAN = 46; // visible yards
 const HW = FIELD.halfWidth + 0.33;
+let nextLiveClip = 0;
 
 export function cameraFor(ballOn) {
   let bottom = ballOn - 15;
@@ -51,12 +53,13 @@ const FIELD_TINT = { Fire: '#ff7a3d', Water: '#5fb6ff', Nature: '#7ad35a', Elect
 export function fieldLayers(o) {
   const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null, qbRead = false, fields = null, fxOptions = null} = o;
   const portalFrame = frame && (frame.hoardFlight || fx?.t8?.items?.some((i) => i.id === 'PSY-02-F' && (frame.t ?? 0) >= i.t0));
-  const cam = portalFrame ? cameraFor(ballOn + frame.ball[0]) : camera || cameraFor(ballOn);
+  const cam = o.viewCamera || (portalFrame ? cameraFor(ballOn + frame.ball[0]) : camera || cameraFor(ballOn));
+  const span = cam.top - cam.bottom;
   const Y = (yard) => cam.top - yard; // yards → svg y
   const X = (lat) => lat; // lateral yards → svg x (centred)
   let s = '';
   // Turf and end zones: the stadium's environment (GDD §33.1); without a venue, the classic grass exactly as before.
-  const T = turfSvg(venue, cam, HW, SPAN, Y);
+  const T = turfSvg(venue, cam, HW, span, Y);
   s += T.turf;
   if (cam.bottom < 0) s += `${T.endZone(Y(0), Y(-10) - Y(0))}<text x="0" y="${Y(-5) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${ownLabel}</text>`;
   if (cam.top > 100) s += `${T.endZone(Y(110), Y(100) - Y(110))}<text x="0" y="${Y(105) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${oppLabel}</text>`;
@@ -82,7 +85,7 @@ export function fieldLayers(o) {
     for (const hx of [-FIELD.hashFromCentre, FIELD.hashFromCentre, -HW + 0.6, HW - 0.6]) s += `<line x1="${hx - 0.4}" y1="${Y(yard)}" x2="${hx + 0.4}" y2="${Y(yard)}" stroke="#f3f7e9" stroke-width="0.15" stroke-opacity="0.7"/>`;
   }
   // Sidelines.
-  s += `<rect x="${-HW + 0.15}" y="0.1" width="${HW * 2 - 0.3}" height="${SPAN - 0.2}" fill="none" stroke="#f0f6e9" stroke-width="0.3"/>`;
+  s += `<rect x="${-HW + 0.15}" y="0.1" width="${HW * 2 - 0.3}" height="${span - 0.2}" fill="none" stroke="#f0f6e9" stroke-width="0.3"/>`;
   // Line of scrimmage and line to gain.
   const ltg = Math.min(100, ballOn + toGo);
   if (!noLines) {
@@ -112,7 +115,8 @@ export function fieldLayers(o) {
   if (underlay) s += underlay; // caller-drawn layer under the players (Playbook Audit paths)
   const statics = s; s = '';
   // ---------------------------------------------------------------- dynamic layer
-  const symbols = [{ id: 'fv-clip', symbol: `<clipPath id="fv-clip" clipPathUnits="userSpaceOnUse"><rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}"/></clipPath>` }]; const seen = new Set(); let pre = '';
+  const clipId = o.clipId || 'fv-clip';
+  const symbols = [{ id: clipId, symbol: `<clipPath id="${clipId}" clipPathUnits="userSpaceOnUse"><rect x="${-HW}" y="0" width="${HW * 2}" height="${span}"/></clipPath>` }]; const seen = new Set(); let pre = '';
   // Players.
   const simpleMarker = (slot, x, y, team, engaged, holder) => {
     const cx = X(ballLat + y), cy = Y(ballOn + x);
@@ -137,7 +141,7 @@ export function fieldLayers(o) {
     let key = `${team}:${slot}`; while (keys.has(key)) key += "'"; keys.add(key);
     if (!m) { const base = simpleMarker(slot, x, y, team, engaged, holder); const html = (sm?.under || '') + (sm?.tf ? `<g transform="${sm.tf}">${base}</g>` : base); players.push({ key, html, sig: null }); return; }
     const base = team === 'off' ? colors.off : colors.def;
-    const [mx] = moved(team, slot, x, y); const flip = Math.abs(mx) > 0.12 ? mx < 0 : team === 'def';
+    const [mx] = moved(team, slot, x, y); const flip = o.facing?.[`${team}:${slot}`] ?? (Math.abs(mx) > 0.12 ? mx < 0 : team === 'def');
     // The sprite: a <use> of the monster's cached <symbol> (same viewBox, size and crisp edges as the inline art it replaces).
     const ref = monsterSpriteRef(m, { flip }); if (!seen.has(ref.id)) { seen.add(ref.id); symbols.push(ref); }
     const ell = { cx: cx.toFixed(2), cy: (cy + 0.75).toFixed(2), fill: base, stroke: holder ? '#fff' : engaged ? '#ffcf5a' : '#0d1f17', 'stroke-width': holder ? '0.4' : '0.2' };
@@ -202,13 +206,13 @@ export function fieldLayers(o) {
   // them (ball effects, ball, read ring, effects, status marks, type badges). The groups carry no attributes: paint order and
   // pixels are those of the flat markup.
   const dynamic = `<g class="fv-pre">${pre}</g><g class="fv-pl">${players.map((x) => `<g>${x.html}</g>`).join('')}</g><g class="fv-post">${post}</g>`;
-  return { statics, dynamic, symbols, pre, players, post };
+  return { statics, dynamic, symbols, pre, players, post, span, clipId };
 }
 
 /** The whole field as one SVG inner string: sprite definitions, the static layer, the dynamic layer. */
 export function fieldSvg(o) {
   const L = fieldLayers(o);
-  return `<defs class="fv-defs">${L.symbols.map((x) => x.symbol).join('')}</defs><g class="fv-static" clip-path="url(#fv-clip)">${L.statics}</g><g class="fv-dyn" clip-path="url(#fv-clip)">${L.dynamic}</g>`;
+  return `<defs class="fv-defs">${L.symbols.map((x) => x.symbol).join('')}</defs><g class="fv-static" clip-path="url(#${L.clipId})">${L.statics}</g><g class="fv-dyn" clip-path="url(#${L.clipId})">${L.dynamic}</g>`;
 }
 
 /**
@@ -219,7 +223,10 @@ export function fieldSvg(o) {
  * fieldSvg() is adopted as it stands. A layer whose markup did not change is not touched. Returns { staticRedrawn, dynamicRedrawn }.
  */
 export function fieldDraw(svg, o) {
-  const L = fieldLayers(o);
+  const tracker = svg.__facing || (svg.__facing = new FacingTracker());
+  const clipId = svg.__clipId || (svg.__clipId = `fv-clip-live-${++nextLiveClip}`);
+  const L = fieldLayers({ ...o, clipId, facing: tracker.observe(o.frame) });
+  if (o.viewCamera) svg.setAttribute('viewBox', `${-HW} 0 ${HW * 2} ${L.span}`);
   let st = svg.__fv;
   if (!st || st.defs.parentNode !== svg || st.statics.parentNode !== svg || st.dyn.parentNode !== svg) {
     let defs = null, statics = null, dyn = null;
@@ -229,8 +236,14 @@ export function fieldDraw(svg, o) {
     const ids = new Set(); for (const c of defs.children) if (c.id) ids.add(c.id);
     st = svg.__fv = { defs, statics, dyn, pre: dyn.children[0], pl: dyn.children[1], post: dyn.children[2], ids, staticStr: null, dynStr: null, preStr: null, postStr: null, keys: null, recs: [], draws: 0, skipped: 0 };
   }
-  st.statics.setAttribute('clip-path', 'url(#fv-clip)'); st.dyn.setAttribute('clip-path', 'url(#fv-clip)');
+  // A review sheet can draw another field above a wide Auto field. SVG ids are
+  // document-global, so each live field needs its own changing clip rectangle.
+  const adoptedClip = st.defs.querySelector('#fv-clip');
+  if (adoptedClip) { adoptedClip.setAttribute('id', clipId); st.ids.delete('fv-clip'); st.ids.add(clipId); }
+  st.statics.setAttribute('clip-path', `url(#${clipId})`); st.dyn.setAttribute('clip-path', `url(#${clipId})`);
   for (const x of L.symbols) if (!st.ids.has(x.id)) { st.ids.add(x.id); st.defs.insertAdjacentHTML('beforeend', x.symbol); }
+  const clip = st.defs.querySelector(`#${clipId} rect`);
+  if (clip) clip.setAttribute('height', String(L.span));
   const staticRedrawn = L.statics !== st.staticStr;
   if (staticRedrawn) { st.statics.innerHTML = L.statics; st.staticStr = L.statics; }
   // Nothing moved (a still frame of the end-of-play hold, a re-render of the same moment): the dynamic layer is left as it is.

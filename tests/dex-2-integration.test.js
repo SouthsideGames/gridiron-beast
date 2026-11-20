@@ -39,6 +39,8 @@ test('one knowledge credit per family per completed owner game: lineup members o
   const [a, b] = starters.filter((x) => x.species !== starters[0].species || x === starters[0]);
   b.species = a.species;
   const before = counts(f); const globalBefore = Object.fromEntries(SPECIES_DEX.map((s) => [s.id, dexKnowledge(s.id).games]));
+  const acquiredBefore = Object.keys(f.dex.signed).sort();
+  const unlockedBefore = F.dexCounts(f).all.seen;
   const game = F.simulatePlayerGame(f);
   // Coaching rotation (PR #125): a reserve who actually took snaps played in this game and earns its family's credit; a monster who
   // never entered earns nothing. "Played" is the lineup plus every reserve the game's own stat lines show on the field.
@@ -48,6 +50,8 @@ test('one knowledge credit per family per completed owner game: lineup members o
   const entered = [...starters, ...reserves];
   const benched = f.roster.filter((x) => !played.has(x.id) && !lines[x.id] && !entered.some((s) => s.species === x.species));
   F.finishSunday(f, game);
+  assert.deepEqual(Object.keys(f.dex.signed).sort(), acquiredBefore, 'playing the first football game does not acquire opponents');
+  assert.equal(F.dexCounts(f).all.seen, unlockedBefore, 'facing a full opposing roster cannot inflate Dex completion');
   const after = counts(f);
   const families = new Set(entered.map((x) => x.species));
   for (const id of families) {

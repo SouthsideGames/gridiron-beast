@@ -4,7 +4,7 @@ import { playMonsterCry } from '../../audio/detail-audio.js';
 import { stopCry } from '../../audio/monster-cries.js';
 // Beast Dex: every species in the game, grouped by element. Reachable from the
 // main menu (no franchise needed). With a franchise, species you have scouted
-// or faced are revealed; species you have signed are marked. Everything else
+// or faced stay locked; only species you have acquired are revealed. Everything else
 // shows as a silhouette with "???" so there is always something to hunt for.
 
 import { abilitiesHtml } from '../ability-info.js';

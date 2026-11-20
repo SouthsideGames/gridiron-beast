@@ -80,7 +80,10 @@ export function migrateSpecies(f) {
   };
   for (const m of f.roster || []) fix(m);
   for (const p of f.week?.prospects || []) fix(p.monster);
-  if (!f.dex) { f.dex = { seen: {}, signed: {} }; for (const m of f.roster || []) dexRecord(f, m, 'signed'); }
+  f.dex ||= { seen: {}, signed: {} };
+  // Older forms records include sightings, so rebuild only what the player's roster proves.
+  // Existing signed stamps preserve past acquisitions, including released/traded beasts.
+  for (const m of f.roster || []) dexRecord(f, m, 'signed');
 }
 export function exportJson(f) { return JSON.stringify({ app: 'gridiron-beast', schemaVersion: f?.schemaVersion ?? SCHEMA_VERSION, exportedAt: new Date().toISOString(), franchise: f }, null, 0); }
 export function importJson(text) {
