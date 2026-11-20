@@ -23,6 +23,13 @@ import { fmtMoney } from '../dom.js';
 import { t } from '../../text/index.js';
 import { t as $t } from '../../text/index.js';
 
+export function randomCoachName(previous = {}, random = Math.random) {
+  const firsts = ['Alex', 'Jordan', 'Morgan', 'Casey', 'Riley', 'Taylor', 'Avery', 'Cameron', 'Jamie', 'Quinn', 'Drew', 'Robin', 'Sam', 'Charlie', 'Dakota', 'Reese'];
+  const lasts = ['Brooks', 'Carter', 'Reyes', 'Patel', 'Kim', 'Walker', 'Bennett', 'Rivera', 'Hayes', 'Mitchell', 'Grant', 'Sullivan', 'Nguyen', 'Parker', 'Cole', 'Morgan'];
+  const pairs = firsts.flatMap(first => lasts.map(last => ({ first, last }))).filter(n => n.first !== previous.first || n.last !== previous.last);
+  return pairs[Math.min(pairs.length - 1, Math.max(0, Math.floor(random() * pairs.length)))];
+}
+
 const STEPS = ['name', 'look', 'background', 'club', 'difficulty', 'offense'];
 const LINES = {
   name: t('onboarding.ah_there_you_are_i_knew'),
@@ -57,7 +64,7 @@ export function registerOnboardingScreens(Router, app) {
       if (step === 'offense') body = cornerstoneGrid('offense') + `<div class="row between" style="margin-top:8px"><span class="dim">${t('onboarding.not_what_you_had_in_mind')}</span><button class="btn small" data-action="reroll" ${draft.rerolls >= 2 ? 'disabled' : ''}>${t('onboarding.show_three_others_left', { rerolls: 2 - draft.rerolls })}</button></div>`;
       return `<div class="commissioner">${portraitSprite('commissioner', 56, { hue: 210 })}<div class="speech"><div class="muted" style="font-size:11px;margin-bottom:4px">${t('onboarding.league_commissioner', { step: draft.step + 1, n: STEPS.length })}</div>${esc(LINES[step])}</div></div>
         <div style="margin:12px 0">${body}</div>
-        <div class="row between"><button class="btn" data-action="back">${t('onboarding.back')}</button><button class="btn primary" data-action="next" id="next">${step === 'offense' ? t('onboarding.enter_the_league') : t('onboarding.continue')}</button></div>
+        <div class="row between"><button class="btn" data-action="back">${t('onboarding.back')}</button>${step === 'name' ? `<button class="btn" data-action="random-name">${t('onboarding.random_name')}</button>` : ''}<button class="btn primary" data-action="next" id="next">${step === 'offense' ? t('onboarding.enter_the_league') : t('onboarding.continue')}</button></div>
         <p id="err" class="muted" style="color:var(--bad);min-height:18px"></p>`;
     },
     mount(root, ctx) {
@@ -71,6 +78,7 @@ export function registerOnboardingScreens(Router, app) {
         return null;
       };
       delegate(root, {
+        'random-name': () => { Object.assign(draft, randomCoachName({ first: root.querySelector('#first').value.trim(), last: root.querySelector('#last').value.trim() })); Router.render(); },
         gender: (el) => { draft.gender = el.dataset.v; Router.render(); },
         ...coachEditorActions(draft.editor, () => Router.render()),
         background: (el) => { const h = root.querySelector('#home'); if (h) draft.hometown = h.value.trim(); draft.background = el.dataset.v; Router.render(); },
