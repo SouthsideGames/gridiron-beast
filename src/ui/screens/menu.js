@@ -241,7 +241,7 @@ export function registerMenuScreens(Router, app) {
 
   // ---------------------------------------------------------------- My office (GDD §18.6): the GM's own page
   Router.registerScreen('office', {
-    title: t('menu.my_office'),
+    back: false, title: t('menu.my_office'),
     render({ f }) {
       const b = f.board || { confidence: 0, goal: null, history: [] }; const g = b.goal; const p = g ? F.goalProgress(f) : null;
       const hof = F.hallOfFameProgress(f); const diff = DIFFICULTY[f.settings.difficulty] || DIFFICULTY.pro;
@@ -252,13 +252,14 @@ export function registerMenuScreens(Router, app) {
         <div class="panel ${F.onHotSeat(f) ? 'hotseat' : ''}"><div class="row between">${t('menu.b_board_b')}<span class="chip ${F.onHotSeat(f) ? 'bad' : b.confidence > 0 ? 'good' : ''}">${F.confidenceLabel(b.confidence)} (${b.confidence >= 0 ? '+' : ''}${b.confidence})</span></div>
           ${g ? `<div style="margin-top:6px">${t('menu.this_season_b_b', { label: esc(g.label) })}${p ? ` · ${esc(p.text)}` : ''}</div><div class="bar" style="margin:6px 0 0"><i style="width:${Math.round((p?.pct || 0) * 100)}%"></i></div>` : `<div class="dim" style="margin-top:6px">${t('menu.no_goal_committed_yet')}</div>`}
           ${b.history.length ? `<div class="dim" style="margin-top:6px">${t('menu.past')} ${b.history.map((h) => `${yearOf(h.year)} ${h.met ? '✅' : '❌'} ${esc(h.label)}`).join(' · ')}</div>` : ''}</div>
+        <button class="btn block" data-action="gmcareer">${t('gm.career')}</button>
         <div class="panel">${t('menu.b_career_b')}<div class="kv" style="margin-top:6px">${t('menu.b_seasons_b')}<span>${seasons + 1}</span>${t('menu.b_record_b')}<span>${wins}-${losses}</span>${t('menu.b_beast_bowls_b')}<span>${f.campaign?.titles || 0}</span>${t('menu.b_league_awards_b')}<span>${f.campaign?.awards || 0}</span>${t('menu.b_badges_b')}<span>${badges.length} / 8</span>${t('menu.b_career_wins_hof_b')}<span>${f.campaign?.wins || 0}</span></div>
           ${badges.length ? `<div class="row" style="flex-wrap:wrap;gap:4px;margin-top:6px">${badges.map(([club, x]) => `<span class="chip accent">${esc(GYM_BY_CLUB[club]?.badge || club)} · ${yearOf(x.year)}</span>`).join('')}</div>` : ''}</div>
         ${(() => { const list = F.achievementList(f); const got = list.filter((a) => a.earned); return `<div class="panel"><div class="row between">${t('menu.b_achievements_this_franchise_b')}<span class="dim">${got.length} of ${list.length}</span></div><div class="dim" style="margin-top:4px">${got.length ? got.map((a) => esc(a.title)).join(' · ') : t('menu.none_yet')}</div><div class="dim" style="margin-top:4px">${t('menu.every_achievement_what_it_takes_and')}</div></div>`; })()}
           <div class="panel">${t('menu.b_hall_of_fame_b')} <span class="dim">${esc(diff.hof)}</span><div class="hof" style="margin-top:6px">${hof.rows.map((r) => `<div class="row between ${r.done ? 'done' : ''}"><span>${r.done ? '✓' : '○'} ${r.key}</span><span class="mono">${r.have} / ${r.goal}</span></div>`).join('')}</div>${hof.eligible ? `<p class="muted">${t('menu.eligible_retire_from_hq_whenever_you')}</p>` : ''}</div>
         <div class="panel">${t('menu.b_franchises_b')}<div class="dim">${t('menu.selling_this_club_and_starting_another')}</div></div>`;
     },
-    mount(root) { delegate(root, { editlook: () => { lookState = null; Router.go('coach-look'); } }); },
+    mount(root) { delegate(root, { gmcareer: () => Router.go('gm-jobs'), editlook: () => { lookState = null; Router.go('coach-look'); } }); },
   });
   // ---------------------------------------------------------------- Coach appearance (coach creation expansion): edit any time
   // Saving replaces f.owner.portrait and nothing else: the record, the career, achievements and every other field are untouched.
@@ -277,7 +278,6 @@ export function registerMenuScreens(Router, app) {
     title: t('menu.more_2'),
     render({ f }) {
       return `<div class="stack">
-        <button class="btn block" data-action="go" data-screen="office">${t('menu.my_office_2')} <span class="dim">${esc(f.owner.first)} ${esc(f.owner.last)}</span></button>
         <button class="btn block" data-action="go" data-screen="dex">${t('menu.beast_dex_2')} <span class="dim mono">${dexCounts(f).all.seen}/${dexCounts(f).all.total}</span></button>
         <button class="btn block" data-action="statguide">${t('menu.what_the_stats_mean')}</button>
         <button class="btn block" data-action="typechart">${t('menu.type_chart')} <span class="dim">${t('menu.strengths_and_weaknesses')}</span></button>

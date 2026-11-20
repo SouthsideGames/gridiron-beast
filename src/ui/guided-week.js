@@ -51,6 +51,10 @@ export function guideFootball(f, save) {
 export function guideTargetSelectors(f, screen) {
   const l = currentLesson(f); if (!l || screen === 'match') return [];
   if (l.kind === 'monster' && screen === 'assign') return ['[data-action="monster"]'];
+  // Coaches live on HQ: teach that route rather than a shortcut from a beast card.
+  if (l.id === 'coaches' && screen !== 'staff') return screen === 'hq'
+    ? ['[data-action="go"][data-screen="staff"]']
+    : ['[data-action="router-tab"][data-screen="hq"]'];
   const destination = lessonScreen(f, l);
   if (screen === destination) {
     if (l.kind === 'monster') return ['[data-action="monster"]', '[data-action="slot"]'];
@@ -90,6 +94,9 @@ export function initGuidedWeek({ app, Router }) {
     if (a === 'guide-book') { b.closest('.sheet-backdrop')?.remove(); Router.go('guidebook'); return; }
     if (!guideActive(app.f)) return;
     const f = app.f; const l = currentLesson(f); const screen = Router.currentScreen()?.name;
+    if (l.id === 'coaches' && screen !== 'hq' && a === 'router-tab' && b.dataset.screen === 'hq') {
+      e.preventDefault(); e.stopImmediatePropagation(); Router.go('hq', {}, { reset: true }); return;
+    }
     const actionGate = screen === 'hq' && (a === 'autorun' || (['scout', 'recruit', 'training', 'scoutopp', 'gameplan', 'lineup', 'game', 'draft', 'goals'].includes(a) && !((l.kind === 'draft' && a === 'draft') || (l.kind === 'board' && a === 'goals') || (l.kind === 'game' && a === 'game') || a === l.screen)));
     if (actionGate && allowedScreens(f)) { e.preventDefault(); e.stopImmediatePropagation(); toast(t('guide.blocked')); return; }
     if (a === 'monster') { guideEvent(f, 'monster'); app.save(); }
@@ -124,46 +131,70 @@ export function mountGuide(f, screen, save) {
 
 
 export const BEAST_SECTION_TIPS = [
-  {id:'overview',title:()=>t('guide.section_overview_title'),text:()=>t('guide.section_overview_text')},
-  {id:'progress',title:()=>t('guide.section_progress_title'),text:()=>t('guide.section_progress_text')},
-  {id:'mastery',title:()=>t('guide.section_mastery_title'),text:()=>t('guide.section_mastery_text')},
-  {id:'health',title:()=>t('guide.section_health_title'),text:()=>t('guide.section_health_text')},
-  {id:'temper',title:()=>t('guide.section_temper_title'),text:()=>t('guide.section_temper_text')},
-  {id:'abilities',title:()=>t('guide.section_abilities_title'),text:()=>t('guide.section_abilities_text')},
-  {id:'ratings',title:()=>t('guide.section_ratings_title'),text:()=>t('guide.section_ratings_text')},
+  { id: 'bio', title: () => t('guide.section_bio_title'), text: () => t('guide.section_bio_text') },
+  { id: 'temper', title: () => t('guide.section_temper_title'), text: () => t('guide.section_temper_text') },
+  { id: 'ratings', title: () => t('guide.section_ratings_title'), text: () => t('guide.section_ratings_text') },
+  { id: 'statistics', title: () => t('guide.section_statistics_title'), text: () => t('guide.section_statistics_text') },
 ];
 let stopSectionTips = () => {};
 export const beastSectionTourActive = f => guideActive(f) && currentLesson(f)?.id === 'beast' && !f.guide.skipPending;
-/** Pick the section nearest the reading line; do not queue tips passed while scrolling. */
+/** Pick the section nearest the reading line; do not queue sections passed while scrolling. */
 export function visibleBeastSection(sections, top, bottom) {
-  return sections.filter(x=>x.bottom>top && x.top<bottom).sort((a,b)=>Math.abs(a.top-top)-Math.abs(b.top-top))[0]?.id || null;
+  return sections.filter(x => x.bottom > top && x.top < bottom)
+    .sort((a, b) => Math.abs(a.top - top) - Math.abs(b.top - top))[0]?.id || null;
 }
-export function mountBeastSectionTips(f, root, save, env = globalThis) {
+function showBeastSection(tip, onClose) {
+  const popup = sheet(`<p class="dim">${esc(t('guide.commissioner'))}</p><p>${esc(tip.text())}</p><button class="btn primary block" data-action="guide-section-ok">${t('guide.continue')}</button>`, { title: tip.title(), onClose });
+  popup.el.classList.add('beast-section-tour');
+  popup.el.querySelector('[data-action="guide-section-ok"]').onclick = popup.close;
+  return popup;
+}
+/** Scroll-triggered lesson sheets use the normal modal's scroll lock, focus trap and Back/Escape handling. */
+export function mountBeastSectionTips(f, root, save, env = globalThis, show = showBeastSection) {
   if (!root || !beastSectionTourActive(f)) return () => {};
   const doc = root.ownerDocument;
   const sections = [...root.querySelectorAll('[data-guide-section]')];
   if (!sections.length) return () => {};
-  const panel = doc.createElement('aside'); panel.className='beast-section-tip'; panel.setAttribute('role','status'); panel.hidden=true;
-  root.appendChild(panel); root.classList.add('guide-section-tour');
-  let timer=null, stopped=false, current=null;
-  const cleanup=()=>{stopped=true;env.clearTimeout(timer);env.removeEventListener('scroll',schedule);env.removeEventListener('resize',schedule);doc.removeEventListener('click',schedule);panel.remove();root.classList.remove('guide-section-tour');};
-  const check=()=>{
-    if(stopped)return;
-    if(!root.isConnected || !beastSectionTourActive(f)){cleanup();return;}
-    if(doc.querySelector('.sheet-backdrop'))return;
-    const top=(doc.querySelector('.topbar')?.getBoundingClientRect().bottom||48)+12;
-    const bottom=Math.min(env.innerHeight*.65,(doc.querySelector('.tabbar')?.getBoundingClientRect().top||env.innerHeight)-150);
-    const id=visibleBeastSection(sections.map(el=>({id:el.dataset.guideSection,...rect(el)})),top,bottom);
-    if(id===current)return;
-    current=id;panel.hidden=true;
-    const tip=BEAST_SECTION_TIPS.find(x=>x.id===id);
-    if(!tip || f.guide.cardSectionsSeen?.[id])return;
-    panel.innerHTML=`<div><b>${esc(tip.title())}</b><p>${esc(tip.text())}</p></div><button class="btn small ghost" aria-label="${esc(t('shared.close'))}">×</button>`;
-    panel.querySelector('button').onclick=()=>{panel.hidden=true;};panel.hidden=false;
-    (f.guide.cardSectionsSeen ||= {})[id]=true;save?.();
-  };
-  function rect(el){const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom};}
-  function schedule(){env.clearTimeout(timer);timer=env.setTimeout(check,200);}
-  env.addEventListener('scroll',schedule,{passive:true});env.addEventListener('resize',schedule);doc.addEventListener('click',schedule);schedule();
+  let timer = null, stopped = false, current = null, popup = null, target = null;
+  function cleanup() {
+    stopped = true;
+    env.clearTimeout(timer);
+    env.removeEventListener('scroll', schedule);
+    env.removeEventListener('resize', schedule);
+    doc.removeEventListener('click', schedule);
+    popup?.close(); popup = null;
+    target?.classList.remove('guide-section-focus'); target = null;
+  }
+  function check() {
+    if (stopped) return;
+    if (!root.isConnected || !beastSectionTourActive(f)) { cleanup(); return; }
+    if (popup || doc.querySelector('.sheet-backdrop')) return;
+    const top = (doc.querySelector('.topbar')?.getBoundingClientRect().bottom || 48) + 12;
+    const bottom = Math.min(env.innerHeight * .75, doc.querySelector('.tabbar')?.getBoundingClientRect().top || env.innerHeight);
+    const id = visibleBeastSection(sections.map((el, index) => {
+      const r = el.getBoundingClientRect();
+      const end = sections[index + 1]?.getBoundingClientRect().top ?? root.getBoundingClientRect().bottom;
+      return { id: el.dataset.guideSection, top: r.top, bottom: Math.max(r.bottom, end) };
+    }), top, bottom);
+    if (id === current) return;
+    current = id;
+    const tip = BEAST_SECTION_TIPS.find(x => x.id === id);
+    // A separate acknowledgment field lets players who saw the previous small tips get the new tour.
+    if (!tip || f.guide.cardTourSeen?.[id]) return;
+    target = sections.find(el => el.dataset.guideSection === id);
+    target.classList.add('guide-section-focus');
+    popup = show(tip, () => {
+      popup = null;
+      target?.classList.remove('guide-section-focus'); target = null;
+      // Navigation cleanup closes the sheet without marking an unread stop as acknowledged.
+      if (stopped) return;
+      (f.guide.cardTourSeen ||= {})[id] = true; save?.();
+    });
+  }
+  function schedule() { env.clearTimeout(timer); timer = env.setTimeout(check, 180); }
+  env.addEventListener('scroll', schedule, { passive: true });
+  env.addEventListener('resize', schedule);
+  doc.addEventListener('click', schedule);
+  schedule();
   return cleanup;
 }

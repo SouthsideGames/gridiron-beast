@@ -1,3 +1,5 @@
+import { franchiseTabs, TAB_OF } from './ui/phone-navigation.js';
+export { TAB_OF };
 import { registerPolishScreens } from './ui/polish.js';
 import { installActivityLifecycle } from './ui/activity.js';
 import { guideHtml, initGuidedWeek, mountGuide } from './ui/guided-week.js';
@@ -213,12 +215,7 @@ function saveOutcome(r) {
 function applySettings() { document.documentElement.dataset.comfortableText = app.settings.comfortableText ? '1' : '0'; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); }
 
 function tabs(ctx, screenName) {
-  if (!app.f || !ctx.inFranchise || isArchived(app.f)) return null; // an archive shows the Legacy shell, not the weekly tabs
-  const items = [['hq', 'HQ', '🏠'], ['roster', $t('franchises.roster'), '🐾'], ['playbook', $t('franchises.plays'), '📋'], ['league', $t('franchises.league'), '🏆'], ['more', $t('franchises.more'), '☰']];
-  const counts = {}; for (const n of F.notices(app.f)) counts[n.screen] = (counts[n.screen] || 0) + 1;
-  // Developer review counts stay on Developer Tools, separate from franchise decisions.
-  // // developer reviews (GDD §23.7)
-  return items.map(([screen, label, icon]) => ({ screen, label, icon, badge: counts[screen] || 0, active: screenName === screen || (ctx.tabOf?.[screenName] === screen) }));
+  return ctx.inFranchise ? franchiseTabs(app.f, screenName) : null;
 }
 
 export function start() {
@@ -416,14 +413,5 @@ async function reconcileCloudInner({ playedAt = null } = {}) {
 function onStoreStatus() {
   const el = document.getElementById('save-status'); if (el) el.innerHTML = saveStatusText(app);
 }
-
-/** Which bottom tab a secondary screen belongs to. */
-export const TAB_OF = {
-  hq: 'hq', commissioner: 'hq', postseason: 'hq', legend: 'hq', scout: 'hq', recruit: 'hq', training: 'hq', scoutopp: 'hq', gameplan: 'playbook', lineup: 'roster', pregame: 'hq', match: 'hq',
-  roster: 'roster', monster: 'roster', assign: 'roster', contracts: 'roster', famarket: 'roster', staff: 'more',
-  playbook: 'playbook', playdetail: 'playbook', practice: 'playbook', audit: 'more',
-  league: 'league', schedule: 'league', standings: 'league', history: 'league',
-  more: 'more', settings: 'more', developer: 'more', 'test-session': 'more', about: 'more', dex: 'more', hof: 'more', achievements: 'more',
-};
 
 start();

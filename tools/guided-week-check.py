@@ -49,15 +49,18 @@ with sync_playwright() as pw:
         click(page, '[data-action="monster"]')
         page.wait_for_selector('.screen-monster')
         assert page.locator('.commissioner-guide h2').inner_text() == 'Know Your Beast'
-        page.locator('[data-guide-section="ratings"]').scroll_into_view_if_needed()
-        page.wait_for_timeout(350)
-        assert page.locator('.beast-section-tip:not([hidden])').count() == 1
-        assert 'Individual Ratings' in page.locator('.beast-section-tip').inner_text()
-        page.locator('.beast-section-tip button').click()
-        page.wait_for_timeout(250)
-        assert page.locator('.beast-section-tip:not([hidden])').count() == 0
+        for section in ['bio', 'temper', 'ratings', 'statistics']:
+            page.locator(f'[data-guide-section="{section}"]').scroll_into_view_if_needed()
+            page.wait_for_selector('.beast-section-tour')
+            assert page.evaluate("document.documentElement.classList.contains('sheet-open')"), 'tour does not pause page scrolling'
+            page.locator('.beast-section-tour [data-action="guide-section-ok"]').click()
+            page.wait_for_timeout(400)
+        assert page.evaluate('Object.keys(__gb.f.guide.cardTourSeen).length') == 4
+        page.locator('[data-guide-section="bio"]').scroll_into_view_if_needed()
+        page.wait_for_timeout(300)
+        assert page.locator('.beast-section-tour').count() == 0
         click(page, '[data-action="guide-next"]')
-        assert page.locator('.beast-section-tip').count() == 0
+        assert page.locator('.beast-section-tour').count() == 0
         click(page, '[data-action="guide-open"]')
         # Pick an eligible alternate using real assign controls; never auto-complete from a click alone.
         slots = page.locator('[data-action="slot"]')
@@ -73,7 +76,11 @@ with sync_playwright() as pw:
             page.evaluate("async () => (await import('/src/ui/router.js')).back()")
         assert changed
         assert page.locator('.commissioner-guide h2').inner_text() == 'Meet Your Coaches'
-        click(page, '[data-action="guide-open"]')
+        assert 'guide-target' in page.locator('.tabbar [data-screen="hq"]').get_attribute('class')
+        click(page, '.tabbar [data-screen="hq"]')
+        page.wait_for_selector('.screen-hq')
+        assert page.locator('.screen-hq [data-screen="staff"].guide-target').count() == 1
+        click(page, '.screen-hq [data-screen="staff"]')
         click(page, '[data-action="guide-next"]')
         assert page.locator('.commissioner-guide h2').inner_text() == 'Your First Draft'
         click(page, '[data-action="guide-book"]')

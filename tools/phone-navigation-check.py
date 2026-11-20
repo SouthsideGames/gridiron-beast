@@ -29,6 +29,23 @@ try:
    def go(name):
     page.evaluate("async name=>(await import('/src/ui/router.js')).go(name,{}, {reset:true})",name);page.wait_for_timeout(200);scenes()
    go('hq')
+   assert page.locator('.tabbar [data-screen="office"]').count()==1
+   assert page.locator('.tabbar [data-screen="playbook"]').count()==0
+   assert page.locator('.polish-deals').count()==0, 'empty trades section'
+   assert not page.locator('main.screen summary',has_text='GM Career').count()
+   page.locator('.tabbar [data-screen="office"]').click();page.wait_for_timeout(200);scenes()
+   assert page.locator('.screen-office').count()==1
+   page.locator('[data-action="gmcareer"]').click();page.wait_for_timeout(200)
+   assert page.locator('.screen-gm-jobs').count()==1
+   assert page.locator('.tabbar [data-screen="office"]').get_attribute('aria-current')=='page'
+   page.locator('.tabbar [data-screen="more"]').click();page.wait_for_timeout(200)
+   assert page.locator('.screen-more [data-screen="office"]').count()==0
+   assert page.locator('.screen-more [data-screen="playbook"]').count()==0
+   page.locator('.tabbar [data-screen="office"]').click();page.wait_for_timeout(200)
+   assert page.locator('.screen-gm-jobs').count()==1, 'Office tab history was not retained'
+   page.locator('.tabbar [data-screen="office"]').click();page.wait_for_timeout(200)
+   assert page.locator('.screen-office').count()==1, 'second Office tap should return to its root'
+   go('hq')
    next_button=page.locator('.phone-hq-next [data-phone-next]');assert next_button.count()==1
    page.evaluate('window.scrollTo(0,document.body.scrollHeight)')
    bounds=next_button.bounding_box();tab=page.locator('.tabbar').bounding_box()

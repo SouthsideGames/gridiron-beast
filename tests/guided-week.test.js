@@ -208,22 +208,49 @@ test('beast section guidance is limited to the early card lesson', async () => {
   advanceGuide(f);assert.equal(beastSectionTourActive(f),false);
   assert.equal(visibleBeastSection([{id:'past',top:-300,bottom:20},{id:'ratings',top:100,bottom:140},{id:'below',top:800,bottom:900}],60,400),'ratings');
 });
-test('section tips persist once per section, dismiss without advancing, and clean up listeners', async () => {
+test('section tour waits for dismissal, persists acknowledgments, and closes safely on navigation', async () => {
   const {mountBeastSectionTips}=await import('../src/ui/guided-week.js');
   const f=fresh();at(f,'beast');const index=f.guide.index,rng=f.rngState;
-  const listeners=new Map(),docListeners=new Map(),children=[];let pending=null,modal=false,active='overview',saves=0;
-  const button={};const panel={hidden:true,setAttribute(){},querySelector:()=>button,remove(){children.splice(children.indexOf(panel),1);}};
-  const doc={createElement:()=>panel,querySelector:s=>s==='.sheet-backdrop'?(modal?{}:null):null,addEventListener:(k,v)=>docListeners.set(k,v),removeEventListener:k=>docListeners.delete(k)};
-  const sections=['overview','ratings'].map(id=>({dataset:{guideSection:id},getBoundingClientRect:()=>({top:active===id?100:900,bottom:active===id?200:1000})}));
-  const root={ownerDocument:doc,isConnected:true,querySelectorAll:()=>sections,appendChild:n=>children.push(n),classList:{add(){},remove(){}}};
+  f.guide.cardSectionsSeen={bio:true,temper:true,ratings:true}; // Small tips do not suppress the revised tour.
+  const listeners=new Map(),docListeners=new Map();let pending=null,modal=false,scroll=0,saves=0,open=null;
+  const shown=[];const marked=new Set();
+  const doc={querySelector:s=>s==='.sheet-backdrop'?(modal?{}:null):null,addEventListener:(k,v)=>docListeners.set(k,v),removeEventListener:k=>docListeners.delete(k)};
+  const sections=['bio','temper','ratings','statistics'].map((id,i)=>({dataset:{guideSection:id},classList:{add:()=>marked.add(id),remove:()=>marked.delete(id)},getBoundingClientRect:()=>({top:100+i*900-scroll,bottom:150+i*900-scroll})}));
+  const root={ownerDocument:doc,isConnected:true,querySelectorAll:()=>sections,getBoundingClientRect:()=>({bottom:4000-scroll})};
   const env={innerHeight:844,setTimeout:fn=>(pending=fn,1),clearTimeout:()=>{pending=null;},addEventListener:(k,v)=>listeners.set(k,v),removeEventListener:k=>listeners.delete(k)};
+  const show=(tip,dismiss)=>{shown.push(tip.id);modal=true;let closed=false;open={close(){if(closed)return;closed=true;modal=false;dismiss();}};return open;};
   const flush=()=>{const fn=pending;pending=null;fn?.();};
-  let cleanup=mountBeastSectionTips(f,root,()=>saves++,env);flush();assert.equal(panel.hidden,false);assert.equal(saves,1);
-  button.onclick();assert.equal(panel.hidden,true);assert.equal(f.guide.index,index);
-  active='ratings';modal=true;listeners.get('scroll')();flush();assert.equal(f.guide.cardSectionsSeen.ratings,undefined);
-  modal=false;docListeners.get('click')();flush();assert.equal(panel.hidden,false);assert.equal(saves,2);
-  active='overview';listeners.get('scroll')();flush();assert.equal(panel.hidden,true,'seen sections do not repeat');
-  cleanup();assert.equal(children.length,0);assert.equal(listeners.size,0);assert.equal(docListeners.size,0);
-  cleanup=mountBeastSectionTips(JSON.parse(JSON.stringify(f)),root,()=>saves++,env);flush();assert.equal(panel.hidden,true);assert.equal(saves,2,'reload retains seen flags');
-  cleanup();assert.equal(f.rngState,rng);assert.equal(f.guide.index,index);
+  const move=y=>{scroll=y;listeners.get('scroll')();flush();};
+  let cleanup=mountBeastSectionTips(f,root,()=>saves++,env,show);flush();assert.deepEqual(shown,['bio']);
+  assert.equal(f.guide.cardTourSeen,undefined,'opening is not acknowledgment');assert.ok(marked.has('bio'));
+  move(900);assert.deepEqual(shown,['bio'],'no second popup while one is open');
+  open.close();assert.equal(saves,1);assert.equal(f.guide.cardTourSeen.bio,true);assert.equal(marked.size,0);
+  move(900);assert.deepEqual(shown,['bio','temper']);open.close();
+  move(0);assert.equal(shown.length,2,'seen sections do not repeat');
+  modal=true;move(1850);assert.equal(shown.length,2,'other sheets have priority');
+  modal=false;docListeners.get('click')();flush();assert.equal(shown.at(-1),'ratings','section still triggers after its short heading has scrolled away');
+  cleanup();assert.equal(saves,2,'navigation does not acknowledge an unread popup');assert.equal(modal,false);
+  assert.equal(listeners.size,0);assert.equal(docListeners.size,0);assert.equal(marked.size,0);
+  const loaded=JSON.parse(JSON.stringify(f));
+  cleanup=mountBeastSectionTips(loaded,root,()=>saves++,env,show);flush();assert.equal(shown.at(-1),'ratings');open.close();
+  move(0);assert.equal(shown.filter(id=>id==='bio').length,1,'reload retains acknowledged stops');
+  move(2700);assert.equal(shown.at(-1),'statistics');open.close();
+  assert.equal(loaded.guide.index,index);assert.equal(loaded.rngState,rng);cleanup();
+});
+test('coaches guidance teaches HQ first and its highlighted tab ignores remembered subpages', async () => {
+  const {guideTargetSelectors,initGuidedWeek}=await import('../src/ui/guided-week.js');
+  const f=fresh();at(f,'coaches');
+  for(const screen of ['monster','roster','assign']) assert.deepEqual(guideTargetSelectors(f,screen),['[data-action="router-tab"][data-screen="hq"]']);
+  assert.deepEqual(guideTargetSelectors(f,'hq'),['[data-action="go"][data-screen="staff"]']);
+  assert.deepEqual(guideTargetSelectors(f,'staff'),[]);
+  const previous=globalThis.document;let listener=null,route=null,stopped=false;
+  globalThis.document={addEventListener:(type,fn)=>{listener=fn;}};
+  try {
+    initGuidedWeek({app:{f,save(){}},Router:{registerScreen(){},setGuard(){},currentScreen:()=>({name:'monster'}),go:(...args)=>{route=args;}}});
+    const button={dataset:{action:'router-tab',screen:'hq'}};
+    listener({target:{closest:()=>button},preventDefault(){},stopImmediatePropagation(){stopped=true;}});
+    assert.equal(stopped,true);assert.deepEqual(route,['hq',{}, {reset:true}]);
+    route=null;f.guide.enabled=false;
+    listener({target:{closest:()=>button}});assert.equal(route,null,'normal tab history remains when guidance is off');
+  }finally{if(previous===undefined)delete globalThis.document;else globalThis.document=previous;}
 });
