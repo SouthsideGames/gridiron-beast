@@ -98,7 +98,7 @@ export function initGuidedWeek({ app, Router }) {
     if (l.id === 'coaches' && screen !== 'hq' && a === 'router-tab' && b.dataset.screen === 'hq') {
       e.preventDefault(); e.stopImmediatePropagation(); Router.go('hq', {}, { reset: true }); return;
     }
-    const actionGate = screen === 'hq' && (a === 'autorun' || (['scout', 'recruit', 'training', 'scoutopp', 'gameplan', 'lineup', 'game', 'draft', 'goals'].includes(a) && !((l.kind === 'draft' && a === 'draft') || (l.kind === 'board' && a === 'goals') || (l.kind === 'game' && a === 'game') || a === l.screen)));
+    const actionGate = screen === 'hq' && (a === 'autorun' || a === 'simahead' || (['scout', 'recruit', 'training', 'scoutopp', 'gameplan', 'lineup', 'game', 'draft', 'goals'].includes(a) && !((l.kind === 'draft' && a === 'draft') || (l.kind === 'board' && a === 'goals') || (l.kind === 'game' && a === 'game') || a === l.screen)));
     if (actionGate && allowedScreens(f)) { e.preventDefault(); e.stopImmediatePropagation(); toast(t('guide.blocked')); return; }
     if (a === 'monster') { guideEvent(f, 'monster'); app.save(); }
     if (a === 'compare') { const before = f.guide.index; guideEvent(f, 'compare'); app.save(); if (f.guide.index !== before) refreshGuidePanel(f, screen); }
