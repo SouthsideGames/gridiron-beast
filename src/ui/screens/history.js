@@ -104,8 +104,8 @@ function awardsScreenHtml(f, params) {
 
 // ---------------------------------------------------------------- Records
 function recordsHtml(f, params) {
-  const tab = ['game', 'season', 'career', 'team'].includes(params.tab) ? params.tab : 'game';
-  const tabs = [['game', $t('hq.single_game')], ['season', $t('hq.season_3')], ['career', $t('hq.your_careers')], ['team', $t('hq.team')]];
+  const tab = ['game', 'season', 'career', 'team', 'preLeague'].includes(params.tab) ? params.tab : 'game';
+  const tabs = [['game', $t('hq.single_game')], ['season', $t('hq.season_3')], ['career', $t('hq.your_careers')], ['team', $t('hq.team')], ...(f.preLeagueHistory ? [['preLeague', 'Before Year 1']] : [])];
   const model = Object.fromEntries(historicalRecords(f).map((s) => [s.scope, s.rows]));
   const holder = (r, cat) => { const id = r.name ? (r.id || resolveRecordHolder(f, r, { scope: tab === 'season' ? 'season' : 'game', cat }).id) : null; return id ? careerLink(id, r.name) : esc(r.name || r.team || ''); };
   const prevLine = (p) => (p ? `<div class="sub hh-prev">${$t('history.previous_record')} <b class="mono">${p.value}</b> · ${p.name ? (p.id ? careerLink(p.id, p.name) : esc(p.name)) : esc(p.team || '')}${p.name && p.team ? ` (${esc(p.team)})` : ''}${p.year != null ? ` · ${yearOf(p.year)}` : ''}</div>` : '');
@@ -114,6 +114,7 @@ function recordsHtml(f, params) {
   let body = ''; let held = null;
   if (tab === 'game') { body = model.game.map((x) => row(x.label, x.record, (r) => `${$t('history.game_line', { team: esc(r.team), opp: esc(r.opp), year: yearOf(r.year), week: r.week })}${playoff(r)}`, x.category)).join(''); held = model.game; }
   else if (tab === 'season') { body = model.season.map((x) => row(x.label, x.record, (r) => `${esc(r.team)} · ${yearOf(r.year)}`, x.category)).join('') + `<p class="dim">${$t('hq.season_records_are_written_when_a')}</p>`; held = model.season; }
+  else if (tab === 'preLeague') { body = (model.preLeague || []).map(x => row(x.label, x.record, r => `${esc(r.team)} · Season ${r.year}`, x.category)).join(''); held = model.preLeague; }
   else if (tab === 'career') { const L = universeCareerLeaders(f, { n: 1 }); body = RECORD_CATEGORIES.map((c) => { const r = L[c.id]?.[0]; return row(c.label, r ? { ...r, team: r.club || '' } : null, (x) => `${$t('hq.regular_season_games', { club: x.club ? esc(x.club) : x.where === 'legend' ? 'retired' : 'free agent', games: x.games })}`, c.id); }).join('') + `<p class="dim">${$t('hq.career_totals_across_every_monster_the')}</p>`; }
   else { body = model.team.map((x) => row(x.label, x.record, (r) => `${$t('history.team_game_line', { score: esc(r.score || ''), opp: esc(r.opp), year: yearOf(r.year), week: r.week })}${playoff(r)}`)).join(''); held = model.team; }
   const set = held ? held.filter((x) => x.record) : []; const mine = set.filter((x) => x.record.team === f.club).length;
