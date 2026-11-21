@@ -1,3 +1,4 @@
+import { positionRatingAttributes } from '../position-ratings.js';
 import { beastSpeciesHtml, beastSpeciesLabel } from '../beast-identity.js';
 import { prepareLineupUndo } from '../phone-navigation.js';
 import { bestLineupMessage } from '../followup-polish.js';
@@ -17,7 +18,7 @@ import { extensionEligible } from '../../franchise/fa-engine.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS, PACKAGE_SLOT_USE, ATTRIBUTES, positionOf, canPlay } from '../../data/personnel.js';
 import { temperSummary } from '../../data/temper.js';
 import * as FR from '../../core/fraction.js';
-import { monsterOverall, effectiveAttributes, TYPES, ABILITIES, xpForLevel, HEADLINE, headlineAttributes, resolveSpecies, POINTS_PER_LEVEL, schemePreferences, evolutionReady, nextEvolution, pointCost } from '../../data/monsters.js';
+import { monsterOverall, effectiveAttributes, TYPES, ABILITIES, xpForLevel, headlineAttributes, resolveSpecies, POINTS_PER_LEVEL, schemePreferences, evolutionReady, nextEvolution, pointCost } from '../../data/monsters.js';
 import { abilitiesHtml, masteryBarHtml, hasAbilities, MODE_LABEL } from '../ability-info.js';
 import { apexEmblem, apexClass, apexFactsHtml, openApexDiscovery } from '../apex-ui.js';
 import { apexKnown } from '../../franchise/t8/discovery.js';
@@ -43,10 +44,10 @@ import { t as $t, fieldText } from '../../text/index.js';
 
 const ATTR_LABEL = { speed: $t('roster.speed'), agility: $t('roster.agility'), strength: $t('roster.strength'), awareness: $t('roster.awareness'), catching: $t('roster.catching'), arm: $t('roster.arm'), accuracy: $t('roster.accuracy'), blocking: $t('roster.blocking'), tackling: $t('roster.tackling'), coverage: $t('roster.coverage'), durability: $t('roster.durability'), kicking: $t('roster.kicking') };
 
-/** Four headline bars for a monster. */
+/** The attributes most useful for a quick read of this position. */
 export function headlineHtml(m, opts) {
-  const h = headlineAttributes(m, opts);
-  return `<div class="headline">${HEADLINE.map((x) => `<div class="hl" title="${esc(x.help)}"><span class="hl-v ${h[x.key] >= 70 ? 'hi' : h[x.key] < 50 ? 'lo' : ''}">${h[x.key]}</span><span class="hl-l">${x.label}</span><div class="bar ${h[x.key] < 45 ? 'bad' : h[x.key] < 60 ? 'warn' : ''}"><i style="width:${h[x.key]}%"></i></div></div>`).join('')}</div>`;
+  const values=effectiveAttributes(m,opts),keys=positionRatingAttributes(opts?.slotPosition||m.position);
+  return `<div class="headline position-ratings">${keys.map(key=>{const value=values[key];return `<div class="hl" data-rating="${key}"><span class="hl-v ${value>=70?'hi':value<50?'lo':''}">${value}</span><span class="hl-l">${ATTR_LABEL[key]}</span><div class="bar ${value<45?'bad':value<60?'warn':''}"><i style="width:${value}%"></i></div></div>`;}).join('')}</div>`;
 }
 /** Captain Partnerships (GDD §27.4B): starters now, and a gentle note when a captain just left the starting lineup. */
 const starters = (f) => new Set(Object.values(buildDepthChart(f.roster, f.lineupManual, f.depth)).filter(Boolean));
@@ -192,9 +193,9 @@ export function registerRosterScreens(Router, app) {
           <button class="btn small" data-action="species" style="margin-top:6px">${$t('roster.in_the_beast_dex', { name: esc(resolveSpecies(m).name) })}</button></div>
         <h3 data-guide-section="ratings">${$t('roster.ratings')}</h3><p class="dim">${$t('polish.growth_categories')}</p>${headlineHtml(m)}${schemeHtml(f, m)}
         ${bank > 0 && F.pointsLocked(f) ? `<div class="panel points">${$t('roster.b_training_points_banked_frozen_b', { bank, n: bank })}<div class="dim">${$t('roster.points_are_frozen_until_every_contract')}</div></div>` : ''}${canTrain ? `<div class="panel points" data-training="open">${$t('roster.b_training_points_to_invest_b', { bank, n: bank })}<div class="dim">${$t('roster.a_full_training_bar_banks_one', { apex: apex ? '' : $t('roster.and_past_his_peak_his_age') })}</div><button class="btn small" data-action="autospendone" style="margin-top:6px">${$t('roster.let_the_trainer_invest_them')}</button></div>` : ''}
-        <details style="margin-top:8px" ${canTrain ? 'open' : ''}><summary class="muted" style="cursor:pointer">${$t('roster.all_twelve_attributes')}</summary><p class="dim">Current rating / training limit. “Now” shows a temporary change from the base rating.</p><div class="attr-grid" style="margin-top:8px">${ATTRIBUTES.map((k) => { const helps = attributeHelps(m.position, k); const cur = d ? d.current[k] : base[k]; const ceil = d ? d.potential[k] : null; const atCeil = ceil != null && cur >= ceil; const cost = d ? FR.toNumber(trainingCost(d, m, k).effective) : null; const prog = d ? Math.floor(FR.toNumber(attributeBar(d, m, k)) * 100) : 0; const costText = cost == null ? '' : cost === 1 ? $t('roster.1_point_per_1') : cost < 1 ? `${1 / cost} per point` : `${$t('roster.points_per_1', { cost })}`;
+        <details style="margin-top:8px" ${canTrain ? 'open' : ''}><summary class="muted" style="cursor:pointer">${$t('roster.all_twelve_attributes')}</summary><div class="attr-grid" style="margin-top:8px">${ATTRIBUTES.map((k) => { const helps = attributeHelps(m.position, k); const cur = d ? d.current[k] : base[k]; const ceil = d ? d.potential[k] : null; const atCeil = ceil != null && cur >= ceil; const cost = d ? FR.toNumber(trainingCost(d, m, k).effective) : null; const prog = d ? Math.floor(FR.toNumber(attributeBar(d, m, k)) * 100) : 0; const costText = cost == null ? '' : cost === 1 ? $t('roster.1_point_per_1') : cost < 1 ? `${1 / cost} per point` : `${$t('roster.points_per_1', { cost })}`;
           return `<div class="attr ${helps ? '' : 'no-help'}" data-attr-row="${k}" title="${esc(statMeaning(m.position, k))}" style="${helps ? '' : 'opacity:.6'}"><button class="linkish" data-action="statinfo" data-attr="${k}" style="all:unset;cursor:pointer;text-decoration:underline dotted">${ATTR_LABEL[k]}</button><div class="bar ${eff[k] < 45 ? 'bad' : eff[k] < 60 ? 'warn' : ''}"><i style="width:${eff[k]}%"></i>${ceil != null ? `<u class="ceil" style="left:${Math.min(100, ceil)}%" aria-hidden="true"></u>` : ''}</div><span class="v" style="color:${eff[k] > base[k] ? 'var(--good)' : eff[k] < base[k] ? 'var(--bad)' : 'inherit'}">${eff[k]}${eff[k] !== base[k] ? `<small class="polish-rating-change">${eff[k] > base[k] ? '+' : ''}${eff[k]-base[k]} Now</small>` : ''}${ceil != null ? `<small class="dim">/${ceil}</small>` : ''}</span>${canTrain ? `<button class="btn small plus" data-action="spend" data-attr="${k}" ${atCeil ? `disabled title="${$t('roster.at_his_ceiling', { ceil })}"` : `title="${costText}${prog ? $t('roster.of_the_next_1_already_invested', { prog }) : ''}"`} aria-label="${$t('roster.invest_1_point_in', { attr: ATTR_LABEL[k], cost: atCeil ? $t('roster.at_ceiling') : costText })}">${atCeil ? $t('roster.limit') : '+'}${!atCeil && cost !== 1 ? `<small class="cost">${cost < 1 ? `×${1 / cost}` : `÷${cost}`}</small>` : ''}</button>` : ''}${prog && !atCeil ? `<i class="invest" style="width:${prog}%" title="${$t('roster.of_the_next_1_invested', { prog })}"></i>` : ''}</div>`; }).join('')}</div>
-        <p class="dim" style="margin-top:8px">${$t('roster.each_value_is_shown_against_that', { toLowerCase: esc(POSITION_NAME[m.position]?.toLowerCase() || m.position) })}</p>
+        <p class="dim" style="margin-top:8px">${$t('roster.each_value_is_shown_against_that')}</p>
         <button class="btn small" data-action="statguide" style="margin-top:4px">${$t('roster.what_the_stats_mean_for_a', { toLowerCase: esc(POSITION_NAME[m.position]?.toLowerCase() || m.position) })}</button></details>
         ${monsterStatsHtml(m, f)}`;
     },

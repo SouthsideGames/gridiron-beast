@@ -29,8 +29,8 @@ export const FOCUS = Object.freeze({
   OL: [['starts', 'Starts'], ['blockWinPct', 'Blocks won %'], ['sacksAllowed', 'Sacks allowed'], ['pbSnaps', 'Pass blocks']],
   DL: [['tacklesTotal', 'Tackles'], ['sacks', 'Sacks'], ['tfl', 'Tackles for loss'], ['pressures', 'Pressures']],
   LB: [['tacklesTotal', 'Tackles'], ['sacks', 'Sacks'], ['int', 'Interceptions'], ['tfl', 'Tackles for loss']],
-  CB: [['int', 'Interceptions'], ['pd', 'Passes defended'], ['tacklesTotal', 'Tackles'], ['compPctAllowed', 'Comp % allowed']],
-  S: [['tacklesTotal', 'Tackles'], ['int', 'Interceptions'], ['pd', 'Passes defended'], ['ff', 'Forced fumbles']],
+  CB: [['int', 'Interceptions'], ['pd', $t('franchise.passes_defended')], ['tacklesTotal', 'Tackles'], ['compPctAllowed', 'Comp % allowed']],
+  S: [['tacklesTotal', 'Tackles'], ['int', 'Interceptions'], ['pd', $t('franchise.passes_defended')], ['ff', 'Forced fumbles']],
   K: [['fgm', 'Field goals'], ['fgPct', 'FG %'], ['fgLong', 'Longest FG'], ['kickPts', 'Points']],
 });
 const RATE_KEYS = new Set(['compPct', 'ypc', 'ypr', 'blockWinPct', 'compPctAllowed', 'fgPct']);

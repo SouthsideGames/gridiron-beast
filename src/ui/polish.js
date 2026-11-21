@@ -42,23 +42,30 @@ export function compareBeast(f, m, opts={}) {
   };
   el.addEventListener('change',e=>{if(e.target.matches('[data-compare-target]')){against=choices.find(x=>x.id===e.target.value);draw();}});draw();
 }
-export function pointPlanner(app,id,initialAttribute=null) {
-  const f=app.f;if(isArchived(f))return; let attrs=initialAttribute&&previewInvestment(f,id,[initialAttribute]).ok?[initialAttribute]:[]; let committed=false;
-  const {el,close}=sheet('',{title:t('polish.plan_points')});
+export function pointPlanner(app,id,initialAttribute=null,{open=sheet,ask=confirmSheet,notify=toast}={}) {
+  const f=app.f;if(isArchived(f))return; let attrs=initialAttribute&&previewInvestment(f,id,[initialAttribute]).ok?[initialAttribute]:[]; let committed=false, confirming=false, closed=false;
+  const {el,close}=open('',{title:t('polish.plan_points'),onClose:()=>{closed=true;}});
   let shown=null; // the preview on screen: Confirm commits this one, so a change to the beast since it was drawn is refused
   const draw=()=>{
     const m=f.roster.find(x=>x.id===id);if(!m){close();return;}
     const pv=previewInvestment(f,id,attrs);shown=pv;const after=pv.monster||m;
     const body=el.querySelector('.sheet-body');
-    body.innerHTML=`<b>${esc(m.name)}</b><p>${t('polish.preview_only')}</p><p>${t('polish.points_left',{points:FR.toNumber(after.dev.bank).toLocaleString('en-US',{maximumFractionDigits:2})})}</p><div class="stack">${ATTRIBUTES.map(a=>`<div class="row between"><span>${ATTR_NAME[a]}: ${m.attributes[a]} → <b>${after.attributes[a]}</b></span>${buttons('point-add','+',a)}</div>`).join('')}</div><div class="polish-actions"><span>${t('polish.investments',{n:attrs.length})}</span>${buttons('point-undo',t('polish.undo'))}${buttons('point-confirm',t('polish.confirm'))}</div>`;
+    body.innerHTML=`<b>${esc(m.name)}</b><p>${t('polish.preview_only')}</p><p>${t('polish.points_left',{points:FR.toNumber(after.dev.bank).toLocaleString('en-US',{maximumFractionDigits:2})})}</p><div class="point-plan-rows">${ATTRIBUTES.map(a=>`<div class="point-plan-row ${attrs.includes(a)?'planned':''}"><span>${ATTR_NAME[a]}</span><span class="point-plan-values">${m.attributes[a]} → <b>${after.attributes[a]}</b></span>${buttons('point-add','+',a)}</div>`).join('')}</div><div class="polish-actions point-plan-actions">${buttons('point-undo',t('polish.undo'))}<span role="status">${t('polish.investments',{n:attrs.length})}</span>${buttons('point-confirm',t('polish.confirm'))}</div>`;
+
+    for(const action of ['point-undo','point-confirm'])body.querySelector(`[data-polish="${action}"]`).disabled=!attrs.length;
   };
-  el.addEventListener('click',e=>{
-    const b=e.target.closest('[data-polish]');if(!b||committed)return;
-    if(b.dataset.polish==='point-add') {const next=previewInvestment(f,id,[...attrs,b.dataset.id]);if(!next.ok){toast(next.reason,'bad');return;}attrs.push(b.dataset.id);draw();}
+  el.addEventListener('click',async e=>{
+    const b=e.target.closest('[data-polish]');if(!b||committed||confirming||closed)return;
+    if(b.dataset.polish==='point-add') {const next=previewInvestment(f,id,[...attrs,b.dataset.id]);if(!next.ok){notify(next.reason,'bad');return;}attrs.push(b.dataset.id);draw();}
     if(b.dataset.polish==='point-undo'){attrs.pop();draw();}
     if(b.dataset.polish==='point-confirm'){
-      const r=commitInvestment(f,shown,{locked:app.f!==f||isArchived(f)||F.pointsLocked(f)});
-      if(!r.ok){toast(r.reason,'bad');return;}committed=true;app.save();close();app.polishRefresh?.();
+      if(!attrs.length)return;
+      const selected=shown;confirming=true;
+      try {
+        if(!await ask(t('polish.confirm_points_warning'),{title:t('polish.confirm'),okLabel:t('polish.confirm')}))return;
+        const r=commitInvestment(f,selected,{locked:closed||app.f!==f||isArchived(f)||F.pointsLocked(f)});
+        if(!r.ok){notify(r.reason,'bad');return;}committed=true;app.save();close();app.polishRefresh?.();
+      } finally { confirming=false; }
     }
   });draw();
 }

@@ -57,7 +57,7 @@ function headerHtml(pg, reduced) {
         <div class="cs-sub">${teamLabel ? `<span class="dim">${teamLabel}:</span> ` : ''}${team}</div></div>
       ${rating}
     </div>
-    <div class="cp-tags"><span class="chip cp-status s-${esc(pg.status.key)}" title="${esc(pg.status.detail)}">${esc(pg.status.label)}</span>${desig}${hr?.induction ? `<span class="chip cp-hof">🏛 ${$t('career.class_of', { year: yearOf(hr.induction.inductedYear) })}</span>` : p.honours?.hof ? `<span class="chip cp-hof">${$t('career.hall_of_fame')}</span>` : ''}${p.tier && TIER_LABEL[p.tier] && p.tier !== 'hof' ? `<span class="chip">${esc(TIER_LABEL[p.tier])}</span>` : ''}${p.level != null && pg.status.key !== 'retired' ? `<span class="chip">Lv ${p.level}</span>` : ''}</div>
+    <div class="cp-tags"><span class="chip cp-status s-${esc(pg.status.key)}">${esc(pg.status.label)}</span>${desig}${hr?.induction ? `<span class="chip cp-hof">🏛 ${$t('career.class_of', { year: yearOf(hr.induction.inductedYear) })}</span>` : p.honours?.hof ? `<span class="chip cp-hof">${$t('career.hall_of_fame')}</span>` : ''}${p.tier && TIER_LABEL[p.tier] && p.tier !== 'hof' ? `<span class="chip">${esc(TIER_LABEL[p.tier])}</span>` : ''}${p.level != null && pg.status.key !== 'retired' ? `<span class="chip">Lv ${p.level}</span>` : ''}</div>
     ${hr?.retirementYear != null && pg.status.key === 'retired' ? `<div class="cp-statusline dim">${$t('career.retired_after_the_season', { year: yearOf(hr.retirementYear) })}</div>` : pg.status.detail ? `<div class="cp-statusline dim">${esc(pg.status.detail)}</div>` : ''}
   </div>`;
 }
@@ -166,6 +166,10 @@ export function careerPageHtml(app, params) {
   return `<div class="career-page" data-mid="${esc(r.p.id)}">${headerHtml(pg, reduced)}${tabsHtml(tab)}<div class="cp-pane">${body}</div></div>`;
 }
 
+export function playCareerProfileCry(profile,entering,{play=playMonsterCry,stop=stopCry}={}) {
+  if(!entering||!profile)return;stop();play(profile);
+}
+
 export function registerCareerScreens(Router, app) {
   Router.registerScreen('career', {
     title: ({ params }) => { const r = resolveCareer(app, params); return r ? r.p.name : $t('career.career'); },
@@ -173,7 +177,7 @@ export function registerCareerScreens(Router, app) {
     mount(root, ctx) {
       const params = ctx.params; // this history entry's own params: the section and filters are kept on it for Back
       const r = resolveCareer(app, params); if (!r) return;
-      if (ctx.entering) { stopCry(); playMonsterCry(r.p); }
+      playCareerProfileCry(r.p,ctx.entering);
       const cctx = { f: () => r.f, profile: () => resolveCareer(app, params)?.p, monster: () => (r.readOnly ? null : findMonster(r.f, r.p.id)?.m || null), go: (s, prm) => Router.go(s, prm) };
       const base = careerActions(cctx);
       const pageTimeline = () => { const pg = careerPage(r.f, r.p.id, { profile: resolveCareer(app, params).p }); return pageTimelineHtml(pg, params, !!app.settings?.reducedMotion); };
