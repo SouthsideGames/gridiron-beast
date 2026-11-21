@@ -2266,3 +2266,19 @@ html[data-comfortable-text="1"] .screen-settings .save-data .dim, html[data-comf
 .position-ratings .hl-l { overflow-wrap:anywhere; text-align:center; font-size:11px; }
 
 .position-ratings { grid-template-columns:repeat(2,minmax(0,1fr)); }
+
+/* Roster: keep tools apart and explanations available on demand. */
+.roster-shortcuts { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:12px; margin:12px 0; }
+.screen-roster .roster-bar { gap:12px; flex-wrap:wrap; }
+.roster-lineup-controls { gap:12px; flex-wrap:wrap; margin-bottom:8px; }
+.roster-side-controls { gap:8px; }
+.roster-lineup-controls .roster-tools { gap:8px; margin:0; }
+.roster-info-toggle { width:44px; min-width:44px; height:44px; padding:0; display:grid; place-items:center; border-radius:6px; }
+.roster-section { margin:12px 0; border:1px solid var(--line); border-radius:var(--r); padding:10px; }
+.roster-section > summary, .roster-search > summary { cursor:pointer; font-weight:800; min-height:44px; padding:6px 0; }
+.roster-section[open] > summary { margin-bottom:10px; }
+.roster-search > .roster-search-body { border:0; margin:8px 0 0; padding:0; background:transparent; box-shadow:none; }
+.roster-lineup-info[hidden] { display:none; }
+
+.roster-tools > .btn { min-height:44px; }
+.roster-info-toggle[aria-expanded="true"] { border-color:var(--accent); color:var(--accent); }
