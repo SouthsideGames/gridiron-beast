@@ -5,7 +5,8 @@ import { activityPaused } from '../activity.js';
 // and their order of entry), then ONE continuous battle; the next monster steps up on a knockout until one side has nobody left.
 // Task 10 (owner 2026-11-13): Watch is a live session (createClashSessionT8): the battle plays on by itself, the player taps a reserve
 // in the lineup bar to switch at the next boundary, and the arena is extended in place, never rebuilt. No stay / rotate prompts.
-import { abilityInfo, masteryInfo } from '../ability-info.js';
+import { abilityInfo, masteryInfo, abilitiesHtml } from '../ability-info.js';
+import { compareBeast } from '../polish.js';
 import { esc, delegate, toast, sheet, fmtMoney } from '../dom.js';
 import { monsterSprite } from '../pixel-monster.js';
 import * as F from '../../franchise/franchise.js';
@@ -60,8 +61,8 @@ function bindings(app, Router) {
         const m = p?.monster || f.roster.find((x) => x.id === e.wild?.[0]) || e.b?.[0] || null;
         if (!m) return `<div class="panel"><button class="btn primary block" data-action="done">${$t('clash.continue_to_wednesday')}</button></div>`;
         const won = e.result?.winner === 'a';
-        if (e.status === 'offer') { const cap = F.salarySummary(f, m.salary); return `<div class="panel"><p>${$t('clash.b_b_is_impressed_and_wants', { name: esc(m.name), club: esc(f.club) })}</p><p class="muted">${$t('clash.ovr_yr_roster', { position: esc(m.position), monsterOverall: monsterOverall(m), amount: fmtMoney(m.salary), n: f.roster.length + 1, rosterMax: F.ROSTER_MAX })}${cap.over ? ` · <span style="color:var(--bad)">${$t('clash.over_the_cap_by', { amount: fmtMoney(-cap.remaining) })}</span>` : ` ${$t('clash.cap_room_after', { amount: fmtMoney(cap.remaining) })}`}</p>${(() => { const c = consequence(f, 'sign', { salary: m.salary }); return c ? `<p class="assist-note">${esc(c)}</p>` : ''; })()}<div class="row"><button class="btn primary grow" data-action="accept">${$t('clash.sign', { name: esc(m.name) })}</button><button class="btn" data-action="decline">${$t('clash.let_them_go')}</button></div></div>`; }
-        if (e.status === 'pitch') return `<div class="panel"><p>${$t('clash.won_the_battle_but_will_still', { name: esc(m.name) })}</p><div class="grid3">${F.RECRUIT_APPROACHES.map((a) => `<button class="btn small" data-action="pitch" data-v="${a.id}" title="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div><button class="btn block" data-action="decline">${$t('clash.let_them_go')}</button></div>`;
+        if (e.status === 'offer') { const cap = F.salarySummary(f, m.salary); return `<div class="panel"><p>${$t('clash.b_b_is_impressed_and_wants', { name: esc(m.name), club: esc(f.club) })}</p><p class="muted">${$t('clash.ovr_yr_roster', { position: esc(m.position), monsterOverall: monsterOverall(m), amount: fmtMoney(m.salary), n: f.roster.length + 1, rosterMax: F.ROSTER_MAX })}${cap.over ? ` · <span style="color:var(--bad)">${$t('clash.over_the_cap_by', { amount: fmtMoney(-cap.remaining) })}</span>` : ` ${$t('clash.cap_room_after', { amount: fmtMoney(cap.remaining) })}`}</p>${(() => { const c = consequence(f, 'sign', { salary: m.salary }); return c ? `<p class="assist-note">${esc(c)}</p>` : ''; })()}<div class="row"><button class="btn primary grow" data-action="accept">${$t('clash.sign', { name: esc(m.name) })}</button><button class="btn" data-action="details">${$t('clash.details')}</button><button class="btn" data-action="decline">${$t('clash.let_them_go')}</button></div></div>`; }
+        if (e.status === 'pitch') return `<div class="panel"><p>${$t('clash.won_the_battle_but_will_still', { name: esc(m.name) })}</p><div class="grid3">${F.RECRUIT_APPROACHES.map((a) => `<button class="btn small" data-action="pitch" data-v="${a.id}" title="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div><button class="btn block" data-action="details">${$t('clash.details')}</button><button class="btn block" data-action="decline">${$t('clash.let_them_go')}</button></div>`;
         return `<div class="panel"><p>${e.status === 'signed' ? `<b>${esc(m.name)}</b> signed!` : e.status === 'walked' ? `${e.hearsPitch === false ? $t('franchise.beast_clash_pitch_refused', { name: esc(m.name) }) : $t('clash.turned_you_down', { name: esc(m.name) })}` : `${$t('clash.you_let_go', { name: esc(m.name) })}`}${won ? '' : ''}</p><button class="btn primary block" data-action="done">${$t('clash.continue_to_wednesday')}</button></div>`;
       },
       actions(root, rerender) {
@@ -70,6 +71,7 @@ function bindings(app, Router) {
             if (rc.needed) { const { el: sh, close } = sheet(`<p>${$t('clash.choose_who_leaves_so_b_b', { reason: esc(rc.reason), name: esc(p.monster.name) })}</p><div class="list">${rc.list.map((c) => `<button class="item" data-rel="${c.id}"><div class="grow"><div class="name">${esc(c.name)}</div><div class="sub">${c.position} · ${c.ovr} OVR · ${fmtMoney(c.salary)}/yr${c.capOk ? '' : $t('clash.still_over_the_cap_after_this')}</div></div><span class="chip ${c.position === p.monster.position ? 'accent' : ''}">${c.position === p.monster.position ? 'same position' : 'release'}</span></button>`).join('')}</div>`, { title: $t('clash.make_room') });
               sh.addEventListener('click', (ev) => { const id = ev.target.closest('[data-rel]')?.dataset.rel; if (!id) return; close(); const r = F.acceptOffer(f, { releaseId: id }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(r.overCap ? `${$t('clash.signed_you_are_over_the_cap', { name: r.monster.name })}` : `${r.monster.name} signed!`, r.overCap ? 'bad' : 'good', 2600, { sound: r.overCap ? 'unavailable' : 'reward' }); rerender(); }); return; }
             const r = F.acceptOffer(f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(r.overCap ? `${$t('clash.signed_you_are_over_the_cap', { name: r.monster.name })}` : `${r.monster.name} signed!`, r.overCap ? 'bad' : 'good', 2600, { sound: r.overCap ? 'unavailable' : 'reward' }); rerender(); },
+          details: () => { const f = app.f; const p = f.week.prospects[f.week.encounter?.prospectIndex]; if (p?.monster) recruitDetailsSheet(f, p); },
           decline: () => { const r = F.declineOffer(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); rerender(); },
           pitch: (el) => { const f = app.f; const e = f.week.encounter; const p = f.week.prospects[e.prospectIndex];
             const send = (releaseId = null) => { const r = F.recruit(f, e.prospectIndex, el.dataset.v, { releaseId }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(r.success ? `${r.monster.name} signed!` : $t('clash.they_turned_you_down'), r.success ? 'good' : 'info', 2600, { sound: r.success ? 'reward' : null }); rerender(); };
@@ -382,4 +384,17 @@ export function registerClashBattle(Router, app) {
     unmount() { stop(); st.replaying = false; },
   });
   return st;
+}
+
+/**
+ * The beast on offer after a Tuesday Beast Clash (2026-11-21 owner request): what it can do, and how it compares, before
+ * Sign or Let Them Go. Abilities are public, as on a free agent's card; the comparison shows only what the scout revealed,
+ * exactly as the Tuesday recruiting screen does.
+ */
+function recruitDetailsSheet(f, p) {
+  const m = p.monster;
+  const { el, close } = sheet(`<div class="row" style="gap:12px;align-items:center">${monsterSprite(m, 56)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(m.name)}</div><div class="muted">${$t('hq.type_age_board', { position: esc(m.position), type: esc(m.type), age: m.age })}</div>${m.origin ? `<div class="dim">${$t('clash.details_from', { origin: esc(m.origin) })}</div>` : ''}</div></div>
+    <div class="panel tight" style="margin-top:10px">${$t('hq.b_signature_abilities_b')}${abilitiesHtml(m, { seeIt: true })}</div>
+    <button class="btn block" data-details="compare" style="margin-top:8px">${$t('clash.details_compare')}</button>`, { title: $t('clash.details_title', { name: m.name }) });
+  el.querySelector('[data-details="compare"]')?.addEventListener('click', () => { close(); compareBeast(f, m, { ovrKnown: p.revealed >= 4, attrsKnown: p.revealed >= 6, potentialKnown: !!p.potentialKnown, salaryKnown: p.revealed >= 4 && !!p.potentialKnown }); });
 }
