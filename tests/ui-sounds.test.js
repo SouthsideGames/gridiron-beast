@@ -31,8 +31,8 @@ test('repeated taps are limited; meaningful feedback can replace a recent click'
  const f=fixture();f.p.request('tap');f.flush();f.p.request('tap');f.flush();assert.deepEqual(f.played,['tap']);f.p.request('unavailable');f.flush();assert.deepEqual(f.played,['tap','unavailable']);
 });
 test('not-yet-loaded sounds never play later as an unwanted backlog; failures are harmless',async()=>{
- const f=fixture();f.p.buffers.clear();f.ac.decodeAudioData=async()=> 'decoded';f.p.fetcher=async()=>({ok:false});f.p.request('tap');await f.p.loading;f.flush();assert.equal(f.played.length,0);
- f.p.loading=null;f.p.fetcher=async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(8)});await f.p.preload();assert.equal(f.p.buffers.size,7);assert.equal(f.played.length,0);
+ const f=fixture();f.p.buffers.clear();f.ac.createBuffer=(channels,length,sampleRate)=>({length,sampleRate,getChannelData:()=>new Float32Array(length)});f.p.fetcher=async()=>({ok:false});f.p.request('tap');await f.p.loading;f.flush();assert.equal(f.played.length,0);
+ f.p.loading=null;f.p.fetcher=async()=>({ok:true,arrayBuffer:async()=>{const b=fs.readFileSync(new URL('../'+UI_SOUNDS.tap,import.meta.url));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);}});await f.p.preload();assert.equal(f.p.buffers.size,7);assert.equal(f.played.length,0);
 });
 test('control semantics keep disabled/busy/muted controls silent and close/confirm distinct',()=>{
  const el=(action,extra={})=>({dataset:{action},getAttribute:()=>null,closest:()=>null,...extra});
@@ -77,4 +77,35 @@ test('installed click handling starts actual UI sources and follows live SFX set
   setAudioPreferences({sfx:.3});await click('yes');assert.deepEqual(played.at(-1),{id:'confirm',volume:.3});
   setAudioPreferences({muted:true});await click('back');assert.equal(played.length,2);
  }finally{uiSounds.stop();setAudioPreferences({muted:false,sfx:.7});if(previous===undefined)delete globalThis.AudioContext;else globalThis.AudioContext=previous;}
+});
+
+test('real approved WAV samples load and preview without the platform audio decoder',async()=>{
+ const f=fixture();f.p.buffers.clear();f.ac.resume=async()=>{};
+ f.ac.decodeAudioData=()=>{throw Error('Platform decoder unavailable');};
+ f.ac.createBuffer=(channels,length,sampleRate)=>{const data=Array.from({length:channels},()=>new Float32Array(length));return{numberOfChannels:channels,length,sampleRate,getChannelData:c=>data[c]};};
+ f.p.fetcher=async path=>({ok:true,arrayBuffer:async()=>{const b=fs.readFileSync(new URL('../'+path,import.meta.url));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);}});
+ await f.p.preload();assert.equal(f.p.buffers.size,7);
+ for(const [id,path] of Object.entries(UI_SOUNDS)){
+  const bytes=fs.readFileSync(new URL('../'+path,import.meta.url)),buffer=f.p.buffers.get(id);
+  assert.equal(buffer.length,(bytes.length-44)/2);assert.equal(buffer.sampleRate,44100);
+  const data=buffer.getChannelData(0);
+  for(let i=0;i<data.length;i++)assert.equal(data[i],bytes.readInt16LE(44+i*2)/32768);
+  assert.equal(await f.p.preview(id),true);assert.equal(f.played.at(-1),buffer);
+ }
+});
+test('Settings preview reports failure when a source cannot start and can retry',async()=>{
+ const f=fixture();f.ac.resume=async()=>{};const create=f.ac.createBufferSource;
+ f.ac.createBufferSource=()=>({connect(){throw Error('Audio unavailable');},disconnect(){}});
+ assert.equal(await f.p.preview(),false);
+ f.ac.createBufferSource=create;assert.equal(await f.p.preview(),true);
+});
+
+test('gesture wake and Settings preview share one asynchronous resume; rejection is recoverable',async()=>{
+ const f=fixture();f.ac.state='suspended';let resolve,calls=0;
+ f.ac.resume=()=>{calls++;return new Promise(r=>resolve=()=>{f.ac.state='running';r();});};
+ const wake=f.p.wake(f.ac),preview=f.p.preview();assert.equal(calls,1);
+ resolve();await wake;assert.equal(await preview,true);
+ f.ac.state='suspended';f.ac.resume=async()=>{throw Error('Interrupted');};
+ assert.equal(await f.p.preview(),false);
+ f.ac.resume=async()=>{f.ac.state='running';};assert.equal(await f.p.preview(),true);
 });

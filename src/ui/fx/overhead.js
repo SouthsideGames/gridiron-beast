@@ -82,8 +82,11 @@ export function overheadSvg(state, t, pos, { quality = 'full', seed = 0 } = {}) 
       if (x.kind === 'status') return statusBadge(cx, y, x.id, x.remaining, o, x.age);
       if (x.kind === 'battery') return battery(cx, y, x.frac, o, t);
       const colour = x.colour || (state.hud?.[k]?.element ? (ELEMENT[state.hud[k].element] || {}).a : null) || '#ffe36c';
-      const drain = spend ? clamp01((t - spend.t) / 0.5) : 0; const icon = x.icon || state.hud?.[k]?.icon; let g = icon && !(x.c.cd > 0) ? chargeIcon(cx, y, icon, x.c, colour, t, o, drain) : chargeBar(cx, y, x.c, colour, t, o, drain);
-      if (x.bump != null && t - x.bump < 0.6) g += ring(cx, y, 1.2 + (t - x.bump) * 4, colour, 0.25, (1 - (t - x.bump) / 0.6) * o);
+      const drain = spend ? clamp01((t - spend.t) / 0.5) : 0;
+      // A small progress ring beside the base leaves faces and passing lanes clear.
+      const c=x.c, fraction=c.cd>0?1-c.cd/Math.max(1,c.cdMax||c.cd):c.ready?1:(c.n||0)/Math.max(1,c.max||1);
+      const r=.48, circumference=2*Math.PI*r, progress=clamp01(fraction)*(1-drain);
+      const g=`<g class="ability-readiness" opacity="${o}" transform="translate(${cx+1.65} ${cy+.65})"><circle r="${r}" fill="#10241c" stroke="#263e35" stroke-width=".22"/><circle r="${r}" fill="none" stroke="${colour}" stroke-width=".22" stroke-dasharray="${progress*circumference} ${circumference}" transform="rotate(-90)"/>${c.ready&&!c.cd?`<circle r=".19" fill="${colour}"/>`:''}</g>`;
       return g; };
     if (n === 1) { s += draw(items[0], 1); continue; }
     const fadeOut = frac > 1 - XFADE / CYCLE ? (1 - frac) / (XFADE / CYCLE) : 1; const fadeIn = frac > 1 - XFADE / CYCLE ? 1 - fadeOut : 0;

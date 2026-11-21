@@ -27,8 +27,8 @@ test('quiet HQ keeps its permanent sections and omits empty deals and GM Career'
   const f=fresh(),{screens}=register(f);
   const html=screens.get('hq').render({f});
   assert.ok(html.includes(t('hq.this_week')));
-  assert.ok(html.includes(t('polish.team_story')));
-  assert.ok(html.includes(t('polish.league_news')));
+  assert.ok(html.includes(`<details class="polish-secondary" open><summary>${t('polish.team_story')}</summary>`));
+  assert.ok(html.includes(`<details class="polish-secondary" open><summary>${t('polish.league_news')}</summary>`));
   assert.doesNotMatch(html,/polish-deals|<summary>GM Career<\/summary>/);
   assert.equal((html.match(/data-phone-next/g)||[]).length,1);
   assert.ok(screens.get('playbook').back!==false,'Game Plan detail browsing retains Back after removing the Plays tab');
