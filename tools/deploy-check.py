@@ -15,8 +15,8 @@ repository's tools/franchise-soak.mjs (next to this script, or --helpers DIR), w
 reserved prefix /__deploy-check/. Nothing is copied into the release folder, and the helper's own imports (../src/...) resolve to
 the release's modules, so the game code under test is always the release's.
 Checks: build version and stamp; each save loads after a reload; Main Menu -> Developer Tools -> AI Testing Lab by taps; the
-Developer Tools QB-read switch toggles and survives a reload; a live franchise game draws the QB read ring and the replay shows
-the read list; no page errors.
+Developer Tools QB-read switch toggles and survives a reload; a live franchise game draws the QB read ring and plays an
+instant replay without the read list (removed in PR #150); no page errors.
 """
 import argparse, os, re, sys, threading, time, socketserver, http.server, json
 from playwright.sync_api import sync_playwright
@@ -86,6 +86,11 @@ with sync_playwright() as pw:
         # Main Menu -> Developer Tools -> AI Testing Lab, by taps
         p.evaluate(GO, ['menu']); p.wait_for_timeout(300); shot(p, 'd1-menu')
         dev = p.locator('main [data-screen="developer"]').first; check(dev.count() == 1, 'Developer Tools button on the Main Menu'); dev.tap(); p.wait_for_timeout(400)
+        # A franchise's first Apex discovery plays as a cutscene on franchise screens (Task 8 M6); skip it as a player would.
+        for _ in range(30):
+            if not p.locator('.apex-scene').count(): break
+            for sel in ['.apex-scene [data-apex="skip"]', '.apex-scene [data-apex="continue"]']:
+                if p.locator(sel).count(): p.locator(sel).first.click(); p.wait_for_timeout(120)
         lab = p.locator('main [data-screen="ai-lab"]'); check(lab.count() == 1, 'AI Testing Lab button in Developer Tools'); shot(p, 'd2-developer'); lab.tap(); p.wait_for_timeout(500)
         check('lab' in (p.evaluate("() => document.querySelector('main').className") or '') or p.locator('[data-action="lab-new"]').count() > 0, 'AI Testing Lab opens'); shot(p, 'd3-lab')
         # Developer Tools QB-read switch survives a reload
@@ -107,12 +112,14 @@ with sync_playwright() as pw:
         ring = panel = False; t0 = time.time(); panelText = ''
         while time.time() - t0 < 300 and not (ring and panel):
             if not ring and p.locator('#field .qb-read-ring').count(): ring = True; shot(p, 'd4-ring')
-            if not panel and p.locator('.replay-badge').count() and p.locator('.qb-reads').count(): panel = True; panelText = p.locator('.qb-reads').first.inner_text(); shot(p, 'd5-replay')
+            # PR #150 (docs/MATCH_BARS_TAP_AUDIO.md): football replays no longer include the QB read list; a replay must play without it.
+            if not panel and p.locator('.replay-badge').count(): panel = True; panelText = p.locator('.qb-reads').first.inner_text() if p.locator('.qb-reads').count() else ''; shot(p, 'd5-replay')
             p.evaluate("() => document.querySelectorAll('.sheet-backdrop').forEach(e => e.remove())")
             if p.evaluate("() => !!window.__gb.f.game?.state.finished"): break
             p.wait_for_timeout(120)
         check(ring, 'QB read ring drawn during live franchise plays (setting on)')
-        check(panel, f'replay shows the QB read list: {panelText[:120]!r}')
+        check(panel, 'an instant replay played during the live game')
+        check(panel and not panelText, f'the replay shows no QB read list (removed in PR #150): {panelText[:120]!r}')
         p.evaluate("() => { if (window.__gb.f.game) window.__gb.f.game.auto = false; }"); ctx.close()
     b.close()
 print('\n'.join(notes)); print('PROBLEMS:', problems); print('ERRORS:', errors[:10])
