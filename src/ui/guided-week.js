@@ -173,11 +173,15 @@ export function mountBeastSectionTips(f, root, save, env = globalThis, show = sh
     if (popup || doc.querySelector('.sheet-backdrop')) return;
     const top = (doc.querySelector('.topbar')?.getBoundingClientRect().bottom || 48) + 12;
     const bottom = Math.min(env.innerHeight * .75, doc.querySelector('.tabbar')?.getBoundingClientRect().top || env.innerHeight);
-    const id = visibleBeastSection(sections.map((el, index) => {
+    const list = sections.map((el, index) => {
       const r = el.getBoundingClientRect();
       const end = sections[index + 1]?.getBoundingClientRect().top ?? root.getBoundingClientRect().bottom;
       return { id: el.dataset.guideSection, top: r.top, bottom: Math.max(r.bottom, end) };
-    }), top, bottom);
+    });
+    // At the bottom of the page the last sections can never reach the reading line (on a phone Statistics stops halfway
+    // down the screen), so there the first visible section not yet seen is shown, in order, instead of the nearest one.
+    const atEnd = env.scrollY + env.innerHeight >= (doc.documentElement?.scrollHeight ?? Infinity) - 2;
+    const id = (atEnd && list.filter(x => x.bottom > top && x.top < bottom).find(x => !f.guide.cardTourSeen?.[x.id])?.id) || visibleBeastSection(list, top, bottom);
     if (id === current) return;
     current = id;
     const tip = BEAST_SECTION_TIPS.find(x => x.id === id);

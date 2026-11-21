@@ -604,7 +604,7 @@ html[data-reduced-motion="1"] .field-banner .callout, html[data-reduced-motion="
 
 /* ---- visual polish pass (2026-10-22): one cohesive feel across screens */
 /* screens slide in on navigation (the router adds .enter on a go/back); re-renders of the same screen do not move */
-.screen.enter { animation: screen-in .22s ease-out both; }
+.screen.enter { animation: screen-in .22s ease-out backwards; } /* backwards, not both: a transform kept after the slide-in makes the screen the containing block for position:fixed children, which pushed the pinned HQ action to the bottom of the page */
 @keyframes screen-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 /* press feedback on every tappable surface, not only .btn */
 .btn, .item:not(.static), .card, .choice, .chip, .tab { transition: transform .08s ease, box-shadow .08s ease, border-color .12s ease, background-color .12s ease; }
@@ -1931,6 +1931,7 @@ html[data-comfortable-text="1"] .item .sub, html[data-comfortable-text="1"] .dim
 [id^="phone-"] { scroll-margin-top:calc(70px + var(--sat)); }
 #toast { display:flex; align-items:center; gap:8px; flex-wrap:wrap; max-width:min(92vw,640px); bottom:calc(160px + var(--sab)); }
 #toast > span { flex:1; min-width:100px; }
+#toast.show button { pointer-events:auto; } /* only the Undo and × buttons take taps; the rest of the toast still lets taps through to the screen */
 .phone-manage { margin-top:12px; padding-top:8px; border-top:1px solid var(--line); }
 .phone-manage summary { cursor:pointer; font-weight:700; padding:8px 0; }
 

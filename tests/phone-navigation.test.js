@@ -21,14 +21,15 @@ test('Auto speed persists across games and JSON reload and cycles 1,2,4 without 
  f.settings.autoSpeed=99;f.game={autoSpeed:-1};assert.equal(autoSpeed(f),1);
 });
 test('lineup Undo restores only its own edit once, refusing intervening roster, game or lineup changes',()=>{
- for(const change of ['none','roster','game','lineup']){
+ for(const change of ['none','saved','roster','game','lineup']){
   const f=fresh(),before=JSON.stringify([f.depth,f.lineupManual]),ready=prepareLineupUndo(f);
   F.autoDepth(f);const undo=ready();
+  if(change==='saved')f.savedAt=(f.savedAt||0)+1000; // the store stamps every save; that is not a team change
   if(change==='roster')f.roster[0].fatigue+=1;
   if(change==='game')f.game={playCount:1};
   if(change==='lineup')f.lineupManual={QB:'other'};
-  assert.equal(undo(),change==='none',change);
-  if(change==='none'){assert.equal(JSON.stringify([f.depth,f.lineupManual]),before);assert.equal(undo(),false);}
+  assert.equal(undo(),change==='none'||change==='saved',change);
+  if(change==='none'||change==='saved'){assert.equal(JSON.stringify([f.depth,f.lineupManual]),before);assert.equal(undo(),false);}
  }
 });
 test('toast messages keep FIFO reading time and dismiss advances without overwriting pending messages',()=>{

@@ -50,7 +50,9 @@ with sync_playwright() as pw:
         page.wait_for_selector('.screen-monster')
         assert page.locator('.commissioner-guide h2').inner_text() == 'Know Your Beast'
         for section in ['bio', 'temper', 'ratings', 'statistics']:
-            page.locator(f'[data-guide-section="{section}"]').scroll_into_view_if_needed()
+            # Bring the section up to the reading line as a player's scroll would; a section that is merely peeking in
+            # at the bottom of the screen is not the one being read yet.
+            page.locator(f'[data-guide-section="{section}"]').evaluate("el => el.scrollIntoView({ block: 'start' })")
             page.wait_for_selector('.beast-section-tour')
             assert page.evaluate("document.documentElement.classList.contains('sheet-open')"), 'tour does not pause page scrolling'
             page.locator('.beast-section-tour [data-action="guide-section-ok"]').click()
@@ -63,6 +65,10 @@ with sync_playwright() as pw:
         assert page.locator('.beast-section-tour').count() == 0
         click(page, '[data-action="guide-open"]')
         # Pick an eligible alternate using real assign controls; never auto-complete from a click alone.
+        # Toasts now queue with their full reading time (PR #133): clear the deliberate "jump to League" refusal above so the
+        # check below sees only what the assignment itself shows.
+        while page.locator('#toast.show [aria-label="Dismiss Message"]').count():
+            page.locator('#toast.show [aria-label="Dismiss Message"]').click(); page.wait_for_timeout(100)
         slots = page.locator('[data-action="slot"]')
         changed = False
         for index in range(slots.count()):

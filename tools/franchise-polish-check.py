@@ -86,6 +86,7 @@ try:
             page.locator('[data-polish="point-add"][data-id='+json.dumps(beast['attr'])+']').click()
             assert page.evaluate('JSON.stringify(__gb.f.roster.find(m=>m.id==='+json.dumps(beast['id'])+'))')==before
             page.locator('[data-polish="point-confirm"]').click()
+            page.locator('.sheet [data-action="yes"]').last.click();page.wait_for_timeout(200) # PR #147 asks once more before spending
             assert page.evaluate('__gb.f.roster.find(m=>m.id==='+json.dumps(beast['id'])+').points')<4
             # Unsaved play selections survive a details trip.
             page.evaluate('__gb.f.season.day=4')
@@ -113,6 +114,7 @@ try:
             page.evaluate('id => { __gb.f.roster.find(m=>m.id===id).fatigue += 5; }', beast['id'])
             snapshot=page.evaluate('JSON.stringify(__gb.f.roster.find(m=>m.id==='+json.dumps(beast['id'])+'))')
             page.locator('[data-polish="point-confirm"]').click(); page.wait_for_timeout(150)
+            page.locator('.sheet [data-action="yes"]').last.click(); page.wait_for_timeout(150) # PR #147's second confirmation
             assert page.evaluate('JSON.stringify(__gb.f.roster.find(m=>m.id==='+json.dumps(beast['id'])+'))')==snapshot, 'a stale point preview was committed'
             # Escape closes the top sheet even after a tap on plain text moved focus out of its controls.
             page.locator('.sheet-body p').first.click(); page.keyboard.press('Escape'); page.wait_for_timeout(100)
@@ -121,6 +123,8 @@ try:
             page.locator('[data-polish="points"]').click(); page.locator('[data-polish="point-add"][data-id='+json.dumps(beast['attr'])+']').tap()
             box=page.locator('[data-polish="point-confirm"]').bounding_box()
             page.touchscreen.tap(box['x']+box['width']/2, box['y']+box['height']/2); page.touchscreen.tap(box['x']+box['width']/2, box['y']+box['height']/2); page.wait_for_timeout(300)
+            while page.locator('.sheet [data-action="no"]').count(): page.locator('.sheet [data-action="no"]').last.click(); page.wait_for_timeout(150) # the second tap may land on PR #147's confirmation
+            if sheets(): close_sheet()
             assert page.evaluate("async () => (await import('/src/ui/router.js')).currentScreen().name")=='monster', 'the second tap of a double tap navigated away'
             # Closing a sheet with ✕ never blocks a quick tap on what lay beneath it (the guard is only for action buttons).
             page.locator('[data-polish="points"]').click(); xb=page.locator('.sheet [data-action="sheet-close"]').bounding_box()
@@ -203,6 +207,7 @@ try:
             }""")
             page.locator('[data-polish="review-lineup"]').tap(); page.wait_for_timeout(500)
             assert page.evaluate("async () => (await import('/src/ui/router.js')).currentScreen().name")=='roster'
+            if page.locator('details.roster-search:not([open]) > summary').count(): page.locator('details.roster-search > summary').click() # PR #148 folds the roster search
             page.locator('[data-polish-search]').fill('NoSuchBeastAnywhere')
             assert 'No beasts match' in page.locator('[data-polish-count]').inner_text()
             page.locator('[data-polish="clear-filters"]').tap(); page.wait_for_timeout(500)

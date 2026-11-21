@@ -254,3 +254,22 @@ test('coaches guidance teaches HQ first and its highlighted tab ignores remember
     listener({target:{closest:()=>button}});assert.equal(route,null,'normal tab history remains when guidance is off');
   }finally{if(previous===undefined)delete globalThis.document;else globalThis.document=previous;}
 });
+test('section tour reaches the last sections when the page bottoms out before they reach the reading line', async () => {
+  const {mountBeastSectionTips}=await import('../src/ui/guided-week.js');
+  const f=fresh();at(f,'beast');f.guide.cardTourSeen={bio:true,temper:true};
+  // A phone at the bottom of the beast page: Ratings sits near the top, Statistics stops halfway down and can scroll no further.
+  const listeners=new Map(),docListeners=new Map();let pending=null,modal=false,open=null;const shown=[];
+  const doc={documentElement:{scrollHeight:4038},querySelector:s=>s==='.sheet-backdrop'?(modal?{}:null):null,addEventListener:(k,v)=>docListeners.set(k,v),removeEventListener:k=>docListeners.delete(k)};
+  const tops={bio:-1600,temper:-700,ratings:68,statistics:537};
+  const sections=Object.entries(tops).map(([id,top])=>({dataset:{guideSection:id},classList:{add(){},remove(){}},getBoundingClientRect:()=>({top,bottom:top+60})}));
+  const root={ownerDocument:doc,isConnected:true,querySelectorAll:()=>sections,getBoundingClientRect:()=>({bottom:800})};
+  const env={innerHeight:844,scrollY:3194,setTimeout:fn=>(pending=fn,1),clearTimeout:()=>{pending=null;},addEventListener:(k,v)=>listeners.set(k,v),removeEventListener:k=>listeners.delete(k)};
+  const show=(tip,dismiss)=>{shown.push(tip.id);modal=true;let closed=false;open={close(){if(closed)return;closed=true;modal=false;dismiss();}};return open;};
+  const flush=()=>{const fn=pending;pending=null;fn?.();};
+  const cleanup=mountBeastSectionTips(f,root,()=>{},env,show);flush();
+  assert.deepEqual(shown,['ratings']);open.close();
+  docListeners.get('click')();flush();
+  assert.deepEqual(shown,['ratings','statistics'],'Statistics is shown at the bottom of the page');open.close();
+  docListeners.get('click')();flush();assert.equal(shown.length,2,'nothing repeats');
+  cleanup();
+});

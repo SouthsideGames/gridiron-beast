@@ -32,7 +32,9 @@ export class TabHistory {
   }
 }
 const lineupState = f => JSON.stringify([f.depth, f.lineupManual]);
-const lineupContext = f => JSON.stringify({...f, depth:undefined, lineupManual:undefined, polish:undefined});
+// savedAt is save bookkeeping (the store stamps it on every write), not a change to the team: the lineup change itself is saved
+// before Undo is offered, so counting it would refuse every Undo.
+const lineupContext = f => JSON.stringify({...f, depth:undefined, lineupManual:undefined, polish:undefined, savedAt:undefined});
 export function prepareLineupUndo(f) {
   const before = structuredClone({depth:f.depth,manual:f.lineupManual});
   const context = lineupContext(f);
