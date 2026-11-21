@@ -1,4 +1,4 @@
-import { activityPaused, resumePlayback } from '../activity.js';
+import { activityPaused } from '../activity.js';
 // Beast Clash in Franchise Mode: the one battle screen for Tuesday encounters, the pregame Clash and the overtime Clash (GDD §26).
 // The screen never decides a battle: the franchise module draws the seed and fixes the lineups, the engine plays the battle, and
 // this screen shows the record (through the arena player). Revised 2026-10-22 (owner brief): ONE selection phase (the monsters
@@ -61,8 +61,8 @@ function bindings(app, Router) {
         if (!m) return `<div class="panel"><button class="btn primary block" data-action="done">${$t('clash.continue_to_wednesday')}</button></div>`;
         const won = e.result?.winner === 'a';
         if (e.status === 'offer') { const cap = F.salarySummary(f, m.salary); return `<div class="panel"><p>${$t('clash.b_b_is_impressed_and_wants', { name: esc(m.name), club: esc(f.club) })}</p><p class="muted">${$t('clash.ovr_yr_roster', { position: esc(m.position), monsterOverall: monsterOverall(m), amount: fmtMoney(m.salary), n: f.roster.length + 1, rosterMax: F.ROSTER_MAX })}${cap.over ? ` · <span style="color:var(--bad)">${$t('clash.over_the_cap_by', { amount: fmtMoney(-cap.remaining) })}</span>` : ` ${$t('clash.cap_room_after', { amount: fmtMoney(cap.remaining) })}`}</p>${(() => { const c = consequence(f, 'sign', { salary: m.salary }); return c ? `<p class="assist-note">${esc(c)}</p>` : ''; })()}<div class="row"><button class="btn primary grow" data-action="accept">${$t('clash.sign', { name: esc(m.name) })}</button><button class="btn" data-action="decline">${$t('clash.let_them_go')}</button></div></div>`; }
-        if (e.status === 'pitch') return `<div class="panel"><p>${$t('clash.won_the_battle_but_will_still', { name: esc(m.name) })}</p><div class="grid3">${F.RECRUIT_APPROACHES.map((a) => `<button class="btn small" data-action="pitch" data-v="${a.id}" title="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div><p class="dim">${$t('clash.the_usual_odds_apply_development_suits')}</p><button class="btn block" data-action="decline">${$t('clash.let_them_go')}</button></div>`;
-        return `<div class="panel"><p>${e.status === 'signed' ? `<b>${esc(m.name)}</b> signed!` : e.status === 'walked' ? `${$t('clash.turned_you_down', { name: esc(m.name) })}` : `${$t('clash.you_let_go', { name: esc(m.name) })}`}${won ? '' : ''}</p><button class="btn primary block" data-action="done">${$t('clash.continue_to_wednesday')}</button></div>`;
+        if (e.status === 'pitch') return `<div class="panel"><p>${$t('clash.won_the_battle_but_will_still', { name: esc(m.name) })}</p><div class="grid3">${F.RECRUIT_APPROACHES.map((a) => `<button class="btn small" data-action="pitch" data-v="${a.id}" title="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div><button class="btn block" data-action="decline">${$t('clash.let_them_go')}</button></div>`;
+        return `<div class="panel"><p>${e.status === 'signed' ? `<b>${esc(m.name)}</b> signed!` : e.status === 'walked' ? `${e.hearsPitch === false ? $t('franchise.beast_clash_pitch_refused', { name: esc(m.name) }) : $t('clash.turned_you_down', { name: esc(m.name) })}` : `${$t('clash.you_let_go', { name: esc(m.name) })}`}${won ? '' : ''}</p><button class="btn primary block" data-action="done">${$t('clash.continue_to_wednesday')}</button></div>`;
       },
       actions(root, rerender) {
         return {
@@ -133,10 +133,11 @@ export function registerClashBattle(Router, app) {
   const st = { kind: null, i: 0, arena: null, cursor: 0, result: null, lineup: null, editing: false, replaying: false, session: null, subNote: null, setupSide: 'a' };
   const settings = () => clashSettings(app.f?.settings);
   const saveSettings = (patch) => { if (!app.f) return; app.f.settings.clash = { ...settings(), ...patch }; app.save(); };
-  const stop = () => { if (st.arena) { st.cursor = st.arena.cursor; st.arena.destroy(); st.arena = null; } st.session = null; };
+  const stop = () => { if (st.arena) { st.cursor = st.arena.cursor; st.arena.destroy(); st.arena = null; } st.session = null; resumeArena = false; };
   const B = () => BINDINGS[st.kind];
-  globalThis.addEventListener?.('gb-playback-pause', () => st.arena?.pause());
-  globalThis.addEventListener?.('gb-playback-resume', () => playWhenReady());
+  let resumeArena = false;
+  globalThis.addEventListener?.('gb-playback-pause', () => { resumeArena = !!st.arena?.playing; st.arena?.pause(); });
+  globalThis.addEventListener?.('gb-playback-resume', () => { if (resumeArena) playWhenReady(); resumeArena = false; });
   function playWhenReady() { if (!st.arena || activityPaused()) return; if (document.querySelector('.sheet')) { setTimeout(playWhenReady, 100); return; } st.arena.play(); }
 
   // ---------- the one selection phase (before the seed is drawn): the monsters and their order of entry
@@ -155,7 +156,8 @@ export function registerClashBattle(Router, app) {
     const card = (m, i, side, n) => `<div class="item static cl-pick ${i === 0 ? 'first' : ''}" style="gap:8px"><span class="cl-slot ${i === 0 ? 'first' : ''}">${i + 1}</span>${monsterSprite(m, 34)}<div class="grow" style="font-size:12px;min-width:0"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b>${esc(m.name)}</b> <span class="dim">${$t('clash.ovr', { monsterOverall: monsterOverall(m) })}</span> ${side === 'a' ? edge(m, theirs[0]) : edge(m, mine[0])}</div>${abLine(m, side)}<div class="dim" style="line-height:1.25">${ARCH_GLYPH[archetypeOf(m.species)] || ''} ${esc(archetypeOf(m.species) || '')} · ${esc(m.type)} · <b style="color:var(--ink-2)">${slotLabel(i, n)}</b>${m.companion ? $t('clash.cannot_sign') : ''}${m.fatigue >= 30 ? ` · <span style="color:var(--warn)">${$t('clash.tired', { fatigue: m.fatigue })}</span>` : ''}</div></div>${side === 'a' ? `<span class="cl-pick-btns"><button class="btn small ghost" data-action="moveup" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="${$t('clash.move_up')}">↑</button><button class="btn small ghost" data-action="movedown" data-i="${i}" ${i === n - 1 ? 'disabled' : ''} aria-label="${$t('clash.move_down')}">↓</button><button class="btn small ghost" data-action="remove" data-id="${m.id}" aria-label="${$t('clash.remove')}">✕</button></span>` : ''}</div>`;
     const rest = pv.eligible.filter((m) => !st.lineup.includes(m.id));
     const picker = st.lineup.length < pv.size || st.editing ? `<div class="list" style="margin-top:6px;max-height:280px;overflow:auto">${rest.map((m) => `<button class="item" style="min-height:0;padding:6px 8px" data-action="add" data-id="${m.id}" ${st.lineup.length >= pv.size ? 'disabled' : ''}>${monsterSprite(m, 28)}<div class="grow" style="font-size:12px;min-width:0"><b>${esc(m.name)}</b> <span class="dim">${ARCH_GLYPH[archetypeOf(m.species)] || ''} ${esc(archetypeOf(m.species) || '')} · ${esc(m.type)} · ${monsterOverall(m)} OVR${m.fatigue >= 30 ? ` ${$t('clash.tired_2', { fatigue: m.fatigue })}` : ''}</span> ${edge(m, theirs[0])}</div><span class="chip">${st.lineup.length >= pv.size ? 'full' : 'add'}</span></button>`).join('') || `<p class="dim">${$t('clash.everyone_healthy_is_in_the_lineup')}</p>`}</div>` : '';
-    return `<div class="clash-presentation"><div class="clash-faceoff" aria-hidden="true">${mine[0] ? monsterSprite(mine[0], 88) : ''}<span>VS</span>${theirs[0] ? monsterSprite(theirs[0], 88) : ''}</div><div class="clash-intro"><div class="muted">${b.introText ? b.introText(f) : `${$t('clash.you_met_b_b_in_the', { name: esc(pv.wild[0].name) })}${pv.wild.length > 1 ? ` ${$t('clash.with_wild_companion_matched_to_your', { n: pv.wild.length - 1, wild: pv.wild.length > 2 ? 's' : '' })}` : ''}${$t('clash.win_the_v_and_will_want', { size: pv.size, size2: pv.size, name: esc(pv.wild[0].name) })}`}</div><button class="btn small ghost" data-action="help">${$t('clash.help')}</button></div>${pv.basicBonus?.active ? `<p class="panel tight" style="margin:6px 0"><b>✨ ${esc(pv.basicBonus.label)}</b><span class="dim"> ${$t('clash.for_every_battler_if_you_win', { name: esc(pv.wild[0].name) })}</span></p>` : ''}
+    const formation = team => `<div class="cl-face-team">${team.map((m,i) => `<div class="cl-face-beast cl-face-${i}">${monsterSprite(m, i ? 72 : 104)}</div>`).join('')}</div>`;
+    return `<div class="clash-presentation"><div class="clash-faceoff" aria-hidden="true">${formation(mine)}<span>VS</span>${formation(theirs)}</div>${pv.basicBonus?.active ? `<p class="panel tight" style="margin:6px 0"><b>✨ ${esc(pv.basicBonus.label)}</b><span class="dim"> ${$t('clash.for_every_battler_if_you_win', { name: esc(pv.wild[0].name) })}</span></p>` : ''}
       <div class="seg cl-setup-tabs"><button class="btn small ${st.setupSide==='a'?'primary':''}" data-action="setup-side" data-side="a">${$t('presentation.your_team')}</button><button class="btn small ${st.setupSide==='b'?'primary':''}" data-action="setup-side" data-side="b">${$t('presentation.opponent')}</button></div><div class="panel cl-setup" ${st.setupSide==='b'?'hidden':''}><div class="row between">${$t('clash.b_your_lineup_b')}<span class="dim">${$t('clash.of_in_order_of_entry', { n: mine.length, size: pv.size })}</span></div>
         <div class="list" style="margin-top:6px">${mine.map((m, i) => card(m, i, 'a', mine.length)).join('')}${!mine.length ? `<p class="dim" style="margin:4px 0">${$t('clash.no_monsters_picked_add_up_to', { size: pv.size })}</p>` : mine.length < pv.size ? `<p class="dim" style="margin:4px 0">${$t('clash.slots_open_add_more_or_enter', { n: pv.size - mine.length, n2: mine.length, n3: mine.length, n4: mine.length })}</p>` : ''}</div>
         <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small" data-action="edit">${st.editing ? $t('clash.done') : $t('clash.change_a_monster')}</button><button class="btn small ghost" data-action="autol">${$t('clash.auto_lineup')}</button></div>${picker}
@@ -184,7 +186,7 @@ export function registerClashBattle(Router, app) {
     const end = st.result.log.length - 1;
     // Looks hook (Task 8 M4): the Clash looks module (src/ui/fx/clash*, branch task8-fx-clash) plugs in here as `looks` once it exists;
     // until then the arena plays its functional cues. See src/ui/clash/t8-record.js for the contract.
-    st.arena = createArena(host, st.result, { onResumePlayback: () => resumePlayback(app, { notify: false }), speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, infoButton: true, looks: app.clashLooks || null, onCursor: (i) => { st.cursor = i; }, onEnd: () => atEnd(f) });
+    st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, infoButton: true, looks: app.clashLooks || null, onCursor: (i) => { st.cursor = i; }, onEnd: () => atEnd(f) });
     if (st.cursor) st.arena.setCursor(Math.min(st.cursor, end));
     if (st.cursor >= end) { atEnd(f); return; }
     setTimeout(playWhenReady, 300);
@@ -192,7 +194,7 @@ export function registerClashBattle(Router, app) {
   // ---------- Task 10: the live continuous battle (Watch)
   function mountLive(root, host, f, e, s) {
     st.session = s; st.result = s.view; st.subNote = null;
-    st.arena = createArena(host, st.result, { onResumePlayback: () => resumePlayback(app, { notify: false }), speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, infoButton: true, live: true, looks: app.clashLooks || null,
+    st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, infoButton: true, live: true, looks: app.clashLooks || null,
       onCursor: (i) => { st.cursor = i; drawSubs(root); }, onEnd: () => liveNext(root, f), onSkip: () => liveSkip(root, f) });
     // Resume where the player was: the same cursor in this visit, or (after a reload) the start of the last exchange reached.
     const last = st.result.log.length - 1;
@@ -333,11 +335,9 @@ export function registerClashBattle(Router, app) {
       if(console){
         const notices=document.createElement('div');notices.id='clash-notices';notices.hidden=true;
         for(const child of [...root.children])if(child!==console){
-          const paused=child.matches('.polish-paused')?child:child.querySelector('.polish-paused');
-          if(paused)console.querySelector('#live-status').appendChild(paused);
           // A replay's way back to the result is an essential control: it stays in the console (validation 2026-11-18).
           if(child.matches?.('[data-action="endreplay"]')){child.classList.add('clash-endreplay');console.appendChild(child);continue;}
-          if(child!==paused)notices.appendChild(child);
+          notices.appendChild(child);
         }
         root.appendChild(notices);
       }
@@ -377,7 +377,7 @@ export function registerClashBattle(Router, app) {
       });
       root.classList.toggle('cl-wide', !!(e && (e.status === 'battle' || st.replaying)));
       if (e && e.status === 'battle' && e.mode !== 'skip') mountBattle(root, f, e);
-      else if (e && st.replaying) { st.result = b.battle(f); const host = root.querySelector('#fb-arena'); if (host && st.result) { st.arena = createArena(host, st.result, { onResumePlayback: () => resumePlayback(app, { notify: false }), speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, infoButton: true, onCursor: (i) => { st.cursor = i; } }); setTimeout(playWhenReady, 300); } }
+      else if (e && st.replaying) { st.result = b.battle(f); const host = root.querySelector('#fb-arena'); if (host && st.result) { st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, infoButton: true, onCursor: (i) => { st.cursor = i; } }); setTimeout(playWhenReady, 300); } }
     },
     unmount() { stop(); st.replaying = false; },
   });

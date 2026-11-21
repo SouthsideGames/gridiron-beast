@@ -100,8 +100,8 @@ export function registerMatchScreens(Router, app) {
     const publicLook=p=>p?{onField:p.onField,align:p.align}:null;
     const ownAttack=PLAYS[mine.offensePlays?.[0]], ownDefense=PLAYS[mine.defensePlays?.[0]];
     const theirAttack=publicLook(PLAYS[theirs.offensePlays?.[0]]),theirDefense=publicLook(PLAYS[theirs.defensePlays?.[0]]);
-    const pairs=[...matchupEdges({offensePlay:ownAttack,defensePlay:theirDefense},mine.offense,theirs.defense).map(x=>({me:x.off,them:x.def})),...matchupEdges({offensePlay:theirAttack,defensePlay:publicLook(ownDefense)},theirs.offense,mine.defense).map(x=>({me:x.def,them:x.off}))].filter(x=>x.me.mod);
-    return pairs.length?`<details class="panel tight pregame-types"><summary>${$t('playview.expected_matchups')}</summary><p class="muted">${$t('playview.forecast_only')}</p>${pairs.map(x=>`<p>${x.me.mod>0?$t('playview.good_matchup',{name:esc(x.me.name),opponent:esc(x.them.name)}):$t('playview.tough_matchup',{name:esc(x.me.name),opponent:esc(x.them.name)})}</p>`).join('')}</details>`:'';
+    const pairs=[...matchupEdges({offensePlay:ownAttack,defensePlay:theirDefense},mine.offense,theirs.defense).map(x=>({me:x.off,them:x.def,myMonster:mine.offense[x.off.slot],theirMonster:theirs.defense[x.def.slot]})),...matchupEdges({offensePlay:theirAttack,defensePlay:publicLook(ownDefense)},theirs.offense,mine.defense).map(x=>({me:x.def,them:x.off,myMonster:mine.defense[x.def.slot],theirMonster:theirs.offense[x.off.slot]}))].filter(x=>x.me.mod);
+    return pairs.length?`<details class="panel tight pregame-types"><summary>${$t('playview.expected_matchups')}</summary><p class="muted">${$t('playview.forecast_only')}</p>${pairs.map(x=>`<div class="pregame-type-pair">${monsterSprite(x.myMonster,32)}<p>${x.me.mod>0?$t('playview.good_matchup',{name:esc(x.me.name),opponent:esc(x.them.name)}):$t('playview.tough_matchup',{name:esc(x.me.name),opponent:esc(x.them.name)})}</p>${monsterSprite(x.theirMonster,32)}</div>`).join('')}</details>`:'';
   }
 
   // ------------------------------------------------------------ pregame
@@ -211,9 +211,7 @@ export function registerMatchScreens(Router, app) {
       const f = app.f; if (!f?.game) { delegate(root, { hq: () => Router.go('hq', {}, { reset: true }) }); return; }
       const notices=document.createElement('div'); notices.id='match-notices'; notices.hidden=true;
       for(const child of [...root.children])if(!child.classList.contains('match-console')) {
-        const paused=child.matches('.polish-paused')?child:child.querySelector('.polish-paused');
-        if(paused)root.querySelector('#live-status').appendChild(paused);
-        if(child!==paused)notices.appendChild(child);
+        notices.appendChild(child);
       }
       notices.insertAdjacentHTML('beforeend', `<section class="match-guide"><h3>${$t('match.how_a_match_works_2')}</h3>${matchHelpHtml(f)}<button class="btn small" data-action="assist-help" data-screen="match">${$t('match.more_help_coach_assist')}</button></section>`);
       root.appendChild(notices);

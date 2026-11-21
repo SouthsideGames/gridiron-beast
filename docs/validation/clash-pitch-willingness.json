@@ -1,0 +1,46 @@
+{
+  "seed": 20261120,
+  "scope": "Consolation pitch eligibility only; battle results and pitch success odds unchanged",
+  "rows": [
+    {
+      "rarity": "basic",
+      "before": 1,
+      "after": 0.9,
+      "trials": 10000,
+      "heard": 8980,
+      "refused": 1020
+    },
+    {
+      "rarity": "common",
+      "before": 1,
+      "after": 0.75,
+      "trials": 10000,
+      "heard": 7512,
+      "refused": 2488
+    },
+    {
+      "rarity": "uncommon",
+      "before": 1,
+      "after": 0.4,
+      "trials": 10000,
+      "heard": 4064,
+      "refused": 5936
+    },
+    {
+      "rarity": "rare",
+      "before": 1,
+      "after": 0,
+      "trials": 10000,
+      "heard": 0,
+      "refused": 10000
+    },
+    {
+      "rarity": "legendary",
+      "before": 1,
+      "after": 0,
+      "trials": 10000,
+      "heard": 0,
+      "refused": 10000
+    }
+  ]
+}

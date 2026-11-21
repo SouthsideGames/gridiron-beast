@@ -31,7 +31,6 @@ export function venueHtml(venue, ctx = {}) {
     <div class="venue-env"><b>${env.icon} ${esc(env.name)}</b> <span class="dim">· ${esc(env.blurb)}</span></div>
     ${venue.fieldBy === 'boss' ? `<div class="dim venue-why" style="font-size:12px">${$t('league.gym_leaders_field_every_game_against', { boss: esc(venue.boss) })}${venue.boss !== (venue.club || venue.home) ? `${$t('league.here_at_too', { name: esc(venue.name) })}` : ''}.</div>` : venue.fieldBy === 'boss-unmapped' ? `<div class="dim venue-why" style="font-size:12px">${$t('league.boss_game_the_element_has_no', { boss: esc(venue.boss) })}</div>` : venue.fieldBy === 'draw' ? `<div class="dim venue-why" style="font-size:12px">${$t('league.this_weeks_field_conditions', { id: env.id === 'grass' ? $t('league.ordinary_grass') : '' })}</div>` : venue.fieldBy === 'home' ? `<div class="dim venue-why" style="font-size:12px">${$t('league.the_home_clubs_permanent_field')}</div>` : ''}
     <div class="venue-bonus">${envBonusHtml(env.id)}</div>${counts}
-    <div class="dim" style="font-size:11px;margin-top:4px">${$t('league.field_bonuses_are_situational_never_ratings', { indoor: env.indoor ? $t('league.indoors_weather_never_reaches_the_field') : $t('league.weather_is_for_atmosphere_only_it') })}</div>
   </div>`;
 }
 /** Every club's stadium (More → Stadiums), the owner's own first. */
