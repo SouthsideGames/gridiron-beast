@@ -23,10 +23,34 @@ export function generateLeagueArchive(f, seasons = 8) {
     for (const id of data.roster || []) teamOf.set(id, club);
   const years = [];
   for (let year = 1 - seasons; year <= 0; year++) {
-    const ranked = teams.slice().sort((a, b) => roll(seed, year + ':' + a, 100000) - roll(seed, year + ':' + b, 100000));
-    const standings = ranked.map((club, i) => { const w = Math.max(0, 11 - Math.floor(i * 11 / Math.max(1, ranked.length - 1))); return { club, w, l: 11 - w }; });
-    const champion = ranked[0];
-    years.push({ year, champion, runnerUp: ranked[1], standings, awards: { league: {} } });
+    // Pair each club with every other club once: balanced 15-game seasons.
+    // Scores are not reconstructed; only standings and postseason outcomes are archived.
+    const records = new Map(teams.map(club => [club, { club, w: 0, l: 0 }]));
+    for (let i = 0; i < teams.length; i++) for (let j = i + 1; j < teams.length; j++) {
+      const home = teams[i], away = teams[j];
+      const winner = roll(seed, year + ':fixture:' + home + ':' + away, 2) ? home : away;
+      records.get(winner).w++;
+      records.get(winner === home ? away : home).l++;
+    }
+    const standings = [...records.values()].sort((a, b) => b.w - a.w || roll(seed, year + ':tie:' + a.club, 100000) - roll(seed, year + ':tie:' + b.club, 100000));
+    const qualified = standings.slice(0, 8).map(t => t.club);
+    const rounds = [];
+    let alive = qualified;
+    while (alive.length > 1) {
+      const next = [];
+      const games = [];
+      for (let i = 0; i < alive.length / 2; i++) {
+        const a = alive[i], b = alive[alive.length - 1 - i];
+        const winner = roll(seed, year + ':playoff:' + alive.length + ':' + a + ':' + b, 2) ? a : b;
+        games.push({ home: a, away: b, winner });
+        next.push(winner);
+      }
+      rounds.push({ name: alive.length === 8 ? 'Quarterfinals' : alive.length === 4 ? 'Semifinals' : 'Beast Bowl', games });
+      alive = next;
+    }
+    const champion = alive[0];
+    const final = rounds[rounds.length - 1].games[0];
+    years.push({ year, champion, runnerUp: final.home === champion ? final.away : final.home, standings, playoffs: rounds, awards: { league: {} } });
   }
   const careers = {};
   for (const m of monsters) {
@@ -67,6 +91,8 @@ export function validateLeagueArchive(archive) {
   }
   for (const s of years.values()) {
     if (!s.standings.some(t => t.club === s.champion)) errors.push('Champion absent: ' + s.year);
+    if (s.standings.reduce((n,t)=>n+t.w,0) !== s.standings.reduce((n,t)=>n+t.l,0)) errors.push('Unbalanced standings: ' + s.year);
+    if (s.playoffs?.at(-1)?.games?.[0]?.winner !== s.champion) errors.push('Playoff winner mismatch: ' + s.year);
     for (const winner of Object.values(s.awards?.league || {})) {
       const book = archive.careers[winner.id]?.seasons.find(b => b.year === s.year);
       if (!book || book.team !== winner.team) errors.push('Award mismatch: ' + s.year);
