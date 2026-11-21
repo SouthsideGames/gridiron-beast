@@ -2294,3 +2294,42 @@ html[data-comfortable-text="1"] .screen-settings .save-data .dim, html[data-comf
 
 .roster-tools > .btn { min-height:44px; }
 .roster-info-toggle[aria-expanded="true"] { border-color:var(--accent); color:var(--accent); }
+
+/* ===========================================================================================================================
+   Large screens, 2026-11-21: Galaxy Z Fold unfolded, tablets and computers. Phones (under 720 px wide) are unchanged.
+   The game is still one column of the same content in the same order; wider screens get a wider column, the top bar and
+   tab bar line up with it, sheets become centred dialogs, HQ splits into two columns, and the live match gives its
+   side panel room instead of using the short-landscape-phone layout inside a 640 px strip.
+   =========================================================================================================================== */
+@media (min-width: 720px) {
+  :root { --wide-col: 860px; }
+  .screen { max-width: var(--wide-col); }
+  .topbar { padding-left: max(0px, calc((100% - var(--wide-col)) / 2)); padding-right: max(0px, calc((100% - var(--wide-col)) / 2)); }
+  .tabbar { padding-left: max(0px, calc((100% - 720px) / 2)); padding-right: max(0px, calc((100% - 720px) / 2)); }
+  .tab { font-size: 12px; }
+  .sheet { max-width: 720px; }
+  .pregame-start { max-width: var(--wide-col); }
+  .phone-hq-next .btn { display: flex; width: 100%; max-width: var(--wide-col); } /* an inline button ignores auto margins: it sat at the left edge */
+  /* Monster cards, the office and settings read better at a measured width than stretched across a tablet. */
+  .screen-monster, .screen-office, .screen-settings, .screen-more { max-width: 760px; }
+}
+@media (min-width: 1200px) { :root { --wide-col: 1080px; } }
+/* Sheets as centred dialogs when there is room above and below (bottom sheets stay on phones and short landscape). */
+@media (min-width: 720px) and (min-height: 600px) {
+  .sheet-backdrop { align-items: center; padding: 24px; }
+  .sheet { border-bottom: 2px solid var(--line-2); border-radius: 12px; max-height: min(88dvh, 900px); padding-bottom: 0; }
+}
+/* HQ: what needs doing stays across the top; the team story sits on the left with links, last game, trades and news on the right. */
+@media (min-width: 860px) {
+  .screen-hq { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: 16px; align-items: start; grid-auto-flow: row dense; }
+  .screen-hq > * { grid-column: 1 / -1; min-width: 0; }
+  .screen-hq > .hq-team-story { grid-column: 1; grid-row: span 6; }
+  .screen-hq > .hq-links, .screen-hq > .hq-news, .screen-hq > .hq-last-game, .screen-hq > .polish-deals { grid-column: 2; }
+}
+/* Live match on a large landscape screen (Fold unfolded sideways, tablet, computer): a wider console, the field
+   centred in its column and a roomier side panel for the play call, log and buttons. */
+@media (orientation: landscape) and (min-width: 900px) and (min-height: 560px) {
+  .screen.screen-match:has(.match-console), .screen.screen-clash-battle:has(.clash-live-console) { max-width: min(1280px, 100%); padding-left: 16px; padding-right: 16px; }
+  .match-console { grid-template-columns: minmax(0, 1.15fr) minmax(320px, 1fr); column-gap: 12px; }
+  .match-console #controls { font-size: 15px; }
+}
