@@ -19,6 +19,8 @@ import { careerLink, careerBlockHtml } from '../career-ui.js';
 import { legendaryCardHtml, openLegendarySheet, announceLegendary } from '../legendary-ui.js';
 import { LEGENDARY_IDS, unannouncedLegendary } from '../../franchise/legendary.js';
 import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
+import { simAheadButtonHtml, openSimAhead } from '../sim-ahead-ui.js';
+import { guideActive as simGuideActive } from '../../franchise/guide.js';
 import { retirementDue, retirementChecklist, requestRetirement, cancelRetirement, SEASON_CAP, seasonsCompleted, isArchived } from '../../franchise/lifecycle.js';
 import { ROUTE_LABELS } from '../../data/routes.js';
 import { yearOf } from '../../data/calendar.js';
@@ -113,21 +115,21 @@ export function registerHqScreens(Router, app) {
         ${weekStrip(f)}
         <div class="panel"><div class="muted" style="font-size:12px">${$t('hq.this_week')}</div><div style="margin:4px 0 8px">${gameLine}${(() => { const g = opp && GYM_BY_CLUB[opp]; if (!g || f.season.finished) return ''; const b = F.badgeOf(f, opp); return `<div class="muted" style="margin-top:4px">${b ? `${$t('hq.you_hold_the', { badge: esc(g.badge), year: yearOf(b.year) })}` : `${$t('hq.b_badge_game_b_beat_s', { name: esc(g.coach.name), opp: esc(opp), badge: esc(g.badge) })}`}</div>`; })()}</div>
           ${next ? `<button class="btn primary big block ${next.action === 'forfeit' || next.action === 'lineupgate' ? 'danger' : ''}" data-phone-next data-action="${next.action}">${next.icon} ${esc(next.label)}</button>${next.note ? `<p class="dim" style="margin:4px 0 0;color:var(--bad)">${$t('hq.fix_the_depth_chart_or_sign', { note: esc(next.note) })}</p>` : ''}${next.skip ? `<button class="btn block" data-action="skipplayoffs" style="margin-top:8px">${$t('hq.skip_to_the_offseason')}</button>` : ''}` : ''}
-          ${!f.season.finished && day < 6 && !f.week.commissioner && !(F.inPlayoffs(f) && !F.playoffFixture(f)) && !F.needsGoal(f) ? `<button class="btn block" data-action="autorun" style="margin-top:8px">${$t('hq.let_the_staff_run_the_week')}</button>` : ''}
+          ${!f.season.finished && day < 6 && !f.week.commissioner && !(F.inPlayoffs(f) && !F.playoffFixture(f)) && !F.needsGoal(f) ? `<button class="btn block" data-action="autorun" style="margin-top:8px">${$t('hq.let_the_staff_run_the_week')}</button>` : ''}${simGuideActive(f) ? "" : simAheadButtonHtml(f)}
           ${cap.over && !f.week.commissioner ? `<p class="muted" style="color:var(--warn);margin-top:8px">${$t('hq.over_the_cap_by_the_commissioner', { amount: fmtMoney(-cap.remaining) })} <button class="btn small" data-action="releasemon">${$t('hq.release_a_monster')}</button></p>` : ''}
           ${f.week.commissioner ? `<p class="muted" style="color:var(--bad);margin-top:8px">${$t('hq.the_commissioner_is_waiting_over_the', { amount: fmtMoney(f.week.commissioner.over) })}</p>` : ''}${warningsHtml(f, { max: 2, only: ['min', 'depth', 'hurt', 'tight', 'points'] })}</div>
         ${waitingCall ? `<details class="polish-secondary polish-deals" open><summary>${$t('polish.trades')}</summary>${waitingCall}${tradeLineHtml(f)}</details>` : ''}
-        ${lastGame ? `<details class="polish-secondary"><summary>${$t('polish.last_game')}</summary>${lastGame}</details>` : ''}
-        <details class="polish-secondary" open><summary>${$t('polish.team_story')}</summary>${captainCard(f)}
+        ${lastGame ? `<details class="polish-secondary hq-last-game"><summary>${$t('polish.last_game')}</summary>${lastGame}</details>` : ''}
+        <details class="polish-secondary hq-team-story" open><summary>${$t('polish.team_story')}</summary>${captainCard(f)}
         ${rivalCard(f)}
         ${boardPanel(f)}
         ${campaignPanel(f)}</details>
         ${f.week.gameResult && !f.week.gameResult.bye && day === 0 ? '' : ''}
-        <div class="grid2" style="margin-bottom:var(--s3)">
+        <div class="grid2 hq-links" style="margin-bottom:var(--s3)">
           <button class="btn block" data-action="go" data-screen="schedule">${$t('hq.schedule')}</button><button class="btn block" data-action="go" data-screen="standings">${$t('hq.standings')}</button>
           <button class="btn block" data-action="go" data-screen="league">${$t('hq.league_hub')}</button><button class="btn block" data-action="go" data-screen="history">${$t('hq.history_and_records')}</button>
           <button class="btn block" data-action="go" data-screen="staff">${$t('hq.coaching_staff')}</button></div>
-        <details class="polish-secondary" open><summary>${$t('polish.league_news')}</summary>${leagueNewsPanel(f, { clubLog: f.news })}</details>`;
+        <details class="polish-secondary hq-news" open><summary>${$t('polish.league_news')}</summary>${leagueNewsPanel(f, { clubLog: f.news })}</details>`;
     },
     mount(root) {
       if (app.f && !app.f.achievementsBackfilled && F.backfillAchievements(app.f).length) app.save();
@@ -174,6 +176,7 @@ export function registerHqScreens(Router, app) {
         watchround: () => { const r = F.advancePlayoffs(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); sheet(roundResultsHtml(app.f, r), { title: F.ROUND_NAMES[r.round] || `${$t('hq.round', { round: r.round })}`, onClose: () => Router.go('hq', {}, { reset: true }) }); },
         skipplayoffs: async () => { if (!(await confirmSheet($t('hq.simulate_the_rest_of_the_playoffs'), { title: $t('hq.skip_the_playoffs'), okLabel: $t('hq.skip') }))) return; F.skipPlayoffs(app.f); app.save(); Router.go('hq', {}, { reset: true }); },
         fired: async () => { await retireNow(app, Router, 'fired'); },
+        simahead: () => openSimAhead(app, Router),
         autorun: async () => { if (!(await confirmSheet($t('hq.your_staff_will_scout_recruit_only'), { title: $t('hq.run_the_week'), okLabel: $t('hq.run_it') }))) return; const r = F.autoRunToSunday(app.f); app.save(); sheet(`<ul style="padding-left:18px">${r.did.map((d) => `<li>${esc(d)}</li>`).join('')}</ul>`, { title: $t('hq.week_handled'), onClose: () => Router.go('hq', {}, { reset: true }) }); },
         awards: () => sheet(app.f.season.finished ? seasonFinalHtml(app.f) : seasonRecapHtml(app.f), { title: `${$t('hq.season', { year: yearOf(app.f.season.year) })}` }),
         gym: (el) => { const g = GYM_BY_CLUB[el.dataset.club]; if (!g) return; const b = F.badgeOf(app.f, g.club); const sp = SPECIES_BY_ID[g.legendary]; sheet(`<div class="row">${portraitSprite(g.coach.portrait, 56, { hue: TYPES[g.element]?.hue })}<div><b>${esc(g.coach.name)}</b><div class="muted">${$t('hq.head_coach', { club: esc(g.club), style: esc(g.coach.style) })}</div><div class="muted">${$t('hq.gym_tier', { element: esc(g.element), tier: g.tier })}</div></div></div><p>${b ? `${$t('hq.b_b_earned_in_week', { badge: esc(g.badge), year: yearOf(b.year), b: b.week, score: esc(b.score) })}` : `${$t('hq.beat_in_any_game_that_counts', { club: esc(g.club), badge: esc(g.badge) })}`}</p><h3>${$t('hq.signature_monster')}</h3><div class="row">${sprite16(sp, 48)}<div><b>${esc(sp.name)}</b><div class="muted">${$t('hq.legendary', { element: esc(sp.element), position: sp.position })}</div><div class="muted">${esc(sp.ability.name)}: ${esc(sp.ability.text)}</div></div></div><p class="dim">${$t('hq.gym_clubs_grow_stronger_every_season')}</p>`, { title: g.badge }); },

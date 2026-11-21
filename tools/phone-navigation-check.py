@@ -47,6 +47,7 @@ try:
    assert page.locator('.screen-office').count()==1, 'second Office tap should return to its root'
    go('hq')
    next_button=page.locator('.phone-hq-next [data-phone-next]');assert next_button.count()==1
+   page.wait_for_timeout(300);top_box=next_button.bounding_box();assert top_box and top_box['y']+top_box['height']<=page.viewport_size['height'],'HQ action is not on screen before scrolling (the slide-in transform must not hold the fixed bar)'
    page.evaluate('window.scrollTo(0,document.body.scrollHeight)')
    bounds=next_button.bounding_box();tab=page.locator('.tabbar').bounding_box()
    assert bounds and bounds['y']>=0 and bounds['y']+bounds['height']<=tab['y']+1,'HQ button covers tabs'

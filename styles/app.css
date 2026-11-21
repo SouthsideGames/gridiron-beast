@@ -604,7 +604,7 @@ html[data-reduced-motion="1"] .field-banner .callout, html[data-reduced-motion="
 
 /* ---- visual polish pass (2026-10-22): one cohesive feel across screens */
 /* screens slide in on navigation (the router adds .enter on a go/back); re-renders of the same screen do not move */
-.screen.enter { animation: screen-in .22s ease-out both; }
+.screen.enter { animation: screen-in .22s ease-out backwards; } /* backwards, not both: a transform kept after the slide-in makes the screen the containing block for position:fixed children, which pushed the pinned HQ action to the bottom of the page */
 @keyframes screen-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 /* press feedback on every tappable surface, not only .btn */
 .btn, .item:not(.static), .card, .choice, .chip, .tab { transition: transform .08s ease, box-shadow .08s ease, border-color .12s ease, background-color .12s ease; }
@@ -1931,6 +1931,7 @@ html[data-comfortable-text="1"] .item .sub, html[data-comfortable-text="1"] .dim
 [id^="phone-"] { scroll-margin-top:calc(70px + var(--sat)); }
 #toast { display:flex; align-items:center; gap:8px; flex-wrap:wrap; max-width:min(92vw,640px); bottom:calc(160px + var(--sab)); }
 #toast > span { flex:1; min-width:100px; }
+#toast.show button { pointer-events:auto; } /* only the Undo and × buttons take taps; the rest of the toast still lets taps through to the screen */
 .phone-manage { margin-top:12px; padding-top:8px; border-top:1px solid var(--line); }
 .phone-manage summary { cursor:pointer; font-weight:700; padding:8px 0; }
 
@@ -2160,25 +2161,25 @@ html[data-reduced-motion="1"] .draft-stage > :last-child { animation:none; }
 .screen-settings .set-group { padding: 4px 14px 6px; border-radius: 14px; background: linear-gradient(180deg, #17302a, #12251f); }
 .screen-settings .set-group > h3 { display: flex; align-items: center; gap: 8px; margin: 10px 0 2px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
 .screen-settings .set-group > h3::after { content: ''; flex: 1; height: 1px; background: var(--line); }
-.screen-settings .set-row { display: grid; gap: 8px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.06); margin: 0; }
-.screen-settings .set-group > .set-row:last-child, .screen-settings .set-group > :last-child > .set-row:last-child { border-bottom: 0; }
-.screen-settings .set-text { display: grid; gap: 2px; min-width: 0; }
-.screen-settings .set-text b { font-size: 15px; font-weight: 700; color: var(--ink); }
-.screen-settings .set-hint { font-size: 12.5px; line-height: 1.35; color: var(--ink-2); }
-html[data-comfortable-text="1"] .screen-settings .set-hint { font-size: 14px; }
-.screen-settings .set-note { margin: 4px 0 10px; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
-html[data-comfortable-text="1"] .screen-settings .set-note { font-size: 14px; }
+:is(.screen-settings, .sim-ahead) .set-row { display: grid; gap: 8px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.06); margin: 0; }
+:is(.screen-settings, .sim-ahead) .set-group > .set-row:last-child, :is(.screen-settings, .sim-ahead) .set-group > :last-child > .set-row:last-child { border-bottom: 0; }
+:is(.screen-settings, .sim-ahead) .set-text { display: grid; gap: 2px; min-width: 0; }
+:is(.screen-settings, .sim-ahead) .set-text b { font-size: 15px; font-weight: 700; color: var(--ink); }
+:is(.screen-settings, .sim-ahead) .set-hint { font-size: 12.5px; line-height: 1.35; color: var(--ink-2); }
+html[data-comfortable-text="1"] :is(.screen-settings, .sim-ahead) .set-hint { font-size: 14px; }
+:is(.screen-settings, .sim-ahead) .set-note { margin: 4px 0 10px; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
+html[data-comfortable-text="1"] :is(.screen-settings, .sim-ahead) .set-note { font-size: 14px; }
 /* switches */
-.screen-settings .set-toggle { grid-template-columns: minmax(0,1fr) auto; align-items: center; min-height: 44px; cursor: pointer; }
-.screen-settings input[type="checkbox"][role="switch"], .screen-settings .set-assist input[type="checkbox"] {
+:is(.screen-settings, .sim-ahead) .set-toggle { grid-template-columns: minmax(0,1fr) auto; align-items: center; min-height: 44px; cursor: pointer; }
+:is(.screen-settings, .sim-ahead) input[type="checkbox"][role="switch"], :is(.screen-settings, .sim-ahead) .set-assist input[type="checkbox"] {
   appearance: none; -webkit-appearance: none; flex: none; width: 50px !important; height: 30px; min-height: 0 !important; margin: 0; padding: 0; position: relative; cursor: pointer;
   border-radius: 999px; background: #0b1712; border: 1px solid var(--line-2); transition: background .18s, border-color .18s; }
-.screen-settings input[type="checkbox"][role="switch"]::after, .screen-settings .set-assist input[type="checkbox"]::after {
+:is(.screen-settings, .sim-ahead) input[type="checkbox"][role="switch"]::after, :is(.screen-settings, .sim-ahead) .set-assist input[type="checkbox"]::after {
   content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #9fb3a9; box-shadow: 0 1px 2px rgba(0,0,0,.5); transition: transform .18s, background .18s; }
-.screen-settings input[type="checkbox"][role="switch"]:checked, .screen-settings .set-assist input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
-.screen-settings input[type="checkbox"][role="switch"]:checked::after, .screen-settings .set-assist input[type="checkbox"]:checked::after { transform: translateX(20px); background: #1a1400; }
-.screen-settings input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-html[data-reduced-motion="1"] .screen-settings input[type="checkbox"], html[data-reduced-motion="1"] .screen-settings input[type="checkbox"]::after { transition: none; }
+:is(.screen-settings, .sim-ahead) input[type="checkbox"][role="switch"]:checked, :is(.screen-settings, .sim-ahead) .set-assist input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+:is(.screen-settings, .sim-ahead) input[type="checkbox"][role="switch"]:checked::after, :is(.screen-settings, .sim-ahead) .set-assist input[type="checkbox"]:checked::after { transform: translateX(20px); background: #1a1400; }
+:is(.screen-settings, .sim-ahead) input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+html[data-reduced-motion="1"] :is(.screen-settings, .sim-ahead) input[type="checkbox"], html[data-reduced-motion="1"] :is(.screen-settings, .sim-ahead) input[type="checkbox"]::after { transition: none; }
 /* choices */
 .screen-settings .set-choice select { width: 100%; min-height: 44px; font-size: 15px; text-overflow: ellipsis; }
 .screen-settings .set-info { padding-bottom: 12px; }
@@ -2293,3 +2294,42 @@ html[data-comfortable-text="1"] .screen-settings .save-data .dim, html[data-comf
 
 .roster-tools > .btn { min-height:44px; }
 .roster-info-toggle[aria-expanded="true"] { border-color:var(--accent); color:var(--accent); }
+
+/* ===========================================================================================================================
+   Large screens, 2026-11-21: Galaxy Z Fold unfolded, tablets and computers. Phones (under 720 px wide) are unchanged.
+   The game is still one column of the same content in the same order; wider screens get a wider column, the top bar and
+   tab bar line up with it, sheets become centred dialogs, HQ splits into two columns, and the live match gives its
+   side panel room instead of using the short-landscape-phone layout inside a 640 px strip.
+   =========================================================================================================================== */
+@media (min-width: 720px) {
+  :root { --wide-col: 860px; }
+  .screen { max-width: var(--wide-col); }
+  .topbar { padding-left: max(0px, calc((100% - var(--wide-col)) / 2)); padding-right: max(0px, calc((100% - var(--wide-col)) / 2)); }
+  .tabbar { padding-left: max(0px, calc((100% - 720px) / 2)); padding-right: max(0px, calc((100% - 720px) / 2)); }
+  .tab { font-size: 12px; }
+  .sheet { max-width: 720px; }
+  .pregame-start { max-width: var(--wide-col); }
+  .phone-hq-next .btn { display: flex; width: 100%; max-width: var(--wide-col); } /* an inline button ignores auto margins: it sat at the left edge */
+  /* Monster cards, the office and settings read better at a measured width than stretched across a tablet. */
+  .screen-monster, .screen-office, .screen-settings, .screen-more { max-width: 760px; }
+}
+@media (min-width: 1200px) { :root { --wide-col: 1080px; } }
+/* Sheets as centred dialogs when there is room above and below (bottom sheets stay on phones and short landscape). */
+@media (min-width: 720px) and (min-height: 600px) {
+  .sheet-backdrop { align-items: center; padding: 24px; }
+  .sheet { border-bottom: 2px solid var(--line-2); border-radius: 12px; max-height: min(88dvh, 900px); padding-bottom: 0; }
+}
+/* HQ: what needs doing stays across the top; the team story sits on the left with links, last game, trades and news on the right. */
+@media (min-width: 860px) {
+  .screen-hq { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: 16px; align-items: start; grid-auto-flow: row dense; }
+  .screen-hq > * { grid-column: 1 / -1; min-width: 0; }
+  .screen-hq > .hq-team-story { grid-column: 1; grid-row: span 6; }
+  .screen-hq > .hq-links, .screen-hq > .hq-news, .screen-hq > .hq-last-game, .screen-hq > .polish-deals { grid-column: 2; }
+}
+/* Live match on a large landscape screen (Fold unfolded sideways, tablet, computer): a wider console, the field
+   centred in its column and a roomier side panel for the play call, log and buttons. */
+@media (orientation: landscape) and (min-width: 900px) and (min-height: 560px) {
+  .screen.screen-match:has(.match-console), .screen.screen-clash-battle:has(.clash-live-console) { max-width: min(1280px, 100%); padding-left: 16px; padding-right: 16px; }
+  .match-console { grid-template-columns: minmax(0, 1.15fr) minmax(320px, 1fr); column-gap: 12px; }
+  .match-console #controls { font-size: 15px; }
+}

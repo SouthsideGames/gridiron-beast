@@ -9,7 +9,7 @@ export const UI_SOUNDS = Object.freeze({
 });
 const PRIORITY={tap:0,back:1,confirm:2,notification:3,unavailable:4,reward:5,achievement:6};
 export class UiSoundPlayer {
- constructor({context=audioContext,bus=()=>audioBus('sfx'),preferences=audioPreferences,hidden=isAudioHidden,fetcher=(p)=>fetch(p),now=()=>Date.now(),defer=queueMicrotask}={}){
+ constructor({context=audioContext,bus=()=>audioBus('sfx'),preferences=audioPreferences,hidden=isAudioHidden,fetcher=(p)=>fetch(p),now=()=>Date.now(),defer=(fn)=>queueMicrotask(fn)}={}){
   Object.assign(this,{context,bus,preferences,hidden,fetcher,now,defer});this.buffers=new Map();this.loading=null;this.waking=null;this.pending=null;this.current=null;this.currentTap=null;this.tapSerial=0;this.serial=0;this.action=0;this.lastAt=-Infinity;this.lastPriority=-1;
  }
  preload(){

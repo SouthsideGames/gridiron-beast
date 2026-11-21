@@ -139,3 +139,15 @@ test('a cold first button tap plays its approved PCM sample even when loading ex
  f.p.tap();f.tick();f.tick();f.tick();release();await f.p.loading;await new Promise(r=>setImmediate(r));
  assert.deepEqual(f.played,[f.p.buffers.get('tap')]);
 });
+test('the default scheduler calls queueMicrotask unbound (browsers throw "Illegal invocation" when it is called as this.defer)',async()=>{
+ // Node tolerates a bound call, so emulate the browser's receiver check.
+ const real=globalThis.queueMicrotask;let receiver='unset';
+ globalThis.queueMicrotask=function(fn){receiver=this;if(this!==undefined&&this!==globalThis)throw new TypeError('Illegal invocation');return real(fn);};
+ try{
+  const ac={state:'running',createBufferSource(){return{connect(){},disconnect(){},start(){}};}};
+  const p=new UiSoundPlayer({context:()=>ac,bus:()=>'sfx',preferences:()=>({muted:false,sfx:.7}),hidden:()=>false});
+  for(const id of Object.keys(UI_SOUNDS))p.buffers.set(id,id);
+  assert.doesNotThrow(()=>p.request('notification'));
+  assert.ok(receiver===undefined||receiver===globalThis);
+ }finally{globalThis.queueMicrotask=real;}
+});
