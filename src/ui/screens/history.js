@@ -79,7 +79,7 @@ function historyHtml(f, params) {
 // ---------------------------------------------------------------- Awards
 function awardsScreenHtml(f, params) {
   const live = f.season?.awardsFinal && !f.season.finished ? { year: f.season.awardsFinal.year ?? f.season.year, league: f.season.awardsFinal.winners || {} } : null;
-  const seasons = [...(f.history || []).filter((h) => h.awards?.league).map((h) => ({ year: h.year, league: h.awards.league })), ...(live ? [{ ...live, live: true }] : [])].sort((a, b) => b.year - a.year);
+  const seasons = [...(f.preLeagueHistory?.seasons || []).filter(h => h.awards?.league).map(h => ({ year: h.year, league: h.awards.league, preLeague: true })), ...(f.history || []).filter((h) => h.awards?.league).map((h) => ({ year: h.year, league: h.awards.league })), ...(live ? [{ ...live, live: true }] : [])].sort((a, b) => b.year - a.year);
   if (!seasons.length) return empty($t('hq.award_winners_are_named_when_the'));
   const mode = params.mode === 'award' ? 'award' : 'season';
   const kinds = Object.keys(AWARDS).filter((k) => seasons.some((s) => s.league[k]));
