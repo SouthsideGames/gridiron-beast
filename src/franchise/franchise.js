@@ -1,3 +1,4 @@
+import { generateLeagueArchive } from './preleague-history.js';
 import { reserveIndividualName, ensureIndividualNames } from '../data/individual-names.js';
 import { commitGameInjuries } from '../sim/substitutions.js';
 import * as GM from './gm-career.js';
@@ -122,6 +123,8 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   for (const m of roster) dexRecord(f, m, 'signed');
   for (const m of roster) { noteJoin(f, m, 'founding', m.cornerstone ? { cornerstone: 1 } : {}); markCareerFresh(m); } // Career Timeline (GDD §38)
   if (persistentLeague) ensureLeague(f, { qualityDelta: -CREATION_LIFT, fresh: true }); // a new universe starts persistent (GDD §42.6): rosters open a little under today's year-1 quality because they will grow by playing (league-season.js calibration)
+  // Archive is separate from playable history: no retroactive GM achievements.
+  if (persistentLeague) f.preLeagueHistory = generateLeagueArchive(f);
   ensureIndividualNames(f);
   openCreationDraft(f);
   ensureIndividualNames(f);
