@@ -7227,4 +7227,8 @@ export default {
   'sim.stop_injury': "A starter was hurt: {names}. Check the lineup.",
   'sim.stop_evolution': "Ready to evolve: {names}.",
   'sim.stop_blocked': "The staff could not run the week: {reason}",
+  'clash.details': "Details",
+  'clash.details_title': "{name}",
+  'clash.details_from': "From {origin}",
+  'clash.details_compare': "Compare With Your Roster",
 };
