@@ -9,7 +9,7 @@ function seasonLine(m, year, seed) {
   const key = fields[position] || 'games';
   const games = 8 + roll(seed, m.id + ':' + year + ':gp', 5);
   const starts = Math.max(0, games - roll(seed, m.id + ':' + year + ':gs', 4));
-  const prime = Math.max(0.42, 1 - Math.abs((m.age || 25) - ((m.yearsPro || 0) - year) - 26) * 0.055);
+  const prime = Math.max(0.42, 1 - Math.abs((m.age || 25) - (1 - year) - 26) * 0.055);
   const scale = { passYds: 1900, rushYds: 720, recYds: 650, pancakes: 42, sacks: 12, tackles: 75, int: 5, fgm: 19 };
   const value = Math.round((scale[key] || 20) * prime * (0.65 + roll(seed, m.id + ':' + year + ':prod', 71) / 100));
   return { year, team: null, reg: { games, starts, [key]: value }, post: {} };
@@ -24,7 +24,7 @@ export function generateLeagueArchive(f, seasons = 8) {
   const years = [];
   for (let year = 1 - seasons; year <= 0; year++) {
     const ranked = teams.slice().sort((a, b) => roll(seed, year + ':' + a, 100000) - roll(seed, year + ':' + b, 100000));
-    const standings = ranked.map((club, i) => ({ club, w: Math.max(0, 11 - Math.floor(i * 11 / Math.max(1, ranked.length - 1))), l: 11 - Math.max(0, 11 - Math.floor(i * 11 / Math.max(1, ranked.length - 1))) }));
+    const standings = ranked.map((club, i) => { const w = Math.max(0, 11 - Math.floor(i * 11 / Math.max(1, ranked.length - 1))); return { club, w, l: 11 - w }; });
     const champion = ranked[0];
     years.push({ year, champion, runnerUp: ranked[1], standings, awards: { league: {} } });
   }
