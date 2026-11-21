@@ -4,10 +4,12 @@ const defaults={muted:false,music:.45,sfx:.7,crowd:.5,cries:.65};
 let preferences={...defaults};try{const saved=JSON.parse(globalThis.localStorage?.getItem(KEY)||'{}');for(const k of ['music','sfx','crowd','cries'])if(Number.isFinite(saved[k]))preferences[k]=Math.max(0,Math.min(1,saved[k]));preferences.muted=saved.muted===true;}catch{}
 let context=null,master=null;const buses={};
 export const audioPreferences=()=>({...preferences});
-// Ambient audio mixes with the player's music/video instead of claiming playback.
-// Older WebViews lack this API; the native iOS host also needs an ambient session.
-export function configureAudioSession(navigator = globalThis.navigator) {
+// Browser audio requests ambient mixing. The native iOS host configures playback
+// with mixWithOthers so in-game settings, rather than the silent switch, control sound.
+export function configureAudioSession(navigator = globalThis.navigator, capacitor = globalThis.Capacitor) {
  try {
+  // The iOS host owns its playback + mixWithOthers category; do not switch it back to ambient.
+  if (capacitor?.isNativePlatform?.() && capacitor?.getPlatform?.() === 'ios') return false;
   const session = navigator?.audioSession;
   if (!session) return false;
   if (session.type !== 'ambient') session.type = 'ambient';

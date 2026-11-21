@@ -6,7 +6,7 @@ import { music } from './music.js';
 let voice = null, ticket = 0;
 export function stopAudioPreview() {
   ticket++;
-  uiSounds.stop();
+  uiSounds.stop({preserveTap:!isAudioHidden()});
   if (voice) { try { voice.stop(); } catch {} voice.disconnect(); voice = null; }
   stopCry();
 }

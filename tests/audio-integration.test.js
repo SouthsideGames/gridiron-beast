@@ -102,3 +102,10 @@ test('a tap after an interruption that paused the current song resumes that same
  first.media.ended=true;first.media.pause();await f.player.select('main');assert.equal(first.media.paused,true,'an ended song is left to the loop handler');
  f.player.pause();
 });
+
+test('native iOS keeps the host mixing category instead of resetting to silent-switch ambient',async()=>{
+ const {configureAudioSession}=await import('../src/audio/context.js');
+ const session={type:'auto'};
+ assert.equal(configureAudioSession({audioSession:session},{isNativePlatform:()=>true,getPlatform:()=> 'ios'}),false);
+ assert.equal(session.type,'auto');
+});

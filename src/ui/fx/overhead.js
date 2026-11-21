@@ -61,7 +61,7 @@ export function battery(x, y, frac, o = 1, t = 0) {
  * All over-the-head items this frame. Sources: state.badges (status events), state.hud (snap snapshot per 'team:slot'), in-play charge
  * events (items of kind ability_charge / ability_ready) and the activation spends (state.spends).
  */
-export function overheadSvg(state, t, pos, { quality = 'full', seed = 0 } = {}) {
+export function overheadSvg(state, t, pos, { quality = 'full', seed = 0, showReadiness = false } = {}) {
   const per = new Map(); const key = (team, slot) => `${team}:${slot}`;
   const add = (team, slot, kind, data) => { const k = key(team, slot); if (!per.has(k)) per.set(k, { team, slot, items: [] }); const e = per.get(k); const i = e.items.findIndex((x) => x.kind === kind); if (i >= 0) e.items[i] = { kind, ...data }; else e.items.push({ kind, ...data }); };
   if (state.hud) for (const [k, hd] of Object.entries(state.hud)) { const [team, slot] = k.split(':'); if (hd.status?.id) add(team, slot, 'status', { id: hd.status.id, remaining: hd.status.remaining ?? null, age: 99 }); if (hd.charge && (hd.charge.max || hd.charge.cdMax || hd.charge.ready)) add(team, slot, 'charge', { c: { ...hd.charge }, colour: hd.colour || null }); if (hd.battery) add(team, slot, 'battery', { frac: hd.staminaFrac ?? 0.2 }); }
@@ -74,7 +74,7 @@ export function overheadSvg(state, t, pos, { quality = 'full', seed = 0 } = {}) 
   for (const [k, e] of per) {
     const p = pos(e.team, e.slot); if (!p) continue; const [cx, cy] = p; const y = cy - TOP;
     const spend = state.spends.find((sp) => sp.team === e.team && sp.slot === e.slot && t >= sp.t);
-    const items = e.items.filter((x) => x.kind !== 'charge' || !(spend && t - spend.t > 1.2 && !x.c.cd)); // a spent bar leaves after it drains (a recharge bar may replace it next play)
+    const items = e.items.filter((x) => x.kind !== 'charge' || showReadiness && !(spend && t - spend.t > 1.2 && !x.c.cd)); // a spent bar leaves after it drains (a recharge bar may replace it next play)
     if (!items.length) continue;
     const n = items.length; const ph = (t + (e.slot.charCodeAt(0) % 5) * 0.37) / CYCLE; const idx = ((Math.floor(ph) % n) + n) % n; const frac = ph - Math.floor(ph);
     // The active item, fading out at the end of its slot while the next fades in.
@@ -83,11 +83,7 @@ export function overheadSvg(state, t, pos, { quality = 'full', seed = 0 } = {}) 
       if (x.kind === 'battery') return battery(cx, y, x.frac, o, t);
       const colour = x.colour || (state.hud?.[k]?.element ? (ELEMENT[state.hud[k].element] || {}).a : null) || '#ffe36c';
       const drain = spend ? clamp01((t - spend.t) / 0.5) : 0;
-      // A small progress ring beside the base leaves faces and passing lanes clear.
-      const c=x.c, fraction=c.cd>0?1-c.cd/Math.max(1,c.cdMax||c.cd):c.ready?1:(c.n||0)/Math.max(1,c.max||1);
-      const r=.48, circumference=2*Math.PI*r, progress=clamp01(fraction)*(1-drain);
-      const g=`<g class="ability-readiness" opacity="${o}" transform="translate(${cx+1.65} ${cy+.65})"><circle r="${r}" fill="#10241c" stroke="#263e35" stroke-width=".22"/><circle r="${r}" fill="none" stroke="${colour}" stroke-width=".22" stroke-dasharray="${progress*circumference} ${circumference}" transform="rotate(-90)"/>${c.ready&&!c.cd?`<circle r=".19" fill="${colour}"/>`:''}</g>`;
-      return g; };
+      return `<g class="ability-readiness">${chargeBar(cx, y, x.c, colour, t, o, drain)}</g>`; };
     if (n === 1) { s += draw(items[0], 1); continue; }
     const fadeOut = frac > 1 - XFADE / CYCLE ? (1 - frac) / (XFADE / CYCLE) : 1; const fadeIn = frac > 1 - XFADE / CYCLE ? 1 - fadeOut : 0;
     s += draw(items[idx], fadeOut); if (fadeIn > 0.02) s += draw(items[(idx + 1) % n], fadeIn);

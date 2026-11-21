@@ -1,3 +1,4 @@
+import { readiness } from './charge.js';
 import { fieldsForNextSnap } from '../../sim/t8/field-runtime.js';
 // Task 8 presentation on the match screen (docs/task8/FX_FOOTBALL_MATRIX.md, integration items I1, I2, I6). No DOM here: the match
 // screen (screens/match.js) calls these and draws the result through field-view.js. Everything is presentation: it reads the game
@@ -336,4 +337,20 @@ export function conditionalNotes(state, teams, list, calls = null) {
     if (c.ready(state.t8?.ability?.[m.id], state, m.id)) { seen.add(`${m.id}|${id}`); out.push({ ability: id, name: dexAbilityName(id) || id, creator: m.name, mid: m.id, shown: false }); }
   }
   return out;
+}
+
+/** Current charge/cooldown information for play selection only. Never initializes or changes game state. */
+export function presnapReadiness(state, teams) {
+  if (!state || state.phase !== 'scrimmage' || state.finished) return null;
+  const hud = {};
+  const off = state.possession, def = off === 'home' ? 'away' : 'home';
+  for (const [side, map, opponent] of [['off', teams[off]?.offense, def], ['def', teams[def]?.defense, off]]) {
+    for (const [slot, m] of Object.entries(map || {})) {
+      const ability = state.t8?.ability?.[m.id];
+      if (!ability) continue;
+      const charge = readiness(m.species, { ...ability, conceded: state.t8?.touchdowns?.[opponent] || 0 }, m.form, m.mastery || 0);
+      if (charge) hud[`${side}:${slot}`] = { charge, element: m.type };
+    }
+  }
+  return Object.keys(hud).length ? hud : null;
 }
