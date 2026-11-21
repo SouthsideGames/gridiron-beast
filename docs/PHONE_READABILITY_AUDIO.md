@@ -15,7 +15,7 @@ Build: v43.32.0-phone-readability. Based on merged main `9a4189b` (PR #145).
 
 ## Validation
 
-Initial targeted run: 77/77 passed. Final affected rerun: 29/29 passed, with no failures, cancellations or skips (19.8 seconds). Release stamping, syntax checks and git diff whitespace checks pass. The broader fast tier is still running at this checkpoint; the full suite has not run. No simulation engine or reward calculation changed.
+Initial targeted run: 77/77 passed. Final affected rerun: 29/29 passed, with no failures, cancellations or skips (19.8 seconds). Release stamping, syntax checks and git diff whitespace checks pass. The optional broader fast-tier development run was interrupted (exit 130) after reaching lengthy unrelated engine batches. It had reported no failures, but did not finish and is not claimed as a pass. It began before the last wake-up refinements and fixture correction; the final affected 29-test rerun covers those changes. The full suite has not run. No simulation engine or reward calculation changed.
 
 The WAV tests load all seven repository files, compare every PCM sample with the original, preview all seven through the SFX bus and test source failure/retry. They do not prove speaker audibility. Additional checks cover default-open HQ sections, retained opposing leader identity when a club has no sacks, base-level charge/cooldown/readiness SVGs and unchanged render input state. The new box-score fixture initially omitted required team metadata; that fixture was corrected before its passing rerun. The preview cancellation fixture now explicitly suspends its fake context before testing delayed resume, matching the new behavior that avoids redundant resumes of running contexts.
 
