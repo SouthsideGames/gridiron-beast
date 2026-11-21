@@ -66,15 +66,25 @@ export function generateLeagueArchive(f, seasons = 8) {
     careers[m.id] = { id: m.id, name: m.name, position: m.position, club, seasons: books,
       totals: books.reduce((sum, b) => { for (const [k,v] of Object.entries(b.reg)) sum[k] = (sum[k] || 0) + v; return sum; }, {}) };
   }
-  // Award selections are drawn from actual generated career entries, not invented stat lines.
+  // Award winners are selected from generated season books, with positional
+  // eligibility. All awards reference the same monster IDs as the archive.
   for (const season of years) {
-    const candidates = Object.values(careers).flatMap(c => c.seasons.filter(b => b.year === season.year).map(b => ({ ...c, book: b })));
-    candidates.sort((a,b) => Object.entries(b.book.reg).filter(([k]) => k !== 'games' && k !== 'starts').reduce((n,[,v])=>n+v,0) -
-      Object.entries(a.book.reg).filter(([k]) => k !== 'games' && k !== 'starts').reduce((n,[,v])=>n+v,0));
-    if (candidates[0]) {
-      const m = candidates[0];
-      season.awards.league.mvp = { id: m.id, name: m.name, team: m.book.team, ...m.book.reg };
-    }
+    const candidates = Object.values(careers).flatMap(c => c.seasons.filter(b => b.year === season.year).map(b => ({ career: c, book: b })));
+    const best = (positions, key) => candidates.filter(x => positions.includes(x.career.position) && (x.book.reg[key] || 0) > 0)
+      .sort((a,b) => (b.book.reg[key] || 0) - (a.book.reg[key] || 0) || String(a.career.id).localeCompare(String(b.career.id)))[0];
+    const award = (kind, selected) => {
+      if (!selected) return;
+      const c = selected.career;
+      season.awards.league[kind] = { id: c.id, name: c.name, position: c.position, team: selected.book.team };
+    };
+    const offense = candidates.filter(x => ['QB','RB','WR','TE'].includes(x.career.position))
+      .sort((a,b) => (b.book.reg.passYds || b.book.reg.rushYds || b.book.reg.recYds || 0) - (a.book.reg.passYds || a.book.reg.rushYds || a.book.reg.recYds || 0))[0];
+    const defense = candidates.filter(x => ['DL','LB','CB','S'].includes(x.career.position))
+      .sort((a,b) => (b.book.reg.sacks || b.book.reg.tackles || b.book.reg.int || 0) - (a.book.reg.sacks || a.book.reg.tackles || a.book.reg.int || 0))[0];
+    award('mvp', offense || defense || candidates[0]);
+    award('opoy', offense);
+    award('dpoy', defense);
+    award('smoy', best(['K'], 'fgm'));
   }
   return { version: 1, seed, seasons: years, careers };
 }
