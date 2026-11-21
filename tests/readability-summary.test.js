@@ -13,14 +13,25 @@ test('a club without a sack gets a readable empty label while the opposing leade
  assert.ok(row);assert.match(row[0],/None recorded/);assert.doesNotMatch(row[0],/>·</);
  assert.ok(html.includes(teams.home.defense.DL1.name));
 });
-test('charge and cooldown render at the beast base without overhead bars or numeric clutter',()=>{
+test('charge bars are available between plays and absent throughout live/replay frames',()=>{
  for(const charge of [{n:1,max:3},{cd:2,cdMax:4},{ready:true,max:3}]){
   const state={hud:{'home:WR1':{charge}},badges:[],items:[],spends:[]},before=JSON.stringify(state);
-  const svg=overheadSvg(state,0,()=>[10,20],{});
-  assert.match(svg,/class="ability-readiness"/);assert.match(svg,/translate\(11.65 20.65\)/);
-  assert.doesNotMatch(svg,/<rect|<text|NaN/);assert.equal(JSON.stringify(state),before);
+  const playing=overheadSvg(state,0,()=>[10,20],{});
+  assert.doesNotMatch(playing,/ability-readiness|<rect|<circle/);
+  const selecting=overheadSvg(state,0,()=>[10,20],{showReadiness:true});
+  assert.match(selecting,/class="ability-readiness"/);assert.match(selecting,/<rect/);
+  assert.doesNotMatch(selecting,/<circle|NaN/);assert.equal(JSON.stringify(state),before);
  }
 });
 test('malformed and truncated UI files are rejected before creating audio sources',()=>{
  for(const bytes of [new ArrayBuffer(0),new ArrayBuffer(44)])assert.throws(()=>decodeUiWav({},bytes),/Invalid UI WAV/);
+});
+
+test('team sack totals credit the defense, using the opposing offense sacks taken',()=>{
+ const teams={home:generatedTeam(3,{id:'h',name:'Home'}),away:generatedTeam(4,{id:'a',name:'Away'})};
+ const state=R.newGame({home:teams.home,away:teams.away,seed:3,first:'home',choice:'receive'});
+ state.stats.home.sacks=2;state.stats.away.sacks=5;
+ const before=JSON.stringify(state),html=boxScoreHtml(state,teams);
+ assert.match(html,/<td>2<\/td><td class="dim">Sacks<\/td><td>5<\/td>/i);
+ assert.doesNotMatch(html,/Sacks taken/i);assert.equal(JSON.stringify(state),before);
 });

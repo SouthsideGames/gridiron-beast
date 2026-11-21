@@ -34,10 +34,10 @@ test('not-yet-loaded sounds never play later as an unwanted backlog; failures ar
  const f=fixture();f.p.buffers.clear();f.ac.createBuffer=(channels,length,sampleRate)=>({length,sampleRate,getChannelData:()=>new Float32Array(length)});f.p.fetcher=async()=>({ok:false});f.p.request('tap');await f.p.loading;f.flush();assert.equal(f.played.length,0);
  f.p.loading=null;f.p.fetcher=async()=>({ok:true,arrayBuffer:async()=>{const b=fs.readFileSync(new URL('../'+UI_SOUNDS.tap,import.meta.url));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);}});await f.p.preload();assert.equal(f.p.buffers.size,7);assert.equal(f.played.length,0);
 });
-test('control semantics keep disabled/busy/muted controls silent and close/confirm distinct',()=>{
+test('every enabled button uses tap feedback, including close and confirm',()=>{
  const el=(action,extra={})=>({dataset:{action},getAttribute:()=>null,closest:()=>null,...extra});
- assert.equal(soundForControl(el('router-back')),'back');assert.equal(soundForControl(el('sheet-close')),'back');assert.equal(soundForControl(el('yes')),'confirm');assert.equal(soundForControl(el('go')),'tap');
- assert.equal(soundForControl(el('go',{disabled:true})),null);assert.equal(soundForControl(el('go',{dataset:{busy:'1'}})),null);assert.equal(soundForControl(el('go',{closest:()=>({})})),null);
+ assert.equal(soundForControl(el('router-back')),'tap');assert.equal(soundForControl(el('sheet-close')),'tap');assert.equal(soundForControl(el('yes')),'tap');assert.equal(soundForControl(el('go')),'tap');
+ assert.equal(soundForControl(el('go',{disabled:true})),null);assert.equal(soundForControl(el('go',{dataset:{busy:'1'}})),'tap');assert.equal(soundForControl(el('go',{closest:()=>({})})),'tap');
 });
 
 test('a tap survives WebKit asynchronous resume, and a reward replaces its generic tap',async()=>{
@@ -74,7 +74,7 @@ test('installed click handling starts actual UI sources and follows live SFX set
   const click=async action=>{listeners.click({target:{closest:()=>({dataset:{action},getAttribute:()=>null,closest:()=>null})}});await new Promise(r=>setImmediate(r));};
   await click('go');assert.deepEqual(played,[{id:'tap',volume:.7}]);
   setAudioPreferences({sfx:0});await click('yes');assert.equal(played.length,1);
-  setAudioPreferences({sfx:.3});await click('yes');assert.deepEqual(played.at(-1),{id:'confirm',volume:.3});
+  setAudioPreferences({sfx:.3});await click('yes');assert.deepEqual(played.at(-1),{id:'tap',volume:.3});
   setAudioPreferences({muted:true});await click('back');assert.equal(played.length,2);
  }finally{uiSounds.stop();setAudioPreferences({muted:false,sfx:.7});if(previous===undefined)delete globalThis.AudioContext;else globalThis.AudioContext=previous;}
 });
@@ -108,4 +108,34 @@ test('gesture wake and Settings preview share one asynchronous resume; rejection
  f.ac.state='suspended';f.ac.resume=async()=>{throw Error('Interrupted');};
  assert.equal(await f.p.preview(),false);
  f.ac.resume=async()=>{f.ac.state='running';};assert.equal(await f.p.preview(),true);
+});
+
+test('button tap and semantic feedback both play; each fresh press is audible without an extra throttle',()=>{
+ const f=fixture();f.p.tap();f.p.request('reward');f.flush();
+ assert.deepEqual(f.played,['tap','reward']);assert.deepEqual(f.stops,[],'reward must not cut off tap');
+ f.p.tap();assert.deepEqual(f.played,['tap','reward','tap']);assert.deepEqual(f.stops,['tap']);
+ f.p.stop();assert.ok(f.stops.includes('reward'));
+});
+test('first button tap can wait for cold loading and asynchronous unlock, while newer presses replace stale ones',async()=>{
+ const f=fixture();let resume;f.ac.state='suspended';f.ac.resume=()=>new Promise(r=>resume=()=>{f.ac.state='running';r();});
+ f.p.tap();f.p.tap();resume();await new Promise(r=>setImmediate(r));assert.deepEqual(f.played,['tap']);
+ for(const cancel of [f=>f.hide(),f=>f.prefs.muted=true,f=>f.prefs.sfx=0,f=>f.p.stop()]){
+  const f=fixture();let resume;f.ac.state='interrupted';f.ac.resume=()=>new Promise(r=>resume=()=>{f.ac.state='running';r();});
+  f.p.tap();cancel(f);resume();await new Promise(r=>setImmediate(r));assert.deepEqual(f.played,[]);
+ }
+});
+
+test('leaving Settings or replacing a preview does not cut off its button tap',async()=>{
+ const f=fixture();f.p.tap();f.p.stop({preserveTap:true});assert.deepEqual(f.stops,[]);
+ f.ac.state='suspended';let resume;f.ac.resume=()=>new Promise(r=>resume=()=>{f.ac.state='running';r();});
+ f.p.tap();f.p.stop({preserveTap:true});resume();await new Promise(r=>setImmediate(r));assert.equal(f.played.length,2);
+ f.p.stop();assert.ok(f.stops.includes('tap'));
+});
+
+test('a cold first button tap plays its approved PCM sample even when loading exceeds 250 ms',async()=>{
+ const f=fixture();f.p.buffers.clear();let release;const gate=new Promise(r=>release=r);
+ f.ac.createBuffer=(channels,length,sampleRate)=>({length,sampleRate,getChannelData:()=>new Float32Array(length)});
+ f.p.fetcher=async path=>{await gate;return {ok:true,arrayBuffer:async()=>{const b=fs.readFileSync(new URL('../'+path,import.meta.url));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);}};};
+ f.p.tap();f.tick();f.tick();f.tick();release();await f.p.loading;await new Promise(r=>setImmediate(r));
+ assert.deepEqual(f.played,[f.p.buffers.get('tap')]);
 });

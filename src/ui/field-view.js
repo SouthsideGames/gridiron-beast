@@ -1,3 +1,4 @@
+import { overheadSvg } from './fx/overhead.js';
 import { FacingTracker } from './match-camera.js';
 import { hybridRegions } from '../sim/t8/zone-planning.js';
 // Live match field: vertical, the offense always attacks UP. A camera
@@ -51,7 +52,7 @@ const FIELD_TINT = { Fire: '#ff7a3d', Water: '#5fb6ff', Nature: '#7ad35a', Elect
  * layer's <use> elements need ({ id, symbol }, deduplicated).
  */
 export function fieldLayers(o) {
-  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null, qbRead = false, fields = null, fxOptions = null} = o;
+  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null, qbRead = false, fields = null, fxOptions = null, readinessHud = null} = o;
   const portalFrame = frame && (frame.hoardFlight || fx?.t8?.items?.some((i) => i.id === 'PSY-02-F' && (frame.t ?? 0) >= i.t0));
   const cam = o.viewCamera || (portalFrame ? cameraFor(ballOn + frame.ball[0]) : camera || cameraFor(ballOn));
   const span = cam.top - cam.bottom;
@@ -187,6 +188,10 @@ export function fieldLayers(o) {
     pre = s; s = '';
     if (dp) for (const slot of dp.onField) { const [x, y] = dp.align[slot]; marker(slot, x, y, 'def', false, false); }
     if (op) for (const slot of op.onField) { const [x, y] = op.align[slot]; marker(slot, x, y, 'off', false, slot === 'QB'); }
+    if (readinessHud) s += overheadSvg({ hud: readinessHud, badges: [], items: [], spends: [] }, time ?? 0, (team, slot) => {
+      const at = (team === 'off' ? op : dp)?.align?.[slot];
+      return at ? [X(ballLat + at[1]), Y(ballOn + at[0])] : null;
+    }, { showReadiness: true });
     // Expected type matchups (GDD §32.4): a small badge just above the sprite's inside shoulder, never over the monster or the
     // ball, and off the line of a straight route (routes leave from the feet). Each badge is a button: tapping opens the matchup panel.
     let tmIcons = '';

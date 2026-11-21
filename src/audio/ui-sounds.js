@@ -10,7 +10,7 @@ export const UI_SOUNDS = Object.freeze({
 const PRIORITY={tap:0,back:1,confirm:2,notification:3,unavailable:4,reward:5,achievement:6};
 export class UiSoundPlayer {
  constructor({context=audioContext,bus=()=>audioBus('sfx'),preferences=audioPreferences,hidden=isAudioHidden,fetcher=(p)=>fetch(p),now=()=>Date.now(),defer=queueMicrotask}={}){
-  Object.assign(this,{context,bus,preferences,hidden,fetcher,now,defer});this.buffers=new Map();this.loading=null;this.waking=null;this.pending=null;this.current=null;this.serial=0;this.action=0;this.lastAt=-Infinity;this.lastPriority=-1;
+  Object.assign(this,{context,bus,preferences,hidden,fetcher,now,defer});this.buffers=new Map();this.loading=null;this.waking=null;this.pending=null;this.current=null;this.currentTap=null;this.tapSerial=0;this.serial=0;this.action=0;this.lastAt=-Infinity;this.lastPriority=-1;
  }
  preload(){
   if(this.loading)return this.loading;
@@ -39,6 +39,16 @@ export class UiSoundPlayer {
    if(ready.length)void Promise.all(ready).then(play).catch(()=>{});else play();
   });}
  }
+ // Button feedback has its own bounded voice, so a reward/confirmation cannot replace the tap.
+ tap(){
+  const p=this.preferences();if(this.hidden()||p.muted||p.sfx<=0)return;
+  const ac=this.context();if(!ac)return;
+  const ticket=++this.tapSerial,at=this.now(),ready=[];
+  if(ac.state!=='running')try{ready.push(this.wake(ac));}catch{return;}
+  if(!this.buffers.has('tap'))ready.push(this.preload());
+  const play=()=>{if(ticket===this.tapSerial&&this.now()-at<=1000)this.play('tap',{force:true,tap:true});};
+  if(ready.length)void Promise.all(ready).then(play).catch(()=>{});else play();
+ }
  async preview(id='confirm'){
   const ac=this.context();if(!ac)return false;
   const ticket=this.serial;
@@ -48,45 +58,41 @@ export class UiSoundPlayer {
   if(ticket!==this.serial||!this.buffers.has(id)||this.hidden())return false;
   return this.play(id, {force:true});
  }
- play(id, {force=false}={}){
+ play(id, {force=false,tap=false}={}){
   const p=this.preferences(),ac=this.context();if(this.hidden()||p.muted||p.sfx<=0||!ac||ac.state!=='running')return false;
   const at=this.now(),priority=PRIORITY[id];if(!force&&at-this.lastAt<70&&priority<=this.lastPriority)return false;
   const buffer=this.buffers.get(id);if(!buffer)return false;
-  this.stopVoice();let source;
-  try { source=ac.createBufferSource();source.buffer=buffer;source.connect(this.bus());this.current=source;
-  source.onended=()=>{source.disconnect();if(this.current===source)this.current=null;};source.start();this.lastAt=at;this.lastPriority=priority;return true;
-  } catch {try{source?.disconnect();}catch{}if(this.current===source)this.current=null;return false;}
+  this.stopVoice(tap);let source;const voice=tap?'currentTap':'current';
+  try { source=ac.createBufferSource();source.buffer=buffer;source.connect(this.bus());this[voice]=source;
+  source.onended=()=>{source.disconnect();if(this[voice]===source)this[voice]=null;};source.start();if(!tap){this.lastAt=at;this.lastPriority=priority;}return true;
+  } catch {try{source?.disconnect();}catch{}if(this[voice]===source)this[voice]=null;return false;}
  }
- stopVoice(){if(this.current){const s=this.current;this.current=null;try{s.stop();}catch{}s.disconnect();}}
- stop(){++this.serial;this.pending=null;this.stopVoice();}
+ stopVoice(tap=false){const voice=tap?'currentTap':'current';if(this[voice]){const s=this[voice];this[voice]=null;try{s.stop();}catch{}s.disconnect();}}
+ stop({preserveTap=false}={}){++this.serial;this.pending=null;this.stopVoice();if(!preserveTap){++this.tapSerial;this.stopVoice(true);}}
+
 }
 export const uiSounds=new UiSoundPlayer();
 export const uiSound=id=>uiSounds.request(id);
 export function soundForControl(el){
- if(!el||el.disabled||el.dataset?.busy||el.getAttribute?.('aria-disabled')==='true'||el.closest?.('[data-ui-sound="none"]'))return null;
- if(el.dataset?.uiSound)return el.dataset.uiSound;
- const a=el.dataset?.action;
- if(['back','router-back','sheet-close','close','cancel','no','undo'].includes(a))return 'back';
- if(a==='yes')return 'confirm';
+ if(!el||el.disabled||el.getAttribute?.('aria-disabled')==='true')return null;
  return 'tap';
 }
-let installed=false;
+const installed=new WeakSet();
 const presentedScenes=new WeakSet();
 export function uiSceneSound(name,ctx){
  const scene=name==='scene'&&ctx.f?.scenes?.[0];
  if(scene&&typeof scene==='object'&&!presentedScenes.has(scene)){presentedScenes.add(scene);uiSound('achievement');}
 }
 export function installUiSounds(doc=globalThis.document){
- if(installed||!doc)return;installed=true;void uiSounds.preload();
+ if(!doc||installed.has(doc))return;installed.add(doc);void uiSounds.preload();
  const wake=()=>{const p=audioPreferences();if(isAudioHidden()||p.muted||p.sfx<=0)return;const ac=audioContext();if(ac&&ac.state!=='running')void uiSounds.wake(ac).catch(()=>{});void uiSounds.preload();};
  doc.addEventListener('pointerdown',wake,{capture:true,passive:true});
  doc.addEventListener('touchend',wake,{capture:true,passive:true});
  doc.addEventListener('keydown',wake,{capture:true});
  doc.addEventListener('click',event=>{
-  const el=event.target.closest?.('button,[role="button"],[data-action],a[data-screen]');
-  const id=soundForControl(el);if(id)uiSound(id);
+  const el=event.target.closest?.('button,[role="button"],[data-action],a[href],a[data-screen],summary,input[type="checkbox"],input[type="radio"]');
+  if(soundForControl(el))uiSounds.tap();
  },{capture:true});
- doc.addEventListener('change',event=>{const el=event.target;if(['checkbox','radio'].includes(el?.type)&&!el.disabled)uiSound('tap');});
  doc.addEventListener('visibilitychange',()=>{if(doc.hidden)uiSounds.stop();});
  globalThis.addEventListener?.('pagehide',()=>uiSounds.stop());
  globalThis.addEventListener?.('gb-app-state',e=>{if(e.detail?.isActive===false)uiSounds.stop();});

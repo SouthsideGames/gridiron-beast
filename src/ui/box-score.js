@@ -61,10 +61,10 @@ export function boxScoreHtml(state, teams, { title = $t('match.box_score') } = {
   const S = (side) => state.stats[side];
   const tot = [
     [$t('match.total_yards'), (s) => s.passYards + s.rushYards], [$t('match.passing'), (s) => s.passYards], [$t('match.rushing'), (s) => s.rushYards],
-    [$t('match.completions'), (s) => `${s.passComp}/${s.passAtt}`], [$t('match.first_downs'), (s) => s.firstDowns], [$t('match.sacks_taken'), (s) => s.sacks],
+    [$t('match.completions'), (s) => `${s.passComp}/${s.passAtt}`], [$t('match.first_downs'), (s) => s.firstDowns], [$t('match.sacks_2'), (s, side) => state.stats[side === 'home' ? 'away' : 'home'].sacks || 0],
     [$t('match.turnovers'), (s) => s.turnovers], [$t('match.possession'), (s) => fmtClock(Math.round(s.timeOfPossession || 0))],
   ];
-  const totals = `<table class="bs-totals"><thead><tr><th style="color:${A.color}">${esc(A.abbr)}</th><th></th><th style="color:${H.color}">${esc(H.abbr)}</th></tr></thead><tbody>${tot.map(([l, fn]) => `<tr><td>${fn(S('away'))}</td><td class="dim">${l}</td><td>${fn(S('home'))}</td></tr>`).join('')}</tbody></table>`;
+  const totals = `<table class="bs-totals"><thead><tr><th style="color:${A.color}">${esc(A.abbr)}</th><th></th><th style="color:${H.color}">${esc(H.abbr)}</th></tr></thead><tbody>${tot.map(([l, fn]) => `<tr><td>${fn(S('away'), 'away')}</td><td class="dim">${l}</td><td>${fn(S('home'), 'home')}</td></tr>`).join('')}</tbody></table>`;
   const pog = playersOfGame(state);
   const pogCard = (p, label) => { if (!p) return ''; const m = who(teams[p.side], p.key || p.slot); const club = state[p.side]; return `<div class="pog">${monsterSprite(m, 44)}<div><div class="dim" style="font-size:11px;letter-spacing:.08em">${label}</div><b>${m.id ? careerLink(m.id, m.name) : esc(m.name)}</b> <span class="dim">${p.slot} · <span style="color:${club.color}">${esc(club.abbr)}</span></span><div class="muted" style="font-size:13px">${esc(line(p))}</div></div></div>`; };
   return `<div class="box-score">

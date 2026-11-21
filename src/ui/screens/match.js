@@ -1,3 +1,4 @@
+import { presnapReadiness } from '../fx/match-fx.js';
 import { beastSpeciesHtml } from '../beast-identity.js';
 import { autoSpeed, cycleAutoSpeed } from '../phone-navigation.js';
 import { matchLogMatches } from '../match-log-filter.js';
@@ -44,7 +45,7 @@ import { matchupEdges } from '../../sim/type-matchups.js';
 import { weatherClass } from '../stadium-art.js';
 import { venueHtml } from '../stadium-preview.js';
 import { replayReason, replayPlan, replayPosition, REPLAY } from '../replay.js';
-import { qbReadPanelHtml, qbReadsShown } from '../qb-read-ui.js';
+import { qbReadsShown } from '../qb-read-ui.js';
 import { openMatchupPanel } from '../type-chart.js';
 import { postGameHtml } from '../captains-ui.js';
 import { t as $t, lineText } from '../../text/index.js';
@@ -313,7 +314,7 @@ export function registerMatchScreens(Router, app) {
     const offColor = s[offenseTeamSide].color, defColor = s[R.opponent(offenseTeamSide)].color;
     const field = anim
       ? { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: anim.frames[anim.i], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, event: G.event, noLines: anim.follow, sprites: spritesFor(f, anim.ev.offenseSide), ...(anim.fx && !anim.replay ? { fields: anim.ev.sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), prevFrame: anim.frames[anim.i - 1] || null, ...(anim.pre && anim.i === 0 && !anim.key ? { time: -anim.pre } : {}) } : {}) }
-      : { venue: G.state.venue, ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, typeIcons: typeIconsFor(f, teams, look), ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession), ...(pre8 ? { fields: pre8.fields.length ? pre8.fields : null, fx: pre8.fx, time: pre8.time, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings) } : {}) };
+      : { venue: G.state.venue, ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, readinessHud: presnapReadiness(s, teams), typeIcons: typeIconsFor(f, teams, look), ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession), ...(pre8 ? { fields: pre8.fields.length ? pre8.fields : null, fx: pre8.fx, time: pre8.time, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings) } : {}) };
     if (!anim && look.myPlay && s.phase === 'scrimmage') {
       const mine = s.possession === me;
       const plans = zonePlans(s, teams, me, mine ? look.myPlay : look.presnap.offensePlay.id, mine ? look.presnap.defensePlay.id : look.myPlay);
@@ -353,7 +354,7 @@ export function registerMatchScreens(Router, app) {
     // N9c: a field the snap creates only if its creator is in the play (Runway, Bloom Break, Crosswind Rescue) is marked as conditional
     const warning = !anim ? (s.t8?.preChoice?.foresight || []).map((m) => `<div class="t8-conditional" role="note">${$t('match.foresight_is_marked_blitzing_risks_confused', { name: esc(findMonster(teams, m.targetMid)?.monster?.name || m.targetSlot) })}</div>`).join('') + (s.t8?.preChoice?.prism || []).map(() => `<div class="t8-conditional" role="note">${$t('match.prism_break_shattered_an_existing_enemy')}</div>`).join('') : '';
     const cond = !anim && pre8?.notes?.length ? `<div class="t8-conditional" role="note">${pre8.notes.map((n) => `<span class="${n.shown ? '' : 'held'}" data-ability="${esc(n.ability)}">◇ <b>${esc(n.name)}</b> ${n.shown ? `${$t('match.is_created_at_the_snap_only', { creator: esc(n.creator) })}` : `${$t('match.is_not_created_is_not_on', { creator: esc(n.creator) })}`}</span>`).join('')}</div>` : '';
-    const after = `${cond}${warning}${anim?.replay && anim.ev?.sim?.qb && qbReadsShown(f.settings) ? qbReadPanelHtml(anim.ev.sim, (slot, side) => `${(side === 'def' ? anim.ev.sim.names?.def : anim.ev.sim.names?.off)?.[slot] || slot} (${slot})`, { title: $t('match.qb_reads_on_this_play') }) : ''}${!anim && presnapEdges.length ? `<div class="tm-legend"><span><b class="up">${$t('match.b_type_advantage')}</span><span><b class="down">${$t('match.b_disadvantage')}</span><span>${$t('match.tap_an_icon')}</span><span>${$t('match.tap_a_monster_to_inspect')}</span></div>` : !anim && inspectMap ? `<div class="tm-legend"><span>${$t('match.tap_a_monster_to_inspect_stamina')}</span></div>` : ''}`;
+    const after = `${cond}${warning}${!anim && presnapEdges.length ? `<div class="tm-legend"><span><b class="up">${$t('match.b_type_advantage')}</span><span><b class="down">${$t('match.b_disadvantage')}</span><span>${$t('match.tap_an_icon')}</span><span>${$t('match.tap_a_monster_to_inspect')}</span></div>` : !anim && inspectMap ? `<div class="tm-legend"><span>${$t('match.tap_a_monster_to_inspect_stamina')}</span></div>` : ''}`;
     const title = `${s.away.abbr} ${s.score.away}-${s.score.home} ${s.home.abbr}`;
     return { title, head, wrapClass, field, over, after, controls: controlsHtml(f, teams, look) };
   }
@@ -770,7 +771,7 @@ export function registerMatchScreens(Router, app) {
         const frame = pos.k >= 0.5 && b !== a ? midFrame(a, b) : a;
         if (anim.follow) { const target = cameraFor((sim.ballOn || 0) + a.ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
         const s2 = G.state;
-        drawMatchField(svg, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame, prevFrame: sim.frames[pos.i - 1] || null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), qbRead: qbReadsShown(f.settings), ownLabel: s2[anim.ev.offenseSide || s2.possession].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide || s2.possession)].abbr, camera: anim.camera, event: G.event, noLines: true, sprites: anim.sprites, time: frame.t });
+        drawMatchField(svg, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame, prevFrame: sim.frames[pos.i - 1] || null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), qbRead: false, ownLabel: s2[anim.ev.offenseSide || s2.possession].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide || s2.possession)].abbr, camera: anim.camera, event: G.event, noLines: true, sprites: anim.sprites, time: frame.t });
         // Camera: a slight zoom that tracks the ball (CSS transform on the svg; the wrap clips it).
         if (zoomOn) { const bx = (anim.ballLat + frame.ball[1] - VB[0]) / VB[2], by = (anim.camera.top - (anim.ballOn + frame.ball[0])) / VB[3]; svg.style.transformOrigin = `${(Math.max(0.15, Math.min(0.85, bx)) * 100).toFixed(1)}% ${(Math.max(0.15, Math.min(0.85, by)) * 100).toFixed(1)}%`; svg.style.transform = `${`scale(${REPLAY.zoom})`}`; }
         wrap?.classList.toggle('slowmo', !!pos.slow);
