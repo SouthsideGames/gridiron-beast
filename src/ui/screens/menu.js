@@ -1,3 +1,4 @@
+import { deviceSettings, isDeviceSetting } from '../device-settings.js';
 import { previewAudio, stopAudioPreview } from '../../audio/settings-preview.js';
 import { returnSummary } from '../polish.js';
 import { audioPreferences, setAudioPreferences } from '../../audio/context.js';
@@ -124,7 +125,8 @@ export function registerMenuScreens(Router, app) {
           ${toggle('reduced', s.reducedMotion, t('menu.reduce_motion_no_play_animation_no'))}
           ${toggle('reducedflash', s.reducedFlash, t('menu.reduce_flashes_softer_ability_and_score'))}
           ${toggle('shake', s.screenShake !== false, t('menu.screen_shake_on_big_hits_and'))}
-          ${choice('framerate', t('menu.frame_rate'), [[60, t('menu.60_fps_default'), frameRateOf(s) === 60], [30, t('menu.30_fps_battery_saver'), frameRateOf(s) === 30]], t('menu.30_fps_redraws_effects_less_often'))}`)}
+          ${choice('framerate', t('menu.frame_rate'), [[60, t('menu.60_fps_default'), frameRateOf(s) === 60], [30, t('menu.30_fps_battery_saver'), frameRateOf(s) === 30]], t('menu.30_fps_redraws_effects_less_often'))}
+          <p class="set-note">These display settings apply across franchises on this device.</p>`)}
         ${group('audio', 'Audio', `
           <label class="set-row set-toggle"><span class="set-text"><b>Mute all audio</b></span><input type="checkbox" role="switch" data-change="audio-mute" ${ap.muted ? 'checked' : ''}></label>
           ${[['music', 'Music', 'Play Music'], ['sfx', 'Sound effects', 'Test'], ['crowd', 'Crowd', 'Test'], ['cries', 'Monster cries', 'Play Cry']].map(([key, label, test]) => `<div class="set-row set-volume"><label class="set-text" for="vol-${key}"><b>${label}</b></label><div class="set-volume-line"><input id="vol-${key}" type="range" min="0" max="1" step="0.05" data-change="audio-${key}" value="${ap[key]}" aria-label="${label} volume"><button class="btn small" data-action="audio-preview" data-channel="${key}">${test}</button></div></div>`).join('')}
@@ -140,7 +142,7 @@ export function registerMenuScreens(Router, app) {
 
       const audioSet = patch => { if (!setAudioPreferences(patch)) toast('Audio setting could not be saved on this device.', 'bad'); };
       root.querySelectorAll('[data-change^="audio-"]').forEach(el => el.addEventListener('input', () => audioSet(el.dataset.change === 'audio-mute' ? { muted: el.checked } : { [el.dataset.change.slice(6)]: Number(el.value) })));
-      const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.comfortableText = app.settings.comfortableText ? '1' : '0'; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); };
+      const set = (k, v) => { if (isDeviceSetting(k) && !deviceSettings.write({ [k]: v })) toast('This setting could not be saved on this device.', 'bad'); if (isDeviceSetting(k)) app.defaultSettings[k] = v; if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.comfortableText = app.settings.comfortableText ? '1' : '0'; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); };
       delegate(root, {
         'audio-preview': async (el) => { try { const r = await previewAudio(el.dataset.channel); if (!r.ok) toast(r.reason); } catch { toast('Audio preview could not play. Try again.', 'bad'); } },
         autospeed: (el) => { const n=Number(el.value); if([1,2,4].includes(n)){if(app.f?.game)app.f.game.autoSpeed=n;set('autoSpeed',n);} },

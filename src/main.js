@@ -63,6 +63,7 @@ import { registerDexScreens } from './ui/screens/dex.js';
 import { installCareerLinks } from './ui/career-ui.js';
 import { applyFlashPref } from './ui/flash-pref.js';
 import { applyFrameRate } from './ui/frame-rate.js';
+import { deviceSettings } from './ui/device-settings.js';
 import { t as $t } from './text/index.js';
 
 const app = {
@@ -223,6 +224,7 @@ export function start() {
   if (globalThis.__gbRefreshing) return; // src/fresh.js is refreshing an older release's cached files: nothing is read or saved first
   installRecorder({ app, currentScreen: Router.currentScreen });
   globalThis.__gb = app; // test hook: the UI check reaches the franchise state through it
+  deviceSettings.syncInto(app.defaultSettings); applySettings(); // the menu, before any franchise, already uses this device's display choices
   // Task 8 M6 (spec §5): the player's discovery records are brought up to date before every franchise screen is drawn (so a screen
   // never shows an Apex it has not recorded), and a pending first-discovery panel opens once the screen is up, outside live play.
   const APEX_QUIET = new Set(['match', 'clash-battle', 'ceremony', 'hofceremony', 'pregame', 'scene', 'onboarding', 'welcome', 'menu', 'franchises', 'recovery']);
@@ -332,7 +334,7 @@ function migrateLeague(f) {
 // saving first would stamp a stale copy as the newest and upload it over progress another device already sent for this franchise.
 let holdLeagueSave = false; let heldLeagueSave = null;
 async function flushHeldLeagueSave() { const f = heldLeagueSave; heldLeagueSave = null; holdLeagueSave = false; if (f && app.f === f) await app.save({ immediate: true }); }
-function adopt(f) { migrateLeague(f); app.f = f; app.lastSig = null; applySettings(); mergeDex(f.dex, { franchise: F.franchiseKey(f) }); F.syncAchievementsToGlobal(f); if (f.uid && f.seed != null) { linkHofCards({ uid: f.uid, seed: f.seed }); linkAchievements({ uid: f.uid, seed: f.seed }); } }
+function adopt(f) { migrateLeague(f); app.f = f; app.lastSig = null; deviceSettings.syncInto(f.settings ||= {}); applySettings(); mergeDex(f.dex, { franchise: F.franchiseKey(f) }); F.syncAchievementsToGlobal(f); if (f.uid && f.seed != null) { linkHofCards({ uid: f.uid, seed: f.seed }); linkAchievements({ uid: f.uid, seed: f.seed }); } }
 
 /** Open storage, migrate the v39.1 save on first run, then load (or stop at recovery). Then reconcile with the cloud copy. */
 async function boot() {
