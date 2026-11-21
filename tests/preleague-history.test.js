@@ -24,3 +24,21 @@ test('archive validation catches tampered career totals', () => {
   a.careers.v1.totals.games++;
   assert.ok(validateLeagueArchive(a).some(e => e.includes('Career mismatch')));
 });
+
+test('historical standings balance and playoff champion matches final', () => {
+  const archive = generateLeagueArchive(fixture());
+  for (const season of archive.seasons) {
+    assert.equal(season.standings.length, 16);
+    assert.equal(season.standings.reduce((n, t) => n + t.w, 0), season.standings.reduce((n, t) => n + t.l, 0));
+    assert.equal(season.playoffs.length, 3);
+    assert.equal(season.playoffs[2].games[0].winner, season.champion);
+    assert.notEqual(season.champion, season.runnerUp);
+  }
+});
+test('historical award winners have matching season books', () => {
+  const f = fixture();
+  f.roster.push({ id: 'd1', name: 'Defender', position: 'DL', age: 28, yearsPro: 6 });
+  const archive = generateLeagueArchive(f);
+  assert.deepEqual(validateLeagueArchive(archive), []);
+  assert.ok(archive.seasons.some(s => s.awards.league.dpoy?.id === 'd1'));
+});
