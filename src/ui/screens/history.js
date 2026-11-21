@@ -43,7 +43,11 @@ function historyHtml(f, params) {
       <div class="dim hh-owner">${f.owner ? `${esc(f.owner.first)} ${esc(f.owner.last)}${f.owner.hometown ? ` · ${esc(f.owner.hometown)}` : ''}` : ''}</div>
       ${glance([[tot.seasons, $t('history.seasons')], [tot.seasons ? rec(tot) : '—', $t('history.all_time_record')], [tot.titleYears.length, $t('history.titles')], [tot.playoffs, $t('history.playoff_trips')], [tot.clubAwards.length, $t('history.league_awards')], [hall.inductees.length, $t('history.hall_of_famers')]])}
       ${f.badges ? `<div class="dim hh-tiers">${$t('hq.challenger_vanguard_sovereign', { challenger: f.badges.challenger, vanguard: f.badges.vanguard, sovereign: f.badges.sovereign })}</div>` : ''}</div>`;
-  if (!seasons.length) return `${head}${empty($t('hq.no_completed_seasons_yet'))}`;
+  const archive = f.preLeagueHistory;
+  const preLeague = archive?.seasons?.length ? `<div class="panel"><div class="cp-sec-h"><b>League history before your arrival</b><span class="dim">Generated league archive · not credited to your GM</span></div>
+    <div class="hh-champs">${archive.seasons.slice().reverse().map(s => `<span class="hh-champ" style="--club:${clubColor(s.champion)}"><b class="mono">Season ${s.year}</b><i></i><span>${esc(s.champion)}</span></span>`).join('')}</div>
+    <details class="hh-decade"><summary><b>Previous seasons and standings</b></summary><div class="list">${archive.seasons.slice().reverse().map(s => `<div class="item static"><div class="grow"><div class="name">Season ${s.year} · 🏆 ${esc(s.champion)}</div><div class="sub">Runner-up: ${esc(s.runnerUp || '—')} · MVP: ${esc(s.awards?.league?.mvp?.name || '—')}</div><div class="sub">${s.standings.map(t => `${esc(t.club)} ${t.w}-${t.l}`).join(' · ')}</div></div></div>`).join('')}</div></details></div>` : '';
+  if (!seasons.length) return `${head}${preLeague}${empty($t('hq.no_completed_seasons_yet'))}`;
 
   const feats = [];
   if (tot.titleYears.length) feats.push(['🏆', $t('history.beast_bowl_champions'), tot.titleYears.map((y) => yearOf(y)).join(' · ')]);
@@ -69,7 +73,7 @@ function historyHtml(f, params) {
   const open = params.open != null ? Number(params.open) : 0;
   const list = groups.map((g, i) => { const w = g.reduce((n, s) => n + (s.record?.w || 0), 0), l = g.reduce((n, s) => n + (s.record?.l || 0), 0); const titles = g.filter((s) => s.champion != null && s.champion === s.club).length; const from = yearOf(g[g.length - 1].year), to = yearOf(g[0].year);
     return `<details class="hh-decade" data-group="${i}" ${i === open ? 'open' : ''}><summary><b class="mono">${from === to ? from : `${from}–${to}`}</b><span class="dim">${$t('history.seasons_count', { n: g.length })} · ${w}-${l}${titles ? ` · 🏆 ${titles}` : ''}</span></summary><div class="list">${g.map(row).join('')}</div></details>`; }).join('');
-  return `${head}${accomplishments}${champions}<h3 class="hh-h">${$t('history.season_by_season')}</h3>${list}`;
+  return `${head}${preLeague}${accomplishments}${champions}<h3 class="hh-h">${$t('history.season_by_season')}</h3>${list}`;
 }
 
 // ---------------------------------------------------------------- Awards
