@@ -106,6 +106,15 @@ export function careerPage(f, id, { profile = null } = {}) {
   const p = profile || careerProfile(f, id); if (!p) return null;
   const found = p.kind === 'snapshot' ? null : findMonster(f, p.id);
   const lines = seasonLines(f, found, p);
+  // Pre-franchise books are read-only; never mutate the playable statistics ledger.
+  const pre = f?.preLeagueHistory?.careers?.[p.id];
+  if (pre?.seasons?.length) {
+    const existing = new Set(lines.seasons.map(s => s.year));
+    const historical = pre.seasons.filter(s => !existing.has(s.year));
+    lines.seasons = [...historical, ...lines.seasons].sort((a, b) => a.year - b.year);
+    lines.career = { reg: sum(pre.totals, lines.career.reg), post: lines.career.post };
+    lines.source = 'books';
+  }
   const years = lines.seasons.map((s) => s.year);
   const clubYears = (p.clubs || []).flatMap((c) => [c.from, c.to]).filter((y) => y != null);
   const retirementYear = (f?.monsterHallOfFame?.candidates || [])
