@@ -64,6 +64,7 @@ export function franchiseLegacyIndex(f) {
   const seasons = franchiseSeasonHistory(f);
   return {
     seasons, championships: championshipHistory(f), awards: historicalAwards(f),
+    preLeague: f?.preLeagueHistory || null,
     hallOfFame: historicalHallOfFame(f), records: historicalRecords(f),
     completedSeasons: seasons.length,
     ownerTitles: seasons.filter((s) => s.champion != null && s.champion === s.club).length,
