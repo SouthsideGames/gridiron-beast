@@ -2333,3 +2333,21 @@ html[data-comfortable-text="1"] .screen-settings .save-data .dim, html[data-comf
   .match-console { grid-template-columns: minmax(0, 1.15fr) minmax(320px, 1fr); column-gap: 12px; }
   .match-console #controls { font-size: 15px; }
 }
+
+/* Playtest fixes, 2026-11-21 (owner, iPhone). */
+/* Beast card attributes: every row had its own bar length, because the value ("67 -1 Now /73") wrapped onto three lines and
+   the + buttons differ in width ("+", "+ x2", "+ ÷2"). Fixed columns line every bar up, the bars are shorter and thinner,
+   and the value with its change note stays on one line. Two columns only where there is room for them. */
+.attr-grid { grid-template-columns: 1fr; }
+@media (min-width: 900px) { .attr-grid { grid-template-columns: 1fr 1fr; } }
+.attr { grid-template-columns: 84px minmax(48px, 150px) 92px auto; justify-content: start; column-gap: 8px; }
+.attr:has(.plus) { grid-template-columns: 84px minmax(48px, 150px) 92px 64px; }
+.attr .bar { height: 6px; }
+.attr .v { white-space: nowrap; text-align: right; }
+.attr .v .polish-rating-change { display: inline; margin-left: 3px; font-size: 10px; }
+.attr .plus { width: 64px; margin-left: 0; padding: 0 4px; justify-content: center; }
+.attr > i.invest { left: 92px; max-width: 150px; }
+/* Trophy case, empty: the trophy kept its own width while the long sentence beside it squeezed it, so the two touched. */
+.tc-empty { gap: 12px; }
+.tc-empty > span:first-child { flex: 0 0 32px; display: inline-flex; justify-content: center; }
+.tc-empty > span:last-child { flex: 1 1 auto; min-width: 0; }

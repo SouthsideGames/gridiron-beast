@@ -1797,7 +1797,7 @@ export default {
   'franchise.fewer_healthy_monsters_than_starting_spots': ': fewer healthy monsters than starting spots. Scout for {needs}.',
   'franchise.monsters_injured_easier_training_and_a': '{hurt} monsters injured. Easier training and a bye help them recover.',
   'franchise.only_cr_of_cap_room_left': 'Only {amount} cr of cap room left: a new signing may not fit.',
-  'franchise.monster_training_points_to_invest_tap': '{pts} monster{pts2} training points to invest (tap them on the Roster).',
+  'franchise.monster_training_points_to_invest_tap': '{pts} monster{pts2} training points to invest.',
   'franchise.contracts_to_decide_before_the_draft': { one: '{n} contract to decide before the draft.', other: '{n} contracts to decide before the draft.' },
   'franchise.none_of_these_would_start_for': 'None of these would start for you or fill a gap. Skipping the encounter costs nothing.',
   'franchise.you_are_short_at': 'you are short at {position}',
