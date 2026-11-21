@@ -1,3 +1,4 @@
+import { decodeUiWav } from './decode-ui-wav.js';
 import { audioContext, audioBus, audioPreferences, isAudioHidden } from './context.js';
 // Exact WAV masters approved by the owner. Preview MP3s were encoded from these files.
 export const UI_SOUNDS = Object.freeze({
@@ -15,7 +16,7 @@ export class UiSoundPlayer {
   if(this.loading)return this.loading;
   const ac=this.context();if(!ac)return Promise.resolve();
   this.loading=Promise.all(Object.entries(UI_SOUNDS).map(async([id,path])=>{
-   try{const r=await this.fetcher(path);if(!r.ok)throw Error('Sound unavailable');const b=await ac.decodeAudioData(await r.arrayBuffer());this.buffers.set(id,b);}catch{ /* audio must never block an action */ }
+   try{const r=await this.fetcher(path);if(!r.ok)throw Error('Sound unavailable');const b=decodeUiWav(ac,await r.arrayBuffer());this.buffers.set(id,b);}catch{ /* audio must never block an action */ }
   })).finally(()=>{if(this.buffers.size<Object.keys(UI_SOUNDS).length)this.loading=null;});return this.loading;
  }
  wake(ac){
@@ -43,16 +44,18 @@ export class UiSoundPlayer {
   const ticket=this.serial;
   // An explicit Settings preview may wait for decoding; ordinary feedback is
   // short-lived and is discarded after 250 ms, never replayed as a backlog.
-  await Promise.all([ac.resume(),this.preload()]);
+  try { await Promise.all([ac.state==='running'?null:this.wake(ac),this.preload()]); } catch { return false; }
   if(ticket!==this.serial||!this.buffers.has(id)||this.hidden())return false;
-  this.play(id);return ac.state==='running';
+  return this.play(id, {force:true});
  }
- play(id){
-  const p=this.preferences(),ac=this.context();if(this.hidden()||p.muted||p.sfx<=0||!ac||ac.state!=='running')return;
-  const at=this.now(),priority=PRIORITY[id];if(at-this.lastAt<70&&priority<=this.lastPriority)return;
-  const buffer=this.buffers.get(id);if(!buffer)return;
-  this.stopVoice();const source=ac.createBufferSource();source.buffer=buffer;source.connect(this.bus());this.current=source;
-  source.onended=()=>{source.disconnect();if(this.current===source)this.current=null;};source.start();this.lastAt=at;this.lastPriority=priority;
+ play(id, {force=false}={}){
+  const p=this.preferences(),ac=this.context();if(this.hidden()||p.muted||p.sfx<=0||!ac||ac.state!=='running')return false;
+  const at=this.now(),priority=PRIORITY[id];if(!force&&at-this.lastAt<70&&priority<=this.lastPriority)return false;
+  const buffer=this.buffers.get(id);if(!buffer)return false;
+  this.stopVoice();let source;
+  try { source=ac.createBufferSource();source.buffer=buffer;source.connect(this.bus());this.current=source;
+  source.onended=()=>{source.disconnect();if(this.current===source)this.current=null;};source.start();this.lastAt=at;this.lastPriority=priority;return true;
+  } catch {try{source?.disconnect();}catch{}if(this.current===source)this.current=null;return false;}
  }
  stopVoice(){if(this.current){const s=this.current;this.current=null;try{s.stop();}catch{}s.disconnect();}}
  stop(){++this.serial;this.pending=null;this.stopVoice();}
@@ -75,7 +78,7 @@ export function uiSceneSound(name,ctx){
 }
 export function installUiSounds(doc=globalThis.document){
  if(installed||!doc)return;installed=true;void uiSounds.preload();
- const wake=()=>{const p=audioPreferences();if(isAudioHidden()||p.muted||p.sfx<=0)return;const ac=audioContext();if(ac&&ac.state!=='running')void ac.resume().catch(()=>{});void uiSounds.preload();};
+ const wake=()=>{const p=audioPreferences();if(isAudioHidden()||p.muted||p.sfx<=0)return;const ac=audioContext();if(ac&&ac.state!=='running')void uiSounds.wake(ac).catch(()=>{});void uiSounds.preload();};
  doc.addEventListener('pointerdown',wake,{capture:true,passive:true});
  doc.addEventListener('touchend',wake,{capture:true,passive:true});
  doc.addEventListener('keydown',wake,{capture:true});

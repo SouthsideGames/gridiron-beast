@@ -144,8 +144,8 @@ tr.me td { background: #2a3f16; }
 .play-preview .play-art { width: 100%; aspect-ratio: 44 / 32; height: auto; border-radius: var(--r); }
 
 /* Match screen */
-.scoreboard { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; align-items: center; background: var(--bg-2); border: 2px solid var(--line); border-radius: var(--r); padding: 6px 10px; margin-bottom: var(--s2); font-family: var(--mono); }
-.scoreboard .team { display: flex; align-items: center; gap: 8px; font-weight: 800; min-width: 0; }
+.scoreboard { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.6fr) minmax(0,1fr); gap: 6px; align-items: center; background: var(--bg-2); border: 2px solid var(--line); border-radius: var(--r); padding: 6px 10px; margin-bottom: var(--s2); font-family: var(--mono); }
+.scoreboard .team { display: flex; align-items: center; gap: 4px; font-weight: 800; min-width: 0; }
 .scoreboard .abbr { display: flex; flex-direction: column; line-height: 1.05; font-size: 13px; }
 .scoreboard .team.right { justify-content: flex-end; }
 .scoreboard .score { font-size: 22px; }
@@ -444,7 +444,7 @@ b.bad{color:var(--bad)} b.warn{color:var(--warn)}
 .item.tappable { cursor: pointer; border-color: #2f5a3a; }
 .item.tappable:active { transform: scale(.995); }
 /* Clock state under the score (GDD §20.4) */
-.scoreboard .clockstate { font-size: 10px; letter-spacing: .02em; margin-top: 2px; font-weight: 700; white-space: nowrap; }
+.scoreboard .clockstate { grid-column:1 / -1; text-align:center; min-width:0; font-size: 10px; letter-spacing: .02em; margin-top: 2px; font-weight: 700; white-space: normal; overflow-wrap:anywhere; }
 .scoreboard .clockstate.running { color: #f5c542; }
 .scoreboard .clockstate.stopped { color: var(--ink-2); }
 /* Cornerstone mark: the monster the club was built around */
@@ -659,10 +659,10 @@ html[data-reduced-motion="1"] .bar > i, html[data-reduced-motion="1"] .btn, html
 .final-hero.lost .final-feel { color: #ffb4b4; }
 .final-hero.champ .final-feel { font-size: 26px; color: #ffe08a; text-shadow: 0 0 18px rgba(255,224,138,.7); }
 .final-score { font-size: 28px; font-weight: 900; font-family: var(--mono); margin: 4px 0 2px; }
-.xp-grid { display: grid; gap: 4px; }
-.xp-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'name amt' 'bar lv'; align-items: center; gap: 2px 8px; font-size: 13px; }
-.xp-row .xp-name { grid-area: name; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
-.xp-row .xp-amt { grid-area: amt; color: var(--good); font-weight: 800; font-family: var(--mono); }
+.xp-grid { display: grid; gap: 12px; }
+.xp-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'name name' 'amt amt' 'bar lv'; align-items: center; gap: 2px 8px; font-size: 13px; }
+.xp-row .xp-name { grid-area: name; white-space: normal; overflow-wrap: anywhere; font-weight: 700; }
+.xp-row .xp-amt { grid-area: amt; display:flex; flex-wrap:wrap; gap: 2px 6px; min-width:0; color: var(--good); font-weight: 800; font-family: var(--mono); }
 .xp-row .bar { grid-area: bar; height: 5px; }
 .xp-row .xp-lv { grid-area: lv; font-size: 11px; }
 html[data-reduced-motion="1"] .final-feel { animation: none; }
@@ -726,8 +726,10 @@ svg .tm-icon { cursor: pointer; } svg .tm-icon:focus { outline: none; } svg .tm-
 .field-wrap.env-frozen { border-color: #d9eef5; background: #3d6e7e; } .field-wrap.env-volcanic { border-color: #5a2a1a; background: #2c3a2e; } .field-wrap.env-forest { border-color: #2f6b3f; background: #1f6a3c; }
 .field-wrap.env-storm { border-color: #46506b; background: #25544a; } .field-wrap.env-desert { border-color: #c79a5c; background: #8a6436; } .field-wrap.env-dome { border-color: #9aa3b8; background: #2b5a5c; }
 .field-wrap .weather { position: absolute; inset: 0; pointer-events: none; z-index: 1; border-radius: inherit; }
-.weather-rain { background-image: repeating-linear-gradient(105deg, rgba(190,215,255,0.0) 0 9px, rgba(190,215,255,0.22) 9px 10px); background-size: 120px 120px; animation: wx-fall 0.6s linear infinite; }
-.weather-storm { background-image: repeating-linear-gradient(110deg, rgba(190,215,255,0.0) 0 7px, rgba(190,215,255,0.26) 7px 8px); background-size: 110px 110px; animation: wx-fall 0.45s linear infinite, wx-flash 9s steps(1) infinite; background-color: rgba(10,16,40,0.10); }
+/* Short, sparse streaks keep weather visible without covering routes or names. */
+.weather-rain, .weather-storm { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='180'%3E%3Cg stroke='%23c7dfff' stroke-opacity='.25' stroke-width='1'%3E%3Cpath d='M20 12l-3 10M100 70l-3 10M62 145l-3 10'/%3E%3C/g%3E%3C/svg%3E"); background-size:150px 180px; animation:wx-fall 1.2s linear infinite; }
+.weather-storm { background-color:rgba(10,20,35,.025); background-size:120px 150px; }
+
 .weather-snow { background-image: radial-gradient(circle, rgba(255,255,255,0.85) 0 1.2px, transparent 1.6px), radial-gradient(circle, rgba(255,255,255,0.6) 0 1px, transparent 1.4px); background-size: 46px 46px, 31px 31px; background-position: 0 0, 15px 20px; animation: wx-snow 6s linear infinite; }
 .weather-wind { background-image: repeating-linear-gradient(176deg, transparent 0 38px, rgba(255,255,255,0.10) 38px 39px, transparent 39px 80px); background-size: 400px 160px; animation: wx-wind 2.4s linear infinite; }
 .weather-overcast { background: rgba(30,40,55,0.12); }
@@ -2246,3 +2248,7 @@ html[data-comfortable-text="1"] .screen-settings .save-data .dim, html[data-comf
 /* Auto keeps Stop, speed and camera within reach without adding a control row. */
 .match-console .secondary.auto-camera-controls { grid-template-columns:minmax(0,1.1fr) minmax(0,.65fr) minmax(0,1fr); }
 .match-console .auto-camera-controls .btn { min-width:0; min-height:44px; padding:5px 3px; font-size:13px; line-height:1.15; }
+
+.scoreboard .mid { min-width:0; padding-inline:3px; overflow-wrap:anywhere; }
+.scoreboard .score, .scoreboard .pos, .scoreboard .abbr { flex-shrink:0; }
+.bs-empty { font-size:11px; overflow-wrap:anywhere; }

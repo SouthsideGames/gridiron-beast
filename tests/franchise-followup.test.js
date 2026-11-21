@@ -67,10 +67,10 @@ test('audio previews respect mute and zero volume, use the real bus, and cancel 
  const {audioPreferences,setAudioPreferences}=await import('../src/audio/context.js');
  const {uiSounds}=await import('../src/audio/ui-sounds.js');
  const previous=audioPreferences(),previousAC=globalThis.AudioContext;
- const oscillators=[],sources=[],approved={approved:'confirm'};let release;
+ const oscillators=[],sources=[],approved={approved:'confirm'};let release,context;
  const param=()=>({value:0,setValueAtTime(){},linearRampToValueAtTime(){},setTargetAtTime(){}});
  class Context {
-  constructor(){this.currentTime=0;this.destination={};this.state='running';}
+  constructor(){context=this;this.currentTime=0;this.destination={};this.state='running';}
   resume(){return release?new Promise(resolve=>{release.resolve=resolve;}):Promise.resolve();}
   createGain(){return {gain:param(),connect(){return this;},disconnect(){}};}
   createBufferSource(){const node={connect(bus){this.bus=bus;},disconnect(){},start(){this.started=true;},stop(){this.stopped=true;}};sources.push(node);return node;}
@@ -82,7 +82,7 @@ test('audio previews respect mute and zero volume, use the real bus, and cancel 
   setAudioPreferences({muted:false,sfx:0});assert.equal((await previewAudio('sfx')).ok,false);
   setAudioPreferences({sfx:.4});assert.equal((await previewAudio('sfx')).ok,true);assert.ok(sources[0].started);assert.equal(sources[0].buffer,approved);assert.equal(sources[0].bus.gain.value,.4);assert.equal(oscillators.length,0,'UI preview must play the approved sound, not a tone');
   release={};const pending=previewAudio('crowd');stopAudioPreview();release.resolve();assert.equal((await pending).ok,false);assert.equal(oscillators.length,0);assert.ok(sources[0].stopped);
-  release={};const pendingUi=previewAudio('sfx');stopAudioPreview();release.resolve();assert.equal((await pendingUi).ok,false);assert.equal(sources.length,1,'canceled UI preview cannot play after resume');
+  context.state='suspended';release={};const pendingUi=previewAudio('sfx');stopAudioPreview();release.resolve();assert.equal((await pendingUi).ok,false);assert.equal(sources.length,1,'canceled UI preview cannot play after resume');
  }finally{stopAudioPreview();setAudioPreferences(previous);if(previousAC===undefined)delete globalThis.AudioContext;else globalThis.AudioContext=previousAC;}
 });
 

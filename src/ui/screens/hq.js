@@ -118,7 +118,7 @@ export function registerHqScreens(Router, app) {
           ${f.week.commissioner ? `<p class="muted" style="color:var(--bad);margin-top:8px">${$t('hq.the_commissioner_is_waiting_over_the', { amount: fmtMoney(f.week.commissioner.over) })}</p>` : ''}${warningsHtml(f, { max: 2, only: ['min', 'depth', 'hurt', 'tight', 'points'] })}</div>
         ${waitingCall ? `<details class="polish-secondary polish-deals" open><summary>${$t('polish.trades')}</summary>${waitingCall}${tradeLineHtml(f)}</details>` : ''}
         ${lastGame ? `<details class="polish-secondary"><summary>${$t('polish.last_game')}</summary>${lastGame}</details>` : ''}
-        <details class="polish-secondary"><summary>${$t('polish.team_story')}</summary>${captainCard(f)}
+        <details class="polish-secondary" open><summary>${$t('polish.team_story')}</summary>${captainCard(f)}
         ${rivalCard(f)}
         ${boardPanel(f)}
         ${campaignPanel(f)}</details>
@@ -127,7 +127,7 @@ export function registerHqScreens(Router, app) {
           <button class="btn block" data-action="go" data-screen="schedule">${$t('hq.schedule')}</button><button class="btn block" data-action="go" data-screen="standings">${$t('hq.standings')}</button>
           <button class="btn block" data-action="go" data-screen="league">${$t('hq.league_hub')}</button><button class="btn block" data-action="go" data-screen="history">${$t('hq.history_and_records')}</button>
           <button class="btn block" data-action="go" data-screen="staff">${$t('hq.coaching_staff')}</button></div>
-        <details class="polish-secondary"><summary>${$t('polish.league_news')}</summary>${leagueNewsPanel(f, { clubLog: f.news })}</details>`;
+        <details class="polish-secondary" open><summary>${$t('polish.league_news')}</summary>${leagueNewsPanel(f, { clubLog: f.news })}</details>`;
     },
     mount(root) {
       if (app.f && !app.f.achievementsBackfilled && F.backfillAchievements(app.f).length) app.save();

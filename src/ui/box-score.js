@@ -53,7 +53,7 @@ function leader(state, side, key) { return rows(state, side).filter((p) => (p[ke
 export function boxScoreHtml(state, teams, { title = $t('match.box_score') } = {}) {
   const A = state.away, H = state.home;
   const cell = (side, cat) => {
-    const p = leader(state, side, cat.key); if (!p) return `<div class="bs-cell ${side}"><span class="dim">·</span></div>`;
+    const p = leader(state, side, cat.key); if (!p) return `<div class="bs-cell ${side}"><span class="dim bs-empty">${$t('match.none_recorded')}</span></div>`;
     const m = who(teams[side], p.key || p.slot);
     return `<div class="bs-cell ${side}">${monsterSprite(m, 30)}<div><div class="bs-v">${p[cat.key]}</div><div class="bs-n">${m.id ? careerLink(m.id, m.name) : esc(m.name)} <span class="dim">${p.slot}</span></div>${cat.sub(p) ? `<div class="dim bs-s">${esc(cat.sub(p))}</div>` : ''}</div></div>`;
   };
