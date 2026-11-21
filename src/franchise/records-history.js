@@ -21,13 +21,26 @@ function copyRecord(record) {
 /** The current standing record for each supported category, with its previous holder. */
 export function historicalRecords(f) {
   const saved = f?.records || {};
-  return sections.map(([scope, label, categories]) => ({
+  const historical = {};
+  for (const career of Object.values(f?.preLeagueHistory?.careers || {})) {
+    for (const book of career.seasons || []) {
+      for (const category of RECORD_CATEGORIES) {
+        const value = book.reg?.[category.key];
+        if (!Number.isFinite(value) || value <= 0 || value <= (historical[category.id]?.value || 0)) continue;
+        historical[category.id] = { value, id: career.id, name: career.name, team: book.team, year: book.year, preLeague: true };
+      }
+    }
+  }
+  return [...sections.map(([scope, label, categories]) => ({
     scope, label,
     rows: categories.map((category) => ({
       category: category.id, label: category.label,
       record: copyRecord(saved?.[scope]?.[category.id]),
     })),
-  }));
+  })), ...(f?.preLeagueHistory ? [{
+    scope: 'preLeague', label: 'Pre-franchise season records',
+    rows: RECORD_CATEGORIES.map(category => ({ category: category.id, label: category.label, record: historical[category.id] || null })),
+  }] : [])];
 }
 
 /** Find all current standing records credited to a monster's stable ID. */
