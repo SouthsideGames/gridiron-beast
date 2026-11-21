@@ -86,13 +86,24 @@ test('audio previews respect mute and zero volume, use the real bus, and cancel 
  }finally{stopAudioPreview();setAudioPreferences(previous);if(previousAC===undefined)delete globalThis.AudioContext;else globalThis.AudioContext=previousAC;}
 });
 
-test('explicit Watch resume clears the persisted pause without advancing any game state', async () => {
- const {pauseActivity,activityPaused,resumePlayback}=await import('../src/ui/activity.js');
- const f=fresh();(f.polish||={}).playbackPaused=true;pauseActivity();
- const before=JSON.stringify([f.rngState,f.game,f.week,f.season]);let saves=0;
- assert.equal(resumePlayback({f,save(){saves++;}},{notify:false}),true);
- assert.equal(activityPaused(),false);assert.equal(f.polish.playbackPaused,undefined);assert.equal(saves,1);
- assert.equal(JSON.stringify([f.rngState,f.game,f.week,f.season]),before);
+test('background lifecycle resumes automatically without saving or advancing the franchise', async () => {
+ const {activityPaused,installActivityLifecycle}=await import('../src/ui/activity.js');
+ const f=fresh();(f.polish||={}).playbackPaused=true; // obsolete saved flag must not block playback
+ const before=JSON.stringify(f), oldDoc=globalThis.document, oldAdd=globalThis.addEventListener, oldDispatch=globalThis.dispatchEvent;
+ const listeners={},events=[];
+ globalThis.document={hidden:false,addEventListener:(k,fn)=>listeners[k]=fn};
+ globalThis.addEventListener=(k,fn)=>listeners[k]=fn;
+ globalThis.dispatchEvent=e=>events.push(e.type);
+ try {
+  installActivityLifecycle({app:{f,save(){throw Error('lifecycle must not save');}}});
+  assert.equal(activityPaused(),false);
+  document.hidden=true;listeners.visibilitychange();assert.equal(activityPaused(),true);
+  document.hidden=false;listeners.visibilitychange();assert.equal(activityPaused(),false);
+  listeners['gb-app-state']({detail:{isActive:false}});assert.equal(activityPaused(),true);
+  listeners['gb-app-state']({detail:{isActive:true}});assert.equal(activityPaused(),false);
+  assert.deepEqual(events,['gb-playback-pause','gb-playback-resume','gb-playback-pause','gb-playback-resume']);
+  assert.equal(JSON.stringify(f),before);
+ } finally { globalThis.document=oldDoc;globalThis.addEventListener=oldAdd;globalThis.dispatchEvent=oldDispatch; }
 });
 
 test('completed real creation drafts account for every recorded rookie and survive JSON reload', async () => {

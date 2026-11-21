@@ -16,7 +16,6 @@ import { rosterWarnings } from '../franchise/assist-advice.js';
 import { guideActive } from '../franchise/guide.js';
 import { t, lineText } from '../text/index.js';
 import { esc, sheet, toast, fmtMoney, fmtClock, confirmSheet } from './dom.js';
-import { activityPaused, pauseActivity, resumePlayback } from './activity.js';
 const buttons = (action,label,id='') => `<button class="btn small" data-polish="${action}" data-id="${esc(id)}" ${action==='point-add'?`aria-label="${esc(t('roster.invest_1_point_in',{attr:ATTR_NAME[id],cost:''}))}"`:''}>${label}</button>`;
 const unknown = () => t('shared.unknown_value');
 const attrOrder = {QB:['accuracy','arm','awareness','speed'],RB:['speed','agility','strength','catching'],WR:['catching','speed','agility','awareness'],TE:['catching','blocking','strength','speed'],OL:['blocking','strength','awareness','durability'],DL:['strength','tackling','speed','awareness'],LB:['tackling','awareness','coverage','speed'],CB:['coverage','speed','agility','awareness'],S:['coverage','tackling','awareness','speed'],K:['kicking','accuracy','awareness','durability']};
@@ -118,8 +117,6 @@ export function polishHeader(ctx,name) {
   if(name==='draft'&&draftShowPick(ctx.f?.draft))return '';
   const {f}=ctx;if(!f?.roster||isArchived(f))return '';
   let out='';
-  if(polishState(f).playbackPaused && ['match','clash-battle'].includes(name))pauseActivity();
-  if(activityPaused()&&['match','clash-battle'].includes(name))out+=`<div class="panel polish-paused" role="status"><b>${t('polish.paused')}</b>${buttons('resume',t('polish.resume'))}</div>`;
   if(name==='hq'&&!guideActive(f)){
     if(trackRosterReviews(f))ctx.app?.save();
     out+=rosterReviewHtml(f);
@@ -141,7 +138,7 @@ export function polishHeader(ctx,name) {
   }
   return out;
 }
-export const POLISH_ROOT_ACTIONS=new Set(['offseason-step','review-lineup','dismiss-roster-review','explain','resume','go','clear-filters','shortlist','compare','shortlist-page','presets-lineup','presets-plan','points','next-points']);
+export const POLISH_ROOT_ACTIONS=new Set(['offseason-step','review-lineup','dismiss-roster-review','explain','go','clear-filters','shortlist','compare','shortlist-page','presets-lineup','presets-plan','points','next-points']);
 export function mountPolish(root,ctx,name,Router) {
   const {app,f}=ctx;if(!f?.roster||!app||isArchived(f))return;
   if(name==='draft'&&draftShowPick(f.draft))return;app.polishRefresh=()=>Router.render();
@@ -207,7 +204,6 @@ export function mountPolish(root,ctx,name,Router) {
       Router.go(step.screen,step.screen==='hofceremony'?{year:f.season.year,step:0,from:'offseason'}:{});return;
     }
     if(action==='explain')sheet(`<p>${esc(b.dataset.info)}</p>`,{title:t('polish.explanation')});
-    if(action==='resume'){if(resumePlayback(app))Router.render();}
     if(action==='go'){
       let screen=b.dataset.screen,params=b.dataset.slot?{slot:b.dataset.slot}:id?{id}:{};
       if(b.dataset.kind==='call'&&name==='hq'){const deals=root.querySelector('.polish-deals');if(deals){deals.open=true;deals.scrollIntoView({block:'center'});return;}}

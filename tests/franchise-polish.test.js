@@ -5,7 +5,7 @@ import {polishState,toggleShortlist,shortlisted,draftScope,savePreset,lineupPres
 import {getPlanDraft,storePlanDraft,returnSummary,offseasonTracker,offerResolutionText} from '../src/ui/polish.js';
 import {buildDepthChart,lineupProblems} from '../src/franchise/roster.js';
 import {matchLogMatches} from '../src/ui/match-log-filter.js';
-import {pauseActivity,resumeActivity,activityPaused} from '../src/ui/activity.js';
+import {activityPaused} from '../src/ui/activity.js';
 import * as FR from '../src/core/fraction.js';
 const base=createFranchise({owner:{first:'Polish',last:'Test'},club:'Ember City Beasts',seed:312});hireDefaultStaff(base);
 const fresh=()=>structuredClone(base);
@@ -83,10 +83,10 @@ test('match-log filters use recorded fields, work with translated prose and do n
  for(const [i,filter] of ['scoring','turnovers','injuries','abilities'].entries())assert.deepEqual(entries.filter(e=>matchLogMatches(e,filter)),[entries[i]]);
  assert.equal(entries.filter(e=>matchLogMatches(e,'all')).length,5);assert.equal(JSON.stringify(entries),before);
 });
-test('interruption pauses remain paused until the player resumes; hidden pages always stay paused',()=>{
+test('hidden pages throttle activity and foreground pages resume without a confirmation',()=>{
  const previous=globalThis.document;globalThis.document={hidden:false};
- try{resumeActivity();assert.equal(activityPaused(),false);pauseActivity();assert.equal(activityPaused(),true);globalThis.document.hidden=true;resumeActivity();assert.equal(activityPaused(),true);globalThis.document.hidden=false;assert.equal(activityPaused(),false);}
- finally{if(previous)globalThis.document=previous;else delete globalThis.document;resumeActivity();}
+ try{assert.equal(activityPaused(),false);globalThis.document.hidden=true;assert.equal(activityPaused(),true);globalThis.document.hidden=false;assert.equal(activityPaused(),false);}
+ finally{if(previous)globalThis.document=previous;else delete globalThis.document;}
 });
 test('return summary and named offer preview read current state without changing it',()=>{
  const f=fresh(),before=JSON.stringify(f);assert.match(returnSummary(f),/Week 1/);assert.match(returnSummary(f),/Next:/);
@@ -115,8 +115,8 @@ test('comparison rows show a candidate salary only where the caller\'s card does
 });
 test('the shared polish listener claims only its own actions, leaving a screen\'s Review and Remove to that screen', async () => {
  const { POLISH_ROOT_ACTIONS } = await import('../src/ui/polish.js');
- for (const own of ['compare','shortlist','go','resume','points','clear-filters']) assert.ok(POLISH_ROOT_ACTIONS.has(own), own);
- for (const screenAction of ['shortlist-open','shortlist-remove','point-add','point-confirm','preset-load']) assert.ok(!POLISH_ROOT_ACTIONS.has(screenAction), screenAction);
+ for (const own of ['compare','shortlist','go','points','clear-filters']) assert.ok(POLISH_ROOT_ACTIONS.has(own), own);
+ for (const screenAction of ['resume','shortlist-open','shortlist-remove','point-add','point-confirm','preset-load']) assert.ok(!POLISH_ROOT_ACTIONS.has(screenAction), screenAction);
 });
 test('a quick second tap at the spot that closed a sheet is dropped; other taps go through', async () => {
  const prev=globalThis.document;globalThis.document={querySelector:()=>null};

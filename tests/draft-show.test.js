@@ -49,5 +49,13 @@ test('pregame and Clash layouts render the real squads read-only and keep action
  assert.match(html,/pregame-team-tabs/);assert.match(html,/pregame-info/);assert.match(html,/data-action="toss">Beast Clash</);assert.doesNotMatch(html,/class="lineups"/);
  assert.equal(JSON.stringify(f),before);
  const clash=screens.get('clash-battle').render({f,params:{kind:'pregame'}});
- assert.match(clash,/clash-faceoff/);assert.match(clash,/data-action="enter"/);assert.doesNotMatch(clash,/<p class="muted">.*<button/);
+ assert.match(clash,/clash-faceoff/);
+ const face=clash.slice(clash.indexOf('clash-faceoff'),clash.indexOf('cl-setup-tabs'));
+ assert.equal((face.match(/class="cl-face-beast /g)||[]).length,6,'all three beasts from both teams appear');
+ assert.equal((face.match(/cl-face-0/g)||[]).length,2,'each side has one foreground starter');
+ assert.doesNotMatch(clash,/data-action="help"/,'navbar provides Help');
+ const pairs=html.match(/class="pregame-type-pair">[^]*?<\/p>[^]*?<\/div>/g)||[];
+ assert.ok(pairs.length);for(const pair of pairs) assert.equal((pair.match(/class="sprite"/g)||[]).length,2);
+ assert.doesNotMatch(html,/Weather is for atmosphere|situational, never ratings/);
+ assert.match(clash,/data-action="enter"/);assert.doesNotMatch(clash,/<p class="muted">.*<button/);
 });

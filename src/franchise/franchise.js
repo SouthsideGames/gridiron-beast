@@ -1777,6 +1777,11 @@ export function scoutRegion(f, regionName, { focus = null } = {}) {
   f.week.region = regionName; f.week.prospects = prospects; f.week.recruitAttempts = 0; f.season.day = 1;
   return { ok: true, prospects, skill, scout: scout?.name || $t('franchise.your_scout'), need };
 }
+/** Chance of hearing one consolation pitch after a lost wild Clash. */
+export function lossPitchChance(monster) {
+  const rarity = resolveSpecies(monster)?.rarity;
+  return rarity === 'basic' ? 0.9 : rarity === 'common' ? 0.75 : rarity === 'uncommon' ? 0.4 : 0;
+}
 export const RECRUIT_APPROACHES = Object.freeze([
   { id: 'development', label: $t('franchise.offer_development'), text: $t('franchise.promise_a_plan_to_grow_their'), weight: { young: 0.25 } },
   { id: 'facilities', label: $t('franchise.showcase_facilities'), text: $t('franchise.show_off_the_training_complex'), weight: { strong: 0.2 } },
@@ -1797,7 +1802,7 @@ export function recruit(f, prospectIndex, approachId, { releaseId = null } = {})
   if (f.season.day !== 1) return { ok: false, reason: $t('franchise.not_tuesday') };
   if (draftWindow(f)) return { ok: false, reason: $t('franchise.no_signings_from_the_final_week') };
   const p = f.week.prospects[prospectIndex]; if (!p) return { ok: false, reason: $t('franchise.no_such_prospect') };
-  // Tuesday Monster Encounters (GDD §26.1): a pitch is the consolation after a lost battle, once, for the monster you fought.
+  // Tuesday Monster Encounters (GDD §26.1): a willing monster may hear one consolation pitch after a lost battle.
   const enc = f.week.encounter;
   if (!enc || enc.status !== 'pitch') return { ok: false, reason: enc?.status === 'offer' ? $t('franchise.they_already_want_to_sign_accept') : $t('franchise.battle_the_monster_first_a_win') };
   if (enc.prospectIndex !== prospectIndex) return { ok: false, reason: $t('franchise.only_the_monster_you_battled_will') };
@@ -1860,8 +1865,8 @@ export function skipRecruit(f) { if (f.season.day === 1) { if (f.week.encounter 
 export const skipEncounter = skipRecruit;
 
 // ------------------------------------------------------------ Tuesday Monster Encounters (Beast Clash in Franchise Mode, GDD §26.1)
-// The scouted monster is met in a Beast Clash. Enter it or skip it. Win: it offers to sign (you may still decline). Lose: one
-// ordinary recruiting pitch at the usual odds. Either way your battlers earn Arena XP and a little fatigue. Skipping costs nothing.
+// The scouted monster is met in a Beast Clash. Enter it or skip it. Win: it offers to sign (you may still decline). Lose: a
+// possible recruiting pitch, with willingness determined by rarity. Either way your battlers earn Arena XP and a little fatigue. Skipping costs nothing.
 /** Can the player battle today? Who is eligible, how big the battle would be, and the proposed lineup. */
 /**
  * Tuesday companions (GDD §26.1, owner authorization 2026-10-22): the chosen prospect fights beside two wild companions that
@@ -1978,7 +1983,7 @@ function battleOrPending(e, run, headless) {
   if (pend) return { reason: isT8Record(e) ? $t('franchise.a_rotation_decision_is_still_open') : $t('franchise.a_swap_decision_is_still_open'), pending: pend };
   return { result };
 }
-/** Settle the battle: record the summary, pay out XP and fatigue, and open the offer (win) or the pitch (loss). Idempotent. `headless` settles an open prompt with Auto (staff, Skip). */
+/** Settle the battle: record the summary, pay out XP and fatigue, and open the offer (win), or settle pitch willingness (loss). Idempotent. `headless` settles an open prompt with Auto (staff, Skip). */
 export function resolveEncounter(f, { headless = false } = {}) {
   const e = f.week.encounter; if (!e) return { ok: false, reason: $t('franchise.no_encounter') };
   if (e.status !== 'battle') return { ok: true, encounter: e, already: true };
@@ -1991,9 +1996,13 @@ export function resolveEncounter(f, { headless = false } = {}) {
   save(); e.bonus = winBonus ? { pct: winBonus, label: bonus.label } : null;
   e.result = battleSummary(result); e.events = events;
   if (isT8Record(e)) { e.carryOut = carryOutOf(result); e.mastery = masteryRecord(result, `clash:${activityId}`); } // standalone: nothing carries (D12); execution counts kept per cap scope (M5 awards)
-  const won = result.winner === 'a'; e.status = won ? 'offer' : 'pitch';
+  const won = result.winner === 'a';
   const p = f.week.prospects[e.prospectIndex];
-  news(f, won ? $L('franchise.beast_clash_won_wants_to_join', { name: p.monster.name, club: f.club }) : $L('franchise.beast_clash_lost_to_one_pitch', { name: p.monster.name }), won ? 'win' : 'info');
+  e.hearsPitch = !won && r.chance(lossPitchChance(p.monster));
+  save();
+  e.status = won ? 'offer' : e.hearsPitch ? 'pitch' : 'walked';
+  if (e.status === 'walked') f.season.day = 2;
+  news(f, won ? $L('franchise.beast_clash_won_wants_to_join', { name: p.monster.name, club: f.club }) : e.hearsPitch ? $L('franchise.beast_clash_lost_to_one_pitch', { name: p.monster.name }) : $L('franchise.beast_clash_pitch_refused', { name: p.monster.name }), won ? 'win' : 'info');
   return { ok: true, encounter: e, won, result, events };
 }
 /** After a won encounter: sign the monster (the usual roster-limit and cap rules apply) or let it go. */

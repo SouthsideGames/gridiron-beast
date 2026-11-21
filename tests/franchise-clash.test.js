@@ -7,6 +7,7 @@ import { logHashFor as logHash } from '../src/clash/index.js'; // the ruleset-aw
 import { toArenaRecord } from '../src/ui/clash/t8-record.js';
 import { stateAt as stateAtRecord } from '../src/ui/clash/choreographer.js';
 const stateAt = (r, i) => stateAtRecord(toArenaRecord(r), i); // t8 results are read through the arena adapter
+import { SPECIES_DEX } from '../src/data/species.js';
 import { monsterOverall, ROSTER_MAX } from '../src/data/monsters.js';
 
 const newFranchise = (seed = 7) => { const f = F.createFranchise({ owner: { first: 'Kai', last: 'Reyes', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed }); F.hireDefaultStaff(f); while (f.draft && !f.draft.done && F.onTheClock(f) === f.club) F.passDraftPick(f); f.settings.tutorial = false; f.welcomed = true; F.chooseGoal(f, 'wins'); return f; };
@@ -53,8 +54,8 @@ test('enter: the battle is seeded from the franchise generator, deterministic, r
   assert.equal(F.recruit(f, 0, 'development').ok, false, 'no pitch while the battle is open');
 });
 
-test('win: an offer that respects the roster limit and the cap rules; decline costs nothing; lose: exactly one pitch at the usual odds', () => {
-  let wins = 0, losses = 0, pitchedSign = 0;
+test('win: an offer that respects the roster limit and the cap rules; decline costs nothing; lose: at most one pitch, with rarity-dependent refusal', () => {
+  let wins = 0, losses = 0, pitchedSign = 0, refused = 0, heard = 0;
   for (let seed = 30; seed < 60; seed++) {
     const f = newFranchise(seed); toTuesday(f); const n = f.roster.length; const p = f.week.prospects[0];
     const weakest = Link.eligibleBattlers(f.roster).slice().sort((x, y) => monsterOverall(x) - monsterOverall(y)).slice(0, 3).map((m) => m.id); // half the seeds field the weakest three, so both outcomes are covered
@@ -69,13 +70,20 @@ test('win: an offer that respects the roster limit and the cap rules; decline co
       else { assert.ok(F.declineOffer(f).ok); assert.equal(f.roster.length, n); assert.equal(f.week.encounter.status, 'declined'); }
       assert.equal(f.season.day, 2);
     } else {
-      losses++; assert.equal(f.week.encounter.status, 'pitch'); assert.equal(F.acceptOffer(f).ok, false);
+      losses++; assert.ok(['pitch','walked'].includes(f.week.encounter.status));
+      if(F.lossPitchChance(p.monster)===0) assert.equal(f.week.encounter.status,'walked','higher rarities refuse after a defeat'); assert.equal(F.acceptOffer(f).ok, false);
+      const reloaded=JSON.parse(JSON.stringify(f));
+      assert.equal(F.resolveEncounter(reloaded).already,true);
+      assert.equal(reloaded.week.encounter.status,f.week.encounter.status);
+      assert.equal(reloaded.rngState,f.rngState);
+      if(f.week.encounter.status==='walked'){refused++;assert.equal(f.season.day,2);assert.equal(F.recruit(f,0,'development').ok,false);assert.equal(f.roster.length,n);continue;}
       assert.equal(F.recruit(f, 1, 'development').ok, false, 'only the monster you battled');
-      const r = F.recruit(f, 0, 'development'); assert.ok(r.ok, r.reason); if (r.success) { pitchedSign++; assert.equal(f.roster.length, n + 1); } else assert.equal(f.roster.length, n);
+      heard++; const r = F.recruit(f, 0, 'development'); assert.ok(r.ok, r.reason); if (r.success) { pitchedSign++; assert.equal(f.roster.length, n + 1); } else assert.equal(f.roster.length, n);
       assert.equal(f.season.day, 2); assert.equal(F.recruit(f, 0, 'facilities').ok, false, 'one pitch');
     }
   }
   assert.ok(wins > 3 && losses > 3, `wins ${wins} losses ${losses}`);
+  assert.ok(refused>0 && heard>0, `refused ${refused}, heard ${heard}`);
   // roster full: the offer needs a release
   const f = newFranchise(61); toTuesday(f);
   while (f.roster.length < ROSTER_MAX) { const m = JSON.parse(JSON.stringify(f.roster[f.roster.length - 1])); m.id = `m_fill${f.roster.length}`; m.name = `Fill ${f.roster.length}`; delete m.cornerstone; f.roster.push(m); }
@@ -303,4 +311,12 @@ test('the pregame Clash continues into football: after the battle the winner cho
   assert.equal(f.week.pregame.status, 'done'); assert.equal(F.startPregameClash(f).ok, false, 'one pregame Clash');
   const p = F.pregamePossession(f); const g = F.simulatePlayerGame(f); assert.equal(g.coin.winner, p.coinWinner); assert.equal(g.coin.choice, p.choice);
   assert.equal(f.week.pregame.result.hash, h, 'the record is untouched by the football game'); assert.ok(F.finishSunday(f, g));
+});
+
+test('pitch willingness falls with rarity; Rare and Legendary defeats cannot open a pitch',()=>{
+ const expected={basic:.9,common:.75,uncommon:.4,rare:0,legendary:0};
+ for(const [rarity,chance] of Object.entries(expected)) {
+  const sp=SPECIES_DEX.find(s=>s.rarity===rarity);assert.ok(sp,rarity);
+  assert.equal(F.lossPitchChance({species:sp.id}),chance);
+ }
 });
