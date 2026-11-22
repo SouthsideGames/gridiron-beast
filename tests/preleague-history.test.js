@@ -93,3 +93,18 @@ test('historical archive survives JSON save roundtrip without changing data', ()
   assert.deepEqual(restored, archive);
   assert.deepEqual(validateLeagueArchive(restored), []);
 });
+
+test('every archived season has offensive, defensive, and MVP winners', () => {
+  const f = fixture();
+  f.roster[0].yearsPro = 0;
+  const archive = generateLeagueArchive(f);
+  for (const season of archive.seasons) {
+    for (const kind of ['mvp', 'opoy', 'dpoy']) {
+      const winner = season.awards.league[kind];
+      assert.ok(winner, `Missing ${kind} in ${season.year}`);
+      const book = archive.careers[winner.id]?.seasons.find(b => b.year === season.year);
+      assert.ok(book);
+      assert.equal(book.team, winner.team);
+    }
+  }
+});
