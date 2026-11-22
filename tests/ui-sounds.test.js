@@ -151,3 +151,32 @@ test('the default scheduler calls queueMicrotask unbound (browsers throw "Illega
   assert.ok(receiver===undefined||receiver===globalThis);
  }finally{globalThis.queueMicrotask=real;}
 });
+
+// Inside the phone app the game's files are served by the app itself. There the sounds were present but never loaded, so every
+// tap was silent and the Settings test said only "could not play". The loader now reads a file every way the platform offers.
+const wavBytes=(path)=>{const b=fs.readFileSync(new URL('../'+path,import.meta.url));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);};
+test('a sound file that fetch() refuses is read by a plain request instead',async()=>{
+ const f=fixture();f.p.buffers.clear();f.p.loading=null;f.ac.createBuffer=(channels,length,sampleRate)=>({length,sampleRate,getChannelData:()=>new Float32Array(length)});
+ let asked=0;f.p.fetcher=async()=>{throw new TypeError('Load failed');};f.p.requester=async path=>{asked++;return wavBytes(path);};
+ await f.p.preload();assert.equal(asked,7);assert.equal(f.p.buffers.size,7);assert.equal(f.p.problem('tap'),null);
+});
+test('a bundled file reported with status 0 is accepted when it has content',async()=>{
+ const f=fixture();f.p.buffers.clear();f.p.loading=null;f.ac.createBuffer=(channels,length,sampleRate)=>({length,sampleRate,getChannelData:()=>new Float32Array(length)});
+ f.p.fetcher=async path=>({ok:false,status:0,arrayBuffer:async()=>wavBytes(path)});f.p.requester=async()=>{throw Error('not needed');};
+ await f.p.preload();assert.equal(f.p.buffers.size,7);
+});
+test('the platform decoder is used when the samples cannot be read directly',async()=>{
+ const f=fixture();f.p.buffers.clear();f.p.loading=null;const decoded={decoded:true};
+ f.ac.createBuffer=()=>{throw Error('unsupported rate');};f.ac.decodeAudioData=async()=>decoded;
+ f.p.fetcher=async path=>({ok:true,status:200,arrayBuffer:async()=>wavBytes(path)});
+ await f.p.preload();assert.equal(f.p.buffers.get('tap'),decoded);
+});
+test('when nothing can read a sound file the reason is kept for the Settings test, and loading can be retried',async()=>{
+ const f=fixture();f.p.buffers.clear();f.p.loading=null;
+ f.p.fetcher=async()=>({ok:false,status:404});f.p.requester=async()=>{throw Error('status 404');};
+ await f.p.preload();assert.equal(f.p.buffers.size,0);assert.match(f.p.problem('confirm'),/did not load: fetch: status 404; request: status 404/);
+ assert.equal(await f.p.preview(),false);
+ f.ac.createBuffer=(channels,length,sampleRate)=>({length,sampleRate,getChannelData:()=>new Float32Array(length)});
+ f.p.fetcher=async path=>({ok:true,status:200,arrayBuffer:async()=>wavBytes(path)});
+ await f.p.preload();assert.equal(f.p.buffers.size,7);assert.equal(f.p.problem('confirm'),null);
+});
