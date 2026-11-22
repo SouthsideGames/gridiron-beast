@@ -19,6 +19,18 @@ const PATTERNS = {
   panels: [5, 5, '<path d="M0 0 H5 M0 0 V5" stroke="#bcd3dc" stroke-width="0.07"/><circle cx="0.4" cy="0.4" r="0.1" fill="#d7e6ee"/>', 0.3],
 };
 
+const SIDELINE_MOTION = {
+  ice: '<path d="M-.5 -.6h.3m.55 .5h.23m-.6 1h.24" stroke="#e6f7ff" stroke-width=".18"/>',
+  lava: '<circle cx="-.2" cy="-.5" r=".12" fill="#ffab42"/><circle cx=".25" cy="-1" r=".09" fill="#ffd075"/>',
+  leaves: '<ellipse cx="-.55" cy=".7" rx=".25" ry=".12" fill="#a8eb8a"/>',
+  sand: '<path d="M-.7 -.25q.65 -.45 1.4 0m-1.1 .45h.78" fill="none" stroke="#e6be83" stroke-width=".16"/>',
+  waves: '<ellipse rx=".52" ry=".85" fill="none" stroke="#b1fffc" stroke-width=".16"/>',
+  rays: '<circle cy="-1.05" r=".62" fill="#ffe3a1" opacity=".55"/>',
+  mist: '<ellipse cy=".35" rx="1.15" ry=".45" fill="#c5b2fa" opacity=".42"/>',
+  scales: '<ellipse cx=".1" cy="-.75" rx=".42" ry=".18" fill="#ff8d82" opacity=".55"/>',
+  panels: '<rect x="-.18" y="-.86" width=".36" height=".55" rx=".1" fill="#cff8ff"/>',
+};
+
 /** Decor along both sidelines, every few yards of the visible window: under the players, half outside the field. */
 function sidelineDecor(env, cam, HW, Y) {
   const out = []; const c = env.palette.decor; const start = Math.ceil(cam.bottom / 6) * 6;
@@ -37,6 +49,11 @@ function sidelineDecor(env, cam, HW, Y) {
         ? `<rect x="${x - 0.5}" y="${y + 0.3}" width="1" height="0.5" fill="#2b2730"/><rect x="${x - 0.3}" y="${y - 0.7}" width="0.6" height="1" fill="#6b6672"/><rect x="${x - 0.3 + (side > 0 ? -0.35 : 0.35)}" y="${y - 1.1}" width="0.6" height="0.5" fill="#6b6672"/><rect x="${x + (side > 0 ? -0.45 : 0.3)}" y="${y - 0.95}" width="0.15" height="0.15" fill="${c}"/>` // a dragon statue: plinth, body, head turned to the field, one red eye
         : `<rect x="${x - 0.08}" y="${y - 1.1}" width="0.16" height="2" fill="#2b2730"/><rect x="${x - 0.08 + (side > 0 ? -0.6 : 0.16)}" y="${y - 1.1}" width="0.6" height="0.9" fill="${k === 1 ? c : '#7b3fa0'}"/>`); // banners, crimson and purple
       else if (env.texture === 'panels') out.push(`<rect x="${x - 0.25}" y="${y - 1}" width="0.5" height="2" rx="0.2" fill="${c}" opacity="0.8"/>`); // light strips
+      if (env.texture === 'storm' && yard + 6 < cam.top) {
+        out.push(`<path class="venue-bolt" d="M${x} ${y - 7.3} l${-side * .32} 1.5 ${side * .5} 1.4 ${-side * .44} 1.5 ${side * .26} 1.6" fill="none" stroke="#bde9ff" stroke-width=".21" stroke-linecap="round" stroke-linejoin="round"/>`);
+      } else if (SIDELINE_MOTION[env.texture]) {
+        out.push(`<g transform="translate(${x} ${y})"><g class="venue-detail venue-detail-${env.texture}" style="animation-delay:-${k * .85}s">${SIDELINE_MOTION[env.texture]}</g></g>`);
+      }
     }
   }
   return out.join('');

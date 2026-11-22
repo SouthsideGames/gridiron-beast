@@ -50,12 +50,15 @@ const CATS = [
 
 function leader(state, side, key) { return rows(state, side).filter((p) => (p[key] || 0) > 0).sort((a, b) => (b[key] || 0) - (a[key] || 0))[0] || null; }
 
-export function boxScoreHtml(state, teams, { title = $t('match.box_score') } = {}) {
+export function boxScoreHtml(state, teams, { title = $t('match.box_score'), live = false } = {}) {
+  const monsterLink = m => !m.id ? esc(m.name) : live
+    ? `<button class="bs-inspect" data-box-inspect="${esc(m.id)}">${esc(m.name)}</button>`
+    : careerLink(m.id, m.name);
   const A = state.away, H = state.home;
   const cell = (side, cat) => {
     const p = leader(state, side, cat.key); if (!p) return `<div class="bs-cell ${side}"><span class="dim bs-empty">${$t('match.none_recorded')}</span></div>`;
     const m = who(teams[side], p.key || p.slot);
-    return `<div class="bs-cell ${side}">${monsterSprite(m, 30)}<div><div class="bs-v">${p[cat.key]}</div><div class="bs-n">${m.id ? careerLink(m.id, m.name) : esc(m.name)} <span class="dim">${p.slot}</span></div>${cat.sub(p) ? `<div class="dim bs-s">${esc(cat.sub(p))}</div>` : ''}</div></div>`;
+    return `<div class="bs-cell ${side}">${monsterSprite(m, 30)}<div><div class="bs-v">${p[cat.key]}</div><div class="bs-n">${monsterLink(m)} <span class="dim">${p.slot}</span></div>${cat.sub(p) ? `<div class="dim bs-s">${esc(cat.sub(p))}</div>` : ''}</div></div>`;
   };
   const leaders = CATS.map((c) => `<div class="bs-row">${cell('away', c)}<div class="bs-label">${c.label}</div>${cell('home', c)}</div>`).join('');
   const S = (side) => state.stats[side];
@@ -66,7 +69,7 @@ export function boxScoreHtml(state, teams, { title = $t('match.box_score') } = {
   ];
   const totals = `<table class="bs-totals"><thead><tr><th style="color:${A.color}">${esc(A.abbr)}</th><th></th><th style="color:${H.color}">${esc(H.abbr)}</th></tr></thead><tbody>${tot.map(([l, fn]) => `<tr><td>${fn(S('away'), 'away')}</td><td class="dim">${l}</td><td>${fn(S('home'), 'home')}</td></tr>`).join('')}</tbody></table>`;
   const pog = playersOfGame(state);
-  const pogCard = (p, label) => { if (!p) return ''; const m = who(teams[p.side], p.key || p.slot); const club = state[p.side]; return `<div class="pog">${monsterSprite(m, 44)}<div><div class="dim" style="font-size:11px;letter-spacing:.08em">${label}</div><b>${m.id ? careerLink(m.id, m.name) : esc(m.name)}</b> <span class="dim">${p.slot} · <span style="color:${club.color}">${esc(club.abbr)}</span></span><div class="muted" style="font-size:13px">${esc(line(p))}</div></div></div>`; };
+  const pogCard = (p, label) => { if (!p) return ''; const m = who(teams[p.side], p.key || p.slot); const club = state[p.side]; return `<div class="pog">${monsterSprite(m, 44)}<div><div class="dim" style="font-size:11px;letter-spacing:.08em">${label}</div><b>${monsterLink(m)}</b> <span class="dim">${p.slot} · <span style="color:${club.color}">${esc(club.abbr)}</span></span><div class="muted" style="font-size:13px">${esc(line(p))}</div></div></div>`; };
   return `<div class="box-score">
     <div class="bs-head"><span style="color:${A.color}">${esc(A.name)}</span><b class="bs-score">${state.score.away}-${state.score.home}</b><span style="color:${H.color}">${esc(H.name)}</span></div>
     <div class="center dim" style="margin-bottom:8px">${esc(title)}</div>

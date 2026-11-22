@@ -47,6 +47,7 @@ import { venueHtml } from '../stadium-preview.js';
 import { replayReason, replayPlan, replayPosition, REPLAY } from '../replay.js';
 import { qbReadsShown } from '../qb-read-ui.js';
 import { openMatchupPanel } from '../type-chart.js';
+import { captainsOf } from '../../franchise/partnerships.js';
 import { postGameHtml } from '../captains-ui.js';
 import { t as $t, lineText } from '../../text/index.js';
 
@@ -250,7 +251,7 @@ export function registerMatchScreens(Router, app) {
         replay: () => { if (!anim && lastReplay && lastReplay.gameKey === f.game?.state.seed) startReplay(f, lastReplay); },
         finish: () => finishGame(f),
         otclash: () => { const pv = F.overtimePreview(f); if (!pv.ok) { toast(pv.reason, 'bad'); return; } Router.go('clash-battle', { kind: 'overtime' }); },
-        boxscore: () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: $t('match.box_score_2') }),
+        boxscore: () => openLiveBox(f),
         kneel: () => { R.kneel(f.game.state); afterStep(f, { kind: 'kneel', text: f.game.state.lastPlay.text }); },
         spike: () => { R.spike(f.game.state); afterStep(f, { kind: 'spike', text: f.game.state.lastPlay.text }); },
       });
@@ -268,7 +269,7 @@ export function registerMatchScreens(Router, app) {
       document.querySelector('.topbar [data-action="help"]')?.addEventListener('click', () => openMatchPanel(root,'notices'));
       momentSheets(f);
       if (!anim && f.game?.lastEvent?.sim?.events?.some(e => e.kind === 'ability' || e.kind === 'status')) guideMoment(f, 'status', () => app.save());
-      document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: f.game.state.finished ? $t('match.final_3') : `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: $t('match.box_score_2') }));
+      document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => openLiveBox(f));
     },
     unmount() { cancelAnimationFrame(cameraRaf); cameraRaf = null; cameraField = cameraSvg = null; autoCamera.reset(null); settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
   });
@@ -300,6 +301,37 @@ export function registerMatchScreens(Router, app) {
     el.addEventListener('click',forward);el.addEventListener('change',forward);
   }
 
+  function openLiveBox(f, title = $t('match.box_score_2')) {
+    const s = f.game.state;
+    const clock = s.finished ? $t('match.final_3') : `${R.quarterText(s)} ${fmtClock(s.clock)}`;
+    const { el } = sheet(boxScoreHtml(s, teamsFor(f), { title: clock, live: true }), { title });
+    el.addEventListener('click', event => {
+      const button = event.target.closest('[data-box-inspect]');
+      if (button) openInspect(f, button.dataset.boxInspect);
+    });
+  }
+
+  function kickoffCaptains(f, s, teams) {
+    return `<div class="kickoff-captains">${['away', 'home'].map(side => {
+      const selected = captainsOf(f, s[side].name);
+      const members = ['offense', 'defense'].flatMap(unit => {
+        const pair = selected?.[unit];
+        return pair ? [pair.a, pair.b] : [];
+      }).map(id => findMonster(teams, id)).filter(entry => entry?.team === side && !entry.monster.injury);
+      return `<div class="kickoff-captain-team ${side}" aria-label="${esc(s[side].name)} captains">${members.map(({ monster }) => `<span title="${esc(monster.name)}">${monsterSprite(monster, 40, { flip: side === 'home' })}</span>`).join('')}</div>`;
+    }).join('')}</div>`;
+  }
+
+  function turnoverCue(ev) {
+    const first = ev.sim?.events?.find(e => e.kind === 'fumble' || e.kind === 'interception');
+    if (first) return { time: first.t, text: first.kind === 'fumble' ? 'FUMBLE!' : 'INTERCEPTION!' };
+    const result = ev.sim?.result;
+    if (['fumble', 'interception', 'touchback_return'].includes(result)) {
+      return { time: ev.sim.frames?.at(-1)?.t || 0, text: result === 'fumble' ? 'FUMBLE!' : 'INTERCEPTION!' };
+    }
+    return null;
+  }
+
   function screenParts(f) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
     const myBall = s.possession === me;
@@ -315,6 +347,8 @@ export function registerMatchScreens(Router, app) {
     const field = anim
       ? { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: anim.frames[anim.i], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, event: G.event, noLines: anim.follow, sprites: spritesFor(f, anim.ev.offenseSide), ...(anim.fx && !anim.replay ? { fields: anim.ev.sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), prevFrame: anim.frames[anim.i - 1] || null, ...(anim.pre && anim.i === 0 && !anim.key ? { time: -anim.pre } : {}) } : {}) }
       : { venue: G.state.venue, ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, readinessHud: presnapReadiness(s, teams), typeIcons: typeIconsFor(f, teams, look), ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession), ...(pre8 ? { fields: pre8.fields.length ? pre8.fields : null, fx: pre8.fx, time: pre8.time, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings) } : {}) };
+    const openingKickoff = !anim && !s.finished && s.phase === 'kickoff' && s.quarter === 1 && !s.playCount && !(s.log || []).some(e => e.kind === 'kick');
+    if (openingKickoff) { field.camera = cameraFor(50); field.noLines = true; }
     if (!anim && look.myPlay && s.phase === 'scrimmage') {
       const mine = s.possession === me;
       const plans = zonePlans(s, teams, me, mine ? look.myPlay : look.presnap.offensePlay.id, mine ? look.presnap.defensePlay.id : look.myPlay);
@@ -350,7 +384,7 @@ export function registerMatchScreens(Router, app) {
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? $t('match.your_ball') : $t('match.your_defense')}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? $t('match.home_2') : $t('match.away_2')}${G.mode === 'key' ? $t('match.key_moments_2') : ''}</span></div>
         ${edgeStrip(f, s, teams, me, pre8?.returning || [])}`;
     const wrapClass = `field-wrap${tdFlash}${venueClass(s.venue)}${anim?.replay ? ' replaying' : ''}`;
-    const over = `${weatherLayer(f, s.venue)}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> ${$t('match.instant_replay_b_b', { label: esc(anim.replay.reason.label) })}</div><div class="replay-slow" aria-hidden="true">${$t('match.slow_mo')}</div>` : banner}`;
+    const over = `${weatherLayer(f, s.venue)}${openingKickoff ? kickoffCaptains(f, s, teams) : ''}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> ${$t('match.instant_replay_b_b', { label: esc(anim.replay.reason.label) })}</div><div class="replay-slow" aria-hidden="true">${$t('match.slow_mo')}</div>` : banner}${!anim && fresh && G.lastEvent?.turnover ? `<div class="turnover-cue" role="status">${esc(G.lastEvent.turnover)}</div>` : ''}`;
     // N9c: a field the snap creates only if its creator is in the play (Runway, Bloom Break, Crosswind Rescue) is marked as conditional
     const warning = !anim ? (s.t8?.preChoice?.foresight || []).map((m) => `<div class="t8-conditional" role="note">${$t('match.foresight_is_marked_blitzing_risks_confused', { name: esc(findMonster(teams, m.targetMid)?.monster?.name || m.targetSlot) })}</div>`).join('') + (s.t8?.preChoice?.prism || []).map(() => `<div class="t8-conditional" role="note">${$t('match.prism_break_shattered_an_existing_enemy')}</div>`).join('') : '';
     const cond = !anim && pre8?.notes?.length ? `<div class="t8-conditional" role="note">${pre8.notes.map((n) => `<span class="${n.shown ? '' : 'held'}" data-ability="${esc(n.ability)}">◇ <b>${esc(n.name)}</b> ${n.shown ? `${$t('match.is_created_at_the_snap_only', { creator: esc(n.creator) })}` : `${$t('match.is_not_created_is_not_on', { creator: esc(n.creator) })}`}</span>`).join('')}</div>` : '';
@@ -360,7 +394,7 @@ export function registerMatchScreens(Router, app) {
   }
   /** What mount() does after the markup is in place; refresh() repeats it (the play clock restarts, Auto is rescheduled, the halftime sheet opens). */
   function afterRender(f, root) {
-    { const G = f.game, st = G.state; if (!anim && !st.finished && st.quarter >= 3 && !G.halftimeShown) { G.halftimeShown = true; app.save(); sheet(boxScoreHtml(st, teamsFor(f), { title: $t('match.halftime') }), { title: $t('match.halftime') }); } }
+    { const G = f.game, st = G.state; if (!anim && !st.finished && st.quarter >= 3 && !G.halftimeShown) { G.halftimeShown = true; app.save(); openLiveBox(f, $t('match.halftime')); } }
     if (!anim) guideFootball(f, () => app.save());
     startPlayClock(f, root);
     runPresnapReveal(f);
@@ -649,7 +683,7 @@ export function registerMatchScreens(Router, app) {
       const K = kickPlay(ev, kickLookup(f, ev.kicking), fxMeta(ev, true));
       if (K?.sim?.frames?.length > 1) { ev.offenseSide = ev.kicking; ev.sim = K.sim; ev.kickerName = teamsFor(f)[ev.kicking]?.kicker?.name || null; if (K.fx) kickFx.set(K.sim, K.fx); startAnim(f, ev); return; }
     }
-    G.lastEvent = { text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), fresh: true };
+    G.lastEvent = { turnover: turnoverCue(ev)?.text, text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), fresh: true };
     app.save(); refresh(f);
   }
   function startAnim(f, ev, opts = {}) {
@@ -662,6 +696,8 @@ export function registerMatchScreens(Router, app) {
     anim.pre = anim.fx?.preroll || 0; if (anim.pre) anim.start += anim.pre * 10 * anim.msPerFrame;
     G.lastEvent = null;
     refresh(f);
+    const cue = turnoverCue(ev);
+    let cueShown = false;
     const tick = (rafNow) => {
       if (!anim) return;
       if (activityPaused()) { anim.pausedAt ??= rafNow; anim.raf = requestAnimationFrame(tick); return; }
@@ -674,6 +710,10 @@ export function registerMatchScreens(Router, app) {
         anim.raf = requestAnimationFrame(tick); return;
       }
       const raw = Math.max(0, Math.floor((now - anim.start) / anim.msPerFrame));
+      if (cue && !cueShown && (now - anim.start) / anim.msPerFrame * .1 >= cue.time) {
+        cueShown = true;
+        document.querySelector('#fieldwrap')?.insertAdjacentHTML('beforeend', `<div class="turnover-cue" role="status">${cue.text}</div>`);
+      }
       const idx = Math.min(sim.frames.length - 1, raw);
       if (!sim.frames.length) { finishAnim(f, false); return; } // a play with no frames (nothing to draw)
       // End-of-play hold: keep drawing the last frame while an effect that fired at the whistle plays out.
@@ -700,6 +740,7 @@ export function registerMatchScreens(Router, app) {
         if (idx > 0 && !half && shakeBetween(anim.fx, prevT, ft)) shakeField(f);
         if (performance.now() - t0 > 18 && !(RP_CLOCK && globalThis.__gbRenderPerf.clock)) anim.slow = true; // this device cannot afford half-steps: back off for the rest of the play (never under the harness's fixed clock: frame-exact screenshots)
       }
+      if (cue && idx >= sim.frames.length - 1 && now < anim.start + cue.time * 10 * anim.msPerFrame + 650) { anim.raf = requestAnimationFrame(tick); return; }
       if (idx >= sim.frames.length - 1 && !(anim.fx && holds(anim) && endHold(anim.fx, sim.frames[sim.frames.length - 1].t ?? 0) > 0)) { finishAnim(f, false); return; }
       anim.raf = requestAnimationFrame(tick);
     };

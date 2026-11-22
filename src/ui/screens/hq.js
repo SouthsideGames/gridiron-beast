@@ -44,7 +44,6 @@ import { teamOverall, buildDepthChart } from '../../franchise/roster.js';
 import { AWARD_RULES } from '../../franchise/awards.js';
 import { RIVAL_WEEKLY } from '../../data/dialogue.js';
 import { LEADER_CATEGORIES, leaders, statLine, leagueSeasons, seasonTables, combinedTable, ARCHIVE_SEASONS } from '../../franchise/stats.js';
-import { HELP_HTML as CLASH_HELP } from './clash-battle.js';
 import { warningsHtml, noteHtml } from '../tutorial.js';
 import { suggestProspect, suggestDraftPick, suggestContract, suggestGoal, consequence } from '../../franchise/assist-advice.js';
 import { captainWarning, captainBadge } from '../captains-ui.js';
@@ -537,6 +536,8 @@ export function registerHqScreens(Router, app) {
     },
   });
 
+  const positionCountBar = (needs, count = n => n.healthy) => `<div class="row" style="flex-wrap:wrap;gap:4px;margin-top:4px">${needs.map((n) => `<span class="chip ${n.status === 'short' ? 'bad' : n.status === 'thin' ? 'warn' : ''}">${n.position} ${count(n)}/${n.slots}</span>`).join('')}</div>`;
+
   // ---------------------------------------------------------------- Monday
   Router.registerScreen('scout', {
     title: $t('hq.monday_scouting'),
@@ -545,7 +546,7 @@ export function registerHqScreens(Router, app) {
       const needs = F.depthNeeds(f); const gaps = needs.filter((n) => n.status !== 'ok');
       return `<p class="muted">${$t('hq.searches_one_region_for_prospects_better', { name: esc(scout?.name || $t('hq.your_scout')) })}</p>
         <div class="panel tight"><div class="row between">${$t('hq.b_depth_check_b')}<span class="dim">${gaps.length ? `${needs.filter((n) => n.status === 'short').length} ${$t('hq.short')} ${needs.filter((n) => n.status === 'thin').length} ${$t('hq.without_a_backup')}` : $t('hq.every_position_has_a_backup')}</span></div>
-          <div class="row" style="flex-wrap:wrap;gap:4px;margin-top:4px">${needs.map((n) => `<span class="chip ${n.status === 'short' ? 'bad' : n.status === 'thin' ? 'warn' : ''}">${n.position} ${n.healthy}/${n.slots}</span>`).join('')}</div>
+          ${positionCountBar(needs)}
           <label class="field" style="margin-top:6px">${$t('hq.ask_the_scout_to_look_for')} <select class="input" id="scout-focus">${[['', gaps.length ? `${$t('hq.automatic', { position: gaps[0].position, status: gaps[0].status === 'short' ? 'short-handed' : $t('hq.no_backup') })}` : $t('hq.nothing_in_particular')], ...Object.keys(F.GROUP_SLOTS).map((g) => [g, `${g}${needs.find((n) => n.position === g)?.status === 'short' ? $t('hq.short_handed') : needs.find((n) => n.position === g)?.status === 'thin' ? $t('hq.no_backup_2') : ''}`])].map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('')}</select></label></div>
         <div class="stack">${Object.entries(REGIONS).map(([name, r]) => { const skill = scout?.biomes?.[r.biome] ?? 50; return `<button class="item" data-action="region" data-v="${esc(name)}"><div class="grow"><div class="name">${esc(name)}</div><div class="sub">${r.types.join(' · ')}</div></div><span class="chip ${skill >= 80 ? 'good' : skill < 40 ? 'bad' : ''}">${skill}/100</span></button>`; }).join('')}</div>`;
     },
@@ -560,18 +561,16 @@ export function registerHqScreens(Router, app) {
       if (f.season.day !== 1) return `<div class="panel"><p>${$t('hq.tuesday_is_done_for_this_week')}</p>${f.week.recruited ? `<p class="muted">${$t('hq.signed')} ${esc(f.roster.find((m) => m.id === f.week.recruited)?.name || '')}</p>` : e?.status === 'skipped' ? `<p class="muted">${$t('hq.you_skipped_the_encounter')}</p>` : ''}<button class="btn block" data-action="back">${$t('hq.back')}</button></div>`;
       if (e && e.status !== 'ready') { setTimeout(() => Router.go('clash-battle', { kind: 'encounter', i: e.prospectIndex }, { replace: true }), 0); return `<p class="muted">${$t('hq.opening_the_battle')}</p>`; }
       if (!f.week.prospects.length) return `<div class="panel"><p>${$t('hq.no_monsters_were_found_this_week')}</p><button class="btn primary block" data-action="skip">${$t('hq.continue_to_wednesday')}</button></div>`;
-      const cap = F.salarySummary(f); const healthy = f.roster.filter((m) => !m.injury).length;
-      return `<p class="muted">${$t('hq.your_scout_found_these_monsters_pick')} <button class="btn small ghost" data-action="clashhelp">${$t('hq.help')}</button></p>
-        <p class="dim">${$t('hq.roster_cap_room_monsters_fit_to', { n: f.roster.length, rosterMax: F.ROSTER_MAX, amount: fmtMoney(cap.remaining), healthy })}</p>
+      const cap = F.salarySummary(f);
+      return `${positionCountBar(F.depthNeeds(f), n => f.roster.filter(m => m.position === n.position).length)}
+        <p class="dim">Roster ${f.roster.length}/${F.ROSTER_MAX} · cap room ${fmtMoney(cap.remaining)}</p>
         ${noteHtml(suggestProspect(f)?.text, 'suggest')}
         <div class="stack">${f.week.prospects.map((p, i) => prospectCard(p, i)).join('')}</div>
-        <button class="btn block" data-action="skip" style="margin-top:8px">${$t('hq.skip_the_encounter')}</button>
-        <p class="dim">${$t('hq.skipping_means_no_battle_and_no')}</p>`;
+        <button class="btn block" data-action="skip" style="margin-top:8px">${$t('hq.skip_the_encounter')}</button>`;
     },
     mount(root) {
       delegate(root, {
         back: () => Router.back(),
-        clashhelp: () => sheet(CLASH_HELP, { title: $t('hq.how_beast_clash_works') }),
         skip: () => { F.skipEncounter(app.f); app.save(); toast($t('hq.encounter_skipped_on_to_wednesday')); Router.go('hq', {}, { reset: true }); },
         compare: (el) => { const p = app.f.week.prospects[Number(el.dataset.i)]; if (p) compareBeast(app.f, p.monster, { ovrKnown: p.revealed >= 4, attrsKnown: p.revealed >= 6, potentialKnown: !!p.potentialKnown, salaryKnown: p.revealed >= 4 && !!p.potentialKnown }); },
         enter: (el) => { const i = Number(el.dataset.i); const pv = F.encounterPreview(app.f, i); if (!pv.ok) { toast(pv.reason, 'bad'); return; } Router.go('clash-battle', { kind: 'encounter', i }); },
