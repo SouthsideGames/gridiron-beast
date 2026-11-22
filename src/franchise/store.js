@@ -8,8 +8,8 @@
 //   parts    key = checksum → { sum, enc, data, bytes }                 content-addressed save parts (core, history, draft)
 //   global   reserved for the Hall of Fame, achievements and dex (they stay in localStorage in Phase 1: §43.2)
 //
-// A manifest: { slot, uid, storage: 7, fmt, savedAt, seq, writer, order, parts: { core|history|draft: { sum, raw, bytes,
-// rawBytes, packedBytes } }, meta, lifecycle }. A franchise is split into three parts so the archive (history, draft results)
+// A manifest: { slot, uid, storage: 7, fmt, savedAt, seq, writer, order, parts: { core|history|draft|prehistory?: { sum, raw, bytes,
+// rawBytes, packedBytes } }, meta, lifecycle }. A franchise is split into three parts (and a fourth, optional one: see OPTIONAL_PARTS) so the archive (history, draft results)
 // is packed and written only when it changes, and backups that share a part store it once. Every write of a manifest, its
 // new parts, the backup rotation and the clean-up of unreferenced parts is ONE transaction: it commits whole or not at all.
 //
@@ -24,7 +24,14 @@ import { newUid, legacyUid } from '../core/uid.js';
 
 export const STORAGE_VERSION = 7;
 export const DB_NAME = 'gridiron-beast';
-export const DB_VERSION = 1;
+/**
+ * 2: saves may hold a fourth part ('prehistory', below). Code from before that part does not know it: its clean-up would delete
+ * the part as unreferenced the next time it committed anything (in any slot), leaving this save unreadable, and it would load the
+ * franchise without its league archive. Raising the database version shuts such code out: a tab still running it is disconnected
+ * the moment this version opens the database, and it cannot open the database again. No store is added or changed by the
+ * upgrade. Never lower this number.
+ */
+export const DB_VERSION = 2;
 export const STORE_NAMES = Object.freeze(['slots', 'saves', 'backups', 'parts', 'global']);
 export const SLOT = 1;
 export const JOURNAL_KEY = 'gridiron-beast-v7-journal';
@@ -47,10 +54,13 @@ const ARCHIVED = new Set(['retired', 'fired']); // lifecycle states that make a 
 export async function idbBackend({ name = DB_NAME, indexedDB: idb = globalThis.indexedDB } = {}) {
   if (!idb) throw Object.assign(new Error('IndexedDB is not available in this browser.'), { code: 'unavailable' });
   const openDb = () => new Promise((resolve, reject) => {
-    let req; try { req = idb.open(name, DB_VERSION); } catch (e) { reject(Object.assign(e, { code: 'unavailable' })); return; }
+    // The browser's own errors (DOMException) have a read-only `code`: assigning to one throws, and the promise then never settles.
+    // They are wrapped instead, so a database that will not open is reported rather than waited on for ever.
+    const wrap = (e, code, text) => Object.assign(new Error(e?.message || text), { code, name: e?.name || 'Error', cause: e });
+    let req; try { req = idb.open(name, DB_VERSION); } catch (e) { reject(wrap(e, 'unavailable', 'IndexedDB is not available.')); return; }
     req.onupgradeneeded = () => { const d = req.result; for (const s of STORE_NAMES) if (!d.objectStoreNames.contains(s)) d.createObjectStore(s); };
     req.onsuccess = () => { const d = req.result; d.onversionchange = () => { d.close(); be.closed = true; }; d.onclose = () => { be.closed = true; }; resolve(d); };
-    req.onerror = () => reject(Object.assign(req.error || new Error('IndexedDB failed to open.'), { code: 'open' }));
+    req.onerror = () => reject(wrap(req.error, 'open', 'IndexedDB failed to open.'));
     req.onblocked = () => reject(Object.assign(new Error('Storage upgrade blocked by another tab of the game.'), { code: 'blocked' }));
   });
   const p = (r) => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });

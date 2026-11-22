@@ -129,3 +129,9 @@ test('usage and status report the archive part with the save', async () => {
   const total = Object.values(m.parts).reduce((a, p) => a + p.bytes, 0); assert.equal(u.save, total, 'storage use leaves out a part'); assert.equal(u.raw, Object.values(m.parts).reduce((a, p) => a + p.rawBytes, 0));
   assert.equal(store.status().bytes, total);
 });
+
+// Code from before the fourth part deletes it as unreferenced and loads the franchise without its archive (checked with two real
+// browser tabs, old code beside new). The database version is what shuts that code out, so it must never go back below 2.
+test('the database version shuts out code that does not know the archive part', async () => {
+  const { DB_VERSION } = await import('../src/franchise/store.js'); assert.ok(DB_VERSION >= 2, `DB_VERSION is ${DB_VERSION}`);
+});
