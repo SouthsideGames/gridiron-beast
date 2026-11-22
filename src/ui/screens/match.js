@@ -4,7 +4,7 @@ import { autoSpeed, cycleAutoSpeed } from '../phone-navigation.js';
 import { matchLogMatches } from '../match-log-filter.js';
 import { activityPaused } from '../activity.js';
 import { iconifyMarkup, infoIcon } from '../icons.js';
-import { surroundHtml, setStadiumScene, introPlateHtml, kickoffRevealHtml, REVEAL_MS, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
+import { surroundHtml, setStadiumScene, fieldBorder, introPlateHtml, kickoffRevealHtml, REVEAL_MS, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
 import { crowdFor } from '../stadium-crowd.js';
 import { guideFootball, guideMoment } from '../guided-week.js';
 import { recorder } from '../../testing/recorder.js';
@@ -29,7 +29,7 @@ import { PLAYS } from '../../data/playbook.js';
 import { TRAINING_FOCI } from '../../data/staff.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
 import { MatchCamera } from '../match-camera.js';
-import { fieldSvg, fieldDraw, FIELD_VIEWBOX, presnapLook, cameraFor } from '../field-view.js';
+import { fieldSvg, fieldDraw, fieldViewBox, presnapLook, cameraFor } from '../field-view.js';
 import { playCardSvg } from '../play-art.js';
 import { monsterSprite, portraitSprite } from '../pixel-monster.js';
 import { GYM_BY_CLUB } from '../../data/gyms.js';
@@ -78,7 +78,7 @@ export function registerMatchScreens(Router, app) {
     const G = f.game;
     const portal = field.frame && (field.frame.hoardFlight || field.fx?.t8?.items?.some(i => i.id === 'PSY-02-F' && (field.frame.t ?? 0) >= i.t0));
     const close = portal ? cameraFor(field.ballOn + field.frame.ball[0]) : field.camera || cameraFor(field.ballOn);
-    const viewCamera = autoCamera.sample(close, { key: G.state, auto: G.auto && !G.state.finished && !anim?.replay, closeView: G.autoCloseView, reducedMotion: f.settings.reducedMotion || !!anim?.replay });
+    const viewCamera = autoCamera.sample(close, { key: G.state, auto: G.auto && !G.state.finished && !anim?.replay, closeView: G.autoCloseView, reducedMotion: f.settings.reducedMotion || !!anim?.replay, pad: fieldBorder() ? fieldBorder() + 1.5 : 0 }); // zoomed out: the white all round, and the goal posts standing on it
     // Planner art is caller-projected in the close camera's coordinate space.
     const underlay = field.underlay ? `<g transform="translate(0 ${viewCamera.top - close.top})">${field.underlay}</g>` : '';
     return { ...field, viewCamera, underlay };
@@ -208,7 +208,7 @@ export function registerMatchScreens(Router, app) {
       // Three in-place regions (refresh(): a play's start and end update them without rebuilding the screen): the head, the field
       // with what lies over it, the panels under the field; then the controls. display:contents wrappers add no box of their own.
       return `<div class="match-console"><div id="live-status"></div><div id="match-head">${P.head}</div>
-        <div class="${P.wrapClass}" id="fieldwrap" aria-label="${$t('match.football_field')}">${P.surround}<svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldSvg(P.field)}</svg>${P.over}</div><div id="field-after">${P.after}</div>
+        <div class="${P.wrapClass}" id="fieldwrap" aria-label="${$t('match.football_field')}">${P.surround}<svg id="field" viewBox="${fieldViewBox()}" preserveAspectRatio="xMidYMid meet" role="img">${fieldSvg(P.field)}</svg>${P.over}</div><div id="field-after">${P.after}</div>
         <div id="controls">${P.controls}</div></div>`;
     },
     mount(root, ctx) {
@@ -335,7 +335,7 @@ export function registerMatchScreens(Router, app) {
     return null;
   }
 
-  const FIELD_ASPECT = (() => { const v = FIELD_VIEWBOX.split(' ').map(Number); return v[2] / v[3]; })();
+  const fieldBox = () => fieldViewBox().split(' ').map(Number); // [-half width, 0, width, span] of the picture on screen now
   let pendingStadium = null;
   // Stadium Polish: on the opening kickoff the stadium's strike reveals the football between the captains before the kick.
   // It only delays the kick the player just asked for, never changes it, and a tap (or the button again) skips it.
@@ -419,7 +419,7 @@ export function registerMatchScreens(Router, app) {
   }
   /** What mount() does after the markup is in place; refresh() repeats it (the play clock restarts, Auto is rescheduled, the halftime sheet opens). */
   function afterRender(f, root) {
-    { const wrap = root?.querySelector('#fieldwrap'), svg = wrap?.querySelector('#field'); if (wrap && svg) { layoutSurround(wrap, svg, FIELD_ASPECT); const r = pendingStadium; pendingStadium = null; if (r) playStadiumReaction(wrap, r, stadiumFxLevel(f.settings)); else resumeStadiumReaction(wrap); } }
+    { const wrap = root?.querySelector('#fieldwrap'), svg = wrap?.querySelector('#field'); if (wrap && svg) { { const v = fieldBox(); layoutSurround(wrap, svg, v[2] / v[3], v[2]); } const r = pendingStadium; pendingStadium = null; if (r) playStadiumReaction(wrap, r, stadiumFxLevel(f.settings)); else resumeStadiumReaction(wrap); } }
     { const G = f.game, st = G.state; if (!anim && !st.finished && st.quarter >= 3 && !G.halftimeShown) { G.halftimeShown = true; app.save(); openLiveBox(f, $t('match.halftime')); } }
     if (!anim) guideFootball(f, () => app.save());
     startPlayClock(f, root);
@@ -813,7 +813,6 @@ export function registerMatchScreens(Router, app) {
   // A replay is presentation only: it draws frames already in memory (ev.sim.frames) and touches nothing in f.game.
   // The buffer is the one most recent eligible play, in memory only (never saved).
   let lastReplay = null; let pendingTip = null; let replayTimer = null;
-  const VB = FIELD_VIEWBOX.split(' ').map(Number); // [-HW, 0, 2HW, SPAN]
   function startReplay(f, rp) {
     const G = f.game; const sim = rp.ev.sim; if (!sim?.frames?.length || anim) return;
     settleSave();
@@ -840,7 +839,7 @@ export function registerMatchScreens(Router, app) {
         const s2 = G.state;
         drawMatchField(svg, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame, prevFrame: sim.frames[pos.i - 1] || null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), qbRead: false, ownLabel: s2[anim.ev.offenseSide || s2.possession].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide || s2.possession)].abbr, camera: anim.camera, event: G.event, noLines: true, sprites: anim.sprites, time: frame.t });
         // Camera: a slight zoom that tracks the ball (CSS transform on the svg; the wrap clips it).
-        if (zoomOn) { const bx = (anim.ballLat + frame.ball[1] - VB[0]) / VB[2], by = (anim.camera.top - (anim.ballOn + frame.ball[0])) / VB[3]; svg.style.transformOrigin = `${(Math.max(0.15, Math.min(0.85, bx)) * 100).toFixed(1)}% ${(Math.max(0.15, Math.min(0.85, by)) * 100).toFixed(1)}%`; svg.style.transform = `${`scale(${REPLAY.zoom})`}`; }
+        if (zoomOn) { const VB = fieldBox(); const bx = (anim.ballLat + frame.ball[1] - VB[0]) / VB[2], by = (anim.camera.top - (anim.ballOn + frame.ball[0])) / VB[3]; svg.style.transformOrigin = `${(Math.max(0.15, Math.min(0.85, bx)) * 100).toFixed(1)}% ${(Math.max(0.15, Math.min(0.85, by)) * 100).toFixed(1)}%`; svg.style.transform = `${`scale(${REPLAY.zoom})`}`; }
         wrap?.classList.toggle('slowmo', !!pos.slow);
       }
       anim.raf = requestAnimationFrame(tick);

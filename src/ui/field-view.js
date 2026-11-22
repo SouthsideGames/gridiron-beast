@@ -27,7 +27,7 @@ import { assignmentLines } from './play-art.js';
 import { PLAYS, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
 import { fxSvg, movementSvg, statusMarks } from './ability-fx.js';
 import { turfSvg } from './stadium-art.js';
-import { postsSvg, standsDepth, standSvg, wallSvg, apronSvg, STANDS_GAP, FOOTBALL } from './stadium-fx.js';
+import { postsSvg, standsDepth, standSvg, wallSvg, apronSvg, borderSvg, barrierSvg, fieldBorder, FIELD_BORDER, STANDS_GRASS, STANDS_BARRIER, STANDS_GAP, FOOTBALL } from './stadium-fx.js';
 import { t as $t } from '../text/index.js';
 
 const SPAN = 46; // visible yards
@@ -41,6 +41,10 @@ export function cameraFor(ballOn) {
   return { bottom, top: bottom + SPAN };
 }
 export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
+/** Stadium Polish: half the picture's width. With a stadium scene set the picture is wider than the field by the white paint. */
+const viewHalf = () => HW + fieldBorder();
+/** The viewBox for the field on screen now (FIELD_VIEWBOX unless a stadium scene is set). */
+export const fieldViewBox = (span = SPAN) => `${-viewHalf()} 0 ${viewHalf() * 2} ${span}`;
 
 /**
  * @param {object} o
@@ -66,6 +70,8 @@ export function fieldLayers(o) {
   s += T.turf;
   if (cam.bottom < 0) s += `${T.endZone(Y(0), Y(-10) - Y(0))}<text x="0" y="${Y(-5) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${ownLabel}</text>`;
   if (cam.top > 100) s += `${T.endZone(Y(110), Y(100) - Y(110))}<text x="0" y="${Y(105) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${oppLabel}</text>`;
+  const VW = viewHalf();
+  s += borderSvg(cam, HW, Y); // Stadium Polish: the white paint around the field (the sideline markers stand on it)
   s += T.over; // tint and sideline decor, under the lines and the players
   // Event field art: rivalry games get a painted midfield crest and purple end-zone stripes; playoffs get gold.
   if (event) {
@@ -97,10 +103,11 @@ export function fieldLayers(o) {
   }
   // Stadium Polish: what lies behind the end lines (the far stand with its crowd; the near wall). Over the turf and sidelines there.
   // A strip of grass runs between each end line and what stands behind it.
-  if (cam.top > 110) s += `${apronSvg(venue, -HW, Y(110 + STANDS_GAP), HW * 2, STANDS_GAP)}${standSvg(venue, -HW, Y(110 + standsDepth()), HW * 2)}`;
-  if (cam.bottom < -10) s += `${apronSvg(venue, -HW, Y(-10), HW * 2, STANDS_GAP)}${wallSvg(venue, -HW, Y(-10 - STANDS_GAP), HW * 2)}`;
+  // Behind the white: grass, the padded barrier, then the stand (far end) or the wall (near end), across the whole picture.
+  if (cam.top > 110 + FIELD_BORDER) s += `${apronSvg(venue, -VW, Y(110 + FIELD_BORDER + STANDS_GRASS), VW * 2, STANDS_GRASS)}${barrierSvg(venue, -VW, Y(110 + STANDS_GAP), VW * 2, -1)}${standSvg(venue, -VW, Y(110 + standsDepth()), VW * 2)}`;
+  if (cam.bottom < -10 - FIELD_BORDER) s += `${apronSvg(venue, -VW, Y(-10 - FIELD_BORDER), VW * 2, STANDS_GRASS)}${barrierSvg(venue, -VW, Y(-10 - FIELD_BORDER - STANDS_GRASS), VW * 2, 1)}${wallSvg(venue, -VW, Y(-10 - STANDS_GAP), VW * 2)}`;
   // Goal posts on the end lines (drawn flat from above: crossbar + uprights).
-  for (const [end, dir] of [[110, 1], [-10, -1]]) if (cam.bottom - 1 < end && cam.top + 1 > end) { const y = Y(end) + dir * 0.6; s += `<g stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round"><line x1="-3" y1="${y}" x2="3" y2="${y}"/><line x1="-3" y1="${y}" x2="-3" y2="${y - dir * 2.4}"/><line x1="3" y1="${y}" x2="3" y2="${y - dir * 2.4}"/></g>${postsSvg(venue?.env, y, dir)}`; }
+  for (const [end, dir] of [[110, 1], [-10, -1]]) if (cam.bottom - 1 < end && cam.top + 1 > end) { const y = Y(end) + (fieldBorder() ? -dir * 0.9 : dir * 0.6); s += `<g stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round"><line x1="-3" y1="${y}" x2="3" y2="${y}"/><line x1="-3" y1="${y}" x2="-3" y2="${y - dir * 2.4}"/><line x1="3" y1="${y}" x2="3" y2="${y - dir * 2.4}"/></g>${postsSvg(venue?.env, y, dir)}`; }
   // Pre-snap art.
   if (presnap?.play) {
     const B = boundsFor(ballOn, ballLat);
@@ -123,7 +130,7 @@ export function fieldLayers(o) {
   const statics = s; s = '';
   // ---------------------------------------------------------------- dynamic layer
   const clipId = o.clipId || 'fv-clip';
-  const symbols = [{ id: clipId, symbol: `<clipPath id="${clipId}" clipPathUnits="userSpaceOnUse"><rect x="${-HW}" y="0" width="${HW * 2}" height="${span}"/></clipPath>` }]; const seen = new Set(); let pre = '';
+  const symbols = [{ id: clipId, symbol: `<clipPath id="${clipId}" clipPathUnits="userSpaceOnUse"><rect x="${-VW}" y="0" width="${VW * 2}" height="${span}"/></clipPath>` }]; const seen = new Set(); let pre = '';
   // Players.
   const simpleMarker = (slot, x, y, team, engaged, holder) => {
     const cx = X(ballLat + y), cy = Y(ballOn + x);
@@ -237,7 +244,7 @@ export function fieldDraw(svg, o) {
   const tracker = svg.__facing || (svg.__facing = new FacingTracker());
   const clipId = svg.__clipId || (svg.__clipId = `fv-clip-live-${++nextLiveClip}`);
   const L = fieldLayers({ ...o, clipId, facing: tracker.observe(o.frame) });
-  if (o.viewCamera) svg.setAttribute('viewBox', `${-HW} 0 ${HW * 2} ${L.span}`);
+  if (o.viewCamera) svg.setAttribute('viewBox', fieldViewBox(L.span));
   let st = svg.__fv;
   if (!st || st.defs.parentNode !== svg || st.statics.parentNode !== svg || st.dyn.parentNode !== svg) {
     let defs = null, statics = null, dyn = null;
@@ -254,7 +261,7 @@ export function fieldDraw(svg, o) {
   st.statics.setAttribute('clip-path', `url(#${clipId})`); st.dyn.setAttribute('clip-path', `url(#${clipId})`);
   for (const x of L.symbols) if (!st.ids.has(x.id)) { st.ids.add(x.id); st.defs.insertAdjacentHTML('beforeend', x.symbol); }
   const clip = st.defs.querySelector(`#${clipId} rect`);
-  if (clip) clip.setAttribute('height', String(L.span));
+  if (clip) { clip.setAttribute('height', String(L.span)); clip.setAttribute('x', String(-viewHalf())); clip.setAttribute('width', String(viewHalf() * 2)); }
   const staticRedrawn = L.statics !== st.staticStr;
   if (staticRedrawn) { st.statics.innerHTML = L.statics; st.staticStr = L.statics; }
   // Nothing moved (a still frame of the end-of-play hold, a re-render of the same moment): the dynamic layer is left as it is.
