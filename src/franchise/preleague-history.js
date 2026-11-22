@@ -112,6 +112,25 @@ export function generateLeagueArchive(f, seasons = 8) {
     careers[m.id] = { id: m.id, name: m.name, position: m.position, club, transfers, seasons: books,
       totals: books.reduce((sum, b) => { for (const [k,v] of Object.entries(b.reg)) sum[k] = k === 'fgLong' ? Math.max(sum[k] || 0, v) : (sum[k] || 0) + v; return sum; }, {}) };
   }
+  // Retired legends are archival identities only. They are never inserted into
+  // the live league registry, draft pools, or Hall of Fame voting machinery.
+  const legends = [];
+  for (let i = 0; i < 6; i++) {
+    const id = 'historical_' + hashString(seed + ':legend:' + i).toString(36);
+    const club = teams[roll(seed, id + ':club', teams.length)];
+    const position = ['QB', 'RB', 'WR', 'DL', 'LB', 'CB'][i];
+    const name = ['Aster', 'Bramble', 'Cinder', 'Dusk', 'Echo', 'Frost'][i] + ' ' +
+      ['Ironclaw', 'Stormmane', 'Brightfang', 'Stonehide', 'Nightwing', 'Goldhorn'][roll(seed, id + ':surname', 6)];
+    const retiredYear = -roll(seed, id + ':retired', 3);
+    const books = [];
+    for (let year = 1 - seasons; year <= retiredYear; year++) {
+      const m = { id, age: 29, yearsPro: seasons, position };
+      books.push({ ...seasonLine(m, year, seed), team: club });
+    }
+    const totals = books.reduce((sum, b) => { for (const [k,v] of Object.entries(b.reg)) sum[k] = (sum[k] || 0) + v; return sum; }, {});
+    careers[id] = { id, name, position, club, retired: true, seasons: books, totals };
+    legends.push({ id, name, position, club, retiredYear, totals });
+  }
   // Award winners are selected from generated season books, with positional
   // eligibility. All awards reference the same monster IDs as the archive.
   for (const season of years) {
@@ -136,25 +155,6 @@ export function generateLeagueArchive(f, seasons = 8) {
     // The historical archive cannot reconstruct ability impact, so do not
     // invent a winner from kicking statistics.
 
-  }
-  // Retired legends are archival identities only. They are never inserted into
-  // the live league registry, draft pools, or Hall of Fame voting machinery.
-  const legends = [];
-  for (let i = 0; i < 6; i++) {
-    const id = 'historical_' + hashString(seed + ':legend:' + i).toString(36);
-    const club = teams[roll(seed, id + ':club', teams.length)];
-    const position = ['QB', 'RB', 'WR', 'DL', 'LB', 'CB'][i];
-    const name = ['Aster', 'Bramble', 'Cinder', 'Dusk', 'Echo', 'Frost'][i] + ' ' +
-      ['Ironclaw', 'Stormmane', 'Brightfang', 'Stonehide', 'Nightwing', 'Goldhorn'][roll(seed, id + ':surname', 6)];
-    const retiredYear = -roll(seed, id + ':retired', 3);
-    const books = [];
-    for (let year = 1 - seasons; year <= retiredYear; year++) {
-      const m = { id, age: 29, yearsPro: seasons, position };
-      books.push({ ...seasonLine(m, year, seed), team: club });
-    }
-    const totals = books.reduce((sum, b) => { for (const [k,v] of Object.entries(b.reg)) sum[k] = (sum[k] || 0) + v; return sum; }, {});
-    careers[id] = { id, name, position, club, retired: true, seasons: books, totals };
-    legends.push({ id, name, position, club, retiredYear, totals });
   }
   return { version: 1, seed, seasons: years, careers, legends };
 }
