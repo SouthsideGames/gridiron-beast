@@ -4,7 +4,7 @@ import { autoSpeed, cycleAutoSpeed } from '../phone-navigation.js';
 import { matchLogMatches } from '../match-log-filter.js';
 import { activityPaused } from '../activity.js';
 import { iconifyMarkup, infoIcon } from '../icons.js';
-import { surroundHtml, introPlateHtml, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
+import { surroundHtml, introPlateHtml, kickoffRevealHtml, REVEAL_MS, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
 import { crowdFor } from '../stadium-crowd.js';
 import { guideFootball, guideMoment } from '../guided-week.js';
 import { recorder } from '../../testing/recorder.js';
@@ -208,7 +208,7 @@ export function registerMatchScreens(Router, app) {
       // Three in-place regions (refresh(): a play's start and end update them without rebuilding the screen): the head, the field
       // with what lies over it, the panels under the field; then the controls. display:contents wrappers add no box of their own.
       return `<div class="match-console"><div id="live-status"></div><div id="match-head">${P.head}</div>
-        <div class="${P.wrapClass}" id="fieldwrap" aria-label="${$t('match.football_field')}">${P.surround}<svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldSvg(P.field)}</svg>${P.over}</div><div id="field-after">${P.after}</div>
+        <div class="${P.wrapClass}" id="fieldwrap" aria-label="${$t('match.football_field')}">${P.surround}<svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="${P.surround ? 'xMidYMax' : 'xMidYMid'} meet" role="img">${fieldSvg(P.field)}</svg>${P.over}</div><div id="field-after">${P.after}</div>
         <div id="controls">${P.controls}</div></div>`;
     },
     mount(root, ctx) {
@@ -236,7 +236,7 @@ export function registerMatchScreens(Router, app) {
         punt: () => act(f, { fourthDown: 'punt' }),
         fg: () => act(f, { fourthDown: 'fg' }),
         fgsig: () => act(f, { fourthDown: 'fg', fgSignature: true }), // Task 8 M3: a player-activated field-goal signature (Dragon Roar)
-        kickoff: () => act(f, { kickoff: 'normal' }),
+        kickoff: () => kickoffWithReveal(f, root, () => act(f, { kickoff: 'normal' })),
         onside: () => act(f, { kickoff: 'onside' }),
         trykick: () => act(f, { tryChoice: 'kick' }),
         trytwo: () => { const G = f.game; if (!G.selected.offense) { toast($t('match.pick_a_play_for_the_two')); return; } act(f, { tryChoice: 'two' }); },
@@ -273,7 +273,7 @@ export function registerMatchScreens(Router, app) {
       if (!anim && f.game?.lastEvent?.sim?.events?.some(e => e.kind === 'ability' || e.kind === 'status')) guideMoment(f, 'status', () => app.save());
       document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => openLiveBox(f));
     },
-    unmount() { stopStadiumReaction(); pendingStadium = null; cancelAnimationFrame(cameraRaf); cameraRaf = null; cameraField = cameraSvg = null; autoCamera.reset(null); settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
+    unmount() { cancelReveal(); stopStadiumReaction(); pendingStadium = null; cancelAnimationFrame(cameraRaf); cameraRaf = null; cameraField = cameraSvg = null; autoCamera.reset(null); settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
   });
 
   /** Everything the match screen shows, as the strings render() and refresh() place: title, head, field options, overlays, panels, controls. */
@@ -336,7 +336,22 @@ export function registerMatchScreens(Router, app) {
   }
 
   const FIELD_ASPECT = (() => { const v = FIELD_VIEWBOX.split(' ').map(Number); return v[2] / v[3]; })();
-  let pendingStadium = null; // a stadium reaction waiting for the field to be on screen
+  let pendingStadium = null;
+  // Stadium Polish: on the opening kickoff the stadium's strike reveals the football between the captains before the kick.
+  // It only delays the kick the player just asked for, never changes it, and a tap (or the button again) skips it.
+  let revealFinish = null;
+  function kickoffWithReveal(f, root, go) {
+    if (revealFinish) { revealFinish(); return; } // pressed again while it plays: skip
+    const s = f.game.state; const level = stadiumFxLevel(f.settings);
+    const opening = s.phase === 'kickoff' && s.quarter === 1 && !s.playCount && !(s.log || []).some((e) => e.kind === 'kick');
+    const wrap = root?.querySelector('#fieldwrap'); const html = opening && wrap && !anim && !f.game.auto ? kickoffRevealHtml(s.venue, level) : '';
+    if (!html) { go(); return; }
+    wrap.insertAdjacentHTML('beforeend', html); const el = wrap.lastElementChild; wrap.classList.add('sfx-revealing');
+    playStadiumReaction(wrap, { ...introReaction(), ms: REVEAL_MS[level] || REVEAL_MS.full }, level);
+    let timer = null; const finish = () => { if (!revealFinish) return; revealFinish = null; clearTimeout(timer); el.remove(); wrap.classList.remove('sfx-revealing'); go(); };
+    revealFinish = finish; timer = setTimeout(finish, REVEAL_MS[level] || REVEAL_MS.full); el.addEventListener('click', finish);
+  }
+  function cancelReveal() { if (!revealFinish) return; revealFinish = null; document.querySelector('.sfx-reveal')?.remove(); } // a stadium reaction waiting for the field to be on screen
   function screenParts(f) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
     const myBall = s.possession === me;

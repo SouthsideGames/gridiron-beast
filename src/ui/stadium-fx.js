@@ -100,7 +100,7 @@ export const introReaction = () => ({ kind: 'intro', level: 'major', side: 'home
 export function layoutSurround(wrap, svg, fieldAspect) {
   if (!wrap || !svg) return;
   const r = svg.getBoundingClientRect(), o = wrap.getBoundingClientRect(); const w = r.width, h = r.height; if (!w || !h) return;
-  const band = Math.max(0, Math.floor((h - Math.min(h, w / fieldAspect)) / 2));
+  const band = Math.max(0, Math.floor(h - Math.min(h, w / fieldAspect))); // the field sits at the bottom of its box; the stand takes all the room above it
   wrap.style.setProperty('--sfx-band', `${band}px`); wrap.style.setProperty('--sfx-top', `${Math.max(0, Math.round(r.top - o.top - wrap.clientTop))}px`);
   wrap.classList.toggle('sfx-no-band', band < 26);
 }
@@ -109,12 +109,12 @@ export function layoutSurround(wrap, svg, fieldAspect) {
 /**
  * Each stadium's look. `label`: the design name. `colors`: [primary, secondary, bright] (also given to the stylesheet as
  * --sfx-a/-b/-c). `intro`: the kickoff line. `edge`: what runs along the sidelines ('chain': current jumping from marker to
- * marker, cycling up the sideline). `posts`: what the goal posts do ('arc'). The stands above and below the field hold the
+ * marker, cycling up the sideline). `posts`: what the goal posts do ('arc'). `reveal`: what brings the football to the captains at the opening kickoff ('bolt'). The stands above and below the field hold the
  * crowd in every look (stadium-crowd.js); the look only colours the rail in front of them. Environments without an entry keep
  * today's look and have no surround.
  */
 export const LOOKS = Object.freeze({
-  storm: { label: 'Electric', colors: ['#4cc9ff', '#a06bff', '#eaf6ff'], intro: 'The current is live', edge: 'chain', posts: 'arc' },
+  storm: { label: 'Electric', colors: ['#4cc9ff', '#a06bff', '#eaf6ff'], intro: 'The current is live', edge: 'chain', posts: 'arc', reveal: 'bolt' },
 });
 export const lookFor = (envId) => (Object.hasOwn(LOOKS, envId) ? LOOKS[envId] : null);
 
@@ -135,7 +135,20 @@ function standHtml(cls, stand, crowd, look) {
 export function surroundHtml(venue, crowd = null) {
   const look = lookFor(venue?.env); if (!look) return '';
   const [a, b, c] = look.colors;
-  return `<div class="stadium-surround sfx-${venue.env}" style="--sfx-a:${a};--sfx-b:${b};--sfx-c:${c}" aria-hidden="true">${standHtml('sfx-far', 'far', crowd, look)}${standHtml('sfx-near', 'near', crowd, look)}<i class="sfx-edge"></i><i class="sfx-lap"></i></div>`;
+  return `<div class="stadium-surround sfx-${venue.env}" style="--sfx-a:${a};--sfx-b:${b};--sfx-c:${c}" aria-hidden="true">${standHtml('sfx-far', 'far', crowd, look)}<i class="sfx-edge"></i><i class="sfx-lap"></i></div>`;
+}
+/** How long the kickoff reveal runs before the kick, by level (it can always be skipped). */
+export const REVEAL_MS = Object.freeze({ full: 1900, reduced: 900 });
+/**
+ * The kickoff reveal: after the player presses the kickoff button on the opening kickoff, the stadium's own strike lands between
+ * the captains and leaves the football there; then the kick goes ahead. '' for a stadium without one, and at Off. A tap skips it.
+ */
+export function kickoffRevealHtml(venue, level = 'full') {
+  const look = lookFor(venue?.env); if (!look?.reveal || level === 'off') return '';
+  const [a, b, c] = look.colors;
+  const bolt = `<svg class="sfx-strike" viewBox="0 0 60 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M33 0 L24 26 L33 26 L21 52 L31 52 L27 100" fill="none" stroke="${a}" stroke-width="7" stroke-linejoin="round" opacity=".55"/><path d="M33 0 L24 26 L33 26 L21 52 L31 52 L27 100" fill="none" stroke="${c}" stroke-width="2.6" stroke-linejoin="round"/><path d="M24 26 L12 40 M31 52 L44 63" fill="none" stroke="${b}" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+  const ball = `<svg class="sfx-ball" viewBox="0 0 40 26" aria-hidden="true" focusable="false"><ellipse cx="20" cy="13" rx="18" ry="10.5" fill="#8a4b22" stroke="#3a1c0a" stroke-width="2"/><path d="M11 13 H29 M16 10 V16 M20 10 V16 M24 10 V16" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+  return `<div class="sfx-reveal sfx-reveal-${look.reveal} ${level === 'reduced' ? 'sfx-reveal-simple' : ''}" style="--sfx-a:${a};--sfx-b:${b};--sfx-c:${c}" role="button" aria-label="Skip">${level === 'reduced' ? '' : `<i class="sfx-whiteout"></i>${bolt}`}<i class="sfx-ring"></i>${ball}<span class="sfx-skip">Tap to skip</span></div>`;
 }
 /** The kickoff name plate: the stadium, its kind and its line. */
 export function introPlateHtml(venue, esc = (s) => s) {

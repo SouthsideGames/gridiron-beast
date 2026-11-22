@@ -2546,3 +2546,25 @@ html[data-stadium-fx="reduced"] .sfx-chain { animation-duration: 3.64s; }
 html[data-stadium-fx="reduced"] .field-wrap[data-sfx] .sfx-cheer { animation: none; }
 html[data-stadium-fx="reduced"] .field-wrap[data-sfx][data-sfx-side="home"] .sfx-cheer-home, html[data-stadium-fx="reduced"] .field-wrap[data-sfx][data-sfx-side="away"] .sfx-cheer-away { opacity: 1; }
 html[data-stadium-fx="off"] :is(.sfx-chain, .sfx-flash, .sfx-cheer) { display: none; }
+/* Stadium Polish v1, revision 3 (owner review): one stand, above the field (the field sits at the bottom of its box); the crowd
+   jumps; the kickoff strike reveals the football between the captains. */
+.sfx-far.sfx-crowd, .sfx-far .sfx-cheer { background-position: center bottom 6px; }
+.field-wrap:has(> .stadium-surround) :is(.kickoff-captains, .sfx-reveal) { inset: calc(var(--sfx-top, 0px) + var(--sfx-band, 0px)) 0 0 0; }
+.field-wrap[data-sfx][data-sfx-side="home"] .sfx-cheer-home, .field-wrap[data-sfx][data-sfx-side="away"] .sfx-cheer-away, .field-wrap[data-sfx="intro"] .sfx-cheer { opacity: 1; animation: sfx-jump .34s steps(1, end) infinite; }
+@keyframes sfx-jump { 0% { transform: translateY(0); } 50%, 100% { transform: translateY(-4px); } }
+html[data-stadium-fx="reduced"] .field-wrap[data-sfx] .sfx-cheer { animation: none; }
+.sfx-reveal { position: absolute; z-index: 5; display: grid; place-items: center; cursor: pointer; overflow: hidden; }
+.sfx-strike { position: absolute; left: calc(50% - 34px); top: 0; width: 68px; height: 50%; opacity: 0; animation: sfx-strike 1.9s steps(1, end) both; }
+.sfx-whiteout { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, #fff 0, var(--sfx-a) 22%, transparent 62%); opacity: 0; animation: sfx-whiteout 1.9s ease-out both; }
+.sfx-ring { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border: 3px solid var(--sfx-c); border-radius: 50%; box-shadow: 0 0 14px 3px var(--sfx-a); opacity: 0; animation: sfx-ring 1.9s ease-out both; }
+.sfx-ball { position: relative; width: 44px; height: auto; filter: drop-shadow(0 3px 2px #000a); opacity: 0; animation: sfx-ball 1.9s cubic-bezier(.2, .9, .3, 1.3) both; }
+.sfx-skip { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #fff; text-shadow: 0 1px 2px #000; opacity: .75; }
+@keyframes sfx-strike { 0%, 17% { opacity: 0; } 18% { opacity: 1; } 22% { opacity: .2; } 25% { opacity: 1; } 31% { opacity: .35; } 34% { opacity: 1; } 42%, 100% { opacity: 0; } }
+@keyframes sfx-whiteout { 0%, 17% { opacity: 0; } 19% { opacity: .85; } 26% { opacity: .3; } 34% { opacity: .7; } 60%, 100% { opacity: 0; } }
+@keyframes sfx-ring { 0%, 33% { opacity: 0; transform: scale(.3); } 36% { opacity: 1; } 75% { opacity: 0; transform: scale(3.2); } 100% { opacity: 0; transform: scale(3.2); } }
+@keyframes sfx-ball { 0%, 33% { opacity: 0; transform: scale(.2) rotate(-25deg); } 48% { opacity: 1; transform: scale(1.25) rotate(6deg); } 62%, 100% { opacity: 1; transform: scale(1) rotate(0); } }
+.sfx-reveal-simple :is(.sfx-ball, .sfx-ring) { animation-duration: .9s; animation-delay: -.5s; }
+/* The play result's headline grows from its own left edge and the box clips it, so the pop never leaves the container. */
+.field-banner .callout { transform-origin: left center; }
+.match-console #fieldwrap > .field-banner { overflow: hidden; }
+.field-wrap.sfx-revealing .sfx-plate { opacity: 0; transition: opacity .15s; }

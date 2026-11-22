@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { stadiumReaction, stadiumFxLevel, STADIUM_FX_LEVELS, REACTION_MS, LOOKS, lookFor, surroundHtml, introPlateHtml, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, introReaction } from '../src/ui/stadium-fx.js';
+import { kickoffRevealHtml, REVEAL_MS, stadiumReaction, stadiumFxLevel, STADIUM_FX_LEVELS, REACTION_MS, LOOKS, lookFor, surroundHtml, introPlateHtml, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, introReaction } from '../src/ui/stadium-fx.js';
 import { ENVIRONMENTS, STADIUMS, venueFor } from '../src/data/stadiums.js';
 import { fieldSvg } from '../src/ui/field-view.js';
 import { DEVICE_SETTING_KEYS } from '../src/ui/device-settings.js';
@@ -65,8 +65,9 @@ test('every look names a real field, and a stadium without a look is left exactl
 });
 test('Electric (Storm Stadium): crowd stands, current cycling between the sideline markers, and current between the goal post uprights', () => {
   const venue = venueFor('Stormport Bolts', 'k'); assert.equal(venue.env, 'storm'); assert.equal(venue.type, 'Electric', 'the field keeps its type');
-  const s = surroundHtml(venue); for (const part of ['sfx-far', 'sfx-near', 'sfx-crowd', 'sfx-cheer-home', 'sfx-cheer-away', 'sfx-rail', 'sfx-channel', 'sfx-flash', 'sfx-edge', 'sfx-lap']) assert.ok(s.includes(part), part);
+  const s = surroundHtml(venue); for (const part of ['sfx-far', 'sfx-crowd', 'sfx-cheer-home', 'sfx-cheer-away', 'sfx-rail', 'sfx-channel', 'sfx-flash', 'sfx-edge', 'sfx-lap']) assert.ok(s.includes(part), part);
   assert.ok((s.match(/sfx-anim/g) || []).length < 120, 'a bounded number of moving pieces');
+  assert.doesNotMatch(s, /sfx-near/, 'one stand, above the field');
   assert.match(introPlateHtml(venue), /The Bolt Yard/); assert.equal(introPlateHtml({ env: 'grass' }), '');
   const mid = fieldSvg({ venue, ballOn: 50 }); assert.match(mid, /sfx-chain/, 'current jumps between the sideline markers'); assert.match(mid, /sfx-node/); assert.doesNotMatch(mid, /sfx-post/);
   const delays = new Set([...mid.matchAll(/sfx-chain sfx-anim" style="animation-delay:-([\d.]+)s/g)].map((m) => m[1])); assert.ok(delays.size >= 4, 'the jumps take turns, so the electricity cycles along the sideline');
@@ -93,4 +94,12 @@ test('the crowd: mostly home colours, more visitors and empty seats when the hom
   const nb = count(a), ng = count(crowdSeats(77, good, 'far')); assert.ok(nb.a > nb.h); assert.ok(ng.h > ng.a * 3); assert.ok(nb[''] > ng['']);
   const c = crowdFor({ seed: 1, homeColor: '#111111', awayColor: '#222222', homeRecord: { w: 1, l: 7 }, awayRecord: { w: 7, l: 1 } }); assert.deepEqual(c.mix, bad);
   assert.equal(crowdImages({ ...c, stand: 'far' }), null, 'without a canvas the stand is simply not drawn');
+});
+
+test('the kickoff reveal: a strike and the football for Electric, simpler at Reduced, nothing at Off or in a stadium without one', () => {
+  const venue = venueFor('Stormport Bolts', 'k'); const full = kickoffRevealHtml(venue, 'full');
+  assert.match(full, /sfx-strike/); assert.match(full, /sfx-ball/); assert.match(full, /Tap to skip/);
+  const reduced = kickoffRevealHtml(venue, 'reduced'); assert.match(reduced, /sfx-ball/); assert.doesNotMatch(reduced, /sfx-strike|sfx-whiteout/);
+  assert.equal(kickoffRevealHtml(venue, 'off'), ''); assert.equal(kickoffRevealHtml({ env: 'grass' }, 'full'), '');
+  assert.ok(REVEAL_MS.full <= 2000 && REVEAL_MS.reduced < REVEAL_MS.full, 'short, and shorter when reduced');
 });

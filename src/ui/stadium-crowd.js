@@ -32,7 +32,7 @@ function rng(seed, label) {
   let h = 2166136261 >>> 0; for (const ch of `${seed}|${label}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
   return () => { h |= 0; h = (h + 0x6d2b79f5) | 0; let t = Math.imul(h ^ (h >>> 15), 1 | h); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
-export const CROWD_COLS = 26, CROWD_ROWS = 9;
+export const CROWD_COLS = 26, CROWD_ROWS = 16;
 /**
  * Who sits in each seat of one stand: rows of 'h' (home colours), 'a' (visitors), 'n' (neutral) or '' (empty). Visiting fans
  * cluster a little (a travelling block) instead of being spread perfectly evenly.
@@ -74,7 +74,7 @@ export function crowdImages({ seed, mix, homeColor, awayColor, stand = 'far' }) 
   g.fillStyle = '#10151d'; g.fillRect(0, 0, CROWD_W, CROWD_H);
   for (let y = 0; y < CROWD_ROWS; y++) {
     // Row 0 is the one next to the field. The far stand's front row is at the bottom of its picture; the near stand's at the top.
-    const py = back ? 1 + y * PITCH_Y : CROWD_H - (y + 1) * PITCH_Y; const depth = 1 - y * 0.045; const step = y % 2 ? '#1b2433' : '#202b3d';
+    const py = back ? 1 + y * PITCH_Y : CROWD_H - (y + 1) * PITCH_Y; const depth = 1 - y * 0.036; const step = y % 2 ? '#1b2433' : '#202b3d';
     g.fillStyle = step; g.fillRect(0, py, CROWD_W, PITCH_Y); // the step of the stand
     g.fillStyle = '#0b0f15'; g.fillRect(0, py + PITCH_Y - 1, CROWD_W, 1);
     for (let x = 0; x < CROWD_COLS; x++) {
