@@ -23,10 +23,11 @@ export function generateLeagueArchive(f, seasons = 8) {
     for (const id of data.roster || []) teamOf.set(id, club);
   const years = [];
   for (let year = 1 - seasons; year <= 0; year++) {
-    // Pair each club with every other club once: balanced 15-game seasons.
+    // Play each club against 14 opponents, omitting one fixed pairing per club.
     // Scores are not reconstructed; only standings and postseason outcomes are archived.
     const records = new Map(teams.map(club => [club, { club, w: 0, l: 0 }]));
     for (let i = 0; i < teams.length; i++) for (let j = i + 1; j < teams.length; j++) {
+      if (i % 2 === 0 && j === i + 1) continue; // 8 omitted matchups: 14 games per club
       const home = teams[i], away = teams[j];
       const winner = roll(seed, year + ':fixture:' + home + ':' + away, 2) ? home : away;
       records.get(winner).w++;
@@ -132,6 +133,7 @@ export function validateLeagueArchive(archive) {
   for (const s of years.values()) {
     if (!s.standings.some(t => t.club === s.champion)) errors.push('Champion absent: ' + s.year);
     if (s.standings.reduce((n,t)=>n+t.w,0) !== s.standings.reduce((n,t)=>n+t.l,0)) errors.push('Unbalanced standings: ' + s.year);
+    if (s.standings.some(t => t.w + t.l !== 14)) errors.push('Invalid season length: ' + s.year);
     if (s.playoffs?.at(-1)?.games?.[0]?.winner !== s.champion) errors.push('Playoff winner mismatch: ' + s.year);
     for (const winner of Object.values(s.awards?.league || {})) {
       const book = archive.careers[winner.id]?.seasons.find(b => b.year === s.year);
