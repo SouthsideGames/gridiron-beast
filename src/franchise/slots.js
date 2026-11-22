@@ -38,7 +38,7 @@ export function createSlotManager({ backend, localStorage: ls = (() => { try { r
         const backups = backupKeys.length;
         if (!m) { out.push({ slot, state: rec?.state === 'migrating' ? 'migrating' : rec?.state === 'active' ? 'damaged' : 'empty', uid: rec?.uid ?? null, meta: null, lifecycle: null, savedAt: rec?.savedAt ?? null, bytes: 0, backups }); continue; }
         const state = isArchivedManifest(m) ? m.lifecycle.status : 'active';
-        const bytes = ['core', 'history', 'draft'].reduce((a, n) => a + (m.parts?.[n]?.bytes || 0), 0);
+        const bytes = ['core', 'history', 'draft', 'prehistory'].reduce((a, n) => a + (m.parts?.[n]?.bytes || 0), 0); // 'prehistory': the optional league-archive part (store.js)
         out.push({ slot, state, uid: m.uid ?? rec?.uid ?? null, meta: m.meta || null, lifecycle: m.lifecycle || null, savedAt: m.savedAt ?? null, bytes, backups });
       } catch (e) { out.push({ slot, state: 'damaged', uid: null, meta: null, lifecycle: null, savedAt: null, bytes: 0, backups: 0, error: e?.message || String(e) }); }
     }
