@@ -108,8 +108,8 @@ function recordsHtml(f, params) {
   const tab = ['game', 'season', 'career', 'team', 'preLeague'].includes(params.tab) ? params.tab : 'game';
   const tabs = [['game', $t('hq.single_game')], ['season', $t('hq.season_3')], ['career', $t('hq.your_careers')], ['team', $t('hq.team')], ...(f.preLeagueHistory ? [['preLeague', 'Before Year 1']] : [])];
   const model = Object.fromEntries(historicalRecords(f).map((s) => [s.scope, s.rows]));
-  const holder = (r, cat) => { const id = r.name ? (r.id || resolveRecordHolder(f, r, { scope: tab === 'season' ? 'season' : 'game', cat }).id) : null; return id ? careerLink(id, r.name) : esc(r.name || r.team || ''); };
-  const prevLine = (p) => (p ? `<div class="sub hh-prev">${$t('history.previous_record')} <b class="mono">${p.value}</b> · ${p.name ? (p.id ? careerLink(p.id, p.name) : esc(p.name)) : esc(p.team || '')}${p.name && p.team ? ` (${esc(p.team)})` : ''}${p.year != null ? ` · ${yearOf(p.year)}` : ''}</div>` : '');
+  const holder = (r, cat) => { const id = r.name ? (r.id || resolveRecordHolder(f, r, { scope: tab === 'season' ? 'season' : 'game', cat }).id) : null; return id && !String(id).startsWith('historical_') ? careerLink(id, r.name) : esc(r.name || r.team || ''); };
+  const prevLine = (p) => (p ? `<div class="sub hh-prev">${$t('history.previous_record')} <b class="mono">${p.value}</b> · ${p.name ? (p.id && !String(p.id).startsWith('historical_') ? careerLink(p.id, p.name) : esc(p.name)) : esc(p.team || '')}${p.name && p.team ? ` (${esc(p.team)})` : ''}${p.year != null ? ` · ${yearOf(p.year)}` : ''}</div>` : '');
   const row = (label, r, sub, cat = null) => `<div class="item static hh-record ${r?.team === f.club ? 'mine' : ''}">${r?.species ? monsterSprite(r, 30) : ''}<div class="grow"><div class="name">${esc(label)}</div><div class="sub">${r ? `<b>${holder(r, cat)}</b>${r.position ? ` (${esc(r.position)})` : ''} · ${sub(r)}` : $t('hq.no_record_yet')}</div>${prevLine(r?.previous)}</div><span class="chip accent hh-value">${r ? r.value : '·'}</span></div>`;
   const playoff = (r) => (r.playoff ? ` ${$t('history.in_the_playoffs')}` : '');
   let body = ''; let held = null;
