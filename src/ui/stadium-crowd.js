@@ -54,16 +54,18 @@ export function crowdSeats(seed, mix, stand = 'far', cols = CROWD_COLS, rows = C
 const SKIN = ['#f1c9a5', '#d9a47a', '#b97c52', '#8a5a3c', '#5e3d2a'];
 const HAIR = ['#1b1512', '#3a2a1c', '#6b4a2a', '#b08a4a', '#d8d2c4', '#7a1f1f'];
 const NEUTRAL = ['#d8dde6', '#8f98a8', '#3b4350', '#c9b79a', '#5a6b8a', '#2c2f36'];
-// Monsters in the stands: about one seat in five holds a monster instead of a person. Too small for the real sprites, so each is
+// Monsters in the stands: some seats hold a monster instead of a person. How many changes from game to game (monsterShare). Too small for the real sprites, so each is
 // a little silhouette (ears, horns, wings, an antenna or a crest) in a fur colour; more than half wear the stadium's own type.
-export const MONSTER_SHARE = 0.2;
+export const MONSTER_SHARE = Object.freeze({ min: 0.05, max: 0.5 });
+/** The share of seats that hold monsters in this game: anywhere from a handful to half the stand, set by the game's seed. */
+export function monsterShare(seed) { const v = rng(seed, 'monster-share')(); return +(MONSTER_SHARE.min + (MONSTER_SHARE.max - MONSTER_SHARE.min) * v).toFixed(3); }
 export const TYPE_FUR = Object.freeze({ Fire: '#ff7a3d', Water: '#4aa8ff', Nature: '#6fd35a', Electric: '#ffe04a', Ice: '#bfe8ff', Wind: '#8ff0dc', Earth: '#c99a5a', Dark: '#8a6ad6', Light: '#fff0a8', Metal: '#c3cada', Psychic: '#ff8ae0' });
 const FURS = Object.values(TYPE_FUR); const SHAPES = ['ears', 'horns', 'wings', 'antenna', 'crest'];
 /** Which seats hold monsters, and what each looks like: rows of null or { fur, shape }. Follows the seed, like the seats. */
 export function crowdMonsters(seed, stand = 'far', type = null, cols = CROWD_COLS, rows = CROWD_ROWS) {
-  const r = rng(seed, `monsters-${stand}`); const home = TYPE_FUR[type] || null; const out = [];
+  const r = rng(seed, `monsters-${stand}`); const home = TYPE_FUR[type] || null; const out = []; const share = monsterShare(seed);
   for (let y = 0; y < rows; y++) { const row = [];
-    for (let x = 0; x < cols; x++) { const is = r() < MONSTER_SHARE, own = r() < 0.6, fur = FURS[Math.floor(r() * FURS.length)], shape = SHAPES[Math.floor(r() * SHAPES.length)];
+    for (let x = 0; x < cols; x++) { const is = r() < share, own = r() < 0.6, fur = FURS[Math.floor(r() * FURS.length)], shape = SHAPES[Math.floor(r() * SHAPES.length)];
       row.push(is ? { fur: home && own ? home : fur, shape } : null); }
     out.push(row); }
   return out;

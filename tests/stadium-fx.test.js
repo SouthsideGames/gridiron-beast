@@ -160,12 +160,13 @@ test('the white border: all round the field in a stadium scene, the sideline mar
 });
 
 // Monsters in the stands.
-test('monsters in the stands: about one seat in five, deterministic from the seed, leaning to the stadium\'s own type; the seats themselves are unchanged', async () => {
-  const { crowdMonsters, crowdSeats, crowdFor, MONSTER_SHARE, TYPE_FUR, CROWD_COLS, CROWD_ROWS } = await import('../src/ui/stadium-crowd.js');
+test('monsters in the stands: more in some games and fewer in others, deterministic from the seed, leaning to the stadium\'s own type; the seats themselves are unchanged', async () => {
+  const { crowdMonsters, crowdSeats, crowdFor, MONSTER_SHARE, monsterShare, TYPE_FUR, CROWD_COLS, CROWD_ROWS } = await import('../src/ui/stadium-crowd.js');
   const a = crowdMonsters(77, 'far', 'Electric'), b = crowdMonsters(77, 'far', 'Electric'); assert.deepEqual(a, b); assert.notDeepEqual(a, crowdMonsters(78, 'far', 'Electric'));
   assert.equal(a.length, CROWD_ROWS); assert.equal(a[0].length, CROWD_COLS);
   let n = 0, own = 0, total = 0; for (let seed = 0; seed < 40; seed++) for (const row of crowdMonsters(seed, 'far', 'Fire')) for (const m of row) { total++; if (m) { n++; if (m.fur === TYPE_FUR.Fire) own++; assert.ok(['ears', 'horns', 'wings', 'antenna', 'crest'].includes(m.shape)); } }
-  assert.ok(Math.abs(n / total - MONSTER_SHARE) < 0.03, `share of monsters ${n / total}`); assert.ok(own / n > 0.55 && own / n < 0.75, `home type share ${own / n}`);
+  const shares = Array.from({ length: 200 }, (_, i) => monsterShare(i)); assert.ok(shares.every((v) => v >= MONSTER_SHARE.min && v <= MONSTER_SHARE.max)); assert.ok(Math.min(...shares) < 0.12 && Math.max(...shares) > 0.42, 'some games have few monsters, some have many'); assert.equal(monsterShare(77), monsterShare(77));
+  for (const seed of [3, 11, 29]) { const seats = crowdMonsters(seed, 'far', 'Fire').flat(); const got = seats.filter(Boolean).length / seats.length; assert.ok(Math.abs(got - monsterShare(seed)) < 0.14, `seed ${seed}: ${got} against ${monsterShare(seed)}`); } assert.ok(own / n > 0.55 && own / n < 0.75, `home type share ${own / n}`);
   const mix = { home: 0.7, away: 0.18, fill: 0.9 }; assert.deepEqual(crowdSeats(77, mix), crowdSeats(77, mix), 'who sits where does not depend on the monsters');
   assert.equal(crowdFor({ seed: 1, type: 'Water' }).type, 'Water'); assert.equal(crowdFor({ seed: 1 }).type, null);
 });
