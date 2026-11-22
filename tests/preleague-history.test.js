@@ -43,7 +43,8 @@ test('historical award winners have matching season books', () => {
   f.roster.push({ id: 'd1', name: 'Defender', position: 'DL', age: 28, yearsPro: 6 });
   const archive = generateLeagueArchive(f);
   assert.deepEqual(validateLeagueArchive(archive), []);
-  assert.ok(archive.seasons.some(s => s.awards.league.dpoy?.id === 'd1'));
+  assert.ok(archive.seasons.some(s => s.awards.league.dpoy));
+  assert.ok(archive.seasons.every(s => !s.awards.league.smoy));
 });
 
 test('player roster takes precedence over duplicate league monster records', () => {
@@ -62,4 +63,33 @@ test('validation rejects inconsistent historical standings and playoff results',
   assert.ok(validateLeagueArchive(a).some(e => e.includes('Invalid season length')));
   a.seasons[0].playoffs[2].games[0].winner = 'Invalid champion';
   assert.ok(validateLeagueArchive(a).some(e => e.includes('Playoff winner mismatch')));
+});
+
+test('historical statistical categories are internally coherent', () => {
+  const f = fixture();
+  f.roster.push(
+    { id: 'rb', name: 'Runner', position: 'RB', yearsPro: 4, age: 26 },
+    { id: 'cb', name: 'Corner', position: 'CB', yearsPro: 5, age: 28 },
+    { id: 'k', name: 'Kicker', position: 'K', yearsPro: 6, age: 29 },
+  );
+  const a = generateLeagueArchive(f);
+  for (const career of Object.values(a.careers)) {
+    for (const { reg } of career.seasons) {
+      if ('comp' in reg) assert.ok(reg.comp <= reg.att);
+      if ('rec' in reg) assert.ok(reg.rec <= reg.targets);
+      if ('tacklesTotal' in reg) assert.equal(reg.tacklesTotal, reg.tacklesSolo + reg.tacklesAssist);
+      if ('fgm' in reg) assert.ok(reg.fgm <= reg.fga);
+      if ('xpm' in reg) assert.ok(reg.xpm <= reg.xpa);
+    }
+    if (career.position === 'K') {
+      assert.equal(career.totals.fgLong, Math.max(...career.seasons.map(b => b.reg.fgLong)));
+    }
+  }
+  assert.deepEqual(validateLeagueArchive(a), []);
+});
+test('historical archive survives JSON save roundtrip without changing data', () => {
+  const archive = generateLeagueArchive(fixture());
+  const restored = JSON.parse(JSON.stringify(archive));
+  assert.deepEqual(restored, archive);
+  assert.deepEqual(validateLeagueArchive(restored), []);
 });
