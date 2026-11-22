@@ -15,7 +15,7 @@ export async function previewAudio(channel) {
   if (audioPreferences().muted) return { ok: false, reason: 'Turn off Mute All Audio to hear a preview.' };
   if (isAudioHidden()) return { ok: false, reason: 'Return to the game to hear a preview.' };
   if (audioPreferences()[channel] === 0) return { ok: false, reason: 'Raise this volume to hear a preview.' };
-  if (channel === 'sfx') return { ok: await uiSounds.preview(), reason: t('menu.ui_sound_unavailable') };
+  if (channel === 'sfx') { const ok = await uiSounds.preview(); const why = ok ? null : uiSounds.problem(); return { ok, reason: why ? `${t('menu.ui_sound_unavailable')} (${why})` : t('menu.ui_sound_unavailable') }; } // the reason names what failed, so a silent device can be diagnosed from a screenshot
   if (channel === 'music') { await music.select('main'); return { ok: true }; }
   if (channel === 'cries') { await playCry(cryCatalog[0].id, 1); return { ok: true }; }
   if (!['sfx', 'crowd'].includes(channel)) return { ok: false, reason: 'Unknown audio channel.' };
