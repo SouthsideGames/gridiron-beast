@@ -121,10 +121,14 @@ export function generateLeagueArchive(f, seasons = 8) {
       const c = selected.career;
       season.awards.league[kind] = { id: c.id, name: c.name, position: c.position, team: selected.book.team };
     };
-    const offense = candidates.filter(x => ['QB','RB','WR','TE'].includes(x.career.position))
-      .sort((a,b) => (b.book.reg.passYds || b.book.reg.rushYds || b.book.reg.recYds || 0) - (a.book.reg.passYds || a.book.reg.rushYds || a.book.reg.recYds || 0))[0];
+    const offensiveScore = r => (r.passYds || 0) / 15 + (r.passTd || 0) * 6 +
+      (r.rushYds || 0) / 8 + (r.rushTd || 0) * 8 + (r.recYds || 0) / 8 + (r.recTd || 0) * 8;
+    const defensiveScore = r => (r.sacks || 0) * 8 + (r.int || 0) * 12 +
+      (r.tacklesTotal || 0) * 0.6 + (r.pd || 0) * 2 + (r.tfl || 0) * 2;
+    const offense = candidates.filter(x => ['QB','RB','WR','TE','OL'].includes(x.career.position))
+      .sort((a,b) => offensiveScore(b.book.reg) - offensiveScore(a.book.reg) || String(a.career.id).localeCompare(String(b.career.id)))[0];
     const defense = candidates.filter(x => ['DL','LB','CB','S'].includes(x.career.position))
-      .sort((a,b) => (b.book.reg.sacks || b.book.reg.tacklesTotal || b.book.reg.int || 0) - (a.book.reg.sacks || a.book.reg.tacklesTotal || a.book.reg.int || 0))[0];
+      .sort((a,b) => defensiveScore(b.book.reg) - defensiveScore(a.book.reg) || String(a.career.id).localeCompare(String(b.career.id)))[0];
     award('mvp', offense || defense || candidates[0]);
     award('opoy', offense);
     award('dpoy', defense);
