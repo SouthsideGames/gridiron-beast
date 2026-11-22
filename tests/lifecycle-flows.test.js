@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
 import * as L from '../src/franchise/lifecycle.js';
+import * as Save from '../src/franchise/save.js';
 import { createStore, memoryBackend, exportFranchise, validateImport } from '../src/franchise/store.js';
 import { createSlotManager } from '../src/franchise/slots.js';
 import { runFranchise } from '../tools/franchise-soak.mjs';
@@ -74,3 +75,21 @@ test('two tabs: different slots save independently; the same slot refuses the ta
   g.owner.first = 'B-stale'; const rs = await b1.save(g, { immediate: true }); assert.equal(rs.ok, false); assert.equal(rs.error?.code, 'newer-elsewhere');
   assert.equal((await tabA.store(1).loadManifest(await a1.readManifest())).owner.first, 'A-newer');
 });
+
+// Regression (2026-11-22): loading runs the save migration, and one step of it (the Beast Dex stamps rebuilt from the roster) went
+// through the guard that refuses changes to an archive. So a retired or fired franchise could not be read at all: reopening it
+// from storage gave recovery mode ("This franchise is retired: it is a read-only archive"), and its export file was refused.
+for (const [label, end] of [['retired', (f) => L.finalizeArchive(f, { reason: 'season-cap' })], ['fired', (f) => { f.board ||= {}; f.board.fired = true; return L.finalizeArchive(f, { reason: 'fired' }); }]]) {
+  test(`a ${label} franchise can still be loaded: migration, reopening from storage and import, unchanged and still read-only`, async () => {
+    const f = settled(label === 'retired' ? 33 : 34); const h = f.history[0]; while (label === 'retired' && f.history.length < 20) f.history.unshift({ ...h, year: f.history[0].year - 1 });
+    assert.ok(end(f).ok, 'archived'); assert.equal(L.isArchived(f), true);
+    const text = JSON.stringify(f); const loaded = Save.migrate(JSON.parse(text)); assert.ok(loaded, 'migration reads an archive');
+    assert.equal(JSON.stringify(loaded), text, 'loading an archive changes nothing in it');
+    const backend = memoryBackend(); const s1 = createStore({ backend, localStorage: null, debounce: 0 }); await s1.open(); assert.ok((await s1.replace(JSON.parse(text), null, {})).franchise);
+    const again = await createStore({ backend, localStorage: null, debounce: 0 }).open();
+    assert.equal(again.mode, 'ready', `reopening gave "${again.mode}": ${again.error?.message || ''}`); assert.equal(L.isArchived(again.franchise), true); assert.equal(again.franchise.lifecycle.status, f.lifecycle.status);
+    const v = validateImport(exportFranchise(again.franchise)); assert.ok(v.ok, v.problems?.[0]); assert.equal(L.isArchived(v.franchise), true);
+    assert.throws(() => F.startNextSeason(again.franchise), /read-only/, 'it is still a read-only archive to play');
+    assert.throws(() => F.dexRecord(again.franchise, again.franchise.roster[0], 'signed'), /read-only/, 'the player-facing Dex stamp is still guarded');
+  });
+}

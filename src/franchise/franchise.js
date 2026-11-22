@@ -456,6 +456,13 @@ export function dexRecord(f, m, how = 'seen') {
   dexRecordGlobal(id, how, stamp); // the player's dex outlives this franchise
   if (how === 'signed' && m?.stage) { f.dex.ownedForms ||= {}; if ((f.dex.ownedForms[id] || 0) < m.stage) f.dex.ownedForms[id] = m.stage; dexFormGlobal(id, m.stage); }
 }
+/**
+ * The same stamp for the load path (save.js migrate). Loading is not a player action: a retired or fired franchise is read-only
+ * to play, but it must still be read. `dexRecord` is guarded against archives like every mutator (the wrapping at the end of
+ * this file); this name keeps the plain function, so migration can rebuild an archive's Dex stamps from the roster it proves.
+ * (Before this, loading any archive threw "read-only": it could not be reopened from storage or imported from a file.)
+ */
+export const dexRecordOnLoad = dexRecord;
 /** Status across the player's whole career (every franchise), or this franchise only with `{ franchiseOnly: true }`. */
 export function dexStatus(f, id, { franchiseOnly = false } = {}) {
   const mine = f?.dex?.signed?.[id] ? 'signed' : 'unknown';

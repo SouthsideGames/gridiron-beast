@@ -59,8 +59,10 @@ function await_import() { return Career; }
 test('development: evolutions as they happen, older evolutions rebuilt honestly, level marks only at 10/20/30, a big season of growth', () => {
   const f = newFranchise(53); const sp = Object.values(SPECIES_BY_ID).find((s) => s.evolution?.length && s.rarity === 'common');
   const m = generateMonster(createRng(9), { species: sp.id, quality: 60, yearsPro: 0 }); raiseToLevel(m, sp.evolution[0].level); f.roster.push(m); // Task 8 M1: a level-1 monster brought to the level honestly (readiness reads the development record)
-  const r = F.evolveMonster(f, m.id); assert.ok(r.ok);
-  const evo = of(m, 'evolve')[0]; assert.equal(evo.y, f.season.year); assert.equal(evo.x.to, m.name);
+  const named = m.name; const r = F.evolveMonster(f, m.id); assert.ok(r.ok);
+  // The moment records the form he evolved into; he keeps his own name through it (docs/INDIVIDUAL_BEAST_NAMES.md).
+  const evo = of(m, 'evolve')[0]; assert.equal(evo.y, f.season.year); assert.equal(evo.x.to, sp.evolution[0].name); assert.equal(evo.x.to, r.event.to); assert.notEqual(evo.x.from, evo.x.to);
+  assert.equal(m.name, named, 'an evolution does not rename him'); assert.equal(m.stage, 1);
   const old = generateMonster(createRng(10), { species: sp.id, quality: 60 }); old.stage = 1; backfillCareer(f, old);
   const oe = of(old, 'evolve')[0]; assert.equal(oe.y, null, 'season unknown: shown as before the timeline'); assert.equal(oe.x.before, 1);
   const lv = fresh(f); lv.level = 9; careerAfterGame([lv], { year: 1, week: 1, club: f.club }); assert.equal(of(lv, 'level').length, 0);
