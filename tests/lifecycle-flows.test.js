@@ -93,3 +93,15 @@ for (const [label, end] of [['retired', (f) => L.finalizeArchive(f, { reason: 's
     assert.throws(() => F.dexRecord(again.franchise, again.franchise.roster[0], 'signed'), /read-only/, 'the player-facing Dex stamp is still guarded');
   });
 }
+
+// A retired monster's league record has no "personal name" flag. Loading used to add one to each such record, so an archive whose league
+// had one was no longer identical to what was stored, and the store refused the next save as a change to a read-only archive.
+test('loading a retired franchise leaves its retired-legend records alone, so saving it again is a no-op', async () => {
+  const f = settled(41); const h = f.history[0]; while (f.history.length < 20) f.history.unshift({ ...h, year: f.history[0].year - 1 });
+  assert.ok(Object.values(f.league.legends).some((s) => s.personalName === undefined), 'this league has a retired-legend record');
+  assert.ok(L.finalizeArchive(f, { reason: 'season-cap' }).ok); const text = JSON.stringify(f);
+  assert.equal(JSON.stringify(Save.migrate(JSON.parse(text))), text, 'loading changes nothing');
+  const backend = memoryBackend(); const s1 = createStore({ backend, localStorage: null, debounce: 0 }); await s1.open(); assert.ok((await s1.replace(JSON.parse(text), null, {})).franchise);
+  const s2 = createStore({ backend, localStorage: null, debounce: 0 }); const again = await s2.open(); assert.equal(again.mode, 'ready');
+  const r = await s2.save(again.franchise, { immediate: true }); assert.ok(r.ok, r.error?.message); assert.equal(r.unchanged, true);
+});
