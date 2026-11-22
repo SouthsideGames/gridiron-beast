@@ -17,10 +17,10 @@ function seasonLine(m, year, seed) {
 export function generateLeagueArchive(f, seasons = 8) {
   const seed = f.seed >>> 0;
   const teams = ALL_TEAMS.slice();
-  const monsters = [...(f.roster || []), ...Object.values(f.league?.monsters || {})];
+  const monsters = [...new Map([...(f.roster || []), ...Object.values(f.league?.monsters || {})].filter(m => m?.id).map(m => [String(m.id), m])).values()];
   const teamOf = new Map((f.roster || []).map(m => [m.id, f.club]));
   for (const [club, data] of Object.entries(f.league?.clubs || {}))
-    for (const id of data.roster || []) teamOf.set(id, club);
+    for (const id of data.roster || []) if (!teamOf.has(id)) teamOf.set(id, club);
   const years = [];
   for (let year = 1 - seasons; year <= 0; year++) {
     // Play each club against 14 opponents, omitting one fixed pairing per club.
