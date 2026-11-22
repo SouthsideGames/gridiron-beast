@@ -18,5 +18,9 @@ export const DESIGN_FIELDS = Object.freeze({
     palette: { a: '#4d7a2a', b: '#55842f', c: '#467026', end: '#7a6418', apron: '#3a5f20', tint: 'rgba(255,220,90,0.04)', decor: '#ffd24a' } },
   specter: { id: 'specter', name: 'Specter Stadium', short: 'Specter', type: null, indoor: false, icon: '👻', texture: 'plain',
     palette: { a: '#2f4448', b: '#354a4e', c: '#2a3e42', end: '#1c2a31', apron: '#24363a', tint: 'rgba(140,255,200,0.04)', decor: '#8dffc8' } },
+  clash: { id: 'clash', name: 'Clash Stadium', short: 'Clash', type: null, indoor: false, icon: '🥊', texture: 'ring',
+    palette: { a: '#8a4a34', b: '#93503a', c: '#814530', end: '#22305a', apron: '#6e3a28', tint: 'rgba(255,120,90,0.04)', decor: '#ffd24a' } },
+  corrupt: { id: 'corrupt', name: 'Corrupt Stadium', short: 'Corrupt', type: null, indoor: false, icon: '🧪', texture: 'ooze',
+    palette: { a: '#3b2450', b: '#422959', c: '#352048', end: '#243f1d', apron: '#2a1a3a', tint: 'rgba(150,255,80,0.035)', decor: '#9cff4a' } },
 });
 export const designField = (id) => (Object.hasOwn(DESIGN_FIELDS, id) ? DESIGN_FIELDS[id] : null);
