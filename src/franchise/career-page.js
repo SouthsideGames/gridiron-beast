@@ -124,13 +124,7 @@ export function careerPage(f, id, { profile = null } = {}) {
   const count = (k) => (p.trophies || []).find((t) => t.kind === k)?.count || 0;
   const careerAll = sum(lines.career.reg, lines.career.post);
   const teams = teamHistory(p, lines);
-  if (pre?.transfers?.length) {
-    for (const transfer of pre.transfers) {
-      if (!teams.some(t => t.club === transfer.club && t.from === transfer.year))
-        teams.push({ club: transfer.club, from: transfer.year, to: pre.seasons.filter(b => b.team === transfer.club).at(-1)?.year ?? transfer.year, preLeague: true });
-    }
-    teams.sort((a,b) => (a.from ?? 0) - (b.from ?? 0));
-  }
+
   const timeline = p.timeline || [];
   const historicalAwardsForMonster = historicalAwards(f).filter((a) => a.id != null && String(a.id) === String(p.id));
   const induction = historicalHallOfFame(f).inductees.find((c) => String(c.id) === String(p.id)) || null;
