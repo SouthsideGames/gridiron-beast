@@ -3,14 +3,14 @@
 import { ALL_TEAMS } from '../data/league.js';
 import { hashString } from '../core/rng.js';
 const roll = (seed, key, max) => hashString(String(seed) + '|' + key) % max;
-const fields = { QB: 'passYds', RB: 'rushYds', WR: 'recYds', TE: 'recYds', OL: 'pancakes', DL: 'sacks', LB: 'tackles', CB: 'int', S: 'tackles', K: 'fgm' };
+const fields = { QB: 'passYds', RB: 'rushYds', WR: 'recYds', TE: 'recYds', OL: 'pancakes', DL: 'sacks', LB: 'tacklesTotal', CB: 'int', S: 'tacklesTotal', K: 'fgm' };
 function seasonLine(m, year, seed) {
   const position = m.position || 'WR';
   const key = fields[position] || 'games';
   const games = 8 + roll(seed, m.id + ':' + year + ':gp', 5);
   const starts = Math.max(0, games - roll(seed, m.id + ':' + year + ':gs', 4));
   const prime = Math.max(0.42, 1 - Math.abs((m.age || 25) - (1 - year) - 26) * 0.055);
-  const scale = { passYds: 1900, rushYds: 720, recYds: 650, pancakes: 42, sacks: 12, tackles: 75, int: 5, fgm: 19 };
+  const scale = { passYds: 1900, rushYds: 720, recYds: 650, pancakes: 42, sacks: 12, tacklesTotal: 75, int: 5, fgm: 19 };
   const value = Math.round((scale[key] || 20) * prime * (0.65 + roll(seed, m.id + ':' + year + ':prod', 71) / 100));
   return { year, team: null, reg: { games, starts, [key]: value }, post: {} };
 }
@@ -90,7 +90,7 @@ export function generateLeagueArchive(f, seasons = 8) {
     const offense = candidates.filter(x => ['QB','RB','WR','TE'].includes(x.career.position))
       .sort((a,b) => (b.book.reg.passYds || b.book.reg.rushYds || b.book.reg.recYds || 0) - (a.book.reg.passYds || a.book.reg.rushYds || a.book.reg.recYds || 0))[0];
     const defense = candidates.filter(x => ['DL','LB','CB','S'].includes(x.career.position))
-      .sort((a,b) => (b.book.reg.sacks || b.book.reg.tackles || b.book.reg.int || 0) - (a.book.reg.sacks || a.book.reg.tackles || a.book.reg.int || 0))[0];
+      .sort((a,b) => (b.book.reg.sacks || b.book.reg.tacklesTotal || b.book.reg.int || 0) - (a.book.reg.sacks || a.book.reg.tacklesTotal || a.book.reg.int || 0))[0];
     award('mvp', offense || defense || candidates[0]);
     award('opoy', offense);
     award('dpoy', defense);
