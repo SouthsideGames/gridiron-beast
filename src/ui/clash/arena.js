@@ -12,6 +12,7 @@ import { activityPaused } from '../activity.js';
 // (playTo, record, length, controls: false, the silent tier, revive, the looks override point, the status glyphs) works in every mode.
 import { frameGate } from '../frame-rate.js';
 import { esc, sheet } from '../dom.js';
+import { infoIcon } from '../icons.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { stateAt, cuesFor, nextExchangeIndex, DURATION } from './choreographer.js';
 import { themeFor, decorSvg, padSvg, SHADOW_SVG, shieldRingSvg, COND_ICON as LEGACY_COND_ICON, COND_COLOR as LEGACY_COND_COLOR } from './arena-art.js';
@@ -109,7 +110,7 @@ export function createArena(root, result, opts = {}) {
 
   const names = { a: opts.names?.a || $t('clash.side_a'), b: opts.names?.b || $t('clash.side_b') }; const simple = !!opts.simple; const noControls = opts.controls === false;
   root.innerHTML = `<div class="cl-arena ${sizeKey} theme-${theme.key} ${simple ? 'simple' : ''} ${t8 ? 't8' : ''}">
-    <div class="cl-hud"><span class="cl-ex">${opts.live ? $t('clash.exchange_b_0_live') : $t('clash.exchange_b_0_b', { exchanges: result.exchanges })}</span><span class="cl-sd"></span><span class="cl-standing"></span><span class="cl-order muted"></span><span class="cl-theme muted">${esc(theme.name)}</span><span class="cl-exp">${result.experiments?.length ? `⚠ ${esc(result.experiments.join(', '))}` : ''}${t8 && result.provisional ? $t('clash.provisional_readings_on') : ''}</span>${opts.infoButton ? `<button class="btn small cl-hud-info" data-action="clash-notices" aria-label="${$t('playview.guide_notices')}">ⓘ</button>` : ''}<div class="cl-exbar"><i></i></div></div>
+    <div class="cl-hud"><span class="cl-ex">${opts.live ? $t('clash.exchange_b_0_live') : $t('clash.exchange_b_0_b', { exchanges: result.exchanges })}</span><span class="cl-sd"></span><span class="cl-standing"></span><span class="cl-order muted"></span><span class="cl-theme muted">${esc(theme.name)}</span><span class="cl-exp">${result.experiments?.length ? `⚠ ${esc(result.experiments.join(', '))}` : ''}${t8 && result.provisional ? $t('clash.provisional_readings_on') : ''}</span>${opts.infoButton ? `<button class="btn small cl-hud-info" data-action="clash-notices" aria-label="${$t('playview.guide_notices')}">${infoIcon()}</button>` : ''}<div class="cl-exbar"><i></i></div></div>
     <div class="cl-matchup" aria-live="polite"></div>
     <div class="cl-viewport"><div class="cl-stage" style="background-color:${theme.base};background-image:${theme.tile}">
       <div class="cl-half cl-half-a" style="background:${theme.halfA}"></div><div class="cl-half cl-half-b" style="background:${theme.halfB}"></div><div class="cl-mid" style="background:${theme.line}"></div>

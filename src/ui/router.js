@@ -48,6 +48,13 @@ export function go(name, params = {}, { replace = false, reset = false } = {}) {
   navigating = true; render();
 }
 let restoreTo = null;
+/**
+ * Open a franchise where its owner left it: HQ, or straight back into the game when one is under way (a game left by closing
+ * the app is still in the save). The game screen leads back to HQ itself when the game is over.
+ */
+export function goToFranchise(f) {
+  go(f?.game?.state && screens.has('match') ? 'match' : 'hq', {}, { reset: true });
+}
 export function back() {
   if (closeTopSheet()) return;
   if (stack.length > 1) stack.pop(); // the guard is for going forward: Back only returns to a screen already visited, so a lesson that completes on a sub-screen never strands the player there

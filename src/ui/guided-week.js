@@ -1,7 +1,7 @@
 import { evolutionReady } from '../data/monsters.js';
 import { t } from '../text/index.js';
-import { esc, sheet, toast } from './dom.js';
-import { LESSONS, GUIDE_LESSON_COUNT, guideActive, currentLesson, advanceGuide, syncGuide, allowedScreens, lessonCanRead, guideEvent, finishIndependent, skipLesson, finishGuideAtFootball } from '../franchise/guide.js';
+import { esc, sheet, toast, confirmSheet } from './dom.js';
+import { LESSONS, GUIDE_LESSON_COUNT, guideActive, currentLesson, advanceGuide, syncGuide, allowedScreens, lessonCanRead, guideEvent, finishIndependent, skipTutorial, resumeTutorial, finishGuideAtFootball } from '../franchise/guide.js';
 import { MOMENTS } from '../franchise/guide-lessons.js';
 
 /** The screen "Show Me Where" opens for the current lesson. */
@@ -12,7 +12,7 @@ export function guideHtml(f, screen) {
   // Already there: "Show Me Where" would do nothing, so it is not offered (the lesson's own control is highlighted instead).
   const away = lessonScreen(f, l) !== screen;
   const compact = ['match', 'clash-battle'].includes(screen);
-  const body = `<section class="commissioner-guide panel" aria-label="${esc(t('guide.commissioner'))}"><b>${t('guide.commissioner')}</b><div class="dim">${t('guide.progress', { n: f.guide.index + 1, total: GUIDE_LESSON_COUNT })}</div><h2>${esc(l.title())}</h2><p>${esc(l.text())}</p><div class="guide-buttons">${away ? `<button class="btn primary" data-action="guide-open">${t('guide.open')}</button>` : ''}${lessonCanRead(f, screen) ? `<button class="btn primary" data-action="guide-next">${t('guide.continue')}</button>` : ''}${l.kind === 'independent' ? `<button class="btn" data-action="guide-keep">${t('guide.keep')}</button><button class="btn" data-action="guide-open">${t('guide.help')}</button>` : ''}<button class="btn" data-action="guide-book">${t('guide.book')}</button><button class="btn ghost" data-action="guide-skip">${t('guide.skip')}</button><button class="btn ghost" data-action="guide-off">${t('guide.off')}</button></div></section>`;
+  const body = `<section class="commissioner-guide panel" aria-label="${esc(t('guide.commissioner'))}"><b>${t('guide.commissioner')}</b><div class="dim">${t('guide.progress', { n: f.guide.index + 1, total: GUIDE_LESSON_COUNT })}</div><h2>${esc(l.title())}</h2><p>${esc(l.text())}</p><div class="guide-buttons">${away ? `<button class="btn primary" data-action="guide-open">${t('guide.show')}</button>` : ''}${lessonCanRead(f, screen) ? `<button class="btn primary" data-action="guide-next">${t('guide.continue')}</button>` : ''}${l.kind === 'independent' ? `<button class="btn" data-action="guide-keep">${t('guide.keep')}</button><button class="btn" data-action="guide-open">${t('guide.help')}</button>` : ''}<button class="btn" data-action="guide-book">${t('guide.book')}</button><button class="btn" data-action="guide-skip">${t('guide.skip_short')}</button></div></section>`;
   return compact ? `<details class="guide-compact"><summary>${esc(t('guide.commissioner'))}: ${esc(l.title())}</summary>${body}</details>` : body;
 }
 // Lessons closed with ✕ instead of Continue wait until the next time the game is opened, rather than reappearing on every
@@ -83,8 +83,10 @@ export function highlightGuideTarget(f, screen, root = document) {
 
 export function initGuidedWeek({ app, Router }) {
   Router.registerScreen('guidebook', { title: t('guide.book'), render({ f }) {
-    const ids = new Set([...(f.guide?.completed || []), ...(f.guide?.skipped || []), currentLesson(f)?.id]);
-    return LESSONS.filter(l => ids.has(l.id)).map(l => `<details class="panel"><summary>${esc(l.title())}</summary><p>${esc(l.text())}</p></details>`).join('') + ((f.guide?.completed?.includes('roster') || currentLesson(f)?.id === 'beast') ? `<h2>${t('guide.card_sections')}</h2>${BEAST_SECTION_TIPS.map(tip => `<details class="panel"><summary>${esc(tip.title())}</summary><p>${esc(tip.text())}</p></details>`).join('')}` : '') + Object.entries(MOMENTS).filter(([k]) => f.guide?.moments.includes(k)).map(([, m]) => `<details class="panel"><summary>${esc(m.title())}</summary><p>${esc(m.text())}</p></details>`).join('');
+    // With the tutorial skipped or never started (a returning owner), the Guidebook holds every lesson and offers the tutorial back.
+    const off = !!f.guide && !f.guide.enabled && !f.guide.done;
+    const ids = new Set(off ? LESSONS.slice(0, GUIDE_LESSON_COUNT).map(l => l.id) : [...(f.guide?.completed || []), ...(f.guide?.skipped || []), currentLesson(f)?.id]);
+    return (off ? `<div class="panel"><p class="dim">${t('guide.off_note')}</p><button class="btn block" data-action="guide-resume">${t('guide.resume')}</button></div>` : '') + LESSONS.filter(l => ids.has(l.id)).map(l => `<details class="panel"><summary>${esc(l.title())}</summary><p>${esc(l.text())}</p></details>`).join('') + ((f.guide?.completed?.includes('roster') || currentLesson(f)?.id === 'beast') ? `<h2>${t('guide.card_sections')}</h2>${BEAST_SECTION_TIPS.map(tip => `<details class="panel"><summary>${esc(tip.title())}</summary><p>${esc(tip.text())}</p></details>`).join('')}` : '') + Object.entries(MOMENTS).filter(([k]) => f.guide?.moments.includes(k)).map(([, m]) => `<details class="panel"><summary>${esc(m.title())}</summary><p>${esc(m.text())}</p></details>`).join('');
   }});
   globalThis.addEventListener?.('gb-before-screen-render', () => stopSectionTips());
   const originalSave = app.save.bind(app);
@@ -93,6 +95,7 @@ export function initGuidedWeek({ app, Router }) {
     const b = e.target.closest?.('[data-action]'); if (!b || !app.f) return;
     const a = b.dataset.action;
     if (a === 'guide-book') { b.closest('.sheet-backdrop')?.remove(); Router.go('guidebook'); return; }
+    if (a === 'guide-resume') { if (resumeTutorial(app.f)) { app.save(); Router.go('hq', {}, { reset: true }); } return; }
     if (!guideActive(app.f)) return;
     const f = app.f; const l = currentLesson(f); const screen = Router.currentScreen()?.name;
     if (l.id === 'coaches' && screen !== 'hq' && a === 'router-tab' && b.dataset.screen === 'hq') {
@@ -102,8 +105,8 @@ export function initGuidedWeek({ app, Router }) {
     if (actionGate && allowedScreens(f)) { e.preventDefault(); e.stopImmediatePropagation(); toast(t('guide.blocked')); return; }
     if (a === 'monster') { guideEvent(f, 'monster'); app.save(); }
     if (a === 'compare') { const before = f.guide.index; guideEvent(f, 'compare'); app.save(); if (f.guide.index !== before) refreshGuidePanel(f, screen); }
-    if (a === 'guide-off') { f.guide.enabled = false; app.save(); Router.render(); }
-    if (a === 'guide-skip') { skipLesson(f); app.save(); Router.render(); }
+    // One Skip, for the whole tutorial, and only after the player confirms it. Help and the Guidebook stay.
+    if (a === 'guide-skip') { void confirmSheet(t('guide.skip_confirm'), { title: t('guide.skip_title'), okLabel: t('guide.skip_ok') }).then((yes) => { if (yes && skipTutorial(app.f)) { app.save(); Router.render(); } }); return; }
     if (a === 'guide-next' && lessonCanRead(f, screen)) { advanceGuide(f); app.save(); Router.render(); }
     if (a === 'guide-open') Router.go(lessonScreen(f, l));
     if (a === 'guide-keep') { if (finishIndependent(f, true)) { app.save(); Router.go('hq'); } else toast(t('guide.inspect_first')); }

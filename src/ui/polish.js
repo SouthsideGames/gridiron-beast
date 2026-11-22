@@ -1,3 +1,4 @@
+import { infoIcon } from './icons.js';
 import { draftShowPick } from './draft-show.js';
 import { offseasonSteps } from './phone-navigation.js';
 import { trackRosterReviews, rosterReviewHtml } from './followup-polish.js';
@@ -172,7 +173,7 @@ export function mountPolish(root,ctx,name,Router) {
   }
   for(const node of root.querySelectorAll('.hl[title], .chip[title], .fat-pip[title], .boost[title]')){
     if(node.closest('button'))continue;
-    const help=document.createElement('button');help.className='btn small polish-info';help.type='button';help.dataset.polish='explain';help.dataset.info=node.title;help.textContent='i';help.setAttribute('aria-label',node.title);node.after(help);
+    const help=document.createElement('button');help.className='btn small polish-info info-mark';help.type='button';help.dataset.polish='explain';help.dataset.info=node.title;help.innerHTML=infoIcon();help.setAttribute('aria-label',node.title);node.after(help);
   }
   const applyFilters=()=>{
     if(name==='contracts')return;
