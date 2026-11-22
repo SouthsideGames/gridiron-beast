@@ -4,6 +4,7 @@
 // Weather is not here: it is a CSS layer over the field (styles/app.css .weather-*), so it never redraws with the play.
 
 import { ENVIRONMENTS, WEATHER } from '../data/stadiums.js';
+import { designField } from '../data/stadium-designs.js';
 import { lookFor, edgeSvg } from './stadium-fx.js';
 
 const PATTERNS = {
@@ -17,6 +18,8 @@ const PATTERNS = {
   rays: [8, 8, '<path d="M4 4 L4 1.6 M4 4 L6.1 4 M4 4 L4 6.4 M4 4 L1.9 4" stroke="#ffe9a3" stroke-width="0.08"/><rect x="3.8" y="3.8" width="0.4" height="0.4" fill="#fff6d0"/><rect x="0.3" y="0.4" width="0.2" height="0.2" fill="#fff"/><rect x="7.2" y="6.9" width="0.2" height="0.2" fill="#fff"/>', 0.3],
   mist: [10, 6, '<ellipse cx="2.5" cy="1.4" rx="2" ry="0.35" fill="#b9a6e6"/><ellipse cx="7.4" cy="4.3" rx="2.3" ry="0.4" fill="#8d7bc0"/><ellipse cx="5" cy="5.6" rx="1.2" ry="0.22" fill="#b9a6e6"/>', 0.16],
   scales: [4, 4, '<path d="M0 2 Q1 0.8 2 2 Q3 0.8 4 2 M-2 4 Q-1 2.8 0 4 Q1 2.8 2 4 Q3 2.8 4 4 M0 0 Q1 -1.2 2 0 Q3 -1.2 4 0" stroke="#1f1b26" stroke-width="0.1" fill="none"/><rect x="1.9" y="2.7" width="0.2" height="0.2" fill="#c0394b"/>', 0.3],
+  clouds: [12, 7, '<ellipse cx="3" cy="1.8" rx="2.2" ry="0.55" fill="#fff"/><ellipse cx="4.2" cy="1.4" rx="1.2" ry="0.5" fill="#fff"/><ellipse cx="9.2" cy="5.2" rx="2" ry="0.5" fill="#eaf6ff"/><ellipse cx="8.2" cy="4.8" rx="1.1" ry="0.45" fill="#eaf6ff"/>', 0.2],
+  stars: [9, 9, '<path d="M1.5 1.6 L3.6 2.8 L5.4 1.2 M3.6 2.8 L4.4 5.2 L7.2 6.4" stroke="#c9a4ff" stroke-width="0.06" fill="none"/><circle cx="1.5" cy="1.6" r="0.16" fill="#fff0fb"/><circle cx="3.6" cy="2.8" r="0.2" fill="#ff9ae6"/><circle cx="5.4" cy="1.2" r="0.12" fill="#fff"/><circle cx="4.4" cy="5.2" r="0.15" fill="#fff0fb"/><circle cx="7.2" cy="6.4" r="0.18" fill="#b48cff"/><circle cx="8.1" cy="2.2" r="0.09" fill="#fff"/><circle cx="0.8" cy="7.4" r="0.1" fill="#fff"/>', 0.42],
   panels: [5, 5, '<path d="M0 0 H5 M0 0 V5" stroke="#bcd3dc" stroke-width="0.07"/><circle cx="0.4" cy="0.4" r="0.1" fill="#d7e6ee"/>', 0.3],
 };
 
@@ -73,6 +76,8 @@ function endZoneDecor(env, x0, y0, w, h) {
   if (env.texture === 'mist') return `<ellipse cx="${x0 + w * 0.3}" cy="${y0 + h * 0.4}" rx="${w * 0.22}" ry="${h * 0.12}" fill="${c}" opacity="0.18"/><ellipse cx="${x0 + w * 0.68}" cy="${y0 + h * 0.65}" rx="${w * 0.26}" ry="${h * 0.13}" fill="${c}" opacity="0.14"/>`;
   if (env.texture === 'scales') return `<path d="M${x0 + w * 0.5 - 4} ${y0 + h * 0.7} l1.2 -${h * 0.45} l1 ${h * 0.3} l1.8 -${h * 0.4} l1.8 ${h * 0.4} l1 -${h * 0.3} l1.2 ${h * 0.45} Z" fill="#7b3fa0" opacity="0.3"/><rect x="${x0}" y="${y0 + h * 0.5 - 0.15}" width="${w}" height="0.3" fill="${c}" opacity="0.35"/>`; // a crown of horns and a crimson band
   if (env.texture === 'sand') return `<path d="M${x0} ${y0 + h * 0.7} Q${x0 + w * 0.5} ${y0 + h * 0.4} ${x0 + w} ${y0 + h * 0.7}" stroke="${c}" stroke-width="0.25" fill="none" opacity="0.4"/>`;
+  if (env.texture === 'clouds') return `<ellipse cx="${x0 + w * 0.26}" cy="${y0 + h * 0.42}" rx="${w * 0.2}" ry="${h * 0.16}" fill="${c}" opacity="0.2"/><ellipse cx="${x0 + w * 0.36}" cy="${y0 + h * 0.34}" rx="${w * 0.11}" ry="${h * 0.14}" fill="${c}" opacity="0.2"/><ellipse cx="${x0 + w * 0.74}" cy="${y0 + h * 0.66}" rx="${w * 0.18}" ry="${h * 0.14}" fill="${c}" opacity="0.16"/>`;
+  if (env.texture === 'stars') return `<g opacity="0.4" fill="none" stroke="${c}" stroke-width="0.2"><path d="M${x0 + w * 0.5 - 5} ${y0 + h * 0.5} Q${x0 + w * 0.5} ${y0 + h * 0.5 - 3.4} ${x0 + w * 0.5 + 5} ${y0 + h * 0.5} Q${x0 + w * 0.5} ${y0 + h * 0.5 + 3.4} ${x0 + w * 0.5 - 5} ${y0 + h * 0.5} Z"/><circle cx="${x0 + w * 0.5}" cy="${y0 + h * 0.5}" r="1.5"/></g>`;
   return '';
 }
 
@@ -81,7 +86,7 @@ function endZoneDecor(env, x0, y0, w, h) {
  * without one, the classic grass is drawn exactly as before. Returns { turf, endZones } so the caller keeps its own order.
  */
 export function turfSvg(venue, cam, HW, SPAN, Y) {
-  const env = ENVIRONMENTS[venue?.env] || ENVIRONMENTS.grass; const P = env.palette;
+  const env = ENVIRONMENTS[venue?.env] || designField(venue?.env) || ENVIRONMENTS.grass; const P = env.palette; // a design no club plays on yet draws like any field
   let s = `<rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="${P.a}"/>`;
   for (let yard = Math.floor(cam.bottom / 10) * 10; yard < cam.top; yard += 10) {
     if (yard < 0 || yard >= 100) continue;

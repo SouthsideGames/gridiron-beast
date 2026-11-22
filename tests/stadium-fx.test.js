@@ -3,6 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { DESIGN_FIELDS as DESIGNS } from '../src/data/stadium-designs.js';
 import { kickoffRevealHtml, REVEAL_MS, stadiumReaction, stadiumFxLevel, STADIUM_FX_LEVELS, REACTION_MS, LOOKS, lookFor, surroundHtml, introPlateHtml, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, introReaction } from '../src/ui/stadium-fx.js';
 import { ENVIRONMENTS, STADIUMS, venueFor } from '../src/data/stadiums.js';
 import { fieldSvg } from '../src/ui/field-view.js';
@@ -58,7 +59,7 @@ test('reactions play one at a time, replace each other, follow the level, surviv
   await new Promise((r) => setTimeout(r, 160)); assert.equal(c.dataset.sfx, undefined, 'a reaction ends by itself');
 });
 test('every look names a real field, and a stadium without a look is left exactly as it was', () => {
-  for (const [env, look] of Object.entries(LOOKS)) { assert.ok(ENVIRONMENTS[env], env); assert.equal(look.colors.length, 3); assert.ok(look.intro && look.label); }
+  for (const [env, look] of Object.entries(LOOKS)) { assert.ok(ENVIRONMENTS[env] || DESIGNS[env], env); assert.equal(look.colors.length, 3); assert.ok(look.intro && look.label); }
   assert.equal(lookFor('toString'), null); assert.equal(surroundHtml({ env: 'grass' }), ''); assert.equal(surroundHtml(null), '');
   const plain = fieldSvg({ venue: { env: 'grass', weather: 'clear' }, ballOn: 95 }); assert.doesNotMatch(plain, /sfx-/);
   for (const club of Object.keys(STADIUMS)) assert.ok(ENVIRONMENTS[venueFor(club, 'k').env], `${club} still has its stadium`);
@@ -125,8 +126,10 @@ test('the kickoff reveal: a strike and the football for Electric, simpler at Red
 // Checkpoint B: Fire, Water and Grass use the same frame as Electric; only the data differs.
 test('Fire, Water and Grass: each look sits on its existing field, keeps the field type, and has its own edge, posts and kickoff reveal', async () => {
   const { edgeSvg, postsSvg } = await import('../src/ui/stadium-fx.js');
-  const expect = { storm: ['Electric', 'Stormport Bolts', 'Electric', /sfx-chain/, /sfx-post-arc/, /sfx-strike/], volcanic: ['Fire', 'Ember City Beasts', 'Fire', /sfx-flame/, /sfx-flame/, /sfx-rise/], tidal: ['Water', 'Harbor Sentinels', 'Water', /sfx-shot/, /sfx-post-arc/, /sfx-drop/], forest: ['Grass', 'Bayou Stalkers', 'Nature', /sfx-vine/, /sfx-vine/, /sfx-swirl/] };
-  assert.deepEqual(Object.keys(LOOKS).sort(), Object.keys(expect).sort());
+  const expect = { storm: ['Electric', 'Stormport Bolts', 'Electric', /sfx-chain/, /sfx-post-arc/, /sfx-strike/], volcanic: ['Fire', 'Ember City Beasts', 'Fire', /sfx-flame/, /sfx-flame/, /sfx-rise/], tidal: ['Water', 'Harbor Sentinels', 'Water', /sfx-shot/, /sfx-post-arc/, /sfx-drop/], forest: ['Grass', 'Bayou Stalkers', 'Nature', /sfx-vine/, /sfx-vine/, /sfx-swirl/],
+    frozen: ['Ice', 'Frostpeak Howlers', 'Ice', /sfx-vine/, /sfx-node/, /sfx-swirl/], desert: ['Ground', 'Canyon Crushers', 'Earth', /sfx-thump/, /sfx-drift/, /sfx-rise/] };
+  const designs = { sky: ['Sky', /sfx-spin/, /sfx-post-arc/, /sfx-twister/, 'Wind'], oracle: ['Oracle', /sfx-orbit/, /sfx-post-arc/, /sfx-eye/, 'Psychic'] };
+  assert.deepEqual(Object.keys(LOOKS).sort(), [...Object.keys(expect), ...Object.keys(designs)].sort());
   for (const [env, [label, club, type, edge, posts, reveal]] of Object.entries(expect)) {
     const venue = venueFor(club, 'k'); assert.equal(venue.env, env, `${club} plays in ${env}`); assert.equal(venue.type, type, 'the field type and its bonus are untouched'); assert.equal(LOOKS[env].label, label);
     const cam = { bottom: 35, top: 81 }; const e = edgeSvg(env, cam, 27, (y) => cam.top - y, 46); assert.match(e, edge, `${env} edge`);
@@ -135,7 +138,7 @@ test('Fire, Water and Grass: each look sits on its existing field, keeps the fie
     assert.match(kickoffRevealHtml(venue, 'full'), /sfx-ball/); assert.match(introPlateHtml(venue), new RegExp(LOOKS[env].intro));
     assert.doesNotMatch(fieldSvg({ venue, ballOn: 50 }), /venue-detail|venue-bolt/, 'the older sideline decor is replaced, not doubled');
   }
-  assert.equal(edgeSvg('grass', { bottom: 35, top: 81 }, 27, (y) => 81 - y, 46), ''); assert.equal(postsSvg('frozen', 0.6, 1), '');
+  assert.equal(edgeSvg('grass', { bottom: 35, top: 81 }, 27, (y) => 81 - y, 46), ''); assert.equal(postsSvg('dome', 0.6, 1), '');
 });
 
 // Revision 5: the white paint around the field, the barrier in front of the fans, markers on the white, Water's drop.
@@ -169,4 +172,20 @@ test('monsters in the stands: more in some games and fewer in others, determinis
   for (const seed of [3, 11, 29]) { const seats = crowdMonsters(seed, 'far', 'Fire').flat(); const got = seats.filter(Boolean).length / seats.length; assert.ok(Math.abs(got - monsterShare(seed)) < 0.14, `seed ${seed}: ${got} against ${monsterShare(seed)}`); } assert.ok(own / n > 0.55 && own / n < 0.75, `home type share ${own / n}`);
   const mix = { home: 0.7, away: 0.18, fill: 0.9 }; assert.deepEqual(crowdSeats(77, mix), crowdSeats(77, mix), 'who sits where does not depend on the monsters');
   assert.equal(crowdFor({ seed: 1, type: 'Water' }).type, 'Water'); assert.equal(crowdFor({ seed: 1 }).type, null);
+});
+
+// Checkpoint C: two designs no club plays on yet.
+test('Sky and Oracle are designs only: drawn when a venue names them, never a club\'s field, never picked by the game, no type bonus', async () => {
+  const { DESIGN_FIELDS, designField } = await import('../src/data/stadium-designs.js'); const { ENVIRONMENTS, STADIUMS } = await import('../src/data/stadiums.js'); const { edgeSvg, postsSvg, setStadiumScene } = await import('../src/ui/stadium-fx.js'); const { TYPE_FUR } = await import('../src/ui/stadium-crowd.js');
+  const designs = { sky: ['Sky', /sfx-spin/, /sfx-post-arc/, /sfx-twister/, 'Wind'], oracle: ['Oracle', /sfx-orbit/, /sfx-post-arc/, /sfx-eye/, 'Psychic'] };
+  assert.deepEqual(Object.keys(DESIGN_FIELDS).sort(), Object.keys(designs).sort());
+  for (const [id, [label, edge, posts, reveal, crowd]] of Object.entries(designs)) {
+    const d = designField(id); assert.ok(d); assert.equal(d.type, null, 'no type, so no field bonus'); assert.equal(ENVIRONMENTS[id], undefined, 'not one of the game\'s fields');
+    assert.ok(!Object.values(STADIUMS).some((s) => s.env === id), 'no club plays there'); assert.equal(LOOKS[id].label, label); assert.ok(TYPE_FUR[LOOKS[id].crowd] && LOOKS[id].crowd === crowd);
+    const venue = { env: id, name: d.name, type: null, weather: 'clear' }; const cam = { bottom: 35, top: 81 };
+    assert.match(edgeSvg(id, cam, 27, (y) => 81 - y, 46), edge); assert.match(postsSvg(id, 0.6, 1), posts); assert.match(kickoffRevealHtml(venue, 'full'), reveal); assert.match(introPlateHtml(venue), new RegExp(d.name));
+    try { setStadiumScene(venue, null); const svg = fieldSvg({ venue, ballOn: 92 }); assert.ok(svg.includes(d.palette.a), 'its own turf'); assert.match(svg, /sfx-apron/); assert.match(svg, /sfx-stand/); assert.ok(svg.includes('stroke="#eaf3e6"'), 'white yard lines'); assert.doesNotMatch(svg, /NaN|undefined/); } finally { setStadiumScene(null); }
+  }
+  assert.equal(designField('grass'), null); assert.equal(venueFor('Ashford Hawks', 'k').env, 'grass', 'every club keeps the field it had');
+  const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8'); for (const k of ['sfx-spin', 'sfx-thump', 'sfx-orbit', 'sfx-twister', 'sfx-eye']) assert.match(css, new RegExp(`@keyframes ${k}\\b`));
 });

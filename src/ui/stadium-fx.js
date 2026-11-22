@@ -17,6 +17,9 @@
 // reaction replaces the one playing, and leaving the screen clears it. Reactions never delay a play: nothing waits for them.
 
 import { ENVIRONMENTS } from '../data/stadiums.js';
+import { designField } from '../data/stadium-designs.js';
+/** The field a venue names: one a club plays on, or a design no club has yet. */
+const fieldOf = (envId) => ENVIRONMENTS[envId] || designField(envId) || null;
 import { crowdImages } from './stadium-crowd.js';
 
 export const STADIUM_FX_LEVELS = Object.freeze(['full', 'reduced', 'off']);
@@ -116,6 +119,11 @@ export const LOOKS = Object.freeze({
   storm: { label: 'Electric', colors: ['#4cc9ff', '#a06bff', '#eaf6ff'], intro: 'The current is live', edge: 'chain', posts: 'arc', reveal: 'bolt' },
   volcanic: { label: 'Fire', colors: ['#ff7a2a', '#ffc04d', '#fff1c9'], intro: 'The mountain is awake', edge: 'magma', posts: 'flame', reveal: 'eruption' },
   tidal: { label: 'Water', colors: ['#3fd3e6', '#2a8cff', '#e8fdff'], intro: 'The tide is in', edge: 'ripple', posts: 'spray', reveal: 'drop' },
+  frozen: { label: 'Ice', colors: ['#7fc4ff', '#4a9fd6', '#f2fbff'], intro: 'The frost has set', edge: 'frost', posts: 'icicle', reveal: 'flake' },
+  desert: { label: 'Ground', colors: ['#e0a85a', '#8a5a2c', '#fff0cf'], intro: 'The ground is restless', edge: 'quake', posts: 'rubble', reveal: 'spire' },
+  // Designs no club plays on yet (data/stadium-designs.js). `crowd`: the monster type its crowd leans to.
+  sky: { label: 'Sky', colors: ['#8fd0ff', '#3f8fd6', '#ffffff'], intro: 'The wind is rising', edge: 'gust', posts: 'spray', reveal: 'twister', crowd: 'Wind' },
+  oracle: { label: 'Oracle', colors: ['#ff8ae0', '#b48cff', '#fff0fb'], intro: 'The stars have already seen it', edge: 'orbit', posts: 'halo', reveal: 'eye', crowd: 'Psychic' },
   forest: { label: 'Grass', colors: ['#6fe07a', '#c8f05a', '#f2ffd6'], intro: 'The grove is listening', edge: 'vine', posts: 'vine', reveal: 'bloom' },
 });
 export const lookFor = (envId) => (Object.hasOwn(LOOKS, envId) ? LOOKS[envId] : null);
@@ -167,6 +175,26 @@ const EDGES = {
     marker: (x, y, k, side, yard, L) => `<circle cx="${x}" cy="${y}" r="${0.8 + k * 0.1}" fill="#174a2c"/><circle class="sfx-node sfx-anim" style="animation-delay:-${k * 0.9}s" cx="${x - side * 0.3}" cy="${y - 0.3}" r="${0.5 + k * 0.1}" fill="#2f9a4f"/>`,
     link: (x, y, k, side, yard, L) => { const j = side * 0.5; const d = `M${x} ${y - 0.9} q${-j} -1.2 0 -2.2 t0 -2.2`; return `<path d="${d}" fill="none" stroke="#14532d" stroke-width="0.2"/><path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.3)}" d="${d}" fill="none" stroke="${L.colors[1]}" stroke-width="0.24" stroke-linecap="round"/><ellipse class="sfx-drift sfx-drift-leaf sfx-anim" style="animation-delay:-${(k * 1.4 + (side > 0 ? 1 : 0)).toFixed(1)}s" cx="${x - side * 1.1}" cy="${y - 2.2}" rx="0.26" ry="0.12" fill="${L.colors[0]}"/><circle class="sfx-firefly sfx-anim" style="animation-delay:-${(k * 1.9 + (side > 0 ? 0.7 : 0)).toFixed(1)}s" cx="${x - side * (0.9 + k * 0.3)}" cy="${y - 3.6}" r="0.11" fill="#fff6a8"/>`; },
   },
+  frost: { // Ice: crystals along the sideline; frost creeps from one to the next in turn; flakes drift
+    track: (x, span, L) => `<line x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="${L.colors[0]}" stroke-width="0.12" opacity="0.8"/>`,
+    marker: (x, y, k, side, yard, L) => `<path d="M${x} ${y - 0.95} L${x + 0.55} ${y} L${x} ${y + 0.95} L${x - 0.55} ${y} Z" fill="#bfe8ff" stroke="${L.colors[1]}" stroke-width="0.12" stroke-linejoin="round"/><path class="sfx-node sfx-anim" style="animation-delay:-${k * 0.8}s" d="M${x} ${y - 0.5} L${x + 0.24} ${y} L${x} ${y + 0.5} L${x - 0.24} ${y} Z" fill="#fff"/>`,
+    link: (x, y, k, side, yard, L) => `<path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.3)}" d="M${x} ${y - 1} v-4.1" fill="none" stroke="${L.colors[1]}" stroke-width="0.26" stroke-linecap="round"/><path class="sfx-drift sfx-anim" style="animation-delay:-${(k * 1.2 + (side > 0 ? 0.5 : 0)).toFixed(1)}s" d="M${x - side * 0.5 - 0.22} ${y - 2.6} h0.44 m-0.22 -0.22 v0.44" fill="none" stroke="${L.colors[1]}" stroke-width="0.1"/>`,
+  },
+  quake: { // Ground: boulders along the sideline thump in turn; a crack runs to the next one; dust rises
+    track: (x, span, L) => `<line x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="${L.colors[1]}" stroke-width="0.1" stroke-dasharray="0.6 0.5" opacity="0.7"/>`,
+    marker: (x, y, k, side, yard, L) => `<g class="sfx-thump sfx-anim" style="${turn(yard, side, 0.26)}"><path d="M${x - 0.72} ${y + 0.5} L${x - 0.48} ${y - 0.5} L${x + 0.2} ${y - 0.78} L${x + 0.76} ${y + 0.05} L${x + 0.4} ${y + 0.62} Z" fill="${L.colors[1]}" stroke="#5e3d1e" stroke-width="0.12" stroke-linejoin="round"/><path d="M${x - 0.48} ${y - 0.5} L${x + 0.2} ${y - 0.78} L${x + 0.05} ${y - 0.05} Z" fill="${L.colors[0]}"/></g>`,
+    link: (x, y, k, side, yard, L) => { const j = side * 0.34; return `<path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.26)}" d="M${x} ${y - 0.9} l${-j} -1 ${j * 1.8} -1.1 ${-j * 1.6} -1 ${j * 0.8} -1.1" fill="none" stroke="#5e3d1e" stroke-width="0.2" stroke-linecap="round" stroke-linejoin="round"/><circle class="sfx-drift sfx-anim" style="animation-delay:-${(k * 1.1).toFixed(1)}s" cx="${x - side * 0.45}" cy="${y - 0.9}" r="0.22" fill="#c79a5c" opacity="0.8"/><circle class="sfx-drift sfx-anim" style="animation-delay:-${(k * 1.1 + 1.6).toFixed(1)}s" cx="${x + side * 0.3}" cy="${y - 3.2}" r="0.16" fill="#c79a5c" opacity="0.8"/>`; },
+  },
+  gust: { // Sky: pinwheels along the sideline spin; a gust runs from one to the next in turn; cloud puffs drift
+    track: () => '',
+    marker: (x, y, k, side, yard, L) => `<circle cx="${x}" cy="${y}" r="0.86" fill="#eaf4fc" stroke="${L.colors[1]}" stroke-width="0.1"/><g class="sfx-spin sfx-anim" style="animation-delay:-${k * 0.5}s">${[0, 90, 180, 270].map((a, i) => `<path d="M${x} ${y} L${x + 0.78} ${y} Q${x + 0.6} ${y - 0.5} ${x + 0.12} ${y - 0.3} Z" fill="${i % 2 ? L.colors[0] : L.colors[1]}" transform="rotate(${a} ${x} ${y})"/>`).join('')}</g><circle cx="${x}" cy="${y}" r="0.14" fill="#fff" stroke="${L.colors[1]}" stroke-width="0.06"/>`,
+    link: (x, y, k, side, yard, L) => { const j = side * 0.5; return `<path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.3)}" d="M${x} ${y - 1} q${-j} -1.1 0 -2.1 t0 -2.1" fill="none" stroke="${L.colors[1]}" stroke-width="0.22" stroke-linecap="round"/><ellipse class="sfx-drift sfx-anim" style="animation-delay:-${(k * 1.3 + (side > 0 ? 0.8 : 0)).toFixed(1)}s" cx="${x - side * 0.35}" cy="${y - 2.4}" rx="0.42" ry="0.18" fill="#9cc9ee"/>`; },
+  },
+  orbit: { // Oracle: orbs along the sideline, each with a star circling it; the constellation lights up link by link
+    track: (x, span, L) => `<line x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="${L.colors[1]}" stroke-width="0.1" stroke-dasharray="0.15 0.9" stroke-linecap="round"/>`,
+    marker: (x, y, k, side, yard, L) => `<circle cx="${x}" cy="${y}" r="0.6" fill="#4a2382" stroke="${L.colors[0]}" stroke-width="0.12"/><circle class="sfx-node sfx-anim" style="animation-delay:-${k * 0.8}s" cx="${x - 0.12}" cy="${y - 0.14}" r="0.26" fill="${L.colors[0]}"/><circle class="sfx-orbit sfx-anim" style="animation-delay:-${k}s" cx="${x}" cy="${y}" r="0.13" fill="#7a3fd0"/>`,
+    link: (x, y, k, side, yard, L) => `<path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.3)}" d="M${x} ${y - 0.9} l${side * 0.4} -2.1 l${-side * 0.4} -2.1" fill="none" stroke="#b03fc0" stroke-width="0.2" stroke-linecap="round" stroke-linejoin="round"/><path class="sfx-firefly sfx-anim" style="animation-delay:-${(k * 1.7 + (side > 0 ? 0.9 : 0)).toFixed(1)}s" d="M${x + side * 0.4 - 0.26} ${y - 3} h0.52 m-0.26 -0.26 v0.52" fill="none" stroke="#7a3fd0" stroke-width="0.12" stroke-linecap="round"/>`,
+  },
 };
 /** Everything a look puts along both sidelines for the visible stretch of field ('' for a stadium without a look). */
 export function edgeSvg(envId, cam, HW, Y, span) {
@@ -196,7 +224,10 @@ export function postsSvg(envId, y, dir) {
   else if (L.posts === 'spray') extra = [0, 1, 2].map((i) => climb(`M-3 ${y - dir * 0.2} q0.75 -0.5 1.5 0 t1.5 0 t1.5 0 t1.5 0`, i)).join('');
   else if (L.posts === 'flame') extra = [-3, 3].map((px, i) => `<path class="sfx-flame sfx-anim" style="animation-delay:-${i * 0.23}s" d="M${px - 0.4} ${tip + 0.1} Q${px - 0.48} ${tip - 0.7} ${px} ${tip - 1.4} Q${px + 0.48} ${tip - 0.7} ${px + 0.4} ${tip + 0.1} Z" fill="${a}" stroke="none"/><path class="sfx-flame sfx-anim" style="animation-delay:-${i * 0.23 + 0.2}s" d="M${px - 0.2} ${tip + 0.05} Q${px - 0.22} ${tip - 0.35} ${px} ${tip - 0.8} Q${px + 0.22} ${tip - 0.35} ${px + 0.2} ${tip + 0.05} Z" fill="${b}" stroke="none"/>`).join('');
   else if (L.posts === 'vine') extra = `<path class="sfx-vine sfx-anim" d="${shape}" stroke="${b}" stroke-width="0.24" stroke-linecap="round"/>${[-3, 3].flatMap((px, s) => [0.6, 1.3, 2].map((t, i) => `<ellipse class="sfx-node sfx-anim" style="animation-delay:-${(i * 0.6 + s * 0.3).toFixed(1)}s" cx="${px + (i % 2 ? 0.35 : -0.35)}" cy="${y - dir * t}" rx="0.3" ry="0.15" fill="${a}" stroke="none"/>`)).join('')}`;
-  const tips = L.posts === 'flame' ? '' : `<circle cx="-3" cy="${tip}" r="0.3" fill="${c}" stroke="none"/><circle cx="3" cy="${tip}" r="0.3" fill="${c}" stroke="none"/>`;
+  else if (L.posts === 'icicle') extra = `${[-2.4, -1.5, -0.6, 0.3, 1.2, 2.1].map((px, i) => `<path d="M${px} ${y} h0.5 l-0.25 ${dir * (0.7 + (i % 3) * 0.3)} Z" fill="#dff3ff" stroke="${b}" stroke-width="0.06"/>`).join('')}${[-3, 3].map((px, i) => `<path class="sfx-node sfx-anim" style="animation-delay:-${i * 0.9}s" d="M${px} ${tip - 0.55} L${px + 0.3} ${tip} L${px} ${tip + 0.55} L${px - 0.3} ${tip} Z" fill="#fff" stroke="${b}" stroke-width="0.06"/>`).join('')}`;
+  else if (L.posts === 'rubble') extra = [-3, 3].map((px, i) => `<path d="M${px - 0.7} ${y + 0.35} L${px - 0.35} ${y - 0.45} L${px + 0.4} ${y - 0.4} L${px + 0.7} ${y + 0.35} Z" fill="${b}" stroke="#5e3d1e" stroke-width="0.08"/><circle class="sfx-drift sfx-anim" style="animation-delay:-${i * 1.4}s" cx="${px + (i ? -0.5 : 0.5)}" cy="${y - 0.3}" r="0.2" fill="#c79a5c" stroke="none" opacity="0.8"/><circle class="sfx-drift sfx-anim" style="animation-delay:-${i * 1.4 + 1.7}s" cx="${px}" cy="${y - 1}" r="0.15" fill="#c79a5c" stroke="none" opacity="0.8"/>`).join('');
+  else if (L.posts === 'halo') extra = `${[0, 1, 2].map((i) => climb(`M-3 ${y - dir * 0.2} q3 ${-dir * 0.9} 6 0`, i)).join('')}<circle class="sfx-node sfx-anim" cx="0" cy="${y - dir * 1.2}" r="0.34" fill="${a}" stroke="none"/>`;
+  const tips = L.posts === 'flame' || L.posts === 'icicle' ? '' : `<circle cx="-3" cy="${tip}" r="0.3" fill="${c}" stroke="none"/><circle cx="3" cy="${tip}" r="0.3" fill="${c}" stroke="none"/>`;
   return `<g class="sfx-post" fill="none"><path class="sfx-post-glow sfx-anim" d="${shape}" stroke="${a}" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/><path d="${shape}" stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round" stroke-linejoin="round"/>${extra}${tips}</g>`;
 }
 
@@ -237,7 +268,7 @@ export function barrierSvg(venue, x0, y0, w, fans = -1, h = STANDS_BARRIER) {
 }
 /** The grass between an end line and the stand or wall behind it: the stadium's own turf, a shade darker, with a boundary line. */
 export function apronSvg(venue, x0, y0, w, h) {
-  const env = ENVIRONMENTS[venue?.env]; if (!env || !scene) return '';
+  const env = fieldOf(venue?.env); if (!env || !scene) return '';
   return `<g class="sfx-apron"><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${env.palette.c}"/><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#000" opacity="0.18"/></g>`;
 }
 /** Behind the near end zone there is no stand in view: the stadium's wall and rail close the picture. */
@@ -272,6 +303,14 @@ export function kickoffRevealHtml(venue, level = 'full') {
     // Water: one giant drop falls from the sky and bursts between the captains
     drop: `<svg class="sfx-drop" viewBox="0 0 60 90" aria-hidden="true" focusable="false"><path d="M30 0 C30 0 4 44 4 60 A26 26 0 0 0 56 60 C56 44 30 0 30 0 Z" fill="${a}" stroke="${b}" stroke-width="2" opacity=".92"/><path d="M17 56 q-2 14 10 22" fill="none" stroke="${c}" stroke-width="3.4" stroke-linecap="round" opacity=".9"/></svg><i class="sfx-splash"></i>`,
     geyser: `<svg class="sfx-rise" viewBox="0 0 60 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M30 100 Q14 70 22 30 Q26 8 30 0 Q34 8 38 30 Q46 70 30 100 Z" fill="${a}" opacity=".8"/><path d="M30 100 Q22 70 27 34 Q30 14 33 34 Q38 70 30 100 Z" fill="${c}" opacity=".9"/><circle cx="12" cy="24" r="3" fill="${c}"/><circle cx="48" cy="18" r="2.4" fill="${c}"/><circle cx="8" cy="46" r="2" fill="${a}"/><circle cx="52" cy="42" r="2.6" fill="${a}"/><circle cx="20" cy="8" r="2" fill="${b}"/><circle cx="42" cy="4" r="1.8" fill="${b}"/></svg>`,
+    // Ice: a snowflake spins in and shatters
+    flake: `<svg class="sfx-swirl" viewBox="-50 -50 100 100" aria-hidden="true" focusable="false"><g fill="none" stroke-linecap="round">${[0, 60, 120].map((r) => `<g transform="rotate(${r})"><path d="M0 -44 V44 M0 -30 l-9 -9 M0 -30 l9 -9 M0 30 l-9 9 M0 30 l9 9 M0 -16 l-6 -6 M0 -16 l6 -6 M0 16 l-6 6 M0 16 l6 6" stroke="${a}" stroke-width="5"/><path d="M0 -44 V44" stroke="${c}" stroke-width="2"/></g>`).join('')}</g><circle r="7" fill="${c}"/></svg>`,
+    // Ground: a spire of rock bursts up through the turf
+    spire: `<svg class="sfx-rise" viewBox="0 0 60 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M6 100 L16 58 L22 70 L30 0 L38 62 L45 50 L54 100 Z" fill="${b}"/><path d="M30 0 L38 62 L45 50 L54 100 L32 100 Z" fill="#5e3d1e"/><path d="M30 0 L26 44 L31 52 Z" fill="${a}"/><circle cx="6" cy="60" r="3" fill="${a}"/><circle cx="55" cy="44" r="2.4" fill="${a}"/><circle cx="12" cy="34" r="2" fill="${b}"/></svg>`,
+    // Sky: a whirlwind drops from the clouds
+    twister: `<svg class="sfx-twister" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">${[[50, 4, 46], [48, 16, 40], [53, 28, 33], [47, 40, 27], [52, 52, 21], [48, 64, 16], [51, 76, 11], [49, 87, 7], [50, 96, 4]].map(([cx, cy, rx], i) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="5.5" fill="none" stroke="${i % 2 ? a : c}" stroke-width="3.2" opacity="${0.55 + (i % 3) * 0.15}"/>`).join('')}</svg>`,
+    // Oracle: a great eye opens over the field, sees the ball, and closes
+    eye: `<svg class="sfx-eye" viewBox="-80 -50 160 100" aria-hidden="true" focusable="false"><path d="M-74 0 Q0 -62 74 0 Q0 62 -74 0 Z" fill="#1c0f33" stroke="${a}" stroke-width="4" stroke-linejoin="round"/><circle r="26" fill="${b}"/><circle r="26" fill="none" stroke="${c}" stroke-width="2"/><circle r="11" fill="#1c0f33"/><circle cx="-8" cy="-9" r="5" fill="${c}"/></svg>`,
     // Grass: leaves swirl up and open
     bloom: `<svg class="sfx-swirl" viewBox="-50 -50 100 100" aria-hidden="true" focusable="false">${Array.from({ length: 10 }, (_, i) => `<ellipse cx="0" cy="-30" rx="6" ry="14" fill="${i % 2 ? a : b}" opacity=".9" transform="rotate(${i * 36})"/>`).join('')}<circle r="12" fill="none" stroke="${c}" stroke-width="2"/></svg>`,
   };
@@ -282,6 +321,6 @@ export function kickoffRevealHtml(venue, level = 'full') {
 }
 /** The kickoff name plate: the stadium, its kind and its line. */
 export function introPlateHtml(venue, esc = (s) => s) {
-  const look = lookFor(venue?.env); const env = ENVIRONMENTS[venue?.env]; if (!look || !env) return '';
+  const look = lookFor(venue?.env); const env = fieldOf(venue?.env); if (!look || !env) return '';
   return `<div class="sfx-plate"><b>${esc(venue.name || env.name)}</b><span>${esc(look.intro)}</span></div>`;
 }
