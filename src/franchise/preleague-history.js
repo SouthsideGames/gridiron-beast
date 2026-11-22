@@ -127,7 +127,7 @@ export function generateLeagueArchive(f, seasons = 8) {
       const m = { id, age: 29, yearsPro: seasons, position };
       books.push({ ...seasonLine(m, year, seed), team: club });
     }
-    const totals = books.reduce((sum, b) => { for (const [k,v] of Object.entries(b.reg)) sum[k] = (sum[k] || 0) + v; return sum; }, {});
+    const totals = books.reduce((sum, b) => { for (const [k,v] of Object.entries(b.reg)) sum[k] = k === 'fgLong' ? Math.max(sum[k] || 0, v) : (sum[k] || 0) + v; return sum; }, {});
     careers[id] = { id, name, position, club, retired: true, seasons: books, totals };
     legends.push({ id, name, position, club, retiredYear, totals });
   }
