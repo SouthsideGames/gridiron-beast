@@ -2452,3 +2452,78 @@ html[data-reduced-motion="1"] .turnover-cue { animation: turnover-fade 1s linear
   .match-console #fieldwrap > .field-banner { position: relative; grid-row: 1; grid-column: 1; left: auto; right: auto; top: auto; margin: 6px 6px 4px; max-height: none; overflow: visible; }
 }
 .sheet-body > p + .row, .sheet-body > p + .grid2 { margin-top: var(--s3); }
+
+/* ---- Stadium Polish v1 (src/ui/stadium-fx.js) -------------------------------------------------------------------------- */
+/* The surround: scenery in the free bands above and below the field, an edge light and a lap of energy for reactions. Only
+   opacity, transform and dash offsets move; nothing is created per reaction. Levels: html[data-stadium-fx] = full|reduced|off. */
+.stadium-surround { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.sfx-band { position: absolute; left: 0; width: 100%; height: var(--sfx-band, 0px); display: block; }
+.sfx-far { top: var(--sfx-top, 0px); } .sfx-near { bottom: 0; }
+.field-wrap.sfx-no-band .sfx-band { display: none; }
+.sfx-edge { position: absolute; inset: 0; opacity: 0; box-shadow: inset 0 0 26px 7px var(--sfx-a); }
+.sfx-lap { position: absolute; inset: 0; padding: 5px; opacity: 0; overflow: hidden;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+.sfx-lap::before { content: ''; position: absolute; left: 50%; top: 50%; width: 220vmax; height: 220vmax; margin: -110vmax 0 0 -110vmax;
+  background: conic-gradient(transparent 0 68%, var(--sfx-a) 82%, var(--sfx-c) 91%, var(--sfx-b) 97%, transparent 100%); }
+/* ambient */
+.sfx-channel { opacity: .8; animation: sfx-flow 2.6s linear infinite; }
+.sfx-channel-b { opacity: .9; animation-duration: 3.6s; animation-direction: reverse; }
+.sfx-node { animation: sfx-pulse 2.6s ease-in-out infinite; }
+.sfx-lit { opacity: .5; animation: sfx-pulse 3.8s ease-in-out infinite; }
+.sfx-glow { opacity: .1; animation: sfx-breathe 5.2s ease-in-out infinite; }
+.sfx-spark { opacity: 0; animation: sfx-spark 6.8s steps(1, end) infinite; }
+.sfx-burst { opacity: 0; }
+.sfx-post-arc { opacity: .75; animation: sfx-climb 1.5s linear infinite; }
+.sfx-post-glow { opacity: .28; animation: sfx-pulse 2.2s ease-in-out infinite; }
+@keyframes sfx-flow { to { stroke-dashoffset: -18; } }
+@keyframes sfx-pulse { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
+@keyframes sfx-breathe { 0%, 100% { opacity: .06; } 50% { opacity: .17; } }
+@keyframes sfx-spark { 0%, 84% { opacity: 0; } 85% { opacity: .95; } 87% { opacity: .25; } 89% { opacity: 1; } 92%, 100% { opacity: 0; } }
+@keyframes sfx-climb { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: .85; } 85% { opacity: .85; } 100% { transform: translateY(var(--climb, -2px)); opacity: 0; } }
+/* reactions: [data-sfx] on the field's box for a fixed time; the visiting team gets the smaller version */
+.field-wrap[data-sfx] { --sfx-k: 1; } .field-wrap[data-sfx][data-sfx-side="away"] { --sfx-k: .7; }
+.field-wrap[data-sfx] .sfx-channel { animation-duration: .45s; opacity: 1; }
+.field-wrap:is([data-sfx="td"], [data-sfx="fg"], [data-sfx="int"], [data-sfx="fumble-lost"], [data-sfx="intro"]) .sfx-node { animation: sfx-on calc(.5s * var(--sfx-k)) ease-in-out 4 both; }
+.field-wrap[data-sfx="td"] .sfx-node { animation-iteration-count: 5; }
+.field-wrap:is([data-sfx="td"], [data-sfx="fg"], [data-sfx="intro"]) :is(.sfx-post-glow, .sfx-post-arc) { opacity: 1; animation-duration: .5s; }
+.field-wrap:is([data-sfx="td"], [data-sfx="intro"]) .sfx-glow { animation: sfx-surge calc(2.6s * var(--sfx-k)) ease-out both; }
+.field-wrap:is([data-sfx="td"], [data-sfx="intro"]) .sfx-spark { animation: sfx-crackle .32s steps(1, end) 8 both; }
+.field-wrap[data-sfx="td"] .sfx-edge { animation: sfx-edge-td calc(2.6s * var(--sfx-k)) ease-out both; }
+.field-wrap[data-sfx="td"][data-sfx-side="home"] .sfx-burst { animation: sfx-burst .9s steps(1, end) both; }
+.field-wrap[data-sfx="td"][data-sfx-side="home"] .sfx-lap { animation: sfx-lap-fade 2.5s linear both; }
+.field-wrap[data-sfx="td"][data-sfx-side="home"] .sfx-lap::before { animation: sfx-turn 1.25s linear 2 both; }
+.field-wrap[data-sfx="intro"] .sfx-lap { animation: sfx-lap-fade 2.4s linear both; }
+.field-wrap[data-sfx="intro"] .sfx-lap::before { animation: sfx-turn 2.4s linear 1 both; }
+.field-wrap[data-sfx="intro"] .sfx-edge { animation: sfx-edge-soft 2.4s ease-out both; }
+.field-wrap[data-sfx="int"] .sfx-edge { animation: sfx-edge-sharp calc(1.3s * var(--sfx-k)) ease-out both; box-shadow: inset 0 0 22px 6px var(--sfx-b); }
+.field-wrap[data-sfx="int"][data-sfx-side="home"] .sfx-lap { animation: sfx-lap-fade .8s linear both; }
+.field-wrap[data-sfx="int"][data-sfx-side="home"] .sfx-lap::before { animation: sfx-turn .8s cubic-bezier(.2, .7, .3, 1) 1 both; }
+.field-wrap[data-sfx="fg"] .sfx-edge { animation: sfx-edge-soft calc(1.3s * var(--sfx-k)) ease-out both; }
+.field-wrap[data-sfx="sack"] .sfx-edge { animation: sfx-edge-tap calc(.6s * var(--sfx-k)) ease-out both; box-shadow: inset 0 0 16px 3px var(--sfx-a); }
+.field-wrap[data-sfx="sack"] .sfx-near .sfx-spark, .field-wrap[data-sfx="fumble"] .sfx-spark { animation: sfx-crackle .3s steps(1, end) 2 both; }
+.field-wrap[data-sfx="fumble"] .sfx-edge { animation: sfx-edge-tap 1s ease-out both; }
+.field-wrap[data-sfx="fumble-lost"] .sfx-edge { animation: sfx-edge-two calc(1.9s * var(--sfx-k)) ease-out both; }
+.field-wrap[data-sfx][data-sfx-side="away"] .sfx-edge { filter: opacity(.55); }
+@keyframes sfx-on { 0%, 100% { opacity: .6; transform: none; } 50% { opacity: 1; transform: scale(1.35); } }
+@keyframes sfx-surge { 0% { opacity: .1; } 12% { opacity: .55; } 100% { opacity: .1; } }
+@keyframes sfx-crackle { 0% { opacity: 1; } 50% { opacity: .15; } 100% { opacity: 0; } }
+@keyframes sfx-burst { 0% { opacity: 1; } 14% { opacity: .1; } 24% { opacity: 1; } 42% { opacity: .3; } 55% { opacity: .9; } 70%, 100% { opacity: 0; } }
+@keyframes sfx-turn { to { transform: rotate(1turn); } }
+@keyframes sfx-lap-fade { 0% { opacity: 0; } 8%, 85% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes sfx-edge-td { 0% { opacity: 0; } 8% { opacity: .95; } 30% { opacity: .35; } 45% { opacity: .8; } 100% { opacity: 0; } }
+@keyframes sfx-edge-soft { 0% { opacity: 0; } 20% { opacity: .6; } 100% { opacity: 0; } }
+@keyframes sfx-edge-sharp { 0% { opacity: 0; } 6% { opacity: 1; } 22% { opacity: .2; } 30% { opacity: .7; } 100% { opacity: 0; } }
+@keyframes sfx-edge-tap { 0% { opacity: 0; } 15% { opacity: .5; } 100% { opacity: 0; } }
+@keyframes sfx-edge-two { 0% { opacity: 0; } 8% { opacity: .45; } 30% { opacity: .08; } 45% { opacity: .95; } 100% { opacity: 0; } }
+.sfx-node, .sfx-post-arc { transform-box: fill-box; transform-origin: center; }
+/* kickoff: the stadium's name plate over the captains */
+.sfx-plate { position: absolute; left: 50%; top: calc(var(--sfx-top, 0px) + var(--sfx-band, 0px) + 10px); transform: translateX(-50%); z-index: 3; display: grid; gap: 2px; justify-items: center; padding: 6px 14px; border: 2px solid var(--line-2); border-radius: 8px; background: #08101ee0; text-align: center; white-space: nowrap; pointer-events: none; animation: sfx-plate-in .5s ease-out both; }
+.sfx-plate b { font-size: 16px; letter-spacing: .04em; color: #fff; } .sfx-plate span { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+@keyframes sfx-plate-in { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+/* levels */
+html[data-stadium-fx="reduced"] :is(.sfx-spark, .sfx-lit, .sfx-channel-b, .sfx-post-arc) { animation: none; }
+html[data-stadium-fx="reduced"] .sfx-channel { animation-duration: 5s; }
+html[data-stadium-fx="reduced"] :is(.sfx-lap, .sfx-burst) { display: none; }
+html[data-stadium-fx="off"] :is(.sfx-anim, .sfx-plate, .venue-bolt, .venue-detail) { animation: none !important; }
+html[data-stadium-fx="off"] :is(.sfx-spark, .sfx-lap, .sfx-edge, .sfx-burst, .sfx-post-arc) { display: none; }
+html[data-app-inactive="1"] .sfx-anim, html[data-app-inactive="1"] .sfx-lap::before { animation-play-state: paused; }

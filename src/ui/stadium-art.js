@@ -4,6 +4,7 @@
 // Weather is not here: it is a CSS layer over the field (styles/app.css .weather-*), so it never redraws with the play.
 
 import { ENVIRONMENTS, WEATHER } from '../data/stadiums.js';
+import { lookFor } from './stadium-fx.js';
 
 const PATTERNS = {
   // Each: [width, height, inner svg, opacity] in yards. Low opacity, so yard lines, hashes and numbers stay on top and readable.
@@ -40,7 +41,7 @@ function sidelineDecor(env, cam, HW, Y) {
       if (env.texture === 'ice') out.push(`<ellipse cx="${x}" cy="${y}" rx="0.9" ry="${1.6 + k * 0.4}" fill="${c}" opacity="0.75"/>`); // snowbanks
       else if (env.texture === 'lava') out.push(`<circle cx="${x}" cy="${y}" r="0.55" fill="#2a120c"/><circle cx="${x}" cy="${y}" r="0.32" fill="${c}" opacity="${0.55 + 0.15 * k}"/>`); // glowing vents
       else if (env.texture === 'leaves') out.push(`<circle cx="${x}" cy="${y}" r="${1.1 + k * 0.25}" fill="#174a2c"/><circle cx="${x - side * 0.3}" cy="${y - 0.3}" r="${0.7 + k * 0.2}" fill="${c}" opacity="0.7"/>`); // tree crowns
-      else if (env.texture === 'storm') out.push(`<line x1="${x}" y1="${y - 1.2}" x2="${x}" y2="${y + 1.2}" stroke="#c9d3e6" stroke-width="0.14"/><circle cx="${x}" cy="${y - 1.3}" r="0.22" fill="${c}"/>`); // lightning rods
+      else if (env.texture === 'storm') { const L = lookFor(env.id); out.push(`<circle cx="${x}" cy="${y}" r="0.62" fill="#0c1430" stroke="${L.colors[0]}" stroke-width="0.14"/><circle class="sfx-node sfx-anim" style="animation-delay:-${k * 0.8}s" cx="${x}" cy="${y}" r="0.34" fill="${L.colors[2]}"/>`); } // energy nodes on the channel
       else if (env.texture === 'sand') out.push(`<path d="M${x - 0.8} ${y + 0.6} L${x - 0.2} ${y - 0.7} L${x + 0.7} ${y + 0.6} Z" fill="#7a4f2a" opacity="0.85"/>`); // red rock
       else if (env.texture === 'waves') out.push(`<ellipse cx="${x}" cy="${y}" rx="0.8" ry="${1.2 + k * 0.3}" fill="#0c3346"/><ellipse cx="${x}" cy="${y}" rx="0.5" ry="${0.8 + k * 0.25}" fill="${c}" opacity="0.7"/>`); // tide pools
       else if (env.texture === 'rays') out.push(`<rect x="${x - 0.18}" y="${y - 0.9}" width="0.36" height="1.8" fill="#f6f1df"/><rect x="${x - 0.4}" y="${y - 1.3}" width="0.8" height="0.5" fill="${c}"/><rect x="${x - 0.22}" y="${y - 1.2}" width="0.44" height="0.3" fill="#fff"/>`); // lanterns
@@ -50,13 +51,18 @@ function sidelineDecor(env, cam, HW, Y) {
         : `<rect x="${x - 0.08}" y="${y - 1.1}" width="0.16" height="2" fill="#2b2730"/><rect x="${x - 0.08 + (side > 0 ? -0.6 : 0.16)}" y="${y - 1.1}" width="0.6" height="0.9" fill="${k === 1 ? c : '#7b3fa0'}"/>`); // banners, crimson and purple
       else if (env.texture === 'panels') out.push(`<rect x="${x - 0.25}" y="${y - 1}" width="0.5" height="2" rx="0.2" fill="${c}" opacity="0.8"/>`); // light strips
       if (env.texture === 'storm' && yard + 6 < cam.top) {
-        out.push(`<path class="venue-bolt" d="M${x} ${y - 7.3} l${-side * .32} 1.5 ${side * .5} 1.4 ${-side * .44} 1.5 ${side * .26} 1.6" fill="none" stroke="#bde9ff" stroke-width=".21" stroke-linecap="round" stroke-linejoin="round"/>`);
+        out.push(`<path class="sfx-spark sfx-anim" style="animation-delay:-${((yard / 6 + (side > 0 ? 2 : 0)) % 5) * 1.35}s" d="M${x} ${y - 5.4} l${-side * .32} 1.2 ${side * .5} 1.1 ${-side * .44} 1.2 ${side * .26} 1.3" fill="none" stroke="#bde9ff" stroke-width=".21" stroke-linecap="round" stroke-linejoin="round"/>`); // a spark jumps to the next node now and then
       } else if (SIDELINE_MOTION[env.texture]) {
         out.push(`<g transform="translate(${x} ${y})"><g class="venue-detail venue-detail-${env.texture}" style="animation-delay:-${k * .85}s">${SIDELINE_MOTION[env.texture]}</g></g>`);
       }
     }
   }
   return out.join('');
+}
+/** Stadium Polish: an energy channel along each sideline for the looks that have one (two flowing dashed lines, under the nodes). */
+function edgeChannel(env, HW, SPAN) {
+  const L = lookFor(env.id); if (L?.edge !== 'channel') return '';
+  return [-1, 1].map((side) => { const x = side * (HW - 0.45); return `<line x1="${x}" y1="0" x2="${x}" y2="${SPAN}" stroke="#0c1430" stroke-width="0.7" opacity="0.85"/><line class="sfx-channel sfx-anim" x1="${x}" y1="0" x2="${x}" y2="${SPAN}" stroke="${L.colors[0]}" stroke-width="0.26" stroke-dasharray="2.5 2"/><line class="sfx-channel sfx-channel-b sfx-anim" x1="${x}" y1="0" x2="${x}" y2="${SPAN}" stroke="${L.colors[1]}" stroke-width="0.14" stroke-dasharray="1 3.5"/>`; }).join('');
 }
 /** End-zone art in the environment's style (low opacity, under the end-zone label). */
 function endZoneDecor(env, x0, y0, w, h) {
@@ -89,7 +95,7 @@ export function turfSvg(venue, cam, HW, SPAN, Y) {
     s += `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="${w}" height="${h}" patternTransform="translate(0 ${(cam.top % h).toFixed(2)})">${inner}</pattern></defs><rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="url(#${id})" opacity="${op}"/>`;
   }
   return { env, turf: s, endZone: (y0, h) => `<rect x="${-HW}" y="${y0}" width="${HW * 2}" height="${h}" fill="${P.end}"/>${endZoneDecor(env, -HW, y0, HW * 2, h)}`,
-    over: `${P.tint ? `<rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="${P.tint}"/>` : ''}${env.id === 'grass' ? '' : sidelineDecor(env, cam, HW, Y)}` };
+    over: `${P.tint ? `<rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="${P.tint}"/>` : ''}${edgeChannel(env, HW, SPAN)}${env.id === 'grass' ? '' : sidelineDecor(env, cam, HW, Y)}` };
 }
 
 /** The CSS class for the weather layer over the field ('' when nothing is drawn: clear, overcast handled by a tint, indoors). */
