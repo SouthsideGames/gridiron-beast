@@ -10,6 +10,7 @@ import { withBoardReset } from '../tools/league-soak.mjs';
 import * as Save from '../src/franchise/save.js';
 import * as F from '../src/franchise/franchise.js';
 import { careerPage, careerStatus, designationOf, statCell, PAGE_TABS } from '../src/franchise/career-page.js';
+import { archiveCareer } from '../src/franchise/preleague-history.js';
 import { careerProfile, careerSnapshot, findMonster, seasonBooks } from '../src/franchise/career-profile.js';
 import { careerTimeline } from '../src/franchise/career.js';
 import { careerPageHtml, resolveCareer } from '../src/ui/screens/career.js';
@@ -79,7 +80,11 @@ test('retired legends: the regular season and the playoffs are kept apart (profi
     if (!stub.seasons?.length) continue;
     const reg = stub.seasons.reduce((a, b) => a + (b.reg?.games || 0), 0); const post = stub.seasons.reduce((a, b) => a + (b.post?.games || 0), 0);
     const p = careerProfile(f, id); assert.equal(p.stats.games, reg, `${stub.name}: regular-season games`); assert.equal(p.stats.postGames, post, `${stub.name}: playoff games`);
-    const pg = careerPage(f, id); assert.equal(pg.facts.games, reg + post); assert.equal(pg.facts.regGames, reg);
+    // His page shows the whole career: what the ledger kept, plus the seasons he played before the franchise began (the league
+    // archive, preleague-history.js). The profile above and the leaders below stay on the ledger alone.
+    const pre = archiveCareer(f, id); const preReg = (pre?.seasons || []).reduce((a, b) => a + (b.reg?.games || 0), 0), prePost = (pre?.seasons || []).reduce((a, b) => a + (b.post?.games || 0), 0);
+    const pg = careerPage(f, id); assert.equal(pg.facts.games, reg + post + preReg + prePost); assert.equal(pg.facts.regGames, reg + preReg); assert.equal(pg.facts.postGames, post + prePost);
+    assert.equal(pg.lines.seasons.filter((s) => !s.pre).reduce((a, s) => a + (s.reg?.games || 0), 0), reg, `${stub.name}: the played seasons on the page are the ledger's`);
     assert.equal(careerTotals(stub).games || 0, reg, `${stub.name}: the leaders count the regular season only`);
   }
 });
