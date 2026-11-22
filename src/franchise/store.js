@@ -29,7 +29,16 @@ export const STORE_NAMES = Object.freeze(['slots', 'saves', 'backups', 'parts', 
 export const SLOT = 1;
 export const JOURNAL_KEY = 'gridiron-beast-v7-journal';
 const KEY = (slot = SLOT) => `slot${slot}`;
-const PARTS = Object.freeze(['core', 'history', 'draft']);
+const PARTS = Object.freeze(['core', 'history', 'draft', 'prehistory']);
+/**
+ * 'prehistory' is the pre-franchise league archive (f.preLeagueHistory, about 440 KB of plain data that never changes after
+ * creation). It is an OPTIONAL part: a manifest, backup or journal has it only when the franchise has an archive and was saved
+ * in the split layout. Without it the three-part format is byte for byte what it always was, so franchises without an archive
+ * (every save made before the archive existed) are untouched. Kept in `core` it was re-packed and re-compressed on every save.
+ */
+const OPTIONAL_PARTS = new Set(['prehistory']);
+/** The parts a manifest's `parts`, a backup's `embedded` or a snapshot's `raws` actually holds (the three required ones always). */
+const partsIn = (rec) => PARTS.filter((n) => !OPTIONAL_PARTS.has(n) || rec?.[n] != null);
 const ROLLING = Object.freeze(['roll0', 'roll1']); // the two latest previous versions
 const ARCHIVED = new Set(['retired', 'fired']); // lifecycle states that make a save read-only (GDD §42.4)
 
@@ -99,7 +108,11 @@ const clone = (v) => (v == null ? v : v instanceof Uint8Array ? v.slice() : type
 
 // ------------------------------------------------------------ encoding a franchise
 // savedAt lives in the manifest, not in a part: a save that changed nothing else then writes no part and rotates no backup.
-const partsOf = (f) => { const { history, draftResults, savedAt, ...core } = f; return { core, history: history ?? null, draft: draftResults ?? null }; };
+/** `split`: the archive in its own part (when the franchise has one). false gives the three-part layout, archive inside `core`. */
+const partsOf = (f, split = true) => {
+  if (split && f.preLeagueHistory != null) { const { history, draftResults, preLeagueHistory, savedAt, ...core } = f; return { core, history: history ?? null, draft: draftResults ?? null, prehistory: preLeagueHistory }; }
+  const { history, draftResults, savedAt, ...core } = f; return { core, history: history ?? null, draft: draftResults ?? null };
+};
 export { newUid };
 /** Summary shown in recovery lists and the storage meter, read without unpacking. */
 export function saveMeta(f) {
@@ -163,8 +176,9 @@ export async function decodePart(part, expectedSum) {
   const o = JSON.parse(str); if (o?.fmt === 'json') return JSON.parse(o.d);
   return unpack(o);
 }
-function assemble(order, core, history, draft, savedAt) {
+function assemble(order, core, history, draft, savedAt, prehistory = null) {
   const f = {}; const src = { ...core }; if (history !== null) src.history = history; if (draft !== null) src.draftResults = draft;
+  if (prehistory != null) src.preLeagueHistory = prehistory; // the split layout; in the three-part layout it is already inside core
   if (savedAt !== undefined && savedAt !== null && (!order || order.includes('savedAt'))) src.savedAt = savedAt;
   for (const k of order || Object.keys(src)) if (k in src) f[k] = src[k];
   for (const k of Object.keys(src)) if (!(k in f)) f[k] = src[k];
@@ -197,12 +211,13 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
   // ---- reading
   async function readManifest(key = slotKey) { return backend.run(['saves'], 'readonly', (t) => t.get('saves', key)); }
   async function loadManifest(m) {
-    const got = await backend.run(['parts'], 'readonly', async (t) => { const o = {}; for (const n of PARTS) o[n] = await t.get('parts', m.parts[n].sum); return o; });
-    const vals = {}; for (const n of PARTS) vals[n] = await decodePart(got[n], m.parts[n].sum);
-    const f = assemble(m.order, vals.core, vals.history, vals.draft, m.savedAt);
+    const names = partsIn(m.parts);
+    const got = await backend.run(['parts'], 'readonly', async (t) => { const o = {}; for (const n of names) o[n] = await t.get('parts', m.parts[n].sum); return o; });
+    const vals = {}; for (const n of names) vals[n] = await decodePart(got[n], m.parts[n].sum);
+    const f = assemble(m.order, vals.core, vals.history, vals.draft, m.savedAt, vals.prehistory ?? null);
     return f;
   }
-  async function loadEmbedded(b) { const vals = {}; for (const n of PARTS) vals[n] = await decodePart(b.embedded[n], b.embedded[n].sum); return assemble(b.order, vals.core, vals.history, vals.draft, b.savedAt); }
+  async function loadEmbedded(b) { const vals = {}; for (const n of partsIn(b.embedded)) vals[n] = await decodePart(b.embedded[n], b.embedded[n].sum); return assemble(b.order, vals.core, vals.history, vals.draft, b.savedAt, vals.prehistory ?? null); }
   async function loadBackupRecord(b) {
     if (b.kind === 'legacy-original' || b.kind === 'legacy-newer') { // the protected v39.1 save, stored exactly as it was
       const text = b.enc === 'gzip' ? await gunzip(b.data) : b.data;
@@ -212,7 +227,7 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     return b.embedded ? loadEmbedded(b) : loadManifest(b);
   }
   /** A committed manifest's cache, so the next save only re-packs parts that changed. */
-  function primeCache(f, m) { const p = partsOf(f); cache = {}; for (const n of PARTS) { const raw = JSON.stringify(p[n]); if (checksum(raw) === m.parts[n].raw) cache[n] = { raw: m.parts[n].raw, entry: m.parts[n] }; } seq = Math.max(seq, m.writer === writer ? m.seq : 0); base = { writer: m.writer, seq: m.seq }; lastManifest = m; }
+  function primeCache(f, m) { const p = partsOf(f, !!m.parts.prehistory); cache = {}; for (const n of partsIn(m.parts)) { const raw = JSON.stringify(p[n]); if (checksum(raw) === m.parts[n].raw) cache[n] = { raw: m.parts[n].raw, entry: m.parts[n] }; } seq = Math.max(seq, m.writer === writer ? m.seq : 0); base = { writer: m.writer, seq: m.seq }; lastManifest = m; }
 
   // ---- writing
   /**
@@ -220,16 +235,25 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
    * the live object while the async packing and the transaction run).
    */
   function freeze(f) {
-    const p = partsOf(f); const raws = {}; for (const n of PARTS) raws[n] = JSON.stringify(p[n]);
+    let p = partsOf(f); let raws = {}; for (const n of partsIn(p)) raws[n] = JSON.stringify(p[n]);
+    // The last committed save holds the archive inside `core` (it was written before the split layout) and nothing in that core
+    // has changed: keep its layout. A save that changes nothing then stays a no-op, and a committed read-only archive (a retired
+    // or fired franchise) is never re-laid-out, which the store would rightly refuse as a change. The first save that really
+    // changes `core` moves the franchise to the split layout.
+    if (raws.prehistory != null && lastManifest && !lastManifest.parts?.prehistory && cache.core) {
+      const legacy = JSON.stringify(partsOf(f, false).core);
+      if (checksum(legacy) === cache.core.raw) { p = partsOf(f, false); raws = { core: legacy, history: raws.history, draft: raws.draft }; }
+    }
     return { raws, savedAt: f.savedAt, uid: f.uid, schemaVersion: f.schemaVersion, order: Object.keys(f), meta: saveMeta(f), lifecycle: f.lifecycle ? manifestLifecycle(f.lifecycle) : lifecycleOf(f) };
   }
   async function encodeFrozen(fz, useCache = true) {
     const entries = {}; const newParts = [];
     // Parts whose raw checksum equals the last committed save's are reused from the cache; the others are packed (in the encode
     // worker where there is one). The checksums themselves are computed where the packing runs.
-    const skip = {}; if (useCache) for (const n of PARTS) if (cache[n]) skip[n] = cache[n].raw;
-    const enc = await encodeParts(Object.fromEntries(PARTS.map((n) => [n, fz.raws[n]])), skip);
-    for (const n of PARTS) {
+    const names = partsIn(fz.raws);
+    const skip = {}; if (useCache) for (const n of names) if (cache[n]) skip[n] = cache[n].raw;
+    const enc = await encodeParts(Object.fromEntries(names.map((n) => [n, fz.raws[n]])), skip);
+    for (const n of names) {
       const r = enc[n];
       if (r.cached) { entries[n] = cache[n].entry; continue; }
       entries[n] = r.entry; newParts.push(r.part);
@@ -247,19 +271,19 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
       // A committed archive (retired or fired, GDD §42.4) is read-only: once the slot holds one, no different content of
       // that franchise is ever written over it, whatever path tried. Only an explicit restore or replace (rotate: false
       // paths) may put another franchise state in the slot.
-      if (rotate && cur?.lifecycle?.legacyHeadline && ARCHIVED.has(cur.lifecycle.status) && cur.uid === manifest.uid && PARTS.some((n) => cur.parts?.[n]?.sum !== manifest.parts[n].sum)) throw Object.assign(new Error('This franchise is a read-only archive: nothing in it can be changed.'), { code: 'read-only' });
+      if (rotate && cur?.lifecycle?.legacyHeadline && ARCHIVED.has(cur.lifecycle.status) && cur.uid === manifest.uid && PARTS.some((n) => cur.parts?.[n]?.sum !== manifest.parts[n]?.sum)) throw Object.assign(new Error('This franchise is a read-only archive: nothing in it can be changed.'), { code: 'read-only' });
       for (const part of newParts) if (!(await t.get('parts', part.sum))) await t.put('parts', part.sum, part);
       // Every part the manifest references must be present and intact in this same transaction (a part reused from the cache
       // may have been removed by another tab's clean-up): a manifest is never committed pointing at missing data.
       const fresh = new Set(newParts.map((x) => x.sum));
-      for (const n of PARTS) { const sum = manifest.parts[n].sum; if (!fresh.has(sum) && !partOk(await t.get('parts', sum), sum)) throw Object.assign(new Error('A stored part this save relies on is missing.'), { code: 'missing-part' }); }
+      for (const n of partsIn(manifest.parts)) { const sum = manifest.parts[n].sum; if (!fresh.has(sum) && !partOk(await t.get('parts', sum), sum)) throw Object.assign(new Error('A stored part this save relies on is missing.'), { code: 'missing-part' }); }
       backend.hit?.('parts-written');
       // Rolling backups hold the two latest previous versions that pass their integrity check: a damaged version is never
       // rotated in over a good one.
       // Every generation is verified before it moves: the outgoing live save before it becomes roll0, and roll0 before it
       // replaces roll1. A damaged roll0 is dropped rather than promoted, so a valid roll1 is never overwritten by it.
-      const verified = async (m) => { if (!m?.parts) return false; for (const n of PARTS) if (!partOk(await t.get('parts', m.parts[n]?.sum), m.parts[n]?.sum)) return false; return true; };
-      const changed = cur && PARTS.some((n) => cur.parts?.[n]?.sum !== manifest.parts[n].sum);
+      const verified = async (m) => { if (!m?.parts) return false; for (const n of partsIn(m.parts)) if (!partOk(await t.get('parts', m.parts[n]?.sum), m.parts[n]?.sum)) return false; return true; };
+      const changed = cur && PARTS.some((n) => cur.parts?.[n]?.sum !== manifest.parts[n]?.sum);
       if (rotate && changed && await verified(cur)) {
         const r0 = await t.get('backups', `${manifest.slot}:roll0`);
         if (r0 && await verified(r0)) await t.put('backups', `${manifest.slot}:roll1`, { ...r0, kind: 'roll1' });
@@ -286,9 +310,9 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     let { entries, newParts } = await encodeFrozen(fz);
     // Nothing but the time changed since the save this tab committed or loaded: nothing is written. An idle tab's leave-save
     // therefore never becomes the newest writer and never locks out the tab being played.
-    if (!newParts.length && !opts && lastManifest && base && base !== EMPTY && lastManifest.writer === base.writer && lastManifest.seq === base.seq && PARTS.every((n) => lastManifest.parts[n].sum === entries[n].sum) && sameOrder(lastManifest.order, fz.order)) {
+    if (!newParts.length && !opts && lastManifest && base && base !== EMPTY && lastManifest.writer === base.writer && lastManifest.seq === base.seq && PARTS.every((n) => lastManifest.parts[n]?.sum === entries[n]?.sum) && sameOrder(lastManifest.order, fz.order)) {
       emit({ state: pendingF ? 'pending' : 'saved', error: null });
-      return { ok: true, unchanged: true, savedAt: lastManifest.savedAt, bytes: PARTS.reduce((a, n) => a + entries[n].bytes, 0), manifest: lastManifest, snapshot: null };
+      return { ok: true, unchanged: true, savedAt: lastManifest.savedAt, bytes: partsIn(entries).reduce((a, n) => a + entries[n].bytes, 0), manifest: lastManifest, snapshot: null };
     }
     let m = manifestFor(fz, entries); if (opts?.extra) Object.assign(m, opts.extra);
     try { await commit(m, newParts, opts); }
@@ -299,8 +323,8 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
       await commit(m, newParts, opts);
     }
     base = { writer: m.writer, seq: m.seq }; lastManifest = m;
-    cache = {}; for (const n of PARTS) cache[n] = { raw: entries[n].raw, entry: entries[n] };
-    const bytes = PARTS.reduce((a, n) => a + entries[n].bytes, 0);
+    cache = {}; for (const n of partsIn(entries)) cache[n] = { raw: entries[n].raw, entry: entries[n] };
+    const bytes = partsIn(entries).reduce((a, n) => a + entries[n].bytes, 0);
     if ((pendingF?.savedAt ?? -1) <= fz.savedAt) clearJournal(); // nothing newer is waiting
     emit({ state: pendingF ? 'pending' : 'saved', savedAt: fz.savedAt, lastOkAt: fz.savedAt, error: null, bytes });
     return { ok: true, savedAt: fz.savedAt, bytes, manifest: m, snapshot: snapshotOf(fz) };
@@ -399,7 +423,7 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     if (!ls || !f || !busy()) return false;
     try {
       const fz = freeze(f); const parts = {}; const bases = {};
-      for (const n of PARTS) { const rs = checksum(fz.raws[n]); if (cache[n] && cache[n].raw === rs) bases[n] = cache[n].entry.sum; else parts[n] = fz.raws[n]; }
+      for (const n of partsIn(fz.raws)) { const rs = checksum(fz.raws[n]); if (cache[n] && cache[n].raw === rs) bases[n] = cache[n].entry.sum; else parts[n] = fz.raws[n]; }
       if (!Object.keys(parts).length) return false; // nothing but the time changed: the committed save already holds it
       const body = JSON.stringify({ v: 2, slot, uid: fz.uid, savedAt: fz.savedAt, order: fz.order, base: bases, on: base, parts });
       ls.setItem(journalKey, JSON.stringify({ sum: checksum(body), body }));
@@ -420,16 +444,17 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     const vals = {};
     for (const n of PARTS) {
       if (j.parts[n] != null) { vals[n] = JSON.parse(j.parts[n]); continue; }
+      if (OPTIONAL_PARTS.has(n) && j.base?.[n] == null) continue; // a journal of the three-part layout (or of a franchise without an archive)
       const part = await backend.run(['parts'], 'readonly', (t) => t.get('parts', j.base[n]));
       vals[n] = await decodePart(part, j.base[n]); // throws if the base is gone: the journal is then not used
     }
-    return assemble(j.order, vals.core, vals.history, vals.draft, j.savedAt);
+    return assemble(j.order, vals.core, vals.history, vals.draft, j.savedAt, vals.prehistory ?? null);
   }
   function clearJournal(key = journalKey) { try { ls?.removeItem(key); } catch { /* ignore */ } }
 
   // ---- backups
   async function embeddedCopy(f, kind, extra = {}) {
-    const fz = freeze(f); const embedded = {}; for (const n of PARTS) embedded[n] = (await encodePart(JSON.parse(fz.raws[n]), fz.raws[n])).part;
+    const fz = freeze(f); const embedded = {}; for (const n of partsIn(fz.raws)) embedded[n] = (await encodePart(JSON.parse(fz.raws[n]), fz.raws[n])).part;
     return { kind, slot, uid: fz.uid ?? null, storage: STORAGE_VERSION, fmt: PACK_FORMAT, savedAt: fz.savedAt ?? now(), takenAt: now(), order: fz.order, meta: fz.meta, embedded, ...extra };
   }
   /** Keep an independent copy (weekly, before a restore, before a cloud copy replaces this one, before deletion…). */
@@ -624,7 +649,7 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     try {
       const raw = await loadManifest(m); const f = Save.migrate(raw);
       if (!f) throw Object.assign(new Error('The save could not be migrated.'), { code: 'migrate' });
-      primeCache(raw, m); emit({ state: 'saved', savedAt: m.savedAt, lastOkAt: m.savedAt, bytes: PARTS.reduce((a, n) => a + m.parts[n].bytes, 0) });
+      primeCache(raw, m); emit({ state: 'saved', savedAt: m.savedAt, lastOkAt: m.savedAt, bytes: partsIn(m.parts).reduce((a, n) => a + m.parts[n].bytes, 0) });
       return { mode: 'ready', franchise: f, source: 'indexeddb', notes, manifest: m };
     } catch (e) {
       notes.push(`load failed: ${e.message}`);
@@ -651,13 +676,13 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
   // ---- storage numbers for the meter
   async function usage() {
     const r = await backend.run(['saves', 'backups', 'parts'], 'readonly', async (t) => {
-      const m = await t.get('saves', slotKey); const own = new Set(m ? PARTS.map((n) => m.parts[n].sum) : []);
+      const m = await t.get('saves', slotKey); const own = new Set(m ? partsIn(m.parts).map((n) => m.parts[n].sum) : []);
       // parts referenced by this slot's rolling backups and by nothing live elsewhere count as this slot's backups
       const others = new Set(); for (const k of await t.keys('saves')) { if (k === slotKey) continue; const o = await t.get('saves', k); for (const n of PARTS) if (o?.parts?.[n]) others.add(o.parts[n].sum); }
       const mineRolling = new Set(); let save = 0, shared = 0, backups = 0, legacy = 0;
       for (const k of await t.keys('backups')) { if (typeof k !== 'string' || !k.startsWith(`${slot}:`)) continue; const b = await t.get('backups', k); if (b?.embedded) for (const n of PARTS) backups += b.embedded[n]?.bytes || 0; else for (const n of PARTS) if (b?.parts?.[n]) mineRolling.add(b.parts[n].sum); if (b?.kind === 'legacy-original') legacy += b.bytes || (b.data?.length ?? 0); }
       for (const k of await t.keys('parts')) { const p = await t.get('parts', k); if (own.has(k)) { save += p.bytes; if (others.has(k)) shared += p.bytes; } else if (mineRolling.has(k) && !others.has(k)) backups += p.bytes; }
-      return { save, backups, legacy, shared, payload: m ? PARTS.reduce((a, n) => a + m.parts[n].packedBytes, 0) : 0, raw: m ? PARTS.reduce((a, n) => a + m.parts[n].rawBytes, 0) : 0, savedAt: m?.savedAt || null };
+      return { save, backups, legacy, shared, payload: m ? partsIn(m.parts).reduce((a, n) => a + m.parts[n].packedBytes, 0) : 0, raw: m ? partsIn(m.parts).reduce((a, n) => a + m.parts[n].rawBytes, 0) : 0, savedAt: m?.savedAt || null };
     });
     let est = null; try { if (globalThis.navigator?.storage?.estimate) est = await navigator.storage.estimate(); } catch { est = null; }
     let persisted = null; try { if (globalThis.navigator?.storage?.persisted) persisted = await navigator.storage.persisted(); } catch { persisted = null; }
