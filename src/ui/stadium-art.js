@@ -4,7 +4,7 @@
 // Weather is not here: it is a CSS layer over the field (styles/app.css .weather-*), so it never redraws with the play.
 
 import { ENVIRONMENTS, WEATHER } from '../data/stadiums.js';
-import { lookFor } from './stadium-fx.js';
+import { lookFor, edgeSvg } from './stadium-fx.js';
 
 const PATTERNS = {
   // Each: [width, height, inner svg, opacity] in yards. Low opacity, so yard lines, hashes and numbers stay on top and readable.
@@ -62,11 +62,6 @@ function sidelineDecor(env, cam, HW, Y) {
   }
   return out.join('');
 }
-/** Stadium Polish: the dark track the sideline markers sit on, for the looks whose markers carry current. */
-function edgeChannel(env, HW, SPAN) {
-  const L = lookFor(env.id); if (L?.edge !== 'chain') return '';
-  return [-1, 1].map((side) => { const x = side * (HW - 0.45); return `<line x1="${x}" y1="0" x2="${x}" y2="${SPAN}" stroke="#0c1430" stroke-width="0.7" opacity="0.8"/><line x1="${x}" y1="0" x2="${x}" y2="${SPAN}" stroke="${L.colors[0]}" stroke-width="0.1" opacity="0.5"/>`; }).join('');
-}
 /** End-zone art in the environment's style (low opacity, under the end-zone label). */
 function endZoneDecor(env, x0, y0, w, h) {
   const c = env.palette.decor;
@@ -98,7 +93,7 @@ export function turfSvg(venue, cam, HW, SPAN, Y) {
     s += `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="${w}" height="${h}" patternTransform="translate(0 ${(cam.top % h).toFixed(2)})">${inner}</pattern></defs><rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="url(#${id})" opacity="${op}"/>`;
   }
   return { env, turf: s, endZone: (y0, h) => `<rect x="${-HW}" y="${y0}" width="${HW * 2}" height="${h}" fill="${P.end}"/>${endZoneDecor(env, -HW, y0, HW * 2, h)}`,
-    over: `${P.tint ? `<rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="${P.tint}"/>` : ''}${edgeChannel(env, HW, SPAN)}${env.id === 'grass' ? '' : sidelineDecor(env, cam, HW, Y)}` };
+    over: `${P.tint ? `<rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="${P.tint}"/>` : ''}${lookFor(env.id) ? edgeSvg(env.id, cam, HW, Y, SPAN) : env.id === 'grass' ? '' : sidelineDecor(env, cam, HW, Y)}` };
 }
 
 /** The CSS class for the weather layer over the field ('' when nothing is drawn: clear, overcast handled by a tint, indoors). */

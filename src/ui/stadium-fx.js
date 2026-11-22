@@ -114,6 +114,9 @@ export function layoutSurround(wrap, svg, fieldAspect, fieldWidthYards = 54) {
  */
 export const LOOKS = Object.freeze({
   storm: { label: 'Electric', colors: ['#4cc9ff', '#a06bff', '#eaf6ff'], intro: 'The current is live', edge: 'chain', posts: 'arc', reveal: 'bolt' },
+  volcanic: { label: 'Fire', colors: ['#ff7a2a', '#ffc04d', '#fff1c9'], intro: 'The mountain is awake', edge: 'magma', posts: 'flame', reveal: 'eruption' },
+  tidal: { label: 'Water', colors: ['#3fd3e6', '#2a8cff', '#e8fdff'], intro: 'The tide is in', edge: 'ripple', posts: 'spray', reveal: 'geyser' },
+  forest: { label: 'Grass', colors: ['#6fe07a', '#c8f05a', '#f2ffd6'], intro: 'The grove is listening', edge: 'vine', posts: 'vine', reveal: 'bloom' },
 });
 export const lookFor = (envId) => (Object.hasOwn(LOOKS, envId) ? LOOKS[envId] : null);
 
@@ -124,12 +127,72 @@ export const lookFor = (envId) => (Object.hasOwn(LOOKS, envId) ? LOOKS[envId] : 
  * end line, exactly as before.
  */
 let scene = null;
-export const STANDS_DEPTH = 6; // yards behind the end line: three rows of two yards
+export const STANDS_GAP = 3; // yards of grass between the end line and the stands
+export const STANDS_ROWS = 6; // yards of stand: three rows of two yards
+export const STANDS_DEPTH = STANDS_GAP + STANDS_ROWS; // how far behind the end line the picture reaches
 export function setStadiumScene(venue, crowd = null) { scene = lookFor(venue?.env) ? { env: venue.env, depth: STANDS_DEPTH, crowd } : null; return scene; }
 export const stadiumScene = () => scene;
 export const standsDepth = () => scene?.depth || 0;
 /** The football as the field draws it on the ground (field-view.js uses the same numbers), in yards. */
 export const FOOTBALL = Object.freeze({ rx: 0.7, ry: 0.45, fill: '#d9924f', stroke: '#fff', strokeWidth: 0.18 });
+
+// ---------------------------------------------------------------- the field edge (shared, data-driven)
+// Every look uses the same frame: a marker every six yards on each sideline, something that links one marker to the next, and
+// a little drifting life beside it. `edge` picks the pieces; the stylesheet moves them. Jumps and pulses take turns (their delay
+// follows the marker's place on the field), so the effect cycles up the sideline.
+const turn = (yard, side, step, n = 7) => `animation-delay:-${((((n - ((Math.round(yard / 6) + (side > 0 ? 3 : 0)) % n)) % n)) * step).toFixed(2)}s`;
+const EDGES = {
+  chain: { // Electric: current jumps from marker to marker
+    track: (x, span, L) => `<line x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="#0c1430" stroke-width="0.7" opacity="0.8"/><line x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="${L.colors[0]}" stroke-width="0.1" opacity="0.5"/>`,
+    marker: (x, y, k, side, yard, L) => `<circle cx="${x}" cy="${y}" r="0.62" fill="#0c1430" stroke="${L.colors[0]}" stroke-width="0.14"/><circle class="sfx-node sfx-anim" style="animation-delay:-${k * 0.8}s" cx="${x}" cy="${y}" r="0.34" fill="${L.colors[2]}"/>`,
+    link: (x, y, k, side, yard) => { const j = side * 0.42, dy = -6; return `<path class="sfx-chain sfx-anim" style="${turn(yard, side, 0.26)}" d="M${x} ${y - 0.5} l${-j} ${dy * 0.17} ${j * 1.7} ${dy * 0.16} ${-j * 1.9} ${dy * 0.17} ${j * 1.6} ${dy * 0.16} ${-j * 0.4} ${dy * 0.17}" fill="none" stroke="#dff3ff" stroke-width=".24" stroke-linecap="round" stroke-linejoin="round"/>`; },
+  },
+  magma: { // Fire: magma flows along the sideline between flame towers; embers rise
+    track: (x, span, L) => `<line x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="#1c0c08" stroke-width="0.8" opacity="0.9"/><line class="sfx-channel sfx-anim" x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="${L.colors[0]}" stroke-width="0.36" stroke-dasharray="2.5 2"/><line class="sfx-channel sfx-channel-b sfx-anim" x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="${L.colors[1]}" stroke-width="0.16" stroke-dasharray="1 3.5"/>`,
+    marker: (x, y, k, side, yard, L) => `<circle cx="${x}" cy="${y}" r="0.7" fill="#241410" stroke="#4a2a1e" stroke-width="0.14"/><path class="sfx-flame sfx-anim" style="animation-delay:-${k * 0.17}s" d="M${x - 0.42} ${y + 0.1} Q${x - 0.5} ${y - 0.7} ${x} ${y - 1.5} Q${x + 0.5} ${y - 0.7} ${x + 0.42} ${y + 0.1} Z" fill="${L.colors[0]}"/><path class="sfx-flame sfx-anim" style="animation-delay:-${k * 0.17 + 0.2}s" d="M${x - 0.2} ${y + 0.05} Q${x - 0.24} ${y - 0.4} ${x} ${y - 0.85} Q${x + 0.24} ${y - 0.4} ${x + 0.2} ${y + 0.05} Z" fill="${L.colors[1]}"/>`,
+    link: (x, y, k, side, yard, L) => `<circle class="sfx-drift sfx-anim" style="animation-delay:-${(k * 1.1 + (side > 0 ? 0.6 : 0)).toFixed(1)}s" cx="${x - side * (0.5 + k * 0.25)}" cy="${y - 1.6}" r="0.13" fill="${L.colors[1]}"/>`,
+  },
+  ripple: { // Water: a canal along the sideline; a ripple opens at each pool in turn
+    track: (x, span, L) => `<line x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="#082636" stroke-width="0.8" opacity="0.9"/><line class="sfx-channel sfx-anim" x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="${L.colors[0]}" stroke-width="0.28" stroke-dasharray="2.5 2" opacity=".8"/>`,
+    marker: (x, y, k, side, yard, L) => `<ellipse cx="${x}" cy="${y}" rx="0.8" ry="1" fill="#0c3346"/><ellipse cx="${x}" cy="${y}" rx="0.5" ry="0.68" fill="${L.colors[0]}" opacity="0.75"/><ellipse class="sfx-ripple sfx-anim" style="${turn(yard, side, 0.36)}" cx="${x}" cy="${y}" rx="0.9" ry="1.1" fill="none" stroke="${L.colors[2]}" stroke-width="0.14"/>`,
+    link: (x, y, k, side, yard, L) => `<path class="sfx-drift sfx-drift-glint sfx-anim" style="animation-delay:-${(k * 1.3).toFixed(1)}s" d="M${x - side * 0.2 - 0.3} ${y - 3} q0.3 -0.25 0.6 0" fill="none" stroke="${L.colors[2]}" stroke-width="0.1"/>`,
+  },
+  vine: { // Grass: a vine links the trees; green energy travels along it in turn; leaves drift and fireflies glow
+    track: () => '',
+    marker: (x, y, k, side, yard, L) => `<circle cx="${x}" cy="${y}" r="${1.05 + k * 0.2}" fill="#174a2c"/><circle class="sfx-node sfx-anim" style="animation-delay:-${k * 0.9}s" cx="${x - side * 0.3}" cy="${y - 0.3}" r="${0.62 + k * 0.15}" fill="#2f9a4f"/>`,
+    link: (x, y, k, side, yard, L) => { const j = side * 0.5; const d = `M${x} ${y - 0.9} q${-j} -1.2 0 -2.2 t0 -2.2`; return `<path d="${d}" fill="none" stroke="#14532d" stroke-width="0.2"/><path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.3)}" d="${d}" fill="none" stroke="${L.colors[1]}" stroke-width="0.24" stroke-linecap="round"/><ellipse class="sfx-drift sfx-drift-leaf sfx-anim" style="animation-delay:-${(k * 1.4 + (side > 0 ? 1 : 0)).toFixed(1)}s" cx="${x - side * 1.1}" cy="${y - 2.2}" rx="0.26" ry="0.12" fill="${L.colors[0]}"/><circle class="sfx-firefly sfx-anim" style="animation-delay:-${(k * 1.9 + (side > 0 ? 0.7 : 0)).toFixed(1)}s" cx="${x - side * (0.9 + k * 0.3)}" cy="${y - 3.6}" r="0.11" fill="#fff6a8"/>`; },
+  },
+};
+/** Everything a look puts along both sidelines for the visible stretch of field ('' for a stadium without a look). */
+export function edgeSvg(envId, cam, HW, Y, span) {
+  const L = lookFor(envId); const E = L && EDGES[L.edge]; if (!E) return '';
+  const out = [];
+  for (const side of [-1, 1]) { const x = side * (HW - 0.45); out.push(E.track(x, span, L));
+    for (let yard = Math.ceil(cam.bottom / 6) * 6; yard < cam.top; yard += 6) {
+      if (yard < 0 || yard > 100) continue; // the markers stand along the field of play, not behind the end lines
+      const y = Y(yard + (side > 0 ? 3 : 0)); const k = Math.abs((yard / 6 + (side > 0 ? 1 : 0)) % 3);
+      if (yard + 6 <= 100) out.push(E.link(x, y, k, side, yard, L));
+      out.push(E.marker(x, y, k, side, yard, L));
+    } }
+  return out.join('');
+}
+/**
+ * What a look's goal posts do. The posts stand on the end line with their uprights laid back over the grass behind it (in view
+ * now that the picture reaches past the end line); the look adds a glow and what runs between or along them. Thin, translucent
+ * pieces: a kicked ball stays visible. `y` is the crossbar, `dir` +1 for the far posts.
+ */
+export function postsSvg(envId, y, dir) {
+  const L = lookFor(envId); if (!L?.posts) return '';
+  const [a, b, c] = L.colors; const tip = y - dir * 2.4; const shape = `M-3 ${tip} V${y} H3 V${tip}`;
+  const climb = (d, i) => `<path class="sfx-post-arc sfx-anim" style="--climb:${-dir * 2.05}px;animation-delay:-${i * 0.5}s" d="${d}" fill="none" stroke="${c}" stroke-width="0.16" stroke-linejoin="round" stroke-linecap="round"/>`;
+  let extra = '';
+  if (L.posts === 'arc') extra = [0, 1, 2].map((i) => climb(`M-3 ${y - dir * 0.2} l1 -0.28 1 0.5 1 -0.5 1 0.5 1 -0.5 1 0.28`, i)).join('');
+  else if (L.posts === 'spray') extra = [0, 1, 2].map((i) => climb(`M-3 ${y - dir * 0.2} q0.75 -0.5 1.5 0 t1.5 0 t1.5 0 t1.5 0`, i)).join('');
+  else if (L.posts === 'flame') extra = [-3, 3].map((px, i) => `<path class="sfx-flame sfx-anim" style="animation-delay:-${i * 0.23}s" d="M${px - 0.4} ${tip + 0.1} Q${px - 0.48} ${tip - 0.7} ${px} ${tip - 1.4} Q${px + 0.48} ${tip - 0.7} ${px + 0.4} ${tip + 0.1} Z" fill="${a}" stroke="none"/><path class="sfx-flame sfx-anim" style="animation-delay:-${i * 0.23 + 0.2}s" d="M${px - 0.2} ${tip + 0.05} Q${px - 0.22} ${tip - 0.35} ${px} ${tip - 0.8} Q${px + 0.22} ${tip - 0.35} ${px + 0.2} ${tip + 0.05} Z" fill="${b}" stroke="none"/>`).join('');
+  else if (L.posts === 'vine') extra = `<path class="sfx-vine sfx-anim" d="${shape}" stroke="${b}" stroke-width="0.24" stroke-linecap="round"/>${[-3, 3].flatMap((px, s) => [0.6, 1.3, 2].map((t, i) => `<ellipse class="sfx-node sfx-anim" style="animation-delay:-${(i * 0.6 + s * 0.3).toFixed(1)}s" cx="${px + (i % 2 ? 0.35 : -0.35)}" cy="${y - dir * t}" rx="0.3" ry="0.15" fill="${a}" stroke="none"/>`)).join('')}`;
+  const tips = L.posts === 'flame' ? '' : `<circle cx="-3" cy="${tip}" r="0.3" fill="${c}" stroke="none"/><circle cx="3" cy="${tip}" r="0.3" fill="${c}" stroke="none"/>`;
+  return `<g class="sfx-post" fill="none"><path class="sfx-post-glow sfx-anim" d="${shape}" stroke="${a}" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/><path d="${shape}" stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round" stroke-linejoin="round"/>${extra}${tips}</g>`;
+}
 
 /**
  * The stand behind the far end zone, drawn with the field (it does not follow the camera: it comes into view as play nears the
@@ -138,14 +201,19 @@ export const FOOTBALL = Object.freeze({ rx: 0.7, ry: 0.45, fill: '#d9924f', stro
  */
 export function standSvg(venue, x0, y0, w) {
   const look = lookFor(venue?.env); if (!look || !scene) return '';
-  const d = scene.depth; const [a, b] = look.colors; const img = scene.crowd ? crowdImages({ ...scene.crowd, stand: 'far' }) : null;
+  const d = STANDS_ROWS; const [a, b] = look.colors; const img = scene.crowd ? crowdImages({ ...scene.crowd, stand: 'far' }) : null;
   const pic = (cls, u) => (u ? `<image class="${cls}" href="${u}" x="${x0}" y="${y0}" width="${w}" height="${d - 0.5}" preserveAspectRatio="none" style="image-rendering:pixelated"/>` : '');
   return `<g class="sfx-stand"><rect x="${x0}" y="${y0}" width="${w}" height="${d}" fill="#10151d"/>${pic('sfx-crowd-img', img?.base)}${pic('sfx-cheer sfx-cheer-home', img?.home)}${pic('sfx-cheer sfx-cheer-away', img?.away)}<rect x="${x0}" y="${y0 + d - 0.5}" width="${w}" height="0.5" fill="#0c1430"/><line class="sfx-channel sfx-anim" x1="${x0}" y1="${y0 + d - 0.25}" x2="${x0 + w}" y2="${y0 + d - 0.25}" stroke="${a}" stroke-width="0.22" stroke-dasharray="2.5 2"/><line class="sfx-channel sfx-channel-b sfx-anim" x1="${x0}" y1="${y0 + d - 0.25}" x2="${x0 + w}" y2="${y0 + d - 0.25}" stroke="${b}" stroke-width="0.12" stroke-dasharray="1 3.5"/></g>`;
+}
+/** The grass between an end line and the stand or wall behind it: the stadium's own turf, a shade darker, with a boundary line. */
+export function apronSvg(venue, x0, y0, w, h) {
+  const env = ENVIRONMENTS[venue?.env]; if (!env || !scene) return '';
+  return `<g class="sfx-apron"><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${env.palette.c}"/><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#000" opacity="0.18"/></g>`;
 }
 /** Behind the near end zone there is no stand in view: the stadium's wall and rail close the picture. */
 export function wallSvg(venue, x0, y0, w) {
   const look = lookFor(venue?.env); if (!look || !scene) return '';
-  const d = scene.depth; const [a] = look.colors;
+  const d = STANDS_ROWS; const [a] = look.colors;
   return `<g class="sfx-wall"><rect x="${x0}" y="${y0}" width="${w}" height="${d}" fill="#0d1320"/><rect x="${x0}" y="${y0}" width="${w}" height="0.5" fill="#0c1430"/><line class="sfx-channel sfx-anim" x1="${x0}" y1="${y0 + 0.25}" x2="${x0 + w}" y2="${y0 + 0.25}" stroke="${a}" stroke-width="0.22" stroke-dasharray="2.5 2"/>${[0.18, 0.5, 0.82].map((k) => `<rect x="${x0 + w * k - 3}" y="${y0 + 1.4}" width="6" height="${d - 2}" rx="0.4" fill="#141c30" stroke="#26335a" stroke-width="0.12"/>`).join('')}</g>`;
 }
 /**
@@ -166,7 +234,17 @@ export const REVEAL_MS = Object.freeze({ full: 1900, reduced: 900 });
 export function kickoffRevealHtml(venue, level = 'full') {
   const look = lookFor(venue?.env); if (!look?.reveal || level === 'off') return '';
   const [a, b, c] = look.colors;
-  const bolt = `<svg class="sfx-strike" viewBox="0 0 60 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M33 0 L24 26 L33 26 L21 52 L31 52 L27 100" fill="none" stroke="${a}" stroke-width="7" stroke-linejoin="round" opacity=".55"/><path d="M33 0 L24 26 L33 26 L21 52 L31 52 L27 100" fill="none" stroke="${c}" stroke-width="2.6" stroke-linejoin="round"/><path d="M24 26 L12 40 M31 52 L44 63" fill="none" stroke="${b}" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+  const R = {
+    // Electric: a thunderbolt from above
+    bolt: `<svg class="sfx-strike" viewBox="0 0 60 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M33 0 L24 26 L33 26 L21 52 L31 52 L27 100" fill="none" stroke="${a}" stroke-width="7" stroke-linejoin="round" opacity=".55"/><path d="M33 0 L24 26 L33 26 L21 52 L31 52 L27 100" fill="none" stroke="${c}" stroke-width="2.6" stroke-linejoin="round"/><path d="M24 26 L12 40 M31 52 L44 63" fill="none" stroke="${b}" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    // Fire: a column of flame erupts from the ground
+    eruption: `<svg class="sfx-rise" viewBox="0 0 60 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M30 100 Q4 78 16 52 Q20 66 26 56 Q18 30 30 0 Q42 30 34 56 Q40 66 44 52 Q56 78 30 100 Z" fill="${a}" opacity=".85"/><path d="M30 100 Q16 82 24 60 Q28 70 30 40 Q32 70 36 60 Q44 82 30 100 Z" fill="${b}"/><path d="M30 100 Q24 88 30 66 Q36 88 30 100 Z" fill="${c}"/></svg>`,
+    // Water: a geyser shoots up and falls back
+    geyser: `<svg class="sfx-rise" viewBox="0 0 60 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M30 100 Q14 70 22 30 Q26 8 30 0 Q34 8 38 30 Q46 70 30 100 Z" fill="${a}" opacity=".8"/><path d="M30 100 Q22 70 27 34 Q30 14 33 34 Q38 70 30 100 Z" fill="${c}" opacity=".9"/><circle cx="12" cy="24" r="3" fill="${c}"/><circle cx="48" cy="18" r="2.4" fill="${c}"/><circle cx="8" cy="46" r="2" fill="${a}"/><circle cx="52" cy="42" r="2.6" fill="${a}"/><circle cx="20" cy="8" r="2" fill="${b}"/><circle cx="42" cy="4" r="1.8" fill="${b}"/></svg>`,
+    // Grass: leaves swirl up and open
+    bloom: `<svg class="sfx-swirl" viewBox="-50 -50 100 100" aria-hidden="true" focusable="false">${Array.from({ length: 10 }, (_, i) => `<ellipse cx="0" cy="-30" rx="6" ry="14" fill="${i % 2 ? a : b}" opacity=".9" transform="rotate(${i * 36})"/>`).join('')}<circle r="12" fill="none" stroke="${c}" stroke-width="2"/></svg>`,
+  };
+  const bolt = R[look.reveal] || R.bolt;
   // The game's own football: same shape, colour and outline as on the field, at the field's scale (--sfx-yd = pixels per yard).
   const B = FOOTBALL; const ball = `<svg class="sfx-ball" viewBox="${-B.rx - 0.2} ${-B.ry - 0.2} ${(B.rx + 0.2) * 2} ${(B.ry + 0.2) * 2}" style="width:calc(var(--sfx-yd, 8px) * ${(B.rx + 0.2) * 2})" aria-hidden="true" focusable="false"><ellipse rx="${B.rx}" ry="${B.ry}" fill="${B.fill}" stroke="${B.stroke}" stroke-width="${B.strokeWidth}"/></svg>`;
   return `<div class="sfx-reveal sfx-reveal-${look.reveal} ${level === 'reduced' ? 'sfx-reveal-simple' : ''}" style="--sfx-a:${a};--sfx-b:${b};--sfx-c:${c}" role="button" aria-label="Skip">${level === 'reduced' ? '' : `<i class="sfx-whiteout"></i>${bolt}`}<i class="sfx-ring"></i>${ball}<span class="sfx-skip">Tap to skip</span></div>`;

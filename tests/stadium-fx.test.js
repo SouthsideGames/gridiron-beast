@@ -73,17 +73,18 @@ test('Electric (Storm Stadium): current cycling between the sideline markers and
   const goal = fieldSvg({ venue, ballOn: 92 }); assert.match(goal, /class="sfx-post"/); assert.equal((goal.match(/sfx-post-arc/g) || []).length, 3);
 });
 test('the stand: behind the far end zone only, in view only near it, and the field ends at the end line without a stadium scene', async () => {
-  const { setStadiumScene, standsDepth, STANDS_DEPTH, FOOTBALL } = await import('../src/ui/stadium-fx.js'); const { cameraFor } = await import('../src/ui/field-view.js');
+  const { setStadiumScene, standsDepth, STANDS_DEPTH, STANDS_GAP, STANDS_ROWS, FOOTBALL } = await import('../src/ui/stadium-fx.js'); const { cameraFor } = await import('../src/ui/field-view.js');
   const venue = venueFor('Stormport Bolts', 'k');
   try {
     assert.equal(standsDepth(), 0); assert.deepEqual(cameraFor(95), { bottom: 64, top: 110 }); assert.deepEqual(cameraFor(2), { bottom: -10, top: 36 });
     assert.equal(setStadiumScene({ env: 'grass' }), null, 'a plain stadium has no scene'); assert.equal(standsDepth(), 0);
-    setStadiumScene(venue, null); assert.equal(standsDepth(), STANDS_DEPTH); assert.equal(STANDS_DEPTH, 6, 'three rows of two yards');
+    setStadiumScene(venue, null); assert.equal(standsDepth(), STANDS_DEPTH); assert.equal(STANDS_ROWS, 6, 'three rows of two yards'); assert.equal(STANDS_GAP, 3, 'grass between the end line and the stands'); assert.equal(STANDS_DEPTH, 9);
     assert.deepEqual(cameraFor(50), { bottom: 35, top: 81 }, 'midfield is unchanged: no crowd in sight');
     assert.deepEqual(cameraFor(79), { bottom: 64, top: 110 }, 'the end line is just reached');
-    assert.equal(cameraFor(82).top, 113, 'the stand comes into view as play nears the end zone'); assert.equal(cameraFor(99).top, 116, 'and never more than its three rows');
+    assert.equal(cameraFor(82).top, 113, 'first the grass behind the end line'); assert.equal(cameraFor(85).top, 116, 'then the stand comes into view'); assert.equal(cameraFor(99).top, 119, 'and never more than its three rows');
     assert.doesNotMatch(fieldSvg({ venue, ballOn: 50 }), /sfx-stand|sfx-wall/); assert.doesNotMatch(fieldSvg({ venue, ballOn: 79 }), /sfx-stand/);
-    const near = fieldSvg({ venue, ballOn: 92 }); assert.match(near, /sfx-stand/); assert.ok(near.indexOf('sfx-stand') < near.indexOf('class="sfx-post"'), 'the goal posts stand in front of the crowd');
+    const near = fieldSvg({ venue, ballOn: 92 }); assert.match(near, /sfx-stand/); assert.ok(near.indexOf('sfx-apron') < near.indexOf('sfx-stand') && near.indexOf('sfx-stand') < near.indexOf('class="sfx-post"'), 'grass, then the crowd, with the goal posts in front');
+    assert.match(fieldSvg({ venue, ballOn: 82 }), /sfx-apron/); assert.doesNotMatch(fieldSvg({ venue, ballOn: 82 }), /sfx-crowd-img|class="sfx-stand"><rect[^>]*y="0"/);
     const own = fieldSvg({ venue, ballOn: 2 }); assert.match(own, /sfx-wall/); assert.doesNotMatch(own, /sfx-stand/, 'no crowd behind the near end zone');
     const full = kickoffRevealHtml(venue, 'full'); assert.ok(full.includes(`rx="${FOOTBALL.rx}" ry="${FOOTBALL.ry}" fill="${FOOTBALL.fill}"`), 'the reveal shows the game\'s own football');
     assert.match(fieldSvg({ venue, ballOn: 30, frame: { ball: [0, 0, 0], off: [], def: [] } }), new RegExp(`rx="${FOOTBALL.rx}" ry="${FOOTBALL.ry}" fill="${FOOTBALL.fill}"`));
@@ -119,4 +120,20 @@ test('the kickoff reveal: a strike and the football for Electric, simpler at Red
   const reduced = kickoffRevealHtml(venue, 'reduced'); assert.match(reduced, /sfx-ball/); assert.doesNotMatch(reduced, /sfx-strike|sfx-whiteout/);
   assert.equal(kickoffRevealHtml(venue, 'off'), ''); assert.equal(kickoffRevealHtml({ env: 'grass' }, 'full'), '');
   assert.ok(REVEAL_MS.full <= 2000 && REVEAL_MS.reduced < REVEAL_MS.full, 'short, and shorter when reduced');
+});
+
+// Checkpoint B: Fire, Water and Grass use the same frame as Electric; only the data differs.
+test('Fire, Water and Grass: each look sits on its existing field, keeps the field type, and has its own edge, posts and kickoff reveal', async () => {
+  const { edgeSvg, postsSvg } = await import('../src/ui/stadium-fx.js');
+  const expect = { storm: ['Electric', 'Stormport Bolts', 'Electric', /sfx-chain/, /sfx-post-arc/, /sfx-strike/], volcanic: ['Fire', 'Ember City Beasts', 'Fire', /sfx-flame/, /sfx-flame/, /sfx-rise/], tidal: ['Water', 'Harbor Sentinels', 'Water', /sfx-ripple/, /sfx-post-arc/, /sfx-rise/], forest: ['Grass', 'Bayou Stalkers', 'Nature', /sfx-vine/, /sfx-vine/, /sfx-swirl/] };
+  assert.deepEqual(Object.keys(LOOKS).sort(), Object.keys(expect).sort());
+  for (const [env, [label, club, type, edge, posts, reveal]] of Object.entries(expect)) {
+    const venue = venueFor(club, 'k'); assert.equal(venue.env, env, `${club} plays in ${env}`); assert.equal(venue.type, type, 'the field type and its bonus are untouched'); assert.equal(LOOKS[env].label, label);
+    const cam = { bottom: 35, top: 81 }; const e = edgeSvg(env, cam, 27, (y) => cam.top - y, 46); assert.match(e, edge, `${env} edge`);
+    assert.ok((e.match(/sfx-anim/g) || []).length <= 80, `${env}: a bounded number of moving pieces along the sidelines`);
+    assert.match(postsSvg(env, 0.6, 1), posts, `${env} posts`); assert.match(kickoffRevealHtml(venue, 'full'), reveal, `${env} reveal`);
+    assert.match(kickoffRevealHtml(venue, 'full'), /sfx-ball/); assert.match(introPlateHtml(venue), new RegExp(LOOKS[env].intro));
+    assert.doesNotMatch(fieldSvg({ venue, ballOn: 50 }), /venue-detail|venue-bolt/, 'the older sideline decor is replaced, not doubled');
+  }
+  assert.equal(edgeSvg('grass', { bottom: 35, top: 81 }, 27, (y) => 81 - y, 46), ''); assert.equal(postsSvg('frozen', 0.6, 1), '');
 });

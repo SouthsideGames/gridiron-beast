@@ -27,25 +27,13 @@ import { assignmentLines } from './play-art.js';
 import { PLAYS, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
 import { fxSvg, movementSvg, statusMarks } from './ability-fx.js';
 import { turfSvg } from './stadium-art.js';
-import { lookFor, standsDepth, standSvg, wallSvg, FOOTBALL } from './stadium-fx.js';
+import { postsSvg, standsDepth, standSvg, wallSvg, apronSvg, STANDS_GAP, FOOTBALL } from './stadium-fx.js';
 import { t as $t } from '../text/index.js';
 
 const SPAN = 46; // visible yards
 const HW = FIELD.halfWidth + 0.33;
 let nextLiveClip = 0;
 
-/**
- * Stadium Polish: what a stadium's goal posts do. 'arc': thin arcs of current climb between the two uprights (they are drawn
- * from above, so "up the posts" is along the uprights' length). Thin, translucent strokes: a kicked ball stays visible.
- */
-function postFx(venue, y, dir) {
-  const L = lookFor(venue?.env); if (L?.posts !== 'arc') return '';
-  // The plain posts point their uprights away from the field, past the edge of the picture. A stadium whose posts carry an
-  // effect draws them laid toward the field instead, so the uprights (and what runs between them) can be seen.
-  const tip = y + dir * 2.4;
-  const arc = (i) => `<path class="sfx-post-arc sfx-anim" style="--climb:${dir * 2.05}px;animation-delay:-${i * 0.5}s" d="M-3 ${y + dir * 0.2} l1 -0.28 1 0.5 1 -0.5 1 0.5 1 -0.5 1 0.28" fill="none" stroke="${L.colors[2]}" stroke-width="0.16" stroke-linejoin="round"/>`;
-  return `<g class="sfx-post" fill="none"><path class="sfx-post-glow sfx-anim" d="M-3 ${tip} V${y} H3 V${tip}" stroke="${L.colors[0]}" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3 ${tip} V${y} H3 V${tip}" stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round" stroke-linejoin="round"/>${arc(0)}${arc(1)}${arc(2)}<circle cx="-3" cy="${tip}" r="0.3" fill="${L.colors[2]}" stroke="none"/><circle cx="3" cy="${tip}" r="0.3" fill="${L.colors[2]}" stroke="none"/></g>`;
-}
 export function cameraFor(ballOn) {
   let bottom = ballOn - 15;
   const reach = standsDepth(); // Stadium Polish: with a stadium scene set, the picture reaches a few yards past each end line (the stands)
@@ -108,10 +96,11 @@ export function fieldLayers(o) {
     if (ltg < 100) s += `<line x1="${-HW}" y1="${Y(ltg)}" x2="${HW}" y2="${Y(ltg)}" stroke="#ffb13d" stroke-width="0.35"/>`;
   }
   // Stadium Polish: what lies behind the end lines (the far stand with its crowd; the near wall). Over the turf and sidelines there.
-  if (cam.top > 110) s += standSvg(venue, -HW, Y(110 + standsDepth()), HW * 2) || `<rect x="${-HW}" y="0" width="${HW * 2}" height="${Y(110)}" fill="#10151d"/>`;
-  if (cam.bottom < -10) s += wallSvg(venue, -HW, Y(-10), HW * 2) || `<rect x="${-HW}" y="${Y(-10)}" width="${HW * 2}" height="${span - Y(-10)}" fill="#10151d"/>`;
+  // A strip of grass runs between each end line and what stands behind it.
+  if (cam.top > 110) s += `${apronSvg(venue, -HW, Y(110 + STANDS_GAP), HW * 2, STANDS_GAP)}${standSvg(venue, -HW, Y(110 + standsDepth()), HW * 2)}`;
+  if (cam.bottom < -10) s += `${apronSvg(venue, -HW, Y(-10), HW * 2, STANDS_GAP)}${wallSvg(venue, -HW, Y(-10 - STANDS_GAP), HW * 2)}`;
   // Goal posts on the end lines (drawn flat from above: crossbar + uprights).
-  for (const [end, dir] of [[110, 1], [-10, -1]]) if (cam.bottom - 1 < end && cam.top + 1 > end) { const y = Y(end) + dir * 0.6; s += `<g stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round"><line x1="-3" y1="${y}" x2="3" y2="${y}"/><line x1="-3" y1="${y}" x2="-3" y2="${y - dir * 2.4}"/><line x1="3" y1="${y}" x2="3" y2="${y - dir * 2.4}"/></g>${postFx(venue, y, dir)}`; }
+  for (const [end, dir] of [[110, 1], [-10, -1]]) if (cam.bottom - 1 < end && cam.top + 1 > end) { const y = Y(end) + dir * 0.6; s += `<g stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round"><line x1="-3" y1="${y}" x2="3" y2="${y}"/><line x1="-3" y1="${y}" x2="-3" y2="${y - dir * 2.4}"/><line x1="3" y1="${y}" x2="3" y2="${y - dir * 2.4}"/></g>${postsSvg(venue?.env, y, dir)}`; }
   // Pre-snap art.
   if (presnap?.play) {
     const B = boundsFor(ballOn, ballLat);
