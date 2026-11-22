@@ -2621,13 +2621,9 @@ html[data-stadium-fx="off"] :is(.sfx-drift, .sfx-firefly, .sfx-ripple, .sfx-shot
 .sfx-orbit { animation: sfx-orbit 3.2s linear infinite; }
 @keyframes sfx-orbit { 0%, 100% { transform: translate(.9px, 0); } 12.5% { transform: translate(.64px, .64px); } 25% { transform: translate(0, .9px); } 37.5% { transform: translate(-.64px, .64px); } 50% { transform: translate(-.9px, 0); } 62.5% { transform: translate(-.64px, -.64px); } 75% { transform: translate(0, -.9px); } 87.5% { transform: translate(.64px, -.64px); } }
 .field-wrap[data-sfx] .sfx-orbit { animation-duration: .9s; }
-.field-wrap.env-sky { border-color: #dff0fb; background: linear-gradient(#5aa6e0, #8cc6ee); } .field-wrap.env-oracle { border-color: #c06ad0; background: #3a2a63; }
+.field-wrap.env-sky { border-color: #bfe6cf; background: #3f9a6c; } .field-wrap.env-rock { border-color: #8a8073; background: #625d55; } .field-wrap.env-bug { border-color: #c9a82a; background: #4d7a2a; } .field-wrap.env-specter { border-color: #4f8f7c; background: #2f4448; } .field-wrap.env-oracle { border-color: #c06ad0; background: #3a2a63; }
 
 /* Stadium Polish, checkpoint C revision: kickoff reveals for Ice, Ground, Sky, Oracle; Sky's pennants. */
-.sfx-flutter { transform-box: fill-box; transform-origin: 0 50%; animation: sfx-flutter 1s ease-in-out infinite; }
-@keyframes sfx-flutter { 0%, 100% { transform: scaleX(1) skewY(0); } 30% { transform: scaleX(.86) skewY(7deg); } 65% { transform: scaleX(.94) skewY(-6deg); } }
-.field-wrap[data-sfx] .sfx-flutter { animation-duration: .3s; }
-html[data-stadium-fx="reduced"] .sfx-flutter { animation-duration: 2.4s; }
 /* Ice: the cube */
 .sfx-cube { position: absolute; top: calc(50% - 55px); width: 55px; height: 110px; z-index: 2; opacity: 0; filter: drop-shadow(0 0 8px var(--sfx-a)); }
 .sfx-cube-l { left: calc(50% - 55px); animation: sfx-cube-l 1.9s ease-in both; } .sfx-cube-r { left: 50%; animation: sfx-cube-r 1.9s ease-in both; }
@@ -2660,3 +2656,44 @@ html[data-stadium-fx="reduced"] .sfx-flutter { animation-duration: 2.4s; }
 @keyframes sfx-ball-late { 0%, 45% { opacity: 0; transform: scale(.6); } 48% { opacity: 1; transform: scale(1.25); } 60%, 100% { opacity: 1; transform: scale(1); } }
 .sfx-reveal-beam .sfx-whiteout { display: none; } .sfx-reveal-beam .sfx-ring { animation-delay: .25s; }
 .sfx-reveal.sfx-reveal-simple .sfx-ball { animation-name: sfx-ball; filter: none; } .sfx-reveal.sfx-reveal-simple .sfx-ring { display: block; animation-delay: -.5s; }
+
+/* Stadium Polish, checkpoint D: Rock, Bug, Specter, Alloy; Sky's waving flags. */
+.sfx-wave { animation: sfx-wave .78s ease-in-out infinite alternate; }
+@keyframes sfx-wave { from { transform: translateY(calc(var(--amp, .1px) * -1)); } to { transform: translateY(var(--amp, .1px)); } }
+.field-wrap[data-sfx] .sfx-wave { animation-duration: .26s; }
+html[data-stadium-fx="reduced"] .sfx-wave { animation-duration: 1.8s; }
+.sfx-tumble { opacity: 0; animation: sfx-tumble 6.5s ease-in infinite; }
+@keyframes sfx-tumble { 0%, 80% { opacity: 0; transform: translate(0, 0); } 82% { opacity: 1; } 90% { opacity: 1; transform: translate(calc(var(--dx, .6px) * .6), 1px); } 96% { opacity: 1; transform: translate(var(--dx, .6px), 1.75px); } 100% { opacity: 0; transform: translate(var(--dx, .6px), 1.75px); } }
+.sfx-wisp { opacity: 0; animation: sfx-wisp 2.8s ease-in-out infinite; }
+@keyframes sfx-wisp { 0% { opacity: 0; transform: translate(0, 0); } 8% { opacity: .95; } 20% { transform: translate(.3px, -1.4px); } 34% { opacity: .9; transform: translate(-.3px, -2.8px); } 48%, 100% { opacity: 0; transform: translate(0, -4.2px); } }
+.field-wrap[data-sfx] .sfx-wisp { animation-duration: .9s; }
+html[data-stadium-fx="reduced"] :is(.sfx-wisp, .sfx-tumble) { display: none; }
+/* Rock: the boulder reuses the cube's fall-and-split; its football only shows once the rock breaks */
+.sfx-reveal-boulder .sfx-ball { animation-name: sfx-ball-late; }
+.sfx-reveal-boulder .sfx-whiteout { display: none; } .sfx-reveal-boulder .sfx-ring { animation-delay: .25s; }
+.sfx-reveal-boulder .sfx-cube { filter: drop-shadow(0 6px 4px #0008); }
+/* Bug: the spider on its thread */
+.sfx-spider { position: absolute; left: calc(50% - 30px); top: 0; bottom: calc(50% - 7px); width: 60px; z-index: 3; opacity: 0; animation: sfx-spider 1.9s ease-in-out both; }
+.sfx-spider > i { position: absolute; left: calc(50% - 1px); top: -100vh; bottom: 44px; width: 2px; background: #f4f4ea; opacity: .85; }
+.sfx-spider > svg { position: absolute; left: 0; bottom: 0; width: 60px; height: 52px; }
+@keyframes sfx-spider { 0% { opacity: 1; transform: translateY(-108%); } 30% { opacity: 1; transform: translateY(0); } 34% { transform: translateY(-5px); } 38%, 50% { transform: translateY(0); } 80% { opacity: 1; transform: translateY(-108%); } 81%, 100% { opacity: 0; transform: translateY(-108%); } }
+.sfx-carry { animation: sfx-carry 1.9s steps(1, end) both; }
+@keyframes sfx-carry { 0%, 46% { opacity: 1; } 47%, 100% { opacity: 0; } }
+.sfx-reveal-spider .sfx-ball { animation-name: sfx-ball-set; animation-timing-function: steps(1, end); }
+@keyframes sfx-ball-set { 0%, 46% { opacity: 0; transform: none; } 47%, 100% { opacity: 1; transform: none; } }
+.sfx-reveal-spider :is(.sfx-whiteout, .sfx-ring) { display: none; }
+/* Specter: the ghost */
+.sfx-ghost { position: absolute; left: calc(50% - 46px); top: calc(50% - 84px); width: 92px; height: 110px; z-index: 1; opacity: 0; transform-origin: 50% 100%; animation: sfx-ghost 1.9s ease-in-out both; filter: drop-shadow(0 0 10px var(--sfx-a)); }
+@keyframes sfx-ghost { 0%, 5% { opacity: 0; transform: translateY(34px) scaleY(.2); } 24% { opacity: .95; transform: translateY(0) scaleY(1); } 34% { transform: translateY(-5px); } 46% { opacity: .95; transform: translateY(0); } 70%, 100% { opacity: 0; transform: translateY(-70px) scaleY(1.1); } }
+.sfx-reveal-ghost .sfx-ball { z-index: 2; animation-name: sfx-ball-ghost; animation-timing-function: ease-in-out; }
+@keyframes sfx-ball-ghost { 0%, 12% { opacity: 0; transform: translateY(26px) scale(.6); } 24% { opacity: 1; transform: translateY(-2px) scale(1); } 34% { transform: translateY(-7px); } 46% { opacity: 1; transform: translateY(-2px); } 56% { transform: translateY(3px); } 62%, 100% { opacity: 1; transform: translateY(0); } }
+.sfx-reveal-ghost .sfx-whiteout { display: none; } .sfx-reveal-ghost .sfx-ring { animation-delay: .5s; }
+/* Alloy: the hatch */
+.sfx-hatch { position: absolute; left: calc(50% - 62px); top: calc(50% - 42px); width: 124px; height: 84px; overflow: hidden; border-radius: 6px; background: radial-gradient(ellipse at 50% 50%, #05080c 30%, #1a2230); box-shadow: 0 0 0 3px #f0b21c, 0 0 0 5px #262c38; opacity: 0; animation: sfx-hatch 1.9s linear both; }
+@keyframes sfx-hatch { 0%, 4% { opacity: 0; } 9%, 78% { opacity: 1; } 86%, 100% { opacity: 0; } }
+.sfx-door { position: absolute; top: 0; bottom: 0; width: 50%; background: repeating-linear-gradient(90deg, #aab3c4 0 10px, #98a2b4 10px 12px); border: 1px solid #262c38; }
+.sfx-door-l { left: 0; animation: sfx-door-l 1.9s ease-in-out both; } .sfx-door-r { right: 0; animation: sfx-door-r 1.9s ease-in-out both; }
+@keyframes sfx-door-l { 0%, 14% { transform: translateX(0); } 27%, 58% { transform: translateX(-101%); } 72%, 100% { transform: translateX(0); } }
+@keyframes sfx-door-r { 0%, 14% { transform: translateX(0); } 27%, 58% { transform: translateX(101%); } 72%, 100% { transform: translateX(0); } }
+.sfx-reveal-hatch .sfx-ball { animation-name: sfx-ball-pit; animation-timing-function: ease-out; }
+.sfx-reveal-hatch :is(.sfx-whiteout, .sfx-ring) { display: none; }
