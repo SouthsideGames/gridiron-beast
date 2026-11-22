@@ -31,6 +31,7 @@ test('historical standings balance and playoff champion matches final', () => {
   const archive = generateLeagueArchive(fixture());
   for (const season of archive.seasons) {
     assert.equal(season.standings.length, 16);
+    assert.ok(season.standings.every(t => t.w + t.l === 14));
     assert.equal(season.standings.reduce((n, t) => n + t.w, 0), season.standings.reduce((n, t) => n + t.l, 0));
     assert.equal(season.playoffs.length, 3);
     assert.equal(season.playoffs[2].games[0].winner, season.champion);
