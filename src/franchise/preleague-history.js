@@ -110,7 +110,7 @@ export function generateLeagueArchive(f, seasons = 8) {
       books.push(book);
     }
     careers[m.id] = { id: m.id, name: m.name, position: m.position, club, transfers, seasons: books,
-      totals: books.reduce((sum, b) => { for (const [k,v] of Object.entries(b.reg)) sum[k] = (sum[k] || 0) + v; return sum; }, {}) };
+      totals: books.reduce((sum, b) => { for (const [k,v] of Object.entries(b.reg)) sum[k] = k === 'fgLong' ? Math.max(sum[k] || 0, v) : (sum[k] || 0) + v; return sum; }, {}) };
   }
   // Award winners are selected from generated season books, with positional
   // eligibility. All awards reference the same monster IDs as the archive.
@@ -167,7 +167,7 @@ export function validateLeagueArchive(archive) {
     for (const b of c.seasons) {
       if (!ALL_TEAMS.includes(b.team)) errors.push('Unknown club: ' + c.id);
       if (!years.has(b.year)) errors.push('Unknown year: ' + b.year);
-      for (const [k,v] of Object.entries(b.reg)) totals[k] = (totals[k] || 0) + v;
+      for (const [k,v] of Object.entries(b.reg)) totals[k] = k === 'fgLong' ? Math.max(totals[k] || 0, v) : (totals[k] || 0) + v;
     }
     for (const [k,v] of Object.entries(totals)) if (c.totals[k] !== v) errors.push('Career mismatch: ' + c.id + ':' + k);
   }
