@@ -4,7 +4,7 @@ import { ensureIndividualNames } from '../data/individual-names.js';
 // and records. The legacy key is never modified.
 
 import { migrationDue, migratePositions, migrateAmbitions } from './position-migration.js';
-import { SCHEMA_VERSION, LEAGUE_SCHEMA_VERSION, LEGACY_SCHEMA_VERSION, createFranchise, dexRecord } from './franchise.js';
+import { SCHEMA_VERSION, LEAGUE_SCHEMA_VERSION, LEGACY_SCHEMA_VERSION, createFranchise, dexRecordOnLoad } from './franchise.js';
 import { ensureFreeAgency } from './fa-state.js';
 import { verifyLeague, hasLeague } from './league-registry.js';
 import { backfillCareer } from './career.js';
@@ -83,7 +83,7 @@ export function migrateSpecies(f) {
   f.dex ||= { seen: {}, signed: {} };
   // Older forms records include sightings, so rebuild only what the player's roster proves.
   // Existing signed stamps preserve past acquisitions, including released/traded beasts.
-  for (const m of f.roster || []) dexRecord(f, m, 'signed');
+  for (const m of f.roster || []) dexRecordOnLoad(f, m, 'signed'); // the unguarded stamp: an archive is loaded too (franchise.js dexRecordOnLoad)
 }
 export function exportJson(f) { return JSON.stringify({ app: 'gridiron-beast', schemaVersion: f?.schemaVersion ?? SCHEMA_VERSION, exportedAt: new Date().toISOString(), franchise: f }, null, 0); }
 export function importJson(text) {

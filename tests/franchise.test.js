@@ -7,6 +7,7 @@ import { t7FA, t7FillToMin } from './t7-support.js';
 import { PLAYS as PLAYS_T7 } from '../src/data/playbook.js';
 import { teamSchedule, leagueSeasonFixtures, standings, blankRecord, applyResult, ALL_TEAMS } from '../src/data/league.js';
 import { STAFF_ROLES, staffById } from '../src/data/staff.js';
+import { validIndividualName } from '../src/data/individual-names.js';
 import { ROSTER_MAX } from '../src/data/monsters.js';
 import { slotsOf } from '../src/franchise/trade-value.js';
 import { exportJson, importJson, importLegacy, legacySummary } from '../src/franchise/save.js';
@@ -44,7 +45,11 @@ test('schedule generator matches the golden vectors (campaign schedule)', () => 
 test('a new franchise has a legal roster, staff, cap room and a rival in its division', () => {
   const f = newFranchise();
   assert.equal(f.roster.length, 28);
-  assert.ok(f.roster.some((m) => m.cornerstone && m.name === 'Zappard' && m.species === 'voltfang')); // old cornerstone names still resolve
+  // Old cornerstone names still resolve: "Voltfang" (and its catalogue name "Zappard") is the voltfang species. Since beasts
+  // have individual names (docs/INDIVIDUAL_BEAST_NAMES.md) he carries a personal name, never his species name.
+  const corner = f.roster.find((m) => m.cornerstone && m.species === 'voltfang'); assert.ok(corner, 'the Voltfang cornerstone is on the roster');
+  assert.ok(validIndividualName(corner.name) && corner.name !== 'Zappard', `the cornerstone is named ${corner.name}`);
+  assert.equal(F.createFranchise({ owner: { first: 'Sam', last: 'Rivera' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Frostclaw', seed: 7 }).roster.find((m) => m.cornerstone && m.species === 'voltfang')?.species, 'voltfang', 'the catalogue name picks the same species');
   assert.ok(STAFF_ROLES.every((r) => f.staff[r]));
   assert.equal(F.salarySummary(f).over, false);
   assert.ok(['Bayou Stalkers', 'Sunfire Lions', 'Palmetto Vipers'].includes(f.rivals.challenger.team));
@@ -153,7 +158,9 @@ test('save round-trips and the legacy v5 import preserves owner, club, staff and
   assert.equal(imported.owner.first, 'Dana'); assert.equal(imported.club, 'Stonehaven Titans');
   assert.equal(imported.staff.head_coach, 'hc_flint'); assert.equal(imported.rivals.challenger.team, 'Ashford Hawks');
   assert.equal(imported.badges.challenger, 1); assert.equal(imported.history.length, 2); assert.equal(imported.season.year, 3);
-  assert.ok(imported.roster.some((m) => m.name === 'Pyronix' && m.position === 'QB'));
+  // The legacy save's quarterback was a "Pyronix": the import keeps his species and position and gives him a personal name.
+  const qb = imported.roster.find((m) => m.species === 'firestorm' && m.position === 'QB'); assert.ok(qb, 'the legacy Pyronix quarterback was imported');
+  assert.ok(validIndividualName(qb.name) && qb.name !== 'Pyronix', `he is named ${qb.name}`);
 });
 
 test('new franchise: default staff, first week starts Monday', () => {
