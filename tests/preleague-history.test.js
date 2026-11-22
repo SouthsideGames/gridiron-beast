@@ -45,3 +45,21 @@ test('historical award winners have matching season books', () => {
   assert.deepEqual(validateLeagueArchive(archive), []);
   assert.ok(archive.seasons.some(s => s.awards.league.dpoy?.id === 'd1'));
 });
+
+test('player roster takes precedence over duplicate league monster records', () => {
+  const f = fixture();
+  f.league.monsters.v1 = { id: 'v1', name: 'Old Name', position: 'WR', yearsPro: 2, age: 25 };
+  f.league.clubs['Stormport Bolts'] = { roster: ['v1'] };
+  const a = generateLeagueArchive(f);
+  assert.equal(a.careers.v1.name, 'Veteran');
+  assert.equal(a.careers.v1.position, 'QB');
+  assert.equal(a.careers.v1.club, f.club);
+  assert.equal(a.careers.v1.seasons.length, 8);
+});
+test('validation rejects inconsistent historical standings and playoff results', () => {
+  const a = generateLeagueArchive(fixture());
+  a.seasons[0].standings[0].w++;
+  assert.ok(validateLeagueArchive(a).some(e => e.includes('Invalid season length')));
+  a.seasons[0].playoffs[2].games[0].winner = 'Invalid champion';
+  assert.ok(validateLeagueArchive(a).some(e => e.includes('Playoff winner mismatch')));
+});
