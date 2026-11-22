@@ -63,16 +63,34 @@ test('every look names a real field, and a stadium without a look is left exactl
   const plain = fieldSvg({ venue: { env: 'grass', weather: 'clear' }, ballOn: 95 }); assert.doesNotMatch(plain, /sfx-/);
   for (const club of Object.keys(STADIUMS)) assert.ok(ENVIRONMENTS[venueFor(club, 'k').env], `${club} still has its stadium`);
 });
-test('Electric (Storm Stadium): surround bands, sideline channels and nodes, and current between the goal post uprights', () => {
+test('Electric (Storm Stadium): crowd stands, current cycling between the sideline markers, and current between the goal post uprights', () => {
   const venue = venueFor('Stormport Bolts', 'k'); assert.equal(venue.env, 'storm'); assert.equal(venue.type, 'Electric', 'the field keeps its type');
-  const s = surroundHtml(venue); for (const part of ['sfx-far', 'sfx-near', 'sfx-channel', 'sfx-node', 'sfx-spark', 'sfx-burst', 'sfx-edge', 'sfx-lap']) assert.ok(s.includes(part), part);
+  const s = surroundHtml(venue); for (const part of ['sfx-far', 'sfx-near', 'sfx-crowd', 'sfx-cheer-home', 'sfx-cheer-away', 'sfx-rail', 'sfx-channel', 'sfx-flash', 'sfx-edge', 'sfx-lap']) assert.ok(s.includes(part), part);
   assert.ok((s.match(/sfx-anim/g) || []).length < 120, 'a bounded number of moving pieces');
   assert.match(introPlateHtml(venue), /The Bolt Yard/); assert.equal(introPlateHtml({ env: 'grass' }), '');
-  const mid = fieldSvg({ venue, ballOn: 50 }); assert.match(mid, /sfx-channel/); assert.match(mid, /sfx-node/); assert.doesNotMatch(mid, /sfx-post/);
+  const mid = fieldSvg({ venue, ballOn: 50 }); assert.match(mid, /sfx-chain/, 'current jumps between the sideline markers'); assert.match(mid, /sfx-node/); assert.doesNotMatch(mid, /sfx-post/);
+  const delays = new Set([...mid.matchAll(/sfx-chain sfx-anim" style="animation-delay:-([\d.]+)s/g)].map((m) => m[1])); assert.ok(delays.size >= 4, 'the jumps take turns, so the electricity cycles along the sideline');
   const goal = fieldSvg({ venue, ballOn: 92 }); assert.match(goal, /class="sfx-post"/); assert.equal((goal.match(/sfx-post-arc/g) || []).length, 3);
 });
 test('the stylesheet drives the three levels and the reactions, and stops ambient movement when the app is inactive', () => {
   const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8');
   for (const need of ['html[data-stadium-fx="reduced"]', 'html[data-stadium-fx="off"]', '[data-sfx="td"]', '[data-sfx="int"]', '[data-sfx="sack"]', '[data-sfx="fg"]', '[data-sfx="fumble-lost"]', '[data-sfx-side="away"]', 'html[data-app-inactive="1"]']) assert.ok(css.includes(need), need);
   const block = css.slice(css.indexOf('Stadium Polish v1')); assert.doesNotMatch(block, /blur\(|backdrop-filter/, 'no full-screen blur or backdrop filter');
+});
+
+// Owner review, 22 November: the stands hold a generated crowd whose colours follow how the two clubs are doing.
+test('the crowd: mostly home colours, more visitors and empty seats when the home club is losing, a full house for big games', async () => {
+  const { crowdMix, crowdSeats, winShare, crowdFor, crowdImages, CROWD_COLS, CROWD_ROWS } = await import('../src/ui/stadium-crowd.js');
+  assert.equal(winShare(null), 0.5); assert.equal(winShare({ w: 1, l: 0 }), 0.5, 'one game is not a season'); assert.equal(winShare({ w: 6, l: 2 }), 0.75);
+  const even = crowdMix({ home: { w: 4, l: 4 }, away: { w: 4, l: 4 } }); assert.ok(even.home > even.away * 3, 'an ordinary game is a home crowd with a sprinkle of visitors');
+  const bad = crowdMix({ home: { w: 1, l: 7 }, away: { w: 7, l: 1 } }); assert.ok(bad.away > bad.home, 'a 1-7 club hosting a 7-1 club is outnumbered'); assert.ok(bad.fill < even.fill, 'and has empty seats');
+  const good = crowdMix({ home: { w: 7, l: 1 }, away: { w: 1, l: 7 } }); assert.ok(good.home > even.home && good.fill > even.fill);
+  for (const m of [even, bad, good]) { assert.ok(m.home + m.away <= 1 && m.home > 0 && m.away > 0 && m.fill >= 0.55 && m.fill <= 1); }
+  assert.equal(crowdMix({ home: { w: 1, l: 7 }, away: { w: 7, l: 1 }, event: 'playoff' }).fill, 1); assert.equal(crowdMix({ event: 'rival' }).fill, 1);
+  const count = (seats) => { const n = { h: 0, a: 0, n: 0, '': 0 }; for (const row of seats) for (const s of row) n[s]++; return n; };
+  const a = crowdSeats(77, bad, 'far'), b = crowdSeats(77, bad, 'far'); assert.deepEqual(a, b, 'the same game always shows the same crowd');
+  assert.equal(a.length, CROWD_ROWS); assert.equal(a[0].length, CROWD_COLS); assert.notDeepEqual(a, crowdSeats(78, bad, 'far'));
+  const nb = count(a), ng = count(crowdSeats(77, good, 'far')); assert.ok(nb.a > nb.h); assert.ok(ng.h > ng.a * 3); assert.ok(nb[''] > ng['']);
+  const c = crowdFor({ seed: 1, homeColor: '#111111', awayColor: '#222222', homeRecord: { w: 1, l: 7 }, awayRecord: { w: 7, l: 1 } }); assert.deepEqual(c.mix, bad);
+  assert.equal(crowdImages({ ...c, stand: 'far' }), null, 'without a canvas the stand is simply not drawn');
 });

@@ -2527,3 +2527,22 @@ html[data-stadium-fx="reduced"] :is(.sfx-lap, .sfx-burst) { display: none; }
 html[data-stadium-fx="off"] :is(.sfx-anim, .sfx-plate, .venue-bolt, .venue-detail) { animation: none !important; }
 html[data-stadium-fx="off"] :is(.sfx-spark, .sfx-lap, .sfx-edge, .sfx-burst, .sfx-post-arc) { display: none; }
 html[data-app-inactive="1"] .sfx-anim, html[data-app-inactive="1"] .sfx-lap::before { animation-play-state: paused; }
+/* Stadium Polish v1, revision 2 (owner review, 22 Nov): the stands hold a generated crowd; the stadium's electricity moves to
+   the sideline markers, jumping from one to the next and cycling up the sideline. */
+.sfx-band.sfx-crowd { background-color: #10151d; background-repeat: no-repeat; background-size: 100% auto; image-rendering: pixelated; overflow: hidden; }
+.sfx-far.sfx-crowd, .sfx-far .sfx-cheer { background-position: center bottom 6px; } .sfx-near.sfx-crowd, .sfx-near .sfx-cheer { background-position: center top 6px; }
+.sfx-cheer { position: absolute; inset: 0; background-repeat: no-repeat; background-size: 100% auto; image-rendering: pixelated; opacity: 0; }
+.sfx-rail { position: absolute; left: 0; width: 100%; height: 6px; display: block; } .sfx-far .sfx-rail { bottom: 0; } .sfx-near .sfx-rail { top: 0; }
+.sfx-flash { position: absolute; width: 3px; height: 3px; background: #fff; box-shadow: 0 0 5px 2px #fffc; opacity: 0; animation: sfx-flash 9s steps(1, end) infinite; }
+@keyframes sfx-flash { 0%, 97% { opacity: 0; } 98% { opacity: 1; } 100% { opacity: 0; } }
+.sfx-chain { opacity: 0; animation: sfx-chain 1.82s steps(1, end) infinite; }
+@keyframes sfx-chain { 0% { opacity: 1; } 5% { opacity: .3; } 9% { opacity: 1; } 15%, 100% { opacity: 0; } }
+.field-wrap[data-sfx] .sfx-chain { animation-duration: .6s; }
+.field-wrap:is([data-sfx="td"], [data-sfx="intro"], [data-sfx="fg"]) .sfx-chain { animation: sfx-crackle .18s steps(1, end) infinite; }
+.field-wrap[data-sfx][data-sfx-side="home"] .sfx-cheer-home, .field-wrap[data-sfx][data-sfx-side="away"] .sfx-cheer-away, .field-wrap[data-sfx="intro"] .sfx-cheer { animation: sfx-cheer .32s steps(1, end) infinite; }
+@keyframes sfx-cheer { 0% { opacity: 1; } 50%, 100% { opacity: 0; } }
+html[data-stadium-fx="reduced"] .sfx-flash { display: none; }
+html[data-stadium-fx="reduced"] .sfx-chain { animation-duration: 3.64s; }
+html[data-stadium-fx="reduced"] .field-wrap[data-sfx] .sfx-cheer { animation: none; }
+html[data-stadium-fx="reduced"] .field-wrap[data-sfx][data-sfx-side="home"] .sfx-cheer-home, html[data-stadium-fx="reduced"] .field-wrap[data-sfx][data-sfx-side="away"] .sfx-cheer-away { opacity: 1; }
+html[data-stadium-fx="off"] :is(.sfx-chain, .sfx-flash, .sfx-cheer) { display: none; }

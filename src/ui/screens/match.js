@@ -5,6 +5,7 @@ import { matchLogMatches } from '../match-log-filter.js';
 import { activityPaused } from '../activity.js';
 import { iconifyMarkup, infoIcon } from '../icons.js';
 import { surroundHtml, introPlateHtml, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
+import { crowdFor } from '../stadium-crowd.js';
 import { guideFootball, guideMoment } from '../guided-week.js';
 import { recorder } from '../../testing/recorder.js';
 import { eligiblePlays } from '../../sim/substitutions.js';
@@ -397,7 +398,7 @@ export function registerMatchScreens(Router, app) {
     // Stadium Polish: the reaction to the play just shown, or the kickoff flourish (once per game), handed to afterRender.
     if (reaction) pendingStadium = reaction;
     else if (openingKickoff && !G.stadiumIntroShown) { G.stadiumIntroShown = true; pendingStadium = introReaction(); }
-    return { title, head, wrapClass, field, over, after, surround: surroundHtml(s.venue), controls: controlsHtml(f, teams, look) };
+    return { title, head, wrapClass, field, over, after, surround: surroundHtml(s.venue, crowdFor({ seed: s.seed, homeColor: s.home.color, awayColor: s.away.color, homeRecord: f.season?.records?.[s.home.name], awayRecord: f.season?.records?.[s.away.name], event: G.event })), controls: controlsHtml(f, teams, look) };
   }
   /** What mount() does after the markup is in place; refresh() repeats it (the play clock restarts, Auto is rescheduled, the halftime sheet opens). */
   function afterRender(f, root) {

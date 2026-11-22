@@ -50,8 +50,11 @@ function sidelineDecor(env, cam, HW, Y) {
         ? `<rect x="${x - 0.5}" y="${y + 0.3}" width="1" height="0.5" fill="#2b2730"/><rect x="${x - 0.3}" y="${y - 0.7}" width="0.6" height="1" fill="#6b6672"/><rect x="${x - 0.3 + (side > 0 ? -0.35 : 0.35)}" y="${y - 1.1}" width="0.6" height="0.5" fill="#6b6672"/><rect x="${x + (side > 0 ? -0.45 : 0.3)}" y="${y - 0.95}" width="0.15" height="0.15" fill="${c}"/>` // a dragon statue: plinth, body, head turned to the field, one red eye
         : `<rect x="${x - 0.08}" y="${y - 1.1}" width="0.16" height="2" fill="#2b2730"/><rect x="${x - 0.08 + (side > 0 ? -0.6 : 0.16)}" y="${y - 1.1}" width="0.6" height="0.9" fill="${k === 1 ? c : '#7b3fa0'}"/>`); // banners, crimson and purple
       else if (env.texture === 'panels') out.push(`<rect x="${x - 0.25}" y="${y - 1}" width="0.5" height="2" rx="0.2" fill="${c}" opacity="0.8"/>`); // light strips
-      if (env.texture === 'storm' && yard + 6 < cam.top) {
-        out.push(`<path class="sfx-spark sfx-anim" style="animation-delay:-${((yard / 6 + (side > 0 ? 2 : 0)) % 5) * 1.35}s" d="M${x} ${y - 5.4} l${-side * .32} 1.2 ${side * .5} 1.1 ${-side * .44} 1.2 ${side * .26} 1.3" fill="none" stroke="#bde9ff" stroke-width=".21" stroke-linecap="round" stroke-linejoin="round"/>`); // a spark jumps to the next node now and then
+      if (env.texture === 'storm') {
+        // Current jumps from this marker to the next one up the sideline. Each jump waits its turn (the delay follows the marker's
+        // place on the field), so the electricity cycles along the sideline, marker to marker, on both sides.
+        const step = Math.round(yard / 6) + (side > 0 ? 3 : 0); const dy = -6; const j = side * 0.42;
+        out.push(`<path class="sfx-chain sfx-anim" style="animation-delay:-${(((7 - (step % 7)) % 7) * 0.26).toFixed(2)}s" d="M${x} ${y - 0.5} l${-j} ${dy * 0.17} ${j * 1.7} ${dy * 0.16} ${-j * 1.9} ${dy * 0.17} ${j * 1.6} ${dy * 0.16} ${-j * 0.4} ${dy * 0.17}" fill="none" stroke="#dff3ff" stroke-width=".24" stroke-linecap="round" stroke-linejoin="round"/>`);
       } else if (SIDELINE_MOTION[env.texture]) {
         out.push(`<g transform="translate(${x} ${y})"><g class="venue-detail venue-detail-${env.texture}" style="animation-delay:-${k * .85}s">${SIDELINE_MOTION[env.texture]}</g></g>`);
       }
@@ -59,10 +62,10 @@ function sidelineDecor(env, cam, HW, Y) {
   }
   return out.join('');
 }
-/** Stadium Polish: an energy channel along each sideline for the looks that have one (two flowing dashed lines, under the nodes). */
+/** Stadium Polish: the dark track the sideline markers sit on, for the looks whose markers carry current. */
 function edgeChannel(env, HW, SPAN) {
-  const L = lookFor(env.id); if (L?.edge !== 'channel') return '';
-  return [-1, 1].map((side) => { const x = side * (HW - 0.45); return `<line x1="${x}" y1="0" x2="${x}" y2="${SPAN}" stroke="#0c1430" stroke-width="0.7" opacity="0.85"/><line class="sfx-channel sfx-anim" x1="${x}" y1="0" x2="${x}" y2="${SPAN}" stroke="${L.colors[0]}" stroke-width="0.26" stroke-dasharray="2.5 2"/><line class="sfx-channel sfx-channel-b sfx-anim" x1="${x}" y1="0" x2="${x}" y2="${SPAN}" stroke="${L.colors[1]}" stroke-width="0.14" stroke-dasharray="1 3.5"/>`; }).join('');
+  const L = lookFor(env.id); if (L?.edge !== 'chain') return '';
+  return [-1, 1].map((side) => { const x = side * (HW - 0.45); return `<line x1="${x}" y1="0" x2="${x}" y2="${SPAN}" stroke="#0c1430" stroke-width="0.7" opacity="0.8"/><line x1="${x}" y1="0" x2="${x}" y2="${SPAN}" stroke="${L.colors[0]}" stroke-width="0.1" opacity="0.5"/>`; }).join('');
 }
 /** End-zone art in the environment's style (low opacity, under the end-zone label). */
 function endZoneDecor(env, x0, y0, w, h) {
