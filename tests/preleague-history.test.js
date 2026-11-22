@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { generateLeagueArchive, validateLeagueArchive } from '../src/franchise/preleague-history.js';
 
 const fixture = () => ({
-  seed: 42, club: 'test-club',
+  seed: 42, club: 'Ember City Beasts',
   roster: [{ id: 'v1', name: 'Veteran', position: 'QB', age: 29, yearsPro: 8 }],
   league: { clubs: {}, monsters: {} },
 });
