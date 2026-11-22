@@ -7,8 +7,9 @@
 // Imports nothing.
 
 export const DESIGN_FIELDS = Object.freeze({
-  sky: { id: 'sky', name: 'Sky Stadium', short: 'Sky', type: null, indoor: false, icon: '☁', texture: 'clouds',
-    palette: { a: '#4f86bd', b: '#5890c7', c: '#497db2', end: '#2f5f96', apron: '#3b6da5', tint: 'rgba(210,235,255,0.06)', decor: '#eaf6ff' } },
+  sky: { id: 'sky', name: 'Sky Stadium', short: 'Sky', type: null, indoor: false, icon: '☁', texture: 'breeze',
+    // An island of bright grass high in the sky: fresh green turf with the breeze drawn across it, sky-blue end zones.
+    palette: { a: '#3f9a6c', b: '#46a473', c: '#399064', end: '#3a7fc4', apron: '#5fa9de', tint: 'rgba(235,250,255,0.05)', decor: '#ffffff' } },
   oracle: { id: 'oracle', name: 'Oracle Stadium', short: 'Oracle', type: null, indoor: false, icon: '🔮', texture: 'stars',
     palette: { a: '#3a2a63', b: '#41306d', c: '#34255a', end: '#5a2466', apron: '#221740', tint: 'rgba(255,140,225,0.05)', decor: '#ff9ae6' } },
 });

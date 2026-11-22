@@ -127,8 +127,8 @@ test('the kickoff reveal: a strike and the football for Electric, simpler at Red
 test('Fire, Water and Grass: each look sits on its existing field, keeps the field type, and has its own edge, posts and kickoff reveal', async () => {
   const { edgeSvg, postsSvg } = await import('../src/ui/stadium-fx.js');
   const expect = { storm: ['Electric', 'Stormport Bolts', 'Electric', /sfx-chain/, /sfx-post-arc/, /sfx-strike/], volcanic: ['Fire', 'Ember City Beasts', 'Fire', /sfx-flame/, /sfx-flame/, /sfx-rise/], tidal: ['Water', 'Harbor Sentinels', 'Water', /sfx-shot/, /sfx-post-arc/, /sfx-drop/], forest: ['Grass', 'Bayou Stalkers', 'Nature', /sfx-vine/, /sfx-vine/, /sfx-swirl/],
-    frozen: ['Ice', 'Frostpeak Howlers', 'Ice', /sfx-vine/, /sfx-node/, /sfx-swirl/], desert: ['Ground', 'Canyon Crushers', 'Earth', /sfx-thump/, /sfx-drift/, /sfx-rise/] };
-  const designs = { sky: ['Sky', /sfx-spin/, /sfx-post-arc/, /sfx-twister/, 'Wind'], oracle: ['Oracle', /sfx-orbit/, /sfx-post-arc/, /sfx-eye/, 'Psychic'] };
+    frozen: ['Ice', 'Frostpeak Howlers', 'Ice', /sfx-snowman/, /sfx-node/, /sfx-cube-l/], desert: ['Ground', 'Canyon Crushers', 'Earth', /sfx-cactus/, /sfx-drift/, /sfx-pit/] };
+  const designs = { sky: ['Sky', /sfx-flutter/, /sfx-post-arc/, /sfx-shadow/, 'Wind'], oracle: ['Oracle', /sfx-orbit/, /sfx-post-arc/, /sfx-ufo/, 'Psychic'] };
   assert.deepEqual(Object.keys(LOOKS).sort(), [...Object.keys(expect), ...Object.keys(designs)].sort());
   for (const [env, [label, club, type, edge, posts, reveal]] of Object.entries(expect)) {
     const venue = venueFor(club, 'k'); assert.equal(venue.env, env, `${club} plays in ${env}`); assert.equal(venue.type, type, 'the field type and its bonus are untouched'); assert.equal(LOOKS[env].label, label);
@@ -177,7 +177,7 @@ test('monsters in the stands: more in some games and fewer in others, determinis
 // Checkpoint C: two designs no club plays on yet.
 test('Sky and Oracle are designs only: drawn when a venue names them, never a club\'s field, never picked by the game, no type bonus', async () => {
   const { DESIGN_FIELDS, designField } = await import('../src/data/stadium-designs.js'); const { ENVIRONMENTS, STADIUMS } = await import('../src/data/stadiums.js'); const { edgeSvg, postsSvg, setStadiumScene } = await import('../src/ui/stadium-fx.js'); const { TYPE_FUR } = await import('../src/ui/stadium-crowd.js');
-  const designs = { sky: ['Sky', /sfx-spin/, /sfx-post-arc/, /sfx-twister/, 'Wind'], oracle: ['Oracle', /sfx-orbit/, /sfx-post-arc/, /sfx-eye/, 'Psychic'] };
+  const designs = { sky: ['Sky', /sfx-flutter/, /sfx-post-arc/, /sfx-shadow/, 'Wind'], oracle: ['Oracle', /sfx-orbit/, /sfx-post-arc/, /sfx-ufo/, 'Psychic'] };
   assert.deepEqual(Object.keys(DESIGN_FIELDS).sort(), Object.keys(designs).sort());
   for (const [id, [label, edge, posts, reveal, crowd]] of Object.entries(designs)) {
     const d = designField(id); assert.ok(d); assert.equal(d.type, null, 'no type, so no field bonus'); assert.equal(ENVIRONMENTS[id], undefined, 'not one of the game\'s fields');
@@ -187,5 +187,10 @@ test('Sky and Oracle are designs only: drawn when a venue names them, never a cl
     try { setStadiumScene(venue, null); const svg = fieldSvg({ venue, ballOn: 92 }); assert.ok(svg.includes(d.palette.a), 'its own turf'); assert.match(svg, /sfx-apron/); assert.match(svg, /sfx-stand/); assert.ok(svg.includes('stroke="#eaf3e6"'), 'white yard lines'); assert.doesNotMatch(svg, /NaN|undefined/); } finally { setStadiumScene(null); }
   }
   assert.equal(designField('grass'), null); assert.equal(venueFor('Ashford Hawks', 'k').env, 'grass', 'every club keeps the field it had');
-  const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8'); for (const k of ['sfx-spin', 'sfx-thump', 'sfx-orbit', 'sfx-twister', 'sfx-eye']) assert.match(css, new RegExp(`@keyframes ${k}\\b`));
+  const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8'); for (const k of ['sfx-flutter', 'sfx-orbit', 'sfx-cube-l', 'sfx-cube-r', 'sfx-crack', 'sfx-pit', 'sfx-ball-pit', 'sfx-ball-float', 'sfx-ufo', 'sfx-beam', 'sfx-ball-late']) assert.match(css, new RegExp(`@keyframes ${k}\\b`));
+});
+
+test('Ice has still snowmen on its sidelines: nothing there moves', async () => {
+  const { edgeSvg } = await import('../src/ui/stadium-fx.js'); const e = edgeSvg('frozen', { bottom: 35, top: 81 }, 27, (y) => 81 - y, 46);
+  assert.ok((e.match(/sfx-snowman/g) || []).length >= 14); assert.doesNotMatch(e, /sfx-anim/);
 });
