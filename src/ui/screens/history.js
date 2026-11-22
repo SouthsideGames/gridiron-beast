@@ -85,7 +85,7 @@ function awardsScreenHtml(f, params) {
   const mode = params.mode === 'award' ? 'award' : 'season';
   const kinds = Object.keys(AWARDS).filter((k) => seasons.some((s) => s.league[k]));
   const kind = kinds.includes(params.kind) ? params.kind : kinds[0];
-  const who = (k, w) => (k === 'coy' ? esc(w.coach || w.name || '') : w.id ? careerLink(w.id, w.name) : esc(w.name || ''));
+  const who = (k, w) => (k === 'coy' ? esc(w.coach || w.name || '') : w.id && !String(w.id).startsWith('historical_') ? careerLink(w.id, w.name) : esc(w.name || ''));
   const winner = (k, w, s, label) => `<div class="item static ${w.team === f.club ? 'mine' : ''}">${k === 'coy' ? '<span class="hh-nosprite coach" aria-hidden="true">🧢</span>' : sprite(w, 32)}<div class="grow"><div class="name">${label} · ${who(k, w)}</div><div class="sub">${esc(w.team || '')}${w.position && k !== 'coy' ? ` · ${esc(w.position)}` : ''}${w.record ? ` · ${esc(w.record)}` : ''}${fieldText(w, 'why') ? ` · ${esc(fieldText(w, 'why'))}` : ''}</div></div></div>`;
   const seg = `<div class="seg hh-seg" role="tablist"><button class="btn small ${mode === 'season' ? 'primary' : ''}" role="tab" aria-selected="${mode === 'season'}" data-action="amode" data-v="season">${$t('history.by_season')}</button><button class="btn small ${mode === 'award' ? 'primary' : ''}" role="tab" aria-selected="${mode === 'award'}" data-action="amode" data-v="award">${$t('history.by_award')}</button></div>`;
   let body;
