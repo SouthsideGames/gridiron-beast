@@ -1,4 +1,4 @@
-// Stadium Polish (v1): the crowd in the stands above and below the field.
+// Stadium Polish (v1): the crowd (people and monsters) in the stand behind the far end zone.
 //
 // The people are generated, never stored: who sits where follows from the game's seed, so a game always shows the same crowd.
 // Most of a crowd wears the home club's colour, with visiting fans sprinkled in. How many of each depends on how the two clubs
@@ -54,6 +54,20 @@ export function crowdSeats(seed, mix, stand = 'far', cols = CROWD_COLS, rows = C
 const SKIN = ['#f1c9a5', '#d9a47a', '#b97c52', '#8a5a3c', '#5e3d2a'];
 const HAIR = ['#1b1512', '#3a2a1c', '#6b4a2a', '#b08a4a', '#d8d2c4', '#7a1f1f'];
 const NEUTRAL = ['#d8dde6', '#8f98a8', '#3b4350', '#c9b79a', '#5a6b8a', '#2c2f36'];
+// Monsters in the stands: about one seat in five holds a monster instead of a person. Too small for the real sprites, so each is
+// a little silhouette (ears, horns, wings, an antenna or a crest) in a fur colour; more than half wear the stadium's own type.
+export const MONSTER_SHARE = 0.2;
+export const TYPE_FUR = Object.freeze({ Fire: '#ff7a3d', Water: '#4aa8ff', Nature: '#6fd35a', Electric: '#ffe04a', Ice: '#bfe8ff', Wind: '#8ff0dc', Earth: '#c99a5a', Dark: '#8a6ad6', Light: '#fff0a8', Metal: '#c3cada', Psychic: '#ff8ae0' });
+const FURS = Object.values(TYPE_FUR); const SHAPES = ['ears', 'horns', 'wings', 'antenna', 'crest'];
+/** Which seats hold monsters, and what each looks like: rows of null or { fur, shape }. Follows the seed, like the seats. */
+export function crowdMonsters(seed, stand = 'far', type = null, cols = CROWD_COLS, rows = CROWD_ROWS) {
+  const r = rng(seed, `monsters-${stand}`); const home = TYPE_FUR[type] || null; const out = [];
+  for (let y = 0; y < rows; y++) { const row = [];
+    for (let x = 0; x < cols; x++) { const is = r() < MONSTER_SHARE, own = r() < 0.6, fur = FURS[Math.floor(r() * FURS.length)], shape = SHAPES[Math.floor(r() * SHAPES.length)];
+      row.push(is ? { fur: home && own ? home : fur, shape } : null); }
+    out.push(row); }
+  return out;
+}
 const PITCH_X = 8, PITCH_Y = 11; // logical pixels per seat (a fan is 6 wide and 9 tall: readable as a person on a phone)
 export const CROWD_W = CROWD_COLS * PITCH_X, CROWD_H = CROWD_ROWS * PITCH_Y + 2;
 const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); const c = (s) => Math.max(0, Math.min(255, Math.round(((n >> s) & 255) * k))); return `rgb(${c(16)},${c(8)},${c(0)})`; };
@@ -63,11 +77,11 @@ const cache = new Map();
  * side's fans, a pixel higher with their arms up (shown in flashes while that side celebrates). Drawn once per game on a small
  * canvas and reused; null where there is no canvas (tests, very old browsers), and the stand is then simply not drawn.
  */
-export function crowdImages({ seed, mix, homeColor, awayColor, stand = 'far' }) {
-  const key = `${seed}|${stand}|${mix.home}|${mix.away}|${mix.fill}|${homeColor}|${awayColor}`;
+export function crowdImages({ seed, mix, homeColor, awayColor, stand = 'far', type = null }) {
+  const key = `${seed}|${stand}|${mix.home}|${mix.away}|${mix.fill}|${homeColor}|${awayColor}|${type}`;
   if (cache.has(key)) return cache.get(key);
   const doc = globalThis.document; if (!doc?.createElement) return null;
-  const seats = crowdSeats(seed, mix, stand); const r = rng(seed, `look-${stand}`); const back = stand === 'near';
+  const seats = crowdSeats(seed, mix, stand); const beasts = crowdMonsters(seed, stand, type); const r = rng(seed, `look-${stand}`); const back = stand === 'near';
   const mk = () => { const c = doc.createElement('canvas'); c.width = CROWD_W; c.height = CROWD_H; return c; };
   const base = mk(), up = { h: mk(), a: mk() }; const g = base.getContext?.('2d'); if (!g) return null;
   const gu = { h: up.h.getContext('2d'), a: up.a.getContext('2d') };
@@ -84,7 +98,21 @@ export function crowdImages({ seed, mix, homeColor, awayColor, stand = 'far' }) 
       g.fillStyle = '#2c3a55'; g.fillRect(px, py + 5, 6, 5); g.fillStyle = '#35466a'; g.fillRect(px, py + 5, 6, 1); // the seat
       if (!who) continue; // an empty seat
       const shirt = who === 'h' ? homeColor : who === 'a' ? awayColor : plain;
-      const fan = (ctx, dy, arms) => {
+      const m = beasts[y][x];
+      // A monster: fur-coloured head and paws, the club's colours on its body (so the crowd's mix still reads), bright eyes.
+      const monster = (ctx, dy, arms) => {
+        const fur = shade(m.fur, depth), dark = shade(m.fur, depth * 0.62);
+        ctx.fillStyle = shade(shirt, depth); ctx.fillRect(px, py + 5 + dy, 6, 5); ctx.fillStyle = shade(shirt, depth * 0.78); ctx.fillRect(px, py + 9 + dy, 6, 1);
+        ctx.fillStyle = fur; ctx.fillRect(px, py + 1 + dy, 6, 4); // a wide head
+        if (m.shape === 'ears') { ctx.fillRect(px, py - 1 + dy, 2, 2); ctx.fillRect(px + 4, py - 1 + dy, 2, 2); }
+        else if (m.shape === 'horns') { ctx.fillStyle = '#f4ead2'; ctx.fillRect(px, py - 1 + dy, 1, 2); ctx.fillRect(px + 5, py - 1 + dy, 1, 2); }
+        else if (m.shape === 'wings') { ctx.fillStyle = dark; ctx.fillRect(px - 1, py + 3 + dy, 1, 4); ctx.fillRect(px + 6, py + 3 + dy, 1, 4); ctx.fillRect(px - 1, py + 2 + dy, 2, 1); ctx.fillRect(px + 5, py + 2 + dy, 2, 1); }
+        else if (m.shape === 'antenna') { ctx.fillRect(px + 2, py - 1 + dy, 1, 2); ctx.fillStyle = '#fff6a8'; ctx.fillRect(px + 2, py - 2 + dy, 2, 1); }
+        else { ctx.fillStyle = dark; ctx.fillRect(px + 1, py + dy, 4, 1); ctx.fillRect(px + 2, py - 1 + dy, 2, 1); }
+        if (!back) { ctx.fillStyle = '#fff'; ctx.fillRect(px + 1, py + 2 + dy, 1, 2); ctx.fillRect(px + 4, py + 2 + dy, 1, 2); ctx.fillStyle = '#14100c'; ctx.fillRect(px + 1, py + 3 + dy, 1, 1); ctx.fillRect(px + 4, py + 3 + dy, 1, 1); }
+        if (arms) { ctx.fillStyle = fur; ctx.fillRect(px - 1, py + dy, 2, 5); ctx.fillRect(px + 5, py + dy, 2, 5); }
+      };
+      const person = (ctx, dy, arms) => {
         ctx.fillStyle = shade(shirt, depth); ctx.fillRect(px, py + 5 + dy, 6, 5); // body
         ctx.fillStyle = shade(shirt, depth * 0.78); ctx.fillRect(px, py + 9 + dy, 6, 1);
         ctx.fillStyle = shade(back ? hair : skin, depth); ctx.fillRect(px + 1, py + 1 + dy, 4, 4); // head
@@ -92,6 +120,7 @@ export function crowdImages({ seed, mix, homeColor, awayColor, stand = 'far' }) 
         else if (hat && who !== 'n') { ctx.fillStyle = shade(shirt, depth); ctx.fillRect(px + 1, py + 1 + dy, 4, 2); }
         if (arms) { ctx.fillStyle = shade(skin, depth); ctx.fillRect(px - 1, py + dy, 2, 5); ctx.fillRect(px + 5, py + dy, 2, 5); }
       };
+      const fan = m ? monster : person;
       fan(g, 0, false);
       if (who === 'h' || who === 'a') { const c = gu[who]; c.fillStyle = step; c.fillRect(px - 1, py, 8, 5); c.fillStyle = '#2c3a55'; c.fillRect(px, py + 5, 6, 5); fan(c, -2, true); }
     }
@@ -103,6 +132,6 @@ export function crowdImages({ seed, mix, homeColor, awayColor, stand = 'far' }) 
 }
 
 /** What the match screen hands the surround: the two clubs' colours, the mix and the seed. */
-export function crowdFor({ seed, homeColor, awayColor, homeRecord, awayRecord, event }) {
-  return { seed, homeColor: homeColor || '#5aa0ff', awayColor: awayColor || '#ff8a7a', mix: crowdMix({ home: homeRecord, away: awayRecord, event }) };
+export function crowdFor({ seed, homeColor, awayColor, homeRecord, awayRecord, event, type = null }) {
+  return { seed, type, homeColor: homeColor || '#5aa0ff', awayColor: awayColor || '#ff8a7a', mix: crowdMix({ home: homeRecord, away: awayRecord, event }) };
 }

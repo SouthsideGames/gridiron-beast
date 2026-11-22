@@ -355,7 +355,7 @@ export function registerMatchScreens(Router, app) {
   function screenParts(f) {
     const G = f.game; const s = G.state;
     // Stadium Polish: the stand and its crowd for this game (the camera and the field drawing read it; null for a plain stadium).
-    setStadiumScene(s.venue, crowdFor({ seed: s.seed, homeColor: s.home.color, awayColor: s.away.color, homeRecord: f.season?.records?.[s.home.name], awayRecord: f.season?.records?.[s.away.name], event: G.event })); const me = G.playerSide, them = R.opponent(me);
+    setStadiumScene(s.venue, crowdFor({ type: s.venue?.type, seed: s.seed, homeColor: s.home.color, awayColor: s.away.color, homeRecord: f.season?.records?.[s.home.name], awayRecord: f.season?.records?.[s.away.name], event: G.event })); const me = G.playerSide, them = R.opponent(me);
     const myBall = s.possession === me;
     const teams = teamsFor(f);
     absenceTrack.observe(s.seed, s, teams, G.fxAbsence); // presentation-only save data, outside the simulation state
