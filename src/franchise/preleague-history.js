@@ -81,8 +81,6 @@ export function generateLeagueArchive(f, seasons = 8) {
   // eligibility. All awards reference the same monster IDs as the archive.
   for (const season of years) {
     const candidates = Object.values(careers).flatMap(c => c.seasons.filter(b => b.year === season.year).map(b => ({ career: c, book: b })));
-    const best = (positions, key) => candidates.filter(x => positions.includes(x.career.position) && (x.book.reg[key] || 0) > 0)
-      .sort((a,b) => (b.book.reg[key] || 0) - (a.book.reg[key] || 0) || String(a.career.id).localeCompare(String(b.career.id)))[0];
     const award = (kind, selected) => {
       if (!selected) return;
       const c = selected.career;
@@ -95,7 +93,10 @@ export function generateLeagueArchive(f, seasons = 8) {
     award('mvp', offense || defense || candidates[0]);
     award('opoy', offense);
     award('dpoy', defense);
-    award('smoy', best(['K'], 'fgm'));
+    // SMOY means Signature Monster of the Year, not special teams.
+    // The historical archive cannot reconstruct ability impact, so do not
+    // invent a winner from kicking statistics.
+
   }
   // Retired legends are archival identities only. They are never inserted into
   // the live league registry, draft pools, or Hall of Fame voting machinery.
