@@ -83,11 +83,11 @@ test('a save in the old three-part layout opens unchanged, stays as it is until 
 
 test('a retired franchise stored in the old layout is never re-laid-out: it opens, re-saves as a no-op, exports, and still refuses changes', async () => {
   const { f: played } = runFranchise(41, { seasons: 1, difficulty: 'rookie' }); while (played.scenes?.length) F.dismissScene(played);
-  assert.ok(played.preLeagueHistory, 'the franchise has an archive'); assert.ok(L.finalizeArchive(played, { reason: 'voluntary' }).ok || L.finalizeArchive(played, { reason: 'season-cap' }).ok || L.isArchived(played));
-  if (!L.isArchived(played)) { const h = played.history[0]; while (played.history.length < 20) played.history.unshift({ ...h, year: played.history[0].year - 1 }); assert.ok(L.finalizeArchive(played, { reason: 'season-cap' }).ok); }
+  assert.ok(played.preLeagueHistory, 'the franchise has an archive'); const h = played.history[0]; while (played.history.length < 20) played.history.unshift({ ...h, year: played.history[0].year - 1 });
+  assert.ok(L.finalizeArchive(played, { reason: 'season-cap' }).ok); assert.equal(L.isArchived(played), true);
   const { backend } = await fresh(played); await toThreePartLayout(backend); const sums = JSON.stringify(manifest(backend).parts);
   const store = createStore({ backend, localStorage: null, now, debounce: 0 }); const opened = await store.open();
-  if (opened.mode !== 'ready') { assert.match(opened.error?.message || '', /read-only/, `unexpected failure: ${opened.error?.message}`); return; } // main before the archive-load fix (PR #156) cannot open any retired franchise; nothing further to prove here
+  assert.equal(opened.mode, 'ready', `a retired franchise did not open: ${opened.error?.message || ''}`);
   const g = opened.franchise; assert.equal(L.isArchived(g), true);
   const r = await store.save(g, { immediate: true }); assert.equal(r.ok, true, `re-saving a retired franchise failed: ${r.error?.message}`); assert.equal(r.unchanged, true);
   assert.equal(JSON.stringify(manifest(backend).parts), sums, 'a read-only archive was rewritten in another layout');
