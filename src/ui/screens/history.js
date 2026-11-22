@@ -137,6 +137,8 @@ function hallHtml(f, params, reduced) {
       ${glance([[hall.inductees.length, $t('history.inductees')], [classes, $t('history.classes')], [hall.elections.length, $t('history.elections')]])}
       <p class="dim hof-rule">${$t('history.hall_rule', { wait: WAIT_SEASONS, voters: VOTER_COUNT, pct: Math.round(VOTE_THRESHOLD * 100), max: MAX_INDUCTEES, nominees: MAX_NOMINEES })}</p>
       ${sealed != null ? `<p class="hof-sealed">✉️ ${$t('history.the_result_is_sealed_until', { year: yearOf(sealed) })}</p>` : ''}</div>`;
+  const archivalLegends = f.preLeagueHistory?.legends || [];
+  const archivePanel = archivalLegends.length ? `<div class="panel"><div class="cp-sec-h"><b>Legends before your arrival</b><span class="dim">Historical archive · not Hall of Fame inductees</span></div><div class="list">${archivalLegends.map(l => `<div class="item static"><div class="grow"><div class="name">${esc(l.name)} · ${esc(l.position)}</div><div class="sub">${esc(l.club)} · Retired ${yearOf(l.retiredYear)}</div></div></div>`).join('')}</div></div>` : '';
   const seg = `<div class="seg hh-seg" role="tablist">${[['inductees', $t('history.inductees')], ['elections', $t('history.elections')], ['candidates', $t('history.candidates')]].map(([k, l]) => `<button class="btn small ${view === k ? 'primary' : ''}" role="tab" aria-selected="${view === k}" data-action="hview" data-v="${k}">${l}</button>`).join('')}</div>`;
   let body;
   if (view === 'inductees') {
@@ -175,7 +177,7 @@ function hallHtml(f, params, reduced) {
       ${sorted.length > rows.length ? `<button class="btn block hh-more" data-action="hall-all" data-v="1">${$t('history.show_all_candidates', { n: sorted.length })}</button>` : all && sorted.length > LIMIT ? `<button class="btn block hh-more" data-action="hall-all" data-v="0">${$t('history.show_the_most_recent')}</button>` : ''}`
       : empty($t('history.no_retired_monster_has_a_preserved'));
   }
-  return `${hero}${seg}${body}<p class="dim cp-foot">${$t('history.the_owners_hall_of_fame_card_is')}</p>`;
+  return `${hero}${archivePanel}${seg}${body}<p class="dim cp-foot">${$t('history.the_owners_hall_of_fame_card_is')}</p>`;
 }
 
 export function registerHistoryScreens(Router, app) {
