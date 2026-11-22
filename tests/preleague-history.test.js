@@ -17,7 +17,9 @@ test('preleague history is deterministic and internally consistent', () => {
 test('rookies have no fabricated professional career', () => {
   const f = fixture();
   f.roster[0].yearsPro = 0;
-  assert.equal(Object.keys(generateLeagueArchive(f).careers).length, 0);
+  const archive = generateLeagueArchive(f);
+  assert.equal(archive.careers.v1, undefined);
+  assert.ok(Object.values(archive.careers).every(c => c.retired === true));
 });
 test('archive validation catches tampered career totals', () => {
   const a = generateLeagueArchive(fixture());
