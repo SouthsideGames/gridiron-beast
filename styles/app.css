@@ -2390,3 +2390,22 @@ html[data-comfortable-text="1"] .screen-settings .save-data .dim, html[data-comf
 .cp-stat-table tr.cp-pre td { color: var(--ink-2); }
 .cp-stat-table tr.cp-pre td.cp-yr { font-style: italic; }
 .cp-pre-sec { border-top: 1px dashed var(--line-2); padding-top: var(--s2); }
+
+.ln-contenders { list-style: none; margin: 2px 0 10px; padding: 0; }
+.ln-contenders li { display: flex; align-items: center; gap: 7px; min-height: 30px; }
+.ln-contenders li > .dim:first-child { min-width: 25px; }
+.bs-inspect { border: 0; padding: 0; background: none; color: inherit; font: inherit; font-weight: 800; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 4px; cursor: pointer; }
+.kickoff-captains { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: clamp(14px, 7vw, 46px); pointer-events: none; }
+.kickoff-captain-team { display: grid; grid-template-columns: repeat(2, minmax(0, 40px)); gap: 6px; }
+.kickoff-captain-team span { display: block; filter: drop-shadow(0 3px 1px #0009); }
+.turnover-cue { position: absolute; inset: 38% 0 auto; z-index: 4; text-align: center; pointer-events: none; font-size: clamp(26px, 8vw, 52px); font-weight: 950; letter-spacing: .04em; color: #ffe584; text-shadow: 0 2px 2px #000, 0 0 14px #000; animation: turnover-cue .8s ease-out forwards; }
+@keyframes turnover-cue { 0% { opacity: .2; transform: scale(.9); } 15%, 68% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.venue-bolt { opacity: .32; stroke-dasharray: 1.5 2.2; animation: venue-current 1.4s linear infinite; }
+.venue-detail { opacity: .6; animation: venue-drift 3s ease-in-out infinite; }
+.venue-detail-waves, .venue-detail-rays, .venue-detail-scales, .venue-detail-panels { animation-name: venue-glow; }
+@keyframes venue-current { to { stroke-dashoffset: -7.4; } }
+@keyframes venue-drift { 0%, 100% { opacity: .24; } 50% { transform: translate(.5px, -.55px); opacity: .78; } }
+@keyframes venue-glow { 0%, 100% { opacity: .25; } 50% { opacity: .85; } }
+html[data-reduced-motion="1"] :is(.venue-bolt,.venue-detail) { animation: none; }
+html[data-reduced-motion="1"] .turnover-cue { animation: turnover-fade 1s linear forwards; }
+@keyframes turnover-fade { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }

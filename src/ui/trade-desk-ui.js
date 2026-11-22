@@ -115,8 +115,9 @@ export function tradeLineHtml(f) {
 export function callPanelHtml(f) {
   const c = F.tradeCall(f); if (!c) return '';
   const until = f.offseason ? $t('market.the_new_season') : `${$t('market.the_end_of_the_week_trade', { closesWeek: F.TRADE_DEADLINE_WEEK + 1 })}`;
-  const asks = (c.asks || []).map((m) => `${esc(m.name)} (${esc(m.position)}, ${m.ovr} OVR)`).join(' + ');
-  const sends = (c.sends || []).map((m) => `${esc(m.name)} (${esc(m.position)}, ${m.ovr} OVR, age ${m.age})`).join(' + ');
+  const identity = m => [m.name, m.species ? resolveSpecies(m).name : null, m.position].filter(Boolean).map(esc).join(' · ');
+  const asks = (c.asks || []).map((m) => `${identity(m)} · ${m.ovr} OVR`).join(' + ');
+  const sends = (c.sends || []).map((m) => `${identity(m)} · ${m.ovr} OVR, age ${m.age}`).join(' + ');
   const myPicks = (c.give || []).map((p) => `${yearOf(p.year)} round ${p.round}${p.original !== f.club ? ` ${$t('market.from_the', { original: esc(p.original) })}` : ''}`).join(' + ');
   const theirPicks = (c.sendPicks || []).map((p) => `${yearOf(p.year)} round ${p.round}${p.original !== c.team ? ` ${$t('market.from_the', { original: esc(p.original) })}` : ''}`).join(' + ');
   const effect = F.callEffect(f);
@@ -125,7 +126,7 @@ export function callPanelHtml(f) {
   if (!c.kind || c.kind === 'sell') { const mine = f.roster.filter((m) => m.position === c.player.position).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0]; says = `${$t('market.we_hear_you_are_thin_at', { position: esc(c.player.position) })}${mine ? ` ${$t('market.your_best_is', { name: esc(mine.name), monsterOverall: monsterOverall(mine) })}` : ''}${$t('market.he_is_yours_for_your', { myPicks })}`; }
   else if (c.kind === 'buy') says = `${$t('market.we_are_short_at_and_would', { position: esc(c.asks[0].position), name: esc(c.asks[0].name), theirPicks })}`;
   else says = `${$t('market.you_are_thin_at_we_are', { position: esc(c.sends[0].position), position2: esc(c.asks[0].position), name: esc(c.sends[0].name), name2: esc(c.asks[0].name) })}`;
-  const shown = !c.kind || c.kind === 'sell' ? `<b>${c.playerId ? careerLink(c.playerId, c.player.name) : esc(c.player.name)}</b> · ${esc(c.player.position)} · ${c.player.ovr} OVR · age ${c.player.age}` : `<div>${$t('market.b_they_send_b', { sends: sends || theirPicks })}</div><div>${$t('market.b_you_send_b', { asks: asks || myPicks })}</div>`;
+  const shown = !c.kind || c.kind === 'sell' ? `<b>${c.playerId ? careerLink(c.playerId, c.player.name) : esc(c.player.name)}</b> · ${esc(c.player.species ? resolveSpecies(c.player).name : "—")} · ${esc(c.player.position)} · ${c.player.ovr} OVR · age ${c.player.age}` : `<div>${$t('market.b_they_send_b', { sends: sends || theirPicks })}</div><div>${$t('market.b_you_send_b', { asks: asks || myPicks })}</div>`;
   return `<div class="panel call-panel"><div class="row" style="gap:10px;align-items:flex-start">${lead ? monsterSprite({ species: lead.species, name: lead.name, id: lead.id }, 44) : ''}<div class="grow" style="min-width:0">
     <div class="muted" style="font-size:12px">${$t('market.the_are_on_the_line', { toUpperCase: esc(c.team.toUpperCase()) })}</div>
     <div style="margin:2px 0">${shown}</div>

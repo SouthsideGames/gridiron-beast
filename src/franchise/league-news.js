@@ -140,7 +140,11 @@ export function raceNews({ year, week, races, meta }) {
     const top = races[k]?.[0]; if (!top) continue;
     const who = k === 'coy' ? top.coach || top.name : top.name; const key = k === 'coy' ? top.team : top.id;
     now[k] = { key, name: who, team: top.team };
-    leaders.push({ award: k, short: AWARDS[k]?.short || k, name: who, team: top.team, mid: k === 'coy' ? null : top.id || null, second: races[k]?.[1] ? (k === 'coy' ? races[k][1].coach || races[k][1].name : races[k][1].name) : null, secondId: k === 'coy' ? null : races[k]?.[1]?.id || null });
+    leaders.push({ award: k, short: AWARDS[k]?.short || k, name: who, team: top.team, mid: k === 'coy' ? null : top.id || null, second: races[k]?.[1] ? (k === 'coy' ? races[k][1].coach || races[k][1].name : races[k][1].name) : null, secondId: k === 'coy' ? null : races[k]?.[1]?.id || null, contenders: races[k].slice(0, 3).map(r => ({
+      name: k === 'coy' ? r.coach || r.name : r.name,
+      mid: k === 'coy' ? null : r.id || null,
+      team: r.team, species: r.species || null,
+    })) });
     if (prev[k] && prev[k].key !== key && ['mvp', 'opoy', 'dpoy'].includes(k)) out.push({ id: `${`${year}|${week}|lead|${k}`}`, year, week, kind: 'race_lead', tier: 'notable', icon: '🔀', mid: top.id || null, mname: who, ...$L('franchise.race_takes_the_lead_from', { short: AWARDS[k].short, who, team: top.team, name: prev[k].name })});
   }
   (meta.leaders ||= {})[year] = now; for (const y of Object.keys(meta.leaders)) if (Number(y) < year - 1) delete meta.leaders[y];

@@ -5,6 +5,8 @@ import { newsByWeek, weekLabel } from '../franchise/league-news.js';
 import { TEAM_META } from '../data/league.js';
 import { yearOf } from '../data/calendar.js';
 import { esc } from './dom.js';
+import { monsterSprite } from './pixel-monster.js';
+import { monsterOf } from './captains-ui.js';
 import { careerLink } from './career-ui.js';
 import { t as $t, lineText } from '../text/index.js';
 
@@ -20,8 +22,15 @@ export function scoreboardHtml(item) {
     ${teamRow(g.away, g.as, g.w === g.away)}${teamRow(g.home, g.hs, g.w === g.home)}
     ${g.mine || g.rival || g.ot ? `<div class="ln-tag">${g.mine ? $t('league.you') : g.rival ? $t('league.rival') : ''}${g.ot ? `${g.mine || g.rival ? ' · ' : ''}${g.clash ? $t('league.ot_clash') : 'OT'}` : ''}</div>` : ''}</div>`).join('')}</div>`;
 }
-function raceHtml(item, n = 7) {
-  return `<div class="ln-race">${item.leaders.slice(0, n).map((l) => `<div class="ln-race-row"><b class="ln-award">${esc(l.short)}</b><span class="grow">${l.mid ? careerLink(l.mid, l.name) : esc(l.name)} <span class="dim">${esc(abbr(l.team))}</span></span>${l.second ? `<span class="dim ln-second">2nd ${l.secondId ? careerLink(l.secondId, l.second) : esc(l.second)}</span>` : ''}</div>`).join('')}</div>`;
+function raceHtml(item, f, n = 7) {
+  return `<div class="ln-race">${item.leaders.slice(0, n).map(l => {
+    const contenders = l.contenders || [{ mid: l.mid, name: l.name, team: l.team },
+      ...(l.second ? [{ mid: l.secondId, name: l.second }] : [])];
+    return `<section><b class="ln-award">${esc(l.short)}</b><ol class="ln-contenders">${contenders.map((r, i) => {
+      const monster = (r.mid && monsterOf(f, r.mid)) || (r.species ? { ...r, id: r.mid } : null);
+      return `<li><span class="dim">${['1st', '2nd', '3rd'][i]}</span>${monster ? monsterSprite(monster, 26) : ''}<span>${r.mid ? careerLink(r.mid, r.name) : esc(r.name)}${r.team ? ` <span class="dim">${esc(abbr(r.team))} · ${esc(r.team)}</span>` : ''}</span></li>`;
+    }).join('')}</ol></section>`;
+  }).join('')}</div>`;
 }
 function headlineHtml(it, f) {
   const rival = f.rivals?.[f.tier]?.team; let t = esc(lineText(it)); // a saved line shows in the language chosen now
@@ -40,7 +49,7 @@ export function weekHtml(group, f, { max = 99, race = true, board = true, raceRo
   const scores = group.items.filter((x) => x.kind === 'scores'); const rc = group.items.find((x) => x.kind === 'race');
   return `${shown.length ? `<ul class="ln-heads">${shown.map((h) => headlineHtml(h, f)).join('')}</ul>${more > 0 ? `<div class="dim" style="font-size:12px;margin:2px 0 6px">${$t('league.more_in_all_league_news', { more })}</div>` : ''}` : ''}
     ${board ? scores.map((s) => `${scores.length > 1 || s.round ? `<div class="ln-sub">${esc(lineText(s))}</div>` : ''}${scoreboardHtml(s)}`).join('') : ''}
-    ${race && rc ? `<div class="ln-sub">${$t('league.award_races')}</div>${raceHtml(rc, raceRows)}` : ''}`;
+    ${race && rc ? `<div class="ln-sub">${$t('league.award_races')}</div>${raceHtml(rc, f, raceRows)}` : ''}`;
 }
 const groupTitle = (g) => `${weekLabel(g.week)} · ${yearOf(g.year)}`;
 

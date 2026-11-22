@@ -124,7 +124,7 @@ export function polishHeader(ctx,name) {
     if(unique.length)out+=`<details class="panel tight polish-notices" open><summary>${t('polish.decisions',{n:unique.length})}</summary><div class="stack">${unique.map(x=>`<button class="btn block" data-polish="go" data-screen="${esc(x.id?'monster':x.screen||'roster')}" data-id="${esc(x.id||'')}" data-slot="${esc(x.slot||'')}" data-kind="${esc(x.kind||'')}">${esc(x.text)}</button>`).join('')}</div><details><summary>${t('polish.team_updates')}</summary>${(f.news||[]).slice(-5).reverse().map(x=>`<p>${esc(lineText(x))}</p>`).join('')}</details></details>`;
   }
   if(name==='offseason')out+=offseasonTracker(f);
-  if(['roster','contracts','famarket','draft','draftclass'].includes(name)){
+  if(['roster','famarket','draft','draftclass'].includes(name)){
     const prefs=browsePreferences(f,name);
     const browse=`<div class="panel tight polish-browse"><label>${t('polish.search')}<input type="search" data-polish-search value="${esc(prefs.query||'')}" autocomplete="off"></label><div class="row wrap">${['shortlist','affordable','needed'].filter(k=>!['roster','contracts'].includes(name)||k==='needed').map(k=>`<label><input type="checkbox" data-polish-filter="${k}" ${prefs[k]?'checked':''}> ${k==='shortlist'?t('polish.shortlist_only'):k==='affordable'?t('polish.affordable'):t('polish.needed')}</label>`).join('')}${buttons('clear-filters',t('polish.clear_filters'))}</div><span data-polish-count role="status"></span></div>`;
     out+=name==='roster'?`<details class="roster-search panel tight polish-browse"><summary>${t('roster.search_filters')} <span class="chip" data-roster-filter-active ${prefs.query||prefs.needed?'':'hidden'}>${t('roster.filters_on')}</span></summary>${browse.replace('polish-browse','roster-search-body')}</details>`:browse;
@@ -175,6 +175,7 @@ export function mountPolish(root,ctx,name,Router) {
     const help=document.createElement('button');help.className='btn small polish-info';help.type='button';help.dataset.polish='explain';help.dataset.info=node.title;help.textContent='i';help.setAttribute('aria-label',node.title);node.after(help);
   }
   const applyFilters=()=>{
+    if(name==='contracts')return;
     const p=browsePreferences(f,name);let n=0;
     const needs=new Set(F.depthNeeds(f).filter(x=>x.status!=='ok').map(x=>x.position));
     const room=name==='famarket'?F.freeAgencyCap(f).usable:F.salarySummary(f).remaining;
