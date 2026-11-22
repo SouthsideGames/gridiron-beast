@@ -3,16 +3,51 @@
 import { ALL_TEAMS } from '../data/league.js';
 import { hashString } from '../core/rng.js';
 const roll = (seed, key, max) => hashString(String(seed) + '|' + key) % max;
-const fields = { QB: 'passYds', RB: 'rushYds', WR: 'recYds', TE: 'recYds', OL: 'pancakes', DL: 'sacks', LB: 'tacklesTotal', CB: 'int', S: 'tacklesTotal', K: 'fgm' };
 function seasonLine(m, year, seed) {
   const position = m.position || 'WR';
-  const key = fields[position] || 'games';
-  const games = 8 + roll(seed, m.id + ':' + year + ':gp', 5);
-  const starts = Math.max(0, games - roll(seed, m.id + ':' + year + ':gs', 4));
-  const prime = Math.max(0.42, 1 - Math.abs((m.age || 25) - (1 - year) - 26) * 0.055);
-  const scale = { passYds: 1900, rushYds: 720, recYds: 650, pancakes: 42, sacks: 12, tacklesTotal: 75, int: 5, fgm: 19 };
-  const value = Math.round((scale[key] || 20) * prime * (0.65 + roll(seed, m.id + ':' + year + ':prod', 71) / 100));
-  return { year, team: null, reg: { games, starts, [key]: value }, post: {} };
+  const games = 10 + roll(seed, m.id + ':' + year + ':gp', 5);
+  const starts = Math.max(0, games - roll(seed, m.id + ':' + year + ':gs', 3));
+  const age = (m.age || 25) + year - 1;
+  const prime = Math.max(0.42, 1 - Math.abs(age - 26) * 0.055);
+  const factor = prime * (0.75 + roll(seed, m.id + ':' + year + ':prod', 51) / 100) * games / 14;
+  const n = (base) => Math.max(0, Math.round(base * factor));
+  const reg = { games, starts };
+  if (position === 'QB') {
+    reg.att = n(290); reg.comp = Math.min(reg.att, n(187));
+    reg.passYds = n(2600); reg.passTd = n(19); reg.intThrown = n(8);
+    reg.rush = n(28); reg.rushYds = n(105); reg.rushTd = n(1);
+  } else if (position === 'RB') {
+    reg.rush = n(185); reg.rushYds = n(790); reg.rushTd = n(7);
+    reg.targets = n(35); reg.rec = Math.min(reg.targets, n(26));
+    reg.recYds = n(210); reg.recTd = n(1);
+  } else if (position === 'WR' || position === 'TE') {
+    reg.targets = n(position === 'WR' ? 92 : 65);
+    reg.rec = Math.min(reg.targets, n(position === 'WR' ? 61 : 44));
+    reg.recYds = n(position === 'WR' ? 810 : 510);
+    reg.recTd = n(position === 'WR' ? 6 : 4);
+    if (position === 'TE') { reg.pbSnaps = n(110); reg.pbWins = n(85); }
+  } else if (position === 'OL') {
+    reg.pbSnaps = n(370); reg.pbWins = n(330);
+    reg.rbSnaps = n(250); reg.rbWins = n(213);
+    reg.sacksAllowed = n(4); reg.pressuresAllowed = n(17);
+    reg.pancakes = n(32);
+  } else if (['DL', 'LB', 'CB', 'S'].includes(position)) {
+    reg.tacklesSolo = n(position === 'LB' ? 67 : position === 'S' ? 53 : 35);
+    reg.tacklesAssist = n(position === 'LB' ? 23 : 15);
+    reg.tacklesTotal = reg.tacklesSolo + reg.tacklesAssist;
+    reg.sacks = n(position === 'DL' ? 10 : position === 'LB' ? 3 : 0);
+    reg.tfl = n(position === 'DL' ? 12 : 5);
+    reg.int = n(position === 'CB' ? 4 : position === 'S' ? 3 : 1);
+    reg.pd = n(position === 'CB' ? 12 : position === 'S' ? 7 : 2);
+    reg.ff = n(2);
+    if (position === 'DL') reg.pressures = n(30);
+  } else if (position === 'K') {
+    reg.fga = n(23); reg.fgm = Math.min(reg.fga, n(19));
+    reg.fgLong = 35 + roll(seed, m.id + ':' + year + ':long', 24);
+    reg.xpa = n(28); reg.xpm = Math.min(reg.xpa, n(27));
+    reg.kickPts = reg.fgm * 3 + reg.xpm;
+  }
+  return { year, team: null, reg, post: {} };
 }
 export function generateLeagueArchive(f, seasons = 8) {
   const seed = f.seed >>> 0;
