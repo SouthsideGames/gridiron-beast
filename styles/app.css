@@ -2635,7 +2635,7 @@ html[data-stadium-fx="off"] :is(.sfx-drift, .sfx-firefly, .sfx-ripple, .sfx-shot
 @keyframes sfx-ball-cube { 0% { opacity: 0; transform: translateY(-60vh); } 5% { opacity: .75; } 16% { transform: translateY(0); } 19% { transform: translateY(-7px); } 22%, 46% { opacity: .75; transform: translateY(0) scale(1); } 54% { opacity: 1; transform: scale(1.3); } 64%, 100% { opacity: 1; transform: scale(1); } }
 .sfx-reveal-cube .sfx-whiteout { animation-delay: .52s; } .sfx-reveal-cube .sfx-ring { animation-delay: .25s; }
 /* Ground: the pit */
-.sfx-pit { position: absolute; left: calc(50% - 66px); top: calc(50% - 44px); width: 132px; height: 88px; opacity: 0; animation: sfx-pit 1.9s ease-in-out both; }
+.sfx-pit { position: absolute; left: calc(50% - 57px); top: calc(50% - 38px); width: 114px; height: 76px; opacity: 0; animation: sfx-pit 1.9s ease-in-out both; }
 @keyframes sfx-pit { 0%, 6% { opacity: 0; transform: scale(.05, .02); } 9% { opacity: 1; transform: scale(1, .04); } 24% { opacity: 1; transform: scale(1, 1); } 58% { opacity: 1; transform: scale(1, 1); } 74% { opacity: 1; transform: scale(1, .04); } 80%, 100% { opacity: 0; transform: scale(.05, .02); } }
 .sfx-reveal-pit .sfx-ball { animation-name: sfx-ball-pit; animation-timing-function: ease-out; }
 @keyframes sfx-ball-pit { 0%, 26% { opacity: 0; transform: scale(.12); filter: brightness(.3); } 30% { opacity: 1; transform: scale(.25); filter: brightness(.45); } 52% { opacity: 1; transform: scale(1.3) translateY(-10px); filter: none; } 64%, 100% { opacity: 1; transform: scale(1); filter: none; } }
@@ -2672,24 +2672,8 @@ html[data-stadium-fx="reduced"] :is(.sfx-wisp, .sfx-tumble) { display: none; }
 .sfx-reveal-boulder .sfx-ball { animation-name: sfx-ball-late; }
 .sfx-reveal-boulder .sfx-whiteout { display: none; } .sfx-reveal-boulder .sfx-ring { animation-delay: .25s; }
 .sfx-reveal-boulder .sfx-cube { filter: drop-shadow(0 6px 4px #0008); }
-/* Bug: the spider on its thread */
-.sfx-spider { position: absolute; left: calc(50% - 30px); top: 0; bottom: calc(50% - 7px); width: 60px; z-index: 3; opacity: 0; animation: sfx-spider 1.9s ease-in-out both; }
-.sfx-spider > i { position: absolute; left: calc(50% - 1px); top: -100vh; bottom: 44px; width: 2px; background: #f4f4ea; opacity: .85; }
-.sfx-spider > svg { position: absolute; left: 0; bottom: 0; width: 60px; height: 52px; }
-@keyframes sfx-spider { 0% { opacity: 1; transform: translateY(-108%); } 30% { opacity: 1; transform: translateY(0); } 34% { transform: translateY(-5px); } 38%, 50% { transform: translateY(0); } 80% { opacity: 1; transform: translateY(-108%); } 81%, 100% { opacity: 0; transform: translateY(-108%); } }
-.sfx-carry { animation: sfx-carry 1.9s steps(1, end) both; }
-@keyframes sfx-carry { 0%, 46% { opacity: 1; } 47%, 100% { opacity: 0; } }
-.sfx-reveal-spider .sfx-ball { animation-name: sfx-ball-set; animation-timing-function: steps(1, end); }
-@keyframes sfx-ball-set { 0%, 46% { opacity: 0; transform: none; } 47%, 100% { opacity: 1; transform: none; } }
-.sfx-reveal-spider :is(.sfx-whiteout, .sfx-ring) { display: none; }
-/* Specter: the ghost */
-.sfx-ghost { position: absolute; left: calc(50% - 46px); top: calc(50% - 84px); width: 92px; height: 110px; z-index: 1; opacity: 0; transform-origin: 50% 100%; animation: sfx-ghost 1.9s ease-in-out both; filter: drop-shadow(0 0 10px var(--sfx-a)); }
-@keyframes sfx-ghost { 0%, 5% { opacity: 0; transform: translateY(34px) scaleY(.2); } 24% { opacity: .95; transform: translateY(0) scaleY(1); } 34% { transform: translateY(-5px); } 46% { opacity: .95; transform: translateY(0); } 70%, 100% { opacity: 0; transform: translateY(-70px) scaleY(1.1); } }
-.sfx-reveal-ghost .sfx-ball { z-index: 2; animation-name: sfx-ball-ghost; animation-timing-function: ease-in-out; }
-@keyframes sfx-ball-ghost { 0%, 12% { opacity: 0; transform: translateY(26px) scale(.6); } 24% { opacity: 1; transform: translateY(-2px) scale(1); } 34% { transform: translateY(-7px); } 46% { opacity: 1; transform: translateY(-2px); } 56% { transform: translateY(3px); } 62%, 100% { opacity: 1; transform: translateY(0); } }
-.sfx-reveal-ghost .sfx-whiteout { display: none; } .sfx-reveal-ghost .sfx-ring { animation-delay: .5s; }
 /* Alloy: the hatch */
-.sfx-hatch { position: absolute; left: calc(50% - 62px); top: calc(50% - 42px); width: 124px; height: 84px; overflow: hidden; border-radius: 6px; background: radial-gradient(ellipse at 50% 50%, #05080c 30%, #1a2230); box-shadow: 0 0 0 3px #f0b21c, 0 0 0 5px #262c38; opacity: 0; animation: sfx-hatch 1.9s linear both; }
+.sfx-hatch { position: absolute; left: calc(50% - 52px); top: calc(50% - 36px); width: 104px; height: 72px; overflow: hidden; border-radius: 6px; background: radial-gradient(ellipse at 50% 50%, #05080c 30%, #1a2230); box-shadow: 0 0 0 3px #f0b21c, 0 0 0 5px #262c38; opacity: 0; animation: sfx-hatch 1.9s linear both; }
 @keyframes sfx-hatch { 0%, 4% { opacity: 0; } 9%, 78% { opacity: 1; } 86%, 100% { opacity: 0; } }
 .sfx-door { position: absolute; top: 0; bottom: 0; width: 50%; background: repeating-linear-gradient(90deg, #aab3c4 0 10px, #98a2b4 10px 12px); border: 1px solid #262c38; }
 .sfx-door-l { left: 0; animation: sfx-door-l 1.9s ease-in-out both; } .sfx-door-r { right: 0; animation: sfx-door-r 1.9s ease-in-out both; }
@@ -2697,3 +2681,38 @@ html[data-stadium-fx="reduced"] :is(.sfx-wisp, .sfx-tumble) { display: none; }
 @keyframes sfx-door-r { 0%, 14% { transform: translateX(0); } 27%, 58% { transform: translateX(101%); } 72%, 100% { transform: translateX(0); } }
 .sfx-reveal-hatch .sfx-ball { animation-name: sfx-ball-pit; animation-timing-function: ease-out; }
 .sfx-reveal-hatch :is(.sfx-whiteout, .sfx-ring) { display: none; }
+
+/* Stadium Polish, checkpoint D revision. The captains step apart before anything opens or lands between them. */
+.kickoff-captains { transition: gap .2s ease-out; }
+.field-wrap.sfx-revealing:has(.sfx-reveal:is(.sfx-reveal-cube, .sfx-reveal-boulder, .sfx-reveal-pit, .sfx-reveal-hatch)) .kickoff-captains { gap: min(164px, 42vw); }
+:is(.sfx-reveal-cube, .sfx-reveal-boulder) :is(.sfx-cube, .sfx-crack, .sfx-ball), :is(.sfx-reveal-pit, .sfx-reveal-hatch) :is(.sfx-pit, .sfx-hatch, .sfx-door, .sfx-ball) { animation-delay: .16s; }
+/* Bug: a web above the field lowers the football on a thread of silk */
+.sfx-web { position: absolute; left: calc(50% - 75px); top: 0; width: 150px; height: 88px; opacity: 0; transform-origin: 50% 0; animation: sfx-web 1.9s ease-out both; }
+@keyframes sfx-web { 0% { opacity: 0; transform: scale(.2); } 10% { opacity: 1; transform: scale(1); } 80% { opacity: 1; transform: scale(1); } 94%, 100% { opacity: 0; transform: scale(.6); } }
+.sfx-silk { position: absolute; left: calc(50% - 30px); top: 0; bottom: calc(50% - 14px); width: 60px; z-index: 3; animation: sfx-silk 1.9s ease-in-out both; }
+.sfx-silk > i { position: absolute; left: calc(50% - 1px); top: -100vh; bottom: 28px; width: 2px; background: #f4f4ea; opacity: .9; }
+.sfx-silk > svg { position: absolute; left: 0; bottom: 0; width: 60px; height: 30px; }
+@keyframes sfx-silk { 0%, 8% { transform: translateY(-106%); } 36% { transform: translateY(0); } 40% { transform: translateY(-4px); } 44%, 52% { transform: translateY(0); } 82%, 100% { transform: translateY(-106%); } }
+.sfx-carry { animation: sfx-carry 1.9s steps(1, end) both; }
+@keyframes sfx-carry { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+.sfx-reveal-web .sfx-ball { animation-name: sfx-ball-set; animation-timing-function: steps(1, end); }
+@keyframes sfx-ball-set { 0%, 50% { opacity: 0; transform: none; } 51%, 100% { opacity: 1; transform: none; } }
+.sfx-reveal-web :is(.sfx-whiteout, .sfx-ring) { display: none; }
+/* Specter: the football fades into being */
+.sfx-mist { position: absolute; left: calc(50% - 45px); top: calc(50% - 45px); width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--sfx-a) 55%, transparent), transparent 68%); opacity: 0; animation: sfx-mist 1.9s ease-in-out both; }
+@keyframes sfx-mist { 0% { opacity: 0; transform: scale(.4); } 30% { opacity: .8; transform: scale(1); } 55% { opacity: .5; transform: scale(1.15); } 85%, 100% { opacity: 0; transform: scale(1.5); } }
+.sfx-reveal-fade .sfx-ball { animation-name: sfx-ball-fade; animation-timing-function: ease-in-out; filter: drop-shadow(0 0 5px var(--sfx-a)); }
+@keyframes sfx-ball-fade { 0%, 8% { opacity: 0; transform: translateY(-5px) scale(1.25); } 20% { opacity: .35; } 28% { opacity: .1; } 40% { opacity: .6; transform: translateY(-3px) scale(1.12); } 48% { opacity: .3; } 62% { opacity: .9; } 74%, 100% { opacity: 1; transform: translateY(0) scale(1); } }
+.sfx-reveal-fade :is(.sfx-whiteout, .sfx-ring) { display: none; }
+/* Specter: ghosts of monsters drift from sideline to sideline */
+.sfx-haunt { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+.sfx-ghostmon { position: absolute; left: 0; width: 44px; height: 44px; opacity: 0; animation: sfx-cross-r 30s linear infinite; }
+.sfx-ghostmon-l { animation-name: sfx-cross-l; }
+.sfx-ghostmon > span { display: block; animation: sfx-bob 2.6s ease-in-out infinite alternate; }
+.sfx-ghostmon svg { display: block; filter: grayscale(1) brightness(1.9) contrast(.75) drop-shadow(0 0 3px var(--sfx-a)) drop-shadow(0 0 1px var(--sfx-a)); }
+@keyframes sfx-cross-r { 0% { opacity: 0; transform: translateX(-50px); } 2% { opacity: .42; } 26% { opacity: .42; } 28%, 100% { opacity: 0; transform: translateX(calc(100vw + 10px)); } }
+@keyframes sfx-cross-l { 0% { opacity: 0; transform: translateX(calc(100vw + 10px)); } 2% { opacity: .42; } 26% { opacity: .42; } 28%, 100% { opacity: 0; transform: translateX(-50px); } }
+@keyframes sfx-bob { from { transform: translateY(-5px); } to { transform: translateY(5px); } }
+html[data-stadium-fx="reduced"] .sfx-haunt, html[data-reduced-motion="1"] .sfx-haunt { display: none; }
+html[data-app-inactive="1"] .sfx-ghostmon, html[data-app-inactive="1"] .sfx-ghostmon > span { animation-play-state: paused; }
+.sfx-stand-side .sfx-cheer { opacity: 0; }

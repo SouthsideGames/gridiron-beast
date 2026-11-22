@@ -125,8 +125,8 @@ export const LOOKS = Object.freeze({
   sky: { label: 'Sky', colors: ['#8fd0ff', '#3f8fd6', '#ffffff'], intro: 'The wind is rising', edge: 'gust', posts: 'spray', reveal: 'float', crowd: 'Wind' },
   oracle: { label: 'Oracle', colors: ['#ff8ae0', '#b48cff', '#fff0fb'], intro: 'The stars have already seen it', edge: 'orbit', posts: 'halo', reveal: 'beam', crowd: 'Psychic' },
   rock: { label: 'Rock', colors: ['#c9b79a', '#7d7264', '#f2ece0'], intro: 'The mountain does not move', edge: 'cairn', posts: 'rubble', reveal: 'boulder', crowd: 'Earth' },
-  bug: { label: 'Bug', colors: ['#ffd24a', '#7fae1c', '#fff6c9'], intro: 'The hive is humming', edge: 'hive', posts: 'web', reveal: 'spider', crowd: 'Nature' },
-  specter: { label: 'Specter', colors: ['#8dffc8', '#2fae84', '#eafff5'], intro: 'They never left', edge: 'grave', posts: 'halo', reveal: 'ghost', crowd: 'Dark' },
+  bug: { label: 'Bug', colors: ['#ffd24a', '#7fae1c', '#fff6c9'], intro: 'The hive is humming', edge: 'hive', posts: 'web', reveal: 'web', crowd: 'Nature' },
+  specter: { label: 'Specter', colors: ['#8dffc8', '#2fae84', '#eafff5'], intro: 'They never left', edge: 'grave', posts: 'halo', reveal: 'fade', crowd: 'Dark', haunt: true },
   dome: { label: 'Alloy', colors: ['#6fd8ff', '#8f99ad', '#ffffff'], intro: 'The forge is lit', edge: 'pylon', posts: 'beacon', reveal: 'hatch' },
   forest: { label: 'Grass', colors: ['#6fe07a', '#c8f05a', '#f2ffd6'], intro: 'The grove is listening', edge: 'vine', posts: 'vine', reveal: 'bloom' },
 });
@@ -251,7 +251,7 @@ export function postsSvg(envId, y, dir) {
   else if (L.posts === 'icicle') extra = `${[-2.4, -1.5, -0.6, 0.3, 1.2, 2.1].map((px, i) => `<path d="M${px} ${y} h0.5 l-0.25 ${dir * (0.7 + (i % 3) * 0.3)} Z" fill="#dff3ff" stroke="${b}" stroke-width="0.06"/>`).join('')}${[-3, 3].map((px, i) => `<path class="sfx-node sfx-anim" style="animation-delay:-${i * 0.9}s" d="M${px} ${tip - 0.55} L${px + 0.3} ${tip} L${px} ${tip + 0.55} L${px - 0.3} ${tip} Z" fill="#fff" stroke="${b}" stroke-width="0.06"/>`).join('')}`;
   else if (L.posts === 'rubble') extra = [-3, 3].map((px, i) => `<path d="M${px - 0.7} ${y + 0.35} L${px - 0.35} ${y - 0.45} L${px + 0.4} ${y - 0.4} L${px + 0.7} ${y + 0.35} Z" fill="${b}" stroke="#5e3d1e" stroke-width="0.08"/><circle class="sfx-drift sfx-anim" style="animation-delay:-${i * 1.4}s" cx="${px + (i ? -0.5 : 0.5)}" cy="${y - 0.3}" r="0.2" fill="#c79a5c" stroke="none" opacity="0.8"/><circle class="sfx-drift sfx-anim" style="animation-delay:-${i * 1.4 + 1.7}s" cx="${px}" cy="${y - 1}" r="0.15" fill="#c79a5c" stroke="none" opacity="0.8"/>`).join('');
   else if (L.posts === 'halo') extra = `${[0, 1, 2].map((i) => climb(`M-3 ${y - dir * 0.2} q3 ${-dir * 0.9} 6 0`, i)).join('')}<circle class="sfx-node sfx-anim" cx="0" cy="${y - dir * 1.2}" r="0.34" fill="${a}" stroke="none"/>`;
-  else if (L.posts === 'web') extra = `<g stroke="#f4f4ea" stroke-width="0.07" opacity="0.9"><path d="M-3 ${y} L3 ${tip} M3 ${y} L-3 ${tip} M0 ${y} V${tip} M-3 ${(y + tip) / 2} H3"/><path d="M-1 ${y - dir * 0.8} L0 ${y - dir * 0.6} L1 ${y - dir * 0.8} L1.2 ${y - dir * 1.2} L1 ${y - dir * 1.6} L0 ${y - dir * 1.8} L-1 ${y - dir * 1.6} L-1.2 ${y - dir * 1.2} Z M-2 ${y - dir * 0.4} L0 ${y - dir * 0.1} L2 ${y - dir * 0.4} L2.5 ${y - dir * 1.2} L2 ${y - dir * 2} L0 ${y - dir * 2.3} L-2 ${y - dir * 2} L-2.5 ${y - dir * 1.2} Z"/></g><circle class="sfx-node sfx-anim" cx="0" cy="${y - dir * 1.2}" r="0.26" fill="#2a1a04" stroke="none"/>`;
+  else if (L.posts === 'web') extra = `<g stroke="#f4f4ea" stroke-width="0.07" opacity="0.9"><path d="M-3 ${y} L3 ${tip} M3 ${y} L-3 ${tip} M0 ${y} V${tip} M-3 ${(y + tip) / 2} H3"/><path d="M-1 ${y - dir * 0.8} L0 ${y - dir * 0.6} L1 ${y - dir * 0.8} L1.2 ${y - dir * 1.2} L1 ${y - dir * 1.6} L0 ${y - dir * 1.8} L-1 ${y - dir * 1.6} L-1.2 ${y - dir * 1.2} Z M-2 ${y - dir * 0.4} L0 ${y - dir * 0.1} L2 ${y - dir * 0.4} L2.5 ${y - dir * 1.2} L2 ${y - dir * 2} L0 ${y - dir * 2.3} L-2 ${y - dir * 2} L-2.5 ${y - dir * 1.2} Z"/></g><circle class="sfx-node sfx-anim" cx="0" cy="${y - dir * 1.2}" r="0.2" fill="#fff6c9" stroke="none"/>`;
   else if (L.posts === 'beacon') extra = [-3, 3].map((px, i) => `<circle cx="${px}" cy="${tip}" r="0.3" fill="#1c3a48" stroke="#262c38" stroke-width="0.08"/><circle class="sfx-chain sfx-anim" style="animation-delay:-${i * 0.9}s" cx="${px}" cy="${tip}" r="0.42" fill="#ff5a4a" stroke="none"/>`).join('');
   const tips = L.posts === 'flame' || L.posts === 'icicle' || L.posts === 'beacon' ? '' : `<circle cx="-3" cy="${tip}" r="0.3" fill="${c}" stroke="none"/><circle cx="3" cy="${tip}" r="0.3" fill="${c}" stroke="none"/>`;
   return `<g class="sfx-post" fill="none"><path class="sfx-post-glow sfx-anim" d="${shape}" stroke="${a}" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/><path d="${shape}" stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round" stroke-linejoin="round"/>${extra}${tips}</g>`;
@@ -291,6 +291,38 @@ export function barrierSvg(venue, x0, y0, w, fans = -1, h = STANDS_BARRIER) {
   for (let x = x0 + 3; x < x0 + w - 0.5; x += 3) seams += `M${x.toFixed(2)} ${y0} v${h}`;
   const cap = fans < 0 ? y0 : y0 + h - 0.16, foot = fans < 0 ? y0 + h - 0.14 : y0;
   return `<g class="sfx-barrier"><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${col}"/><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#000" opacity="0.38"/><path d="${seams}" stroke="#000" stroke-width="0.1" opacity="0.45"/><rect x="${x0}" y="${cap}" width="${w}" height="0.16" fill="#fff" opacity="0.6"/><rect x="${x0}" y="${foot}" width="${w}" height="0.14" fill="#000" opacity="0.35"/></g>`;
+}
+/** How far past the white the picture reaches on each side when zoomed right out: grass, the barrier, then the side stand. */
+export const SIDE_REACH = STANDS_GRASS + STANDS_BARRIER + STANDS_ROWS;
+/**
+ * The stands along both sidelines, seen only in the zoomed-out view. Grass, the barrier in the home colour, then three rows of
+ * the generated crowd turned to face the field. Returns { svg, symbols } (the crowd pictures are drawn once into the field's
+ * <defs> and placed with <use>, so the zooming camera does not carry them in every frame), or null when there is nothing to draw.
+ */
+export function sideStandsSvg(venue, cam, HW, Y) {
+  const look = lookFor(venue?.env); const env = fieldOf(venue?.env); if (!look || !env || !scene) return null;
+  const b = FIELD_BORDER, top = 110 + b, bot = -10 - b; if (cam.top <= bot || cam.bottom >= top) return null;
+  const y0 = Y(top), len = top - bot, D = STANDS_ROWS - 0.5, half = len / 2; const col = scene.crowd?.homeColor || look.colors[1];
+  const symbols = []; let s = '';
+  for (const side of [-1, 1]) {
+    const edge = side * (HW + b); const x = (from, w) => (side > 0 ? edge + from : edge - from - w); // `from` yards out from the white
+    s += `<rect x="${x(0, STANDS_GRASS)}" y="${y0}" width="${STANDS_GRASS}" height="${len}" fill="${env.palette.c}"/><rect x="${x(0, STANDS_GRASS)}" y="${y0}" width="${STANDS_GRASS}" height="${len}" fill="#000" opacity="0.18"/>`;
+    const bx = x(STANDS_GRASS, STANDS_BARRIER); let seams = ''; for (let yy = y0 + 3; yy < y0 + len - 0.5; yy += 3) seams += `M${bx} ${yy.toFixed(2)} h${STANDS_BARRIER}`;
+    s += `<rect x="${bx}" y="${y0}" width="${STANDS_BARRIER}" height="${len}" fill="${col}"/><rect x="${bx}" y="${y0}" width="${STANDS_BARRIER}" height="${len}" fill="#000" opacity="0.38"/><path d="${seams}" stroke="#000" stroke-width="0.1" opacity="0.45"/>`;
+    const sx = x(STANDS_GRASS + STANDS_BARRIER, STANDS_ROWS); s += `<rect x="${sx}" y="${y0}" width="${STANDS_ROWS}" height="${len}" fill="#10151d"/>`;
+    for (const seg of [0, 1]) {
+      const img = scene.crowd ? crowdImages({ ...scene.crowd, stand: `${side < 0 ? 'left' : 'right'}${seg}` }) : null; if (!img?.base) continue;
+      const ty = side < 0 ? y0 + half * (seg + 1) : y0 + half * seg; const tx = side < 0 ? sx : sx + STANDS_ROWS; // the front row faces the field
+      let layers = '';
+      for (const [k, cls] of [['base', 'sfx-crowd-img'], ['home', 'sfx-cheer sfx-cheer-home'], ['away', 'sfx-cheer sfx-cheer-away']]) {
+        if (!img[k]) continue; const id = `sfx-cr-${scene.crowd.seed}-${side < 0 ? 'l' : 'r'}${seg}-${k}`.replace(/[^\w-]/g, '');
+        symbols.push({ id, symbol: `<image id="${id}" href="${img[k]}" width="${half}" height="${D}" preserveAspectRatio="none" style="image-rendering:pixelated"/>` });
+        layers += `<use class="${cls}" href="#${id}"/>`;
+      }
+      s += `<g transform="translate(${tx} ${ty}) rotate(${side < 0 ? -90 : 90})">${layers}</g>`;
+    }
+  }
+  return { svg: `<g class="sfx-stand sfx-stand-side">${s}</g>`, symbols };
 }
 /** The grass between an end line and the stand or wall behind it: the stadium's own turf, a shade darker, with a boundary line. */
 export function apronSvg(venue, x0, y0, w, h) {
@@ -340,10 +372,10 @@ export function kickoffRevealHtml(venue, level = 'full') {
     beam: `<i class="sfx-beam"></i><svg class="sfx-ufo" viewBox="0 0 120 60" aria-hidden="true" focusable="false"><ellipse cx="60" cy="24" rx="26" ry="20" fill="${b}" opacity=".85"/><ellipse cx="52" cy="16" rx="8" ry="5" fill="${c}" opacity=".8"/><ellipse cx="60" cy="36" rx="56" ry="15" fill="#2a1a4a" stroke="${a}" stroke-width="3"/><ellipse cx="60" cy="31" rx="50" ry="9" fill="#6a4aa8"/>${[14, 37, 60, 83, 106].map((x, i) => `<circle class="sfx-ufo-light" style="animation-delay:-${i * 0.12}s" cx="${x}" cy="${38 + (i === 2 ? 6 : i === 1 || i === 3 ? 4 : 0)}" r="4" fill="${c}"/>`).join('')}</svg>`,
     // Rock: a boulder drops between the captains, cracks and crumbles apart
     boulder: `<svg class="sfx-cube sfx-cube-l" viewBox="0 0 50 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M14 30 L34 8 L66 6 L90 28 L94 62 L76 90 L40 94 L10 72 Z" fill="${b}" stroke="#3c362e" stroke-width="3" stroke-linejoin="round"/><path d="M34 8 L66 6 L58 34 L30 40 Z" fill="${a}"/><path d="M58 34 L90 28 L94 62 L64 60 Z" fill="#968a79"/><path d="M30 40 L58 34 L64 60 L40 94 L10 72 Z" fill="none" stroke="#3c362e" stroke-width="1.5"/></svg><svg class="sfx-cube sfx-cube-r" viewBox="50 0 50 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M14 30 L34 8 L66 6 L90 28 L94 62 L76 90 L40 94 L10 72 Z" fill="${b}" stroke="#3c362e" stroke-width="3" stroke-linejoin="round"/><path d="M34 8 L66 6 L58 34 L30 40 Z" fill="${a}"/><path d="M58 34 L90 28 L94 62 L64 60 Z" fill="#968a79"/><path d="M30 40 L58 34 L64 60 L40 94 L10 72 Z" fill="none" stroke="#3c362e" stroke-width="1.5"/></svg><svg class="sfx-crack" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M50 4 L44 22 L56 38 L46 54 L57 70 L49 96 M56 38 L72 30 M46 54 L28 62" fill="none" stroke="#1c1814" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"/></svg>`,
-    // Bug: a spider lowers itself on a thread, sets the football down, and climbs back up
-    spider: `<div class="sfx-spider"><i></i><svg viewBox="0 0 60 52" aria-hidden="true" focusable="false"><g fill="none" stroke="#1a1410" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 18 L8 8 L2 16 M22 22 L6 22 L1 30 M23 26 L9 34 L6 44 M38 18 L52 8 L58 16 M38 22 L54 22 L59 30 M37 26 L51 34 L54 44"/><path d="M26 30 L24 40 M34 30 L36 40"/></g><ellipse cx="30" cy="14" rx="11" ry="12" fill="#2a2118" stroke="#1a1410" stroke-width="1.5"/><path d="M26 8 l4 5 l4 -5 M27 16 h6" stroke="${a}" stroke-width="1.6" fill="none"/><circle cx="30" cy="27" r="6.5" fill="#3a2e22" stroke="#1a1410" stroke-width="1.5"/><circle cx="27.5" cy="28" r="1.5" fill="${a}"/><circle cx="32.5" cy="28" r="1.5" fill="${a}"/><ellipse class="sfx-carry" cx="30" cy="44" rx="${(B.rx * 8).toFixed(1)}" ry="${(B.ry * 8).toFixed(1)}" fill="${B.fill}" stroke="${B.stroke}" stroke-width="1.4"/></svg></div>`,
-    // Specter: a ghost rises through the turf holding the football, lets it go, and fades
-    ghost: `<svg class="sfx-ghost" viewBox="0 0 100 120" aria-hidden="true" focusable="false"><path d="M12 112 V50 A38 38 0 0 1 88 50 V112 L76 100 L63 112 L50 100 L37 112 L24 100 Z" fill="${c}" stroke="${b}" stroke-width="3" stroke-linejoin="round" opacity=".92"/><ellipse cx="36" cy="48" rx="7" ry="10" fill="#12302a"/><ellipse cx="64" cy="48" rx="7" ry="10" fill="#12302a"/><ellipse cx="50" cy="68" rx="6" ry="8" fill="#12302a"/><path d="M20 78 q12 14 24 6 M80 78 q-12 14 -24 6" fill="none" stroke="${b}" stroke-width="4" stroke-linecap="round"/></svg>`,
+    // Bug: a web is spun above the field; a thread of silk lowers the football from it, sets it down, and winds back up
+    web: `<svg class="sfx-web" viewBox="-60 0 120 70" aria-hidden="true" focusable="false"><g fill="none" stroke="#f4f4ea" stroke-width="1.3" stroke-linecap="round" opacity=".92"><path d="M0 0 L-58 22 M0 0 L-42 50 M0 0 L-16 66 M0 0 L16 66 M0 0 L42 50 M0 0 L58 22"/><path d="M-20 8 Q-14 16 -15 18 Q-8 22 -6 24 Q0 24 6 24 Q8 22 15 18 Q14 16 20 8 M-38 14 Q-30 30 -28 33 Q-16 42 -11 44 Q0 46 11 44 Q16 42 28 33 Q30 30 38 14 M-52 20 Q-44 44 -39 46 Q-22 58 -15 62 Q0 64 15 62 Q22 58 39 46 Q44 44 52 20"/></g></svg><div class="sfx-silk"><i></i><svg viewBox="0 0 60 30" aria-hidden="true" focusable="false"><ellipse class="sfx-carry" cx="30" cy="16" rx="${(B.rx * 8).toFixed(1)}" ry="${(B.ry * 8).toFixed(1)}" fill="${B.fill}" stroke="${B.stroke}" stroke-width="1.4"/><path class="sfx-carry" d="M30 0 V10 M22 12 Q30 6 38 12 M21 17 Q30 24 39 17 M26 11 L27 21 M34 11 L33 21" fill="none" stroke="#f4f4ea" stroke-width="1.1" stroke-linecap="round"/></svg></div>`,
+    // Specter: nothing arrives; the football simply fades into being, flickering like a ghost
+    fade: `<i class="sfx-mist"></i>`,
     // Alloy: a steel hatch slides open in the field, the football rises on a lift, and the hatch shuts
     hatch: `<div class="sfx-hatch"><i class="sfx-door sfx-door-l"></i><i class="sfx-door sfx-door-r"></i></div>`,
     // Grass: leaves swirl up and open

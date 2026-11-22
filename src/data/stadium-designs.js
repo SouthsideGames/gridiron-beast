@@ -16,7 +16,7 @@ export const DESIGN_FIELDS = Object.freeze({
     palette: { a: '#625d55', b: '#69645b', c: '#5a564e', end: '#403c36', apron: '#4c4841', tint: 'rgba(230,215,190,0.04)', decor: '#c9b79a' } },
   bug: { id: 'bug', name: 'Bug Stadium', short: 'Bug', type: null, indoor: false, icon: '🐝', texture: 'comb',
     palette: { a: '#4d7a2a', b: '#55842f', c: '#467026', end: '#7a6418', apron: '#3a5f20', tint: 'rgba(255,220,90,0.04)', decor: '#ffd24a' } },
-  specter: { id: 'specter', name: 'Specter Stadium', short: 'Specter', type: null, indoor: false, icon: '👻', texture: 'fog',
+  specter: { id: 'specter', name: 'Specter Stadium', short: 'Specter', type: null, indoor: false, icon: '👻', texture: 'plain',
     palette: { a: '#2f4448', b: '#354a4e', c: '#2a3e42', end: '#1c2a31', apron: '#24363a', tint: 'rgba(140,255,200,0.04)', decor: '#8dffc8' } },
 });
 export const designField = (id) => (Object.hasOwn(DESIGN_FIELDS, id) ? DESIGN_FIELDS[id] : null);

@@ -4,7 +4,7 @@ import { autoSpeed, cycleAutoSpeed } from '../phone-navigation.js';
 import { matchLogMatches } from '../match-log-filter.js';
 import { activityPaused } from '../activity.js';
 import { iconifyMarkup, infoIcon } from '../icons.js';
-import { surroundHtml, setStadiumScene, fieldBorder, lookFor, introPlateHtml, kickoffRevealHtml, REVEAL_MS, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
+import { surroundHtml, setStadiumScene, standsDepth, lookFor, introPlateHtml, kickoffRevealHtml, REVEAL_MS, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
 import { crowdFor } from '../stadium-crowd.js';
 import { guideFootball, guideMoment } from '../guided-week.js';
 import { recorder } from '../../testing/recorder.js';
@@ -49,6 +49,7 @@ import { venueHtml } from '../stadium-preview.js';
 import { replayReason, replayPlan, replayPosition, REPLAY } from '../replay.js';
 import { qbReadsShown } from '../qb-read-ui.js';
 import { openMatchupPanel } from '../type-chart.js';
+import { hauntHtml } from '../stadium-haunt.js';
 import { captainsOf } from '../../franchise/partnerships.js';
 import { postGameHtml } from '../captains-ui.js';
 import { t as $t, lineText } from '../../text/index.js';
@@ -78,7 +79,7 @@ export function registerMatchScreens(Router, app) {
     const G = f.game;
     const portal = field.frame && (field.frame.hoardFlight || field.fx?.t8?.items?.some(i => i.id === 'PSY-02-F' && (field.frame.t ?? 0) >= i.t0));
     const close = portal ? cameraFor(field.ballOn + field.frame.ball[0]) : field.camera || cameraFor(field.ballOn);
-    const viewCamera = autoCamera.sample(close, { key: G.state, auto: G.auto && !G.state.finished && !anim?.replay, closeView: G.autoCloseView, reducedMotion: f.settings.reducedMotion || !!anim?.replay, pad: fieldBorder() ? fieldBorder() + 1.5 : 0 }); // zoomed out: the white all round, and the goal posts standing on it
+    const viewCamera = autoCamera.sample(close, { key: G.state, auto: G.auto && !G.state.finished && !anim?.replay, closeView: G.autoCloseView, reducedMotion: f.settings.reducedMotion || !!anim?.replay, pad: standsDepth() }); // zoomed out: the white all round, and the goal posts standing on it
     // Planner art is caller-projected in the close camera's coordinate space.
     const underlay = field.underlay ? `<g transform="translate(0 ${viewCamera.top - close.top})">${field.underlay}</g>` : '';
     return { ...field, viewCamera, underlay };
@@ -415,7 +416,7 @@ export function registerMatchScreens(Router, app) {
     // Stadium Polish: the reaction to the play just shown, or the kickoff flourish (once per game), handed to afterRender.
     if (reaction) pendingStadium = reaction;
     else if (openingKickoff && !G.stadiumIntroShown) { G.stadiumIntroShown = true; pendingStadium = introReaction(); }
-    return { title, head, wrapClass, field, over, after, surround: surroundHtml(s.venue), controls: controlsHtml(f, teams, look) };
+    return { title, head, wrapClass, field, over, after, surround: surroundHtml(s.venue) + hauntHtml(s.venue, stadiumFxLevel(f.settings)), controls: controlsHtml(f, teams, look) };
   }
   /** What mount() does after the markup is in place; refresh() repeats it (the play clock restarts, Auto is rescheduled, the halftime sheet opens). */
   function afterRender(f, root) {

@@ -128,7 +128,7 @@ test('Fire, Water and Grass: each look sits on its existing field, keeps the fie
   const { edgeSvg, postsSvg } = await import('../src/ui/stadium-fx.js');
   const expect = { storm: ['Electric', 'Stormport Bolts', 'Electric', /sfx-chain/, /sfx-post-arc/, /sfx-strike/], volcanic: ['Fire', 'Ember City Beasts', 'Fire', /sfx-flame/, /sfx-flame/, /sfx-rise/], tidal: ['Water', 'Harbor Sentinels', 'Water', /sfx-shot/, /sfx-post-arc/, /sfx-drop/], forest: ['Grass', 'Bayou Stalkers', 'Nature', /sfx-vine/, /sfx-vine/, /sfx-swirl/],
     frozen: ['Ice', 'Frostpeak Howlers', 'Ice', /sfx-snowman/, /sfx-node/, /sfx-cube-l/], desert: ['Ground', 'Canyon Crushers', 'Earth', /sfx-cactus/, /sfx-drift/, /sfx-pit/], dome: ['Alloy', 'Ironpeak Rams', 'Metal', /sfx-chain/, /sfx-chain/, /sfx-hatch/] };
-  const designs = { sky: ['Sky', /sfx-wave/, /sfx-post-arc/, /sfx-shadow/, 'Wind'], oracle: ['Oracle', /sfx-orbit/, /sfx-post-arc/, /sfx-ufo/, 'Psychic'], rock: ['Rock', /sfx-tumble/, /sfx-drift/, /sfx-cube-l/, 'Earth'], bug: ['Bug', /sfx-orbit/, /sfx-node/, /sfx-spider/, 'Nature'], specter: ['Specter', /sfx-wisp/, /sfx-post-arc/, /sfx-ghost/, 'Dark'] };
+  const designs = { sky: ['Sky', /sfx-wave/, /sfx-post-arc/, /sfx-shadow/, 'Wind'], oracle: ['Oracle', /sfx-orbit/, /sfx-post-arc/, /sfx-ufo/, 'Psychic'], rock: ['Rock', /sfx-tumble/, /sfx-drift/, /sfx-cube-l/, 'Earth'], bug: ['Bug', /sfx-orbit/, /sfx-node/, /sfx-silk/, 'Nature'], specter: ['Specter', /sfx-wisp/, /sfx-post-arc/, /sfx-mist/, 'Dark'] };
   assert.deepEqual(Object.keys(LOOKS).sort(), [...Object.keys(expect), ...Object.keys(designs)].sort());
   for (const [env, [label, club, type, edge, posts, reveal]] of Object.entries(expect)) {
     const venue = venueFor(club, 'k'); assert.equal(venue.env, env, `${club} plays in ${env}`); assert.equal(venue.type, type, 'the field type and its bonus are untouched'); assert.equal(LOOKS[env].label, label);
@@ -177,7 +177,7 @@ test('monsters in the stands: more in some games and fewer in others, determinis
 // Checkpoint C: two designs no club plays on yet.
 test('Sky, Oracle, Rock, Bug and Specter are designs only: drawn when a venue names them, never a club\'s field, never picked by the game, no type bonus', async () => {
   const { DESIGN_FIELDS, designField } = await import('../src/data/stadium-designs.js'); const { ENVIRONMENTS, STADIUMS } = await import('../src/data/stadiums.js'); const { edgeSvg, postsSvg, setStadiumScene } = await import('../src/ui/stadium-fx.js'); const { TYPE_FUR } = await import('../src/ui/stadium-crowd.js');
-  const designs = { sky: ['Sky', /sfx-wave/, /sfx-post-arc/, /sfx-shadow/, 'Wind'], oracle: ['Oracle', /sfx-orbit/, /sfx-post-arc/, /sfx-ufo/, 'Psychic'], rock: ['Rock', /sfx-tumble/, /sfx-drift/, /sfx-cube-l/, 'Earth'], bug: ['Bug', /sfx-orbit/, /sfx-node/, /sfx-spider/, 'Nature'], specter: ['Specter', /sfx-wisp/, /sfx-post-arc/, /sfx-ghost/, 'Dark'] };
+  const designs = { sky: ['Sky', /sfx-wave/, /sfx-post-arc/, /sfx-shadow/, 'Wind'], oracle: ['Oracle', /sfx-orbit/, /sfx-post-arc/, /sfx-ufo/, 'Psychic'], rock: ['Rock', /sfx-tumble/, /sfx-drift/, /sfx-cube-l/, 'Earth'], bug: ['Bug', /sfx-orbit/, /sfx-node/, /sfx-silk/, 'Nature'], specter: ['Specter', /sfx-wisp/, /sfx-post-arc/, /sfx-mist/, 'Dark'] };
   assert.deepEqual(Object.keys(DESIGN_FIELDS).sort(), Object.keys(designs).sort());
   for (const [id, [label, edge, posts, reveal, crowd]] of Object.entries(designs)) {
     const d = designField(id); assert.ok(d); assert.equal(d.type, null, 'no type, so no field bonus'); assert.equal(ENVIRONMENTS[id], undefined, 'not one of the game\'s fields');
@@ -187,10 +187,36 @@ test('Sky, Oracle, Rock, Bug and Specter are designs only: drawn when a venue na
     try { setStadiumScene(venue, null); const svg = fieldSvg({ venue, ballOn: 92 }); assert.ok(svg.includes(d.palette.a), 'its own turf'); assert.match(svg, /sfx-apron/); assert.match(svg, /sfx-stand/); assert.ok(svg.includes('stroke="#eaf3e6"'), 'white yard lines'); assert.doesNotMatch(svg, /NaN|undefined/); } finally { setStadiumScene(null); }
   }
   assert.equal(designField('grass'), null); assert.equal(venueFor('Ashford Hawks', 'k').env, 'grass', 'every club keeps the field it had');
-  const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8'); for (const k of ['sfx-wave', 'sfx-tumble', 'sfx-wisp', 'sfx-spider', 'sfx-ghost', 'sfx-hatch', 'sfx-door-l', 'sfx-door-r', 'sfx-ball-set', 'sfx-ball-ghost', 'sfx-orbit', 'sfx-cube-l', 'sfx-cube-r', 'sfx-crack', 'sfx-pit', 'sfx-ball-pit', 'sfx-ball-float', 'sfx-ufo', 'sfx-beam', 'sfx-ball-late']) assert.match(css, new RegExp(`@keyframes ${k}\\b`));
+  const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8'); for (const k of ['sfx-wave', 'sfx-tumble', 'sfx-wisp', 'sfx-web', 'sfx-silk', 'sfx-mist', 'sfx-ball-fade', 'sfx-cross-r', 'sfx-cross-l', 'sfx-hatch', 'sfx-door-l', 'sfx-door-r', 'sfx-ball-set', 'sfx-orbit', 'sfx-cube-l', 'sfx-cube-r', 'sfx-crack', 'sfx-pit', 'sfx-ball-pit', 'sfx-ball-float', 'sfx-ufo', 'sfx-beam', 'sfx-ball-late']) assert.match(css, new RegExp(`@keyframes ${k}\\b`));
 });
 
 test('Ice has still snowmen on its sidelines: nothing there moves', async () => {
   const { edgeSvg } = await import('../src/ui/stadium-fx.js'); const e = edgeSvg('frozen', { bottom: 35, top: 81 }, 27, (y) => 81 - y, 46);
   assert.ok((e.match(/sfx-snowman/g) || []).length >= 14); assert.doesNotMatch(e, /sfx-anim/);
+});
+
+// Checkpoint D revision.
+test('nothing frightening at kickoff: the Bug reveal shows a web and silk, the Specter reveal shows only the football fading in', () => {
+  const bug = kickoffRevealHtml({ env: 'bug' }, 'full'), specter = kickoffRevealHtml({ env: 'specter' }, 'full');
+  assert.match(bug, /sfx-web/); assert.match(bug, /sfx-silk/); assert.doesNotMatch(bug, /spider/i); assert.doesNotMatch(specter, /ghost/i); assert.match(specter, /sfx-ball/);
+  const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8');
+  assert.match(css, /sfx-revealing:has\(\.sfx-reveal:is\(\.sfx-reveal-cube, \.sfx-reveal-boulder, \.sfx-reveal-pit, \.sfx-reveal-hatch\)\) \.kickoff-captains \{ gap:/, 'the captains step apart before anything opens or lands between them');
+});
+test('Specter ghosts: pale shapes of real species, random, in a layer that takes no taps; none elsewhere or at Off', async () => {
+  const { hauntHtml, HAUNT_GHOSTS } = await import('../src/ui/stadium-haunt.js');
+  let n = 0; const rand = () => { n = (n * 9301 + 49297) % 233280; return n / 233280; };
+  const h = hauntHtml({ env: 'specter' }, 'full', rand); assert.equal((h.match(/class="sfx-ghostmon /g) || []).length, HAUNT_GHOSTS); assert.match(h, /aria-hidden="true"/); assert.match(h, /<svg class="sprite"/);
+  assert.notEqual(hauntHtml({ env: 'specter' }, 'full', rand), h, 'a new pick each time'); assert.equal(hauntHtml({ env: 'specter' }, 'off'), ''); assert.equal(hauntHtml({ env: 'storm' }), ''); assert.equal(hauntHtml(null), '');
+  const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8'); assert.match(css, /\.sfx-haunt \{[^}]*pointer-events: none/); assert.match(css, /html\[data-stadium-fx="reduced"\] \.sfx-haunt[^{]*\{ display: none/);
+});
+test('zoomed out, stands with the crowd run along both sidelines; the close view is unchanged', async () => {
+  const { setStadiumScene, SIDE_REACH, FIELD_BORDER } = await import('../src/ui/stadium-fx.js'); const { fieldViewBox, FIELD_VIEWBOX } = await import('../src/ui/field-view.js');
+  const venue = venueFor('Stormport Bolts', 'k'); const plain = FIELD_VIEWBOX.split(' ').map(Number);
+  assert.equal(fieldViewBox(142), `${plain[0]} 0 ${plain[2]} 142`, 'no scene: no side stands');
+  try {
+    setStadiumScene(venue, null); const close = fieldViewBox().split(' ').map(Number), wide = fieldViewBox(142).split(' ').map(Number);
+    assert.ok(Math.abs(close[2] - (plain[2] + FIELD_BORDER * 2)) < 1e-9); assert.ok(Math.abs(wide[2] - (close[2] + SIDE_REACH * 2)) < 1e-9); assert.equal(SIDE_REACH, 9);
+    assert.doesNotMatch(fieldSvg({ venue, ballOn: 50 }), /sfx-stand-side/); const z = fieldSvg({ venue, ballOn: 50, viewCamera: { bottom: -21, top: 121 } });
+    assert.match(z, /sfx-stand-side/); assert.match(z, /class="sfx-stand"/, 'and the far stand'); assert.match(z, /sfx-wall/); assert.doesNotMatch(z, /NaN|undefined/);
+  } finally { setStadiumScene(null); }
 });
