@@ -63,10 +63,11 @@ function headerHtml(pg, reduced) {
 }
 
 // ---------------------------------------------------------------- Historical recognition (Task 9): the Monster Hall of Fame and standing records
-const SCOPE_LABEL = { game: () => $t('career.single_game_record'), season: () => $t('career.single_season_record'), team: () => $t('career.team_record') };
+const SCOPE_LABEL = { game: () => $t('career.single_game_record'), season: () => $t('career.single_season_record'), team: () => $t('career.team_record'),
+  preSeason: () => $t('career.pre_single_season_record', { year: yearOf(1) }), preCareer: () => $t('career.pre_career_record', { year: yearOf(1) }) }; // the league archive's own book (before the owner arrived)
 function recordsHeldHtml(pg) {
   const rows = pg.historicalRecognition?.records || []; if (!rows.length) return '';
-  return `<div class="cp-sec"><div class="cp-sec-h">${$t('career.b_records_held_b')}<span class="dim">${rows.length}</span></div><ol class="cp-moments">${rows.map((r) => `<li><span aria-hidden="true">📈</span><div><b>${esc(r.label)} · <span class="mono">${esc(r.value)}</span></b><span class="dim">${(SCOPE_LABEL[r.scope] || SCOPE_LABEL.game)()}${r.year != null ? ` · ${esc(yearOf(r.year))}` : ''}${r.team ? ` · ${esc(r.team)}` : ''}</span></div></li>`).join('')}</ol></div>`;
+  return `<div class="cp-sec"><div class="cp-sec-h">${$t('career.b_records_held_b')}<span class="dim">${rows.length}</span></div><ol class="cp-moments">${rows.map((r) => `<li><span aria-hidden="true">📈</span><div><b>${esc(r.label)} · <span class="mono">${esc(r.value)}</span></b><span class="dim">${(SCOPE_LABEL[r.scope] || SCOPE_LABEL.game)()}${r.year != null ? ` · ${esc(yearOf(r.year))}` : ''}${r.team && r.scope !== 'preCareer' ? ` · ${esc(r.team)}` : ''}</span></div></li>`).join('')}</ol></div>`;
 }
 function hallHtml(pg, canGo) {
   const h = pg.historicalRecognition?.hall; if (!h) return '';
@@ -75,6 +76,19 @@ function hallHtml(pg, canGo) {
     : lb ? $t('career.on_the_ballot_votes', { year: yearOf(lb.year), votes: lb.votes, voters: lb.voters })
       : h.eligibleYear != null ? $t('career.first_eligible_for_the_ballot', { retired: yearOf(h.retiredYear), year: yearOf(h.eligibleYear) }) : '';
   return `<div class="cp-sec cp-hall ${ind ? 'in' : ''}"><div class="cp-sec-h">${$t('career.b_monster_hall_of_fame_b')}${canGo ? `<button class="cp-more" data-action="cp-hall">${$t('career.open_the_hall')}</button>` : ''}</div><p class="${ind ? 'cp-hofline' : 'dim'}" style="margin:0">${ind ? '🏛 ' : ''}${esc(line)}</p>${!ind && h.ballots.length > 1 ? `<p class="dim" style="margin:4px 0 0;font-size:12px">${$t('career.ballots_so_far', { n: h.ballots.length })}</p>` : ''}</div>`;
+}
+/** Honours and moves from the league archive (the seasons before the owner arrived): listed apart from the trophy case, which holds what this franchise has seen. */
+function preLeagueHtml(pg) {
+  const pre = pg.preLeague; if (!pre || !pre.seasons) return '';
+  const AWARD_LABEL = { mvp: $t('career.pre_mvp'), opoy: $t('career.pre_opoy'), dpoy: $t('career.pre_dpoy') };
+  const rows = [
+    ...pre.titles.map((t) => ({ y: t.year, icon: '🏆', title: $t('career.pre_league_champion'), club: t.club })),
+    ...pre.awards.map((a) => ({ y: a.year, icon: '🏅', title: AWARD_LABEL[a.award] || a.award, club: a.team })),
+    ...pre.transfers.map((t) => ({ y: t.year, icon: '🔁', title: $t('career.pre_joined', { club: t.to }), club: $t('career.pre_from', { club: t.from }) })),
+  ].sort((x, y) => y.y - x.y);
+  return `<div class="cp-sec cp-pre-sec"><div class="cp-sec-h">${$t('career.b_pre_before_b', { year: yearOf(1) })}<span class="dim">${plural(pre.seasons, 'season')}</span></div>
+    <p class="dim" style="margin:0 0 6px;font-size:12px">${$t('career.pre_summary', { span: pre.from === pre.to ? yearOf(pre.from) : `${yearOf(pre.from)}–${yearOf(pre.to)}`, games: plural((pre.reg.games || 0) + (pre.post.games || 0), 'game') })}</p>
+    ${rows.length ? `<ol class="cp-moments">${rows.map((r) => `<li><span aria-hidden="true">${r.icon}</span><div><b>${esc(r.title)}</b><span class="dim">${esc(yearOf(r.y))} · ${esc(r.club)}</span></div></li>`).join('')}</ol>` : ''}</div>`;
 }
 const tabsHtml = (cur) => `<div class="cp-tabs" role="tablist">${PAGE_TABS.map(([k, l]) => `<button class="cp-tab ${cur === k ? 'on' : ''}" role="tab" aria-selected="${cur === k}" data-action="cp-tab" data-v="${k}">${l}</button>`).join('')}</div>`;
 
@@ -93,7 +107,7 @@ function overviewHtml(pg, readOnly, f = null) {
   return `<div class="panel cp-body">
     <div class="cp-facts">${facts.map(([l, v]) => `<div><b class="mono">${esc(v)}</b><span>${l}</span></div>`).join('')}</div>
     ${spanTxt ? `<div class="cp-span dim">${p.kind === 'league' ? $t('career.on_record_2') : $t('career.career')} ${esc(spanTxt)}${!p.complete && fx.onRecord && fx.seasons && fx.onRecord < fx.seasons ? ` ${$t('career.on_record', { plural: plural(fx.onRecord, 'season') })}` : ''}</div>` : ''}
-    ${highlights}${honours}${hallHtml(pg, !readOnly && !!f?.history)}${recordsHeldHtml(pg)}${clubs}${!readOnly && f && p.id ? careerPartnershipsHtml(f, p.id) : ''}${!readOnly && f && p.id ? careerInjuryHtml(f, p.id, { firstSeason: pg.span?.from ?? null }) : ''}${moments}
+    ${highlights}${honours}${hallHtml(pg, !readOnly && !!f?.history)}${recordsHeldHtml(pg)}${preLeagueHtml(pg)}${clubs}${!readOnly && f && p.id ? careerPartnershipsHtml(f, p.id) : ''}${!readOnly && f && p.id ? careerInjuryHtml(f, p.id, { firstSeason: pg.span?.from ?? null }) : ''}${moments}
     ${(p.notes || []).map((n) => `<p class="cs-note">${esc(n)}</p>`).join('')}
     ${!p.legacy && (p.kind === 'full' || p.kind === 'snapshot') ? `<button class="btn block cc-btn" data-action="cc-open" style="margin-top:10px">${$t('career.career_card')}</button>` : ''}
   </div>`;
@@ -125,14 +139,15 @@ function statsHtml(pg, params) {
   const typeLabel = bucket === 'reg' ? 'regular season' : bucket === 'post' ? 'playoffs' : $t('career.regular_season_playoffs');
   const canOpen = p.kind === 'full';
   const table = rows.length ? `<div class="stat-table cp-stat-table"><table><thead><tr><th class="cp-yr">${$t('career.season')}</th><th class="cp-tm">${$t('career.team')}</th>${cols.map(([, l]) => `<th>${esc(l)}</th>`).join('')}</tr></thead><tbody>
-      ${rows.map((s) => `<tr>${canOpen ? `<td class="cp-yr"><button class="cp-yr-btn" data-action="tl-season" data-y="${s.year}" aria-label="${$t('career.season_game_by_game', { year: esc(yearOf(s.year)) })}">${esc(yearOf(s.year))} ›</button></td>` : `<td class="cp-yr">${esc(yearOf(s.year))}</td>`}<td class="cp-tm"><span class="cp-dot" style="--club:${clubColor(s.team)}"></span>${esc(abbr(s.team))}</td>${cols.map(([k]) => `<td>${statCell(bucketLine(s, bucket), k)}</td>`).join('')}</tr>`).join('')}
+      ${rows.map((s) => `<tr class="${s.pre ? 'cp-pre' : ''}">${canOpen && !s.pre ? `<td class="cp-yr"><button class="cp-yr-btn" data-action="tl-season" data-y="${s.year}" aria-label="${$t('career.season_game_by_game', { year: esc(yearOf(s.year)) })}">${esc(yearOf(s.year))} ›</button></td>` : `<td class="cp-yr">${esc(yearOf(s.year))}</td>`}<td class="cp-tm"><span class="cp-dot" style="--club:${clubColor(s.team)}"></span>${esc(abbr(s.team))}</td>${cols.map(([k]) => `<td>${statCell(bucketLine(s, bucket), k)}</td>`).join('')}</tr>`).join('')}
       <tr class="cp-total"><td class="cp-yr">${L.source === 'tables' ? $t('career.on_record_2') : $t('career.career')}</td><td class="cp-tm">${plural(rows.length, 'yr')}</td>${cols.map(([k]) => `<td>${statCell(total, k)}</td>`).join('')}</tr>
     </tbody></table></div>` : `<p class="dim">${bucket === 'post' ? $t('career.no_playoff_games_in_this_career') : $t('career.no_games_of_this_kind_on')}</p>`;
   return `<div class="panel cp-body">
     ${seg([['reg', $t('career.regular_season')], ['post', $t('career.playoffs')], ['all', $t('career.both')]], 'cp-bucket', bucket)}
     ${pg.groups.length > 1 ? `<div style="margin-top:6px">${seg(pg.groups.map((g) => [g.key, g.label]), 'cp-group', group)}</div>` : ''}
-    <div class="dim stat-caption">${esc(typeLabel)} · ${plural(total.games || 0, 'game')}${canOpen ? $t('career.tap_a_season_for_its_games') : ''}</div>
+    <div class="dim stat-caption">${esc(typeLabel)} · ${plural(total.games || 0, 'game')}${canOpen && rows.some((s) => !s.pre) ? $t('career.tap_a_season_for_its_games') : ''}</div>
     ${table}
+    ${rows.some((s) => s.pre) ? `<p class="dim cp-foot cp-pre-note">${$t('career.pre_seasons_note', { year: yearOf(1) })}</p>` : ''}
     <p class="dim cp-foot">${$t('career.rates_come_from_the_totals_shown', { source: L.source === 'tables' ? $t('career.another_clubs_player_before_persistent_rosters') : '' })}${!p.complete && p.kind === 'full' && pg.facts.onRecord && pg.facts.seasons && pg.facts.onRecord < pg.facts.seasons ? ` ${$t('career.seasons_before_this_franchise_kept_his', { plural: plural(pg.facts.onRecord, 'season') })}` : ''}</p>
   </div>`;
 }
@@ -143,7 +158,7 @@ function awardsHtml(pg, reduced) {
   const list = pg.awards.length ? `<div class="cp-sec"><div class="cp-sec-h">${$t('career.b_honors_by_season_b')}</div><div class="list">${pg.awards.flatMap((a) => a.entries.map((e) => ({ ...e, a }))).sort((x, y) => (y.year ?? -1) - (x.year ?? -1)).map((e) => `<div class="item static cp-hrow"><span class="cp-hicon" aria-hidden="true">${e.a.icon}</span><div class="grow"><div class="name">${esc(e.a.label)}</div><div class="sub">${e.year == null ? $t('career.season_not_recorded_2') : esc(yearOf(e.year))}${e.club ? ` · ${esc(e.club)}` : ''}</div></div></div>`).join('')}</div></div>` : '';
   const ms = pg.milestones.filter((e) => ['milestone', 'season', 'first', 'debut', 'playoff', 'star', 'rival', 'bowl', 'evolve'].includes(e.t));
   const miles = ms.length ? `<div class="cp-sec"><div class="cp-sec-h">${$t('career.b_milestones_b')}<span class="dim">${ms.length}</span></div><ol class="cp-moments">${ms.map((e) => `<li><span aria-hidden="true">${e.icon}</span><div><b>${esc(e.title)}</b><span class="dim">${e.y == null ? $t('career.before_the_timeline') : esc(yearOf(e.y))}${e.c ? ` · ${esc(e.c)}` : ''}</span></div></li>`).join('')}</ol></div>` : '';
-  return `<div class="panel cp-body">${trophyCaseHtml(p, { reduced, interactive: p.kind === 'full' || p.kind === 'league' })}${p.honours?.hof && !pg.historicalRecognition?.induction ? `<p class="cp-hofline">${$t('career.enshrined_in_the_hall_of_fame')}</p>` : ''}${hallHtml(pg, false)}${recordsHeldHtml(pg)}${list}${miles || (p.kind === 'full' ? `<p class="dim">${$t('career.firsts_milestones_and_big_seasons_appear')}</p>` : '')}</div>`;
+  return `<div class="panel cp-body">${trophyCaseHtml(p, { reduced, interactive: p.kind === 'full' || p.kind === 'league' })}${p.honours?.hof && !pg.historicalRecognition?.induction ? `<p class="cp-hofline">${$t('career.enshrined_in_the_hall_of_fame')}</p>` : ''}${hallHtml(pg, false)}${recordsHeldHtml(pg)}${list}${preLeagueHtml(pg)}${miles || (p.kind === 'full' ? `<p class="dim">${$t('career.firsts_milestones_and_big_seasons_appear')}</p>` : '')}</div>`;
 }
 
 // ---------------------------------------------------------------- Team History

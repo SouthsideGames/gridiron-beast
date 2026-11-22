@@ -1,3 +1,4 @@
+import { generateLeagueArchive } from './preleague-history.js';
 import { reserveIndividualName, ensureIndividualNames } from '../data/individual-names.js';
 import { commitGameInjuries } from '../sim/substitutions.js';
 import * as GM from './gm-career.js';
@@ -92,8 +93,9 @@ export const DAY_ACTIONS = [$t('franchise.scout_a_region'), 'Recruit', $t('franc
 export const PLAN_SIZE = 6;
 
 // ------------------------------------------------------------ creation
+/** `leagueArchive`: false leaves out the pre-franchise archive (tests prove it changes nothing else; the game always passes true). */
 /** `persistentLeague`: false builds a v40-style universe (generated AI rosters, no registry) for parity and balance baselines only; the game always passes true. */
-export function createFranchise({ owner, club, rival = null, cornerstone = null, cornerstoneOffense, cornerstoneDefense, seed = Date.now() >>> 0, settings = {}, persistentLeague = true }) {
+export function createFranchise({ owner, club, rival = null, cornerstone = null, cornerstoneOffense, cornerstoneDefense, seed = Date.now() >>> 0, settings = {}, persistentLeague = true, leagueArchive = true }) {
   const rng = createRng(seed);
   const division = divisionOf(club);
   const rivalChoices = DIVISIONS[division].filter((t) => t !== club);
@@ -122,7 +124,14 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   for (const m of roster) dexRecord(f, m, 'signed');
   for (const m of roster) { noteJoin(f, m, 'founding', m.cornerstone ? { cornerstone: 1 } : {}); markCareerFresh(m); } // Career Timeline (GDD §38)
   if (persistentLeague) ensureLeague(f, { qualityDelta: -CREATION_LIFT, fresh: true }); // a new universe starts persistent (GDD §42.6): rosters open a little under today's year-1 quality because they will grow by playing (league-season.js calibration)
+  // Archive is separate from playable history: no retroactive GM achievements.
   ensureIndividualNames(f);
+  if (persistentLeague && leagueArchive) {
+    // The league's eight seasons before the owner arrived (preleague-history.js). Generated once, here, from the seed alone: it
+    // draws nothing from the franchise generator, so the draft class that follows is the one it would have been without it.
+    f.preLeagueHistory = generateLeagueArchive(f, { quality: (name) => clubQuality(f, name, 1) });
+    for (const id of f.preLeagueHistory.legends) { const c = f.preLeagueHistory.careers[id]; reserveIndividualName(f, { id: c.id, name: c.name }); } // a retired legend's name is his alone (reserved through a copy: the archive is not touched)
+  }
   openCreationDraft(f);
   ensureIndividualNames(f);
   return f;

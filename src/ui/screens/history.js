@@ -19,6 +19,9 @@ import { resolveRecordHolder } from '../../franchise/career-profile.js';
 import { universeCareerLeaders } from '../../franchise/league-careers.js';
 import { franchiseSeasonHistory, championshipHistory, historicalAwards, historicalHallOfFame, historicalRecords, franchiseTotals, monsterHallStatus, WAIT_SEASONS, MAX_INDUCTEES, MAX_NOMINEES, VOTER_COUNT, VOTE_THRESHOLD } from '../../franchise/task9-history.js';
 import { sealedElectionYear } from '../../franchise/hall-ceremony.js';
+import { preLeagueRecords } from '../../franchise/records-history.js';
+import { leagueArchive } from '../../franchise/preleague-history.js';
+import { preLeagueHistoryHtml, preLeagueHallHtml, legendSheetHtml, archiveName, firstYearLabel } from '../preleague-ui.js';
 import { fieldText, t as $t } from '../../text/index.js';
 
 const clubColor = (c) => TEAM_META[c]?.color || '#9fb8ad';
@@ -31,7 +34,8 @@ const SCREENS = [['history', () => $t('history.nav_history'), '📜'], ['awardhi
 
 /** The strip that joins the four history screens. Moving along it replaces the screen, so Back leaves the history in one step. */
 export const historyNavHtml = (current) => `<nav class="hh-nav" aria-label="${$t('history.sections')}">${SCREENS.map(([s, label, icon]) => `<button class="hh-nav-btn ${current === s ? 'on' : ''}" data-action="hnav" data-screen="${s}" aria-current="${current === s ? 'page' : 'false'}"><span aria-hidden="true">${icon}</span>${label()}</button>`).join('')}</nav>`;
-const navActions = (Router) => ({ hnav: (el) => { if (Router.currentScreen()?.name !== el.dataset.screen) Router.go(el.dataset.screen, {}, { replace: true }); } });
+const navActions = (Router, app) => ({ hnav: (el) => { if (Router.currentScreen()?.name !== el.dataset.screen) Router.go(el.dataset.screen, {}, { replace: true }); },
+  'pl-legend': (el) => { const s = app?.f ? legendSheetHtml(app.f, el.dataset.id) : null; if (s) sheet(s.html, { title: s.title }); } }); // a retired legend exists only in the archive: his career opens here, not on a career page
 const glance = (cells) => `<div class="cp-facts hh-glance">${cells.map(([v, l]) => `<div><b class="mono">${esc(v)}</b><span>${l}</span></div>`).join('')}</div>`;
 const empty = (text) => `<div class="panel hh-empty"><p class="dim" style="margin:0">${text}</p></div>`;
 
@@ -43,7 +47,8 @@ function historyHtml(f, params) {
       <div class="dim hh-owner">${f.owner ? `${esc(f.owner.first)} ${esc(f.owner.last)}${f.owner.hometown ? ` · ${esc(f.owner.hometown)}` : ''}` : ''}</div>
       ${glance([[tot.seasons, $t('history.seasons')], [tot.seasons ? rec(tot) : '—', $t('history.all_time_record')], [tot.titleYears.length, $t('history.titles')], [tot.playoffs, $t('history.playoff_trips')], [tot.clubAwards.length, $t('history.league_awards')], [hall.inductees.length, $t('history.hall_of_famers')]])}
       ${f.badges ? `<div class="dim hh-tiers">${$t('hq.challenger_vanguard_sovereign', { challenger: f.badges.challenger, vanguard: f.badges.vanguard, sovereign: f.badges.sovereign })}</div>` : ''}</div>`;
-  if (!seasons.length) return `${head}${empty($t('hq.no_completed_seasons_yet'))}`;
+  const preLeague = preLeagueHistoryHtml(f, { openYear: params.pre != null ? Number(params.pre) : null }); // the league before the owner arrived: shown apart, counted in none of the totals above
+  if (!seasons.length) return `${head}${empty($t('hq.no_completed_seasons_yet'))}${preLeague}`;
 
   const feats = [];
   if (tot.titleYears.length) feats.push(['🏆', $t('history.beast_bowl_champions'), tot.titleYears.map((y) => yearOf(y)).join(' · ')]);
@@ -69,47 +74,52 @@ function historyHtml(f, params) {
   const open = params.open != null ? Number(params.open) : 0;
   const list = groups.map((g, i) => { const w = g.reduce((n, s) => n + (s.record?.w || 0), 0), l = g.reduce((n, s) => n + (s.record?.l || 0), 0); const titles = g.filter((s) => s.champion != null && s.champion === s.club).length; const from = yearOf(g[g.length - 1].year), to = yearOf(g[0].year);
     return `<details class="hh-decade" data-group="${i}" ${i === open ? 'open' : ''}><summary><b class="mono">${from === to ? from : `${from}–${to}`}</b><span class="dim">${$t('history.seasons_count', { n: g.length })} · ${w}-${l}${titles ? ` · 🏆 ${titles}` : ''}</span></summary><div class="list">${g.map(row).join('')}</div></details>`; }).join('');
-  return `${head}${accomplishments}${champions}<h3 class="hh-h">${$t('history.season_by_season')}</h3>${list}`;
+  return `${head}${accomplishments}${champions}<h3 class="hh-h">${$t('history.season_by_season')}</h3>${list}${preLeague}`;
 }
 
 // ---------------------------------------------------------------- Awards
 function awardsScreenHtml(f, params) {
   const live = f.season?.awardsFinal && !f.season.finished ? { year: f.season.awardsFinal.year ?? f.season.year, league: f.season.awardsFinal.winners || {} } : null;
-  const seasons = [...(f.history || []).filter((h) => h.awards?.league).map((h) => ({ year: h.year, league: h.awards.league })), ...(live ? [{ ...live, live: true }] : [])].sort((a, b) => b.year - a.year);
+  const seasons = [...(leagueArchive(f)?.seasons || []).filter((h) => h.awards?.league && Object.keys(h.awards.league).length).map((h) => ({ year: h.year, league: h.awards.league, pre: true })), ...(f.history || []).filter((h) => h.awards?.league).map((h) => ({ year: h.year, league: h.awards.league })), ...(live ? [{ ...live, live: true }] : [])].sort((a, b) => b.year - a.year);
   if (!seasons.length) return empty($t('hq.award_winners_are_named_when_the'));
   const mode = params.mode === 'award' ? 'award' : 'season';
   const kinds = Object.keys(AWARDS).filter((k) => seasons.some((s) => s.league[k]));
   const kind = kinds.includes(params.kind) ? params.kind : kinds[0];
-  const who = (k, w) => (k === 'coy' ? esc(w.coach || w.name || '') : w.id ? careerLink(w.id, w.name) : esc(w.name || ''));
-  const winner = (k, w, s, label) => `<div class="item static ${w.team === f.club ? 'mine' : ''}">${k === 'coy' ? '<span class="hh-nosprite coach" aria-hidden="true">🧢</span>' : sprite(w, 32)}<div class="grow"><div class="name">${label} · ${who(k, w)}</div><div class="sub">${esc(w.team || '')}${w.position && k !== 'coy' ? ` · ${esc(w.position)}` : ''}${w.record ? ` · ${esc(w.record)}` : ''}${fieldText(w, 'why') ? ` · ${esc(fieldText(w, 'why'))}` : ''}</div></div></div>`;
+  const who = (k, w) => (k === 'coy' ? esc(w.coach || w.name || '') : archiveName(f, w.id, w.name));
+  const preChip = `<span class="chip pl-chip">${$t('history.pre_chip', { year: firstYearLabel() })}</span>`;
+  const winner = (k, w, s, label) => `<div class="item static ${w.team === f.club && !s.pre ? 'mine' : ''}">${k === 'coy' ? '<span class="hh-nosprite coach" aria-hidden="true">🧢</span>' : sprite(w, 32)}<div class="grow"><div class="name">${label} · ${who(k, w)}</div><div class="sub">${esc(w.team || '')}${w.position && k !== 'coy' ? ` · ${esc(w.position)}` : ''}${w.record ? ` · ${esc(w.record)}` : ''}${fieldText(w, 'why') ? ` · ${esc(fieldText(w, 'why'))}` : ''}</div></div></div>`;
   const seg = `<div class="seg hh-seg" role="tablist"><button class="btn small ${mode === 'season' ? 'primary' : ''}" role="tab" aria-selected="${mode === 'season'}" data-action="amode" data-v="season">${$t('history.by_season')}</button><button class="btn small ${mode === 'award' ? 'primary' : ''}" role="tab" aria-selected="${mode === 'award'}" data-action="amode" data-v="award">${$t('history.by_award')}</button></div>`;
   let body;
   if (mode === 'season') {
-    body = seasons.map((s, i) => `<details class="hh-decade" ${i === 0 ? 'open' : ''}><summary><b class="mono">${yearOf(s.year)}</b>${s.live ? `<span class="chip">${$t('hq.this_season_2')}</span>` : ''}<span class="dim">${s.league.mvp ? `${esc(AWARDS.mvp.short)} ${esc(s.league.mvp.name || '')}` : ''}</span></summary><div class="list">${Object.entries(AWARDS).map(([k, a]) => (s.league[k] ? winner(k, s.league[k], s, esc(a.short)) : '')).join('')}</div></details>`).join('');
+    const firstPre = seasons.findIndex((s) => s.pre);
+    body = seasons.map((s, i) => `${i === firstPre ? `<h3 class="hh-h pl-divider">${$t('history.pre_awards_divider', { year: firstYearLabel() })}</h3><p class="dim pl-note">${$t('history.pre_awards_note')}</p>` : ''}<details class="hh-decade" ${i === 0 ? 'open' : ''}><summary><b class="mono">${yearOf(s.year)}</b>${s.live ? `<span class="chip">${$t('hq.this_season_2')}</span>` : ''}<span class="dim">${s.league.mvp ? `${esc(AWARDS.mvp.short)} ${esc(s.league.mvp.name || '')}` : ''}</span></summary><div class="list">${Object.entries(AWARDS).map(([k, a]) => (s.league[k] ? winner(k, s.league[k], s, esc(a.short)) : '')).join('')}</div></details>`).join('');
   } else {
     const rows = seasons.filter((s) => s.league[kind]); const a = AWARDS[kind];
     // the monsters named most often for this award, from the recorded winners only
     const tally = new Map(); if (kind !== 'coy') for (const s of rows) { const w = s.league[kind]; if (w.id == null) continue; const x = tally.get(w.id) || { id: w.id, name: w.name, n: 0 }; x.n++; tally.set(w.id, x); }
     const multi = [...tally.values()].filter((x) => x.n > 1).sort((x, y) => y.n - x.n).slice(0, 3);
     body = `<div class="hh-kinds" role="tablist">${kinds.map((k) => `<button class="cp-tab ${k === kind ? 'on' : ''}" role="tab" aria-selected="${k === kind}" data-action="akind" data-v="${k}">${esc(AWARDS[k].short)}</button>`).join('')}</div>
-      <div class="panel tight"><b>${esc(a.label)}</b><div class="dim">${$t('history.winners_on_record', { n: rows.length })}${multi.length ? ` · ${$t('history.most_often')} ${multi.map((x) => `${careerLink(x.id, x.name)} ×${x.n}`).join(', ')}` : ''}</div></div>
-      <div class="list">${rows.map((s) => winner(kind, s.league[kind], s, `<span class="mono">${yearOf(s.year)}</span>${s.live ? ` <span class="chip">${$t('hq.this_season_2')}</span>` : ''}`)).join('')}</div>`;
+      <div class="panel tight"><b>${esc(a.label)}</b><div class="dim">${$t('history.winners_on_record', { n: rows.length })}${multi.length ? ` · ${$t('history.most_often')} ${multi.map((x) => `${archiveName(f, x.id, x.name)} ×${x.n}`).join(', ')}` : ''}</div></div>
+      <div class="list">${rows.map((s) => winner(kind, s.league[kind], s, `<span class="mono">${yearOf(s.year)}</span>${s.live ? ` <span class="chip">${$t('hq.this_season_2')}</span>` : ''}${s.pre ? ` ${preChip}` : ''}`)).join('')}</div>`;
   }
   return `${seg}${body}`;
 }
 
 // ---------------------------------------------------------------- Records
 function recordsHtml(f, params) {
-  const tab = ['game', 'season', 'career', 'team'].includes(params.tab) ? params.tab : 'game';
-  const tabs = [['game', $t('hq.single_game')], ['season', $t('hq.season_3')], ['career', $t('hq.your_careers')], ['team', $t('hq.team')]];
+  const pre = preLeagueRecords(f); // the archive's own book ([] when the save has none)
+  const tab = ['game', 'season', 'career', 'team', ...(pre.length ? ['preLeague'] : [])].includes(params.tab) ? params.tab : 'game';
+  const tabs = [['game', $t('hq.single_game')], ['season', $t('hq.season_3')], ['career', $t('hq.your_careers')], ['team', $t('hq.team')], ...(pre.length ? [['preLeague', $t('history.pre_records_tab', { year: firstYearLabel() })]] : [])];
   const model = Object.fromEntries(historicalRecords(f).map((s) => [s.scope, s.rows]));
-  const holder = (r, cat) => { const id = r.name ? (r.id || resolveRecordHolder(f, r, { scope: tab === 'season' ? 'season' : 'game', cat }).id) : null; return id ? careerLink(id, r.name) : esc(r.name || r.team || ''); };
-  const prevLine = (p) => (p ? `<div class="sub hh-prev">${$t('history.previous_record')} <b class="mono">${p.value}</b> · ${p.name ? (p.id ? careerLink(p.id, p.name) : esc(p.name)) : esc(p.team || '')}${p.name && p.team ? ` (${esc(p.team)})` : ''}${p.year != null ? ` · ${yearOf(p.year)}` : ''}</div>` : '');
-  const row = (label, r, sub, cat = null) => `<div class="item static hh-record ${r?.team === f.club ? 'mine' : ''}">${r?.species ? monsterSprite(r, 30) : ''}<div class="grow"><div class="name">${esc(label)}</div><div class="sub">${r ? `<b>${holder(r, cat)}</b>${r.position ? ` (${esc(r.position)})` : ''} · ${sub(r)}` : $t('hq.no_record_yet')}</div>${prevLine(r?.previous)}</div><span class="chip accent hh-value">${r ? r.value : '·'}</span></div>`;
+  const holder = (r, cat) => { const id = r.name ? (r.id || resolveRecordHolder(f, r, { scope: tab === 'season' ? 'season' : 'game', cat }).id) : null; return id ? archiveName(f, id, r.name) : esc(r.name || r.team || ''); };
+  const prevLine = (p) => (p ? `<div class="sub hh-prev">${$t('history.previous_record')} <b class="mono">${p.value}</b> · ${p.name ? (p.id ? archiveName(f, p.id, p.name) : esc(p.name)) : esc(p.team || '')}${p.name && p.team ? ` (${esc(p.team)})` : ''}${p.year != null ? ` · ${yearOf(p.year)}` : ''}</div>` : '');
+  const row = (label, r, sub, cat = null) => `<div class="item static hh-record ${r?.team === f.club && !r?.preLeague ? 'mine' : ''}">${r?.species ? monsterSprite(r, 30) : ''}<div class="grow"><div class="name">${esc(label)}</div><div class="sub">${r ? `<b>${holder(r, cat)}</b>${r.position ? ` (${esc(r.position)})` : ''} · ${sub(r)}` : $t('hq.no_record_yet')}</div>${prevLine(r?.previous)}</div><span class="chip accent hh-value">${r ? r.value : '·'}</span></div>`;
   const playoff = (r) => (r.playoff ? ` ${$t('history.in_the_playoffs')}` : '');
   let body = ''; let held = null;
   if (tab === 'game') { body = model.game.map((x) => row(x.label, x.record, (r) => `${$t('history.game_line', { team: esc(r.team), opp: esc(r.opp), year: yearOf(r.year), week: r.week })}${playoff(r)}`, x.category)).join(''); held = model.game; }
   else if (tab === 'season') { body = model.season.map((x) => row(x.label, x.record, (r) => `${esc(r.team)} · ${yearOf(r.year)}`, x.category)).join('') + `<p class="dim">${$t('hq.season_records_are_written_when_a')}</p>`; held = model.season; }
+  else if (tab === 'preLeague') { const sec = (scope) => pre.find((x) => x.scope === scope)?.rows || [];
+    body = `<p class="dim pl-note">${$t('history.pre_records_note', { year: firstYearLabel() })}</p><h3 class="hh-h">${$t('hq.season_3')}</h3>${sec('preSeason').map((x) => row(x.label, x.record, (r) => `${esc(r.team)} · ${yearOf(r.year)}`, x.category)).join('')}<h3 class="hh-h">${$t('history.pre_career')}</h3>${sec('preCareer').map((x) => row(x.label, x.record, (r) => `${r.retired ? $t('history.pre_retired') : esc(r.team)} · ${r.from === r.to ? yearOf(r.from) : `${yearOf(r.from)}–${yearOf(r.to)}`} · ${$t('history.pre_games', { n: r.games })}`, x.category)).join('')}`; }
   else if (tab === 'career') { const L = universeCareerLeaders(f, { n: 1 }); body = RECORD_CATEGORIES.map((c) => { const r = L[c.id]?.[0]; return row(c.label, r ? { ...r, team: r.club || '' } : null, (x) => `${$t('hq.regular_season_games', { club: x.club ? esc(x.club) : x.where === 'legend' ? 'retired' : 'free agent', games: x.games })}`, c.id); }).join('') + `<p class="dim">${$t('hq.career_totals_across_every_monster_the')}</p>`; }
   else { body = model.team.map((x) => row(x.label, x.record, (r) => `${$t('history.team_game_line', { score: esc(r.score || ''), opp: esc(r.opp), year: yearOf(r.year), week: r.week })}${playoff(r)}`)).join(''); held = model.team; }
   const set = held ? held.filter((x) => x.record) : []; const mine = set.filter((x) => x.record.team === f.club).length;
@@ -169,11 +179,11 @@ function hallHtml(f, params, reduced) {
       ${sorted.length > rows.length ? `<button class="btn block hh-more" data-action="hall-all" data-v="1">${$t('history.show_all_candidates', { n: sorted.length })}</button>` : all && sorted.length > LIMIT ? `<button class="btn block hh-more" data-action="hall-all" data-v="0">${$t('history.show_the_most_recent')}</button>` : ''}`
       : empty($t('history.no_retired_monster_has_a_preserved'));
   }
-  return `${hero}${seg}${body}<p class="dim cp-foot">${$t('history.the_owners_hall_of_fame_card_is')}</p>`;
+  return `${hero}${seg}${body}${view === 'inductees' ? preLeagueHallHtml(f) : ''}<p class="dim cp-foot">${$t('history.the_owners_hall_of_fame_card_is')}</p>`;
 }
 
 export function registerHistoryScreens(Router, app) {
-  const nav = navActions(Router); const reduced = () => !!(app.settings?.reducedMotion || app.f?.settings?.reducedMotion);
+  const nav = navActions(Router, app); const reduced = () => !!(app.settings?.reducedMotion || app.f?.settings?.reducedMotion);
   const wrap = (name, html) => `<div class="history-hub hh-${name}">${historyNavHtml(name)}${html}</div>`;
   const noFranchise = () => `<div class="panel"><p>${$t('career.no_franchise_is_open')}</p></div>`;
   Router.registerScreen('history', {
@@ -182,7 +192,8 @@ export function registerHistoryScreens(Router, app) {
     mount(root, ctx) { const params = ctx.params; delegate(root, { ...nav,
       ceremony: (el) => Router.go('ceremony', { year: Number(el.dataset.year) }),
       awards: (el) => { const h = app.f.history.find((x) => x.year === Number(el.dataset.year)); if (h?.awards) sheet(awardsHtml(h.awards), { title: `${$t('hq.awards_2', { year: yearOf(h.year) })}` }); } });
-      for (const d of root.querySelectorAll('details.hh-decade')) d.addEventListener('toggle', () => { if (d.open) params.open = Number(d.dataset.group); }); // Back from a profile returns to the same fold
+      for (const d of root.querySelectorAll('details.hh-decade')) d.addEventListener('toggle', () => { if (d.open) params.open = Number(d.dataset.group); });
+      for (const d of root.querySelectorAll('details.pl-fold')) d.addEventListener('toggle', () => { if (d.open) params.pre = Number(d.dataset.pre); else if (params.pre === Number(d.dataset.pre)) delete params.pre; }); // Back from a profile returns to the same fold
     },
   });
   Router.registerScreen('awardhistory', {

@@ -3,7 +3,9 @@
 // monster or the franchise (no backfill, no stats initialisation). Sections: Overview, Timeline, Statistics, Awards & Trophy
 // Case, Team History.
 
-import { careerProfile, findMonster, seasonBooks, leagueRowsFor, statValue, TROPHY_META } from './career-profile.js';
+import { careerProfile, findMonster, seasonBooks, leagueRowsFor, statValue, focusStats, TROPHY_META } from './career-profile.js';
+import { archiveCareer, archiveAwardsFor, leagueArchive } from './preleague-history.js';
+import { statLine } from './stats.js';
 import { withDerived, addInto, POSITION_COLUMNS, STAT_GROUPS, GROUP_LABEL, groupsWithData } from './stats.js';
 import { SPECIES_BY_ID } from '../data/monsters.js';
 import { hasLeague } from './league-registry.js';
@@ -103,9 +105,32 @@ export function teamHistory(p, lines) {
  * `profile` lets the screen pass the scouting-aware profile (withVisibility) it shows elsewhere.
  */
 export function careerPage(f, id, { profile = null } = {}) {
-  const p = profile || careerProfile(f, id); if (!p) return null;
-  const found = p.kind === 'snapshot' ? null : findMonster(f, p.id);
-  const lines = seasonLines(f, found, p);
+  const p0 = profile || careerProfile(f, id); if (!p0) return null;
+  const found = p0.kind === 'snapshot' ? null : findMonster(f, p0.id);
+  const lines = seasonLines(f, found, p0);
+  // The seasons he played before the owner arrived come from the league archive (preleague-history.js). They are shown, never
+  // stored: his statistics ledger, the record book and the Hall of Fame vote keep counting only what this franchise has played.
+  let p = p0; let preLeague = null;
+  const pre = p0.kind === 'full' ? archiveCareer(f, p0.id) : null;
+  if (pre?.seasons?.length) {
+    const existing = new Set(lines.seasons.map((s) => s.year));
+    const historical = pre.seasons.filter((s) => !existing.has(s.year)).map((s) => ({ year: s.year, team: s.team, reg: s.reg || {}, post: s.post || {}, pre: true, ...(s.age != null ? { age: s.age } : {}) }));
+    const reg = sum(...historical.map((s) => s.reg)), post = sum(...historical.map((s) => s.post));
+    lines.seasons = [...historical, ...lines.seasons].sort((x, y) => x.year - y.year);
+    lines.career = { reg: sum(reg, lines.career.reg), post: sum(post, lines.career.post) };
+    lines.source = 'books';
+    const champions = new Map((leagueArchive(f)?.seasons || []).map((x) => [x.year, x.champion]));
+    preLeague = {
+      seasons: historical.length, from: historical[0]?.year ?? null, to: historical[historical.length - 1]?.year ?? null, debut: pre.debut, reg, post,
+      transfers: (pre.transfers || []).map((t) => ({ ...t })),
+      awards: archiveAwardsFor(f, p0.id).sort((x, y) => y.year - x.year),
+      titles: historical.filter((s) => champions.get(s.year) === s.team && (s.post?.games || 0) > 0).map((s) => ({ year: s.year, club: s.team })).reverse(),
+    };
+    // The page's own summary follows the whole career; the profile object every other view shares is not changed.
+    const career = lines.career.reg, careerPost = lines.career.post;
+    p = { ...p0, onRecord: lines.seasons.length, complete: true, notes: (p0.notes || []).filter((n) => n !== p0.archiveNote),
+      stats: { ...p0.stats, career, careerReg: career, careerPost, games: career.games || 0, postGames: careerPost.games || 0, focus: focusStats(p0.position, career), post: (careerPost.games || 0) > 0 ? { games: careerPost.games, text: statLine(careerPost) } : null } };
+  }
   const years = lines.seasons.map((s) => s.year);
   const clubYears = (p.clubs || []).flatMap((c) => [c.from, c.to]).filter((y) => y != null);
   const retirementYear = (f?.monsterHallOfFame?.candidates || [])
@@ -115,11 +140,13 @@ export function careerPage(f, id, { profile = null } = {}) {
   const count = (k) => (p.trophies || []).find((t) => t.kind === k)?.count || 0;
   const careerAll = sum(lines.career.reg, lines.career.post);
   const teams = teamHistory(p, lines);
+  if (preLeague) teams.sort((x, y) => (x.from ?? Infinity) - (y.from ?? Infinity)); // his earlier clubs come first
+
   const timeline = p.timeline || [];
   const historicalAwardsForMonster = historicalAwards(f).filter((a) => a.id != null && String(a.id) === String(p.id));
   const induction = historicalHallOfFame(f).inductees.find((c) => String(c.id) === String(p.id)) || null;
   return {
-    p, found: found ? { where: found.where, team: found.team || null } : null,
+    p, preLeague, found: found ? { where: found.where, team: found.team || null } : null,
     // Task 9: independent historical recognition; do not rewrite a saved career timeline.
     historicalRecognition: {
       awards: historicalAwardsForMonster,
@@ -129,7 +156,7 @@ export function careerPage(f, id, { profile = null } = {}) {
       records: monsterRecordHonours(f, p.id),    // the standing records credited to him in the record book
     },
     status: careerStatus(f, found, p), designation: designationOf(found?.m, p), span,
-    facts: { seasons: p.seasons ?? null, onRecord: p.onRecord ?? lines.seasons.length, games: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0) + (lines.career.post.games || 0), regGames: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0), postGames: lines.career.post.games || 0, teams: teams.length, titles: count('champion'), awards: AWARD_KINDS.reduce((a, k) => a + count(k), 0), records: count('record'), hof: count('hof') > 0 || !!induction },
+    facts: { seasons: p.seasons ?? null, onRecord: p.onRecord ?? lines.seasons.length, games: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0) + (lines.career.post.games || 0), regGames: lines.source === 'none' ? (p.stats?.games || 0) : (lines.career.reg.games || 0), postGames: lines.career.post.games || 0, teams: teams.length, titles: count('champion') + (preLeague?.titles.length || 0), awards: AWARD_KINDS.reduce((a, k) => a + count(k), 0) + (preLeague?.awards.length || 0), records: count('record'), hof: count('hof') > 0 || !!induction },
     lines, groups: statGroups(p.position, careerAll), teams,
     milestones: timeline.filter((e) => MILESTONE_TYPES.has(e.t)).slice().reverse(),
     moments: timeline.filter((e) => e.tier !== 'career').slice(0, 5),
