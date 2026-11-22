@@ -2,13 +2,23 @@
 import { LESSONS } from './guide-lessons.js';
 import { canPlay } from '../data/personnel.js';
 import { buildDepthChart } from './roster.js';
+import { setAssist } from './assist.js';
 export { LESSONS };
 export const guideActive = (f) => f?.guide?.v === 1 && f.guide.enabled && !f.guide.done;
 export const lineupStamp = (f) => JSON.stringify(buildDepthChart(f.roster, f.lineupManual, f.depth));
-export function startGuide(f) {
+/**
+ * `returning`: this device already holds another franchise, so its owner has been shown around before. The tour starts switched
+ * off and the automatic first-use tips with it (Coach Assist: Expert). Help, the Guidebook and Settings bring either back.
+ */
+export function startGuide(f, { returning = false } = {}) {
   if (f.guide) return;
-  f.guide = { v: 1, enabled: true, index: 0, completed: [], skipped: [], moments: [], year: f.season.year, week: f.season.week, lineup: lineupStamp(f), evidence: {} };
+  f.guide = { v: 1, enabled: !returning, index: 0, completed: [], skipped: [], moments: [], year: f.season.year, week: f.season.week, lineup: lineupStamp(f), evidence: {} };
+  if (returning) { f.guide.returning = true; setAssist(f, { mode: 'expert' }); }
 }
+/** Skip the whole tutorial (the lesson card's Skip, after its confirmation). Nothing is simulated or spent. */
+export function skipTutorial(f) { if (!f?.guide) return false; f.guide.enabled = false; delete f.guide.skipPending; return true; }
+/** Turn the tutorial back on from the Guidebook; it carries on from the lesson it had reached. */
+export function resumeTutorial(f) { if (!f?.guide || f.guide.done) return false; f.guide.enabled = true; return true; }
 export const currentLesson = (f) => guideActive(f) ? LESSONS[f.guide.index] || null : null;
 // Later lesson IDs stay in the archive for older saves and the Guidebook. The
 // actual required tour now ends as soon as the first football game starts.

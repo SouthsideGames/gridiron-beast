@@ -273,3 +273,20 @@ test('section tour reaches the last sections when the page bottoms out before th
   docListeners.get('click')();flush();assert.equal(shown.length,2,'nothing repeats');
   cleanup();
 });
+
+// Phone test, 22 November: one Skip for the whole tutorial, and no tutorial or automatic tips for an owner who already has a franchise.
+test('skipping the tutorial turns the lessons off without spending a day, and the Guidebook can turn them back on', async () => {
+  const { skipTutorial, resumeTutorial } = await import('../src/franchise/guide.js');
+  const f = fresh(); startGuide(f); const day = f.season.day, index = f.guide.index; f.guide.skipPending = true;
+  assert.equal(skipTutorial(f), true); assert.equal(guideActive(f), false); assert.equal(currentLesson(f), null); assert.equal(f.guide.skipPending, undefined);
+  assert.equal(f.season.day, day); assert.equal(f.guide.index, index); assert.equal(allowedScreens(f), null);
+  assert.equal(resumeTutorial(f), true); assert.equal(guideActive(f), true); assert.equal(f.guide.index, index);
+  f.guide.done = true; assert.equal(resumeTutorial(f), false);
+});
+test('an owner who already has a franchise starts the next one with the tutorial and automatic tips off', async () => {
+  const { assistSettings, automaticTipsOff } = await import('../src/franchise/assist.js');
+  const first = fresh(); startGuide(first); assert.equal(first.guide.enabled, true); assert.equal(automaticTipsOff(first), false);
+  const again = fresh(); startGuide(again, { returning: true });
+  assert.equal(guideActive(again), false); assert.equal(again.guide.returning, true); assert.equal(assistSettings(again).mode, 'expert'); assert.equal(automaticTipsOff(again), true);
+  assert.equal(assistSettings(again).hints, true, 'only the automatic tips change; contextual hints keep their own switch');
+});

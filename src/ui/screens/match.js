@@ -3,7 +3,7 @@ import { beastSpeciesHtml } from '../beast-identity.js';
 import { autoSpeed, cycleAutoSpeed } from '../phone-navigation.js';
 import { matchLogMatches } from '../match-log-filter.js';
 import { activityPaused } from '../activity.js';
-import { iconifyMarkup } from '../icons.js';
+import { iconifyMarkup, infoIcon } from '../icons.js';
 import { guideFootball, guideMoment } from '../guided-week.js';
 import { recorder } from '../../testing/recorder.js';
 import { eligiblePlays } from '../../sim/substitutions.js';
@@ -117,7 +117,7 @@ export function registerMatchScreens(Router, app) {
         ${[[ $t('match.offense'), OFFENSE_BASE, true ], [ $t('match.defense'), DEFENSE_BASE, false ], [ $t('match.packages'), [...OFFENSE_PACKAGE_SLOTS, ...DEFENSE_PACKAGE_SLOTS], false ]].map(([label,slots,open]) => `<details class="pregame-unit" ${open?'open':''}><summary>${label}</summary><div class="pregame-grid">${slots.map(slot=>line(slot,team.offense[slot]||team.defense[slot],team)).join('')}</div></details>`).join('')}</div>`;
       function line(slot, beast, team) {
         const boost=team?.boosts?.[beast?.id];
-        return `<button class="pregame-player" data-action="pregame-detail" data-slot="${slot}" ${beast?'':'disabled'}><b class="mono">${slot}</b>${beast?monsterSprite(beast,36):'<span></span>'}<span class="pregame-player-name">${esc(beast?.name||'—')}</span><span class="pregame-boosts">${boost?.training?'<span class="boost train">T</span>':''}${boost?.media?'<span class="boost media">+</span>':''}</span><span class="pregame-info" aria-hidden="true">i</span></button>`;
+        return `<button class="pregame-player" data-action="pregame-detail" data-slot="${slot}" ${beast?'':'disabled'}><b class="mono">${slot}</b>${beast?monsterSprite(beast,36):'<span></span>'}<span class="pregame-player-name">${esc(beast?.name||'—')}</span><span class="pregame-boosts">${boost?.training?'<span class="boost train">T</span>':''}${boost?.media?'<span class="boost media">+</span>':''}</span><span class="pregame-info info-mark" aria-hidden="true">${infoIcon()}</span></button>`;
       }
       const rv = f.rivals[f.tier];
       const gym = GYM_BY_CLUB[m.opponent]; const held = gym && F.badgeOf(f, m.opponent);
@@ -199,7 +199,7 @@ export function registerMatchScreens(Router, app) {
 
   Router.registerScreen('match', {
     title: ({ f }) => f?.game ? `${f.game.state.away.abbr} ${f.game.state.score.away}-${f.game.state.score.home} ${f.game.state.home.abbr}` : $t('match.match'), back: false, tabs: false, help: false, // the ⓘ button is this screen's help (it links to Coach Assist)
-    topRight: () => `${recorder.active() ? '<button class="btn ghost small" data-action="test-report-issue" aria-label="Report Last Play">⚑</button>' : ''}<button class="btn ghost small" data-action="box" aria-label="${$t('match.box_score')}">📊</button><button class="btn ghost small" data-action="log" aria-label="${$t('match.play_log')}">📋</button><button class="btn ghost small" data-action="help" aria-label="${$t('match.how_a_match_works')}" title="${$t('playview.guide_notices')}">ⓘ</button>`,
+    topRight: () => `${recorder.active() ? '<button class="btn ghost small" data-action="test-report-issue" aria-label="Report Last Play">⚑</button>' : ''}<button class="btn ghost small" data-action="box" aria-label="${$t('match.box_score')}">📊</button><button class="btn ghost small" data-action="log" aria-label="${$t('match.play_log')}">📋</button><button class="btn ghost small" data-action="help" aria-label="${$t('match.how_a_match_works')}" title="${$t('playview.guide_notices')}">${infoIcon()}</button>`,
     render({ f }) {
       const G = f.game; if (!G) return `<div class="panel"><p>${$t('match.no_game_in_progress')}</p><button class="btn block" data-action="hq">${$t('match.headquarters')}</button></div>`;
       const P = screenParts(f);
@@ -279,11 +279,12 @@ export function registerMatchScreens(Router, app) {
   // Sheet copies carry no game datasets. Document capture sees exactly one
   // original action, including tutorial progress, pause resumes and substitutions.
   function openMatchPanel(root,kind) {
-    const host=kind==='notices'?root.querySelector('#match-notices'):root.querySelector('[data-match-panel="'+kind+'"]');
-    if(!host)return;
+    // Guide opens with this play's matchups first (they used to sit under the buttons, on the play screen itself).
+    const hosts=(kind==='notices'?[root.querySelector('[data-match-panel="matchups"]'),root.querySelector('#match-notices')]:[root.querySelector('[data-match-panel="'+kind+'"]')]).filter(Boolean);
+    if(!hosts.length)return;
     const title=kind==='plays'?$t('playview.choose_play'):kind==='zones'?$t('playview.zones'):kind==='notices'?$t('playview.guide_notices'):$t('playview.more_controls');
-    const source=[...host.querySelectorAll('button,select,input')];
-    const {el,close}=sheet(host.innerHTML,{title});
+    const source=hosts.flatMap(host=>[...host.querySelectorAll('button,select,input')]);
+    const {el,close}=sheet(hosts.map(host=>host.innerHTML).join(''),{title});
     el.classList.add('match-control-sheet');
     el.classList.toggle('match-more-sheet',kind==='more');
     [...el.querySelector('.sheet-body').querySelectorAll('button,select,input')].forEach((copy,i)=>{
@@ -631,8 +632,8 @@ export function registerMatchScreens(Router, app) {
       <button class="btn small" data-action="match-panel" data-panel="plays">${$t('playview.choose_play')}</button>
       ${plans.length || s.t8?.preChoice?.prismChoice ? `<button class="btn small" data-action="match-panel" data-panel="zones">${$t('playview.zones')}</button>`:''}
       <button class="btn small" data-action="match-panel" data-panel="more">${$t('playview.more_controls')}</button>
-      <button class="btn small" data-action="match-panel" data-panel="notices">${$t('playview.guide_notices')}</button></div>${clock}
-      ${presnapEdges.slice(0,2).map((x,i)=>`<button class="match-type-note" data-action="matchup" data-i="${i}">${x[presnapMe].mod>0?$t('playview.good_matchup',{name:esc(x[presnapMe].name),opponent:esc(x[presnapMe==='off'?'def':'off'].name)}):$t('playview.tough_matchup',{name:esc(x[presnapMe].name),opponent:esc(x[presnapMe==='off'?'def':'off'].name)})}</button>`).join('')}</div>
+      <button class="btn small" data-action="match-panel" data-panel="notices">${$t('playview.guide_notices')}</button></div>${clock}</div>
+      <div hidden data-match-panel="matchups">${presnapEdges.length?`<h3>${$t('playview.matchups_this_play')}</h3>`:''}${presnapEdges.map((x,i)=>`<button class="match-type-note" data-action="matchup" data-i="${i}">${x[presnapMe].mod>0?$t('playview.good_matchup',{name:esc(x[presnapMe].name),opponent:esc(x[presnapMe==='off'?'def':'off'].name)}):$t('playview.tough_matchup',{name:esc(x[presnapMe].name),opponent:esc(x[presnapMe==='off'?'def':'off'].name)})}</button>`).join('')}</div>
       <div hidden data-match-panel="zones">${myBall?'':prismPickerHtml(s)}${zonePlannerHtml(plans,{focus:G.zoneFocus})}</div>
       <div hidden data-match-panel="more">${secondary}${subPanel}<div class="muted">${$t('match.coachs_suggestion_opponents_call_is_hidden',{myBall:myBall?$t('match.your_offensive_plays'):$t('match.your_defensive_plays')})}${teams[me].blockedPlays?.length?` · ${$t('match.plays_unavailable_no_legal',{n:teams[me].blockedPlays.length})} ${teams[me].blockedSlots.join('/')})`:''}</div></div>
       <div hidden data-match-panel="plays">${cards(plan,side,selected,suggestion)}</div>`;

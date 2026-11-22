@@ -2409,3 +2409,46 @@ html[data-comfortable-text="1"] .screen-settings .save-data .dim, html[data-comf
 html[data-reduced-motion="1"] :is(.venue-bolt,.venue-detail) { animation: none; }
 html[data-reduced-motion="1"] .turnover-cue { animation: turnover-fade 1s linear forwards; }
 @keyframes turnover-fade { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---- Phone test fixes (v43.40.0) -------------------------------------------------------------------------------------- */
+/* One information mark everywhere, and a smaller box for it. The tap area stays 44px (the ::after reaches past the box). */
+.info-mark.btn, .info-mark.info-btn, .info-mark.polish-info, .btn.roster-info-toggle, span.pregame-info.info-mark {
+  flex: 0 0 34px; width: 34px; min-width: 34px; height: 34px; min-height: 34px; padding: 0; display: inline-grid; place-items: center;
+  position: relative; border-radius: 6px; font-size: 14px; line-height: 1; }
+.info-mark.btn::after, .info-mark.info-btn::after, .info-mark.polish-info::after, .btn.roster-info-toggle::after { content: ''; position: absolute; inset: -5px; }
+.info-mark > .ui-icon, .roster-info-toggle > .ui-icon { width: 18px; height: 18px; vertical-align: 0; }
+.roster-tools, .roster-bar { align-items: center; }
+
+/* Stacked controls and panels never touch: a full-width button, a row of buttons and a panel each keep a gap from the next. */
+:where(.screen, .panel, .sheet-body, section) > .btn.block + .btn.block,
+:where(.screen, .panel, .sheet-body, section) > :is(.grid2, .grid3, .row, .seg, .stack, .list) + .btn.block,
+:where(.screen, .panel, .sheet-body, section) > .btn.block + :is(.grid2, .grid3, .row, .seg, .stack, .list),
+:where(.screen, .panel, .sheet-body, section) > :is(p, .muted, .dim, label, input, select) + .btn.block,
+.sheet-body > label + button, .sheet-body > label + label, .sheet-body > button + :is(.stack, .list), .sheet-body > input + button { margin-top: var(--s2); }
+:where(.screen, .sheet-body, section) > .btn + :is(.panel, details), :where(.screen, .sheet-body, section) > .btn.block + h3 { margin-top: var(--s3); }
+.sheet-body > .stack > .row { gap: var(--s2); }
+/* The recruiting result has the room: its choices get more air. */
+.screen-clash-battle .panel > .grid3, .screen-clash-battle .panel > .row { gap: 10px; }
+.screen-clash-battle .panel > .grid3 + .btn.block, .screen-clash-battle .panel > .btn.block + .btn.block { margin-top: var(--s3); }
+.screen-clash-battle .panel > p + .grid3 { margin-top: var(--s3); }
+
+/* The lesson card: three even buttons on one line. */
+.guide-buttons { gap: var(--s2); }
+.guide-buttons .btn { flex: 1 1 0; min-width: 0; padding-left: 8px; padding-right: 8px; }
+
+/* Match screen. The head's pieces, the field and the controls keep a gap; the matchup lines live in Guide now. */
+.match-console { gap: 8px; }
+.match-console #match-head { display: grid; gap: 6px; }
+.match-console #match-head > :empty { display: none; }
+.match-console .scoreboard { margin-bottom: 0; }
+.match-console .match-actions { gap: 8px; }
+.match-quick-actions { gap: 8px; }
+.sheet-body .match-type-note { display: block; width: 100%; min-height: 44px; padding: 8px 10px; margin: 0 0 var(--s2); border: 2px solid var(--line-2); border-radius: 6px; background: var(--panel-2); color: var(--ink); font-size: 14px; }
+/* Upright phone: the last play's text sits above the field in the field's own box and takes the height it needs, so it never
+   covers the field. A long result moves the field down; a short one leaves it where it was. */
+@media (orientation: portrait) {
+  .match-console #fieldwrap { display: grid; grid-template-rows: auto minmax(0, 1fr); }
+  .match-console #fieldwrap > #field { grid-row: 2; grid-column: 1; min-height: 0; }
+  .match-console #fieldwrap > .field-banner { position: relative; grid-row: 1; grid-column: 1; left: auto; right: auto; top: auto; margin: 6px 6px 4px; max-height: none; overflow: visible; }
+}
+.sheet-body > p + .row, .sheet-body > p + .grid2 { margin-top: var(--s3); }

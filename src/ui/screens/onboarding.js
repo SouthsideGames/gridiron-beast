@@ -94,8 +94,10 @@ export function registerOnboardingScreens(Router, app) {
           if (STEPS[draft.step] === 'offense') {
             const offer = cornerstoneOffers(draft.offerSeed).find((x) => x.name === draft.offense);
             const f = createFranchise({ owner: { first: draft.first, last: draft.last, gender: draft.gender, portrait: spec(), hometown: draft.hometown, background: draft.background }, club: draft.club, rival: draft.rival, cornerstone: offer, settings: { ...app.defaultSettings, difficulty: draft.difficulty } });
-            hireDefaultStaff(f); firstWeekWelcome(f); startGuide(f);
-            if (creating) return; creating = true; // one franchise per tap, however impatient the thumb
+            if (creating) return; creating = true;
+            // An owner who already has a franchise on this device has been shown around: no tutorial and no automatic tips this time.
+            let returning = false; try { returning = (await app.slotSummaries()).some((s) => ['active', 'retired', 'fired'].includes(s.state)); } catch { /* unknown: treat as a first franchise */ }
+            hireDefaultStaff(f); firstWeekWelcome(f); startGuide(f, { returning }); // one franchise per tap, however impatient the thumb
             const r = await app.setFranchise(f).finally(() => { creating = false; }); // committed before it becomes the active franchise
             if (!r.ok) { err(`${t('onboarding.your_new_franchise_could_not_be', { message: r.error?.message || 'unknown error', f: app.f ? t('onboarding.your_current_franchise_is_unchanged') : '' })}`); return; }
             draft = null; Router.go('welcome', {}, { reset: true }); return;

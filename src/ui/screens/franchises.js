@@ -84,9 +84,9 @@ export function registerFranchisesScreens(Router, app) {
       })();
       const franchiseOf = async (slot) => (slot === app.slot && app.f ? app.f : (await app.slots.store(slot).open()).franchise);
       delegate(root, {
-        continue: () => Router.go(app.f && (app.f.lifecycle?.legacy) ? 'legacy' : 'hq', {}, { reset: true }),
-        switch: async (el) => { const slot = Number(el.dataset.slot); const r = await app.switchSlot(slot); if (!r.ok) { toast(r.error?.message || $t('franchises.could_not_open_that_slot'), 'bad'); return; } if (r.mode !== 'recovery') Router.go(app.f?.lifecycle?.legacy ? 'legacy' : 'hq', {}, { reset: true }); },
-        open: async (el) => { const r = await app.switchSlot(Number(el.dataset.slot)); if (r.ok && r.mode !== 'recovery') Router.go('hq', {}, { reset: true }); },
+        continue: () => { if (app.f?.lifecycle?.legacy) Router.go('legacy', {}, { reset: true }); else Router.goToFranchise(app.f); },
+        switch: async (el) => { const slot = Number(el.dataset.slot); const r = await app.switchSlot(slot); if (!r.ok) { toast(r.error?.message || $t('franchises.could_not_open_that_slot'), 'bad'); return; } if (r.mode !== 'recovery') { if (app.f?.lifecycle?.legacy) Router.go('legacy', {}, { reset: true }); else Router.goToFranchise(app.f); } },
+        open: async (el) => { const r = await app.switchSlot(Number(el.dataset.slot)); if (r.ok && r.mode !== 'recovery') Router.goToFranchise(app.f); },
         legacy: async (el) => { const slot = Number(el.dataset.slot); if (slot !== app.slot) { const r = await app.switchSlot(slot); if (!r.ok) { toast(r.error?.message || $t('franchises.could_not_open_that_slot'), 'bad'); return; } } Router.go('legacy', {}, { reset: true }); },
         new: async (el) => { const r = await app.createIn(Number(el.dataset.slot)); if (!r.ok) toast(r.error?.message || $t('franchises.that_slot_is_not_empty'), 'bad'); },
         export: async (el) => { const f = await franchiseOf(Number(el.dataset.slot)); if (!f) { toast($t('franchises.nothing_to_export_in_that_slot'), 'bad'); return; } await offerExport(f); },

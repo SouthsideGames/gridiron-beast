@@ -75,7 +75,7 @@ export function registerMenuScreens(Router, app) {
     },
     mount(root, ctx) {
       delegate(root, {
-        continue: () => Router.go(isArchived(app.f) ? 'legacy' : 'hq', {}, { reset: true }),
+        continue: () => { if (isArchived(app.f)) Router.go('legacy', {}, { reset: true }); else Router.goToFranchise(app.f); },
         // A new franchise goes into an empty slot (GDD §42.5): the Franchises screen chooses it. With no slot manager (fallback
         // storage) the single-save behaviour of v39.1 remains, with its warning.
         new: async () => {

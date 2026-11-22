@@ -69,6 +69,8 @@ export function iconHtml(name) {
   const art = Object.hasOwn(ART, name) ? ART[name] : '';
   return art ? `<svg class="ui-icon" data-ui-icon="${name}" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true" focusable="false">${art}</svg>` : '';
 }
+/** The one information mark: every "what is this?" button in the game shows it. */
+export const infoIcon = () => iconHtml('info');
 const segments = new Intl.Segmenter('en', { granularity: 'grapheme' });
 const candidate = /[\p{Extended_Pictographic}\u2630\u2691]/u;
 const cache = new Map();
