@@ -121,9 +121,14 @@ export function generateLeagueArchive(f, seasons = 8) {
 }
 export function validateLeagueArchive(archive) {
   const errors = [];
-  const years = new Map((archive?.seasons || []).map(s => [s.year, s]));
+  const allSeasons = archive?.seasons || [];
+  const years = new Map(allSeasons.map(s => [s.year, s]));
+  if (years.size !== allSeasons.length) errors.push('Duplicate historical season');
+  if (allSeasons.some((s, i) => s.year !== i + 1 - allSeasons.length)) errors.push('Invalid season chronology');
   for (const c of Object.values(archive?.careers || {})) {
     const totals = {};
+    if (new Set(c.seasons.map(b => b.year)).size !== c.seasons.length) errors.push('Duplicate career season: ' + c.id);
+    if (c.seasons.at(-1)?.team !== c.club) errors.push('Current club mismatch: ' + c.id);
     for (const b of c.seasons) {
       if (!ALL_TEAMS.includes(b.team)) errors.push('Unknown club: ' + c.id);
       if (!years.has(b.year)) errors.push('Unknown year: ' + b.year);
@@ -132,10 +137,14 @@ export function validateLeagueArchive(archive) {
     for (const [k,v] of Object.entries(totals)) if (c.totals[k] !== v) errors.push('Career mismatch: ' + c.id + ':' + k);
   }
   for (const s of years.values()) {
+    if (s.standings.length !== ALL_TEAMS.length || new Set(s.standings.map(t => t.club)).size !== ALL_TEAMS.length) errors.push('Invalid standings clubs: ' + s.year);
     if (!s.standings.some(t => t.club === s.champion)) errors.push('Champion absent: ' + s.year);
     if (s.standings.reduce((n,t)=>n+t.w,0) !== s.standings.reduce((n,t)=>n+t.l,0)) errors.push('Unbalanced standings: ' + s.year);
     if (s.standings.some(t => t.w + t.l !== 14)) errors.push('Invalid season length: ' + s.year);
     if (s.playoffs?.at(-1)?.games?.[0]?.winner !== s.champion) errors.push('Playoff winner mismatch: ' + s.year);
+    const final = s.playoffs?.at(-1)?.games?.[0];
+    if (final && (final.winner === s.runnerUp || ![final.home, final.away].includes(s.runnerUp))) errors.push('Runner-up mismatch: ' + s.year);
+    if ((s.playoffs || []).length !== 3 || s.playoffs.some((r,i) => r.games.length !== 4 / (2 ** i))) errors.push('Invalid playoff rounds: ' + s.year);
     for (const winner of Object.values(s.awards?.league || {})) {
       const book = archive.careers[winner.id]?.seasons.find(b => b.year === s.year);
       if (!book || book.team !== winner.team) errors.push('Award mismatch: ' + s.year);
