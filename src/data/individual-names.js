@@ -73,7 +73,9 @@ export function ensureIndividualNames(f) {
   collect(f);
   // Old custom names get priority over generated names. Deterministic order handles collisions.
   const ordered = [...individuals].sort((a, b) => Number(catalogueName(a.name)) - Number(catalogueName(b.name)) || String(a.id).localeCompare(String(b.id)));
-  for (const m of ordered) reserveIndividualName(f, m);
+  // A retired legend's record is a finished snapshot: it reserves its name but is not rewritten, so loading a save never changes it.
+  const stubs = new WeakSet(Object.values(f.league?.legends || {}));
+  for (const m of ordered) reserveIndividualName(f, stubs.has(m) ? { ...m } : m);
   const byId = f.individualNames?.byId || {};
   // Only typed identity fields are updated; old narrative prose is left intact. Human/staff names are never matched by text.
   const seen = new WeakSet();

@@ -28,7 +28,12 @@ test('QB reads in games: on in development (switch on by default), off with the 
 test('every in-game QB read display goes through the gate; the player Settings screen no longer offers it', () => {
   const match = fs.readFileSync('src/ui/screens/match.js', 'utf8'), practice = fs.readFileSync('src/ui/screens/practice.js', 'utf8'), menu = fs.readFileSync('src/ui/screens/menu.js', 'utf8');
   assert.ok(!/qbRead: true/.test(match) && !/qbRead: !!f\.settings\.qbReads/.test(match), 'match field uses the gate');
-  assert.match(match, /anim\.ev\?\.sim\?\.qb && qbReadsShown\(f\.settings\) \? qbReadPanelHtml\(/);
+  // Football instant replays no longer list the QB's reads or draw the replay read ring (docs/MATCH_BARS_TAP_AUDIO.md, 888318b):
+  // the match screen has no read panel at all, a replay frame asks for no ring, and the one live ring left asks the gate.
+  assert.ok(!/qbReadPanelHtml/.test(match), 'the match screen shows no QB read list');
+  assert.match(match, /qbRead: false/, 'replay frames draw no read ring');
+  assert.match(match, /qbRead: qbReadsShown\(f\.settings, \{ live: true \}\)/, 'the live read ring goes through the gate');
+  assert.equal((match.match(/qbRead: /g) || []).length, 2, 'no other read display in the match screen');
   assert.match(practice, /prac\.sim\?\.qb && qbReadsShown\(/);
   const settings = menu.slice(menu.indexOf("registerScreen('settings'"), menu.indexOf("registerScreen('developer'"));
   assert.ok(!/data-change="qbreads"/.test(settings), 'not in player Settings');
