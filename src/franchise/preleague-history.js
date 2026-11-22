@@ -58,12 +58,22 @@ export function generateLeagueArchive(f, seasons = 8) {
     if (!count || !m.id) continue;
     const club = teamOf.get(m.id) || f.club;
     const books = [];
+    const transfers = [];
+    let previous = null;
+    // Protected/signature players stay with their club. Others may have
+    // transferred before the franchise opened; their current club is fixed.
+    const previousClub = !m.legendary && !m.signature && count > 2 &&
+      roll(seed, m.id + ':transfer-chance', 4) === 0
+      ? teams.filter(t => t !== club)[roll(seed, m.id + ':former-club', teams.length - 1)] : null;
+    const transferYear = previousClub ? -Math.max(1, Math.floor(count / 2)) : null;
     for (let year = 1 - count; year <= 0; year++) {
       const book = seasonLine(m, year, seed);
-      book.team = club;
+      book.team = previousClub && year < transferYear ? previousClub : club;
+      if (previous !== book.team) transfers.push({ year, club: book.team, from: previous });
+      previous = book.team;
       books.push(book);
     }
-    careers[m.id] = { id: m.id, name: m.name, position: m.position, club, seasons: books,
+    careers[m.id] = { id: m.id, name: m.name, position: m.position, club, transfers, seasons: books,
       totals: books.reduce((sum, b) => { for (const [k,v] of Object.entries(b.reg)) sum[k] = (sum[k] || 0) + v; return sum; }, {}) };
   }
   // Award winners are selected from generated season books, with positional
@@ -94,6 +104,7 @@ export function validateLeagueArchive(archive) {
   for (const c of Object.values(archive?.careers || {})) {
     const totals = {};
     for (const b of c.seasons) {
+      if (!ALL_TEAMS.includes(b.team)) errors.push('Unknown club: ' + c.id);
       if (!years.has(b.year)) errors.push('Unknown year: ' + b.year);
       for (const [k,v] of Object.entries(b.reg)) totals[k] = (totals[k] || 0) + v;
     }
