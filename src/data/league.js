@@ -31,11 +31,14 @@ export const TEAM_META = Object.freeze({
   'Palmetto Vipers': { abbr: 'PAL', color: '#7be3b0', mascot: 'viper' },
 });
 
-/** The four rebuilding clubs offered to a new owner (with fictional prior records). */
-/** Clubs a new owner may take: ordinary clubs only, so every franchise meets the same eight gyms (GDD §15.3). */
+/**
+ * Clubs a new owner may take: ordinary clubs only, so every franchise meets the same eight gyms (GDD §15.3). `record` is last
+ * season's (a nine-game season, like every season this league plays): the club picker shows it, and the pre-franchise archive
+ * (franchise/preleague-history.js) gives these clubs exactly these records in the season before year 1.
+ */
 export const STARTER_CLUBS = Object.freeze([
-  { name: 'Ember City Beasts', record: '2-12' }, { name: 'Stonehaven Titans', record: '1-13' },
-  { name: 'Glacier Guardians', record: '3-11' }, { name: 'Stormport Bolts', record: '2-12' },
+  { name: 'Ember City Beasts', record: '2-7' }, { name: 'Stonehaven Titans', record: '1-8' },
+  { name: 'Glacier Guardians', record: '3-6' }, { name: 'Stormport Bolts', record: '2-7' },
 ]);
 
 export const RIVAL_GMS = Object.freeze({ 'Glacier Guardians': 'Morgan Vale', 'Northstar Wolves': 'Cameron Frost', 'Ironpeak Rams': 'Jules Stone', 'Canyon Crushers': 'Alex Calder', 'Sundown Drakes': 'Riley Ash', 'Thunder Mesa': 'Blake Storm', 'Eastport Phantoms': 'Taylor Voss', 'Harbor Sentinels': 'Jordan Shore', 'Ashford Hawks': 'Casey Finch', 'Bayou Stalkers': 'Drew Marsh', 'Sunfire Lions': 'Avery Sol', 'Palmetto Vipers': 'Quinn Reed', 'Frostpeak Howlers': 'Sam Rime', 'Stormport Bolts': 'Devon Gale', 'Stonehaven Titans': 'Harper Flint', 'Ember City Beasts': 'Rowan Blaze' });

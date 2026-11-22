@@ -16,6 +16,7 @@ import { monsterOverall, SPECIES_BY_ID } from '../data/monsters.js';
 import { yearOf } from '../data/calendar.js';
 import { t as $t } from '../text/index.js';
 import { monsterHofInductees } from './monster-hof-voting.js';
+import { archiveCareer } from './preleague-history.js';
 import { revealedElections } from './hall-ceremony.js';
 
 export const PROFILE_VERSION = 1;
@@ -255,6 +256,9 @@ export function fullProfile(f, m, where = 'roster', team = null) {
   const onRecord = books.length;
   const complete = fullRecord(m, f.season?.year) || (m.yearsPro || 0) === 0;
   const trophies = trophyCase(f, m);
+  // Seasons played before the owner arrived are kept in the league archive, apart from this ledger (preleague-history.js).
+  const archived = archiveCareer(f, m.id)?.seasons.filter((b) => !books.some((x) => x.year === b.year)).length || 0;
+  const archiveNote = archived ? $t('franchise.his_earlier_seasons_are_in_the_league_archive', { n: archived, year: yearOf(1) }) : null;
   const count = (k) => trophies.find((t) => t.kind === k)?.count || 0;
   const titles = count('champion'); const awards = ['mvp', 'opoy', 'dpoy', 'smoy', 'oroy', 'droy'].reduce((a, k) => a + count(k), 0); const records = count('record'); const hof = count('hof') > 0;
   const timeline = careerTimeline(m, { club: where === 'roster' ? f.club : null }).map((e) => ({ ...e, ref: eventRef(f, m, e) }));
@@ -266,12 +270,14 @@ export function fullProfile(f, m, where = 'roster', team = null) {
     books: books.map((b) => ({ year: b.year, team: b.team || null, games: (b.reg?.games || 0) + (b.post?.games || 0) })),
     honours: { titles, awards, records, hof }, trophies, timeline,
     tier: careerTier({ titles, awards, hof, seasons, records }),
-    notes: careerNotes({ where, complete, onRecord, seasons, club: clubs.find((c) => c.how === 'current')?.club || club }),
+    notes: careerNotes({ where, complete, onRecord, seasons, archiveNote, club: clubs.find((c) => c.how === 'current')?.club || club }),
+    ...(archiveNote ? { archiveNote } : {}),
   };
 }
-function careerNotes({ where, complete, onRecord, seasons }) {
+function careerNotes({ where, complete, onRecord, seasons, archiveNote = null }) {
   const n = [];
-  if (!complete && seasons > onRecord) n.push(`${$t('franchise.career_totals_count_the_seasons_on', { onRecord, n: onRecord })}`);
+  if (archiveNote) n.push(archiveNote); // his earlier seasons are on record in the league archive: say where, instead of "not on record"
+  else if (!complete && seasons > onRecord) n.push(`${$t('franchise.career_totals_count_the_seasons_on', { onRecord, n: onRecord })}`);
   if (where === 'pool' || where === 'market') n.push($t('franchise.a_free_agent_his_record_runs'));
   return n;
 }
