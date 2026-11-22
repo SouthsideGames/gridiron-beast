@@ -17,7 +17,7 @@ function seasonLine(m, year, seed) {
 export function generateLeagueArchive(f, seasons = 8) {
   const seed = f.seed >>> 0;
   const teams = ALL_TEAMS.slice();
-  const monsters = [...new Map([...(f.roster || []), ...Object.values(f.league?.monsters || {})].filter(m => m?.id).map(m => [String(m.id), m])).values()];
+  const monsters = [...new Map([...Object.values(f.league?.monsters || {}), ...(f.roster || [])].filter(m => m?.id).map(m => [String(m.id), m])).values()];
   const teamOf = new Map((f.roster || []).map(m => [m.id, f.club]));
   for (const [club, data] of Object.entries(f.league?.clubs || {}))
     for (const id of data.roster || []) if (!teamOf.has(id)) teamOf.set(id, club);
