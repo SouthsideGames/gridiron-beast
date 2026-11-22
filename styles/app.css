@@ -2706,13 +2706,10 @@ html[data-stadium-fx="reduced"] :is(.sfx-wisp, .sfx-tumble) { display: none; }
 .sfx-reveal-fade :is(.sfx-whiteout, .sfx-ring) { display: none; }
 /* Specter: ghosts of monsters drift from sideline to sideline */
 .sfx-haunt { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
-.sfx-ghostmon { position: absolute; left: 0; width: 44px; height: 44px; opacity: 0; animation: sfx-cross-r 30s linear infinite; }
-.sfx-ghostmon-l { animation-name: sfx-cross-l; }
-.sfx-ghostmon > span { display: block; animation: sfx-bob 2.6s ease-in-out infinite alternate; }
-.sfx-ghostmon svg { display: block; filter: grayscale(1) brightness(1.9) contrast(.75) drop-shadow(0 0 3px var(--sfx-a)) drop-shadow(0 0 1px var(--sfx-a)); }
-@keyframes sfx-cross-r { 0% { opacity: 0; transform: translateX(-50px); } 2% { opacity: .42; } 26% { opacity: .42; } 28%, 100% { opacity: 0; transform: translateX(calc(100vw + 10px)); } }
-@keyframes sfx-cross-l { 0% { opacity: 0; transform: translateX(calc(100vw + 10px)); } 2% { opacity: .42; } 26% { opacity: .42; } 28%, 100% { opacity: 0; transform: translateX(-50px); } }
-@keyframes sfx-bob { from { transform: translateY(-5px); } to { transform: translateY(5px); } }
+.sfx-orb { position: absolute; animation: sfx-orb-drift 22s ease-in-out infinite alternate; }
+.sfx-orb > b { display: block; width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle, var(--sfx-c) 0, var(--sfx-a) 35%, transparent 72%); opacity: 0; animation: sfx-orb-fade 9s ease-in-out infinite; }
+@keyframes sfx-orb-drift { from { transform: translate(0, 0); } to { transform: translate(var(--dx, 80px), var(--dy, -60px)); } }
+@keyframes sfx-orb-fade { 0%, 12%, 100% { opacity: 0; } 40% { opacity: .34; } 55% { opacity: .2; } 72% { opacity: .3; } 90% { opacity: 0; } }
 html[data-stadium-fx="reduced"] .sfx-haunt, html[data-reduced-motion="1"] .sfx-haunt { display: none; }
-html[data-app-inactive="1"] .sfx-ghostmon, html[data-app-inactive="1"] .sfx-ghostmon > span { animation-play-state: paused; }
+html[data-app-inactive="1"] .sfx-orb, html[data-app-inactive="1"] .sfx-orb > b { animation-play-state: paused; }
 .sfx-stand-side .sfx-cheer { opacity: 0; }

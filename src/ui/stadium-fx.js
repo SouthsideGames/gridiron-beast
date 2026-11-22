@@ -301,8 +301,8 @@ export const SIDE_REACH = STANDS_GRASS + STANDS_BARRIER + STANDS_ROWS;
  */
 export function sideStandsSvg(venue, cam, HW, Y) {
   const look = lookFor(venue?.env); const env = fieldOf(venue?.env); if (!look || !env || !scene) return null;
-  const b = FIELD_BORDER, top = 110 + b, bot = -10 - b; if (cam.top <= bot || cam.bottom >= top) return null;
-  const y0 = Y(top), len = top - bot, D = STANDS_ROWS - 0.5, half = len / 2; const col = scene.crowd?.homeColor || look.colors[1];
+  const b = FIELD_BORDER, top = 110 + STANDS_GAP, bot = -10 - STANDS_GAP; if (cam.top <= bot || cam.bottom >= top) return null; // a little past each end line, so the corners are closed
+  const y0 = Y(top), len = top - bot, half = len / 2; const col = scene.crowd?.homeColor || look.colors[1];
   const symbols = []; let s = '';
   for (const side of [-1, 1]) {
     const edge = side * (HW + b); const x = (from, w) => (side > 0 ? edge + from : edge - from - w); // `from` yards out from the white
@@ -311,15 +311,13 @@ export function sideStandsSvg(venue, cam, HW, Y) {
     s += `<rect x="${bx}" y="${y0}" width="${STANDS_BARRIER}" height="${len}" fill="${col}"/><rect x="${bx}" y="${y0}" width="${STANDS_BARRIER}" height="${len}" fill="#000" opacity="0.38"/><path d="${seams}" stroke="#000" stroke-width="0.1" opacity="0.45"/>`;
     const sx = x(STANDS_GRASS + STANDS_BARRIER, STANDS_ROWS); s += `<rect x="${sx}" y="${y0}" width="${STANDS_ROWS}" height="${len}" fill="#10151d"/>`;
     for (const seg of [0, 1]) {
-      const img = scene.crowd ? crowdImages({ ...scene.crowd, stand: `${side < 0 ? 'left' : 'right'}${seg}` }) : null; if (!img?.base) continue;
-      const ty = side < 0 ? y0 + half * (seg + 1) : y0 + half * seg; const tx = side < 0 ? sx : sx + STANDS_ROWS; // the front row faces the field
-      let layers = '';
+      // The fans stand upright in three columns, the front row nearest the field (stadium-crowd.js draws the picture that way).
+      const img = scene.crowd ? crowdImages({ ...scene.crowd, stand: `${side < 0 ? 'left' : 'right'}${seg}`, side: side < 0 ? 'left' : 'right' }) : null; if (!img?.base) continue;
       for (const [k, cls] of [['base', 'sfx-crowd-img'], ['home', 'sfx-cheer sfx-cheer-home'], ['away', 'sfx-cheer sfx-cheer-away']]) {
         if (!img[k]) continue; const id = `sfx-cr-${scene.crowd.seed}-${side < 0 ? 'l' : 'r'}${seg}-${k}`.replace(/[^\w-]/g, '');
-        symbols.push({ id, symbol: `<image id="${id}" href="${img[k]}" width="${half}" height="${D}" preserveAspectRatio="none" style="image-rendering:pixelated"/>` });
-        layers += `<use class="${cls}" href="#${id}"/>`;
+        symbols.push({ id, symbol: `<image id="${id}" href="${img[k]}" width="${STANDS_ROWS}" height="${half}" preserveAspectRatio="none" style="image-rendering:pixelated"/>` });
+        s += `<use class="${cls}" href="#${id}" x="${sx}" y="${y0 + half * seg}"/>`;
       }
-      s += `<g transform="translate(${tx} ${ty}) rotate(${side < 0 ? -90 : 90})">${layers}</g>`;
     }
   }
   return { svg: `<g class="sfx-stand sfx-stand-side">${s}</g>`, symbols };

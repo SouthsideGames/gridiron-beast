@@ -79,24 +79,32 @@ const cache = new Map();
  * side's fans, a pixel higher with their arms up (shown in flashes while that side celebrates). Drawn once per game on a small
  * canvas and reused; null where there is no canvas (tests, very old browsers), and the stand is then simply not drawn.
  */
-export function crowdImages({ seed, mix, homeColor, awayColor, stand = 'far', type = null }) {
-  const key = `${seed}|${stand}|${mix.home}|${mix.away}|${mix.fill}|${homeColor}|${awayColor}|${type}`;
+export const SIDE_SEATS = 43, SIDE_COL = 11, SIDE_PITCH = 8; // a side stand's picture: 43 seats down its length, three columns deep
+/**
+ * `side`: 'left' or 'right' draws the picture for a stand along a sideline instead: the fans stand upright, one column per row
+ * of the stand, with the front row in the column nearest the field, each fan a little in front of the one above.
+ */
+export function crowdImages({ seed, mix, homeColor, awayColor, stand = 'far', type = null, side = null }) {
+  const key = `${seed}|${stand}|${side}|${mix.home}|${mix.away}|${mix.fill}|${homeColor}|${awayColor}|${type}`;
   if (cache.has(key)) return cache.get(key);
   const doc = globalThis.document; if (!doc?.createElement) return null;
-  const seats = crowdSeats(seed, mix, stand); const beasts = crowdMonsters(seed, stand, type); const r = rng(seed, `look-${stand}`); const back = stand === 'near';
-  const mk = () => { const c = doc.createElement('canvas'); c.width = CROWD_W; c.height = CROWD_H; return c; };
+  const COLS = side ? SIDE_SEATS : CROWD_COLS; const W = side ? CROWD_ROWS * SIDE_COL : CROWD_W, H = side ? SIDE_SEATS * SIDE_PITCH + 4 : CROWD_H;
+  const seats = crowdSeats(seed, mix, stand, COLS); const beasts = crowdMonsters(seed, stand, type, COLS); const r = rng(seed, `look-${stand}`); const back = stand === 'near';
+  const mk = () => { const c = doc.createElement('canvas'); c.width = W; c.height = H; return c; };
   const base = mk(), up = { h: mk(), a: mk() }; const g = base.getContext?.('2d'); if (!g) return null;
   const gu = { h: up.h.getContext('2d'), a: up.a.getContext('2d') };
-  g.fillStyle = '#10151d'; g.fillRect(0, 0, CROWD_W, CROWD_H);
+  g.fillStyle = '#10151d'; g.fillRect(0, 0, W, H);
+  if (side) for (let y = 0; y < CROWD_ROWS; y++) { const cx = (side === 'left' ? CROWD_ROWS - 1 - y : y) * SIDE_COL; g.fillStyle = y % 2 ? '#1b2433' : '#202b3d'; g.fillRect(cx, 0, SIDE_COL, H); g.fillStyle = '#0b0f15'; g.fillRect(side === 'left' ? cx : cx + SIDE_COL - 1, 0, 1, H); }
   for (let y = 0; y < CROWD_ROWS; y++) {
     // Row 0 is the one next to the field. The far stand's front row is at the bottom of its picture; the near stand's at the top.
     const py = back ? 1 + y * PITCH_Y : CROWD_H - (y + 1) * PITCH_Y; const depth = 1 - y * 0.07; const step = y % 2 ? '#1b2433' : '#202b3d';
-    g.fillStyle = step; g.fillRect(0, py, CROWD_W, PITCH_Y); // the step of the stand
-    g.fillStyle = '#0b0f15'; g.fillRect(0, py + PITCH_Y - 1, CROWD_W, 1);
-    for (let x = 0; x < CROWD_COLS; x++) {
-      const px = x * PITCH_X + 1 + (y % 2 ? 2 : 0); const who = seats[y][x];
+    if (!side) { g.fillStyle = step; g.fillRect(0, py, CROWD_W, PITCH_Y); // the step of the stand
+      g.fillStyle = '#0b0f15'; g.fillRect(0, py + PITCH_Y - 1, CROWD_W, 1); }
+    const row = y; const rowPy = py;
+    for (let x = 0; x < COLS; x++) {
+      const px = side ? (side === 'left' ? CROWD_ROWS - 1 - row : row) * SIDE_COL + 2 : x * PITCH_X + 1 + (y % 2 ? 2 : 0); const py = side ? 2 + x * SIDE_PITCH + (row % 2 ? 3 : 0) : rowPy; const who = seats[y][x];
       const skin = SKIN[Math.floor(r() * SKIN.length)], hair = HAIR[Math.floor(r() * HAIR.length)], plain = NEUTRAL[Math.floor(r() * NEUTRAL.length)]; const hat = r() < 0.22;
-      if (x % 9 === 8) { g.fillStyle = '#2b3547'; g.fillRect(px + 6, py, 2, PITCH_Y - 1); } // an aisle
+      if (!side && x % 9 === 8) { g.fillStyle = '#2b3547'; g.fillRect(px + 6, py, 2, PITCH_Y - 1); } // an aisle
       g.fillStyle = '#2c3a55'; g.fillRect(px, py + 5, 6, 5); g.fillStyle = '#35466a'; g.fillRect(px, py + 5, 6, 1); // the seat
       if (!who) continue; // an empty seat
       const shirt = who === 'h' ? homeColor : who === 'a' ? awayColor : plain;

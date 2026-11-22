@@ -86,7 +86,8 @@ test('the stand: behind the far end zone only, in view only near it, and the fie
     assert.doesNotMatch(fieldSvg({ venue, ballOn: 50 }), /sfx-stand|sfx-wall/); assert.doesNotMatch(fieldSvg({ venue, ballOn: 79 }), /sfx-stand/);
     const near = fieldSvg({ venue, ballOn: 92 }); assert.match(near, /sfx-stand/); assert.ok(near.indexOf('sfx-border') < near.indexOf('sfx-apron') && near.indexOf('sfx-apron') < near.indexOf('sfx-barrier') && near.indexOf('sfx-barrier') < near.indexOf('sfx-stand') && near.indexOf('sfx-stand') < near.indexOf('class="sfx-post"'), 'white paint, grass, the barrier, then the crowd, with the goal posts in front');
     assert.match(fieldSvg({ venue, ballOn: 82 }), /sfx-apron/); assert.doesNotMatch(fieldSvg({ venue, ballOn: 82 }), /sfx-crowd-img|class="sfx-stand"><rect[^>]*y="0"/);
-    const own = fieldSvg({ venue, ballOn: 2 }); assert.match(own, /sfx-wall/); assert.doesNotMatch(own, /sfx-stand/, 'no crowd behind the near end zone');
+    const own = fieldSvg({ venue, ballOn: 2 }); assert.match(own, /sfx-barrier/, 'the barrier closes the picture behind the near end zone'); assert.doesNotMatch(own, /sfx-stand|sfx-wall/, 'no crowd there, and the wall behind the barrier is drawn only when it is in view');
+    assert.match(fieldSvg({ venue, ballOn: 2, camera: { bottom: -21, top: 25 } }), /sfx-wall/);
     const full = kickoffRevealHtml(venue, 'full'); assert.ok(full.includes(`rx="${FOOTBALL.rx}" ry="${FOOTBALL.ry}" fill="${FOOTBALL.fill}"`), 'the reveal shows the game\'s own football');
     assert.match(fieldSvg({ venue, ballOn: 30, frame: { ball: [0, 0, 0], off: [], def: [] } }), new RegExp(`rx="${FOOTBALL.rx}" ry="${FOOTBALL.ry}" fill="${FOOTBALL.fill}"`));
   } finally { setStadiumScene(null); }
@@ -154,7 +155,7 @@ test('the white border: all round the field in a stadium scene, the sideline mar
     const mid = fieldSvg({ venue, ballOn: 50 }); assert.match(mid, /sfx-border/); assert.ok(mid.indexOf('sfx-border') < mid.indexOf('sfx-shot'), 'the markers are drawn on the white');
     const hw = -plain[0]; for (const m of edgeSvg('tidal', cam, hw, Y, 46).matchAll(/<circle class="sfx-shot[^>]* cx="(-?[\d.]+)"/g)) assert.ok(Math.abs(Number(m[1])) > hw && Math.abs(Number(m[1])) < hw + FIELD_BORDER, 'each spout stands on the white, outside the sideline');
     assert.match(barrierSvg(venue, -29, 0, 58), /fill="#123456"/, 'the barrier wears the home colour');
-    const own = fieldSvg({ venue, ballOn: 2 }); assert.match(own, /sfx-barrier/); assert.match(own, /sfx-wall/);
+    const own = fieldSvg({ venue, ballOn: 2 }); assert.match(own, /sfx-barrier/);
     const c = new MatchCamera(); const z = c.sample({ bottom: 35, top: 81 }, { key: 1, auto: true, reducedMotion: true, pad: 3.5 }); assert.deepEqual(z, { bottom: -13.5, top: 113.5 }, 'zoomed out, the white behind both end lines is in view');
     assert.deepEqual(new MatchCamera().sample({ bottom: 35, top: 81 }, { key: 1, auto: true, reducedMotion: true }), { bottom: -10, top: 110 }, 'and without a scene the zoomed-out view is the field as before');
   } finally { setStadiumScene(null); }
@@ -187,7 +188,7 @@ test('Sky, Oracle, Rock, Bug and Specter are designs only: drawn when a venue na
     try { setStadiumScene(venue, null); const svg = fieldSvg({ venue, ballOn: 92 }); assert.ok(svg.includes(d.palette.a), 'its own turf'); assert.match(svg, /sfx-apron/); assert.match(svg, /sfx-stand/); assert.ok(svg.includes('stroke="#eaf3e6"'), 'white yard lines'); assert.doesNotMatch(svg, /NaN|undefined/); } finally { setStadiumScene(null); }
   }
   assert.equal(designField('grass'), null); assert.equal(venueFor('Ashford Hawks', 'k').env, 'grass', 'every club keeps the field it had');
-  const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8'); for (const k of ['sfx-wave', 'sfx-tumble', 'sfx-wisp', 'sfx-web', 'sfx-silk', 'sfx-mist', 'sfx-ball-fade', 'sfx-cross-r', 'sfx-cross-l', 'sfx-hatch', 'sfx-door-l', 'sfx-door-r', 'sfx-ball-set', 'sfx-orbit', 'sfx-cube-l', 'sfx-cube-r', 'sfx-crack', 'sfx-pit', 'sfx-ball-pit', 'sfx-ball-float', 'sfx-ufo', 'sfx-beam', 'sfx-ball-late']) assert.match(css, new RegExp(`@keyframes ${k}\\b`));
+  const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8'); for (const k of ['sfx-wave', 'sfx-tumble', 'sfx-wisp', 'sfx-web', 'sfx-silk', 'sfx-mist', 'sfx-ball-fade', 'sfx-orb-drift', 'sfx-orb-fade', 'sfx-hatch', 'sfx-door-l', 'sfx-door-r', 'sfx-ball-set', 'sfx-orbit', 'sfx-cube-l', 'sfx-cube-r', 'sfx-crack', 'sfx-pit', 'sfx-ball-pit', 'sfx-ball-float', 'sfx-ufo', 'sfx-beam', 'sfx-ball-late']) assert.match(css, new RegExp(`@keyframes ${k}\\b`));
 });
 
 test('Ice has still snowmen on its sidelines: nothing there moves', async () => {
@@ -202,12 +203,14 @@ test('nothing frightening at kickoff: the Bug reveal shows a web and silk, the S
   const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8');
   assert.match(css, /sfx-revealing:has\(\.sfx-reveal:is\(\.sfx-reveal-cube, \.sfx-reveal-boulder, \.sfx-reveal-pit, \.sfx-reveal-hatch\)\) \.kickoff-captains \{ gap:/, 'the captains step apart before anything opens or lands between them');
 });
-test('Specter ghosts: pale shapes of real species, random, in a layer that takes no taps; none elsewhere or at Off', async () => {
-  const { hauntHtml, HAUNT_GHOSTS } = await import('../src/ui/stadium-haunt.js');
+test('Specter orbs: a few small, half-faded orbs in a layer that takes no taps; none elsewhere or at Off', async () => {
+  const { hauntHtml, HAUNT_ORBS } = await import('../src/ui/stadium-haunt.js');
   let n = 0; const rand = () => { n = (n * 9301 + 49297) % 233280; return n / 233280; };
-  const h = hauntHtml({ env: 'specter' }, 'full', rand); assert.equal((h.match(/class="sfx-ghostmon /g) || []).length, HAUNT_GHOSTS); assert.match(h, /aria-hidden="true"/); assert.match(h, /<svg class="sprite"/);
-  assert.notEqual(hauntHtml({ env: 'specter' }, 'full', rand), h, 'a new pick each time'); assert.equal(hauntHtml({ env: 'specter' }, 'off'), ''); assert.equal(hauntHtml({ env: 'storm' }), ''); assert.equal(hauntHtml(null), '');
+  const h = hauntHtml({ env: 'specter' }, 'full', rand); assert.equal((h.match(/class="sfx-orb"/g) || []).length, HAUNT_ORBS); assert.match(h, /aria-hidden="true"/); assert.doesNotMatch(h, /<svg/, 'no monster shapes');
+  for (const m of h.matchAll(/width:(\d+)px/g)) assert.ok(Number(m[1]) <= 14, 'small');
+  assert.notEqual(hauntHtml({ env: 'specter' }, 'full', rand), h); assert.equal(hauntHtml({ env: 'specter' }, 'off'), ''); assert.equal(hauntHtml({ env: 'storm' }), ''); assert.equal(hauntHtml(null), '');
   const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8'); assert.match(css, /\.sfx-haunt \{[^}]*pointer-events: none/); assert.match(css, /html\[data-stadium-fx="reduced"\] \.sfx-haunt[^{]*\{ display: none/);
+  const peak = Math.max(...[...css.match(/@keyframes sfx-orb-fade \{[^@]*/)[0].matchAll(/opacity: ([.\d]+)/g)].map((m) => Number(m[1]))); assert.ok(peak <= 0.4, 'never more than half faded in');
 });
 test('zoomed out, stands with the crowd run along both sidelines; the close view is unchanged', async () => {
   const { setStadiumScene, SIDE_REACH, FIELD_BORDER } = await import('../src/ui/stadium-fx.js'); const { fieldViewBox, FIELD_VIEWBOX } = await import('../src/ui/field-view.js');
@@ -217,6 +220,13 @@ test('zoomed out, stands with the crowd run along both sidelines; the close view
     setStadiumScene(venue, null); const close = fieldViewBox().split(' ').map(Number), wide = fieldViewBox(142).split(' ').map(Number);
     assert.ok(Math.abs(close[2] - (plain[2] + FIELD_BORDER * 2)) < 1e-9); assert.ok(Math.abs(wide[2] - (close[2] + SIDE_REACH * 2)) < 1e-9); assert.equal(SIDE_REACH, 9);
     assert.doesNotMatch(fieldSvg({ venue, ballOn: 50 }), /sfx-stand-side/); const z = fieldSvg({ venue, ballOn: 50, viewCamera: { bottom: -21, top: 121 } });
-    assert.match(z, /sfx-stand-side/); assert.match(z, /class="sfx-stand"/, 'and the far stand'); assert.match(z, /sfx-wall/); assert.doesNotMatch(z, /NaN|undefined/);
+    assert.match(z, /sfx-stand-side/); assert.doesNotMatch(z, /NaN|undefined/); assert.doesNotMatch(z, /rotate\(-?90\)/, 'the side fans stand upright');
+    const auto = fieldSvg({ venue, ballOn: 50, viewCamera: { bottom: -13.5, top: 113.5 } }); assert.match(auto, /sfx-stand-side/); assert.doesNotMatch(auto, /class="sfx-stand"><rect|sfx-wall/, 'zoomed out, only the two side stands are in view');
   } finally { setStadiumScene(null); }
+});
+
+test('a side stand\'s crowd is seated for a sideline: 43 seats long, the same people-and-monsters mix, deterministic', async () => {
+  const { crowdSeats, crowdMonsters, SIDE_SEATS, CROWD_ROWS } = await import('../src/ui/stadium-crowd.js'); const mix = { home: 0.7, away: 0.18, fill: 0.9 };
+  const seats = crowdSeats(5, mix, 'left0', SIDE_SEATS); assert.equal(seats.length, CROWD_ROWS); assert.equal(seats[0].length, SIDE_SEATS); assert.deepEqual(seats, crowdSeats(5, mix, 'left0', SIDE_SEATS));
+  assert.notDeepEqual(seats, crowdSeats(5, mix, 'right0', SIDE_SEATS)); assert.equal(crowdMonsters(5, 'left0', 'Fire', SIDE_SEATS)[0].length, SIDE_SEATS);
 });

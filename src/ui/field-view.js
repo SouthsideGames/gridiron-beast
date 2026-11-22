@@ -106,8 +106,8 @@ export function fieldLayers(o) {
   // Stadium Polish: what lies behind the end lines (the far stand with its crowd; the near wall). Over the turf and sidelines there.
   // A strip of grass runs between each end line and what stands behind it.
   // Behind the white: grass, the padded barrier, then the stand (far end) or the wall (near end), across the whole picture.
-  if (cam.top > 110 + FIELD_BORDER) s += `${apronSvg(venue, -VW, Y(110 + FIELD_BORDER + STANDS_GRASS), VW * 2, STANDS_GRASS)}${barrierSvg(venue, -VW, Y(110 + STANDS_GAP), VW * 2, -1)}${standSvg(venue, -VW, Y(110 + standsDepth()), VW * 2)}`;
-  if (cam.bottom < -10 - FIELD_BORDER) s += `${apronSvg(venue, -VW, Y(-10 - FIELD_BORDER), VW * 2, STANDS_GRASS)}${barrierSvg(venue, -VW, Y(-10 - FIELD_BORDER - STANDS_GRASS), VW * 2, 1)}${wallSvg(venue, -VW, Y(-10 - STANDS_GAP), VW * 2)}`;
+  if (cam.top > 110 + FIELD_BORDER) s += `${apronSvg(venue, -VW, Y(110 + FIELD_BORDER + STANDS_GRASS), VW * 2, STANDS_GRASS)}${barrierSvg(venue, -VW, Y(110 + STANDS_GAP), VW * 2, -1)}${cam.top > 110 + STANDS_GAP ? standSvg(venue, -VW, Y(110 + standsDepth()), VW * 2) : ''}`; // the stand only once it is in view
+  if (cam.bottom < -10 - FIELD_BORDER) s += `${apronSvg(venue, -VW, Y(-10 - FIELD_BORDER), VW * 2, STANDS_GRASS)}${barrierSvg(venue, -VW, Y(-10 - FIELD_BORDER - STANDS_GRASS), VW * 2, 1)}${cam.bottom < -10 - STANDS_GAP ? wallSvg(venue, -VW, Y(-10 - STANDS_GAP), VW * 2) : ''}`;
   if (sideReach(span) > 0.05) { const side = sideStandsSvg(venue, cam, HW, Y); if (side) { s += side.svg; sideSymbols.push(...side.symbols); } }
   // Goal posts on the end lines (drawn flat from above: crossbar + uprights).
   for (const [end, dir] of [[110, 1], [-10, -1]]) if (cam.bottom - 1 < end && cam.top + 1 > end) { const y = Y(end) + (fieldBorder() ? -dir * 0.9 : dir * 0.6); s += `<g stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round"><line x1="-3" y1="${y}" x2="3" y2="${y}"/><line x1="-3" y1="${y}" x2="-3" y2="${y - dir * 2.4}"/><line x1="3" y1="${y}" x2="3" y2="${y - dir * 2.4}"/></g>${postsSvg(venue?.env, y, dir)}`; }

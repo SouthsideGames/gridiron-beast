@@ -79,7 +79,7 @@ export function registerMatchScreens(Router, app) {
     const G = f.game;
     const portal = field.frame && (field.frame.hoardFlight || field.fx?.t8?.items?.some(i => i.id === 'PSY-02-F' && (field.frame.t ?? 0) >= i.t0));
     const close = portal ? cameraFor(field.ballOn + field.frame.ball[0]) : field.camera || cameraFor(field.ballOn);
-    const viewCamera = autoCamera.sample(close, { key: G.state, auto: G.auto && !G.state.finished && !anim?.replay, closeView: G.autoCloseView, reducedMotion: f.settings.reducedMotion || !!anim?.replay, pad: standsDepth() }); // zoomed out: the white all round, and the goal posts standing on it
+    const viewCamera = autoCamera.sample(close, { key: G.state, auto: G.auto && !G.state.finished && !anim?.replay, closeView: G.autoCloseView, reducedMotion: f.settings.reducedMotion || !!anim?.replay, pad: standsDepth() ? 3.5 : 0 }); // zoomed out: the white all round with the goal posts on it; the stands in view are the two along the sidelines // zoomed out: the white all round, and the goal posts standing on it
     // Planner art is caller-projected in the close camera's coordinate space.
     const underlay = field.underlay ? `<g transform="translate(0 ${viewCamera.top - close.top})">${field.underlay}</g>` : '';
     return { ...field, viewCamera, underlay };
