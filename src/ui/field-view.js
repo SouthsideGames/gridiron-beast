@@ -27,7 +27,7 @@ import { assignmentLines } from './play-art.js';
 import { PLAYS, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
 import { fxSvg, movementSvg, statusMarks } from './ability-fx.js';
 import { turfSvg } from './stadium-art.js';
-import { lookFor } from './stadium-fx.js';
+import { lookFor, standsDepth, standSvg, wallSvg, FOOTBALL } from './stadium-fx.js';
 import { t as $t } from '../text/index.js';
 
 const SPAN = 46; // visible yards
@@ -48,7 +48,8 @@ function postFx(venue, y, dir) {
 }
 export function cameraFor(ballOn) {
   let bottom = ballOn - 15;
-  bottom = Math.max(-10, Math.min(110 - SPAN, bottom));
+  const reach = standsDepth(); // Stadium Polish: with a stadium scene set, the picture reaches a few yards past each end line (the stands)
+  bottom = Math.max(-10 - reach, Math.min(110 + reach - SPAN, bottom));
   return { bottom, top: bottom + SPAN };
 }
 export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
@@ -106,6 +107,9 @@ export function fieldLayers(o) {
     s += `<line x1="${-HW}" y1="${Y(ballOn)}" x2="${HW}" y2="${Y(ballOn)}" stroke="#4aa3ff" stroke-width="0.35"/>`;
     if (ltg < 100) s += `<line x1="${-HW}" y1="${Y(ltg)}" x2="${HW}" y2="${Y(ltg)}" stroke="#ffb13d" stroke-width="0.35"/>`;
   }
+  // Stadium Polish: what lies behind the end lines (the far stand with its crowd; the near wall). Over the turf and sidelines there.
+  if (cam.top > 110) s += standSvg(venue, -HW, Y(110 + standsDepth()), HW * 2) || `<rect x="${-HW}" y="0" width="${HW * 2}" height="${Y(110)}" fill="#10151d"/>`;
+  if (cam.bottom < -10) s += wallSvg(venue, -HW, Y(-10), HW * 2) || `<rect x="${-HW}" y="${Y(-10)}" width="${HW * 2}" height="${span - Y(-10)}" fill="#10151d"/>`;
   // Goal posts on the end lines (drawn flat from above: crossbar + uprights).
   for (const [end, dir] of [[110, 1], [-10, -1]]) if (cam.bottom - 1 < end && cam.top + 1 > end) { const y = Y(end) + dir * 0.6; s += `<g stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round"><line x1="-3" y1="${y}" x2="3" y2="${y}"/><line x1="-3" y1="${y}" x2="-3" y2="${y - dir * 2.4}"/><line x1="3" y1="${y}" x2="3" y2="${y - dir * 2.4}"/></g>${postFx(venue, y, dir)}`; }
   // Pre-snap art.
@@ -186,7 +190,7 @@ export function fieldLayers(o) {
     const [bx, by, air] = frame.ball;
     const cx = X(ballLat + by), cy = Y(ballOn + bx);
     s += layers.ball; // fire or wind on a ball in the air, just under the ball
-    const ballArt = `<ellipse cx="${(cx + (air ? 0 : 0.9)).toFixed(2)}" cy="${(cy - (air ? 1.4 : 0.7)).toFixed(2)}" rx="${air ? 0.95 : 0.7}" ry="${air ? 0.6 : 0.45}" fill="#d9924f" stroke="#fff" stroke-width="0.18"/>`;
+    const ballArt = `<ellipse cx="${(cx + (air ? 0 : 0.9)).toFixed(2)}" cy="${(cy - (air ? 1.4 : 0.7)).toFixed(2)}" rx="${air ? 0.95 : FOOTBALL.rx}" ry="${air ? 0.6 : FOOTBALL.ry}" fill="${FOOTBALL.fill}" stroke="${FOOTBALL.stroke}" stroke-width="${FOOTBALL.strokeWidth}"/>`;
     // Ability presentation over the sprites: icons, badges, outcome labels; then status marks on top of everything.
     // QB read indicator (GDD §53, opt-in): a thin dashed ring on the receiver the quarterback is reading. Draws only; the frame's
     // `read` is what the engine recorded.

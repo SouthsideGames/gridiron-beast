@@ -2568,3 +2568,11 @@ html[data-stadium-fx="reduced"] .field-wrap[data-sfx] .sfx-cheer { animation: no
 .field-banner .callout { transform-origin: left center; }
 .match-console #fieldwrap > .field-banner { overflow: hidden; }
 .field-wrap.sfx-revealing .sfx-plate { opacity: 0; transition: opacity .15s; }
+/* Stadium Polish v1, revision 4 (owner review): the crowd is a three-row stand behind the far end zone, part of the field (it
+   comes into view near that end zone); the kickoff football is the game's own, at the field's scale. */
+.sfx-stand .sfx-cheer { position: static; }
+.field-wrap[data-sfx][data-sfx-side="home"] .sfx-stand .sfx-cheer-home, .field-wrap[data-sfx][data-sfx-side="away"] .sfx-stand .sfx-cheer-away, .field-wrap[data-sfx="intro"] .sfx-stand .sfx-cheer { animation-name: sfx-jump-yd; }
+@keyframes sfx-jump-yd { 0% { transform: translateY(0); } 50%, 100% { transform: translateY(-.32px); } }
+.sfx-plate { top: 14%; }
+.sfx-ball { height: auto; filter: none; }
+.field-wrap.sfx-revealing .sfx-plate { animation: none; opacity: 0; }

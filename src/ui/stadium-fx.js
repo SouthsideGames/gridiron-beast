@@ -6,8 +6,8 @@
 //   3. major    – a celebration (touchdown, interception, a made field goal, a recovered turnover)
 //
 // Where things are drawn. The field is seen from straight above and fills the width of the screen, so a stadium has two places:
-//   * the SURROUND: the two bands above and below the field inside the field's box (free space on an upright phone). They
-//     are the stands, and the crowd sits there (stadium-crowd.js). It is screen-fixed: it does not scroll with the camera.
+//   * the STAND behind the far end zone, with the crowd (stadium-crowd.js). It belongs to the field: it stays where it is and
+//     comes into view as play nears that end zone (the camera may look a few yards past the end line while a scene is set).
 //   * the FIELD EDGE: the stadium's own effect on the sideline markers and the goal posts (drawn with the turf, in stadium-art.js
 //     and field-view.js), which do scroll with the field.
 //
@@ -96,13 +96,12 @@ export function playStadiumReaction(wrap, reaction, level = 'full') {
 /** The kickoff introduction: the stadium's own flourish, once per game. */
 export const introReaction = () => ({ kind: 'intro', level: 'major', side: 'home', ms: REACTION_MS.intro });
 
-/** Fit the two surround bands to the free space above and below the drawn field (none in a wide layout: the bands hide). */
-export function layoutSurround(wrap, svg, fieldAspect) {
+/** Tell the stylesheet the field's scale (pixels per yard), so screen-space pieces such as the kickoff football match it. */
+export function layoutSurround(wrap, svg, fieldAspect, fieldWidthYards = 54) {
   if (!wrap || !svg) return;
-  const r = svg.getBoundingClientRect(), o = wrap.getBoundingClientRect(); const w = r.width, h = r.height; if (!w || !h) return;
-  const band = Math.max(0, Math.floor(h - Math.min(h, w / fieldAspect))); // the field sits at the bottom of its box; the stand takes all the room above it
-  wrap.style.setProperty('--sfx-band', `${band}px`); wrap.style.setProperty('--sfx-top', `${Math.max(0, Math.round(r.top - o.top - wrap.clientTop))}px`);
-  wrap.classList.toggle('sfx-no-band', band < 26);
+  const r = svg.getBoundingClientRect(); if (!r.width || !r.height) return;
+  const drawn = Math.min(r.width, r.height * fieldAspect);
+  wrap.style.setProperty('--sfx-yd', `${(drawn / fieldWidthYards).toFixed(3)}px`);
 }
 
 // ---------------------------------------------------------------- looks (data)
@@ -118,24 +117,45 @@ export const LOOKS = Object.freeze({
 });
 export const lookFor = (envId) => (Object.hasOwn(LOOKS, envId) ? LOOKS[envId] : null);
 
-/** A few camera flashes in a stand (fixed spots, each on its own slow timer). */
-const flashes = (n, off) => Array.from({ length: n }, (_, i) => `<i class="sfx-flash sfx-anim" style="left:${(7 + ((i * 37 + off) % 86))}%;top:${12 + ((i * 53 + off * 3) % 70)}%;animation-delay:-${((i * 1.7 + off) % 9).toFixed(1)}s"></i>`).join('');
-/** One stand: the crowd picture, the two "arms up" layers for celebrations, flashes, and the stadium's rail on the field side. */
-function standHtml(cls, stand, crowd, look) {
-  const img = crowd ? crowdImages({ ...crowd, stand }) : null; const [a, b] = look.colors;
-  const bg = (u) => (u ? ` style="background-image:url(${u})"` : '');
-  const rail = `<svg class="sfx-rail" viewBox="0 0 120 3" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect width="120" height="3" fill="#0c1430"/><line class="sfx-channel sfx-anim" x1="0" y1="1.5" x2="120" y2="1.5" stroke="${a}" stroke-width="1.1" stroke-dasharray="5 4"/><line class="sfx-channel sfx-channel-b sfx-anim" x1="0" y1="1.5" x2="120" y2="1.5" stroke="${b}" stroke-width=".6" stroke-dasharray="2 7"/></svg>`;
-  return `<div class="sfx-band ${cls} sfx-crowd"${bg(img?.base)}><i class="sfx-cheer sfx-cheer-home"${bg(img?.home)}></i><i class="sfx-cheer sfx-cheer-away"${bg(img?.away)}></i>${flashes(5, stand === 'far' ? 0 : 4)}${rail}</div>`;
+/**
+ * The stadium scene for the game on screen: how far behind each end line the picture reaches (the stands) and the crowd that
+ * sits there. Set by the match screen while a game in a stadium with a look is shown, cleared when it leaves. The field camera
+ * and the field drawing read it, so every overlay that uses the camera agrees with the picture. Null: the field ends at the
+ * end line, exactly as before.
+ */
+let scene = null;
+export const STANDS_DEPTH = 6; // yards behind the end line: three rows of two yards
+export function setStadiumScene(venue, crowd = null) { scene = lookFor(venue?.env) ? { env: venue.env, depth: STANDS_DEPTH, crowd } : null; return scene; }
+export const stadiumScene = () => scene;
+export const standsDepth = () => scene?.depth || 0;
+/** The football as the field draws it on the ground (field-view.js uses the same numbers), in yards. */
+export const FOOTBALL = Object.freeze({ rx: 0.7, ry: 0.45, fill: '#d9924f', stroke: '#fff', strokeWidth: 0.18 });
+
+/**
+ * The stand behind the far end zone, drawn with the field (it does not follow the camera: it comes into view as play nears the
+ * end zone). Three rows of the generated crowd, the two "arms up" layers for celebrations, and the stadium's rail in front.
+ * `y0` is the svg y of the back of the stand, `x0`/`w` its left edge and width, all in yards.
+ */
+export function standSvg(venue, x0, y0, w) {
+  const look = lookFor(venue?.env); if (!look || !scene) return '';
+  const d = scene.depth; const [a, b] = look.colors; const img = scene.crowd ? crowdImages({ ...scene.crowd, stand: 'far' }) : null;
+  const pic = (cls, u) => (u ? `<image class="${cls}" href="${u}" x="${x0}" y="${y0}" width="${w}" height="${d - 0.5}" preserveAspectRatio="none" style="image-rendering:pixelated"/>` : '');
+  return `<g class="sfx-stand"><rect x="${x0}" y="${y0}" width="${w}" height="${d}" fill="#10151d"/>${pic('sfx-crowd-img', img?.base)}${pic('sfx-cheer sfx-cheer-home', img?.home)}${pic('sfx-cheer sfx-cheer-away', img?.away)}<rect x="${x0}" y="${y0 + d - 0.5}" width="${w}" height="0.5" fill="#0c1430"/><line class="sfx-channel sfx-anim" x1="${x0}" y1="${y0 + d - 0.25}" x2="${x0 + w}" y2="${y0 + d - 0.25}" stroke="${a}" stroke-width="0.22" stroke-dasharray="2.5 2"/><line class="sfx-channel sfx-channel-b sfx-anim" x1="${x0}" y1="${y0 + d - 0.25}" x2="${x0 + w}" y2="${y0 + d - 0.25}" stroke="${b}" stroke-width="0.12" stroke-dasharray="1 3.5"/></g>`;
+}
+/** Behind the near end zone there is no stand in view: the stadium's wall and rail close the picture. */
+export function wallSvg(venue, x0, y0, w) {
+  const look = lookFor(venue?.env); if (!look || !scene) return '';
+  const d = scene.depth; const [a] = look.colors;
+  return `<g class="sfx-wall"><rect x="${x0}" y="${y0}" width="${w}" height="${d}" fill="#0d1320"/><rect x="${x0}" y="${y0}" width="${w}" height="0.5" fill="#0c1430"/><line class="sfx-channel sfx-anim" x1="${x0}" y1="${y0 + 0.25}" x2="${x0 + w}" y2="${y0 + 0.25}" stroke="${a}" stroke-width="0.22" stroke-dasharray="2.5 2"/>${[0.18, 0.5, 0.82].map((k) => `<rect x="${x0 + w * k - 3}" y="${y0 + 1.4}" width="6" height="${d - 2}" rx="0.4" fill="#141c30" stroke="#26335a" stroke-width="0.12"/>`).join('')}</g>`;
 }
 /**
- * The surround for a venue: the two stands with their crowd, the edge light that reactions use, and the lap of energy for the
- * biggest moments. `crowd` comes from crowdFor (stadium-crowd.js). '' for a stadium without a look. The pictures are the same
- * at every level; the level only decides what moves (stylesheet).
+ * The surround for a venue: the edge light that reactions use and the lap of energy for the biggest moments. '' for a stadium
+ * without a look.
  */
-export function surroundHtml(venue, crowd = null) {
+export function surroundHtml(venue) {
   const look = lookFor(venue?.env); if (!look) return '';
   const [a, b, c] = look.colors;
-  return `<div class="stadium-surround sfx-${venue.env}" style="--sfx-a:${a};--sfx-b:${b};--sfx-c:${c}" aria-hidden="true">${standHtml('sfx-far', 'far', crowd, look)}<i class="sfx-edge"></i><i class="sfx-lap"></i></div>`;
+  return `<div class="stadium-surround sfx-${venue.env}" style="--sfx-a:${a};--sfx-b:${b};--sfx-c:${c}" aria-hidden="true"><i class="sfx-edge"></i><i class="sfx-lap"></i></div>`;
 }
 /** How long the kickoff reveal runs before the kick, by level (it can always be skipped). */
 export const REVEAL_MS = Object.freeze({ full: 1900, reduced: 900 });
@@ -147,7 +167,8 @@ export function kickoffRevealHtml(venue, level = 'full') {
   const look = lookFor(venue?.env); if (!look?.reveal || level === 'off') return '';
   const [a, b, c] = look.colors;
   const bolt = `<svg class="sfx-strike" viewBox="0 0 60 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M33 0 L24 26 L33 26 L21 52 L31 52 L27 100" fill="none" stroke="${a}" stroke-width="7" stroke-linejoin="round" opacity=".55"/><path d="M33 0 L24 26 L33 26 L21 52 L31 52 L27 100" fill="none" stroke="${c}" stroke-width="2.6" stroke-linejoin="round"/><path d="M24 26 L12 40 M31 52 L44 63" fill="none" stroke="${b}" stroke-width="1.6" stroke-linecap="round"/></svg>`;
-  const ball = `<svg class="sfx-ball" viewBox="0 0 40 26" aria-hidden="true" focusable="false"><ellipse cx="20" cy="13" rx="18" ry="10.5" fill="#8a4b22" stroke="#3a1c0a" stroke-width="2"/><path d="M11 13 H29 M16 10 V16 M20 10 V16 M24 10 V16" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+  // The game's own football: same shape, colour and outline as on the field, at the field's scale (--sfx-yd = pixels per yard).
+  const B = FOOTBALL; const ball = `<svg class="sfx-ball" viewBox="${-B.rx - 0.2} ${-B.ry - 0.2} ${(B.rx + 0.2) * 2} ${(B.ry + 0.2) * 2}" style="width:calc(var(--sfx-yd, 8px) * ${(B.rx + 0.2) * 2})" aria-hidden="true" focusable="false"><ellipse rx="${B.rx}" ry="${B.ry}" fill="${B.fill}" stroke="${B.stroke}" stroke-width="${B.strokeWidth}"/></svg>`;
   return `<div class="sfx-reveal sfx-reveal-${look.reveal} ${level === 'reduced' ? 'sfx-reveal-simple' : ''}" style="--sfx-a:${a};--sfx-b:${b};--sfx-c:${c}" role="button" aria-label="Skip">${level === 'reduced' ? '' : `<i class="sfx-whiteout"></i>${bolt}`}<i class="sfx-ring"></i>${ball}<span class="sfx-skip">Tap to skip</span></div>`;
 }
 /** The kickoff name plate: the stadium, its kind and its line. */

@@ -63,15 +63,32 @@ test('every look names a real field, and a stadium without a look is left exactl
   const plain = fieldSvg({ venue: { env: 'grass', weather: 'clear' }, ballOn: 95 }); assert.doesNotMatch(plain, /sfx-/);
   for (const club of Object.keys(STADIUMS)) assert.ok(ENVIRONMENTS[venueFor(club, 'k').env], `${club} still has its stadium`);
 });
-test('Electric (Storm Stadium): crowd stands, current cycling between the sideline markers, and current between the goal post uprights', () => {
+test('Electric (Storm Stadium): current cycling between the sideline markers and between the goal post uprights', () => {
   const venue = venueFor('Stormport Bolts', 'k'); assert.equal(venue.env, 'storm'); assert.equal(venue.type, 'Electric', 'the field keeps its type');
-  const s = surroundHtml(venue); for (const part of ['sfx-far', 'sfx-crowd', 'sfx-cheer-home', 'sfx-cheer-away', 'sfx-rail', 'sfx-channel', 'sfx-flash', 'sfx-edge', 'sfx-lap']) assert.ok(s.includes(part), part);
-  assert.ok((s.match(/sfx-anim/g) || []).length < 120, 'a bounded number of moving pieces');
-  assert.doesNotMatch(s, /sfx-near/, 'one stand, above the field');
+  const s = surroundHtml(venue); for (const part of ['sfx-edge', 'sfx-lap']) assert.ok(s.includes(part), part);
+  assert.doesNotMatch(s, /sfx-band|sfx-crowd/, 'no screen-fixed stands: the crowd belongs to the field');
   assert.match(introPlateHtml(venue), /The Bolt Yard/); assert.equal(introPlateHtml({ env: 'grass' }), '');
   const mid = fieldSvg({ venue, ballOn: 50 }); assert.match(mid, /sfx-chain/, 'current jumps between the sideline markers'); assert.match(mid, /sfx-node/); assert.doesNotMatch(mid, /sfx-post/);
   const delays = new Set([...mid.matchAll(/sfx-chain sfx-anim" style="animation-delay:-([\d.]+)s/g)].map((m) => m[1])); assert.ok(delays.size >= 4, 'the jumps take turns, so the electricity cycles along the sideline');
   const goal = fieldSvg({ venue, ballOn: 92 }); assert.match(goal, /class="sfx-post"/); assert.equal((goal.match(/sfx-post-arc/g) || []).length, 3);
+});
+test('the stand: behind the far end zone only, in view only near it, and the field ends at the end line without a stadium scene', async () => {
+  const { setStadiumScene, standsDepth, STANDS_DEPTH, FOOTBALL } = await import('../src/ui/stadium-fx.js'); const { cameraFor } = await import('../src/ui/field-view.js');
+  const venue = venueFor('Stormport Bolts', 'k');
+  try {
+    assert.equal(standsDepth(), 0); assert.deepEqual(cameraFor(95), { bottom: 64, top: 110 }); assert.deepEqual(cameraFor(2), { bottom: -10, top: 36 });
+    assert.equal(setStadiumScene({ env: 'grass' }), null, 'a plain stadium has no scene'); assert.equal(standsDepth(), 0);
+    setStadiumScene(venue, null); assert.equal(standsDepth(), STANDS_DEPTH); assert.equal(STANDS_DEPTH, 6, 'three rows of two yards');
+    assert.deepEqual(cameraFor(50), { bottom: 35, top: 81 }, 'midfield is unchanged: no crowd in sight');
+    assert.deepEqual(cameraFor(79), { bottom: 64, top: 110 }, 'the end line is just reached');
+    assert.equal(cameraFor(82).top, 113, 'the stand comes into view as play nears the end zone'); assert.equal(cameraFor(99).top, 116, 'and never more than its three rows');
+    assert.doesNotMatch(fieldSvg({ venue, ballOn: 50 }), /sfx-stand|sfx-wall/); assert.doesNotMatch(fieldSvg({ venue, ballOn: 79 }), /sfx-stand/);
+    const near = fieldSvg({ venue, ballOn: 92 }); assert.match(near, /sfx-stand/); assert.ok(near.indexOf('sfx-stand') < near.indexOf('class="sfx-post"'), 'the goal posts stand in front of the crowd');
+    const own = fieldSvg({ venue, ballOn: 2 }); assert.match(own, /sfx-wall/); assert.doesNotMatch(own, /sfx-stand/, 'no crowd behind the near end zone');
+    const full = kickoffRevealHtml(venue, 'full'); assert.ok(full.includes(`rx="${FOOTBALL.rx}" ry="${FOOTBALL.ry}" fill="${FOOTBALL.fill}"`), 'the reveal shows the game\'s own football');
+    assert.match(fieldSvg({ venue, ballOn: 30, frame: { ball: [0, 0, 0], off: [], def: [] } }), new RegExp(`rx="${FOOTBALL.rx}" ry="${FOOTBALL.ry}" fill="${FOOTBALL.fill}"`));
+  } finally { setStadiumScene(null); }
+  assert.deepEqual(cameraFor(95), { bottom: 64, top: 110 }, 'leaving the game restores the plain camera');
 });
 test('the stylesheet drives the three levels and the reactions, and stops ambient movement when the app is inactive', () => {
   const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8');

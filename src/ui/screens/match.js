@@ -4,7 +4,7 @@ import { autoSpeed, cycleAutoSpeed } from '../phone-navigation.js';
 import { matchLogMatches } from '../match-log-filter.js';
 import { activityPaused } from '../activity.js';
 import { iconifyMarkup, infoIcon } from '../icons.js';
-import { surroundHtml, introPlateHtml, kickoffRevealHtml, REVEAL_MS, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
+import { surroundHtml, setStadiumScene, introPlateHtml, kickoffRevealHtml, REVEAL_MS, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
 import { crowdFor } from '../stadium-crowd.js';
 import { guideFootball, guideMoment } from '../guided-week.js';
 import { recorder } from '../../testing/recorder.js';
@@ -208,7 +208,7 @@ export function registerMatchScreens(Router, app) {
       // Three in-place regions (refresh(): a play's start and end update them without rebuilding the screen): the head, the field
       // with what lies over it, the panels under the field; then the controls. display:contents wrappers add no box of their own.
       return `<div class="match-console"><div id="live-status"></div><div id="match-head">${P.head}</div>
-        <div class="${P.wrapClass}" id="fieldwrap" aria-label="${$t('match.football_field')}">${P.surround}<svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="${P.surround ? 'xMidYMax' : 'xMidYMid'} meet" role="img">${fieldSvg(P.field)}</svg>${P.over}</div><div id="field-after">${P.after}</div>
+        <div class="${P.wrapClass}" id="fieldwrap" aria-label="${$t('match.football_field')}">${P.surround}<svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldSvg(P.field)}</svg>${P.over}</div><div id="field-after">${P.after}</div>
         <div id="controls">${P.controls}</div></div>`;
     },
     mount(root, ctx) {
@@ -273,7 +273,7 @@ export function registerMatchScreens(Router, app) {
       if (!anim && f.game?.lastEvent?.sim?.events?.some(e => e.kind === 'ability' || e.kind === 'status')) guideMoment(f, 'status', () => app.save());
       document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => openLiveBox(f));
     },
-    unmount() { cancelReveal(); stopStadiumReaction(); pendingStadium = null; cancelAnimationFrame(cameraRaf); cameraRaf = null; cameraField = cameraSvg = null; autoCamera.reset(null); settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
+    unmount() { cancelReveal(); stopStadiumReaction(); setStadiumScene(null); pendingStadium = null; cancelAnimationFrame(cameraRaf); cameraRaf = null; cameraField = cameraSvg = null; autoCamera.reset(null); settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
   });
 
   /** Everything the match screen shows, as the strings render() and refresh() place: title, head, field options, overlays, panels, controls. */
@@ -353,7 +353,9 @@ export function registerMatchScreens(Router, app) {
   }
   function cancelReveal() { if (!revealFinish) return; revealFinish = null; document.querySelector('.sfx-reveal')?.remove(); } // a stadium reaction waiting for the field to be on screen
   function screenParts(f) {
-    const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
+    const G = f.game; const s = G.state;
+    // Stadium Polish: the stand and its crowd for this game (the camera and the field drawing read it; null for a plain stadium).
+    setStadiumScene(s.venue, crowdFor({ seed: s.seed, homeColor: s.home.color, awayColor: s.away.color, homeRecord: f.season?.records?.[s.home.name], awayRecord: f.season?.records?.[s.away.name], event: G.event })); const me = G.playerSide, them = R.opponent(me);
     const myBall = s.possession === me;
     const teams = teamsFor(f);
     absenceTrack.observe(s.seed, s, teams, G.fxAbsence); // presentation-only save data, outside the simulation state
@@ -413,7 +415,7 @@ export function registerMatchScreens(Router, app) {
     // Stadium Polish: the reaction to the play just shown, or the kickoff flourish (once per game), handed to afterRender.
     if (reaction) pendingStadium = reaction;
     else if (openingKickoff && !G.stadiumIntroShown) { G.stadiumIntroShown = true; pendingStadium = introReaction(); }
-    return { title, head, wrapClass, field, over, after, surround: surroundHtml(s.venue, crowdFor({ seed: s.seed, homeColor: s.home.color, awayColor: s.away.color, homeRecord: f.season?.records?.[s.home.name], awayRecord: f.season?.records?.[s.away.name], event: G.event })), controls: controlsHtml(f, teams, look) };
+    return { title, head, wrapClass, field, over, after, surround: surroundHtml(s.venue), controls: controlsHtml(f, teams, look) };
   }
   /** What mount() does after the markup is in place; refresh() repeats it (the play clock restarts, Auto is rescheduled, the halftime sheet opens). */
   function afterRender(f, root) {
