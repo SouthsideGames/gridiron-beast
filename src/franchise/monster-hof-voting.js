@@ -37,7 +37,7 @@ export const HALL_CASE = Object.freeze({
   award: Object.freeze({ mvp: 30, opoy: 22, dpoy: 22, smoy: 12, oroy: 8, droy: 8 }), awardOther: 14,
   record: Object.freeze({ season: 10, game: 5 }), recordOther: 7, recordCap: 30,
   production: 40, productionPeers: 8, best: Object.freeze([16, 8]), bestPeers: 10,
-  season: 2, seasonCap: 12, gamesPer: 25, gamesCap: 250, // 14-game seasons: the nine-game 16 and 160 times 14/9, so games still add at most ten points over about sixteen seasons
+  season: 2, seasonCap: 12, gamesPer: 16, gamesCap: 160, // (owner 2026-11-12, set for nine-game seasons and left as approved: in 14-game seasons a career reaches the 160-game ceiling in about ten seasons, not sixteen; the ceiling itself, ten points, is the same)
   title: 2, titleCap: 3,
   standardFrom: 57, standardSpan: 31,
 });

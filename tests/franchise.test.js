@@ -147,8 +147,9 @@ test('standings tiebreakers and playoff seeding', () => {
   applyResult(records, { home: 'Sunfire Solars', away: 'Palmetto Wyrms', homeScore: 21, awayScore: 20 });
   const st = standings(records);
   assert.deepEqual(st.divisions.Everwild.slice(0, 2), ['Ember City Beasts', 'Sunfire Solars']); // better point differential wins the tie
-  assert.equal(st.conferences.Koruun.seeds.length, 4); assert.equal(st.conferences.Veyra.seeds.length, 4);
-  assert.equal(st.conferences.Koruun.seeds[0], 'Ember City Beasts', 'the division winners are the seeds, the best record first'); assert.deepEqual(st.conferences.Koruun.wildcards, []);
+  // 14-club playoffs (owner, 2026-11-23): seven seeds a conference, the four division champions first and three wild cards after.
+  assert.equal(st.conferences.Koruun.seeds.length, 7); assert.equal(st.conferences.Veyra.seeds.length, 7);
+  assert.equal(st.conferences.Koruun.seeds[0], 'Ember City Beasts', 'the division champions are seeds 1-4, the best record first'); assert.equal(st.conferences.Koruun.wildcards.length, 3); assert.equal(st.conferences.Koruun.seeds[4], 'Sunfire Solars', 'the best club that did not win its division is the first wild card');
 });
 
 test('save round-trips and the legacy v5 import preserves owner, club, staff and record', () => {
@@ -308,7 +309,7 @@ test('Thursday scouting shows exactly the six plays the opponent brings on Sunda
 test('difficulty is chosen at creation, carried in the save and exposed with Hall of Fame goals', () => {
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed: 5, settings: { difficulty: 'allstar' } });
   assert.equal(f.settings.difficulty, 'allstar');
-  assert.deepEqual(F.difficultyOf(f).hofGoals, { badges: 8, titles: 4, wins: 80, awards: 5 });
+  assert.deepEqual(F.difficultyOf(f).hofGoals, { badges: 12, titles: 4, wins: 80, awards: 5 }); // Hard: all twelve badges (owner, 2026-11-23)
   assert.equal(F.difficultyOf({ settings: {} }).label, 'Pro');
 });
 
@@ -403,13 +404,14 @@ test('commissioner: signing over the cap is allowed with a warning; Saturday nam
   assert.equal(f.campaign.commissionerReleases, 1);
 });
 
-test('Legend Tracks: a champion chooses a track; three unlock the legendary in its home region; the rival keeps a signature monster', () => {
+// Owner, 2026-11-23: every Legend Track needs its Gym Leader's badge, held now (four used to be free). tests/league-32.test.js has all twelve.
+test('Legend Tracks: a champion with the badge chooses a track; three unlock the legendary in its home region; the rival keeps a signature monster', () => {
   const f = newFranchise(31);
-  f.campaign.badges['Harbor Anchors'] = { year: 1, week: 1, score: '1-0' };
+  assert.deepEqual(F.legendChoices(f), [], 'no badge, no track');
+  f.campaign.badges['Harbor Anchors'] = { year: 1, week: 1, score: '1-0' }; f.campaign.badges['Emberfall Infernos'] = { year: 1, week: 2, score: '1-0' };
   const choices = F.legendChoices(f).map((c) => c.id);
-  assert.deepEqual(choices.slice(0, 4), ['pyroclast', 'elderoot', 'tempestra', 'astralux']);
-  assert.ok(choices.includes('tsunarok'), 'a held badge opens that gym legendary');
-  assert.ok(!choices.includes('aurodrax'));
+  assert.deepEqual(choices.slice().sort(), ['pyroclast', 'tsunarok'], 'exactly the legendaries of the badges held');
+  assert.ok(!choices.includes('aurodrax')); assert.ok(!choices.includes('elderoot'));
   assert.equal(F.chooseLegendTrack(f, 'pyroclast').ok, false, 'only after a title');
   for (let i = 1; i <= 3; i++) { f.legendPick = { year: i, resolved: false }; const r = F.chooseLegendTrack(f, 'pyroclast'); assert.equal(r.ok, true); assert.equal(r.unlocked, i === 3); }
   assert.ok(f.campaign.unlocked.pyroclast);
@@ -417,7 +419,7 @@ test('Legend Tracks: a champion chooses a track; three unlock the legendary in i
   // Unlocked: scoutable in its home region (Volcanic Fields) and nowhere else.
   let found = 0, elsewhere = 0;
   for (let i = 0; i < 40; i++) {
-    const g = newFranchise(100 + i); g.campaign.unlocked = { pyroclast: true }; g.staff.head_scout = 'sc_ash';
+    const g = newFranchise(100 + i); g.campaign.unlocked = { pyroclast: true }; g.campaign.badges['Emberfall Infernos'] = { year: 1, week: 2, score: '1-0' }; g.staff.head_scout = 'sc_ash';
     const r = F.scoutRegion(g, i % 2 ? 'Volcanic Fields' : 'Coral Coast');
     for (const p of r.prospects) if (p.monster.species === 'pyroclast') { if (i % 2) found++; else elsewhere++; }
   }

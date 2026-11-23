@@ -7,7 +7,7 @@ import * as F from '../src/franchise/franchise.js';
 import { CANON, FALLEN_POWERS } from '../src/franchise/preleague-history.js';
 import { generateLeagueArchive, validateLeagueArchive, lineProblems, leagueArchive, archiveCareer, careerTotals, archiveLegends, archiveAwardsFor, archiveRecords, isArchiveLegendId, ARCHIVE_VERSION, ARCHIVE_SEASONS, ARCHIVE_LEGENDS, ARCHIVE_AWARDS, REGULAR_GAMES, LEGEND_PREFIX } from '../src/franchise/preleague-history.js';
 import { CONFERENCE_NAMES, STARTER_DIVISIONS } from '../src/data/league.js';
-import { ALL_TEAMS, DIVISIONS, STARTER_CLUBS, conferenceFor, divisionOf, leagueSeasonFixtures, playoffRound } from '../src/data/league.js';
+import { ALL_TEAMS, DIVISIONS, STARTER_CLUBS, conferenceFor, divisionOf, leagueSeasonFixtures, legacyPlayoffRound } from '../src/data/league.js';
 import { STAT_LABEL, MAX_KEYS, RECORD_CATEGORIES, POSITION_COLUMNS, OFFENSE_POSITIONS, DEFENSE_POSITIONS, withDerived, addInto } from '../src/franchise/stats.js';
 import { computeAwards } from '../src/franchise/awards.js';
 import { pack, unpack } from '../src/franchise/pack.js';
@@ -60,7 +60,9 @@ test('several seeds and every starter club: each archive is sound against its ow
   }
 });
 
-test('seasons follow the league\'s real format: fourteen games on real fixtures, the real seeding and the real bracket', () => {
+// The archive's seasons were played in the old eight-club bracket and stay in it (owner, 2026-11-23: the 14-club playoffs start with
+// the owner's first season, and the archive's champions are kept).
+test('seasons follow the league\'s real format: fourteen games on real fixtures, the division champions seeded, the old eight-club bracket', () => {
   const real = leagueSeasonFixtures(1); const gamesPerClub = real.flatMap((w) => w.games).filter((g) => g.home === ALL_TEAMS[0] || g.away === ALL_TEAMS[0]).length;
   assert.equal(gamesPerClub, REGULAR_GAMES, 'the archive must play as many games as the league does'); assert.equal(REGULAR_GAMES, 14);
   for (const [seed, club] of SEEDS.slice(0, 3)) for (const s of franchise(seed, club).preLeagueHistory.seasons) {
@@ -77,7 +79,7 @@ test('seasons follow the league\'s real format: fourteen games on real fixtures,
       assert.equal(divs.length, 4); assert.deepEqual(seeds.slice().sort(), divs.map((d) => s.divisions[d][0]).sort(), 'the four seeds are the four division champions: there are no wild cards');
     }
     assert.equal(s.playoffs.length, 7, 'four semifinals, two conference finals, the Beast Bowl');
-    assert.deepEqual(s.playoffs.filter((g) => g.round === 1).map((g) => [g.home, g.away, g.tag]), playoffRound(1, [], s.seeds).map((g) => [g.home, g.away, g.tag]), 'semifinals are 1 v 4 and 2 v 3 in each conference');
+    assert.deepEqual(s.playoffs.filter((g) => g.round === 1).map((g) => [g.home, g.away, g.tag]), legacyPlayoffRound(1, [], s.seeds).map((g) => [g.home, g.away, g.tag]), 'semifinals are 1 v 4 and 2 v 3 in each conference');
     assert.deepEqual(s.playoffs.filter((g) => g.round === 2).map((g) => g.tag), ['Veyra Championship', 'Koruun Championship']);
     const fin = s.playoffs[6]; assert.equal(fin.tag, 'Beast Bowl'); assert.equal(fin.winner, s.champion); assert.equal(fin.winner === fin.home ? fin.away : fin.home, s.runnerUp);
     assert.notEqual(conferenceFor(divisionOf(fin.home)), conferenceFor(divisionOf(fin.away)), 'the Beast Bowl is between the conference champions');

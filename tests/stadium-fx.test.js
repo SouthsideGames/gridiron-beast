@@ -71,7 +71,7 @@ test('Electric (Storm Stadium): current cycling between the sideline markers and
   const venue = venueFor('Thunder Mesa Blitz', 'k'); assert.equal(venue.env, 'storm'); assert.equal(venue.type, 'Electric', 'the field keeps its type');
   const s = surroundHtml(venue); for (const part of ['sfx-edge', 'sfx-lap']) assert.ok(s.includes(part), part);
   assert.doesNotMatch(s, /sfx-band|sfx-crowd/, 'no screen-fixed stands: the crowd belongs to the field');
-  assert.match(introPlateHtml(venue), /Thunderhead Stadium/); assert.match(introPlateHtml(venueFor('Goldhaven Royals', 'k')), /Crown Field/, 'a grass stadium is announced by name too'); assert.doesNotMatch(introPlateHtml(venueFor('Goldhaven Royals', 'k')), /current|mountain|tide/i);
+  assert.match(introPlateHtml(venue), /Thunderhead Stadium/); assert.match(introPlateHtml(venueFor('Goldhaven Royals', 'k')), /Crownfield Stadium/, 'a grass stadium is announced by name too'); assert.doesNotMatch(introPlateHtml(venueFor('Goldhaven Royals', 'k')), /current|mountain|tide/i);
   const mid = fieldSvg({ venue, ballOn: 50 }); assert.match(mid, /sfx-chain/, 'current jumps between the sideline markers'); assert.match(mid, /sfx-node/); assert.doesNotMatch(mid, /sfx-post/);
   const delays = new Set([...mid.matchAll(/sfx-chain sfx-anim" style="animation-delay:-([\d.]+)s/g)].map((m) => m[1])); assert.ok(delays.size >= 4, 'the jumps take turns, so the electricity cycles along the sideline');
   const goal = fieldSvg({ venue, ballOn: 92 }); assert.match(goal, /class="sfx-post"/); assert.equal((goal.match(/sfx-post-arc/g) || []).length, 3);
