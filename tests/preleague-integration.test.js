@@ -52,7 +52,8 @@ test('saving and loading through the real store keeps every byte of the archive'
   assert.deepEqual(validateLeagueArchive(f.preLeagueHistory, { live: liveOf(f) }), []);
   // the compressed save grows by the archive and no more than that (measured 2026-11-21: about 128 KB with, about 100 KB without)
   const bare = createStore({ backend: memoryBackend(), localStorage: null, debounce: 0 }); await bare.open(); const without = await bare.save(make(312, 'Ember City Beasts', { leagueArchive: false }), { immediate: true });
-  assert.ok(saved.bytes - without.bytes < 60_000, `the archive adds ${saved.bytes - without.bytes} bytes to the stored save`);
+  assert.ok(saved.bytes - without.bytes < 120_000, // 32 clubs: twice the veterans, so about twice the 16-club archive (which was held under 60 KB)
+    `the archive adds ${saved.bytes - without.bytes} bytes to the stored save`);
   assert.equal(JSON.stringify(unpack(pack(base))), JSON.stringify(base), 'the packer is not lossless with an archive in the save');
   const file = exportFranchise(base); const body = typeof file === 'string' ? file : JSON.stringify(file); assert.ok(body.includes(LEGEND_PREFIX) || body.length > 1000, 'the export holds the franchise');
 });
