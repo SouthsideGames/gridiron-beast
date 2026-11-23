@@ -59,7 +59,7 @@ test('forecasts display whole wins while precise internal expectations remain in
   for (const p of [0.15, 0.3, 0.5, 0.85]) {
     const offers = goalOffers(null, { expectedWinPct: p });
     assert.match(offers[0].text, /win \d+ games/); assert.doesNotMatch(offers[0].text, /\d\.\d/);
-    assert.equal(offers[0].forecastWins, +(p * 9).toFixed(1));
+    assert.equal(offers[0].forecastWins, +(p * 14).toFixed(1)); // a 14-game season since the 32-club league
   }
   assert.equal(new Set(LESSONS.map(l => l.id)).size, LESSONS.length);
 });

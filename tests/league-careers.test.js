@@ -91,9 +91,9 @@ test('compaction is forward-only and lossless: a slimmed winner row expands to t
   const g = runFranchise(54, { seasons: 1, legacy: true }).f; for (const x of Object.values(g.history[0].awards.league)) if (x && typeof x === 'object') assert.ok(!x.slim);
 });
 
-test('the League Hub data: 16 clubs, rosters with tenure and deals, career leaders over the universe including retired legends, protected monsters, head-to-head', () => {
+test('the League Hub data: 32 clubs, rosters with tenure and deals, career leaders over the universe including retired legends, protected monsters, head-to-head', () => {
   const { f } = two();
-  const dir = LC.clubDirectory(f, { overallOf: () => 60 }); assert.equal(dir.length, 16); assert.equal(dir.filter((c) => c.mine).length, 1); assert.ok(dir.some((c) => c.protected.length));
+  const dir = LC.clubDirectory(f, { overallOf: () => 60 }); assert.equal(dir.length, 32); assert.equal(dir.filter((c) => c.mine).length, 1); assert.ok(dir.some((c) => c.protected.length));
   const club = clubsOf(f)[0]; const rows = LC.clubRosterView(f, club); assert.ok(rows.length >= 26); assert.ok(rows.every((m) => m.id && m.ovr > 0 && (m.permanent || m.ends != null)));
   const L = LC.universeCareerLeaders(f, { n: 5 }); assert.ok(Object.keys(L).length >= 6); assert.ok(L.tacklesTotal[0].value >= L.tacklesTotal[4].value);
   const mine = LC.universeCareerLeaders(f, { n: 3, mine: true }); for (const rows2 of Object.values(mine)) assert.ok(rows2.every((r) => r.where === 'roster'));

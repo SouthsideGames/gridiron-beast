@@ -25,6 +25,7 @@ function stepDay(f) {
   if (d === 0) return F.scoutRegion(f, 'Coral Coast'); if (d === 1) return F.skipRecruit(f); if (d === 2) return F.setTraining(f, 'coverage'); if (d === 3) return F.scoutOpponent(f, 'defense'); if (d === 4) return F.setGamePlan(f, F.catalog(f, 'offense').slice(0, 6), F.catalog(f, 'defense').slice(0, 6)); if (d === 5) return F.lineupCheck(f);
   return null;
 }
+import { GYM_CLUBS as GYM_CLUBS_32 } from '../src/data/gyms.js';
 function newFranchise(seed = 7) {
   const f = F.createFranchise({ owner: { first: 'Sam', last: 'Rivera', gender: 'Female', portrait: 1, hometown: 'Ember City' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed });
   for (const id of ['hc_vale', 'oc_park', 'dc_ice', 'sc_moss', 'tr_focus']) assert.equal(F.hireStaff(f, id).ok, true, id);
@@ -319,7 +320,7 @@ test('campaign: fourteen games against eleven clubs, no Gym Leader game guarante
   for (const y of [1, 2, 7]) for (const t of ALL_TEAMS) {
     const sched = teamSchedule(y, t).filter((g) => !g.bye); const opps = sched.map((g) => g.opponent);
     assert.equal(opps.length, 14); assert.equal(new Set(opps).size, 11, `${t} plays eleven different clubs: three rivals twice and eight others once`);
-    if (!GYM_CLUBS.includes(t)) assert.ok(opps.filter((o) => GYM_CLUBS.includes(o)).length <= 8);
+    if (!GYM_CLUBS.includes(t)) assert.ok(opps.filter((o) => GYM_CLUBS.includes(o)).length <= 12, 'at most its two division Gym Leaders twice and eight more');
   }
   assert.equal(GYM_CLUBS.length, 12);
   const f = newFranchise(3);
@@ -358,10 +359,11 @@ test('campaign: the other coach speaks before the game and remembers the result'
   F.autoRunToSunday(f);
   const t1 = F.pregameTalk(f);
   assert.ok(t1 && t1.lines.length >= 1 && t1.lines.length <= 3);
-  assert.equal(t1.kind, t1.kind === 'rival' ? 'rival' : 'ordinary', 'week 1 is an ordinary club (or the rival), never a gym'); assert.equal(t1.state, t1.kind === 'rival' ? 'first' : 'generic');
+  // (32-club league: the schedule no longer keeps Gym Leaders out of week 1 or puts one in week 2.)
+  assert.ok(['rival', 'ordinary', 'gym'].includes(t1.kind)); assert.equal(t1.state, t1.kind === 'ordinary' ? 'generic' : 'first');
   if (t1.kind === 'ordinary') { assert.equal(t1.replies, false); }
-  // Week 2 is a badge game: the gym coach speaks and a reply is allowed.
-  { const g = F.simulatePlayerGame(f); F.finishSunday(f, g); F.autoRunToSunday(f); }
+  // The first badge game on the schedule: the gym coach speaks and a reply is allowed.
+  for (let w = 0; w < 15 && !(F.opponentName(f) && F.pregameTalk(f)?.kind === 'gym'); w++) { if (F.isBye(f)) F.takeBye(f); else { const g = F.simulatePlayerGame(f); F.finishSunday(f, g); } F.autoRunToSunday(f); }
   const t2 = F.pregameTalk(f); assert.equal(t2.kind, 'gym'); assert.equal(t2.state, 'first');
   const boostsBefore = JSON.stringify(F.playerTeam(f).boosts);
   assert.equal(F.replyToCoach(f, 'confident').ok, true);
@@ -486,7 +488,7 @@ test('owner backgrounds carry a perk: cap, training odds, scouting reveal, analy
 test('playtest round 2: fatigue shows all week and recovers Saturday; bye weeks skip to rest; play stats tally; award races need games played', () => {
   const f = newFranchise(71);
   F.autoRunToSunday(f); const g = F.simulatePlayerGame(f); const r = F.finishSunday(f, g);
-  assert.equal(r.newBadge, null, 'week 1 is not a badge game');
+  { const last = f.season.schedule.find((x) => x.week === 1); const won = !!last.result?.won; assert.equal(r.newBadge, won && GYM_CLUBS_32.includes(last.opponent) ? last.opponent : null, 'a badge only for beating a Gym Leader (week 1 can be one now)'); }
   const starters = f.roster.filter((m) => m.fatigue > 0);
   assert.ok(starters.length >= 10, `fatigue visible on Monday (${starters.length} tired)`);
   const before = Math.max(...f.roster.map((m) => m.fatigue));
@@ -713,14 +715,14 @@ test('the draft: class opens in the final week, Mondays scout it and Tuesdays re
   settle(f);
   assert.match(F.startNextSeason(f).reason, /draft|free agency/i); // Task 7: free agency, then the draft, gate the season
   const b = (t7FA(f), F.beginDraft(f)); assert.ok(b.ok); assert.equal(F.onTheClock(f), f.club);
-  const st = F.leagueStandings(f).overall; const myRank = st.indexOf(f.club); assert.equal(f.draft.index, 15 - myRank, 'worst record picks first');
+  const st = F.leagueStandings(f).overall; const myRank = st.indexOf(f.club); assert.equal(f.draft.index, 31 - myRank, 'worst record picks first');
   const before = f.roster.length; const first = f.draft.class.find((m) => f.draft.available.includes(m.id));
   const p = F.myDraftPick(f, first.id); assert.ok(p.ok); assert.equal(f.roster.length, before + 1); assert.ok(p.monster.contract.rookie && p.monster.contract.ends === 3); assert.equal(p.monster.salary, Math.round((18000 + 280 * monsterOverall(p.monster)) * 0.7 / 100) * 100);
   assert.equal(F.myDraftPick(f, first.id).ok, false, 'not your pick again until the AI has gone');
   while (!f.draft.done) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
-  assert.ok(f.draft.done && f.draft.picks.length === 48);
+  assert.ok(f.draft.done && f.draft.picks.length === 96, 'three rounds of 32');
   // Persistent rosters (GDD §42.6): AI picks join their clubs' registry rosters on rookie deals; `draftResults` is history only.
-  const aiPicks = f.draft.picks.filter((pk) => pk.team !== f.club && pk.id); assert.ok(aiPicks.length >= 40, 'AI clubs drafted');
+  const aiPicks = f.draft.picks.filter((pk) => pk.team !== f.club && pk.id); assert.ok(aiPicks.length >= 80, 'AI clubs drafted');
   const team = aiPicks[0].team; const got = aiPicks.filter((pk) => pk.team === team).map((pk) => F.findInLeague(f, pk.id)?.m).filter(Boolean);
   assert.ok(got.length && got.every((m) => m.contract?.rookie && m.drafted?.club === team), 'the club holds its draftees on rookie deals');
   while (f.roster.length < F.ROSTER_MIN) F.signFreeAgent(f, F.offseasonMarket(f)[0].monster.id);

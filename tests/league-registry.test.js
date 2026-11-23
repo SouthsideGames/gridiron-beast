@@ -17,11 +17,11 @@ import { ROSTER_MAX, monsterOverall } from '../src/data/monsters.js';
 
 const clubsOf = (f) => ALL_TEAMS.filter((t) => t !== f.club);
 
-test('a new franchise is a persistent universe: 15 clubs of 38, every id issued once, protected monsters listed on permanent deals, schema 10', () => {
+test('a new franchise is a persistent universe: 31 clubs of 38, every id issued once, protected monsters listed on permanent deals, schema 10', () => {
   const f = newFranchise(11, { difficulty: 'pro' });
   assert.equal(f.schemaVersion, 10); assert.ok(F.hasLeague(f)); assert.ok(f.freeAgency?.v, 'the Task 7 block');
   assert.deepEqual(R.verifyLeague(f), []);
-  const clubs = clubsOf(f); assert.equal(R.leagueClubs(f).length, 15);
+  const clubs = clubsOf(f); assert.equal(R.leagueClubs(f).length, 31);
   for (const c of clubs) assert.equal(R.clubRoster(f, c).length, 38, `${c} carries the full roster`);
   const all = [...new Set([...f.roster, ...(f.draft?.class || []), ...clubs.flatMap((c) => R.clubRoster(f, c))])]; // the class still lists the drafted objects
   assert.equal(new Set(all.map((m) => m.id)).size, all.length, 'no id twice anywhere in the universe');
@@ -96,17 +96,21 @@ test('migration: a v40-style universe (no registry) mid-season gets a registry b
   assert.ok(r.ok && r.created, r.problems.join('; ')); assert.equal(f.schemaVersion, 10, 'the capture keeps schema 10');
   assert.deepEqual(f.league.persistentFrom, { year, week: f.season.week });
   assert.equal(JSON.stringify({ roster: f.roster, pool: f.pool, history: f.history, season: { ...f.season, leagueStats: null }, draftResults: f.draftResults }), untouched, 'the owner\'s side is untouched');
+  const renamed = [];
   for (const c of clubs) {
     const now = F.aiTeam(f, c, year);
     assert.equal(teamOverall(now), teamOverall(before[c]), `${c}: the same strength`);
     const ids = (t) => t.roster.map((m) => m.id).sort(); const names = (t) => t.roster.map((m) => `${m.name}|${m.level}|${m.stage || 0}`).sort();
-    assert.deepEqual(names(now), names(before[c]), `${c}: the same monsters`);
+    // The same monsters by name, level and stage. A name can change only where the capture found it twice in the universe (individual
+    // names are unique; with 32 clubs a repeat is likelier): each such monster is checked below to be a genuine clash.
+    { const a = names(now), b = names(before[c]); assert.equal(a.length, b.length, `${c}: the same number of monsters`); const gone = b.filter((x) => !a.includes(x)), came = a.filter((x) => !b.includes(x)); assert.equal(gone.length, came.length, `${c}: the same monsters`); assert.deepEqual(came.map((x) => x.split('|').slice(1).join('|')).sort(), gone.map((x) => x.split('|').slice(1).join('|')).sort(), `${c}: a renamed monster keeps his level and stage`); for (const x of gone) renamed.push({ club: c, name: x.split('|')[0] }); }
     const moved = new Set(r.rekeyed.filter((x) => x.club === c).map((x) => x.from));
     assert.deepEqual(ids(now).filter((id) => !r.rekeyed.some((x) => x.to === id)), ids(before[c]).filter((id) => !moved.has(id)), `${c}: the same ids apart from genuine clashes`);
   }
   // every re-key was a genuine clash: the old id is held by another monster somewhere in the universe (today's generator can repeat an id across clubs, GDD §42.2)
   const everyone = [...f.roster, ...clubs.flatMap((c) => R.clubRoster(f, c)), ...(f.draft?.class || [])];
   for (const x of r.rekeyed) assert.ok(everyone.some((m) => m.id === x.from), `${x.from} was taken`);
+  assert.ok(renamed.length <= 12, `renames are rare (under 1% of some 1,200 monsters): ${renamed.length}`); for (const x of renamed) assert.ok(everyone.some((m) => m.name === x.name), `${x.club}: ${x.name} was renamed only because another monster holds that name`);
   const vr = r.rekeyed.find((x) => x.from === victim.id); assert.ok(vr && vr.club === clubs[3], 'the injected clash was re-keyed');
   assert.ok(!f.season.leagueStats[clubs[3]][victim.id] && f.season.leagueStats[clubs[3]][vr.to]?.tackles === 7, 'the table row followed the new id');
   assert.ok(R.clubRoster(f, clubs[3]).some((m) => m.id === vr.to));
