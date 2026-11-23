@@ -1,7 +1,7 @@
 // Captain Partnerships (GDD §27.4B), phase 4: the franchise lifecycle. One-time initial selection (and its automatic
 // fallback), seasonal locking, the offseason pick, commits once per game id, playoff and AI–AI chemistry, captains released or
 // traded (no restriction, no replacement, the partnership inactive, reactivated on return), injuries, permanent history by
-// monster id (reunions, evolution, retirement), deterministic AI selection, all 16 clubs valid over seasons, and saves: no
+// monster id (reunions, evolution, retirement), deterministic AI selection, all 32 clubs valid over seasons, and saves: no
 // fabricated chemistry on load, the optional field survives the save, local storage and the cloud mirror unchanged.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -154,9 +154,9 @@ test('permanent history by monster id: chemistry persists across seasons and sel
   assert.deepEqual(CP.partnershipProblems(f), []);
 });
 
-test('all 16 clubs keep valid partnership state over seasons; playoffs award chemistry; the ledger keeps two seasons', () => {
+test('all 32 clubs keep valid partnership state over seasons; playoffs award chemistry; the ledger keeps two seasons', () => {
   const f = played(); const P = f.partnerships;
-  for (const [y, byClub] of Object.entries(P.captains)) assert.equal(Object.keys(byClub).length, 16, `season ${y}: 16 clubs`);
+  for (const [y, byClub] of Object.entries(P.captains)) assert.equal(Object.keys(byClub).length, 32, `season ${y}: 32 clubs`);
   const years = Object.keys(P.credited).map(Number); assert.ok(years.length <= CP.LEDGER_SEASONS);
   const playoff = Object.values(P.credited).flatMap((x) => Object.keys(x)).filter((id) => /\|p\d\|/.test(id)); assert.ok(playoff.length >= 7, 'playoff games are credited');
   assert.deepEqual(CP.partnershipProblems(f), []);
