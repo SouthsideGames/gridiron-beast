@@ -4831,8 +4831,11 @@ and left on the device unchanged; settings, achievements and other data are unto
   | DL–DL | 1 / 3 / 4 / 6, 3 | 2 / 5 / 6 / 9, 3 |
   | DL–LB | 2 / 4 / 6 / 9, 3 | 3 / 6 / 9 / 14, 4 |
   | DL–CB | 1 / 3 / 4 / 6, 3 | 2 / 5 / 6 / 9, 3 |
-* **Left as approved:** the Monster Hall of Fame case (owner 2026-11-12). Its games ceiling (160 games, ten points) is reached
-  in about ten 14-game seasons where it took sixteen nine-game ones; nothing else in the case depends on season length.
+* **Monster Hall of Fame longevity scaled by 14/9 (owner ruling 2026-11-23, second set):** one point per 24.9 games (was 16) up
+  to 249 games (was 160), so the games part still tops out at ten points and a career reaches it in the same number of seasons.
+  Seasons (2 points each, up to 12) and every other part of the case are unchanged; past inductions are stored and never re-judged.
+  Longevity points for full careers: 2 seasons 5.1 → 5.1; 5 seasons 12.8 → 12.8; 8 seasons 20.5 → 20.5; 10 seasons 25.6 → 25.6;
+  12 seasons 30.8 → 30.8; 16 seasons 33.0 → 33.0 (with the old divisor, 14-game careers would have scored 5.8, 14.4, 23.0, 28.8, 34.0, 34.0).
 * **Release check:** `tools/deploy-check.py` needs franchise exports from this league; 16-club exports are refused by design.
 * A season of 32 clubs is about three times the simulation of a 16-club season; tests that play whole seasons take correspondingly longer.
 
