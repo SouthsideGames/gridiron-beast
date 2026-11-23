@@ -4601,7 +4601,7 @@ export default {
   'league.home': 'HOME',
   'league.neutral': 'Neutral',
   'league.indoor': ' · indoor',
-  'league.every_club_plays_its_home_games': 'Every club plays its home games in its own stadium. A game against a gym leader is always played on that gym\'s field, wherever it is held; clubs with an ordinary grass stadium get the week\'s field conditions (usually grass). The pregame screen shows the field actually in use. A field\'s environment gives monsters of its type {percent} in direct contests, whichever team they play for; with a type advantage the total is capped at {percent2}.',
+  'league.every_club_plays_its_home_games': 'Every club plays its home games in its own stadium. A Gym Leader\'s club plays at home on its type\'s field, and that field appears nowhere else; every other club\'s home is grass, and a visiting Gym Leader plays on it. The pregame screen shows the field in use. A field\'s environment gives monsters of its type {percent} in direct contests, whichever team they play for; with a type advantage the total is capped at {percent2}.',
   'league.b_wildcard_b_in_football_dragon': '🐉 <b>Wildcard.</b> In football Dragon also gets {percent} against the types listed as neutral (never against another Dragon). In Beast Clash those matchups stay neutral.',
   'league.for_dragon_against_neutral_types': ', {percent} for Dragon against neutral types',
   'league.tap_a_type_every_type_is': 'Tap a type. Every type is strong against two types and weak against two; the rest are neutral.',
