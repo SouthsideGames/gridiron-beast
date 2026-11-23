@@ -1518,7 +1518,8 @@ export function playoffFixture(f) { const p = f.season.playoffs; if (!p) return 
 export function playoffAlive(f, club = f.club) { const p = f.season.playoffs; if (!p) return false; return Object.values(p.seeds).flat().includes(club) && !p.results.some((r) => (r.home === club || r.away === club) && r.winner !== club); }
 /** The owner's club is resting this round: seed 1 in the Wild Card round. He watches the round (advancePlayoffs) and plays the next. */
 export function playoffBye(f) { return inPlayoffs(f) && !f.season.finished && !playoffFixture(f) && playoffAlive(f) && !f.season.playoffs?.champion; }
-export function playerAlive(f) { return !inPlayoffs(f) || playoffAlive(f); }
+/** Has the owner a game to play this week? (False for a resting top seed too: playoffBye says which; he advances the round instead.) */
+export function playerAlive(f) { return !inPlayoffs(f) || !!playoffFixture(f); }
 
 export function record(f) { return f.season.records[f.club]; }
 /** Legendary Plays (GDD §36): discover new ones and clear unavailable ones from the plan, refilled with the coordinator's picks. */

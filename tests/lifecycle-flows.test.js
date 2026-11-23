@@ -9,6 +9,7 @@ import * as Save from '../src/franchise/save.js';
 import { createStore, memoryBackend, exportFranchise, validateImport } from '../src/franchise/store.js';
 import { createSlotManager } from '../src/franchise/slots.js';
 import { runFranchise } from '../tools/franchise-soak.mjs';
+import { legendStub } from '../src/franchise/league-registry.js';
 import { memoryLocalStorage } from './helpers/cloud-sim.js';
 
 const settled = (seed) => { const { f, problems } = runFranchise(seed, { seasons: 1, difficulty: 'rookie' }); assert.deepEqual(problems, []); while (f.scenes?.length) F.dismissScene(f); return f; };
@@ -99,6 +100,9 @@ for (const [label, end] of [['retired', (f) => L.finalizeArchive(f, { reason: 's
 test('loading a retired franchise leaves its retired-legend records alone, so saving it again is a no-op', async () => {
   const f = settled(44); const h = f.history[0]; // seed 44: a decorated monster retires after season 1 in the 32-club league (seed 41 in the 16-club one)
   while (f.history.length < 20) f.history.unshift({ ...h, year: f.history[0].year - 1 });
+  // Whether a decorated monster happens to retire after one season depends on the seed and has drifted with every change to the league.
+  // If none did, the league's own function makes the record this test is about, from one of its monsters, exactly as a retirement does.
+  if (!Object.values(f.league.legends).some((s) => s.personalName === undefined)) { const m = Object.values(f.league.monsters).find((x) => x.yearsPro >= 3); const club = Object.entries(f.league.clubs).find(([, c]) => c.roster.includes(m.id))[0]; const stub = legendStub(m, { year: f.season.year, club }); delete stub.personalName; f.league.legends[m.id] = stub; f.league.clubs[club].roster = f.league.clubs[club].roster.filter((id) => id !== m.id); delete f.league.monsters[m.id]; }
   assert.ok(Object.values(f.league.legends).some((s) => s.personalName === undefined), 'this league has a retired-legend record');
   assert.ok(L.finalizeArchive(f, { reason: 'season-cap' }).ok); const text = JSON.stringify(f);
   assert.equal(JSON.stringify(Save.migrate(JSON.parse(text))), text, 'loading changes nothing');

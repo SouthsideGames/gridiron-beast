@@ -4809,9 +4809,11 @@ and left on the device unchanged; settings, achievements and other data are unto
   11 of 14, and a narrow miss is within 2 wins. A GM's reputation divides by 14 games.
 * **Scaled from nine games to fourteen (audit 2026-11-23), each by 14/9 so it means what it meant:** season marks (2,300 passing
   yards, 23 touchdown passes, 1,250 rushing, 950 receiving, 16 touchdowns, 6 sacks, 5 interceptions, 60 tackles) and career
-  milestones (`career.js`); Captain Partnership steps (`partnerships.js`, Elite is still a strong pair's season); the injury-history
+  milestones (`career.js`); the injury-history
   lines and its one-season minimum (`injury-history.js`, classification unchanged). Awards already scale with the weeks played,
   the record book starts in season 2 as before, and Hall of Fame production is judged against peers.
+* **Left as approved, OPEN DECISION:** Captain Partnership steps and per-game ceilings (owner 2026-10-25). A strong pair now reaches
+  Elite in about nine of fourteen games; the 14/9 numbers are written beside the table in `partnerships.js`.
 * **Left as approved:** the Monster Hall of Fame case (owner 2026-11-12). Its games ceiling (160 games, ten points) is reached
   in about ten 14-game seasons where it took sixteen nine-game ones; nothing else in the case depends on season length.
 * **Release check:** `tools/deploy-check.py` needs franchise exports from this league; 16-club exports are refused by design.

@@ -63,8 +63,9 @@ test('an injury already there when tracking began is shown but not counted as a 
   const g = fr(3, 1); IH.beforeGame(g, [mon('n')], G(1)); assert.equal(IH.injurySummary(g, 'n', { firstSeason: 3 }).note, null, 'no note when his career began with tracking (season start)');
 });
 
-test('the indicator: not classified before 9 games of opportunity, then by rates, never by raw totals', () => {
-  const f = fr(1, 1); f.injuryHistory = { v: 1, since: { y: 1, w: 1 }, opp: { x: 100, y: 5, z: 6, h: 30 }, open: {}, log: {
+// 14-game season (2026-11-23): one season of opportunity is 14 games (nine before); the rates classify exactly as they did.
+test('the indicator: not classified before a season (14 games) of opportunity, then by rates, never by raw totals', () => {
+  const f = fr(1, 1); f.injuryHistory = { v: 1, since: { y: 1, w: 1 }, opp: { x: 100, y: 5, z: 11, h: 30 }, open: {}, log: {
     x: [{ y: 1, w: 1, missed: 2, back: { y: 1, w: 3 } }, { y: 4, w: 1, missed: 1, back: { y: 4, w: 2 } }, { y: 9, w: 1, missed: 1, back: { y: 9, w: 2 } }],
     z: [{ y: 1, w: 1, missed: 1, back: { y: 1, w: 2 } }, { y: 1, w: 4, missed: 1, back: { y: 1, w: 5 } }, { y: 1, w: 7, missed: 1, back: { y: 1, w: 8 } }],
     h: [{ y: 1, w: 1, missed: 9, back: { y: 1, w: 9 } }] }, done: {}, seq: 0 };

@@ -87,9 +87,9 @@ test('football: firsts only for what he did, career milestones when crossed, the
   logGame(wr, { year: 1, week: 2, line: { rec: 5, recYds: 90, recTd: 2 } }); careerAfterGame([wr], { year: 1, week: 2, club });
   const td = of(wr, 'first')[0]; assert.equal(td.x.id, 'td'); assert.equal(td.w, 2); assert.equal(describeEvent(td, wr).title, 'First career touchdown');
   logGame(wr, { year: 1, week: 3, line: { recTd: 1 } }); careerAfterGame([wr], { year: 1, week: 3, club }); assert.equal(of(wr, 'first').length, 1, 'firsts happen once');
-  // career milestone: 10 touchdowns crossed in week 4
-  logGame(wr, { year: 1, week: 4, line: { recTd: 7 } }); careerAfterGame([wr], { year: 1, week: 4, club });
-  assert.equal(of(wr, 'milestone').find((e) => e.x.key === 'tdTotal').x.at, 10);
+  // career milestone: 15 touchdowns crossed in week 4 (the first mark was 10 in nine-game seasons)
+  logGame(wr, { year: 1, week: 4, line: { recTd: 12 } }); careerAfterGame([wr], { year: 1, week: 4, club });
+  assert.equal(of(wr, 'milestone').find((e) => e.x.key === 'tdTotal').x.at, 15);
   // rivalry win with a big line, a playoff game, the Beast Bowl: winner, loser, and a teammate who did not play
   logGame(wr, { year: 1, week: 5, line: { rec: 6, recYds: 120 } }); careerAfterGame([wr], { year: 1, week: 5, club, rival: true });
   assert.ok(hasEvent(wr, 'rival:1:5'));
@@ -154,11 +154,11 @@ test('the timeline never changes the game: the same franchise with the writers s
 
 test('older saves: rebuilt once from what they prove (awards, titles, seasons, evolutions), nothing invented, idempotent', () => {
   const f = newFranchise(57); const m = f.roster.find((x) => !x.cornerstone); delete m.career; m.yearsPro = 1;
-  withSeason(m, 1, { games: 9, rushTd: 4, rushYds: 820 }, { games: 2, rushTd: 1 }, f.club); withSeason(m, 2, { games: 9, rushTd: 6, rushYds: 500 }, {}, f.club); m.stats.season = { year: 3, reg: {}, post: {} };
+  withSeason(m, 1, { games: 14, rushTd: 4, rushYds: 1280 }, { games: 2, rushTd: 1 }, f.club); withSeason(m, 2, { games: 14, rushTd: 11, rushYds: 800 }, {}, f.club); // 14-game seasons: a 1,250-yard season, the 15th touchdown in season 2 m.stats.season = { year: 3, reg: {}, post: {} };
   f.season.year = 3; f.history.push({ year: 1, club: f.club, champion: f.club, awards: { league: { oroy: { id: m.id, team: f.club, name: m.name } } }, record: { w: 7, l: 2 } });
   const raw = JSON.parse(Save.exportJson(f)); for (const x of raw.franchise.roster) delete x.career; // a save from before the timeline
   const loaded = Save.importJson(JSON.stringify(raw)); const lm = loaded.roster.find((x) => x.id === m.id);
-  assert.ok(hasEvent(lm, 'award:oroy:1') && hasEvent(lm, 'champ:1') && hasEvent(lm, 'season:rushYds:1') && hasEvent(lm, 'first:td') && hasEvent(lm, 'mile:tdTotal:10'));
+  assert.ok(hasEvent(lm, 'award:oroy:1') && hasEvent(lm, 'champ:1') && hasEvent(lm, 'season:rushYds:1') && hasEvent(lm, 'first:td') && hasEvent(lm, 'mile:tdTotal:15'));
   assert.equal(of(lm, 'first')[0].y, 1); assert.equal(of(lm, 'milestone').find((e) => e.x.key === 'tdTotal').y, 2, 'crossed in season 2');
   assert.ok(!of(lm, 'join').length, 'how he joined is not on record: no entry invented');
   const n = keys(lm).length; const twice = Save.importJson(Save.exportJson(loaded)); assert.equal(keys(twice.roster.find((x) => x.id === m.id)).length, n, 'loading again adds nothing');
