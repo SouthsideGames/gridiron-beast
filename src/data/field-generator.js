@@ -49,5 +49,5 @@ export function fieldFor(home, away, key, overrides = null) {
 /** The venue of one franchise game: the home club's stadium name, the generated field and that field's weather for the day. */
 export function generatedVenue(home, away, key, overrides = null) {
   const s = stadiumFor(home, overrides); const f = fieldFor(home, away, key, overrides); const env = ENVIRONMENTS[f.env] || ENVIRONMENTS.grass;
-  return { club: home, name: s.name, env: env.id, type: env.type, indoor: env.indoor, weather: weatherFor(env.id, `${key}|${home}`), fieldBy: f.by, ...(f.boss ? { boss: f.boss } : {}) };
+  return { club: home, name: s.name, env: env.id, type: env.type, indoor: env.indoor, weather: weatherFor(env.id, `${key}|${home}`), fieldBy: f.by, ...(f.boss ? { boss: f.boss } : {}), ...(s.variant && s.env === env.id ? { variant: s.variant } : {}) };
 }

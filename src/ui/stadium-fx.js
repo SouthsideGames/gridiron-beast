@@ -16,7 +16,7 @@
 // time; the stylesheet does the rest (styles/stadium.css). No element is created per reaction, so nothing can accumulate, a new
 // reaction replaces the one playing, and leaving the screen clears it. Reactions never delay a play: nothing waits for them.
 
-import { ENVIRONMENTS } from '../data/stadiums.js';
+import { ENVIRONMENTS, STADIUM_VARIANTS } from '../data/stadiums.js';
 import { designField } from '../data/stadium-designs.js';
 /** The field a venue names: one a club plays on, or a design no club has yet. */
 const fieldOf = (envId) => ENVIRONMENTS[envId] || designField(envId) || null;
@@ -134,6 +134,9 @@ export const LOOKS = Object.freeze({
   shadow: { label: 'Umbral', colors: ['#b9a6ff', '#6a4ad0', '#f4f0ff'], intro: 'The lights are going out', edge: 'lantern', posts: 'moon', reveal: 'eclipse' },
   radiant: { label: 'Radiant', colors: ['#ffd24a', '#ff9a2a', '#fff6d0'], intro: 'The sun is up', edge: 'sundial', posts: 'sunburst', reveal: 'sunrise' },
   forest: { label: 'Grass', colors: ['#6fe07a', '#c8f05a', '#f2ffd6'], intro: 'The grove is listening', edge: 'vine', posts: 'vine', reveal: 'bloom' },
+  // The ordinary home field of the twenty clubs without a Gym Leader (owner, 2026-11-22): plain grass with the same white
+  // paint, barrier, crowd, side stands and play reactions as every stadium, and none of a gym's markers, posts or kickoff reveal.
+  grass: { label: 'Home', colors: ['#bfe8c6', '#7fc98d', '#ffffff'], intro: 'Home turf', edge: null, posts: null, reveal: null, plain: true },
 });
 export const lookFor = (envId) => (Object.hasOwn(LOOKS, envId) ? LOOKS[envId] : null);
 
@@ -359,6 +362,7 @@ export function sideStandsSvg(venue, cam, HW, Y) {
 /** The grass between an end line and the stand or wall behind it: the stadium's own turf, a shade darker, with a boundary line. */
 export function apronSvg(venue, x0, y0, w, h) {
   const env = fieldOf(venue?.env); if (!env || !scene) return '';
+  const sand = STADIUM_VARIANTS[venue?.variant]?.sand; if (sand) return `<g class="sfx-apron sfx-apron-sand"><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${sand}"/><rect x="${x0}" y="${y0 + h * 0.5}" width="${w}" height="${h * 0.5}" fill="#000" opacity="0.07"/></g>`;
   return `<g class="sfx-apron"><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${env.palette.c}"/><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#000" opacity="0.18"/></g>`;
 }
 /** Behind the near end zone there is no stand in view: the stadium's wall and rail close the picture. */
@@ -431,5 +435,5 @@ export function kickoffRevealHtml(venue, level = 'full') {
 /** The kickoff name plate: the stadium, its kind and its line. */
 export function introPlateHtml(venue, esc = (s) => s) {
   const look = lookFor(venue?.env); const env = fieldOf(venue?.env); if (!look || !env) return '';
-  return `<div class="sfx-plate"><b>${esc(venue.name || env.name)}</b><span>${esc(look.intro)}</span></div>`;
+  return `<div class="sfx-plate"><b>${esc(venue.name || env.name)}</b><span>${esc(STADIUM_VARIANTS[venue?.variant]?.intro || look.intro)}</span></div>`;
 }

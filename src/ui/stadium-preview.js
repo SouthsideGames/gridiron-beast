@@ -1,6 +1,7 @@
 // The stadium card (GDD §33.4): where a game is played, the environment, the weather, and who it helps. Shown on the
 // pregame screen and the scouting report, and as the full list under More → Stadiums.
 
+import { GYM_BY_CLUB } from '../data/gyms.js';
 import { ENVIRONMENTS, STADIUMS, stadiumFor } from '../data/stadiums.js';
 import { FOOTBALL_TYPE_VALUES, pct } from '../sim/type-matchups.js';
 import { TEAM_META } from '../data/league.js';
@@ -29,7 +30,7 @@ export function venueHtml(venue, ctx = {}) {
   return `<div class="panel tight venue-card env-${env.id}">
     <div class="row" style="gap:10px;align-items:center">${envSwatch(env.id)}<div class="grow"><div class="venue-name">${esc(venue.name)}</div><div class="dim" style="font-size:12px">${$t('league.home_of_the', { club: esc(venue.club || venue.home || '') })}</div></div></div>
     <div class="venue-env"><b>${env.icon} ${esc(env.name)}</b> <span class="dim">· ${esc(env.blurb)}</span></div>
-    ${venue.fieldBy === 'boss' ? `<div class="dim venue-why" style="font-size:12px">${$t('league.gym_leaders_field_every_game_against', { boss: esc(venue.boss) })}${venue.boss !== (venue.club || venue.home) ? `${$t('league.here_at_too', { name: esc(venue.name) })}` : ''}.</div>` : venue.fieldBy === 'boss-unmapped' ? `<div class="dim venue-why" style="font-size:12px">${$t('league.boss_game_the_element_has_no', { boss: esc(venue.boss) })}</div>` : venue.fieldBy === 'draw' ? `<div class="dim venue-why" style="font-size:12px">${$t('league.this_weeks_field_conditions', { id: env.id === 'grass' ? $t('league.ordinary_grass') : '' })}</div>` : venue.fieldBy === 'home' ? `<div class="dim venue-why" style="font-size:12px">${$t('league.the_home_clubs_permanent_field')}</div>` : ''}
+    ${venue.fieldBy === 'home' && venue.boss && GYM_BY_CLUB[venue.boss] ? `<div class="dim venue-why" style="font-size:12px">${$t('league.gym_leaders_home_field', { leader: esc(GYM_BY_CLUB[venue.boss].coach.name), boss: esc(venue.boss), badge: esc(GYM_BY_CLUB[venue.boss].badge) })}</div>` : venue.fieldBy === 'boss' ? `<div class="dim venue-why" style="font-size:12px">${$t('league.gym_leaders_field_every_game_against', { boss: esc(venue.boss) })}${venue.boss !== (venue.club || venue.home) ? `${$t('league.here_at_too', { name: esc(venue.name) })}` : ''}.</div>` : venue.fieldBy === 'boss-unmapped' ? `<div class="dim venue-why" style="font-size:12px">${$t('league.boss_game_the_element_has_no', { boss: esc(venue.boss) })}</div>` : venue.fieldBy === 'draw' ? `<div class="dim venue-why" style="font-size:12px">${$t('league.this_weeks_field_conditions', { id: env.id === 'grass' ? $t('league.ordinary_grass') : '' })}</div>` : venue.fieldBy === 'home' ? `<div class="dim venue-why" style="font-size:12px">${$t('league.the_home_clubs_permanent_field')}</div>` : ''}
     <div class="venue-bonus">${envBonusHtml(env.id)}</div>${counts}
   </div>`;
 }

@@ -20,7 +20,9 @@ function stintCampaign(f) {
 
 export function careerTotals(f) {
   const past = f.gmCareer?.stints || [], c = stintCampaign(f);
-  return past.reduce((a,s)=> { for(const k of ['titles','wins','awards']) a[k] += s.campaign?.[k] || 0; Object.assign(a.badges,s.campaign?.badges || {}); return a; }, { titles:c.titles || 0,wins:c.wins || 0,awards:c.awards || 0,badges:{...c.badges} });
+  // Badges belong to the coach, not to the club (owner specification, 2026-11-23): the badges held are the ones in the campaign now,
+  // whichever club they were won with, and a badge lost back to its Gym Leader after a move is no longer counted.
+  return past.reduce((a,s)=> { for(const k of ['titles','wins','awards']) a[k] += s.campaign?.[k] || 0; return a; }, { titles:c.titles || 0,wins:c.wins || 0,awards:c.awards || 0,badges:{...(f.campaign?.badges || {})} });
 }
 export function ensureGmCareer(f) {
   if(archived(f)) return null;
@@ -102,6 +104,9 @@ export function acceptJob(f,club,{reopenContracts}={}) {
     for(const key of CLUB_FIELDS) { if(key in nextAssets) f[key]=structuredClone(nextAssets[key]); else delete f[key]; }
     f.board={confidence:0,goal:null,history:[],scoutBonusYear:null,fired:false,misses:0};
     f.lineupManual ||= {}; f.depth ||= {}; f.campaign ||= emptyCampaign();
+    // The coach's badges, and the count of wins over each Gym Leader, go with the coach to the new club (also on a return to an old one).
+    f.campaign.badges=structuredClone(assets.campaign?.badges || {}); f.campaign.gymWins=structuredClone(assets.campaign?.gymWins || {});
+    delete f.campaign.badges[club]; // a coach who takes over a Gym Leader's club does not hold that club's own badge
     f.lifecycle={status:'active'}; f.game=null; f.lastGame=null; f.scenes=[]; f.postseason=null; f.legendPick=null;
     const div=DIVISIONS[divisionOf(club)] || [], rivals=div.filter(c=>c!==club), rival=createRng(hashString(`${f.seed}|rival|${club}`)).pick(rivals);
     f.rivals[f.tier]={team:rival,gm:RIVAL_GMS[rival] || 'GM',headToHead:{w:0,l:0}};

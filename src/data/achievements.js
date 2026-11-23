@@ -7,6 +7,10 @@
 // Speakers: 'commissioner' (his office), 'rival' (the rival GM, on the phone),
 // 'board' (a typed letter: no face, no name, only the letters).
 import { t as $t } from '../text/index.js';
+import { GYMS } from './gyms.js';
+import { REG_GAMES } from './league.js';
+/** Twelve Gym Leaders since the 32-club league (eight before): half the badges is six, all of them twelve. */
+const ALL_BADGES = GYMS.length, HALF_BADGES = GYMS.length / 2;
 
 export const ACHIEVEMENTS = Object.freeze([
   { id: 'first_win', title: $t('achievements.first_blood'), titleKey: 'achievements.first_blood', desc: $t('achievements.win_your_first_game_with_a'), speaker: 'commissioner', trigger: 'sunday',
@@ -22,16 +26,16 @@ export const ACHIEVEMENTS = Object.freeze([
     when: (f, c) => c.won && c.newBadge && Object.keys(f.campaign.badges).length === 1,
     beats: [$t('achievements.a_gym_badge_the_gym_coaches'), $t('achievements.seven_left_and_every_one_of')] },
   { id: 'half_badges', title: $t('achievements.four_of_eight'), titleKey: 'achievements.four_of_eight', desc: $t('achievements.hold_four_of_the_eight_gym'), speaker: 'commissioner', trigger: 'sunday',
-    when: (f, c) => c.won && c.newBadge && Object.keys(f.campaign.badges).length === 4,
+    when: (f, c) => c.won && c.newBadge && Object.keys(f.campaign.badges).length === HALF_BADGES,
     beats: [$t('achievements.half_the_gyms_the_last_gm')] },
   { id: 'all_badges', title: $t('achievements.all_eight'), titleKey: 'achievements.all_eight', desc: $t('achievements.hold_all_eight_gym_badges'), speaker: 'board', trigger: 'sunday',
-    when: (f, c) => c.won && c.newBadge && Object.keys(f.campaign.badges).length === 8,
+    when: (f, c) => c.won && c.newBadge && Object.keys(f.campaign.badges).length === ALL_BADGES,
     beats: [$t('achievements.to_the_general_manager_of'), $t('achievements.eight_of_eight_the_gyms_are'), $t('achievements.the_board_has_seen_this_twice'), $t('achievements.the_board')] },
   { id: 'winning_season', title: $t('achievements.a_winning_season'), titleKey: 'achievements.a_winning_season', desc: $t('achievements.finish_your_first_winning_season'), speaker: 'commissioner', trigger: 'season',
     when: (f, c) => c.wins > c.losses && !(f.history || []).some((h) => h.year !== f.season.year && h.record.w > h.record.l),
     beats: [$t('achievements.a_winning_season_2'), $t('achievements.ill_be_honest_with_you_when'), $t('achievements.the_board_will_have_noticed_the')] },
   { id: 'undefeated', title: $t('achievements.perfect'), titleKey: 'achievements.perfect', desc: $t('achievements.go_unbeaten_through_a_regular_season'), speaker: 'commissioner', trigger: 'season',
-    when: (f, c) => c.wins >= 9 && c.losses === 0,
+    when: (f, c) => c.wins >= REG_GAMES && c.losses === 0,
     beats: [$t('achievements.nine_and_oh_i_have_the'), $t('achievements.i_wont_say_its_never_been')] },
   { id: 'first_playoffs', title: $t('achievements.the_playoffs'), titleKey: 'achievements.the_playoffs', desc: $t('achievements.make_the_playoffs_for_the_first'), speaker: 'commissioner', trigger: 'playoffs',
     when: (f, c) => c.qualified && !(f.history || []).some((h) => h.playoffs),

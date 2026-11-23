@@ -109,7 +109,7 @@ export const STADIUMS = Object.freeze({
   'Aetheria Seers': { name: t('stadiums.the_seers_observatory'), env: 'oracle', provisional: true },
   'Deepwater Chompers': { name: t('stadiums.deepwater_trench'), env: 'grass', provisional: true },
   'Mistport Veils': { name: t('stadiums.mistport_quay'), env: 'grass', provisional: true },
-  'Westhaven Pirates': { name: t('stadiums.corsair_harbor_stadium'), env: 'forest' },
+  'Westhaven Pirates': { name: t('stadiums.corsair_harbor_stadium'), env: 'forest', variant: 'coastal' }, // the Nature Gym, by the sea
 });
 
 const hash = (s) => { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; };
@@ -117,8 +117,14 @@ const hash = (s) => { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i+
 export function stadiumFor(club, overrides = null) {
   const s = overrides?.[club] || STADIUMS[club] || { name: `${t('stadiums.field', { club: club || t('stadiums.neutral') })}`, env: 'grass' };
   const env = ENVIRONMENTS[s.env] || ENVIRONMENTS.grass;
-  return { club, name: s.name, env: env.id, type: env.type, indoor: env.indoor };
+  return { club, name: s.name, env: env.id, type: env.type, indoor: env.indoor, ...(s.variant ? { variant: s.variant } : {}) };
 }
+/**
+ * A stadium's own version of its field's look. The design stays the type's (there are twelve, one per type); a variant only
+ * recolours parts of it. 'coastal': Corsair Harbor Stadium, the Nature Gym on the shore: sea-blue end zones and a strip of sand
+ * between the paint and the barrier.
+ */
+export const STADIUM_VARIANTS = Object.freeze({ coastal: { end: '#1d6f8c', sand: '#d8c690', intro: 'The grove meets the tide' } });
 /** Weather for one game, drawn from a key (deterministic: the preview and the game always agree). Indoors: always 'indoor'. */
 export function weatherFor(envId, key) {
   const env = ENVIRONMENTS[envId] || ENVIRONMENTS.grass; const pool = Object.entries(env.weather);
@@ -129,5 +135,5 @@ export function weatherFor(envId, key) {
 /** The venue of one game: the home club's stadium and the day's weather. Small and plain, so it can live in a saved game. */
 export function venueFor(homeClub, key, overrides = null) {
   const s = stadiumFor(homeClub, overrides);
-  return { club: homeClub, name: s.name, env: s.env, type: s.type, indoor: s.indoor, weather: weatherFor(s.env, `${key}|${homeClub}`) };
+  return { club: homeClub, name: s.name, env: s.env, type: s.type, indoor: s.indoor, weather: weatherFor(s.env, `${key}|${homeClub}`), ...(s.variant ? { variant: s.variant } : {}) };
 }

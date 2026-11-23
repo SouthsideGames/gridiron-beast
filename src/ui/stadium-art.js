@@ -3,7 +3,7 @@
 // (the browser tiles them, so a frame costs one rect per layer whatever the camera), decor is a few shapes per sideline.
 // Weather is not here: it is a CSS layer over the field (styles/app.css .weather-*), so it never redraws with the play.
 
-import { ENVIRONMENTS, WEATHER } from '../data/stadiums.js';
+import { ENVIRONMENTS, WEATHER, STADIUM_VARIANTS } from '../data/stadiums.js';
 import { designField } from '../data/stadium-designs.js';
 import { lookFor, edgeSvg } from './stadium-fx.js';
 
@@ -95,7 +95,8 @@ function endZoneDecor(env, x0, y0, w, h) {
  * without one, the classic grass is drawn exactly as before. Returns { turf, endZones } so the caller keeps its own order.
  */
 export function turfSvg(venue, cam, HW, SPAN, Y) {
-  const env = ENVIRONMENTS[venue?.env] || designField(venue?.env) || ENVIRONMENTS.grass; const P = env.palette; // a design no club plays on yet draws like any field
+  const env = ENVIRONMENTS[venue?.env] || designField(venue?.env) || ENVIRONMENTS.grass; // a design no club plays on yet draws like any field
+  const V = STADIUM_VARIANTS[venue?.variant]; const P = V?.end ? { ...env.palette, end: V.end } : env.palette; // a stadium's own version of the look (Westhaven's coast)
   let s = `<rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="${P.a}"/>`;
   for (let yard = Math.floor(cam.bottom / 10) * 10; yard < cam.top; yard += 10) {
     if (yard < 0 || yard >= 100) continue;

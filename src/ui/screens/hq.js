@@ -30,7 +30,7 @@ import * as F from '../../franchise/franchise.js';
 import { REPORTERS, STYLE_LABEL, STYLE_ICON } from '../../data/press.js';
 import { REGIONS, TRAINING_FOCI, ROLE_LABEL, trainingBonus } from '../../data/staff.js';
 import { PLAYS, LESSONS, counterPlays } from '../../data/playbook.js';
-import { CONFERENCE_NAMES, REG_WEEKS, REG_GAMES, tierById, TEAM_META, DIVISIONS, conferenceFor, divisionOf } from '../../data/league.js';
+import { CONFERENCE_NAMES, REG_WEEKS, conferenceOf, tierById, TEAM_META, DIVISIONS, conferenceFor, divisionOf } from '../../data/league.js';
 import { temperSummary } from '../../data/temper.js';
 import { salaryFor, monsterOverall, TYPES, effectiveAttributes, HEADLINE, headlineAttributes, resolveSpecies, ABILITIES } from '../../data/monsters.js';
 import { TRAITS } from '../../data/species.js';
@@ -760,7 +760,7 @@ export function registerHqScreens(Router, app) {
       const st = F.leagueStandings(f);
       const rec = (t) => f.season.records[t];
       const table = (teams) => `<table class="standings"><thead><tr><th>${$t('hq.team')}</th><th class="num">W</th><th class="num">L</th><th class="num">PF</th><th class="num">PA</th></tr></thead><tbody>${teams.map((t) => `<tr class="${t === f.club ? 'me' : ''}"><td>${esc(t)}</td><td class="num">${rec(t).w}</td><td class="num">${rec(t).l}</td><td class="num">${rec(t).pf}</td><td class="num">${rec(t).pa}</td></tr>`).join('')}</tbody></table>`;
-      return `<div class="grid2" style="margin-bottom:8px"><button class="btn block" data-action="go" data-screen="league">${$t('hq.league_hub')}</button><button class="btn block" data-action="go" data-screen="leaders">${$t('hq.leaders')}</button></div>` + ['Aurora', 'Titan'].map((conf) => `<h3>${$t('hq.conference', { conf })}</h3>${Object.keys(DIVISIONS).filter((d) => conferenceFor(d) === conf).map((d) => `<div class="panel tight"><b>${d}</b>${table(st.divisions[d])}</div>`).join('')}`).join('') + `<p class="dim">${$t('hq.tiebreakers_head_to_head_division_record')}</p>`;
+      return `<div class="grid2" style="margin-bottom:8px"><button class="btn block" data-action="go" data-screen="league">${$t('hq.league_hub')}</button><button class="btn block" data-action="go" data-screen="leaders">${$t('hq.leaders')}</button></div>` + CONFERENCE_NAMES.map((conf) => `<h3>${$t('hq.conference', { conf })}</h3>${Object.keys(DIVISIONS).filter((d) => conferenceFor(d) === conf).map((d) => `<div class="panel tight"><b>${d}</b>${table(st.divisions[d])}</div>`).join('')}`).join('') + `<p class="dim">${$t('hq.tiebreakers_head_to_head_division_record')}</p>`;
     },
     mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen) }); },
   });
@@ -859,8 +859,8 @@ export function registerHqScreens(Router, app) {
       const seasons = leagueSeasons(f); const year = seasons.includes(leaderYear) ? leaderYear : f.season.year;
       const T = seasonTables(f, year); const table = leaderBucket === 'post' ? T.post : leaderBucket === 'all' ? combinedTable(T.reg, T.post) : T.reg;
       const cat = LEADER_CATEGORIES.find((c) => c.id === leaderCat) || LEADER_CATEGORIES[0];
-      const myConf = conferenceFor(f.club), myDiv = divisionOf(f.club);
-      const teams = leaderScope === 'conference' ? Object.values(DIVISIONS).flat().filter((t) => conferenceFor(t) === myConf) : leaderScope === 'division' ? DIVISIONS[myDiv] : null;
+      const myConf = conferenceOf(f.club), myDiv = divisionOf(f.club);
+      const teams = leaderScope === 'conference' ? Object.values(DIVISIONS).flat().filter((t) => conferenceOf(t) === myConf) : leaderScope === 'division' ? DIVISIONS[myDiv] : null;
       const rows = leaders(table, cat.id, { n: 15, teams });
       const seg = (items, key, cur) => `<div class="seg wrap" role="tablist">${items.map(([v, l]) => `<button class="btn small ${String(cur) === String(v) ? 'primary' : ''}" role="tab" aria-selected="${String(cur) === String(v)}" data-action="${key}" data-v="${v}">${l}</button>`).join('')}</div>`;
       const playoffsOn = T.current ? !!f.season.playoffs : Object.keys(T.post).length > 0;
@@ -908,7 +908,7 @@ export function awardsHtml(a) {
     <h3>${$t('hq.club_awards')}</h3><div class="list">${a.mvp ? `<div class="item static" style="border-color:var(--accent)"><div class="grow"><div class="name">${$t('hq.team_mvp')}</div><div class="sub">${esc(a.mvp.name)} (${esc(a.mvp.position)})</div></div></div>` : ''}${line($t('hq.rushing_leader'), a.rusher)}${line($t('hq.receiving_leader'), a.receiver)}${line($t('hq.passing_leader'), a.passer)}${line($t('hq.tackling_leader'), a.tackler)}${line($t('hq.sack_leader'), a.rusherD)}${line($t('hq.ball_hawk'), a.ballhawk)}</div>`;
 }
 
-/** Campaign panel on HQ: the eight gym badges and the Hall of Fame checklist (GDD §15.4, §15.9). */
+/** Campaign panel on HQ: the twelve gym badges and the Hall of Fame checklist (GDD §15.4, §15.9). */
 function campaignPanel(f) {
   const hof = F.hallOfFameProgress(f);
   const LABEL = { badges: $t('hq.gym_badges'), titles: $t('hq.beast_bowl_titles_2'), wins: $t('hq.career_wins'), awards: $t('hq.league_awards') };

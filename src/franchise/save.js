@@ -4,7 +4,7 @@ import { ensureIndividualNames } from '../data/individual-names.js';
 // and records. The legacy key is never modified.
 
 import { migrationDue, migratePositions, migrateAmbitions } from './position-migration.js';
-import { SCHEMA_VERSION, LEAGUE_SCHEMA_VERSION, LEGACY_SCHEMA_VERSION, createFranchise, dexRecordOnLoad } from './franchise.js';
+import { SCHEMA_VERSION, LEAGUE_SCHEMA_VERSION, LEGACY_SCHEMA_VERSION, LEAGUE_FORMAT, createFranchise, dexRecordOnLoad } from './franchise.js';
 import { ensureFreeAgency } from './fa-state.js';
 import { verifyLeague, hasLeague } from './league-registry.js';
 import { backfillCareer } from './career.js';
@@ -34,6 +34,8 @@ export function loadBackup() { const s = storage(); if (!s) return null; try { c
 export function clear() { const s = storage(); if (s) { s.removeItem(SAVE_KEY); s.removeItem(BACKUP_KEY); } }
 /** The message for a save written by an earlier version of the game (Task 8 fresh-save break). `code: 'incompatible'`. */
 export const INCOMPATIBLE_MESSAGE = 'This franchise was saved by an earlier version of Gridiron Beast. The monster system has changed, so it cannot be loaded. It is kept on this device unchanged. Start a new franchise to play this version.';
+/** The message for a franchise saved in the 16-club league. Same `code: 'incompatible'`, with `reason: 'league-format'`. */
+export const OLD_LEAGUE_MESSAGE = 'This franchise was saved in the 16-club league. The league now has 32 clubs, so it cannot be continued. It is kept on this device unchanged. Start a new franchise to play this version.';
 export function incompatibleSave(f) { return Object.assign(new Error(INCOMPATIBLE_MESSAGE), { code: 'incompatible', schemaVersion: f?.schemaVersion ?? null }); }
 export function migrate(f) {
   if (!f || typeof f !== 'object') return null;
@@ -41,6 +43,8 @@ export function migrate(f) {
   // identified and refused, never parsed as current; it is not changed or deleted. A save from a later build (11+) is refused too.
   if ([LEGACY_SCHEMA_VERSION, LEAGUE_SCHEMA_VERSION, 9].includes(f.schemaVersion) || (f.schemaVersion == null && Array.isArray(f.roster))) throw incompatibleSave(f);
   if (f.schemaVersion !== SCHEMA_VERSION) return null;
+  // The 32-club league (2026-11-23): a franchise from the 16-club league is not migrated. It is refused, unchanged, with its own message.
+  if (f.leagueFormat !== LEAGUE_FORMAT) throw Object.assign(new Error(OLD_LEAGUE_MESSAGE), { code: 'incompatible', reason: 'league-format', schemaVersion: f.schemaVersion, leagueFormat: f.leagueFormat ?? 16 });
   if (!hasLeague(f)) return null; // a 10 without its league registry is not a save this game wrote (the game always creates one)
   if ((f.roster || []).some((m) => m && !m.dev)) throw incompatibleSave(f); // a monster without its development record is not a Task 8 save
   if (hasLeague(f)) { const p = verifyLeague(f); if (p.length) throw Object.assign(new Error(`The league registry is damaged: ${p[0]}`), { code: 'league', problems: p }); }

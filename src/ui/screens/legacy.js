@@ -5,6 +5,7 @@
 
 import { esc, delegate, toast, sheet } from '../dom.js';
 import { yearOf } from '../../data/calendar.js';
+import { GYMS } from '../../data/gyms.js';
 import { portraitSprite, monsterSprite } from '../pixel-monster.js';
 import { monsterOverall, SPECIES_BY_ID } from '../../data/monsters.js';
 import { careerLink } from '../career-ui.js';
@@ -41,7 +42,7 @@ function legacyTab(f) {
       ${$t('career.b_career_record_b')}<span class="mono">${rec(lg.record)}</span>
       ${$t('career.b_beast_bowls_b')}<span>${lg.titles} won${lg.beastBowls?.appearances == null ? $t('career.appearances_not_recorded') : ` ${$t('career.appearances', { appearances: lg.beastBowls.appearances })}`}</span>
       ${$t('career.b_playoff_appearances_b')}<span>${lg.playoffAppearances ?? 0}</span>
-      ${$t('career.b_gym_badges_b')}<span>${lg.badges?.length ? `${lg.badges.length} / 8` : '0 / 8'}</span>
+      ${$t('career.b_gym_badges_b')}<span>${lg.badges?.length ? `${lg.badges.length} / ${GYMS.length}` : `0 / ${GYMS.length}`}</span>
       ${$t('career.b_league_awards_b')}<span>${lg.leagueAwards ?? na}</span>
       ${$t('career.b_records_held_b')}<span>${lg.recordsHeld == null ? na : lg.recordsHeld}</span>
       ${$t('career.b_board_goals_b')}<span>${goalsMet ?? na}</span>
