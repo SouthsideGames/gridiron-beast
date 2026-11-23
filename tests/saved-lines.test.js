@@ -33,7 +33,10 @@ test('a plain sentence, and a record saved before lines existed, show as written
   assert.equal(lineText('Old news.'), 'Old news.'); assert.equal(lineText({ text: 'Old news.', kind: 'info' }), 'Old news.'); assert.equal(lineText(null), ''); assert.deepEqual(lineFields('x'), {});
   const old = importJson(readFileSync(new URL('./fixtures/save-v10-season2.json', import.meta.url), 'utf8')); const f = old.franchise || old.f || old;
   assert.ok(f.news.length > 0);
-  try { setLanguage('zz', other(Object.keys(en))); for (const n of f.news) assert.equal(lineText(n), n.text, 'an old item keeps its sentence'); }
+  // The fixture was regenerated for the 32-club league (2026-11-23) by a build that saves lines, so its news carries them. A record
+  // from before lines existed held only the sentence: that shape is rebuilt here from the same items.
+  const before = f.news.map(({ text, kind, week, year }) => ({ text, kind, week, year })); assert.ok(before.every((n) => typeof n.text === 'string' && n.text.length > 3));
+  try { setLanguage('zz', other(Object.keys(en))); for (const n of before) assert.equal(lineText(n), n.text, 'an old item keeps its sentence'); }
   finally { setLanguage('en'); }
 });
 
