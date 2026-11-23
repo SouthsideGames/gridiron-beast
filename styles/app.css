@@ -2776,3 +2776,10 @@ html[data-stadium-fx="reduced"] .sfx-dial { animation-duration: 20s; } html[data
 @keyframes final-fall { from { transform: translateY(-14px) rotate(0deg); } to { transform: translateY(78vh) rotate(540deg); } }
 html[data-reduced-motion="1"] .final-celebration .final-party span { animation: none; } html[data-reduced-motion="1"] .final-confetti { display: none; }
 html[data-app-inactive="1"] .final-celebration * { animation-play-state: paused; }
+
+/* Team logos (src/ui/team-logo.js): beside club names, on the scoreboard */
+.team-logo.inline { vertical-align: middle; margin-right: 6px; flex: none; }
+.scoreboard .sb-logo { width: 18px; height: 18px; vertical-align: -4px; margin: 0 4px; }
+.kit-pair { display: flex; gap: 10px; align-items: center; justify-content: center; }
+.kit-pair figure { margin: 0; text-align: center; font-size: 11px; color: var(--muted, #a9c7b6); }
+.mu-club .mu-logo { display: block; margin: 0 auto 4px; }

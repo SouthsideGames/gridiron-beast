@@ -1,0 +1,26 @@
+<!doctype html><meta charset="utf-8"><title>Gridiron Beast — home stadiums</title>
+<link rel="stylesheet" href="../../styles/app.css">
+<style>body{margin:0;background:#0b1510;color:#e8f2ec;font:600 14px system-ui,sans-serif}h1{font-size:20px;margin:14px 16px 2px}.sub{margin:0 16px 10px;color:#a9c7b6;font-weight:500}.row{display:flex;gap:14px;padding:0 16px 16px}.card{background:#13231b;border-radius:10px;padding:8px;flex:1;min-width:0}.card h3{margin:2px 4px 6px;font-size:14px;display:flex;align-items:center;gap:8px}.card .meta{font-size:11px;color:#a9c7b6;margin:0 4px 6px;font-weight:500}.card svg.field{display:block;width:100%;height:auto;background:#0a120e;border-radius:6px}</style>
+<div id="root"></div>
+<script type="module">
+import { fieldSvg, fieldViewBox } from '../../src/ui/field-view.js';
+import { setStadiumScene, STANDS_DEPTH, venueLook } from '../../src/ui/stadium-fx.js';
+import { crowdFor } from '../../src/ui/stadium-crowd.js';
+import { venueFor, ENVIRONMENTS } from '../../src/data/stadiums.js';
+import { TEAM_META, DIVISIONS, conferenceFor } from '../../src/data/league.js';
+import { teamLogo } from '../../src/ui/team-logo.js';
+import { isGymClub } from '../../src/data/gyms.js';
+const q = new URLSearchParams(location.search); const mode = q.get('mode') || 'one';
+const card = (club, { width = null } = {}) => {
+  const venue = { ...venueFor(club, 'preview'), weather: 'clear' }; const m = TEAM_META[club];
+  setStadiumScene(venue, crowdFor({ seed: 7, homeColor: m.color, awayColor: '#9aa3ad', homeColor2: m.secondary, homeRecord: { w: 9, l: 5 }, awayRecord: { w: 7, l: 7 }, type: venue.type }));
+  const bottom = -10 - STANDS_DEPTH, top = 110 + STANDS_DEPTH; const span = top - bottom;
+  const svg = `<svg class="field" viewBox="${fieldViewBox(span)}" preserveAspectRatio="xMidYMid meet">${fieldSvg({ venue, camera: { bottom, top }, ballOn: 25, toGo: 10, noLines: true, homeOnOffense: true })}</svg>`;
+  setStadiumScene(null);
+  return `<div class="card" data-club="${club}"${width ? ` style="flex:0 0 ${width}px"` : ''}><h3>${teamLogo(club, 28)}${club}</h3><div class="meta">${venue.name} · ${isGymClub(club) ? `Gym Leader field: ${ENVIRONMENTS[venue.env].name}` : `Grass · ${venueLook(venue)?.region?.label || ''} home dressing`}</div>${svg}</div>`;
+};
+let h = '';
+if (mode === 'one') { const club = q.get('club'); h = `<div class="row" style="padding-top:12px">${card(club)}</div>`; }
+if (mode === 'division') { const d = q.get('d'); h = `<h1>${conferenceFor(d)} · ${d}</h1><div class="sub">Home stadiums, whole field and stands (rendered by the game's field code)</div><div class="row">${DIVISIONS[d].map((c) => card(c)).join('')}</div>`; }
+document.getElementById('root').innerHTML = h; window.__ready = true;
+</script>

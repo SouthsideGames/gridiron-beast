@@ -27,6 +27,7 @@ import { assignmentLines } from './play-art.js';
 import { PLAYS, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
 import { fxSvg, movementSvg, statusMarks } from './ability-fx.js';
 import { turfSvg } from './stadium-art.js';
+import { fieldBrand, brandEndZone, brandMidfield, LOGO_YARDS } from './field-branding.js';
 import { postsSvg, standsDepth, standSvg, wallSvg, apronSvg, borderSvg, barrierSvg, sideStandsSvg, SIDE_REACH, fieldBorder, FIELD_BORDER, STANDS_GRASS, STANDS_BARRIER, STANDS_GAP, FOOTBALL } from './stadium-fx.js';
 import { t as $t } from '../text/index.js';
 
@@ -60,7 +61,7 @@ const FIELD_TINT = { Fire: '#ff7a3d', Water: '#5fb6ff', Nature: '#7ad35a', Elect
  * layer's <use> elements need ({ id, symbol }, deduplicated).
  */
 export function fieldLayers(o) {
-  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null, qbRead = false, fields = null, fxOptions = null, readinessHud = null} = o;
+  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null, qbRead = false, fields = null, fxOptions = null, readinessHud = null, kits = null, homeOnOffense = null} = o;
   const portalFrame = frame && (frame.hoardFlight || fx?.t8?.items?.some((i) => i.id === 'PSY-02-F' && (frame.t ?? 0) >= i.t0));
   const cam = o.viewCamera || (portalFrame ? cameraFor(ballOn + frame.ball[0]) : camera || cameraFor(ballOn));
   const span = cam.top - cam.bottom;
@@ -70,15 +71,22 @@ export function fieldLayers(o) {
   // Turf and end zones: the stadium's environment (GDD §33.1); without a venue, the classic grass exactly as before.
   const T = turfSvg(venue, cam, HW, span, Y);
   s += T.turf;
-  if (cam.bottom < 0) s += `${T.endZone(Y(0), Y(-10) - Y(0))}<text x="0" y="${Y(-5) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${ownLabel}</text>`;
-  if (cam.top > 100) s += `${T.endZone(Y(110), Y(100) - Y(110))}<text x="0" y="${Y(105) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${oppLabel}</text>`;
+  // Home-field branding (field-branding.js): the home club's place name in the end zone it defends, its nickname in the other.
+  // Which end zone that is follows the camera (the offense always attacks up): the near one when the home club has the ball.
+  const brand = fieldBrand(venue); const homeNear = homeOnOffense ?? true;
+  if (brand) s += `<defs>${brand.logo.symbol}</defs>`;
+  const ez = (y0, h, label, which) => (brand ? `${T.endZone(y0, h)}${brandEndZone(brand, which, HW, y0, h)}` : `${T.endZone(y0, h)}<text x="0" y="${y0 + h / 2 + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${label}</text>`);
+  if (cam.bottom < 0) s += ez(Y(0), Y(-10) - Y(0), ownLabel, homeNear ? 'place' : 'nickname');
+  if (cam.top > 100) s += ez(Y(110), Y(100) - Y(110), oppLabel, homeNear ? 'nickname' : 'place');
   const VW = viewHalf(span); const sideSymbols = [];
   s += borderSvg(cam, HW, Y); // Stadium Polish: the white paint around the field (the sideline markers stand on it)
   s += T.over; // tint and sideline decor, under the lines and the players
   // Event field art: rivalry games get a painted midfield crest and purple end-zone stripes; playoffs get gold.
+  const midIn = cam.bottom < 50 + LOGO_YARDS / 2 && cam.top > 50 - LOGO_YARDS / 2;
+  if (brand && midIn) s += brandMidfield(brand, Y, event ? (event === 'rival' ? '#a855f7' : '#f5c542') : null); // under the yard lines, which stay readable
   if (event) {
     const accent = event === 'rival' ? '#a855f7' : '#f5c542';
-    if (cam.bottom < 50 && cam.top > 50) s += `<g opacity="0.35"><circle cx="0" cy="${Y(50)}" r="6" fill="none" stroke="${accent}" stroke-width="0.6"/><text x="0" y="${Y(50) + 1.6}" text-anchor="middle" font-size="4.5" font-weight="900" fill="${accent}">${event === 'rival' ? '⚔' : '★'}</text></g>`;
+    if (!brand && cam.bottom < 50 && cam.top > 50) s += `<g opacity="0.35"><circle cx="0" cy="${Y(50)}" r="6" fill="none" stroke="${accent}" stroke-width="0.6"/><text x="0" y="${Y(50) + 1.6}" text-anchor="middle" font-size="4.5" font-weight="900" fill="${accent}">${event === 'rival' ? '⚔' : '★'}</text></g>`;
     for (const ez of [[-10, 0], [100, 110]]) if (cam.bottom < ez[1] && cam.top > ez[0]) s += `<rect x="${-HW}" y="${Y(ez[1])}" width="${HW * 2}" height="${Y(ez[0]) - Y(ez[1])}" fill="${accent}" opacity="0.18"/>`;
   }
   // Yard lines, hashes, numbers.
@@ -157,10 +165,10 @@ export function fieldLayers(o) {
     if (sm?.over) statusOver += sm.over;
     let key = `${team}:${slot}`; while (keys.has(key)) key += "'"; keys.add(key);
     if (!m) { const base = simpleMarker(slot, x, y, team, engaged, holder); const html = (sm?.under || '') + (sm?.tf ? `<g transform="${sm.tf}">${base}</g>` : base); players.push({ key, html, sig: null }); return; }
-    const base = team === 'off' ? colors.off : colors.def;
+    const kit = kits?.[team] || null; const base = kit?.base || (team === 'off' ? colors.off : colors.def); // the uniform (team-kit.js): jersey on the sprite, kit colour under it
     const [mx] = moved(team, slot, x, y); const flip = o.facing?.[`${team}:${slot}`] ?? (Math.abs(mx) > 0.12 ? mx < 0 : team === 'def');
     // The sprite: a <use> of the monster's cached <symbol> (same viewBox, size and crisp edges as the inline art it replaces).
-    const ref = monsterSpriteRef(m, { flip }); if (!seen.has(ref.id)) { seen.add(ref.id); symbols.push(ref); }
+    const ref = monsterSpriteRef(m, { flip, kit }); if (!seen.has(ref.id)) { seen.add(ref.id); symbols.push(ref); }
     const ell = { cx: cx.toFixed(2), cy: (cy + 0.75).toFixed(2), fill: base, stroke: holder ? '#fff' : engaged ? '#ffcf5a' : '#0d1f17', 'stroke-width': holder ? '0.4' : '0.2' };
     const use = { href: `#${ref.id}`, x: (cx - 1.7).toFixed(2), y: (cy - 2.5).toFixed(2) };
     const art = `<use data-fv="s" href="${use.href}" x="${use.x}" y="${use.y}" width="3.4" height="3.4" aria-hidden="true"/>`;

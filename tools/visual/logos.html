@@ -1,0 +1,21 @@
+<!doctype html><meta charset="utf-8"><title>Gridiron Beast — 32 team logos</title>
+<style>body{margin:0;font:600 14px system-ui,sans-serif;background:#0f1b15;color:#e8f2ec}h1{margin:16px 20px 4px;font-size:22px}h2{margin:18px 20px 6px;font-size:16px;color:#a9c7b6}.sec{padding:0 20px 10px}.grid{display:grid;grid-template-columns:repeat(8,1fr);gap:10px}.cell{background:#16271e;border-radius:10px;padding:10px 6px;text-align:center}.cell.light{background:#f3f1ea;color:#1d2a22}.cell svg{display:block;margin:0 auto 6px}.name{font-size:12px;line-height:1.2}.div{font-size:10px;opacity:.7}.sizes{display:flex;gap:8px;align-items:center;justify-content:center}</style>
+<h1>Gridiron Beast — the 32 club logos</h1><div class="sec" id="root"></div>
+<script type="module">
+import { teamLogo } from '../../src/ui/team-logo.js';
+import { CLUBS_BY_DIVISION } from '../../src/data/club-identity.js';
+import { conferenceFor } from '../../src/data/league.js';
+const q = new URLSearchParams(location.search); const mode = q.get('mode') || 'sheet'; const size = Number(q.get('size') || 110);
+const root = document.getElementById('root'); let h = '';
+const all = CLUBS_BY_DIVISION.flatMap((d) => d.clubs.map((c) => ({ club: c, division: d.division })));
+if (mode === 'sheet') {
+  h += `<div class="grid">${all.map(({ club, division }) => `<div class="cell">${teamLogo(club, size)}<div class="name">${club}</div><div class="div">${conferenceFor(division)} · ${division}</div></div>`).join('')}</div>`;
+} else if (mode === 'light') {
+  h += `<div class="grid">${all.map(({ club }) => `<div class="cell light">${teamLogo(club, size)}<div class="name">${club}</div></div>`).join('')}</div>`;
+} else if (mode === 'small') {
+  h += `<div class="grid">${all.map(({ club }) => `<div class="cell"><div class="sizes">${[16, 20, 24, 32, 48].map((s) => teamLogo(club, s)).join('')}</div><div class="name">${club}</div></div>`).join('')}</div>`;
+} else if (mode === 'one') {
+  const club = q.get('club'); h += `<div style="display:flex;gap:16px;align-items:center"><div class="cell" style="padding:18px">${teamLogo(club, 220)}<div class="name">${club} · on dark</div></div><div class="cell light" style="padding:18px">${teamLogo(club, 220)}<div class="name">${club} · on light</div></div><div class="cell" style="padding:18px"><div class="sizes" style="flex-direction:column">${[64, 32, 24, 18].map((s) => teamLogo(club, s)).join('')}</div><div class="name">game sizes 64/32/24/18</div></div></div>`;
+}
+root.innerHTML = h; window.__ready = true;
+</script>

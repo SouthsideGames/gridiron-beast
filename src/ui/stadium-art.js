@@ -5,7 +5,7 @@
 
 import { ENVIRONMENTS, WEATHER, STADIUM_VARIANTS } from '../data/stadiums.js';
 import { designField } from '../data/stadium-designs.js';
-import { lookFor, edgeSvg } from './stadium-fx.js';
+import { lookFor, edgeSvg, homeEdgeSvg } from './stadium-fx.js';
 
 const PATTERNS = {
   // Each: [width, height, inner svg, opacity] in yards. Low opacity, so yard lines, hashes and numbers stay on top and readable.
@@ -108,7 +108,7 @@ export function turfSvg(venue, cam, HW, SPAN, Y) {
     s += `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="${w}" height="${h}" patternTransform="translate(0 ${(cam.top % h).toFixed(2)})">${inner}</pattern></defs><rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="url(#${id})" opacity="${op}"/>`;
   }
   return { env, turf: s, endZone: (y0, h) => `<rect x="${-HW}" y="${y0}" width="${HW * 2}" height="${h}" fill="${P.end}"/>${endZoneDecor(env, -HW, y0, HW * 2, h)}`,
-    over: `${P.tint ? `<rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="${P.tint}"/>` : ''}${lookFor(env.id) ? edgeSvg(env.id, cam, HW, Y, SPAN) : env.id === 'grass' ? '' : sidelineDecor(env, cam, HW, Y)}` };
+    over: `${P.tint ? `<rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="${P.tint}"/>` : ''}${lookFor(env.id) ? edgeSvg(env.id, cam, HW, Y, SPAN) : env.id === 'grass' ? '' : sidelineDecor(env, cam, HW, Y)}${env.id === 'grass' ? homeEdgeSvg(venue, cam, HW, Y) : ''}` };
 }
 
 /** The CSS class for the weather layer over the field ('' when nothing is drawn: clear, overcast handled by a tint, indoors). */
