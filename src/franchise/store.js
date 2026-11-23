@@ -348,6 +348,9 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
       let out = fz.raws.core.slice(0, -1); const add = (k, v) => { out += `${out.length > 1 ? ',' : ''}${JSON.stringify(k)}:${v}`; };
       if (fz.order.includes('history')) add('history', fz.raws.history);
       if (fz.order.includes('draftResults')) add('draftResults', fz.raws.draft);
+      // The league archive, when it is stored as its own part (the split layout): it was left out of the snapshot until 2026-11-23,
+      // so a mirrored save lost its league history. (In the three-part layout it is already inside core.)
+      if (fz.raws.prehistory != null && fz.order.includes('preLeagueHistory')) add('preLeagueHistory', fz.raws.prehistory);
       if (fz.order.includes('savedAt') && fz.savedAt != null) add('savedAt', JSON.stringify(fz.savedAt));
       return `${out}}`;
     } };

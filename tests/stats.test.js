@@ -164,7 +164,7 @@ test('awards freeze when the playoffs are drawn and a full season books leaders 
   assert.ok(w.mvp.why && w.mvp.record, 'winner explains itself');
   { const slim = f.season.awards.league.mvp; assert.equal(slim.id, w.mvp.id); assert.equal(slim.score, w.mvp.score); assert.equal(slim.why, w.mvp.why); const back = expandWinner(slim, 1, (id) => f.roster.find((m) => m.id === id) || f.league?.monsters?.[id] || null); for (const [k, v] of Object.entries(w.mvp)) if (typeof v === 'number') assert.equal(back[k], v, `${k} restored from the book (forward-only compaction, GDD §46)`); } // end-of-season awards use the frozen result, slimmed to what the books hold
   assert.ok(Object.keys(f.season.playoffStats).length >= 2, 'playoff table filled');
-  const regGames = Math.max(...F.Stats.leagueRows(f.season.leagueStats).map((r) => r.games)); assert.ok(regGames <= 9, 'regular-season games never include playoffs');
+  const regGames = Math.max(...F.Stats.leagueRows(f.season.leagueStats).map((r) => r.games)); assert.ok(regGames <= 14, 'regular-season games never include playoffs'); assert.ok(regGames >= 12, 'and a full season is fourteen');
   assert.ok(f.history[0].awards.leaders.passYds?.length, 'history keeps the season leaders');
   assert.ok(leaders(f.season.leagueStats, 'rating', { n: 3 }).every((r) => r.att >= 10), 'rate leaders meet the minimum');
   // Careers advance at the rollover.

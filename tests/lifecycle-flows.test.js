@@ -97,7 +97,8 @@ for (const [label, end] of [['retired', (f) => L.finalizeArchive(f, { reason: 's
 // A retired monster's league record has no "personal name" flag. Loading used to add one to each such record, so an archive whose league
 // had one was no longer identical to what was stored, and the store refused the next save as a change to a read-only archive.
 test('loading a retired franchise leaves its retired-legend records alone, so saving it again is a no-op', async () => {
-  const f = settled(41); const h = f.history[0]; while (f.history.length < 20) f.history.unshift({ ...h, year: f.history[0].year - 1 });
+  const f = settled(44); const h = f.history[0]; // seed 44: a decorated monster retires after season 1 in the 32-club league (seed 41 in the 16-club one)
+  while (f.history.length < 20) f.history.unshift({ ...h, year: f.history[0].year - 1 });
   assert.ok(Object.values(f.league.legends).some((s) => s.personalName === undefined), 'this league has a retired-legend record');
   assert.ok(L.finalizeArchive(f, { reason: 'season-cap' }).ok); const text = JSON.stringify(f);
   assert.equal(JSON.stringify(Save.migrate(JSON.parse(text))), text, 'loading changes nothing');
