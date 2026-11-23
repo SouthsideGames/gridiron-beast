@@ -113,8 +113,8 @@ test('two full seasons later: the archive is untouched, legends are in no roster
   const { f, problems } = runFranchise(seed, { seasons: 2 }); assert.deepEqual(problems, []);
   assert.ok(f.history.length >= 2, 'two seasons were completed');
   assert.equal(JSON.stringify(f.preLeagueHistory), text, 'two seasons of play, an offseason, a draft and free agency changed the archive');
-  const a = f.preLeagueHistory; const rest = JSON.parse(JSON.stringify(f)); delete rest.preLeagueHistory; for (const id of a.legends) delete rest.individualNames.byId[id];
-  assert.ok(!JSON.stringify(rest).includes(LEGEND_PREFIX), 'a retired legend\'s id appears outside the archive (roster, registry, pool, draft, market, ballot, news or records)');
+  const a = f.preLeagueHistory; const rest = JSON.parse(JSON.stringify(f)); delete rest.preLeagueHistory; for (const id of [...a.legends, ...(a.stars || [])]) delete rest.individualNames.byId[id];
+  assert.ok(!JSON.stringify(rest).includes(LEGEND_PREFIX), 'a retired legend\'s or star\'s id appears outside the archive (roster, registry, pool, draft, market, ballot, news or records)');
   for (const l of archiveLegends(f)) assert.ok(!liveOf(f).some((m) => m.name === l.name) && !(f.draft?.class || []).some((m) => m.name === l.name), `${l.name}: a live monster took a legend's name`);
   assert.ok((f.monsterHallOfFame?.candidates || []).every((c) => !String(c.id).startsWith(LEGEND_PREFIX)));
   // the record book and the awards of the played seasons know nothing older than year 1

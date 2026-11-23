@@ -4787,8 +4787,28 @@ One of each legendary, as before. The Legend Tracks screen lists all twelve with
 
 The eight seasons before the owner arrives are canon: the tables, brackets, champions and retired legends are the same in every
 franchise (`CANON` in `src/franchise/preleague-history.js`) and are not re-rolled with a new save. Skyvale won the Beast Bowl twice
-and Thornwood once under their former Gym Leaders, and both have declined since. The careers of a save's own veterans, and so the
-award winners among them, still belong to that save, because rosters are generated per save.
+and Thornwood once under their former Gym Leaders, and both have declined since. The careers of a save's own veterans still belong
+to that save, because rosters are generated per save.
+
+**Award winners are canon (owner ruling 2026-11-23, second set).** Each past season's MVP, Offensive and Defensive Monster of the
+Year are chosen by the game's own award rules (`computeAwards`) among the canon players of that season only: the six retired
+legends and twelve retired stars (`ARCHIVE_STARS`, six of an early era and six of a late one), all drawn from `CANON` with names
+chosen among themselves and reserved in every new save before its monsters are named. A save's veterans never take a canon
+award. Every winner played at least 60% of his season at a position that can win the award. Brackets stay the old three-round
+format. A save made before this change keeps the award winners stored in it (the archive is never regenerated).
+
+| Season | Champion | MVP | Offensive Monster of the Year | Defensive Monster of the Year |
+|---|---|---|---|---|
+| -7 | Skyvale Cyclones | Zolalin (RB, Emberfall Infernos) † | Zolalin (RB, Emberfall Infernos) † | Zellinen (DL, Emberfall Infernos) † |
+| -6 | Thornwood Wildroots | Ralelor (QB, Emberfall Infernos) † | Ralelor (QB, Emberfall Infernos) † | Voulor (LB, Emberfall Infernos) † |
+| -5 | Skyvale Cyclones | Ralelor (QB, Emberfall Infernos) † | Zolalin (RB, Emberfall Infernos) † | Zellinen (DL, Emberfall Infernos) † |
+| -4 | Stormport Bolts | Maroyen (WR, Emberfall Infernos) † | Maroyen (WR, Emberfall Infernos) † | Tulomar (LB, Ashford Cinders) |
+| -3 | Stormport Bolts | Ralelor (QB, Emberfall Infernos) † | Ralelor (QB, Emberfall Infernos) † | Zellinen (DL, Emberfall Infernos) † |
+| -2 | Aetheria Seers | Kiiken (RB, Ember City Beasts) | Kiiken (RB, Ember City Beasts) | Voulor (LB, Emberfall Infernos) † |
+| -1 | Harbor Anchors | Tulomar (LB, Ashford Cinders) | Filegen (WR, Ember City Beasts) | Tulomar (LB, Ashford Cinders) |
+| 0 | Frostpeak Howlers | Rauwen (QB, Deepwater Chompers) | Rauwen (QB, Deepwater Chompers) | Horabon (DL, Deepwater Chompers) |
+
+† a retired legend. (All six legends played for Emberfall: that is how the canon drew them, unchanged here.)
 
 ### 60.10 Saves
 

@@ -1,4 +1,4 @@
-import { generateLeagueArchive } from './preleague-history.js';
+import { generateLeagueArchive, canonCast } from './preleague-history.js';
 import { reserveIndividualName, ensureIndividualNames } from '../data/individual-names.js';
 import { commitGameInjuries } from '../sim/substitutions.js';
 import * as GM from './gm-career.js';
@@ -120,6 +120,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
     tutorial: { seen: {} },
     pool: {}, staffContracts: {}, staffRaise: {}, offseason: null,
   };
+  if (persistentLeague && leagueArchive) for (const c of canonCast()) reserveIndividualName(f, { id: c.id, name: c.name }); // the league's canon players keep their names in every franchise (preleague-history.js)
   for (const m of roster) reserveIndividualName(f, m);
   // Contracts (GDD §18.1): about 35% of the founding roster, never a cornerstone, is on a one-year deal, so the first
   // offseason already brings renewals, walks and the market. Chosen by a hash of the id, so no rng is consumed.
@@ -136,7 +137,6 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
     // The league's eight seasons before the owner arrived (preleague-history.js). Generated once, here, from the seed alone: it
     // draws nothing from the franchise generator, so the draft class that follows is the one it would have been without it.
     f.preLeagueHistory = generateLeagueArchive(f, { quality: (name) => clubQuality(f, name, 1) });
-    for (const id of f.preLeagueHistory.legends) { const c = f.preLeagueHistory.careers[id]; reserveIndividualName(f, { id: c.id, name: c.name }); } // a retired legend's name is his alone (reserved through a copy: the archive is not touched)
   }
   openCreationDraft(f);
   ensureIndividualNames(f);

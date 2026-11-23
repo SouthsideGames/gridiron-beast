@@ -10,7 +10,11 @@
 // retired legends are drawn from one fixed key, CANON, so they are the same in every franchise and are not re-rolled with a new
 // save; among them are the years Aria Gale's Skyvale Cyclones and Rowan Thorne's Thornwood Wildroots were the league's best, and
 // their decline since both coaches left. What still follows the save is what belongs to its own monsters: the careers of the
-// veterans on its rosters, and so the award winners chosen among them. A season is 14 games, not nine.
+// veterans on its rosters. A season is 14 games, not nine.
+// Award winners are canon too (owner ruling 2026-11-23, second set): each season's MVP, OPOY and DPOY are chosen by the game's own
+// award rules among the canon players of that season only, the six retired legends and twelve retired stars (ARCHIVE_STARS), all
+// drawn from CANON with canon-only names, so every new franchise has the same award history. A save's own veterans keep their
+// per-save careers but never take a canon award.
 //
 // It follows the game's own rules instead of inventing a format: the fixtures come from leagueSeasonFixtures (nine games and a
 // bye), the tables from applyResult/standings (the real tiebreakers), the bracket from playoffRound (four seeds per
@@ -30,6 +34,11 @@ import { computeAwards } from './awards.js';
 export const ARCHIVE_VERSION = 3;
 export const ARCHIVE_SEASONS = 8;
 export const ARCHIVE_LEGENDS = 6;
+/** Retired stars of the canon era: the award races of the past are run among them and the legends. Six of an early era, six of a late one. */
+export const ARCHIVE_STARS = Object.freeze([
+  { pos: 'QB', era: 'early' }, { pos: 'RB', era: 'early' }, { pos: 'WR', era: 'early' }, { pos: 'DL', era: 'early' }, { pos: 'LB', era: 'early' }, { pos: 'CB', era: 'early' },
+  { pos: 'QB', era: 'late' }, { pos: 'WR', era: 'late' }, { pos: 'TE', era: 'late' }, { pos: 'DL', era: 'late' }, { pos: 'LB', era: 'late' }, { pos: 'S', era: 'late' },
+]);
 export const ARCHIVE_AWARDS = Object.freeze(['mvp', 'opoy', 'dpoy']); // Signature Monster of the Year needs ability impact, which a past season cannot prove
 export const REGULAR_GAMES = REG_GAMES;
 /** Playoff rounds of an archive season: the old three-round bracket (the Beast Bowl is round 3 there, round 4 in a live season). */
@@ -229,6 +238,31 @@ const safeOverall = (m) => { try { const v = monsterOverall(m); return Number.is
 function maturity(experience, age) { return (experience <= 0 ? 0.86 : experience === 1 ? 0.93 : experience === 2 ? 0.975 : 1) * (age != null && age >= 31 ? 1 - (age - 30) * 0.03 : 1); }
 
 /**
+ * The canon cast: the six retired legends and the twelve retired stars, with ids, names, positions, species and career spans drawn
+ * from `canon` alone. Names are chosen against each other only, never against a save's monsters, so they are the same in every
+ * franchise (franchise.js reserves them before any monster of the save is named).
+ */
+export function canonCast(canon = CANON, seasons = ARCHIVE_SEASONS) {
+  const C = makeDraws(canon); const firstYear = 1 - seasons; const taken = new Set(); const out = [];
+  const pick = (key, position) => { const pool = SPECIES_DEX.filter((s) => s.position === position && ['uncommon', 'rare'].includes(s.rarity)); return pool[C.int(key, pool.length)] || SPECIES_DEX.find((s) => s.position === position); };
+  const legendPositions = ['QB', 'RB', 'WR', 'DL', 'LB', 'CB'];
+  for (let i = 0; i < ARCHIVE_LEGENDS; i++) {
+    const id = `${LEGEND_PREFIX}${hashString(`${canon}:legend:${i}`).toString(36)}`; const position = legendPositions[i % legendPositions.length]; const sp = pick(`legend-species|${i}`, position);
+    const name = individualName(id, taken); taken.add(name.toLowerCase());
+    out.push({ id, name, position, species: sp?.id || null, type: sp?.element || null, stage: Math.min(2, sp?.evolution?.length || 0), legend: true, canon: true, i,
+      debut: firstYear, last: 0 - C.int(`legend-retired|${i}`, 3), ageAtDebut: 23 + C.int(`legend-age|${i}`, 3) });
+  }
+  ARCHIVE_STARS.forEach(({ pos, era }, i) => {
+    const id = `${LEGEND_PREFIX}s${hashString(`${canon}:star:${i}`).toString(36)}`; const sp = pick(`star-species|${i}`, pos);
+    const name = individualName(id, taken); taken.add(name.toLowerCase());
+    const debut = era === 'early' ? firstYear + C.int(`star-debut|${i}`, 2) : firstYear + 3 + C.int(`star-debut|${i}`, 2);
+    const last = era === 'early' ? Math.min(-1, debut + 4 + C.int(`star-retired|${i}`, 2)) : 0;
+    out.push({ id, name, position: pos, species: sp?.id || null, type: sp?.element || null, stage: Math.min(2, sp?.evolution?.length || 0), legend: false, canon: true, i, debut, last, ageAtDebut: 22 + C.int(`star-age|${i}`, 4) });
+  });
+  return out;
+}
+
+/**
  * Build the archive for a new franchise. Pure: reads the franchise, changes nothing.
  * `quality(club)` is the club's present strength (franchise.js clubQuality); last season's table leans on it, so the clubs the
  * draft order calls weak were the ones that lost.
@@ -278,32 +312,28 @@ export function generateLeagueArchive(f, { seasons = ARCHIVE_SEASONS, quality = 
     }
     people.push({ id: m.id, name: m.name, species: m.species, type: m.type, position: m.position, club, debut, last: 0, moves, overall: safeOverall(m), ageNow: Number(m.age) || null, ageless, stage: m.stage || 0 });
   }
-  const taken = new Set([...live.map((m) => String(m.name || '').toLowerCase()), ...Object.entries(f?.individualNames?.byId || {}).filter(([id]) => !isArchiveLegendId(id)).map(([, x]) => String(x).toLowerCase())]); // (a legend's own reserved name is his to keep on a second generation)
-  const legendPositions = ['QB', 'RB', 'WR', 'DL', 'LB', 'CB'];
   const byStrength = (year) => ALL_TEAMS.slice().sort((a, b) => strengthOf[year][b] - strengthOf[year][a] || a.localeCompare(b));
-  for (let i = 0; i < ARCHIVE_LEGENDS; i++) {
-    const id = `${LEGEND_PREFIX}${hashString(`${canon}:legend:${i}`).toString(36)}`; const position = legendPositions[i % legendPositions.length];
-    const pool = SPECIES_DEX.filter((s) => s.position === position && ['uncommon', 'rare'].includes(s.rarity)); const sp = pool[C.int(`legend-species|${i}`, pool.length)] || SPECIES_DEX.find((s) => s.position === position);
-    const name = individualName(id, taken); taken.add(name.toLowerCase());
-    const last = 0 - C.int(`legend-retired|${i}`, 3); // retired after season 0, -1 or -2 (a plain 0, never -0)
-    const club = byStrength(firstYear)[C.int(`legend-club|${i}`, 6)]; // he made his name at one of the early era's strong clubs
-    people.push({ id, name, species: sp?.id || null, type: sp?.element || null, position, club, debut: firstYear, last, moves: [], overall: 99, ageNow: null, ageAtDebut: 23 + C.int(`legend-age|${i}`, 3), ageless: false, legend: true, stage: Math.min(2, sp?.evolution?.length || 0) });
+  for (const c of canonCast(canon, seasons)) {
+    // a legend made his name at one of the early era's strong clubs; a star at one of the strong clubs of his debut year
+    const club = c.legend ? byStrength(firstYear)[C.int(`legend-club|${c.i}`, 6)] : byStrength(c.debut)[C.int(`star-club|${c.i}`, 8)];
+    people.push({ id: c.id, name: c.name, species: c.species, type: c.type, position: c.position, club, debut: c.debut, last: c.last, moves: [], overall: 99, ageNow: null, ageAtDebut: c.ageAtDebut, ageless: false, legend: c.legend, canon: true, star: !c.legend,
+      starTalent: c.legend ? null : 1.9 + C.n(`star-talent|${c.i}`) * 0.25, stage: c.stage });
   }
 
   // --- season by season: who started, what they did
-  const posStats = {}; { const by = {}; for (const p of people) if (!p.legend) (by[p.position] ||= []).push(p.overall); for (const [pos, v] of Object.entries(by)) { const m = v.reduce((a, b) => a + b, 0) / v.length; posStats[pos] = { m, sd: Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length) || 1 }; } }
+  const posStats = {}; { const by = {}; for (const p of people) if (!p.canon) (by[p.position] ||= []).push(p.overall); for (const [pos, v] of Object.entries(by)) { const m = v.reduce((a, b) => a + b, 0) / v.length; posStats[pos] = { m, sd: Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length) || 1 }; } }
   const clubIn = (p, year) => { let c = p.club; for (let i = p.moves.length - 1; i >= 0; i--) if (year < p.moves[i].year) c = p.moves[i].from; return c; };
-  const ageIn = (p, year) => (p.legend ? p.ageAtDebut + (year - p.debut) : p.ageNow == null ? null : p.ageless ? p.ageNow : p.ageNow - (1 - year));
+  const ageIn = (p, year) => (p.canon ? p.ageAtDebut + (year - p.debut) : p.ageNow == null ? null : p.ageless ? p.ageNow : p.ageNow - (1 - year));
   const books = new Map(people.map((p) => [p.id, []]));
   for (const season of years) {
     const year = season.year; const active = people.filter((p) => year >= p.debut && year <= p.last);
-    const rated = active.map((p) => { const age = ageIn(p, year); const st = posStats[p.position] || { m: 50, sd: 8 }; const talent = p.legend ? 2.5 + C.n(`legend-form|${p.id}|${year}`) * 0.25 : ((p.overall * maturity(year - p.debut, age)) - st.m) / st.sd; return { p, age, team: clubIn(p, year), talent }; });
+    const rated = active.map((p) => { const age = ageIn(p, year); const st = posStats[p.position] || { m: 50, sd: 8 }; const talent = p.legend ? 2.5 + C.n(`legend-form|${p.id}|${year}`) * 0.25 : p.star ? p.starTalent + C.n(`star-form|${p.id}|${year}`) * 0.25 : ((p.overall * maturity(year - p.debut, age)) - st.m) / st.sd; return { p, age, team: clubIn(p, year), talent }; });
     const groups = new Map(); for (const r of rated) { const k = `${r.team}|${r.p.position}`; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); }
     for (const g of groups.values()) g.sort((a, b) => b.talent - a.talent || String(a.p.id).localeCompare(String(b.p.id)));
     for (const r of rated) {
-      const rank = groups.get(`${r.team}|${r.p.position}`).indexOf(r); const key = `${r.p.id}|${year}`; const D = r.p.legend ? C : DS; // a legend's seasons are canon
+      const rank = groups.get(`${r.team}|${r.p.position}`).indexOf(r); const key = `${r.p.id}|${year}`; const D = r.p.canon ? C : DS; // a legend's and a star's seasons are canon
       // The clubs of those years also had monsters who have since left; a weak or raw monster sat behind one of them.
-      const starter = r.p.legend || (rank < STARTERS[r.p.position] && r.talent + D.n(`${key}|depth`) * 0.5 > -1.1);
+      const starter = r.p.canon || (rank < STARTERS[r.p.position] && r.talent + D.n(`${key}|depth`) * 0.5 > -1.1);
       const rec = recordOf(year, r.team); const teamForm = ((rec.w / (rec.w + rec.l)) - 0.5) * 0.5;
       const z = clamp(r.talent * 0.62 + D.n(`${key}|form`) * 0.62 + teamForm, -2.4, 2.6);
       const missed = starter && D.u(`${key}|hurt`) < 0.14 ? 1 + D.int(`${key}|weeks`, 4) : 0;
@@ -316,7 +346,7 @@ export function generateLeagueArchive(f, { seasons = ARCHIVE_SEASONS, quality = 
   // --- awards: the game's own award rules on each season's league table
   for (const season of years) {
     const table = {}; const yearsPro = new Map();
-    for (const p of people) { const b = books.get(p.id).find((x) => x.year === season.year); if (!b) continue; yearsPro.set(p.id, season.year - p.debut); (table[b.team] ||= {})[p.id] = { id: p.id, name: p.name, type: p.type, species: p.species, position: p.position, age: b.age ?? null, yearsPro: season.year - p.debut, team: b.team, ...b.reg }; }
+    for (const p of people) { if (!p.canon) continue; const b = books.get(p.id).find((x) => x.year === season.year); if (!b) continue; /* the award races of the past are run among the canon players */ yearsPro.set(p.id, season.year - p.debut); (table[b.team] ||= {})[p.id] = { id: p.id, name: p.name, type: p.type, species: p.species, position: p.position, age: b.age ?? null, yearsPro: season.year - p.debut, team: b.team, ...b.reg }; }
     const records = Object.fromEntries(season.standings.map((r) => [r.club, { w: r.w, l: r.l, t: 0, pf: r.pf, pa: r.pa }]));
     let races = null; try { races = computeAwards({ table, records, n: 1 }); } catch { races = null; }
     for (const kind of ARCHIVE_AWARDS) {
@@ -328,9 +358,9 @@ export function generateLeagueArchive(f, { seasons = ARCHIVE_SEASONS, quality = 
   const careers = {};
   for (const p of people) {
     const seasonsOf = books.get(p.id); if (!seasonsOf.length) continue;
-    careers[p.id] = { id: p.id, name: p.name, species: p.species, type: p.type, position: p.position, ...(p.stage ? { stage: p.stage } : {}), club: p.club, debut: p.debut, ...(p.legend ? { retired: true, retiredYear: p.last } : {}), ...(p.moves.length ? { transfers: p.moves.map((x) => ({ ...x })) } : {}), seasons: seasonsOf };
+    careers[p.id] = { id: p.id, name: p.name, species: p.species, type: p.type, position: p.position, ...(p.stage ? { stage: p.stage } : {}), club: p.club, debut: p.debut, ...(p.canon ? { retired: true, retiredYear: p.last } : {}), ...(p.moves.length ? { transfers: p.moves.map((x) => ({ ...x })) } : {}), seasons: seasonsOf };
   }
-  return { version: ARCHIVE_VERSION, seed, from: firstYear, to: 0, seasons: years, careers, legends: people.filter((p) => p.legend).map((p) => p.id) };
+  return { version: ARCHIVE_VERSION, seed, from: firstYear, to: 0, seasons: years, careers, legends: people.filter((p) => p.legend).map((p) => p.id), stars: people.filter((p) => p.star).map((p) => p.id) };
 }
 
 // ------------------------------------------------------------ reading the archive (never writes)
@@ -426,7 +456,7 @@ export function validateLeagueArchive(archive, { live = null } = {}) {
     if (ys[0] !== c.debut) say(`Debut mismatch: ${c.id}`);
     if (c.retired ? ys.at(-1) !== c.retiredYear : ys.at(-1) !== 0) say(`Career end mismatch: ${c.id}`);
     if (c.seasons.at(-1).team !== c.club) say(`Current club mismatch: ${c.id}`);
-    if (!!c.retired !== isArchiveLegendId(c.id) || !!c.retired !== (archive.legends || []).includes(c.id)) say(`Legend flag mismatch: ${c.id}`);
+    if (!!c.retired !== isArchiveLegendId(c.id) || !!c.retired !== [...(archive.legends || []), ...(archive.stars || [])].includes(c.id)) say(`Legend flag mismatch: ${c.id}`);
     let club = c.seasons[0].team; const moves = (c.transfers || []).slice();
     for (const b of c.seasons) {
       if (!ALL_TEAMS.includes(b.team)) say(`Unknown club: ${c.id}`);
@@ -442,6 +472,11 @@ export function validateLeagueArchive(archive, { live = null } = {}) {
     const ages = c.seasons.map((b) => b.age).filter((x) => x != null); if (ages.some((x, i) => i && x !== ages[i - 1] && x !== ages[i - 1] + 1)) say(`Age sequence: ${c.id}`);
   }
   if ((archive.legends || []).length !== ARCHIVE_LEGENDS || new Set(archive.legends).size !== ARCHIVE_LEGENDS) say('Wrong number of retired legends');
+  if (archive.stars) { // an archive written before canon awards (no stars) keeps its own award winners
+    if (archive.stars.length !== ARCHIVE_STARS.length || new Set(archive.stars).size !== ARCHIVE_STARS.length) say('Wrong number of retired stars');
+    const cast = new Set([...(archive.legends || []), ...archive.stars]);
+    for (const s of all) for (const [kind, w] of Object.entries(s.awards?.league || {})) if (!cast.has(w.id)) say(`Award winner is not a canon player: ${s.year} ${kind}`);
+  }
   if (live) {
     for (const m of live) {
       const c = archive.careers?.[m.id]; const want = Math.min(all.length, Math.max(0, Math.floor(m.yearsPro || 0)));

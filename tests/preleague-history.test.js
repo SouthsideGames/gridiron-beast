@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
 import { CANON, FALLEN_POWERS } from '../src/franchise/preleague-history.js';
 import { generateLeagueArchive, validateLeagueArchive, lineProblems, leagueArchive, archiveCareer, careerTotals, archiveLegends, archiveAwardsFor, archiveRecords, isArchiveLegendId, ARCHIVE_VERSION, ARCHIVE_SEASONS, ARCHIVE_LEGENDS, ARCHIVE_AWARDS, REGULAR_GAMES, LEGEND_PREFIX } from '../src/franchise/preleague-history.js';
-import { CONFERENCE_NAMES, STARTER_DIVISIONS } from '../src/data/league.js';
+import { CONFERENCE_NAMES, STARTER_DIVISIONS, REG_GAMES } from '../src/data/league.js';
 import { ALL_TEAMS, DIVISIONS, STARTER_CLUBS, conferenceFor, divisionOf, leagueSeasonFixtures, legacyPlayoffRound } from '../src/data/league.js';
 import { STAT_LABEL, MAX_KEYS, RECORD_CATEGORIES, POSITION_COLUMNS, OFFENSE_POSITIONS, DEFENSE_POSITIONS, withDerived, addInto } from '../src/franchise/stats.js';
 import { computeAwards } from '../src/franchise/awards.js';
@@ -117,7 +117,7 @@ test('veterans have a career as long as their experience; rookies and unknown mo
     // Draft-day cuts happen after the archive is written: a veteran released then played last season and is rightly remembered.
     const released = new Set(Object.keys(f.freeAgency?.locks?.released || {}));
     const gone = ids.filter((id) => !liveIds.has(id) && !isArchiveLegendId(id)); assert.ok(gone.every((id) => released.has(id)), `archived monsters that are neither in the league nor released at creation: ${gone.filter((id) => !released.has(id))}`);
-    assert.deepEqual(ids.filter(isArchiveLegendId).sort(), [...a.legends].sort()); assert.ok(gone.length < 12);
+    assert.deepEqual(ids.filter(isArchiveLegendId).sort(), [...a.legends, ...a.stars].sort()); assert.ok(gone.length < 12);
     assert.equal(new Set(Object.values(a.careers).map((c) => c.name.toLowerCase())).size, ids.length, 'two archived monsters share a name');
   }
 });
@@ -172,18 +172,18 @@ test('career totals are the sums of the seasons, and the longest-play keys are m
   assert.ok(maxima > 100, 'longest-play keys were checked'); assert.ok(posts > 100, 'playoff lines exist');
 });
 
-test('award winners: one MVP, OPOY and DPOY a season, chosen by the game\'s own award rules from that season\'s lines; no Signature Monster of the Year', () => {
+test('award winners: one MVP, OPOY and DPOY a season, chosen by the game\'s own award rules from the canon players\' lines of that season; no Signature Monster of the Year', () => {
   for (const [seed, club] of SEEDS.slice(0, 2)) {
     const f = franchise(seed, club); const a = f.preLeagueHistory;
     for (const s of a.seasons) {
       assert.deepEqual(Object.keys(s.awards.league).sort(), [...ARCHIVE_AWARDS].sort(), `${s.year}`); assert.equal(s.awards.league.smoy, undefined);
-      const table = {}; for (const c of Object.values(a.careers)) { const b = c.seasons.find((x) => x.year === s.year); if (b) (table[b.team] ||= {})[c.id] = { id: c.id, name: c.name, type: c.type, species: c.species, position: c.position, age: b.age ?? null, yearsPro: s.year - c.debut, team: b.team, ...b.reg }; }
+      const cast = new Set([...a.legends, ...a.stars]); const table = {}; for (const c of Object.values(a.careers)) { if (!cast.has(c.id)) continue; const b = c.seasons.find((x) => x.year === s.year); if (b) (table[b.team] ||= {})[c.id] = { id: c.id, name: c.name, type: c.type, species: c.species, position: c.position, age: b.age ?? null, yearsPro: s.year - c.debut, team: b.team, ...b.reg }; }
       const races = computeAwards({ table, records: Object.fromEntries(s.standings.map((r) => [r.club, { w: r.w, l: r.l, t: 0, pf: r.pf, pa: r.pa }])), n: 1 });
       for (const kind of ARCHIVE_AWARDS) {
         const w = s.awards.league[kind]; const c = a.careers[w.id]; const book = c.seasons.find((b) => b.year === s.year);
         assert.equal(w.id, races[kind][0].id, `${s.year} ${kind}: not the winner the game's rules name`);
         assert.deepEqual([w.name, w.position, w.species, w.team], [c.name, c.position, c.species, book.team]);
-        assert.ok(book.reg.games >= 6, 'a winner played most of the season'); assert.equal(typeof w.why, 'string'); assert.match(w.record, /^\d+-\d+$/);
+        assert.ok(book.reg.games >= Math.ceil(REG_GAMES * 0.6), 'a winner played most of the season'); assert.ok(cast.has(w.id), 'a canon player'); assert.equal(typeof w.why, 'string'); assert.match(w.record, /^\d+-\d+$/);
         const rec = s.standings.find((r) => r.club === w.team); assert.equal(w.record, `${rec.w}-${rec.l}`);
       }
       assert.ok(OFFENSE_POSITIONS.has(s.awards.league.opoy.position)); assert.ok(DEFENSE_POSITIONS.has(s.awards.league.dpoy.position));
@@ -212,7 +212,7 @@ test('six retired legends: archive-only identities with real species and unique 
       assert.deepEqual(l.totals, careerTotals(c)); assert.deepEqual(l.titles, a.seasons.filter((s) => s.champion === c.club && c.seasons.some((b) => b.year === s.year)).map((s) => s.year));
     }
     assert.equal(new Set(legends.map((l) => l.name)).size, ARCHIVE_LEGENDS);
-    for (const id of a.legends) { assert.ok(!f.roster.some((m) => m.id === id)); assert.ok(!f.league.monsters[id] && !f.league.legends[id]); assert.ok(!(f.draft.class || []).some((m) => m.id === id)); assert.ok(!Object.values(f.pool || {}).flat().some((m) => m.id === id)); }
+    for (const id of [...a.legends, ...a.stars]) { assert.ok(!f.roster.some((m) => m.id === id)); assert.ok(!f.league.monsters[id] && !f.league.legends[id]); assert.ok(!(f.draft.class || []).some((m) => m.id === id)); assert.ok(!Object.values(f.pool || {}).flat().some((m) => m.id === id)); }
   }
 });
 
@@ -251,6 +251,8 @@ test('the validator catches a damaged archive', () => {
   { const a = fresh(); a.seasons[7].awards.league.smoy = a.seasons[7].awards.league.mvp; has(a, 'cannot be proved'); }
   { const a = fresh(); delete a.seasons[5].awards.league.mvp; has(a, 'Missing mvp'); }
   { const a = fresh(); a.legends.pop(); has(a, 'Wrong number of retired legends'); }
+  { const a = fresh(); a.stars.pop(); has(a, 'Wrong number of retired stars'); }
+  { const a = fresh(); const live = Object.keys(a.careers).find((id) => !isArchiveLegendId(id) && a.careers[id].seasons.some((b) => b.year === 0)); const c = a.careers[live]; a.seasons[7].awards.league.mvp = { ...a.seasons[7].awards.league.mvp, id: live, name: c.name, position: c.position, team: c.seasons.at(-1).team }; has(a, 'not a canon player'); }
   { const a = fresh(); const c = Object.values(a.careers).find((x) => x.position === 'LB'); c.seasons[0].reg.tacklesTotal = 5; has(a, 'derived or unknown key'); }
   assert.deepEqual(validateLeagueArchive({ version: 1, seasons: [], careers: {} }), ['Not a version-3 archive']);
   { const f = franchise(); const live = liveOf(f).map((m) => ({ ...m })); const rookie = live.find((m) => !m.yearsPro); const a = fresh(); a.careers[rookie.id] = { ...Object.values(a.careers)[0], id: rookie.id }; assert.ok(validateLeagueArchive(a, { live }).some((e) => e.includes('Rookie with a fabricated career'))); }
@@ -264,4 +266,15 @@ test('the archive is plain JSON: it survives a save round trip and the storage p
   assert.deepEqual(validateLeagueArchive(JSON.parse(text), { live: liveOf(f) }), []);
   // 32 clubs hold twice the veterans of 16, so the archive is about twice the 16-club one (which was held under 700 KB).
   assert.ok(text.length < 1_400_000, `the archive is ${Math.round(text.length / 1024)} KB of plain data`);
+});
+
+test('canon award winners (owner 2026-11-23): every new franchise has the same MVP, OPOY and DPOY in all eight past seasons, and the same champions', () => {
+  const sig = (f) => { const a = f.preLeagueHistory; return JSON.stringify(a.seasons.map((s) => ({ year: s.year, champion: s.champion, runnerUp: s.runnerUp, awards: Object.fromEntries(ARCHIVE_AWARDS.map((k) => { const w = s.awards.league[k]; return [k, [w.id, w.name, w.position, w.team, w.species]]; })) }))); };
+  const first = sig(franchise(SEEDS[0][0], SEEDS[0][1]));
+  for (const [seed, club] of SEEDS.slice(1)) assert.equal(sig(franchise(seed, club)), first, `seed ${seed}: the same past`);
+  const f = franchise(SEEDS[0][0], SEEDS[0][1]); const a = f.preLeagueHistory;
+  assert.deepEqual(a.seasons.map((s) => s.champion), ['Skyvale Cyclones', 'Thornwood Wildroots', 'Skyvale Cyclones', 'Stormport Bolts', 'Stormport Bolts', 'Aetheria Seers', 'Harbor Anchors', 'Frostpeak Howlers'], 'the champions are unchanged');
+  assert.equal(a.stars.length, 12); for (const id of [...a.legends, ...a.stars]) { const c = a.careers[id]; assert.equal(c.retired, true); assert.ok(isArchiveLegendId(id)); assert.ok(c.retiredYear <= 0); assert.equal(f.individualNames.byId[id], c.name, 'a canon name is reserved in the save'); }
+  const live = new Set([...Object.values(f.league.monsters), ...f.roster].map((m) => m.name.toLowerCase())); for (const id of [...a.legends, ...a.stars]) assert.equal(live.has(a.careers[id].name.toLowerCase()), false, 'no monster of the save shares a canon name');
+  for (const s of a.seasons) { const act = (pos) => [...a.legends, ...a.stars].filter((id) => a.careers[id].seasons.some((b) => b.year === s.year) && pos.has(a.careers[id].position)).length; assert.ok(act(OFFENSE_POSITIONS) >= 3 && act(DEFENSE_POSITIONS) >= 3, `${s.year}: a real race on both sides`); }
 });
