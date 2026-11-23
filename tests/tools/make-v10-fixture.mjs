@@ -10,7 +10,7 @@ import * as Save from '../../src/franchise/save.js';
 const T0 = 1_790_000_000_000; let tick = 0; const realNow = Date.now; Date.now = () => T0 + (tick++) * 1000;
 
 export function makeV10Season2() {
-  const f = F.createFranchise({ owner: { first: 'Fixture', last: 'Owner', gender: 'Female', portrait: 1, hometown: '' }, club: 'Ember City Beasts', seed: 20261107 });
+  const f = F.createFranchise({ owner: { first: 'Fixture', last: 'Owner', gender: 'Female', portrait: 1, hometown: '' }, club: 'Goldhaven Royals', seed: 20261107 });
   // A fixed creation time, and no storage identity: like the v39.1-era payload this replaces, the franchise carries no `uid`, so the
   // storage layer gives it one (legacyUid) exactly as it does a pre-IndexedDB save; the migration tests depend on that.
   f.createdAt = '2026-11-07T00:00:00.000Z'; delete f.uid;

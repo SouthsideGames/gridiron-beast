@@ -25,7 +25,8 @@ export const ROOKIE_SCALE = 0.70;
  *  matched). The offset function stays (always 0) so the class shape and every random draw are unchanged. */
 export const CLASS_GROWTH_PER_SEASON = 0, CLASS_GROWTH_CAP = 0; // retired (was 0.5 a season, capped at +10)
 export const classQualityOffset = (year) => Math.min(CLASS_GROWTH_CAP, Math.max(0, Math.round(CLASS_GROWTH_PER_SEASON * ((year || 1) - 1))));
-export const CLASS_SHAPE = Object.freeze([['QB', 4], ['RB', 5], ['WR', 8], ['TE', 4], ['OL', 7], ['DL', 7], ['LB', 5], ['CB', 6], ['S', 5], ['K', 2]]); // 53
+// 32-club league (2026-11-23): three rounds are 96 picks, so the class is twice the 16-club one (53 prospects for 48 picks), position by position.
+export const CLASS_SHAPE = Object.freeze([['QB', 8], ['RB', 10], ['WR', 16], ['TE', 8], ['OL', 14], ['DL', 14], ['LB', 10], ['CB', 12], ['S', 10], ['K', 4]]); // 106
 
 /** Build the class: ages 19-22, all first-year, a spread of quality with a few gems. Scouting reveals them. */
 export function generateDraftClass(rng, { year, uniqueName }) {

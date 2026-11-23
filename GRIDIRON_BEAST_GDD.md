@@ -321,6 +321,8 @@ Agreed with the owner after Prototype 1 sign-off and the monsters pass. Franchis
 
 ### 15.3 Gym clubs (fixed, same in every franchise)
 
+> **Superseded in part by §60 (the 32-club league, owner specification 2026-11-23).** There are now twelve Gym Leaders among 32 clubs, the four "unheld" legendaries have Gym Leaders, several clubs have new nicknames, and the schedule no longer guarantees Gym Leader games. The text below is kept as the history of the 16-club league.
+
 Eight of the sixteen clubs are **gym clubs**: a permanent home element, a named head coach with a personality and a scheme, and that element's legendary on the roster (the only copy in the league). The other eight clubs stay ordinary and are the ones a player may choose at creation, so every player meets the same eight gyms. Draft assignment (names are placeholders for the owner to approve on the review page):
 
 | Club | Element | Legendary | Coach (draft) | Scheme | Tier |
@@ -342,6 +344,8 @@ Fire (Pyroclast), Nature (Elderoot), Wind (Tempestra) and Psychic (Astralux) are
 * **No replays.** A loss stands, the season moves on, the standings matter. Nothing in the campaign offers a rematch outside the schedule and the bracket. (A gym club's badge is at stake in every one of those games: §15.4.)
 
 ### 15.4 Badges
+
+> **Superseded in part by §60 (the 32-club league, owner specification 2026-11-23).** There are twelve badges, badges belong to the coach and follow him to a new club, and a season is not guaranteed to offer any particular badge. Reclaimable badges are unchanged. The text below is kept as the history of the 16-club league.
 
 * **Reclaimable badges (owner clarification, Task 10, 2026-11-13; replaces "badges are permanent").** Every game against a gym club that counts (regular season or playoffs, played or forfeited) puts its badge at stake. A win earns the badge, or keeps it if held; a loss gives it back to the gym if held; a later win earns it again.
 * Badge progress (the HQ badge row, "badge n of 8", the Hall of Fame checklist) counts the badges **held now**; there is no second lifetime badge counter. The other campaign milestones (wins, titles, awards) stay cumulative. An achievement already awarded (first badge, four badges, all eight, Hall of Fame eligible) is never taken back.
@@ -1371,6 +1375,8 @@ Both values live in `FOOTBALL_TYPE_VALUES`.
 - Tools: `tools/type-balance.mjs` for balance, and `tools/type-ui-check.py` for the indicators, the panel and the chart at 390, 360 and 320 px in headless Chromium (emulated, not a real device).
 
 ## 33. Stadium environments (IMPLEMENTED 2026-10-22, owner brief; branch `stadiums-replays-legendary`)
+
+> **Superseded in part by §60 (the 32-club league, owner specification 2026-11-23).** The home club alone decides the field: a Gym Leader's field appears only at that Gym Leader's home games, every other club plays at home on grass, and there are twelve type fields (Sky for Wind and Oracle for Psychic are new). The text below is kept as the history of the 16-club league.
 
 **33.0 Audit.** Before this work the game had no stadium data: every field was the same grass. The football type system (§32) was already merged, so the field bonus is built into the same contest modifier rather than a second system. Of the eight gym clubs, four have an element the brief's environments cover (Ice, Electric, Earth, Metal), and each of those plays in its element's stadium. The other four (Water, Light, Dark, Dragon) keep classic grass, because the brief named no environment of their type. No club's name, colours, roster or schedule changed.
 
@@ -4644,3 +4650,129 @@ Branch `codex/coaching-gm-careers`, build `v43.17.0-coaching-gm-preview`. This i
 - The old delay-of-game yardage mutation is removed. The optional live play clock is advisory only. Other attribute/training/fatigue modifiers remain unchanged in meaning.
 
 Remaining release work: full policy-required suite on the final candidate, browser/phone walkthroughs, expanded multi-season job/firing/return checks and rotation/injury balance measurement. Do not mark this released or update the main link before that review.
+
+## 60. The 32-club league and the twelve Gym Leaders (owner specification 2026-11-23; branch `feature/league-32`; IMPLEMENTED, NOT MERGED)
+
+An expansion of the existing systems, not a rebuild: the football engine, abilities, Beast Clash, franchise management, AI, audio and
+the stadium presentation are unchanged. This section is the authority for the league's shape; where it disagrees with §8, §15.3,
+§15.4, §33, `docs/FRANCHISE_QOL_UPDATE.md` (the field generator) or `docs/PRELEAGUE_HISTORY.md`, this section wins and those
+passages are history.
+
+### 60.1 Structure
+
+| Conference | Division | Clubs (Gym Leader clubs in bold) |
+|---|---|---|
+| Veyra | Frostlands | **Frostpeak Howlers**, Glacier Guardians, Northstar Novas, **Ironpeak Colossi** |
+| Veyra | Redrock | Stormport Bolts, **Canyon Crushers**, Sundown Drakes, **Thunder Mesa Blitz** |
+| Veyra | Golden Valley (starter) | Goldhaven Royals, Riverbend Rapids, Pinecrest Wardens, Skyvale Cyclones |
+| Veyra | Suncoast | **Emberfall Infernos**, Coral Bay Tides, **Cliffhaven Chargers**, Palm Isle Mystics |
+| Koruun | Kingsport | Stonehaven Bastions, **Eastport Phantoms**, **Harbor Anchors**, Ashford Cinders |
+| Koruun | Everwild | Ember City Beasts, Bayou Stalkers, **Sunfire Solars**, **Palmetto Wyrms** |
+| Koruun | Greenheart (starter) | Thornwood Wildroots, Silvergrove Arcanists, Mossvale Quakes, Fernhaven Wisps |
+| Koruun | Azure Isles | **Aetheria Seers**, Deepwater Chompers, Mistport Veils, **Westhaven Pirates** |
+
+Renamed from the 16-club league: Northstar Wolves → Novas, Ironpeak Rams → Colossi, Stonehaven Titans → Bastions, Harbor Sentinels →
+Anchors, Ashford Hawks → Cinders, Sunfire Lions → Solars, Palmetto Vipers → Wyrms, Thunder Mesa → Thunder Mesa Blitz. The conferences
+Aurora and Titan and the divisions North, West, East and South are gone.
+
+**Provisional identities.** The repository held no colours, stadium names, managers or playing styles for the sixteen new clubs or
+the renamed ones. Those in the build are placeholders, flagged `provisional: true` in `src/data/league.js` and `src/data/stadiums.js`,
+until the owner's identity sheet arrives. The names the specification gives (Cliffside Arena, Skyvale Summit, Elderroot Stadium,
+Corsair Harbor Stadium, Rook Tanner) are used as given.
+
+### 60.2 Starting a franchise
+
+A new owner picks one of the eight clubs of Golden Valley and Greenheart. They are established clubs that are rebuilding (last
+season 3-11 to 5-9), not weakened ones: their level is set by the same rule as every other ordinary club. Neither division has a Gym
+Leader, so every badge is won outside the division.
+
+### 60.3 The twelve Gym Leaders
+
+One per monster type, two in each of the six competitive divisions, six in each conference.
+
+| Club | Gym Leader | Type | Badge | Legendary | Home field |
+|---|---|---|---|---|---|
+| Frostpeak Howlers | Sigrid Hale | Ice | Frost | Glacivern | Frozen Stadium |
+| Ironpeak Colossi | Brock Ferris | Metal | Forge | Aegistron | Metallic Dome |
+| Canyon Crushers | Dolores Crag | Earth | Quake | Titanolith | Desert Stadium |
+| Thunder Mesa Blitz | Lena Volkov | Electric | Storm | Voltarch | Storm Stadium |
+| Emberfall Infernos | Kael Ember | Fire | Blaze | Pyroclast | Volcanic Stadium |
+| Cliffhaven Chargers | Aria Gale | Wind | Gale | Tempestra | Sky Stadium (Cliffside Arena) |
+| Eastport Phantoms | Silas Mourne | Dark | Dusk | Nyxshade | Shadow Grounds |
+| Harbor Anchors | Nadia Reyes | Water | Tide | Tsunarok | Tidal Arena |
+| Sunfire Solars | Elias Dawn | Light | Dawn | Aurelion | Radiant Coliseum |
+| Palmetto Wyrms | Marcus Vane | Dragon | Wyrm | Aurodrax | Dragon's Den |
+| Aetheria Seers | Lyra Vesper | Psychic | Mind | Astralux | Oracle Stadium |
+| Westhaven Pirates | Rowan Thorne | Nature | Grove | Elderoot | Forest Stadium, coastal (Corsair Harbor Stadium) |
+
+* **Aria Gale** coached the Skyvale Cyclones and **Rowan Thorne** the Thornwood Wildroots. Both took their type, badge and legendary
+  with them. Skyvale keeps Skyvale Summit and Thornwood keeps Elderroot Stadium, now ordinary grass.
+* **Rook Tanner** remains Cliffhaven's general manager (`RIVAL_GMS`); Aria Gale is its head coach. A Gym Leader is always the club's
+  one head coach (`headCoachName`), and a general manager is a different person at every club.
+* The four new Gym Leaders' schemes, tiers and pregame lines are provisional.
+
+### 60.4 Fields
+
+The home club decides the field, in the regular season and the playoffs. A Gym Leader's field appears only when that club hosts;
+a visiting Gym Leader plays on the home club's field. Every club without a Gym Leader plays at home on grass (this includes Glacier,
+Stormport, Sundown, Ember City and Bayou, which had elemental stadiums). The 65% grass / 35% elemental draw is retired. Every home
+field, grass included, has the white paint, the barrier, the crowd, the side stands and the play reactions; only a Gym Leader's field
+has its markers, goal posts and kickoff reveal. The matching-type bonus is unchanged and helps both teams; Wind, Psychic and Dragon
+fields carry no bonus (to be reviewed). Rock, Bug, Specter, Clash and Corrupt remain as unused designs.
+
+### 60.5 Season and schedule
+
+Fourteen games in fifteen weeks (one league-wide bye in weeks 6 to 10), then the playoffs in weeks 16 to 18.
+
+* **6 division games:** each of the three rivals home and away.
+* **5 conference games** against clubs of the other three divisions, and **3 games against the other conference**; no club outside
+  the division is met twice. Every club has seven home games.
+* The schedule is drawn from the franchise's seed and redrawn every season (`leagueSeasonFixtures(season, seed)`); two franchises
+  have different schedules. **Nothing forces or guarantees a Gym Leader game**: a starter club can meet as few as none and as many
+  as eight in a season, and a missing badge may have to wait for a season in which that club is on the schedule (or for the
+  playoffs). This replaces the guarantee in §15.3 and §15.4.
+* The 6 / 5 / 3 split of the eight non-division games is this build's reading of "division, then conference, then the other
+  conference"; the specification left the numbers open (OPEN DECISION).
+* The trade deadline moved from week 7 to week 10, keeping its place about two thirds of the way through.
+
+### 60.6 Playoffs
+
+The bracket is unchanged: eight clubs, four per conference, three rounds, the better seed at home, the Beast Bowl between the
+conference champions. With four divisions in a conference its four places go to the **four division winners, seeded by record**;
+there are no wild cards. (The old rule, two division winners and two wild cards, cannot be applied to four divisions.) OPEN
+DECISION: the owner may prefer another way to fill four places, for example the four best records. One consequence to weigh: a
+starter division's winner always qualifies.
+
+### 60.7 Badges
+
+Twelve badges. They are reclaimable exactly as before (§15.4). They now belong to the coach: on a job change the badges held and the
+count of wins over each Gym Leader go to the new club, can be lost there, and the Hall of Fame counts the badges held now. A coach who
+takes over a Gym Leader's club does not hold that club's own badge. The HQ badge row, "badge n of 12", the legacy screen and the
+achievements (six and twelve badges) follow. The Hall of Fame still asks for 8 badges on every difficulty (OPEN DECISION: the owner
+mentioned 8 for normal and 12 for hard).
+
+### 60.8 Legendaries and Legend Tracks
+
+Each Gym Leader's club holds its type's legendary. Pyroclast, Elderoot, Tempestra and Astralux were the four nobody held and were
+free to hunt through Legend Tracks; they now have Gym Leaders. The Legend Tracks rule is **unchanged pending the owner's decision**:
+those four can still be tracked without a badge, the other eight need their badge (OPEN DECISION).
+
+### 60.9 League history
+
+The eight seasons before the owner arrives are canon: the tables, brackets, champions and retired legends are the same in every
+franchise (`CANON` in `src/franchise/preleague-history.js`) and are not re-rolled with a new save. Skyvale won the Beast Bowl twice
+and Thornwood once under their former Gym Leaders, and both have declined since. The careers of a save's own veterans, and so the
+award winners among them, still belong to that save, because rosters are generated per save.
+
+### 60.10 Saves
+
+A franchise saved in the 16-club league is not migrated (owner: test saves may be reset). It is refused on load with its own message
+and left on the device unchanged; settings, achievements and other data are untouched. New franchises carry `leagueFormat: 32`.
+
+### 60.11 Other changes that follow from 32 clubs
+
+* The draft class is 106 prospects (twice 53) for 96 picks.
+* `REG_GAMES`, `REG_WEEKS`, `LAST_WEEK` and `CONFERENCE_NAMES` in `src/data/league.js` replace the numbers 9, 10 and 13 and the
+  conference names that were written into the franchise, news, career and HQ code.
+* A season of 32 clubs is about three times the simulation of a 16-club season; tests that play whole seasons take correspondingly longer.
+

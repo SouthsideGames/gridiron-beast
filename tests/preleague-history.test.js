@@ -4,26 +4,50 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
+import { CANON, FALLEN_POWERS } from '../src/franchise/preleague-history.js';
 import { generateLeagueArchive, validateLeagueArchive, lineProblems, leagueArchive, archiveCareer, careerTotals, archiveLegends, archiveAwardsFor, archiveRecords, isArchiveLegendId, ARCHIVE_VERSION, ARCHIVE_SEASONS, ARCHIVE_LEGENDS, ARCHIVE_AWARDS, REGULAR_GAMES, LEGEND_PREFIX } from '../src/franchise/preleague-history.js';
+import { CONFERENCE_NAMES, STARTER_DIVISIONS } from '../src/data/league.js';
 import { ALL_TEAMS, DIVISIONS, STARTER_CLUBS, conferenceFor, divisionOf, leagueSeasonFixtures, playoffRound } from '../src/data/league.js';
 import { STAT_LABEL, MAX_KEYS, RECORD_CATEGORIES, POSITION_COLUMNS, OFFENSE_POSITIONS, DEFENSE_POSITIONS, withDerived, addInto } from '../src/franchise/stats.js';
 import { computeAwards } from '../src/franchise/awards.js';
 import { pack, unpack } from '../src/franchise/pack.js';
 
-const SEEDS = [[312, 'Ember City Beasts'], [7, 'Stonehaven Bastions'], [99, 'Glacier Guardians'], [1234, 'Stormport Bolts'], [2026, 'Ember City Beasts']];
+const SEEDS = [[312, 'Goldhaven Royals'], [7, 'Skyvale Cyclones'], [99, 'Thornwood Wildroots'], [1234, 'Mossvale Quakes'], [2026, 'Goldhaven Royals']];
 const cache = new Map();
-const franchise = (seed = 312, club = 'Ember City Beasts') => { const k = `${seed}|${club}`; if (!cache.has(k)) cache.set(k, F.createFranchise({ owner: { first: 'Test', last: 'GM', background: 'player' }, club, seed })); return cache.get(k); };
+const franchise = (seed = 312, club = 'Goldhaven Royals') => { const k = `${seed}|${club}`; if (!cache.has(k)) cache.set(k, F.createFranchise({ owner: { first: 'Test', last: 'GM', background: 'player' }, club, seed })); return cache.get(k); };
 const liveOf = (f) => [...f.roster, ...Object.values(f.league.monsters)];
 const POSITIONS = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'CB', 'S', 'K'];
 
-test('deterministic: the same franchise gives the same archive, another seed another one, and generating reads the franchise without changing it', () => {
+test('deterministic: the same franchise gives the same archive, and generating reads the franchise without changing it', () => {
   const f = franchise(); const before = JSON.stringify(f);
   const again = generateLeagueArchive(f, { quality: (name) => F.clubQuality(f, name, 1) });
   assert.equal(JSON.stringify(f), before, 'generating changed the franchise (state, generator or names)');
   assert.deepEqual(again, f.preLeagueHistory, 'a second generation differs from the one made at creation');
-  const twin = F.createFranchise({ owner: { first: 'Test', last: 'GM', background: 'player' }, club: 'Ember City Beasts', seed: 312 });
+  const twin = F.createFranchise({ owner: { first: 'Test', last: 'GM', background: 'player' }, club: 'Goldhaven Royals', seed: 312 });
   assert.deepEqual(twin.preLeagueHistory, f.preLeagueHistory, 'two creations with one seed differ');
-  assert.notDeepEqual(franchise(7, 'Stonehaven Bastions').preLeagueHistory.seasons.map((s) => s.champion + s.standings[0].w), f.preLeagueHistory.seasons.map((s) => s.champion + s.standings[0].w), 'another seed gave the same history');
+});
+
+// Owner specification, 2026-11-23: the league's history is canon. It is not re-rolled with each franchise.
+const canonOf = (f) => JSON.stringify(f.preLeagueHistory.seasons.map((s) => [s.year, s.champion, s.runnerUp, s.standings, s.divisions, s.seeds, s.playoffs]));
+test('league history is canon: every franchise, whatever its seed, club or difficulty, has the same seasons, brackets, champions and legends', () => {
+  const first = franchise(); const canon = canonOf(first); const legends = (f) => f.preLeagueHistory.legends.map((id) => { const c = f.preLeagueHistory.careers[id]; return [id, c.species, c.position, c.club, c.debut, c.retiredYear, c.seasons]; });
+  for (const [seed, club] of SEEDS.slice(1)) { const f = franchise(seed, club); assert.equal(canonOf(f), canon, `seed ${seed} at ${club} has another past`); assert.deepEqual(legends(f), legends(first), `seed ${seed}: the retired legends differ`); }
+  assert.notDeepEqual(Object.keys(franchise(7, 'Skyvale Cyclones').preLeagueHistory.careers).filter((id) => !isArchiveLegendId(id)).sort(), Object.keys(first.preLeagueHistory.careers).filter((id) => !isArchiveLegendId(id)).sort(), 'the careers of a save\'s own monsters still belong to that save');
+  assert.equal(typeof CANON, 'string'); assert.notDeepEqual(generateLeagueArchive(first, { canon: 'another-key' }).seasons.map((s) => s.champion), first.preLeagueHistory.seasons.map((s) => s.champion), 'the canon key is what fixes the past');
+});
+
+test('the two fallen powers: Skyvale and Thornwood won titles under the Gym Leaders who left them, and are at the bottom when the owner arrives', () => {
+  const a = franchise().preLeagueHistory; const rec = (year, club) => a.seasons.find((s) => s.year === year).standings.find((r) => r.club === club);
+  assert.deepEqual(Object.keys(FALLEN_POWERS), ['Skyvale Cyclones', 'Thornwood Wildroots']);
+  assert.equal(FALLEN_POWERS['Skyvale Cyclones'].coach, 'Aria Gale'); assert.equal(FALLEN_POWERS['Skyvale Cyclones'].now, 'Cliffhaven Chargers'); assert.equal(FALLEN_POWERS['Thornwood Wildroots'].coach, 'Rowan Thorne'); assert.equal(FALLEN_POWERS['Thornwood Wildroots'].now, 'Westhaven Pirates');
+  for (const [club, arc] of Object.entries(FALLEN_POWERS)) {
+    const titles = a.seasons.filter((s) => s.champion === club); assert.ok(titles.length >= 1, `${club} won the Beast Bowl`); assert.ok(titles.every((s) => s.year <= arc.left), `${club}'s titles came under ${arc.coach}`);
+    const early = a.seasons.filter((s) => s.year <= arc.left - 1).map((s) => rec(s.year, club)); assert.ok(early.every((r) => r.w > r.l), `${club} had winning seasons under ${arc.coach}`);
+    assert.ok(a.seasons.filter((s) => s.year <= arc.left - 1).filter((s) => Object.values(s.seeds).flat().includes(club)).length >= 3, `${club} was a regular in the playoffs`);
+    const last = rec(0, club); assert.ok(last.w < last.l, `${club} is a losing club now`); assert.ok(!Object.values(a.seasons.at(-1).seeds).flat().includes(club));
+    assert.ok(STARTER_DIVISIONS.includes(divisionOf(club)), `${club} is a starter club`);
+  }
+  assert.deepEqual(a.seasons.filter((s) => s.champion === 'Skyvale Cyclones').map((s) => s.year), [-7, -5]); assert.deepEqual(a.seasons.filter((s) => s.champion === 'Thornwood Wildroots').map((s) => s.year), [-6], 'the club picker tells the owner this');
 });
 
 test('several seeds and every starter club: each archive is sound against its own league', () => {
@@ -36,25 +60,25 @@ test('several seeds and every starter club: each archive is sound against its ow
   }
 });
 
-test('seasons follow the league\'s real format: nine games on the real fixtures, the real seeding and the real bracket', () => {
+test('seasons follow the league\'s real format: fourteen games on real fixtures, the real seeding and the real bracket', () => {
   const real = leagueSeasonFixtures(1); const gamesPerClub = real.flatMap((w) => w.games).filter((g) => g.home === ALL_TEAMS[0] || g.away === ALL_TEAMS[0]).length;
-  assert.equal(gamesPerClub, REGULAR_GAMES, 'the league no longer plays nine games: the archive must follow');
+  assert.equal(gamesPerClub, REGULAR_GAMES, 'the archive must play as many games as the league does'); assert.equal(REGULAR_GAMES, 14);
   for (const [seed, club] of SEEDS.slice(0, 3)) for (const s of franchise(seed, club).preLeagueHistory.seasons) {
-    assert.equal(s.standings.length, 16); assert.deepEqual(s.standings.map((r) => r.club).sort(), [...ALL_TEAMS].sort());
+    assert.equal(s.standings.length, 32); assert.deepEqual(s.standings.map((r) => r.club).sort(), [...ALL_TEAMS].sort());
     for (const r of s.standings) { assert.equal(r.w + r.l, REGULAR_GAMES, `${r.club} ${s.year}`); assert.ok(Number.isInteger(r.pf) && Number.isInteger(r.pa) && r.pf >= 0 && r.pa >= 0); }
-    assert.equal(s.standings.reduce((n, r) => n + r.w, 0), 72, 'a 16-club, nine-game season has 72 games'); assert.equal(s.standings.reduce((n, r) => n + r.l, 0), 72);
+    assert.equal(s.standings.reduce((n, r) => n + r.w, 0), 224, 'a 32-club, 14-game season has 224 games'); assert.equal(s.standings.reduce((n, r) => n + r.l, 0), 224);
     assert.equal(s.standings.reduce((n, r) => n + r.pf, 0), s.standings.reduce((n, r) => n + r.pa, 0), 'every point scored was conceded');
     assert.ok(s.standings.every((r, i) => !i || r.w <= s.standings[i - 1].w), 'the table is ordered by record');
     assert.deepEqual(Object.keys(s.divisions).sort(), Object.keys(DIVISIONS).sort());
-    for (const conf of ['Aurora', 'Titan']) {
+    for (const conf of CONFERENCE_NAMES) {
       const seeds = s.seeds[conf]; assert.equal(seeds.length, 4);
       assert.ok(seeds.every((c) => conferenceFor(divisionOf(c)) === conf));
       const divs = Object.keys(DIVISIONS).filter((d) => conferenceFor(d) === conf);
-      assert.deepEqual(seeds.slice(0, 2).slice().sort(), divs.map((d) => s.divisions[d][0]).sort(), 'the top two seeds are the division champions');
+      assert.equal(divs.length, 4); assert.deepEqual(seeds.slice().sort(), divs.map((d) => s.divisions[d][0]).sort(), 'the four seeds are the four division champions: there are no wild cards');
     }
     assert.equal(s.playoffs.length, 7, 'four semifinals, two conference finals, the Beast Bowl');
     assert.deepEqual(s.playoffs.filter((g) => g.round === 1).map((g) => [g.home, g.away, g.tag]), playoffRound(1, [], s.seeds).map((g) => [g.home, g.away, g.tag]), 'semifinals are 1 v 4 and 2 v 3 in each conference');
-    assert.deepEqual(s.playoffs.filter((g) => g.round === 2).map((g) => g.tag), ['Aurora Championship', 'Titan Championship']);
+    assert.deepEqual(s.playoffs.filter((g) => g.round === 2).map((g) => g.tag), ['Veyra Championship', 'Koruun Championship']);
     const fin = s.playoffs[6]; assert.equal(fin.tag, 'Beast Bowl'); assert.equal(fin.winner, s.champion); assert.equal(fin.winner === fin.home ? fin.away : fin.home, s.runnerUp);
     assert.notEqual(conferenceFor(divisionOf(fin.home)), conferenceFor(divisionOf(fin.away)), 'the Beast Bowl is between the conference champions');
     for (const g of s.playoffs) { assert.notEqual(g.homeScore, g.awayScore); assert.equal(g.winner, g.homeScore > g.awayScore ? g.home : g.away); }
@@ -63,7 +87,7 @@ test('seasons follow the league\'s real format: nine games on the real fixtures,
 
 test('last season\'s records are the ones the club picker shows, whichever club the owner took', () => {
   const shown = Object.fromEntries(STARTER_CLUBS.map((c) => [c.name, c.record]));
-  for (const c of STARTER_CLUBS) { const [w, l] = c.record.split('-').map(Number); assert.equal(w + l, REGULAR_GAMES, `${c.name}: the picker shows ${c.record}, which is not a nine-game record`); }
+  for (const c of STARTER_CLUBS) { const [w, l] = c.record.split('-').map(Number); assert.equal(w + l, REGULAR_GAMES, `${c.name}: the picker shows ${c.record}, which is not a 14-game record`); }
   for (const [seed, club] of SEEDS) {
     const last = franchise(seed, club).preLeagueHistory.seasons.at(-1); assert.equal(last.year, 0);
     for (const [name, record] of Object.entries(shown)) { const r = last.standings.find((x) => x.club === name); assert.equal(`${r.w}-${r.l}`, record, `seed ${seed}: ${name}`); }
@@ -157,7 +181,7 @@ test('award winners: one MVP, OPOY and DPOY a season, chosen by the game\'s own 
         const w = s.awards.league[kind]; const c = a.careers[w.id]; const book = c.seasons.find((b) => b.year === s.year);
         assert.equal(w.id, races[kind][0].id, `${s.year} ${kind}: not the winner the game's rules name`);
         assert.deepEqual([w.name, w.position, w.species, w.team], [c.name, c.position, c.species, book.team]);
-        assert.ok(book.reg.games >= 6, 'a winner played most of the season'); assert.equal(typeof w.why, 'string'); assert.match(w.record, /^\d-\d$/);
+        assert.ok(book.reg.games >= 6, 'a winner played most of the season'); assert.equal(typeof w.why, 'string'); assert.match(w.record, /^\d+-\d+$/);
         const rec = s.standings.find((r) => r.club === w.team); assert.equal(w.record, `${rec.w}-${rec.l}`);
       }
       assert.ok(OFFENSE_POSITIONS.has(s.awards.league.opoy.position)); assert.ok(DEFENSE_POSITIONS.has(s.awards.league.dpoy.position));
@@ -215,7 +239,7 @@ test('the validator catches a damaged archive', () => {
   { const a = fresh(); a.seasons[0].standings[0].w++; has(a, 'Invalid season length'); has(a, 'Unbalanced standings'); }
   { const a = fresh(); a.seasons[3].standings[0].pf += 7; has(a, 'Unbalanced points'); }
   { const a = fresh(); a.seasons[0].playoffs[6].winner = a.seasons[0].runnerUp; has(a, 'Playoff winner mismatch'); }
-  { const a = fresh(); const s = a.seasons[2]; [s.seeds.Aurora[0], s.seeds.Aurora[3]] = [s.seeds.Aurora[3], s.seeds.Aurora[0]]; has(a, 'Semifinal pairings'); }
+  { const a = fresh(); const s = a.seasons[2]; [s.seeds.Veyra[0], s.seeds.Veyra[3]] = [s.seeds.Veyra[3], s.seeds.Veyra[0]]; has(a, 'Semifinal pairings'); }
   { const a = fresh(); a.seasons[1].champion = 'Nobody'; has(a, 'Champion absent'); }
   { const a = fresh(); a.seasons.pop(); has(a, 'Invalid season chronology'); }
   { const a = fresh(); const c = Object.values(a.careers).find((x) => x.position === 'QB' && x.seasons.length > 2); c.seasons[1].reg.comp = c.seasons[1].reg.att + 1; has(a, 'comp'); }
@@ -226,7 +250,7 @@ test('the validator catches a damaged archive', () => {
   { const a = fresh(); delete a.seasons[5].awards.league.mvp; has(a, 'Missing mvp'); }
   { const a = fresh(); a.legends.pop(); has(a, 'Wrong number of retired legends'); }
   { const a = fresh(); const c = Object.values(a.careers).find((x) => x.position === 'LB'); c.seasons[0].reg.tacklesTotal = 5; has(a, 'derived or unknown key'); }
-  assert.deepEqual(validateLeagueArchive({ version: 1, seasons: [], careers: {} }), ['Not a version-2 archive']);
+  assert.deepEqual(validateLeagueArchive({ version: 1, seasons: [], careers: {} }), ['Not a version-3 archive']);
   { const f = franchise(); const live = liveOf(f).map((m) => ({ ...m })); const rookie = live.find((m) => !m.yearsPro); const a = fresh(); a.careers[rookie.id] = { ...Object.values(a.careers)[0], id: rookie.id }; assert.ok(validateLeagueArchive(a, { live }).some((e) => e.includes('Rookie with a fabricated career'))); }
 });
 
@@ -236,5 +260,6 @@ test('the archive is plain JSON: it survives a save round trip and the storage p
   assert.ok(!/null/.test(JSON.stringify(Object.values(a.careers).map((c) => c.seasons))), 'a season line holds a null');
   assert.equal(JSON.stringify(unpack(pack(f)).preLeagueHistory), text, 'the packed save loses or reorders the archive');
   assert.deepEqual(validateLeagueArchive(JSON.parse(text), { live: liveOf(f) }), []);
-  assert.ok(text.length < 700_000, `the archive is ${Math.round(text.length / 1024)} KB of plain data`);
+  // 32 clubs hold twice the veterans of 16, so the archive is about twice the 16-club one (which was held under 700 KB).
+  assert.ok(text.length < 1_400_000, `the archive is ${Math.round(text.length / 1024)} KB of plain data`);
 });

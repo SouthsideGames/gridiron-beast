@@ -8,12 +8,12 @@ const make = (seed = 82) => ({ class: generateDraftClass(createRng(seed), { year
 test('full-class consensus ranks are unique and position rank counts every member of the group', () => {
   for (const seed of [1, 23, 82]) {
     const d = make(seed), before = JSON.stringify(d);
-    assert.equal(d.class.length, 53);
-    assert.deepEqual(d.class.map(m => draftProspectRankings(d, m).overall), Array.from({length:53}, (_, i) => i + 1));
+    assert.equal(d.class.length, 106); // twice the 16-club class: 96 picks in three rounds of 32
+    assert.deepEqual(d.class.map(m => draftProspectRankings(d, m).overall), Array.from({length:106}, (_, i) => i + 1));
     for (const position of new Set(d.class.map(m => m.position))) {
       const group = d.class.filter(m => m.position === position);
       group.forEach((m, i) => assert.deepEqual(draftProspectRankings(d, m), {
-        overall: m.boardRank, total: 53, positionRank: i + 1, positionTotal: group.length, position
+        overall: m.boardRank, total: 106, positionRank: i + 1, positionTotal: group.length, position
       }));
     }
     assert.equal(JSON.stringify(d), before, 'display must not mutate class or consume RNG');

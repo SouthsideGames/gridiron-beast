@@ -26,11 +26,16 @@ import * as FR from '../src/core/fraction.js';
 import { newFranchise } from '../tools/franchise-soak.mjs';
 
 // The approved tables (AI_IDENTITIES.md §3 strategy column read as schemes; §4 exactly).
-const ORDINARY = { 'Ember City Beasts': ['pass', 'pressure'], 'Stonehaven Bastions': ['run', 'coverage'], 'Glacier Guardians': ['balanced', 'coverage'], 'Stormport Bolts': ['pass', 'man'], 'Northstar Novas': ['run', 'pressure'], 'Sundown Drakes': ['pass', 'coverage'], 'Ashford Cinders': ['balanced', 'man'], 'Bayou Stalkers': ['run', 'man'] };
-const GYM_SCHEMES = { 'Harbor Anchors': [null, 'coverage'], 'Sunfire Solars': ['pass', null], 'Thunder Mesa Blitz': ['pass', 'pressure'], 'Canyon Crushers': ['run', 'pressure'], 'Eastport Phantoms': [null, 'man'], 'Frostpeak Howlers': [null, 'coverage'], 'Ironpeak Colossi': ['run', 'pressure'], 'Palmetto Wyrms': ['pass', 'man'] };
+const ORDINARY = { 'Ember City Beasts': ['pass', 'pressure'], 'Stonehaven Bastions': ['run', 'coverage'], 'Glacier Guardians': ['balanced', 'coverage'], 'Stormport Bolts': ['pass', 'man'], 'Northstar Novas': ['run', 'pressure'], 'Sundown Drakes': ['pass', 'coverage'], 'Ashford Cinders': ['balanced', 'man'], 'Bayou Stalkers': ['run', 'man'],
+  // the twelve ordinary clubs new with the 32-club league (provisional until the owner's identity sheet): the same eight combinations, spread evenly
+  'Goldhaven Royals': ['balanced', 'coverage'], 'Riverbend Rapids': ['pass', 'man'], 'Pinecrest Wardens': ['run', 'coverage'], 'Skyvale Cyclones': ['pass', 'coverage'], 'Coral Bay Tides': ['balanced', 'man'], 'Palm Isle Mystics': ['run', 'man'],
+  'Thornwood Wildroots': ['run', 'pressure'], 'Silvergrove Arcanists': ['pass', 'pressure'], 'Mossvale Quakes': ['run', 'coverage'], 'Fernhaven Wisps': ['pass', 'man'], 'Deepwater Chompers': ['run', 'pressure'], 'Mistport Veils': ['balanced', 'coverage'] };
+const GYM_SCHEMES = { 'Harbor Anchors': [null, 'coverage'], 'Sunfire Solars': ['pass', null], 'Thunder Mesa Blitz': ['pass', 'pressure'], 'Canyon Crushers': ['run', 'pressure'], 'Eastport Phantoms': [null, 'man'], 'Frostpeak Howlers': [null, 'coverage'], 'Ironpeak Colossi': ['run', 'pressure'], 'Palmetto Wyrms': ['pass', 'man'],
+  'Emberfall Infernos': ['pass', 'pressure'], 'Westhaven Pirates': ['run', 'coverage'], 'Cliffhaven Chargers': ['pass', 'coverage'], 'Aetheria Seers': ['balanced', 'man'] }; // the four Gym Leaders added with the 32-club league
 
 test('the identity table: every club, the ordinary table exactly, the gyms\' strategies; derived from the name, no state', () => {
   assert.deepEqual(Object.keys(IDENTITIES).sort(), [...ALL_TEAMS].sort());
+  assert.equal(Object.keys(ORDINARY).length, 20); assert.equal(GYMS.length, 12); assert.deepEqual([...Object.keys(ORDINARY), ...Object.keys(GYM_SCHEMES)].sort(), [...ALL_TEAMS].sort(), 'every one of the 32 clubs is in one table');
   for (const [club, [o, d]] of Object.entries(ORDINARY)) { const id = identityFor(club); assert.equal(id.offense, o, club); assert.equal(id.defense, d, club); assert.equal(id.gym, false); }
   for (const g of GYMS) {
     const id = identityFor(g.club); const [o, d] = GYM_SCHEMES[g.club]; assert.equal(id.gym, true);

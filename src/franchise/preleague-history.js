@@ -242,6 +242,9 @@ export function generateLeagueArchive(f, { seasons = ARCHIVE_SEASONS, quality = 
   // Gym Leader clubs are the league's establishment and the eight starter clubs are at the bottom when the owner arrives; the
   // rest drift as the years go back (a dynasty fades, a doormat was not always one). The two fallen powers follow their own arc.
   const C = makeDraws(canon);
+  // `quality` is still asked once for every club, and its answers ignored: asking is what settles each AI club's lineup (and so its
+  // monsters' ratings) at creation, as it always has, so an archive generated later from the same franchise is the same archive.
+  if (quality) for (const t of ALL_TEAMS) quality(t);
   const starters = new Set(STARTER_CLUBS.map((c) => c.name));
   const strengthOf = {}; let walk = Object.fromEntries(ALL_TEAMS.map((t) => [t, C.n(`q|${t}`) * 0.8 + (isGymClub(t) ? 0.55 : 0) - (starters.has(t) ? 1.1 : 0)]));
   for (let year = 0; year >= firstYear; year--) {
