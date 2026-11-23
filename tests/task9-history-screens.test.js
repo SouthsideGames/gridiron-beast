@@ -16,15 +16,15 @@ const render = (name, f, params = {}) => screens.get(name).render({ f, params })
 function franchise(years = 35) {
   const f = { club: 'Ember City Beasts', owner: { first: 'Ada', last: 'Stone', hometown: '' }, badges: { challenger: 1, vanguard: 0, sovereign: 0 }, settings: {},
     history: [], season: { year: years + 1, finished: false }, league: { legends: {} },
-    records: { game: { passYds: { value: 406, id: 'p2', name: 'Pyronix', position: 'QB', species: 'firestorm', type: 'Fire', team: 'Ashford Hawks', opp: 'Stormport Bolts', year: 2, week: 3, playoff: false, prev: { value: 381, name: 'Lumen', team: 'Sunfire Lions', year: 1, id: 'p1' } } },
+    records: { game: { passYds: { value: 406, id: 'p2', name: 'Pyronix', position: 'QB', species: 'firestorm', type: 'Fire', team: 'Ashford Cinders', opp: 'Stormport Bolts', year: 2, week: 3, playoff: false, prev: { value: 381, name: 'Lumen', team: 'Sunfire Solars', year: 1, id: 'p1' } } },
       season: { rushYds: { value: 1900, id: 'retired-4', name: 'Veteran 4', position: 'RB', species: 'duskrunner', type: 'Dark', team: 'Ember City Beasts', year: 3, prev: null } },
-      team: { points: { value: 55, team: 'Ember City Beasts', opp: 'Ashford Hawks', year: 2, week: 10, playoff: true, score: '55-21', prev: { value: 42, name: null, team: 'Ashford Hawks', year: 2 } } } },
+      team: { points: { value: 55, team: 'Ember City Beasts', opp: 'Ashford Cinders', year: 2, week: 10, playoff: true, score: '55-21', prev: { value: 42, name: null, team: 'Ashford Cinders', year: 2 } } } },
     monsterHallOfFame: { v: 1, candidates: [], elections: [] } };
   for (let year = 1; year <= years; year++) {
     const mine = year % 5 === 0;
     f.history.push({ year, club: f.club, tier: 'challenger', record: { w: mine ? 9 : 6, l: mine ? 0 : 3, t: 0 }, place: mine ? 1 : 7, champion: mine ? f.club : 'Bayou Stalkers', playoffs: year % 2 === 0,
       awards: { mvp: { id: `club-${year}`, name: `Club Star ${year}` }, league: {
-        mvp: { id: year % 3 ? 'star-a' : `star-${year}`, name: year % 3 ? 'Aurelion' : `Star ${year}`, species: 'aurelion', position: 'WR', team: year % 4 ? 'Sunfire Lions' : f.club, why: 'Elite impact' },
+        mvp: { id: year % 3 ? 'star-a' : `star-${year}`, name: year % 3 ? 'Aurelion' : `Star ${year}`, species: 'aurelion', position: 'WR', team: year % 4 ? 'Sunfire Solars' : f.club, why: 'Elite impact' },
         coy: { team: 'Frostpeak Howlers', coach: 'Sigrid Hale', name: 'Sigrid Hale', record: '8-1' } } } });
     const id = `retired-${year}`; const great = year % 4 === 0;
     f.league.legends[id] = { id, name: `Veteran ${year}`, species: 'duskrunner', stage: 0, position: 'RB', lastClub: f.club, left: year };
@@ -75,7 +75,7 @@ test('Award History: by season and by award, real winners only, Coach of the Yea
   assert.match(byAward, /Aurelion<\/button> ×8/, 'the most frequent winner, counted from the record');
   const coy = render('awardhistory', f, { mode: 'award', kind: 'coy' });
   assert.equal(links(coy).length, 0, 'a coach has no monster profile'); assert.match(coy, /Sigrid Hale/);
-  const live = render('awardhistory', { ...f, season: { year: 13, finished: false, awardsFinal: { year: 13, winners: { mvp: { id: 'now', name: 'Current Star', team: 'Sunfire Lions' } } } } });
+  const live = render('awardhistory', { ...f, season: { year: 13, finished: false, awardsFinal: { year: 13, winners: { mvp: { id: 'now', name: 'Current Star', team: 'Sunfire Solars' } } } } });
   assert.match(live, /Current Star/);
   assert.match(render('awardhistory', { ...f, history: [] }), /hh-empty/);
 });
@@ -87,7 +87,7 @@ test('Records: holders link to profiles, a previous holder shows only when the b
   assert.equal((game.match(/hh-prev/g) || []).length, 1, 'one record has a previous holder');
   assert.match(game, /1 of 12 records set/);
   const season = render('records', f, { tab: 'season' }); assert.match(season, /data-career="retired-4"/); assert.equal(season.includes('hh-prev'), false, 'no previous holder was kept');
-  const team = render('records', f, { tab: 'team' }); clean(team, 'records team'); assert.match(team, /55-21/); assert.match(team, /hh-prev[^]*?42[^]*?Ashford Hawks/); assert.equal(links(team).length, 0, 'a team record has no monster');
+  const team = render('records', f, { tab: 'team' }); clean(team, 'records team'); assert.match(team, /55-21/); assert.match(team, /hh-prev[^]*?42[^]*?Ashford Cinders/); assert.equal(links(team).length, 0, 'a team record has no monster');
   assert.match(team, /item static hh-record mine/, 'the club’s own record is marked');
   const before = JSON.stringify(f); render('records', f); render('records', f, { tab: 'career' }); assert.equal(JSON.stringify(f), before, 'the screen writes nothing');
   const bare = { ...f }; delete bare.records; clean(render('records', bare), 'no record book'); assert.equal('records' in bare, false, 'a missing record book is not created by looking at it');

@@ -8,6 +8,7 @@
 // a detail whose record is gone says so, and an event with nothing behind it is not a link. Reading a profile never writes
 // the monster or the franchise.
 
+import { REG_WEEKS, LAST_WEEK } from '../data/league.js';
 import { careerTimeline, careerEvents, fullRecord } from './career.js';
 import { withDerived, addInto, RECORD_CATEGORIES, statLine, seasonGames } from './stats.js';
 import { findInLeague } from './league-registry.js';
@@ -132,11 +133,11 @@ export const TIER_LABEL = Object.freeze({ hof: $t('franchise.hall_of_famer'), dy
 export function gameRecord(f, m, year, week, club = null) {
   // His own line: the current season's log, or (from v39.1) the archived season's packed games.
   const log = (seasonGames(m, year) || []).find((g) => g.week === week && (!club || !g.team || g.team === club));
-  if (log) return { source: log.archived ? 'archive' : 'log', year, week, opp: log.opp, home: log.home, playoff: !!log.playoff || week > 10, won: log.won, score: log.score, line: log.line || {}, club: log.team || club };
+  if (log) return { source: log.archived ? 'archive' : 'log', year, week, opp: log.opp, home: log.home, playoff: !!log.playoff || week > REG_WEEKS, won: log.won, score: log.score, line: log.line || {}, club: log.team || club };
   const fromSchedule = (sched, c) => { const g = (sched || []).find((x) => x.week === week && x.result); return g ? { source: 'schedule', year, week, opp: g.opponent, home: g.home, playoff: false, won: g.result.won, score: `${g.result.playerScore}-${g.result.oppScore}`, club: c } : null; };
   if (year === f.season?.year && (!club || club === f.club)) { const r = fromSchedule(f.season.schedule, f.club); if (r) return r; }
   const h = (f.history || []).find((x) => x.year === year && (!club || x.club === club));
-  if (h) { const r = fromSchedule(h.schedule, h.club); if (r) return r; if (week === 13 && h.championship?.final) { const fin = h.championship.final; return { source: 'championship', year, week, opp: fin.opponent, home: fin.home === h.club, playoff: true, won: true, score: `${fin.us}-${fin.them}`, club: h.club }; } }
+  if (h) { const r = fromSchedule(h.schedule, h.club); if (r) return r; if (week === LAST_WEEK && h.championship?.final) { const fin = h.championship.final; return { source: 'championship', year, week, opp: fin.opponent, home: fin.home === h.club, playoff: true, won: true, score: `${fin.us}-${fin.them}`, club: h.club }; } }
   return null;
 }
 const GAME_EVENTS = new Set(['debut', 'first', 'star', 'rival', 'bowl', 'playoff', 'milestone']);
@@ -343,7 +344,7 @@ export function eventDetail(f, m, ref) {
     case 'season': {
       const b = book(ref.year); if (!b) return null; const games = seasonGames(m, ref.year);
       return { kind: 'season', year: ref.year, club: b.team || ref.club, reg: { games: b.reg?.games || 0, text: statLine(b.reg || {}) }, post: (b.post?.games || 0) > 0 ? { games: b.post.games, text: statLine(b.post) } : null,
-        games: games ? games.map((g) => ({ week: g.week, opp: g.opp, home: g.home, won: g.won, score: g.score, playoff: !!g.playoff || g.week > 10, text: statLine(g.line || {}) })) : null, missing: games ? null : $t('franchise.game_by_game_lines_are_kept') };
+        games: games ? games.map((g) => ({ week: g.week, opp: g.opp, home: g.home, won: g.won, score: g.score, playoff: !!g.playoff || g.week > REG_WEEKS, text: statLine(g.line || {}) })) : null, missing: games ? null : $t('franchise.game_by_game_lines_are_kept') };
     }
     case 'hof': return { kind: 'hof', year: ref.year, club: ref.club, owner: ref.owner };
     default: return null;

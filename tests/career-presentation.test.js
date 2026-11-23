@@ -52,14 +52,14 @@ test('summary: rookies, older saves with seasons before the record, and several 
   const vet = mon({ id: 'v1', yearsPro: 6, stats: { v: 2, career: { reg: { games: 9, rush: 100, rushYds: 500 } }, season: { year: 3, reg: {}, post: {} }, seasons: [book(2, 'Ember City Beasts', { games: 9, rush: 100, rushYds: 500 })], log: [] }, position: 'RB' });
   const v = P.fullProfile(fr({ roster: [vet] }), vet, 'roster');
   assert.equal(v.complete, false); assert.match(v.notes[0], /count the 1 season on record/);
-  const moved = mon({ id: 'mv', history: [{ club: 'Thunder Mesa', from: 1, to: 2, reason: 'released' }, { club: 'Ember City Beasts', from: 2, to: 3, reason: 'walked' }] });
+  const moved = mon({ id: 'mv', history: [{ club: 'Thunder Mesa Blitz', from: 1, to: 2, reason: 'released' }, { club: 'Ember City Beasts', from: 2, to: 3, reason: 'walked' }] });
   const pm = P.fullProfile(fr({ pool: { Lava: [moved] } }), moved, 'pool');
-  assert.deepEqual(pm.clubs.map((c) => c.club), ['Thunder Mesa', 'Ember City Beasts']); assert.equal(pm.club, 'Ember City Beasts'); assert.match(pm.notes.join(' '), /free agent/i);
+  assert.deepEqual(pm.clubs.map((c) => c.club), ['Thunder Mesa Blitz', 'Ember City Beasts']); assert.equal(pm.club, 'Ember City Beasts'); assert.match(pm.notes.join(' '), /free agent/i);
 });
 
 test('trophy case: only what was earned, repeats counted, awards from events and history deduplicated, Hall of Fame', () => {
   const ev = [
-    { k: 'champ:2', t: 'champion', y: 2, c: 'Ember City Beasts', x: { opp: 'Thunder Mesa', score: '21-14', played: 1 } },
+    { k: 'champ:2', t: 'champion', y: 2, c: 'Ember City Beasts', x: { opp: 'Thunder Mesa Blitz', score: '21-14', played: 1 } },
     { k: 'champ:3', t: 'champion', y: 3, c: 'Ember City Beasts', x: { run: 1 } },
     { k: 'award:mvp:2', t: 'award', y: 2, c: 'Ember City Beasts', x: { key: 'mvp' } },
     { k: 'award:mvp:3', t: 'award', y: 3, c: 'Ember City Beasts', x: { key: 'mvp' } },
@@ -79,13 +79,13 @@ test('trophy case: only what was earned, repeats counted, awards from events and
 
 test('interactive timeline: game links only where a record exists; details read the records and say what is missing', () => {
   const m = mon({ career: { v: 1, bf: 1, ev: [
-    { k: 'first:td', t: 'first', y: 3, w: 2, c: 'Ember City Beasts', x: { id: 'td', opp: 'Thunder Mesa' } },
+    { k: 'first:td', t: 'first', y: 3, w: 2, c: 'Ember City Beasts', x: { id: 'td', opp: 'Thunder Mesa Blitz' } },
     { k: 'debut', t: 'debut', y: 1, w: 1, c: 'Ember City Beasts' },
     { k: 'mile:passYds:5000', t: 'milestone', y: 1, w: 9, c: 'Gone Club' },
     { k: 'evo:1', t: 'evolve', y: null, x: { from: 'Flaroo', to: 'Flarex', stage: 1, before: 1 } },
     { k: 'season:passYds:2', t: 'season', y: 2, c: 'Ember City Beasts', x: { key: 'passYds', value: 1600, at: 1500 } },
-  ] }, stats: { v: 2, career: { reg: {} }, season: { year: 3, reg: {}, post: {} }, seasons: [], log: [{ year: 3, week: 2, opp: 'Thunder Mesa', home: true, won: true, score: '24-10', line: { att: 30, comp: 20, passYds: 280, passTd: 3 } }] } });
-  const f = fr({ roster: [m], history: [{ year: 1, club: 'Ember City Beasts', schedule: [{ week: 1, opponent: 'Harbor Sentinels', home: false, result: { playerScore: 14, oppScore: 17, won: false } }] }] });
+  ] }, stats: { v: 2, career: { reg: {} }, season: { year: 3, reg: {}, post: {} }, seasons: [], log: [{ year: 3, week: 2, opp: 'Thunder Mesa Blitz', home: true, won: true, score: '24-10', line: { att: 30, comp: 20, passYds: 280, passTd: 3 } }] } });
+  const f = fr({ roster: [m], history: [{ year: 1, club: 'Ember City Beasts', schedule: [{ week: 1, opponent: 'Harbor Anchors', home: false, result: { playerScore: 14, oppScore: 17, won: false } }] }] });
   const items = P.fullProfile(f, m, 'roster').timeline; const by = (k) => items.find((e) => e.k === k);
   assert.deepEqual(by('first:td').ref, { kind: 'game', year: 3, week: 2, club: 'Ember City Beasts' });
   assert.equal(by('debut').ref.kind, 'game', 'an old season\'s game links to its schedule result');
@@ -100,12 +100,12 @@ test('interactive timeline: game links only where a record exists; details read 
 
 test('record details: still standing, or broken since (by whom), matched by id when two monsters share a name', () => {
   const f = fr(); ensureRecords(f);
-  const teams = (id) => ({ home: { name: 'Ember City Beasts', offense: { QB: { id, name: 'Twin', position: 'QB' } }, defense: {} }, away: { name: 'Thunder Mesa', offense: {}, defense: {} } });
+  const teams = (id) => ({ home: { name: 'Ember City Beasts', offense: { QB: { id, name: 'Twin', position: 'QB' } }, defense: {} }, away: { name: 'Thunder Mesa Blitz', offense: {}, defense: {} } });
   const st = (y) => ({ score: { home: 21, away: 7 }, stats: { home: { players: { QB: { passYds: y } }, yards: y }, away: { players: {}, yards: 0 } } });
   updateGameRecords(f, st(300), teams('a'), { year: 2, week: 3 });
   assert.equal(f.records.game.passYds.id, 'a', 'the records book keeps the holder\'s id');
   const a = mon({ id: 'a', name: 'Twin' }), b = mon({ id: 'b', name: 'Twin' });
-  for (const m of [a, b]) m.stats = { v: 2, career: { reg: {} }, season: { year: 2, reg: {}, post: {} }, seasons: [], log: [{ year: 2, week: 3, opp: 'Thunder Mesa', won: true, score: '21-7', line: { passYds: 300 } }] };
+  for (const m of [a, b]) m.stats = { v: 2, career: { reg: {} }, season: { year: 2, reg: {}, post: {} }, seasons: [], log: [{ year: 2, week: 3, opp: 'Thunder Mesa Blitz', won: true, score: '21-7', line: { passYds: 300 } }] };
   careerAfterGame([a, b], { year: 2, week: 3, club: 'Ember City Beasts', records: f.records });
   assert.ok(a.career.ev.some((e) => e.t === 'record')); assert.ok(!b.career.ev.some((e) => e.t === 'record'), 'the namesake does not get his record');
   const ref = { kind: 'record', scope: 'game', cat: 'passYds', value: 300, year: 2, week: 3, club: 'Ember City Beasts' };

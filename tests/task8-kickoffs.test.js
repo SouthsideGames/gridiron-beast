@@ -11,7 +11,7 @@ import { statKey } from '../src/sim/substitutions.js';
 const line = (s, side, slot) => s.stats[side].players[statKey(s, side, slot)];
 
 const home = generatedTeam(11, { id: 'h', name: 'Ember City Beasts', abbr: 'EMB' });
-const away = generatedTeam(51, { id: 'a', name: 'Stonehaven Titans', abbr: 'STO' });
+const away = generatedTeam(51, { id: 'a', name: 'Stonehaven Bastions', abbr: 'STO' });
 const teams = { home, away };
 const kickoffState = (seed) => R.newGame({ home, away, seed, coinWinner: 'home', choice: 'receive' }); // away kicks, home receives
 /** The first seed (from `from`) whose kickoff is returned live (not a touchback). */

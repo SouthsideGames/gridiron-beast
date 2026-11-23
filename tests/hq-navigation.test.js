@@ -38,7 +38,7 @@ test('HQ deals appear for a waiting offer and disappear after declining or expir
   const {screens}=register(f), render=()=>screens.get('hq').render({f});
   assert.equal(F.tradeWindow(f).calls,true);assert.doesNotMatch(render(),/polish-deals/);
   const player=f.roster.find(m=>m.position==='WR');
-  const offer={team:'Stonehaven Titans',give:[],player:{...player,ovr:40},expires:`wk:${f.season.year}:${f.season.week}`};
+  const offer={team:'Stonehaven Bastions',give:[],player:{...player,ovr:40},expires:`wk:${f.season.year}:${f.season.week}`};
   f.tradeCall=structuredClone(offer);
   assert.match(render(),/polish-deals" open/);assert.match(render(),/data-call="yes"/);assert.match(render(),/data-call="no"/);
   assert.equal(F.answerTradeCall(f,false).ok,true);assert.doesNotMatch(render(),/polish-deals/);

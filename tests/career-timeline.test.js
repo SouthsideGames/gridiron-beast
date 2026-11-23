@@ -39,8 +39,8 @@ test('recruitment, free agency, a trade, a release and a return: each move is re
   { const j = of(rec, 'join')[0]; assert.equal(j.x.via, 'encounter'); assert.equal(j.c, f.club); assert.match(describeEvent(j, rec).desc, /Tuesday Beast Clash/); }
   // trade: a monster arrives from an AI club with his stint there
   const src = generateMonster(createRng(3), { position: 'RB', quality: 61 }); src.yearsPro = 2;
-  const res = executeTrade(f, { team: 'Ashford Hawks', give: [], get: { player: src } }, { club: f.club, year: f.season.year, nextYear: f.season.year + 1 });
-  const t = res.player; const tj = of(t, 'join')[0]; assert.equal(tj.x.via, 'trade'); assert.equal(tj.x.from, 'Ashford Hawks');
+  const res = executeTrade(f, { team: 'Ashford Cinders', give: [], get: { player: src } }, { club: f.club, year: f.season.year, nextYear: f.season.year + 1 });
+  const t = res.player; const tj = of(t, 'join')[0]; assert.equal(tj.x.via, 'trade'); assert.equal(tj.x.from, 'Ashford Cinders');
   assert.ok(careerTimeline(t, { club: f.club }).some((e) => e.t === 'join' && e.title === 'Traded in'));
   // release, then the same monster (same id) comes back: a return, not a new monster
   const m = f.roster.find((x) => !x.cornerstone && of(x, 'join')[0]?.x?.via === 'founding'); const id = m.id;

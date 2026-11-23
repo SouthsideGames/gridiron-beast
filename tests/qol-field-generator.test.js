@@ -13,7 +13,7 @@ import { newFranchise } from '../tools/franchise-soak.mjs';
 const ORDINARY = ALL_TEAMS.filter((c) => !isGymClub(c));
 const GRASS_HOME = ORDINARY.filter((c) => STADIUMS[c].env === 'grass'); // the only homes that draw
 const FIXED_HOME = ORDINARY.filter((c) => STADIUMS[c].env !== 'grass');
-const REQUIRED = { 'Harbor Sentinels': 'tidal', 'Sunfire Lions': 'radiant', 'Eastport Phantoms': 'shadow', 'Palmetto Vipers': 'dragon', 'Thunder Mesa': 'storm', 'Canyon Crushers': 'desert', 'Frostpeak Howlers': 'frozen', 'Ironpeak Rams': 'dome' };
+const REQUIRED = { 'Harbor Anchors': 'tidal', 'Sunfire Solars': 'radiant', 'Eastport Phantoms': 'shadow', 'Palmetto Wyrms': 'dragon', 'Thunder Mesa Blitz': 'storm', 'Canyon Crushers': 'desert', 'Frostpeak Howlers': 'frozen', 'Ironpeak Colossi': 'dome' };
 
 test('the draw (grass-stadium homes, no gym leader): about 65% grass and 35% elemental, spread across every elemental field', () => {
   assert.equal(GRASS_SHARE, 0.65); assert.deepEqual(ELEMENTAL_FIELDS, ['frozen', 'volcanic', 'forest', 'storm', 'desert', 'dome', 'tidal', 'radiant', 'shadow', 'dragon']);
@@ -38,7 +38,7 @@ test('the same key always gives the same field, a different week can differ, and
 test('gym leaders: all eight have their own field; every game against one uses it, home or away, over stadium settings and overrides', () => {
   assert.deepEqual(Object.fromEntries(GYMS.map((g) => [g.club, FIELD_BY_TYPE[g.element]])), REQUIRED);
   assert.deepEqual([...UNMAPPED_BOSS_TYPES], [], 'no gym is without a field');
-  assert.deepEqual(Object.fromEntries(GYMS.map((g) => [g.club, ENVIRONMENTS[REQUIRED[g.club]].name])), { 'Harbor Sentinels': 'Tidal Arena', 'Sunfire Lions': 'Radiant Coliseum', 'Eastport Phantoms': 'Shadow Grounds', 'Palmetto Vipers': 'Dragon\'s Den', 'Thunder Mesa': 'Storm Stadium', 'Canyon Crushers': 'Desert Stadium', 'Frostpeak Howlers': 'Frozen Stadium', 'Ironpeak Rams': 'Metallic Dome' });
+  assert.deepEqual(Object.fromEntries(GYMS.map((g) => [g.club, ENVIRONMENTS[REQUIRED[g.club]].name])), { 'Harbor Anchors': 'Tidal Arena', 'Sunfire Solars': 'Radiant Coliseum', 'Eastport Phantoms': 'Shadow Grounds', 'Palmetto Wyrms': 'Dragon\'s Den', 'Thunder Mesa Blitz': 'Storm Stadium', 'Canyon Crushers': 'Desert Stadium', 'Frostpeak Howlers': 'Frozen Stadium', 'Ironpeak Colossi': 'Metallic Dome' });
   for (const g of GYMS) { assert.equal(stadiumFor(g.club).env, REQUIRED[g.club], `${g.club}'s own stadium is its element's field`);
     for (const other of ORDINARY) for (let week = 1; week <= 12; week++) for (const [home, away] of [[g.club, other], [other, g.club]]) {
       const overrides = week % 3 === 0 ? { [home]: { name: 'Somewhere Else', env: 'volcanic' }, [away]: { name: 'Elsewhere', env: 'frozen' } } : null; // a saved override never beats a gym leader
@@ -53,7 +53,7 @@ test('gym leaders: all eight have their own field; every game against one uses i
 test('Dragon\'s Den is a look only: no type bonus anywhere in the engine path; Water, Light and Dark use the existing matching-type bonus', async () => {
   const { envMod, contestMod } = await import('../src/sim/type-matchups.js');
   assert.equal(ENVIRONMENTS.dragon.type, null); assert.equal(fieldElement('dragon'), 'Dragon');
-  const v = generatedVenue('Palmetto Vipers', ORDINARY[0], 'k'); assert.equal(v.env, 'dragon'); assert.equal(v.type, null, 'the engine reads venue.type: nothing is favoured');
+  const v = generatedVenue('Palmetto Wyrms', ORDINARY[0], 'k'); assert.equal(v.env, 'dragon'); assert.equal(v.type, null, 'the engine reads venue.type: nothing is favoured');
   assert.equal(envMod('Dragon', v.type), 0); assert.equal(contestMod('Dragon', 'Fire', v.type), contestMod('Dragon', 'Fire', null));
   for (const [env, type] of [['tidal', 'Water'], ['radiant', 'Light'], ['shadow', 'Dark']]) { assert.equal(ENVIRONMENTS[env].type, type); assert.equal(envMod(type, type), envMod('Fire', 'Fire'), 'the same bonus as the older fields, not a new one'); }
   for (const e of Object.values(ENVIRONMENTS)) assert.deepEqual(Object.keys(e).filter((k) => !['id', 'name', 'short', 'type', 'element', 'indoor', 'icon', 'texture', 'palette', 'blurb', 'weather'].includes(k)), [], `${e.id}: no hazard, status or ability field`);

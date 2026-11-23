@@ -29,14 +29,14 @@ test('pack: exact round trip on a real save, key order included, and smaller', (
 });
 test('pack: escapes, sentinels and JSON edge cases survive unchanged', () => {
   const v = { '~': 1, '~0': '~0', '~*0': ['~*0', 1, 2], a: [undefined, NaN, Infinity, null, () => 1], b: undefined, 10: 'x', 2: 'y',
-    rows: Array.from({ length: 5 }, (_, i) => ({ id: `m_${i}`, team: 'Stonehaven Titans', yds: i, '~x': '~~' })), deep: { d: new Date(0), s: 'Stonehaven Titans', t: 'Stonehaven Titans', u: 'Stonehaven Titans' } };
+    rows: Array.from({ length: 5 }, (_, i) => ({ id: `m_${i}`, team: 'Stonehaven Bastions', yds: i, '~x': '~~' })), deep: { d: new Date(0), s: 'Stonehaven Bastions', t: 'Stonehaven Bastions', u: 'Stonehaven Bastions' } };
   assert.equal(JSON.stringify(unpack(JSON.parse(JSON.stringify(pack(v))))), JSON.stringify(v));
   const odd = JSON.parse('{"r":[{"a\\u0000b":1,"c":2,"d":3},{"a\\u0000b":4,"c":5,"d":6},{"__proto__":{"x":1},"c":1,"d":2}]}');
   assert.equal(JSON.stringify(unpack(JSON.parse(JSON.stringify(pack(odd))))), JSON.stringify(odd), 'NUL in keys and __proto__ keys');
   for (const x of [null, 0, 'str', [], {}, [[[]]], { a: { b: { c: [1, { d: 2 }] } } }]) assert.equal(JSON.stringify(unpack(pack(x))), JSON.stringify(x));
 });
 test('pack: a corrupted payload is refused, never half-read', () => {
-  const p = pack({ rows: [{ a: 1, b: 2, c: 3 }, { a: 4, b: 5, c: 6 }], s: ['Stonehaven Titans', 'Stonehaven Titans', 'Stonehaven Titans'] });
+  const p = pack({ rows: [{ a: 1, b: 2, c: 3 }, { a: 4, b: 5, c: 6 }], s: ['Stonehaven Bastions', 'Stonehaven Bastions', 'Stonehaven Bastions'] });
   assert.throws(() => unpack({ ...p, fmt: 'zzz' }));
   assert.throws(() => unpack({ ...p, s: [] }), /unknown code/);
   assert.throws(() => unpack({ ...p, h: [] }), /shaped/);
@@ -246,7 +246,7 @@ test('preservation: careers, timelines, Hall of Fame snapshots, awards, history 
   }
 });
 test('a new franchise gets its uid from the store at its first save, from the platform, never from the game RNG', async () => {
-  const opts = { owner: { first: 'A', last: 'B' }, club: 'Stonehaven Titans', cornerstoneOffense: 'Pyronix', cornerstoneDefense: 'Granigor', seed: 77 };
+  const opts = { owner: { first: 'A', last: 'B' }, club: 'Stonehaven Bastions', cornerstoneOffense: 'Pyronix', cornerstoneDefense: 'Granigor', seed: 77 };
   const a = F.createFranchise(opts), b = F.createFranchise(opts); const rng = a.rngState;
   const store = createStore({ backend: memoryBackend(), localStorage: mkLs(), now, debounce: 0 }); assert.equal((await store.open()).mode, 'empty');
   assert.ok((await store.save(a)).ok); await store.save(b);

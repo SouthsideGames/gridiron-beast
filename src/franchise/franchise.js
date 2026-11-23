@@ -28,7 +28,7 @@ export { MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
 export { pickKey, currentClassYear, tradableYears, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, describePick, canTakePlayer } from './trades.js';
 export * as Stats from './stats.js';
 export { GROUP_SLOTS } from './roster.js';
-import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
+import { REG_WEEKS, LAST_WEEK, CONFERENCE_NAMES, DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
 import { retirementPass, agingContext, nativeAging, retirementOutlook } from './retirement.js';
 import { recordRetiredMonsterCandidates, electMonsterHallOfFame } from './monster-hof-voting.js';
@@ -566,7 +566,7 @@ export function replaceStaff(f, id) {
   else { const budget = salarySummary(f, c.salary - (current?.salary || 0)); if (budget.over) return { ok: false, reason: $t('franchise.exceeds_the_salary_cap') }; }
   // Firing mid-season costs: the rest of the outgoing coach's salary stays on the books this season.
   let severance = 0;
-  if (current && f.season && !f.season.finished) { severance = Math.round(current.salary * Math.max(0, (10 - (f.season.week || 1)) / 10)); f.deadCap = (f.deadCap || 0) + severance; }
+  if (current && f.season && !f.season.finished) { severance = Math.round(current.salary * Math.max(0, (REG_WEEKS - (f.season.week || 1)) / REG_WEEKS)); f.deadCap = (f.deadCap || 0) + severance; }
   f.staff[c.role] = id; (f.staffContracts ||= {})[c.role] = newContract(f.season?.year || 1); (f.staffRaise ||= {})[c.role] = 1; withdrawStaffRenewal(f, c.role);
   news(f, $P(c.name, ` hired as `, c.role.replace(/_/g, ' '), (current ? $L('franchise.replacing', { name: current.name }) : ''), (severance ? $P(` `, $L('franchise.cr_severance_this_season', { toLocaleString: severance.toLocaleString('en-US') })) : ''), `.`), 'roster');
   return { ok: true, replaced: current, severance };
@@ -946,7 +946,7 @@ export function startSeason(f, year) {
   if (f.rewardLedger) pruneLedger(f.rewardLedger, (id) => Number(id.split(':')[1]) >= year); // completed activities of earlier seasons are no longer needed
   const records = Object.fromEntries(ALL_TEAMS.map((t) => [t, blankRecord()]));
   const lastRecords = f.season?.records || null;
-  f.season = { year, week: 1, day: 0, records, results: [], playoffs: null, champion: null, finished: false, schedule: teamSchedule(year, f.club), leagueStats: {}, playoffStats: {}, recorded: [], expectations: {} };
+  f.season = { year, week: 1, day: 0, records, results: [], playoffs: null, champion: null, finished: false, schedule: teamSchedule(year, f.club, f.seed), leagueStats: {}, playoffStats: {}, recorded: [], expectations: {} };
   f.week = blankWeek();
   for (const m of f.roster) { m.fatigue = 0; if (m.yearsPro == null) m.yearsPro = Math.max(0, (m.age || 22) - 22); rolloverMonster(m, { year, team: f.club }); }
   if (hasLeague(f)) { for (const club of leagueClubs(f)) for (const m of clubRoster(f, club)) { m.fatigue = 0; rolloverMonster(m, { year, team: club }); } notePreseason(f, (c) => aiTeam(f, c, year)); noteStaffPreseason(f, year, strengthTable(f)); } // every persistent monster opens a new season book; the club's strength now is what its growth is measured from
@@ -1486,7 +1486,7 @@ export function unspentPoints(f) { return f.roster.filter((m) => (m.points || 0)
 export function coachNameOf(f, team) { return headCoachName(team, { seed: f.seed, playerClub: f.club, playerCoach: staffMember(f, 'head_coach')?.name || null }); }
 export const currentFixture = (f) => f.season.schedule.find((g) => g.week === f.season.week) || null;
 export const isBye = (f) => !!currentFixture(f)?.bye;
-export const inPlayoffs = (f) => f.season.week > 10;
+export const inPlayoffs = (f) => f.season.week > REG_WEEKS;
 export const LAST_REGULAR_WEEK = 10;
 /** The final regular-season week and the playoffs: no region scouting or recruiting; Mondays scout the draft class, Tuesdays are recovery days (GDD §19). */
 export const draftWindow = (f) => f.season.week >= LAST_REGULAR_WEEK && !f.season.finished;
@@ -1688,7 +1688,7 @@ function simulateLeagueWeek(f) {
   ensureCaptains(f); // Captain Partnerships (GDD §27.4B): a season without captains yet gets them before its next games
   if (hasLeague(f)) { const deals = aiTrades(f, r, { year: f.season.year, cap: tierById(f.tier).cap, window: 'season' }); noteCaptainTrades(f, deals); }
   if (hasLeague(f) && hasFreeAgency(f) && f.season.week === EXTENSION_WEEK) { const st = (f.freeAgency.steps[f.season.year] ||= {}); if (!st.midExt) { st.midExt = aiExtensions(f); } } // R6: the mid-season extension window, once // weeks 2–8: an occasional deal between AI clubs (GDD §46); a traded captain leaves his partnership inactive
-  const fixtures = leagueSeasonFixtures(f.season.year).find((w) => w.week === f.season.week);
+  const fixtures = leagueSeasonFixtures(f.season.year, f.seed).find((w) => w.week === f.season.week);
   const results = [];
   if (fixtures && !fixtures.bye) {
     for (const g of fixtures.games) {
@@ -2484,7 +2484,7 @@ function advanceWeek(f, { bye = false } = {}) {
   f.week = blankWeek(); f.week.plan = lastPlan; // keep the plan as the default for next week
   maybeTradeCall(f); // a club may call with an offer this week (GDD §19.6)
   if (draftWindow(f)) ensureDraftClass(f);
-  if (f.season.week === 11) startPlayoffs(f);
+  if (f.season.week === REG_WEEKS + 1) startPlayoffs(f);
   if (inPlayoffs(f) && f.season.playoffs?.champion) { endSeason(f); return; }
   if (inPlayoffs(f) && !playoffFixture(f)) {
     // Eliminated (or never qualified): the owner watches the bracket round by round (advancePlayoffs) or skips to the offseason (skipPlayoffs).
@@ -2507,10 +2507,10 @@ export const ROUND_NAMES = Object.freeze({ 1: $t('franchise.wild_card_round'), 2
 // ------------------------------------------------------------ playoffs
 function startPlayoffs(f) {
   const st = leagueStandings(f);
-  const seeds = { Aurora: st.conferences.Aurora.seeds, Titan: st.conferences.Titan.seeds };
-  const fixtures = playoffRound(1, [], seeds).map((g) => ({ ...g, round: 1, week: 11, result: null }));
+  const seeds = Object.fromEntries(CONFERENCE_NAMES.map((c) => [c, st.conferences[c].seeds]));
+  const fixtures = playoffRound(1, [], seeds).map((g) => ({ ...g, round: 1, week: REG_WEEKS + 1, result: null }));
   f.season.playoffs = { seeds, round: 1, fixtures, results: [], champion: null };
-  addLeagueNews(f, playoffFieldNews({ year: f.season.year, week: 10, seeds, records: f.season.records }));
+  addLeagueNews(f, playoffFieldNews({ year: f.season.year, week: REG_WEEKS, seeds, records: f.season.records }));
   finalizeAwards(f);
   const qualified = Object.values(seeds).flat().includes(f.club);
   checkAchievements(f, 'playoffs', { qualified });
@@ -2546,7 +2546,7 @@ function simulatePlayoffWeek(f) {
   save();
   if (p.round === 3) { p.champion = p.results.find((x) => x.round === 3).winner; f.season.champion = p.champion; return; }
   p.round += 1;
-  p.fixtures.push(...playoffRound(p.round, p.results, p.seeds).map((g) => ({ ...g, round: p.round, week: 10 + p.round, result: null })));
+  p.fixtures.push(...playoffRound(p.round, p.results, p.seeds).map((g) => ({ ...g, round: p.round, week: REG_WEEKS + p.round, result: null })));
 }
 
 // ------------------------------------------------------------ season end
@@ -2556,7 +2556,7 @@ function endSeason(f) {
   const champion = s.playoffs?.champion || null;
   const rec = record(f);
   if (champion === f.club) { f.badges[f.tier] += 1; f.qualification[f.tier] += 1; f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 }; f.campaign.titles += 1; news(f, $L('franchise.beast_bowl_champions_win_the_title', { club: f.club, name: tierById(f.tier).name }), 'win'); }
-  if (champion) addLeagueNews(f, championNews({ year: s.year, week: 13, final: (s.playoffs?.results || []).find((x) => x.round === 3) }));
+  if (champion) addLeagueNews(f, championNews({ year: s.year, week: LAST_WEEK, final: (s.playoffs?.results || []).find((x) => x.round === 3) }));
   const place = st.overall.indexOf(f.club) + 1;
   f.bottomFourStreak = place > 12 ? f.bottomFourStreak + 1 : 0;
   f.history.push({ year: s.year, club: f.club, tier: f.tier, record: { w: rec.w, l: rec.l, t: rec.t }, place, champion, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), schedule: s.schedule.map((g) => ({ ...g })), rival: { ...f.rivals[f.tier] } });
@@ -2572,7 +2572,7 @@ function endSeason(f) {
   f.history[f.history.length - 1].awards = s.awards;
   if (champion === f.club) f.history[f.history.length - 1].championship = championshipRecord(f, s); // the ceremony and its summary (GDD §35)
   updateSeasonRecords(f, s.year); // the records book (GDD §17.8)
-  addLeagueNews(f, recordNews({ year: s.year, week: 13, records: f.records, seasonsInBook: (f.history || []).length, scope: 'season' }));
+  addLeagueNews(f, recordNews({ year: s.year, week: LAST_WEEK, records: f.records, seasonsInBook: (f.history || []).length, scope: 'season' }));
   careerSeasonEnd(f.roster, { year: s.year, club: f.club, awards: s.awards, records: f.records, champion }); // Career Timeline (GDD §38)
   leagueSeasonEnd(f, { year: s.year, awards: s.awards, records: f.records, champion }); // the 15 persistent rosters' season-end events (GDD §42.6)
   archiveSeasonTables(f); // the season's league tables stay readable from the statistics screens (2026-10-22)
@@ -2664,7 +2664,7 @@ export function finalizeAwards(f) {
   if (f.season.awardsFinal) return f.season.awardsFinal;
   const races = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n: 5, priorRookieAwardIds: priorRookieAwardIds(f) });
   f.season.awardsFinal = { year: f.season.year, races, winners: Object.fromEntries(Object.entries(AWARDS).map(([k]) => [k, races[k]?.[0] || null])) };
-  addLeagueNews(f, awardNews({ year: f.season.year, week: 10, winners: f.season.awardsFinal.winners, priorOf: (id, key) => (f.history || []).filter((h) => h.awards?.league?.[key]?.id === id).length }));
+  addLeagueNews(f, awardNews({ year: f.season.year, week: REG_WEEKS, winners: f.season.awardsFinal.winners, priorOf: (id, key) => (f.history || []).filter((h) => h.awards?.league?.[key]?.id === id).length }));
   for (const [k, w] of Object.entries(f.season.awardsFinal.winners)) if (w && w.team === f.club) news(f, $L('franchise.one_of_yours', { short: AWARDS[k].short, k: (k === 'coy' ? $L('franchise.your_staff') : w.name)}), 'win');
   return f.season.awardsFinal;
 }

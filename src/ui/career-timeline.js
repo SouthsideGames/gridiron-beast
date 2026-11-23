@@ -6,7 +6,7 @@
 import { monsterTimeline, ROUND_NAMES } from '../franchise/franchise.js';
 import { eventRef } from '../franchise/career-profile.js';
 import { yearOf } from '../data/calendar.js';
-import { TEAM_META } from '../data/league.js';
+import { TEAM_META, REG_WEEKS } from '../data/league.js';
 import { esc } from './dom.js';
 import { t as $t } from '../text/index.js';
 
@@ -16,7 +16,7 @@ export const timelineView = view;
 
 function itemHtml(e, i, animate, interactive) {
   const col = TEAM_META[e.c]?.color || null;
-  const meta = [e.w != null ? (e.w > 10 ? (ROUND_NAMES[e.w - 10] || $t('career.playoffs')) : `${$t('career.week_3', { w: e.w })}`) : null, e.c ? `<span class="tl-club"${col ? ` style="--club:${col}"` : ''}>${esc(e.c)}</span>` : null].filter(Boolean).join(' · ');
+  const meta = [e.w != null ? (e.w > REG_WEEKS ? (ROUND_NAMES[e.w - REG_WEEKS] || $t('career.playoffs')) : `${$t('career.week_3', { w: e.w })}`) : null, e.c ? `<span class="tl-club"${col ? ` style="--club:${col}"` : ''}>${esc(e.c)}</span>` : null].filter(Boolean).join(' · ');
   const link = interactive && e.ref;
   const inner = `<span class="tl-icon" aria-hidden="true">${e.icon}</span>
     <div class="tl-body"><div class="tl-title">${esc(e.title)}${e.tier === 'major' ? ' <span class="tl-badge">★</span>' : ''}</div>${meta ? `<div class="tl-meta">${meta}</div>` : ''}<div class="tl-desc">${esc(e.desc)}</div></div>${link ? '<span class="tl-go" aria-hidden="true">›</span>' : ''}`;

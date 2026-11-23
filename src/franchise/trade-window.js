@@ -1,4 +1,6 @@
 // The trade calendar (Task 5, GDD §19.6c, §54.10; Task 10 owner 2026-11-13): ONE place that says when trading is possible. Pure.
+// (32-club league, 2026-11-23: the regular season is 15 weeks; the deadline moved from week 7 to week 10 to keep its place,
+//  about two thirds of the way through. The lines below describe the windows with the old week numbers.)
 // Regular season (10 weeks):  weeks 1–7 the owner may propose deals, clubs trade with each other and may call the owner ·
 //                             trading CLOSES when week 8 begins · weeks 8–10 closed · postseason closed.
 // Draft clock and offseason (after the championship until the next season begins): everything is open.
@@ -7,7 +9,7 @@ import { t as $t } from '../text/index.js';
 
 /** Trades are processed before the games of weeks 1 through 7. When week 8 begins, regular-season trading is over. */
 export const FIRST_TRADE_WEEK = 1;
-export const TRADE_DEADLINE_WEEK = 7; // the last week in which trading is open
+export const TRADE_DEADLINE_WEEK = 10; // the last week in which trading is open
 export const TRADE_CLOSES_WEEK = TRADE_DEADLINE_WEEK + 1; // trading closes when this week begins
 
 /** Is this week of the regular season inside the in-season window (club-to-club deals, calls to the owner)? */

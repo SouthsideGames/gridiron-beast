@@ -10,7 +10,7 @@ import { STAT_LABEL, MAX_KEYS, RECORD_CATEGORIES, POSITION_COLUMNS, OFFENSE_POSI
 import { computeAwards } from '../src/franchise/awards.js';
 import { pack, unpack } from '../src/franchise/pack.js';
 
-const SEEDS = [[312, 'Ember City Beasts'], [7, 'Stonehaven Titans'], [99, 'Glacier Guardians'], [1234, 'Stormport Bolts'], [2026, 'Ember City Beasts']];
+const SEEDS = [[312, 'Ember City Beasts'], [7, 'Stonehaven Bastions'], [99, 'Glacier Guardians'], [1234, 'Stormport Bolts'], [2026, 'Ember City Beasts']];
 const cache = new Map();
 const franchise = (seed = 312, club = 'Ember City Beasts') => { const k = `${seed}|${club}`; if (!cache.has(k)) cache.set(k, F.createFranchise({ owner: { first: 'Test', last: 'GM', background: 'player' }, club, seed })); return cache.get(k); };
 const liveOf = (f) => [...f.roster, ...Object.values(f.league.monsters)];
@@ -23,7 +23,7 @@ test('deterministic: the same franchise gives the same archive, another seed ano
   assert.deepEqual(again, f.preLeagueHistory, 'a second generation differs from the one made at creation');
   const twin = F.createFranchise({ owner: { first: 'Test', last: 'GM', background: 'player' }, club: 'Ember City Beasts', seed: 312 });
   assert.deepEqual(twin.preLeagueHistory, f.preLeagueHistory, 'two creations with one seed differ');
-  assert.notDeepEqual(franchise(7, 'Stonehaven Titans').preLeagueHistory.seasons.map((s) => s.champion + s.standings[0].w), f.preLeagueHistory.seasons.map((s) => s.champion + s.standings[0].w), 'another seed gave the same history');
+  assert.notDeepEqual(franchise(7, 'Stonehaven Bastions').preLeagueHistory.seasons.map((s) => s.champion + s.standings[0].w), f.preLeagueHistory.seasons.map((s) => s.champion + s.standings[0].w), 'another seed gave the same history');
 });
 
 test('several seeds and every starter club: each archive is sound against its own league', () => {

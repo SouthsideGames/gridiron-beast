@@ -127,9 +127,9 @@ test('the kickoff reveal: a strike and the football for Electric, simpler at Red
 // Checkpoint B: Fire, Water and Grass use the same frame as Electric; only the data differs.
 test('Fire, Water and Grass: each look sits on its existing field, keeps the field type, and has its own edge, posts and kickoff reveal', async () => {
   const { edgeSvg, postsSvg } = await import('../src/ui/stadium-fx.js');
-  const expect = { storm: ['Electric', 'Stormport Bolts', 'Electric', /sfx-chain/, /sfx-post-arc/, /sfx-strike/], volcanic: ['Fire', 'Ember City Beasts', 'Fire', /sfx-flame/, /sfx-flame/, /sfx-rise/], tidal: ['Water', 'Harbor Sentinels', 'Water', /sfx-shot/, /sfx-post-arc/, /sfx-drop/], forest: ['Grass', 'Bayou Stalkers', 'Nature', /sfx-vine/, /sfx-vine/, /sfx-swirl/],
-    frozen: ['Ice', 'Frostpeak Howlers', 'Ice', /sfx-snowman/, /sfx-node/, /sfx-cube-l/], desert: ['Ground', 'Canyon Crushers', 'Earth', /sfx-cactus/, /sfx-drift/, /sfx-pit/], dome: ['Alloy', 'Ironpeak Rams', 'Metal', /sfx-chain/, /sfx-chain/, /sfx-hatch/],
-    dragon: ['Wyrm', 'Palmetto Vipers', null, /sfx-rock/, /sfx-flame/, /sfx-breath/], shadow: ['Umbral', 'Eastport Phantoms', 'Dark', /sfx-dim/, /sfx-node/, /sfx-moonbeam/], radiant: ['Radiant', 'Sunfire Lions', 'Light', /sfx-dial/, /sfx-turn/, /sfx-dawn/] };
+  const expect = { storm: ['Electric', 'Stormport Bolts', 'Electric', /sfx-chain/, /sfx-post-arc/, /sfx-strike/], volcanic: ['Fire', 'Ember City Beasts', 'Fire', /sfx-flame/, /sfx-flame/, /sfx-rise/], tidal: ['Water', 'Harbor Anchors', 'Water', /sfx-shot/, /sfx-post-arc/, /sfx-drop/], forest: ['Grass', 'Bayou Stalkers', 'Nature', /sfx-vine/, /sfx-vine/, /sfx-swirl/],
+    frozen: ['Ice', 'Frostpeak Howlers', 'Ice', /sfx-snowman/, /sfx-node/, /sfx-cube-l/], desert: ['Ground', 'Canyon Crushers', 'Earth', /sfx-cactus/, /sfx-drift/, /sfx-pit/], dome: ['Alloy', 'Ironpeak Colossi', 'Metal', /sfx-chain/, /sfx-chain/, /sfx-hatch/],
+    dragon: ['Wyrm', 'Palmetto Wyrms', null, /sfx-rock/, /sfx-flame/, /sfx-breath/], shadow: ['Umbral', 'Eastport Phantoms', 'Dark', /sfx-dim/, /sfx-node/, /sfx-moonbeam/], radiant: ['Radiant', 'Sunfire Solars', 'Light', /sfx-dial/, /sfx-turn/, /sfx-dawn/] };
   const designs = { sky: ['Sky', /sfx-wave/, /sfx-post-arc/, /sfx-shadow/, 'Wind'], oracle: ['Oracle', /sfx-orbit/, /sfx-post-arc/, /sfx-ufo/, 'Psychic'], rock: ['Rock', /sfx-tumble/, /sfx-drift/, /sfx-cube-l/, 'Earth'], bug: ['Bug', /sfx-orbit/, /sfx-node/, /sfx-silk/, 'Nature'], specter: ['Specter', /sfx-wisp/, /sfx-post-arc/, /sfx-mist/, 'Dark'], clash: ['Clash', /sfx-twang/, /sfx-node/, /sfx-belt-l/, 'Earth'], corrupt: ['Corrupt', /sfx-shot/, /sfx-drift/, /sfx-pit/, 'Dark'] };
   assert.deepEqual(Object.keys(LOOKS).sort(), [...Object.keys(expect), ...Object.keys(designs)].sort());
   for (const [env, [label, club, type, edge, posts, reveal]] of Object.entries(expect)) {
@@ -146,7 +146,7 @@ test('Fire, Water and Grass: each look sits on its existing field, keeps the fie
 // Revision 5: the white paint around the field, the barrier in front of the fans, markers on the white, Water's drop.
 test('the white border: all round the field in a stadium scene, the sideline markers stand on it, and the picture is wider by it; nothing changes without a scene', async () => {
   const { setStadiumScene, fieldBorder, FIELD_BORDER, borderSvg, barrierSvg, edgeSvg, postsSvg } = await import('../src/ui/stadium-fx.js'); const { fieldViewBox, FIELD_VIEWBOX } = await import('../src/ui/field-view.js'); const { MatchCamera } = await import('../src/ui/match-camera.js');
-  const venue = venueFor('Harbor Sentinels', 'k'); const cam = { bottom: 35, top: 81 }; const Y = (y) => cam.top - y;
+  const venue = venueFor('Harbor Anchors', 'k'); const cam = { bottom: 35, top: 81 }; const Y = (y) => cam.top - y;
   assert.equal(fieldBorder(), 0); assert.equal(fieldViewBox(), FIELD_VIEWBOX); assert.equal(borderSvg(cam, 27, Y), ''); assert.equal(barrierSvg(venue, -27, 0, 54), '');
   assert.doesNotMatch(fieldSvg({ venue, ballOn: 50 }), /sfx-border/); const xOld = Number(/cx="(-?[\d.]+)"/.exec(edgeSvg('tidal', cam, 27, Y, 46))[1]); assert.ok(Math.abs(xOld) < 27, 'without a scene the markers are where they were');
   try {
@@ -188,7 +188,7 @@ test('Sky, Oracle, Rock, Bug, Specter, Clash and Corrupt are designs only: drawn
     assert.match(edgeSvg(id, cam, 27, (y) => 81 - y, 46), edge); assert.match(postsSvg(id, 0.6, 1), posts); assert.match(kickoffRevealHtml(venue, 'full'), reveal); assert.match(introPlateHtml(venue), new RegExp(d.name));
     try { setStadiumScene(venue, null); const svg = fieldSvg({ venue, ballOn: 92 }); assert.ok(svg.includes(d.palette.a), 'its own turf'); assert.match(svg, /sfx-apron/); assert.match(svg, /sfx-stand/); assert.ok(svg.includes('stroke="#eaf3e6"'), 'white yard lines'); assert.doesNotMatch(svg, /NaN|undefined/); } finally { setStadiumScene(null); }
   }
-  assert.equal(designField('grass'), null); assert.equal(venueFor('Ashford Hawks', 'k').env, 'grass', 'every club keeps the field it had');
+  assert.equal(designField('grass'), null); assert.equal(venueFor('Ashford Cinders', 'k').env, 'grass', 'every club keeps the field it had');
   const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8'); for (const k of ['sfx-wave', 'sfx-tumble', 'sfx-wisp', 'sfx-web', 'sfx-silk', 'sfx-mist', 'sfx-ball-fade', 'sfx-orb-drift', 'sfx-orb-fade', 'sfx-twang', 'sfx-rock', 'sfx-dim', 'sfx-dial', 'sfx-turn', 'sfx-dawn', 'sfx-warm', 'sfx-bell', 'sfx-breath', 'sfx-ball-hot', 'sfx-dark', 'sfx-moonbeam', 'sfx-hatch', 'sfx-door-l', 'sfx-door-r', 'sfx-ball-set', 'sfx-orbit', 'sfx-cube-l', 'sfx-cube-r', 'sfx-crack', 'sfx-pit', 'sfx-ball-pit', 'sfx-ball-float', 'sfx-ufo', 'sfx-beam', 'sfx-ball-late']) assert.match(css, new RegExp(`@keyframes ${k}\\b`));
 });
 

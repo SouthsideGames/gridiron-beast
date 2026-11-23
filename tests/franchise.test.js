@@ -52,7 +52,7 @@ test('a new franchise has a legal roster, staff, cap room and a rival in its div
   assert.equal(F.createFranchise({ owner: { first: 'Sam', last: 'Rivera' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Frostclaw', seed: 7 }).roster.find((m) => m.cornerstone && m.species === 'voltfang')?.species, 'voltfang', 'the catalogue name picks the same species');
   assert.ok(STAFF_ROLES.every((r) => f.staff[r]));
   assert.equal(F.salarySummary(f).over, false);
-  assert.ok(['Bayou Stalkers', 'Sunfire Lions', 'Palmetto Vipers'].includes(f.rivals.challenger.team));
+  assert.ok(['Bayou Stalkers', 'Sunfire Solars', 'Palmetto Wyrms'].includes(f.rivals.challenger.team));
   const team = F.playerTeam(f);
   assert.ok(Object.values(team.chart).every(Boolean), 'every slot filled');
   assert.equal(team.offensePlays.length, 6);
@@ -141,9 +141,9 @@ test('economy: cap, release rules and roster limits', () => {
 test('standings tiebreakers and playoff seeding', () => {
   const records = Object.fromEntries(ALL_TEAMS.map((t) => [t, blankRecord()]));
   applyResult(records, { home: 'Ember City Beasts', away: 'Bayou Stalkers', homeScore: 20, awayScore: 10 });
-  applyResult(records, { home: 'Sunfire Lions', away: 'Palmetto Vipers', homeScore: 21, awayScore: 20 });
+  applyResult(records, { home: 'Sunfire Solars', away: 'Palmetto Wyrms', homeScore: 21, awayScore: 20 });
   const st = standings(records);
-  assert.deepEqual(st.divisions.South.slice(0, 2), ['Ember City Beasts', 'Sunfire Lions']); // better point differential wins the tie
+  assert.deepEqual(st.divisions.South.slice(0, 2), ['Ember City Beasts', 'Sunfire Solars']); // better point differential wins the tie
   assert.equal(st.conferences.Titan.seeds.length, 4);
 });
 
@@ -152,11 +152,11 @@ test('save round-trips and the legacy v5 import preserves owner, club, staff and
   const json = exportJson(f);
   const back = importJson(json);
   assert.equal(back.club, f.club); assert.equal(back.roster.length, f.roster.length);
-  const legacy = { coach: { first: 'Dana', last: 'Cole', gender: 'Female', city: 'Stonehaven', team: 'Stonehaven Titans' }, staff: { head_coach: 'hc_flint', offensive_coordinator: 'oc_brock', defensive_coordinator: 'dc_stone', head_scout: 'sc_ash', monster_trainer: 'tr_power' }, franchise: { season: 3, week: 4, record: { w: 2, l: 1 }, starterOffense: 'Firestorm', starterDefense: 'Skywarden', rivals: { challenger: { team: 'Ashford Hawks' } }, championshipBadges: { challenger: 1, vanguard: 0, sovereign: 0 }, seasonHistory: [{ season: 1, record: { w: 4, l: 5 }, schedule: [] }, { season: 2, record: { w: 6, l: 3 }, schedule: [] }] } };
-  const s = legacySummary(legacy); assert.equal(s.club, 'Stonehaven Titans');
+  const legacy = { coach: { first: 'Dana', last: 'Cole', gender: 'Female', city: 'Stonehaven', team: 'Stonehaven Bastions' }, staff: { head_coach: 'hc_flint', offensive_coordinator: 'oc_brock', defensive_coordinator: 'dc_stone', head_scout: 'sc_ash', monster_trainer: 'tr_power' }, franchise: { season: 3, week: 4, record: { w: 2, l: 1 }, starterOffense: 'Firestorm', starterDefense: 'Skywarden', rivals: { challenger: { team: 'Ashford Cinders' } }, championshipBadges: { challenger: 1, vanguard: 0, sovereign: 0 }, seasonHistory: [{ season: 1, record: { w: 4, l: 5 }, schedule: [] }, { season: 2, record: { w: 6, l: 3 }, schedule: [] }] } };
+  const s = legacySummary(legacy); assert.equal(s.club, 'Stonehaven Bastions');
   const imported = importLegacy(legacy);
-  assert.equal(imported.owner.first, 'Dana'); assert.equal(imported.club, 'Stonehaven Titans');
-  assert.equal(imported.staff.head_coach, 'hc_flint'); assert.equal(imported.rivals.challenger.team, 'Ashford Hawks');
+  assert.equal(imported.owner.first, 'Dana'); assert.equal(imported.club, 'Stonehaven Bastions');
+  assert.equal(imported.staff.head_coach, 'hc_flint'); assert.equal(imported.rivals.challenger.team, 'Ashford Cinders');
   assert.equal(imported.badges.challenger, 1); assert.equal(imported.history.length, 2); assert.equal(imported.season.year, 3);
   // The legacy save's quarterback was a "Pyronix": the import keeps his species and position and gives him a personal name.
   const qb = imported.roster.find((m) => m.species === 'firestorm' && m.position === 'QB'); assert.ok(qb, 'the legacy Pyronix quarterback was imported');
@@ -338,7 +338,7 @@ test('campaign: an ordinary club meets four gyms a season (all eight over two), 
 
 test('campaign: beating a gym club earns its badge once; Hall of Fame progress reads the difficulty goals', () => {
   const f = newFranchise(4);
-  const gymWeek = f.season.schedule.find((g) => !g.bye && ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers'].includes(g.opponent));
+  const gymWeek = f.season.schedule.find((g) => !g.bye && ['Harbor Anchors', 'Sunfire Solars', 'Thunder Mesa Blitz', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Colossi', 'Palmetto Wyrms'].includes(g.opponent));
   assert.ok(gymWeek);
   while (f.season.week < gymWeek.week) { F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); continue; } const g = F.simulatePlayerGame(f); F.finishSunday(f, g); }
   F.autoRunToSunday(f);
@@ -403,7 +403,7 @@ test('commissioner: signing over the cap is allowed with a warning; Saturday nam
 
 test('Legend Tracks: a champion chooses a track; three unlock the legendary in its home region; the rival keeps a signature monster', () => {
   const f = newFranchise(31);
-  f.campaign.badges['Harbor Sentinels'] = { year: 1, week: 1, score: '1-0' };
+  f.campaign.badges['Harbor Anchors'] = { year: 1, week: 1, score: '1-0' };
   const choices = F.legendChoices(f).map((c) => c.id);
   assert.deepEqual(choices.slice(0, 4), ['pyroclast', 'elderoot', 'tempestra', 'astralux']);
   assert.ok(choices.includes('tsunarok'), 'a held badge opens that gym legendary');
@@ -438,7 +438,7 @@ test('Hall of Fame: eligibility follows the checklist; retiring writes a career 
   const f = newFranchise(41);
   assert.equal(F.retire(f).ok, false);
   assert.equal(F.hallOfFameNotice(f), false);
-  for (const g of ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers']) f.campaign.badges[g] = { year: 1, week: 1, score: '1-0' };
+  for (const g of ['Harbor Anchors', 'Sunfire Solars', 'Thunder Mesa Blitz', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Colossi', 'Palmetto Wyrms']) f.campaign.badges[g] = { year: 1, week: 1, score: '1-0' };
   Object.assign(f.campaign, { titles: 2, wins: 50, awards: 3 });
   f.history.push({ year: 1, club: f.club, record: { w: 9, l: 0 }, place: 1, champion: f.club, playoffs: true });
   assert.equal(F.hallOfFameProgress(f).eligible, true);
@@ -459,7 +459,7 @@ test('cornerstone offers: three monsters of different positions and elements, ea
     assert.deepEqual(cornerstoneOffers(seed).map((x) => x.name), o.map((x) => x.name), 'deterministic per seed');
   }
   const offer = cornerstoneOffers(5)[1];
-  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Stonehaven Titans', cornerstone: offer, seed: 5 });
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Stonehaven Bastions', cornerstone: offer, seed: 5 });
   const star = f.roster.find((m) => m.cornerstone);
   assert.ok(star && star.species === offer.species && star.position === offer.position);
   assert.equal(f.roster.filter((m) => m.cornerstone).length, 1, 'one cornerstone, no hidden second one');
@@ -529,10 +529,10 @@ test('playtest round 3: comeback mode is retired (owner N8a); scheme lock needs 
   const team = F.playerTeam(f); assert.equal(!!team.schemeLock, !!(lock.offense || lock.defense));
   st.ot = null; st.score.home = 20; st.possession = 'home'; e = R.edgesFor(st, { home: { ...m.home, schemeLock: { offense: 3, defense: 0 } }, away: m.away }); assert.equal(e.off, 3); assert.ok(e.why.off.includes('scheme'));
   // Badge memory for the HQ banner.
-  f.campaign.badges = {}; f.season.schedule.find((g) => g.week === f.season.week).opponent = 'Harbor Sentinels';
+  f.campaign.badges = {}; f.season.schedule.find((g) => g.week === f.season.week).opponent = 'Harbor Anchors';
   const g = F.simulatePlayerGame(f); const side = F.sundayMatchup(f).playerSide; g.score[side] = 40; g.score[side === 'home' ? 'away' : 'home'] = 0; g.winner = side;
   const r = F.finishSunday(f, g);
-  assert.equal(r.newBadge, 'Harbor Sentinels'); assert.deepEqual(f.campaign.lastBadge, { club: 'Harbor Sentinels', year: 1, week: 1, n: 1 });
+  assert.equal(r.newBadge, 'Harbor Anchors'); assert.deepEqual(f.campaign.lastBadge, { club: 'Harbor Anchors', year: 1, week: 1, n: 1 });
 });
 
 test('a roster that cannot staff a package slot still plays (Task 7 D6): nobody from another position borrows the slot; the plays that need it drop out; the base lineup plays', async () => {

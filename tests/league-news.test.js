@@ -9,7 +9,7 @@ import { resultsNews, playoffNews, championNews, raceNews, recordNews, addLeague
 import { updateGameRecords, ensureRecords } from '../src/franchise/stats.js';
 
 const home = generatedTeam(1, { id: 'h', name: 'Ember City Beasts', abbr: 'EMB' });
-const away = generatedTeam(2, { id: 'a', name: 'Stonehaven Titans', abbr: 'STO' });
+const away = generatedTeam(2, { id: 'a', name: 'Stonehaven Bastions', abbr: 'STO' });
 function scrimmage(over = {}) {
   const s = R.newGame({ home, away, seed: 5, coinWinner: 'home', choice: 'receive' });
   s.phase = 'scrimmage'; s.possession = 'away'; s.ballOn = 30; s.down = 1; s.toGo = 10; s.clockRunning = false;
@@ -56,7 +56,7 @@ test('results news: streaks are mentioned at 4, 6 and 8, not every week they gro
   assert.deepEqual(lines, [0, 0, 0, 2, 0, 2, 0, 2]); // Bravo and Delta at 4, 6, 8
   const shut = resultsNews({ year: 1, week: 1, results: res }).find((x) => x.kind === 'shutout');
   assert.match(shut.text, /^Ember City Beasts' defense shuts out Bravo/);
-  assert.equal(poss('Thunder Mesa'), "Thunder Mesa's");
+  assert.equal(poss('Thunder Mesa Blitz'), "Thunder Mesa Blitz's");
   assert.deepEqual(recordsFrom(res).Bravo, { w: 0, l: 8, t: 0, streak: -8 });
 });
 
