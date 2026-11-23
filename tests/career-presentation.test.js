@@ -120,7 +120,7 @@ test('career links: monsters found by stable id anywhere; another club\'s player
   const twin = { ...JSON.parse(JSON.stringify(y)), name };
   assert.equal(P.findMonster(f, x.id).m, x); assert.equal(P.careerProfile({ ...f, roster: [x, twin] }, twin.id).id, twin.id);
   const pool = Object.values(f.pool || {}).flat()[0]; if (pool) assert.equal(P.findMonster(f, pool.id).where, 'pool');
-  const row = Object.values(f.season.leagueStats).flatMap((T) => Object.values(T)).find((r) => r.team !== f.club && r.games > 3);
+  const row = Object.values(f.season.leagueStats).flatMap((T) => Object.values(T)).find((r) => r.team !== f.club && r.games > 3 && f.league.monsters[r.id]); // one still in the league (a released player's row stays in the table: the next case)
   // Persistent AI rosters (GDD §42.6): another club's player is a real monster in the league registry, with a full profile and his own books.
   const lp = P.careerProfile(f, row.id); assert.equal(lp.kind, 'full'); assert.equal(lp.where, 'league'); assert.equal(lp.club, row.team); assert.equal(lp.stats.games >= row.games, true);
   // A player the registry no longer holds (table rows only) still opens a table-only profile.
