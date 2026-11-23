@@ -218,7 +218,7 @@ test('a franchise saved in the 16-club league is refused with its own message an
 });
 
 // ------------------------------------------------------------ Legend Tracks need a held badge (owner, 2026-11-23)
-test('all twelve Legend Tracks: locked without the badge, active with it, paused when it is lost with progress kept, resumed when it is won back', () => {
+test('all twelve Legend Tracks: locked without the badge, active with it, paused when an unfinished track loses it, resumed when it is won back, complete for good', () => {
   const f = F.createFranchise({ owner: { first: 'L', last: 'T' }, club: 'Fernhaven Wisps', seed: 19 }); const state = (id) => F.legendTracks(f).find((t) => t.id === id);
   assert.equal(F.legendTracks(f).length, 12); assert.deepEqual(F.legendTracks(f).map((t) => t.id).sort(), GYMS.map((g) => g.legendary).sort()); assert.ok(F.legendTracks(f).every((t) => t.state === 'locked' && t.needed === 3)); assert.deepEqual(F.legendChoices(f), []);
   for (const g of GYMS) { const id = g.legendary; const where = `${g.club} (${id})`;
@@ -227,28 +227,41 @@ test('all twelve Legend Tracks: locked without the badge, active with it, paused
     // win the badge: the track runs
     f.campaign.badges[g.club] = { year: 1, week: 3, score: '20-10' }; assert.equal(state(id).state, 'active'); assert.equal(state(id).held, true); assert.ok(F.legendChoices(f).some((c) => c.id === id));
     assert.equal(F.chooseLegendTrack(f, id).tracks, 1); f.legendPick = { year: 2, resolved: false }; assert.equal(F.chooseLegendTrack(f, id).tracks, 2); assert.equal(state(id).tracks, 2);
-    // lose the badge: paused at once, progress kept, nothing advances
-    delete f.campaign.badges[g.club]; assert.equal(state(id).state, 'paused', `${where}: paused`); assert.equal(state(id).tracks, 2, 'progress is kept'); assert.ok(!F.legendChoices(f).some((c) => c.id === id));
+    // lose the badge on an unfinished track: paused at once, progress kept, nothing advances, the legendary is not scoutable
+    delete f.campaign.badges[g.club]; assert.equal(state(id).state, 'paused', `${where}: paused`); assert.equal(state(id).tracks, 2, 'progress is kept'); assert.ok(!F.legendChoices(f).some((c) => c.id === id)); assert.equal(F.legendTrackActive(f, id), false);
     f.legendPick = { year: 3, resolved: false }; assert.equal(F.chooseLegendTrack(f, id).ok, false, `${where}: a paused track does not advance`); assert.equal(f.campaign.tracks[id], 2); assert.equal(f.legendPick.resolved, false, 'and the champion\'s pick is not spent');
     // win it back: it resumes where it stood and completes
-    f.campaign.badges[g.club] = { year: 3, week: 5, score: '17-14' }; assert.equal(state(id).state, 'active'); const r = F.chooseLegendTrack(f, id); assert.equal(r.tracks, 3); assert.equal(r.unlocked, true); assert.equal(state(id).unlocked, true);
-    // a completed track stays completed when the badge goes again; it is paused, not undone
-    delete f.campaign.badges[g.club]; assert.equal(state(id).state, 'paused'); assert.equal(state(id).unlocked, true, `${where}: a completed milestone stays completed`); assert.equal(f.campaign.unlocked[id], true); assert.equal(f.campaign.tracks[id], 3);
+    f.campaign.badges[g.club] = { year: 3, week: 5, score: '17-14' }; assert.equal(state(id).state, 'active'); const r = F.chooseLegendTrack(f, id); assert.equal(r.tracks, 3); assert.equal(r.unlocked, true); assert.equal(state(id).state, 'complete');
+    // a completed track never goes back to paused or locked: the badge can go and come back, the legendary stays available
+    delete f.campaign.badges[g.club]; assert.equal(state(id).state, 'complete', `${where}: complete without the badge`); assert.equal(state(id).unlocked, true); assert.equal(F.legendTrackActive(f, id), true, `${where}: still scoutable`);
+    assert.equal(f.campaign.unlocked[id], true); assert.equal(f.campaign.tracks[id], 3); assert.ok(!F.legendChoices(f).some((c) => c.id === id), 'a complete track takes no more picks');
+    f.campaign.badges[g.club] = { year: 4, week: 2, score: '10-7' }; assert.equal(state(id).state, 'complete'); delete f.campaign.badges[g.club];
   }
-  assert.ok(F.legendTracks(f).every((t) => t.state === 'paused' && t.unlocked && t.tracks === 3));
+  assert.ok(F.legendTracks(f).every((t) => t.state === 'complete' && t.unlocked && t.tracks === 3 && !t.held));
   const back = Save.importJson(Save.exportJson(f)); assert.deepEqual(F.legendTracks(back).map((t) => [t.id, t.state, t.tracks, t.unlocked]), F.legendTracks(f).map((t) => [t.id, t.state, t.tracks, t.unlocked]), 'the states survive a save and load');
 });
 
-test('a paused track\'s legendary does not turn up in scouting until the badge is back; a legendary already recruited is never taken away', () => {
+test('scouting: a paused track\'s legendary stays away until the badge is back; a completed track\'s legendary turns up with or without the badge; a recruited legendary is never taken away', () => {
   const f = F.createFranchise({ owner: { first: 'L', last: 'T' }, club: 'Fernhaven Wisps', seed: 23 }); F.hireDefaultStaff(f); const g = GYM_BY_CLUB['Emberfall Infernos']; const id = g.legendary; const home = SPECIES_BY_ID[id].regions[0];
-  f.campaign.unlocked = { [id]: true }; f.campaign.tracks = { [id]: 3 };
-  const found = () => { f.campaign.legendSeen = {}; f.season.day = 0; f.week = { ...f.week, scouted: null, prospects: null, region: null }; const r = F.scoutRegion(f, home); return (r.prospects || f.week.prospects || []).some((p) => p.monster.species === id); };
-  assert.equal(found(), false, 'no badge: the unlocked legendary stays away'); f.campaign.badges[g.club] = { year: 1, week: 2, score: '14-7' }; assert.equal(found(), true, 'badge held: he turns up in his home region');
-  delete f.campaign.badges[g.club]; assert.equal(found(), false, 'badge lost: paused again');
-  // recruited: on the roster, and he stays there whatever happens to the badge
+  const found = () => { let hit = false; for (let k = 0; k < 6 && !hit; k++) { f.campaign.legendSeen = {}; f.season.day = 0; f.week = { ...f.week, scouted: null, prospects: null, region: null }; const r = F.scoutRegion(f, home); hit = (r.prospects || f.week.prospects || []).some((p) => p.monster.species === id); } return hit; };
+  f.campaign.tracks = { [id]: 2 }; assert.equal(found(), false, 'paused (2 of 3, no badge): he does not turn up');
+  f.campaign.badges[g.club] = { year: 1, week: 2, score: '14-7' }; assert.equal(found(), false, 'active but incomplete: not scoutable yet');
+  f.campaign.tracks = { [id]: 3 }; f.campaign.unlocked = { [id]: true }; assert.equal(found(), true, 'complete with the badge: he turns up in his home region');
+  delete f.campaign.badges[g.club]; assert.equal(F.legendTracks(f).find((t) => t.id === id).state, 'complete'); assert.equal(found(), true, 'complete without the badge: he still turns up');
+  // recruited: on the roster, and he stays there whatever happens to the badge; one of each legendary, so he is not offered again
   const legend = { ...f.roster[0], id: 'legend-test', species: id, name: 'Kept' }; f.roster.push(legend); const t = () => F.legendTracks(f).find((x) => x.id === id);
-  assert.equal(t().state, 'recruited'); assert.equal(t().recruited, true); f.campaign.badges[g.club] = { year: 2, week: 2, score: '14-7' }; assert.equal(t().state, 'recruited'); delete f.campaign.badges[g.club]; assert.equal(t().state, 'recruited');
+  assert.equal(t().state, 'recruited'); assert.equal(found(), false, 'not scouted a second time'); f.campaign.badges[g.club] = { year: 2, week: 2, score: '14-7' }; assert.equal(t().state, 'recruited'); delete f.campaign.badges[g.club]; assert.equal(t().state, 'recruited');
   assert.ok(f.roster.some((m) => m.id === 'legend-test'), 'never removed'); assert.ok(!F.legendChoices(f).some((c) => c.id === id), 'and he cannot be tracked twice (one of each legendary)');
+});
+
+test('Legend Track states travel with the coach: complete stays complete, paused stays paused, active needs the badge, which travels too', () => {
+  const f = closedSeason(); const [a, b, c, d] = GYMS.map((g) => g.legendary); const gb = GYMS[1].club, gc = GYMS[2].club;
+  f.campaign.tracks = { [a]: 3, [b]: 2, [c]: 1 }; f.campaign.unlocked = { [a]: true }; f.campaign.badges = { [gc]: { year: 1, week: 3, score: '21-7' } };
+  const st = () => Object.fromEntries(F.legendTracks(f).map((t) => [t.id, t.state])); const before = st(); assert.deepEqual([before[a], before[b], before[c], before[d]], ['complete', 'paused', 'active', 'locked']);
+  const job = GM.jobMarket(f).find((o) => o.rebuilding && !isGymClub(o.club)); assert.ok(job); assert.ok(GM.applyForJob(f, job.club).offered); assert.ok(F.acceptGmJob(f, job.club).ok);
+  assert.deepEqual(st(), before, 'every state is the same at the new club'); assert.equal(F.legendTrackActive(f, a), true); assert.equal(F.legendTrackActive(f, b), false);
+  f.campaign.badges[gb] = { year: 2, week: 4, score: '14-10' }; assert.equal(st()[b], 'active', 'winning the badge at the new club resumes the paused track');
+  const back = Save.importJson(Save.exportJson(f)); assert.deepEqual(Object.fromEntries(F.legendTracks(back).map((t) => [t.id, t.state])), st());
 });
 
 test('Hall of Fame: the badge requirement counts badges held now, 8 on Easy and Normal and 12 on Hard', () => {

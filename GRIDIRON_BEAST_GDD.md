@@ -4767,14 +4767,17 @@ no fourth difficulty. Titles, wins and awards are unchanged. A Hall of Fame achi
 
 ### 60.8 Legendaries and Legend Tracks (owner ruling 2026-11-23)
 
-Each Gym Leader's club holds its type's legendary, and **all twelve Legend Tracks need that Gym Leader's badge, held now.** No
-legendary is free to track any more (Pyroclast, Elderoot, Tempestra and Astralux were, before they had Gym Leaders).
+Each Gym Leader's club holds its type's legendary, and **every unfinished Legend Track needs that Gym Leader's badge, held
+now.** No legendary is free to track any more (Pyroclast, Elderoot, Tempestra and Astralux were, before they had Gym Leaders).
+**A completed track is complete for good** (owner ruling 2026-11-23, second set): its legendary stays available in scouting
+whether or not the badge is still held.
 
 | State | When | What it means |
 |---|---|---|
 | Locked | no badge, no progress | nothing can be done |
-| Active | the badge is held | a Beast Bowl champion may add a track; a completed track's legendary turns up in its home region |
-| Paused | progress made, badge lost | nothing advances and the legendary does not turn up; every track and a completed unlock are kept |
+| Active | the badge is held, track unfinished | a Beast Bowl champion may add a track |
+| Paused | progress made, badge lost, track unfinished | nothing advances; the progress is kept |
+| Complete | three tracks done, not yet recruited | the legendary turns up in its home region, badge or no badge; never locked or paused again |
 | Recruited | the legendary is on the roster | he is never removed, with or without the badge |
 
 Winning the badge back resumes the track exactly where it stood. Tracks, unlocks and badges all go with the coach to a new club.

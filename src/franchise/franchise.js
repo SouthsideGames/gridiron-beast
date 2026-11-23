@@ -280,8 +280,10 @@ function bestSchemeFor(f, role) {
  * needs that Gym Leader's badge HELD NOW:
  *   'locked'    no badge and no progress: nothing can be done yet;
  *   'active'    the badge is held: a Beast Bowl champion may add a track, and a completed track's legendary can be scouted;
- *   'paused'    progress was made, then the badge was lost: nothing advances and the legendary does not turn up, but every track
- *               and a completed unlock are kept, and winning the badge back resumes exactly where it stood;
+ *   'paused'    an incomplete track whose badge was lost: nothing advances, the progress is kept, and winning the badge back
+ *               resumes exactly where it stood;
+ *   'complete'  all three tracks are done: the legendary can be scouted for good, badge or no badge (owner 2026-11-23). A
+ *               completed track never goes back to 'locked' or 'paused';
  *   'recruited' the legendary is on the roster. He is never taken away, badge or no badge.
  * Badges, tracks and unlocks all travel with the coach to a new club (gm-career.js).
  */
@@ -289,10 +291,10 @@ export function legendTracks(f) {
   const c = f.campaign || {};
   return GYMS.map((g) => { const id = g.legendary; const held = !!c.badges?.[g.club]; const tracks = c.tracks?.[id] || 0; const unlocked = !!c.unlocked?.[id]; const recruited = f.roster.some((m) => m.species === id);
     return { id, club: g.club, badge: g.badge, element: g.element, leader: g.coach.name, held, tracks, needed: LEGEND_RULES.tracksNeeded, unlocked, recruited, species: SPECIES_DEX.find((s) => s.id === id),
-      state: recruited ? 'recruited' : held ? 'active' : tracks || unlocked ? 'paused' : 'locked' }; });
+      state: recruited ? 'recruited' : unlocked ? 'complete' : held ? 'active' : tracks ? 'paused' : 'locked' }; });
 }
-/** Is this legendary's track running: its Gym Leader's badge held now? */
-export const legendTrackActive = (f, speciesId) => { const g = GYMS.find((x) => x.legendary === speciesId); return !!g && !!f.campaign?.badges?.[g.club]; };
+/** Can this legendary turn up in scouting: his track is complete (for good), or its Gym Leader's badge is held now? */
+export const legendTrackActive = (f, speciesId) => { const g = GYMS.find((x) => x.legendary === speciesId); return !!g && (!!f.campaign?.unlocked?.[speciesId] || !!f.campaign?.badges?.[g.club]); };
 /** Legendaries a champion may add a track to: a held badge's legendary, not yet unlocked and not on the roster. */
 export function legendChoices(f) {
   return legendTracks(f).filter((t) => t.state === 'active' && !t.unlocked).map((t) => ({ id: t.id, tracks: t.tracks, species: t.species }));
@@ -1780,7 +1782,7 @@ export function scoutRegion(f, regionName, { focus = null } = {}) {
   const count = (skill >= 80 ? 3 : skill >= 45 ? 2 : 1) + (scoutBonusActive(f) ? 1 : 0); // the board's expanded scouting department after a goal met (GDD §17.4)
   const prospects = [];
   // Species come from the region's elements by rarity weight; rares only in their home region from their week.
-  // (a completed track whose badge has been lost is paused: its legendary does not turn up until the badge is won back)
+  // (a completed track stays open for good; an unlocked legendary is never paused by a lost badge, owner 2026-11-23)
   const unlocked = Object.keys(f.campaign?.unlocked || {}).filter((id) => legendTrackActive(f, id)).map((id) => SPECIES_DEX.find((s) => s.id === id)).filter((sp) => sp && (sp.regions || [])[0] === regionName && !f.roster.some((m) => m.species === sp.id));
   const pool = [...regionSpecies(regionName, region.types, f.season.week), ...unlocked]; // a legendary with three Legend Tracks is scoutable in its home region
   const rarityBonus = skill >= 80 ? 1.6 : skill >= 60 ? 1.25 : 1;
