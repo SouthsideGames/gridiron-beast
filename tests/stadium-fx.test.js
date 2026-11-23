@@ -241,3 +241,13 @@ test('every stadium design has a look: ten on fields clubs play on (the ten type
   // The twelve monster types each have a design (the Gym Leader line-up): ten on typed fields plus Sky (Wind) and Oracle (Psychic).
   assert.deepEqual(['storm', 'volcanic', 'tidal', 'forest', 'frozen', 'desert', 'dome', 'dragon', 'shadow', 'radiant', 'sky', 'oracle'].filter((k) => !LOOKS[k]), []);
 });
+
+// 2026-11-23: no weather drawn over the field; the winners celebrate when the game is over.
+test('the match screen draws no weather layer, and the final screen has the winners celebrating', () => {
+  const match = fs.readFileSync(new URL('../src/ui/screens/match.js', import.meta.url), 'utf8'); const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8');
+  assert.doesNotMatch(match, /weatherLayer|weatherClass|class="weather /, 'no weather layer over the field');
+  assert.doesNotMatch(fs.readFileSync(new URL('../src/ui/stadium-preview.js', import.meta.url), 'utf8'), /venue-weather/, 'and no weather label before the game');
+  assert.match(match, /s\.finished && !anim \? finalCelebration\(f, s, teams\)/); assert.match(match, /const side = s\.winner; if \(level === 'off' \|\| !side/, 'the winning side, whoever it is; nothing for a tie or at Off');
+  assert.match(css, /\.final-celebration \{[^}]*pointer-events: none/); assert.match(css, /@keyframes final-jump\b/); assert.match(css, /@keyframes final-fall\b/);
+  assert.equal((match.match(/Array\.from\(\{ length: 18 \}/g) || []).length, 1, 'a fixed, small number of confetti pieces');
+});

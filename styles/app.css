@@ -2749,3 +2749,17 @@ html[data-stadium-fx="reduced"] .sfx-dial { animation-duration: 20s; } html[data
 @keyframes sfx-dawn { 0% { opacity: 0; transform: translateX(-105%); } 6% { opacity: .95; } 58% { opacity: .95; } 66%, 100% { opacity: 0; transform: translateX(170%); } }
 .sfx-reveal-sunrise .sfx-ball { filter: drop-shadow(0 0 5px var(--sfx-a)); }
 .sfx-reveal-sunrise .sfx-whiteout { display: none; }
+
+/* The winners celebrate on the field when the game is over (2026-11-23). Presentation only; sits over the field, takes no taps. */
+.final-celebration { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; pointer-events: none; overflow: hidden; }
+.final-party { display: grid; grid-template-columns: repeat(5, 44px); gap: 4px 10px; justify-content: center; }
+.final-party span { display: block; filter: drop-shadow(0 3px 1px #0009); }
+.final-party span:nth-child(n+6) { transform: translateX(27px); }
+.final-celebration.moving .final-party span { animation: final-jump .72s ease-in-out infinite; }
+@keyframes final-jump { 0%, 100% { translate: 0 0; rotate: 0deg; } 35% { translate: 0 -13px; rotate: -4deg; } 55% { translate: 0 -13px; rotate: 4deg; } }
+.final-cheer { max-width: 92%; padding: 5px 12px; border-radius: 9px; font-weight: 800; font-size: 14px; text-align: center; color: #fff; background: color-mix(in srgb, var(--team, #2b7) 55%, #0b1410); border: 2px solid color-mix(in srgb, var(--team, #2b7) 70%, #fff); text-shadow: 0 1px 0 #0009; }
+.final-confetti { position: absolute; inset: 0; }
+.final-confetti i { position: absolute; top: -14px; width: 6px; height: 11px; border-radius: 1px; animation: final-fall var(--d, 3s) linear infinite; }
+@keyframes final-fall { from { transform: translateY(-14px) rotate(0deg); } to { transform: translateY(78vh) rotate(540deg); } }
+html[data-reduced-motion="1"] .final-celebration .final-party span { animation: none; } html[data-reduced-motion="1"] .final-confetti { display: none; }
+html[data-app-inactive="1"] .final-celebration * { animation-play-state: paused; }
