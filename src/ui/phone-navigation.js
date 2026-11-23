@@ -8,13 +8,13 @@ export const TAB_OF = {
   hq: 'hq', commissioner: 'hq', postseason: 'hq', legend: 'hq', scout: 'hq', recruit: 'hq', training: 'hq', scoutopp: 'hq', gameplan: 'hq', lineup: 'roster', pregame: 'hq', match: 'hq',
   roster: 'roster', monster: 'roster', assign: 'roster', contracts: 'roster', famarket: 'roster', staff: 'more',
   playbook: 'hq', playdetail: 'hq', practice: 'more', audit: 'more',
-  office: 'office', 'coach-look': 'office', 'gm-jobs': 'office',
+  office: 'hq', 'coach-look': 'hq', 'gm-jobs': 'hq', map: 'map',
   league: 'league', schedule: 'league', standings: 'league', history: 'league',
-  more: 'more', settings: 'more', developer: 'more', 'test-session': 'more', about: 'more', dex: 'more', hof: 'more', achievements: 'more',
+  more: 'more', guide: 'more', settings: 'more', developer: 'more', 'test-session': 'more', about: 'more', dex: 'more', hof: 'more', achievements: 'more',
 };
 export function franchiseTabs(f, screenName) {
   if (!f || isArchived(f)) return null;
-  const items = [['hq', 'HQ', '🏠'], ['roster', t('franchises.roster'), '🐾'], ['office', t('menu.my_office'), '📋'], ['league', t('franchises.league'), '🏆'], ['more', t('franchises.more'), '☰']];
+  const items = [['hq', 'HQ', '🏠'], ['roster', t('franchises.roster'), '🐾'], ['map', t('map.tab'), '🗺️'], ['league', t('franchises.league'), '🏆'], ['more', t('franchises.more'), '☰']];
   const counts = {};
   for (const notice of F.notices(f)) counts[notice.screen] = (counts[notice.screen] || 0) + 1;
   return items.map(([screen, label, icon]) => ({ screen, label, icon, badge: counts[screen] || 0, active: screenName === screen || TAB_OF[screenName] === screen }));

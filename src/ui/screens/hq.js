@@ -126,9 +126,8 @@ export function registerHqScreens(Router, app) {
         ${campaignPanel(f)}</details>
         ${f.week.gameResult && !f.week.gameResult.bye && day === 0 ? '' : ''}
         <div class="grid2 hq-links" style="margin-bottom:var(--s3)">
-          <button class="btn block" data-action="go" data-screen="schedule">${$t('hq.schedule')}</button><button class="btn block" data-action="go" data-screen="standings">${$t('hq.standings')}</button>
-          <button class="btn block" data-action="go" data-screen="league">${$t('hq.league_hub')}</button><button class="btn block" data-action="go" data-screen="history">${$t('hq.history_and_records')}</button>
-          <button class="btn block" data-action="go" data-screen="staff">${$t('hq.coaching_staff')}</button></div>
+          <button class="btn block" data-action="go" data-screen="schedule">${$t('hq.schedule')}</button><button class="btn block" data-action="go" data-screen="history">${$t('hq.history_and_records')}</button>
+          <button class="btn block" data-action="go" data-screen="staff">${$t('hq.coaching_staff')}</button><button class="btn block" data-action="go" data-screen="office">${$t('hq.my_office')}</button></div>
         <details class="polish-secondary hq-news" open><summary>${$t('polish.league_news')}</summary>${leagueNewsPanel(f, { clubLog: f.news })}</details>`;
     },
     mount(root) {

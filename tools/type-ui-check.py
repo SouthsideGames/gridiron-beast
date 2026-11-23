@@ -109,7 +109,8 @@ with sync_playwright() as pw:
         if overflow(page) > 0: problems.append('overflow on the chart from the card')
         page.click('.sheet [data-action=sheet-close]')
     page.evaluate("async () => (await import('/src/ui/router.js')).go('more')"); page.wait_for_timeout(200)
-    if not page.query_selector('[data-action=typechart]'): problems.append('no Type Chart entry in More')
+    if page.query_selector('[data-screen=guide]'): page.click('[data-screen=guide]'); page.wait_for_timeout(200)
+    if not page.query_selector('[data-action=typechart]'): problems.append('no Type Chart entry in More > Guide')
     else:
         page.click('[data-action=typechart]'); page.wait_for_timeout(200)
         if 'Strong against' not in page.evaluate("() => document.querySelector('.sheet')?.innerText || ''"): problems.append('chart did not open from More')

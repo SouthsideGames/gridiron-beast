@@ -29,22 +29,27 @@ try:
    def go(name):
     page.evaluate("async name=>(await import('/src/ui/router.js')).go(name,{}, {reset:true})",name);page.wait_for_timeout(200);scenes()
    go('hq')
-   assert page.locator('.tabbar [data-screen="office"]').count()==1
+   assert page.locator('.tabbar [data-screen="map"]').count()==1 and page.locator('.tabbar [data-screen="office"]').count()==0
    assert page.locator('.tabbar [data-screen="playbook"]').count()==0
    assert page.locator('.polish-deals').count()==0, 'empty trades section'
    assert not page.locator('main.screen summary',has_text='GM Career').count()
-   page.locator('.tabbar [data-screen="office"]').click();page.wait_for_timeout(200);scenes()
+   page.locator('main.screen [data-screen="office"]').click();page.wait_for_timeout(200);scenes()
    assert page.locator('.screen-office').count()==1
    page.locator('[data-action="gmcareer"]').click();page.wait_for_timeout(200)
    assert page.locator('.screen-gm-jobs').count()==1
-   assert page.locator('.tabbar [data-screen="office"]').get_attribute('aria-current')=='page'
+   assert page.locator('.tabbar [data-screen="hq"]').get_attribute('aria-current')=='page'
    page.locator('.tabbar [data-screen="more"]').click();page.wait_for_timeout(200)
    assert page.locator('.screen-more [data-screen="office"]').count()==0
    assert page.locator('.screen-more [data-screen="playbook"]').count()==0
-   page.locator('.tabbar [data-screen="office"]').click();page.wait_for_timeout(200)
-   assert page.locator('.screen-gm-jobs').count()==1, 'Office tab history was not retained'
-   page.locator('.tabbar [data-screen="office"]').click();page.wait_for_timeout(200)
-   assert page.locator('.screen-office').count()==1, 'second Office tap should return to its root'
+   assert page.locator('.screen-more [data-screen="developer"]').count()==0
+   page.locator('.tabbar [data-screen="map"]').click();page.wait_for_timeout(200);scenes()
+   assert page.locator('.screen-map .region-map .map-pin').count()==32
+   page.locator('.screen-map .map-pin[data-club="Harbor Anchors"]').dispatch_event('click');page.wait_for_timeout(200)
+   assert 'Harbor Anchors' in page.locator('.screen-map .map-card').inner_text()
+   page.locator('.tabbar [data-screen="hq"]').click();page.wait_for_timeout(200)
+   assert page.locator('.screen-gm-jobs').count()==1, 'HQ tab history was not retained'
+   page.locator('.tabbar [data-screen="hq"]').click();page.wait_for_timeout(200)
+   assert page.locator('.screen-hq').count()==1, 'second HQ tap should return to its root'
    go('hq')
    next_button=page.locator('.phone-hq-next [data-phone-next]');assert next_button.count()==1
    page.wait_for_timeout(300);top_box=next_button.bounding_box();assert top_box and top_box['y']+top_box['height']<=page.viewport_size['height'],'HQ action is not on screen before scrolling (the slide-in transform must not hold the fixed bar)'

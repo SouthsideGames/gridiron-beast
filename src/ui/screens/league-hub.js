@@ -2,12 +2,12 @@
 // career leaders across the universe, the league's recent moves, the award races and the rivalries (the rival GM and his
 // signature monster, the gym legendaries) with their 20-season continuity. Every monster name opens its career. Reads only.
 
-import { teamLogo } from '../team-logo.js';
+import { teamLogo, logoBody } from '../team-logo.js';
 import { esc, delegate } from '../dom.js';
 import { yearOf } from '../../data/calendar.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { careerLink } from '../career-ui.js';
-import { TEAM_META, tierById, REG_WEEKS, teamSwatch } from '../../data/league.js';
+import { TEAM_META, tierById, REG_WEEKS, teamSwatch, DIVISIONS, CONFERENCE_NAMES, divisionOf, conferenceFor, leagueSeasonFixtures } from '../../data/league.js';
 import { AWARDS } from '../../franchise/awards.js';
 import { RECORD_CATEGORIES } from '../../franchise/stats.js';
 import { teamOverall } from '../../franchise/roster.js';
@@ -17,6 +17,10 @@ import { TRANSACTION_KINDS } from '../../franchise/league-news.js';
 import * as F from '../../franchise/franchise.js';
 import { historyNavHtml } from './history.js';
 import { t as $t, lineText, fieldText } from '../../text/index.js';
+import { REGIONS, CLUB_NAMES } from '../../data/club-identity.js';
+import { GYM_BY_CLUB } from '../../data/gyms.js';
+import { TYPES } from '../../data/monsters.js';
+import { stadiumFor, ENVIRONMENTS } from '../../data/stadiums.js';
 
 const TAB_KEY = 'gridiron-beast-v7-league-tab';
 const TABS = [['clubs', $t('league.clubs')], ['leaders', $t('league.leaders')], ['moves', $t('league.moves')], ['races', $t('league.races')], ['rivals', $t('league.rivals')]];
@@ -67,6 +71,156 @@ function rivalsTab(f) {
   return `${rivalPanel}<h3>${$t('league.gym_legendaries')}</h3><p class="muted">${$t('league.each_gyms_legendary_belongs_to_its')}</p><div class="list">${legends.map((p) => `<div class="item static">${monsterSprite(p, 36)}<div class="grow"><div class="name">${careerLink(p.id, p.name)} ${badge('legendary')}</div><div class="sub">${esc(p.club)}${p.gym ? ` ${$t('league.the', { gym: esc(p.gym) })}` : ''} ${$t('league.ovr_games_honors', { position: esc(p.position), ovr: p.ovr, games: p.games, honors: p.honours, n: p.honours })}</div></div><button class="btn small" data-action="club" data-club="${esc(p.club)}">${$t('league.club')}</button></div>`).join('') || `<p class="dim">${$t('league.no_gym_legendaries_on_record_yet')}</p>`}</div>`;
 }
 
+// ---------------------------------------------------------------- The region map (owner 2026-11-23): the league as a place.
+// Two landmasses across a strait: Veyra in the west, its four regions north to south, and Koruun in the east with the Azure
+// Isles off its southern coast. Every club sits at its home stadium; Gym Leaders carry their type's colour and, once beaten, a
+// gold star. Drawn here (not in a module of its own) because the released game is at the artifact's 512-file limit.
+const MAP_VIEW = { x: -16, y: -26, w: 432, h: 600 };
+/** Where each club's home stadium stands, in map units (400 × 574). */
+export const MAP_PINS = Object.freeze({
+  'Frostpeak Howlers': [62, 62], 'Glacier Guardians': [142, 52], 'Northstar Novas': [118, 112], 'Ironpeak Colossi': [50, 122],
+  'Stormport Bolts': [38, 190], 'Canyon Crushers': [118, 180], 'Sundown Drakes': [74, 246], 'Thunder Mesa Blitz': [152, 238],
+  'Goldhaven Royals': [98, 318], 'Riverbend Rapids': [44, 364], 'Pinecrest Wardens': [156, 312], 'Skyvale Cyclones': [126, 380],
+  'Emberfall Infernos': [60, 444], 'Coral Bay Tides': [146, 452], 'Cliffhaven Chargers': [44, 508], 'Palm Isle Mystics': [124, 514],
+  'Stonehaven Bastions': [262, 56], 'Eastport Phantoms': [352, 62], 'Harbor Anchors': [232, 118], 'Ashford Cinders': [322, 118],
+  'Thornwood Wildroots': [256, 184], 'Silvergrove Arcanists': [344, 176], 'Mossvale Quakes': [278, 246], 'Fernhaven Wisps': [354, 240],
+  'Ember City Beasts': [250, 312], 'Bayou Stalkers': [334, 306], 'Sunfire Solars': [272, 376], 'Palmetto Wyrms': [356, 370],
+  'Aetheria Seers': [250, 464], 'Deepwater Chompers': [338, 452], 'Mistport Veils': [290, 528], 'Westhaven Pirates': [366, 522],
+});
+/** Each region's ground on the map, its label's place and ink, and the small landmarks scattered over it. */
+const MAP_REGIONS = Object.freeze({
+  Frostlands: { fill: '#dcebf1', shade: '#b9d3dd', label: [-7, 80], motif: 'peak' },
+  Redrock: { fill: '#b8673d', shade: '#8d4a2a', label: [-7, 215], motif: 'mesa' },
+  'Golden Valley': { fill: '#cdb259', shade: '#a68c3c', label: [-7, 345], motif: 'wheat' },
+  Suncoast: { fill: '#e8d6a0', shade: '#cdb67a', label: [-7, 478], motif: 'palm' },
+  Kingsport: { fill: '#8f8a84', shade: '#6d6863', label: [407, 76], motif: 'town' },
+  Greenheart: { fill: '#3f7a3a', shade: '#2d5a2a', label: [407, 211], motif: 'tree' },
+  Everwild: { fill: '#5a6838', shade: '#414c27', label: [407, 342], motif: 'reed' },
+  'Azure Isles': { fill: '#dcc895', shade: '#b9a36d', label: [300, 566], motif: 'palm' },
+});
+// Region boundaries (map y) on each landmass, north to south.
+const MAP_BANDS = { Veyra: [0, 150, 280, 410, 600], Koruun: [0, 146, 276, 600] };
+const wobble = (seed, t) => Math.sin(t * 2 + seed) * 0.42 + Math.sin(t * 5 + seed * 2.3) * 0.32 + Math.sin(t * 11 + seed * 0.7) * 0.18 + Math.sin(t * 23 + seed * 1.9) * 0.08;
+/** A coastline: a squared-off ellipse whose edge wanders by up to `amp` map units. */
+function coast(cx, cy, a, b, seed, amp = 6, n = 96) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const t = (i / n) * Math.PI * 2, c = Math.cos(t), s = Math.sin(t), k = 0.6; // k < 1 squares the ellipse off
+    const x = Math.sign(c) * Math.abs(c) ** k * a, y = Math.sign(s) * Math.abs(s) ** k * b, r = Math.hypot(x, y) || 1, w = 1 + (Math.max(-0.55, wobble(seed, t)) * amp) / r;
+    pts.push(`${(cx + x * w).toFixed(1)},${(cy + y * w).toFixed(1)}`);
+  }
+  return `M${pts.join('L')}Z`;
+}
+const LAND = Object.freeze({
+  Veyra: coast(100, 283, 90, 262, 1.7, 13, 160),
+  Koruun: coast(300, 214, 90, 198, 4.1, 13, 160),
+  isles: [coast(250, 462, 40, 28, 2.2, 4), coast(338, 452, 38, 27, 5.3, 4), coast(290, 527, 36, 22, 3.1, 4), coast(366, 522, 27, 22, 6.6, 4), coast(312, 486, 9, 6, 1.1, 2), coast(214, 512, 8, 6, 0.4, 2), coast(388, 480, 7, 5, 2.9, 2)],
+});
+const edge = (y, x0, x1, seed) => { const p = []; for (let x = x0; x <= x1; x += 8) p.push([x, y + 5 * Math.sin(x / 17 + seed) + 3 * Math.sin(x / 7 + seed * 2)]); return p; };
+function bandPath(y0, y1, x0, x1, seed) {
+  const top = y0 <= 0 ? [[x0, -30], [x1, -30]] : edge(y0, x0, x1, seed), bot = y1 >= 600 ? [[x1, 630], [x0, 630]] : edge(y1, x0, x1, seed + 1).reverse();
+  return `M${[...top, ...bot].map(([x, y]) => `${x},${y.toFixed(1)}`).join('L')}Z`;
+}
+/** Small landmarks (map units around 0,0). */
+const MOTIF = {
+  peak: (c) => `<path d="M-7 4L0 -7L7 4Z" fill="${c.shade}"/><path d="M-2.6 -3L0 -7L2.6 -3L1 -2L-1 -3.4Z" fill="#fff"/>`,
+  mesa: (c) => `<path d="M-8 4L-5 -3H5L8 4Z" fill="${c.shade}"/><path d="M-5 -3H5L4.2 -1.4H-4.2Z" fill="#e2a36a"/>`,
+  wheat: () => `<path d="M-4 4V-3M0 4V-5M4 4V-3" stroke="#f3dc8a" stroke-width="1.4" stroke-linecap="round"/>`,
+  palm: () => `<path d="M0 5Q1 0 0 -4" stroke="#7a5a34" stroke-width="1.4" fill="none"/><path d="M0 -4Q-5 -6 -7 -2M0 -4Q5 -6 7 -2M0 -4Q-2 -8 -5 -8M0 -4Q2 -8 5 -8" stroke="#3f8a45" stroke-width="1.5" fill="none" stroke-linecap="round"/>`,
+  town: (c) => `<path d="M-7 4V-1H-3V4ZM-2 4V-4H2V4ZM3 4V0H7V4Z" fill="${c.shade}"/><path d="M-2 -4L0 -7L2 -4Z" fill="#c9675a"/>`,
+  tree: (c) => `<circle cx="-3" cy="0" r="3.6" fill="${c.shade}"/><circle cx="3" cy="-1" r="4" fill="#2a6a2c"/><circle cx="0" cy="-4" r="3.4" fill="#356f33"/>`,
+  reed: () => `<ellipse cx="0" cy="3.5" rx="7" ry="2" fill="#3e6f73" opacity=".8"/><path d="M-3 3V-5M0 3V-7M3 3V-4" stroke="#c9cf8a" stroke-width="1.2" stroke-linecap="round"/>`,
+};
+const hashN = (s) => { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; };
+/** Landmarks for one region: a jittered grid, kept clear of the stadiums and the labels. */
+function motifsFor(division, x0, x1, y0, y1, inside) {
+  const c = MAP_REGIONS[division]; const draw = MOTIF[c.motif]; const clubs = DIVISIONS[division].map((k) => MAP_PINS[k]);
+  const out = []; let h = hashN(division);
+  const rnd = () => { h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0; h = Math.imul(h ^ (h >>> 13), 3266489909) >>> 0; return ((h ^= h >>> 16) >>> 0) / 4294967296; };
+  for (let y = y0 + 14; y < y1 - 8; y += 22) for (let x = x0 + 12; x < x1 - 6; x += 24) {
+    const px = x + (rnd() - 0.5) * 14, py = y + (rnd() - 0.5) * 12;
+    if (!inside(px, py) || clubs.some(([cx, cy]) => Math.hypot(px - cx, py - cy) < 27) || rnd() < 0.35) continue;
+    out.push(`<g transform="translate(${px.toFixed(1)} ${py.toFixed(1)}) scale(${(0.8 + rnd() * 0.35).toFixed(2)})">${draw(c)}</g>`);
+  }
+  return out.join('');
+}
+// Is a point on land? (Superellipse test matching coast() without its wobble, shrunk a little so landmarks stay off the shore.)
+const onLand = (cx, cy, a, b) => (x, y) => (Math.abs((x - cx) / (a - 8)) ** (2 / 0.6) + Math.abs((y - cy) / (b - 8)) ** (2 / 0.6)) < 1;
+const ISLE_CENTERS = [[250, 462, 40, 28], [338, 452, 38, 27], [290, 527, 36, 22], [366, 522, 27, 22]];
+
+/** This week's league games ([{home, away}]), or none in the playoffs, the offseason or the league's bye. */
+export function mapWeekGames(f) {
+  if (!f?.season || f.season.finished || f.season.playoffs) return [];
+  const w = leagueSeasonFixtures(f.season.year, f.seed).find((x) => x.week === f.season.week);
+  return w && !w.bye ? w.games : [];
+}
+const MAP_MODES = ['all', 'division', 'gyms', 'week'];
+/** Who is lit on the map in a mode. */
+export function mapLit(f, mode) {
+  const all = Object.keys(MAP_PINS);
+  if (mode === 'division') return new Set(DIVISIONS[divisionOf(f.club)] || all);
+  if (mode === 'gyms') return new Set([...all.filter((c) => GYM_BY_CLUB[c]), f.club]);
+  if (mode === 'week') { const s = new Set(mapWeekGames(f).flatMap((g) => [g.home, g.away])); return s.size ? s : new Set(all); }
+  return new Set(all);
+}
+/** The whole map as one inline svg. `sel` is the club whose card is open. */
+export function regionMapSvg(f, { mode = 'all', sel = null } = {}) {
+  const lit = mapLit(f, mode); const mine = f.club;
+  const next = (f.season?.schedule || []).find((g) => g.week === f.season.week && !g.bye && !g.result)?.opponent || null;
+  const rival = f.rivals?.[f.tier]?.team || null;
+  const defs = `<defs><linearGradient id="map-sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#143651"/><stop offset="1" stop-color="#1c4f72"/></linearGradient>
+    <clipPath id="map-veyra"><path d="${LAND.Veyra}"/></clipPath><clipPath id="map-koruun"><path d="${LAND.Koruun}"/></clipPath>
+    <filter id="map-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#06121e" flood-opacity=".55"/></filter></defs>`;
+  // the sea, with a few wave marks
+  let waves = ''; { let h = 7; const r = () => ((h = (h * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 70; i++) { const x = r() * 400, y = -20 + r() * 590; waves += `<path d="M${x.toFixed(0)} ${y.toFixed(0)}q3 -3 6 0t6 0" stroke="#5f9cc4" stroke-width="1" fill="none" opacity=".35"/>`; } }
+  const land = (conf, path, clip, x0, x1, inside) => {
+    const bands = MAP_BANDS[conf]; const divs = conf === 'Veyra' ? ['Frostlands', 'Redrock', 'Golden Valley', 'Suncoast'] : ['Kingsport', 'Greenheart', 'Everwild'];
+    const fills = divs.map((d, i) => `<path d="${bandPath(bands[i], bands[i + 1], x0 - 10, x1 + 10, i * 1.9 + (conf === 'Veyra' ? 0 : 5))}" fill="${MAP_REGIONS[d].fill}"/>`).join('');
+    const marks = divs.map((d, i) => motifsFor(d, x0, x1, Math.max(bands[i], 18), Math.min(bands[i + 1], 560), inside)).join('');
+    return `<path d="${path}" fill="#e8dcb2" filter="url(#map-shadow)" transform="translate(0 0)"/><path d="${path}" fill="none" stroke="#f4ecd0" stroke-width="5" opacity=".55"/><g clip-path="url(#${clip})">${fills}${marks}</g><path d="${path}" fill="none" stroke="#24384a" stroke-width="1.4"/>`;
+  };
+  const isleFill = MAP_REGIONS['Azure Isles'];
+  const isles = LAND.isles.map((d) => `<path d="${d}" fill="${isleFill.fill}" filter="url(#map-shadow)"/><path d="${d}" fill="none" stroke="#24384a" stroke-width="1.2"/>`).join('')
+    + ISLE_CENTERS.map(([cx, cy, a, b], i) => { const tx = cx + (i % 2 ? -a * 0.55 : a * 0.5), ty = cy + (i < 2 ? -b * 0.35 : b * 0.3); return `<g transform="translate(${tx} ${ty}) scale(.8)">${MOTIF.palm()}</g>`; }).join('');
+  const labels = Object.entries(MAP_REGIONS).map(([d, c]) => { const [x, y] = c.label; const west = x < 200, isle = d === 'Azure Isles';
+    return `<text class="map-region" transform="translate(${x} ${y})${isle ? '' : ` rotate(${west ? -90 : 90})`}">${esc(REGIONS[d]?.label || d).toUpperCase()}</text>`; }).join('')
+    + CONFERENCE_NAMES.map((conf, i) => `<text class="map-conf" x="${i ? 300 : 100}" y="-9">${esc(conf).toUpperCase()}</text>`).join('');
+  // this week's games: every pairing in "This week", otherwise only yours
+  const games = mode === 'week' ? mapWeekGames(f) : next ? [{ home: mine, away: next }] : [];
+  const routes = games.map((g) => { const a = MAP_PINS[g.home], b = MAP_PINS[g.away]; if (!a || !b) return ''; const me = g.home === mine || g.away === mine;
+    const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, bend = Math.min(40, len * 0.22);
+    return `<path class="map-route ${me ? 'mine' : ''}" d="M${a[0]} ${a[1]}Q${(mx - (dy / len) * bend).toFixed(1)} ${(my + (dx / len) * bend).toFixed(1)} ${b[0]} ${b[1]}"/>`; }).join('');
+  const pins = Object.entries(MAP_PINS).map(([club, [x, y]]) => {
+    const gym = GYM_BY_CLUB[club]; const held = gym && F.badgeOf(f, club); const me = club === mine; const dim = !lit.has(club);
+    const ring = me ? `<circle class="map-ring you" r="18.5"/>` : club === next ? `<circle class="map-ring next" r="17.5"/>` : club === rival ? `<circle class="map-ring rival" r="17.5"/>` : '';
+    const g = gym ? `<g transform="translate(11 -11)"><circle r="5.6" fill="${held ? '#ffd34d' : `hsl(${TYPES[gym.element]?.hue ?? 0} 70% 52%)`}" stroke="#0b1622" stroke-width="1.4"/>${held ? `<path d="M0 -3.4L1 -1L3.4 -1L1.5 .6L2.2 3L0 1.6L-2.2 3L-1.5 .6L-3.4 -1L-1 -1Z" fill="#7a4a00"/>` : ''}</g>` : '';
+    const place = CLUB_NAMES[club]?.[0] || club;
+    return `<g class="map-pin${me ? ' me' : ''}${dim ? ' dim' : ''}${sel === club ? ' sel' : ''}" data-action="mapclub" data-club="${esc(club)}" transform="translate(${x} ${y})" role="button" tabindex="0" aria-label="${esc(club)}">
+      <circle class="map-hit" r="20"/>${ring}<circle r="13.5" fill="#0e1824" stroke="${sel === club ? '#fff' : '#f4ecd0'}" stroke-width="${sel === club ? 2.4 : 1.4}"/>
+      <g transform="translate(-11.5 -11.5) scale(.23)">${logoBody(club)}</g>${g}<text class="map-name" y="25">${esc(place)}</text></g>`;
+  }).join('');
+  return `<svg class="region-map" viewBox="${MAP_VIEW.x} ${MAP_VIEW.y} ${MAP_VIEW.w} ${MAP_VIEW.h}" role="img" aria-label="${esc($t('map.aria', { n: Object.keys(MAP_PINS).length }))}">${defs}
+    <rect x="${MAP_VIEW.x}" y="${MAP_VIEW.y}" width="${MAP_VIEW.w}" height="${MAP_VIEW.h}" fill="url(#map-sea)"/>${waves}
+    ${land('Veyra', LAND.Veyra, 'map-veyra', 14, 186, onLand(100, 283, 86, 260))}${land('Koruun', LAND.Koruun, 'map-koruun', 214, 386, onLand(300, 214, 86, 196))}${isles}
+    ${labels}<g class="map-routes">${routes}</g>${pins}</svg>`;
+}
+/** The card under the map for one club. */
+function mapClubCard(f, club) {
+  const meta = TEAM_META[club]; if (!meta) return '';
+  const div = divisionOf(club), conf = conferenceFor(div); const st = stadiumFor(club); const env = ENVIRONMENTS[st.env] || ENVIRONMENTS.grass;
+  const rec = f.season?.records?.[club] || { w: 0, l: 0 }; const placeIn = (F.leagueStandings(f).divisions?.[div] || []).indexOf(club) + 1;
+  const gym = GYM_BY_CLUB[club]; const held = gym && F.badgeOf(f, club); const mine = club === f.club;
+  const next = (f.season?.schedule || []).find((g) => g.week === f.season.week && !g.bye && !g.result)?.opponent === club; const rival = f.rivals?.[f.tier]?.team === club;
+  const tags = [mine ? `<span class="chip accent">${$t('map.your_club')}</span>` : '', next ? `<span class="chip bad">${$t('map.plays_you')}</span>` : '', rival ? `<span class="chip" style="border-color:#a855f7">⚔️ ${$t('map.rival')}</span>` : ''].join('');
+  return `<div class="panel map-card"><div class="row" style="gap:10px;align-items:center">${teamLogo(club, 46, { cls: 'team-logo inline' })}<div class="grow"><div style="font-weight:900;color:${meta.ink}">${esc(club)}</div><div class="dim">${$t('map.division_line', { division: esc(div), conference: esc(conf) })}</div></div><span class="chip mono">${rec.w}-${rec.l}</span></div>
+    ${tags ? `<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${tags}</div>` : ''}
+    <div class="kv" style="margin-top:8px"><b>${$t('map.home')}</b><span>${env.icon} ${esc(st.name)} <span class="dim">${esc(env.short)}</span></span><b>${$t('map.standing')}</b><span>${placeIn ? $t('map.place_in', { place: placeIn, division: esc(div) }) : '—'}</span>${gym ? `<b>${$t('map.gym')}</b><span>${$t('map.gym_line', { coach: esc(gym.coach.name), element: esc(gym.element), badge: esc(gym.badge) })}<br><span class="${held ? 'good' : 'dim'}">${held ? $t('map.badge_held', { year: yearOf(held.year) }) : $t('map.badge_open')}</span></span>` : ''}</div>
+    <button class="btn block" data-action="club" data-club="${esc(club)}" style="margin-top:8px">${$t('map.club_page')}</button></div>`;
+}
+const MAP_ZOOMS = [1, 1.6, 2.4];
+const MAP_KEY = 'gridiron-beast-v7-map';
+
 export function registerLeagueHubScreens(Router, app) {
   let scope = 'all';
   Router.registerScreen('league', {
@@ -75,10 +229,43 @@ export function registerLeagueHubScreens(Router, app) {
       if (!f) return `<div class="panel"><p>${$t('league.no_franchise_is_open')}</p><button class="btn block" data-action="go" data-screen="menu">${$t('league.main_menu')}</button></div>`;
       const tab = TABS.some(([k]) => k === get(TAB_KEY)) ? get(TAB_KEY) : 'clubs';
       const body = tab === 'clubs' ? clubsTab(f) : tab === 'leaders' ? leadersTab(f, scope === 'mine') : tab === 'moves' ? movesTab(f) : tab === 'races' ? racesTab(f) : rivalsTab(f);
-      return `<div class="seg wrap" role="tablist" style="margin-bottom:8px">${TABS.map(([k, l]) => `<button class="btn small ${tab === k ? 'primary' : ''}" role="tab" aria-selected="${tab === k}" data-action="tab" data-tab="${k}">${l}</button>`).join('')}</div>${body}<h3 class="hh-h">${$t('league.history_and_records')}</h3>${historyNavHtml(null)}`;
+      return `<button class="btn block league-standings" data-action="go" data-screen="standings" style="margin-bottom:8px">${$t('league.standings')}</button><div class="seg wrap" role="tablist" style="margin-bottom:8px">${TABS.map(([k, l]) => `<button class="btn small ${tab === k ? 'primary' : ''}" role="tab" aria-selected="${tab === k}" data-action="tab" data-tab="${k}">${l}</button>`).join('')}</div>${body}<h3 class="hh-h">${$t('league.history_and_records')}</h3>${historyNavHtml(null)}`;
     },
     mount(root) {
       delegate(root, { tab: (el) => { set(TAB_KEY, el.dataset.tab); Router.render(); }, scope: (el) => { scope = el.dataset.v; Router.render(); }, club: (el) => Router.go('club', { club: el.dataset.club }), go: (el) => Router.go(el.dataset.screen), hnav: (el) => Router.go(el.dataset.screen) });
+    },
+  });
+  // The region map: a tab of its own (it replaced My Office on the tab bar; My Office is on HQ).
+  let mapSel = null, mapScroll = null;
+  const mapPrefs = () => { try { return JSON.parse(get(MAP_KEY) || '{}') || {}; } catch { return {}; } };
+  Router.registerScreen('map', {
+    title: $t('map.title'), back: false,
+    render({ f }) {
+      if (!f) return `<div class="panel"><p>${$t('league.no_franchise_is_open')}</p></div>`;
+      const p = mapPrefs(); const mode = MAP_MODES.includes(p.mode) ? p.mode : 'all'; const zoom = MAP_ZOOMS.includes(p.zoom) ? p.zoom : 1;
+      const sel = MAP_PINS[mapSel] ? mapSel : f.club; const week = mapWeekGames(f);
+      const label = { all: $t('map.mode_all'), division: $t('map.mode_division'), gyms: $t('map.mode_gyms'), week: $t('map.mode_week') };
+      const note = mode === 'week' ? (week.length ? $t('map.week_games', { n: week.length, week: f.season.week }) : $t('map.week_none')) : $t('map.tap_hint');
+      return `<div class="seg wrap map-modes" role="tablist">${MAP_MODES.map((m) => `<button class="btn small ${m === mode ? 'primary' : ''}" role="tab" aria-selected="${m === mode}" data-action="mapmode" data-mode="${m}">${label[m]}</button>`).join('')}</div>
+        <div class="map-frame"><div class="map-scroll" data-zoom="${zoom}"><div class="map-canvas" style="width:${zoom * 100}%">${regionMapSvg(f, { mode, sel })}</div></div></div>
+        <div class="map-under"><p class="dim map-note">${note}</p><div class="map-zoom"><button class="btn small" data-action="mapzoom" data-d="-1" aria-label="${$t('map.zoom_out')}" ${zoom === MAP_ZOOMS[0] ? 'disabled' : ''}>−</button><button class="btn small" data-action="mapzoom" data-d="1" aria-label="${$t('map.zoom_in')}" ${zoom === MAP_ZOOMS[MAP_ZOOMS.length - 1] ? 'disabled' : ''}>+</button></div></div>
+        <div class="map-legend"><span><i class="lg you"></i>${$t('map.legend_you')}</span><span><i class="lg next"></i>${$t('map.legend_next')}</span><span><i class="lg rival"></i>${$t('map.rival')}</span><span><i class="lg gym"></i>${$t('map.legend_gym')}</span><span><i class="lg badge"></i>${$t('map.legend_badge')}</span></div>
+        ${mapClubCard(f, sel)}`;
+    },
+    mount(root) {
+      const sc = root.querySelector?.('.map-scroll');
+      if (sc && mapScroll) { sc.scrollLeft = mapScroll.left; sc.scrollTop = mapScroll.top; }
+      const keep = () => { if (sc) mapScroll = { left: sc.scrollLeft, top: sc.scrollTop }; };
+      const save = (patch) => set(MAP_KEY, JSON.stringify({ ...mapPrefs(), ...patch }));
+      delegate(root, {
+        mapclub: (el) => { keep(); mapSel = el.dataset.club; Router.render(); },
+        mapmode: (el) => { keep(); save({ mode: el.dataset.mode }); Router.render(); },
+        mapzoom: (el) => { const p = mapPrefs(); const i = Math.max(0, Math.min(MAP_ZOOMS.length - 1, MAP_ZOOMS.indexOf(MAP_ZOOMS.includes(p.zoom) ? p.zoom : 1) + Number(el.dataset.d)));
+          if (sc) { const z0 = MAP_ZOOMS.includes(p.zoom) ? p.zoom : 1, z1 = MAP_ZOOMS[i], k = z1 / z0; mapScroll = { left: (sc.scrollLeft + sc.clientWidth / 2) * k - sc.clientWidth / 2, top: (sc.scrollTop + sc.clientHeight / 2) * k - sc.clientHeight / 2 }; }
+          save({ zoom: MAP_ZOOMS[i] }); Router.render(); },
+        club: (el) => Router.go('club', { club: el.dataset.club }),
+      });
+      root.addEventListener?.('keydown', (e) => { const pin = e.target?.closest?.('.map-pin'); if (pin && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); keep(); mapSel = pin.dataset.club; Router.render(); } });
     },
   });
   Router.registerScreen('club', {
