@@ -7358,4 +7358,7 @@ export default {
   'onboarding.fallen_skyvale': "Two-time champions under Aria Gale, who has since left for Cliffhaven.",
   'onboarding.fallen_thornwood': "Champions under Rowan Thorne, who has since left for Westhaven.",
   'league.gym_leaders_home_field': "👑 {leader}'s Gym · {badge}. The {boss} play on this field only at home; away from it they play on the home club's grass.",
+  'match.badge_surrendered': "{badge} surrendered",
+  'match.badge_surrendered_text': "{name} and the {club} take it back. Beat them again to reclaim it. Badges held: {n} of {total}.",
+  'match.final_badge_lost': "Final · Badge Lost",
 };

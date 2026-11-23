@@ -34,7 +34,7 @@ test('XP: the eight week shapes for the one-third starter rate', () => {
   const raw = battleXp(r, 'a').a0; assert.ok(Math.abs(s[r.lines.a[0].combatant.monsterId] - raw * (1 + 0.8 + 0.6) / 3) < 0.05);
 });
 
-test('load: the ten-week projection reproduces the approved table for a starter with 3 battles (weeks 1-3) and the bye', () => {
+test('load: the season projection (fifteen weeks since the 32-club league) reproduces the approved table for a starter with 3 battles (weeks 1-3) and the bye', () => {
   const rows = projectSeason({ battles: 3, plays: true });
   const r1 = rows[0]; assert.deepEqual([r1.monday, r1.afterArena, r1.afterPractice, r1.afterSaturday, r1.kickoff, r1.afterSunday], [0, 15, 23, 0, 0, 21]);
   const r2 = rows[1]; assert.deepEqual([r2.monday, r2.afterArena, r2.afterPractice, r2.afterSaturday, r2.kickoff, r2.afterSunday], [13, 28, 36, 5, 5, 26]);

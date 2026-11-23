@@ -38,7 +38,7 @@ export function projectWeek(start, week) {
 export function projectSeason(profile, weeks = REG_WEEKS) {
   const rows = []; let f = 0;
   for (let w = 1; w <= weeks; w++) {
-    const week = { ...profile, bye: w === (profile.byeWeek ?? 8), injured: profile.injuredWeeks?.includes(w) };
+    const week = { ...profile, bye: w === (profile.byeWeek ?? 6), injured: profile.injuredWeeks?.includes(w) };
     const r = projectWeek(f, week); rows.push({ week: w, ...week, ...r }); f = r.afterSunday;
   }
   return rows;
