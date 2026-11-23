@@ -46,7 +46,7 @@ export function pressFacts(f, h) {
   if (h.streak >= 3) live.streakW = { n: h.streak }; if (h.streak <= -3) live.streakL = { n: -h.streak };
   if (h.matchup?.rival) live.rival = {};
   if (h.playoffLive) live.playoffs = {};
-  else if (f.season.week >= 7 && rec.w + rec.l >= 5 && rec.w >= rec.l) live.playoffRace = {};
+  else if (f.season.week >= 10 && rec.w + rec.l >= 7 && rec.w >= rec.l) live.playoffRace = {}; // the last third of a 15-week season (week 7 of 10 before)
   if (f.history?.length && f.history[f.history.length - 1].champion === f.club) live.champion = {};
   if (h.hotseat) live.hotseat = {};
   if (h.injured) live.injury = { name: h.injured.name, pos: h.injured.position, weeks: weeksText(h.injured.injury?.weeks || 1) };

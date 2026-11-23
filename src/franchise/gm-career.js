@@ -1,6 +1,6 @@
 // A career owns one league/save identity. Changing jobs swaps the managed club, never recreates the universe.
 import { createRng, hashString } from '../core/rng.js';
-import { DIVISIONS, divisionOf, RIVAL_GMS, tierById } from '../data/league.js';
+import { DIVISIONS, divisionOf, RIVAL_GMS, tierById, REG_GAMES } from '../data/league.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
 import { STAFF, STAFF_ROLES } from '../data/staff.js';
 import { clubRoster, isProtected, verifyLeague } from './league-registry.js';
@@ -61,8 +61,8 @@ export function jobMarket(f) {
   const recent=(f.history || []).slice(-3), recentGames=recent.reduce((a,h)=>a+(h.record?.w||0)+(h.record?.l||0),0);
   const recentShare=recentGames?recent.reduce((a,h)=>a+(h.record?.w||0),0)/recentGames:.5;
   const expectations=[...(f.gmCareer?.stints || []).flatMap(s=>s.board?.history || []),...(f.board?.history || [])].slice(-3);
-  const expectedShare=expectations.length?expectations.reduce((a,h)=>a+Math.max(0,Math.min(1,.5+((h.wins||0)-(h.forecast??h.wins??0))/9)),0)/expectations.length:.5;
-  const rep=.35*(totals.wins/(seasons*9))+.4*recentShare+.25*expectedShare+Math.min(.2,totals.titles*.05);
+  const expectedShare=expectations.length?expectations.reduce((a,h)=>a+Math.max(0,Math.min(1,.5+((h.wins||0)-(h.forecast??h.wins??0))/REG_GAMES)),0)/expectations.length:.5;
+  const rep=.35*(totals.wins/(seasons*REG_GAMES))+.4*recentShare+.25*expectedShare+Math.min(.2,totals.titles*.05);
   const clubs=Object.keys(f.league.clubs).filter(c=>c!==f.club && !GYM_BY_CLUB[c]);
   const ranked=clubs.map(club=>({club,roster:clubRoster(f,club)})).sort((a,b)=>strength(a.roster)-strength(b.roster)||a.club.localeCompare(b.club));
   const safety=ranked[0]?.club;

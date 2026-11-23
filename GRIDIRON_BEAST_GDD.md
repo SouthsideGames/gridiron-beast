@@ -4774,5 +4774,10 @@ and left on the device unchanged; settings, achievements and other data are unto
 * The draft class is 106 prospects (twice 53) for 96 picks.
 * `REG_GAMES`, `REG_WEEKS`, `LAST_WEEK` and `CONFERENCE_NAMES` in `src/data/league.js` replace the numbers 9, 10 and 13 and the
   conference names that were written into the franchise, news, career and HQ code.
+* The Board's win counts keep their proportion of the nine-game season: the lowest safe goal is 3 wins, a safe goal is never above
+  11 of 14, and a narrow miss is within 2 wins. A GM's reputation divides by 14 games.
+* **Not re-tuned for the longer season (OPEN):** season totals are about 56% higher than in a nine-game season, and these were
+  measured on nine games and left as they are: career milestones (`src/franchise/career.js`), Captain Partnership steps
+  (`partnerships.js`), the injury-history indicator (`injury-history.js`), record-book and Hall of Fame expectations.
 * A season of 32 clubs is about three times the simulation of a 16-club season; tests that play whole seasons take correspondingly longer.
 

@@ -5,6 +5,7 @@
 // goal is the rounded forecast, a narrow miss on the hot seat is a final warning rather than a dismissal, and three
 // missed seasons in a row end the franchise however narrow the misses. Nothing else in the game can end a franchise.
 import { t as $t, captured, lineField, fieldLine } from '../text/index.js';
+import { REG_GAMES } from '../data/league.js';
 
 export const CONFIDENCE_MAX = 2;
 export const HOT_SEAT = -1;
@@ -21,18 +22,20 @@ function consecutiveMisses(history = []) { let n = 0; for (let i = history.lengt
  * asked (or a season at or above the forecast) is a narrow miss. `strikes`: missed seasons in a row that end a franchise
  * whatever the margins.
  */
-export const BOARD_RULES = Object.freeze({ slope: 0.035, band: [0.15, 0.85], safeBelow: 0, minSafe: 2, narrow: 1, strikes: 3 });
+// 14-game season (32-club league, 2026-11-23): the win counts keep their proportion of the nine-game season they were set for:
+// the lowest safe goal 2 of 9 becomes 3 of 14, a narrow miss 1 win becomes 2, and a safe goal's ceiling 7 of 9 becomes 11 of 14.
+export const BOARD_RULES = Object.freeze({ slope: 0.035, band: [0.15, 0.85], safeBelow: 0, minSafe: 3, narrow: 2, safeCeiling: 11 / 14, strikes: 3 });
 
 /** The preseason forecast: the club's talent against the league's average talent this season. */
-export function boardForecast({ talent, leagueTalent, games = 9 }, R = BOARD_RULES) { const winPct = Math.max(R.band[0], Math.min(R.band[1], 0.5 + ((talent ?? leagueTalent) - leagueTalent) * R.slope));
+export function boardForecast({ talent, leagueTalent, games = REG_GAMES }, R = BOARD_RULES) { const winPct = Math.max(R.band[0], Math.min(R.band[1], 0.5 + ((talent ?? leagueTalent) - leagueTalent) * R.slope));
   return { winPct, wins: winPct * games };
 }
 
 /** Three offers for this season: safe (wins), medium (playoffs or badges), stretch (the title). */
-export function goalOffers(f, { expectedWinPct = 0.5, gamesInSeason = 9, gymsThisSeason = 4 } = {}, R = BOARD_RULES) {
+export function goalOffers(f, { expectedWinPct = 0.5, gamesInSeason = REG_GAMES, gymsThisSeason = 4 } = {}, R = BOARD_RULES) {
   const exp = expectedWinPct * gamesInSeason;
-  // The rounded forecast (minus `safeBelow`), at least `minSafe`, never more than seven of nine (a contender's safe goal stays easier than the title).
-  const safeWins = Math.max(R.minSafe, Math.min(gamesInSeason - 2, Math.round(exp) - R.safeBelow));
+  // The rounded forecast (minus `safeBelow`), at least `minSafe`, never more than eleven of fourteen (a contender's safe goal stays easier than the title).
+  const safeWins = Math.max(R.minSafe, Math.min(Math.round(gamesInSeason * (R.safeCeiling ?? 11 / 14)), Math.round(exp) - R.safeBelow));
   // A rebuilding club's medium goal is one badge from a gym on its schedule that it does not hold yet (a badge is won once, so
   // gyms already beaten do not count); with none left to win, the playoffs.
   const medium = expectedWinPct >= 0.45 || gymsThisSeason < 1

@@ -6,7 +6,7 @@ import { esc, delegate } from '../dom.js';
 import { yearOf } from '../../data/calendar.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { careerLink } from '../career-ui.js';
-import { TEAM_META, tierById } from '../../data/league.js';
+import { TEAM_META, tierById, REG_WEEKS } from '../../data/league.js';
 import { AWARDS } from '../../franchise/awards.js';
 import { RECORD_CATEGORIES } from '../../franchise/stats.js';
 import { teamOverall } from '../../franchise/roster.js';
@@ -44,7 +44,7 @@ function movesTab(f) {
   const items = (f.leagueNews || []).filter((it) => TRANSACTION_KINDS.has(it.kind)).slice(0, 60);
   if (!items.length) return `<p class="dim">${$t('league.no_league_moves_on_record_yet')}</p>`;
   const byWeek = []; for (const it of items) { const k = `${it.year}|${it.week}`; let g = byWeek.find((x) => x.k === k); if (!g) { g = { k, year: it.year, week: it.week, items: [] }; byWeek.push(g); } g.items.push(it); }
-  const label = (w) => (w === 0 ? $t('league.offseason') : w > 10 ? $t('league.playoffs') : `${$t('league.week', { w })}`);
+  const label = (w) => (w === 0 ? $t('league.offseason') : w > REG_WEEKS ? $t('league.playoffs') : `${$t('league.week', { w })}`);
   return `<p class="muted">${$t('league.the_leagues_moves_worth_a_line')}</p>${byWeek.map((g) => `<h3>${yearOf(g.year)} · ${label(g.week)}</h3><div class="list">${g.items.map((it) => `<div class="item static"><span>${it.icon || '📰'}</span><div class="grow"><div class="sub" style="font-size:14px">${linkText(it)}</div>${it.lines?.length ? `<div class="dim" style="font-size:12px;margin-top:4px">${it.lines.map((l) => linkText(l)).join(`<br>`)}</div>` : ''}</div></div>`).join('')}</div>`).join('')}`;
 }
 /** An item's text with its monster's name linked (the News UI's rule). */

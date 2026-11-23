@@ -1,4 +1,6 @@
 // Board expectations and firing (GDD §29, owner authorization 2026-10-22).
+// 14-game season (32-club league, 2026-11-23): the win counts below are the nine-game ones in proportion (GDD §60): the lowest
+// safe goal is 3, a safe goal is never above 11 of 14, and a narrow miss is within 2 wins.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as B from '../src/franchise/board.js';
@@ -12,15 +14,16 @@ test('the forecast compares the club with this league, not with a fixed number',
   assert.equal(B.boardForecast({ talent: 64, leagueTalent: 64 }).winPct, 0.5, 'league-average talent is a .500 forecast');
   assert.ok(B.boardForecast({ talent: 66, leagueTalent: 60 }).winPct > B.boardForecast({ talent: 66, leagueTalent: 66 }).winPct, 'the same club is forecast lower in a stronger league');
   const [lo, hi] = B.BOARD_RULES.band; assert.equal(B.boardForecast({ talent: 99, leagueTalent: 50 }).winPct, hi); assert.equal(B.boardForecast({ talent: 30, leagueTalent: 70 }).winPct, lo);
-  // In the franchise: a club exactly at the league average is forecast 4.5 of 9.
-  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 3 });
+  // In the franchise: a club exactly at the league average is forecast 7 of 14.
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Goldhaven Royals', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 3 });
   for (const t of ALL_TEAMS) f.season.expectations[t].talent = 63;
-  assert.equal(F.boardForecastFor(f).wins, 4.5); assert.equal(F.commissionerGoals(f)[0].text, 'Your team is expected to win 5 games.');
+  assert.equal(F.boardForecastFor(f).wins, 7); assert.equal(F.commissionerGoals(f)[0].text, 'Your team is expected to win 7 games.'); assert.equal(B.boardForecast({ talent: 63, leagueTalent: 63 }).wins, 7);
 });
 
-test('the safe goal matches the forecast (rounded), at least two and never more than seven of nine', () => {
+test('the safe goal matches the forecast (rounded), at least three and never more than eleven of fourteen', () => {
   const safe = (p) => B.goalOffers(null, { expectedWinPct: p }).find((o) => o.tier === 'safe').target;
-  assert.equal(safe(0.5), 5); assert.equal(safe(0.6), 5); assert.equal(safe(0.7), 6); assert.equal(safe(0.15), 2); assert.equal(safe(0.85), 7);
+  assert.equal(safe(0.5), 7); assert.equal(safe(0.6), 8); assert.equal(safe(0.7), 10); assert.equal(safe(0.15), 3); assert.equal(safe(0.85), 11);
+  assert.equal(B.BOARD_RULES.minSafe, 3); assert.equal(B.BOARD_RULES.narrow, 2); assert.equal(B.goalOffers(null, { expectedWinPct: 0.85, gamesInSeason: 9 }).find((o) => o.tier === 'safe').target, 7, 'in a nine-game season the ceiling is still seven');
   assert.equal(B.goalOffers(null, { expectedWinPct: 0.3 })[1].id, "badges", "a rebuilding club gets a badge goal, not the playoffs"); assert.equal(B.goalOffers(null, { expectedWinPct: 0.3 })[1].target, 1);
   assert.equal(B.goalOffers(null, { expectedWinPct: 0.3, gymsThisSeason: 0 })[1].id, "playoffs", "no badge left to win on the schedule: never an impossible badge goal");
 });
@@ -31,18 +34,18 @@ test('one disappointing season is never a dismissal: a miss from neutral puts th
 });
 
 test('on the hot seat a narrow miss is a final warning; a clear miss is a dismissal', () => {
-  const narrow = { confidence: -1, misses: 1 }; const v1 = season(narrow, wins(6, 6.8), { wins: 5 });
+  const narrow = { confidence: -1, misses: 1 }; const v1 = season(narrow, wins(9, 9.8), { wins: 7 }); // two short of nine: narrow
   assert.equal(v1.fired, false); assert.equal(v1.miss, 'narrow'); assert.equal(narrow.confidence, B.HOT_SEAT); assert.match(v1.reason, /final warning/);
-  const atForecast = { confidence: -1, misses: 1 }; assert.equal(season(atForecast, { id: 'playoffs', weight: 1, forecastWins: 5.2 }, { wins: 5, playoffs: false }).fired, false, 'missing the playoffs while playing to the forecast is narrow');
-  const clear = { confidence: -1, misses: 1 }; const v2 = season(clear, wins(6, 6.8), { wins: 3 });
+  const atForecast = { confidence: -1, misses: 1 }; assert.equal(season(atForecast, { id: 'playoffs', weight: 1, forecastWins: 8.2 }, { wins: 8, playoffs: false }).fired, false, 'missing the playoffs while playing to the forecast is narrow');
+  const clear = { confidence: -1, misses: 1 }; const v2 = season(clear, wins(9, 9.8), { wins: 6 }); // three short: clear
   assert.equal(v2.fired, true); assert.equal(v2.miss, 'clear'); assert.match(v2.reason, /clear miss/);
 });
 
 test('sustained underperformance still ends a franchise: three missed seasons in a row, even narrow ones and even with winning records', () => {
-  const b = { confidence: 0, misses: 0 }; const g = wins(7, 7.4);
-  assert.equal(season(b, g, { wins: 6 }).fired, false); assert.equal(season(b, g, { wins: 6 }).fired, false);
-  const v = season(b, g, { wins: 6 }); assert.equal(v.fired, true); assert.match(v.reason, /3 missed seasons/);
-  const poor = { confidence: 0, misses: 0 }; season(poor, wins(4, 4.5), { wins: 1 }); assert.equal(season(poor, wins(4, 4.5), { wins: 2 }).fired, true, 'two clear misses');
+  const b = { confidence: 0, misses: 0 }; const g = wins(10, 10.4);
+  assert.equal(season(b, g, { wins: 9 }).fired, false); assert.equal(season(b, g, { wins: 9 }).fired, false);
+  const v = season(b, g, { wins: 9 }); assert.equal(v.fired, true); assert.match(v.reason, /3 missed seasons/);
+  const poor = { confidence: 0, misses: 0 }; season(poor, wins(6, 6.5), { wins: 2 }); assert.equal(season(poor, wins(6, 6.5), { wins: 3 }).fired, true, 'two clear misses');
 });
 
 test('a met goal clears the deficit and the miss streak; a Beast Bowl title meets any goal', () => {

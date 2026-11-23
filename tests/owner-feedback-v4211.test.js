@@ -56,7 +56,7 @@ test('awards announced at the end of the regular season count on career cards be
 });
 
 test('only the Beast Bowl is the Beast Bowl: semifinals and conference championships are not', () => {
-  const seeds = { Aurora: ['A1', 'A2', 'A3', 'A4'], Titan: ['T1', 'T2', 'T3', 'T4'] };
+  const seeds = { Veyra: ['A1', 'A2', 'A3', 'A4'], Koruun: ['T1', 'T2', 'T3', 'T4'] };
   const r1 = playoffRound(1, [], seeds); assert.ok(r1.every((g) => !isBeastBowlTag(g.tag)), r1.map((g) => g.tag).join());
   const res1 = r1.map((g, i) => ({ round: 1, conf: g.conf, winner: g.home }));
   const r2 = playoffRound(2, res1, seeds); assert.ok(r2.every((g) => !isBeastBowlTag(g.tag)), r2.map((g) => g.tag).join());

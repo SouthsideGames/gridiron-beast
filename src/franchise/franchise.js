@@ -1450,14 +1450,14 @@ export function answerTradeCall(f, accept) {
 
 /** The commissioner's three goal offers for this season (GDD §17.4). */
 /** The Board's forecast for the player's club this season (GDD §29): its preseason talent against the league's average. */
-export function boardForecastFor(f, games = 9) {
+export function boardForecastFor(f, games = REG_GAMES) {
   const ex = f.season?.expectations || {}; const talents = ALL_TEAMS.map((t) => ex[t]?.talent).filter(Number.isFinite);
   if (!talents.length || !Number.isFinite(ex[f.club]?.talent)) return { winPct: 0.5, wins: games / 2 };
   return boardForecast({ talent: ex[f.club].talent, leagueTalent: talents.reduce((a, b) => a + b, 0) / talents.length, games });
 }
 export function commissionerGoals(f) {
   ensureBoard(f);
-  const games = f.season.schedule.filter((g) => !g.bye).length || 9;
+  const games = f.season.schedule.filter((g) => !g.bye).length || REG_GAMES;
   const gyms = new Set(f.season.schedule.filter((g) => !g.bye && GYM_BY_CLUB[g.opponent] && !badgeOf(f, g.opponent)).map((g) => g.opponent)).size; // badges still to win
   return goalOffers(f, { expectedWinPct: boardForecastFor(f, games).winPct, gamesInSeason: games, gymsThisSeason: gyms });
 }
@@ -1494,7 +1494,7 @@ export function coachNameOf(f, team) { return headCoachName(team, { seed: f.seed
 export const currentFixture = (f) => f.season.schedule.find((g) => g.week === f.season.week) || null;
 export const isBye = (f) => !!currentFixture(f)?.bye;
 export const inPlayoffs = (f) => f.season.week > REG_WEEKS;
-export const LAST_REGULAR_WEEK = 10;
+export const LAST_REGULAR_WEEK = REG_WEEKS; // week 15 since the 32-club league (week 10 before)
 /** The final regular-season week and the playoffs: no region scouting or recruiting; Mondays scout the draft class, Tuesdays are recovery days (GDD §19). */
 export const draftWindow = (f) => f.season.week >= LAST_REGULAR_WEEK && !f.season.finished;
 export function opponentName(f) { const fx = currentFixture(f); if (fx && !fx.bye) return fx.opponent; const p = playoffFixture(f); return p ? (p.home === f.club ? p.away : p.home) : null; }

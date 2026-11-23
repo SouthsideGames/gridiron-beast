@@ -31,15 +31,17 @@ function newFranchise(seed = 7) {
   return f;
 }
 
-test('schedule generator matches the golden vectors (campaign schedule)', () => {
+// 32-club league (2026-11-23): the vectors were regenerated for the seeded 14-game schedule (tests/tools/make-schedule-vectors.mjs);
+// the rules themselves are tested in tests/league-32.test.js. The 16-club campaign schedule they used to pin is retired.
+test('schedule generator matches the golden vectors (the seeded 14-game schedule)', () => {
   const v = JSON.parse(fs.readFileSync(new URL('./schedule-vectors.json', import.meta.url)));
   let checked = 0;
   for (const season of v.seasons) for (const [team, games] of Object.entries(season.teams)) {
-    const mine = teamSchedule(season.year, team);
+    const mine = teamSchedule(season.year, team, season.seed);
     games.forEach((g, i) => { checked++; assert.equal(!!g.bye, !!mine[i].bye); assert.equal(g.opponent ?? null, mine[i].opponent ?? null); assert.equal(g.home ?? null, mine[i].home ?? null); });
   }
   assert.ok(checked >= 300);
-  for (let y = 1; y <= 16; y++) { const w = leagueSeasonFixtures(y); assert.equal(w.filter((x) => x.bye).length, 1); for (const wk of w) if (!wk.bye) assert.equal(wk.games.length, 8); }
+  for (let y = 1; y <= 16; y++) { const w = leagueSeasonFixtures(y); assert.equal(w.filter((x) => x.bye).length, 1); for (const wk of w) if (!wk.bye) assert.equal(wk.games.length, 16); }
 });
 
 test('a new franchise has a legal roster, staff, cap room and a rival in its division', () => {
@@ -93,10 +95,10 @@ test('a full season plus playoffs completes with standings from real games', () 
   }
   assert.ok(f.season.finished, 'season finished');
   assert.ok(f.season.champion, 'a champion was crowned');
-  const rec = F.record(f); assert.equal(rec.w + rec.l + rec.t, 9, 'nine regular-season games');
+  const rec = F.record(f); assert.equal(rec.w + rec.l + rec.t, 14, 'fourteen regular-season games');
   const st = F.leagueStandings(f);
-  assert.equal(st.overall.length, 16);
-  for (const t of ALL_TEAMS) { const r = f.season.records[t]; assert.equal(r.w + r.l + r.t, 9, `${t} played nine`); }
+  assert.equal(st.overall.length, 32);
+  for (const t of ALL_TEAMS) { const r = f.season.records[t]; assert.equal(r.w + r.l + r.t, 14, `${t} played fourteen`); }
   assert.ok(f.history.length === 1 && f.history[0].year === 1);
   assert.ok(f.roster.some((m) => (m.stats.career.reg.games || 0) > 0), 'career games recorded');
   const ev = F.postseasonEvent(f);
@@ -143,8 +145,9 @@ test('standings tiebreakers and playoff seeding', () => {
   applyResult(records, { home: 'Ember City Beasts', away: 'Bayou Stalkers', homeScore: 20, awayScore: 10 });
   applyResult(records, { home: 'Sunfire Solars', away: 'Palmetto Wyrms', homeScore: 21, awayScore: 20 });
   const st = standings(records);
-  assert.deepEqual(st.divisions.South.slice(0, 2), ['Ember City Beasts', 'Sunfire Solars']); // better point differential wins the tie
-  assert.equal(st.conferences.Titan.seeds.length, 4);
+  assert.deepEqual(st.divisions.Everwild.slice(0, 2), ['Ember City Beasts', 'Sunfire Solars']); // better point differential wins the tie
+  assert.equal(st.conferences.Koruun.seeds.length, 4); assert.equal(st.conferences.Veyra.seeds.length, 4);
+  assert.equal(st.conferences.Koruun.seeds[0], 'Ember City Beasts', 'the division winners are the seeds, the best record first'); assert.deepEqual(st.conferences.Koruun.wildcards, []);
 });
 
 test('save round-trips and the legacy v5 import preserves owner, club, staff and record', () => {
@@ -308,20 +311,17 @@ test('difficulty is chosen at creation, carried in the save and exposed with Hal
   assert.equal(F.difficultyOf({ settings: {} }).label, 'Pro');
 });
 
-test('campaign: an ordinary club meets four gyms a season (all eight over two), never in week 1, alternating with ordinary games; gym clubs field their legendary and lean to their element', async () => {
+// 32-club league (owner, 2026-11-23): Gym Leader games are no longer forced or guaranteed, so the old campaign schedule's promises
+// (four gyms a season, all eight over two, never in week 1, never back to back) are retired; tests/league-32.test.js covers the new rule.
+test('campaign: fourteen games against eleven clubs, no Gym Leader game guaranteed; gym clubs field their legendary and lean to their element', async () => {
   const { GYM_CLUBS, GYM_BY_CLUB } = await import('../src/data/gyms.js');
   const { SPECIES_BY_ID } = await import('../src/data/monsters.js');
   for (const y of [1, 2, 7]) for (const t of ALL_TEAMS) {
     const sched = teamSchedule(y, t).filter((g) => !g.bye); const opps = sched.map((g) => g.opponent);
-    assert.equal(new Set(opps).size, 9, `${t} plays nine different clubs`);
-    if (!GYM_CLUBS.includes(t)) {
-      assert.equal(opps.filter((o) => GYM_CLUBS.includes(o)).length, 4, `${t} meets four gyms in season ${y}`);
-      assert.ok(!GYM_CLUBS.includes(opps[0]), `${t}: week 1 is never a badge game`);
-      for (let i = 1; i < opps.length; i++) assert.ok(!(GYM_CLUBS.includes(opps[i]) && GYM_CLUBS.includes(opps[i - 1])), `${t}: no back-to-back badge games`);
-      const both = new Set([...opps, ...teamSchedule(y + 1, t).filter((g) => !g.bye).map((g) => g.opponent)].filter((o) => GYM_CLUBS.includes(o)));
-      assert.equal(both.size, 8, `${t} meets every gym across seasons ${y} and ${y + 1}`);
-    }
+    assert.equal(opps.length, 14); assert.equal(new Set(opps).size, 11, `${t} plays eleven different clubs: three rivals twice and eight others once`);
+    if (!GYM_CLUBS.includes(t)) assert.ok(opps.filter((o) => GYM_CLUBS.includes(o)).length <= 8);
   }
+  assert.equal(GYM_CLUBS.length, 12);
   const f = newFranchise(3);
   for (const club of GYM_CLUBS) {
     const g = GYM_BY_CLUB[club]; const team = F.aiTeam(f, club);
@@ -440,11 +440,11 @@ test('Hall of Fame: eligibility follows the checklist; retiring writes a career 
   assert.equal(F.hallOfFameNotice(f), false);
   for (const g of ['Harbor Anchors', 'Sunfire Solars', 'Thunder Mesa Blitz', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Colossi', 'Palmetto Wyrms']) f.campaign.badges[g] = { year: 1, week: 1, score: '1-0' };
   Object.assign(f.campaign, { titles: 2, wins: 50, awards: 3 });
-  f.history.push({ year: 1, club: f.club, record: { w: 9, l: 0 }, place: 1, champion: f.club, playoffs: true });
+  f.history.push({ year: 1, club: f.club, record: { w: 14, l: 0 }, place: 1, champion: f.club, playoffs: true });
   assert.equal(F.hallOfFameProgress(f).eligible, true);
   assert.equal(F.hallOfFameNotice(f), true); assert.equal(F.hallOfFameNotice(f), false, 'the commissioner calls once');
   const r = F.retire(f); assert.equal(r.ok, true);
-  assert.equal(r.card.badges.length, 8); assert.equal(r.card.titles, 2); assert.equal(r.card.record.w, 9); assert.ok(r.card.bestMonsters.length === 5);
+  assert.equal(r.card.badges.length, 8); assert.equal(r.card.titles, 2); assert.equal(r.card.record.w, 14); assert.ok(r.card.bestMonsters.length === 5);
   H.resetHof(); H.addHofCard(r.card); assert.equal(H.hallOfFame().length, 1); H.addHofCard(r.card); assert.equal(H.hallOfFame().length, 1, 'no duplicates');
   H.mergeHof([{ ...r.card, id: 'other' }]); assert.equal(H.hallOfFame().length, 2); H.resetHof();
 });
@@ -617,7 +617,7 @@ test('board goals: three scaled offers, one commitment per season, settled at se
   // Pure settlement rules.
   assert.equal(B.goalMet({ id: 'wins', target: 5 }, { wins: 5 }), true); assert.equal(B.goalMet({ id: 'playoffs' }, { playoffs: false }), false); assert.equal(B.goalMet({ id: 'badges', target: 2 }, { badgesWon: 1 }), false);
   assert.equal(B.goalMet({ id: 'wins', target: 8 }, { wins: 7, champion: true }), true, 'a title meets any goal');
-  for (const pct of [0.8, 0.95]) assert.ok(B.goalOffers({}, { expectedWinPct: pct }).find((o) => o.id === 'wins').target <= 7, 'safe goal never asks for more than seven of nine');
+  for (const pct of [0.8, 0.95]) assert.ok(B.goalOffers({}, { expectedWinPct: pct }).find((o) => o.id === 'wins').target <= 11, 'safe goal never asks for more than eleven of fourteen');
   const g = { board: { confidence: 0, goal: { id: 'wins', target: 5, label: 'Win 5', year: 1, weight: 1 }, history: [] }, season: { year: 1 } };
   let v = B.settleGoal(g, { wins: 3 }); assert.equal(v.met, false); assert.equal(v.status, 'hot_seat'); assert.equal(g.board.confidence, -1);
   g.board.goal = { id: 'title', label: 'Title', year: 1, weight: 2 }; v = B.settleGoal(g, { champion: true }); assert.equal(g.board.confidence, 2, 'a met goal resets the hole and the title counts double'); assert.equal(g.board.scoutBonusYear, 2);
@@ -700,8 +700,8 @@ test('the draft: class opens in the final week, Mondays scout it and Tuesdays re
   const D = await import('../src/franchise/draft.js');
   assert.deepEqual(D.draftOrder(['A', 'B', 'C'], 2).map((o) => o.team), ['C', 'B', 'A', 'A', 'B', 'C']);
   const f = newFranchise(21); F.chooseGoal(f, 'wins');
-  for (let g = 0; g < 20 && f.season.week < 10; g++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else F.finishSunday(f, F.simulatePlayerGame(f)); }
-  assert.equal(f.season.week, 10); assert.ok(F.draftWindow(f)); assert.ok(f.draft && f.draft.class.length >= 40, 'class in');
+  for (let g = 0; g < 30 && f.season.week < 15; g++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else F.finishSunday(f, F.simulatePlayerGame(f)); }
+  assert.equal(f.season.week, 15); assert.ok(F.draftWindow(f)); assert.ok(f.draft && f.draft.class.length >= 40, 'class in');
   assert.ok(f.draft.class.every((m) => m.yearsPro === 0 && m.age >= 19 && m.age <= 22));
   assert.equal(F.scoutRegion(f, 'Coral Coast').ok, false, 'no region scouting in the final week');
   const r = F.scoutDraft(f, { focus: 'QB' }); assert.ok(r.ok && r.studied.length >= 1 && r.studied.every((m) => m.position === 'QB'), 'focus studied first'); assert.equal(f.season.day, 1);
