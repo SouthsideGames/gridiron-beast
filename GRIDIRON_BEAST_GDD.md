@@ -4815,8 +4815,22 @@ and left on the device unchanged; settings, achievements and other data are unto
   milestones (`career.js`); the injury-history
   lines and its one-season minimum (`injury-history.js`, classification unchanged). Awards already scale with the weeks played,
   the record book starts in season 2 as before, and Hall of Fame production is judged against peers.
-* **Left as approved, OPEN DECISION:** Captain Partnership steps and per-game ceilings (owner 2026-10-25). A strong pair now reaches
-  Elite in about nine of fourteen games; the 14/9 numbers are written beside the table in `partnerships.js`.
+* **Captain Partnership steps scaled by 14/9 (owner ruling 2026-11-23, second set).** Each step is the nine-game value × 14 / 9,
+  rounded to the nearest play (half up); each list still rises; levels, names and bonuses are unchanged; the per-game ceiling
+  is the same rule (25% of Elite, half up, at least 3) on the new Elite. The nine-game values stay in `partnerships.js` as the
+  source. A partnership record written before the change (`v: 1`) is read on the new scale at once (count × 14 / 9, half up,
+  which keeps every pair's earned level exactly) and stored that way the next time it is written; loading changes nothing.
+
+  | Type | Nine games (steps, ceiling) | Fourteen games (steps, ceiling) |
+  |---|---|---|
+  | QB–RB | 15 / 34 / 53 / 75, 19 | 23 / 53 / 82 / 117, 29 |
+  | QB–WR | 6 / 14 / 21 / 30, 8 | 9 / 22 / 33 / 47, 12 |
+  | QB–TE | 7 / 16 / 25 / 36, 9 | 11 / 25 / 39 / 56, 14 |
+  | RB–OL | 6 / 14 / 22 / 32, 8 | 9 / 22 / 34 / 50, 13 |
+  | OL–OL | 4 / 9 / 14 / 20, 5 | 6 / 14 / 22 / 31, 8 |
+  | DL–DL | 1 / 3 / 4 / 6, 3 | 2 / 5 / 6 / 9, 3 |
+  | DL–LB | 2 / 4 / 6 / 9, 3 | 3 / 6 / 9 / 14, 4 |
+  | DL–CB | 1 / 3 / 4 / 6, 3 | 2 / 5 / 6 / 9, 3 |
 * **Left as approved:** the Monster Hall of Fame case (owner 2026-11-12). Its games ceiling (160 games, ten points) is reached
   in about ten 14-game seasons where it took sixteen nine-game ones; nothing else in the case depends on season length.
 * **Release check:** `tools/deploy-check.py` needs franchise exports from this league; 16-club exports are refused by design.

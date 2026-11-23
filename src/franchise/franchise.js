@@ -1676,7 +1676,7 @@ export function pickCaptains(f, choice) {
   if (!offseasonCaptainsOpen(f)) return { ok: false, reason: $t('franchise.captains_are_chosen_in_the_offseason') };
   const cands = captainCandidates(f); const off = CP.checkPick(cands, 'offense', choice?.offense); if (!off.ok) return { ok: false, reason: `${$t('franchise.offense', { reason: off.reason })}` };
   const def = CP.checkPick(cands, 'defense', choice?.defense, { other: [off.pair.a, off.pair.b] }); if (!def.ok) return { ok: false, reason: `${$t('franchise.defense', { reason: def.reason })}` };
-  (f.partnerships ||= { v: 1, startedYear: f.season.year + 1, pairs: {}, captains: {}, credited: {} }).pick = { year: f.season.year + 1, offense: [off.pair.a, off.pair.b], defense: [def.pair.a, def.pair.b] };
+  (f.partnerships ||= { v: CP.RECORD_VERSION, startedYear: f.season.year + 1, pairs: {}, captains: {}, credited: {} }).pick = { year: f.season.year + 1, offense: [off.pair.a, off.pair.b], defense: [def.pair.a, def.pair.b] };
   return { ok: true, pick: f.partnerships.pick, offense: off.pair, defense: def.pair };
 }
 /** Commit one finished game's chemistry (once per game id) and write the milestones. Returns the committed rows. */
