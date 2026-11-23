@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
 import { ALL_TEAMS, DIVISIONS, divisionOf } from '../src/data/league.js';
 import { GYM_BY_CLUB } from '../src/data/gyms.js';
-import { MAP_PINS, regionMapSvg, mapWeekGames, mapLit } from '../src/ui/screens/league-hub.js';
+import { MAP_PINS, regionMapSvg, mapWeekGames, mapLit, mapRegionAt } from '../src/ui/screens/league-hub.js';
 
 const fresh = () => { const f = F.createFranchise({ owner: { first: 'Map', last: 'Test' }, club: 'Riverbend Rapids', seed: 612 }); F.hireDefaultStaff(f); return f; };
 
@@ -13,15 +13,14 @@ test('all 32 clubs have a place on the map, none crowding another', () => {
   const e = Object.entries(MAP_PINS);
   for (let i = 0; i < e.length; i++) for (let j = i + 1; j < e.length; j++) {
     const d = Math.hypot(e[i][1][0] - e[j][1][0], e[i][1][1] - e[j][1][1]);
-    assert.ok(d >= 40, `${e[i][0]} and ${e[j][0]} are ${d.toFixed(0)} apart`);
+    assert.ok(d >= 70, `${e[i][0]} and ${e[j][0]} are ${d.toFixed(0)} apart`);
   }
 });
-test('each division sits in its own band: Veyra west, Koruun east, north to south in league order', () => {
-  const west = ['Frostlands', 'Redrock', 'Golden Valley', 'Suncoast'], east = ['Kingsport', 'Greenheart', 'Everwild', 'Azure Isles'];
-  for (const [side, divs] of [[(x) => x < 200, west], [(x) => x > 200, east]]) {
-    let prevMax = -Infinity;
-    for (const d of divs) { const ys = DIVISIONS[d].map((c) => MAP_PINS[c][1]); for (const c of DIVISIONS[d]) assert.ok(side(MAP_PINS[c][0]), `${c} on the wrong landmass`);
-      assert.ok(Math.min(...ys) > prevMax, `${d} overlaps the region north of it`); prevMax = Math.max(...ys); }
+test('each club stands inside its own region, clear of its borders: Veyra west, Koruun east', () => {
+  for (const [club, [x, y]] of Object.entries(MAP_PINS)) {
+    const d = divisionOf(club);
+    for (const [dx, dy] of [[0, 0], [18, 0], [-18, 0], [0, 18], [0, -18]]) assert.equal(mapRegionAt(x + dx, y + dy), d, `${club} at ${dx},${dy}`);
+    assert.ok(['Frostlands', 'Redrock', 'Golden Valley', 'Suncoast'].includes(d) ? x < 400 : x > 400, `${club} on the wrong landmass`);
   }
 });
 test('the map marks the owner, the Gym Leaders, held badges and this week\'s games', () => {
