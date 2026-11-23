@@ -2733,3 +2733,19 @@ html[data-stadium-fx="reduced"] :is(.sfx-twang, .sfx-rock) { animation: none; } 
 .sfx-reveal-eclipse :is(.sfx-whiteout, .sfx-ring) { display: none; }
 .field-wrap.env-dragon { border-color: #8a5a66; background: #4a4651; } .field-wrap.env-shadow { border-color: #6a5a96; background: #352a4a; }
 .field-wrap.env-tidal { border-color: #58b6c8; background: #16607a; }
+
+/* Stadium Polish: Radiant (Light). Sundials whose shadows swing together; a sunburst on the posts; dawn breaking at kickoff. */
+.field-wrap.env-radiant { border-color: #e8c66a; background: #6e5f22; }
+.sfx-dial, .sfx-turn { transform-box: fill-box; transform-origin: center; }
+.sfx-dial { animation: sfx-dial 7s ease-in-out infinite alternate; }
+@keyframes sfx-dial { from { transform: rotate(-70deg); } to { transform: rotate(70deg); } }
+.sfx-turn { animation: sfx-turn 14s linear infinite; }
+@keyframes sfx-turn { to { transform: rotate(360deg); } }
+.field-wrap[data-sfx] .sfx-dial { animation-duration: 1.1s; } .field-wrap[data-sfx] .sfx-turn { animation-duration: 2.2s; }
+html[data-stadium-fx="reduced"] .sfx-dial { animation-duration: 20s; } html[data-stadium-fx="reduced"] .sfx-turn { animation: none; }
+.sfx-warm { position: absolute; inset: 0; background: linear-gradient(90deg, var(--sfx-b), var(--sfx-a)); opacity: 0; animation: sfx-warm 1.9s ease-in-out both; }
+@keyframes sfx-warm { 0% { opacity: 0; } 30% { opacity: .22; } 55% { opacity: .16; } 82%, 100% { opacity: 0; } }
+.sfx-dawn { position: absolute; top: 0; bottom: 0; left: 0; width: 62%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--sfx-b) 55%, transparent) 22%, color-mix(in srgb, var(--sfx-a) 80%, transparent) 42%, var(--sfx-c) 50%, color-mix(in srgb, var(--sfx-a) 80%, transparent) 58%, color-mix(in srgb, var(--sfx-b) 55%, transparent) 78%, transparent); opacity: 0; animation: sfx-dawn 1.9s cubic-bezier(.3, 0, .6, 1) both; }
+@keyframes sfx-dawn { 0% { opacity: 0; transform: translateX(-105%); } 6% { opacity: .95; } 58% { opacity: .95; } 66%, 100% { opacity: 0; transform: translateX(170%); } }
+.sfx-reveal-sunrise .sfx-ball { filter: drop-shadow(0 0 5px var(--sfx-a)); }
+.sfx-reveal-sunrise .sfx-whiteout { display: none; }

@@ -129,7 +129,7 @@ test('Fire, Water and Grass: each look sits on its existing field, keeps the fie
   const { edgeSvg, postsSvg } = await import('../src/ui/stadium-fx.js');
   const expect = { storm: ['Electric', 'Stormport Bolts', 'Electric', /sfx-chain/, /sfx-post-arc/, /sfx-strike/], volcanic: ['Fire', 'Ember City Beasts', 'Fire', /sfx-flame/, /sfx-flame/, /sfx-rise/], tidal: ['Water', 'Harbor Sentinels', 'Water', /sfx-shot/, /sfx-post-arc/, /sfx-drop/], forest: ['Grass', 'Bayou Stalkers', 'Nature', /sfx-vine/, /sfx-vine/, /sfx-swirl/],
     frozen: ['Ice', 'Frostpeak Howlers', 'Ice', /sfx-snowman/, /sfx-node/, /sfx-cube-l/], desert: ['Ground', 'Canyon Crushers', 'Earth', /sfx-cactus/, /sfx-drift/, /sfx-pit/], dome: ['Alloy', 'Ironpeak Rams', 'Metal', /sfx-chain/, /sfx-chain/, /sfx-hatch/],
-    dragon: ['Wyrm', 'Palmetto Vipers', null, /sfx-rock/, /sfx-flame/, /sfx-breath/], shadow: ['Umbral', 'Eastport Phantoms', 'Dark', /sfx-dim/, /sfx-node/, /sfx-moonbeam/] };
+    dragon: ['Wyrm', 'Palmetto Vipers', null, /sfx-rock/, /sfx-flame/, /sfx-breath/], shadow: ['Umbral', 'Eastport Phantoms', 'Dark', /sfx-dim/, /sfx-node/, /sfx-moonbeam/], radiant: ['Radiant', 'Sunfire Lions', 'Light', /sfx-dial/, /sfx-turn/, /sfx-dawn/] };
   const designs = { sky: ['Sky', /sfx-wave/, /sfx-post-arc/, /sfx-shadow/, 'Wind'], oracle: ['Oracle', /sfx-orbit/, /sfx-post-arc/, /sfx-ufo/, 'Psychic'], rock: ['Rock', /sfx-tumble/, /sfx-drift/, /sfx-cube-l/, 'Earth'], bug: ['Bug', /sfx-orbit/, /sfx-node/, /sfx-silk/, 'Nature'], specter: ['Specter', /sfx-wisp/, /sfx-post-arc/, /sfx-mist/, 'Dark'], clash: ['Clash', /sfx-twang/, /sfx-node/, /sfx-belt-l/, 'Earth'], corrupt: ['Corrupt', /sfx-shot/, /sfx-drift/, /sfx-pit/, 'Dark'] };
   assert.deepEqual(Object.keys(LOOKS).sort(), [...Object.keys(expect), ...Object.keys(designs)].sort());
   for (const [env, [label, club, type, edge, posts, reveal]] of Object.entries(expect)) {
@@ -140,7 +140,7 @@ test('Fire, Water and Grass: each look sits on its existing field, keeps the fie
     assert.match(kickoffRevealHtml(venue, 'full'), /sfx-ball/); assert.match(introPlateHtml(venue), new RegExp(LOOKS[env].intro));
     assert.doesNotMatch(fieldSvg({ venue, ballOn: 50 }), /venue-detail|venue-bolt/, 'the older sideline decor is replaced, not doubled');
   }
-  assert.equal(edgeSvg('grass', { bottom: 35, top: 81 }, 27, (y) => 81 - y, 46), ''); assert.equal(postsSvg('radiant', 0.6, 1), '');
+  assert.equal(edgeSvg('grass', { bottom: 35, top: 81 }, 27, (y) => 81 - y, 46), ''); assert.equal(postsSvg('grass', 0.6, 1), '');
 });
 
 // Revision 5: the white paint around the field, the barrier in front of the fans, markers on the white, Water's drop.
@@ -189,7 +189,7 @@ test('Sky, Oracle, Rock, Bug, Specter, Clash and Corrupt are designs only: drawn
     try { setStadiumScene(venue, null); const svg = fieldSvg({ venue, ballOn: 92 }); assert.ok(svg.includes(d.palette.a), 'its own turf'); assert.match(svg, /sfx-apron/); assert.match(svg, /sfx-stand/); assert.ok(svg.includes('stroke="#eaf3e6"'), 'white yard lines'); assert.doesNotMatch(svg, /NaN|undefined/); } finally { setStadiumScene(null); }
   }
   assert.equal(designField('grass'), null); assert.equal(venueFor('Ashford Hawks', 'k').env, 'grass', 'every club keeps the field it had');
-  const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8'); for (const k of ['sfx-wave', 'sfx-tumble', 'sfx-wisp', 'sfx-web', 'sfx-silk', 'sfx-mist', 'sfx-ball-fade', 'sfx-orb-drift', 'sfx-orb-fade', 'sfx-twang', 'sfx-rock', 'sfx-dim', 'sfx-bell', 'sfx-breath', 'sfx-ball-hot', 'sfx-dark', 'sfx-moonbeam', 'sfx-hatch', 'sfx-door-l', 'sfx-door-r', 'sfx-ball-set', 'sfx-orbit', 'sfx-cube-l', 'sfx-cube-r', 'sfx-crack', 'sfx-pit', 'sfx-ball-pit', 'sfx-ball-float', 'sfx-ufo', 'sfx-beam', 'sfx-ball-late']) assert.match(css, new RegExp(`@keyframes ${k}\\b`));
+  const css = fs.readFileSync(new URL('../styles/app.css', import.meta.url), 'utf8'); for (const k of ['sfx-wave', 'sfx-tumble', 'sfx-wisp', 'sfx-web', 'sfx-silk', 'sfx-mist', 'sfx-ball-fade', 'sfx-orb-drift', 'sfx-orb-fade', 'sfx-twang', 'sfx-rock', 'sfx-dim', 'sfx-dial', 'sfx-turn', 'sfx-dawn', 'sfx-warm', 'sfx-bell', 'sfx-breath', 'sfx-ball-hot', 'sfx-dark', 'sfx-moonbeam', 'sfx-hatch', 'sfx-door-l', 'sfx-door-r', 'sfx-ball-set', 'sfx-orbit', 'sfx-cube-l', 'sfx-cube-r', 'sfx-crack', 'sfx-pit', 'sfx-ball-pit', 'sfx-ball-float', 'sfx-ufo', 'sfx-beam', 'sfx-ball-late']) assert.match(css, new RegExp(`@keyframes ${k}\\b`));
 });
 
 test('Ice has still snowmen on its sidelines: nothing there moves', async () => {
@@ -232,10 +232,12 @@ test('a side stand\'s crowd is seated for a sideline: 43 seats long, the same pe
   assert.notDeepEqual(seats, crowdSeats(5, mix, 'right0', SIDE_SEATS)); assert.equal(crowdMonsters(5, 'left0', 'Fire', SIDE_SEATS)[0].length, SIDE_SEATS);
 });
 
-test('all sixteen stadiums on the list have a look: nine on fields clubs play on, seven as unassigned designs', async () => {
+test('every stadium design has a look: ten on fields clubs play on (the ten typed fields), seven as unassigned designs', async () => {
   const { DESIGN_FIELDS } = await import('../src/data/stadium-designs.js'); const { ENVIRONMENTS } = await import('../src/data/stadiums.js');
   const labels = Object.values(LOOKS).map((l) => l.label).sort();
-  assert.deepEqual(labels, ['Alloy', 'Bug', 'Clash', 'Corrupt', 'Electric', 'Fire', 'Grass', 'Ground', 'Ice', 'Oracle', 'Rock', 'Sky', 'Specter', 'Umbral', 'Water', 'Wyrm']);
-  assert.equal(Object.keys(LOOKS).filter((k) => ENVIRONMENTS[k]).length, 9); assert.equal(Object.keys(LOOKS).filter((k) => DESIGN_FIELDS[k]).length, 7);
-  assert.equal(new Set(Object.values(LOOKS).map((l) => l.reveal)).size, 16, 'every stadium has its own kickoff');
+  assert.deepEqual(labels, ['Alloy', 'Bug', 'Clash', 'Corrupt', 'Electric', 'Fire', 'Grass', 'Ground', 'Ice', 'Oracle', 'Radiant', 'Rock', 'Sky', 'Specter', 'Umbral', 'Water', 'Wyrm']);
+  assert.equal(Object.keys(LOOKS).filter((k) => ENVIRONMENTS[k]).length, 10); assert.equal(Object.keys(LOOKS).filter((k) => DESIGN_FIELDS[k]).length, 7);
+  assert.equal(new Set(Object.values(LOOKS).map((l) => l.reveal)).size, 17, 'every stadium has its own kickoff');
+  // The twelve monster types each have a design (the Gym Leader line-up): ten on typed fields plus Sky (Wind) and Oracle (Psychic).
+  assert.deepEqual(['storm', 'volcanic', 'tidal', 'forest', 'frozen', 'desert', 'dome', 'dragon', 'shadow', 'radiant', 'sky', 'oracle'].filter((k) => !LOOKS[k]), []);
 });
