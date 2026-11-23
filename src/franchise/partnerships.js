@@ -14,18 +14,21 @@ export { PAIR_TYPES };
 export const LEVEL_NAMES = Object.freeze(['New', 'Developing', 'Established', 'Strong', 'Elite']);
 /**
  * Joint successful plays (lifetime, for the exact pair) needed for +1% … +4%. Elite = what a strong (75th-percentile) pair of
- * that type earns in one nine-game regular season; the steps are 20 / 45 / 70 / 100% of it (audit 2026-10-24; DL–DL recalibrated
+ * that type earns in one regular season; the steps are 20 / 45 / 70 / 100% of it (audit 2026-10-24; DL–DL recalibrated
  * on the owner's strict rule plus the shed → partner's stop event, 2026-10-25).
+ * 14-game season (32-club league, 2026-11-23): the nine-game numbers scaled by 14/9, so Elite is still a strong pair's season.
+ * Before: QB-RB 15/34/53/75, QB-WR 6/14/21/30, QB-TE 7/16/25/36, RB-OL 6/14/22/32, OL-OL 4/9/14/20, DL-DL 1/3/4/6, DL-LB 2/4/6/9,
+ * DL-CB 1/3/4/6.
  */
 export const THRESHOLDS = Object.freeze({
-  'QB-RB': [15, 34, 53, 75],
-  'QB-WR': [6, 14, 21, 30],
-  'QB-TE': [7, 16, 25, 36],
-  'RB-OL': [6, 14, 22, 32],
-  'OL-OL': [4, 9, 14, 20],
-  'DL-DL': [1, 3, 4, 6],
-  'DL-LB': [2, 4, 6, 9],
-  'DL-CB': [1, 3, 4, 6],
+  'QB-RB': [23, 53, 82, 117],
+  'QB-WR': [9, 22, 33, 47],
+  'QB-TE': [11, 25, 39, 56],
+  'RB-OL': [9, 22, 34, 50],
+  'OL-OL': [6, 14, 22, 31],
+  'DL-DL': [2, 5, 6, 9],
+  'DL-LB': [3, 6, 9, 14],
+  'DL-CB': [2, 5, 6, 9],
 });
 /** Per-game ceiling: 25% of the Elite target, rounded half up, never below 3 (owner decision 2026-10-25). */
 export const GAME_CAP_SHARE = 0.25;

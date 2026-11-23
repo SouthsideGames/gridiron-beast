@@ -10,6 +10,7 @@
 
 import { leagueRows, withDerived, statLine, OFFENSE_POSITIONS, DEFENSE_POSITIONS } from './stats.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
+import { ALL_TEAMS, RIVAL_GMS } from '../data/league.js';
 import { hashString } from '../core/rng.js';
 import { t as $t, captured, lineField } from '../text/index.js';
 
@@ -132,5 +133,18 @@ const LAST = ['Okafor', 'Brandt', 'Castellano', 'Hughes', 'Mbeki', 'Lindqvist', 
 export function headCoachName(team, { seed = 0, playerClub = null, playerCoach = null } = {}) {
   if (team === playerClub) return playerCoach || $t('franchise.your_head_coach');
   const gym = GYM_BY_CLUB[team]; if (gym) return gym.coach.name;
-  const h = hashString(`${`coach|${team}|${seed}`}`); return `${FIRST[h % FIRST.length]} ${LAST[(h >>> 8) % LAST.length]}`;
+  return generatedCoaches(seed)[team] || (() => { const h = hashString(`${`coach|${team}|${seed}`}`); return `${FIRST[h % FIRST.length]} ${LAST[(h >>> 8) % LAST.length]}`; })();
+}
+/**
+ * The generated head coaches of one franchise seed, club by club in league order. A name already taken, by an earlier club's
+ * coach, a Gym Leader or a general manager, is drawn again: with 32 clubs and 256 names two clubs otherwise shared a coach in
+ * most leagues (identity audit, 2026-11-23). The first draw is the old one, so most clubs keep the coach they had.
+ */
+const COACH_CACHE = new Map();
+function generatedCoaches(seed) {
+  let out = COACH_CACHE.get(seed); if (out) return out;
+  out = {}; const taken = new Set([...Object.values(RIVAL_GMS), ...Object.values(GYM_BY_CLUB).map((g) => g.coach.name)]);
+  for (const team of ALL_TEAMS) { if (GYM_BY_CLUB[team]) continue;
+    for (let n = 0; n < 400; n++) { const h = hashString(`coach|${team}|${seed}${n ? `|${n}` : ''}`); const name = `${FIRST[h % FIRST.length]} ${LAST[(h >>> 8) % LAST.length]}`; if (!taken.has(name)) { out[team] = name; taken.add(name); break; } } }
+  if (COACH_CACHE.size > 64) COACH_CACHE.clear(); COACH_CACHE.set(seed, out); return out;
 }

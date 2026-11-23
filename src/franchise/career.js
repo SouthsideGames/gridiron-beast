@@ -19,7 +19,11 @@ const PAIR_LABEL = { 'QB-RB': $t('franchise.qb_rb'), 'QB-WR': $t('franchise.qb_w
 const CHEM_LABEL = ['New', 'Developing', 'Established', 'Strong', 'Elite'];
 export const TIER = Object.freeze({ award: 'major', champion: 'major', record: 'major', hof: 'major', evolve: 'notable', first: 'notable', milestone: 'notable', season: 'notable', playoff: 'notable', bowl: 'notable', level: 'notable', growth: 'notable', star: 'notable', rival: 'notable', debut: 'notable', join: 'career', drafted: 'career', left: 'career', signed: 'career', captain: 'career', chemistry: 'notable', injury: 'career', 'injury-return': 'notable', 'injury-free': 'notable', retired: 'notable' });
 
-/** Thresholds for a 7-on-7, nine-game season (measured: GDD §38.2). */
+/**
+ * Thresholds for a 7-on-7 season. They were measured on nine-game seasons (GDD §38.2) and are scaled by 14/9 for the 14-game
+ * season of the 32-club league (2026-11-23), rounded to round numbers: a mark means what it meant, a season's or a career's worth.
+ * Before: seasons 1,500 / 15 / 800 / 600 / 10 / 4 / 3 / 40; careers 5,000-20,000 passing yards and so on.
+ */
 export const FIRSTS = Object.freeze([
   { key: 'tdTotal', id: 'td', label: 'touchdown' },
   { key: 'passTd', id: 'passTd', label: 'touchdown pass', pos: ['QB'] },
@@ -27,16 +31,16 @@ export const FIRSTS = Object.freeze([
   { key: 'sacks', id: 'sack', label: 'sack' },
 ]);
 export const CAREER_MILESTONES = Object.freeze([
-  { key: 'passYds', at: [5000, 10000, 20000], unit: 'passing yards' }, { key: 'passTd', at: [25, 50, 100], unit: 'touchdown passes' },
-  { key: 'rushYds', at: [1500, 3000, 6000], unit: 'rushing yards' }, { key: 'recYds', at: [1500, 3000, 6000], unit: 'receiving yards' },
-  { key: 'tdTotal', at: [10, 25, 50], unit: 'touchdowns' }, { key: 'sacks', at: [10, 20, 40], unit: 'sacks' },
-  { key: 'int', at: [5, 10, 20], unit: 'interceptions' }, { key: 'tacklesTotal', at: [100, 200, 400], unit: 'tackles' },
+  { key: 'passYds', at: [7500, 15000, 30000], unit: 'passing yards' }, { key: 'passTd', at: [40, 80, 150], unit: 'touchdown passes' },
+  { key: 'rushYds', at: [2500, 5000, 9000], unit: 'rushing yards' }, { key: 'recYds', at: [2500, 5000, 9000], unit: 'receiving yards' },
+  { key: 'tdTotal', at: [15, 40, 80], unit: 'touchdowns' }, { key: 'sacks', at: [15, 30, 60], unit: 'sacks' },
+  { key: 'int', at: [8, 15, 30], unit: 'interceptions' }, { key: 'tacklesTotal', at: [150, 300, 600], unit: 'tackles' },
 ]);
 export const SEASON_MARKS = Object.freeze([
-  { key: 'passYds', at: 1500, label: $t('franchise.1_500_yard_passing_season') }, { key: 'passTd', at: 15, label: $t('franchise.15_touchdown_passes_in_a_season') },
-  { key: 'rushYds', at: 800, label: '800-yard rushing season' }, { key: 'recYds', at: 600, label: '600-yard receiving season' },
-  { key: 'tdTotal', at: 10, label: '10-touchdown season' }, { key: 'sacks', at: 4, label: '4-sack season' },
-  { key: 'int', at: 3, label: '3-interception season' }, { key: 'tacklesTotal', at: 40, label: '40-tackle season' },
+  { key: 'passYds', at: 2300, label: $t('franchise.1_500_yard_passing_season') }, { key: 'passTd', at: 23, label: $t('franchise.15_touchdown_passes_in_a_season') },
+  { key: 'rushYds', at: 1250, label: '1,250-yard rushing season' }, { key: 'recYds', at: 950, label: '950-yard receiving season' },
+  { key: 'tdTotal', at: 16, label: '16-touchdown season' }, { key: 'sacks', at: 6, label: '6-sack season' },
+  { key: 'int', at: 5, label: '5-interception season' }, { key: 'tacklesTotal', at: 60, label: '60-tackle season' },
 ]);
 export const LEVEL_MARKS = Object.freeze([10, 20, 30]);
 export const GROWTH_MARK = 7; // overall points gained in one season worth a mention (5 happened to a third of every roster)

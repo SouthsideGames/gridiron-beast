@@ -12,14 +12,16 @@
 // A new injury object is stamped with its incident key (`m.injury.rec`), so the same injury is never opened twice and a fresh
 // one is never merged into an older one, even across reloads. Nothing here draws a random number or reads by the engine.
 import { t as $t } from '../text/index.js';
-export const MIN_OPPORTUNITY = 9; // games of opportunity (in the lineup or missed to injury) before the history is classified
+import { REG_GAMES } from '../data/league.js';
+export const MIN_OPPORTUNITY = REG_GAMES; // a regular season (14 games; nine before the 32-club league): games of opportunity (in the lineup or missed to injury) before the history is classified
 /**
  * Injury History classification, by two rates since tracking began, over opportunity (games in the lineup + games missed to
- * injury): games missed per game, and injuries per nine games (a regular season). High when either rate reaches its High line,
+ * injury): games missed per game, and injuries per regular season (14 games; the lines are the nine-game ones times 14/9, so a
+ * monster is classified exactly as before). High when either rate reaches its High line,
  * Moderate when either reaches its Moderate line, else Low. Calibrated on 4 franchises × 5 seasons (1,275 monsters with 9+
  * games): 84% Low, 12% Moderate, 4% High; 29% of them had no injury at all. A record of the past, not a forecast.
  */
-export const INDICATOR = Object.freeze({ missedRate: { moderate: 0.05, high: 0.10 }, perSeason: { moderate: 0.6, high: 1.0 } });
+export const INDICATOR = Object.freeze({ missedRate: { moderate: 0.05, high: 0.10 }, perSeason: { moderate: 0.6 * REG_GAMES / 9, high: 1.0 * REG_GAMES / 9 } });
 export const INDICATOR_LABEL = Object.freeze({ low: $t('franchise.low_injury_history'), moderate: $t('franchise.moderate_injury_history'), high: $t('franchise.high_injury_history'), early: $t('franchise.not_enough_history_yet') });
 const KEEP_SEASONS = 1; // the pre-game ledger keeps this season only (a game of an earlier season can no longer be played)
 
@@ -107,7 +109,7 @@ export function injurySummary(f, id, { firstSeason = null } = {}) {
   const incidents = recs.filter((r) => r.src !== 'before').length;
   const missed = recs.reduce((a, r) => a + (r.missed || 0), 0);
   const opp = (H.opp[id] || 0) + missed; // appearances + games missed to injury
-  const perSeason = opp ? incidents / opp * 9 : 0; const missedRate = opp ? missed / opp : 0;
+  const perSeason = opp ? incidents / opp * REG_GAMES : 0; const missedRate = opp ? missed / opp : 0;
   const I = INDICATOR; let indicator = 'early';
   if (opp >= MIN_OPPORTUNITY) indicator = missedRate >= I.missedRate.high || perSeason >= I.perSeason.high ? 'high' : missedRate >= I.missedRate.moderate || perSeason >= I.perSeason.moderate ? 'moderate' : 'low';
   const since = H.since; const startedLater = firstSeason != null && (firstSeason < since.y || (firstSeason === since.y && since.w > 1));
