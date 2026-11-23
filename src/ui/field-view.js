@@ -27,6 +27,7 @@ import { assignmentLines } from './play-art.js';
 import { PLAYS, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
 import { fxSvg, movementSvg, statusMarks } from './ability-fx.js';
 import { turfSvg } from './stadium-art.js';
+import { postsSvg, standsDepth, standSvg, wallSvg, apronSvg, borderSvg, barrierSvg, sideStandsSvg, SIDE_REACH, fieldBorder, FIELD_BORDER, STANDS_GRASS, STANDS_BARRIER, STANDS_GAP, FOOTBALL } from './stadium-fx.js';
 import { t as $t } from '../text/index.js';
 
 const SPAN = 46; // visible yards
@@ -35,10 +36,17 @@ let nextLiveClip = 0;
 
 export function cameraFor(ballOn) {
   let bottom = ballOn - 15;
-  bottom = Math.max(-10, Math.min(110 - SPAN, bottom));
+  const reach = standsDepth(); // Stadium Polish: with a stadium scene set, the picture reaches a few yards past each end line (the stands)
+  bottom = Math.max(-10 - reach, Math.min(110 + reach - SPAN, bottom));
   return { bottom, top: bottom + SPAN };
 }
 export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
+/** Stadium Polish: half the picture's width. With a stadium scene set the picture is wider than the field by the white paint. */
+/** Zoomed out, the picture also takes in the stands along the sidelines; they slide into view as the camera pulls back. */
+const sideReach = (span) => (fieldBorder() ? SIDE_REACH * Math.max(0, Math.min(1, (span - SPAN) / 50)) : 0);
+const viewHalf = (span = SPAN) => HW + fieldBorder() + sideReach(span);
+/** The viewBox for the field on screen now (FIELD_VIEWBOX unless a stadium scene is set). */
+export const fieldViewBox = (span = SPAN) => `${-viewHalf(span)} 0 ${viewHalf(span) * 2} ${span}`;
 
 /**
  * @param {object} o
@@ -64,6 +72,8 @@ export function fieldLayers(o) {
   s += T.turf;
   if (cam.bottom < 0) s += `${T.endZone(Y(0), Y(-10) - Y(0))}<text x="0" y="${Y(-5) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${ownLabel}</text>`;
   if (cam.top > 100) s += `${T.endZone(Y(110), Y(100) - Y(110))}<text x="0" y="${Y(105) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${oppLabel}</text>`;
+  const VW = viewHalf(span); const sideSymbols = [];
+  s += borderSvg(cam, HW, Y); // Stadium Polish: the white paint around the field (the sideline markers stand on it)
   s += T.over; // tint and sideline decor, under the lines and the players
   // Event field art: rivalry games get a painted midfield crest and purple end-zone stripes; playoffs get gold.
   if (event) {
@@ -93,8 +103,14 @@ export function fieldLayers(o) {
     s += `<line x1="${-HW}" y1="${Y(ballOn)}" x2="${HW}" y2="${Y(ballOn)}" stroke="#4aa3ff" stroke-width="0.35"/>`;
     if (ltg < 100) s += `<line x1="${-HW}" y1="${Y(ltg)}" x2="${HW}" y2="${Y(ltg)}" stroke="#ffb13d" stroke-width="0.35"/>`;
   }
+  // Stadium Polish: what lies behind the end lines (the far stand with its crowd; the near wall). Over the turf and sidelines there.
+  // A strip of grass runs between each end line and what stands behind it.
+  // Behind the white: grass, the padded barrier, then the stand (far end) or the wall (near end), across the whole picture.
+  if (cam.top > 110 + FIELD_BORDER) s += `${apronSvg(venue, -VW, Y(110 + FIELD_BORDER + STANDS_GRASS), VW * 2, STANDS_GRASS)}${barrierSvg(venue, -VW, Y(110 + STANDS_GAP), VW * 2, -1)}${cam.top > 110 + STANDS_GAP ? standSvg(venue, -VW, Y(110 + standsDepth()), VW * 2) : ''}`; // the stand only once it is in view
+  if (cam.bottom < -10 - FIELD_BORDER) s += `${apronSvg(venue, -VW, Y(-10 - FIELD_BORDER), VW * 2, STANDS_GRASS)}${barrierSvg(venue, -VW, Y(-10 - FIELD_BORDER - STANDS_GRASS), VW * 2, 1)}${cam.bottom < -10 - STANDS_GAP ? wallSvg(venue, -VW, Y(-10 - STANDS_GAP), VW * 2) : ''}`;
+  if (sideReach(span) > 0.05) { const side = sideStandsSvg(venue, cam, HW, Y); if (side) { s += side.svg; sideSymbols.push(...side.symbols); } }
   // Goal posts on the end lines (drawn flat from above: crossbar + uprights).
-  for (const [end, dir] of [[110, 1], [-10, -1]]) if (cam.bottom - 1 < end && cam.top + 1 > end) { const y = Y(end) + dir * 0.6; s += `<g stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round"><line x1="-3" y1="${y}" x2="3" y2="${y}"/><line x1="-3" y1="${y}" x2="-3" y2="${y - dir * 2.4}"/><line x1="3" y1="${y}" x2="3" y2="${y - dir * 2.4}"/></g>`; }
+  for (const [end, dir] of [[110, 1], [-10, -1]]) if (cam.bottom - 1 < end && cam.top + 1 > end) { const y = Y(end) + (fieldBorder() ? -dir * 0.9 : dir * 0.6); s += `<g stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round"><line x1="-3" y1="${y}" x2="3" y2="${y}"/><line x1="-3" y1="${y}" x2="-3" y2="${y - dir * 2.4}"/><line x1="3" y1="${y}" x2="3" y2="${y - dir * 2.4}"/></g>${postsSvg(venue?.env, y, dir)}`; }
   // Pre-snap art.
   if (presnap?.play) {
     const B = boundsFor(ballOn, ballLat);
@@ -117,7 +133,7 @@ export function fieldLayers(o) {
   const statics = s; s = '';
   // ---------------------------------------------------------------- dynamic layer
   const clipId = o.clipId || 'fv-clip';
-  const symbols = [{ id: clipId, symbol: `<clipPath id="${clipId}" clipPathUnits="userSpaceOnUse"><rect x="${-HW}" y="0" width="${HW * 2}" height="${span}"/></clipPath>` }]; const seen = new Set(); let pre = '';
+  const symbols = [{ id: clipId, symbol: `<clipPath id="${clipId}" clipPathUnits="userSpaceOnUse"><rect x="${-VW}" y="0" width="${VW * 2}" height="${span}"/></clipPath>` }, ...sideSymbols]; const seen = new Set(); let pre = '';
   // Players.
   const simpleMarker = (slot, x, y, team, engaged, holder) => {
     const cx = X(ballLat + y), cy = Y(ballOn + x);
@@ -173,7 +189,7 @@ export function fieldLayers(o) {
     const [bx, by, air] = frame.ball;
     const cx = X(ballLat + by), cy = Y(ballOn + bx);
     s += layers.ball; // fire or wind on a ball in the air, just under the ball
-    const ballArt = `<ellipse cx="${(cx + (air ? 0 : 0.9)).toFixed(2)}" cy="${(cy - (air ? 1.4 : 0.7)).toFixed(2)}" rx="${air ? 0.95 : 0.7}" ry="${air ? 0.6 : 0.45}" fill="#d9924f" stroke="#fff" stroke-width="0.18"/>`;
+    const ballArt = `<ellipse cx="${(cx + (air ? 0 : 0.9)).toFixed(2)}" cy="${(cy - (air ? 1.4 : 0.7)).toFixed(2)}" rx="${air ? 0.95 : FOOTBALL.rx}" ry="${air ? 0.6 : FOOTBALL.ry}" fill="${FOOTBALL.fill}" stroke="${FOOTBALL.stroke}" stroke-width="${FOOTBALL.strokeWidth}"/>`;
     // Ability presentation over the sprites: icons, badges, outcome labels; then status marks on top of everything.
     // QB read indicator (GDD §53, opt-in): a thin dashed ring on the receiver the quarterback is reading. Draws only; the frame's
     // `read` is what the engine recorded.
@@ -231,7 +247,7 @@ export function fieldDraw(svg, o) {
   const tracker = svg.__facing || (svg.__facing = new FacingTracker());
   const clipId = svg.__clipId || (svg.__clipId = `fv-clip-live-${++nextLiveClip}`);
   const L = fieldLayers({ ...o, clipId, facing: tracker.observe(o.frame) });
-  if (o.viewCamera) svg.setAttribute('viewBox', `${-HW} 0 ${HW * 2} ${L.span}`);
+  if (o.viewCamera) svg.setAttribute('viewBox', fieldViewBox(L.span));
   let st = svg.__fv;
   if (!st || st.defs.parentNode !== svg || st.statics.parentNode !== svg || st.dyn.parentNode !== svg) {
     let defs = null, statics = null, dyn = null;
@@ -248,7 +264,7 @@ export function fieldDraw(svg, o) {
   st.statics.setAttribute('clip-path', `url(#${clipId})`); st.dyn.setAttribute('clip-path', `url(#${clipId})`);
   for (const x of L.symbols) if (!st.ids.has(x.id)) { st.ids.add(x.id); st.defs.insertAdjacentHTML('beforeend', x.symbol); }
   const clip = st.defs.querySelector(`#${clipId} rect`);
-  if (clip) clip.setAttribute('height', String(L.span));
+  if (clip) { clip.setAttribute('height', String(L.span)); clip.setAttribute('x', String(-viewHalf(L.span))); clip.setAttribute('width', String(viewHalf(L.span) * 2)); }
   const staticRedrawn = L.statics !== st.staticStr;
   if (staticRedrawn) { st.statics.innerHTML = L.statics; st.staticStr = L.statics; }
   // Nothing moved (a still frame of the end-of-play hold, a re-render of the same moment): the dynamic layer is left as it is.

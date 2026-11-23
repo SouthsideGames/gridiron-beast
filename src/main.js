@@ -63,6 +63,7 @@ import { registerDexScreens } from './ui/screens/dex.js';
 import { installCareerLinks } from './ui/career-ui.js';
 import { applyFlashPref } from './ui/flash-pref.js';
 import { applyFrameRate } from './ui/frame-rate.js';
+import { applyStadiumFx } from './ui/stadium-fx.js';
 import { deviceSettings } from './ui/device-settings.js';
 import { t as $t } from './text/index.js';
 
@@ -214,7 +215,7 @@ function saveOutcome(r) {
   failing = true; showSaveFailure(app, r.error);
 }
 
-function applySettings() { document.documentElement.dataset.comfortableText = app.settings.comfortableText ? '1' : '0'; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); }
+function applySettings() { document.documentElement.dataset.comfortableText = app.settings.comfortableText ? '1' : '0'; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); applyStadiumFx(app.settings); }
 
 function tabs(ctx, screenName) {
   return ctx.inFranchise ? franchiseTabs(app.f, screenName) : null;

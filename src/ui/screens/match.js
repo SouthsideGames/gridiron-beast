@@ -4,6 +4,8 @@ import { autoSpeed, cycleAutoSpeed } from '../phone-navigation.js';
 import { matchLogMatches } from '../match-log-filter.js';
 import { activityPaused } from '../activity.js';
 import { iconifyMarkup, infoIcon } from '../icons.js';
+import { surroundHtml, setStadiumScene, standsDepth, lookFor, introPlateHtml, kickoffRevealHtml, REVEAL_MS, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
+import { crowdFor } from '../stadium-crowd.js';
 import { guideFootball, guideMoment } from '../guided-week.js';
 import { recorder } from '../../testing/recorder.js';
 import { eligiblePlays } from '../../sim/substitutions.js';
@@ -27,7 +29,7 @@ import { PLAYS } from '../../data/playbook.js';
 import { TRAINING_FOCI } from '../../data/staff.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
 import { MatchCamera } from '../match-camera.js';
-import { fieldSvg, fieldDraw, FIELD_VIEWBOX, presnapLook, cameraFor } from '../field-view.js';
+import { fieldSvg, fieldDraw, fieldViewBox, presnapLook, cameraFor } from '../field-view.js';
 import { playCardSvg } from '../play-art.js';
 import { monsterSprite, portraitSprite } from '../pixel-monster.js';
 import { GYM_BY_CLUB } from '../../data/gyms.js';
@@ -47,6 +49,7 @@ import { venueHtml } from '../stadium-preview.js';
 import { replayReason, replayPlan, replayPosition, REPLAY } from '../replay.js';
 import { qbReadsShown } from '../qb-read-ui.js';
 import { openMatchupPanel } from '../type-chart.js';
+import { hauntHtml } from '../stadium-haunt.js';
 import { captainsOf } from '../../franchise/partnerships.js';
 import { postGameHtml } from '../captains-ui.js';
 import { t as $t, lineText } from '../../text/index.js';
@@ -76,7 +79,7 @@ export function registerMatchScreens(Router, app) {
     const G = f.game;
     const portal = field.frame && (field.frame.hoardFlight || field.fx?.t8?.items?.some(i => i.id === 'PSY-02-F' && (field.frame.t ?? 0) >= i.t0));
     const close = portal ? cameraFor(field.ballOn + field.frame.ball[0]) : field.camera || cameraFor(field.ballOn);
-    const viewCamera = autoCamera.sample(close, { key: G.state, auto: G.auto && !G.state.finished && !anim?.replay, closeView: G.autoCloseView, reducedMotion: f.settings.reducedMotion || !!anim?.replay });
+    const viewCamera = autoCamera.sample(close, { key: G.state, auto: G.auto && !G.state.finished && !anim?.replay, closeView: G.autoCloseView, reducedMotion: f.settings.reducedMotion || !!anim?.replay, pad: standsDepth() ? 3.5 : 0 }); // zoomed out: the white all round with the goal posts on it; the stands in view are the two along the sidelines // zoomed out: the white all round, and the goal posts standing on it
     // Planner art is caller-projected in the close camera's coordinate space.
     const underlay = field.underlay ? `<g transform="translate(0 ${viewCamera.top - close.top})">${field.underlay}</g>` : '';
     return { ...field, viewCamera, underlay };
@@ -206,7 +209,7 @@ export function registerMatchScreens(Router, app) {
       // Three in-place regions (refresh(): a play's start and end update them without rebuilding the screen): the head, the field
       // with what lies over it, the panels under the field; then the controls. display:contents wrappers add no box of their own.
       return `<div class="match-console"><div id="live-status"></div><div id="match-head">${P.head}</div>
-        <div class="${P.wrapClass}" id="fieldwrap" aria-label="${$t('match.football_field')}"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldSvg(P.field)}</svg>${P.over}</div><div id="field-after">${P.after}</div>
+        <div class="${P.wrapClass}" id="fieldwrap" aria-label="${$t('match.football_field')}">${P.surround}<svg id="field" viewBox="${fieldViewBox()}" preserveAspectRatio="xMidYMid meet" role="img">${fieldSvg(P.field)}</svg>${P.over}</div><div id="field-after">${P.after}</div>
         <div id="controls">${P.controls}</div></div>`;
     },
     mount(root, ctx) {
@@ -234,7 +237,7 @@ export function registerMatchScreens(Router, app) {
         punt: () => act(f, { fourthDown: 'punt' }),
         fg: () => act(f, { fourthDown: 'fg' }),
         fgsig: () => act(f, { fourthDown: 'fg', fgSignature: true }), // Task 8 M3: a player-activated field-goal signature (Dragon Roar)
-        kickoff: () => act(f, { kickoff: 'normal' }),
+        kickoff: () => kickoffWithReveal(f, root, () => act(f, { kickoff: 'normal' })),
         onside: () => act(f, { kickoff: 'onside' }),
         trykick: () => act(f, { tryChoice: 'kick' }),
         trytwo: () => { const G = f.game; if (!G.selected.offense) { toast($t('match.pick_a_play_for_the_two')); return; } act(f, { tryChoice: 'two' }); },
@@ -271,7 +274,7 @@ export function registerMatchScreens(Router, app) {
       if (!anim && f.game?.lastEvent?.sim?.events?.some(e => e.kind === 'ability' || e.kind === 'status')) guideMoment(f, 'status', () => app.save());
       document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => openLiveBox(f));
     },
-    unmount() { cancelAnimationFrame(cameraRaf); cameraRaf = null; cameraField = cameraSvg = null; autoCamera.reset(null); settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
+    unmount() { cancelReveal(); stopStadiumReaction(); setStadiumScene(null); pendingStadium = null; cancelAnimationFrame(cameraRaf); cameraRaf = null; cameraField = cameraSvg = null; autoCamera.reset(null); settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
   });
 
   /** Everything the match screen shows, as the strings render() and refresh() place: title, head, field options, overlays, panels, controls. */
@@ -333,8 +336,27 @@ export function registerMatchScreens(Router, app) {
     return null;
   }
 
+  const fieldBox = () => fieldViewBox().split(' ').map(Number); // [-half width, 0, width, span] of the picture on screen now
+  let pendingStadium = null;
+  // Stadium Polish: on the opening kickoff the stadium's strike reveals the football between the captains before the kick.
+  // It only delays the kick the player just asked for, never changes it, and a tap (or the button again) skips it.
+  let revealFinish = null;
+  function kickoffWithReveal(f, root, go) {
+    if (revealFinish) { revealFinish(); return; } // pressed again while it plays: skip
+    const s = f.game.state; const level = stadiumFxLevel(f.settings);
+    const opening = s.phase === 'kickoff' && s.quarter === 1 && !s.playCount && !(s.log || []).some((e) => e.kind === 'kick');
+    const wrap = root?.querySelector('#fieldwrap'); const html = opening && wrap && !anim && !f.game.auto ? kickoffRevealHtml(s.venue, level) : '';
+    if (!html) { go(); return; }
+    wrap.insertAdjacentHTML('beforeend', html); const el = wrap.lastElementChild; wrap.classList.add('sfx-revealing');
+    playStadiumReaction(wrap, { ...introReaction(), ms: REVEAL_MS[level] || REVEAL_MS.full }, level);
+    let timer = null; const finish = () => { if (!revealFinish) return; revealFinish = null; clearTimeout(timer); el.remove(); wrap.classList.remove('sfx-revealing'); go(); };
+    revealFinish = finish; timer = setTimeout(finish, REVEAL_MS[level] || REVEAL_MS.full); el.addEventListener('click', finish);
+  }
+  function cancelReveal() { if (!revealFinish) return; revealFinish = null; document.querySelector('.sfx-reveal')?.remove(); } // a stadium reaction waiting for the field to be on screen
   function screenParts(f) {
-    const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
+    const G = f.game; const s = G.state;
+    // Stadium Polish: the stand and its crowd for this game (the camera and the field drawing read it; null for a plain stadium).
+    setStadiumScene(s.venue, crowdFor({ type: s.venue?.type || lookFor(s.venue?.env)?.crowd, seed: s.seed, homeColor: s.home.color, awayColor: s.away.color, homeRecord: f.season?.records?.[s.home.name], awayRecord: f.season?.records?.[s.away.name], event: G.event })); const me = G.playerSide, them = R.opponent(me);
     const myBall = s.possession === me;
     const teams = teamsFor(f);
     absenceTrack.observe(s.seed, s, teams, G.fxAbsence); // presentation-only save data, outside the simulation state
@@ -370,7 +392,7 @@ export function registerMatchScreens(Router, app) {
     const contact=G.lastEvent?.sim?.typeContests?.find(x=>x.mod>(x.env?0.02:0));
     const contactNames=G.lastEvent?.sim?.names;
     const typeNote=contact&&contactNames?.[contact.team]?.[contact.a]&&contactNames?.[contact.team==='off'?'def':'off']?.[contact.b] ? $t('playview.type_contact',{name:esc(contactNames[contact.team][contact.a]),opponent:esc(contactNames[contact.team==='off'?'def':'off'][contact.b])}):'';
-    const co = G.lastEvent?.callout; const fresh = !!G.lastEvent?.fresh; if (G.lastEvent) G.lastEvent.fresh = false; // the pop plays once, not on every re-render
+    const co = G.lastEvent?.callout; const fresh = !!G.lastEvent?.fresh; const reaction = fresh && !anim ? G.lastEvent.stadium || null : null; if (G.lastEvent) G.lastEvent.fresh = false; // the pop plays once, not on every re-render
     const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''} ${co ? `tier-${co.tier} ${co.mine === true ? 'mine' : co.mine === false ? 'theirs' : ''}` : ''} ${fresh ? 'fresh' : ''}" id="banner">${co && co.tier !== 'routine' ? `<div class="callout">${esc(co.text)}</div>` : co ? `<span class="callout small">${esc(co.text)}</span> ` : ''}${esc(G.lastEvent.text)}${typeNote?`<div class="type-contact-note">${typeNote}</div>`:''}${ab}</div>` : '';
     const tdFlash = reducedFlash(f.settings) ? '' : fresh && co?.tier === 'td' ? ` td-flash ${co.mine ? 'mine' : 'theirs'}` : fresh && co?.tier === 'turnover' ? ' to-flash' : '';
     const bump = (side) => (G.scoreSeen?.[side] != null && G.scoreSeen[side] !== s.score[side]) ? 'bump' : ''; const bumpA = bump('away'), bumpH = bump('home'); G.scoreSeen = { ...s.score };
@@ -385,16 +407,20 @@ export function registerMatchScreens(Router, app) {
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? $t('match.your_ball') : $t('match.your_defense')}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? $t('match.home_2') : $t('match.away_2')}${G.mode === 'key' ? $t('match.key_moments_2') : ''}</span></div>
         ${edgeStrip(f, s, teams, me, pre8?.returning || [])}`;
     const wrapClass = `field-wrap${tdFlash}${venueClass(s.venue)}${anim?.replay ? ' replaying' : ''}`;
-    const over = `${weatherLayer(f, s.venue)}${openingKickoff ? kickoffCaptains(f, s, teams) : ''}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> ${$t('match.instant_replay_b_b', { label: esc(anim.replay.reason.label) })}</div><div class="replay-slow" aria-hidden="true">${$t('match.slow_mo')}</div>` : banner}${!anim && fresh && G.lastEvent?.turnover ? `<div class="turnover-cue" role="status">${esc(G.lastEvent.turnover)}</div>` : ''}`;
+    const over = `${weatherLayer(f, s.venue)}${openingKickoff ? introPlateHtml(s.venue, esc) + kickoffCaptains(f, s, teams) : ''}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> ${$t('match.instant_replay_b_b', { label: esc(anim.replay.reason.label) })}</div><div class="replay-slow" aria-hidden="true">${$t('match.slow_mo')}</div>` : banner}${!anim && fresh && G.lastEvent?.turnover ? `<div class="turnover-cue" role="status">${esc(G.lastEvent.turnover)}</div>` : ''}`;
     // N9c: a field the snap creates only if its creator is in the play (Runway, Bloom Break, Crosswind Rescue) is marked as conditional
     const warning = !anim ? (s.t8?.preChoice?.foresight || []).map((m) => `<div class="t8-conditional" role="note">${$t('match.foresight_is_marked_blitzing_risks_confused', { name: esc(findMonster(teams, m.targetMid)?.monster?.name || m.targetSlot) })}</div>`).join('') + (s.t8?.preChoice?.prism || []).map(() => `<div class="t8-conditional" role="note">${$t('match.prism_break_shattered_an_existing_enemy')}</div>`).join('') : '';
     const cond = !anim && pre8?.notes?.length ? `<div class="t8-conditional" role="note">${pre8.notes.map((n) => `<span class="${n.shown ? '' : 'held'}" data-ability="${esc(n.ability)}">◇ <b>${esc(n.name)}</b> ${n.shown ? `${$t('match.is_created_at_the_snap_only', { creator: esc(n.creator) })}` : `${$t('match.is_not_created_is_not_on', { creator: esc(n.creator) })}`}</span>`).join('')}</div>` : '';
     const after = `${cond}${warning}${!anim && presnapEdges.length ? `<div class="tm-legend"><span><b class="up">${$t('match.b_type_advantage')}</span><span><b class="down">${$t('match.b_disadvantage')}</span><span>${$t('match.tap_an_icon')}</span><span>${$t('match.tap_a_monster_to_inspect')}</span></div>` : !anim && inspectMap ? `<div class="tm-legend"><span>${$t('match.tap_a_monster_to_inspect_stamina')}</span></div>` : ''}`;
     const title = `${s.away.abbr} ${s.score.away}-${s.score.home} ${s.home.abbr}`;
-    return { title, head, wrapClass, field, over, after, controls: controlsHtml(f, teams, look) };
+    // Stadium Polish: the reaction to the play just shown, or the kickoff flourish (once per game), handed to afterRender.
+    if (reaction) pendingStadium = reaction;
+    else if (openingKickoff && !G.stadiumIntroShown) { G.stadiumIntroShown = true; pendingStadium = introReaction(); }
+    return { title, head, wrapClass, field, over, after, surround: surroundHtml(s.venue) + hauntHtml(s.venue, stadiumFxLevel(f.settings)), controls: controlsHtml(f, teams, look) };
   }
   /** What mount() does after the markup is in place; refresh() repeats it (the play clock restarts, Auto is rescheduled, the halftime sheet opens). */
   function afterRender(f, root) {
+    { const wrap = root?.querySelector('#fieldwrap'), svg = wrap?.querySelector('#field'); if (wrap && svg) { { const v = fieldBox(); layoutSurround(wrap, svg, v[2] / v[3], v[2]); } const r = pendingStadium; pendingStadium = null; if (r) playStadiumReaction(wrap, r, stadiumFxLevel(f.settings)); else resumeStadiumReaction(wrap); } }
     { const G = f.game, st = G.state; if (!anim && !st.finished && st.quarter >= 3 && !G.halftimeShown) { G.halftimeShown = true; app.save(); openLiveBox(f, $t('match.halftime')); } }
     if (!anim) guideFootball(f, () => app.save());
     startPlayClock(f, root);
@@ -684,7 +710,7 @@ export function registerMatchScreens(Router, app) {
       const K = kickPlay(ev, kickLookup(f, ev.kicking), fxMeta(ev, true));
       if (K?.sim?.frames?.length > 1) { ev.offenseSide = ev.kicking; ev.sim = K.sim; ev.kickerName = teamsFor(f)[ev.kicking]?.kicker?.name || null; if (K.fx) kickFx.set(K.sim, K.fx); startAnim(f, ev); return; }
     }
-    G.lastEvent = { turnover: turnoverCue(ev)?.text, text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), fresh: true };
+    G.lastEvent = { turnover: turnoverCue(ev)?.text, text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), stadium: stadiumReaction(ev), fresh: true };
     app.save(); refresh(f);
   }
   function startAnim(f, ev, opts = {}) {
@@ -775,7 +801,7 @@ export function registerMatchScreens(Router, app) {
     if (anim.replay) { endReplay(f); return; }
     const { ev } = anim; cancelAnimationFrame(anim.raf); anim = null;
     const G = f.game;
-    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), fresh: true };
+    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), stadium: stadiumReaction(ev), fresh: true };
     app.save(); refresh(f); saveWhenIdle(); // the play's result is requested above and written while the screen is idle after it
     // Instant replay (GDD §34): the outcome is final and saved above; the replay only re-draws this play's recorded frames.
     const reason = replayReason(ev, G.state, G.playerSide);
@@ -788,7 +814,6 @@ export function registerMatchScreens(Router, app) {
   // A replay is presentation only: it draws frames already in memory (ev.sim.frames) and touches nothing in f.game.
   // The buffer is the one most recent eligible play, in memory only (never saved).
   let lastReplay = null; let pendingTip = null; let replayTimer = null;
-  const VB = FIELD_VIEWBOX.split(' ').map(Number); // [-HW, 0, 2HW, SPAN]
   function startReplay(f, rp) {
     const G = f.game; const sim = rp.ev.sim; if (!sim?.frames?.length || anim) return;
     settleSave();
@@ -815,7 +840,7 @@ export function registerMatchScreens(Router, app) {
         const s2 = G.state;
         drawMatchField(svg, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame, prevFrame: sim.frames[pos.i - 1] || null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), qbRead: false, ownLabel: s2[anim.ev.offenseSide || s2.possession].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide || s2.possession)].abbr, camera: anim.camera, event: G.event, noLines: true, sprites: anim.sprites, time: frame.t });
         // Camera: a slight zoom that tracks the ball (CSS transform on the svg; the wrap clips it).
-        if (zoomOn) { const bx = (anim.ballLat + frame.ball[1] - VB[0]) / VB[2], by = (anim.camera.top - (anim.ballOn + frame.ball[0])) / VB[3]; svg.style.transformOrigin = `${(Math.max(0.15, Math.min(0.85, bx)) * 100).toFixed(1)}% ${(Math.max(0.15, Math.min(0.85, by)) * 100).toFixed(1)}%`; svg.style.transform = `${`scale(${REPLAY.zoom})`}`; }
+        if (zoomOn) { const VB = fieldBox(); const bx = (anim.ballLat + frame.ball[1] - VB[0]) / VB[2], by = (anim.camera.top - (anim.ballOn + frame.ball[0])) / VB[3]; svg.style.transformOrigin = `${(Math.max(0.15, Math.min(0.85, bx)) * 100).toFixed(1)}% ${(Math.max(0.15, Math.min(0.85, by)) * 100).toFixed(1)}%`; svg.style.transform = `${`scale(${REPLAY.zoom})`}`; }
         wrap?.classList.toggle('slowmo', !!pos.slow);
       }
       anim.raf = requestAnimationFrame(tick);

@@ -6,7 +6,7 @@
 // The device copy (localStorage, like the audio settings) is written into whichever settings object is in use: the loaded
 // franchise's (so every screen that reads f.settings directly sees it, and the save still carries it) and the menu's
 // defaults. The first franchise loaded on a device with no record seeds it, so an existing player keeps their choices.
-export const DEVICE_SETTING_KEYS = Object.freeze(['comfortableText', 'reducedMotion', 'reducedFlash', 'screenShake', 'frameRate']);
+export const DEVICE_SETTING_KEYS = Object.freeze(['comfortableText', 'reducedMotion', 'reducedFlash', 'screenShake', 'frameRate', 'stadiumEffects']);
 const STORAGE_KEY = 'gb.deviceSettings.v1';
 
 export function createDeviceSettings(storage = globalThis.localStorage) {

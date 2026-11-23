@@ -3,7 +3,7 @@ export const AUTO_ZOOM_MS = 1800;
 export class MatchCamera {
   constructor() { this.key = null; this.amount = 0; this.from = 0; this.target = 0; this.started = 0; }
   reset(key) { this.key = key; this.amount = this.from = this.target = 0; this.started = 0; }
-  sample(close, { key, auto = false, closeView = false, reducedMotion = false, now = performance.now() } = {}) {
+  sample(close, { key, auto = false, closeView = false, reducedMotion = false, now = performance.now(), pad = 0 } = {}) {
     if (this.key !== key) this.reset(key);
     const target = auto && !closeView ? 1 : 0;
     // Finish the current interpolation before reversing its direction.
@@ -12,8 +12,9 @@ export class MatchCamera {
     this.amount = this.from + (this.target - this.from) * eased;
     if (target !== this.target) { this.from = this.amount; this.target = target; this.started = now; }
     if (reducedMotion) this.amount = this.from = this.target;
-    const bottom = close.bottom + (-10 - close.bottom) * this.amount;
-    const top = close.top + (110 - close.top) * this.amount;
+    // `pad`: yards shown behind each end line when zoomed out (the white paint around a stadium's field).
+    const bottom = close.bottom + (-10 - pad - close.bottom) * this.amount;
+    const top = close.top + (110 + pad - close.top) * this.amount;
     return { bottom, top };
   }
   get moving() { return Math.abs(this.amount - this.target) > 0.00001; }
