@@ -4856,6 +4856,44 @@ and left on the device unchanged; settings, achievements and other data are unto
   Seasons (2 points each, up to 12) and every other part of the case are unchanged; past inductions are stored and never re-judged.
   Longevity points for full careers: 2 seasons 5.1 → 5.1; 5 seasons 12.8 → 12.8; 8 seasons 20.5 → 20.5; 10 seasons 25.6 → 25.6;
   12 seasons 30.8 → 30.8; 16 seasons 33.0 → 33.0 (with the old divisor, 14-game careers would have scored 5.8, 14.4, 23.0, 28.8, 34.0, 34.0).
-* **Release check:** `tools/deploy-check.py` needs franchise exports from this league; 16-club exports are refused by design.
+* **Release check (owner ruling 2026-11-23, second set):** `tools/make-reference-saves.mjs` writes three 32-club reference saves to
+  `tools/release-saves/` (a regular-season week, a season in the Divisional round, a coach three seasons in who moved clubs with
+  his badges). `tools/deploy-check.py` loads each and runs `tools/release-league-check.mjs` in the page (32 clubs, the 6/5/3
+  schedule, four playoff rounds and seven seeds, badges, the Legend Track rule, canon history, branding, uniforms, export → import
+  → export). `--old-save tools/release-saves/16club-live-midseason.json` checks that a 16-club save is refused, imported or found
+  on the device, and left unchanged.
 * A season of 32 clubs is about three times the simulation of a 16-club season; tests that play whole seasons take correspondingly longer.
+
+### 60.12 Logos, uniforms and home stadiums (owner ruling 2026-11-23, second set)
+
+* **Logos** (`src/ui/team-logo.js`): one badge per club, drawn in SVG in its approved colours (the secondary as the badge, the
+  primary as ring and emblem, the accent for details, a dark outline). Every club's emblem is its own mascot (`TEAM_META.mascot`:
+  wolf, bear, nova, colossus, bolt, rock, drake, blitz, crown, rapids, warden pine, cyclone, inferno, tide, ram, mystic eye,
+  bastion, ghost, anchor, cinder, beast, gator, sun, wyrm, roots, arcanist, quake, wisp, seer's eye, shark, veil, pirate). Eight
+  badge shapes, mixed inside every division (`BADGES` in `src/data/club-identity.js`). Where a primary does not stand off its
+  secondary (Harbor, Ember City, Palmetto, Mossvale, Deepwater) the emblem is the accent with primary details, so only approved
+  colours are used. Shown on the scoreboard, the club lists, the club page, the starter-club picker and the pregame matchup.
+* **Uniforms** (`src/ui/team-kit.js`): home (primary, trimmed in the secondary), away (accent, trimmed in the primary) and an
+  alternate (secondary, trimmed in the accent). The home club always wears home; the visitors wear away unless it is too close to
+  the home jersey, then whichever of their other kits stands furthest from it (91 of the 992 pairings). On the field the kit is
+  drawn into each monster's own sprite as a jersey band and trim line on body pixels only (`kitGrid` in `src/ui/sprite16.js`),
+  so silhouettes, outlines and faces are exactly the species'; the base under each player is the kit colour. The pregame screen
+  shows both shirts with the club crest.
+* **Home fields** (`src/ui/field-branding.js`): every home stadium shows its club's logo at midfield (14 yards, under the yard
+  lines) and its place name in the end zone the club defends, its nickname in the other (`CLUB_NAMES`: THUNDER MESA / BLITZ,
+  EMBER CITY / BEASTS, CORAL BAY / TIDES, PALM ISLE / MYSTICS …). The home club owns the field in every game there, regular season
+  and playoffs; the visitors never repaint it. The branding is in the field's static layer and does not depend on the Stadium
+  Effects setting, so it shows at Full, Reduced and Off.
+* **The twenty grass stadiums:** end zones in the club's colours (place on the primary, nickname on the secondary), club colours on
+  the barrier, the stand rail and the wall behind the near end zone (with the logo and two banners, one of four banner patterns),
+  and the region of its division around the field: Frostlands snow, Redrock red rock, Golden Valley wheat, Suncoast sand and palms,
+  Kingsport brick and lamps, Everwild reeds, Greenheart hedges, Azure Isles piers (`REGIONS`). The playing surface stays grass.
+* **The twelve Gym Leader stadiums keep their approved designs:** surfaces, environments, structures, effects and animations are
+  unchanged; only the logo and the two end-zone words are added (light lettering with a dark line), nothing is recoloured.
+
+### 60.13 Aetheria balance (owner ruling 2026-11-23, second set)
+
+Aetheria won 30% of simulated titles. Its own starting level is reduced by 5 (`balance: -5` on its Gym Leader entry in
+`src/data/gyms.js`, so +2 over an ordinary club instead of the late tier's +7). Its tier, Lyra Vesper, the Psychic field,
+Astralux, colours, manager and playing style are unchanged. The analysis and the before/after simulations are in PR #165.
 

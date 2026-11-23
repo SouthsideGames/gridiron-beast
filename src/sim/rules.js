@@ -462,7 +462,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.
     offense: P ? boostSlots(slots.offense, P[state.possession]?.offense) : slots.offense, defense: P ? boostSlots(slots.defense, P[opponent(state.possession)]?.defense) : slots.defense,
-    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8, createdFields, offenseSide: state.possession, toGo: state.toGo, ...(vacant ? { vacant } : {}), ...(t8.fields?.list?.length ? { fields: playFields(state, t8) } : {}) },
+    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...(state.frameMode ? { frames: state.frameMode } : {}), ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8, createdFields, offenseSide: state.possession, toGo: state.toGo, ...(vacant ? { vacant } : {}), ...(t8.fields?.list?.length ? { fields: playFields(state, t8) } : {}) },
   });
   T8K.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)]); // Task 8 stamina (spec §12): drained under the statuses active during this play (Afflicted, B10)
   T8S.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10), after the drain
@@ -748,7 +748,7 @@ export function attemptTwoPoint(state, teams, offensePlayId, defensePlayId) {
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
   const os=pickSlots(offense.offense,offensePlay.onField,offense,offensePlay,state,state.tryTeam), ds=pickSlots(defense.defense,defensePlay.onField,defense,defensePlay,state,opponent(state.tryTeam));
   if ((offense.rotation && Object.values(os).some(p=>!p?.id)) || (defense.rotation && Object.values(ds).some(p=>!p?.id))) return {...lineupForfeit(state,Object.values(os).some(p=>!p?.id)?state.tryTeam:opponent(state.tryTeam)),sim:null};
-  const sim = simulatePlay({ offensePlay, defensePlay, offense: os, defense: ds, ballOn: 100 - FIELD.twoPointSpot, seed: r.seed(), options: { memory: abilityMemory(state, { drive: `try@${state.playCount || 0}` }), envType: state.venue?.type || null, twoPoint: true, t8: (state.t8 ||= { status: {} }) } });
+  const sim = simulatePlay({ offensePlay, defensePlay, offense: os, defense: ds, ballOn: 100 - FIELD.twoPointSpot, seed: r.seed(), options: { ...(state.frameMode ? { frames: state.frameMode } : {}), memory: abilityMemory(state, { drive: `try@${state.playCount || 0}` }), envType: state.venue?.type || null, twoPoint: true, t8: (state.t8 ||= { status: {} }) } });
   rememberAbilities(state, sim);
   save();
   const good = sim.touchdown && !sim.stats.defensiveScore;
@@ -843,7 +843,7 @@ export function doKickoff(state, teams, { onside = false } = {}) {
       const seed = r.seed(); const catchAt = Math.max(-9, flight.landingFromGoal);
       const plays = kickoffPlays(units); const slots = { offense: units.ret, defense: units.coverage }; const view = snapView(state, (state.t8 ||= { status: {} }), slots, receiving === 'home'); // Task 8 presentation (data only)
       sim = simulatePlay({ offensePlay: plays.ret, defensePlay: plays.cov, offense: units.ret, defense: units.coverage, ballOn: KICK_SPOT, ballLat: 0, seed,
-        options: { kickoff: { returner: units.returnerSlot, landing: [catchAt - KICK_SPOT, 0], hang: KICKOFF_HANG }, offenseSide: receiving, memory: abilityMemory(state, { drive: `ko@${state.playCount || 0}` }), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8: (state.t8 ||= { status: {} }) } });
+        options: { ...(state.frameMode ? { frames: state.frameMode } : {}), kickoff: { returner: units.returnerSlot, landing: [catchAt - KICK_SPOT, 0], hang: KICKOFF_HANG }, offenseSide: receiving, memory: abilityMemory(state, { drive: `ko@${state.playCount || 0}` }), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8: (state.t8 ||= { status: {} }) } });
       rememberAbilities(state, sim); sim.t8view = view;
       res = kickoffOutcome(sim, catchAt, state[receiving].name, sim.names.off[units.returnerSlot] || $E('sim.the_returner'));
     }

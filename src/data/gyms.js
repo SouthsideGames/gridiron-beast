@@ -22,7 +22,7 @@ export const GYMS = Object.freeze([
   { club: 'Emberfall Infernos', element: 'Fire', legendary: 'pyroclast', tier: 'early', coach: { name: 'Kael Ember', style: $t('data.blazing'), offense: 'pass', defense: 'pressure', aggression: 0.72, passBias: 0.64, portrait: 'gym_fire' }, badge: 'Blaze Badge' },
   { club: 'Westhaven Pirates', element: 'Nature', legendary: 'elderoot', tier: 'early', coach: { name: 'Rowan Thorne', style: $t('data.rooted'), offense: 'run', defense: 'coverage', aggression: 0.42, passBias: 0.42, portrait: 'gym_nature', formerClub: 'Thornwood Wildroots' }, badge: 'Grove Badge' },
   { club: 'Cliffhaven Chargers', element: 'Wind', legendary: 'tempestra', tier: 'mid', coach: { name: 'Aria Gale', style: $t('data.swift'), offense: 'pass', defense: 'coverage', aggression: 0.5, passBias: 0.66, portrait: 'gym_wind', formerClub: 'Skyvale Cyclones' }, badge: 'Gale Badge' },
-  { club: 'Aetheria Seers', element: 'Psychic', legendary: 'astralux', tier: 'late', coach: { name: 'Lyra Vesper', style: $t('data.visionary'), offense: 'balanced', defense: 'man', aggression: 0.58, passBias: 0.6, portrait: 'gym_psychic' }, badge: 'Mind Badge' },
+  { club: 'Aetheria Seers', element: 'Psychic', legendary: 'astralux', tier: 'late', balance: -5, coach: { name: 'Lyra Vesper', style: $t('data.visionary'), offense: 'balanced', defense: 'man', aggression: 0.58, passBias: 0.6, portrait: 'gym_psychic' }, badge: 'Mind Badge' },
   { club: 'Palmetto Wyrms', element: 'Dragon', legendary: 'aurodrax', tier: 'late', coach: { name: 'Marcus Vane', style: $t('data.sovereign'), offense: 'balanced', defense: 'man', aggression: 0.6, passBias: 0.58, portrait: 'gym_dragon' }, badge: 'Wyrm Badge' },
 ]);
 
@@ -40,6 +40,10 @@ export const FREE_LEGENDARIES = Object.freeze([]);
 
 /** Quality offset by tier, plus growth per season and after the player's first win over them (GDD §15.3). */
 export const GYM_TIER = Object.freeze({ early: 1, mid: 4, late: 7 });
+// `balance` on a Gym Leader (owner ruling 2026-11-23, second set): a club's own correction to its tier's starting level. Aetheria
+// (late, +7) converted the tier bonus into far more on-field strength than Ironpeak and Palmetto with the same bonus (its Psychic
+// squad is built around QB, RB, TE, CB and S, with Astralux at running back) and plays in the league's weakest division and
+// conference, so it took the top seed and the bye most seasons and 30% of simulated titles. −5 keeps it a late-tier contender.
 export const GYM_GROWTH_PER_SEASON = 1.5;
 export const GYM_STUDIED_TAPE = 1;
 export const ORDINARY_GROWTH_PER_SEASON = 0.5;

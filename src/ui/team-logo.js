@@ -14,14 +14,15 @@ const mix = (a, b, t) => toHex(rgb(a).map((v, i) => v + (rgb(b)[i] - v) * t));
 const lum = (hex) => { const v = rgb(hex).map((c) => c / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
 export const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
 
-/** The four colours a logo is drawn in: P primary, S secondary (the badge), A accent, K outline. */
+/**
+ * The colours a logo is drawn in, all of them the club's approved ones: P the emblem, S the badge (secondary), A the details, R the
+ * ring (primary), K the outline (the secondary darkened). The emblem is the primary with accent details, except where the primary
+ * does not stand off the secondary badge (five clubs): there the two swap, accent emblem with primary details.
+ */
 export function logoColors(club) {
   const m = TEAM_META[club]; if (!m) return null;
-  let P = m.color, S = m.secondary; const A = m.accent;
-  // the emblem must stand off the badge: a primary too close to the secondary is lifted toward the accent
-  if (contrast(P, S) < 2.2) P = mix(P, A, 0.45);
-  const K = mix(S, '#000000', 0.6);
-  return { P, S, A, K };
+  const S = m.secondary; const swap = contrast(m.color, S) < 2.2;
+  return { P: swap ? m.accent : m.color, A: swap ? m.color : m.accent, S, R: m.color, K: mix(S, '#000000', 0.6), swap };
 }
 
 // ---------------------------------------------------------------- badge shapes (outer edge, 100×100)
@@ -181,7 +182,7 @@ export function logoBody(club) {
   const shape = BADGES[club] || 'circle'; const d = SHAPES[shape]; const k = ROOM[shape] || 0.84; const lift = LIFT[shape] || 0;
   const o = `stroke="${c.K}" stroke-width="2.6" stroke-linejoin="round"`;
   const emblem = (E[m.mascot] || E.nova)(c, o); const nudge = NUDGE[m.mascot] || '';
-  return `<path d="${d}" fill="${c.K}"/><path d="${d}" fill="${c.S}" ${at(0.9)}/><path d="${d}" fill="none" stroke="${c.P}" stroke-width="3.2" ${at(0.8)}/>`
+  return `<path d="${d}" fill="${c.K}"/><path d="${d}" fill="${c.S}" ${at(0.9)}/><path d="${d}" fill="none" stroke="${c.R}" stroke-width="3.2" ${at(0.8)}/>`
     + `<g transform="translate(50 ${50 + lift}) scale(${k * 0.95}) translate(-50 -50)${nudge}">${emblem}</g>`;
 }
 /** A club's logo as an inline svg, `size` css pixels square. */

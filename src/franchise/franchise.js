@@ -819,7 +819,7 @@ export function clubQuality(f, name, year = f.season?.year || 1) {
   const seasons = Math.max(0, year - 1);
   // Task 8 (N7f): initial strength only. No seasonal growth, title floor or 'studied tape' boost: a club changes through its own
   // roster (development, ageing, drafting, trades, free agency). `seasons` is kept for the signature, unused.
-  void seasons; const growth = gym ? GYM_TIER[gym.tier] : 0; const floor = 0;
+  void seasons; const growth = gym ? GYM_TIER[gym.tier] + (gym.balance || 0) : 0; const floor = 0; // `balance`: a Gym Leader's own correction to its tier's level (gyms.js)
   return Math.round(base + (h % 9) - 4 + (f.rivals[f.tier]?.team === name ? 2 : 0) + difficultyQuality(D, !!gym) + growth + floor);
 }
 /** Task 8 D7 (owner N8b, AI_IDENTITIES.md §5 q4): Rookie's −4 lowers ordinary clubs only; a gym keeps the standard (Pro) level on
@@ -1726,7 +1726,7 @@ function simulateLeagueWeek(f) {
       const ig = { home: g.home, away: g.away, week: f.season.week }; const it = [[g.home, home.roster, g.away, home.chart], [g.away, away.roster, g.home, away.chart]];
       injuriesBeforeGame(f, it, ig); // Injury History (GDD §50): who misses this game
       const toss = leaguePregame(f, r, home, away);
-      const game = playGame({ home, away, venue: gameVenue(f, home.name, away.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
+      const game = playGame({ home, away, venue: gameVenue(f, home.name, away.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null, frames: 'last' });
       leagueTiebreak(f, r, home, away, game);
       aiAfterGame(f, home, game, 'home', r); aiAfterGame(f, away, game, 'away', r); // persistent rosters develop as they play (GDD §42.6, decision B)
       injuriesAfterGame(f, it, ig);
@@ -2566,7 +2566,7 @@ function simulatePlayoffWeek(f) {
     const ig = { home: g.home, away: g.away, week: f.season.week, playoff: true, round: p.round }; const it = [[g.home, home.roster, g.away, home.chart], [g.away, away.roster, g.home, away.chart]];
     injuriesBeforeGame(f, it, ig);
     const toss = leaguePregame(f, r, home, away);
-    const game = playGame({ home, away, venue: gameVenue(f, home.name, away.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
+    const game = playGame({ home, away, venue: gameVenue(f, home.name, away.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null, frames: 'last' });
     leagueTiebreak(f, r, home, away, game, { playoff: true });
     aiAfterGame(f, home, game, 'home', r); aiAfterGame(f, away, game, 'away', r);
     injuriesAfterGame(f, it, ig);

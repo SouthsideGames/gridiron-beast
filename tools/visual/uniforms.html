@@ -1,0 +1,26 @@
+<!doctype html><meta charset="utf-8"><title>Gridiron Beast — uniforms</title>
+<style>body{margin:0;background:#0f1b15;color:#e8f2ec;font:600 13px system-ui,sans-serif}h1{font-size:20px;margin:14px 16px 2px}.sub{margin:0 16px 10px;color:#a9c7b6;font-weight:500}.grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;padding:0 16px 16px}.cell{background:#16271e;border-radius:10px;padding:8px 4px;text-align:center}.cell .name{font-size:11px;margin-top:4px}.sprites{display:flex;justify-content:center;gap:2px;margin-top:4px}.sp{position:relative;width:44px;height:48px}.sp .base{position:absolute;left:6px;bottom:2px;width:32px;height:12px;border-radius:50%;border:1.5px solid #0d1f17}.sp svg{position:absolute;left:2px;top:0;width:40px;height:40px;image-rendering:pixelated}.cmp{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 16px 16px}.cmp .cell{display:flex;gap:10px;align-items:center;justify-content:center;padding:10px}.kit{display:flex;flex-direction:column;align-items:center;gap:2px}.tag{font-size:10px;color:#a9c7b6}</style>
+<div id="root"></div>
+<script type="module">
+import { teamKits, gameKits, kitJersey } from '../../src/ui/team-kit.js';
+import { monsterSprite } from '../../src/ui/pixel-monster.js';
+import { CLUBS_BY_DIVISION } from '../../src/data/club-identity.js';
+import { teamLogo } from '../../src/ui/team-logo.js';
+const q = new URLSearchParams(location.search); const mode = q.get('mode') || 'home';
+const all = CLUBS_BY_DIVISION.flatMap((d) => d.clubs);
+const SAMPLE = ['firestorm', 'emberfox', 'mudcub', 'tidefin', 'stormcrown'].map((species, i) => ({ id: `kit-sample-${i}`, species }));
+const sprites = (kit, n = 3) => `<div class="sprites">${SAMPLE.slice(0, n).map((m) => `<div class="sp"><div class="base" style="background:${kit.base}"></div>${monsterSprite(m, 40, { kit })}</div>`).join('')}</div>`;
+let h = '';
+if (mode === 'home' || mode === 'away') {
+  h = `<h1>${mode === 'home' ? 'Home' : 'Away'} uniforms — all 32 clubs</h1><div class="sub">Shirt with the club crest, and the same kit as the game draws it on field sprites (jersey band on body pixels; silhouettes unchanged)</div><div class="grid">${all.map((c) => { const k = teamKits(c)[mode]; return `<div class="cell">${kitJersey(k, 84)}${sprites(k)}<div class="name">${c}</div></div>`; }).join('')}</div>`;
+}
+if (mode === 'compare') {
+  const list = (q.get('clubs') || all.join(',')).split(',');
+  h = `<h1>Home and away by club</h1><div class="sub">Left: home kit. Right: away kit. Third: alternate (worn only when the away kit clashes with the home side)</div><div class="cmp">${list.map((c) => { const K = teamKits(c); return `<div class="cell"><div>${teamLogo(c, 34)}<div class="name" style="max-width:70px">${c}</div></div>${['home', 'away', 'alt'].map((x) => `<div class="kit">${kitJersey(K[x], x === 'alt' ? 44 : 64)}${sprites(K[x], x === 'alt' ? 1 : 2)}<div class="tag">${x === 'alt' ? 'alternate' : x}</div></div>`).join('')}</div>`; }).join('')}</div>`;
+}
+if (mode === 'clashes') {
+  const rows = []; for (const a of all) for (const b of all) if (a !== b) { const k = gameKits(a, b); if (k.away.kind !== 'away') rows.push([a, b, k]); }
+  h = `<h1>When the visitors change kit</h1><div class="sub">${rows.length} of 992 home–away pairings switch the visitors out of their away kit so the two sides stand apart</div><div class="cmp">${rows.slice(0, 24).map(([a, b, k]) => `<div class="cell"><div class="kit">${kitJersey(k.home, 54)}<div class="tag">${a} (home)</div></div><div class="kit">${kitJersey(teamKits(b).away, 40)}<div class="tag">away ✕</div></div><div class="kit">${kitJersey(k.away, 54)}<div class="tag">${b} (${k.away.kind})</div></div></div>`).join('')}</div>`;
+}
+document.getElementById('root').innerHTML = h; window.__ready = true;
+</script>

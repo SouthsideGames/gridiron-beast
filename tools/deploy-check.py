@@ -9,6 +9,13 @@
            the build label on the Main Menu must match it too, and BUILD.test must be false.
 --save     an existing franchise export (repeatable); each is imported in a fresh browser profile and must load after a reload.
 --files    optional: the output of tools/release-files.py; the release folder must hold exactly those files.
+--old-save a franchise saved by the 16-club game (repeatable, tools/release-saves/16club-*.json). The game must refuse it with the
+           16-club message, both when it is imported and when it is found on the device, and leave it unchanged.
+
+32-club league (owner 2026-11-23): every --save is also checked in the page by tools/release-league-check.mjs (served under the
+reserved prefix like the soak helper): 32 clubs in 8 divisions, the 14-game 6/5/3 schedule, four playoff rounds with seven seeds
+and top-seed byes, Gym Leader badges, the Legend Track rule, the canon history, home branding and uniforms, and an export ->
+import -> export round trip. Reference saves: tools/make-reference-saves.mjs writes tools/release-saves/league32-*.json.
 
 Test helpers are kept apart from the release files: the disposable franchise used for the live-game step comes from the
 repository's tools/franchise-soak.mjs (next to this script, or --helpers DIR), which the local server exposes only under the
@@ -24,6 +31,7 @@ from playwright.sync_api import sync_playwright
 ap = argparse.ArgumentParser(description='Deploy check on a release folder')
 ap.add_argument('--release', required=True); ap.add_argument('--version', required=True)
 ap.add_argument('--save', action='append', required=True); ap.add_argument('--files'); ap.add_argument('--shots')
+ap.add_argument('--old-save', action='append', default=[])
 ap.add_argument('--helpers', default=os.path.dirname(os.path.abspath(__file__)))
 a = ap.parse_args()
 REL, HELPERS, VERSION = os.path.abspath(a.release), os.path.abspath(a.helpers), a.version
@@ -82,6 +90,8 @@ with sync_playwright() as pw:
         p.reload(); p.wait_for_function(READY, timeout=60000)
         info = p.evaluate("() => window.__gb.f ? { club: window.__gb.f.club, year: window.__gb.f.season.year, week: window.__gb.f.season.week, n: window.__gb.f.roster.length } : null")
         check(bool(ok and info), f'{tag}: existing save loads after reload: {info}')
+        lc = p.evaluate("""async (prefix) => { const C = await import(prefix + 'release-league-check.mjs'); return C.checkFranchise(window.__gb.f); }""", PREFIX)
+        check(not lc['problems'], f'{tag}: 32-club league checks {lc["facts"]}' + (f' PROBLEMS {lc["problems"][:4]}' if lc['problems'] else ''))
         if i: ctx.close(); continue
         # Main Menu -> Developer Tools -> AI Testing Lab, by taps
         p.evaluate(GO, ['menu']); p.wait_for_timeout(300); shot(p, 'd1-menu')
@@ -121,6 +131,23 @@ with sync_playwright() as pw:
         check(panel, 'an instant replay played during the live game')
         check(panel and not panelText, f'the replay shows no QB read list (removed in PR #150): {panelText[:120]!r}')
         p.evaluate("() => { if (window.__gb.f.game) window.__gb.f.game.auto = false; }"); ctx.close()
+    # 16-club saves: refused with their own message, by the import route and on the device (the legacy save the game finds at
+    # start), and never changed.
+    for old in a.old_save:
+        tag = os.path.basename(old); text = open(old, encoding='utf-8').read()
+        ctx, p = page(b)
+        r = p.evaluate("""async ([prefix, t]) => { const C = await import(prefix + 'release-league-check.mjs'); return C.checkOldSave(t); }""", [PREFIX, text])
+        check(r['refused'] and r['unchanged'] and r['message'] == r['expected'], f'{tag}: import refused with the 16-club message, file unchanged')
+        ctx.close()
+        ctx = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=3, is_mobile=True, has_touch=True, user_agent=UA)
+        ctx.add_init_script("(() => { const t = " + json.dumps(text) + "; try { if (!localStorage.getItem('__dc_seeded')) { localStorage.setItem('gridiron-beast-v6', t); localStorage.setItem('__dc_seeded', '1'); } } catch (e) {} })();")
+        p = ctx.new_page(); p.on('pageerror', lambda e: errors.append(str(e)))
+        p.goto(URL); p.wait_for_function(READY, timeout=60000); p.wait_for_timeout(800)
+        body = p.locator('main').inner_text() if p.locator('main').count() else ''
+        kept = p.evaluate("() => localStorage.getItem('gridiron-beast-v6')")
+        check('16-club league' in body and 'kept on this device unchanged' in body, f'{tag}: found on the device, the game shows the 16-club message ({body[:80]!r})')
+        check(kept == text, f'{tag}: the save on the device is unchanged after the refusal')
+        shot(p, 'd6-old-save-' + tag.replace('.json', '')); ctx.close()
     b.close()
 print('\n'.join(notes)); print('PROBLEMS:', problems); print('ERRORS:', errors[:10])
 print('DEPLOY CHECK ' + ('PASSED' if not problems and not errors else 'FAILED')); sys.exit(1 if problems or errors else 0)
