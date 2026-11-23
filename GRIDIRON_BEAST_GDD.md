@@ -4675,10 +4675,15 @@ Renamed from the 16-club league: Northstar Wolves → Novas, Ironpeak Rams → C
 Anchors, Ashford Hawks → Cinders, Sunfire Lions → Solars, Palmetto Vipers → Wyrms, Thunder Mesa → Thunder Mesa Blitz. The conferences
 Aurora and Titan and the divisions North, West, East and South are gone.
 
-**Provisional identities.** The repository held no colours, stadium names, managers or playing styles for the sixteen new clubs or
-the renamed ones. Those in the build are placeholders, flagged `provisional: true` in `src/data/league.js` and `src/data/stadiums.js`,
-until the owner's identity sheet arrives. The names the specification gives (Cliffside Arena, Skyvale Summit, Elderroot Stadium,
-Corsair Harbor Stadium, Rook Tanner) are used as given.
+**Identities (owner, 2026-11-23).** Every club has an approved primary, secondary and accent colour (`PALETTE` in
+`src/data/league.js`; exact values, not to be adjusted). The primary is the club's colour everywhere it was before (scoreboard,
+brackets, crowd, celebrations); the secondary is a band on the scoreboard and one supporter's shirt in three; all three show as a
+swatch on team cards, the league list and the club picker. A club's name written as coloured text uses the primary, or the accent
+for the three clubs whose primary cannot be read on a dark panel (Harbor, Ember City, Deepwater). Playing surfaces are not recoloured.
+The eight corrected stadium names (Crownfield Stadium, Riverbend Stadium, Pinecrest Bowl, Inferno Crater, Silvergrove Park, Mossvale
+Grounds, Fernhaven Falls Field, Oracle Spire) and the five managers (Victor Hale, Maya Rivers, Grant Mercer, Marina Cole, Jalen Tide)
+are in. Generated head coaches are unique within a league and never share a name with a general manager or a Gym Leader. There is no
+logo or uniform art in the game; none was invented. Mascot words and the playing styles of the new clubs are unchanged.
 
 ### 60.2 Starting a franchise
 
@@ -4731,32 +4736,49 @@ Fourteen games in fifteen weeks (one league-wide bye in weeks 6 to 10), then the
   have different schedules. **Nothing forces or guarantees a Gym Leader game**: a starter club can meet as few as none and as many
   as eight in a season, and a missing badge may have to wait for a season in which that club is on the schedule (or for the
   playoffs). This replaces the guarantee in §15.3 and §15.4.
-* The 6 / 5 / 3 split of the eight non-division games is this build's reading of "division, then conference, then the other
-  conference"; the specification left the numbers open (OPEN DECISION).
-* The trade deadline is unchanged (owner ruling 2026-11-13): trading closes when week 8 begins, which is now about half way through
-  the season instead of two thirds. OPEN DECISION: move it (week 10 would keep its old place) or leave it.
+* The 6 / 5 / 3 split is approved (owner, 2026-11-23).
+* The trade deadline stays at week 7 (owner, confirmed 2026-11-23): trading closes when week 8 begins.
 
-### 60.6 Playoffs
+### 60.6 Playoffs (owner ruling 2026-11-23: fourteen clubs)
 
-The bracket is unchanged: eight clubs, four per conference, three rounds, the better seed at home, the Beast Bowl between the
-conference champions. With four divisions in a conference its four places go to the **four division winners, seeded by record**;
-there are no wild cards. (The old rule, two division winners and two wild cards, cannot be applied to four divisions.) OPEN
-DECISION: the owner may prefer another way to fill four places, for example the four best records. One consequence to weigh: a
-starter division's winner always qualifies.
+Seven clubs a conference: the four division champions are seeds 1 to 4 and the three best of the rest are wild cards, seeds 5 to 7,
+each group ranked by the standings and their tiebreakers. Four rounds, thirteen games, weeks 16 to 19:
+
+1. **Wild Card:** 2 v 7, 3 v 6, 4 v 5 at the better seed's. Seed 1 rests.
+2. **Divisional:** the four survivors are reseeded; seed 1 hosts the lowest seed left, the other two meet at the higher seed's.
+3. **Conference Championships:** the higher seed hosts.
+4. **Beast Bowl:** the Veyra champion against the Koruun champion.
+
+Gym Leaders qualify like any club. An owner whose club is seed 1 watches the Wild Card round from HQ ("first-round bye"), his
+roster rests, and he plays the Divisional round at home. The bracket screen shows each conference as three columns with the Beast
+Bowl beneath. SUPERSEDED: the eight-club, three-round bracket (two division winners and two wild cards in the 16-club league; the
+four division winners in this branch's first version). The league archive's eight seasons were played in that old bracket and
+are kept exactly as they were (`legacyPlayoffRound`), so their champions stand.
 
 ### 60.7 Badges
 
-Twelve badges. They are reclaimable exactly as before (§15.4). They now belong to the coach: on a job change the badges held and the
+Twelve badges. They are reclaimable exactly as before (§15.4). They belong to the coach: on a job change the badges held and the
 count of wins over each Gym Leader go to the new club, can be lost there, and the Hall of Fame counts the badges held now. A coach who
 takes over a Gym Leader's club does not hold that club's own badge. The HQ badge row, "badge n of 12", the legacy screen and the
-achievements (six and twelve badges) follow. The Hall of Fame still asks for 8 badges on every difficulty (OPEN DECISION: the owner
-mentioned 8 for normal and 12 for hard).
+achievements (six and twelve badges) follow. The final screen says when a badge is surrendered.
 
-### 60.8 Legendaries and Legend Tracks
+**Hall of Fame (owner ruling 2026-11-23):** badges held now: 8 on Rookie (Easy), 8 on Pro (Normal), 12 on All-Star (Hard). There is
+no fourth difficulty. Titles, wins and awards are unchanged. A Hall of Fame achievement already earned stays earned.
 
-Each Gym Leader's club holds its type's legendary. Pyroclast, Elderoot, Tempestra and Astralux were the four nobody held and were
-free to hunt through Legend Tracks; they now have Gym Leaders. The Legend Tracks rule is **unchanged pending the owner's decision**:
-those four can still be tracked without a badge, the other eight need their badge (OPEN DECISION).
+### 60.8 Legendaries and Legend Tracks (owner ruling 2026-11-23)
+
+Each Gym Leader's club holds its type's legendary, and **all twelve Legend Tracks need that Gym Leader's badge, held now.** No
+legendary is free to track any more (Pyroclast, Elderoot, Tempestra and Astralux were, before they had Gym Leaders).
+
+| State | When | What it means |
+|---|---|---|
+| Locked | no badge, no progress | nothing can be done |
+| Active | the badge is held | a Beast Bowl champion may add a track; a completed track's legendary turns up in its home region |
+| Paused | progress made, badge lost | nothing advances and the legendary does not turn up; every track and a completed unlock are kept |
+| Recruited | the legendary is on the roster | he is never removed, with or without the badge |
+
+Winning the badge back resumes the track exactly where it stood. Tracks, unlocks and badges all go with the coach to a new club.
+One of each legendary, as before. The Legend Tracks screen lists all twelve with their state.
 
 ### 60.9 League history
 
@@ -4785,8 +4807,12 @@ and left on the device unchanged; settings, achievements and other data are unto
   own part (`src/franchise/store.js`). The regenerated save fixture, which has an archive, exposed it.
 * The Board's win counts keep their proportion of the nine-game season: the lowest safe goal is 3 wins, a safe goal is never above
   11 of 14, and a narrow miss is within 2 wins. A GM's reputation divides by 14 games.
-* **Not re-tuned for the longer season (OPEN):** season totals are about 56% higher than in a nine-game season, and these were
-  measured on nine games and left as they are: career milestones (`src/franchise/career.js`), Captain Partnership steps
-  (`partnerships.js`), the injury-history indicator (`injury-history.js`), record-book and Hall of Fame expectations.
+* **Scaled from nine games to fourteen (audit 2026-11-23), each by 14/9 so it means what it meant:** season marks (2,300 passing
+  yards, 23 touchdown passes, 1,250 rushing, 950 receiving, 16 touchdowns, 6 sacks, 5 interceptions, 60 tackles) and career
+  milestones (`career.js`); Captain Partnership steps (`partnerships.js`, Elite is still a strong pair's season); the injury-history
+  lines and its one-season minimum (`injury-history.js`, classification unchanged); Hall of Fame longevity (`monster-hof-voting.js`).
+  Awards already scale with the weeks played, the record book starts in season 2 as before, and Hall production is judged against
+  peers.
+* **Release check:** `tools/deploy-check.py` needs franchise exports from this league; 16-club exports are refused by design.
 * A season of 32 clubs is about three times the simulation of a 16-club season; tests that play whole seasons take correspondingly longer.
 
