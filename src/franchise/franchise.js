@@ -28,7 +28,7 @@ export { MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
 export { pickKey, currentClassYear, tradableYears, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, describePick, canTakePlayer } from './trades.js';
 export * as Stats from './stats.js';
 export { GROUP_SLOTS } from './roster.js';
-import { REG_GAMES, REG_WEEKS, LAST_WEEK, CONFERENCE_NAMES, DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
+import { REG_GAMES, REG_WEEKS, LAST_WEEK, PLAYOFF_ROUNDS, CONFERENCE_ROUND, FINAL_ROUND, CONFERENCE_NAMES, DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
 import { retirementPass, agingContext, nativeAging, retirementOutlook } from './retirement.js';
 import { recordRetiredMonsterCandidates, electMonsterHallOfFame } from './monster-hof-voting.js';
@@ -406,7 +406,7 @@ export function backfillAchievements(f) {
   const hist = f.history || []; const c = f.campaign; const badges = Object.keys(c.badges || {}).length;
   const facts = { first_win: c.wins >= 1, rival_beaten: Object.entries(c.h2h || {}).some(([t, h]) => t === f.rivals?.[f.tier]?.team && h.w >= 1), first_badge: badges >= 1, half_badges: badges >= GYMS.length / 2, all_badges: badges >= GYMS.length,
     winning_season: hist.some((h) => h.record.w > h.record.l), undefeated: hist.some((h) => h.record.w >= REG_GAMES && h.record.l === 0), first_playoffs: hist.some((h) => h.playoffs) || !!(f.season?.playoffs && Object.values(f.season.playoffs.seeds).flat().includes(f.club)),
-    conference_title: hist.some((h) => h.champion === f.club) || (f.season?.playoffs?.results || []).some((r) => r.round === 2 && r.winner === f.club), first_title: (c.titles || 0) >= 1, second_title: (c.titles || 0) >= 2, first_award: (c.awards || 0) >= 1,
+    conference_title: hist.some((h) => h.champion === f.club) || (f.season?.playoffs?.results || []).some((r) => r.round === CONFERENCE_ROUND && r.winner === f.club), first_title: (c.titles || 0) >= 1, second_title: (c.titles || 0) >= 2, first_award: (c.awards || 0) >= 1,
     wins_10: c.wins >= 10, wins_30: c.wins >= 30, wins_50: c.wins >= 50, legend_tracked: Object.values(c.tracks || {}).some((n) => n >= 1), legend_unlocked: Object.keys(c.unlocked || {}).length >= 1, hof_eligible: hallOfFameProgress(f).eligible, traded_up: (f.trades || []).length >= 1 };
   const got = [];
   for (const a of ACHIEVEMENTS) if (!f.achievements[a.id] && facts[a.id]) { f.achievements[a.id] = { year: f.season?.year || 1, week: f.season?.week || 1, backfilled: true }; const vars = sceneVars(f, {}); f.scenes.push({ id: a.id, ctx: vars }); got.push(a.id); stampGlobal(f, a, vars); }
@@ -1499,7 +1499,11 @@ export const LAST_REGULAR_WEEK = REG_WEEKS; // week 15 since the 32-club league 
 export const draftWindow = (f) => f.season.week >= LAST_REGULAR_WEEK && !f.season.finished;
 export function opponentName(f) { const fx = currentFixture(f); if (fx && !fx.bye) return fx.opponent; const p = playoffFixture(f); return p ? (p.home === f.club ? p.away : p.home) : null; }
 export function playoffFixture(f) { const p = f.season.playoffs; if (!p) return null; return p.fixtures.find((g) => g.round === p.round && (g.home === f.club || g.away === f.club) && !g.result) || null; }
-export function playerAlive(f) { return !inPlayoffs(f) || !!playoffFixture(f); }
+/** Still in the playoffs: a seeded club that has not lost. (Seed 1 has no game in the Wild Card round and is alive all the same.) */
+export function playoffAlive(f, club = f.club) { const p = f.season.playoffs; if (!p) return false; return Object.values(p.seeds).flat().includes(club) && !p.results.some((r) => (r.home === club || r.away === club) && r.winner !== club); }
+/** The owner's club is resting this round: seed 1 in the Wild Card round. He watches the round (advancePlayoffs) and plays the next. */
+export function playoffBye(f) { return inPlayoffs(f) && !f.season.finished && !playoffFixture(f) && playoffAlive(f) && !f.season.playoffs?.champion; }
+export function playerAlive(f) { return !inPlayoffs(f) || playoffAlive(f); }
 
 export function record(f) { return f.season.records[f.club]; }
 /** Legendary Plays (GDD §36): discover new ones and clear unavailable ones from the plan, refilled with the coordinator's picks. */
@@ -2497,7 +2501,7 @@ function advanceWeek(f, { bye = false } = {}) {
   if (inPlayoffs(f) && f.season.playoffs?.champion) { endSeason(f); return; }
   if (inPlayoffs(f) && !playoffFixture(f)) {
     // Eliminated (or never qualified): the owner watches the bracket round by round (advancePlayoffs) or skips to the offseason (skipPlayoffs).
-    f.season.spectating = true;
+    f.season.spectating = !playoffAlive(f); // (seed 1 resting in the Wild Card round is not out: playoffBye)
     if (f.season.playoffs.champion) endSeason(f);
   }
 }
@@ -2505,13 +2509,14 @@ function advanceWeek(f, { bye = false } = {}) {
 export function advancePlayoffs(f) {
   if (!inPlayoffs(f) || playoffFixture(f) || f.season.finished) return { ok: false, reason: $t('franchise.nothing_to_advance') };
   const p = f.season.playoffs; const round = p.round;
-  simulatePlayoffWeek(f); writeLeagueNews(f, round); leagueRecoverWeek(f, {}); f.season.week += 1; f.season.day = 0; { const lastPlan = f.week.plan; f.week = blankWeek(); f.week.plan = lastPlan; }
+  const resting = playoffBye(f);
+  simulatePlayoffWeek(f); writeLeagueNews(f, round); if (resting) recoverWeek(f.roster, { bye: true }); leagueRecoverWeek(f, {}); f.season.week += 1; f.season.day = 0; f.season.spectating = !playoffAlive(f) && !f.season.playoffs.champion ? true : f.season.spectating; { const lastPlan = f.week.plan; f.week = blankWeek(); f.week.plan = lastPlan; }
   const results = p.results.filter((x) => x.round === round);
   if (p.champion) endSeason(f);
   return { ok: true, round, results, champion: p.champion || null, finished: !!f.season.finished };
 }
-export function skipPlayoffs(f) { let guard = 0; while (!f.season.finished && guard++ < 5) { const r = advancePlayoffs(f); if (!r.ok) break; } return { ok: true }; }
-export const ROUND_NAMES = Object.freeze({ 1: $t('franchise.wild_card_round'), 2: $t('franchise.conference_finals'), 3: $t('franchise.beast_bowl') });
+export function skipPlayoffs(f) { let guard = 0; while (!f.season.finished && guard++ < PLAYOFF_ROUNDS + 2) { const r = advancePlayoffs(f); if (!r.ok) break; } return { ok: true }; }
+export const ROUND_NAMES = Object.freeze({ 1: $t('franchise.wild_card_round'), 2: $t('franchise.divisional_round'), 3: $t('franchise.conference_finals'), 4: $t('franchise.beast_bowl') });
 
 // ------------------------------------------------------------ playoffs
 function startPlayoffs(f) {
@@ -2553,7 +2558,7 @@ function simulatePlayoffWeek(f) {
     g.result = res; p.results.push({ round: p.round, conf: g.conf, ...res, winner: res.winner || (res.homeScore > res.awayScore ? g.home : g.away) });
   }
   save();
-  if (p.round === 3) { p.champion = p.results.find((x) => x.round === 3).winner; f.season.champion = p.champion; return; }
+  if (p.round === FINAL_ROUND) { p.champion = p.results.find((x) => x.round === FINAL_ROUND).winner; f.season.champion = p.champion; return; }
   p.round += 1;
   p.fixtures.push(...playoffRound(p.round, p.results, p.seeds).map((g) => ({ ...g, round: p.round, week: REG_WEEKS + p.round, result: null })));
 }
@@ -2565,7 +2570,7 @@ function endSeason(f) {
   const champion = s.playoffs?.champion || null;
   const rec = record(f);
   if (champion === f.club) { f.badges[f.tier] += 1; f.qualification[f.tier] += 1; f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 }; f.campaign.titles += 1; news(f, $L('franchise.beast_bowl_champions_win_the_title', { club: f.club, name: tierById(f.tier).name }), 'win'); }
-  if (champion) addLeagueNews(f, championNews({ year: s.year, week: LAST_WEEK, final: (s.playoffs?.results || []).find((x) => x.round === 3) }));
+  if (champion) addLeagueNews(f, championNews({ year: s.year, week: LAST_WEEK, final: (s.playoffs?.results || []).find((x) => x.round === FINAL_ROUND) }));
   const place = st.overall.indexOf(f.club) + 1;
   f.bottomFourStreak = place > 12 ? f.bottomFourStreak + 1 : 0;
   f.history.push({ year: s.year, club: f.club, tier: f.tier, record: { w: rec.w, l: rec.l, t: rec.t }, place, champion, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), schedule: s.schedule.map((g) => ({ ...g })), rival: { ...f.rivals[f.tier] } });
@@ -2628,7 +2633,7 @@ export const TIERS_ENABLED = false;
  * ability name). No animation data: the ceremony is rebuilt from this, so it can be replayed from the history forever.
  */
 export function championshipRecord(f, s = f.season) {
-  const p = s.playoffs || {}; const fin = (p.results || []).find((x) => x.round === 3) || null;
+  const p = s.playoffs || {}; const fin = (p.results || []).find((x) => x.round === FINAL_ROUND) || null;
   const mine = fin ? (fin.home === f.club ? 'home' : 'away') : null;
   const games = (p.results || []).filter((x) => x.home === f.club || x.away === f.club);
   const rec = s.records?.[f.club] || { w: 0, l: 0, t: 0 };

@@ -8,7 +8,7 @@
 // 'board' (a typed letter: no face, no name, only the letters).
 import { t as $t } from '../text/index.js';
 import { GYMS } from './gyms.js';
-import { REG_GAMES } from './league.js';
+import { REG_GAMES, CONFERENCE_ROUND } from './league.js';
 /** Twelve Gym Leaders since the 32-club league (eight before): half the badges is six, all of them twelve. */
 const ALL_BADGES = GYMS.length, HALF_BADGES = GYMS.length / 2;
 
@@ -41,7 +41,7 @@ export const ACHIEVEMENTS = Object.freeze([
     when: (f, c) => c.qualified && !(f.history || []).some((h) => h.playoffs),
     beats: [$t('achievements.youre_in_eight_clubs_three_rounds'), $t('achievements.the_regular_season_is_over_which')] },
   { id: 'conference_title', title: $t('achievements.conference_champions'), titleKey: 'achievements.conference_champions', desc: $t('achievements.win_a_conference_championship'), speaker: 'rival', trigger: 'sunday',
-    when: (f, c) => c.won && c.playoffRound === 2,
+    when: (f, c) => c.won && c.playoffRound === CONFERENCE_ROUND,
     beats: [$t('achievements.conference_champions_i_watched_the_whole'), $t('achievements.one_more_you_know_what_the')] },
   { id: 'first_title', title: $t('achievements.beast_bowl_champions'), titleKey: 'achievements.beast_bowl_champions', desc: $t('achievements.win_the_beast_bowl'), speaker: 'board', trigger: 'season',
     when: (f, c) => c.champion && f.campaign.titles === 1,

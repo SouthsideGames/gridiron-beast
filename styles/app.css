@@ -482,6 +482,14 @@ b.bad{color:var(--bad)} b.warn{color:var(--warn)}
 .bk-team.me { outline: 2px solid #f5c542; outline-offset: 1px; }
 .bk-team.tbd { background: transparent; color: var(--ink-2); border: 1px dashed var(--line-2); box-shadow: none; }
 .bk-center { justify-content: center; align-items: stretch; }
+/* The 14-club bracket: a block of three columns for each conference, the Beast Bowl under both. */
+.bracket-14 .bk-heads, .bracket-14 .bk-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bracket-14 .bk-conf { margin-bottom: 14px; }
+.bracket-14 .bk-conf-name { font-weight: 900; font-size: 14px; margin: 0 2px 6px; }
+.bracket-14 .bk-col { min-height: 0; gap: 10px; }
+.bracket-14 .bk-bye .bk-team { opacity: .92; }
+.bracket-14 .bk-note { background: rgba(0,0,0,.28); text-transform: uppercase; letter-spacing: .04em; font-size: 9px; padding: 1px 4px; }
+.bracket-14 .bk-final { max-width: 220px; margin: 4px auto 0; }
 .bk-ball { text-align: center; font-size: 26px; opacity: .85; }
 .bk-champ { display: flex; margin-top: 10px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
 .bk-champ-label { background: #c8342b; color: #fff; font-weight: 900; padding: 8px 12px; font-size: 13px; letter-spacing: .04em; }

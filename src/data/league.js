@@ -71,7 +71,11 @@ export const TEAM_META = Object.freeze({
 /** A season: 14 games and one bye. The playoffs follow in the three weeks after. */
 export const REG_GAMES = 14;
 export const REG_WEEKS = 15;
-export const PLAYOFF_ROUNDS = 3;
+export const PLAYOFF_ROUNDS = 4; // Wild Card, Divisional, Conference Championships, Beast Bowl (owner, 2026-11-23; three rounds before)
+/** The round of the conference championships and of the Beast Bowl. */
+export const CONFERENCE_ROUND = 3, FINAL_ROUND = 4;
+/** Clubs of one conference in the playoffs: four division champions (seeds 1-4) and three wild cards (seeds 5-7). */
+export const PLAYOFF_SEEDS = 7, WILD_CARDS = 3;
 export const LAST_WEEK = REG_WEEKS + PLAYOFF_ROUNDS; // the Beast Bowl's week
 /** The game mix of one season, per club: both games against each division rival, then the rest of the conference, then the other conference. */
 export const SCHEDULE_MIX = Object.freeze({ division: 6, conference: 5, interconference: 3 });
@@ -207,20 +211,45 @@ export function standings(records) {
   const cmp = compareTeams(records);
   const divisions = Object.fromEntries(Object.entries(DIVISIONS).map(([d, teams]) => [d, [...teams].sort(cmp)]));
   const conferences = {};
-  // The playoff field (owner specification 2026-11-23, pending confirmation): the same eight-club, three-round bracket as before.
-  // With four divisions in a conference its four places go to the four division champions, seeded by record; there are no wildcards.
+  // The playoff field (owner, 2026-11-23): seven clubs a conference. The four division champions are seeds 1 to 4 and the three best
+  // of the rest are the wild cards, seeds 5 to 7, each group ranked by the standings' own order and tiebreakers.
   for (const conf of CONFERENCE_NAMES) {
     const divs = CONFERENCES[conf];
     const champions = divs.map((d) => divisions[d][0]).sort(cmp);
-    conferences[conf] = { divisions: [...divs], champions, wildcards: [], seeds: [...champions], order: [...divs.flatMap((d) => DIVISIONS[d])].sort(cmp) };
+    const order = [...divs.flatMap((d) => DIVISIONS[d])].sort(cmp);
+    const wildcards = order.filter((t) => !champions.includes(t)).slice(0, WILD_CARDS);
+    conferences[conf] = { divisions: [...divs], champions, wildcards, seeds: [...champions, ...wildcards], order };
   }
   return { divisions, conferences, overall: [...ALL_TEAMS].sort(cmp) };
 }
 
 /** Is this playoff game the Beast Bowl (the title game)? Conference semifinals and championships are not. */
 export const isBeastBowlTag = (tag) => tag === 'Beast Bowl';
-/** Playoff bracket: 8 teams. Semifinals (1v4, 2v3 per conference) the week after the season, then the conference finals, then the Beast Bowl. */
+/**
+ * The playoff bracket (owner, 2026-11-23): fourteen clubs, four rounds, thirteen games.
+ *   1 Wild Card: in each conference 2 v 7, 3 v 6, 4 v 5; seed 1 rests.
+ *   2 Divisional: the four survivors are reseeded; seed 1 hosts the lowest seed left, the other two meet at the higher seed's.
+ *   3 Conference Championships: the higher seed hosts.
+ *   4 Beast Bowl: the Veyra champion against the Koruun champion.
+ * `results` are the rounds already played ({ round, conf, winner }); `seedsByConf[conf]` is the seven seeds in order.
+ */
 export function playoffRound(round, results, seedsByConf) {
+  const bySeed = (conf) => (a, b) => seedsByConf[conf].indexOf(a) - seedsByConf[conf].indexOf(b);
+  const winners = (r, conf) => results.filter((x) => x.round === r && x.conf === conf).map((x) => x.winner);
+  if (round === 1) return CONFERENCE_NAMES.flatMap((conf) => { const s = seedsByConf[conf]; return [[1, 6], [2, 5], [3, 4]].map(([h, a]) => ({ conf, home: s[h], away: s[a], tag: `${conf} Wild Card` })); });
+  if (round === 2) return CONFERENCE_NAMES.flatMap((conf) => { const alive = [seedsByConf[conf][0], ...winners(1, conf)].sort(bySeed(conf)); return [{ conf, home: alive[0], away: alive[3], tag: `${conf} Divisional` }, { conf, home: alive[1], away: alive[2], tag: `${conf} Divisional` }]; });
+  if (round === 3) return CONFERENCE_NAMES.map((conf) => { const alive = winners(2, conf).sort(bySeed(conf)); return { conf, home: alive[0], away: alive[1], tag: `${conf} Championship` }; });
+  const champs = CONFERENCE_NAMES.map((conf) => winners(3, conf)[0]);
+  return [{ conf: 'League', home: champs[0], away: champs[1], tag: 'Beast Bowl' }];
+}
+/** The clubs with a bye in a round: seed 1 of each conference in the Wild Card round, nobody after. */
+export const playoffByes = (round, seedsByConf) => (round === 1 ? CONFERENCE_NAMES.map((c) => seedsByConf[c][0]) : []);
+/**
+ * THE OLD BRACKET, kept for the league archive: the eight seasons before the owner arrives were played in it and stay as they
+ * were (their champions are canon). Eight clubs, the four division champions of each conference. Semifinals (1v4, 2v3 per conference), then the
+ * conference finals, then the Beast Bowl: three rounds.
+ */
+export function legacyPlayoffRound(round, results, seedsByConf) {
   if (round === 1) return Object.entries(seedsByConf).flatMap(([conf, seeds]) => [{ conf, home: seeds[0], away: seeds[3], tag: `${conf} Semifinal` }, { conf, home: seeds[1], away: seeds[2], tag: `${conf} Semifinal` }]);
   if (round === 2) return CONFERENCE_NAMES.map((conf) => { const winners = results.filter((r) => r.round === 1 && r.conf === conf).map((r) => r.winner); const seeds = seedsByConf[conf]; const ordered = winners.sort((a, b) => seeds.indexOf(a) - seeds.indexOf(b)); return { conf, home: ordered[0], away: ordered[1], tag: `${conf} Championship` }; });
   const finalists = results.filter((r) => r.round === 2).map((r) => r.winner);

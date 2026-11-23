@@ -18,7 +18,7 @@
 // the award winners from computeAwards run on each season's league table. Season totals are calibrated to what the game's
 // own simulated seasons produce (tools/preleague-study.mjs), not to another sport's numbers.
 
-import { ALL_TEAMS, DIVISIONS, STARTER_CLUBS, REG_GAMES, CONFERENCE_NAMES, conferenceFor, divisionOf, leagueSeasonFixtures, blankRecord, applyResult, standings, playoffRound } from '../data/league.js';
+import { legacyPlayoffRound, ALL_TEAMS, DIVISIONS, STARTER_CLUBS, REG_GAMES, CONFERENCE_NAMES, conferenceFor, divisionOf, leagueSeasonFixtures, blankRecord, applyResult, standings, playoffRound } from '../data/league.js';
 import { hashString } from '../core/rng.js';
 import { isGymClub } from '../data/gyms.js';
 import { SPECIES_DEX } from '../data/species.js';
@@ -32,6 +32,8 @@ export const ARCHIVE_SEASONS = 8;
 export const ARCHIVE_LEGENDS = 6;
 export const ARCHIVE_AWARDS = Object.freeze(['mvp', 'opoy', 'dpoy']); // Signature Monster of the Year needs ability impact, which a past season cannot prove
 export const REGULAR_GAMES = REG_GAMES;
+/** Playoff rounds of an archive season: the old three-round bracket (the Beast Bowl is round 3 there, round 4 in a live season). */
+export const ARCHIVE_ROUNDS = 3;
 /** The season lines below were measured on nine-game seasons; a longer season keeps their per-game rates. */
 const STUDY_GAMES = 9;
 /** The key every franchise's league history is drawn from. Changing it rewrites the league's past for new franchises. */
@@ -121,10 +123,12 @@ function playSeason(D, year, strength, fixed) {
     applyResult(records, { home: g.home, away: g.away, homeScore: winner === g.home ? w : l, awayScore: winner === g.home ? l : w });
   }
   const table = standings(records);
-  const seeds = Object.fromEntries(Object.entries(table.conferences).map(([conf, c]) => [conf, c.seeds.slice()]));
+  // The archive's seasons were played in the league's old bracket (eight clubs, the four division champions of each conference,
+  // three rounds) and are kept exactly as they were: the 14-club playoffs begin with the owner's first season (owner, 2026-11-23).
+  const seeds = Object.fromEntries(Object.entries(table.conferences).map(([conf, c]) => [conf, c.champions.slice()]));
   const results = [];
-  for (let round = 1; round <= 3; round++) {
-    for (const g of playoffRound(round, results, seeds)) {
+  for (let round = 1; round <= ARCHIVE_ROUNDS; round++) {
+    for (const g of legacyPlayoffRound(round, results, seeds)) {
       const key = `${year}|po${round}|${g.home}|${g.away}`;
       const pHome = 1 / (1 + Math.exp(-((strength[g.home] - strength[g.away]) * SLOPE + 0.22)));
       const winner = D.u(`${key}|win`) < pHome ? g.home : g.away; const loser = winner === g.home ? g.away : g.home;
@@ -393,9 +397,9 @@ export function validateLeagueArchive(archive, { live = null } = {}) {
     const po = s.playoffs || []; const round = (r) => po.filter((g) => g.round === r);
     if (po.length !== 7 || round(1).length !== 4 || round(2).length !== 2 || round(3).length !== 1) say(`Invalid playoff rounds: ${Y}`);
     else {
-      const expect1 = playoffRound(1, [], s.seeds); if (round(1).some((g, i) => g.home !== expect1[i].home || g.away !== expect1[i].away || g.tag !== expect1[i].tag)) say(`Semifinal pairings do not follow the seeds: ${Y}`);
-      const expect2 = playoffRound(2, po.filter((g) => g.round === 1), s.seeds); if (round(2).some((g, i) => g.home !== expect2[i].home || g.away !== expect2[i].away || g.tag !== expect2[i].tag)) say(`Conference final pairings are wrong: ${Y}`);
-      const expect3 = playoffRound(3, po.filter((g) => g.round <= 2), s.seeds)[0]; const fin = round(3)[0]; if (fin.home !== expect3.home || fin.away !== expect3.away || fin.tag !== 'Beast Bowl') say(`Beast Bowl pairing is wrong: ${Y}`);
+      const expect1 = legacyPlayoffRound(1, [], s.seeds); if (round(1).some((g, i) => g.home !== expect1[i].home || g.away !== expect1[i].away || g.tag !== expect1[i].tag)) say(`Semifinal pairings do not follow the seeds: ${Y}`);
+      const expect2 = legacyPlayoffRound(2, po.filter((g) => g.round === 1), s.seeds); if (round(2).some((g, i) => g.home !== expect2[i].home || g.away !== expect2[i].away || g.tag !== expect2[i].tag)) say(`Conference final pairings are wrong: ${Y}`);
+      const expect3 = legacyPlayoffRound(3, po.filter((g) => g.round <= 2), s.seeds)[0]; const fin = round(3)[0]; if (fin.home !== expect3.home || fin.away !== expect3.away || fin.tag !== 'Beast Bowl') say(`Beast Bowl pairing is wrong: ${Y}`);
       if (fin.winner !== s.champion) say(`Playoff winner mismatch: ${Y}`);
       if (s.runnerUp === s.champion || ![fin.home, fin.away].includes(s.runnerUp)) say(`Runner-up mismatch: ${Y}`);
       for (const g of po) { if (![g.home, g.away].includes(g.winner)) say(`Playoff winner did not play: ${Y}`); if ((g.winner === g.home) !== (g.homeScore > g.awayScore) || g.homeScore === g.awayScore) say(`Playoff score disagrees with its winner: ${Y}`); }
