@@ -175,7 +175,9 @@ test('awards freeze when the playoffs are drawn and a full season books leaders 
   const agedAtClose = F.task7Offseason(f); // Task 7: ageing (and a season of experience) happens at the season close, before contracts and free agency
   { const b = (t7FA(f), F.beginDraft(f)); assert.ok(b.ok, b.reason); let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } }
   t7FillToMin(f); // monsters who decline to renew (their own say) leave places to fill
-  assert.equal(F.startNextSeason(f).ok, true, F.startNextSeason(f).reason);
+  // (This hands-off owner fills the roster by price, not by position: in the 32-club league seed 71 is left without a running back, and
+  // the lineup safeguard would hold the season. He continues under the forfeit rule, as the soak's hands-off owner does.)
+  { const next = F.startNextSeason(f, { acceptForfeits: true }); assert.equal(next.ok, true, next.reason); }
   assert.equal(starter.yearsPro, agedAtClose ? yp : yp + 1, 'a season of experience (counted once)');
   assert.equal(starter.stats.seasons.length, 1); assert.equal(starter.stats.season.year, 2); assert.deepEqual(starter.stats.season.reg, {});
   assert.ok(monsterLine(starter, 'career', 'reg').games >= 5, 'career totals survive');
