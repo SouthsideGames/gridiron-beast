@@ -22,23 +22,41 @@ import { t as $t } from '../text/index.js';
 // `passStyle` / `runStyle`: the playbook tags a gym's (or club's) approved strategy leans to; `positions`: where its acquisition tilt applies.
 export const IDENTITIES = Object.freeze({
   // ---- gyms (AI_IDENTITIES.md §3). Schemes follow the approved strategy column; where the column names no side, the gym coach's scheme (gyms.js).
-  'Harbor Sentinels': { style: 'balanced', offense: 'balanced', defense: 'coverage', label: $t('data.ball_hawk_zone_defense_ball_control'), runStyle: 'inside', positions: ['CB', 'S'] },
-  'Sunfire Lions': { style: 'air_raid', offense: 'pass', defense: 'coverage', label: $t('data.air_raid_with_light_cooldown_fields'), passStyle: 'vertical', positions: ['QB', 'WR'] },
-  'Thunder Mesa': { style: 'tempo', offense: 'pass', defense: 'pressure', label: $t('data.quick_passing_behind_extra_protection_blitzing'), passStyle: 'quick', positions: ['QB', 'WR', 'OL', 'DL', 'LB'] },
+  'Harbor Anchors': { style: 'balanced', offense: 'balanced', defense: 'coverage', label: $t('data.ball_hawk_zone_defense_ball_control'), runStyle: 'inside', positions: ['CB', 'S'] },
+  'Sunfire Solars': { style: 'air_raid', offense: 'pass', defense: 'coverage', label: $t('data.air_raid_with_light_cooldown_fields'), passStyle: 'vertical', positions: ['QB', 'WR'] },
+  'Thunder Mesa Blitz': { style: 'tempo', offense: 'pass', defense: 'pressure', label: $t('data.quick_passing_behind_extra_protection_blitzing'), passStyle: 'quick', positions: ['QB', 'WR', 'OL', 'DL', 'LB'] },
   'Canyon Crushers': { style: 'ground_pound', offense: 'run', defense: 'pressure', label: $t('data.ground_attack_physical_run_front'), runStyle: 'inside', runFront: true, positions: ['RB', 'OL', 'TE', 'DL'] },
   'Eastport Phantoms': { style: 'trickster', offense: 'pass', defense: 'man', label: $t('data.man_coverage_tricks_dark_fields'), positions: ['CB', 'S'] },
   'Frostpeak Howlers': { style: 'balanced', offense: 'balanced', defense: 'coverage', label: $t('data.field_position_bend_dont_break_zone'), positions: ['K', 'CB', 'S'] },
-  'Ironpeak Rams': { style: 'ground_pound', offense: 'run', defense: 'pressure', label: $t('data.run_stuffing_blitz_front_power_runs'), runStyle: 'inside', runFront: true, positions: ['RB', 'OL', 'DL', 'LB'] },
-  'Palmetto Vipers': { style: 'air_raid', offense: 'pass', defense: 'man', label: $t('data.aggressive_vertical_passing_man_coverage'), passStyle: 'vertical', positions: ['QB', 'WR', 'CB', 'S'] },
+  'Ironpeak Colossi': { style: 'ground_pound', offense: 'run', defense: 'pressure', label: $t('data.run_stuffing_blitz_front_power_runs'), runStyle: 'inside', runFront: true, positions: ['RB', 'OL', 'DL', 'LB'] },
+  'Palmetto Wyrms': { style: 'air_raid', offense: 'pass', defense: 'man', label: $t('data.aggressive_vertical_passing_man_coverage'), passStyle: 'vertical', positions: ['QB', 'WR', 'CB', 'S'] },
   // ---- ordinary clubs (AI_IDENTITIES.md §4): offence / defence exactly as the table
   'Ember City Beasts': { style: 'air_raid', offense: 'pass', defense: 'pressure', label: $t('data.air_raid_blitz_heavy'), passStyle: 'vertical' },
-  'Stonehaven Titans': { style: 'ground_pound', offense: 'run', defense: 'coverage', label: $t('data.ground_attack_zone_control') },
+  'Stonehaven Bastions': { style: 'ground_pound', offense: 'run', defense: 'coverage', label: $t('data.ground_attack_zone_control') },
   'Glacier Guardians': { style: 'balanced', offense: 'balanced', defense: 'coverage', label: $t('data.balanced_zone_control') },
   'Stormport Bolts': { style: 'tempo', offense: 'pass', defense: 'man', label: $t('data.air_raid_man_coverage') },
-  'Northstar Wolves': { style: 'ground_pound', offense: 'run', defense: 'pressure', label: $t('data.ground_attack_blitz_heavy') },
+  'Northstar Novas': { style: 'ground_pound', offense: 'run', defense: 'pressure', label: $t('data.ground_attack_blitz_heavy') },
   'Sundown Drakes': { style: 'air_raid', offense: 'pass', defense: 'coverage', label: $t('data.air_raid_zone_control'), passStyle: 'vertical' },
-  'Ashford Hawks': { style: 'balanced', offense: 'balanced', defense: 'man', label: $t('data.balanced_man_coverage') },
+  'Ashford Cinders': { style: 'balanced', offense: 'balanced', defense: 'man', label: $t('data.balanced_man_coverage') },
   'Bayou Stalkers': { style: 'trickster', offense: 'run', defense: 'man', label: $t('data.ground_attack_man_coverage'), runStyle: 'option' },
+  // ---- the 32-club league (2026-11-23). The four new Gym Leaders follow their coaches' schemes (gyms.js); the twelve new ordinary
+  // clubs spread evenly over the same offence / defence combinations as the eight above. All provisional until the owner's sheet.
+  'Emberfall Infernos': { style: 'air_raid', offense: 'pass', defense: 'pressure', label: $t('data.air_raid_blitz_heavy'), passStyle: 'vertical', positions: ['QB', 'WR', 'DL', 'LB'] },
+  'Westhaven Pirates': { style: 'ground_pound', offense: 'run', defense: 'coverage', label: $t('data.ground_attack_zone_control'), runStyle: 'inside', positions: ['RB', 'OL', 'CB', 'S'] },
+  'Cliffhaven Chargers': { style: 'tempo', offense: 'pass', defense: 'coverage', label: $t('data.air_raid_zone_control'), passStyle: 'quick', positions: ['QB', 'WR', 'CB', 'S'] },
+  'Aetheria Seers': { style: 'trickster', offense: 'balanced', defense: 'man', label: $t('data.balanced_man_coverage'), positions: ['QB', 'CB', 'S'] },
+  'Goldhaven Royals': { style: 'balanced', offense: 'balanced', defense: 'coverage', label: $t('data.balanced_zone_control') },
+  'Riverbend Rapids': { style: 'tempo', offense: 'pass', defense: 'man', label: $t('data.air_raid_man_coverage') },
+  'Pinecrest Wardens': { style: 'ground_pound', offense: 'run', defense: 'coverage', label: $t('data.ground_attack_zone_control') },
+  'Skyvale Cyclones': { style: 'air_raid', offense: 'pass', defense: 'coverage', label: $t('data.air_raid_zone_control'), passStyle: 'vertical' },
+  'Coral Bay Tides': { style: 'balanced', offense: 'balanced', defense: 'man', label: $t('data.balanced_man_coverage') },
+  'Palm Isle Mystics': { style: 'trickster', offense: 'run', defense: 'man', label: $t('data.ground_attack_man_coverage'), runStyle: 'option' },
+  'Thornwood Wildroots': { style: 'ground_pound', offense: 'run', defense: 'pressure', label: $t('data.ground_attack_blitz_heavy') },
+  'Silvergrove Arcanists': { style: 'air_raid', offense: 'pass', defense: 'pressure', label: $t('data.air_raid_blitz_heavy'), passStyle: 'vertical' },
+  'Mossvale Quakes': { style: 'ground_pound', offense: 'run', defense: 'coverage', label: $t('data.ground_attack_zone_control') },
+  'Fernhaven Wisps': { style: 'tempo', offense: 'pass', defense: 'man', label: $t('data.air_raid_man_coverage') },
+  'Deepwater Chompers': { style: 'ground_pound', offense: 'run', defense: 'pressure', label: $t('data.ground_attack_blitz_heavy') },
+  'Mistport Veils': { style: 'balanced', offense: 'balanced', defense: 'coverage', label: $t('data.balanced_zone_control') },
 });
 /**
  * Task 10 (owner 2026-11-13): the five coach identities. Each AI club's offensive play-caller has one, fixed with the club's identity

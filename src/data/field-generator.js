@@ -39,11 +39,12 @@ export function drawField(key) {
  * has no field: grass), 'override' (a saved stadium override), 'home' (the home club's permanent elemental stadium) or 'draw'.
  */
 export function fieldFor(home, away, key, overrides = null) {
-  const boss = bossOf(home, away);
-  if (boss) { const env = FIELD_BY_TYPE[boss.element]; return env ? { env, by: 'boss', boss: boss.club } : { env: 'grass', by: 'boss-unmapped', boss: boss.club }; }
+  // Owner, 2026-11-22: the home club decides the field. A Gym Leader's field appears only when that Gym Leader hosts; every other
+  // club's home is grass, and a visiting Gym Leader plays on it. (Until then a gym brought its field to away games, and a grass
+  // stadium drew an elemental field 35% of the time; bossOf and drawField remain for the tools that study those rules.)
   if (overrides?.[home]) return { env: stadiumFor(home, overrides).env, by: 'override', boss: null };
-  const own = STADIUMS[home]?.env; if (own && own !== 'grass' && ENVIRONMENTS[own]) return { env: own, by: 'home', boss: null };
-  return { env: drawField(`${key}|${home}|${away || ''}`), by: 'draw', boss: null };
+  const own = STADIUMS[home]?.env; const env = own && ENVIRONMENTS[own] ? own : 'grass';
+  return { env, by: 'home', boss: GYM_BY_CLUB[home] && env !== 'grass' ? home : null };
 }
 /** The venue of one franchise game: the home club's stadium name, the generated field and that field's weather for the day. */
 export function generatedVenue(home, away, key, overrides = null) {

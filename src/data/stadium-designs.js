@@ -1,3 +1,6 @@
+// Stadium Polish (v1): field designs that no club plays on. Sky and Oracle left this list on 2026-11-23, when the Wind and
+// Psychic Gym Leaders arrived: they are fields in data/stadiums.js now. The five below match no monster type and are kept, unused,
+// out of the Gym Leader line-up (owner, 2026-11-22). The original header:
 // Stadium Polish (v1): field designs that no club plays on yet.
 //
 // These are looks only, kept apart from ENVIRONMENTS (data/stadiums.js) on purpose: the game picks fields from ENVIRONMENTS, so
@@ -7,11 +10,6 @@
 // Imports nothing.
 
 export const DESIGN_FIELDS = Object.freeze({
-  sky: { id: 'sky', name: 'Sky Stadium', short: 'Sky', type: null, indoor: false, icon: '☁', texture: 'breeze',
-    // An island of bright grass high in the sky: fresh green turf with the breeze drawn across it, sky-blue end zones.
-    palette: { a: '#3f9a6c', b: '#46a473', c: '#399064', end: '#3a7fc4', apron: '#5fa9de', tint: 'rgba(235,250,255,0.05)', decor: '#ffffff' } },
-  oracle: { id: 'oracle', name: 'Oracle Stadium', short: 'Oracle', type: null, indoor: false, icon: '🔮', texture: 'stars',
-    palette: { a: '#3a2a63', b: '#41306d', c: '#34255a', end: '#5a2466', apron: '#221740', tint: 'rgba(255,140,225,0.05)', decor: '#ff9ae6' } },
   rock: { id: 'rock', name: 'Rock Stadium', short: 'Rock', type: null, indoor: false, icon: '🪨', texture: 'slab',
     palette: { a: '#625d55', b: '#69645b', c: '#5a564e', end: '#403c36', apron: '#4c4841', tint: 'rgba(230,215,190,0.04)', decor: '#c9b79a' } },
   bug: { id: 'bug', name: 'Bug Stadium', short: 'Bug', type: null, indoor: false, icon: '🐝', texture: 'comb',
