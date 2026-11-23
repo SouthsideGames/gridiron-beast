@@ -42,7 +42,7 @@ export { ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
 import { dexKnowledgeGame, knowledgeEventId, dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise } from './dex-store.js';
 import { clubIdentity, identityCoach, lineupPreference, trainingPriority } from '../data/identities.js';
-import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, FREE_LEGENDARIES, gymGrowth } from '../data/gyms.js';
+import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, gymGrowth } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
 import { yearOf } from '../data/calendar.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
@@ -275,12 +275,27 @@ function bestSchemeFor(f, role) {
 }
 
 // ------------------------------------------------------------ Legend Tracks (GDD §15.8)
-/** Legendaries a champion may track: the four no club holds, plus gym legendaries whose badge the player holds; never one already unlocked or signed. */
+/**
+ * The twelve Legend Tracks and where each stands (owner ruling, 2026-11-23). Every track belongs to a Gym Leader's legendary and
+ * needs that Gym Leader's badge HELD NOW:
+ *   'locked'    no badge and no progress: nothing can be done yet;
+ *   'active'    the badge is held: a Beast Bowl champion may add a track, and a completed track's legendary can be scouted;
+ *   'paused'    progress was made, then the badge was lost: nothing advances and the legendary does not turn up, but every track
+ *               and a completed unlock are kept, and winning the badge back resumes exactly where it stood;
+ *   'recruited' the legendary is on the roster. He is never taken away, badge or no badge.
+ * Badges, tracks and unlocks all travel with the coach to a new club (gm-career.js).
+ */
+export function legendTracks(f) {
+  const c = f.campaign || {};
+  return GYMS.map((g) => { const id = g.legendary; const held = !!c.badges?.[g.club]; const tracks = c.tracks?.[id] || 0; const unlocked = !!c.unlocked?.[id]; const recruited = f.roster.some((m) => m.species === id);
+    return { id, club: g.club, badge: g.badge, element: g.element, leader: g.coach.name, held, tracks, needed: LEGEND_RULES.tracksNeeded, unlocked, recruited, species: SPECIES_DEX.find((s) => s.id === id),
+      state: recruited ? 'recruited' : held ? 'active' : tracks || unlocked ? 'paused' : 'locked' }; });
+}
+/** Is this legendary's track running: its Gym Leader's badge held now? */
+export const legendTrackActive = (f, speciesId) => { const g = GYMS.find((x) => x.legendary === speciesId); return !!g && !!f.campaign?.badges?.[g.club]; };
+/** Legendaries a champion may add a track to: a held badge's legendary, not yet unlocked and not on the roster. */
 export function legendChoices(f) {
-  const held = Object.keys(f.campaign?.badges || {});
-  // (Since the 32-club league the four free legendaries also have Gym Leaders; they stay free to hunt until the owner rules otherwise.)
-  const ids = [...new Set([...FREE_LEGENDARIES, ...GYMS.filter((g) => held.includes(g.club)).map((g) => g.legendary)])];
-  return ids.filter((id) => !f.campaign?.unlocked?.[id] && !f.roster.some((m) => m.species === id)).map((id) => ({ id, tracks: f.campaign?.tracks?.[id] || 0, species: SPECIES_DEX.find((s) => s.id === id) }));
+  return legendTracks(f).filter((t) => t.state === 'active' && !t.unlocked).map((t) => ({ id: t.id, tracks: t.tracks, species: t.species }));
 }
 export function chooseLegendTrack(f, speciesId) {
   if (!f.legendPick || f.legendPick.resolved) return { ok: false, reason: $t('franchise.no_legend_track_to_choose') };
@@ -789,7 +804,7 @@ export function schemeLock(f) { const rf = rosterFit(f); const on = (x) => x.tot
 export const DIFFICULTY = Object.freeze({
   rookie: { label: 'Rookie', quality: -4, iq: 0.6, text: $t('franchise.weaker_clubs_that_call_plays_loosely'), hof: $t('franchise.hall_of_fame_8_badges_1'), hofGoals: { badges: 8, titles: 1, wins: 30, awards: 2 }, commissionerPicks: 5 },
   pro: { label: 'Pro', quality: -1, iq: 1, text: $t('franchise.the_standard_league'), hof: $t('franchise.hall_of_fame_8_badges_2'), hofGoals: { badges: 8, titles: 2, wins: 50, awards: 3 }, commissionerPicks: 3 },
-  allstar: { label: 'All-Star', quality: 3, iq: 1.5, text: $t('franchise.stronger_clubs_whose_coaches_read_the'), hof: $t('franchise.hall_of_fame_8_badges_4'), hofGoals: { badges: 8, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
+  allstar: { label: 'All-Star', quality: 3, iq: 1.5, text: $t('franchise.stronger_clubs_whose_coaches_read_the'), hof: $t('franchise.hall_of_fame_8_badges_4'), hofGoals: { badges: 12, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
 });
 export const difficultyOf = (f) => DIFFICULTY[f?.settings?.difficulty] || DIFFICULTY.pro;
 /** Club quality for a season: base by difficulty, gym tier, growth per season, the title raising the floor, and "studied tape" after the player first beats a gym (GDD §15.3, §15.8). */
@@ -1764,7 +1779,8 @@ export function scoutRegion(f, regionName, { focus = null } = {}) {
   const count = (skill >= 80 ? 3 : skill >= 45 ? 2 : 1) + (scoutBonusActive(f) ? 1 : 0); // the board's expanded scouting department after a goal met (GDD §17.4)
   const prospects = [];
   // Species come from the region's elements by rarity weight; rares only in their home region from their week.
-  const unlocked = Object.keys(f.campaign?.unlocked || {}).map((id) => SPECIES_DEX.find((s) => s.id === id)).filter((sp) => sp && (sp.regions || [])[0] === regionName && !f.roster.some((m) => m.species === sp.id));
+  // (a completed track whose badge has been lost is paused: its legendary does not turn up until the badge is won back)
+  const unlocked = Object.keys(f.campaign?.unlocked || {}).filter((id) => legendTrackActive(f, id)).map((id) => SPECIES_DEX.find((s) => s.id === id)).filter((sp) => sp && (sp.regions || [])[0] === regionName && !f.roster.some((m) => m.species === sp.id));
   const pool = [...regionSpecies(regionName, region.types, f.season.week), ...unlocked]; // a legendary with three Legend Tracks is scoutable in its home region
   const rarityBonus = skill >= 80 ? 1.6 : skill >= 60 ? 1.25 : 1;
   const weights = pool.map((sp) => [sp.id, (sp.rarity === 'common' ? 60 : sp.rarity === 'uncommon' ? 30 * rarityBonus : sp.rarity === 'legendary' ? 14 * rarityBonus : 9 * rarityBonus)]);

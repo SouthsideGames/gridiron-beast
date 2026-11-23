@@ -33,40 +33,88 @@ export const conferenceOf = (team) => conferenceFor(divisionOf(team));
 // Colours, mascots and (in data/stadiums.js, RIVAL_GMS below, data/identities.js) stadium names, managers and playing styles of
 // the sixteen clubs new to the game and the new nicknames of eight older ones are PROVISIONAL (marked `provisional: true`): the
 // owner's specification names the clubs, and the approved identity sheet is not in the repository yet. Replace them here.
-export const TEAM_META = Object.freeze({
-  'Frostpeak Howlers': { abbr: 'FRO', color: '#7fb6ff', mascot: 'wolf' },
-  'Glacier Guardians': { abbr: 'GLA', color: '#bfe8ff', mascot: 'bear' },
-  'Northstar Novas': { abbr: 'NOR', color: '#8d9bff', mascot: 'nova', provisional: true },
-  'Ironpeak Colossi': { abbr: 'IRO', color: '#c9c9c9', mascot: 'colossus', provisional: true },
-  'Stormport Bolts': { abbr: 'STM', color: '#ffe36b', mascot: 'bolt' },
-  'Canyon Crushers': { abbr: 'CAN', color: '#e09a5a', mascot: 'rock' },
-  'Sundown Drakes': { abbr: 'SUN', color: '#ff8a5b', mascot: 'drake' },
-  'Thunder Mesa Blitz': { abbr: 'THU', color: '#c288ff', mascot: 'blitz', provisional: true },
-  'Goldhaven Royals': { abbr: 'GOL', color: '#e6b800', mascot: 'royal', provisional: true },
-  'Riverbend Rapids': { abbr: 'RIV', color: '#4fb3d9', mascot: 'rapid', provisional: true },
-  'Pinecrest Wardens': { abbr: 'PIN', color: '#5f9e6e', mascot: 'warden', provisional: true },
-  'Skyvale Cyclones': { abbr: 'SKY', color: '#9ad4f5', mascot: 'cyclone', provisional: true },
-  'Emberfall Infernos': { abbr: 'EMF', color: '#ff5533', mascot: 'inferno', provisional: true },
-  'Coral Bay Tides': { abbr: 'COR', color: '#ff8fa3', mascot: 'tide', provisional: true },
-  'Cliffhaven Chargers': { abbr: 'CLF', color: '#7fd8e8', mascot: 'charger', provisional: true },
-  'Palm Isle Mystics': { abbr: 'PIS', color: '#c58cf0', mascot: 'mystic', provisional: true },
-  'Stonehaven Bastions': { abbr: 'STO', color: '#9fd8c8', mascot: 'bastion', provisional: true },
-  'Eastport Phantoms': { abbr: 'EAS', color: '#b9b5ff', mascot: 'ghost' },
-  'Harbor Anchors': { abbr: 'HAR', color: '#6ec6ff', mascot: 'anchor', provisional: true },
-  'Ashford Cinders': { abbr: 'ASH', color: '#d8c38a', mascot: 'cinder', provisional: true },
-  'Ember City Beasts': { abbr: 'EMB', color: '#ff6b4a', mascot: 'beast' },
-  'Bayou Stalkers': { abbr: 'BAY', color: '#8fd47a', mascot: 'gator' },
-  'Sunfire Solars': { abbr: 'SNF', color: '#ffc14d', mascot: 'solar', provisional: true },
-  'Palmetto Wyrms': { abbr: 'PAL', color: '#7be3b0', mascot: 'wyrm', provisional: true },
-  'Thornwood Wildroots': { abbr: 'THO', color: '#7cba4a', mascot: 'root', provisional: true },
-  'Silvergrove Arcanists': { abbr: 'SIL', color: '#c9cfe0', mascot: 'arcanist', provisional: true },
-  'Mossvale Quakes': { abbr: 'MOS', color: '#a8a05a', mascot: 'quake', provisional: true },
-  'Fernhaven Wisps': { abbr: 'FER', color: '#9fe6c0', mascot: 'wisp', provisional: true },
-  'Aetheria Seers': { abbr: 'AET', color: '#ff8ae0', mascot: 'seer', provisional: true },
-  'Deepwater Chompers': { abbr: 'DEE', color: '#3f7fd0', mascot: 'shark', provisional: true },
-  'Mistport Veils': { abbr: 'MIS', color: '#b8c4d8', mascot: 'veil', provisional: true },
-  'Westhaven Pirates': { abbr: 'WES', color: '#4fae7a', mascot: 'pirate', provisional: true },
+/**
+ * The clubs' colours are the owner's approved palette (2026-11-23): `color` is the primary, with a `secondary` and an `accent`.
+ * Do not adjust the values. `ink` is not a fourth colour: it is whichever of the club's own primary or accent reads on the game's
+ * dark panels (a few primaries are too dark to be text), for a club's name written as coloured text.
+ */
+const PALETTE = Object.freeze({
+  'Frostpeak Howlers': ['#73C8F5', '#142B52', '#F4FAFF'],
+  'Glacier Guardians': ['#E0F2F1', '#3B6370', '#A3CDD4'],
+  'Northstar Novas': ['#6565D8', '#161638', '#F3C7FF'],
+  'Ironpeak Colossi': ['#777F89', '#252A31', '#D59A52'],
+  'Stormport Bolts': ['#F5D400', '#172C50', '#FFFFFF'],
+  'Canyon Crushers': ['#B56A3D', '#483126', '#F2C79C'],
+  'Sundown Drakes': ['#E86A45', '#50203D', '#FFCC8B'],
+  'Thunder Mesa Blitz': ['#9A4DDB', '#291B4A', '#F4D64E'],
+  'Goldhaven Royals': ['#C8A039', '#442857', '#FFF2C6'],
+  'Riverbend Rapids': ['#188EAB', '#133B56', '#D6F6FF'],
+  'Pinecrest Wardens': ['#527C46', '#263E2C', '#D8DFB2'],
+  'Skyvale Cyclones': ['#A5D9ED', '#325A85', '#FFFFFF'],
+  'Emberfall Infernos': ['#E53D25', '#44151D', '#FFB35C'],
+  'Coral Bay Tides': ['#F18BA2', '#176E79', '#FFF0E3'],
+  'Cliffhaven Chargers': ['#36B7C9', '#254D7B', '#FFFFFF'],
+  'Palm Isle Mystics': ['#C28AE3', '#355B61', '#F6E0FF'],
+  'Stonehaven Bastions': ['#4C8D80', '#293D45', '#D9E5D9'],
+  'Eastport Phantoms': ['#8477B8', '#242139', '#D9D2F0'],
+  'Harbor Anchors': ['#205A96', '#142B48', '#D3E9F7'],
+  'Ashford Cinders': ['#A17B53', '#4C3832', '#EAD5B1'],
+  'Ember City Beasts': ['#A82932', '#35262C', '#F3A76D'],
+  'Bayou Stalkers': ['#8A9E35', '#283D2C', '#E5DE91'],
+  'Sunfire Solars': ['#F4A62A', '#713B30', '#FFF0B0'],
+  'Palmetto Wyrms': ['#247D60', '#24433E', '#D7B2A1'],
+  'Thornwood Wildroots': ['#75A52C', '#34452A', '#E2D8A5'],
+  'Silvergrove Arcanists': ['#AAB5C5', '#49466D', '#F1E8FA'],
+  'Mossvale Quakes': ['#777044', '#4C3F30', '#D5C79B'],
+  'Fernhaven Wisps': ['#62D5A9', '#2C6660', '#E7FFF3'],
+  'Aetheria Seers': ['#DB65BA', '#432B66', '#FFE2F6'],
+  'Deepwater Chompers': ['#183E72', '#10243F', '#7ED0E5'],
+  'Mistport Veils': ['#7D929D', '#384A5B', '#E4EAF0'],
+  'Westhaven Pirates': ['#167C79', '#183E48', '#D6B775'],
 });
+const lum = (hex) => { const v = [0, 2, 4].map((i) => parseInt(hex.slice(1 + i, 3 + i), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+/** Contrast of a colour against the game's dark panel (#12251c). A club's name is bold text: 3 or more reads. */
+export const contrastOnPanel = (hex) => (lum(hex) + 0.05) / (lum('#12251c') + 0.05);
+const club = (name, abbr, mascot) => { const [color, secondary, accent] = PALETTE[name]; return [name, Object.freeze({ abbr, color, secondary, accent, ink: contrastOnPanel(color) >= 3 ? color : accent, mascot })]; };
+export const TEAM_META = Object.freeze(Object.fromEntries([
+  club('Frostpeak Howlers', 'FRO', 'wolf'),
+  club('Glacier Guardians', 'GLA', 'bear'),
+  club('Northstar Novas', 'NOR', 'nova'),
+  club('Ironpeak Colossi', 'IRO', 'colossus'),
+  club('Stormport Bolts', 'STM', 'bolt'),
+  club('Canyon Crushers', 'CAN', 'rock'),
+  club('Sundown Drakes', 'SUN', 'drake'),
+  club('Thunder Mesa Blitz', 'THU', 'blitz'),
+  club('Goldhaven Royals', 'GOL', 'royal'),
+  club('Riverbend Rapids', 'RIV', 'rapid'),
+  club('Pinecrest Wardens', 'PIN', 'warden'),
+  club('Skyvale Cyclones', 'SKY', 'cyclone'),
+  club('Emberfall Infernos', 'EMF', 'inferno'),
+  club('Coral Bay Tides', 'COR', 'tide'),
+  club('Cliffhaven Chargers', 'CLF', 'charger'),
+  club('Palm Isle Mystics', 'PIS', 'mystic'),
+  club('Stonehaven Bastions', 'STO', 'bastion'),
+  club('Eastport Phantoms', 'EAS', 'ghost'),
+  club('Harbor Anchors', 'HAR', 'anchor'),
+  club('Ashford Cinders', 'ASH', 'cinder'),
+  club('Ember City Beasts', 'EMB', 'beast'),
+  club('Bayou Stalkers', 'BAY', 'gator'),
+  club('Sunfire Solars', 'SNF', 'solar'),
+  club('Palmetto Wyrms', 'PAL', 'wyrm'),
+  club('Thornwood Wildroots', 'THO', 'root'),
+  club('Silvergrove Arcanists', 'SIL', 'arcanist'),
+  club('Mossvale Quakes', 'MOS', 'quake'),
+  club('Fernhaven Wisps', 'FER', 'wisp'),
+  club('Aetheria Seers', 'AET', 'seer'),
+  club('Deepwater Chompers', 'DEE', 'shark'),
+  club('Mistport Veils', 'MIS', 'veil'),
+  club('Westhaven Pirates', 'WES', 'pirate'),
+]));
+/** The three approved colours of a club as a small swatch (team cards, the club picker, the league list). */
+export const teamSwatch = (name) => { const m = TEAM_META[name]; return m ? `<span class="team-swatch" aria-hidden="true"><i style="background:${m.color}"></i><i style="background:${m.secondary}"></i><i style="background:${m.accent}"></i></span>` : ''; };
+/** A club's readable text colour (see `ink` above); `fallback` for a team that is not one of the 32. */
+export const teamInk = (name, fallback = '#cfe3d6') => TEAM_META[name]?.ink || fallback;
+
 
 /** A season: 14 games and one bye. The playoffs follow in the three weeks after. */
 export const REG_GAMES = 14;
@@ -91,8 +139,8 @@ export const STARTER_CLUBS = Object.freeze([
 ]);
 
 export const RIVAL_GMS = Object.freeze({ 'Glacier Guardians': 'Morgan Vale', 'Northstar Novas': 'Cameron Frost', 'Ironpeak Colossi': 'Jules Stone', 'Canyon Crushers': 'Alex Calder', 'Sundown Drakes': 'Riley Ash', 'Thunder Mesa Blitz': 'Blake Storm', 'Eastport Phantoms': 'Taylor Voss', 'Harbor Anchors': 'Jordan Shore', 'Ashford Cinders': 'Casey Finch', 'Bayou Stalkers': 'Drew Marsh', 'Sunfire Solars': 'Avery Sol', 'Palmetto Wyrms': 'Quinn Reed', 'Frostpeak Howlers': 'Sam Rime', 'Stormport Bolts': 'Devon Gale', 'Stonehaven Bastions': 'Harper Flint', 'Ember City Beasts': 'Rowan Blaze',
-  // New clubs. Rook Tanner (Cliffhaven) is the owner's; the rest are provisional.
-  'Cliffhaven Chargers': 'Rook Tanner', 'Goldhaven Royals': 'Harper Lane', 'Riverbend Rapids': 'Jesse Ford', 'Pinecrest Wardens': 'Rowan Pike', 'Skyvale Cyclones': 'Emery Vance', 'Emberfall Infernos': 'Dana Cole', 'Coral Bay Tides': 'Marin Shaw', 'Palm Isle Mystics': 'Indigo Hart', 'Thornwood Wildroots': 'Sage Alder', 'Silvergrove Arcanists': 'Lennox Wren', 'Mossvale Quakes': 'Hollis Grange', 'Fernhaven Wisps': 'Wren Calloway', 'Aetheria Seers': 'Noor Celeste', 'Deepwater Chompers': 'Finn Corrigan', 'Mistport Veils': 'Ellis Gray', 'Westhaven Pirates': 'Kit Teague' });
+  // New clubs. Rook Tanner, Victor Hale, Maya Rivers, Grant Mercer, Marina Cole and Jalen Tide are the owner's (2026-11-23).
+  'Cliffhaven Chargers': 'Rook Tanner', 'Goldhaven Royals': 'Victor Hale', 'Riverbend Rapids': 'Maya Rivers', 'Pinecrest Wardens': 'Grant Mercer', 'Skyvale Cyclones': 'Emery Vance', 'Emberfall Infernos': 'Dana Cole', 'Coral Bay Tides': 'Marina Cole', 'Palm Isle Mystics': 'Jalen Tide', 'Thornwood Wildroots': 'Sage Alder', 'Silvergrove Arcanists': 'Lennox Wren', 'Mossvale Quakes': 'Hollis Grange', 'Fernhaven Wisps': 'Wren Calloway', 'Aetheria Seers': 'Noor Celeste', 'Deepwater Chompers': 'Finn Corrigan', 'Mistport Veils': 'Ellis Gray', 'Westhaven Pirates': 'Kit Teague' });
 
 export const TIERS = Object.freeze([
   { id: 'challenger', name: $t('data.challenger_league'), rank: 3, cap: 1800000, badgeGoal: 4, next: 'vanguard' },

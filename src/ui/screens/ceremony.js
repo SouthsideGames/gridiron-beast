@@ -41,7 +41,7 @@ function summaryHtml(f, c, fromGame) {
   const fin = c.final;
   return `<div class="cer-summary" role="dialog" aria-label="${$t('career.championship_summary')}">
     <div class="cer-sum-title">${$t('career.beast_bowl_champions', { preview: c.preview ? $t('career.preview') : '' })}</div>
-    <div class="cer-sum-club" style="color:${c.color}">${esc(c.club)}</div>
+    <div class="cer-sum-club" style="color:${TEAM_META[c.club]?.ink || c.color}">${esc(c.club)}</div>
     <div class="dim">${$t('career.season_2', { year: esc(yearOf(c.year)) })}</div>
     ${fin ? `<div class="cer-sum-score"><b>${fin.us}</b> <span class="dim">–</span> <b>${fin.them}</b> <span class="dim">vs ${esc(fin.opponent)}${fin.ot ? ' · OT' : ''}</span></div><div class="dim" style="font-size:12px">${esc(fin.venue || '')}</div>` : ''}
     <div class="kv cer-kv">${$t('career.b_season_record_b')}<span>${c.record.w}-${c.record.l}${c.record.t ? '-' + c.record.t : ''}</span>${$t('career.b_playoffs_b_2')}<span>${c.playoffs.w}-${c.playoffs.l}</span>${$t('career.b_beast_bowl_b')}<span>${fin ? `${$t('career.won_2', { us: fin.us, them: fin.them })}` : $t('career.won')}</span>${c.captain ? `${$t('career.b_captain_b')}<span>${esc((c.starters.find((m) => m.id === c.captain) || {}).name || '')}</span>` : ''}</div>
@@ -67,11 +67,11 @@ export function registerCeremony(Router, app) {
       return `<div class="ceremony ${reduced ? 'sc-summary reduced' : 'sc-final'}" id="ceremony" style="--team:${c.color};--turf-a:${P.b};--turf-b:${P.c};--end:${P.end}">
         <div class="cer-stage">
           <div class="cer-stands" aria-hidden="true"></div><div class="cer-turf" aria-hidden="true"></div><div class="cer-lights" aria-hidden="true"></div>
-          <div class="cer-board"><div class="cer-board-label">${$t('career.final', { fin: fin?.ot ? ' · OT' : '' })}</div><div class="cer-board-score"><span style="color:${c.color}">${esc(TEAM_META[c.club]?.abbr || c.club)}</span> <b>${fin ? fin.us : ''}</b> – <b>${fin ? fin.them : ''}</b> <span>${esc(TEAM_META[fin?.opponent]?.abbr || fin?.opponent || '')}</span></div></div>
+          <div class="cer-board"><div class="cer-board-label">${$t('career.final', { fin: fin?.ot ? ' · OT' : '' })}</div><div class="cer-board-score"><span style="color:${TEAM_META[c.club]?.ink || c.color}">${esc(TEAM_META[c.club]?.abbr || c.club)}</span> <b>${fin ? fin.us : ''}</b> – <b>${fin ? fin.them : ''}</b> <span>${esc(TEAM_META[fin?.opponent]?.abbr || fin?.opponent || '')}</span></div></div>
           <div class="cer-banner"><span>${$t('career.beast_bowl_2')}</span>${$t('career.b_champions_b')}</div>
           <div class="cer-bench">${roster}</div>
           <div class="cer-starters">${starters}</div>
-          <div class="cer-trophy">${TROPHY}${cap ? `<div class="cer-captain">${monsterSprite(cap, 48)}<div class="cer-cap-name">${$t('career.lifts_the_trophy', { name: esc(cap.name) })}</div></div>` : ''}<div class="cer-club" style="color:${c.color}">${esc(c.club)}</div></div>
+          <div class="cer-trophy">${TROPHY}${cap ? `<div class="cer-captain">${monsterSprite(cap, 48)}<div class="cer-cap-name">${$t('career.lifts_the_trophy', { name: esc(cap.name) })}</div></div>` : ''}<div class="cer-club" style="color:${TEAM_META[c.club]?.ink || c.color}">${esc(c.club)}</div></div>
           <div class="cer-confetti" aria-hidden="true">${confetti}</div>
           <div class="cer-caption" aria-live="polite"></div>
           <div class="cer-scene-label"></div>

@@ -73,7 +73,7 @@ export const WEATHER = Object.freeze({
 /**
  * Each club's home stadium. A Gym Leader's club plays on its type's field, with that field's special look and (where the field
  * has one) its bonus; that is the only place the field appears. Every other club's home is ordinary grass (owner, 2026-11-22),
- * including five that had elemental fields in the 16-club league. Names marked provisional await the owner's identity sheet.
+ * including five that had elemental fields in the 16-club league. The names are the owner's (the eight corrected on 2026-11-23 keep their text keys).
  */
 export const STADIUMS = Object.freeze({
   // Veyra
@@ -85,14 +85,14 @@ export const STADIUMS = Object.freeze({
   'Canyon Crushers': { name: t('stadiums.crusher_canyon'), env: 'desert' },
   'Sundown Drakes': { name: t('stadiums.sundown_mesa_field'), env: 'grass' },
   'Thunder Mesa Blitz': { name: t('stadiums.thunderhead_stadium'), env: 'storm' },
-  'Goldhaven Royals': { name: t('stadiums.crown_field'), env: 'grass', provisional: true },
-  'Riverbend Rapids': { name: t('stadiums.rapids_run_park'), env: 'grass', provisional: true },
-  'Pinecrest Wardens': { name: t('stadiums.warden_lodge_field'), env: 'grass', provisional: true },
+  'Goldhaven Royals': { name: t('stadiums.crown_field'), env: 'grass' },
+  'Riverbend Rapids': { name: t('stadiums.rapids_run_park'), env: 'grass' },
+  'Pinecrest Wardens': { name: t('stadiums.warden_lodge_field'), env: 'grass' },
   'Skyvale Cyclones': { name: t('stadiums.skyvale_summit'), env: 'grass' },
-  'Emberfall Infernos': { name: t('stadiums.the_cinder_bowl'), env: 'volcanic', provisional: true },
-  'Coral Bay Tides': { name: t('stadiums.coral_bay_reef_park'), env: 'grass', provisional: true },
+  'Emberfall Infernos': { name: t('stadiums.the_cinder_bowl'), env: 'volcanic' },
+  'Coral Bay Tides': { name: t('stadiums.coral_bay_reef_park'), env: 'grass' },
   'Cliffhaven Chargers': { name: t('stadiums.cliffside_arena'), env: 'sky' },
-  'Palm Isle Mystics': { name: t('stadiums.mystic_lagoon_field'), env: 'grass', provisional: true },
+  'Palm Isle Mystics': { name: t('stadiums.mystic_lagoon_field'), env: 'grass' },
   // Koruun
   'Stonehaven Bastions': { name: t('stadiums.stonehaven_field'), env: 'grass' },
   'Eastport Phantoms': { name: t('stadiums.gaslight_park'), env: 'shadow' },
@@ -103,12 +103,12 @@ export const STADIUMS = Object.freeze({
   'Sunfire Solars': { name: t('stadiums.sunfire_coliseum'), env: 'radiant' },
   'Palmetto Wyrms': { name: t('stadiums.palmetto_grove'), env: 'dragon' },
   'Thornwood Wildroots': { name: t('stadiums.elderroot_stadium'), env: 'grass' },
-  'Silvergrove Arcanists': { name: t('stadiums.silvergrove_athenaeum'), env: 'grass', provisional: true },
-  'Mossvale Quakes': { name: t('stadiums.faultline_field'), env: 'grass', provisional: true },
-  'Fernhaven Wisps': { name: t('stadiums.wispwood_park'), env: 'grass', provisional: true },
-  'Aetheria Seers': { name: t('stadiums.the_seers_observatory'), env: 'oracle', provisional: true },
-  'Deepwater Chompers': { name: t('stadiums.deepwater_trench'), env: 'grass', provisional: true },
-  'Mistport Veils': { name: t('stadiums.mistport_quay'), env: 'grass', provisional: true },
+  'Silvergrove Arcanists': { name: t('stadiums.silvergrove_athenaeum'), env: 'grass' },
+  'Mossvale Quakes': { name: t('stadiums.faultline_field'), env: 'grass' },
+  'Fernhaven Wisps': { name: t('stadiums.wispwood_park'), env: 'grass' },
+  'Aetheria Seers': { name: t('stadiums.the_seers_observatory'), env: 'oracle' },
+  'Deepwater Chompers': { name: t('stadiums.deepwater_trench'), env: 'grass' },
+  'Mistport Veils': { name: t('stadiums.mistport_quay'), env: 'grass' },
   'Westhaven Pirates': { name: t('stadiums.corsair_harbor_stadium'), env: 'forest', variant: 'coastal' }, // the Nature Gym, by the sea
 });
 

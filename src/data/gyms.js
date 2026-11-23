@@ -34,7 +34,9 @@ export const isGymClub = (club) => !!GYM_BY_CLUB[club];
  * Fire, Nature, Wind and Psychic now have Gym Leaders who do, and whether these four should need their badge like the other eight
  * is an OPEN OWNER DECISION (the specification asks for approval before that progression rule changes), so the rule is unchanged.
  */
-export const FREE_LEGENDARIES = Object.freeze(['pyroclast', 'elderoot', 'tempestra', 'astralux']);
+// Owner ruling, 2026-11-23: there are none any more. All twelve Legend Tracks need their Gym Leader's badge, held now. (Until then
+// Pyroclast, Elderoot, Tempestra and Astralux could be tracked without one.) The list is kept, empty, for the code that reads it.
+export const FREE_LEGENDARIES = Object.freeze([]);
 
 /** Quality offset by tier, plus growth per season and after the player's first win over them (GDD §15.3). */
 export const GYM_TIER = Object.freeze({ early: 1, mid: 4, late: 7 });

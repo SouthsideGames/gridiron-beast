@@ -106,6 +106,8 @@ export function acceptJob(f,club,{reopenContracts}={}) {
     f.lineupManual ||= {}; f.depth ||= {}; f.campaign ||= emptyCampaign();
     // The coach's badges, and the count of wins over each Gym Leader, go with the coach to the new club (also on a return to an old one).
     f.campaign.badges=structuredClone(assets.campaign?.badges || {}); f.campaign.gymWins=structuredClone(assets.campaign?.gymWins || {});
+    // So do the Legend Tracks: the tracks added, the legendaries unlocked and the seasons each has been seen (owner, 2026-11-23).
+    for(const k of ['tracks','unlocked','legendSeen']) f.campaign[k]=structuredClone(assets.campaign?.[k] || {});
     delete f.campaign.badges[club]; // a coach who takes over a Gym Leader's club does not hold that club's own badge
     f.lifecycle={status:'active'}; f.game=null; f.lastGame=null; f.scenes=[]; f.postseason=null; f.legendPick=null;
     const div=DIVISIONS[divisionOf(club)] || [], rivals=div.filter(c=>c!==club), rival=createRng(hashString(`${f.seed}|rival|${club}`)).pick(rivals);

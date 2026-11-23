@@ -281,6 +281,10 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .hint-note { border-color: #6ee7a0; margin-bottom: 8px; }
 
 .team-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; border: 1px solid rgba(255,255,255,.35); }
+/* A club's three approved colours: primary, secondary, accent. */
+.team-swatch { display: inline-flex; vertical-align: -2px; width: 30px; height: 14px; border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,.4); flex: none; }
+.team-swatch i { display: block; height: 100%; }
+.team-swatch i:nth-child(1) { width: 50%; } .team-swatch i:nth-child(2) { width: 30%; } .team-swatch i:nth-child(3) { width: 20%; }
 .po-conf { margin-top: 8px; }
 .po-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .po-row { display: flex; align-items: center; gap: 8px; padding: 6px 6px; border-radius: 8px; border: 1px solid transparent; }
@@ -2152,7 +2156,8 @@ html[data-reduced-motion="1"] .draft-stage > :last-child { animation:none; }
 .pregame .venue-card { border-top-color: var(--line); border-right-color: var(--line); border-bottom-color: var(--line); }
 /* Live game scoreboard (Match Day look, 2026-11-19): each club's colour glows at its end; the clock sits on a dark plaque. Same size. */
 .scoreboard { border-width: 1px; border-radius: 12px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--away, #333) 30%, transparent), transparent 32%, transparent 68%, color-mix(in srgb, var(--home, #333) 30%, transparent)), linear-gradient(180deg, #16302a, #0d1c16);
+  /* each club's primary fading in from its side, over a thin band of its secondary along the bottom edge */
+  background: linear-gradient(90deg, color-mix(in srgb, var(--away, #333) 30%, transparent), transparent 32%, transparent 68%, color-mix(in srgb, var(--home, #333) 30%, transparent)), linear-gradient(90deg, var(--away2, transparent) 0 26%, transparent 26% 74%, var(--home2, transparent) 74% 100%) bottom / 100% 3px no-repeat, linear-gradient(180deg, #16302a, #0d1c16);
   box-shadow: 0 0 0 1px rgba(255,255,255,.05) inset, 0 4px 12px rgba(0,0,0,.35); }
 .scoreboard .score { font-variant-numeric: tabular-nums; font-weight: 900; text-shadow: 0 2px 0 #000; }
 .scoreboard .mid { background: rgba(0,0,0,.35); border-radius: 8px; padding: 2px 10px; }
