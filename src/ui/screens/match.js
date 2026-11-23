@@ -44,7 +44,6 @@ import { buildFx, shakeBetween, endHold } from '../ability-fx.js';
 import { kickPlay, presnapFields, presnapFx, createRevealClock, abilityTicks, absentMonsters, dexAbilityName, createAbsenceTracker, servedVacancies, inspectInfo, lastPlayNotes, findMonster, conditionalNotes } from '../fx/match-fx.js';
 import { fxOptionsFor, reducedFlash } from '../flash-pref.js';
 import { matchupEdges } from '../../sim/type-matchups.js';
-import { weatherClass } from '../stadium-art.js';
 import { venueHtml } from '../stadium-preview.js';
 import { replayReason, replayPlan, replayPosition, REPLAY } from '../replay.js';
 import { qbReadsShown } from '../qb-read-ui.js';
@@ -407,7 +406,7 @@ export function registerMatchScreens(Router, app) {
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? $t('match.your_ball') : $t('match.your_defense')}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? $t('match.home_2') : $t('match.away_2')}${G.mode === 'key' ? $t('match.key_moments_2') : ''}</span></div>
         ${edgeStrip(f, s, teams, me, pre8?.returning || [])}`;
     const wrapClass = `field-wrap${tdFlash}${venueClass(s.venue)}${anim?.replay ? ' replaying' : ''}`;
-    const over = `${weatherLayer(f, s.venue)}${openingKickoff ? introPlateHtml(s.venue, esc) + kickoffCaptains(f, s, teams) : ''}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> ${$t('match.instant_replay_b_b', { label: esc(anim.replay.reason.label) })}</div><div class="replay-slow" aria-hidden="true">${$t('match.slow_mo')}</div>` : banner}${!anim && fresh && G.lastEvent?.turnover ? `<div class="turnover-cue" role="status">${esc(G.lastEvent.turnover)}</div>` : ''}`;
+    const over = `${s.finished && !anim ? finalCelebration(f, s, teams) : ''}${openingKickoff ? introPlateHtml(s.venue, esc) + kickoffCaptains(f, s, teams) : ''}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> ${$t('match.instant_replay_b_b', { label: esc(anim.replay.reason.label) })}</div><div class="replay-slow" aria-hidden="true">${$t('match.slow_mo')}</div>` : banner}${!anim && fresh && G.lastEvent?.turnover ? `<div class="turnover-cue" role="status">${esc(G.lastEvent.turnover)}</div>` : ''}`;
     // N9c: a field the snap creates only if its creator is in the play (Runway, Bloom Break, Crosswind Rescue) is marked as conditional
     const warning = !anim ? (s.t8?.preChoice?.foresight || []).map((m) => `<div class="t8-conditional" role="note">${$t('match.foresight_is_marked_blitzing_risks_confused', { name: esc(findMonster(teams, m.targetMid)?.monster?.name || m.targetSlot) })}</div>`).join('') + (s.t8?.preChoice?.prism || []).map(() => `<div class="t8-conditional" role="note">${$t('match.prism_break_shattered_an_existing_enemy')}</div>`).join('') : '';
     const cond = !anim && pre8?.notes?.length ? `<div class="t8-conditional" role="note">${pre8.notes.map((n) => `<span class="${n.shown ? '' : 'held'}" data-ability="${esc(n.ability)}">◇ <b>${esc(n.name)}</b> ${n.shown ? `${$t('match.is_created_at_the_snap_only', { creator: esc(n.creator) })}` : `${$t('match.is_not_created_is_not_on', { creator: esc(n.creator) })}`}</span>`).join('')}</div>` : '';
@@ -476,8 +475,21 @@ export function registerMatchScreens(Router, app) {
   }
 
   // ------------------------------------------------------------ stadium (GDD §33)
-  /** The weather layer over the field: CSS only (no redraw per frame), off with reduced motion; indoors never. */
-  function weatherLayer(f, venue) { const c = weatherClass(venue); return c && !f.settings.reducedMotion ? `<div class="weather ${c}" aria-hidden="true"></div>` : ''; }
+  // Weather is no longer drawn over the field (owner's decision, 2026-11-23: the rain, snow and wind layers did not look good).
+  // A game's venue still records its weather, so saved games are unchanged; nothing in the simulation ever read it.
+  /**
+   * When the game is over, the winners celebrate on the field: nine of their starters jumping together, confetti in the club's
+   * colour, and a line saying who won. Whichever side won, so after a defeat it is the opponent celebrating. Nothing for a tie.
+   * Presentation only. Stadium Effects: Full has the jumping and confetti, Reduced shows the group standing still, Off nothing.
+   */
+  function finalCelebration(f, s, teams) {
+    const level = stadiumFxLevel(f.settings); const side = s.winner; if (level === 'off' || !side || !teams?.[side]) return '';
+    const seen = new Set(); const pick = (unit, n) => Object.values(teams[side][unit] || {}).filter((m) => m?.id && !m.injury && !seen.has(m.id) && seen.add(m.id)).slice(0, n);
+    const members = [...pick('offense', 5), ...pick('defense', 4)]; if (!members.length) return '';
+    const club = s[side]; const moving = level === 'full';
+    const confetti = moving ? `<div class="final-confetti">${Array.from({ length: 18 }, (_, i) => `<i style="left:${(i * 5.6 + (i % 3) * 1.7).toFixed(1)}%;--d:${(2.4 + (i % 5) * 0.35).toFixed(2)}s;animation-delay:-${((i * 0.37) % 3).toFixed(2)}s;background:${i % 3 === 0 ? '#fff' : i % 3 === 1 ? club.color : '#ffd24a'}"></i>`).join('')}</div>` : '';
+    return `<div class="final-celebration${moving ? ' moving' : ''}" style="--team:${club.color}">${confetti}<div class="final-party" role="img" aria-label="${esc($t('match.final_celebrate', { club: club.name }))}">${members.map((m, i) => `<span style="animation-delay:-${(i * 0.11).toFixed(2)}s">${monsterSprite(m, 44, { flip: i % 2 === 1 })}</span>`).join('')}</div><div class="final-cheer">${esc($t('match.final_celebrate', { club: club.name }))}</div></div>`;
+  }
   function venueClass(venue) { return venue?.env ? ` env-${venue.env}` : ''; }
 
   // ------------------------------------------------------------ type matchups (GDD §32.3–32.4)
