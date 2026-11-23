@@ -12,10 +12,10 @@ function hsl(h, s, l) { return `hsl(${h} ${s}% ${l}%)`; }
 
 const indTint = (m, sp) => createRng(hashString(`ind|${m?.id || m?.name || sp.id}`)).int(7) - 3;
 /** Returns an inline SVG string. `size` is the CSS pixel size. */
-export function monsterSprite(m, size = 48, { tint = null, flip = false } = {}) {
+export function monsterSprite(m, size = 48, { tint = null, flip = false, kit = null } = {}) {
   const sp = formOf(m);
   const t = tint ?? indTint(m, sp);
-  return sprite16(sp, size, { tint: t, flip });
+  return sprite16(sp, size, { tint: t, flip, kit });
 }
 
 /**
@@ -24,12 +24,12 @@ export function monsterSprite(m, size = 48, { tint = null, flip = false } = {}) 
  * (species, name, stage, id), so an evolution between plays is picked up.
  */
 const refCache = new WeakMap();
-export function monsterSpriteRef(m, { flip = false } = {}) {
-  const stamp = `${m?.species}|${m?.name}|${m?.stage || 0}|${m?.id}`;
+export function monsterSpriteRef(m, { flip = false, kit = null } = {}) {
+  const stamp = `${m?.species}|${m?.name}|${m?.stage || 0}|${m?.id}|${kit ? `${kit.jersey}|${kit.trim}` : ''}`; // a uniform is part of the art (team-kit.js)
   let c = m && typeof m === 'object' ? refCache.get(m) : null;
   if (!c || c.stamp !== stamp) { const sp = formOf(m); c = { stamp, sp, tint: indTint(m, sp), refs: [null, null] }; if (m && typeof m === 'object') refCache.set(m, c); }
   const i = flip ? 1 : 0;
-  return c.refs[i] || (c.refs[i] = sprite16Symbol(c.sp, { tint: c.tint, flip }));
+  return c.refs[i] || (c.refs[i] = sprite16Symbol(c.sp, { tint: c.tint, flip, kit }));
 }
 
 /** Small type glyph (used in lists) as an inline SVG. */

@@ -1,4 +1,4 @@
-import { generateLeagueArchive } from './preleague-history.js';
+import { generateLeagueArchive, canonCast } from './preleague-history.js';
 import { reserveIndividualName, ensureIndividualNames } from '../data/individual-names.js';
 import { commitGameInjuries } from '../sim/substitutions.js';
 import * as GM from './gm-career.js';
@@ -28,7 +28,7 @@ export { MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
 export { pickKey, currentClassYear, tradableYears, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, describePick, canTakePlayer } from './trades.js';
 export * as Stats from './stats.js';
 export { GROUP_SLOTS } from './roster.js';
-import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
+import { REG_GAMES, REG_WEEKS, LAST_WEEK, PLAYOFF_ROUNDS, CONFERENCE_ROUND, FINAL_ROUND, CONFERENCE_NAMES, DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
 import { retirementPass, agingContext, nativeAging, retirementOutlook } from './retirement.js';
 import { recordRetiredMonsterCandidates, electMonsterHallOfFame } from './monster-hof-voting.js';
@@ -42,7 +42,7 @@ export { ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
 import { dexKnowledgeGame, knowledgeEventId, dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise } from './dex-store.js';
 import { clubIdentity, identityCoach, lineupPreference, trainingPriority } from '../data/identities.js';
-import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, FREE_LEGENDARIES, gymGrowth } from '../data/gyms.js';
+import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, gymGrowth } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
 import { yearOf } from '../data/calendar.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
@@ -87,6 +87,12 @@ import { t as $t, line as $L, lineParts as $P, lineText, lineFields, lineField, 
 
 export const SCHEMA_VERSION = 10; // 10: Task 8, the fresh-save break (Dex individuals with `m.dev`; spec §15): saves 6, 8 and 9 are refused with a Start New Franchise message (save.js). Earlier: 9 Task 7 free agency, 8 the league registry, 6 every save before it
 export const LEAGUE_SCHEMA_VERSION = 8;
+/**
+ * The league a franchise was created in: 32 clubs since the expansion of 2026-11-23. A franchise saved in the 16-club league has no
+ * stamp; it is refused on load like a save from before Task 8 (the owner allowed those test saves to be reset, not migrated) and
+ * is left on the device unchanged. Settings, achievements and every other franchise are untouched.
+ */
+export const LEAGUE_FORMAT = 32;
 export const LEGACY_SCHEMA_VERSION = 6;
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 export const DAY_ACTIONS = [$t('franchise.scout_a_region'), 'Recruit', $t('franchise.training_focus'), $t('franchise.scout_opponent'), $t('franchise.game_plan'), $t('franchise.lineup_check'), 'Game day'];
@@ -102,7 +108,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   const rivalTeam = rivalChoices.includes(rival) ? rival : rng.pick(rivalChoices);
   const roster = createRoster(rng.seed(), { cornerstone, cornerstoneOffense, cornerstoneDefense, quality: 56 });
   const f = {
-    schemaVersion: SCHEMA_VERSION, uid: newUid(), createdAt: new Date().toISOString(), seed, rngState: rng.state, // uid: the permanent identity of this franchise universe (GDD §42.3)
+    schemaVersion: SCHEMA_VERSION, leagueFormat: LEAGUE_FORMAT, uid: newUid(), createdAt: new Date().toISOString(), seed, rngState: rng.state, // uid: the permanent identity of this franchise universe (GDD §42.3)
     owner: { ...owner }, club, tier: 'challenger', staff: {},
     roster, lineupManual: {}, depth: {}, aging: nativeAging(), // born under the ageing rules of GDD §55: no transition
     season: null, week: blankWeek(), game: null,
@@ -114,6 +120,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
     tutorial: { seen: {} },
     pool: {}, staffContracts: {}, staffRaise: {}, offseason: null,
   };
+  if (persistentLeague && leagueArchive) for (const c of canonCast()) reserveIndividualName(f, { id: c.id, name: c.name }); // the league's canon players keep their names in every franchise (preleague-history.js)
   for (const m of roster) reserveIndividualName(f, m);
   // Contracts (GDD §18.1): about 35% of the founding roster, never a cornerstone, is on a one-year deal, so the first
   // offseason already brings renewals, walks and the market. Chosen by a hash of the id, so no rng is consumed.
@@ -130,7 +137,6 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
     // The league's eight seasons before the owner arrived (preleague-history.js). Generated once, here, from the seed alone: it
     // draws nothing from the franchise generator, so the draft class that follows is the one it would have been without it.
     f.preLeagueHistory = generateLeagueArchive(f, { quality: (name) => clubQuality(f, name, 1) });
-    for (const id of f.preLeagueHistory.legends) { const c = f.preLeagueHistory.careers[id]; reserveIndividualName(f, { id: c.id, name: c.name }); } // a retired legend's name is his alone (reserved through a copy: the archive is not touched)
   }
   openCreationDraft(f);
   ensureIndividualNames(f);
@@ -269,11 +275,29 @@ function bestSchemeFor(f, role) {
 }
 
 // ------------------------------------------------------------ Legend Tracks (GDD §15.8)
-/** Legendaries a champion may track: the four no club holds, plus gym legendaries whose badge the player holds; never one already unlocked or signed. */
+/**
+ * The twelve Legend Tracks and where each stands (owner ruling, 2026-11-23). Every track belongs to a Gym Leader's legendary and
+ * needs that Gym Leader's badge HELD NOW:
+ *   'locked'    no badge and no progress: nothing can be done yet;
+ *   'active'    the badge is held: a Beast Bowl champion may add a track, and a completed track's legendary can be scouted;
+ *   'paused'    an incomplete track whose badge was lost: nothing advances, the progress is kept, and winning the badge back
+ *               resumes exactly where it stood;
+ *   'complete'  all three tracks are done: the legendary can be scouted for good, badge or no badge (owner 2026-11-23). A
+ *               completed track never goes back to 'locked' or 'paused';
+ *   'recruited' the legendary is on the roster. He is never taken away, badge or no badge.
+ * Badges, tracks and unlocks all travel with the coach to a new club (gm-career.js).
+ */
+export function legendTracks(f) {
+  const c = f.campaign || {};
+  return GYMS.map((g) => { const id = g.legendary; const held = !!c.badges?.[g.club]; const tracks = c.tracks?.[id] || 0; const unlocked = !!c.unlocked?.[id]; const recruited = f.roster.some((m) => m.species === id);
+    return { id, club: g.club, badge: g.badge, element: g.element, leader: g.coach.name, held, tracks, needed: LEGEND_RULES.tracksNeeded, unlocked, recruited, species: SPECIES_DEX.find((s) => s.id === id),
+      state: recruited ? 'recruited' : unlocked ? 'complete' : held ? 'active' : tracks ? 'paused' : 'locked' }; });
+}
+/** Can this legendary turn up in scouting: his track is complete (for good), or its Gym Leader's badge is held now? */
+export const legendTrackActive = (f, speciesId) => { const g = GYMS.find((x) => x.legendary === speciesId); return !!g && (!!f.campaign?.unlocked?.[speciesId] || !!f.campaign?.badges?.[g.club]); };
+/** Legendaries a champion may add a track to: a held badge's legendary, not yet unlocked and not on the roster. */
 export function legendChoices(f) {
-  const held = Object.keys(f.campaign?.badges || {});
-  const ids = [...FREE_LEGENDARIES, ...GYMS.filter((g) => held.includes(g.club)).map((g) => g.legendary)];
-  return ids.filter((id) => !f.campaign?.unlocked?.[id] && !f.roster.some((m) => m.species === id)).map((id) => ({ id, tracks: f.campaign?.tracks?.[id] || 0, species: SPECIES_DEX.find((s) => s.id === id) }));
+  return legendTracks(f).filter((t) => t.state === 'active' && !t.unlocked).map((t) => ({ id: t.id, tracks: t.tracks, species: t.species }));
 }
 export function chooseLegendTrack(f, speciesId) {
   if (!f.legendPick || f.legendPick.resolved) return { ok: false, reason: $t('franchise.no_legend_track_to_choose') };
@@ -397,9 +421,9 @@ export function backfillAchievements(f) {
   if (!f?.campaign || f.achievementsBackfilled) return [];
   f.achievementsBackfilled = true; f.achievements ||= {}; f.scenes ||= [];
   const hist = f.history || []; const c = f.campaign; const badges = Object.keys(c.badges || {}).length;
-  const facts = { first_win: c.wins >= 1, rival_beaten: Object.entries(c.h2h || {}).some(([t, h]) => t === f.rivals?.[f.tier]?.team && h.w >= 1), first_badge: badges >= 1, half_badges: badges >= 4, all_badges: badges >= 8,
-    winning_season: hist.some((h) => h.record.w > h.record.l), undefeated: hist.some((h) => h.record.w >= 9 && h.record.l === 0), first_playoffs: hist.some((h) => h.playoffs) || !!(f.season?.playoffs && Object.values(f.season.playoffs.seeds).flat().includes(f.club)),
-    conference_title: hist.some((h) => h.champion === f.club) || (f.season?.playoffs?.results || []).some((r) => r.round === 2 && r.winner === f.club), first_title: (c.titles || 0) >= 1, second_title: (c.titles || 0) >= 2, first_award: (c.awards || 0) >= 1,
+  const facts = { first_win: c.wins >= 1, rival_beaten: Object.entries(c.h2h || {}).some(([t, h]) => t === f.rivals?.[f.tier]?.team && h.w >= 1), first_badge: badges >= 1, half_badges: badges >= GYMS.length / 2, all_badges: badges >= GYMS.length,
+    winning_season: hist.some((h) => h.record.w > h.record.l), undefeated: hist.some((h) => h.record.w >= REG_GAMES && h.record.l === 0), first_playoffs: hist.some((h) => h.playoffs) || !!(f.season?.playoffs && Object.values(f.season.playoffs.seeds).flat().includes(f.club)),
+    conference_title: hist.some((h) => h.champion === f.club) || (f.season?.playoffs?.results || []).some((r) => r.round === CONFERENCE_ROUND && r.winner === f.club), first_title: (c.titles || 0) >= 1, second_title: (c.titles || 0) >= 2, first_award: (c.awards || 0) >= 1,
     wins_10: c.wins >= 10, wins_30: c.wins >= 30, wins_50: c.wins >= 50, legend_tracked: Object.values(c.tracks || {}).some((n) => n >= 1), legend_unlocked: Object.keys(c.unlocked || {}).length >= 1, hof_eligible: hallOfFameProgress(f).eligible, traded_up: (f.trades || []).length >= 1 };
   const got = [];
   for (const a of ACHIEVEMENTS) if (!f.achievements[a.id] && facts[a.id]) { f.achievements[a.id] = { year: f.season?.year || 1, week: f.season?.week || 1, backfilled: true }; const vars = sceneVars(f, {}); f.scenes.push({ id: a.id, ctx: vars }); got.push(a.id); stampGlobal(f, a, vars); }
@@ -566,7 +590,7 @@ export function replaceStaff(f, id) {
   else { const budget = salarySummary(f, c.salary - (current?.salary || 0)); if (budget.over) return { ok: false, reason: $t('franchise.exceeds_the_salary_cap') }; }
   // Firing mid-season costs: the rest of the outgoing coach's salary stays on the books this season.
   let severance = 0;
-  if (current && f.season && !f.season.finished) { severance = Math.round(current.salary * Math.max(0, (10 - (f.season.week || 1)) / 10)); f.deadCap = (f.deadCap || 0) + severance; }
+  if (current && f.season && !f.season.finished) { severance = Math.round(current.salary * Math.max(0, (REG_WEEKS - (f.season.week || 1)) / REG_WEEKS)); f.deadCap = (f.deadCap || 0) + severance; }
   f.staff[c.role] = id; (f.staffContracts ||= {})[c.role] = newContract(f.season?.year || 1); (f.staffRaise ||= {})[c.role] = 1; withdrawStaffRenewal(f, c.role);
   news(f, $P(c.name, ` hired as `, c.role.replace(/_/g, ' '), (current ? $L('franchise.replacing', { name: current.name }) : ''), (severance ? $P(` `, $L('franchise.cr_severance_this_season', { toLocaleString: severance.toLocaleString('en-US') })) : ''), `.`), 'roster');
   return { ok: true, replaced: current, severance };
@@ -782,7 +806,7 @@ export function schemeLock(f) { const rf = rosterFit(f); const on = (x) => x.tot
 export const DIFFICULTY = Object.freeze({
   rookie: { label: 'Rookie', quality: -4, iq: 0.6, text: $t('franchise.weaker_clubs_that_call_plays_loosely'), hof: $t('franchise.hall_of_fame_8_badges_1'), hofGoals: { badges: 8, titles: 1, wins: 30, awards: 2 }, commissionerPicks: 5 },
   pro: { label: 'Pro', quality: -1, iq: 1, text: $t('franchise.the_standard_league'), hof: $t('franchise.hall_of_fame_8_badges_2'), hofGoals: { badges: 8, titles: 2, wins: 50, awards: 3 }, commissionerPicks: 3 },
-  allstar: { label: 'All-Star', quality: 3, iq: 1.5, text: $t('franchise.stronger_clubs_whose_coaches_read_the'), hof: $t('franchise.hall_of_fame_8_badges_4'), hofGoals: { badges: 8, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
+  allstar: { label: 'All-Star', quality: 3, iq: 1.5, text: $t('franchise.stronger_clubs_whose_coaches_read_the'), hof: $t('franchise.hall_of_fame_8_badges_4'), hofGoals: { badges: 12, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
 });
 export const difficultyOf = (f) => DIFFICULTY[f?.settings?.difficulty] || DIFFICULTY.pro;
 /** Club quality for a season: base by difficulty, gym tier, growth per season, the title raising the floor, and "studied tape" after the player first beats a gym (GDD §15.3, §15.8). */
@@ -795,7 +819,7 @@ export function clubQuality(f, name, year = f.season?.year || 1) {
   const seasons = Math.max(0, year - 1);
   // Task 8 (N7f): initial strength only. No seasonal growth, title floor or 'studied tape' boost: a club changes through its own
   // roster (development, ageing, drafting, trades, free agency). `seasons` is kept for the signature, unused.
-  void seasons; const growth = gym ? GYM_TIER[gym.tier] : 0; const floor = 0;
+  void seasons; const growth = gym ? GYM_TIER[gym.tier] + (gym.balance || 0) : 0; const floor = 0; // `balance`: a Gym Leader's own correction to its tier's level (gyms.js)
   return Math.round(base + (h % 9) - 4 + (f.rivals[f.tier]?.team === name ? 2 : 0) + difficultyQuality(D, !!gym) + growth + floor);
 }
 /** Task 8 D7 (owner N8b, AI_IDENTITIES.md §5 q4): Rookie's −4 lowers ordinary clubs only; a gym keeps the standard (Pro) level on
@@ -946,7 +970,7 @@ export function startSeason(f, year) {
   if (f.rewardLedger) pruneLedger(f.rewardLedger, (id) => Number(id.split(':')[1]) >= year); // completed activities of earlier seasons are no longer needed
   const records = Object.fromEntries(ALL_TEAMS.map((t) => [t, blankRecord()]));
   const lastRecords = f.season?.records || null;
-  f.season = { year, week: 1, day: 0, records, results: [], playoffs: null, champion: null, finished: false, schedule: teamSchedule(year, f.club), leagueStats: {}, playoffStats: {}, recorded: [], expectations: {} };
+  f.season = { year, week: 1, day: 0, records, results: [], playoffs: null, champion: null, finished: false, schedule: teamSchedule(year, f.club, f.seed), leagueStats: {}, playoffStats: {}, recorded: [], expectations: {} };
   f.week = blankWeek();
   for (const m of f.roster) { m.fatigue = 0; if (m.yearsPro == null) m.yearsPro = Math.max(0, (m.age || 22) - 22); rolloverMonster(m, { year, team: f.club }); }
   if (hasLeague(f)) { for (const club of leagueClubs(f)) for (const m of clubRoster(f, club)) { m.fatigue = 0; rolloverMonster(m, { year, team: club }); } notePreseason(f, (c) => aiTeam(f, c, year)); noteStaffPreseason(f, year, strengthTable(f)); } // every persistent monster opens a new season book; the club's strength now is what its growth is measured from
@@ -1443,14 +1467,14 @@ export function answerTradeCall(f, accept) {
 
 /** The commissioner's three goal offers for this season (GDD §17.4). */
 /** The Board's forecast for the player's club this season (GDD §29): its preseason talent against the league's average. */
-export function boardForecastFor(f, games = 9) {
+export function boardForecastFor(f, games = REG_GAMES) {
   const ex = f.season?.expectations || {}; const talents = ALL_TEAMS.map((t) => ex[t]?.talent).filter(Number.isFinite);
   if (!talents.length || !Number.isFinite(ex[f.club]?.talent)) return { winPct: 0.5, wins: games / 2 };
   return boardForecast({ talent: ex[f.club].talent, leagueTalent: talents.reduce((a, b) => a + b, 0) / talents.length, games });
 }
 export function commissionerGoals(f) {
   ensureBoard(f);
-  const games = f.season.schedule.filter((g) => !g.bye).length || 9;
+  const games = f.season.schedule.filter((g) => !g.bye).length || REG_GAMES;
   const gyms = new Set(f.season.schedule.filter((g) => !g.bye && GYM_BY_CLUB[g.opponent] && !badgeOf(f, g.opponent)).map((g) => g.opponent)).size; // badges still to win
   return goalOffers(f, { expectedWinPct: boardForecastFor(f, games).winPct, gamesInSeason: games, gymsThisSeason: gyms });
 }
@@ -1486,12 +1510,17 @@ export function unspentPoints(f) { return f.roster.filter((m) => (m.points || 0)
 export function coachNameOf(f, team) { return headCoachName(team, { seed: f.seed, playerClub: f.club, playerCoach: staffMember(f, 'head_coach')?.name || null }); }
 export const currentFixture = (f) => f.season.schedule.find((g) => g.week === f.season.week) || null;
 export const isBye = (f) => !!currentFixture(f)?.bye;
-export const inPlayoffs = (f) => f.season.week > 10;
-export const LAST_REGULAR_WEEK = 10;
+export const inPlayoffs = (f) => f.season.week > REG_WEEKS;
+export const LAST_REGULAR_WEEK = REG_WEEKS; // week 15 since the 32-club league (week 10 before)
 /** The final regular-season week and the playoffs: no region scouting or recruiting; Mondays scout the draft class, Tuesdays are recovery days (GDD §19). */
 export const draftWindow = (f) => f.season.week >= LAST_REGULAR_WEEK && !f.season.finished;
 export function opponentName(f) { const fx = currentFixture(f); if (fx && !fx.bye) return fx.opponent; const p = playoffFixture(f); return p ? (p.home === f.club ? p.away : p.home) : null; }
 export function playoffFixture(f) { const p = f.season.playoffs; if (!p) return null; return p.fixtures.find((g) => g.round === p.round && (g.home === f.club || g.away === f.club) && !g.result) || null; }
+/** Still in the playoffs: a seeded club that has not lost. (Seed 1 has no game in the Wild Card round and is alive all the same.) */
+export function playoffAlive(f, club = f.club) { const p = f.season.playoffs; if (!p) return false; return Object.values(p.seeds).flat().includes(club) && !p.results.some((r) => (r.home === club || r.away === club) && r.winner !== club); }
+/** The owner's club is resting this round: seed 1 in the Wild Card round. He watches the round (advancePlayoffs) and plays the next. */
+export function playoffBye(f) { return inPlayoffs(f) && !f.season.finished && !playoffFixture(f) && playoffAlive(f) && !f.season.playoffs?.champion; }
+/** Has the owner a game to play this week? (False for a resting top seed too: playoffBye says which; he advances the round instead.) */
 export function playerAlive(f) { return !inPlayoffs(f) || !!playoffFixture(f); }
 
 export function record(f) { return f.season.records[f.club]; }
@@ -1647,7 +1676,7 @@ export function pickCaptains(f, choice) {
   if (!offseasonCaptainsOpen(f)) return { ok: false, reason: $t('franchise.captains_are_chosen_in_the_offseason') };
   const cands = captainCandidates(f); const off = CP.checkPick(cands, 'offense', choice?.offense); if (!off.ok) return { ok: false, reason: `${$t('franchise.offense', { reason: off.reason })}` };
   const def = CP.checkPick(cands, 'defense', choice?.defense, { other: [off.pair.a, off.pair.b] }); if (!def.ok) return { ok: false, reason: `${$t('franchise.defense', { reason: def.reason })}` };
-  (f.partnerships ||= { v: 1, startedYear: f.season.year + 1, pairs: {}, captains: {}, credited: {} }).pick = { year: f.season.year + 1, offense: [off.pair.a, off.pair.b], defense: [def.pair.a, def.pair.b] };
+  (f.partnerships ||= { v: CP.RECORD_VERSION, startedYear: f.season.year + 1, pairs: {}, captains: {}, credited: {} }).pick = { year: f.season.year + 1, offense: [off.pair.a, off.pair.b], defense: [def.pair.a, def.pair.b] };
   return { ok: true, pick: f.partnerships.pick, offense: off.pair, defense: def.pair };
 }
 /** Commit one finished game's chemistry (once per game id) and write the milestones. Returns the committed rows. */
@@ -1688,7 +1717,7 @@ function simulateLeagueWeek(f) {
   ensureCaptains(f); // Captain Partnerships (GDD §27.4B): a season without captains yet gets them before its next games
   if (hasLeague(f)) { const deals = aiTrades(f, r, { year: f.season.year, cap: tierById(f.tier).cap, window: 'season' }); noteCaptainTrades(f, deals); }
   if (hasLeague(f) && hasFreeAgency(f) && f.season.week === EXTENSION_WEEK) { const st = (f.freeAgency.steps[f.season.year] ||= {}); if (!st.midExt) { st.midExt = aiExtensions(f); } } // R6: the mid-season extension window, once // weeks 2–8: an occasional deal between AI clubs (GDD §46); a traded captain leaves his partnership inactive
-  const fixtures = leagueSeasonFixtures(f.season.year).find((w) => w.week === f.season.week);
+  const fixtures = leagueSeasonFixtures(f.season.year, f.seed).find((w) => w.week === f.season.week);
   const results = [];
   if (fixtures && !fixtures.bye) {
     for (const g of fixtures.games) {
@@ -1697,7 +1726,7 @@ function simulateLeagueWeek(f) {
       const ig = { home: g.home, away: g.away, week: f.season.week }; const it = [[g.home, home.roster, g.away, home.chart], [g.away, away.roster, g.home, away.chart]];
       injuriesBeforeGame(f, it, ig); // Injury History (GDD §50): who misses this game
       const toss = leaguePregame(f, r, home, away);
-      const game = playGame({ home, away, venue: gameVenue(f, home.name, away.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
+      const game = playGame({ home, away, venue: gameVenue(f, home.name, away.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null, frames: 'last' });
       leagueTiebreak(f, r, home, away, game);
       aiAfterGame(f, home, game, 'home', r); aiAfterGame(f, away, game, 'away', r); // persistent rosters develop as they play (GDD §42.6, decision B)
       injuriesAfterGame(f, it, ig);
@@ -1753,7 +1782,8 @@ export function scoutRegion(f, regionName, { focus = null } = {}) {
   const count = (skill >= 80 ? 3 : skill >= 45 ? 2 : 1) + (scoutBonusActive(f) ? 1 : 0); // the board's expanded scouting department after a goal met (GDD §17.4)
   const prospects = [];
   // Species come from the region's elements by rarity weight; rares only in their home region from their week.
-  const unlocked = Object.keys(f.campaign?.unlocked || {}).map((id) => SPECIES_DEX.find((s) => s.id === id)).filter((sp) => sp && (sp.regions || [])[0] === regionName && !f.roster.some((m) => m.species === sp.id));
+  // (a completed track stays open for good; an unlocked legendary is never paused by a lost badge, owner 2026-11-23)
+  const unlocked = Object.keys(f.campaign?.unlocked || {}).filter((id) => legendTrackActive(f, id)).map((id) => SPECIES_DEX.find((s) => s.id === id)).filter((sp) => sp && (sp.regions || [])[0] === regionName && !f.roster.some((m) => m.species === sp.id));
   const pool = [...regionSpecies(regionName, region.types, f.season.week), ...unlocked]; // a legendary with three Legend Tracks is scoutable in its home region
   const rarityBonus = skill >= 80 ? 1.6 : skill >= 60 ? 1.25 : 1;
   const weights = pool.map((sp) => [sp.id, (sp.rarity === 'common' ? 60 : sp.rarity === 'uncommon' ? 30 * rarityBonus : sp.rarity === 'legendary' ? 14 * rarityBonus : 9 * rarityBonus)]);
@@ -2434,7 +2464,9 @@ export function finishSunday(f, gameState) {
   h2h[won ? 'w' : 'l'] += 1; h2h.last = won ? 'w' : 'l'; h2h.streakL = won ? 0 : h2h.streakL + 1;
   // The pregame reply: a confident word backed up is remembered; one that wasn't rattles the room.
   if (f.week.pregameReply === 'confident') { if (won) news(f, $L('franchise.you_said_youd_take_it_and', { opponent: m.opponent }), 'win'); else { f.rattled = true; news(f, $L('franchise.the_confident_talk_before_the_game'), 'loss'); } }
+  const heldBefore = !!f.campaign.badges?.[m.opponent];
   settleGymBadge(f, m, won, gameState.score[side], gameState.score[oppSide]);
+  const lostBadge = heldBefore && !f.campaign.badges?.[m.opponent] ? m.opponent : null; // the badge went back to its Gym Leader (shown on the final screen)
   // Level-ups are shown after the game and on the Career Timeline; the club log keeps evolutions and injuries.
   for (const e of events.filter((x) => x.kind !== 'xp' && x.kind !== 'levelup')) news(f, e.kind === 'levelup' ? $L('franchise.reached_level_ovr', { name: e.name, level: e.level, from: e.from, to: e.to, autoPoints: (f.settings.autoPoints ? '' : $L('franchise.2_attribute_points_to_spend_on'))}) : e.kind === 'evolve' ? $L('franchise.evolution_evolved_into_2', { from: `${e.name} (${e.from})`, to: e.to }) : e.kind === 'injury' ? $L('franchise.injured_out_weeks', { name: e.name, severity: e.severity, weeks: e.weeks, n: e.weeks }) : e.name, e.kind === 'evolve' ? 'win' : e.kind, e.id ? { mid: e.id, mname: e.name } : null);
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
@@ -2443,7 +2475,7 @@ export function finishSunday(f, gameState) {
   // Career Timeline (GDD §38): read-only, after the game's stats are in the books.
   careerAfterGame(f.roster, { year: f.season.year, week: f.season.week, club: f.club, playoffRound: playoffRoundNow, rival: !!m.rival, won, opponent: m.opponent, records: f.records });
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) noteEvolution(x, { year: f.season.year, week: f.season.week, club: f.club, from: e.from, to: e.to }); }
-  f.lastGame = { ...f.week.gameResult, events, partnerships: captainRows.filter((x) => x.club === f.club), captainNote, year: f.season.year, week: f.season.week, newBadge: f.campaign.badges[m.opponent]?.year === f.season.year && f.campaign.badges[m.opponent]?.week === f.season.week && won ? m.opponent : null };
+  f.lastGame = { ...f.week.gameResult, events, partnerships: captainRows.filter((x) => x.club === f.club), captainNote, year: f.season.year, week: f.season.week, newBadge: f.campaign.badges[m.opponent]?.year === f.season.year && f.campaign.badges[m.opponent]?.week === f.season.week && won ? m.opponent : null , lostBadge };
   { const rvTeam = f.rivals?.[f.tier]?.team; const vsRival = f.season.schedule.filter((g) => g.opponent === rvTeam && g.result);
     checkAchievements(f, 'sunday', { won, opponent: m.opponent, rival: rvTeam === m.opponent, newBadge: !!f.lastGame?.newBadge, playoffRound: playoffRoundNow, rivalSeasonWins: vsRival.filter((g) => g.result.won).length + (rvTeam === m.opponent && won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0), rivalSeasonLosses: vsRival.filter((g) => !g.result.won).length + (rvTeam === m.opponent && !won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0) }); }
   advanceWeek(f);
@@ -2484,11 +2516,11 @@ function advanceWeek(f, { bye = false } = {}) {
   f.week = blankWeek(); f.week.plan = lastPlan; // keep the plan as the default for next week
   maybeTradeCall(f); // a club may call with an offer this week (GDD §19.6)
   if (draftWindow(f)) ensureDraftClass(f);
-  if (f.season.week === 11) startPlayoffs(f);
+  if (f.season.week === REG_WEEKS + 1) startPlayoffs(f);
   if (inPlayoffs(f) && f.season.playoffs?.champion) { endSeason(f); return; }
   if (inPlayoffs(f) && !playoffFixture(f)) {
     // Eliminated (or never qualified): the owner watches the bracket round by round (advancePlayoffs) or skips to the offseason (skipPlayoffs).
-    f.season.spectating = true;
+    f.season.spectating = !playoffAlive(f); // (seed 1 resting in the Wild Card round is not out: playoffBye)
     if (f.season.playoffs.champion) endSeason(f);
   }
 }
@@ -2496,21 +2528,22 @@ function advanceWeek(f, { bye = false } = {}) {
 export function advancePlayoffs(f) {
   if (!inPlayoffs(f) || playoffFixture(f) || f.season.finished) return { ok: false, reason: $t('franchise.nothing_to_advance') };
   const p = f.season.playoffs; const round = p.round;
-  simulatePlayoffWeek(f); writeLeagueNews(f, round); leagueRecoverWeek(f, {}); f.season.week += 1; f.season.day = 0; { const lastPlan = f.week.plan; f.week = blankWeek(); f.week.plan = lastPlan; }
+  const resting = playoffBye(f);
+  simulatePlayoffWeek(f); writeLeagueNews(f, round); if (resting) recoverWeek(f.roster, { bye: true }); leagueRecoverWeek(f, {}); f.season.week += 1; f.season.day = 0; f.season.spectating = !playoffAlive(f) && !f.season.playoffs.champion ? true : f.season.spectating; { const lastPlan = f.week.plan; f.week = blankWeek(); f.week.plan = lastPlan; }
   const results = p.results.filter((x) => x.round === round);
   if (p.champion) endSeason(f);
   return { ok: true, round, results, champion: p.champion || null, finished: !!f.season.finished };
 }
-export function skipPlayoffs(f) { let guard = 0; while (!f.season.finished && guard++ < 5) { const r = advancePlayoffs(f); if (!r.ok) break; } return { ok: true }; }
-export const ROUND_NAMES = Object.freeze({ 1: $t('franchise.wild_card_round'), 2: $t('franchise.conference_finals'), 3: $t('franchise.beast_bowl') });
+export function skipPlayoffs(f) { let guard = 0; while (!f.season.finished && guard++ < PLAYOFF_ROUNDS + 2) { const r = advancePlayoffs(f); if (!r.ok) break; } return { ok: true }; }
+export const ROUND_NAMES = Object.freeze({ 1: $t('franchise.wild_card_round'), 2: $t('franchise.divisional_round'), 3: $t('franchise.conference_finals'), 4: $t('franchise.beast_bowl') });
 
 // ------------------------------------------------------------ playoffs
 function startPlayoffs(f) {
   const st = leagueStandings(f);
-  const seeds = { Aurora: st.conferences.Aurora.seeds, Titan: st.conferences.Titan.seeds };
-  const fixtures = playoffRound(1, [], seeds).map((g) => ({ ...g, round: 1, week: 11, result: null }));
+  const seeds = Object.fromEntries(CONFERENCE_NAMES.map((c) => [c, st.conferences[c].seeds]));
+  const fixtures = playoffRound(1, [], seeds).map((g) => ({ ...g, round: 1, week: REG_WEEKS + 1, result: null }));
   f.season.playoffs = { seeds, round: 1, fixtures, results: [], champion: null };
-  addLeagueNews(f, playoffFieldNews({ year: f.season.year, week: 10, seeds, records: f.season.records }));
+  addLeagueNews(f, playoffFieldNews({ year: f.season.year, week: REG_WEEKS, seeds, records: f.season.records }));
   finalizeAwards(f);
   const qualified = Object.values(seeds).flat().includes(f.club);
   checkAchievements(f, 'playoffs', { qualified });
@@ -2533,7 +2566,7 @@ function simulatePlayoffWeek(f) {
     const ig = { home: g.home, away: g.away, week: f.season.week, playoff: true, round: p.round }; const it = [[g.home, home.roster, g.away, home.chart], [g.away, away.roster, g.home, away.chart]];
     injuriesBeforeGame(f, it, ig);
     const toss = leaguePregame(f, r, home, away);
-    const game = playGame({ home, away, venue: gameVenue(f, home.name, away.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
+    const game = playGame({ home, away, venue: gameVenue(f, home.name, away.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null, frames: 'last' });
     leagueTiebreak(f, r, home, away, game, { playoff: true });
     aiAfterGame(f, home, game, 'home', r); aiAfterGame(f, away, game, 'away', r);
     injuriesAfterGame(f, it, ig);
@@ -2544,9 +2577,9 @@ function simulatePlayoffWeek(f) {
     g.result = res; p.results.push({ round: p.round, conf: g.conf, ...res, winner: res.winner || (res.homeScore > res.awayScore ? g.home : g.away) });
   }
   save();
-  if (p.round === 3) { p.champion = p.results.find((x) => x.round === 3).winner; f.season.champion = p.champion; return; }
+  if (p.round === FINAL_ROUND) { p.champion = p.results.find((x) => x.round === FINAL_ROUND).winner; f.season.champion = p.champion; return; }
   p.round += 1;
-  p.fixtures.push(...playoffRound(p.round, p.results, p.seeds).map((g) => ({ ...g, round: p.round, week: 10 + p.round, result: null })));
+  p.fixtures.push(...playoffRound(p.round, p.results, p.seeds).map((g) => ({ ...g, round: p.round, week: REG_WEEKS + p.round, result: null })));
 }
 
 // ------------------------------------------------------------ season end
@@ -2556,7 +2589,7 @@ function endSeason(f) {
   const champion = s.playoffs?.champion || null;
   const rec = record(f);
   if (champion === f.club) { f.badges[f.tier] += 1; f.qualification[f.tier] += 1; f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 }; f.campaign.titles += 1; news(f, $L('franchise.beast_bowl_champions_win_the_title', { club: f.club, name: tierById(f.tier).name }), 'win'); }
-  if (champion) addLeagueNews(f, championNews({ year: s.year, week: 13, final: (s.playoffs?.results || []).find((x) => x.round === 3) }));
+  if (champion) addLeagueNews(f, championNews({ year: s.year, week: LAST_WEEK, final: (s.playoffs?.results || []).find((x) => x.round === FINAL_ROUND) }));
   const place = st.overall.indexOf(f.club) + 1;
   f.bottomFourStreak = place > 12 ? f.bottomFourStreak + 1 : 0;
   f.history.push({ year: s.year, club: f.club, tier: f.tier, record: { w: rec.w, l: rec.l, t: rec.t }, place, champion, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), schedule: s.schedule.map((g) => ({ ...g })), rival: { ...f.rivals[f.tier] } });
@@ -2572,7 +2605,7 @@ function endSeason(f) {
   f.history[f.history.length - 1].awards = s.awards;
   if (champion === f.club) f.history[f.history.length - 1].championship = championshipRecord(f, s); // the ceremony and its summary (GDD §35)
   updateSeasonRecords(f, s.year); // the records book (GDD §17.8)
-  addLeagueNews(f, recordNews({ year: s.year, week: 13, records: f.records, seasonsInBook: (f.history || []).length, scope: 'season' }));
+  addLeagueNews(f, recordNews({ year: s.year, week: LAST_WEEK, records: f.records, seasonsInBook: (f.history || []).length, scope: 'season' }));
   careerSeasonEnd(f.roster, { year: s.year, club: f.club, awards: s.awards, records: f.records, champion }); // Career Timeline (GDD §38)
   leagueSeasonEnd(f, { year: s.year, awards: s.awards, records: f.records, champion }); // the 15 persistent rosters' season-end events (GDD §42.6)
   archiveSeasonTables(f); // the season's league tables stay readable from the statistics screens (2026-10-22)
@@ -2619,7 +2652,7 @@ export const TIERS_ENABLED = false;
  * ability name). No animation data: the ceremony is rebuilt from this, so it can be replayed from the history forever.
  */
 export function championshipRecord(f, s = f.season) {
-  const p = s.playoffs || {}; const fin = (p.results || []).find((x) => x.round === 3) || null;
+  const p = s.playoffs || {}; const fin = (p.results || []).find((x) => x.round === FINAL_ROUND) || null;
   const mine = fin ? (fin.home === f.club ? 'home' : 'away') : null;
   const games = (p.results || []).filter((x) => x.home === f.club || x.away === f.club);
   const rec = s.records?.[f.club] || { w: 0, l: 0, t: 0 };
@@ -2664,7 +2697,7 @@ export function finalizeAwards(f) {
   if (f.season.awardsFinal) return f.season.awardsFinal;
   const races = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n: 5, priorRookieAwardIds: priorRookieAwardIds(f) });
   f.season.awardsFinal = { year: f.season.year, races, winners: Object.fromEntries(Object.entries(AWARDS).map(([k]) => [k, races[k]?.[0] || null])) };
-  addLeagueNews(f, awardNews({ year: f.season.year, week: 10, winners: f.season.awardsFinal.winners, priorOf: (id, key) => (f.history || []).filter((h) => h.awards?.league?.[key]?.id === id).length }));
+  addLeagueNews(f, awardNews({ year: f.season.year, week: REG_WEEKS, winners: f.season.awardsFinal.winners, priorOf: (id, key) => (f.history || []).filter((h) => h.awards?.league?.[key]?.id === id).length }));
   for (const [k, w] of Object.entries(f.season.awardsFinal.winners)) if (w && w.team === f.club) news(f, $L('franchise.one_of_yours', { short: AWARDS[k].short, k: (k === 'coy' ? $L('franchise.your_staff') : w.name)}), 'win');
   return f.season.awardsFinal;
 }

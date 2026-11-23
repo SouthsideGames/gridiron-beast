@@ -3,9 +3,9 @@
 // (the browser tiles them, so a frame costs one rect per layer whatever the camera), decor is a few shapes per sideline.
 // Weather is not here: it is a CSS layer over the field (styles/app.css .weather-*), so it never redraws with the play.
 
-import { ENVIRONMENTS, WEATHER } from '../data/stadiums.js';
+import { ENVIRONMENTS, WEATHER, STADIUM_VARIANTS } from '../data/stadiums.js';
 import { designField } from '../data/stadium-designs.js';
-import { lookFor, edgeSvg } from './stadium-fx.js';
+import { lookFor, edgeSvg, homeEdgeSvg } from './stadium-fx.js';
 
 const PATTERNS = {
   // Each: [width, height, inner svg, opacity] in yards. Low opacity, so yard lines, hashes and numbers stay on top and readable.
@@ -95,7 +95,8 @@ function endZoneDecor(env, x0, y0, w, h) {
  * without one, the classic grass is drawn exactly as before. Returns { turf, endZones } so the caller keeps its own order.
  */
 export function turfSvg(venue, cam, HW, SPAN, Y) {
-  const env = ENVIRONMENTS[venue?.env] || designField(venue?.env) || ENVIRONMENTS.grass; const P = env.palette; // a design no club plays on yet draws like any field
+  const env = ENVIRONMENTS[venue?.env] || designField(venue?.env) || ENVIRONMENTS.grass; // a design no club plays on yet draws like any field
+  const V = STADIUM_VARIANTS[venue?.variant]; const P = V?.end ? { ...env.palette, end: V.end } : env.palette; // a stadium's own version of the look (Westhaven's coast)
   let s = `<rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="${P.a}"/>`;
   for (let yard = Math.floor(cam.bottom / 10) * 10; yard < cam.top; yard += 10) {
     if (yard < 0 || yard >= 100) continue;
@@ -107,7 +108,7 @@ export function turfSvg(venue, cam, HW, SPAN, Y) {
     s += `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="${w}" height="${h}" patternTransform="translate(0 ${(cam.top % h).toFixed(2)})">${inner}</pattern></defs><rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="url(#${id})" opacity="${op}"/>`;
   }
   return { env, turf: s, endZone: (y0, h) => `<rect x="${-HW}" y="${y0}" width="${HW * 2}" height="${h}" fill="${P.end}"/>${endZoneDecor(env, -HW, y0, HW * 2, h)}`,
-    over: `${P.tint ? `<rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="${P.tint}"/>` : ''}${lookFor(env.id) ? edgeSvg(env.id, cam, HW, Y, SPAN) : env.id === 'grass' ? '' : sidelineDecor(env, cam, HW, Y)}` };
+    over: `${P.tint ? `<rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="${P.tint}"/>` : ''}${lookFor(env.id) ? edgeSvg(env.id, cam, HW, Y, SPAN) : env.id === 'grass' ? '' : sidelineDecor(env, cam, HW, Y)}${env.id === 'grass' ? homeEdgeSvg(venue, cam, HW, Y) : ''}` };
 }
 
 /** The CSS class for the weather layer over the field ('' when nothing is drawn: clear, overcast handled by a tint, indoors). */

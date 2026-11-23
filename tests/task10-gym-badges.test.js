@@ -27,6 +27,7 @@ test('gym badges over three seasons: win earns or keeps, loss gives back, a late
         const p = pending; pending = null; const held = !!f.campaign.badges[p.club];
         assert.equal(held, p.want === 'W', `${p.year} ${p.club} ${p.want}: the badge is held after a win and not after a loss`);
         assert.equal(F.badgeOf(f, p.club) != null, held, 'badgeOf agrees');
+        assert.equal(f.lastGame?.lostBadge ?? null, p.before && p.want === 'L' ? p.club : null, 'the result says when a held badge went back to its Gym Leader (the final screen shows it)');
         assert.equal(F.hallOfFameProgress(f).rows.find((r) => r.key === 'badges').have, Object.keys(f.campaign.badges).length, 'badge progress is the badges held now');
         const top = lineText(f.news[0]?.text ?? f.news[0]);
         if (p.before && p.want === 'L') assert.match(f.news.map((n) => lineText(n.text ?? n)).join('\n'), /BADGE LOST: .* take back the /, 'a lost badge is in the news');

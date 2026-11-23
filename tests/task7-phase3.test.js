@@ -98,7 +98,7 @@ test('periods: five, early completion, then the draft; the draft refuses to star
 });
 
 test('immediate negotiation (in season): accept, counter or reject at once, under the same rules', () => {
-  const f = openMarket(23); F.finishFreeAgency(f); // seed 23: the cheapest free agent counters a half-price offer (Task 8 retired Nature, N7c B14; seed 21 before: its cheapest is now a money-indifferent veteran who takes half his ask)
+  const f = openMarket(24); F.finishFreeAgency(f); // seed 24 in the 32-club league (seed 23 until 2026-11-23, whose cheapest money-minded agent now takes half his ask). Earlier: seed 23: the cheapest free agent counters a half-price offer (Task 8 retired Nature, N7c B14; seed 21 before: its cheapest is now a money-indifferent veteran who takes half his ask)
   // Task 8 M1 (seed drift): under the Dex generator seed 23's cheapest free agent (m_r8e337, Championship) takes half his ask, as
   // several cheap agents now do; the scenario is made explicit: the cheapest free agent whose Ambition is money (m_nqhn9v).
   makeRoom(f, 1); const m = cheapest(f, (x) => x.ambition === 'money')[0]; const ask = E.askOf(f, m);

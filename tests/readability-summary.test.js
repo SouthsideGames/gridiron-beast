@@ -7,7 +7,7 @@ import {overheadSvg} from '../src/ui/fx/overhead.js';
 import {decodeUiWav} from '../src/audio/decode-ui-wav.js';
 
 test('a club without a sack gets a readable empty label while the opposing leader keeps its name',()=>{
- const teams={home:generatedTeam(1,{id:'a',name:'Cinder Owls',quality:50}),away:generatedTeam(2,{id:'h',name:'Stonehaven Titans',quality:50})},state=R.newGame({home:teams.home,away:teams.away,seed:3,first:'home',choice:'receive'});
+ const teams={home:generatedTeam(1,{id:'a',name:'Cinder Owls',quality:50}),away:generatedTeam(2,{id:'h',name:'Stonehaven Bastions',quality:50})},state=R.newGame({home:teams.home,away:teams.away,seed:3,first:'home',choice:'receive'});
  state.stats.home.players={DL1:{sacks:1}};
  const html=boxScoreHtml(state,teams),row=html.match(/<div class="bs-row">[^]*?SACKS[^]*?<\/div><\/div><\/div>/i);
  assert.ok(row);assert.match(row[0],/None recorded/);assert.doesNotMatch(row[0],/>·</);

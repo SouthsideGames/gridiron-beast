@@ -1,4 +1,6 @@
 // The trade calendar (Task 5, GDD §19.6c, §54.10; Task 10 owner 2026-11-13): ONE place that says when trading is possible. Pure.
+// (32-club league, 2026-11-23: the regular season is now 15 weeks. The deadline is the owner's ruling of 2026-11-13 and is NOT moved:
+//  trading still closes when week 8 begins, now about half way through the season. Whether it should move is an open owner decision.)
 // Regular season (10 weeks):  weeks 1–7 the owner may propose deals, clubs trade with each other and may call the owner ·
 //                             trading CLOSES when week 8 begins · weeks 8–10 closed · postseason closed.
 // Draft clock and offseason (after the championship until the next season begins): everything is open.

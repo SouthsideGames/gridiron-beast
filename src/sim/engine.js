@@ -2503,7 +2503,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   }
 
   // ------------------------------------------------------------ main loop
+  // options.frames 'last': a headless league game nobody watches keeps only the latest frame (the rules read the last one); the
+  // play itself is the same, frame for frame, so every result is identical (owner 2026-11-23, after-game processing time).
+  const lastOnly = options.frames === 'last';
   function recordFrame() {
+    if (lastOnly) frames.length = 0;
     frames.push({
       t: +t.toFixed(2),
       off: offs.map((a) => [a.slot, +a.x.toFixed(2), +a.y.toFixed(2), a.engaged ? 1 : 0, statusOf(a)]),

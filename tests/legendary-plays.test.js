@@ -66,7 +66,7 @@ test('plan slots: a Legendary Play takes one of the six, never a seventh; out wh
 test('execution: the Legendary takes the play\'s slot for the snap (from another slot or the bench) and the play runs', () => {
   const f = newFranchise(43); const m = legend(f, 'tempestra'); F.syncLegendary(f);
   const o = F.startingPlan(f, 'offense'), d = F.startingPlan(f, 'defense'); F.setGamePlan(f, [...o.slice(0, 5), 'lp_eye_of_the_storm'], d);
-  const me = F.playerTeam(f); const them = F.aiTeam(f, F.opponentName(f) || 'Ashford Hawks');
+  const me = F.playerTeam(f); const them = F.aiTeam(f, F.opponentName(f) || 'Ashford Cinders');
   const s = R.newGame({ home: me, away: them, seed: 3 }); s.phase = 'scrimmage'; s.possession = 'home';
   for (let k = 0; k < 8; k++) {
     if (s.phase !== 'scrimmage' || s.finished) break; if (s.possession !== 'home') s.possession = 'home';
@@ -81,14 +81,14 @@ test('execution: the Legendary takes the play\'s slot for the snap (from another
 
 test('AI: a club holding a Legendary equips its play in one of its six and calls it in fitting situations', () => {
   const f = newFranchise(44); let found = 0;
-  for (const club of ['Palmetto Vipers', 'Canyon Crushers', 'Eastport Phantoms']) { // Frostpeak's Glacivern has no pilot play (owner 2026-11-07)
+  for (const club of ['Palmetto Wyrms', 'Canyon Crushers', 'Eastport Phantoms']) { // Frostpeak's Glacivern has no pilot play (owner 2026-11-07)
     const t = F.aiTeam(f, club); const lp = LEGENDARY_IDS.find((id) => t.roster.some((m) => m.species === PLAYS[id].legendary.species && !m.injury));
     if (!lp) continue; found++;
     const key = PLAYS[lp].side === 'offense' ? 'offensePlays' : 'defensePlays'; assert.ok(t[key].includes(lp), `${club} equips ${lp}`); assert.equal(t[key].length, 6);
   }
   assert.equal(found, 3, `${found} gym clubs with a pilot Legendary`);
   assert.ok(!F.aiTeam(f, 'Frostpeak Howlers').defensePlays.some((id) => PLAYS[id]?.legendary), 'Frostpeak equips no legendary play');
-  const t = F.aiTeam(f, 'Palmetto Vipers'); const opp = F.aiTeam(f, 'Ashford Hawks');
+  const t = F.aiTeam(f, 'Palmetto Wyrms'); const opp = F.aiTeam(f, 'Ashford Cinders');
   if (t.offensePlays.includes('lp_dragons_gambit')) {
     let calls = 0; playGame({ home: t, away: opp, seed: 9, onStep: (ev) => { if (ev?.offensePlayId === 'lp_dragons_gambit') calls++; } });
     assert.ok(calls > 0, 'the AI calls it during a game');

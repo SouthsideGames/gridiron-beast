@@ -8,8 +8,8 @@ import { FA_STRATEGY } from '../src/franchise/fa-strategy.js';
 
 test('a gym ranks a matching-element trade target above an equally useful one, never above a clearly better one; ordinary clubs never', () => {
   const water = { type: 'Water' }, fire = { type: 'Fire' };
-  assert.ok(gymTradeRank('Harbor Sentinels', water, 10) > gymTradeRank('Harbor Sentinels', fire, 10), 'equal gain: the element wins');
-  assert.ok(gymTradeRank('Harbor Sentinels', water, 10) < gymTradeRank('Harbor Sentinels', fire, 10 + GYM_ELEMENT_TRADE_TIE + 1), 'a clearly better off-element target still wins');
+  assert.ok(gymTradeRank('Harbor Anchors', water, 10) > gymTradeRank('Harbor Anchors', fire, 10), 'equal gain: the element wins');
+  assert.ok(gymTradeRank('Harbor Anchors', water, 10) < gymTradeRank('Harbor Anchors', fire, 10 + GYM_ELEMENT_TRADE_TIE + 1), 'a clearly better off-element target still wins');
   assert.equal(gymTradeRank('Not A Gym', water, 10), gymTradeRank('Not A Gym', fire, 10), 'ordinary clubs: no preference');
   assert.ok(GYM_ELEMENT_TRADE_TIE < 8 / 2, 'a tie-break well under the minimum deal gain (8): no forced trade');
   assert.equal(GYM_ELEMENT_BONUS, 1.5); assert.equal(FA_STRATEGY.element, 1.5, 'the draft and free-agency tie-breaks are unchanged');

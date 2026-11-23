@@ -16,11 +16,14 @@
 // time; the stylesheet does the rest (styles/stadium.css). No element is created per reaction, so nothing can accumulate, a new
 // reaction replaces the one playing, and leaving the screen clears it. Reactions never delay a play: nothing waits for them.
 
-import { ENVIRONMENTS } from '../data/stadiums.js';
+import { ENVIRONMENTS, STADIUM_VARIANTS } from '../data/stadiums.js';
 import { designField } from '../data/stadium-designs.js';
 /** The field a venue names: one a club plays on, or a design no club has yet. */
 const fieldOf = (envId) => ENVIRONMENTS[envId] || designField(envId) || null;
 import { crowdImages } from './stadium-crowd.js';
+import { TEAM_META } from '../data/league.js';
+import { regionOf, CLUB_NAMES } from '../data/club-identity.js';
+import { teamLogoSymbol } from './team-logo.js';
 
 export const STADIUM_FX_LEVELS = Object.freeze(['full', 'reduced', 'off']);
 /** The level in force: the player's Stadium Effects setting, lowered to Off by Reduce Motion (no environment movement at all). */
@@ -134,8 +137,23 @@ export const LOOKS = Object.freeze({
   shadow: { label: 'Umbral', colors: ['#b9a6ff', '#6a4ad0', '#f4f0ff'], intro: 'The lights are going out', edge: 'lantern', posts: 'moon', reveal: 'eclipse' },
   radiant: { label: 'Radiant', colors: ['#ffd24a', '#ff9a2a', '#fff6d0'], intro: 'The sun is up', edge: 'sundial', posts: 'sunburst', reveal: 'sunrise' },
   forest: { label: 'Grass', colors: ['#6fe07a', '#c8f05a', '#f2ffd6'], intro: 'The grove is listening', edge: 'vine', posts: 'vine', reveal: 'bloom' },
+  // The ordinary home field of the twenty clubs without a Gym Leader (owner, 2026-11-22): plain grass with the same white
+  // paint, barrier, crowd, side stands and play reactions as every stadium, and none of a gym's markers, posts or kickoff reveal.
+  grass: { label: 'Home', colors: ['#bfe8c6', '#7fc98d', '#ffffff'], intro: 'Home turf', edge: null, posts: null, reveal: null, plain: true },
 });
 export const lookFor = (envId) => (Object.hasOwn(LOOKS, envId) ? LOOKS[envId] : null);
+/**
+ * A venue's look with its home club (owner ruling 2026-11-23, second set): on the plain home field of a club without a Gym
+ * Leader the colours are the club's own [primary, secondary, accent] and the region of its division dresses the ground around the
+ * field (data/club-identity.js REGIONS). A Gym Leader's look is returned as it is: its design is approved and stays.
+ */
+const lookMemo = new Map();
+export function venueLook(venue) {
+  const L = lookFor(venue?.env); if (!L) return null; const m = TEAM_META[venue?.club]; if (!L.plain || !m) return L;
+  const key = venue.club; if (!lookMemo.has(key)) lookMemo.set(key, Object.freeze({ ...L, colors: [m.color, m.secondary, m.accent], region: regionOf(venue.club), club: venue.club, banner: BANNERS[(CLUB_NAMES[venue.club]?.[0].length || 0) % BANNERS.length] }));
+  return lookMemo.get(key);
+}
+const BANNERS = ['stripes', 'chevron', 'split', 'diamond'];
 
 /**
  * The stadium scene for the game on screen: how far behind each end line the picture reaches (the stands) and the crowd that
@@ -150,7 +168,7 @@ export const STANDS_BARRIER = 1; // the padded wall between the players and the 
 export const STANDS_GAP = FIELD_BORDER + STANDS_GRASS + STANDS_BARRIER; // from the end line to the first row of the stands
 export const STANDS_ROWS = 6; // yards of stand: three rows of two yards
 export const STANDS_DEPTH = STANDS_GAP + STANDS_ROWS; // how far behind the end line the picture reaches
-export function setStadiumScene(venue, crowd = null) { scene = lookFor(venue?.env) ? { env: venue.env, depth: STANDS_DEPTH, crowd } : null; return scene; }
+export function setStadiumScene(venue, crowd = null) { scene = lookFor(venue?.env) ? { env: venue.env, club: venue.club || null, depth: STANDS_DEPTH, crowd } : null; return scene; }
 export const stadiumScene = () => scene;
 export const standsDepth = () => scene?.depth || 0;
 /** How wide the white paint around the field is for the game on screen (0 without a stadium scene: the field as before). */
@@ -297,7 +315,7 @@ export function postsSvg(envId, y, dir) {
  * `y0` is the svg y of the back of the stand, `x0`/`w` its left edge and width, all in yards.
  */
 export function standSvg(venue, x0, y0, w) {
-  const look = lookFor(venue?.env); if (!look || !scene) return '';
+  const look = venueLook(venue); if (!look || !scene) return '';
   const d = STANDS_ROWS; const [a, b] = look.colors; const img = scene.crowd ? crowdImages({ ...scene.crowd, stand: 'far' }) : null;
   const pic = (cls, u) => (u ? `<image class="${cls}" href="${u}" x="${x0}" y="${y0}" width="${w}" height="${d - 0.5}" preserveAspectRatio="none" style="image-rendering:pixelated"/>` : '');
   return `<g class="sfx-stand"><rect x="${x0}" y="${y0}" width="${w}" height="${d}" fill="#10151d"/>${pic('sfx-crowd-img', img?.base)}${pic('sfx-cheer sfx-cheer-home', img?.home)}${pic('sfx-cheer sfx-cheer-away', img?.away)}<rect x="${x0}" y="${y0 + d - 0.5}" width="${w}" height="0.5" fill="#0c1430"/><line class="sfx-channel sfx-anim" x1="${x0}" y1="${y0 + d - 0.25}" x2="${x0 + w}" y2="${y0 + d - 0.25}" stroke="${a}" stroke-width="0.22" stroke-dasharray="2.5 2"/><line class="sfx-channel sfx-channel-b sfx-anim" x1="${x0}" y1="${y0 + d - 0.25}" x2="${x0 + w}" y2="${y0 + d - 0.25}" stroke="${b}" stroke-width="0.12" stroke-dasharray="1 3.5"/></g>`;
@@ -320,7 +338,7 @@ export function borderSvg(cam, HW, Y) {
  * which side the crowd is on (-1: above it, as behind the far end zone; 1: below it).
  */
 export function barrierSvg(venue, x0, y0, w, fans = -1, h = STANDS_BARRIER) {
-  const look = lookFor(venue?.env); if (!look || !scene) return '';
+  const look = venueLook(venue); if (!look || !scene) return '';
   const col = scene.crowd?.homeColor || look.colors[1]; let seams = '';
   for (let x = x0 + 3; x < x0 + w - 0.5; x += 3) seams += `M${x.toFixed(2)} ${y0} v${h}`;
   const cap = fans < 0 ? y0 : y0 + h - 0.16, foot = fans < 0 ? y0 + h - 0.14 : y0;
@@ -334,13 +352,13 @@ export const SIDE_REACH = STANDS_GRASS + STANDS_BARRIER + STANDS_ROWS;
  * <defs> and placed with <use>, so the zooming camera does not carry them in every frame), or null when there is nothing to draw.
  */
 export function sideStandsSvg(venue, cam, HW, Y) {
-  const look = lookFor(venue?.env); const env = fieldOf(venue?.env); if (!look || !env || !scene) return null;
+  const look = venueLook(venue); const env = fieldOf(venue?.env); if (!look || !env || !scene) return null;
   const b = FIELD_BORDER, top = 110 + STANDS_GAP, bot = -10 - STANDS_GAP; if (cam.top <= bot || cam.bottom >= top) return null; // a little past each end line, so the corners are closed
   const y0 = Y(top), len = top - bot, half = len / 2; const col = scene.crowd?.homeColor || look.colors[1];
   const symbols = []; let s = '';
   for (const side of [-1, 1]) {
     const edge = side * (HW + b); const x = (from, w) => (side > 0 ? edge + from : edge - from - w); // `from` yards out from the white
-    s += `<rect x="${x(0, STANDS_GRASS)}" y="${y0}" width="${STANDS_GRASS}" height="${len}" fill="${env.palette.c}"/><rect x="${x(0, STANDS_GRASS)}" y="${y0}" width="${STANDS_GRASS}" height="${len}" fill="#000" opacity="0.18"/>`;
+    s += look.region ? groundSvg(look, x(0, STANDS_GRASS), y0, STANDS_GRASS, len, true) : `<rect x="${x(0, STANDS_GRASS)}" y="${y0}" width="${STANDS_GRASS}" height="${len}" fill="${env.palette.c}"/><rect x="${x(0, STANDS_GRASS)}" y="${y0}" width="${STANDS_GRASS}" height="${len}" fill="#000" opacity="0.18"/>`;
     const bx = x(STANDS_GRASS, STANDS_BARRIER); let seams = ''; for (let yy = y0 + 3; yy < y0 + len - 0.5; yy += 3) seams += `M${bx} ${yy.toFixed(2)} h${STANDS_BARRIER}`;
     s += `<rect x="${bx}" y="${y0}" width="${STANDS_BARRIER}" height="${len}" fill="${col}"/><rect x="${bx}" y="${y0}" width="${STANDS_BARRIER}" height="${len}" fill="#000" opacity="0.38"/><path d="${seams}" stroke="#000" stroke-width="0.1" opacity="0.45"/>`;
     const sx = x(STANDS_GRASS + STANDS_BARRIER, STANDS_ROWS); s += `<rect x="${sx}" y="${y0}" width="${STANDS_ROWS}" height="${len}" fill="#10151d"/>`;
@@ -359,12 +377,15 @@ export function sideStandsSvg(venue, cam, HW, Y) {
 /** The grass between an end line and the stand or wall behind it: the stadium's own turf, a shade darker, with a boundary line. */
 export function apronSvg(venue, x0, y0, w, h) {
   const env = fieldOf(venue?.env); if (!env || !scene) return '';
+  const home = venueLook(venue); if (home?.region) return `<g class="sfx-apron sfx-apron-home">${groundSvg(home, x0, y0, w, h, false)}</g>`;
+  const sand = STADIUM_VARIANTS[venue?.variant]?.sand; if (sand) return `<g class="sfx-apron sfx-apron-sand"><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${sand}"/><rect x="${x0}" y="${y0 + h * 0.5}" width="${w}" height="${h * 0.5}" fill="#000" opacity="0.07"/></g>`;
   return `<g class="sfx-apron"><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${env.palette.c}"/><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#000" opacity="0.18"/></g>`;
 }
 /** Behind the near end zone there is no stand in view: the stadium's wall and rail close the picture. */
 export function wallSvg(venue, x0, y0, w) {
-  const look = lookFor(venue?.env); if (!look || !scene) return '';
+  const look = venueLook(venue); if (!look || !scene) return '';
   const d = STANDS_ROWS; const [a] = look.colors;
+  if (look.club) return homeWallSvg(look, x0, y0, w, d);
   return `<g class="sfx-wall"><rect x="${x0}" y="${y0}" width="${w}" height="${d}" fill="#0d1320"/><rect x="${x0}" y="${y0}" width="${w}" height="0.5" fill="#0c1430"/><line class="sfx-channel sfx-anim" x1="${x0}" y1="${y0 + 0.25}" x2="${x0 + w}" y2="${y0 + 0.25}" stroke="${a}" stroke-width="0.22" stroke-dasharray="2.5 2"/>${[0.18, 0.5, 0.82].map((k) => `<rect x="${x0 + w * k - 3}" y="${y0 + 1.4}" width="6" height="${d - 2}" rx="0.4" fill="#141c30" stroke="#26335a" stroke-width="0.12"/>`).join('')}</g>`;
 }
 /**
@@ -372,7 +393,7 @@ export function wallSvg(venue, x0, y0, w) {
  * without a look.
  */
 export function surroundHtml(venue) {
-  const look = lookFor(venue?.env); if (!look) return '';
+  const look = venueLook(venue); if (!look) return '';
   const [a, b, c] = look.colors;
   return `<div class="stadium-surround sfx-${venue.env}" style="--sfx-a:${a};--sfx-b:${b};--sfx-c:${c}" aria-hidden="true"><i class="sfx-edge"></i><i class="sfx-lap"></i></div>`;
 }
@@ -431,5 +452,60 @@ export function kickoffRevealHtml(venue, level = 'full') {
 /** The kickoff name plate: the stadium, its kind and its line. */
 export function introPlateHtml(venue, esc = (s) => s) {
   const look = lookFor(venue?.env); const env = fieldOf(venue?.env); if (!look || !env) return '';
-  return `<div class="sfx-plate"><b>${esc(venue.name || env.name)}</b><span>${esc(look.intro)}</span></div>`;
+  return `<div class="sfx-plate"><b>${esc(venue.name || env.name)}</b><span>${esc(STADIUM_VARIANTS[venue?.variant]?.intro || look.intro)}</span></div>`;
+}
+
+// ---------------------------------------------------------------- the plain home fields of the twenty clubs without a Gym Leader
+// Region and club, around the field only (the playing surface is grass for all twenty): the ground between the paint and the
+// barrier, the markers along the sidelines, and the wall behind the near end zone with the club's banners and logo. Static
+// shapes in the club's colours: no animation, so the Stadium Effects setting has nothing to slow down here, and all of it is
+// drawn the same at Full, Reduced and Off.
+const MOTIF = {
+  snow: (x, y, k) => `<ellipse cx="${x + (k - 1) * 0.5}" cy="${y}" rx="${0.55 + k * 0.12}" ry="0.3" fill="#ffffff" opacity="0.9"/>`,
+  mesa: (x, y, k) => `<path d="M${x - 0.6} ${y + 0.3} L${x - 0.3} ${y - 0.35} H${x + 0.35} L${x + 0.6} ${y + 0.3} Z" fill="#5b2a17" opacity="0.8"/>`,
+  wheat: (x, y, k) => `<path d="M${x - 0.4} ${y + 0.4} l0.4 -0.8 l0.4 0.8 M${x} ${y + 0.4} v-0.9" stroke="#f3dc8a" stroke-width="0.12" fill="none"/>`,
+  palm: (x, y, k) => `<circle cx="${x}" cy="${y}" r="${0.14 + k * 0.04}" fill="#fff6dc" opacity="0.8"/>`,
+  brick: (x, y, k) => `<rect x="${x - 0.55}" y="${y - 0.22}" width="1.1" height="0.44" fill="none" stroke="#3a3633" stroke-width="0.08"/>`,
+  reeds: (x, y, k) => `<path d="M${x - 0.3} ${y + 0.4} q0.1 -0.8 -0.2 -1.1 M${x} ${y + 0.4} v-1.2 M${x + 0.3} ${y + 0.4} q-0.1 -0.8 0.25 -1" stroke="#a6b25a" stroke-width="0.1" fill="none"/>`,
+  hedge: (x, y, k) => `<circle cx="${x}" cy="${y}" r="${0.5 + k * 0.1}" fill="#1b3a1a"/><circle cx="${x + 0.2}" cy="${y - 0.15}" r="0.12" fill="#f2c6e0"/>`,
+  pier: (x, y, k) => `<path d="M${x - 0.9} ${y} h1.8" stroke="#3e2c1d" stroke-width="0.08"/>`,
+};
+/** The ground of a region in a strip (`side`: a strip along a sideline, else behind an end line), with its scattered motif. */
+function groundSvg(look, x0, y0, w, h, side) {
+  const R = look.region; const draw = MOTIF[R.motif]; let marks = '';
+  const n = Math.max(2, Math.round((side ? h : w) / 3.2));
+  for (let i = 0; i < n; i++) { const t = (i + 0.5) / n; const k = i % 3; const x = side ? x0 + w * (0.3 + 0.4 * ((i * 7) % 3) / 2) : x0 + w * t; const y = side ? y0 + h * t : y0 + h * (0.3 + 0.4 * (k / 2)); marks += draw(x, y, k); }
+  const stripe = R.motif === 'pier' ? `<path d="${Array.from({ length: Math.ceil((side ? h : w) / 1.2) }, (_, i) => side ? `M${x0} ${y0 + i * 1.2}h${w}` : `M${x0 + i * 1.2} ${y0}v${h}`).join('')}" stroke="#3e2c1d" stroke-width="0.07" opacity="0.7"/>` : '';
+  return `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${R.ground}"/><rect x="${x0}" y="${side ? y0 : y0 + h * 0.55}" width="${side ? w * 0.35 : w}" height="${side ? h : h * 0.45}" fill="${R.groundShade}" opacity="0.6"/>${stripe}${marks}`;
+}
+/** The markers along both sidelines of a plain home field: the region's kind of marker, in the club's colours. */
+const MARKER = {
+  snow: (x, y, P, S, A, side) => `<path d="M${x} ${y + 0.6} V${y - 1.1}" stroke="${S}" stroke-width="0.14"/><path d="M${x} ${y - 1.1} l${-side * 1.1} 0.35 l${side * 1.1} 0.35 Z" fill="${P}" stroke="${S}" stroke-width="0.06"/><ellipse cx="${x}" cy="${y + 0.62}" rx="0.45" ry="0.2" fill="#ffffff"/>`,
+  mesa: (x, y, P, S, A) => `<path d="M${x - 0.45} ${y + 0.55} L${x - 0.25} ${y - 0.55} H${x + 0.25} L${x + 0.45} ${y + 0.55} Z" fill="${S}"/><rect x="${x - 0.28}" y="${y - 0.55}" width="0.56" height="0.3" fill="${P}"/><rect x="${x - 0.38}" y="${y + 0.05}" width="0.76" height="0.14" fill="${A}"/>`,
+  wheat: (x, y, P, S, A) => `<rect x="${x - 0.42}" y="${y - 0.75}" width="0.84" height="1.25" fill="${P}" stroke="${S}" stroke-width="0.07"/><rect x="${x - 0.42}" y="${y - 0.3}" width="0.84" height="0.22" fill="${S}"/><path d="M${x} ${y + 0.5} v0.35" stroke="${S}" stroke-width="0.1"/>`,
+  palm: (x, y, P, S, A) => `<path d="M${x} ${y + 0.7} V${y - 0.5}" stroke="${S}" stroke-width="0.16"/><path d="M${x - 0.28} ${y - 0.5} Q${x} ${y - 1.4} ${x + 0.28} ${y - 0.5} Z" fill="${A}"/><path d="M${x - 0.2} ${y - 0.1} H${x + 0.2}" stroke="${P}" stroke-width="0.14"/>`,
+  brick: (x, y, P, S, A) => `<rect x="${x - 0.35}" y="${y + 0.2}" width="0.7" height="0.45" fill="#7a3f2c" stroke="#3a1f15" stroke-width="0.05"/><path d="M${x} ${y + 0.2} V${y - 0.8}" stroke="${S}" stroke-width="0.12"/><circle cx="${x}" cy="${y - 0.92}" r="0.26" fill="${A}" stroke="${P}" stroke-width="0.08"/>`,
+  reeds: (x, y, P, S, A) => `<path d="M${x - 0.3} ${y + 0.6} q0.05 -0.9 -0.2 -1.3 M${x} ${y + 0.6} v-1.5 M${x + 0.3} ${y + 0.6} q-0.05 -0.9 0.2 -1.3" stroke="${P}" stroke-width="0.14" fill="none"/><ellipse cx="${x}" cy="${y - 0.95}" rx="0.12" ry="0.3" fill="${S}"/><circle cx="${x}" cy="${y + 0.6}" r="0.22" fill="${A}"/>`,
+  hedge: (x, y, P, S, A) => `<circle cx="${x}" cy="${y}" r="0.62" fill="${S}"/><circle cx="${x - 0.15}" cy="${y - 0.15}" r="0.42" fill="${P}" opacity="0.85"/><circle cx="${x + 0.25}" cy="${y + 0.1}" r="0.12" fill="${A}"/>`,
+  pier: (x, y, P, S, A) => `<circle cx="${x}" cy="${y}" r="0.5" fill="${P}" stroke="${S}" stroke-width="0.1"/><rect x="${x - 0.5}" y="${y - 0.1}" width="1" height="0.2" fill="${A}"/>`,
+};
+export function homeEdgeSvg(venue, cam, HW, Y) {
+  const L = venueLook(venue); if (!L?.region) return ''; const [P, S, A] = L.colors; const mk = MARKER[L.region.motif]; const out = [];
+  const b = fieldBorder(); const x0 = b ? HW + b / 2 : HW - 0.45;
+  for (let yard = Math.ceil(cam.bottom / 6) * 6; yard < cam.top; yard += 6) {
+    if (yard < 0 || yard > 100) continue;
+    for (const side of [-1, 1]) out.push(mk(side * x0, Y(yard + (side > 0 ? 3 : 0)), P, S, A, side));
+  }
+  return `<g class="home-edge" data-region="${L.region.label}">${out.join('')}</g>`;
+}
+/** The wall behind the near end zone of a plain home field: the club's colours, its logo in the middle and two banners. */
+function homeWallSvg(L, x0, y0, w, d) {
+  const [P, S, A] = L.colors; const logo = teamLogoSymbol(L.club); const cx = x0 + w / 2; const bw = 7, bh = d - 1.8; let banners = '';
+  for (const k of [0.2, 0.8]) {
+    const bx = x0 + w * k - bw / 2, by = y0 + 1.2; const pat = L.banner === 'stripes' ? `<path d="M${bx} ${by + bh * 0.35}h${bw}M${bx} ${by + bh * 0.65}h${bw}" stroke="${A}" stroke-width="0.35"/>`
+      : L.banner === 'chevron' ? `<path d="M${bx} ${by + bh * 0.3} l${bw / 2} ${bh * 0.3} l${bw / 2} ${-bh * 0.3}" fill="none" stroke="${A}" stroke-width="0.45"/>`
+      : L.banner === 'split' ? `<rect x="${bx + bw / 2}" y="${by}" width="${bw / 2}" height="${bh}" fill="${S}"/>` : `<path d="M${bx + bw / 2} ${by + 0.4} l${bw * 0.3} ${bh / 2 - 0.4} l${-bw * 0.3} ${bh / 2 - 0.4} l${-bw * 0.3} ${-(bh / 2 - 0.4)} Z" fill="${A}" opacity="0.85"/>`;
+    banners += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="0.3" fill="${P}" stroke="${A}" stroke-width="0.14"/>${pat}`;
+  }
+  return `<g class="sfx-wall sfx-wall-home"><defs>${logo.symbol}</defs><rect x="${x0}" y="${y0}" width="${w}" height="${d}" fill="${S}"/><rect x="${x0}" y="${y0}" width="${w}" height="${d}" fill="#000" opacity="0.35"/><rect x="${x0}" y="${y0}" width="${w}" height="0.5" fill="${P}"/><rect x="${x0}" y="${y0 + 0.5}" width="${w}" height="0.16" fill="${A}"/>${banners}<use href="#${logo.id}" x="${cx - (d - 1.4) / 2}" y="${y0 + 0.9}" width="${d - 1.4}" height="${d - 1.4}"/></g>`;
 }

@@ -2,6 +2,7 @@
 // Pure calculators on numbers (P1 formula); they never read or write a franchise. The Load screen
 // shows them with synthetic inputs so the wording and levels can be reviewed before Phase 2b.
 // Imports only values.
+import { REG_WEEKS } from '../data/league.js';
 import { CLASH_VALUES } from './values.js';
 
 const L = CLASH_VALUES.load;
@@ -33,8 +34,8 @@ export function projectWeek(start, week) {
   return r;
 }
 
-/** Ten-week projection for a profile; each row is projectWeek() from the previous Sunday. */
-export function projectSeason(profile, weeks = 10) {
+/** A regular season's projection for a profile (fifteen weeks since the 32-club league; ten before); each row is projectWeek() from the previous Sunday. */
+export function projectSeason(profile, weeks = REG_WEEKS) {
   const rows = []; let f = 0;
   for (let w = 1; w <= weeks; w++) {
     const week = { ...profile, bye: w === (profile.byeWeek ?? 6), injured: profile.injuredWeeks?.includes(w) };

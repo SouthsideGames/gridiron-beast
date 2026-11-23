@@ -99,7 +99,7 @@ test('individual awards outweigh championships in nomination score', () => {
 const career = (over) => ({ id: 'c', name: 'C', position: 'WR', retiredYear: 5, seasons: 12, games: 120, honours: { titles: 0, awards: 0, records: 0 }, awardsBy: {}, recordsBy: {}, prod: 100, ...over });
 test('a case is the sum of its parts, and titles are the smallest of them', () => {
   const k = candidateCase(career({ honours: { titles: 9, awards: 2, records: 4 }, awardsBy: { mvp: 1, oroy: 1 }, recordsBy: { season: 2, game: 2 } }), 0.9, 1);
-  assert.deepEqual(k, { awards: 38, records: 30, production: 48.4, longevity: 31.5, titles: 6, total: 153.9 });
+  assert.deepEqual(k, { awards: 38, records: 30, production: 48.4, longevity: 12 * HALL_CASE.season + 120 / HALL_CASE.gamesPer, titles: 6, total: 151.2 }); // 14-game scale (owner 2026-11-23): 120 games / 24.9
   assert.equal(HALL_CASE.title * HALL_CASE.titleCap, 6, 'nine titles count as three');
   assert.ok(candidateScore(career({ honours: { titles: 20 } }), 0.5) < HALL_CASE.standardFrom, 'titles alone never reach even the most lenient Board member');
   assert.ok(HALL_CASE.award.mvp > HALL_CASE.award.opoy && HALL_CASE.award.opoy > HALL_CASE.award.smoy && HALL_CASE.award.smoy > HALL_CASE.award.oroy, 'an MVP counts most, a rookie award least');
@@ -107,7 +107,7 @@ test('a case is the sum of its parts, and titles are the smallest of them', () =
   assert.equal(candidateCase(career({ seasons: 30, games: 900 })).longevity, 34, 'longevity has a ceiling');
 });
 test('production is judged within a position: a kicker or a lineman has the same way in as a quarterback', () => {
-  const group = (position, n, scale) => Array.from({ length: n }, (_, i) => career({ id: `${position}-${i}`, position, prod: (i + 1) * scale, seasons: 14, games: 150 }));
+  const group = (position, n, scale) => Array.from({ length: n }, (_, i) => career({ id: `${position}-${i}`, position, prod: (i + 1) * scale, seasons: 14, games: 233 })); // a long career: 150 nine-game-era games × 14 / 9
   const pool = [...group('QB', 30, 3000), ...group('K', 30, 40), ...group('OL', 30, 300)];
   const st = productionStanding(pool); const rank = productionRank(pool);
   for (const p of ['QB', 'K', 'OL']) { assert.equal(rank.get(`${p}-29`), 1); assert.equal(rank.get(`${p}-28`), 2); assert.equal(rank.get(`${p}-27`), undefined); }
@@ -145,7 +145,7 @@ test('a preserved record gives the detailed case, and an older candidate gains i
   const g = { league: { legends: {} }, monsterHallOfFame: { v: 1, candidates: [{ id: 'gone', name: 'Gone', position: 'QB', retiredYear: 2, seasons: 10, games: 90, honours: { titles: 0, awards: 3, records: 1 } }], elections: [] } };
   recordRetiredMonsterCandidates(g, { owner: [], league: [] }, 6);
   assert.equal('prod' in g.monsterHallOfFame.candidates[0], false);
-  assert.equal(candidateScore(g.monsterHallOfFame.candidates[0]), Math.round((3 * HALL_CASE.awardOther + HALL_CASE.recordOther + 10 + 20 + 90 / 16) * 10) / 10);
+  assert.equal(candidateScore(g.monsterHallOfFame.candidates[0]), Math.round((3 * HALL_CASE.awardOther + HALL_CASE.recordOther + 10 + 20 + 90 / HALL_CASE.gamesPer) * 10) / 10);
 });
 test('the Board: fifteen seats, a fixed standard per seat and year, and the same result every time', () => {
   const pool = Array.from({ length: 40 }, (_, i) => career({ id: `m${i}`, position: ['QB', 'K', 'OL', 'S'][i % 4], prod: 50 + i * 7, seasons: 6 + (i % 10), games: 60 + i * 3, awardsBy: i % 9 === 0 ? { mvp: 1 } : {} }));
@@ -157,4 +157,13 @@ test('the Board: fifteen seats, a fixed standard per seat and year, and the same
   // a seat's standard is spread over the whole range, not bunched (seats differ by one character)
   const votes = []; for (let y = 1; y <= 60; y++) votes.push(electMonsterHallOfFame([career({ id: 'edge', retiredYear: 0, prod: 100, seasons: 12, games: 160, awardsBy: { opoy: 1, smoy: 1 } })], y + 3).election.ballot[0].votes);
   assert.ok(new Set(votes).size >= 6, `a borderline case draws many different counts: ${[...new Set(votes)].sort((x, y) => x - y)}`);
+});
+
+test('longevity on the 14-game scale (owner 2026-11-23): 249 games at one point per 24.9, the same ten-point ceiling, reached in the same number of seasons', () => {
+  assert.equal(HALL_CASE.gamesCap, 249); assert.equal(HALL_CASE.gamesPer, 24.9); assert.equal(Math.round(160 * 14 / 9), HALL_CASE.gamesCap);
+  assert.equal(HALL_CASE.gamesCap / HALL_CASE.gamesPer, 160 / 16, 'the games part still tops out at ten points');
+  const games = (n) => candidateCase(career({ seasons: 0, games: n })).longevity;
+  assert.equal(games(249), 10); assert.equal(games(400), 10, 'nothing above the ceiling'); assert.equal(games(0), 0);
+  for (const seasons of [1, 4, 8, 12, 16, 20]) { const old = Math.min(seasons * 9, 160) / 16; const now = Math.min(seasons * 14, 249) / 24.9; assert.ok(Math.abs(now - old) < 0.06, `${seasons} full seasons: ${old} then, ${now} now`); }
+  assert.equal(candidateCase(career({ seasons: 30, games: 900 })).longevity, 34, 'the longevity ceiling as a whole is unchanged');
 });

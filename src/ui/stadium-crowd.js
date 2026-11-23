@@ -84,8 +84,8 @@ export const SIDE_SEATS = 43, SIDE_COL = 11, SIDE_PITCH = 8; // a side stand's p
  * `side`: 'left' or 'right' draws the picture for a stand along a sideline instead: the fans stand upright, one column per row
  * of the stand, with the front row in the column nearest the field, each fan a little in front of the one above.
  */
-export function crowdImages({ seed, mix, homeColor, awayColor, stand = 'far', type = null, side = null }) {
-  const key = `${seed}|${stand}|${side}|${mix.home}|${mix.away}|${mix.fill}|${homeColor}|${awayColor}|${type}`;
+export function crowdImages({ seed, mix, homeColor, awayColor, homeColor2 = null, awayColor2 = null, stand = 'far', type = null, side = null }) {
+  const key = `${seed}|${stand}|${side}|${mix.home}|${mix.away}|${mix.fill}|${homeColor}|${awayColor}|${homeColor2}|${awayColor2}|${type}`;
   if (cache.has(key)) return cache.get(key);
   const doc = globalThis.document; if (!doc?.createElement) return null;
   const COLS = side ? SIDE_SEATS : CROWD_COLS; const W = side ? CROWD_ROWS * SIDE_COL : CROWD_W, H = side ? SIDE_SEATS * SIDE_PITCH + 4 : CROWD_H;
@@ -107,7 +107,8 @@ export function crowdImages({ seed, mix, homeColor, awayColor, stand = 'far', ty
       if (!side && x % 9 === 8) { g.fillStyle = '#2b3547'; g.fillRect(px + 6, py, 2, PITCH_Y - 1); } // an aisle
       g.fillStyle = '#2c3a55'; g.fillRect(px, py + 5, 6, 5); g.fillStyle = '#35466a'; g.fillRect(px, py + 5, 6, 1); // the seat
       if (!who) continue; // an empty seat
-      const shirt = who === 'h' ? homeColor : who === 'a' ? awayColor : plain;
+      const second = (x * 7 + y * 3) % 3 === 0; // one supporter in three wears the club's secondary colour
+      const shirt = who === 'h' ? (second && homeColor2) || homeColor : who === 'a' ? (second && awayColor2) || awayColor : plain;
       const m = beasts[y][x];
       // A monster: fur-coloured head and paws, the club's colours on its body (so the crowd's mix still reads), bright eyes.
       const monster = (ctx, dy, arms) => {
@@ -142,6 +143,6 @@ export function crowdImages({ seed, mix, homeColor, awayColor, stand = 'far', ty
 }
 
 /** What the match screen hands the surround: the two clubs' colours, the mix and the seed. */
-export function crowdFor({ seed, homeColor, awayColor, homeRecord, awayRecord, event, type = null }) {
-  return { seed, type, homeColor: homeColor || '#5aa0ff', awayColor: awayColor || '#ff8a7a', mix: crowdMix({ home: homeRecord, away: awayRecord, event }) };
+export function crowdFor({ seed, homeColor, awayColor, homeColor2 = null, awayColor2 = null, homeRecord, awayRecord, event, type = null }) {
+  return { seed, type, homeColor: homeColor || '#5aa0ff', awayColor: awayColor || '#ff8a7a', homeColor2, awayColor2, mix: crowdMix({ home: homeRecord, away: awayRecord, event }) };
 }

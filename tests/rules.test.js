@@ -8,7 +8,7 @@ import { generatedTeam } from '../src/franchise/roster.js';
 import { createRng } from '../src/core/rng.js';
 
 const home = generatedTeam(1, { id: 'h', name: 'Ember City Beasts', abbr: 'EMB' });
-const away = generatedTeam(2, { id: 'a', name: 'Stonehaven Titans', abbr: 'STO' });
+const away = generatedTeam(2, { id: 'a', name: 'Stonehaven Bastions', abbr: 'STO' });
 const teams = { home, away };
 const fakeSim = (over) => ({ result: 'tackle', yards: 0, endYard: 0, elapsed: 4, events: [], stats: {}, names: {}, frames: [], seed: 1, ballOn: 0, touchdown: false, ...over });
 function scrimmage(over = {}) {

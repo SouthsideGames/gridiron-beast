@@ -1,3 +1,5 @@
+> **Superseded in part (2026-11-23):** the field generator's rules in this document (a gym's field home or away; the 65% grass / 35% elemental draw) are replaced by `GRIDIRON_BEAST_GDD.md` §60.4: the home club alone decides the field. The rest of this document stands.
+
 # Franchise Mode quality-of-life and personality update (2026-11-11)
 
 Branch `franchise-qol-personality`, from main 65391d2 (PR #99). Final update the same day: four new fields, the final field rules, the Developer Tools cleanup and ability-review tracking. Merged as d303aee and published to the main testing link as **v43.7.0-franchise-qol** (artifact version 120) on the owner's authorisation; the 24 changed or added files were read back and match the merge commit.

@@ -141,7 +141,7 @@ test('the Beast Dex outlives a franchise: discoveries merge into the player stor
   const signedA = Object.keys(a.dex.signed);
   assert.ok(signedA.length >= 20);
   assert.equal(D.dexStatusGlobal(signedA[0]), 'signed');
-  const b = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Stonehaven Titans', cornerstoneOffense: 'Pyronix', cornerstoneDefense: 'Granigor', seed: 10 });
+  const b = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Stonehaven Bastions', cornerstoneOffense: 'Pyronix', cornerstoneDefense: 'Granigor', seed: 10 });
   assert.equal(F.dexStatus(b, signedA[0]), 'signed', 'a species signed in the previous franchise still counts');
   assert.equal(F.dexStatus(b, signedA[0], { franchiseOnly: true }) === 'signed', b.dex.signed[signedA[0]] != null);
   assert.equal(D.dexCountsGlobal().franchises, 2);
@@ -170,7 +170,7 @@ test('evolution: commons evolve at their level, keep personal names, grow, and t
   // Facing an evolved AI monster does not unlock its form; acquiring one does.
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed: 77 });
   f.season.year = 4;
-  const t = F.legacyAiTeam(f, 'Harbor Sentinels'); // the generated rosters of v40 saves; persistent rosters evolve by level as they play (GDD §42.6)
+  const t = F.legacyAiTeam(f, 'Harbor Anchors'); // the generated rosters of v40 saves; persistent rosters evolve by level as they play (GDD §42.6)
   assert.ok(t.roster.some((x) => x.stage >= 1), 'season 4 gym club fields evolved monsters');
   const evolved = t.roster.find((x) => x.stage >= 1); const previousForm = F.dexFormSeen(f, evolved.species); F.dexRecord(f, evolved, 'seen');
   assert.equal(F.dexFormSeen(f, evolved.species), previousForm);

@@ -315,12 +315,29 @@ const cache = new Map();
 const bodyCache = new Map(); // sprite body (the rect rows, flipped or not) per spec and tint: shared by the inline svg and the field symbols
 const specKey = (spec, tint, flip) => JSON.stringify([spec.id || spec.name, tint, flip, spec.body, spec.size, spec.look, spec.features, spec.colors, spec.pattern || '', ...(spec.structure != null ? [spec.structure, spec.pose || '', spec.mirror || false, spec.eyes || '', spec.proportions || null, spec.features || null, spec.face || null, spec.markings || null] : [])]); // v2 fields only for v2 recipes, so legacy keys are unchanged
 
+/**
+ * A uniform on the sprite (team-kit.js): `kit` { jersey, trim } recolours a band of the body. Only body, belly and accent pixels in
+ * two rows a little below the middle of the monster become the jersey (keeping their light and shade), and the row under them the
+ * trim; outline, eyes, white and dark details are never touched, so the silhouette and the face stay exactly the species'.
+ */
+const KIT_CODES = new Set(['M', 'Ml', 'Md', 'B', 'A', 'Al', 'Ad', 'G']);
+export function kitGrid(grid, kit) {
+  if (!kit) return null; let top = H, bottom = -1;
+  for (let y = 0; y < H; y++) if (grid[y].some((v) => v)) { top = Math.min(top, y); bottom = y; }
+  if (bottom < 0) return null; const y0 = Math.round(top + (bottom - top) * 0.5);
+  const shade = (code) => (code.endsWith('l') ? 'l' : code.endsWith('d') ? 'd' : code === 'B' ? 'l' : '');
+  const out = grid.map((row) => row.slice());
+  for (let y = y0; y <= Math.min(H - 1, y0 + 2); y++) for (let x = 0; x < W; x++) { const v = grid[y][x]; if (!KIT_CODES.has(v)) continue; out[y][x] = (y === y0 + 2 ? 'T' : 'J') + shade(v); }
+  return out;
+}
+const kitPalette = (kit) => ({ J: kit.jersey, Jl: shift(kit.jersey, 9, -2), Jd: shift(kit.jersey, -12, 2), T: kit.trim, Tl: shift(kit.trim, 9, -2), Td: shift(kit.trim, -12, 2) });
+
 /** The 16×16 pixel rows of a species spec as SVG rects (run-length merged), optionally mirrored. The same pixels sprite16 draws. */
-export function sprite16Body(spec, { tint = 0, flip = false } = {}) {
-  const key = specKey(spec, tint, flip);
+export function sprite16Body(spec, { tint = 0, flip = false, kit = null } = {}) {
+  const key = specKey(spec, tint, flip) + (kit ? `|${kit.jersey}|${kit.trim}` : '');
   if (bodyCache.has(key)) return bodyCache.get(key);
-  const pal = palette(spec.colors || ['#888888', '#cccccc'], tint);
-  const grid = spriteGrid(spec);
+  const pal = { ...palette(spec.colors || ['#888888', '#cccccc'], tint), ...(kit ? kitPalette(kit) : {}) };
+  const grid = kitGrid(spriteGrid(spec), kit) || spriteGrid(spec);
   let rects = '';
   for (let y = 0; y < H; y++) {
     let x = 0;
@@ -336,10 +353,10 @@ export function sprite16Body(spec, { tint = 0, flip = false } = {}) {
 }
 
 /** Inline SVG for a species spec. `tint` (−6..6) nudges lightness per individual. */
-export function sprite16(spec, size = 48, { tint = 0, flip = false, cls = 'sprite' } = {}) {
-  const key = `${size}|${cls}|${specKey(spec, tint, flip)}`;
+export function sprite16(spec, size = 48, { tint = 0, flip = false, cls = 'sprite', kit = null } = {}) {
+  const key = `${size}|${cls}|${specKey(spec, tint, flip)}${kit ? `|${kit.jersey}|${kit.trim}` : ''}`;
   if (cache.has(key)) return cache.get(key);
-  const body = sprite16Body(spec, { tint, flip });
+  const body = sprite16Body(spec, { tint, flip, kit });
   const svg = `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${body}</svg>`;
   cache.set(key, svg);
   return svg;
@@ -351,9 +368,9 @@ export function sprite16(spec, size = 48, { tint = 0, flip = false, cls = 'sprit
  * distinct sprite for the page's lifetime.
  */
 const symbols = new Map(); let symbolSeq = 0;
-export function sprite16Symbol(spec, { tint = 0, flip = false } = {}) {
-  const key = specKey(spec, tint, flip);
+export function sprite16Symbol(spec, { tint = 0, flip = false, kit = null } = {}) {
+  const key = specKey(spec, tint, flip) + (kit ? `|${kit.jersey}|${kit.trim}` : '');
   let e = symbols.get(key);
-  if (!e) { const id = `fvs${++symbolSeq}`; e = { id, symbol: `<symbol id="${id}" viewBox="0 0 16 16" shape-rendering="crispEdges">${sprite16Body(spec, { tint, flip })}</symbol>` }; symbols.set(key, e); }
+  if (!e) { const id = `fvs${++symbolSeq}`; e = { id, symbol: `<symbol id="${id}" viewBox="0 0 16 16" shape-rendering="crispEdges">${sprite16Body(spec, { tint, flip, kit })}</symbol>` }; symbols.set(key, e); }
   return e;
 }

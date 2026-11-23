@@ -162,9 +162,9 @@ test('awards freeze when the playoffs are drawn and a full season books leaders 
   assert.equal(f.season.awardsFinal.year, 1);
   const w = f.season.awardsFinal.winners; assert.ok(w.mvp && w.opoy && w.dpoy && w.coy, 'all major awards have winners');
   assert.ok(w.mvp.why && w.mvp.record, 'winner explains itself');
-  { const slim = f.season.awards.league.mvp; assert.equal(slim.id, w.mvp.id); assert.equal(slim.score, w.mvp.score); assert.equal(slim.why, w.mvp.why); const back = expandWinner(slim, 1, (id) => f.roster.find((m) => m.id === id) || f.league?.monsters?.[id] || null); for (const [k, v] of Object.entries(w.mvp)) if (typeof v === 'number') assert.equal(back[k], v, `${k} restored from the book (forward-only compaction, GDD §46)`); } // end-of-season awards use the frozen result, slimmed to what the books hold
+  { const slim = f.season.awards.league.mvp; assert.equal(slim.id, w.mvp.id); assert.equal(slim.score, w.mvp.score); assert.equal(slim.why, w.mvp.why); const back = expandWinner(slim, 1, (id) => f.roster.find((m) => m.id === id) || f.league?.monsters?.[id] || (f.league?.legends?.[id] ? { stats: { seasons: f.league.legends[id].seasons } } : null)); /* a winner who retired at the end of the season keeps his books in his legend record */ for (const [k, v] of Object.entries(w.mvp)) if (typeof v === 'number') assert.equal(back[k], v, `${k} restored from the book (forward-only compaction, GDD §46)`); } // end-of-season awards use the frozen result, slimmed to what the books hold
   assert.ok(Object.keys(f.season.playoffStats).length >= 2, 'playoff table filled');
-  const regGames = Math.max(...F.Stats.leagueRows(f.season.leagueStats).map((r) => r.games)); assert.ok(regGames <= 9, 'regular-season games never include playoffs');
+  const regGames = Math.max(...F.Stats.leagueRows(f.season.leagueStats).map((r) => r.games)); assert.ok(regGames <= 14, 'regular-season games never include playoffs'); assert.ok(regGames >= 12, 'and a full season is fourteen');
   assert.ok(f.history[0].awards.leaders.passYds?.length, 'history keeps the season leaders');
   assert.ok(leaders(f.season.leagueStats, 'rating', { n: 3 }).every((r) => r.att >= 10), 'rate leaders meet the minimum');
   // Careers advance at the rollover.
@@ -175,7 +175,9 @@ test('awards freeze when the playoffs are drawn and a full season books leaders 
   const agedAtClose = F.task7Offseason(f); // Task 7: ageing (and a season of experience) happens at the season close, before contracts and free agency
   { const b = (t7FA(f), F.beginDraft(f)); assert.ok(b.ok, b.reason); let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } }
   t7FillToMin(f); // monsters who decline to renew (their own say) leave places to fill
-  assert.equal(F.startNextSeason(f).ok, true, F.startNextSeason(f).reason);
+  // (This hands-off owner fills the roster by price, not by position: in the 32-club league seed 71 is left without a running back, and
+  // the lineup safeguard would hold the season. He continues under the forfeit rule, as the soak's hands-off owner does.)
+  { const next = F.startNextSeason(f, { acceptForfeits: true }); assert.equal(next.ok, true, next.reason); }
   assert.equal(starter.yearsPro, agedAtClose ? yp : yp + 1, 'a season of experience (counted once)');
   assert.equal(starter.stats.seasons.length, 1); assert.equal(starter.stats.season.year, 2); assert.deepEqual(starter.stats.season.reg, {});
   assert.ok(monsterLine(starter, 'career', 'reg').games >= 5, 'career totals survive');

@@ -56,8 +56,11 @@ test('League News: only meaningful moves, two a week in season, one offseason di
 test('AI–AI trades: uncommon, fair, within the cap and the roster limits, never a protected monster, deterministic by seed', () => {
   const a = runFranchise(52, { seasons: 3, difficulty: 'pro' }).f; const b = runFranchise(52, { seasons: 3, difficulty: 'pro' }).f;
   assert.deepEqual(a.league.trades, b.league.trades, 'one seed, one league');
-  const tr = a.league.trades || []; assert.ok(tr.length >= 2 && tr.length <= 12, `${tr.length} trades in three offseasons and seasons`);
-  const perYear = {}; for (const t of tr) perYear[t.year] = (perYear[t.year] || 0) + 1; assert.ok(Object.values(perYear).every((n) => n <= LT.AI_TRADE_RULES.offseasonMax + 2), JSON.stringify(perYear));
+  const tr = a.league.trades || []; // "Uncommon" was at most 12 trades among 15 AI clubs; among 31 the same rate is 24 (the yearly limits below are unchanged).
+  assert.ok(tr.length >= 2 && tr.length <= 24, `${tr.length} trades in three offseasons and seasons`);
+  const perYear = {}; for (const t of tr) perYear[t.year] = (perYear[t.year] || 0) + 1; // A year's limit by the rules: `offseasonMax` deals in the offseason window and at most one in each open week of the season. (The
+  // bound here used to be offseasonMax + 2, which is what this seed produced among 15 AI clubs; among 31 a weekly attempt finds a partner more often.)
+  { const [w0, w1] = LT.AI_TRADE_RULES.weeks; assert.ok(Object.values(perYear).every((n) => n <= LT.AI_TRADE_RULES.offseasonMax + (w1 - w0 + 1)), JSON.stringify(perYear)); assert.ok(tr.length / Object.keys(perYear).length <= LT.AI_TRADE_RULES.offseasonMax + 3, 'and on average well under it'); }
   for (const t of tr) { const m = a.league.monsters[t.toA]; if (m) { assert.ok(!R.isProtected(m)); const later = tr.slice(tr.indexOf(t) + 1).some((u) => u.toA === m.id || u.toB === m.id || (u.toBAll || []).includes(m.id)); if (!later) assert.equal(m.traded?.from, t.B); assert.ok(m.history.some((h) => h.club === t.B && h.reason === 'traded')); } } // `traded` names his latest seller: a monster traded on again (no repeat-trade rule yet, trading track T4) keeps this deal in his history
   assert.deepEqual(R.verifyLeague(a), []);
   // a window on a prepared league: value bands and the cap hold for every deal made
@@ -91,9 +94,9 @@ test('compaction is forward-only and lossless: a slimmed winner row expands to t
   const g = runFranchise(54, { seasons: 1, legacy: true }).f; for (const x of Object.values(g.history[0].awards.league)) if (x && typeof x === 'object') assert.ok(!x.slim);
 });
 
-test('the League Hub data: 16 clubs, rosters with tenure and deals, career leaders over the universe including retired legends, protected monsters, head-to-head', () => {
+test('the League Hub data: 32 clubs, rosters with tenure and deals, career leaders over the universe including retired legends, protected monsters, head-to-head', () => {
   const { f } = two();
-  const dir = LC.clubDirectory(f, { overallOf: () => 60 }); assert.equal(dir.length, 16); assert.equal(dir.filter((c) => c.mine).length, 1); assert.ok(dir.some((c) => c.protected.length));
+  const dir = LC.clubDirectory(f, { overallOf: () => 60 }); assert.equal(dir.length, 32); assert.equal(dir.filter((c) => c.mine).length, 1); assert.ok(dir.some((c) => c.protected.length));
   const club = clubsOf(f)[0]; const rows = LC.clubRosterView(f, club); assert.ok(rows.length >= 26); assert.ok(rows.every((m) => m.id && m.ovr > 0 && (m.permanent || m.ends != null)));
   const L = LC.universeCareerLeaders(f, { n: 5 }); assert.ok(Object.keys(L).length >= 6); assert.ok(L.tacklesTotal[0].value >= L.tacklesTotal[4].value);
   const mine = LC.universeCareerLeaders(f, { n: 3, mine: true }); for (const rows2 of Object.values(mine)) assert.ok(rows2.every((r) => r.where === 'roster'));

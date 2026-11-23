@@ -63,7 +63,8 @@ test('Task 10 continuous Watch: no prompt and no boundary stop; a recorded switc
     assert.equal(F.encounterDecide(f, legal.ex, '').ok, false); assert.equal(F.encounterDecide(f, 0, 'stay').ok, false);
     const pick = legal.reserves[0].id; assert.ok(F.encounterDecide(f, legal.ex, pick).ok); const r2 = F.encounterBattle(f);
     for (let i = 0; i <= legal.lastSeq; i++) assert.equal(r2.log[i].text, r.log[i].text, `event ${i} identical before the switch`);
-    const rot = r2.log.find((x) => x.kind === 'rotation' && x.side === 'a' && x.ex === legal.ex); assert.ok(rot, 'the rotation happens at that rotation phase'); assert.equal(rot.in, pick);
+    // (the switch asked for is the rotation after the decision point: an ability may already have moved this side earlier in the same exchange)
+    const rot = r2.log.find((x, i) => i > legal.lastSeq && x.kind === 'rotation' && x.side === 'a' && x.ex === legal.ex); assert.ok(rot, 'the rotation happens at that rotation phase'); assert.equal(rot.in, pick);
     const h = clone(f); h.week.encounter.decisions.a[legal.ex] = 'zz9'; assert.throws(() => F.encounterBattle(h), /not a living reserve/, 'a bogus reserve is refused by the engine');
     const g = Save.importJson(Save.exportJson(f)); assert.equal(logHashFor(F.encounterBattle(g)), logHashFor(r2), 'a reload rebuilds the same battle');
     const t = clone(f); t.week.encounter.decisions.a = { [legal.ex]: 'auto' }; const rt = F.encounterBattle(t); assert.ok(rt.winner); assert.ok(rt.log.some((x) => x.kind === 'rotation_decision' && x.decision === 'auto' && x.ex === legal.ex), 'auto is recorded where it was chosen');

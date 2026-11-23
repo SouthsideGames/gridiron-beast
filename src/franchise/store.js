@@ -18,7 +18,7 @@
 // earlier one: saves run one at a time, a newer request replaces a pending one, and a manifest refuses a lower sequence from
 // the same writer.
 
-import { unpack, checksum, gzip, gunzip, encodeRaw, encodeWorkerSource, PACK_FORMAT } from './pack.js';
+import { pack, unpack, checksum, gzip, gunzip, encodeRaw, encodeWorkerSource, PACK_FORMAT } from './pack.js';
 import * as Save from './save.js';
 import { newUid, legacyUid } from '../core/uid.js';
 
@@ -35,6 +35,8 @@ export const DB_VERSION = 2;
 export const STORE_NAMES = Object.freeze(['slots', 'saves', 'backups', 'parts', 'global']);
 export const SLOT = 1;
 export const JOURNAL_KEY = 'gridiron-beast-v7-journal';
+/** Journal parts longer than this (characters of JSON) are written packed so they fit localStorage (32-club franchises). */
+export const JOURNAL_PACK_FROM = 1_000_000;
 const KEY = (slot = SLOT) => `slot${slot}`;
 const PARTS = Object.freeze(['core', 'history', 'draft', 'prehistory']);
 /**
@@ -348,6 +350,9 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
       let out = fz.raws.core.slice(0, -1); const add = (k, v) => { out += `${out.length > 1 ? ',' : ''}${JSON.stringify(k)}:${v}`; };
       if (fz.order.includes('history')) add('history', fz.raws.history);
       if (fz.order.includes('draftResults')) add('draftResults', fz.raws.draft);
+      // The league archive, when it is stored as its own part (the split layout): it was left out of the snapshot until 2026-11-23,
+      // so a mirrored save lost its league history. (In the three-part layout it is already inside core.)
+      if (fz.raws.prehistory != null && fz.order.includes('preLeagueHistory')) add('preLeagueHistory', fz.raws.prehistory);
       if (fz.order.includes('savedAt') && fz.savedAt != null) add('savedAt', JSON.stringify(fz.savedAt));
       return `${out}}`;
     } };
@@ -433,7 +438,9 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     if (!ls || !f || !busy()) return false;
     try {
       const fz = freeze(f); const parts = {}; const bases = {};
-      for (const n of partsIn(fz.raws)) { const rs = checksum(fz.raws[n]); if (cache[n] && cache[n].raw === rs) bases[n] = cache[n].entry.sum; else parts[n] = fz.raws[n]; }
+      // A large part (a 32-club franchise's core is about 5 MB of JSON) would not fit localStorage's quota as it stands: it is packed
+      // (pack.js, lossless and synchronous, about a third of the size). Small parts stay plain JSON, exactly as before.
+      for (const n of partsIn(fz.raws)) { const rs = checksum(fz.raws[n]); if (cache[n] && cache[n].raw === rs) bases[n] = cache[n].entry.sum; else parts[n] = fz.raws[n].length > JOURNAL_PACK_FROM ? JSON.stringify(pack(JSON.parse(fz.raws[n]))) : fz.raws[n]; }
       if (!Object.keys(parts).length) return false; // nothing but the time changed: the committed save already holds it
       const body = JSON.stringify({ v: 2, slot, uid: fz.uid, savedAt: fz.savedAt, order: fz.order, base: bases, on: base, parts });
       ls.setItem(journalKey, JSON.stringify({ sum: checksum(body), body }));
@@ -453,7 +460,7 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
   async function assembleJournal(j) {
     const vals = {};
     for (const n of PARTS) {
-      if (j.parts[n] != null) { vals[n] = JSON.parse(j.parts[n]); continue; }
+      if (j.parts[n] != null) { const o = JSON.parse(j.parts[n]); vals[n] = o?.fmt === PACK_FORMAT && Array.isArray(o.k) ? unpack(o) : o; continue; } // packed when it was large (journal)
       if (OPTIONAL_PARTS.has(n) && j.base?.[n] == null) continue; // a journal of the three-part layout (or of a franchise without an archive)
       const part = await backend.run(['parts'], 'readonly', (t) => t.get('parts', j.base[n]));
       vals[n] = await decodePart(part, j.base[n]); // throws if the base is gone: the journal is then not used

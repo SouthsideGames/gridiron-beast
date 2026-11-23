@@ -135,7 +135,10 @@ export function weakestSpare(f, club, { position = null, exclude = new Set() } =
 export function joinAsDraftee(f, club, m, { year, silent = false } = {}) {
   let released = null;
   if (clubRoster(f, club).length >= ROSTER_MAX) {
-    const out = weakestSpare(f, club, { position: m.position }); if (!out) return { ok: false, reason: `${$t('franchise.cannot_make_room', { club })}` };
+    // Never one of this same draft's rookies: with two picks at one position (more likely since the class doubled for 32 clubs)
+    // the weakest spare there was the club's earlier pick, who vanished the moment he was chosen.
+    const classmates = new Set(clubRoster(f, club).filter((x) => x.joined === year && !x.yearsPro && x.contract?.rookie).map((x) => x.id));
+    const out = weakestSpare(f, club, { position: m.position, exclude: classmates }); if (!out) return { ok: false, reason: `${$t('franchise.cannot_make_room', { club })}` };
     released = releaseFromClub(f, club, out.id, { year, reason: 'released', silent, why: 'room' });
   }
   const salary = Math.round(salaryFor(m) * ROOKIE_SCALE / 100) * 100;

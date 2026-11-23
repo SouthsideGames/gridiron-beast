@@ -47,6 +47,14 @@ export const ENVIRONMENTS = Object.freeze({
   dragon: { id: 'dragon', name: t('stadiums.dragons_den'), short: t('stadiums.den'), type: null, element: 'Dragon', indoor: false, icon: '🐉', texture: 'scales',
     palette: { a: '#4a4651', b: '#514c58', c: '#44404b', end: '#5a1f2c', apron: '#2b2130', tint: 'rgba(170,60,90,0.05)', decor: '#c0394b' },
     blurb: t('stadiums.ancient_stone_crimson_and_purple_banners'), weather: { clear: 4, overcast: 3, wind: 2, storm: 1 } },
+  // The Wind and Psychic Gym Leaders' fields (32-club league, 2026-11-23). Looks only, like Dragon's Den: `type` is null, so no
+  // monster is boosted there. Whether Wind and Psychic fields should carry a bonus is a balance decision the owner has deferred.
+  sky: { id: 'sky', name: t('stadiums.sky_stadium'), short: t('stadiums.sky'), type: null, element: 'Wind', indoor: false, icon: '☁', texture: 'breeze',
+    palette: { a: '#3f9a6c', b: '#46a473', c: '#399064', end: '#3a7fc4', apron: '#5fa9de', tint: 'rgba(235,250,255,0.05)', decor: '#ffffff' },
+    blurb: t('stadiums.bright_turf_high_above_the_clouds'), weather: { clear: 6, wind: 3, overcast: 1 } },
+  oracle: { id: 'oracle', name: t('stadiums.oracle_stadium'), short: t('stadiums.oracle'), type: null, element: 'Psychic', indoor: false, icon: '🔮', texture: 'stars',
+    palette: { a: '#3a2a63', b: '#41306d', c: '#34255a', end: '#5a2466', apron: '#221740', tint: 'rgba(255,140,225,0.05)', decor: '#ff9ae6' },
+    blurb: t('stadiums.deep_violet_turf_under_charted_stars'), weather: { clear: 7, overcast: 3 } },
 });
 /** The element a field belongs to (null for grass): its favoured type, or for a look-only field its `element`. */
 export const fieldElement = (envId) => { const e = ENVIRONMENTS[envId]; return e ? e.element || e.type || null : null; };
@@ -62,24 +70,46 @@ export const WEATHER = Object.freeze({
   indoor: { label: t('stadiums.indoors'), icon: '🏟' },
 });
 
-/** Each club's home stadium (one per club; every gym club sits in its element's environment). */
+/**
+ * Each club's home stadium. A Gym Leader's club plays on its type's field, with that field's special look and (where the field
+ * has one) its bonus; that is the only place the field appears. Every other club's home is ordinary grass (owner, 2026-11-22),
+ * including five that had elemental fields in the 16-club league. The names are the owner's (the eight corrected on 2026-11-23 keep their text keys).
+ */
 export const STADIUMS = Object.freeze({
+  // Veyra
   'Frostpeak Howlers': { name: t('stadiums.howling_glacier_bowl'), env: 'frozen' },
-  'Glacier Guardians': { name: t('stadiums.guardian_icefield'), env: 'frozen' },
-  'Northstar Wolves': { name: t('stadiums.northstar_park'), env: 'grass' },
-  'Ironpeak Rams': { name: t('stadiums.ironpeak_foundry_dome'), env: 'dome' },
-  'Stormport Bolts': { name: t('stadiums.the_bolt_yard'), env: 'storm' },
+  'Glacier Guardians': { name: t('stadiums.guardian_icefield'), env: 'grass' },
+  'Northstar Novas': { name: t('stadiums.northstar_park'), env: 'grass' },
+  'Ironpeak Colossi': { name: t('stadiums.ironpeak_foundry_dome'), env: 'dome' },
+  'Stormport Bolts': { name: t('stadiums.the_bolt_yard'), env: 'grass' },
   'Canyon Crushers': { name: t('stadiums.crusher_canyon'), env: 'desert' },
-  'Sundown Drakes': { name: t('stadiums.sundown_mesa_field'), env: 'desert' },
-  'Thunder Mesa': { name: t('stadiums.thunderhead_stadium'), env: 'storm' },
-  'Stonehaven Titans': { name: t('stadiums.stonehaven_field'), env: 'grass' },
+  'Sundown Drakes': { name: t('stadiums.sundown_mesa_field'), env: 'grass' },
+  'Thunder Mesa Blitz': { name: t('stadiums.thunderhead_stadium'), env: 'storm' },
+  'Goldhaven Royals': { name: t('stadiums.crown_field'), env: 'grass' },
+  'Riverbend Rapids': { name: t('stadiums.rapids_run_park'), env: 'grass' },
+  'Pinecrest Wardens': { name: t('stadiums.warden_lodge_field'), env: 'grass' },
+  'Skyvale Cyclones': { name: t('stadiums.skyvale_summit'), env: 'grass' },
+  'Emberfall Infernos': { name: t('stadiums.the_cinder_bowl'), env: 'volcanic' },
+  'Coral Bay Tides': { name: t('stadiums.coral_bay_reef_park'), env: 'grass' },
+  'Cliffhaven Chargers': { name: t('stadiums.cliffside_arena'), env: 'sky' },
+  'Palm Isle Mystics': { name: t('stadiums.mystic_lagoon_field'), env: 'grass' },
+  // Koruun
+  'Stonehaven Bastions': { name: t('stadiums.stonehaven_field'), env: 'grass' },
   'Eastport Phantoms': { name: t('stadiums.gaslight_park'), env: 'shadow' },
-  'Harbor Sentinels': { name: t('stadiums.sentinel_pier_field'), env: 'tidal' },
-  'Ashford Hawks': { name: t('stadiums.ashford_commons'), env: 'grass' },
-  'Ember City Beasts': { name: t('stadiums.the_ember_pit'), env: 'volcanic' },
-  'Bayou Stalkers': { name: t('stadiums.cypress_hollow'), env: 'forest' },
-  'Sunfire Lions': { name: t('stadiums.sunfire_coliseum'), env: 'radiant' },
-  'Palmetto Vipers': { name: t('stadiums.palmetto_grove'), env: 'dragon' },
+  'Harbor Anchors': { name: t('stadiums.sentinel_pier_field'), env: 'tidal' },
+  'Ashford Cinders': { name: t('stadiums.ashford_commons'), env: 'grass' },
+  'Ember City Beasts': { name: t('stadiums.the_ember_pit'), env: 'grass' },
+  'Bayou Stalkers': { name: t('stadiums.cypress_hollow'), env: 'grass' },
+  'Sunfire Solars': { name: t('stadiums.sunfire_coliseum'), env: 'radiant' },
+  'Palmetto Wyrms': { name: t('stadiums.palmetto_grove'), env: 'dragon' },
+  'Thornwood Wildroots': { name: t('stadiums.elderroot_stadium'), env: 'grass' },
+  'Silvergrove Arcanists': { name: t('stadiums.silvergrove_athenaeum'), env: 'grass' },
+  'Mossvale Quakes': { name: t('stadiums.faultline_field'), env: 'grass' },
+  'Fernhaven Wisps': { name: t('stadiums.wispwood_park'), env: 'grass' },
+  'Aetheria Seers': { name: t('stadiums.the_seers_observatory'), env: 'oracle' },
+  'Deepwater Chompers': { name: t('stadiums.deepwater_trench'), env: 'grass' },
+  'Mistport Veils': { name: t('stadiums.mistport_quay'), env: 'grass' },
+  'Westhaven Pirates': { name: t('stadiums.corsair_harbor_stadium'), env: 'forest', variant: 'coastal' }, // the Nature Gym, by the sea
 });
 
 const hash = (s) => { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; };
@@ -87,8 +117,14 @@ const hash = (s) => { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i+
 export function stadiumFor(club, overrides = null) {
   const s = overrides?.[club] || STADIUMS[club] || { name: `${t('stadiums.field', { club: club || t('stadiums.neutral') })}`, env: 'grass' };
   const env = ENVIRONMENTS[s.env] || ENVIRONMENTS.grass;
-  return { club, name: s.name, env: env.id, type: env.type, indoor: env.indoor };
+  return { club, name: s.name, env: env.id, type: env.type, indoor: env.indoor, ...(s.variant ? { variant: s.variant } : {}) };
 }
+/**
+ * A stadium's own version of its field's look. The design stays the type's (there are twelve, one per type); a variant only
+ * recolours parts of it. 'coastal': Corsair Harbor Stadium, the Nature Gym on the shore: sea-blue end zones and a strip of sand
+ * between the paint and the barrier.
+ */
+export const STADIUM_VARIANTS = Object.freeze({ coastal: { end: '#1d6f8c', sand: '#d8c690', intro: 'The grove meets the tide' } });
 /** Weather for one game, drawn from a key (deterministic: the preview and the game always agree). Indoors: always 'indoor'. */
 export function weatherFor(envId, key) {
   const env = ENVIRONMENTS[envId] || ENVIRONMENTS.grass; const pool = Object.entries(env.weather);
@@ -99,5 +135,5 @@ export function weatherFor(envId, key) {
 /** The venue of one game: the home club's stadium and the day's weather. Small and plain, so it can live in a saved game. */
 export function venueFor(homeClub, key, overrides = null) {
   const s = stadiumFor(homeClub, overrides);
-  return { club: homeClub, name: s.name, env: s.env, type: s.type, indoor: s.indoor, weather: weatherFor(s.env, `${key}|${homeClub}`) };
+  return { club: homeClub, name: s.name, env: s.env, type: s.type, indoor: s.indoor, weather: weatherFor(s.env, `${key}|${homeClub}`), ...(s.variant ? { variant: s.variant } : {}) };
 }

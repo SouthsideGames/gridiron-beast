@@ -55,11 +55,12 @@ test('awards announced at the end of the regular season count on career cards be
   assert.equal(careerProfile(f, m.id).honours.awards, 1, 'no double count');
 });
 
-test('only the Beast Bowl is the Beast Bowl: semifinals and conference championships are not', () => {
-  const seeds = { Aurora: ['A1', 'A2', 'A3', 'A4'], Titan: ['T1', 'T2', 'T3', 'T4'] };
+test('only the Beast Bowl is the Beast Bowl: wild card, divisional and conference championship games are not', () => {
+  const seeds = { Veyra: ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7'], Koruun: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'] }; // 14 clubs, four rounds (2026-11-23)
   const r1 = playoffRound(1, [], seeds); assert.ok(r1.every((g) => !isBeastBowlTag(g.tag)), r1.map((g) => g.tag).join());
   const res1 = r1.map((g, i) => ({ round: 1, conf: g.conf, winner: g.home }));
   const r2 = playoffRound(2, res1, seeds); assert.ok(r2.every((g) => !isBeastBowlTag(g.tag)), r2.map((g) => g.tag).join());
-  const r3 = playoffRound(3, [...res1, ...r2.map((g) => ({ round: 2, conf: g.conf, winner: g.home }))], seeds); assert.ok(isBeastBowlTag(r3[0].tag));
+  const res2 = r2.map((g) => ({ round: 2, conf: g.conf, winner: g.home })); const r3 = playoffRound(3, [...res1, ...res2], seeds); assert.equal(r3.length, 2); assert.ok(r3.every((g) => !isBeastBowlTag(g.tag)), r3.map((g) => g.tag).join());
+  const r4 = playoffRound(4, [...res1, ...res2, ...r3.map((g) => ({ round: 3, conf: g.conf, winner: g.home }))], seeds); assert.equal(r4.length, 1); assert.ok(isBeastBowlTag(r4[0].tag));
   assert.match(fs.readFileSync('src/ui/screens/match.js', 'utf8'), /const champ = G\.event === 'playoff' && isBeastBowlTag\(tag\)/);
 });

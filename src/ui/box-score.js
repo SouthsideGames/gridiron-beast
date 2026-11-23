@@ -1,6 +1,7 @@
 // Halftime / final box score: per-team leaders (with monster art), team
 // totals, Players of the Game and the monster-football extras (abilities,
 // jukes, broken tackles, blocks shed). Pure functions over the game state.
+import { teamInk } from '../data/league.js';
 import { careerLink } from './career-ui.js';
 
 import { esc, fmtClock } from './dom.js';
@@ -67,11 +68,11 @@ export function boxScoreHtml(state, teams, { title = $t('match.box_score'), live
     [$t('match.completions'), (s) => `${s.passComp}/${s.passAtt}`], [$t('match.first_downs'), (s) => s.firstDowns], [$t('match.sacks_2'), (s, side) => state.stats[side === 'home' ? 'away' : 'home'].sacks || 0],
     [$t('match.turnovers'), (s) => s.turnovers], [$t('match.possession'), (s) => fmtClock(Math.round(s.timeOfPossession || 0))],
   ];
-  const totals = `<table class="bs-totals"><thead><tr><th style="color:${A.color}">${esc(A.abbr)}</th><th></th><th style="color:${H.color}">${esc(H.abbr)}</th></tr></thead><tbody>${tot.map(([l, fn]) => `<tr><td>${fn(S('away'), 'away')}</td><td class="dim">${l}</td><td>${fn(S('home'), 'home')}</td></tr>`).join('')}</tbody></table>`;
+  const totals = `<table class="bs-totals"><thead><tr><th style="color:${teamInk(A.name, A.color)}">${esc(A.abbr)}</th><th></th><th style="color:${teamInk(H.name, H.color)}">${esc(H.abbr)}</th></tr></thead><tbody>${tot.map(([l, fn]) => `<tr><td>${fn(S('away'), 'away')}</td><td class="dim">${l}</td><td>${fn(S('home'), 'home')}</td></tr>`).join('')}</tbody></table>`;
   const pog = playersOfGame(state);
-  const pogCard = (p, label) => { if (!p) return ''; const m = who(teams[p.side], p.key || p.slot); const club = state[p.side]; return `<div class="pog">${monsterSprite(m, 44)}<div><div class="dim" style="font-size:11px;letter-spacing:.08em">${label}</div><b>${monsterLink(m)}</b> <span class="dim">${p.slot} · <span style="color:${club.color}">${esc(club.abbr)}</span></span><div class="muted" style="font-size:13px">${esc(line(p))}</div></div></div>`; };
+  const pogCard = (p, label) => { if (!p) return ''; const m = who(teams[p.side], p.key || p.slot); const club = state[p.side]; return `<div class="pog">${monsterSprite(m, 44)}<div><div class="dim" style="font-size:11px;letter-spacing:.08em">${label}</div><b>${monsterLink(m)}</b> <span class="dim">${p.slot} · <span style="color:${teamInk(club.name, club.color)}">${esc(club.abbr)}</span></span><div class="muted" style="font-size:13px">${esc(line(p))}</div></div></div>`; };
   return `<div class="box-score">
-    <div class="bs-head"><span style="color:${A.color}">${esc(A.name)}</span><b class="bs-score">${state.score.away}-${state.score.home}</b><span style="color:${H.color}">${esc(H.name)}</span></div>
+    <div class="bs-head"><span style="color:${teamInk(A.name, A.color)}">${esc(A.name)}</span><b class="bs-score">${state.score.away}-${state.score.home}</b><span style="color:${teamInk(H.name, H.color)}">${esc(H.name)}</span></div>
     <div class="center dim" style="margin-bottom:8px">${esc(title)}</div>
     ${pog.offense || pog.defense ? `<h3>${$t('match.players_of_the_game')}</h3><div class="pog-wrap">${pogCard(pog.offense, 'OFFENSE')}${pogCard(pog.defense, 'DEFENSE')}</div>` : ''}
     <h3>${$t('match.leaders')}</h3><div class="bs-leaders">${leaders}</div>

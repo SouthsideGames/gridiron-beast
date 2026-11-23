@@ -13,11 +13,13 @@ import { t as $t } from '../text/index.js';
 export { PAIR_TYPES };
 export const LEVEL_NAMES = Object.freeze(['New', 'Developing', 'Established', 'Strong', 'Elite']);
 /**
- * Joint successful plays (lifetime, for the exact pair) needed for +1% … +4%. Elite = what a strong (75th-percentile) pair of
- * that type earns in one nine-game regular season; the steps are 20 / 45 / 70 / 100% of it (audit 2026-10-24; DL–DL recalibrated
- * on the owner's strict rule plus the shed → partner's stop event, 2026-10-25).
+ * Joint successful plays (lifetime, for the exact pair) needed for +1% … +4%. The nine-game values below were set so Elite =
+ * what a strong (75th-percentile) pair of that type earns in one regular season, the steps 20 / 45 / 70 / 100% of it (audit
+ * 2026-10-24; DL–DL recalibrated 2026-10-25).
+ * 14-game season (owner ruling 2026-11-23): every threshold is the nine-game value × 14 / 9, rounded to the nearest whole play
+ * (half up). Each list still rises strictly; levels, names and the +1% … +4% bonuses are unchanged.
  */
-export const THRESHOLDS = Object.freeze({
+export const THRESHOLDS_9_GAMES = Object.freeze({
   'QB-RB': [15, 34, 53, 75],
   'QB-WR': [6, 14, 21, 30],
   'QB-TE': [7, 16, 25, 36],
@@ -27,6 +29,22 @@ export const THRESHOLDS = Object.freeze({
   'DL-LB': [2, 4, 6, 9],
   'DL-CB': [1, 3, 4, 6],
 });
+export const SEASON_SCALE = Object.freeze({ from: 9, to: 14 });
+/** Nine-game plays to fourteen-game plays: × 14 / 9, nearest whole number, half up. Used for the thresholds and for older counts. */
+export const scalePlays = (n) => Math.floor((n || 0) * SEASON_SCALE.to / SEASON_SCALE.from + 0.5);
+export const THRESHOLDS = Object.freeze(Object.fromEntries(Object.entries(THRESHOLDS_9_GAMES).map(([k, t]) => [k, Object.freeze(t.map(scalePlays))])));
+/** Version of `f.partnerships`: 2 = counts on the 14-game scale. A version-1 record is read on the 14-game scale at once and its stored counts are scaled the first time it is written to (a game or a captain pick); loading a save changes nothing. */
+export const RECORD_VERSION = 2;
+/**
+ * Chemistry earned before the 14-game thresholds keeps its level: each pair's count is scaled by the same 14 / 9. Because the
+ * scale is above 1 and rounding is monotonic, a count at or over an old threshold lands at or over the new one, and a count
+ * below it stays below, so every pair has exactly the level it had. Idempotent (only a version-1 record is touched).
+ */
+export function scaleOldChemistry(f) {
+  const P = f?.partnerships; if (!P || (P.v || 1) >= RECORD_VERSION) return false;
+  for (const rec of Object.values(P.pairs || {})) if (rec && Number.isFinite(rec.n)) rec.n = scalePlays(rec.n);
+  P.v = RECORD_VERSION; return true;
+}
 /** Per-game ceiling: 25% of the Elite target, rounded half up, never below 3 (owner decision 2026-10-25). */
 export const GAME_CAP_SHARE = 0.25;
 export const GAME_CAP_MIN = 3;
@@ -125,9 +143,11 @@ export function checkPick(cands, side, pick, { other = [] } = {}) {
 export const isActive = (f) => !!f?.partnerships?.v;
 export function captainsOf(f, club, year = f?.season?.year) { return f?.partnerships?.captains?.[year]?.[club] || null; }
 export function pairRecord(f, a, b) { return f?.partnerships?.pairs?.[pairKey(a, b)] || null; }
-export function chemistryCount(f, a, b) { return pairRecord(f, a, b)?.n || 0; }
+/** A stored count on the 14-game scale (a version-1 record's count is scaled as it is read). */
+const countOf = (P, rec) => ((P?.v || 1) < RECORD_VERSION ? scalePlays(rec?.n) : rec?.n || 0);
+export function chemistryCount(f, a, b) { return countOf(f?.partnerships, pairRecord(f, a, b)); }
 export function captaincyOf(f, club, id, year = f?.season?.year) { const c = captainsOf(f, club, year); if (!c || !id) return null; for (const side of SIDES) { const p = c[side]; if (p && (p.a === id || p.b === id)) return { side, pair: p, partner: p.a === id ? p.b : p.a }; } return null; }
-function ensure(f, year) { return (f.partnerships ||= { v: 1, startedYear: year, pairs: {}, captains: {}, credited: {} }); }
+function ensure(f, year) { scaleOldChemistry(f); return (f.partnerships ||= { v: RECORD_VERSION, startedYear: year, pairs: {}, captains: {}, credited: {} }); }
 function touchPair(P, p, year, club) {
   const k = pairKey(p.a, p.b); const rec = (P.pairs[k] ||= { a: p.a, b: p.b, type: p.type, n: 0, first: year, last: year, seasons: [] });
   rec.type = p.type; rec.last = Math.max(rec.last ?? year, year); rec.first = Math.min(rec.first ?? year, year);
@@ -164,7 +184,7 @@ export function gameIdOf({ year, week, playoff = false, round = null, home, away
 /** (`together` is null for a game begun before v42.2.1, which counted no snaps.) */
 export function commitGame(f, state, { year, gameId, clubs }) {
   if (!state?.partners || !isActive(f) || !gameId) return [];
-  const P = f.partnerships; const led = (P.credited[year] ||= {});
+  scaleOldChemistry(f); const P = f.partnerships; const led = (P.credited[year] ||= {});
   if (led[gameId]) return [];
   led[gameId] = 1;
   const rows = [];
@@ -197,7 +217,7 @@ export function sideStatus(f, club, side, { rosterIds = [], lineupIds = [], inju
 }
 /** Every partnership a monster has had chemistry or a captaincy in, best first. */
 export function partnershipsOf(f, id) {
-  const out = []; for (const rec of Object.values(f?.partnerships?.pairs || {})) if (rec.a === id || rec.b === id) out.push({ ...rec, partner: rec.a === id ? rec.b : rec.a, progress: progressOf(rec.type, rec.n) });
+  const out = []; for (const rec of Object.values(f?.partnerships?.pairs || {})) if (rec.a === id || rec.b === id) { const n = countOf(f.partnerships, rec); out.push({ ...rec, n, partner: rec.a === id ? rec.b : rec.a, progress: progressOf(rec.type, n) }); }
   return out.sort((x, y) => (y.progress.level - x.progress.level) || (y.n - x.n) || String(x.partner).localeCompare(String(y.partner)));
 }
 
@@ -205,7 +225,7 @@ export function partnershipsOf(f, id) {
 export function partnershipProblems(f) {
   const P = f?.partnerships; if (!P) return [];
   const out = []; const say = (s) => out.push(`partnerships: ${s}`);
-  if (P.v !== 1) say(`version ${P.v}`);
+  if (P.v !== 1 && P.v !== RECORD_VERSION) say(`version ${P.v}`);
   for (const [y, byClub] of Object.entries(P.captains || {})) for (const [club, e] of Object.entries(byClub || {})) {
     const ids = [];
     for (const side of SIDES) { const p = e[side]; if (!p) continue; if (!PAIR_TYPES[p.type]) say(`${$t('franchise.unknown_type', { y, club, side, type: p.type })}`); else if (PAIR_TYPES[p.type].side !== side) say(`${$t('franchise.is_not_a_pair', { y, club, side, type: p.type, side2: side })}`); if (!p.a || !p.b || p.a === p.b) say(`${$t('franchise.bad_pair', { y, club, side })}`); ids.push(p.a, p.b); if (!P.pairs?.[pairKey(p.a, p.b)]) say(`${$t('franchise.no_pair_record', { y, club, side })}`); }

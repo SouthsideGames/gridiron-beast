@@ -10,7 +10,7 @@ import { careerProfile, fullProfile, eventDetail, snapshotProfile, findMonster, 
 import { timelineSectionHtml, timelineActions, redrawKeepingPlace, timelineView } from './career-timeline.js';
 import { openCareerCard } from './career-card.js';
 import { monsterSprite, typeGlyph } from './pixel-monster.js';
-import { TEAM_META } from '../data/league.js';
+import { TEAM_META, REG_WEEKS } from '../data/league.js';
 import { yearOf } from '../data/calendar.js';
 import { POSITION_NAME } from '../data/stat-guide.js';
 import { esc, sheet } from './dom.js';
@@ -99,7 +99,7 @@ export function detailHtml(f, m, d, p) {
     case 'evolve': { const a = { id: m?.id || p?.id, name: '', species: d.species, stage: d.fromStage }, b = { ...a, stage: d.stage };
       return `<div class="dt-evo"><div>${monsterSprite(a, 72)}<span>${esc(d.from || $t('career.before'))}</span></div><span class="dt-evo-arrow" aria-hidden="true">➜</span><div>${monsterSprite(b, 72)}<span>${esc(d.to || $t('career.after'))}</span></div></div>
       <p class="dim center">${d.before ? $t('career.evolved_before_the_timeline_began_the') : `${d.year != null ? yearOf(d.year) : ''}${d.week ? `${$t('career.week', { week: d.week })}` : ''}`}</p>${d.lvl || d.ovr ? `<div class="kv">${d.lvl ? `${$t('career.b_level_b')}<span>${d.lvl}</span>` : ''}${d.ovr ? `${$t('career.b_overall_b')}<span class="mono">${d.ovr[0]} → <b>${d.ovr[1]}</b>${d.ovr[1] > d.ovr[0] ? ` <span class="good">(+${d.ovr[1] - d.ovr[0]})</span>` : ''}</span>` : ''}</div>` : ''}`; }
-    case 'game': return `<div class="dt-hero"><span class="dt-icon">🏈</span><div><div class="dt-title">${d.week > 10 ? esc(F.ROUND_NAMES[d.week - 10] || $t('career.playoffs')) : `${$t('career.week_2', { week: d.week })}`} · ${yearOf(d.year)}</div><div class="dt-sub">${d.home ? 'vs' : 'at'} the ${esc(d.opp)}${d.club ? ` · ${club(d.club)}` : ''}</div></div></div>
+    case 'game': return `<div class="dt-hero"><span class="dt-icon">🏈</span><div><div class="dt-title">${d.week > REG_WEEKS ? esc(F.ROUND_NAMES[d.week - REG_WEEKS] || $t('career.playoffs')) : `${$t('career.week_2', { week: d.week })}`} · ${yearOf(d.year)}</div><div class="dt-sub">${d.home ? 'vs' : 'at'} the ${esc(d.opp)}${d.club ? ` · ${club(d.club)}` : ''}</div></div></div>
       <div class="dt-big mono ${d.won ? 'good' : 'bad'}">${d.won ? 'W' : 'L'} ${esc(d.score)}</div>
       ${d.lineText ? `<div class="kv">${$t('career.b_his_game_b')}<span>${esc(d.lineText)}</span></div>` : ''}${missing}`;
     case 'season': return `<div class="dt-hero"><span class="dt-icon">📅</span><div><div class="dt-title">${$t('career.season_2', { year: yearOf(d.year) })}</div><div class="dt-sub">${club(d.club)}</div></div></div>

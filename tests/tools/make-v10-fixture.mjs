@@ -10,7 +10,7 @@ import * as Save from '../../src/franchise/save.js';
 const T0 = 1_790_000_000_000; let tick = 0; const realNow = Date.now; Date.now = () => T0 + (tick++) * 1000;
 
 export function makeV10Season2() {
-  const f = F.createFranchise({ owner: { first: 'Fixture', last: 'Owner', gender: 'Female', portrait: 1, hometown: '' }, club: 'Ember City Beasts', seed: 20261107 });
+  const f = F.createFranchise({ owner: { first: 'Fixture', last: 'Owner', gender: 'Female', portrait: 1, hometown: '' }, club: 'Goldhaven Royals', seed: 20261107 });
   // A fixed creation time, and no storage identity: like the v39.1-era payload this replaces, the franchise carries no `uid`, so the
   // storage layer gives it one (legacyUid) exactly as it does a pre-IndexedDB save; the migration tests depend on that.
   f.createdAt = '2026-11-07T00:00:00.000Z'; delete f.uid;
@@ -24,6 +24,9 @@ export function makeV10Season2() {
     else F.skipPlayoffs(f);
   }
   if (!f.season.finished) throw new Error('season 1 did not finish');
+  // The fixture stands, as it always has, for a save written before Task 9 (the monster Hall of Fame): tests/task9-save-compat.test.js
+  // loads it to prove such a save opens with an empty Hall. It was regenerated for the 32-club league on 2026-11-23 by a later build.
+  delete f.monsterHallOfFame;
   return f;
 }
 

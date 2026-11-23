@@ -9,7 +9,7 @@ import { resultsNews, playoffNews, championNews, raceNews, recordNews, addLeague
 import { updateGameRecords, ensureRecords } from '../src/franchise/stats.js';
 
 const home = generatedTeam(1, { id: 'h', name: 'Ember City Beasts', abbr: 'EMB' });
-const away = generatedTeam(2, { id: 'a', name: 'Stonehaven Titans', abbr: 'STO' });
+const away = generatedTeam(2, { id: 'a', name: 'Stonehaven Bastions', abbr: 'STO' });
 function scrimmage(over = {}) {
   const s = R.newGame({ home, away, seed: 5, coinWinner: 'home', choice: 'receive' });
   s.phase = 'scrimmage'; s.possession = 'away'; s.ballOn = 30; s.down = 1; s.toGo = 10; s.clockRunning = false;
@@ -56,15 +56,16 @@ test('results news: streaks are mentioned at 4, 6 and 8, not every week they gro
   assert.deepEqual(lines, [0, 0, 0, 2, 0, 2, 0, 2]); // Bravo and Delta at 4, 6, 8
   const shut = resultsNews({ year: 1, week: 1, results: res }).find((x) => x.kind === 'shutout');
   assert.match(shut.text, /^Ember City Beasts' defense shuts out Bravo/);
-  assert.equal(poss('Thunder Mesa'), "Thunder Mesa's");
+  assert.equal(poss('Thunder Mesa Blitz'), "Thunder Mesa Blitz's");
   assert.deepEqual(recordsFrom(res).Bravo, { w: 0, l: 8, t: 0, streak: -8 });
 });
 
 test('playoffs and the champion; award races report a change of leader', () => {
-  const pr = [{ round: 1, home: 'A', away: 'B', homeScore: 20, awayScore: 21, winner: 'B' }, { round: 3, home: 'B', away: 'C', homeScore: 14, awayScore: 7, winner: 'B' }];
-  const p = playoffNews({ year: 2, week: 11, round: 1, results: pr });
-  assert.equal(p[0].kind, 'scores'); assert.match(p[1].text, /B beat A 21-20 and advance to the Conference finals/);
-  assert.match(championNews({ year: 2, week: 13, final: pr[1] })[0].text, /B win the Beast Bowl, beating C 14-7/);
+  const pr = [{ round: 1, home: 'A', away: 'B', homeScore: 20, awayScore: 21, winner: 'B' }, { round: 4, home: 'B', away: 'C', homeScore: 14, awayScore: 7, winner: 'B' }, { round: 3, home: 'B', away: 'D', homeScore: 17, awayScore: 3, winner: 'B' }];
+  const p = playoffNews({ year: 2, week: 16, round: 1, results: pr });
+  assert.equal(p[0].kind, 'scores'); assert.match(p[1].text, /B beat A 21-20 and advance to the Divisional round/); // four rounds since 2026-11-23
+  assert.match(playoffNews({ year: 2, week: 18, round: 3, results: pr })[1].text, /B beat D 17-3 and advance to the Beast Bowl/); assert.equal(playoffNews({ year: 2, week: 19, round: 4, results: pr }).length, 1, 'the final has no "advance" line');
+  assert.match(championNews({ year: 2, week: 19, final: pr[1] })[0].text, /B win the Beast Bowl, beating C 14-7/);
   const meta = { leaders: {} }; const races = (name) => ({ mvp: [{ id: name, name, team: 'X' }, { id: 'z', name: 'Zed', team: 'Y' }] });
   assert.equal(raceNews({ year: 2, week: 2, races: races('Ann'), meta }).length, 0, 'not before week 3');
   assert.equal(raceNews({ year: 2, week: 3, races: races('Ann'), meta }).length, 1);

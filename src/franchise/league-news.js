@@ -7,6 +7,7 @@
 // Items: { id, year, week, kind, tier: 'major' | 'notable' | 'info', icon, text, games?, leaders?, round? }
 //   kind: scores · upset · streak · unbeaten · shutout · blowout · overtime · race · race_lead · award · record · playoffs · champion
 
+import { REG_WEEKS, LAST_WEEK, FINAL_ROUND } from '../data/league.js';
 import { honoursText } from './league.js';
 import { AWARDS } from './awards.js';
 import { RECORD_CATEGORIES, TEAM_RECORDS } from './stats.js';
@@ -28,12 +29,12 @@ export const NEWS_RULES = Object.freeze({
 export const RACE_AWARDS = Object.freeze(['mvp', 'opoy', 'dpoy', 'oroy', 'droy', 'smoy', 'coy']);
 const PRIORITY = { record: 0, champion: 0, award: 1, playoffs: 1, race_lead: 2, upset: 3, unbeaten: 4, streak: 5, overtime: 6, shutout: 7, blowout: 8 };
 
-export const ROUND_LABEL = Object.freeze({ 1: $t('franchise.wild_card_round'), 2: $t('franchise.conference_finals'), 3: $t('franchise.beast_bowl') });
-const ROUND_LINE = Object.freeze({ 1: $L('franchise.wild_card_round'), 2: $L('franchise.conference_finals'), 3: $L('franchise.beast_bowl') });   // the same names as saved lines, for the items below
+export const ROUND_LABEL = Object.freeze({ 1: $t('franchise.wild_card_round'), 2: $t('franchise.divisional_round'), 3: $t('franchise.conference_finals'), 4: $t('franchise.beast_bowl') });
+const ROUND_LINE = Object.freeze({ 1: $L('franchise.wild_card_round'), 2: $L('franchise.divisional_round'), 3: $L('franchise.conference_finals'), 4: $L('franchise.beast_bowl') });   // the same names as saved lines, for the items below
 const winnerOf = (g) => g.winner || (g.homeScore > g.awayScore ? g.home : g.awayScore > g.homeScore ? g.away : null);
 const loserOf = (g) => { const w = winnerOf(g); return w ? (w === g.home ? g.away : g.home) : null; };
 const scoreLine = (g) => { const w = winnerOf(g); const hi = Math.max(g.homeScore, g.awayScore), lo = Math.min(g.homeScore, g.awayScore); return w ? `${hi}-${lo}` : `${g.homeScore}-${g.awayScore}`; };
-/** "Thunder Mesa's", "Ironpeak Rams'". */
+/** "Thunder Mesa Blitz's", "Ironpeak Colossi'". */
 export const poss = (team) => (/s$/.test(team) ? `${team}'` : `${team}'s`);
 /** The score as a sentence ends it: a tie settled by the Beast Clash says so instead of "beat 16-16". */
 // a saved line when it has wording in it: every use is a value inside a saved line
@@ -78,7 +79,7 @@ const recStr = (r) => (r ? `${r.w}-${r.l}${r.t ? `-${r.t}` : ''}` : '0-0');
  * The scoreboard and results headlines for one regular-season week. `results` is every regular-season result so far (this
  * week's included, in week order); `club` is the owner's club and `rival` the rival club, highlighted on the scoreboard.
  */
-export function resultsNews({ year, week, results, club = null, rival = null, lastWeek = 10 }) {
+export function resultsNews({ year, week, results, club = null, rival = null, lastWeek = REG_WEEKS }) {
   const thisWeek = results.filter((g) => g.week === week);
   if (!thisWeek.length) return [];
   const before = recordsFrom(results.filter((g) => g.week < week)); const after = recordsFrom(results.filter((g) => g.week <= week));
@@ -115,7 +116,7 @@ export function playoffNews({ year, week, round, results, club = null, rival = n
   const games = results.filter((g) => g.round === round); if (!games.length) return [];
   const label = ROUND_LABEL[round] || `${$t('franchise.round', { round })}`; const id = (k) => `${year}|${week}|${k}`;
   const out = [{ id: id(`pscores${round}`), year, week, round, kind: 'scores', tier: 'info', icon: '🏟️', ...$L('franchise.scores', { label: ROUND_LINE[round] || label }), games: games.map((g) => ({ home: g.home, away: g.away, hs: g.homeScore, as: g.awayScore, ot: !!g.ot, clash: !!g.clash, w: winnerOf(g), mine: g.home === club || g.away === club, rival: !!rival && (g.home === rival || g.away === rival) })) }];
-  if (round < 3) for (const g of games) { const w = winnerOf(g); out.push({ id: id(`${`adv${round}|${w}`}`), year, week, round, kind: 'playoffs', tier: 'notable', icon: '🎟️', ...$L('franchise.beat_and_advance_to_the', { w, loser: loserOf(g), resultTail: resultTail(g), roundLabel: ROUND_LINE[round + 1] })}); }
+  if (round < FINAL_ROUND) for (const g of games) { const w = winnerOf(g); out.push({ id: id(`${`adv${round}|${w}`}`), year, week, round, kind: 'playoffs', tier: 'notable', icon: '🎟️', ...$L('franchise.beat_and_advance_to_the', { w, loser: loserOf(g), resultTail: resultTail(g), roundLabel: ROUND_LINE[round + 1] })}); }
   return out;
 }
 export function championNews({ year, week, final }) {
@@ -123,7 +124,7 @@ export function championNews({ year, week, final }) {
   const w = winnerOf(final);
   return [{ id: `${`${year}|${week}|champion`}`, year, week, kind: 'champion', tier: 'major', icon: '🏆', ...$L('franchise.win_the_beast_bowl_beating', { w, loser: loserOf(final), resultTail: resultTail(final) })}];
 }
-/** The playoff field, drawn after week 10. `seeds` = { conf: [team, ...] }, `records` the season's standings records. */
+/** The playoff field, drawn after the last week of the regular season. `seeds` = { conf: [team, ...] }, `records` the season's standings records. */
 export function playoffFieldNews({ year, week, seeds, records }) {
   const parts = Object.entries(seeds).map(([conf, s]) => `${conf}: ${s.map((t, i) => `${i + 1}. ${t} (${recStr(records?.[t])})`).join(', ')}`);
   return [{ id: `${`${year}|${week}|field`}`, year, week, kind: 'playoffs', tier: 'notable', icon: '📋', ...$P($L('franchise.the_playoff_field_is_set'), ` `, parts.join(' · '), `.`)}];
@@ -180,7 +181,7 @@ export function newsByWeek(list) {
   for (const it of list || []) { if (!cur || cur.year !== it.year || cur.week !== it.week) { cur = { year: it.year, week: it.week, items: [] }; out.push(cur); } cur.items.push(it); }
   return out;
 }
-export const weekLabel = (week) => (week > 10 ? ROUND_LABEL[week - 10] || 'Playoffs' : week === 0 ? 'Preseason' : `${$t('franchise.week_2', { week })}`);
+export const weekLabel = (week) => (week > REG_WEEKS ? ROUND_LABEL[week - REG_WEEKS] || 'Playoffs' : week === 0 ? 'Preseason' : `${$t('franchise.week_2', { week })}`);
 
 /**
  * Backfill for a save made before League News: the current season's scoreboards and results headlines, rebuilt from the
@@ -189,12 +190,12 @@ export const weekLabel = (week) => (week > 10 ? ROUND_LABEL[week - 10] || 'Playo
 export function backfillLeagueNews(f) {
   ensureLeagueNews(f); if (f.leagueNews.length || !f.season?.results?.length) return 0;
   const year = f.season.year; const club = f.club; const rival = f.rivals?.[f.tier]?.team || null;
-  const reg = f.season.results.filter((g) => !g.round && g.week <= 10);
+  const reg = f.season.results.filter((g) => !g.round && g.week <= REG_WEEKS);
   const weeks = [...new Set(reg.map((g) => g.week))].sort((a, b) => a - b);
   const items = weeks.flatMap((week) => resultsNews({ year, week, results: reg, club, rival }));
   const p = f.season.playoffs;
-  if (p?.results?.length) for (const round of [1, 2, 3]) items.push(...playoffNews({ year, week: 10 + round, round, results: p.results, club, rival }));
-  if (p?.champion) { const fin = p.results.find((x) => x.round === 3); items.push(...championNews({ year, week: 13, final: fin })); }
+  if (p?.results?.length) for (const round of [1, 2, 3, 4]) items.push(...playoffNews({ year, week: REG_WEEKS + round, round, results: p.results, club, rival }));
+  if (p?.champion) { const fin = p.results.find((x) => x.round === FINAL_ROUND); items.push(...championNews({ year, week: LAST_WEEK, final: fin })); }
   return addLeagueNews(f, items);
 }
 

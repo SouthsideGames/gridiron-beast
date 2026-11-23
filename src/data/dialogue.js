@@ -27,21 +27,21 @@ const SHARED = {
 
 /** Per-gym pools: lines by state, two per state. */
 export const GYM_LINES = Object.freeze({
-  'Harbor Sentinels': {
+  'Harbor Anchors': {
     first: [$t('dialogue.welcome_to_the_coast_the_tide'), $t('dialogue.play_your_game_mine_has_been')],
     theyWon: [$t('dialogue.you_came_in_high_and_fast'), $t('dialogue.patience_coach_learn_it_or_lose')],
     youWon: [$t('dialogue.you_beat_the_tide_once_nobody'), $t('dialogue.i_made_some_changes_you_will')],
     badgeHeld: [$t('dialogue.you_carry_my_badge_carry_it'), $t('dialogue.tsunarok_remembers_you')],
     beaten: [$t('dialogue.twenty_years_of_the_same_tide'), $t('dialogue.tsunarok_will_want_this_one_back')],
   },
-  'Sunfire Lions': {
+  'Sunfire Solars': {
     first: [$t('dialogue.bright_day_for_it_we_throw'), $t('dialogue.keep_up_if_you_can_most')],
     theyWon: [$t('dialogue.last_time_you_squinted_at_the'), $t('dialogue.aurelion_is_faster_than_your_corners')],
     youWon: [$t('dialogue.you_found_a_way_to_cloud'), $t('dialogue.round_two_the_lions_are_rested')],
     badgeHeld: [$t('dialogue.the_dawn_badge_in_your_pocket'), $t('dialogue.lets_light_it_up')],
     beaten: [$t('dialogue.you_didnt_squint_once_fine_the'), $t('dialogue.nobody_out_shines_the_lions_twice')],
   },
-  'Thunder Mesa': {
+  'Thunder Mesa Blitz': {
     first: [$t('dialogue.tempo_tempo_tempo_if_you_blink'), $t('dialogue.i_run_plays_faster_than_your')],
     theyWon: [$t('dialogue.you_were_a_step_slow_last'), $t('dialogue.voltarch_had_fun_he_wants_more')],
     youWon: [$t('dialogue.you_slowed_us_down_nobody_slows'), $t('dialogue.new_wrinkles_this_week_try_to')],
@@ -69,14 +69,43 @@ export const GYM_LINES = Object.freeze({
     badgeHeld: [$t('dialogue.the_frost_badge_belongs_on_this'), $t('dialogue.nothing_thaws_up_here_coach_not')],
     beaten: [$t('dialogue.clean_football_in_the_cold_i'), $t('dialogue.glacivern_froze_nothing_today_i_will')],
   },
-  'Ironpeak Rams': {
+  'Ironpeak Colossi': {
     first: [$t('dialogue.we_hit_thats_the_whole_speech'), $t('dialogue.aegistron_doesnt_lose_a_matchup_pick')],
     theyWon: [$t('dialogue.you_limped_off_last_time_did'), $t('dialogue.same_hammer_same_nail')],
     youWon: [$t('dialogue.you_beat_the_hammer_respect_wont'), $t('dialogue.we_forged_a_few_new_things')],
     badgeHeld: [$t('dialogue.the_forge_badge_you_earned_it'), $t('dialogue.hit_first_today_or_dont_bother')],
     beaten: [$t('dialogue.you_hit_first_all_day_the'), $t('dialogue.aegistron_lost_a_matchup_write_the')],
   },
-  'Palmetto Vipers': {
+  // The four Gym Leaders added with the 32-club league (2026-11-23).
+  'Emberfall Infernos': {
+    first: [$t('dialogue.welcome_to_the_cinder_bowl_it_only'), $t('dialogue.we_throw_deep_and_we_blitz_you')],
+    theyWon: [$t('dialogue.you_wilted_in_the_second_half_last'), $t('dialogue.pyroclast_was_still_warming_up_when_you')],
+    youWon: [$t('dialogue.you_put_the_fire_out_once_fires'), $t('dialogue.i_have_been_thinking_about_that_loss')],
+    badgeHeld: [$t('dialogue.that_is_my_blaze_badge_in_your'), $t('dialogue.today_the_fire_takes_back_what_is')],
+    beaten: [$t('dialogue.you_stood_in_the_heat_and_did'), $t('dialogue.pyroclast_is_pacing_he_will_want_this')],
+  },
+  'Westhaven Pirates': {
+    first: [$t('dialogue.rowan_thorne_i_planted_my_roots_on'), $t('dialogue.we_run_the_ball_until_the_tide')],
+    theyWon: [$t('dialogue.you_were_in_a_hurry_last_time'), $t('dialogue.elderoot_barely_had_to_stand_up_bring')],
+    youWon: [$t('dialogue.you_cut_through_the_grove_once_it'), $t('dialogue.i_left_one_club_behind_already_i')],
+    badgeHeld: [$t('dialogue.you_carry_the_grove_badge_carry_it'), $t('dialogue.everything_planted_here_comes_back_to_me')],
+    beaten: [$t('dialogue.patience_beat_patience_i_did_not_think'), $t('dialogue.elderoot_will_remember_your_scent')],
+  },
+  'Cliffhaven Chargers': {
+    first: [$t('dialogue.aria_gale_up_here_the_wind_picks'), $t('dialogue.we_play_fast_and_we_play_high')],
+    theyWon: [$t('dialogue.you_were_chasing_shadows_last_time_the'), $t('dialogue.tempestra_says_thank_you_for_the_easy')],
+    youWon: [$t('dialogue.you_held_your_ground_in_my_wind'), $t('dialogue.i_rebuilt_one_club_from_nothing_i')],
+    badgeHeld: [$t('dialogue.my_gale_badge_suits_you_badly_let'), $t('dialogue.the_wind_always_comes_back_around_coach')],
+    beaten: [$t('dialogue.you_read_the_wind_better_than_i'), $t('dialogue.tempestra_is_circling_she_does_not_forget')],
+  },
+  'Aetheria Seers': {
+    first: [$t('dialogue.lyra_vesper_i_have_already_watched_this'), $t('dialogue.do_try_to_surprise_me_so_few')],
+    theyWon: [$t('dialogue.last_time_went_exactly_as_i_saw'), $t('dialogue.astralux_found_your_thoughts_rather_loud')],
+    youWon: [$t('dialogue.you_did_something_i_did_not_foresee'), $t('dialogue.one_unexpected_result_i_do_not_expect')],
+    badgeHeld: [$t('dialogue.the_mind_badge_is_with_you_for'), $t('dialogue.let_us_find_out_which_of_us')],
+    beaten: [$t('dialogue.i_did_not_see_that_i_did'), $t('dialogue.astralux_is_very_quiet_that_is_not')],
+  },
+  'Palmetto Wyrms': {
     first: [$t('dialogue.so_you_are_the_one_they'), $t('dialogue.aurodrax_has_never_been_intercepted_on')],
     theyWon: [$t('dialogue.last_time_was_a_lesson_this'), $t('dialogue.you_looked_at_the_dragon_and')],
     youWon: [$t('dialogue.once_you_beat_the_dragon_once'), $t('dialogue.i_have_waited_all_year_for')],

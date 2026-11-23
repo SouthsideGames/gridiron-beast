@@ -134,7 +134,7 @@ test('staff auto-run handles Tuesday through an encounter and the week still rea
   const f = newFranchise(120);
   const r = F.autoRunToSunday(f); assert.ok(r.ok); assert.equal(f.season.day, 6);
   assert.ok(r.did.some((d) => /Beast Clash|Skipped the encounter/.test(d)), r.did.join(' | '));
-  const g = newFranchise(121); g.season.week = 10; F.scoutDraft(g); assert.equal(F.startEncounter(g, 0).ok, false, 'no encounters in the draft window');
+  const g = newFranchise(121); g.season.week = 15; F.scoutDraft(g); assert.equal(F.startEncounter(g, 0).ok, false, 'no encounters in the draft window');
   const rec = F.recoveryDay(g); assert.ok(rec.ok); assert.equal(g.season.day, 2);
 });
 
@@ -252,7 +252,7 @@ test('a tied player game is settled by the overtime Clash: 3v3 in the season, 5v
     assert.ok(f.news[0] ? f.news.some((n) => /Beast Clash/.test(n.text) && /(WIN|LOSS) 21-21/.test(n.text)) : true);
   }
   // playoffs: five a side
-  const f = newFranchise(420); f.season.week = 11; f.season.playoffs = { round: 1, fixtures: [{ round: 1, home: f.club, away: 'Bayou Stalkers', tag: 'Wild card', conf: 'Aurora' }], results: [], champion: null }; f.season.day = 6; f.week.plan = { offense: [], defense: [] };
+  const f = newFranchise(420); f.season.week = 16; f.season.playoffs = { round: 1, fixtures: [{ round: 1, home: f.club, away: 'Bayou Stalkers', tag: 'Koruun Semifinal', conf: 'Koruun' }], results: [], champion: null }; f.season.day = 6; f.week.plan = { offense: [], defense: [] };
   const pv = F.overtimePreview(f); assert.ok(pv.ok, pv.reason); assert.equal(pv.size, 5); assert.ok(pv.playoff);
 });
 
@@ -286,7 +286,7 @@ test('XP is shown: every battler gets an xp record (amount, level, progress) tha
 test('5v5 playoff overtime (Skip: the AI policy, no prompt): five enter in the chosen order, replacements step up through knockouts, HP persists, and the winner is the side with monsters left', () => {
   let fiveSeen = 0;
   for (const seed of [500, 501, 502, 503]) {
-    const f = newFranchise(seed); f.season.week = 11; f.season.playoffs = { round: 1, fixtures: [{ round: 1, home: f.club, away: 'Bayou Stalkers', tag: 'Wild card', conf: 'Aurora' }], results: [], champion: null }; f.season.day = 6; f.week.plan = { offense: [], defense: [] };
+    const f = newFranchise(seed); f.season.week = 16; f.season.playoffs = { round: 1, fixtures: [{ round: 1, home: f.club, away: 'Bayou Stalkers', tag: 'Koruun Semifinal', conf: 'Koruun' }], results: [], champion: null }; f.season.day = 6; f.week.plan = { offense: [], defense: [] };
     const m = F.sundayMatchup(f); const pv = F.overtimePreview(f); if (!pv.ok || pv.size < 5) continue; fiveSeen++;
     const order = pv.eligible.slice(0, 5).map((x) => x.id).reverse();
     const s = R.newGame({ home: m.home, away: m.away, seed: 9, otPeriods: 1 }); s.finished = true; s.phase = 'final'; s.winner = null; s.needsTiebreak = true; s.score = { home: 20, away: 20 }; f.game = { state: s, playerSide: m.playerSide };

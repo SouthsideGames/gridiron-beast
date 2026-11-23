@@ -73,7 +73,7 @@ test('cornerstone selection carries its shown personal name into the franchise',
 });
 test('draft ceremonies use the athlete name and a separate species label; Dex species names stay untouched',()=>{
   const f=fresh(),m=f.draft.class[0];
-  f.draft.picks=[{round:1,overall:1,team:'Harbor Sentinels',id:m.id,name:m.name,position:m.position}];
+  f.draft.picks=[{round:1,overall:1,team:'Harbor Anchors',id:m.id,name:m.name,position:m.position}];
   startDraftShow(f.draft);const html=draftShowHtml(f.draft);
   assert.ok(html.includes(m.name));assert.ok(html.includes(beastSpeciesLabel(m)));assert.ok(SPECIES_DEX.some(s=>s.id===m.species));
 });

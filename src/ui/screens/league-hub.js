@@ -2,11 +2,12 @@
 // career leaders across the universe, the league's recent moves, the award races and the rivalries (the rival GM and his
 // signature monster, the gym legendaries) with their 20-season continuity. Every monster name opens its career. Reads only.
 
+import { teamLogo } from '../team-logo.js';
 import { esc, delegate } from '../dom.js';
 import { yearOf } from '../../data/calendar.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { careerLink } from '../career-ui.js';
-import { TEAM_META, tierById } from '../../data/league.js';
+import { TEAM_META, tierById, REG_WEEKS, teamSwatch } from '../../data/league.js';
 import { AWARDS } from '../../franchise/awards.js';
 import { RECORD_CATEGORIES } from '../../franchise/stats.js';
 import { teamOverall } from '../../franchise/roster.js';
@@ -30,7 +31,7 @@ function clubsTab(f) {
   const dir = clubDirectory(f, { overallOf: overallOf(f) }); const st = F.leagueStandings(f); const place = (c) => st.overall.indexOf(c) + 1;
   if (!hasLeague(f)) return `<p class="muted">${$t('league.this_franchise_still_plays_against_generated')}</p>`;
   const byDiv = {}; for (const c of dir) (byDiv[c.division] ||= []).push(c);
-  return `<p class="muted">${$t('league.sixteen_clubs_one_universe_tap_a')}</p>${Object.entries(byDiv).map(([div, clubs]) => `<h3>${esc(div)}</h3><div class="list">${clubs.sort((a, b) => place(a.club) - place(b.club)).map((c) => `<button class="item ${c.mine ? 'mine' : ''}" data-action="club" data-club="${esc(c.club)}"><span class="rank">${place(c.club)}</span><div class="grow"><div class="name"><span style="color:${TEAM_META[c.club]?.color}">●</span> ${esc(c.club)}${c.mine ? ` <span class="chip accent">you</span>` : ''}${c.rival ? ` <span class="chip" style="border-color:#a855f7">rival</span>` : ''}${c.gym ? ` <span class="chip">${$t('league.gym', { badge: esc(c.gym.badge) })}</span>` : ''}</div><div class="sub">${$t('league.ovr_monsters', { w: c.record.w, l: c.record.l, t: c.record.t ? '-' + c.record.t : '', overall: c.overall, size: c.size })}${c.protected.length ? ` · ${c.protected.map((p) => `${p.kind === 'legendary' ? '★' : '⚔️'} ${esc(p.name)}`).join(', ')}` : ''}</div></div><span class="dim">›</span></button>`).join('')}</div>`).join('')}`;
+  return `<p class="muted">${$t('league.sixteen_clubs_one_universe_tap_a')}</p>${Object.entries(byDiv).map(([div, clubs]) => `<h3>${esc(div)}</h3><div class="list">${clubs.sort((a, b) => place(a.club) - place(b.club)).map((c) => `<button class="item ${c.mine ? 'mine' : ''}" data-action="club" data-club="${esc(c.club)}"><span class="rank">${place(c.club)}</span><div class="grow"><div class="name">${teamLogo(c.club, 22, { cls: 'team-logo inline' })}${teamSwatch(c.club)} ${esc(c.club)}${c.mine ? ` <span class="chip accent">you</span>` : ''}${c.rival ? ` <span class="chip" style="border-color:#a855f7">rival</span>` : ''}${c.gym ? ` <span class="chip">${$t('league.gym', { badge: esc(c.gym.badge) })}</span>` : ''}</div><div class="sub">${$t('league.ovr_monsters', { w: c.record.w, l: c.record.l, t: c.record.t ? '-' + c.record.t : '', overall: c.overall, size: c.size })}${c.protected.length ? ` · ${c.protected.map((p) => `${p.kind === 'legendary' ? '★' : '⚔️'} ${esc(p.name)}`).join(', ')}` : ''}</div></div><span class="dim">›</span></button>`).join('')}</div>`).join('')}`;
 }
 
 function leadersTab(f, mine) {
@@ -44,7 +45,7 @@ function movesTab(f) {
   const items = (f.leagueNews || []).filter((it) => TRANSACTION_KINDS.has(it.kind)).slice(0, 60);
   if (!items.length) return `<p class="dim">${$t('league.no_league_moves_on_record_yet')}</p>`;
   const byWeek = []; for (const it of items) { const k = `${it.year}|${it.week}`; let g = byWeek.find((x) => x.k === k); if (!g) { g = { k, year: it.year, week: it.week, items: [] }; byWeek.push(g); } g.items.push(it); }
-  const label = (w) => (w === 0 ? $t('league.offseason') : w > 10 ? $t('league.playoffs') : `${$t('league.week', { w })}`);
+  const label = (w) => (w === 0 ? $t('league.offseason') : w > REG_WEEKS ? $t('league.playoffs') : `${$t('league.week', { w })}`);
   return `<p class="muted">${$t('league.the_leagues_moves_worth_a_line')}</p>${byWeek.map((g) => `<h3>${yearOf(g.year)} · ${label(g.week)}</h3><div class="list">${g.items.map((it) => `<div class="item static"><span>${it.icon || '📰'}</span><div class="grow"><div class="sub" style="font-size:14px">${linkText(it)}</div>${it.lines?.length ? `<div class="dim" style="font-size:12px;margin-top:4px">${it.lines.map((l) => linkText(l)).join(`<br>`)}</div>` : ''}</div></div>`).join('')}</div>`).join('')}`;
 }
 /** An item's text with its monster's name linked (the News UI's rule). */
@@ -88,7 +89,7 @@ export function registerLeagueHubScreens(Router, app) {
       const cap = tierById(f.tier).cap; const payroll = mine ? F.salarySummary(f).monsters : (hasLeague(f) ? clubPayroll(f, club) : null);
       const h2h = mine ? null : headToHead(f, club);
       const year = f.season.year;
-      return `<div class="panel"><div class="row between"><b style="color:${meta.color}">${esc(club)}</b><span class="chip">${rec.w}-${rec.l}</span></div><div class="muted">${$t('league.monsters_team_ovr', { n: rows.length, club: overallOf(f)(club) })}${payroll != null ? ` ${$t('league.payroll_cr', { toLocaleString: payroll.toLocaleString('en-US'), toLocaleString2: cap.toLocaleString('en-US') })}` : ''}${h2h ? ` ${$t('league.against_you', { w: h2h.w, l: h2h.l })}` : ''}</div></div>
+      return `<div class="panel"><div class="row between"><b style="color:${meta.ink}">${teamLogo(club, 40, { cls: 'team-logo inline' })}${teamSwatch(club)} ${esc(club)}</b><span class="chip">${rec.w}-${rec.l}</span></div><div class="muted">${$t('league.monsters_team_ovr', { n: rows.length, club: overallOf(f)(club) })}${payroll != null ? ` ${$t('league.payroll_cr', { toLocaleString: payroll.toLocaleString('en-US'), toLocaleString2: cap.toLocaleString('en-US') })}` : ''}${h2h ? ` ${$t('league.against_you', { w: h2h.w, l: h2h.l })}` : ''}</div></div>
         ${rows.length ? `<div class="list">${rows.map((m) => `<div class="item static ${m.injury ? 'hurt' : ''}">${monsterSprite(m, 32)}<div class="grow"><div class="name">${careerLink(m.id, m.name)} ${m.kind ? badge(m.kind) : ''}${m.rookie ? ` <span class="chip">rookie</span>` : ''}${m.injury ? ` <span class="chip" style="border-color:var(--bad)">${$t('league.out_w', { weeks: m.injury.weeks })}</span>` : ''}</div><div class="sub">${$t('league.ovr_age_lvl', { position: esc(m.position), ovr: m.ovr, age: m.age, level: m.level })}${m.seasonsHere != null ? ` · ${m.seasonsHere === 1 ? 'first season here' : `${m.seasonsHere} seasons here`}` : ''}${m.permanent ? $t('league.for_life') : m.ends != null ? ` ${$t('league.deal_to', { year: yearOf(m.ends) })}` : ''}</div></div></div>`).join('')}</div>` : `<p class="dim">${hasLeague(f) ? $t('league.no_roster_on_record') : $t('league.a_generated_roster_it_changes_each')}</p>`}
         <p class="dim" style="margin-top:8px">${$t('league.tap_a_name_for_the_career', { year: yearOf(year) })}</p>`;
     },

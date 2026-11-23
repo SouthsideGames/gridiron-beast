@@ -1,7 +1,7 @@
 // Stadium environments (GDD §33): assignment, weather, the field bonus and its cap, the engine and saves.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ENVIRONMENTS, STADIUMS, WEATHER, stadiumFor, venueFor, weatherFor } from '../src/data/stadiums.js';
+import { ENVIRONMENTS, STADIUMS, WEATHER, stadiumFor, venueFor, weatherFor, fieldElement } from '../src/data/stadiums.js';
 import { ALL_TEAMS } from '../src/data/league.js';
 import { GYMS } from '../src/data/gyms.js';
 import { envMod, contestMod, typeMod, withTypeValues, FOOTBALL_TYPE_VALUES } from '../src/sim/type-matchups.js';
@@ -14,13 +14,18 @@ import * as F from '../src/franchise/franchise.js';
 import * as Save from '../src/franchise/save.js';
 import { newFranchise } from '../tools/franchise-soak.mjs';
 
-test('every club has one permanent stadium in a known environment; gym clubs sit in their element where one exists', () => {
+// 32-club league (2026-11-23): each of the twelve Gym Leaders plays at home on its own type's field, and every other club on grass.
+test('every club has one permanent stadium in a known environment; every Gym Leader sits on its type\'s field and every other club on grass', () => {
   assert.deepEqual(Object.keys(STADIUMS).sort(), [...ALL_TEAMS].sort());
   const names = new Set();
   for (const club of ALL_TEAMS) { const s = stadiumFor(club); assert.ok(ENVIRONMENTS[s.env], club); assert.ok(!names.has(s.name), `unique name ${s.name}`); names.add(s.name); assert.equal(stadiumFor(club).env, s.env, 'permanent'); }
-  for (const g of GYMS) { const env = Object.values(ENVIRONMENTS).find((e) => e.type === g.element); if (env) assert.equal(stadiumFor(g.club).type, g.element, `${g.club} plays in the ${env.name}`); }
-  assert.deepEqual(Object.values(ENVIRONMENTS).map((e) => e.type), [null, 'Ice', 'Fire', 'Nature', 'Electric', 'Earth', 'Metal', 'Water', 'Light', 'Dark', null]); // the last is Dragon's Den: a look only
-  assert.equal(stadiumFor('Ember City Beasts').env, 'volcanic'); assert.equal(stadiumFor('Ironpeak Rams').indoor, true);
+  assert.equal(GYMS.length, 12); assert.equal(new Set(GYMS.map((g) => g.element)).size, 12, 'one Gym Leader per monster type');
+  for (const g of GYMS) { assert.equal(fieldElement(stadiumFor(g.club).env), g.element, `${g.club} plays on the ${g.element} field`); const env = Object.values(ENVIRONMENTS).find((e) => e.type === g.element); if (env) assert.equal(stadiumFor(g.club).type, g.element, `${g.club} plays in the ${env.name}`); }
+  assert.equal(new Set(GYMS.map((g) => stadiumFor(g.club).env)).size, 12, 'twelve Gym Leader fields, none shared');
+  for (const club of ALL_TEAMS) if (!GYMS.some((g) => g.club === club)) assert.equal(stadiumFor(club).env, 'grass', `${club} has no Gym Leader, so its home is grass`);
+  assert.deepEqual(Object.values(ENVIRONMENTS).map((e) => e.type), [null, 'Ice', 'Fire', 'Nature', 'Electric', 'Earth', 'Metal', 'Water', 'Light', 'Dark', null, null, null]); // the last three are Dragon's Den, Sky and Oracle: looks only
+  assert.equal(stadiumFor('Emberfall Infernos').env, 'volcanic'); assert.equal(stadiumFor('Ember City Beasts').env, 'grass'); assert.equal(stadiumFor('Ironpeak Colossi').indoor, true);
+  assert.equal(stadiumFor('Cliffhaven Chargers').env, 'sky'); assert.equal(stadiumFor('Westhaven Pirates').env, 'forest'); assert.equal(stadiumFor('Westhaven Pirates').variant, 'coastal'); assert.equal(stadiumFor('Aetheria Seers').env, 'oracle');
   assert.equal(stadiumFor('Ember City Beasts', { 'Ember City Beasts': { name: 'New Pit', env: 'dome' } }).env, 'dome', 'a future stadium-management override replaces the default');
 });
 
@@ -65,10 +70,10 @@ test('engine: a neutral field changes nothing; a matching field helps whichever 
 
 test('games carry their venue: newGame records it, older saved games without one still play, the preview matches the game, saves keep it', () => {
   const lu = lineup(4, 60); const team = (name) => ({ name, abbr: name.slice(0, 3).toUpperCase(), color: '#fff', offense: lu.offense, defense: lu.defense, offensePlays: OFFENSE_IDS.slice(0, 6), defensePlays: DEFENSE_IDS.slice(0, 6), kicker: { attrs: { kicking: 70 } } });
-  const s = R.newGame({ home: team('Ember City Beasts'), away: team('Bayou Stalkers'), seed: 5 });
+  const s = R.newGame({ home: team('Emberfall Infernos'), away: team('Bayou Stalkers'), seed: 5 });
   assert.equal(s.venue.env, 'volcanic'); assert.equal(s.venue.type, 'Fire'); assert.ok(WEATHER[s.venue.weather]);
-  const old = R.newGame({ home: team('Ember City Beasts'), away: team('Bayou Stalkers'), seed: 5 }); delete old.venue;
-  old.phase = 'scrimmage'; assert.doesNotThrow(() => R.runScrimmagePlay(old, { home: team('Ember City Beasts'), away: team('Bayou Stalkers') }, OFFENSE_IDS[0], DEFENSE_IDS[0]), 'a game saved before venues still plays (no field bonus)');
+  const old = R.newGame({ home: team('Emberfall Infernos'), away: team('Bayou Stalkers'), seed: 5 }); delete old.venue;
+  old.phase = 'scrimmage'; assert.doesNotThrow(() => R.runScrimmagePlay(old, { home: team('Emberfall Infernos'), away: team('Bayou Stalkers') }, OFFENSE_IDS[0], DEFENSE_IDS[0]), 'a game saved before venues still plays (no field bonus)');
   const f = newFranchise(31); F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); F.autoRunToSunday(f); }
   const v = F.sundayVenue(f); const m = F.sundayMatchup(f); assert.equal(v.home, m.home.name);
   const g = F.simulatePlayerGame(f); { const { home: _h, away: _a, ...shown } = v; assert.deepEqual({ ...g.venue }, shown, 'the game is played where, on the field and in the weather the preview said'); }

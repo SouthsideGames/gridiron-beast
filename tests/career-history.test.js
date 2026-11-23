@@ -16,11 +16,11 @@ const fr = (over = {}) => ({ club: 'Ember City Beasts', season: { year: 4, week:
 test('archived games: packed compactly at rollover, unpacked exactly, abbreviations unique', () => {
   const abbrs = Object.values(TEAM_META).map((t) => t.abbr); assert.equal(new Set(abbrs).size, abbrs.length);
   const m = mon({ stats: { v: 2, career: { reg: {}, post: {} }, season: { year: 2, reg: { games: 2, att: 30, passYds: 300 }, post: { games: 1, att: 10, passYds: 90 } }, seasons: [],
-    log: [{ year: 2, week: 1, opp: 'Thunder Mesa', home: true, won: true, score: '21-7', line: { att: 15, passYds: 150, snapsOff: 40 } }, { year: 2, week: 2, opp: 'Harbor Sentinels', home: false, won: false, score: '10-14', line: { att: 15, passYds: 150 } }, { year: 2, week: 11, opp: 'Canyon Crushers', home: true, won: true, playoff: true, score: '17-3', line: { att: 10, passYds: 90 } }] } });
+    log: [{ year: 2, week: 1, opp: 'Thunder Mesa Blitz', home: true, won: true, score: '21-7', line: { att: 15, passYds: 150, snapsOff: 40 } }, { year: 2, week: 2, opp: 'Harbor Anchors', home: false, won: false, score: '10-14', line: { att: 15, passYds: 150 } }, { year: 2, week: 11, opp: 'Canyon Crushers', home: true, won: true, playoff: true, score: '17-3', line: { att: 10, passYds: 90 } }] } });
   rolloverMonster(m, { year: 3, team: 'Ember City Beasts' });
   const b = m.stats.seasons[0]; assert.equal(b.g.length, 3); assert.equal(m.stats.log.length, 0);
   assert.ok(JSON.stringify(b.g).length < 200, `packed season ${JSON.stringify(b.g).length} bytes`);
-  const g = seasonGames(m, 2); assert.deepEqual(g.map((x) => [x.week, x.opp, x.home, x.won, x.playoff, x.score]), [[1, 'Thunder Mesa', true, true, false, '21-7'], [2, 'Harbor Sentinels', false, false, false, '10-14'], [11, 'Canyon Crushers', true, true, true, '17-3']]);
+  const g = seasonGames(m, 2); assert.deepEqual(g.map((x) => [x.week, x.opp, x.home, x.won, x.playoff, x.score]), [[1, 'Thunder Mesa Blitz', true, true, false, '21-7'], [2, 'Harbor Anchors', false, false, false, '10-14'], [11, 'Canyon Crushers', true, true, true, '17-3']]);
   assert.deepEqual(g[0].line, { att: 15, passYds: 150 }, 'snap counts stay in the season totals only');
   assert.deepEqual(unpackGame(packGame({ week: 4, opp: 'Unknown Club', line: { sacks: 2 } })).opp, 'Unknown Club');
 });
@@ -47,10 +47,10 @@ test('season details: totals, playoffs apart, and the game-by-game list from the
 
 test('older records without an id: linked only when the evidence leaves one monster', () => {
   const book = (team, reg, g) => ({ year: 2, team, reg, post: {}, ...(g ? { g } : {}) });
-  const a = mon({ id: 'a', name: 'Twin', stats: { v: 2, career: { reg: {} }, season: { year: 4, reg: {}, post: {} }, seasons: [book('Ember City Beasts', { games: 9, passYds: 2000 }, [packGame({ week: 3, opp: 'Thunder Mesa', line: { passYds: 412 } })])], log: [] } });
-  const b = mon({ id: 'b', name: 'Twin', stats: { v: 2, career: { reg: {} }, season: { year: 4, reg: {}, post: {} }, seasons: [book('Harbor Sentinels', { games: 9, passYds: 2500 })], log: [] } });
+  const a = mon({ id: 'a', name: 'Twin', stats: { v: 2, career: { reg: {} }, season: { year: 4, reg: {}, post: {} }, seasons: [book('Ember City Beasts', { games: 9, passYds: 2000 }, [packGame({ week: 3, opp: 'Thunder Mesa Blitz', line: { passYds: 412 } })])], log: [] } });
+  const b = mon({ id: 'b', name: 'Twin', stats: { v: 2, career: { reg: {} }, season: { year: 4, reg: {}, post: {} }, seasons: [book('Harbor Anchors', { games: 9, passYds: 2500 })], log: [] } });
   const f = fr({ roster: [a], pool: { Lava: [b] } });
-  const rec = { value: 412, name: 'Twin', team: 'Ember City Beasts', opp: 'Thunder Mesa', year: 2, week: 3 };
+  const rec = { value: 412, name: 'Twin', team: 'Ember City Beasts', opp: 'Thunder Mesa Blitz', year: 2, week: 3 };
   assert.deepEqual(P.resolveRecordHolder(f, rec, { scope: 'game', cat: 'passYds' }), { id: 'a', how: 'evidence', candidates: 1 });
   assert.equal(P.resolveRecordHolder(f, { ...rec, week: 4 }, { scope: 'game', cat: 'passYds' }).id, null, 'the archived game says otherwise: unlinked');
   assert.equal(P.resolveRecordHolder(f, { ...rec, id: 'z' }, { cat: 'passYds' }).id, 'z', 'an id is trusted as is');
@@ -61,10 +61,10 @@ test('older records without an id: linked only when the evidence leaves one mons
   const a3 = JSON.parse(JSON.stringify(a2)); a3.id = 'a3';
   const amb = P.resolveRecordHolder(fr({ roster: [a2, a3] }), { ...rec, week: 9, value: 300 }, { scope: 'game', cat: 'passYds' });
   assert.equal(amb.id, null); assert.equal(amb.candidates, 2, 'namesakes on one club in one season: never guessed');
-  const season = P.resolveRecordHolder(f, { value: 2500, name: 'Twin', team: 'Harbor Sentinels', year: 2 }, { scope: 'season', cat: 'passYds' });
+  const season = P.resolveRecordHolder(f, { value: 2500, name: 'Twin', team: 'Harbor Anchors', year: 2 }, { scope: 'season', cat: 'passYds' });
   assert.equal(season.id, 'b');
-  const table = fr({ season: { year: 2, leagueStats: { 'Thunder Mesa': { x9: { id: 'x9', name: 'Twin', team: 'Thunder Mesa', sacks: 6 } } }, playoffStats: {} } });
-  assert.equal(P.resolveRecordHolder(table, { value: 6, name: 'Twin', team: 'Thunder Mesa', year: 2 }, { scope: 'season', cat: 'sacks' }).id, 'x9', 'another club\'s player from the league table');
+  const table = fr({ season: { year: 2, leagueStats: { 'Thunder Mesa Blitz': { x9: { id: 'x9', name: 'Twin', team: 'Thunder Mesa Blitz', sacks: 6 } } }, playoffStats: {} } });
+  assert.equal(P.resolveRecordHolder(table, { value: 6, name: 'Twin', team: 'Thunder Mesa Blitz', year: 2 }, { scope: 'season', cat: 'sacks' }).id, 'x9', 'another club\'s player from the league table');
 });
 
 test('Hall of Fame cards written before careers were kept: a clearly partial history, nothing invented', () => {
@@ -94,8 +94,8 @@ test('Career vs This Season: regular-season totals in both views (the game\'s de
   const rk = mon({ id: 'r', stats: { v: 2, career: { reg: line(4, 40, 22, 300) }, season: { year: 4, reg: line(4, 40, 22, 300), post: {} }, seasons: [], log: [] } });
   const pr = P.fullProfile(fr({ roster: [rk] }), rk, 'roster'); assert.equal(pr.stats.games, 4); assert.equal(pr.stats.seasonGames, 4); assert.deepEqual(pr.stats.focus.map((x) => x.text), pr.stats.seasonFocus.map((x) => x.text));
   // 3: traded in (seasons with another club before this franchise kept his stats): incomplete, said so
-  const tr = mon({ id: 't', yearsPro: 4, history: [{ club: 'Thunder Mesa', from: 1, to: 3, reason: 'traded' }], career: { v: 1, bf: 1, ev: [{ k: 'join:4:Ember City Beasts:1', t: 'join', y: 4, c: 'Ember City Beasts', x: { via: 'trade', from: 'Thunder Mesa' } }] }, stats: { v: 2, career: { reg: cur }, season: { year: 4, reg: cur, post: {} }, seasons: [], log: [] } });
-  const pt = P.fullProfile(fr({ roster: [tr] }), tr, 'roster'); assert.equal(pt.stats.games, 6); assert.equal(pt.complete, false); assert.match(pt.notes[0], /1 season on record/); assert.deepEqual(pt.clubs.map((c) => c.club), ['Thunder Mesa', 'Ember City Beasts']);
+  const tr = mon({ id: 't', yearsPro: 4, history: [{ club: 'Thunder Mesa Blitz', from: 1, to: 3, reason: 'traded' }], career: { v: 1, bf: 1, ev: [{ k: 'join:4:Ember City Beasts:1', t: 'join', y: 4, c: 'Ember City Beasts', x: { via: 'trade', from: 'Thunder Mesa Blitz' } }] }, stats: { v: 2, career: { reg: cur }, season: { year: 4, reg: cur, post: {} }, seasons: [], log: [] } });
+  const pt = P.fullProfile(fr({ roster: [tr] }), tr, 'roster'); assert.equal(pt.stats.games, 6); assert.equal(pt.complete, false); assert.match(pt.notes[0], /1 season on record/); assert.deepEqual(pt.clubs.map((c) => c.club), ['Thunder Mesa Blitz', 'Ember City Beasts']);
   // 4: a free agent (pool): his record runs to the day he left; no "this season" without games
   const fa = mon({ id: 'fa', yearsPro: 2, history: [{ club: 'Ember City Beasts', from: 2, to: 3, reason: 'walked' }], stats: { v: 2, career: { reg: s2 }, season: { year: 3, reg: s2, post: {} }, seasons: [], log: [] } });
   const pf = P.fullProfile(fr({ pool: { Lava: [fa] } }), fa, 'pool'); assert.equal(pf.stats.seasonFocus, null); assert.equal(pf.stats.games, 9);

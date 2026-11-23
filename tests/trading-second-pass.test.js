@@ -264,7 +264,7 @@ function findAccepted(f, { kind = 'picks' } = {}) {
   return null;
 }
 test('a played franchise: the desk lists both sides, previews a deal, and the preview never says whether the club will accept', () => {
-  const f = played(); assert.ok(F.deskAvailable(f)); assert.equal(F.deskPartners(f).length, 15);
+  const f = played(); assert.ok(F.deskAvailable(f)); assert.equal(F.deskPartners(f).length, 31);
   const team = aiClubs(f)[0]; const a = F.deskAssetsFor(f, team);
   assert.ok(a.mine.length >= 26 && a.theirs.length >= 26 && a.myPicks.length > 0 && a.theirPicks.length > 0);
   assert.ok(a.theirs.some((m) => m.why), 'protected and rookie monsters are listed with the reason they cannot move');

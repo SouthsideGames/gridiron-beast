@@ -118,7 +118,7 @@ test('performance refactor: successorsAt designates exactly the successors roste
   for (const c of R.leagueClubs(f)) { const roster = R.clubRoster(f, c); const starters = new Set(Object.values(buildDepthChart(roster)).filter(Boolean));
     const full = rosterPlan(roster, null, { starters }).successors; const fast = successorsAt(roster, [...new Set(roster.map((m) => m.position))], { starters });
     assert.deepEqual([...fast.entries()].sort(), [...full.entries()].sort(), c); compared++; }
-  assert.equal(compared, 15);
+  assert.equal(compared, 31);
 });
 
 test('performance refactor: the roster-worth group cache never serves a stale value (deals, signings, ratings, injuries, contracts, ages, seasons)', async () => {

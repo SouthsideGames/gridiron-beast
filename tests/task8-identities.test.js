@@ -26,11 +26,16 @@ import * as FR from '../src/core/fraction.js';
 import { newFranchise } from '../tools/franchise-soak.mjs';
 
 // The approved tables (AI_IDENTITIES.md §3 strategy column read as schemes; §4 exactly).
-const ORDINARY = { 'Ember City Beasts': ['pass', 'pressure'], 'Stonehaven Titans': ['run', 'coverage'], 'Glacier Guardians': ['balanced', 'coverage'], 'Stormport Bolts': ['pass', 'man'], 'Northstar Wolves': ['run', 'pressure'], 'Sundown Drakes': ['pass', 'coverage'], 'Ashford Hawks': ['balanced', 'man'], 'Bayou Stalkers': ['run', 'man'] };
-const GYM_SCHEMES = { 'Harbor Sentinels': [null, 'coverage'], 'Sunfire Lions': ['pass', null], 'Thunder Mesa': ['pass', 'pressure'], 'Canyon Crushers': ['run', 'pressure'], 'Eastport Phantoms': [null, 'man'], 'Frostpeak Howlers': [null, 'coverage'], 'Ironpeak Rams': ['run', 'pressure'], 'Palmetto Vipers': ['pass', 'man'] };
+const ORDINARY = { 'Ember City Beasts': ['pass', 'pressure'], 'Stonehaven Bastions': ['run', 'coverage'], 'Glacier Guardians': ['balanced', 'coverage'], 'Stormport Bolts': ['pass', 'man'], 'Northstar Novas': ['run', 'pressure'], 'Sundown Drakes': ['pass', 'coverage'], 'Ashford Cinders': ['balanced', 'man'], 'Bayou Stalkers': ['run', 'man'],
+  // the twelve ordinary clubs new with the 32-club league (provisional until the owner's identity sheet): the same eight combinations, spread evenly
+  'Goldhaven Royals': ['balanced', 'coverage'], 'Riverbend Rapids': ['pass', 'man'], 'Pinecrest Wardens': ['run', 'coverage'], 'Skyvale Cyclones': ['pass', 'coverage'], 'Coral Bay Tides': ['balanced', 'man'], 'Palm Isle Mystics': ['run', 'man'],
+  'Thornwood Wildroots': ['run', 'pressure'], 'Silvergrove Arcanists': ['pass', 'pressure'], 'Mossvale Quakes': ['run', 'coverage'], 'Fernhaven Wisps': ['pass', 'man'], 'Deepwater Chompers': ['run', 'pressure'], 'Mistport Veils': ['balanced', 'coverage'] };
+const GYM_SCHEMES = { 'Harbor Anchors': [null, 'coverage'], 'Sunfire Solars': ['pass', null], 'Thunder Mesa Blitz': ['pass', 'pressure'], 'Canyon Crushers': ['run', 'pressure'], 'Eastport Phantoms': [null, 'man'], 'Frostpeak Howlers': [null, 'coverage'], 'Ironpeak Colossi': ['run', 'pressure'], 'Palmetto Wyrms': ['pass', 'man'],
+  'Emberfall Infernos': ['pass', 'pressure'], 'Westhaven Pirates': ['run', 'coverage'], 'Cliffhaven Chargers': ['pass', 'coverage'], 'Aetheria Seers': ['balanced', 'man'] }; // the four Gym Leaders added with the 32-club league
 
 test('the identity table: every club, the ordinary table exactly, the gyms\' strategies; derived from the name, no state', () => {
   assert.deepEqual(Object.keys(IDENTITIES).sort(), [...ALL_TEAMS].sort());
+  assert.equal(Object.keys(ORDINARY).length, 20); assert.equal(GYMS.length, 12); assert.deepEqual([...Object.keys(ORDINARY), ...Object.keys(GYM_SCHEMES)].sort(), [...ALL_TEAMS].sort(), 'every one of the 32 clubs is in one table');
   for (const [club, [o, d]] of Object.entries(ORDINARY)) { const id = identityFor(club); assert.equal(id.offense, o, club); assert.equal(id.defense, d, club); assert.equal(id.gym, false); }
   for (const g of GYMS) {
     const id = identityFor(g.club); const [o, d] = GYM_SCHEMES[g.club]; assert.equal(id.gym, true);
@@ -38,7 +43,7 @@ test('the identity table: every club, the ordinary table exactly, the gyms\' str
     if (d) assert.equal(id.defense, d, `${g.club} defence from the approved strategy`); else assert.equal(id.defense, g.coach.defense);
     assert.ok(id.positions.length > 0, `${g.club} names the positions its strategy needs`);
   }
-  assert.deepEqual(identityFor('Harbor Sentinels').positions, ['CB', 'S'], 'Harbor: Water CBs and safeties (the table\'s example)');
+  assert.deepEqual(identityFor('Harbor Anchors').positions, ['CB', 'S'], 'Harbor: Water CBs and safeties (the table\'s example)');
   assert.ok(['RB', 'OL'].every((p) => identityFor('Canyon Crushers').positions.includes(p)), 'Canyon: OL and RBs (the table\'s example)');
   assert.deepEqual(identityFor('Stormport Bolts'), identityFor('Stormport Bolts'), 'pure: the same identity every call');
 });
@@ -143,7 +148,7 @@ test('free agency and trades: the identity tilt is a tie-break on the existing w
 
 test('training: the identity\'s attributes come first among the position\'s OVR attributes; never a non-approved attribute; the same points spent', () => {
   const rng = createRng(13);
-  for (const club of ['Canyon Crushers', 'Stormport Bolts', 'Harbor Sentinels', 'Ember City Beasts']) {
+  for (const club of ['Canyon Crushers', 'Stormport Bolts', 'Harbor Anchors', 'Ember City Beasts']) {
     const pri = trainingPriority(identityFor(club));
     for (const pos of ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'CB', 'S']) {
       for (const a of pri[pos]) assert.ok(POSITION_WEIGHTS[pos][a] > 0, `${club} ${pos}: ${a} counts toward OVR`);

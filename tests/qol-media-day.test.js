@@ -51,12 +51,12 @@ test('situations come only from saved data: a fresh franchise has none, and each
   const qs = F.mediaQuestions(f); for (const q of qs) assert.ok(!q.when || q.when === 'rival' || q.when === 'legendary', 'week one asks generic questions');
   // a real game with real stat lines
   const g = saturday(62); const qb = g.roster.find((m) => m.position === 'QB'), rb = g.roster.find((m) => m.position !== 'QB');
-  g.season.week = 4; g.lastGame = { week: 3, year: g.season.year, player: true, won: false, playerScore: 3, oppScore: 31, opponent: 'Ashford Hawks' };
+  g.season.week = 4; g.lastGame = { week: 3, year: g.season.year, player: true, won: false, playerScore: 3, oppScore: 31, opponent: 'Ashford Cinders' };
   (qb.stats ||= {}).log = [{ year: g.season.year, week: 3, line: { intThrown: 4, passTd: 0 } }]; (rb.stats ||= {}).log = [{ year: g.season.year, week: 3, line: { rushYds: 141 } }];
   const facts = pressFacts(g, help(g, { streak: -3, record: { w: 0, l: 3 } }));
   assert.deepEqual(facts.live.qbInts, { name: qb.name, ints: 4, mid: qb.id }); assert.deepEqual(facts.live.rushBig, { name: rb.name, yds: 141, mid: rb.id });
   assert.ok(facts.live.blowoutLoss && facts.live.streakL.n === 3); assert.ok(!facts.live.qbHot && !facts.live.blowoutWin && !facts.live.streakW);
-  assert.equal(facts.tokens.margin, 28); assert.equal(facts.tokens.lastOpp, 'Ashford Hawks');
+  assert.equal(facts.tokens.margin, 28); assert.equal(facts.tokens.lastOpp, 'Ashford Cinders');
   const ids = pickQuestions(g, facts, []); const picked = ids.map((id) => fillQuestion(id, facts));
   assert.equal(picked.filter((q) => q.when).length, 2, 'at most two situational questions');
   for (const q of picked) { assert.ok(!q.when || facts.live[q.when], `${q.id} is about something real`); assert.ok(!/\{\w+\}/.test(q.q + q.a.map((a) => a.text).join(' ')), `${q.id}: every placeholder filled`); }

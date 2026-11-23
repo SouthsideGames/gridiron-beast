@@ -1,3 +1,5 @@
+> **Superseded in part (2026-11-23):** the league has 32 clubs and 14-game seasons, and the archive's seasons, brackets, champions and legends are now canon, the same in every franchise (`GRIDIRON_BEAST_GDD.md` §60.9). Descriptions below of a per-seed history, nine games and wild cards are history.
+
 # Pre-Franchise League History
 
 A new franchise opens with eight seasons of league history already played (league years −7 … 0; year 1 is the owner's first). The archive is written once, when the franchise is created, and is never changed or regenerated afterwards. Existing saves are not given one.

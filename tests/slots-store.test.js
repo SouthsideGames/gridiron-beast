@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import zlib from 'node:zlib';
 import * as Save from '../src/franchise/save.js';
 import { createStore, memoryBackend } from '../src/franchise/store.js';
 
@@ -66,4 +67,15 @@ test('slots: usage is reported per slot', async () => {
   const S1 = tab(backend, ls, 1); const S2 = tab(backend, ls, 2); await S1.open(); await S2.open();
   await S1.replace(fresh('One'), null, {}); const u2empty = await S2.usage(); assert.equal(u2empty.save, 0, 'an empty slot owns no bytes');
   await S2.replace(fresh('Two'), null, {}); const u1 = await S1.usage(); const u2 = await S2.usage(); assert.ok(u1.save > 0 && u2.save > 0);
+});
+
+test('a 32-club franchise\'s unload journal is packed so it fits localStorage, and is adopted whole on the next start', async () => {
+  /* Chromium's localStorage limit per origin, in characters */ const quota = 5_242_880; const base = mkLs(); const ls = { getItem: base.getItem, removeItem: base.removeItem, key: base.key, get length() { return base.length; }, setItem: (k, v) => { const used = [...base.m.entries()].filter(([x]) => x !== k).reduce((n, [x, y]) => n + x.length + y.length, 0); if (used + k.length + String(v).length > quota) throw new Error('QuotaExceededError'); base.setItem(k, v); } };
+  const backend = memoryBackend(); const A = tab(backend, ls, 1, { debounce: 60_000 }); await A.open();
+  const text = zlib.gunzipSync(fs.readFileSync(new URL('../tools/release-saves/league32-week6.json.gz', import.meta.url))).toString('utf8');
+  const f = (await A.replace(Save.importJson(text), null, {})).franchise; assert.ok(JSON.stringify(JSON.stringify(f)).length > quota, 'as plain JSON inside the journal it would not fit');
+  f.settings.qbReads = !f.settings.qbReads; f.owner.first = 'Unsaved'; A.save(f);
+  assert.ok(A.journal(f), 'the journal is written within the quota'); const key = [...base.m.keys()].find((k) => k.startsWith('gridiron-beast-v7-journal')); assert.ok(base.m.get(key).length < quota);
+  const r = await tab(backend, ls, 1).open(); assert.equal(r.source, 'journal', JSON.stringify(r.notes)); assert.equal(r.franchise.owner.first, 'Unsaved'); assert.equal(r.franchise.settings.qbReads, f.settings.qbReads);
+  assert.equal(JSON.stringify({ ...r.franchise, savedAt: 0 }), JSON.stringify({ ...f, savedAt: 0 }), 'adopted whole: the packed journal is lossless');
 });

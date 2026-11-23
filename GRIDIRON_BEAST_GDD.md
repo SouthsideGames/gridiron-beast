@@ -321,6 +321,8 @@ Agreed with the owner after Prototype 1 sign-off and the monsters pass. Franchis
 
 ### 15.3 Gym clubs (fixed, same in every franchise)
 
+> **Superseded in part by §60 (the 32-club league, owner specification 2026-11-23).** There are now twelve Gym Leaders among 32 clubs, the four "unheld" legendaries have Gym Leaders, several clubs have new nicknames, and the schedule no longer guarantees Gym Leader games. The text below is kept as the history of the 16-club league.
+
 Eight of the sixteen clubs are **gym clubs**: a permanent home element, a named head coach with a personality and a scheme, and that element's legendary on the roster (the only copy in the league). The other eight clubs stay ordinary and are the ones a player may choose at creation, so every player meets the same eight gyms. Draft assignment (names are placeholders for the owner to approve on the review page):
 
 | Club | Element | Legendary | Coach (draft) | Scheme | Tier |
@@ -342,6 +344,8 @@ Fire (Pyroclast), Nature (Elderoot), Wind (Tempestra) and Psychic (Astralux) are
 * **No replays.** A loss stands, the season moves on, the standings matter. Nothing in the campaign offers a rematch outside the schedule and the bracket. (A gym club's badge is at stake in every one of those games: §15.4.)
 
 ### 15.4 Badges
+
+> **Superseded in part by §60 (the 32-club league, owner specification 2026-11-23).** There are twelve badges, badges belong to the coach and follow him to a new club, and a season is not guaranteed to offer any particular badge. Reclaimable badges are unchanged. The text below is kept as the history of the 16-club league.
 
 * **Reclaimable badges (owner clarification, Task 10, 2026-11-13; replaces "badges are permanent").** Every game against a gym club that counts (regular season or playoffs, played or forfeited) puts its badge at stake. A win earns the badge, or keeps it if held; a loss gives it back to the gym if held; a later win earns it again.
 * Badge progress (the HQ badge row, "badge n of 8", the Hall of Fame checklist) counts the badges **held now**; there is no second lifetime badge counter. The other campaign milestones (wins, titles, awards) stay cumulative. An achievement already awarded (first badge, four badges, all eight, Hall of Fame eligible) is never taken back.
@@ -1371,6 +1375,8 @@ Both values live in `FOOTBALL_TYPE_VALUES`.
 - Tools: `tools/type-balance.mjs` for balance, and `tools/type-ui-check.py` for the indicators, the panel and the chart at 390, 360 and 320 px in headless Chromium (emulated, not a real device).
 
 ## 33. Stadium environments (IMPLEMENTED 2026-10-22, owner brief; branch `stadiums-replays-legendary`)
+
+> **Superseded in part by §60 (the 32-club league, owner specification 2026-11-23).** The home club alone decides the field: a Gym Leader's field appears only at that Gym Leader's home games, every other club plays at home on grass, and there are twelve type fields (Sky for Wind and Oracle for Psychic are new). The text below is kept as the history of the 16-club league.
 
 **33.0 Audit.** Before this work the game had no stadium data: every field was the same grass. The football type system (§32) was already merged, so the field bonus is built into the same contest modifier rather than a second system. Of the eight gym clubs, four have an element the brief's environments cover (Ice, Electric, Earth, Metal), and each of those plays in its element's stadium. The other four (Water, Light, Dark, Dragon) keep classic grass, because the brief named no environment of their type. No club's name, colours, roster or schedule changed.
 
@@ -4644,3 +4650,250 @@ Branch `codex/coaching-gm-careers`, build `v43.17.0-coaching-gm-preview`. This i
 - The old delay-of-game yardage mutation is removed. The optional live play clock is advisory only. Other attribute/training/fatigue modifiers remain unchanged in meaning.
 
 Remaining release work: full policy-required suite on the final candidate, browser/phone walkthroughs, expanded multi-season job/firing/return checks and rotation/injury balance measurement. Do not mark this released or update the main link before that review.
+
+## 60. The 32-club league and the twelve Gym Leaders (owner specification 2026-11-23; branch `feature/league-32`; IMPLEMENTED, NOT MERGED)
+
+An expansion of the existing systems, not a rebuild: the football engine, abilities, Beast Clash, franchise management, AI, audio and
+the stadium presentation are unchanged. This section is the authority for the league's shape; where it disagrees with §8, §15.3,
+§15.4, §33, `docs/FRANCHISE_QOL_UPDATE.md` (the field generator) or `docs/PRELEAGUE_HISTORY.md`, this section wins and those
+passages are history.
+
+### 60.1 Structure
+
+| Conference | Division | Clubs (Gym Leader clubs in bold) |
+|---|---|---|
+| Veyra | Frostlands | **Frostpeak Howlers**, Glacier Guardians, Northstar Novas, **Ironpeak Colossi** |
+| Veyra | Redrock | Stormport Bolts, **Canyon Crushers**, Sundown Drakes, **Thunder Mesa Blitz** |
+| Veyra | Golden Valley (starter) | Goldhaven Royals, Riverbend Rapids, Pinecrest Wardens, Skyvale Cyclones |
+| Veyra | Suncoast | **Emberfall Infernos**, Coral Bay Tides, **Cliffhaven Chargers**, Palm Isle Mystics |
+| Koruun | Kingsport | Stonehaven Bastions, **Eastport Phantoms**, **Harbor Anchors**, Ashford Cinders |
+| Koruun | Everwild | Ember City Beasts, Bayou Stalkers, **Sunfire Solars**, **Palmetto Wyrms** |
+| Koruun | Greenheart (starter) | Thornwood Wildroots, Silvergrove Arcanists, Mossvale Quakes, Fernhaven Wisps |
+| Koruun | Azure Isles | **Aetheria Seers**, Deepwater Chompers, Mistport Veils, **Westhaven Pirates** |
+
+Renamed from the 16-club league: Northstar Wolves → Novas, Ironpeak Rams → Colossi, Stonehaven Titans → Bastions, Harbor Sentinels →
+Anchors, Ashford Hawks → Cinders, Sunfire Lions → Solars, Palmetto Vipers → Wyrms, Thunder Mesa → Thunder Mesa Blitz. The conferences
+Aurora and Titan and the divisions North, West, East and South are gone.
+
+**Identities (owner, 2026-11-23).** Every club has an approved primary, secondary and accent colour (`PALETTE` in
+`src/data/league.js`; exact values, not to be adjusted). The primary is the club's colour everywhere it was before (scoreboard,
+brackets, crowd, celebrations); the secondary is a band on the scoreboard and one supporter's shirt in three; all three show as a
+swatch on team cards, the league list and the club picker. A club's name written as coloured text uses the primary, or the accent
+for the three clubs whose primary cannot be read on a dark panel (Harbor, Ember City, Deepwater). Playing surfaces are not recoloured.
+The eight corrected stadium names (Crownfield Stadium, Riverbend Stadium, Pinecrest Bowl, Inferno Crater, Silvergrove Park, Mossvale
+Grounds, Fernhaven Falls Field, Oracle Spire) and the five managers (Victor Hale, Maya Rivers, Grant Mercer, Marina Cole, Jalen Tide)
+are in. Generated head coaches are unique within a league and never share a name with a general manager or a Gym Leader. There is no
+logo or uniform art in the game; none was invented. Mascot words and the playing styles of the new clubs are unchanged.
+
+### 60.2 Starting a franchise
+
+A new owner picks one of the eight clubs of Golden Valley and Greenheart. They are established clubs that are rebuilding (last
+season 3-11 to 5-9), not weakened ones: their level is set by the same rule as every other ordinary club. Neither division has a Gym
+Leader, so every badge is won outside the division.
+
+### 60.3 The twelve Gym Leaders
+
+One per monster type, two in each of the six competitive divisions, six in each conference.
+
+| Club | Gym Leader | Type | Badge | Legendary | Home field |
+|---|---|---|---|---|---|
+| Frostpeak Howlers | Sigrid Hale | Ice | Frost | Glacivern | Frozen Stadium |
+| Ironpeak Colossi | Brock Ferris | Metal | Forge | Aegistron | Metallic Dome |
+| Canyon Crushers | Dolores Crag | Earth | Quake | Titanolith | Desert Stadium |
+| Thunder Mesa Blitz | Lena Volkov | Electric | Storm | Voltarch | Storm Stadium |
+| Emberfall Infernos | Kael Ember | Fire | Blaze | Pyroclast | Volcanic Stadium |
+| Cliffhaven Chargers | Aria Gale | Wind | Gale | Tempestra | Sky Stadium (Cliffside Arena) |
+| Eastport Phantoms | Silas Mourne | Dark | Dusk | Nyxshade | Shadow Grounds |
+| Harbor Anchors | Nadia Reyes | Water | Tide | Tsunarok | Tidal Arena |
+| Sunfire Solars | Elias Dawn | Light | Dawn | Aurelion | Radiant Coliseum |
+| Palmetto Wyrms | Marcus Vane | Dragon | Wyrm | Aurodrax | Dragon's Den |
+| Aetheria Seers | Lyra Vesper | Psychic | Mind | Astralux | Oracle Stadium |
+| Westhaven Pirates | Rowan Thorne | Nature | Grove | Elderoot | Forest Stadium, coastal (Corsair Harbor Stadium) |
+
+* **Aria Gale** coached the Skyvale Cyclones and **Rowan Thorne** the Thornwood Wildroots. Both took their type, badge and legendary
+  with them. Skyvale keeps Skyvale Summit and Thornwood keeps Elderroot Stadium, now ordinary grass.
+* **Rook Tanner** remains Cliffhaven's general manager (`RIVAL_GMS`); Aria Gale is its head coach. A Gym Leader is always the club's
+  one head coach (`headCoachName`), and a general manager is a different person at every club.
+* The four new Gym Leaders' schemes, tiers and pregame lines are provisional.
+
+### 60.4 Fields
+
+The home club decides the field, in the regular season and the playoffs. A Gym Leader's field appears only when that club hosts;
+a visiting Gym Leader plays on the home club's field. Every club without a Gym Leader plays at home on grass (this includes Glacier,
+Stormport, Sundown, Ember City and Bayou, which had elemental stadiums). The 65% grass / 35% elemental draw is retired. Every home
+field, grass included, has the white paint, the barrier, the crowd, the side stands and the play reactions; only a Gym Leader's field
+has its markers, goal posts and kickoff reveal. The matching-type bonus is unchanged and helps both teams; Wind, Psychic and Dragon
+fields carry no bonus (to be reviewed). Rock, Bug, Specter, Clash and Corrupt remain as unused designs.
+
+### 60.5 Season and schedule
+
+Fourteen games in fifteen weeks (one league-wide bye in weeks 6 to 10), then the playoffs in weeks 16 to 18.
+
+* **6 division games:** each of the three rivals home and away.
+* **5 conference games** against clubs of the other three divisions, and **3 games against the other conference**; no club outside
+  the division is met twice. Every club has seven home games.
+* The schedule is drawn from the franchise's seed and redrawn every season (`leagueSeasonFixtures(season, seed)`); two franchises
+  have different schedules. **Nothing forces or guarantees a Gym Leader game**: a starter club can meet as few as none and as many
+  as eight in a season, and a missing badge may have to wait for a season in which that club is on the schedule (or for the
+  playoffs). This replaces the guarantee in §15.3 and §15.4.
+* The 6 / 5 / 3 split is approved (owner, 2026-11-23).
+* The trade deadline stays at week 7 (owner, confirmed 2026-11-23): trading closes when week 8 begins.
+
+### 60.6 Playoffs (owner ruling 2026-11-23: fourteen clubs)
+
+Seven clubs a conference: the four division champions are seeds 1 to 4 and the three best of the rest are wild cards, seeds 5 to 7,
+each group ranked by the standings and their tiebreakers. Four rounds, thirteen games, weeks 16 to 19:
+
+1. **Wild Card:** 2 v 7, 3 v 6, 4 v 5 at the better seed's. Seed 1 rests.
+2. **Divisional:** the four survivors are reseeded; seed 1 hosts the lowest seed left, the other two meet at the higher seed's.
+3. **Conference Championships:** the higher seed hosts.
+4. **Beast Bowl:** the Veyra champion against the Koruun champion.
+
+Gym Leaders qualify like any club. An owner whose club is seed 1 watches the Wild Card round from HQ ("first-round bye"), his
+roster rests, and he plays the Divisional round at home. The bracket screen shows each conference as three columns with the Beast
+Bowl beneath. SUPERSEDED: the eight-club, three-round bracket (two division winners and two wild cards in the 16-club league; the
+four division winners in this branch's first version). The league archive's eight seasons were played in that old bracket and
+are kept exactly as they were (`legacyPlayoffRound`), so their champions stand.
+
+### 60.7 Badges
+
+Twelve badges. They are reclaimable exactly as before (§15.4). They belong to the coach: on a job change the badges held and the
+count of wins over each Gym Leader go to the new club, can be lost there, and the Hall of Fame counts the badges held now. A coach who
+takes over a Gym Leader's club does not hold that club's own badge. The HQ badge row, "badge n of 12", the legacy screen and the
+achievements (six and twelve badges) follow. The final screen says when a badge is surrendered.
+
+**Hall of Fame (owner ruling 2026-11-23):** badges held now: 8 on Rookie (Easy), 8 on Pro (Normal), 12 on All-Star (Hard). There is
+no fourth difficulty. Titles, wins and awards are unchanged. A Hall of Fame achievement already earned stays earned.
+
+### 60.8 Legendaries and Legend Tracks (owner ruling 2026-11-23)
+
+Each Gym Leader's club holds its type's legendary, and **every unfinished Legend Track needs that Gym Leader's badge, held
+now.** No legendary is free to track any more (Pyroclast, Elderoot, Tempestra and Astralux were, before they had Gym Leaders).
+**A completed track is complete for good** (owner ruling 2026-11-23, second set): its legendary stays available in scouting
+whether or not the badge is still held.
+
+| State | When | What it means |
+|---|---|---|
+| Locked | no badge, no progress | nothing can be done |
+| Active | the badge is held, track unfinished | a Beast Bowl champion may add a track |
+| Paused | progress made, badge lost, track unfinished | nothing advances; the progress is kept |
+| Complete | three tracks done, not yet recruited | the legendary turns up in its home region, badge or no badge; never locked or paused again |
+| Recruited | the legendary is on the roster | he is never removed, with or without the badge |
+
+Winning the badge back resumes the track exactly where it stood. Tracks, unlocks and badges all go with the coach to a new club.
+One of each legendary, as before. The Legend Tracks screen lists all twelve with their state.
+
+### 60.9 League history
+
+The eight seasons before the owner arrives are canon: the tables, brackets, champions and retired legends are the same in every
+franchise (`CANON` in `src/franchise/preleague-history.js`) and are not re-rolled with a new save. Skyvale won the Beast Bowl twice
+and Thornwood once under their former Gym Leaders, and both have declined since. The careers of a save's own veterans still belong
+to that save, because rosters are generated per save.
+
+**Award winners are canon (owner ruling 2026-11-23, second set).** Each past season's MVP, Offensive and Defensive Monster of the
+Year are chosen by the game's own award rules (`computeAwards`) among the canon players of that season only: the six retired
+legends and twelve retired stars (`ARCHIVE_STARS`, six of an early era and six of a late one), all drawn from `CANON` with names
+chosen among themselves and reserved in every new save before its monsters are named. A save's veterans never take a canon
+award. Every winner played at least 60% of his season at a position that can win the award. Brackets stay the old three-round
+format. A save made before this change keeps the award winners stored in it (the archive is never regenerated).
+
+| Season | Champion | MVP | Offensive Monster of the Year | Defensive Monster of the Year |
+|---|---|---|---|---|
+| -7 | Skyvale Cyclones | Zolalin (RB, Emberfall Infernos) † | Zolalin (RB, Emberfall Infernos) † | Zellinen (DL, Emberfall Infernos) † |
+| -6 | Thornwood Wildroots | Ralelor (QB, Emberfall Infernos) † | Ralelor (QB, Emberfall Infernos) † | Voulor (LB, Emberfall Infernos) † |
+| -5 | Skyvale Cyclones | Ralelor (QB, Emberfall Infernos) † | Zolalin (RB, Emberfall Infernos) † | Zellinen (DL, Emberfall Infernos) † |
+| -4 | Stormport Bolts | Maroyen (WR, Emberfall Infernos) † | Maroyen (WR, Emberfall Infernos) † | Tulomar (LB, Ashford Cinders) |
+| -3 | Stormport Bolts | Ralelor (QB, Emberfall Infernos) † | Ralelor (QB, Emberfall Infernos) † | Zellinen (DL, Emberfall Infernos) † |
+| -2 | Aetheria Seers | Kiiken (RB, Ember City Beasts) | Kiiken (RB, Ember City Beasts) | Voulor (LB, Emberfall Infernos) † |
+| -1 | Harbor Anchors | Tulomar (LB, Ashford Cinders) | Filegen (WR, Ember City Beasts) | Tulomar (LB, Ashford Cinders) |
+| 0 | Frostpeak Howlers | Rauwen (QB, Deepwater Chompers) | Rauwen (QB, Deepwater Chompers) | Horabon (DL, Deepwater Chompers) |
+
+† a retired legend. (All six legends played for Emberfall: that is how the canon drew them, unchanged here.)
+
+### 60.10 Saves
+
+A franchise saved in the 16-club league is not migrated (owner: test saves may be reset). It is refused on load with its own message
+and left on the device unchanged; settings, achievements and other data are untouched. New franchises carry `leagueFormat: 32`.
+
+### 60.11 Other changes that follow from 32 clubs
+
+* The draft class is 106 prospects (twice 53) for 96 picks.
+* `REG_GAMES`, `REG_WEEKS`, `LAST_WEEK` and `CONFERENCE_NAMES` in `src/data/league.js` replace the numbers 9, 10 and 13 and the
+  conference names that were written into the franchise, news, career and HQ code.
+* The final screen of a game says when a held badge went back to its Gym Leader ("Quake Badge surrendered"), with the badges still
+  held; before, only a line in the club log said so. `finishSunday` reports it as `lostBadge`.
+* An AI club that is full never releases one of the same draft's rookies to make room for the next (with two picks at one position
+  the earlier pick used to vanish; likelier now that the class is twice the size).
+* The draft window (Mondays scout the class, Tuesdays recover) opens in week 15, the last regular week; the press's playoff-race
+  topic starts in week 10.
+* Found on the way and fixed: the snapshot handed to the cloud mirror left out the league archive when the archive is stored as its
+  own part (`src/franchise/store.js`). The regenerated save fixture, which has an archive, exposed it.
+* The Board's win counts keep their proportion of the nine-game season: the lowest safe goal is 3 wins, a safe goal is never above
+  11 of 14, and a narrow miss is within 2 wins. A GM's reputation divides by 14 games.
+* **Scaled from nine games to fourteen (audit 2026-11-23), each by 14/9 so it means what it meant:** season marks (2,300 passing
+  yards, 23 touchdown passes, 1,250 rushing, 950 receiving, 16 touchdowns, 6 sacks, 5 interceptions, 60 tackles) and career
+  milestones (`career.js`); the injury-history
+  lines and its one-season minimum (`injury-history.js`, classification unchanged). Awards already scale with the weeks played,
+  the record book starts in season 2 as before, and Hall of Fame production is judged against peers.
+* **Captain Partnership steps scaled by 14/9 (owner ruling 2026-11-23, second set).** Each step is the nine-game value × 14 / 9,
+  rounded to the nearest play (half up); each list still rises; levels, names and bonuses are unchanged; the per-game ceiling
+  is the same rule (25% of Elite, half up, at least 3) on the new Elite. The nine-game values stay in `partnerships.js` as the
+  source. A partnership record written before the change (`v: 1`) is read on the new scale at once (count × 14 / 9, half up,
+  which keeps every pair's earned level exactly) and stored that way the next time it is written; loading changes nothing.
+
+  | Type | Nine games (steps, ceiling) | Fourteen games (steps, ceiling) |
+  |---|---|---|
+  | QB–RB | 15 / 34 / 53 / 75, 19 | 23 / 53 / 82 / 117, 29 |
+  | QB–WR | 6 / 14 / 21 / 30, 8 | 9 / 22 / 33 / 47, 12 |
+  | QB–TE | 7 / 16 / 25 / 36, 9 | 11 / 25 / 39 / 56, 14 |
+  | RB–OL | 6 / 14 / 22 / 32, 8 | 9 / 22 / 34 / 50, 13 |
+  | OL–OL | 4 / 9 / 14 / 20, 5 | 6 / 14 / 22 / 31, 8 |
+  | DL–DL | 1 / 3 / 4 / 6, 3 | 2 / 5 / 6 / 9, 3 |
+  | DL–LB | 2 / 4 / 6 / 9, 3 | 3 / 6 / 9 / 14, 4 |
+  | DL–CB | 1 / 3 / 4 / 6, 3 | 2 / 5 / 6 / 9, 3 |
+* **Monster Hall of Fame longevity scaled by 14/9 (owner ruling 2026-11-23, second set):** one point per 24.9 games (was 16) up
+  to 249 games (was 160), so the games part still tops out at ten points and a career reaches it in the same number of seasons.
+  Seasons (2 points each, up to 12) and every other part of the case are unchanged; past inductions are stored and never re-judged.
+  Longevity points for full careers: 2 seasons 5.1 → 5.1; 5 seasons 12.8 → 12.8; 8 seasons 20.5 → 20.5; 10 seasons 25.6 → 25.6;
+  12 seasons 30.8 → 30.8; 16 seasons 33.0 → 33.0 (with the old divisor, 14-game careers would have scored 5.8, 14.4, 23.0, 28.8, 34.0, 34.0).
+* **Release check (owner ruling 2026-11-23, second set):** `tools/make-reference-saves.mjs` writes three 32-club reference saves to
+  `tools/release-saves/` (a regular-season week, a season in the Divisional round, a coach three seasons in who moved clubs with
+  his badges). `tools/deploy-check.py` loads each and runs `tools/release-league-check.mjs` in the page (32 clubs, the 6/5/3
+  schedule, four playoff rounds and seven seeds, badges, the Legend Track rule, canon history, branding, uniforms, export → import
+  → export). `--old-save tools/release-saves/16club-live-midseason.json.gz` checks that a 16-club save is refused, imported or found
+  on the device, and left unchanged.
+* A season of 32 clubs is about three times the simulation of a 16-club season; tests that play whole seasons take correspondingly longer.
+
+### 60.12 Logos, uniforms and home stadiums (owner ruling 2026-11-23, second set)
+
+* **Logos** (`src/ui/team-logo.js`): one badge per club, drawn in SVG in its approved colours (the secondary as the badge, the
+  primary as ring and emblem, the accent for details, a dark outline). Every club's emblem is its own mascot (`TEAM_META.mascot`:
+  wolf, bear, nova, colossus, bolt, rock, drake, blitz, crown, rapids, warden pine, cyclone, inferno, tide, ram, mystic eye,
+  bastion, ghost, anchor, cinder, beast, gator, sun, wyrm, roots, arcanist, quake, wisp, seer's eye, shark, veil, pirate). Eight
+  badge shapes, mixed inside every division (`BADGES` in `src/data/club-identity.js`). Where a primary does not stand off its
+  secondary (Harbor, Ember City, Palmetto, Mossvale, Deepwater) the emblem is the accent with primary details, so only approved
+  colours are used. Shown on the scoreboard, the club lists, the club page, the starter-club picker and the pregame matchup.
+* **Uniforms** (`src/ui/team-kit.js`): home (primary, trimmed in the secondary), away (accent, trimmed in the primary) and an
+  alternate (secondary, trimmed in the accent). The home club always wears home; the visitors wear away unless it is too close to
+  the home jersey, then whichever of their other kits stands furthest from it (91 of the 992 pairings). On the field the kit is
+  drawn into each monster's own sprite as a jersey band and trim line on body pixels only (`kitGrid` in `src/ui/sprite16.js`),
+  so silhouettes, outlines and faces are exactly the species'; the base under each player is the kit colour. The pregame screen
+  shows both shirts with the club crest.
+* **Home fields** (`src/ui/field-branding.js`): every home stadium shows its club's logo at midfield (14 yards, under the yard
+  lines) and its place name in the end zone the club defends, its nickname in the other (`CLUB_NAMES`: THUNDER MESA / BLITZ,
+  EMBER CITY / BEASTS, CORAL BAY / TIDES, PALM ISLE / MYSTICS …). The home club owns the field in every game there, regular season
+  and playoffs; the visitors never repaint it. The branding is in the field's static layer and does not depend on the Stadium
+  Effects setting, so it shows at Full, Reduced and Off.
+* **The twenty grass stadiums:** end zones in the club's colours (place on the primary, nickname on the secondary), club colours on
+  the barrier, the stand rail and the wall behind the near end zone (with the logo and two banners, one of four banner patterns),
+  and the region of its division around the field: Frostlands snow, Redrock red rock, Golden Valley wheat, Suncoast sand and palms,
+  Kingsport brick and lamps, Everwild reeds, Greenheart hedges, Azure Isles piers (`REGIONS`). The playing surface stays grass.
+* **The twelve Gym Leader stadiums keep their approved designs:** surfaces, environments, structures, effects and animations are
+  unchanged; only the logo and the two end-zone words are added (light lettering with a dark line), nothing is recoloured.
+
+### 60.13 Aetheria balance (owner ruling 2026-11-23, second set)
+
+Aetheria won 30% of simulated titles. Its own starting level is reduced by 5 (`balance: -5` on its Gym Leader entry in
+`src/data/gyms.js`, so +2 over an ordinary club instead of the late tier's +7). Its tier, Lyra Vesper, the Psychic field,
+Astralux, colours, manager and playing style are unchanged. The analysis and the before/after simulations are in PR #165.
+

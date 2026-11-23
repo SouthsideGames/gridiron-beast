@@ -33,13 +33,13 @@ test('every threshold boundary: one play short stays, the threshold itself reach
     for (let i = 1; i < 4; i++) assert.ok(t[i] > t[i - 1], `${type}: thresholds rise`);
     const pr = P.progressOf(type, t[3] + 50); assert.equal(pr.name, 'Elite'); assert.equal(pr.bonus, 4); assert.equal(pr.next, null); assert.equal(pr.n, t[3] + 50);
   }
-  assert.deepEqual(P.THRESHOLDS['QB-RB'], [15, 34, 53, 75]); assert.deepEqual(P.THRESHOLDS['DL-CB'], [1, 3, 4, 6]); assert.deepEqual(P.THRESHOLDS['DL-DL'], [1, 3, 4, 6]);
+  assert.deepEqual(P.THRESHOLDS['QB-RB'], [23, 53, 82, 117]); assert.deepEqual(P.THRESHOLDS['DL-CB'], [2, 5, 6, 9]); assert.deepEqual(P.THRESHOLDS['DL-DL'], [2, 5, 6, 9]); // 14-game scale (owner 2026-11-23)
   assert.deepEqual(P.LEVEL_NAMES, ['New', 'Developing', 'Established', 'Strong', 'Elite']);
-  const pr = P.progressOf('QB-WR', 10); assert.deepEqual([pr.level, pr.prev, pr.next, pr.toNext], [1, 6, 14, 4]);
+  const pr = P.progressOf('QB-WR', 15); assert.deepEqual([pr.level, pr.prev, pr.next, pr.toNext], [1, 9, 22, 7]);
 });
 
 test('per-game cap: 25% of Elite rounded half up, never below 3', () => {
-  assert.deepEqual(Object.fromEntries(Object.keys(P.THRESHOLDS).map((t) => [t, P.gameCap(t)])), { 'QB-RB': 19, 'QB-WR': 8, 'QB-TE': 9, 'RB-OL': 8, 'OL-OL': 5, 'DL-DL': 3, 'DL-LB': 3, 'DL-CB': 3 });
+  assert.deepEqual(Object.fromEntries(Object.keys(P.THRESHOLDS).map((t) => [t, P.gameCap(t)])), { 'QB-RB': 29, 'QB-WR': 12, 'QB-TE': 14, 'RB-OL': 13, 'OL-OL': 8, 'DL-DL': 3, 'DL-LB': 4, 'DL-CB': 3 });
   assert.equal(P.gameCap('LB-LB'), 0);
 });
 
@@ -104,3 +104,24 @@ test('all eight pairings stay eligible: each one can be picked by the owner and 
   }
 });
 
+
+test('14-game scale (owner 2026-11-23): every threshold is the nine-game value × 14 / 9 rounded half up, still strictly rising', () => {
+  const nine = { 'QB-RB': [15, 34, 53, 75], 'QB-WR': [6, 14, 21, 30], 'QB-TE': [7, 16, 25, 36], 'RB-OL': [6, 14, 22, 32], 'OL-OL': [4, 9, 14, 20], 'DL-DL': [1, 3, 4, 6], 'DL-LB': [2, 4, 6, 9], 'DL-CB': [1, 3, 4, 6] };
+  assert.deepEqual(P.THRESHOLDS_9_GAMES, nine, 'the approved nine-game values are kept as the source');
+  assert.deepEqual(Object.keys(P.THRESHOLDS).sort(), Object.keys(nine).sort());
+  for (const [type, t] of Object.entries(nine)) { const want = t.map((x) => Math.floor(x * 14 / 9 + 0.5)); assert.deepEqual(P.THRESHOLDS[type], want, type); for (let i = 1; i < 4; i++) assert.ok(want[i] > want[i - 1], `${type} rises`); }
+  assert.deepEqual(P.THRESHOLDS, { 'QB-RB': [23, 53, 82, 117], 'QB-WR': [9, 22, 33, 47], 'QB-TE': [11, 25, 39, 56], 'RB-OL': [9, 22, 34, 50], 'OL-OL': [6, 14, 22, 31], 'DL-DL': [2, 5, 6, 9], 'DL-LB': [3, 6, 9, 14], 'DL-CB': [2, 5, 6, 9] });
+});
+
+test('chemistry earned on the nine-game scale keeps its level: a version-1 record reads on the 14-game scale and is scaled once when written, and only once', () => {
+  const oldLevel = (type, n) => P.THRESHOLDS_9_GAMES[type].filter((x) => n >= x).length; const k = P.pairKey('a', 'b');
+  for (const type of Object.keys(P.THRESHOLDS)) for (let n = 0; n <= 250; n++) {
+    const f = { partnerships: { v: 1, pairs: { [k]: { type, a: 'a', b: 'b', n } }, captains: {}, credited: {} } };
+    const read = P.chemistryCount(f, 'a', 'b'); assert.equal(f.partnerships.pairs[k].n, n, 'reading changes nothing'); assert.equal(f.partnerships.v, 1);
+    assert.equal(P.levelOf(type, read), Math.min(4, oldLevel(type, n)), `${type} ${n}: the level read is the level earned`);
+    assert.equal(P.scaleOldChemistry(f), true); assert.equal(f.partnerships.pairs[k].n, read, 'the stored count becomes the count that was read'); assert.equal(f.partnerships.v, P.RECORD_VERSION);
+    assert.equal(P.scaleOldChemistry(f), false, 'a second pass changes nothing'); assert.equal(P.chemistryCount(f, 'a', 'b'), read);
+  }
+  const fresh = { partnerships: { v: 2, pairs: { [k]: { type: 'QB-RB', a: 'a', b: 'b', n: 40 } } } }; P.scaleOldChemistry(fresh); assert.equal(fresh.partnerships.pairs[k].n, 40, 'a 14-game record is left alone'); assert.equal(P.chemistryCount(fresh, 'a', 'b'), 40);
+  assert.equal(P.scaleOldChemistry({}), false);
+});
