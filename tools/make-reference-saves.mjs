@@ -4,13 +4,14 @@
 //
 //   node tools/make-reference-saves.mjs [OUTDIR=tools/release-saves]
 //
-//   league32-week6.json            Skyvale Cyclones, season 1 week 6: a regular-season week with a Gym Leader game behind it
+//   league32-week6.json.gz            Skyvale Cyclones, season 1 week 6: a regular-season week with a Gym Leader game behind it
 //   league32-playoffs.json         a season in the four-round playoffs (Divisional round), the owner's club among the seeds
 //   league32-season3-moved.json    three seasons in, the coach moved clubs after season 2 and took his badges and tracks along
 //
-// The 16-club saves kept beside them (16club-*.json) are franchises written by the released 16-club game; the check expects the
+// (gzip; tools/deploy-check.py reads .gz directly.) The 16-club saves kept beside them (16club-*.json.gz) are franchises written by the released 16-club game; the check expects the
 // game to refuse them with its own message and to leave them unchanged.
 import fs from 'node:fs';
+import zlib from 'node:zlib';
 import path from 'node:path';
 import { runFranchise, newFranchise } from './franchise-soak.mjs';
 import * as F from '../src/franchise/franchise.js';
@@ -19,7 +20,7 @@ import * as Save from '../src/franchise/save.js';
 const OUT = process.argv[2] || path.join(path.dirname(new URL(import.meta.url).pathname), 'release-saves');
 fs.mkdirSync(OUT, { recursive: true });
 const keepJob = (f) => { if (f.board) { f.board.confidence = Math.max(f.board.confidence, 0); f.board.misses = 0; f.board.fired = false; } };
-const write = (name, f, note) => { const text = Save.exportJson(f); Save.importJson(text); fs.writeFileSync(path.join(OUT, name), text); console.log(name, `${(text.length / 1024).toFixed(0)} KB`, note); };
+const write = (name, f, note) => { const text = Save.exportJson(f); Save.importJson(text); fs.writeFileSync(path.join(OUT, `${name}.gz`), zlib.gzipSync(text, { level: 9 })); console.log(`${name}.gz`, `${(text.length / 1024).toFixed(0)} KB uncompressed`, note); };
 
 // 1. a regular-season week
 { const seed = 4101; const r = runFranchise(seed, { from: newFranchise(seed, { club: 'Skyvale Cyclones', difficulty: 'pro' }), seasons: 1, stopWeek: 6 });

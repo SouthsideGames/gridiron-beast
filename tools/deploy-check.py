@@ -9,13 +9,13 @@
            the build label on the Main Menu must match it too, and BUILD.test must be false.
 --save     an existing franchise export (repeatable); each is imported in a fresh browser profile and must load after a reload.
 --files    optional: the output of tools/release-files.py; the release folder must hold exactly those files.
---old-save a franchise saved by the 16-club game (repeatable, tools/release-saves/16club-*.json). The game must refuse it with the
+--old-save a franchise saved by the 16-club game (repeatable, tools/release-saves/16club-*.json.gz). The game must refuse it with the
            16-club message, both when it is imported and when it is found on the device, and leave it unchanged.
 
 32-club league (owner 2026-11-23): every --save is also checked in the page by tools/release-league-check.mjs (served under the
 reserved prefix like the soak helper): 32 clubs in 8 divisions, the 14-game 6/5/3 schedule, four playoff rounds with seven seeds
 and top-seed byes, Gym Leader badges, the Legend Track rule, the canon history, home branding and uniforms, and an export ->
-import -> export round trip. Reference saves: tools/make-reference-saves.mjs writes tools/release-saves/league32-*.json.
+import -> export round trip. Reference saves: tools/make-reference-saves.mjs writes tools/release-saves/league32-*.json.gz.
 
 Test helpers are kept apart from the release files: the disposable franchise used for the live-game step comes from the
 repository's tools/franchise-soak.mjs (next to this script, or --helpers DIR), which the local server exposes only under the
@@ -25,7 +25,9 @@ Checks: build version and stamp; each save loads after a reload; Main Menu -> De
 Developer Tools QB-read switch toggles and survives a reload; a live franchise game draws the QB read ring and plays an
 instant replay without the read list (removed in PR #150); no page errors.
 """
-import argparse, os, re, sys, threading, time, socketserver, http.server, json
+import argparse, os, re, sys, threading, time, socketserver, http.server, json, gzip
+def read_save(path):
+    with (gzip.open(path, 'rt', encoding='utf-8') if path.endswith('.gz') else open(path, encoding='utf-8')) as fh: return fh.read()
 from playwright.sync_api import sync_playwright
 
 ap = argparse.ArgumentParser(description='Deploy check on a release folder')
@@ -86,7 +88,7 @@ with sync_playwright() as pw:
             check(build['version'] == VERSION, f'build version {build["version"]} (expected {VERSION})'); check(build['test'] is False, f'BUILD.test is false ({build["test"]})')
             p.evaluate(GO, ['menu']); p.wait_for_timeout(300)
             check(VERSION in p.locator('main').inner_text(), f'Main Menu build label shows {VERSION}')
-        ok = p.evaluate("""async (t) => { const Save = await import('./src/franchise/save.js'); const r = await window.__gb.importInto(1, Save.importJson(t)); await window.__gb.save({ immediate: true }); return r.ok; }""", open(save).read())
+        ok = p.evaluate("""async (t) => { const Save = await import('./src/franchise/save.js'); const r = await window.__gb.importInto(1, Save.importJson(t)); await window.__gb.save({ immediate: true }); return r.ok; }""", read_save(save))
         p.reload(); p.wait_for_function(READY, timeout=60000)
         info = p.evaluate("() => window.__gb.f ? { club: window.__gb.f.club, year: window.__gb.f.season.year, week: window.__gb.f.season.week, n: window.__gb.f.roster.length } : null")
         check(bool(ok and info), f'{tag}: existing save loads after reload: {info}')
@@ -134,7 +136,7 @@ with sync_playwright() as pw:
     # 16-club saves: refused with their own message, by the import route and on the device (the legacy save the game finds at
     # start), and never changed.
     for old in a.old_save:
-        tag = os.path.basename(old); text = open(old, encoding='utf-8').read()
+        tag = os.path.basename(old); text = read_save(old)
         ctx, p = page(b)
         r = p.evaluate("""async ([prefix, t]) => { const C = await import(prefix + 'release-league-check.mjs'); return C.checkOldSave(t); }""", [PREFIX, text])
         check(r['refused'] and r['unchanged'] and r['message'] == r['expected'], f'{tag}: import refused with the 16-club message, file unchanged')

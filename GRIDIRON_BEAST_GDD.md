@@ -4860,7 +4860,7 @@ and left on the device unchanged; settings, achievements and other data are unto
   `tools/release-saves/` (a regular-season week, a season in the Divisional round, a coach three seasons in who moved clubs with
   his badges). `tools/deploy-check.py` loads each and runs `tools/release-league-check.mjs` in the page (32 clubs, the 6/5/3
   schedule, four playoff rounds and seven seeds, badges, the Legend Track rule, canon history, branding, uniforms, export → import
-  → export). `--old-save tools/release-saves/16club-live-midseason.json` checks that a 16-club save is refused, imported or found
+  → export). `--old-save tools/release-saves/16club-live-midseason.json.gz` checks that a 16-club save is refused, imported or found
   on the device, and left unchanged.
 * A season of 32 clubs is about three times the simulation of a 16-club season; tests that play whole seasons take correspondingly longer.
 
