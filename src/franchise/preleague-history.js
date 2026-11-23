@@ -6,30 +6,52 @@
 //    vote or a GM's career, so nothing a previous manager "did" is credited to the incoming one and no game calculation sees it;
 //  - retired legends exist only here. They are never in a roster, the league registry, a draft class, a pool or a ballot.
 //
+// 32-club league (owner specification, 2026-11-23): THE LEAGUE'S PAST IS CANON. The seasons (tables, brackets, champions) and the
+// retired legends are drawn from one fixed key, CANON, so they are the same in every franchise and are not re-rolled with a new
+// save; among them are the years Aria Gale's Skyvale Cyclones and Rowan Thorne's Thornwood Wildroots were the league's best, and
+// their decline since both coaches left. What still follows the save is what belongs to its own monsters: the careers of the
+// veterans on its rosters, and so the award winners chosen among them. A season is 14 games, not nine.
+//
 // It follows the game's own rules instead of inventing a format: the fixtures come from leagueSeasonFixtures (nine games and a
 // bye), the tables from applyResult/standings (the real tiebreakers), the bracket from playoffRound (four seeds per
 // conference: Conference Semifinals, Conference Championships, the Beast Bowl), the statistic names from the stats ledger, and
 // the award winners from computeAwards run on each season's league table. Season totals are calibrated to what the game's
 // own simulated seasons produce (tools/preleague-study.mjs), not to another sport's numbers.
 
-import { ALL_TEAMS, DIVISIONS, STARTER_CLUBS, conferenceFor, divisionOf, leagueSeasonFixtures, blankRecord, applyResult, standings, playoffRound } from '../data/league.js';
+import { ALL_TEAMS, DIVISIONS, STARTER_CLUBS, REG_GAMES, CONFERENCE_NAMES, conferenceFor, divisionOf, leagueSeasonFixtures, blankRecord, applyResult, standings, playoffRound } from '../data/league.js';
 import { hashString } from '../core/rng.js';
+import { isGymClub } from '../data/gyms.js';
 import { SPECIES_DEX } from '../data/species.js';
 import { monsterOverall } from '../data/monsters.js';
 import { individualName } from '../data/individual-names.js';
 import { addInto, withDerived, MAX_KEYS, RECORD_CATEGORIES, OFFENSE_POSITIONS, DEFENSE_POSITIONS } from './stats.js';
 import { computeAwards } from './awards.js';
 
-export const ARCHIVE_VERSION = 2;
+export const ARCHIVE_VERSION = 3;
 export const ARCHIVE_SEASONS = 8;
 export const ARCHIVE_LEGENDS = 6;
 export const ARCHIVE_AWARDS = Object.freeze(['mvp', 'opoy', 'dpoy']); // Signature Monster of the Year needs ability impact, which a past season cannot prove
-export const REGULAR_GAMES = 9;
+export const REGULAR_GAMES = REG_GAMES;
+/** The season lines below were measured on nine-game seasons; a longer season keeps their per-game rates. */
+const STUDY_GAMES = 9;
+/** The key every franchise's league history is drawn from. Changing it rewrites the league's past for new franchises. */
+export const CANON = 'beast-league-canon-63';
+/**
+ * The two fallen powers (owner specification). `rise` is the club's strength, in standard deviations, in each archive year from
+ * the oldest to the newest: the best club in the league under the coach who has since left, then the slide to where the owner
+ * finds it.
+ */
+export const FALLEN_POWERS = Object.freeze({
+  'Skyvale Cyclones': { coach: 'Aria Gale', now: 'Cliffhaven Chargers', left: -3, rise: [1.9, 2.1, 2.2, 1.8, 0.5, -0.3, -0.8, -1.1] },
+  'Thornwood Wildroots': { coach: 'Rowan Thorne', now: 'Westhaven Pirates', left: -2, rise: [1.4, 1.9, 2.1, 2.2, 1.7, 0.3, -0.6, -1.1] },
+});
 /** Retired legends carry this id prefix; no live monster id ("m_…") can collide with it. */
 export const LEGEND_PREFIX = 'historical_';
 export const isArchiveLegendId = (id) => String(id ?? '').startsWith(LEGEND_PREFIX);
 /** The fixture rotation repeats every 70 seasons, so year y is played on the schedule of season y + 70 and season 1 follows on. */
 const FIXTURE_CYCLE = 70;
+/** The schedule seed of the canon seasons (a franchise's own seasons are drawn from its own seed). */
+const CANON_FIXTURES = 0x5eed;
 
 // ------------------------------------------------------------ draws (hash only: no generator state)
 const makeDraws = (seed) => {
@@ -60,15 +82,22 @@ function pinnedWinners(D, games, fixed) {
   const clubs = Object.keys(fixed); if (!clubs.length) return pinned;
   const inner = games.filter((g) => fixed[g.home] && fixed[g.away]);
   const outer = Object.fromEntries(clubs.map((c) => [c, games.filter((g) => (g.home === c || g.away === c) && !(fixed[g.home] && fixed[g.away]))]));
-  const first = D.int('pin|start', 1 << inner.length);
+  // Eight clubs in two divisions play each other 24 times or more, too many to try every outcome. Hand each game to the club with
+  // more wins still owed to it, in a drawn order, and draw again if a club is left owing more wins than it has other games.
   let chosen = null;
-  for (let k = 0; k < (1 << inner.length) && !chosen; k++) {
-    const mask = (first + k) % (1 << inner.length); const wins = Object.fromEntries(clubs.map((c) => [c, 0]));
-    inner.forEach((g, i) => { wins[(mask >> i) & 1 ? g.home : g.away]++; });
-    if (clubs.every((c) => wins[c] <= fixed[c].w && fixed[c].w - wins[c] <= outer[c].length && (fixed[c].w + fixed[c].l) === wins[c] + (inner.filter((g) => g.home === c || g.away === c).length - wins[c]) + outer[c].length)) chosen = { mask, wins };
+  for (let attempt = 0; attempt < 400 && !chosen; attempt++) {
+    const wins = Object.fromEntries(clubs.map((c) => [c, 0])); const left = (c) => fixed[c].w - wins[c]; const winners = new Map();
+    const order = inner.slice().sort((a, b) => D.u(`pin|${attempt}|${a.week}|${a.home}|${a.away}`) - D.u(`pin|${attempt}|${b.week}|${b.home}|${b.away}`));
+    let ok = true;
+    for (const g of order) {
+      const h = left(g.home), a = left(g.away); if (h <= 0 && a <= 0) { ok = false; break; }
+      const w = h === a ? (D.u(`pin|${attempt}|coin|${g.week}|${g.home}|${g.away}`) < 0.5 ? g.home : g.away) : h > a ? g.home : g.away;
+      wins[w]++; winners.set(g, w);
+    }
+    if (ok && clubs.every((c) => left(c) >= 0 && left(c) <= outer[c].length && fixed[c].w + fixed[c].l === inner.filter((g) => g.home === c || g.away === c).length + outer[c].length)) chosen = { wins, winners };
   }
   if (!chosen) return pinned; // the pinned records do not fit this year's fixtures: leave the season to the strengths
-  inner.forEach((g, i) => pinned.set(g, (chosen.mask >> i) & 1 ? g.home : g.away));
+  for (const [g, w] of chosen.winners) pinned.set(g, w);
   for (const c of clubs) {
     const need = fixed[c].w - chosen.wins[c];
     const order = outer[c].slice().sort((a, b) => D.u(`pin|${c}|${a.home}|${a.away}`) - D.u(`pin|${c}|${b.home}|${b.away}`));
@@ -80,7 +109,7 @@ function pinnedWinners(D, games, fixed) {
 const SLOPE = 0.62;
 function playSeason(D, year, strength, fixed) {
   const records = Object.fromEntries(ALL_TEAMS.map((t) => [t, blankRecord()]));
-  const weeks = leagueSeasonFixtures(year + FIXTURE_CYCLE);
+  const weeks = leagueSeasonFixtures(year + FIXTURE_CYCLE, CANON_FIXTURES);
   const games = weeks.flatMap((w) => w.games.map((g) => ({ ...g, week: w.week })));
   const pinned = pinnedWinners(D, games, fixed || {});
   for (const g of games) {
@@ -113,12 +142,13 @@ function playSeason(D, year, strength, fixed) {
 }
 
 // ------------------------------------------------------------ season lines
+// (Since the 32-club league a season is 14 games; the per-game rates are those of the nine-game study.)
 // A starter's nine-game season at the middle of the league, from the game's own simulated seasons (medians of monsters with
 // six or more starts over six simulated seasons; tools/preleague-study.mjs prints the comparison). `z` is how good the season
 // was for the position (talent, age and luck); rates move with it so a bigger season is also a better one.
 const SPREAD = { QB: 0.36, RB: 0.7, WR: 0.72, TE: 0.75, OL: 0.22, DL: 0.4, LB: 0.5, CB: 0.3, S: 0.28, K: 0.4 };
 function fullLine(D, key, position, z, games) {
-  const share = games / REGULAR_GAMES * 0.93; z = 2.1 * Math.tanh(z / 2.1); // the tails flatten: a great season is about three times a middling one, not ten
+  const share = games / STUDY_GAMES * 0.93; z = 2.1 * Math.tanh(z / 2.1); // the tails flatten: a great season is about three times a middling one, not ten
   const e = (s) => Math.exp(s * z); const j = (k, s = 0.12) => Math.exp(D.n(`${key}|${k}`) * s);
   const line = {};
   if (position === 'QB') {
@@ -154,7 +184,7 @@ const BENCH_SCALE = { QB: 0.2, RB: 0.28, WR: 0.22, TE: 0.2, OL: 0.2, DL: 0.2, LB
 /** One regular-season line with the ledger's own keys. A reserve plays some games, starts few and gets a share of a starter's work. */
 function seasonLine(D, key, position, { starter, z, missed = 0 }) {
   if (starter) { const games = REGULAR_GAMES - missed; return clean({ games, starts: games, ...fullLine(D, key, position, z, games) }); }
-  const games = clamp(4 + D.int(`${key}|gp`, 6), 1, REGULAR_GAMES), starts = D.u(`${key}|gs`) < 0.2 ? 1 : 0;
+  const games = clamp(6 + D.int(`${key}|gp`, 9), 1, REGULAR_GAMES), starts = D.u(`${key}|gs`) < 0.2 ? 1 : 0;
   const full = fullLine(D, `${key}|bench`, position, z - 0.6, games); const scale = BENCH_SCALE[position] * Math.exp(D.n(`${key}|role`) * 0.3);
   const line = { games, starts };
   for (const [k, v] of Object.entries(full)) line[k] = MAX_KEYS.has(k) ? R(v * 0.7) : R(v * scale);
@@ -199,8 +229,8 @@ function maturity(experience, age) { return (experience <= 0 ? 0.86 : experience
  * `quality(club)` is the club's present strength (franchise.js clubQuality); last season's table leans on it, so the clubs the
  * draft order calls weak were the ones that lost.
  */
-export function generateLeagueArchive(f, { seasons = ARCHIVE_SEASONS, quality = null } = {}) {
-  const seed = (f?.seed ?? 0) >>> 0; const D = makeDraws(seed);
+export function generateLeagueArchive(f, { seasons = ARCHIVE_SEASONS, quality = null, canon = CANON } = {}) {
+  const seed = (f?.seed ?? 0) >>> 0; const DS = makeDraws(seed); const D = DS;
   const firstYear = 1 - seasons;
   const live = [...new Map([...Object.values(f?.league?.monsters || {}), ...(f?.roster || [])].filter((m) => m?.id != null).map((m) => [String(m.id), m])).values()]
     .sort((a, b) => String(a.id).localeCompare(String(b.id)));
@@ -208,13 +238,19 @@ export function generateLeagueArchive(f, { seasons = ARCHIVE_SEASONS, quality = 
   for (const [club, data] of Object.entries(f?.league?.clubs || {})) for (const id of data.roster || []) clubOf.set(String(id), club);
   for (const m of f?.roster || []) if (m?.id != null) clubOf.set(String(m.id), f.club); // the owner's roster wins over a stale registry row
 
-  // --- club strengths: today's quality, drifting as the years go back (a dynasty fades, a doormat was not always one)
-  const now = Object.fromEntries(ALL_TEAMS.map((t) => [t, quality ? Number(quality(t)) || 0 : 50 + D.n(`q|${t}`) * 5]));
-  const mean = ALL_TEAMS.reduce((s, t) => s + now[t], 0) / ALL_TEAMS.length; const sd = Math.sqrt(ALL_TEAMS.reduce((s, t) => s + (now[t] - mean) ** 2, 0) / ALL_TEAMS.length) || 1;
-  const strengthOf = {}; let walk = Object.fromEntries(ALL_TEAMS.map((t) => [t, (now[t] - mean) / sd]));
-  for (let year = 0; year >= firstYear; year--) { strengthOf[year] = walk; walk = Object.fromEntries(ALL_TEAMS.map((t) => [t, walk[t] * 0.7 + D.n(`drift|${year}|${t}`) * 0.7])); }
+  // --- club strengths. Canon: every franchise sees the same past, so nothing here reads the save (`quality` is no longer used).
+  // Gym Leader clubs are the league's establishment and the eight starter clubs are at the bottom when the owner arrives; the
+  // rest drift as the years go back (a dynasty fades, a doormat was not always one). The two fallen powers follow their own arc.
+  const C = makeDraws(canon);
+  const starters = new Set(STARTER_CLUBS.map((c) => c.name));
+  const strengthOf = {}; let walk = Object.fromEntries(ALL_TEAMS.map((t) => [t, C.n(`q|${t}`) * 0.8 + (isGymClub(t) ? 0.55 : 0) - (starters.has(t) ? 1.1 : 0)]));
+  for (let year = 0; year >= firstYear; year--) {
+    strengthOf[year] = { ...walk };
+    for (const [club, arc] of Object.entries(FALLEN_POWERS)) { const v = arc.rise[arc.rise.length - 1 + year]; if (v != null) strengthOf[year][club] = v; }
+    walk = Object.fromEntries(ALL_TEAMS.map((t) => [t, walk[t] * 0.7 + C.n(`drift|${year}|${t}`) * 0.7]));
+  }
   const fixed = Object.fromEntries(STARTER_CLUBS.map((c) => { const [w, l] = String(c.record).split('-').map(Number); return [c.name, { w, l }]; }).filter(([, r]) => r.w + r.l === REGULAR_GAMES));
-  const years = []; for (let year = firstYear; year <= 0; year++) years.push(playSeason(D, year, strengthOf[year], year === 0 ? fixed : null));
+  const years = []; for (let year = firstYear; year <= 0; year++) years.push(playSeason(C, year, strengthOf[year], year === 0 ? fixed : null));
   const seasonOf = new Map(years.map((s) => [s.year, s]));
   const recordOf = (year, club) => seasonOf.get(year).standings.find((r) => r.club === club);
   const playoffGames = (year, club) => seasonOf.get(year).playoffs.filter((g) => g.home === club || g.away === club).length;
@@ -239,12 +275,12 @@ export function generateLeagueArchive(f, { seasons = ARCHIVE_SEASONS, quality = 
   const legendPositions = ['QB', 'RB', 'WR', 'DL', 'LB', 'CB'];
   const byStrength = (year) => ALL_TEAMS.slice().sort((a, b) => strengthOf[year][b] - strengthOf[year][a] || a.localeCompare(b));
   for (let i = 0; i < ARCHIVE_LEGENDS; i++) {
-    const id = `${LEGEND_PREFIX}${hashString(`${seed}:legend:${i}`).toString(36)}`; const position = legendPositions[i % legendPositions.length];
-    const pool = SPECIES_DEX.filter((s) => s.position === position && ['uncommon', 'rare'].includes(s.rarity)); const sp = pool[D.int(`legend-species|${i}`, pool.length)] || SPECIES_DEX.find((s) => s.position === position);
+    const id = `${LEGEND_PREFIX}${hashString(`${canon}:legend:${i}`).toString(36)}`; const position = legendPositions[i % legendPositions.length];
+    const pool = SPECIES_DEX.filter((s) => s.position === position && ['uncommon', 'rare'].includes(s.rarity)); const sp = pool[C.int(`legend-species|${i}`, pool.length)] || SPECIES_DEX.find((s) => s.position === position);
     const name = individualName(id, taken); taken.add(name.toLowerCase());
-    const last = 0 - D.int(`legend-retired|${i}`, 3); // retired after season 0, -1 or -2 (a plain 0, never -0)
-    const club = byStrength(firstYear)[D.int(`legend-club|${i}`, 6)]; // he made his name at one of the early era's strong clubs
-    people.push({ id, name, species: sp?.id || null, type: sp?.element || null, position, club, debut: firstYear, last, moves: [], overall: 99, ageNow: null, ageAtDebut: 23 + D.int(`legend-age|${i}`, 3), ageless: false, legend: true, stage: Math.min(2, sp?.evolution?.length || 0) });
+    const last = 0 - C.int(`legend-retired|${i}`, 3); // retired after season 0, -1 or -2 (a plain 0, never -0)
+    const club = byStrength(firstYear)[C.int(`legend-club|${i}`, 6)]; // he made his name at one of the early era's strong clubs
+    people.push({ id, name, species: sp?.id || null, type: sp?.element || null, position, club, debut: firstYear, last, moves: [], overall: 99, ageNow: null, ageAtDebut: 23 + C.int(`legend-age|${i}`, 3), ageless: false, legend: true, stage: Math.min(2, sp?.evolution?.length || 0) });
   }
 
   // --- season by season: who started, what they did
@@ -254,11 +290,11 @@ export function generateLeagueArchive(f, { seasons = ARCHIVE_SEASONS, quality = 
   const books = new Map(people.map((p) => [p.id, []]));
   for (const season of years) {
     const year = season.year; const active = people.filter((p) => year >= p.debut && year <= p.last);
-    const rated = active.map((p) => { const age = ageIn(p, year); const st = posStats[p.position] || { m: 50, sd: 8 }; const talent = p.legend ? 2.5 + D.n(`legend-form|${p.id}|${year}`) * 0.25 : ((p.overall * maturity(year - p.debut, age)) - st.m) / st.sd; return { p, age, team: clubIn(p, year), talent }; });
+    const rated = active.map((p) => { const age = ageIn(p, year); const st = posStats[p.position] || { m: 50, sd: 8 }; const talent = p.legend ? 2.5 + C.n(`legend-form|${p.id}|${year}`) * 0.25 : ((p.overall * maturity(year - p.debut, age)) - st.m) / st.sd; return { p, age, team: clubIn(p, year), talent }; });
     const groups = new Map(); for (const r of rated) { const k = `${r.team}|${r.p.position}`; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); }
     for (const g of groups.values()) g.sort((a, b) => b.talent - a.talent || String(a.p.id).localeCompare(String(b.p.id)));
     for (const r of rated) {
-      const rank = groups.get(`${r.team}|${r.p.position}`).indexOf(r); const key = `${r.p.id}|${year}`;
+      const rank = groups.get(`${r.team}|${r.p.position}`).indexOf(r); const key = `${r.p.id}|${year}`; const D = r.p.legend ? C : DS; // a legend's seasons are canon
       // The clubs of those years also had monsters who have since left; a weak or raw monster sat behind one of them.
       const starter = r.p.legend || (rank < STARTERS[r.p.position] && r.talent + D.n(`${key}|depth`) * 0.5 > -1.1);
       const rec = recordOf(year, r.team); const teamForm = ((rec.w / (rec.w + rec.l)) - 0.5) * 0.5;
@@ -332,7 +368,7 @@ export function archiveRecords(f) {
 /** Every inconsistency in an archive, as readable strings ([] when it is sound). Used by the tests and tools/preleague-study.mjs. */
 export function validateLeagueArchive(archive, { live = null } = {}) {
   const errors = []; const say = (s) => errors.push(s);
-  if (!archive || archive.version !== ARCHIVE_VERSION) return ['Not a version-2 archive'];
+  if (!archive || archive.version !== ARCHIVE_VERSION) return [`Not a version-${ARCHIVE_VERSION} archive`];
   const all = archive.seasons || []; const byYear = new Map(all.map((s) => [s.year, s]));
   if (byYear.size !== all.length) say('Duplicate historical season');
   if (all.some((s, i) => s.year !== i + 1 - all.length || Object.is(s.year, -0))) say('Invalid season chronology');
@@ -345,11 +381,11 @@ export function validateLeagueArchive(archive, { live = null } = {}) {
     if (rows.reduce((n, t) => n + t.pf, 0) !== rows.reduce((n, t) => n + t.pa, 0)) say(`Unbalanced points: ${Y}`);
     const rec = Object.fromEntries(rows.map((t) => [t.club, t])); const pct = (c) => rec[c] ? rec[c].w / REGULAR_GAMES : -1;
     for (const [d, clubs] of Object.entries(DIVISIONS)) { const got = s.divisions?.[d] || []; if (got.length !== clubs.length || clubs.some((c) => !got.includes(c))) say(`Invalid division ${d}: ${Y}`); else if (got.some((c, i) => i && pct(c) > pct(got[i - 1]))) say(`Division ${d} out of order: ${Y}`); }
-    for (const conf of ['Aurora', 'Titan']) {
+    for (const conf of CONFERENCE_NAMES) {
       const seeds = s.seeds?.[conf] || []; const divs = Object.keys(DIVISIONS).filter((d) => conferenceFor(d) === conf);
       if (seeds.length !== 4 || new Set(seeds).size !== 4 || seeds.some((c) => conferenceFor(divisionOf(c)) !== conf)) { say(`Invalid ${conf} seeds: ${Y}`); continue; }
-      const champs = divs.map((d) => s.divisions?.[d]?.[0]); if (champs.some((c) => !seeds.slice(0, 2).includes(c))) say(`${conf} division champions are not the top seeds: ${Y}`);
-      const out = divs.flatMap((d) => DIVISIONS[d]).filter((c) => !seeds.includes(c)); if (out.some((c) => seeds.slice(2).some((w) => pct(c) > pct(w)))) say(`${conf} wildcard behind a non-qualifier: ${Y}`);
+      const champs = divs.map((d) => s.divisions?.[d]?.[0]); if (champs.some((c) => !seeds.includes(c))) say(`${conf} division champions are not the seeds: ${Y}`);
+      if (seeds.some((c, i) => i && pct(c) > pct(seeds[i - 1]))) say(`${conf} seeds out of order: ${Y}`);
     }
     const po = s.playoffs || []; const round = (r) => po.filter((g) => g.round === r);
     if (po.length !== 7 || round(1).length !== 4 || round(2).length !== 2 || round(3).length !== 1) say(`Invalid playoff rounds: ${Y}`);
