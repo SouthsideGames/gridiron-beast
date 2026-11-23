@@ -132,6 +132,7 @@ export const LOOKS = Object.freeze({
   corrupt: { label: 'Corrupt', colors: ['#9cff4a', '#b06cff', '#f0ffd6'], intro: 'Something is in the water', edge: 'cauldron', posts: 'drip', reveal: 'goo', crowd: 'Dark' },
   dragon: { label: 'Wyrm', colors: ['#ff6a3a', '#b04ad0', '#ffe9c4'], intro: 'The den is awake', edge: 'eggs', posts: 'flame', reveal: 'firebreath', crowd: 'Fire' },
   shadow: { label: 'Umbral', colors: ['#b9a6ff', '#6a4ad0', '#f4f0ff'], intro: 'The lights are going out', edge: 'lantern', posts: 'moon', reveal: 'eclipse' },
+  radiant: { label: 'Radiant', colors: ['#ffd24a', '#ff9a2a', '#fff6d0'], intro: 'The sun is up', edge: 'sundial', posts: 'sunburst', reveal: 'sunrise' },
   forest: { label: 'Grass', colors: ['#6fe07a', '#c8f05a', '#f2ffd6'], intro: 'The grove is listening', edge: 'vine', posts: 'vine', reveal: 'bloom' },
 });
 export const lookFor = (envId) => (Object.hasOwn(LOOKS, envId) ? LOOKS[envId] : null);
@@ -243,6 +244,11 @@ const EDGES = {
     marker: (x, y, k, side, yard, L) => `<ellipse cx="${x}" cy="${y + 0.95}" rx="0.5" ry="0.13" fill="#000" opacity="0.2"/><rect x="${x - 0.1}" y="${y - 0.2}" width="0.2" height="1.15" fill="#1c1626"/><rect x="${x - 0.42}" y="${y - 1}" width="0.84" height="0.84" rx="0.14" fill="#1c1626" stroke="#0c0912" stroke-width="0.08"/><rect x="${x - 0.28}" y="${y - 0.86}" width="0.56" height="0.56" rx="0.08" fill="#3a2f55"/><g class="sfx-dim sfx-anim" style="${turn(yard, side, 0.4)}"><circle cx="${x}" cy="${y - 0.58}" r="0.85" fill="${L.colors[0]}" opacity="0.35"/><rect x="${x - 0.28}" y="${y - 0.86}" width="0.56" height="0.56" rx="0.08" fill="${L.colors[2]}"/></g>`,
     link: () => '',
   },
+  sundial: { // Radiant: golden sundials along the sideline; their shadows swing round together as the sun crosses; motes of light rise
+    track: () => '',
+    marker: (x, y, k, side, yard, L) => `<ellipse cx="${x}" cy="${y + 0.12}" rx="0.92" ry="0.92" fill="#000" opacity="0.14"/><circle cx="${x}" cy="${y}" r="0.86" fill="${L.colors[0]}" stroke="#8a5a0c" stroke-width="0.12"/><circle cx="${x}" cy="${y}" r="0.62" fill="#ffe89a" stroke="#c98a1c" stroke-width="0.06"/><path d="M${x} ${y - 0.62} v0.16 M${x} ${y + 0.46} v0.16 M${x - 0.62} ${y} h0.16 M${x + 0.46} ${y} h0.16 M${x - 0.44} ${y - 0.44} l0.1 0.1 M${x + 0.34} ${y - 0.34} l0.1 -0.1 M${x - 0.44} ${y + 0.44} l0.1 -0.1 M${x + 0.34} ${y + 0.34} l0.1 0.1" stroke="#8a5a0c" stroke-width="0.07" stroke-linecap="round"/><g class="sfx-dial sfx-anim"><circle cx="${x}" cy="${y}" r="0.86" fill="none"/><path d="M${x - 0.07} ${y} L${x} ${y - 0.6} L${x + 0.07} ${y} Z" fill="#5a3a08" opacity="0.75"/></g><circle cx="${x}" cy="${y}" r="0.13" fill="#8a5a0c"/><circle cx="${x - 0.03}" cy="${y - 0.03}" r="0.05" fill="#fff6d0"/>`,
+    link: (x, y, k, side, yard, L) => `<circle class="sfx-drift sfx-anim" style="animation-delay:-${(k * 1.2 + (side > 0 ? 0.7 : 0)).toFixed(1)}s" cx="${x - side * 0.3}" cy="${y - 2.2}" r="0.14" fill="${L.colors[1]}"/><path class="sfx-firefly sfx-anim" style="animation-delay:-${(k * 1.7 + (side > 0 ? 0.9 : 0)).toFixed(1)}s" d="M${x + side * 0.35 - 0.24} ${y - 3.6} h0.48 m-0.24 -0.24 v0.48" fill="none" stroke="${L.colors[1]}" stroke-width="0.11" stroke-linecap="round"/>`,
+  },
 };
 /** Everything a look puts along both sidelines for the visible stretch of field ('' for a stadium without a look). */
 export function edgeSvg(envId, cam, HW, Y, span) {
@@ -279,6 +285,7 @@ export function postsSvg(envId, y, dir) {
   else if (L.posts === 'beacon') extra = [-3, 3].map((px, i) => `<circle cx="${px}" cy="${tip}" r="0.3" fill="#1c3a48" stroke="#262c38" stroke-width="0.08"/><circle class="sfx-chain sfx-anim" style="animation-delay:-${i * 0.9}s" cx="${px}" cy="${tip}" r="0.42" fill="#ff5a4a" stroke="none"/>`).join('');
   else if (L.posts === 'pads') extra = [-3, 3].map((px, i) => `<rect x="${px - 0.42}" y="${Math.min(y, y - dir * 1.3)}" width="0.84" height="1.3" rx="0.3" fill="${i ? '#3a6ad6' : a}" stroke="#1c1f26" stroke-width="0.08"/><circle class="sfx-node sfx-anim" style="animation-delay:-${i * 0.9}s" cx="${px}" cy="${tip}" r="0.3" fill="${b}" stroke="none"/>`).join('');
   else if (L.posts === 'drip') extra = `${[-2.3, -1.2, 0.1, 1.1, 2.2].map((px, i) => `<path d="M${px - 0.18} ${y} q0.18 ${dir * (0.9 + (i % 3) * 0.3)} 0.36 0 Z" fill="#58c81e" stroke="none"/>`).join('')}${[-1.2, 1.1].map((px, i) => `<circle class="sfx-drift sfx-anim" style="animation-delay:-${i * 1.5}s" cx="${px}" cy="${y - dir * 0.6}" r="0.14" fill="none" stroke="#7fe03a" stroke-width="0.08"/>`).join('')}`;
+  else if (L.posts === 'sunburst') { const cy = y - dir * 1.3; extra = `<g class="sfx-turn sfx-anim"><circle cx="0" cy="${cy}" r="1.25" fill="none" stroke="none"/>${[0, 45, 90, 135, 180, 225, 270, 315].map((d, i) => `<path d="M0 ${cy - 0.62} L${i % 2 ? 0.1 : 0.14} ${cy - (i % 2 ? 0.95 : 1.22)} L${i % 2 ? -0.1 : -0.14} ${cy - (i % 2 ? 0.95 : 1.22)} Z" fill="${i % 2 ? b : a}" stroke="none" transform="rotate(${d} 0 ${cy})"/>`).join('')}</g><circle cx="0" cy="${cy}" r="0.52" fill="${a}" stroke="#8a5a0c" stroke-width="0.08"/><circle class="sfx-node sfx-anim" cx="-0.12" cy="${cy - 0.12}" r="0.2" fill="${c}" stroke="none"/>${[-3, 3].map((px, i) => `<path class="sfx-node sfx-anim" style="animation-delay:-${i * 0.9}s" d="M${px - 0.3} ${tip} h0.6 M${px} ${tip - 0.3} v0.6" stroke="${c}" stroke-width="0.12" stroke-linecap="round"/>`).join('')}`; }
   else if (L.posts === 'moon') extra = `<path class="sfx-node sfx-anim" d="M0.5 ${y - dir * 1.9} a0.8 0.8 0 1 0 0 1.4 a0.58 0.58 0 1 1 0 -1.4 Z" fill="${c}" stroke="none"/>`;
   const tips = L.posts === 'flame' || L.posts === 'icicle' || L.posts === 'beacon' || L.posts === 'pads' ? '' : `<circle cx="-3" cy="${tip}" r="0.3" fill="${c}" stroke="none"/><circle cx="3" cy="${tip}" r="0.3" fill="${c}" stroke="none"/>`;
   return `<g class="sfx-post" fill="none"><path class="sfx-post-glow sfx-anim" d="${shape}" stroke="${a}" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/><path d="${shape}" stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round" stroke-linejoin="round"/>${extra}${tips}</g>`;
@@ -411,6 +418,8 @@ export function kickoffRevealHtml(venue, level = 'full') {
     firebreath: `<i class="sfx-breath"></i>`,
     // Umbral: the field goes dark like an eclipse; one moonbeam lands on midfield with the football in it
     eclipse: `<i class="sfx-dark"></i><i class="sfx-moonbeam"></i>`,
+    // Radiant: dawn breaks across the field from one sideline to the other, and the football is revealed as the light passes
+    sunrise: `<i class="sfx-warm"></i><i class="sfx-dawn"></i>`,
     // Grass: leaves swirl up and open
     bloom: `<svg class="sfx-swirl" viewBox="-50 -50 100 100" aria-hidden="true" focusable="false">${Array.from({ length: 10 }, (_, i) => `<ellipse cx="0" cy="-30" rx="6" ry="14" fill="${i % 2 ? a : b}" opacity=".9" transform="rotate(${i * 36})"/>`).join('')}<circle r="12" fill="none" stroke="${c}" stroke-width="2"/></svg>`,
   };
