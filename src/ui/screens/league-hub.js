@@ -157,6 +157,74 @@ const MAP_MOTIFS = (() => {
   return out.join('');
 })();
 
+/** Larger landmarks, one style per region (map units around 0,0, roughly 36 × 28). */
+const FEATURE = {
+  Frostlands: () => `<path d="M-18 9L-6-13L2-3L8-11L19 9Z" fill="#9fbccb"/><path d="M-18 9L-6-13L-3 9Z" fill="#c7dde6"/><path d="M2-3L8-11L10 9Z" fill="#b6cfda"/><path d="M-10-6L-6-13L-2-6L-4-4L-6-7L-8-4Z" fill="#fff"/><path d="M5-7L8-11L11-7L9-6L8-8Z" fill="#fff"/>`,
+  Redrock: () => `<path d="M-18 9L-13-4H-1L3 9Z" fill="#8d4a2a"/><path d="M-13-4H-1L-2-1H-12Z" fill="#e2a36a"/><path d="M-15 3H1" stroke="#a65a33" stroke-width="1.4"/><path d="M-1 9L4-8H14L18 9Z" fill="#9c5230"/><path d="M4-8H14L13.4-5.6H4.6Z" fill="#eab07a"/><path d="M2 1H16M3-2H15" stroke="#b0653a" stroke-width="1.2"/>`,
+  'Golden Valley': () => `<rect x="-3" y="-6" width="6" height="15" fill="#f1e7c8" stroke="#7a5a34" stroke-width=".8"/><path d="M-4-6L0-11L4-6Z" fill="#b8483a"/><g stroke="#5a4520" stroke-width="1.6" stroke-linecap="round"><path d="M0-6L-9-14M0-6L9 2M0-6L8-14M0-6L-8 2"/></g><circle cy="-6" r="1.6" fill="#5a4520"/><rect x="-1" y="4" width="2" height="5" fill="#5a4520"/>`,
+  Suncoast: () => `${[[-10, 2, 1], [0, -2, 1.15], [10, 3, .9]].map(([x, y, s]) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 8Q1.4 1 0-5" stroke="#7a5a34" stroke-width="1.8" fill="none"/><path d="M0-5Q-6-8-9-3M0-5Q6-8 9-3M0-5Q-3-10-6-11M0-5Q3-10 6-11" stroke="#3f8a45" stroke-width="2" fill="none" stroke-linecap="round"/></g>`).join('')}`,
+  Kingsport: () => `<rect x="-16" y="-4" width="8" height="13" fill="#6d6863"/><rect x="-7" y="-12" width="9" height="21" fill="#5f5a55"/><rect x="3" y="-7" width="8" height="16" fill="#77716b"/><rect x="11" y="0" width="6" height="9" fill="#6d6863"/><path d="M-7-12L-2.5-17L2-12Z" fill="#c9675a"/><g fill="#ffe7a3" opacity=".85"><rect x="-5" y="-9" width="2" height="2"/><rect x="-1" y="-9" width="2" height="2"/><rect x="-5" y="-4" width="2" height="2"/><rect x="5" y="-4" width="2" height="2"/><rect x="-14" y="0" width="2" height="2"/></g>`,
+  Greenheart: () => `${[[-10, 3, 6], [9, 4, 6], [-3, -3, 7.5], [5, -6, 6], [0, 5, 6.5]].map(([x, y, r], i) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${['#2a6a2c', '#2f7431', '#22592a', '#358038', '#2a6a2c'][i]}"/>`).join('')}<circle cx="-5" cy="-6" r="2.4" fill="#4f9a4a" opacity=".7"/>`,
+  Everwild: () => `<ellipse cx="0" cy="3" rx="16" ry="7" fill="#3e6f73"/><ellipse cx="-3" cy="2" rx="9" ry="3.5" fill="#5a8f90" opacity=".6"/><circle cx="7" cy="4" r="2" fill="#7fae6a"/><circle cx="-8" cy="5" r="1.6" fill="#7fae6a"/><path d="M-14 3V-8M-11 3V-11M-8 3V-6M12 3V-9M15 4V-5" stroke="#c9cf8a" stroke-width="1.3" stroke-linecap="round"/><path d="M4-2V-14M4-10L0-14M4-8L8-12" stroke="#4a3b2a" stroke-width="1.6" stroke-linecap="round"/>`,
+};
+/** Hand-placed scenery: rivers and a lake, the canyon, the volcano, the city, the lighthouse, sea lanes, a ship, a serpent. */
+const SCENERY = Object.freeze({
+  rivers: ['M118 48C108 80 124 110 116 132S108 192 116 240S104 300 108 330S118 382 120 396', 'M120 412C118 440 126 470 122 506', 'M672 40C666 70 678 100 672 120S664 200 674 236S640 270 616 286', 'M604 300C590 330 606 370 596 400S600 420 598 440'],
+  lakes: [[120, 404, 15, 8], [610, 293, 13, 7]],
+  canyon: 'M286 46L294 66L284 86L297 106L289 128L296 146',
+  volcano: [352, 398], lighthouse: [438, 244], city: [512, 56],
+  lanes: ['M378 330Q402 318 424 300', 'M380 168Q402 176 424 172', 'M560 430Q546 446 528 458', 'M676 430Q684 446 688 452', 'M760 470Q770 470 772 478'],
+  ship: [398, 412], serpent: [404, 246], whirlpool: [786, 392], compass: [420, 498], bowl: [410, 44],
+});
+/** Everything on the map that never changes, built once: shallows and sea marks, terrain shading, scenery, landmarks. */
+const MAP_DETAIL = (() => {
+  let h = 977; const rnd = () => { h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0; h = Math.imul(h ^ (h >>> 13), 3266489909) >>> 0; return ((h ^= h >>> 16) >>> 0) / 4294967296; };
+  const pins = Object.values(MAP_PINS); const taken = [];
+  const clear = (x, y, r, pinGap = 20) => !pins.some(([px, py]) => Math.hypot(px - x, py - y) < pinGap + r || (Math.abs(px - x) < 26 + r * 0.6 && y - r < py + 34 && y + r > py + 20))
+    && !Object.entries(MAP_REGIONS).some(([d, { label: [lx, ly] }]) => Math.abs(lx - x) < d.length * 7.6 + 6 + r && Math.abs(ly - y) < 10 + r) && !taken.some(([tx, ty, tr]) => Math.hypot(tx - x, ty - y) < tr + r);
+  const inRegion = (x, y, r) => { const d = mapRegionAt(x, y); return d && [[r, 0], [-r, 0], [0, r], [0, -r]].every(([dx, dy]) => mapRegionAt(x + dx, y + dy) === d) ? d : null; };
+  // terrain shading: soft organic patches a shade darker or lighter than the ground
+  let shade = '';
+  for (let i = 0; i < 260; i++) { const x = 20 + rnd() * 780, y = 40 + rnd() * 480, d = inRegion(x, y, 10); if (!d || d === 'Azure Isles') continue; const c = MAP_REGIONS[d];
+    shade += `<path d="${coast(x, y, 10 + rnd() * 22, 6 + rnd() * 12, rnd() * 9, 4, 24)}" fill="${rnd() < 0.7 ? c.shade : '#fff'}" opacity="${rnd() < 0.7 ? 0.2 : 0.07}"/>`; }
+  // fields in Golden Valley
+  for (let i = 0; i < 90; i++) { const x = 30 + rnd() * 170, y = 280 + rnd() * 200, w = 12 + rnd() * 14, hh = 7 + rnd() * 8; if (inRegion(x, y, 14) !== 'Golden Valley' || !clear(x, y, 6, 24)) continue;
+    shade += `<rect x="${(x - w / 2).toFixed(1)}" y="${(y - hh / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" transform="rotate(${(rnd() * 30 - 15).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})" fill="${['#d9c068', '#b9a24a', '#c6b25e', '#a9a54e'][i % 4]}" opacity=".55"/>`; }
+  // fine texture: snow sparkle, grass ticks, sand dots, cobbles
+  const tick = { Frostlands: '#ffffff', Redrock: '#7a3e22', 'Golden Valley': '#8d7330', Suncoast: '#b89a5a', Kingsport: '#5f5a55', Greenheart: '#2d5a2a', Everwild: '#3a4520', 'Azure Isles': '#b89a5a' };
+  let fine = ''; for (let i = 0; i < 900; i++) { const x = 16 + rnd() * 790, y = 34 + rnd() * 500, d = inRegion(x, y, 3); if (!d || pins.some(([px, py]) => Math.hypot(px - x, py - y) < 18)) continue;
+    fine += d === 'Greenheart' || d === 'Everwild' || d === 'Golden Valley' ? `<path d="M${x.toFixed(1)} ${y.toFixed(1)}l1-3l1 3" stroke="${tick[d]}" stroke-width=".7" fill="none" opacity=".45"/>` : `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r=".9" fill="${tick[d]}" opacity="${d === 'Frostlands' ? 0.8 : 0.35}"/>`; }
+  // rivers and lakes (drawn under the landmarks)
+  const S = SCENERY;
+  let water = S.rivers.map((d) => `<path d="${d}" fill="none" stroke="#2f6f96" stroke-width="5" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#6fb3d6" stroke-width="2.6" stroke-linecap="round"/>`).join('')
+    + S.lakes.map(([x, y, a, b]) => `<path d="${coast(x, y, a, b, x / 7, 2, 30)}" fill="#4f93b8" stroke="#2f6f96" stroke-width="1.4"/><path d="${coast(x - 2, y - 1, a * 0.55, b * 0.4, 1, 1, 20)}" fill="#8cc6e0" opacity=".6"/>`).join('');
+  water += `<path d="${S.canyon}" fill="none" stroke="#5e2d17" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><path d="${S.canyon}" fill="none" stroke="#e2a36a" stroke-width="1.2" stroke-linejoin="round" transform="translate(1.6 0)" opacity=".8"/>`;
+  for (const [x, y] of [S.volcano, S.lighthouse, S.city]) taken.push([x, y, 20]);
+  for (const d of S.rivers) { const m = d.match(/-?\d+(\.\d+)?/g).map(Number); for (let k = 0; k + 1 < m.length; k += 2) taken.push([m[k], m[k + 1], 7]); }
+  for (const [x, y, a] of S.lakes) taken.push([x, y, a + 4]);
+  // roads: each division's clubs joined, a pale dashed track
+  let roads = ''; for (const [d, clubs] of Object.entries(DIVISIONS)) { if (d === 'Azure Isles') continue; const p = clubs.map((c) => MAP_PINS[c]).sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    for (const [a, b] of [[p[0], p[1]], [p[0], p[2]], [p[1], p[3]], [p[2], p[3]]]) roads += `<path d="M${a[0]} ${a[1]}Q${(a[0] + b[0]) / 2 + 6} ${(a[1] + b[1]) / 2 - 6} ${b[0]} ${b[1]}" fill="none" stroke="#f4ecd0" stroke-width="1.6" stroke-dasharray="3 3" opacity=".55"/>`; }
+  // landmarks: a few large ones per region, clear of everything else
+  let marks = ''; const want = { Frostlands: 12, Redrock: 9, 'Golden Valley': 6, Suncoast: 6, Kingsport: 6, Greenheart: 13, Everwild: 8 };
+  for (const [d, n] of Object.entries(want)) { let got = 0; for (let k = 0; k < 3000 && got < n; k++) { const x = 20 + rnd() * 780, y = 40 + rnd() * 470; if (inRegion(x, y, 16) !== d || !clear(x, y, 14)) continue;
+    taken.push([x, y, 20]); got++; marks += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(0.85 + rnd() * 0.3).toFixed(2)})">${FEATURE[d]()}</g>`; } }
+  const [vx, vy] = S.volcano, [lx, ly] = S.lighthouse, [cx, cy] = S.city;
+  marks += `<g transform="translate(${vx} ${vy})"><path d="M-17 10L-5-9H5L17 10Z" fill="#5a3a2a"/><path d="M-5-9H5L3-5Q0-3-3-5Z" fill="#ff6a2a"/><path d="M-2-6L-6 4M2-6L4 2" stroke="#ff8a3a" stroke-width="1.4" stroke-linecap="round"/><g fill="#8a8a8a" opacity=".6"><circle cx="2" cy="-15" r="4"/><circle cx="7" cy="-21" r="5"/><circle cx="13" cy="-28" r="6"/></g></g>`
+    + `<g transform="translate(${lx} ${ly})"><path d="M-3 10L-2-8H2L3 10Z" fill="#f4ecd0"/><path d="M-2.6-2H2.6M-2.8 4H2.8" stroke="#b8483a" stroke-width="2.4"/><rect x="-3" y="-12" width="6" height="4" fill="#ffd34d"/><path d="M-3.4-12L0-15.5L3.4-12Z" fill="#b8483a"/><path d="M3-10L22-15V-5Z" fill="#ffd34d" opacity=".35"/></g>`
+    + `<g transform="translate(${cx} ${cy}) scale(1.15)">${FEATURE.Kingsport()}</g>`;
+  // the sea: shallows round every coast, sea lanes, a ship, a serpent, a whirlpool, the compass, the Beast Bowl's island
+  const shallows = [MAP_LAND.Veyra, MAP_LAND.Koruun, ...MAP_LAND.isles].map((d) => `<path d="${d}" fill="none" stroke="#2f7aa6" stroke-width="26" opacity=".35"/><path d="${d}" fill="none" stroke="#4f9cc6" stroke-width="12" opacity=".45"/>`).join('');
+  const lanes = S.lanes.map((d) => `<path d="${d}" fill="none" stroke="#cfe6f5" stroke-width="1.3" stroke-dasharray="2 4" opacity=".6"/>`).join('');
+  const [sx, sy] = S.ship, [ex, ey] = S.serpent, [wx, wy] = S.whirlpool, [kx, ky] = S.compass, [bx, by] = S.bowl;
+  const sea = `${lanes}<g transform="translate(${sx} ${sy})"><path d="M-11 2H11L7 8H-7Z" fill="#7a4a2a"/><path d="M0 2V-14" stroke="#4a3020" stroke-width="1.4"/><path d="M1-13L10 0H1Z" fill="#f4ecd0"/><path d="M-1-11L-8 0H-1Z" fill="#e2d6b0"/><path d="M-14 10q4-2 8 0t8 0t8 0" stroke="#cfe6f5" stroke-width="1" fill="none" opacity=".6"/></g>`
+    + `<g transform="translate(${ex} ${ey})" fill="#3f8a6a" stroke="#1d4a3a" stroke-width="1"><path d="M-16 4Q-13-6-10 4Z"/><path d="M-6 4Q-2-9 2 4Z"/><path d="M6 4Q8-14 14-10Q17-8 15-6Q12-9 10-4L10 4Z"/><circle cx="13.5" cy="-9.5" r="1" fill="#ffd34d" stroke="none"/><path d="M-20 5H20" stroke="#cfe6f5" stroke-width="1" opacity=".7"/></g>`
+    + `<g transform="translate(${wx} ${wy})" fill="none" stroke="#cfe6f5" opacity=".55" stroke-linecap="round"><path d="M0 0m-12 0a12 7 0 1 1 24 0" stroke-width="1.4"/><path d="M-8 1a8 4.6 0 1 0 16 0" stroke-width="1.2"/><path d="M-4 0a4 2.4 0 1 1 8 0" stroke-width="1"/></g>`
+    + `<g transform="translate(${kx} ${ky})"><circle r="17" fill="#173f5c" stroke="#cfe6f5" stroke-width=".8" opacity=".9"/><path d="M0-22L3.6 0L0 22L-3.6 0Z" fill="#f4ecd0"/><path d="M0-22L3.6 0H-3.6Z" fill="#ffd34d"/><path d="M-22 0L0-3.6L22 0L0 3.6Z" fill="#cfe6f5" opacity=".7"/><text y="-25" class="map-compass">N</text></g>`
+    + `<g transform="translate(${bx} ${by})"><path d="${coast(0, 0, 15, 11, 3.3, 2, 30)}" fill="#e8d6a0" stroke="#24384a" stroke-width="1.1"/><ellipse rx="9" ry="5.6" fill="#2f8a5c" stroke="#f4ecd0" stroke-width="1.6"/><ellipse rx="5" ry="2.6" fill="none" stroke="#f4ecd0" stroke-width=".7"/><path d="M-1.6-8H1.6L1-5H-1Z" fill="#ffd34d"/><text y="22" class="map-bowl">${esc($t('map.beast_bowl')).toUpperCase()}</text></g>`;
+  return { shallows, shade: shade + fine, water, roads, marks, sea };
+})();
+
 /** This week's league games ([{home, away}]), or none in the playoffs, the offseason or the league's bye. */
 export function mapWeekGames(f) {
   if (!f?.season || f.season.finished || f.season.playoffs) return [];
@@ -212,7 +280,7 @@ export function regionMapSvg(f, { mode = 'all', sel = null } = {}) {
   }).join('');
   return `<svg class="region-map" viewBox="${MAP_VIEW.x} ${MAP_VIEW.y} ${MAP_VIEW.w} ${MAP_VIEW.h}" role="img" aria-label="${esc($t('map.aria', { n: Object.keys(MAP_PINS).length }))}">${defs}
     <rect x="${MAP_VIEW.x}" y="${MAP_VIEW.y}" width="${MAP_VIEW.w}" height="${MAP_VIEW.h}" fill="url(#map-sea)"/>${waves}
-    ${shore(MAP_LAND.Veyra)}${shore(MAP_LAND.Koruun)}${veyra}${koruun}${MAP_MOTIFS}${outline(MAP_LAND.Veyra)}${outline(MAP_LAND.Koruun)}${isles}
+    ${MAP_DETAIL.shallows}${MAP_DETAIL.sea}${shore(MAP_LAND.Veyra)}${shore(MAP_LAND.Koruun)}${veyra}${koruun}<g clip-path="url(#map-veyra)">${MAP_DETAIL.shade}</g><g clip-path="url(#map-koruun)">${MAP_DETAIL.shade}</g>${MAP_DETAIL.water}${MAP_MOTIFS}${MAP_DETAIL.roads}${MAP_DETAIL.marks}${outline(MAP_LAND.Veyra)}${outline(MAP_LAND.Koruun)}${isles}
     ${labels}<g class="map-routes">${routes}</g>${pins}</svg>`;
 }
 /** The card under the map for one club. */
@@ -272,15 +340,20 @@ export function registerLeagueHubScreens(Router, app) {
         sc.scrollLeft = ((px - MAP_VIEW.x) / MAP_VIEW.w) * w - sc.clientWidth / 2; sc.scrollTop = ((py - MAP_VIEW.y) / MAP_VIEW.h) * h - sc.clientHeight / 2; }
       const keep = () => { if (sc) mapScroll = { left: sc.scrollLeft, top: sc.scrollTop }; };
       const save = (patch) => set(MAP_KEY, JSON.stringify({ ...mapPrefs(), ...patch }));
+      // A tap only moves the selection and swaps the card: the map itself is not drawn again.
+      const selectPin = (club) => {
+        for (const g of root.querySelectorAll('.map-pin')) { const on = g.dataset.club === club; g.classList.toggle('sel', on); const c = g.querySelector('circle:not(.map-hit):not(.map-ring)'); if (c) { c.setAttribute('stroke', on ? '#fff' : '#f4ecd0'); c.setAttribute('stroke-width', on ? '2.4' : '1.4'); } }
+        const card = root.querySelector('.map-card'); if (card && app.f) card.outerHTML = mapClubCard(app.f, club);
+      };
       delegate(root, {
-        mapclub: (el) => { keep(); mapSel = el.dataset.club; Router.render(); },
+        mapclub: (el) => { mapSel = el.dataset.club; selectPin(mapSel); },
         mapmode: (el) => { keep(); save({ mode: el.dataset.mode }); Router.render(); },
         mapzoom: (el) => { const p = mapPrefs(); const z = MAP_ZOOMS.includes(p.zoom) ? p.zoom : mapDefaultZoom(); const i = Math.max(0, Math.min(MAP_ZOOMS.length - 1, MAP_ZOOMS.indexOf(z) + Number(el.dataset.d)));
           if (sc) { const z0 = z, z1 = MAP_ZOOMS[i], k = z1 / z0; mapScroll = { left: (sc.scrollLeft + sc.clientWidth / 2) * k - sc.clientWidth / 2, top: (sc.scrollTop + sc.clientHeight / 2) * k - sc.clientHeight / 2 }; }
           save({ zoom: MAP_ZOOMS[i] }); Router.render(); },
         club: (el) => Router.go('club', { club: el.dataset.club }),
       });
-      root.addEventListener?.('keydown', (e) => { const pin = e.target?.closest?.('.map-pin'); if (pin && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); keep(); mapSel = pin.dataset.club; Router.render(); } });
+      root.addEventListener?.('keydown', (e) => { const pin = e.target?.closest?.('.map-pin'); if (pin && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); mapSel = pin.dataset.club; selectPin(mapSel); } });
     },
   });
   Router.registerScreen('club', {

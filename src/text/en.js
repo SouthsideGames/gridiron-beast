@@ -4669,6 +4669,7 @@ export default {
   'league.basic': 'Basic',
   'league.all': 'All',
   'map.tab': 'Map',
+  'map.beast_bowl': 'Beast Bowl',
   'map.title': 'Region Map',
   'map.aria': 'Map of the league: {n} clubs in two conferences',
   'map.mode_all': 'All Clubs',

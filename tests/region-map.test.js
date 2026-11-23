@@ -30,7 +30,7 @@ test('the map marks the owner, the Gym Leaders, held badges and this week\'s gam
   assert.match(svg, /class="map-pin me[^"]*" data-action="mapclub" data-club="Riverbend Rapids"/);
   const games = mapWeekGames(f); assert.equal(games.length, 16);
   assert.equal((svg.match(/class="map-route[ "]/g) || []).length, 16); assert.equal((svg.match(/class="map-route mine"/g) || []).length, 1);
-  assert.equal((svg.match(/fill="#ffd34d"/g) || []).length, 1, 'one gold badge star');
+  assert.equal((svg.match(/<circle r="5.6" fill="#ffd34d"/g) || []).length, 1, 'one gold badge star');
   const gyms = mapLit(f, 'gyms'); assert.equal(gyms.size, Object.keys(GYM_BY_CLUB).length + 1);
   assert.deepEqual([...mapLit(f, 'division')].sort(), [...DIVISIONS[divisionOf(f.club)]].sort());
 });

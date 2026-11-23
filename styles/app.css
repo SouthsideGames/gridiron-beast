@@ -2794,6 +2794,8 @@ html[data-app-inactive="1"] .final-celebration * { animation-play-state: paused;
 .region-map .map-region { font-size: 12px; font-weight: 900; letter-spacing: 3px; text-anchor: middle; dominant-baseline: middle; fill: #fff; stroke: rgba(8,18,28,.75); stroke-width: 3px; paint-order: stroke; stroke-linejoin: round; opacity: .92; pointer-events: none; }
 .region-map .map-conf { font-size: 15px; font-weight: 900; letter-spacing: 5px; text-anchor: middle; fill: #cfe6f5; opacity: .9; pointer-events: none; }
 .region-map .map-name { font-size: 10px; font-weight: 800; text-anchor: middle; fill: #fff; stroke: #0b1622; stroke-width: 2.6px; paint-order: stroke; stroke-linejoin: round; pointer-events: none; }
+.region-map .map-compass { font-size: 9px; font-weight: 900; text-anchor: middle; fill: #f4ecd0; }
+.region-map .map-bowl { font-size: 7.5px; font-weight: 900; letter-spacing: 1.4px; text-anchor: middle; fill: #ffd34d; stroke: #0b1622; stroke-width: 2.4px; paint-order: stroke; }
 .region-map .map-pin { cursor: pointer; transition: opacity .2s; outline: none; }
 .region-map .map-pin .map-hit { fill: transparent; }
 .region-map .map-pin.dim { opacity: .28; }
