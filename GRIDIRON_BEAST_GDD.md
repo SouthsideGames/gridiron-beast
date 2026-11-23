@@ -4774,6 +4774,14 @@ and left on the device unchanged; settings, achievements and other data are unto
 * The draft class is 106 prospects (twice 53) for 96 picks.
 * `REG_GAMES`, `REG_WEEKS`, `LAST_WEEK` and `CONFERENCE_NAMES` in `src/data/league.js` replace the numbers 9, 10 and 13 and the
   conference names that were written into the franchise, news, career and HQ code.
+* The final screen of a game says when a held badge went back to its Gym Leader ("Quake Badge surrendered"), with the badges still
+  held; before, only a line in the club log said so. `finishSunday` reports it as `lostBadge`.
+* An AI club that is full never releases one of the same draft's rookies to make room for the next (with two picks at one position
+  the earlier pick used to vanish; likelier now that the class is twice the size).
+* The draft window (Mondays scout the class, Tuesdays recover) opens in week 15, the last regular week; the press's playoff-race
+  topic starts in week 10.
+* Found on the way and fixed: the snapshot handed to the cloud mirror left out the league archive when the archive is stored as its
+  own part (`src/franchise/store.js`). The regenerated save fixture, which has an archive, exposed it.
 * The Board's win counts keep their proportion of the nine-game season: the lowest safe goal is 3 wins, a safe goal is never above
   11 of 14, and a narrow miss is within 2 wins. A GM's reputation divides by 14 games.
 * **Not re-tuned for the longer season (OPEN):** season totals are about 56% higher than in a nine-game season, and these were
