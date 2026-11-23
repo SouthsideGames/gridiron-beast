@@ -93,14 +93,14 @@ test('football: firsts only for what he did, career milestones when crossed, the
   // rivalry win with a big line, a playoff game, the Beast Bowl: winner, loser, and a teammate who did not play
   logGame(wr, { year: 1, week: 5, line: { rec: 6, recYds: 120 } }); careerAfterGame([wr], { year: 1, week: 5, club, rival: true });
   assert.ok(hasEvent(wr, 'rival:1:5'));
-  logGame(wr, { year: 1, week: 13, playoff: true, line: { rec: 3, recYds: 40, recTd: 2 } }); logGame(qb, { year: 1, week: 13, playoff: true, won: true, line: { passYds: 120 } });
-  careerAfterGame([wr, qb, bench], { year: 1, week: 13, club, playoffRound: 3 });
+  logGame(wr, { year: 1, week: 19, playoff: true, line: { rec: 3, recYds: 40, recTd: 2 } }); logGame(qb, { year: 1, week: 19, playoff: true, won: true, line: { passYds: 120 } });
+  careerAfterGame([wr, qb, bench], { year: 1, week: 19, club, playoffRound: 4 }); // the Beast Bowl is round 4, week 19 (round 3, week 13 in the 16-club league)
   assert.ok(hasEvent(wr, 'champ:1') && hasEvent(qb, 'champ:1') && !hasEvent(bench, 'champ:1'), 'only those who played in the final');
-  assert.ok(hasEvent(wr, 'po:first') && hasEvent(wr, 'star:1:13'));
-  const loser = fresh(f, 'RB'); logGame(loser, { year: 2, week: 13, playoff: true, won: false, line: { rush: 10, rushYds: 30 } }); careerAfterGame([loser], { year: 2, week: 13, club, playoffRound: 3 });
+  assert.ok(hasEvent(wr, 'po:first') && hasEvent(wr, 'star:1:19'));
+  const loser = fresh(f, 'RB'); logGame(loser, { year: 2, week: 19, playoff: true, won: false, line: { rush: 10, rushYds: 30 } }); careerAfterGame([loser], { year: 2, week: 19, club, playoffRound: 4 });
   assert.ok(hasEvent(loser, 'bowl:2') && !hasEvent(loser, 'champ:2'));
   // season end: the title run for someone who played earlier rounds, awards (not the coach's), season marks
-  const run = fresh(f, 'LB'); run.stats = { v: 2, career: { reg: { games: 9 }, post: { games: 1 } }, season: { year: 3, reg: { games: 9, tackles: 41 }, post: { games: 1 } }, log: [], seasons: [] };
+  const run = fresh(f, 'LB'); run.stats = { v: 2, career: { reg: { games: 14 }, post: { games: 1 } }, season: { year: 3, reg: { games: 14, tackles: 61 }, post: { games: 1 } }, log: [], seasons: [] };
   careerSeasonEnd([run, bench], { year: 3, club, champion: club, awards: { league: { dpoy: { id: run.id, name: run.name, team: club }, coy: { id: run.id, team: club } } }, records: {} });
   assert.ok(hasEvent(run, 'champ:3') && !hasEvent(bench, 'champ:3'), 'a title run needs a playoff game');
   assert.ok(hasEvent(run, 'award:dpoy:3') && !hasEvent(run, 'award:coy:3'));
