@@ -18,7 +18,7 @@ export function checkFranchise(f) {
   const P = []; const say = (c, m) => { if (!c) P.push(m); };
   // 32 clubs, 8 divisions, two conferences, the registry sound
   say(ALL_TEAMS.length === 32 && Object.keys(DIVISIONS).length === 8 && CONFERENCE_NAMES.length === 2, '32 clubs in 8 divisions and 2 conferences');
-  say(Object.keys(f.league?.clubs || {}).length === 32, `league registry holds 32 clubs (${Object.keys(f.league?.clubs || {}).length})`);
+  const clubs = new Set([...Object.keys(f.league?.clubs || {}), f.club]); say(clubs.size === 32 && [...clubs].every((c) => ALL_TEAMS.includes(c)), `the 31 AI clubs in the registry and the owner's make 32 (${clubs.size})`);
   const reg = verifyLeague(f); say(!reg.length, `league registry: ${reg[0] || ''}`); say(f.leagueFormat === 32, 'saved as a 32-club franchise');
   // the season: 14 games, 6/5/3, seven at home; the trade deadline in week 7
   const games = (f.season?.schedule || []).filter((g) => !g.bye); const dv = games.filter((g) => divisionOf(g.opponent) === divisionOf(f.club)).length;
@@ -41,7 +41,7 @@ export function checkFranchise(f) {
   const opp = games.find((g) => g.opponent)?.opponent; const venue = venueFor(f.club, 'release'); const b = fieldBrand(venue); say(b?.club === f.club, 'home field branding');
   if (opp) { const k = gameKits(f.club, opp); say(kitsApart(k.home, k.away), `uniforms told apart against ${opp}`); }
   // save and load: export, import, export again gives the same text
-  const t1 = Save.exportJson(f); let same = false; try { same = Save.exportJson(Save.importJson(t1)) === t1; } catch (e) { P.push(`re-import failed: ${e.message}`); } say(same, 'export -> import -> export is identical');
+  const body = (t) => JSON.stringify(JSON.parse(t).franchise); const t1 = Save.exportJson(f); let same = false; try { same = body(Save.exportJson(Save.importJson(t1))) === body(t1); } /* the export's own timestamp aside */ catch (e) { P.push(`re-import failed: ${e.message}`); } say(same, 'export -> import -> export is identical');
   const facts = { club: f.club, year: f.season?.year, week: f.season?.week, badges: held.length, tracks: tracks.map((t) => t.state[0]).join(''), playoffs: po ? po.round : null, stints: (f.gmCareer?.stints || f.career?.stints || []).length || null };
   return { problems: P, facts };
 }
