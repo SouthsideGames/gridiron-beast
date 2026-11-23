@@ -130,7 +130,7 @@ test('the playoffs: the four division winners of each conference, seeded by reco
   assert.equal(r1.length, 4); for (const c of CONFERENCE_NAMES) { const mine = r1.filter((g) => g.conf === c); assert.deepEqual(mine.map((g) => [g.home, g.away]), [[seeds[c][0], seeds[c][3]], [seeds[c][1], seeds[c][2]]], '1 v 4 and 2 v 3, the better seed at home'); }
   const res1 = r1.map((g) => ({ ...g, round: 1, winner: g.home })); const r2 = playoffRound(2, res1, seeds); assert.equal(r2.length, 2); assert.deepEqual(r2.map((g) => g.tag), ['Veyra Championship', 'Koruun Championship']);
   const res2 = r2.map((g) => ({ ...g, round: 2, winner: g.home })); const r3 = playoffRound(3, [...res1, ...res2], seeds); assert.equal(r3.length, 1); assert.equal(r3[0].tag, 'Beast Bowl'); assert.notEqual(conferenceOf(r3[0].home), conferenceOf(r3[0].away));
-  assert.equal(REG_WEEKS + 1, 16); assert.equal(LAST_WEEK, REG_WEEKS + PLAYOFF_ROUNDS); assert.ok(TRADE_DEADLINE_WEEK < REG_WEEKS && TRADE_DEADLINE_WEEK >= 8, 'the trade deadline sits in the second half of the longer season');
+  assert.equal(REG_WEEKS + 1, 16); assert.equal(LAST_WEEK, REG_WEEKS + PLAYOFF_ROUNDS); assert.equal(TRADE_DEADLINE_WEEK, 7, 'the trade deadline is the owner\'s ruling of 2026-11-13 and has not been moved for the longer season');
 });
 
 // ------------------------------------------------------------ badges belong to the coach (Phase 7)

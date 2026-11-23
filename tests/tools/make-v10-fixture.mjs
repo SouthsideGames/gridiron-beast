@@ -24,6 +24,9 @@ export function makeV10Season2() {
     else F.skipPlayoffs(f);
   }
   if (!f.season.finished) throw new Error('season 1 did not finish');
+  // The fixture stands, as it always has, for a save written before Task 9 (the monster Hall of Fame): tests/task9-save-compat.test.js
+  // loads it to prove such a save opens with an empty Hall. It was regenerated for the 32-club league on 2026-11-23 by a later build.
+  delete f.monsterHallOfFame;
   return f;
 }
 

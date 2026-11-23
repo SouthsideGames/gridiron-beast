@@ -4733,7 +4733,8 @@ Fourteen games in fifteen weeks (one league-wide bye in weeks 6 to 10), then the
   playoffs). This replaces the guarantee in §15.3 and §15.4.
 * The 6 / 5 / 3 split of the eight non-division games is this build's reading of "division, then conference, then the other
   conference"; the specification left the numbers open (OPEN DECISION).
-* The trade deadline moved from week 7 to week 10, keeping its place about two thirds of the way through.
+* The trade deadline is unchanged (owner ruling 2026-11-13): trading closes when week 8 begins, which is now about half way through
+  the season instead of two thirds. OPEN DECISION: move it (week 10 would keep its old place) or leave it.
 
 ### 60.6 Playoffs
 
