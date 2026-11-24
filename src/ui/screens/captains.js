@@ -9,6 +9,13 @@ import * as CP from '../../franchise/partnerships.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { chemMeterHtml, inactiveText, monsterOf } from '../captains-ui.js';
 import { t as $t } from '../../text/index.js';
+import { infoIcon } from '../icons.js';
+
+// The explanation panels show in full on the first visit; afterwards they wait behind the info button (owner 2026-11-24: less scrolling).
+const INTRO_KEY = 'gridiron-beast-v7-captains-intro-seen';
+const introSeen = () => { try { return localStorage.getItem(INTRO_KEY) === '1'; } catch { return false; } };
+const markIntroSeen = () => { try { localStorage.setItem(INTRO_KEY, '1'); } catch { /* a convenience */ } };
+let showIntro = null; // this visit: null until decided on render
 
 const SIDES = ['offense', 'defense'];
 const SIDE_WORD = { offense: $t('roster.offense'), defense: $t('roster.defense') };
@@ -57,19 +64,24 @@ export function registerCaptainScreens(Router, app) {
     render({ f }) {
       if (!f?.season) return `<p>${$t('roster.no_franchise')}</p>`;
       const mode = modeOf(f);
-      const intro = `<div class="panel tight cap-intro"><p style="margin:0">${$t('roster.captains_who_make_plays_together_build')}</p></div>`;
-      if (mode === 'locked') return intro + lockedHtml(f);
+      if (showIntro === null) showIntro = !introSeen();
+      const intro = showIntro ? `<div class="panel tight cap-intro"><p style="margin:0">${$t('roster.captains_who_make_plays_together_build')}</p></div>` : '';
+      const infoBtn = `<button class="btn small ghost cap-info info-mark" data-action="cap-info" aria-expanded="${showIntro}" aria-label="${showIntro ? $t('roster.captains_hide_info') : $t('roster.captains_show_info')}">${infoIcon()}</button>`;
+      if (mode === 'locked') return `<div class="row" style="justify-content:flex-end;margin-bottom:6px">${infoBtn}</div>` + intro + lockedHtml(f);
       const d = ensureDraft(f, mode); const cands = F.captainCandidates(f); const sugg = F.suggestedCaptains(f);
-      const when = mode === 'initial' ? `<div class="panel tight cap-note">${$t('roster.b_one_time_pick_b_your', { year: yearOf(f.season.year) })}</div>`
+      const when = !showIntro ? '' : mode === 'initial' ? `<div class="panel tight cap-note">${$t('roster.b_one_time_pick_b_your', { year: yearOf(f.season.year) })}</div>`
         : `<div class="panel tight cap-note">${$t('roster.b_captains_for_b_you_can', { year: yearOf(f.season.year + 1) })}${f.partnerships?.pick?.year === f.season.year + 1 ? ` <span class="chip good">${$t('roster.saved')}</span>` : ''}</div>`;
       return `${intro}${when}
-        <button class="btn block" data-action="cap-suggest" style="margin-bottom:var(--s3)">${$t('roster.use_suggested_captains')}</button>
+        <div class="row cap-top" style="gap:8px;margin-bottom:var(--s3)"><button class="btn block grow" data-action="cap-suggest">${$t('roster.use_suggested_captains')}</button>${infoBtn}</div>
         ${SIDES.map((side) => sideHtml(f, cands, side, d[side], sugg)).join('')}
         <p class="dim">${$t('roster.captains_stay_the_same_all_season')}</p>
         <button class="btn primary big block" data-action="cap-confirm">${mode === 'initial' ? $t('roster.confirm_captains') : $t('roster.save_captains_for_next_season')}</button>`;
     },
+    unmount() { showIntro = null; }, // each visit decides afresh
     mount(root) {
+      if (showIntro) markIntroSeen(); // seen once: the next visit starts folded
       delegate(root, {
+        'cap-info': () => { showIntro = !showIntro; Router.render(); },
         go: (el) => Router.go(el.dataset.screen),
         'cap-suggest': () => { const f = app.f; const mode = modeOf(f); ensureDraft(f, mode); Object.assign(draft, pairFromSuggestion(F.suggestedCaptains(f))); Router.render(); },
         'cap-slot': (el) => {

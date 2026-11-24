@@ -2861,3 +2861,21 @@ html[data-app-inactive="1"] .final-celebration * { animation-play-state: paused;
 @media (min-width: 900px) { .screen-guide .guide-list { grid-template-columns: 1fr 1fr; } .screen-guide { max-width: 900px; } }
 .guide-tile { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 14px; background: var(--tile); color: #fff; box-shadow: inset 0 -3px 0 rgba(0,0,0,.18); }
 .guide-tile .ui-icon { width: 30px; height: 30px; }
+
+/* ---------------------------------------------------------------- Beast Clash bench guidance (owner 2026-11-24) */
+.cl-tip { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; background: rgba(250, 204, 21, .08); border: 1px solid rgba(250, 204, 21, .35); font-size: 13px; line-height: 1.35; }
+.cl-sort { display: flex; align-items: center; gap: 6px; margin-top: 8px; overflow-x: auto; scrollbar-width: none; }
+.cl-sort::-webkit-scrollbar { display: none; }
+.cl-sort .chip { flex: none; cursor: pointer; }
+.cl-bench.best { border-color: var(--accent); }
+.cl-best { font-size: 11px; padding: 1px 6px; }
+.cl-reasons { line-height: 1.3; margin-top: 2px; }
+.cl-why { display: inline-block; margin-right: 8px; }
+.cl-why.good { color: var(--good); }
+.cl-why.bad { color: var(--warn); }
+/* Team Captains: the info button sits beside Use Suggested Captains, never on its own line (owner 2026-11-24) */
+.cap-top { flex-wrap: nowrap; align-items: stretch; }
+.cap-top > .btn.block { width: auto; flex: 1 1 auto; min-width: 0; }
+.cap-top > .cap-info { flex: 0 0 auto; min-width: 48px; display: inline-flex; align-items: center; justify-content: center; }
+/* Closed Search & Filters bars: label centred in the 44px tap row (owner 2026-11-24) */
+.roster-search > summary { line-height: 32px; }

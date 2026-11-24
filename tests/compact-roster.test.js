@@ -52,3 +52,13 @@ test('development summary uses current exact rewards and simple non-starter word
  assert.ok(text.replace(/<[^>]+>/g,'').split(/\s+/).length<45);
  assert.doesNotMatch(text,/at least 3|quarter of|planned replacements|Limit:/);
 });
+test('the draft and the market fold their search and filters into a closed drop-down too (owner 2026-11-24)', async () => {
+  const { polishHeader } = await import('../src/ui/polish.js');
+  const F = await import('../src/franchise/franchise.js');
+  const f = F.createFranchise({ owner: { first: 'D', last: 'F' }, club: 'Goldhaven Royals', seed: 91 }); F.hireDefaultStaff(f);
+  for (const name of ['draft', 'famarket']) {
+    const html = polishHeader({ f, app: {} }, name);
+    assert.match(html, /<details class="roster-search panel tight polish-browse">/, name); assert.doesNotMatch(html, /<details class="roster-search[^>]*\sopen/, `${name}: closed`);
+    assert.match(html, /data-roster-filter-active hidden/, `${name}: no filter on`);
+  }
+});

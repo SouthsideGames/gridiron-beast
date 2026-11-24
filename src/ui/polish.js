@@ -128,7 +128,10 @@ export function polishHeader(ctx,name) {
   if(['roster','famarket','draft','draftclass'].includes(name)){
     const prefs=browsePreferences(f,name);
     const browse=`<div class="panel tight polish-browse"><label>${t('polish.search')}<input type="search" data-polish-search value="${esc(prefs.query||'')}" autocomplete="off"></label><div class="row wrap">${['shortlist','affordable','needed'].filter(k=>!['roster','contracts'].includes(name)||k==='needed').map(k=>`<label><input type="checkbox" data-polish-filter="${k}" ${prefs[k]?'checked':''}> ${k==='shortlist'?t('polish.shortlist_only'):k==='affordable'?t('polish.affordable'):t('polish.needed')}</label>`).join('')}${buttons('clear-filters',t('polish.clear_filters'))}</div><span data-polish-count role="status"></span></div>`;
-    out+=name==='roster'?`<details class="roster-search panel tight polish-browse"><summary>${t('roster.search_filters')} <span class="chip" data-roster-filter-active ${prefs.query||prefs.needed?'':'hidden'}>${t('roster.filters_on')}</span></summary>${browse.replace('polish-browse','roster-search-body')}</details>`:browse;
+    // Every list's search and filters fold into one drop-down, closed when the screen opens (owner 2026-11-24: less scrolling);
+    // the heading says when a filter is on.
+    const on=prefs.query||prefs.needed||(name!=='roster'&&(prefs.shortlist||prefs.affordable));
+    out+=`<details class="roster-search panel tight polish-browse"><summary>${t('roster.search_filters')} <span class="chip" data-roster-filter-active ${on?'':'hidden'}>${t('roster.filters_on')}</span></summary>${browse.replace('polish-browse','roster-search-body')}</details>`;
   }
   if(['draft','draftclass','famarket'].includes(name))out+=buttons('shortlist-page',t('polish.shortlist'));
   if(name==='roster')out+=`<div class="roster-shortcuts">${buttons('shortlist-page',t('polish.shortlist'))}${buttons('presets-lineup',t('polish.lineup_presets'))}</div>`;
@@ -188,7 +191,7 @@ export function mountPolish(root,ctx,name,Router) {
       const visible=matchesSearch(`${m.name} ${formOf(m).name} ${speciesName(m)}`,p.query)&&(!p.shortlist||shortlisted(f,scope,m.id))&&(!p.needed||needs.has(m.position))&&(!p.affordable||charge!=null&&charge<=room);
       row.hidden=!visible;if(visible)visibleIds.add(m.id);
     }
-    const active=root.querySelector('[data-roster-filter-active]');if(active)active.hidden=!p.query&&!p.needed;
+    const active=root.querySelector('[data-roster-filter-active]');if(active)active.hidden=!p.query&&!p.needed&&(name==='roster'||(!p.shortlist&&!p.affordable));
     const searchList=root.querySelector('.polish-roster-search');if(searchList)searchList.hidden=!p.query&&!p.needed;
     const count=root.querySelector('[data-polish-count]');if(count){const total=new Set(rows.map(x=>x.m.id)).size,empty=total>0&&visibleIds.size===0;count.textContent=empty?t('polish.no_matches'):t('polish.results',{n:visibleIds.size,total});count.classList.toggle('polish-empty',empty);}
   };

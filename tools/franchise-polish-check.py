@@ -61,7 +61,10 @@ try:
             card.locator('[data-polish="compare"]').click()
             assert page.locator('.polish-comparison tbody tr').first.locator('td').first.inner_text()=='???'
             close_sheet()
+            assert page.locator('details.roster-search:not([open])').count()==1, 'the draft search starts folded'
+            page.locator('details.roster-search > summary').click()
             page.locator('[data-polish-filter="shortlist"]').check()
+            assert page.locator('[data-roster-filter-active]:not([hidden])').count()==1, 'the folded heading says a filter is on'
             assert page.locator('[data-prospect-id]:visible').count()==1
             page.locator('[data-polish="clear-filters"]').click()
             assert page.locator('[data-prospect-id]:visible').count()>30

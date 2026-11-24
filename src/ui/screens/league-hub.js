@@ -311,7 +311,7 @@ export function mapRegionHtml(f, division) {
 }
 const MAP_ZOOMS = [1, 2, 3];
 // The whole world fits a wide screen; on a phone the map opens at 2× on your club and drags sideways.
-const mapDefaultZoom = () => ((globalThis.innerWidth || 1024) < 700 ? 2 : 1);
+const mapDefaultZoom = () => 1; // the whole world first, on every screen (owner 2026-11-24); zoom in with + or a pinch
 const MAP_KEY = 'gridiron-beast-v7-map';
 
 /**
