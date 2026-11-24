@@ -71,7 +71,7 @@ test('Runway: selectable 6x10 placement with form strength, extended offensive-t
     assert.ok(near(f.lat[1] - f.lat[0], 6, 1e-9) && Math.abs((f.lat[0] + f.lat[1]) / 2) <= HALF, 'centred on his slot lateral (WR1), not the play');
     const st = g.t8.ability[wr.id]; assert.equal(st.cd, 4, 'Stratosoar-tier mastery 2: cooldown 4, the creating play excluded');
     assert.equal(g.t8.mastery[wr.id].executions, 1);
-    if (g.possession !== side) continue; // a turnover: the next check needs his next offensive play
+    if (g.possession !== side || g.phase !== 'scrimmage') continue; // a turnover or a score: the next check needs his next offensive snap
     const [made] = fieldsOf(g, 'WIN-01-F'); assert.ok(made, 'lifetime 2 at mastery 2: one participating play left'); assert.equal(made.remaining, 3);
     const abs = side === 'home' ? f.yard.map((x) => ballOn + x) : [100 - ballOn - f.yard[1], 100 - ballOn - f.yard[0]];
     assert.ok(near(made.yard[0], abs[0], 1e-9) && near(made.yard[1], abs[1], 1e-9), 'absolute placement at the upcoming LOS');
@@ -363,7 +363,7 @@ test('Night Watch: all allied cornerbacks and safeties are protected anywhere wh
   // the field effect itself: only the Dark base Awareness term is filtered
   const mk = (ign) => ({ team: 'def', slot: 'LB1', mid: 'x', name: 'X', type: 'Fire', x: 1, y: 0, vx: 0, vy: 0, attrs: { awareness: 80, catching: 60, blocking: 60 }, ignoreFieldAwareness: ign });
   const fields = [{ id: 'F1', type: 'Dark', strength: 25, createdAt: 0, yard: [0, 5], lat: [-3, 3] }];
-  for (const [ign, exp] of [[false, 60], [true, 80]]) { const a = mk(ign); createFieldPlay({ fields, actors: [a] }).tick(0.05); assert.ok(near(a.attrs.awareness, exp, 1e-9), `ignore ${ign}: ${a.attrs.awareness}`); }
+  for (const [ign, exp] of [[false, 28 /* Dark 25 + 40 = 65% lost (owner 2026-11-24) */], [true, 80]]) { const a = mk(ign); createFieldPlay({ fields, actors: [a] }).tick(0.05); assert.ok(near(a.attrs.awareness, exp, 1e-9), `ignore ${ign}: ${a.attrs.awareness}`); }
   // on the real engine: the aura credits its passive mastery once a protected ally stands in a Dark field
   const t8 = { status: {} }; const darkField = [{ id: 'F9', type: 'Dark', strength: 25, createdAt: 0, owner: 'x', yard: [-2, 30], lat: [-30, 30] }];
   for (let seed = 1; seed <= 3; seed++) play({ seed, offensePlay: 'quick_slants', def: { FS: mon(lineup(12, 64).defense.FS, { id: 'nw', species: 'nightowl', type: 'Dark', mastery: 3 }) }, t8, options: { fields: darkField }, defType: 'Fire' });

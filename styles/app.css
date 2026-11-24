@@ -2879,3 +2879,9 @@ html[data-app-inactive="1"] .final-celebration * { animation-play-state: paused;
 .cap-top > .cap-info { flex: 0 0 auto; min-width: 48px; display: inline-flex; align-items: center; justify-content: center; }
 /* Closed Search & Filters bars: label centred in the 44px tap row (owner 2026-11-24) */
 .roster-search > summary { line-height: 32px; }
+/* Zones panel: what the zone does, and any combination a spot would make (owner 2026-11-24) */
+.zone-planner .zone-what { margin: 4px 0 2px; font-size: 14px; line-height: 1.35; }
+.zone-planner .zone-combo { margin-top: 6px; padding: 6px 8px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--accent, #f5c518) 45%, transparent); font-size: 13px; line-height: 1.35; }
+.zone-planner .zone-combo.picked { background: color-mix(in srgb, var(--accent, #f5c518) 16%, transparent); border-color: var(--accent, #f5c518); }
+.zone-planner .btn:has(> small) { flex-direction: column; line-height: 1.15; }
+.zone-planner .btn > small { color: inherit; opacity: .8; font-size: 11px; font-weight: 700; }

@@ -11,7 +11,7 @@ export function queueField(t8, spec) { book(t8).pending.push({ ...spec }); }
  * At a snap: create every pending field whose creator is on the field and eligible for this snap (`eligible(spec)`); placement is
  * computed from the upcoming formation reference (`place(spec)` returns placeRect arguments). Returns the fields created.
  */
-export function createPending(t8, { onField, eligible = () => true, place, playIndex }) {
+export function createPending(t8, { onField, eligible = () => true, place, playIndex, teamOf = null }) {
   const b = book(t8); const made = []; const keep = [];
   const prior = [...b.list];
   for (const p of b.pending) {
@@ -19,7 +19,7 @@ export function createPending(t8, { onField, eligible = () => true, place, playI
     if ((!p.benchOk && !p.offField && !onField.has(p.owner)) || !eligible(p)) { keep.push(p); continue; } // M3 hook: benchOk / offField (approved off-field creation, e.g. Frostmark, Gear Grid; N7d G3)
     const r = placeRect({ id: `F${++b.seq}`, type: p.type, createdAt: playIndex, owner: p.owner, strength: p.strength ?? null, ...place(p) });
     // `payload`: the producing ability's approved per-field data the in-play effects read (src/sim/t8/field-effects.js)
-    const f = { ...r, ...(b.snap && !p.immediate ? { followLOS: relativeToSnap(r, b.snap) } : {}), lat: [...r.lat], yard: [...r.yard], ability: p.ability, ownerTeam: p.ownerTeam ?? null, payload: p.payload ?? null, remaining: p.lifetime, clock: p.clock, clearsAtHalftime: p.clearsAtHalftime !== false, createdThisPlay: true };
+    const f = { ...r, ...(b.snap && !p.immediate ? { followLOS: relativeToSnap(r, b.snap) } : {}), lat: [...r.lat], yard: [...r.yard], ability: p.ability, ownerTeam: p.ownerTeam ?? null, team: teamOf?.(p.owner) ?? p.ownerTeam ?? null, /* the club that placed it (owner 2026-11-24: zones pick sides); ownerTeam can name the other club for its clock */ payload: p.payload ?? null, remaining: p.lifetime, clock: p.clock, clearsAtHalftime: p.clearsAtHalftime !== false, createdThisPlay: true };
     b.list.push(f); made.push(f); trace(t8, 'field-created', { field: f });
   }
   b.pending = keep; return made;

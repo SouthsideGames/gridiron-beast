@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Fd from '../src/sim/t8/fields.js';
-import { createFieldPlay, STEAM, FROSTSTORM, MAGNETIC_STORM, LIVING_TERRAIN, PSYCHIC_DEADBAND } from '../src/sim/t8/field-effects.js';
+import { createFieldPlay, STEAM, FROSTSTORM, MAGNETIC_STORM, LIVING_TERRAIN, PSYCHIC_DEADBAND, ZONE_LINGER, ELECTRIC_STUN, ZONE_SPEED_BONUS } from '../src/sim/t8/field-effects.js';
 import { simulatePlay } from '../src/sim/engine.js';
 import { PLAYS, OFFENSE_IDS, DEFENSE_IDS } from '../src/data/playbook.js';
 import { lineup } from './tools/lineup.js';
@@ -20,18 +20,21 @@ test('no fields: no field play is built (plays without fields are unchanged)', (
   assert.deepEqual(b.frames, a.frames); assert.equal(b.fields, undefined);
 });
 
-test('Fire and Wind: maximum-speed modifiers through the shared aggregation; same-type neutrality; strongest same-type; status + field add', () => {
+test('Fire and Wind: maximum-speed modifiers (strength + the zone bonus, capped) through the shared aggregation; same-type neutrality; strongest same-type; status + field add; the effect carries on after leaving', () => {
+  assert.equal(ZONE_SPEED_BONUS, 10);
   const p = A('p', 'Water'), fire = A('f', 'Fire'), wind = A('w', 'Wind');
   const { fx } = world([F('f1', 'Fire', 10), F('f2', 'Fire', 25, { createdAt: 2 }), F('w1', 'Wind', 15)], [p, fire, wind]); fx.tick(DT);
-  assert.equal(p.maxSpeedMods.field, -25 + 15, 'strongest Fire (25, not 35) plus Wind: the same property adds');
-  assert.equal(fire.maxSpeedMods.field, 15, 'a Fire monster feels only the Wind'); assert.equal(wind.maxSpeedMods.field, -25, 'a Wind monster only the Fire');
+  assert.equal(p.maxSpeedMods.field, -35 + 25, 'strongest Fire (25 + 10, not both) plus Wind (15 + 10): the same property adds');
+  assert.equal(fire.maxSpeedMods.field, 25, 'a Fire monster feels only the Wind'); assert.equal(wind.maxSpeedMods.field, -35, 'a Wind monster only the Fire');
+  const z = A('z', 'Water'); world([F('f9', 'Fire', 30)], [z]).fx.tick(DT); assert.equal(z.maxSpeedMods.field, -35, 'capped at 35%');
   const q = A('q', 'Water'); const w2 = world([F('f', 'Fire', 10)], [q]); w2.fx.tick(DT);
-  q.maxSpeedMods.status = -15; assert.equal(Fd.maxSpeedFactor(q.maxSpeedMods), 0.75, 'status -15% + field -10% = -25%');
-  q.x = 50; w2.fx.tick(2 * DT); assert.equal(q.maxSpeedMods.field, undefined, 'leaving restores'); assert.equal(Fd.maxSpeedFactor(q.maxSpeedMods), 0.85);
+  q.maxSpeedMods.status = -15; assert.equal(+Fd.maxSpeedFactor(q.maxSpeedMods).toFixed(6), 0.65, 'status -15% + field -20% = -35%');
+  q.x = 50; w2.fx.tick(2 * DT); assert.equal(q.maxSpeedMods.field, -20, 'just after leaving the slow carries on');
+  w2.fx.tick(2 * DT + ZONE_LINGER + DT); assert.equal(q.maxSpeedMods.field, undefined, 'then wears off'); assert.equal(Fd.maxSpeedFactor(q.maxSpeedMods), 0.85);
   assert.equal(Fd.maxSpeedFactor({ a: -60, b: -40 }), 0.25, 'bounded at -75%'); assert.equal(Fd.maxSpeedFactor({ a: 40, b: 40 }), 1.5, 'bounded at +50%'); assert.equal(Fd.maxSpeedFactor(null), 1);
 });
 
-test('Nature reduces turning only; Ice reduces braking only and extends the stopping slide', () => {
+test('Nature reduces turning only; Ice reduces braking (strength + 45) and turning (30%) and extends the stopping slide', () => {
   const n = A('n', 'Fire', 0, 0, { vx: 5, vy: 0 }), nn = A('nn', 'Nature', 0, 0, { vx: 5, vy: 0 });
   const { fx } = world([F('n1', 'Nature', 20)], [n, nn]); fx.tick(DT);
   assert.deepEqual(fx.shapeDv(n, 0.3, 0.4).map((v) => +v.toFixed(6)), [0.3, 0.32], 'turning share -20%, straight acceleration unchanged');
@@ -39,7 +42,7 @@ test('Nature reduces turning only; Ice reduces braking only and extends the stop
   assert.equal(fx.shapeDv(nn, 0.3, 0.4), null, 'a Nature monster is unaffected');
   const i = A('i', 'Fire', 0, 0, { vx: 5, vy: 0 }), ii = A('ii', 'Ice', 0, 0, { vx: 5, vy: 0 });
   const w = world([F('i1', 'Ice', 25)], [i, ii]); w.fx.tick(DT);
-  assert.deepEqual(w.fx.shapeDv(i, -0.4, 0.2).map((v) => +v.toFixed(6)), [-0.3, 0.2], 'braking -25%, turning unchanged');
+  assert.deepEqual(w.fx.shapeDv(i, -0.4, 0.2).map((v) => +v.toFixed(6)), [-0.12, 0.14], 'braking -70% (25 + 45), turning -30%');
   assert.deepEqual(w.fx.shapeDv(i, 0.4, 0).map((v) => +v.toFixed(6)), [0.4, 0], 'acceleration unchanged');
   assert.ok(w.fx.coast(i) > 0.93 && w.fx.coast(ii) === 0.93, 'a coasting (stunned) slide lasts longer, only for non-Ice');
   assert.equal(w.fx.shapeDv(ii, -0.4, 0.2), null);
@@ -47,33 +50,36 @@ test('Nature reduces turning only; Ice reduces braking only and extends the stop
 
 test('Earth resists contact displacement without immunity; Dark reduces effective Awareness and restores it on leaving', () => {
   const e = A('e', 'Fire'), ee = A('ee', 'Earth'); const { fx } = world([F('e1', 'Earth', 30)], [e, ee]); fx.tick(DT);
-  assert.equal(+fx.resist(e).toFixed(6), 0.7); assert.equal(fx.resist(ee), 1);
+  assert.equal(+fx.resist(e).toFixed(6), 0.4, 'Earth 30 + 30: 60% of a knockback resisted'); assert.equal(fx.resist(ee), 1);
   const big = A('b', 'Fire'); const w = world([F('e2', 'Earth', 100)], [big]); w.fx.tick(DT); assert.ok(w.fx.resist(big) > 0, 'never a guaranteed immunity');
   const d = A('d', 'Fire'), dd = A('dd', 'Dark'); const v = world([F('d1', 'Dark', 15)], [d, dd]); v.fx.tick(DT);
-  assert.equal(+d.attrs.awareness.toFixed(6), 51); assert.equal(dd.attrs.awareness, 60);
-  v.fx.tick(2 * DT); assert.equal(+d.attrs.awareness.toFixed(6), 51, 'no compounding tick to tick');
-  d.x = 40; v.fx.tick(3 * DT); assert.equal(+d.attrs.awareness.toFixed(6), 60, 'restored');
+  assert.equal(+d.attrs.awareness.toFixed(6), 27, 'Dark 15 + 40: 55% of Awareness lost'); assert.equal(dd.attrs.awareness, 60);
+  v.fx.tick(2 * DT); assert.equal(+d.attrs.awareness.toFixed(6), 27, 'no compounding tick to tick');
+  d.x = 40; v.fx.tick(3 * DT); assert.equal(+d.attrs.awareness.toFixed(6), 27, 'carried on just after leaving');
+  v.fx.tick(3 * DT + ZONE_LINGER + DT); assert.equal(+d.attrs.awareness.toFixed(6), 60, 'restored once it wears off');
 });
 
-test('Electric: chance to apply Stunned on first entry through the shared gate; no re-entry reroll; Electric monsters unaffected; occupied slot blocks', () => {
+test('Electric: a sure short stun on entering through the shared gate; once a play; Electric monsters unaffected; occupied slot blocks', () => {
   const a = A('a', 'Fire'), e = A('e', 'Electric'), b = A('b', 'Fire'); const t8 = { status: { m_b: { id: 'shielded', strength: 1, originalStrength: 1, remaining: 2, applications: 1 } } };
-  const { fx, events } = world([F('z', 'Electric', 100)], [a, e, b], t8); fx.tick(DT);
-  assert.equal(t8.status.m_a.id, 'stunned'); assert.equal(t8.status.m_a.restOfPlay, true); assert.ok(a.stun > 100 && a.vx === 0, 'movement stops for the rest of the play');
+  const { fx, events } = world([F('z', 'Electric', 20)], [a, e, b], t8); fx.tick(DT);
+  assert.equal(t8.status.m_a.id, 'stunned'); assert.equal(t8.status.m_a.restOfPlay, false); assert.ok(a.stun === ELECTRIC_STUN && a.vx === 0, 'stopped for half a second, not the play');
   assert.equal(t8.status.m_e, undefined); assert.equal(e.stun, 0);
   assert.equal(t8.status.m_b.id, 'shielded', 'a different status occupies the slot: blocked'); assert.equal(b.stun, 0);
   assert.ok(events.some((x) => x.kind === 'field_status_blocked' && x.by === 'b'));
-  const c = A('c', 'Fire'); const w = world([F('z0', 'Electric', 0)], [c]); w.fx.tick(DT); c.x = 50; w.fx.tick(2 * DT);
-  c.x = 0; w.fx.tick(4 * DT); assert.equal(c.stun, 0, '0% never stuns');
-  assert.equal(w.events.filter((x) => x.kind === 'field_enter').length, 1, 'one entry per field per play (no re-entry reroll)');
+  const c = A('c', 'Fire'); const w = world([F('z0', 'Electric', 0), F('z1', 'Electric', 0, { yard: [20, 30] })], [c]); w.fx.tick(DT); assert.equal(c.stun, ELECTRIC_STUN, 'every entry stuns: no chance roll');
+  c.stun = 0; c.x = 50; w.fx.tick(2 * DT); c.x = 0; w.fx.tick(4 * DT); c.x = 25; w.fx.tick(5 * DT); assert.equal(c.stun, 0, 'once a play: neither re-entering nor another Electric zone stuns again');
+  assert.equal(w.events.filter((x) => x.kind === 'field_stun').length, 1);
 });
 
-test('Water: a sharp cut or stop rolls the slip; success Stumbles (40% current speed, once a play); Water monsters immune; no cut, no roll', () => {
-  const a = A('a', 'Fire', 0, 0, { vx: 6, vy: 0, cutUntil: 0 }), w = A('w', 'Water', 0, 0, { vx: 6, vy: 0, cutUntil: 0 }), still = A('s', 'Fire', 0, 0, { vx: 6, vy: 0, cutUntil: 0 });
-  const t8 = { status: {} }; const { fx, events } = world([F('p', 'Water', 100)], [a, w, still], t8); fx.tick(DT);
-  assert.equal(a.vx, 6, 'no cut yet'); a.cutUntil = DT + 0.3; w.cutUntil = DT + 0.3; fx.tick(2 * DT);
-  assert.equal(+a.vx.toFixed(6), 3.6); assert.equal(t8.status.m_a.id, 'stumbled'); assert.equal(w.vx, 6); assert.equal(t8.status.m_w, undefined); assert.equal(still.vx, 6);
-  a.vx = 6; a.cutUntil = 0.9; fx.tick(3 * DT); assert.equal(a.vx, 6, 'one successful slip per monster per play');
-  assert.equal(events.filter((x) => x.kind === 'field_slip').length, 1);
+test('Water: a sure slip (Stumbles, 40% current speed) once a play once he runs or cuts inside; Water monsters immune', () => {
+  const a = A('a', 'Fire', 0, 0, { vx: 6, vy: 0, cutUntil: 0 }), w = A('w', 'Water', 0, 0, { vx: 6, vy: 0, cutUntil: 0 }), still = A('s', 'Fire', 0, 0, { vx: 0, vy: 0, cutUntil: 0 });
+  const t8 = { status: {} }; const { fx, events } = world([F('p', 'Water', 20)], [a, w, still], t8); fx.tick(DT);
+  assert.equal(+a.vx.toFixed(6), 3.6, 'moving inside: he slips at once'); assert.equal(t8.status.m_a.id, 'stumbled'); assert.equal(w.vx, 6); assert.equal(t8.status.m_w, undefined);
+  assert.equal(still.vx, 0); assert.equal(t8.status.m_s, undefined, 'standing still (at the snap): not yet');
+  still.vx = 2; fx.tick(2 * DT); assert.equal(still.vx, 2, 'a first step: not yet');
+  still.vx = 5; fx.tick(2.5 * DT); assert.equal(+still.vx.toFixed(6), 3, 'running (WATER_SLIP_SPEED): he slips');
+  a.vx = 6; a.cutUntil = 0.9; fx.tick(3 * DT); assert.equal(a.vx, 6, 'one slip per monster per play');
+  assert.equal(events.filter((x) => x.kind === 'field_slip').length, 2);
 });
 
 test('Metal: the first changed automatic decision inside waits one AI decision update, then is adopted; later changes pass; Metal monsters exempt', () => {
@@ -84,10 +90,10 @@ test('Metal: the first changed automatic decision inside waits one AI decision u
   assert.equal(fx.defer(m, 'read', true, false, 0.3), true);
 });
 
-test('Psychic: bounded inward pull at the field strength of applicable maximum speed, stopping at the centre deadband', () => {
+test('Psychic: bounded inward pull at the field strength + 20 of applicable maximum speed, stopping at the centre deadband', () => {
   const a = A('a', 'Fire', 4, 0), p = A('p', 'Psychic', 4, 0), c = A('c', 'Fire', 0.5, 0);
   const { fx } = world([F('y', 'Psychic', 20)], [a, p, c]); fx.tick(DT); fx.displace(a); fx.displace(p); fx.displace(c);
-  assert.equal(+a.x.toFixed(6), +(4 - 0.2 * 8 * DT).toFixed(6)); assert.equal(p.x, 4); assert.equal(c.x, 0.5, 'inside the deadband');
+  assert.equal(+a.x.toFixed(6), +(4 - 0.4 * 8 * DT).toFixed(6)); assert.equal(p.x, 4); assert.equal(c.x, 0.5, 'inside the deadband');
   a.maxSpeed = 8 * 0.5; const x0 = a.x; // the engine's one aggregation (refreshMaxSpeed) has applied a −50% status to a.maxSpeed fx.displace(a); assert.equal(+(x0 - a.x).toFixed(6), +(0.2 * 4 * DT).toFixed(6), 'applicable (modified) maximum speed');
   const e = A('e', 'Fire', 1.2, 0); fx.tick(2 * DT); fx.displace(e); assert.ok(e.x >= PSYCHIC_DEADBAND - 1e-9, 'never pulled inside the deadband');
 });
@@ -100,7 +106,7 @@ test('Steam (Fire + Water): nonparent Catching and Blocking -15% once, parent ef
   n.cutUntil = 1; fx.tick(3 * DT); assert.equal(n.vx, 6, 'no Water slip inside Steam');
   for (const x of [f, w]) { assert.equal(x.attrs.catching, 60); assert.equal(x.fx.hybrid, null); }
   const out = A('o', 'Nature', 0, 0); const fields2 = [F('fi', 'Fire', 20, { yard: [-10, 0] }), F('wa', 'Water', 50, { yard: [0, 10], createdAt: 2 })];
-  const v = world(fields2, [out]); out.x = -5; v.fx.tick(DT); assert.equal(out.maxSpeedMods.field, -20, 'outside the overlap the base Fire applies');
+  const v = world(fields2, [out]); out.x = -5; v.fx.tick(DT); assert.equal(out.maxSpeedMods.field, -30, 'outside the overlap the base Fire applies (20 + the zone bonus)');
 });
 
 test('Froststorm drifts 15% of applicable max speed to one seeded side, capped at 2 yd net; Magnetic Storm pairs and pulls; Mindstorm echo lures once', () => {

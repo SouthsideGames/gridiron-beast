@@ -19,9 +19,25 @@ export function zonePlans(state, teams, side, offense, defense) {
   return [...groups.values()];
 }
 const mixText = (o) => o.overlaps?.map((m) => `${m.name}: ${m.remaining == null ? 'while both zones remain' : `${m.remaining} shared plays`}`).join(' · ') || '';
+// What each zone does, in a line (owner 2026-11-24: the panel explains the zone, not the rules for moving it).
+const ZONE_FX = { Fire: () => $t('playview.zone_fx_fire'), Water: () => $t('playview.zone_fx_water'), Nature: () => $t('playview.zone_fx_nature'), Electric: () => $t('playview.zone_fx_electric'), Earth: () => $t('playview.zone_fx_earth'), Ice: () => $t('playview.zone_fx_ice'), Wind: () => $t('playview.zone_fx_wind'), Psychic: () => $t('playview.zone_fx_psychic'), Dark: () => $t('playview.zone_fx_dark'), Light: () => $t('playview.zone_fx_light'), Metal: () => $t('playview.zone_fx_metal'), Dragon: () => $t('playview.zone_fx_dragon') };
+// Combination zones by their two parent types (names can be translated, the parents cannot).
+const COMBO_FX = { 'Fire+Water': () => $t('playview.combo_fx_steam'), 'Dark+Light': () => $t('playview.combo_fx_eclipse'), 'Earth+Nature': () => $t('playview.combo_fx_living_terrain'), 'Electric+Metal': () => $t('playview.combo_fx_magnetic_storm'), 'Ice+Wind': () => $t('playview.combo_fx_froststorm'), 'Electric+Psychic': () => $t('playview.combo_fx_mindstorm') };
+export const zoneEffectText = (type) => ZONE_FX[type]?.() || '';
+export const comboEffectText = (parents) => COMBO_FX[[...parents].sort().join('+')]?.() || '';
+/** One line per spot that would join an existing zone into a combination zone: which combination, and what it does. */
+function comboLines(p) {
+  const out = [];
+  for (const o of p.placementOptions) for (const m of o.overlaps || []) {
+    const [a, b] = m.parents[0] === p.type ? m.parents : [...m.parents].reverse();
+    const line = $t('playview.zone_combo', { spot: o.label, name: m.name, a, b, effect: comboEffectText(m.parents) }) + (m.cross ? ` ${$t('playview.zone_combo_both')}` : '');
+    if (!out.some((l) => l.line === line)) out.push({ line, picked: p.picked === o.id });
+  }
+  return out.map((l) => `<div class="zone-combo${l.picked ? ' picked' : ''}">◆ ${esc(l.line)}</div>`).join('');
+}
 export function zonePlannerHtml(plans, { action = 'zonepick', focus = null, focusAction = 'zonefocus' } = {}) {
   if (!plans.length) return '';
-  return `<div class="panel tight zone-planner" role="region" aria-label="Zone placement"><b>◇ Zone abilities ready this play</b><p class="dim">${$t('playview.zone_policy')}</p><p class="dim" style="font-size:12px;margin:4px 0">Choose a highlighted area. Snapping confirms it. Matching types are immune; other allies can be affected.</p>${plans.map((p) => `<div style="margin-top:8px"><button class="btn small ghost" data-action="${focusAction}" data-zone="${esc(p.key)}" aria-pressed="${(focus || plans[0].key) === p.key}">${esc(p.name)} · ${p.remaining} plays</button>${p.placementOptions.length ? `<div class="row" style="gap:5px;flex-wrap:wrap;margin-top:4px">${[{ id: 'auto', label: 'Auto Place' }, ...p.placementOptions].map((o) => `<button class="btn small ${p.picked === o.id ? 'primary' : 'ghost'}" data-action="${action}" data-zone="${esc(p.key)}" data-choice="${esc(o.id)}" aria-pressed="${p.picked === o.id}" style="min-height:44px">${esc(o.label)}${mixText(o) ? `<small style="display:block">${esc(mixText(o))}</small>` : ''}</button>`).join('')}</div>` : '<div class="dim" style="font-size:12px">Creates at its action or alignment location.</div>'}</div>`).join('')}</div>`;
+  return `<div class="panel tight zone-planner" role="region" aria-label="Zone placement"><b>◇ Zone abilities ready this play</b><p class="dim" style="font-size:12px;margin:4px 0">${esc($t('playview.zone_how'))}</p>${plans.map((p) => `<div style="margin-top:8px"><button class="btn small ghost" data-action="${focusAction}" data-zone="${esc(p.key)}" aria-pressed="${(focus || plans[0].key) === p.key}">${esc(p.name)} · ${p.remaining} plays</button>${zoneEffectText(p.type) ? `<div class="zone-what">${esc($t('playview.zone_what', { type: p.type, effect: zoneEffectText(p.type) }))}</div>` : ''}${p.placementOptions.length ? `<div class="row" style="gap:5px;flex-wrap:wrap;margin-top:4px">${[{ id: 'auto', label: 'Auto Place' }, ...p.placementOptions].map((o) => `<button class="btn small ${p.picked === o.id ? 'primary' : 'ghost'}" data-action="${action}" data-zone="${esc(p.key)}" data-choice="${esc(o.id)}" aria-pressed="${p.picked === o.id}" style="min-height:44px">${esc(o.label)}${mixText(o) ? `<small style="display:block">${esc(mixText(o))}</small>` : ''}</button>`).join('')}</div>${comboLines(p)}` : '<div class="dim" style="font-size:12px">Creates at its action or alignment location.</div>'}</div>`).join('')}</div>`;
 }
 /** Absolute rectangles -> the offense-up field SVG; selected option stays outlined. */
 export function zonePlannerOverlay(plan, state, camera, { action = 'zonepick', reducedMotion = false } = {}) {

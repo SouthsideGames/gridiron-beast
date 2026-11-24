@@ -298,7 +298,7 @@ test('Phase Release: phased from a ready route snap (spends even without contact
   const r2 = play('voltfang', 'off', 'WR2', 2, { t8: { status: { X: { id: 'stunned', strength: 1, remaining: 1, applications: 1 } }, ability: { X: { cd: 0 } } } }); assert.equal(ab(r2, 'ELE-03-F').length, 0, 'Stunned prevents activation');
 });
 
-test('Static Field: selected lane placement, 15% entry stun, three defensive team plays; mastery cooldown unchanged', () => {
+test('Static Field: selected lane placement, a sure entry stun, three defensive team plays; mastery cooldown unchanged', () => {
   const { g, teams, other } = game(11, (T, s, o) => Object.assign(T[o].defense.FS, { species: 'stormlynx', form: 'stormlynx:0', mastery: 2, type: 'Electric' }));
   const id = teams[other].defense.FS.id;
   const { sim } = R.runScrimmagePlay(g, teams, 'slant_flat', 'cover_3');
@@ -306,7 +306,8 @@ test('Static Field: selected lane placement, 15% entry stun, three defensive tea
   assert.equal(f.strength, 15); assert.ok(Math.abs(f.yard[0] - 5) < 1e-6 && Math.abs(f.yard[1] - 12) < 1e-6); assert.ok(Math.abs(f.lat[1] - f.lat[0] - 12) < 1e-6 && Math.abs((f.lat[0] + f.lat[1]) / 2) < 1e-6);
   assert.equal(fieldsOf(g, 'ELE-04-F').length, 1, 'three defensive plays including the spawn');
   assert.equal(g.t8.ability[id].cd, 3, 'mastery 2: 3 subsequent defensive plays');
-  // stun rate on the engine (frozen: 30 plays with a field over the whole box; at least 80 first entries; tolerance 0.08 of 15%)
+  // stun on the engine (30 plays with a field over the whole box; at least 80 first entries): every entry stuns (owner 2026-11-24),
+  // bar the odd one a status already in the slot blocks
   let entries = 0, stuns = 0;
   for (let seed = 1; seed <= 30; seed++) {
     const fl = [{ id: 'S', type: 'Electric', createdAt: 0, strength: 15, owner: 'X', ability: 'ELE-04-F', yard: [-8, 14], lat: [-27, 27] }];
@@ -314,7 +315,7 @@ test('Static Field: selected lane placement, 15% entry stun, three defensive tea
     entries += r.events.filter((e) => e.kind === 'field_enter' && !(e.side === 'def' && e.by === 'FS')).length; stuns += r.events.filter((e) => e.kind === 'field_stun').length;
     assert.ok(!r.events.some((e) => e.kind === 'field_enter' && e.side === 'def' && e.by === 'FS'), 'Electric unaffected');
   }
-  assert.ok(entries >= 80); assert.ok(Math.abs(stuns / entries - 0.15) <= 0.08, `${stuns}/${entries}`);
+  assert.ok(entries >= 80); assert.ok(stuns / entries >= 0.9, `${stuns}/${entries}`);
 });
 
 test('Chain Break: his successful ordinary shed arcs Stumbled to the nearest other engaged blocker within 3 yards (whose block continues); none: readiness kept; spent even when the status is blocked', () => {

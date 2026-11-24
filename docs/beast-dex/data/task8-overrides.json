@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-09",
+  "version": "2026-11-24",
   "precedence": "Owner-approved Task 8 rulings. Each override replaces the named Beast Dex v18 source section for implementation; the source text is kept in abilities.json as historical evidence and is exposed as `supersededRule` in the generated module. Only approved rulings appear here; open items are listed in docs/task8/APPROVAL_REGISTER.md.",
   "rulingSources": {
     "R1": "Owner rulings on Phase 1 items 1-40, 2026-11-06 23:46 (docs/task8/DECISIONS.md)",
@@ -10,7 +10,8 @@
     "N7e": "Owner ruling on fractional training display, 2026-11-07 10:32",
     "N7f": "Owner rulings on club strength, identities and scope, 2026-11-07 12:44 (docs/task8/RULINGS_2026-11-07d.md)",
     "N7g": "Owner rulings on the Basic encounter XP bonus, encounter companions and Glacivern, 2026-11-07 15:08 (docs/task8/RULINGS_2026-11-07e.md)",
-    "N9d": "Owner approval of all nine follow-up recommendations, 2026-11-09; docs/task8/APPROVAL_REGISTER.md N9d"
+    "N9d": "Owner approval of all nine follow-up recommendations, 2026-11-09; docs/task8/APPROVAL_REGISTER.md N9d",
+    "Z24": "Owner rulings on zones, 2026-11-24: zones pick sides (Wind, Light and Earth help the placing club; every other zone hits only the other club, its own type immune), every effect is sure and lasts 2 seconds after leaving, and Ice, Dark, Earth, Psychic and Steam are strengthened"
   },
   "abilities": {
     "FIR-01-C": {
@@ -47,8 +48,10 @@
       }
     },
     "LIG-01-F": {
-      "ruling": "N7b P3, P4",
-      "sections": {},
+      "ruling": "N7b P3, P4; Z24",
+      "sections": {
+        "Core resolution": "Light zone: Your monsters who pass through recharge their abilities faster. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      },
       "values": {
         "lifetimePlaysByMastery": [
           3,
@@ -56,7 +59,8 @@
           4,
           5
         ]
-      }
+      },
+      "mechanic": "One benefit per monster per play. No charge-bar or once-use restoration. Same-type neutrality and bench pause apply. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap. Light zone: Your monsters who pass through recharge their abilities faster. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
     },
     "LIG-02-F": {
       "ruling": "N7b P7",
@@ -142,6 +146,124 @@
         "Lifetime / persistence": "N9d: preserve the approved launch, charge and delayed-impact lifetime. Target the then-active position when impact starts. Due impacts resolve before the exchange-30 cap check. Not-yet-due impacts are discarded at the cap, without extending the battle. Preserve the named post-KO exception."
       },
       "ruling": "N9d"
+    },
+    "FIR-02-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Fire zone: Slows opponents who run through it. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune.",
+        "Exceptions / counterplay": "See What it does."
+      }
+    },
+    "FIR-06-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Fire zone: Slows opponents who run through it. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune.",
+        "Exceptions / counterplay": "See What it does."
+      }
+    },
+    "WAT-01-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Water zone: Opponents who step in slip once. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      }
+    },
+    "WAT-06-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Water zone: Opponents who step in slip once. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune.",
+        "Visuals": "See What it does."
+      }
+    },
+    "NAT-01-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Nature zone: Opponents inside turn slowly. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      }
+    },
+    "NAT-05-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Nature zone: Opponents inside turn slowly. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      }
+    },
+    "ELE-02-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Electric zone: Opponents who step in are stunned for half a second. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      }
+    },
+    "ELE-04-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Electric zone: Opponents who step in are stunned for half a second. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      }
+    },
+    "ICE-01-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Ice zone: Opponents inside slide before they can stop, turn slowly and lose Agility. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      }
+    },
+    "ICE-04-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Ice zone: Opponents inside slide before they can stop, turn slowly and lose Agility. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      }
+    },
+    "WIN-01-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Wind zone: Your monsters inside run faster. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune.",
+        "Exceptions / counterplay": "See What it does."
+      }
+    },
+    "WIN-04-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Wind zone: Your monsters inside run faster. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      }
+    },
+    "DAR-01-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Dark smoke zone: opponents who leave the smoke are Confused for the rest of the play (Awareness -20% and a wrong assignment point); Dark types and Night Watch-protected secondary defenders are immune. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      },
+      "mechanic": "After his own pass breakup, bank a 6-by-6-yard Dark smoke zone. Choose its lane before the next defensive snap; lasts 3/3/4/5 defensive team plays by mastery. Dark smoke zone: opponents who leave the smoke are Confused for the rest of the play (Awareness -20% and a wrong assignment point); Dark types and Night Watch-protected secondary defenders are immune. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+    },
+    "DAR-05-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Dark zone: Opponents inside lose Awareness and Coverage; a quarterback caught in it reads the field badly. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      },
+      "mechanic": "DAR-05-F: Blackout Pocket; Covers front pressure reads but also own blockers, no concealed essential UI. Zone revision: 3/4/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap. Dark zone: Opponents inside lose Awareness and Coverage; a quarterback caught in it reads the field badly. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+    },
+    "MET-03-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Metal zone: Opponents react a beat late the first time they change plans inside. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune.",
+        "Exceptions / counterplay": "See What it does."
+      }
+    },
+    "MET-05-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Metal zone: Opponents react a beat late the first time they change plans inside. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      }
+    },
+    "PSY-01-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Psychic zone: Pulls opponents hard toward the middle of the zone. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      },
+      "mechanic": "Stop pull within 1 yard of center. Ordinary movement can overcome pull. Psychic monsters have same-type neutrality. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap. Psychic zone: Pulls opponents hard toward the middle of the zone. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+    },
+    "PSY-04-F": {
+      "ruling": "Z24",
+      "sections": {
+        "Core resolution": "Psychic zone: Pulls opponents hard toward the middle of the zone. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune.",
+        "Ability story": "See What it does."
+      },
+      "mechanic": "Echolot can be benched when pending field appears. Zone revision: 3/4/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap. Psychic zone: Pulls opponents hard toward the middle of the zone. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
     }
   },
   "rules": [
