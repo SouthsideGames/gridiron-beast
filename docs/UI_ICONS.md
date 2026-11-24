@@ -20,7 +20,18 @@ Selected RhosGFX Vector Icon Pack PRO SVG artwork supplied by the project owner 
 | League | General / Trophy |
 | More | UI / Hamburger Menu |
 
-Map (🗺 → location pin), Coaching Staff (👥 → clipboard), History (📜 → book), Beast Dex (🔎 → search), Guide (ℹ️ → info), Type Chart (⚡ → lightning) and Stadiums (🚩 → flag) all use pack artwork (owner 2026-11-23: no in-house drawings beside the pack's). 🏟 stays unmapped: it also marks the Beast Bowl and score lines, where a flag would mislead.
+Pack artwork supplied by the owner on 2026-11-23 (Flat White variants, converted the same way):
+
+| Use | Pack file |
+|---|---|
+| Map tab (🗺) | Tools / Map |
+| Stadiums (🏟) | Sports / Football Pitch |
+| Beast Dex (🧬) | Nature / DNA |
+| Type Chart (🔺) | Element Guide (owner's own icon, 100-unit art scaled to 64) |
+| Football everywhere (🏈, How to Play) | Sports / Football |
+| Coaching Staff (👥) | General / Clipboard (already in the game) |
+
+History (📜) uses the book, Guide (ℹ️) the info mark, Search (🔎) the binoculars.
 
 The shared renderer maps common pictorial decorations to the selected art; unneeded pictorial decorations are omitted. Category labels and Surprise Me are text-only. Ordinary arrows, copyright characters, saved data and existing SVG monster/field artwork are preserved. Icons are decorative; existing labels and aria-labels remain. Router screens and sheets use the renderer, as do incremental football controls. Directly drawn SVG scenes and specialist incremental panels are intentionally not rewritten; review remaining pictographs in those views during browser validation.
 

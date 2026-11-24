@@ -293,7 +293,7 @@ export function registerMenuScreens(Router, app) {
   // The Guide (owner 2026-11-23): the reference pages that used to sit loose on More.
   // The Guide (owner 2026-11-23): How to Play and the reference pages, each a card with a small picture and a line on what it is.
   // Each card's picture is the icon pack's own artwork on a coloured tile, so the Guide matches every other icon in the game.
-  const GUIDE_ART = { howto: ['football', '#2f8a5c'], stats: ['stats', '#3b6fb0'], types: ['lightning', '#b07a1e'], stadiums: ['flag', '#a8443a'] };
+  const GUIDE_ART = { howto: ['football', '#2f8a5c'], stats: ['stats', '#3b6fb0'], types: ['elements', '#b07a1e'], stadiums: ['pitch', '#a8443a'] };
   const guideTile = (k) => `<span class="guide-tile" style="--tile:${GUIDE_ART[k][1]}">${iconHtml(GUIDE_ART[k][0])}</span>`;
   Router.registerScreen('guide', {
     title: t('menu.guide_title'),

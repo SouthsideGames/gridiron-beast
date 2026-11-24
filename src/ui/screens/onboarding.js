@@ -18,17 +18,17 @@ import { coachEditorHtml, coachEditorActions, specOf } from '../coach-editor.js'
 import { DEFAULT_LOOK } from '../coach-portrait.js';
 import { BACKGROUNDS } from '../../data/staff.js';
 import { playCardSvg } from '../play-art.js';
-import { PLAYBOOKS } from '../../data/staff.js';
+import { PLAYBOOKS, COACH_FIRST_NAMES, COACH_LAST_NAMES } from '../../data/staff.js';
 import { PLAYS } from '../../data/playbook.js';
 import { fmtMoney } from '../dom.js';
 import { t } from '../../text/index.js';
 import { t as $t } from '../../text/index.js';
 
 export function randomCoachName(previous = {}, random = Math.random) {
-  const firsts = ['Alex', 'Jordan', 'Morgan', 'Casey', 'Riley', 'Taylor', 'Avery', 'Cameron', 'Jamie', 'Quinn', 'Drew', 'Robin', 'Sam', 'Charlie', 'Dakota', 'Reese'];
-  const lasts = ['Brooks', 'Carter', 'Reyes', 'Patel', 'Kim', 'Walker', 'Bennett', 'Rivera', 'Hayes', 'Mitchell', 'Grant', 'Sullivan', 'Nguyen', 'Parker', 'Cole', 'Morgan'];
-  const pairs = firsts.flatMap(first => lasts.map(last => ({ first, last }))).filter(n => n.first !== previous.first || n.last !== previous.last);
-  return pairs[Math.min(pairs.length - 1, Math.max(0, Math.floor(random() * pairs.length)))];
+  // The owner's lists (src/data/staff.js): 400 × 400 names, drawn without building every pair; never the name just shown.
+  const pick = (xs) => xs[Math.min(xs.length - 1, Math.max(0, Math.floor(random() * xs.length)))];
+  for (let n = 0; n < 8; n++) { const name = { first: pick(COACH_FIRST_NAMES), last: pick(COACH_LAST_NAMES) }; if (name.first !== previous.first || name.last !== previous.last) return name; }
+  return { first: COACH_FIRST_NAMES[0] === previous.first ? COACH_FIRST_NAMES[1] : COACH_FIRST_NAMES[0], last: COACH_LAST_NAMES[0] };
 }
 
 const STEPS = ['name', 'look', 'background', 'club', 'difficulty', 'offense'];
