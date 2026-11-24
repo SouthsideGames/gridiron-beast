@@ -7,7 +7,7 @@ import { esc, delegate, sheet } from '../dom.js';
 import { yearOf } from '../../data/calendar.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { careerLink } from '../career-ui.js';
-import { TEAM_META, tierById, REG_WEEKS, teamSwatch, DIVISIONS, CONFERENCE_NAMES, divisionOf, conferenceFor, leagueSeasonFixtures } from '../../data/league.js';
+import { TEAM_META, tierById, REG_WEEKS, teamSwatch, DIVISIONS, CONFERENCE_NAMES, divisionOf, conferenceFor, leagueSeasonFixtures, ACTIVE_LAYOUT } from '../../data/league.js';
 import { AWARDS } from '../../franchise/awards.js';
 import { RECORD_CATEGORIES } from '../../franchise/stats.js';
 import { teamOverall } from '../../franchise/roster.js';
@@ -88,6 +88,18 @@ export const MAP_PINS = Object.freeze({
   'Ember City Beasts': [486, 282], 'Bayou Stalkers': [700, 282], 'Sunfire Solars': [530, 372], 'Palmetto Wyrms': [660, 372],
   'Aetheria Seers': [500, 476], 'Deepwater Chompers': [596, 488], 'Mistport Veils': [690, 470], 'Westhaven Pirates': [774, 494],
 });
+/**
+ * The pins of the league layout in play (data/league.js LEAGUE_LAYOUTS). Layout 2 swaps four clubs between divisions, and each
+ * pair swaps home grounds on the map too, so every club still stands in its own region: Canyon Crushers and Pinecrest Wardens
+ * (Redrock / Golden Valley), Sunfire Solars and Fernhaven Wisps (Everwild / Greenheart). MAP_PINS is layout 1.
+ */
+const PIN_SWAPS = Object.freeze({ 2: [['Canyon Crushers', 'Pinecrest Wardens'], ['Sunfire Solars', 'Fernhaven Wisps']] });
+const pinsByLayout = {};
+export function mapPins(layout = ACTIVE_LAYOUT) {
+  if (pinsByLayout[layout]) return pinsByLayout[layout];
+  const pins = { ...MAP_PINS }; for (const [a, b] of PIN_SWAPS[layout] || []) [pins[a], pins[b]] = [MAP_PINS[b], MAP_PINS[a]];
+  return (pinsByLayout[layout] = Object.freeze(pins));
+}
 /** Each region's ground on the map, where its name is written, and the small landmarks scattered over it. */
 const MAP_REGIONS = Object.freeze({
   Frostlands: { fill: '#dcebf1', shade: '#b9d3dd', label: [116, 162], motif: 'peak' },
@@ -148,7 +160,7 @@ const MOTIF = {
 /** Landmarks: a jittered grid over the land, each in its region's style, kept clear of the stadiums and the region names. */
 const MAP_MOTIFS = (() => {
   let h = 2166136261; const rnd = () => { h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0; h = Math.imul(h ^ (h >>> 13), 3266489909) >>> 0; return ((h ^= h >>> 16) >>> 0) / 4294967296; };
-  const pins = Object.values(MAP_PINS); const out = [];
+  const pins = Object.values(mapPins()); const out = [];
   for (let y = 30; y < 530; y += 22) for (let x = 14; x < 800; x += 24) {
     const px = x + (rnd() - 0.5) * 14, py = y + (rnd() - 0.5) * 12, d = mapRegionAt(px, py), skip = rnd() < 0.4;
     if (!d || skip || d === 'Azure Isles' || mapRegionAt(px + 10, py) !== d || mapRegionAt(px - 10, py) !== d || mapRegionAt(px, py + 8) !== d || mapRegionAt(px, py - 8) !== d) continue;
@@ -180,7 +192,7 @@ const SCENERY = Object.freeze({
 /** Everything on the map that never changes, built once: shallows and sea marks, terrain shading, scenery, landmarks. */
 const MAP_DETAIL = (() => {
   let h = 977; const rnd = () => { h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0; h = Math.imul(h ^ (h >>> 13), 3266489909) >>> 0; return ((h ^= h >>> 16) >>> 0) / 4294967296; };
-  const pins = Object.values(MAP_PINS); const taken = [];
+  const pins = Object.values(mapPins()); const taken = [];
   const clear = (x, y, r, pinGap = 20) => !pins.some(([px, py]) => Math.hypot(px - x, py - y) < pinGap + r || (Math.abs(px - x) < 26 + r * 0.6 && y - r < py + 34 && y + r > py + 20))
     && !Object.entries(MAP_REGIONS).some(([d, { label: [lx, ly] }]) => Math.abs(lx - x) < d.length * 7.6 + 6 + r && Math.abs(ly - y) < 10 + r) && !taken.some(([tx, ty, tr]) => Math.hypot(tx - x, ty - y) < tr + r);
   const inRegion = (x, y, r) => { const d = mapRegionAt(x, y); return d && [[r, 0], [-r, 0], [0, r], [0, -r]].every(([dx, dy]) => mapRegionAt(x + dx, y + dy) === d) ? d : null; };
@@ -204,7 +216,7 @@ const MAP_DETAIL = (() => {
   for (const d of S.rivers) { const m = d.match(/-?\d+(\.\d+)?/g).map(Number); for (let k = 0; k + 1 < m.length; k += 2) taken.push([m[k], m[k + 1], 7]); }
   for (const [x, y, a] of S.lakes) taken.push([x, y, a + 4]);
   // roads: each division's clubs joined, a pale dashed track
-  let roads = ''; for (const [d, clubs] of Object.entries(DIVISIONS)) { if (d === 'Azure Isles') continue; const p = clubs.map((c) => MAP_PINS[c]).sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+  let roads = ''; for (const [d, clubs] of Object.entries(DIVISIONS)) { if (d === 'Azure Isles') continue; const p = clubs.map((c) => mapPins()[c]).sort((a, b) => a[1] - b[1] || a[0] - b[0]);
     for (const [a, b] of [[p[0], p[1]], [p[0], p[2]], [p[1], p[3]], [p[2], p[3]]]) roads += `<path d="M${a[0]} ${a[1]}Q${(a[0] + b[0]) / 2 + 6} ${(a[1] + b[1]) / 2 - 6} ${b[0]} ${b[1]}" fill="none" stroke="#f4ecd0" stroke-width="1.6" stroke-dasharray="3 3" opacity=".55"/>`; }
   // landmarks: a few large ones per region, clear of everything else
   let marks = ''; const want = { Frostlands: 12, Redrock: 9, 'Golden Valley': 6, Suncoast: 6, Kingsport: 6, Greenheart: 13, Everwild: 8 };
@@ -268,13 +280,13 @@ export function regionMapSvg(f, { mode = 'all', sel = null } = {}) {
     + CONFERENCE_NAMES.map((conf) => { const [cx] = SHAPES[conf]; return `<text class="map-conf" x="${cx}" y="22">${esc(conf).toUpperCase()}</text>`; }).join('');
   // this week's games: every pairing in "This week", otherwise only yours
   const games = mode === 'week' ? mapWeekGames(f) : next ? [{ home: mine, away: next }] : [];
-  const routes = games.map((g) => { const a = MAP_PINS[g.home], b = MAP_PINS[g.away]; if (!a || !b) return ''; const me = g.home === mine || g.away === mine;
+  const routes = games.map((g) => { const a = mapPins()[g.home], b = mapPins()[g.away]; if (!a || !b) return ''; const me = g.home === mine || g.away === mine;
     const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, bend = Math.min(40, len * 0.22);
     const qx = mx - (dy / len) * bend, qy = my + (dx / len) * bend;
     const res = mode === 'week' ? (f.season?.results || []).find((x) => x.week === f.season.week && x.home === g.home && x.away === g.away) : null;
     const score = res ? `<g class="map-score${me ? ' mine' : ''}" transform="translate(${((mx + qx) / 2).toFixed(1)} ${((my + qy) / 2).toFixed(1)})"><rect x="-17" y="-8" width="34" height="16" rx="8"/><text y="4">${res.homeScore}–${res.awayScore}</text></g>` : '';
     return `<path class="map-route ${me ? 'mine' : ''}" d="M${a[0]} ${a[1]}Q${qx.toFixed(1)} ${qy.toFixed(1)} ${b[0]} ${b[1]}"/>${score}`; }).join('');
-  const pins = Object.entries(MAP_PINS).map(([club, [x, y]]) => {
+  const pins = Object.entries(mapPins()).map(([club, [x, y]]) => {
     const gym = GYM_BY_CLUB[club]; const held = gym && F.badgeOf(f, club); const me = club === mine; const dim = !lit.has(club);
     const ring = me ? `<circle class="map-ring you" r="20.5"/>` : club === next ? `<circle class="map-ring next" r="19.5"/>` : club === rival ? `<circle class="map-ring rival" r="19.5"/>` : '';
     const g = gym ? `<g transform="translate(12.5 -12.5)"><circle r="5.6" fill="${held ? '#ffd34d' : `hsl(${TYPES[gym.element]?.hue ?? 0} 70% 52%)`}" stroke="#0b1622" stroke-width="1.4"/>${held ? `<path d="M0 -3.4L1 -1L3.4 -1L1.5 .6L2.2 3L0 1.6L-2.2 3L-1.5 .6L-3.4 -1L-1 -1Z" fill="#7a4a00"/>` : ''}</g>` : '';
@@ -364,7 +376,7 @@ export function registerLeagueHubScreens(Router, app) {
     render({ f }) {
       if (!f) return `<div class="panel"><p>${$t('league.no_franchise_is_open')}</p></div>`;
       const p = mapPrefs(); const mode = MAP_MODES.includes(p.mode) ? p.mode : 'all'; const zoom = MAP_ZOOMS.includes(p.zoom) ? p.zoom : mapDefaultZoom();
-      const sel = MAP_PINS[mapSel] ? mapSel : f.club; const week = mapWeekGames(f);
+      const sel = mapPins()[mapSel] ? mapSel : f.club; const week = mapWeekGames(f);
       const label = { all: $t('map.mode_all'), division: $t('map.mode_division'), gyms: $t('map.mode_gyms'), week: $t('map.mode_week') };
       const note = mode === 'week' ? (week.length ? $t('map.week_games', { n: week.length, week: f.season.week }) : $t('map.week_none')) : $t('map.tap_hint');
       return `<div class="seg map-modes" role="tablist">${MAP_MODES.map((m) => `<button class="btn small ${m === mode ? 'primary' : ''}" role="tab" aria-selected="${m === mode}" data-action="mapmode" data-mode="${m}">${label[m]}</button>`).join('')}</div>
@@ -376,8 +388,8 @@ export function registerLeagueHubScreens(Router, app) {
     mount(root) {
       const sc = root.querySelector?.('.map-scroll');
       if (sc && mapScroll) { sc.scrollLeft = mapScroll.left; sc.scrollTop = mapScroll.top; }
-      else if (sc && app.f && MAP_PINS[mapSel || app.f.club]) { // first visit: centre on the open club
-        const [px, py] = MAP_PINS[mapSel || app.f.club]; const w = sc.scrollWidth, h = sc.scrollHeight;
+      else if (sc && app.f && mapPins()[mapSel || app.f.club]) { // first visit: centre on the open club
+        const [px, py] = mapPins()[mapSel || app.f.club]; const w = sc.scrollWidth, h = sc.scrollHeight;
         sc.scrollLeft = ((px - MAP_VIEW.x) / MAP_VIEW.w) * w - sc.clientWidth / 2; sc.scrollTop = ((py - MAP_VIEW.y) / MAP_VIEW.h) * h - sc.clientHeight / 2; }
       const keep = () => { if (sc) mapScroll = { left: sc.scrollLeft, top: sc.scrollTop }; };
       const curZoom = () => { const p = mapPrefs(); return MAP_ZOOMS.includes(p.zoom) ? p.zoom : mapDefaultZoom(); };

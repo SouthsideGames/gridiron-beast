@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
 import { ALL_TEAMS, DIVISIONS, divisionOf } from '../src/data/league.js';
 import { GYM_BY_CLUB } from '../src/data/gyms.js';
-import { MAP_PINS, regionMapSvg, mapWeekGames, mapLit, mapRegionAt } from '../src/ui/screens/league-hub.js';
+import { MAP_PINS, mapPins, regionMapSvg, mapWeekGames, mapLit, mapRegionAt } from '../src/ui/screens/league-hub.js';
 
 const fresh = () => { const f = F.createFranchise({ owner: { first: 'Map', last: 'Test' }, club: 'Riverbend Rapids', seed: 612 }); F.hireDefaultStaff(f); return f; };
 
@@ -17,7 +17,7 @@ test('all 32 clubs have a place on the map, none crowding another', () => {
   }
 });
 test('each club stands inside its own region, clear of its borders: Veyra west, Koruun east', () => {
-  for (const [club, [x, y]] of Object.entries(MAP_PINS)) {
+  for (const [club, [x, y]] of Object.entries(mapPins())) { // the layout in play (layout 2 for a new franchise)
     const d = divisionOf(club);
     for (const [dx, dy] of [[0, 0], [18, 0], [-18, 0], [0, 18], [0, -18]]) assert.equal(mapRegionAt(x + dx, y + dy), d, `${club} at ${dx},${dy}`);
     assert.ok(['Frostlands', 'Redrock', 'Golden Valley', 'Suncoast'].includes(d) ? x < 400 : x > 400, `${club} on the wrong landmass`);
@@ -50,7 +50,7 @@ test('a region\'s sheet lists its four clubs in standing order with their record
   const { mapRegionHtml } = await import('../src/ui/screens/league-hub.js');
   const f = fresh(); const html = mapRegionHtml(f, 'Redrock');
   assert.equal((html.match(/data-action="regionclub"/g) || []).length, 4);
-  assert.match(html, /Gym Leaders: .*Canyon \(Earth\).*Thunder Mesa \(Electric\)/);
-  assert.match(mapRegionHtml(f, 'Golden Valley'), /no Gym Leaders here/);
+  assert.match(html, /Gym Leaders?: .*Thunder Mesa \(Electric\)/); assert.doesNotMatch(html, /Canyon \(Earth\)/);
+  assert.match(mapRegionHtml(f, 'Golden Valley'), /Gym Leaders?: .*Canyon \(Earth\)/); // layout 2: Canyon moved to Golden Valley
   assert.match(regionMapSvg(f, {}), /data-action="mapregion" data-division="Azure Isles"/);
 });

@@ -8,7 +8,8 @@ import { philosophyLabel } from '../../sim/substitutions.js';
 import { abilitiesHtml } from '../ability-info.js';
 import { ASSIST_MODES, ASSIST_MODE_TEXT, assistSettings, setAssist } from '../../franchise/assist.js';
 import { esc, delegate, toast, sheet } from '../dom.js';
-import { teamSwatch, STARTER_DIVISIONS, STARTER_CLUBS, DIVISIONS, RIVAL_GMS, divisionOf, conferenceFor, TEAM_META } from '../../data/league.js';
+import { teamSwatch, LEAGUE_LAYOUTS, CURRENT_LAYOUT, CONFERENCE_NAMES, RIVAL_GMS, divisionIn, rivalChoicesIn, conferenceFor, useLayoutOf, TEAM_META } from '../../data/league.js';
+import { GYM_BY_CLUB } from '../../data/gyms.js';
 import { cornerstoneOffers, TYPES, resolveSpecies } from '../../data/monsters.js';
 import { TRAITS } from '../../data/species.js';
 import { STAFF, ROLE_LABEL, STAFF_ROLES } from '../../data/staff.js';
@@ -59,10 +60,14 @@ export function registerOnboardingScreens(Router, app) {
           ${coachEditorHtml(draft.editor.look, { tab: draft.editor.tab, canUndo: !!draft.editor.lookHistory?.length, teamColor: draft.club ? TEAM_META[draft.club]?.color : null, teamNote: t('onboarding.team_colors_follow_the_club_you') })}`;
       }
       if (step === 'background') body = `<div class="stack" style="margin-top:8px">${Object.entries(BACKGROUNDS).map(([id, b]) => `<button class="choice ${draft.background === id ? 'selected' : ''}" data-action="background" data-v="${id}"><span class="name">${esc(b.label)}</span><div class="muted">${esc(b.text)}</div></button>`).join('')}</div>`;
-      // Eight clubs in the two starter divisions (32-club league): grouped by division, each with last season's record.
+      // The starter clubs of the current league layout (a new franchise is created in it, whatever save is open): one in every
+      // division (layout 2, owner 2026-11-24), grouped by conference, each with last season's record and its division's Gym Leaders.
+      const L = LEAGUE_LAYOUTS[CURRENT_LAYOUT]; const divOf = (club) => divisionIn(CURRENT_LAYOUT, club);
+      const gymsIn = (d) => (L.divisions[d] || []).filter((c) => GYM_BY_CLUB[c]).length;
       const fallen = { 'Skyvale Cyclones': t('onboarding.fallen_skyvale'), 'Thornwood Wildroots': t('onboarding.fallen_thornwood') };
-      const clubChoice = (c) => `<button class="choice ${draft.club === c.name ? 'selected' : ''}" data-action="club" data-v="${esc(c.name)}"><span class="name" style="color:${TEAM_META[c.name].ink}">${teamLogo(c.name, 30, { cls: 'team-logo inline' })}${teamSwatch(c.name)} ${esc(c.name)}</span><span class="muted">${t('onboarding.last_season_record', { record: c.record })}${fallen[c.name] ? ` · ${fallen[c.name]}` : ''}</span></button>`;
-      if (step === 'club') body = `<div class="stack">${STARTER_DIVISIONS.map((d) => `<div class="starter-division"><h3 style="margin:8px 0 4px">${t('onboarding.starter_division_head', { division: esc(d), conference: esc(conferenceFor(d)) })}</h3><div class="stack">${STARTER_CLUBS.filter((c) => divisionOf(c.name) === d).map(clubChoice).join('')}</div></div>`).join('')}</div>${draft.rival ? `<div class="panel tight" style="border-color:#a855f7;margin-top:8px">${t('onboarding.your_division_rival_b_b_new', { rival: esc(draft.rival), rivalGms: esc(RIVAL_GMS[draft.rival]) })}</div>` : ''}`;
+      const gymLine = (n) => (n === 1 ? t('onboarding.starter_gyms_one') : t('onboarding.starter_gyms_many', { n }));
+      const clubChoice = (c) => { const d = divOf(c.name); return `<button class="choice ${draft.club === c.name ? 'selected' : ''}" data-action="club" data-v="${esc(c.name)}"><span class="name" style="color:${TEAM_META[c.name].ink}">${teamLogo(c.name, 30, { cls: 'team-logo inline' })}${teamSwatch(c.name)} ${esc(c.name)}</span><span class="muted">${t('onboarding.starter_division_line', { division: esc(d) })} · ${gymLine(gymsIn(d))}</span><span class="muted">${t('onboarding.last_season_record', { record: c.record })}${fallen[c.name] ? ` · ${fallen[c.name]}` : ''}</span></button>`; };
+      if (step === 'club') body = `<div class="stack">${CONFERENCE_NAMES.map((conf) => `<div class="starter-division"><h3 style="margin:8px 0 4px">${t('onboarding.starter_conference_head', { conference: esc(conf) })}</h3><div class="stack">${L.starters.filter((c) => conferenceFor(divOf(c.name)) === conf).map(clubChoice).join('')}</div></div>`).join('')}</div>${draft.rival ? `<div class="panel tight" style="border-color:#a855f7;margin-top:8px">${t('onboarding.your_division_rival_b_b_new', { rival: esc(draft.rival), rivalGms: esc(RIVAL_GMS[draft.rival]) })}</div>` : ''}`;
       if (step === 'rival') { const r = draft.rival; body = `<div class="panel center" style="border-color:#a855f7"><div style="font-size:32px">⚔️</div><h2>${t('onboarding.your_rival_has_arrived')}</h2><div style="font-size:18px;font-weight:800;color:${TEAM_META[r].ink}">${esc(r)}</div><div class="muted">${t('onboarding.new_general_manager_b_b', { rivalGms: esc(RIVAL_GMS[r]) })}</div><p class="muted" style="margin-top:8px">${t('onboarding.you_meet_twice_a_season_home')}</p></div>`; }
       if (step === 'difficulty') body = `<div class="stack">${Object.entries(DIFFICULTY).map(([id, d]) => `<button class="choice ${draft.difficulty === id ? 'selected' : ''}" data-action="difficulty" data-v="${id}"><span class="name">${esc(d.label)}</span><div class="muted">${esc(d.text)}</div><div class="muted">${esc(d.hof)}</div></button>`).join('')}</div>`;
       if (step === 'offense') body = cornerstoneGrid('offense') + `<div class="row between" style="margin-top:8px"><span class="dim">${t('onboarding.not_what_you_had_in_mind')}</span><button class="btn small" data-action="reroll" ${draft.rerolls >= 2 ? 'disabled' : ''}>${t('onboarding.show_three_others_left', { rerolls: 2 - draft.rerolls })}</button></div>`;
@@ -87,7 +92,7 @@ export function registerOnboardingScreens(Router, app) {
         ...coachEditorActions(draft.editor, () => Router.render()),
         background: (el) => { const h = root.querySelector('#home'); if (h) draft.hometown = h.value.trim(); draft.background = el.dataset.v; Router.render(); },
         portrait: (el) => { const fi = root.querySelector('#first'), la = root.querySelector('#last'); if (fi) { draft.first = fi.value.trim(); draft.last = la.value.trim(); } draft.portrait = Number(el.dataset.v); Router.render(); },
-        club: (el) => { draft.club = el.dataset.v; const others = DIVISIONS[divisionOf(draft.club)].filter((t) => t !== draft.club); draft.rival = others[Math.floor(Math.random() * others.length)]; Router.render(); },
+        club: (el) => { draft.club = el.dataset.v; const others = rivalChoicesIn(CURRENT_LAYOUT, draft.club, (t) => !!GYM_BY_CLUB[t]); draft.rival = others[Math.floor(Math.random() * others.length)]; Router.render(); },
         pick: (el) => { draft[el.dataset.side] = el.dataset.v; Router.render(); },
         difficulty: (el) => { draft.difficulty = el.dataset.v; Router.render(); },
         reroll: () => { if (draft.rerolls >= 2) return; draft.rerolls += 1; draft.offerSeed = (draft.offerSeed * 31 + 7) >>> 0; draft.offense = null; Router.render(); },
@@ -103,7 +108,7 @@ export function registerOnboardingScreens(Router, app) {
             let returning = false; try { returning = (await app.slotSummaries()).some((s) => ['active', 'retired', 'fired'].includes(s.state)); } catch { /* unknown: treat as a first franchise */ }
             hireDefaultStaff(f); firstWeekWelcome(f); startGuide(f, { returning }); // one franchise per tap, however impatient the thumb
             const r = await app.setFranchise(f).finally(() => { creating = false; }); // committed before it becomes the active franchise
-            if (!r.ok) { err(`${t('onboarding.your_new_franchise_could_not_be', { message: r.error?.message || 'unknown error', f: app.f ? t('onboarding.your_current_franchise_is_unchanged') : '' })}`); return; }
+            if (!r.ok) { if (app.f) useLayoutOf(app.f); err(`${t('onboarding.your_new_franchise_could_not_be', { message: r.error?.message || 'unknown error', f: app.f ? t('onboarding.your_current_franchise_is_unchanged') : '' })}`); return; }
             draft = null; Router.go('welcome', {}, { reset: true }); return;
           }
           draft.step += 1; Router.render();

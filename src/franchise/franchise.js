@@ -28,7 +28,7 @@ export { MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
 export { pickKey, currentClassYear, tradableYears, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, describePick, canTakePlayer } from './trades.js';
 export * as Stats from './stats.js';
 export { GROUP_SLOTS } from './roster.js';
-import { REG_GAMES, REG_WEEKS, LAST_WEEK, PLAYOFF_ROUNDS, CONFERENCE_ROUND, FINAL_ROUND, CONFERENCE_NAMES, DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
+import { REG_GAMES, REG_WEEKS, LAST_WEEK, PLAYOFF_ROUNDS, CONFERENCE_ROUND, FINAL_ROUND, CONFERENCE_NAMES, DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, CURRENT_LAYOUT, useLeagueLayout, layoutOf, rivalChoicesIn, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
 import { retirementPass, agingContext, nativeAging, retirementOutlook } from './retirement.js';
 import { recordRetiredMonsterCandidates, electMonsterHallOfFame } from './monster-hof-voting.js';
@@ -102,13 +102,13 @@ export const PLAN_SIZE = 6;
 /** `leagueArchive`: false leaves out the pre-franchise archive (tests prove it changes nothing else; the game always passes true). */
 /** `persistentLeague`: false builds a v40-style universe (generated AI rosters, no registry) for parity and balance baselines only; the game always passes true. */
 export function createFranchise({ owner, club, rival = null, cornerstone = null, cornerstoneOffense, cornerstoneDefense, seed = Date.now() >>> 0, settings = {}, persistentLeague = true, leagueArchive = true }) {
+  useLeagueLayout(CURRENT_LAYOUT); // a new franchise is created in the current league layout and keeps it (f.leagueLayout)
   const rng = createRng(seed);
-  const division = divisionOf(club);
-  const rivalChoices = DIVISIONS[division].filter((t) => t !== club);
+  const rivalChoices = rivalChoicesIn(CURRENT_LAYOUT, club, (t) => !!GYM_BY_CLUB[t]);
   const rivalTeam = rivalChoices.includes(rival) ? rival : rng.pick(rivalChoices);
   const roster = createRoster(rng.seed(), { cornerstone, cornerstoneOffense, cornerstoneDefense, quality: 56 });
   const f = {
-    schemaVersion: SCHEMA_VERSION, leagueFormat: LEAGUE_FORMAT, coachNames: 2, uid: newUid(), createdAt: new Date().toISOString(), seed, rngState: rng.state, // uid: the permanent identity of this franchise universe (GDD §42.3)
+    schemaVersion: SCHEMA_VERSION, leagueFormat: LEAGUE_FORMAT, leagueLayout: CURRENT_LAYOUT, coachNames: 2, uid: newUid(), createdAt: new Date().toISOString(), seed, rngState: rng.state, // uid: the permanent identity of this franchise universe (GDD §42.3)
     owner: { ...owner }, club, tier: 'challenger', staff: {},
     roster, lineupManual: {}, depth: {}, aging: nativeAging(), // born under the ageing rules of GDD §55: no transition
     season: null, week: blankWeek(), game: null,
@@ -2721,7 +2721,7 @@ export function seasonAwards(f) {
     rivalry: rival ? { team: rival.team, gm: rival.gm, wins: rivalGames.filter((g) => g.result.won).length, games: rivalGames.length, swept: rivalGames.length === 2 && rivalGames.every((g) => g.result.won) } : null,
   };
 }
-function ensureRival(f) { if (!f.rivals[f.tier]) { const { r, save } = frng(f); const choices = DIVISIONS[divisionOf(f.club)].filter((t) => t !== f.club); const team = r.pick(choices); save(); f.rivals[f.tier] = { team, gm: RIVAL_GMS[team] || $t('franchise.rival_gm'), headToHead: { w: 0, l: 0 } }; } }
+function ensureRival(f) { if (!f.rivals[f.tier]) { const { r, save } = frng(f); const choices = rivalChoicesIn(layoutOf(f), f.club, (t) => !!GYM_BY_CLUB[t]); const team = r.pick(choices); save(); f.rivals[f.tier] = { team, gm: RIVAL_GMS[team] || $t('franchise.rival_gm'), headToHead: { w: 0, l: 0 } }; } }
 // ------------------------------------------------------------ Task 7: the free-agency offseason (fa-*.js; specification "Offseason sequencing")
 // Season close → retirement (Task 6, unchanged) → Task 6 strategy snapshot → ageing → contract processing (the owner's renewals and
 // the AI's Task 6 renewals, each answered by the monster) → [the owner opens free agency: AI–AI trade window, the league year turns,

@@ -12,21 +12,93 @@ export const CONFERENCES = Object.freeze({
   Koruun: Object.freeze(['Kingsport', 'Everwild', 'Greenheart', 'Azure Isles']),
 });
 export const CONFERENCE_NAMES = Object.freeze(Object.keys(CONFERENCES));
-export const DIVISIONS = Object.freeze({
-  Frostlands: ['Frostpeak Howlers', 'Glacier Guardians', 'Northstar Novas', 'Ironpeak Colossi'],
-  Redrock: ['Stormport Bolts', 'Canyon Crushers', 'Sundown Drakes', 'Thunder Mesa Blitz'],
-  'Golden Valley': ['Goldhaven Royals', 'Riverbend Rapids', 'Pinecrest Wardens', 'Skyvale Cyclones'],
-  Suncoast: ['Emberfall Infernos', 'Coral Bay Tides', 'Cliffhaven Chargers', 'Palm Isle Mystics'],
-  Kingsport: ['Stonehaven Bastions', 'Eastport Phantoms', 'Harbor Anchors', 'Ashford Cinders'],
-  Everwild: ['Ember City Beasts', 'Bayou Stalkers', 'Sunfire Solars', 'Palmetto Wyrms'],
-  Greenheart: ['Thornwood Wildroots', 'Silvergrove Arcanists', 'Mossvale Quakes', 'Fernhaven Wisps'],
-  'Azure Isles': ['Aetheria Seers', 'Deepwater Chompers', 'Mistport Veils', 'Westhaven Pirates'],
+/**
+ * The league's layouts: which clubs play in which division, and which clubs a new owner may take. A franchise keeps the layout
+ * it was created in (`f.leagueLayout`; a save without one is layout 1), so an existing league never reshuffles.
+ *  - Layout 1 (to v43.47): two starter divisions, Golden Valley and Greenheart, eight rebuilding clubs and no Gym Leader there.
+ *  - Layout 2 (owner 2026-11-24): one rebuilding club in every division, so a new owner picks a region. Canyon Crushers swap
+ *    with Pinecrest Wardens (Golden Valley / Redrock) and Sunfire Solars with Fernhaven Wisps (Greenheart / Everwild): four
+ *    divisions have two Gym Leaders and four have one, six in each conference, and every starter club meets at least one.
+ * `record` is the starter club's last season (14 games): the club picker shows it, and the league's history
+ * (franchise/preleague-history.js) gives these clubs exactly these records in the season before year 1. They are established
+ * clubs on hard times, not expansion teams.
+ */
+export const LEAGUE_LAYOUTS = Object.freeze({
+  1: Object.freeze({
+    divisions: {
+      Frostlands: ['Frostpeak Howlers', 'Glacier Guardians', 'Northstar Novas', 'Ironpeak Colossi'],
+      Redrock: ['Stormport Bolts', 'Canyon Crushers', 'Sundown Drakes', 'Thunder Mesa Blitz'],
+      'Golden Valley': ['Goldhaven Royals', 'Riverbend Rapids', 'Pinecrest Wardens', 'Skyvale Cyclones'],
+      Suncoast: ['Emberfall Infernos', 'Coral Bay Tides', 'Cliffhaven Chargers', 'Palm Isle Mystics'],
+      Kingsport: ['Stonehaven Bastions', 'Eastport Phantoms', 'Harbor Anchors', 'Ashford Cinders'],
+      Everwild: ['Ember City Beasts', 'Bayou Stalkers', 'Sunfire Solars', 'Palmetto Wyrms'],
+      Greenheart: ['Thornwood Wildroots', 'Silvergrove Arcanists', 'Mossvale Quakes', 'Fernhaven Wisps'],
+      'Azure Isles': ['Aetheria Seers', 'Deepwater Chompers', 'Mistport Veils', 'Westhaven Pirates'],
+    },
+    starters: [
+      { name: 'Goldhaven Royals', record: '4-10' }, { name: 'Riverbend Rapids', record: '3-11' }, { name: 'Pinecrest Wardens', record: '5-9' }, { name: 'Skyvale Cyclones', record: '4-10' },
+      { name: 'Thornwood Wildroots', record: '4-10' }, { name: 'Silvergrove Arcanists', record: '5-9' }, { name: 'Mossvale Quakes', record: '3-11' }, { name: 'Fernhaven Wisps', record: '4-10' },
+    ],
+  }),
+  2: Object.freeze({
+    divisions: {
+      Frostlands: ['Frostpeak Howlers', 'Glacier Guardians', 'Northstar Novas', 'Ironpeak Colossi'],
+      Redrock: ['Stormport Bolts', 'Pinecrest Wardens', 'Sundown Drakes', 'Thunder Mesa Blitz'],
+      'Golden Valley': ['Goldhaven Royals', 'Riverbend Rapids', 'Canyon Crushers', 'Skyvale Cyclones'],
+      Suncoast: ['Emberfall Infernos', 'Coral Bay Tides', 'Cliffhaven Chargers', 'Palm Isle Mystics'],
+      Kingsport: ['Stonehaven Bastions', 'Eastport Phantoms', 'Harbor Anchors', 'Ashford Cinders'],
+      Everwild: ['Ember City Beasts', 'Bayou Stalkers', 'Fernhaven Wisps', 'Palmetto Wyrms'],
+      Greenheart: ['Thornwood Wildroots', 'Silvergrove Arcanists', 'Mossvale Quakes', 'Sunfire Solars'],
+      'Azure Isles': ['Aetheria Seers', 'Deepwater Chompers', 'Mistport Veils', 'Westhaven Pirates'],
+    },
+    starters: [
+      { name: 'Northstar Novas', record: '4-10' }, { name: 'Sundown Drakes', record: '5-9' }, { name: 'Riverbend Rapids', record: '3-11' }, { name: 'Palm Isle Mystics', record: '4-10' },
+      { name: 'Ashford Cinders', record: '4-10' }, { name: 'Bayou Stalkers', record: '5-9' }, { name: 'Mossvale Quakes', record: '3-11' }, { name: 'Mistport Veils', record: '4-10' },
+    ],
+  }),
 });
-/** The two starter divisions: no Gym Leader plays in either, and a new owner takes one of their eight rebuilding clubs. */
-export const STARTER_DIVISIONS = Object.freeze(['Golden Valley', 'Greenheart']);
+/** The layout a new franchise is created in. */
+export const CURRENT_LAYOUT = 2;
+/** A franchise's layout: the one it was created in (saves from before layouts existed are layout 1). */
+export const layoutOf = (f) => (LEAGUE_LAYOUTS[f?.leagueLayout] ? f.leagueLayout : 1);
+
+// The active layout. Everything below reads these live bindings, so the league follows the franchise in play: loading a save
+// (franchise/save.js migrate) and creating one (createFranchise) switch it. The game starts in the current layout.
+export let ACTIVE_LAYOUT = CURRENT_LAYOUT;
+export let DIVISIONS = {};
+/** The rebuilding clubs a new owner may take in the active layout. */
+export let STARTER_CLUBS = [];
+/** The divisions with a starter club, in league order (layout 1: the two starter divisions; layout 2: all eight). */
+export let STARTER_DIVISIONS = [];
+export let ALL_TEAMS = [];
+let DIVISION_OF = {};
+/** Switch the league to a layout (1, 2, ...). Returns the layout now active. */
+export function useLeagueLayout(n = CURRENT_LAYOUT) {
+  const id = LEAGUE_LAYOUTS[n] ? Number(n) : 1; const L = LEAGUE_LAYOUTS[id];
+  if (id === ACTIVE_LAYOUT && ALL_TEAMS.length) return id;
+  ACTIVE_LAYOUT = id;
+  DIVISIONS = Object.freeze(Object.fromEntries(Object.entries(L.divisions).map(([d, ts]) => [d, Object.freeze([...ts])])));
+  STARTER_CLUBS = Object.freeze(L.starters.map((c) => Object.freeze({ ...c })));
+  ALL_TEAMS = Object.freeze(Object.values(DIVISIONS).flat());
+  DIVISION_OF = Object.freeze(Object.fromEntries(Object.entries(DIVISIONS).flatMap(([d, ts]) => ts.map((t) => [t, d]))));
+  const startersAt = new Set(STARTER_CLUBS.map((c) => DIVISION_OF[c.name]));
+  STARTER_DIVISIONS = Object.freeze(Object.keys(DIVISIONS).filter((d) => startersAt.has(d)));
+  return id;
+}
+/** Switch the league to a franchise's own layout. */
+export const useLayoutOf = (f) => useLeagueLayout(layoutOf(f));
+/**
+ * The clubs that can be a new owner's division rival in a layout: the other clubs of the division. From layout 2 a Gym Leader is
+ * never the rival (the starter divisions of layout 1 had none, so it never was): the rival is the club's own story, the Gym
+ * Leader its badge. `isGym` is data/gyms.js isGymClub (passed in: gyms.js reads this module).
+ */
+export const rivalChoicesIn = (layout, club, isGym) => {
+  const div = (LEAGUE_LAYOUTS[layout] || LEAGUE_LAYOUTS[1]).divisions[divisionIn(layout, club)] || []; const others = div.filter((t) => t !== club);
+  const plain = layout >= 2 ? others.filter((t) => !isGym(t)) : others; return plain.length ? plain : others;
+};
+/** The division of a club in a given layout, without switching (the club picker shows layout 2 while a layout-1 save is open). */
+export const divisionIn = (layout, team) => Object.entries((LEAGUE_LAYOUTS[layout] || LEAGUE_LAYOUTS[1]).divisions).find(([, ts]) => ts.includes(team))?.[0];
 export const conferenceFor = (division) => CONFERENCE_NAMES.find((c) => CONFERENCES[c].includes(division)) || CONFERENCE_NAMES[0];
-export const ALL_TEAMS = Object.values(DIVISIONS).flat();
-const DIVISION_OF = Object.freeze(Object.fromEntries(Object.entries(DIVISIONS).flatMap(([d, ts]) => ts.map((t) => [t, d]))));
 export const divisionOf = (team) => DIVISION_OF[team];
 export const conferenceOf = (team) => conferenceFor(divisionOf(team));
 
@@ -128,15 +200,7 @@ export const LAST_WEEK = REG_WEEKS + PLAYOFF_ROUNDS; // the Beast Bowl's week
 /** The game mix of one season, per club: both games against each division rival, then the rest of the conference, then the other conference. */
 export const SCHEDULE_MIX = Object.freeze({ division: 6, conference: 5, interconference: 3 });
 
-/**
- * Clubs a new owner may take: the eight rebuilding clubs of the two starter divisions. They are established clubs on hard times,
- * not expansion teams. `record` is last season's (14 games): the club picker shows it, and the league's history
- * (franchise/preleague-history.js) gives these clubs exactly these records in the season before year 1.
- */
-export const STARTER_CLUBS = Object.freeze([
-  { name: 'Goldhaven Royals', record: '4-10' }, { name: 'Riverbend Rapids', record: '3-11' }, { name: 'Pinecrest Wardens', record: '5-9' }, { name: 'Skyvale Cyclones', record: '4-10' },
-  { name: 'Thornwood Wildroots', record: '4-10' }, { name: 'Silvergrove Arcanists', record: '5-9' }, { name: 'Mossvale Quakes', record: '3-11' }, { name: 'Fernhaven Wisps', record: '4-10' },
-]);
+useLeagueLayout(CURRENT_LAYOUT);
 
 export const RIVAL_GMS = Object.freeze({ 'Glacier Guardians': 'Morgan Vale', 'Northstar Novas': 'Cameron Frost', 'Ironpeak Colossi': 'Jules Stone', 'Canyon Crushers': 'Alex Calder', 'Sundown Drakes': 'Riley Ash', 'Thunder Mesa Blitz': 'Blake Storm', 'Eastport Phantoms': 'Taylor Voss', 'Harbor Anchors': 'Jordan Shore', 'Ashford Cinders': 'Casey Finch', 'Bayou Stalkers': 'Drew Marsh', 'Sunfire Solars': 'Avery Sol', 'Palmetto Wyrms': 'Quinn Reed', 'Frostpeak Howlers': 'Sam Rime', 'Stormport Bolts': 'Devon Gale', 'Stonehaven Bastions': 'Harper Flint', 'Ember City Beasts': 'Rowan Blaze',
   // New clubs. Rook Tanner, Victor Hale, Maya Rivers, Grant Mercer, Marina Cole and Jalen Tide are the owner's (2026-11-23).
@@ -189,7 +253,7 @@ const fixtureCache = new Map();
  */
 export function leagueSeasonFixtures(season, seed = 0) {
   season = Math.max(1, Math.floor(Number(season) || 1));
-  const key = `${seed}|${season}`; if (fixtureCache.has(key)) return fixtureCache.get(key);
+  const key = `${ACTIVE_LAYOUT}|${seed}|${season}`; if (fixtureCache.has(key)) return fixtureCache.get(key);
   const R = seeded(`gb-schedule|${key}`);
   const order = Object.fromEntries(Object.entries(DIVISIONS).map(([d, ts]) => [d, R.shuffle(ts)])); // each division's clubs in this season's order
   // Division rounds: three pairings, first leg then second leg with the home side swapped.

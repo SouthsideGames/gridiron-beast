@@ -1,4 +1,5 @@
 import { ensureIndividualNames } from '../data/individual-names.js';
+import { useLayoutOf, useLeagueLayout, ACTIVE_LAYOUT } from '../data/league.js';
 // Persistence: localStorage key `gridiron-beast-v6`, JSON export/import and
 // a one-way import of the v5 (11v11) prototype's owner, club, staff, rival
 // and records. The legacy key is never modified.
@@ -37,7 +38,16 @@ export const INCOMPATIBLE_MESSAGE = 'This franchise was saved by an earlier vers
 /** The message for a franchise saved in the 16-club league. Same `code: 'incompatible'`, with `reason: 'league-format'`. */
 export const OLD_LEAGUE_MESSAGE = 'This franchise was saved in the 16-club league. The league now has 32 clubs, so it cannot be continued. It is kept on this device unchanged. Start a new franchise to play this version.';
 export function incompatibleSave(f) { return Object.assign(new Error(INCOMPATIBLE_MESSAGE), { code: 'incompatible', schemaVersion: f?.schemaVersion ?? null }); }
+/**
+ * Read a save as this version's franchise. The league layout is switched to the save's own while it is read (its registry and
+ * free agency are checked against its own divisions) and put back afterwards: a backup or an import read while another
+ * franchise is in play must not move that franchise's league. The franchise that becomes active switches it (main.js adopt).
+ */
 export function migrate(f) {
+  const before = ACTIVE_LAYOUT;
+  try { return migrateSave(f); } finally { useLeagueLayout(before); }
+}
+function migrateSave(f) {
   if (!f || typeof f !== 'object') return null;
   // Task 8 fresh-save break (spec §15, owner-authorised): only schema 10 is read. A save from an earlier version (6, 8 or 9) is
   // identified and refused, never parsed as current; it is not changed or deleted. A save from a later build (11+) is refused too.
@@ -45,6 +55,7 @@ export function migrate(f) {
   if (f.schemaVersion !== SCHEMA_VERSION) return null;
   // The 32-club league (2026-11-23): a franchise from the 16-club league is not migrated. It is refused, unchanged, with its own message.
   if (f.leagueFormat !== LEAGUE_FORMAT) throw Object.assign(new Error(OLD_LEAGUE_MESSAGE), { code: 'incompatible', reason: 'league-format', schemaVersion: f.schemaVersion, leagueFormat: f.leagueFormat ?? 16 });
+  useLayoutOf(f); // the league layout this franchise was created in (data/league.js LEAGUE_LAYOUTS): an old save keeps its divisions
   if (!hasLeague(f)) return null; // a 10 without its league registry is not a save this game wrote (the game always creates one)
   if ((f.roster || []).some((m) => m && !m.dev)) throw incompatibleSave(f); // a monster without its development record is not a Task 8 save
   if (hasLeague(f)) { const p = verifyLeague(f); if (p.length) throw Object.assign(new Error(`The league registry is damaged: ${p[0]}`), { code: 'league', problems: p }); }
