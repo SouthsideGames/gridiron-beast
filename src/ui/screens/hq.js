@@ -920,11 +920,13 @@ function campaignPanel(f) {
   const hof = F.hallOfFameProgress(f);
   const LABEL = { badges: $t('hq.gym_badges'), titles: $t('hq.beast_bowl_titles_2'), wins: $t('hq.career_wins'), awards: $t('hq.league_awards') };
   const badges = GYMS.map((g) => { const b = F.badgeOf(f, g.club); const hue = TYPES[g.element]?.hue ?? 120; return `<button class="badge ${b ? 'won' : ''}" data-action="gym" data-club="${esc(g.club)}" style="--hue:${hue}" aria-label="${b ? $t('hq.earned', { badge: esc(g.badge) }) : $t('hq.not_yet_earned', { badge: esc(g.badge) })}"><span class="badge-ico">${b ? '★' : '·'}</span><span class="badge-nm">${esc(g.element)}</span></button>`; }).join('');
-  return `<div class="panel"><div class="row between">${$t('hq.b_campaign_b')}<span class="dim">${hof.eligible ? $t('hq.hall_of_fame_eligible') : `${hof.rows.filter((r) => r.done).length} ${$t('hq.on_track', { n: hof.rows.length })}`}</span></div>
+  // Folded to one line on HQ (polish pass 2026-11-23); it opens by itself when the coach can retire to the Hall of Fame.
+  const held = GYMS.filter((g) => F.badgeOf(f, g.club)).length;
+  return `<details class="panel hq-campaign" ${hof.eligible ? 'open' : ''}><summary class="row between"><span>${$t('hq.b_campaign_b')} <span class="dim">${$t('hq.campaign_badges', { n: held, of: 8 })}</span></span><span class="dim">${hof.eligible ? $t('hq.hall_of_fame_eligible') : `${hof.rows.filter((r) => r.done).length} ${$t('hq.on_track', { n: hof.rows.length })}`}</span></summary>
     ${hof.eligible ? `<button class="btn block" data-action="retire" style="margin:8px 0">${$t('hq.retire_to_the_hall_of_fame')}</button>` : ''}
     <div class="badge-row">${badges}</div>
     <div class="hof">${hof.rows.map((r) => `<div class="row between ${r.done ? 'done' : ''}"><span>${r.done ? '✓' : '○'} ${LABEL[r.key]}</span><span class="mono">${r.have} / ${r.goal}</span></div>`).join('')}</div>
-    <div class="row between" style="margin-top:8px"><span class="muted">${$t('hq.legend_tracks')} ${Object.entries(f.campaign?.tracks || {}).map(([id, n]) => `${esc(SPECIES_BY_ID[id]?.name || id)} ${n}/3`).join(' · ') || 'none yet'}</span><button class="btn small" data-action="legend">${$t('hq.tracks')}</button></div></div>`;
+    <div class="row between" style="margin-top:8px"><span class="muted">${$t('hq.legend_tracks')} ${Object.entries(f.campaign?.tracks || {}).map(([id, n]) => `${esc(SPECIES_BY_ID[id]?.name || id)} ${n}/3`).join(' · ') || 'none yet'}</span><button class="btn small" data-action="legend">${$t('hq.tracks')}</button></div></details>`;
 }
 
 /** One award race in full: the finalists with record, the stat line that drives it, the explanation and the rule (GDD §16.4). */

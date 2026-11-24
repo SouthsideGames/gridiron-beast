@@ -10,7 +10,7 @@ export const TAB_OF = {
   playbook: 'hq', playdetail: 'hq', practice: 'more', audit: 'more',
   office: 'hq', 'coach-look': 'hq', 'gm-jobs': 'hq', map: 'map',
   league: 'league', schedule: 'league', standings: 'league', history: 'league',
-  more: 'more', guide: 'more', settings: 'more', developer: 'more', 'test-session': 'more', about: 'more', dex: 'more', hof: 'more', achievements: 'more',
+  more: 'more', guide: 'more', guidebook: 'more', settings: 'more', developer: 'more', 'test-session': 'more', about: 'more', dex: 'more', hof: 'more', achievements: 'more',
 };
 export function franchiseTabs(f, screenName) {
   if (!f || isArchived(f)) return null;

@@ -13,7 +13,7 @@ import { generatedTeam } from '../../franchise/roster.js';
 import { createRng } from '../../core/rng.js';
 import { buildFx, endHold } from '../ability-fx.js';
 import { fxOptionsFor } from '../flash-pref.js';
-import { reviewHtml, reviewHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, reviewsText, devBadge, flagPlayMoment } from '../dev-review.js';
+import { reviewHtml, reviewHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, reviewsText, devBadge, devNoticeSettings, flagPlayMoment } from '../dev-review.js';
 import { syncReviews } from '../../franchise/review-store.js';
 import { resolveSpecies } from '../../data/monsters.js';
 import { qbReadPanelHtml, qbReadsShown } from '../qb-read-ui.js';
@@ -158,7 +158,7 @@ export function registerPracticeScreens(Router, app) {
       const run = audit.run; const n = run ? run.frames.length : 0;
       const isReservePlay = isReserve(audit.play);
       return `<p class="muted">Every play with its art, assignments and a run you can watch. ${approved}/${shown.length} approved in this list · 🔔 ${shown.filter((id) => NEEDS_OWNER.has(states[id])).length} to review. In the list: ✓ good, ✎ waiting on dev, • new, 🔔 changed since your review.</p>
-        <div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px"><button class="btn small ${audit.side === 'offense' ? 'primary' : ''}" data-action="side" data-v="offense">Offense (${count('offense', 'all')})${devBadge(app.settings, due('offense'))}</button><button class="btn small ${audit.side === 'defense' ? 'primary' : ''}" data-action="side" data-v="defense">Defense (${count('defense', 'all')})${devBadge(app.settings, due('defense'))}</button></div>
+        <div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px"><button class="btn small ${audit.side === 'offense' ? 'primary' : ''}" data-action="side" data-v="offense">Offense (${count('offense', 'all')})${devBadge(devNoticeSettings(app.settings), due('offense'))}</button><button class="btn small ${audit.side === 'defense' ? 'primary' : ''}" data-action="side" data-v="defense">Defense (${count('defense', 'all')})${devBadge(devNoticeSettings(app.settings), due('defense'))}</button></div>
         <div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px"><span class="muted" style="font-size:12px">Show</span>${chip('list', 'all', `All ${count(audit.side, 'all')}`)}${chip('list', 'live', `In the Game ${count(audit.side, 'live')}`)}${chip('list', 'reserve', `Reserve ${count(audit.side, 'reserve')}`)}</div>
         <div class="grid2">${sel('Play', 'play', audit.side, shown, audit.play, mark)}${sel('Against', 'opp', otherSide(), other, audit.opponent)}</div>
         ${isReservePlay ? '<p class="dim" style="font-size:12px;margin:4px 0 0">Reserve play: built and reviewable here, but no coach, AI club or practice field can call it yet.</p>' : ''}

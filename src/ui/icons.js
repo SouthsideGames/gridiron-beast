@@ -51,7 +51,7 @@ const ART = {
   "upgrade": "<g transform=\"scale(0.5 0.5) translate(-0 -0)\"><g><g><polygon points=\"24.95 88.01 27.03 120 64 99.4 100.97 120 103.05 88.01 64 64.97 24.95 88.01\" fill=\"currentColor\"></polygon><polygon points=\"64 8 21.53 35.34 23.98 73.01 64 48.79 104.02 73.01 106.47 35.34 64 8\" fill=\"currentColor\"></polygon></g></g></g>",
 };
 const ICON_KEYS = Object.freeze({
-  '🏠': 'home', '🐾': 'paw', '📋': 'clipboard', '🏆': 'trophy', '☰': 'menu', '🗺': 'location',
+  '🏠': 'home', '🐾': 'paw', '📋': 'clipboard', '🏆': 'trophy', '☰': 'menu', '🗺': 'location', '👥': 'clipboard',
   '⚙': 'settings', '⚠': 'warning', '🔔': 'bell', '📖': 'book', '📘': 'book', '📕': 'book',
   '📅': 'calendar', '🗓': 'calendar', '📊': 'stats', '📈': 'stats', '✅': 'check', '❌': 'close',
   '🔒': 'lock', '⛔': 'warning', 'ℹ': 'info', '🔍': 'search', '🔎': 'search', '👀': 'search',
@@ -61,7 +61,7 @@ const ICON_KEYS = Object.freeze({
   '📰': 'news', '🗞': 'news', '⏸': 'pause', '⏭': 'skip', '⏩': 'skip', '💾': 'save', '⬇': 'download',
   '🔊': 'sound', '🔇': 'mute', '❓': 'question', '💬': 'message', '✉': 'mail', '🚪': 'door',
   '🎁': 'gift', '☠': 'skull', '🎯': 'target', '🧭': 'location', '🏅': 'trophy', '👑': 'trophy',
-  '📜': 'clipboard', '📝': 'clipboard', '📄': 'clipboard', '🤝': 'trade', '🔁': 'trade', '⬆': 'upgrade',
+  '📜': 'book', '📝': 'clipboard', '📄': 'clipboard', '🤝': 'trade', '🔁': 'trade', '⬆': 'upgrade',
 });
 export const iconNames = () => Object.keys(ART);
 /** Fixed, trusted artwork only. Decorative icons accompany labels or an existing accessible button name. */
