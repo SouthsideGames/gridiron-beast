@@ -10,11 +10,12 @@ const plan = (over = {}) => ({ key: 'a|PSY|0', name: 'Mind Bend', remaining: 3, 
 test('the panel explains the zone instead of the rules for moving it', () => {
   const html = zonePlannerHtml([plan()]);
   assert.doesNotMatch(html, /move with the line/, 'the old policy line is gone');
-  assert.match(html, /Psychic zone: Pulls other types toward the middle of the zone\./);
+  assert.match(html, /Psychic zone: Pulls opponents toward the middle of the zone\./);
 });
 test('a spot that would make a combination zone names it, its parents and what it does', () => {
   const html = zonePlannerHtml([plan()]);
-  assert.match(html, /Middle makes Mindstorm \(Psychic \+ Electric\): Runners leave an echo behind them/);
+  assert.match(html, /Middle makes Mindstorm \(Psychic \+ Electric\): Your runners leave an echo/);
+  assert.match(zonePlannerHtml([plan({ placementOptions: [{ id: 'mid', label: 'Middle', overlaps: [{ name: 'Mindstorm', parents: ['Psychic', 'Electric'], remaining: 2, cross: true }] }] })]), /hits both teams/, 'mixing with the other club\'s zone says it hits both');
   assert.doesNotMatch(html, /Left makes|Right makes/, 'spots without a combination say nothing extra');
   assert.match(zonePlannerHtml([plan({ picked: 'mid' })]), /zone-combo picked/, 'the chosen spot\'s combination stands out');
 });

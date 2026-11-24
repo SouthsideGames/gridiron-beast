@@ -25,21 +25,34 @@ export const FROSTSTORM = Object.freeze({ drift: 0.15, cap: 2 });
 // Mindstorm: "opposing eligible AI may follow for one decision update". No probability is approved; 1 means every eligible opposing
 // pursuer follows once per echo. Pending owner confirmation (reported).
 export const MINDSTORM = Object.freeze({ behind: 2, followChance: 1 });
+// Owner 2026-11-24: zones are dependable. Entering a zone (standing in it at the snap counts) always does its thing, once a play
+// for the one-off effects (Electric's stun, Water's slip), and a lasting effect carries on for ZONE_LINGER seconds after he leaves.
+// Fire and Wind change top speed by the ability's strength plus ZONE_SPEED_BONUS (at most ZONE_SPEED_CAP).
+export const ZONE_LINGER = 2;
+export const ELECTRIC_STUN = 0.5;
+export const ZONE_SPEED_BONUS = 10, ZONE_SPEED_CAP = 35;
+export const WATER_SLIP_SPEED = 1.5; // yd/s: a slip needs him moving (a lineman standing at the snap slips on his first step)
+const NO_LINGER = new Set(['Psychic']); // the pull is toward the zone itself: nothing to carry once he has left it
 
 const pct = (s) => (s == null ? 0 : Math.max(0, s) / 100);
 const centre = (f) => ({ x: (f.yard[0] + f.yard[1]) / 2, y: (f.lat[0] + f.lat[1]) / 2 });
 const hyp = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
+const zoneSpeed = (b) => (b?.strength == null ? 0 : Math.min(ZONE_SPEED_CAP, b.strength + ZONE_SPEED_BONUS));
+const speedOf = (base) => (-zoneSpeed(base.Fire) + zoneSpeed(base.Wind)) || 0;
+const darkOf = (base) => (base.Dark?.field.ability === 'DAR-01-F' ? 0 : pct(base.Dark?.strength));
 
 /**
  * @param o.fields play-frame fields; o.actors the engine's actors; o.seed the play seed (own stream); o.log the engine's event log;
  *        o.t8 the game's Task 8 block (shared status gate); o.setStatus the renderer status; o.bounds the play bounds; o.dt the tick.
  * @returns null without fields, else the per-play effect functions.
  */
-export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 = { status: {} }, setStatus = () => {}, bounds: B, dt = 0.05, refreshMaxSpeed = null, applySharedStatus = null }) {
+export function createFieldPlay({ fields, actors, offenseSide = null, seed = 1, log = () => {}, t8 = { status: {} }, setStatus = () => {}, bounds: B, dt = 0.05, refreshMaxSpeed = null, applySharedStatus = null }) {
   if (!fields?.length) return null;
   const recording = tracing(t8); const reported = recording ? new Map() : null;
   const rng = createRng(((Number(seed) >>> 0) ^ 0x1b873593) >>> 0 || 17); // the fields' own draws: other plays keep theirs
   const byId = new Map(fields.map((f) => [f.id, f]));
+  // A monster's club ('home' | 'away'), so zones can pick sides; null without the offense's side (the type-only rule).
+  const sideOf = (a) => (offenseSide ? (a.team === 'off' ? offenseSide : offenseSide === 'home' ? 'away' : 'home') : null);
   const state = { t8 };
   let clumps = []; let placed = false; // Living Terrain clumps: placed at the snap (first tick, after alignment)
   const driftDir = rng.chance(0.5) ? 1 : -1; // Froststorm: seeded side, fixed for the play
@@ -51,25 +64,26 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   // absent; nothing enumerates it), so all of them share one object shape.
   // Same for the effective-attribute layer record (layer(): a missing key and undefined both read as 0; nothing enumerates it).
   // Third pass: `m` is the lookup the last tick resolved for him (its entry events are done) and `byType` his type's memo map.
-  const fxState = (cut) => ({ seen: new Set(), attr: { awareness: 0, catching: 0, blocking: 0 }, drift: 0, cut, base: undefined, hybrid: undefined, echo: undefined, pend: undefined, metalUsed: undefined, slipped: undefined, lured: undefined, bonded: undefined, m: undefined, byType: undefined, fms: 0 });
+  const fxState = (cut) => ({ seen: new Set(), attr: { awareness: 0, catching: 0, blocking: 0 }, drift: 0, cut, base: undefined, hybrid: undefined, echo: undefined, pend: undefined, metalUsed: undefined, slipped: undefined, lured: undefined, bonded: undefined, m: undefined, byType: undefined, fms: 0, ling: undefined, zapped: undefined, steamUntil: 0 });
   const applicableMax = (a) => a.maxSpeed; // already carries the shared modifiers (engine refreshMaxSpeed)
   const unpair = (a) => { if (a.engaged) { a.engaged.engaged = null; a.engaged = null; } };
 
   /** Shared-gate status attempt from a field (§11 "explicit field-inflicted status uses normal status gates"). */
   function inflict(a, id, b) {
     if (a.immune && (a.immune.has('*') || a.immune.has(id))) return { accepted: false, reason: 'immune' }; // M3 hook: an ability's per-play status immunity
-    return applyStatus(state, a.mid, { id, strength: b.strength, duration: 0, restOfPlay: id === 'stunned', sourceId: b.field.owner, abilityId: b.field.ability }); }
-  /** Electric: chance to apply Stunned on first entry (starting inside counts; no re-entry reroll). */
+    return applyStatus(state, a.mid, { id, strength: b.strength, duration: 0, restOfPlay: false, sourceId: b.field.owner, abilityId: b.field.ability }); }
+  /** Electric: a sure stun of ELECTRIC_STUN seconds on entering (starting inside counts), once a play whatever zone he enters. */
   function electric(a, b) {
-    if (b.strength == null || a.sitsOut || !rng.chance(pct(b.strength))) return;
+    if (b.strength == null || a.sitsOut || a.fx.zapped) return;
+    a.fx.zapped = true;
     const r = inflict(a, 'stunned', b);
     if (!r.accepted) { ev(a, 'field_status_blocked', `${$E('sim.resists_the_electric_fields_stunned', { name: a.name, reason: r.reason })}`, { field: b.field.id, status: 'stunned' }); return; }
-    unpair(a); a.vx = 0; a.vy = 0; a.stun = 1e6; a.noEngage = 1e6; setStatus(a, 'stun', 1e6);
+    unpair(a); a.vx = 0; a.vy = 0; a.stun = Math.max(a.stun || 0, ELECTRIC_STUN); a.noEngage = Math.max(a.noEngage || 0, ELECTRIC_STUN); setStatus(a, 'stun', ELECTRIC_STUN);
     ev(a, 'field_stun', `${$E('sim.is_stunned_in_the_electric_field', { name: a.name })}`, { field: b.field.id, element: 'Electric' });
   }
-  /** Water: a distinct sharp cut or stop (the engine's plant) rolls the slip chance; success attempts Stumbled; one success a play. */
+  /** Water: a sure slip (Stumbled) once a play, at his first cut or stop, or as soon as he is moving, inside or just after. */
   function water(a, b) {
-    if (a.fx.slipped || b.strength == null || !rng.chance(pct(b.strength))) return;
+    if (a.fx.slipped || b.strength == null) return;
     const r = inflict(a, 'stumbled', b);
     if (!r.accepted) { ev(a, 'field_status_blocked', `${$E('sim.keeps_his_feet', { name: a.name, reason: r.reason })}`, { field: b.field.id, status: 'stumbled' }); return; }
     a.fx.slipped = true; unpair(a); a.vx *= 1 - STUMBLE_SPEED_LOSS; a.vy *= 1 - STUMBLE_SPEED_LOSS; a.stumbled = true; setStatus(a, 'stumble', 0.4);
@@ -110,7 +124,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   function effectsHere(a) {
     // Perf: an actor's type never changes, so his field state keeps his type's memo map once it has one (the Map lookup is skipped)
     const st = a.fx; let byType = st ? st.byType : undefined;
-    if (!byType) { byType = memo.get(a.type); if (!byType) { byType = new Map(); memo.set(a.type, byType); } if (st) st.byType = byType; }
+    if (!byType) { const mk = `${a.type}|${sideOf(a)}`; byType = memo.get(mk); if (!byType) { byType = new Map(); memo.set(mk, byType); } if (st) st.byType = byType; }
     let k = bigList ? '' : 0;
     const x = a.x, y = a.y;
     if (!(x < UY0 || x > UY1 || y < UL0 || y > UL1)) for (let i = 0; i < NF; i++) {
@@ -123,8 +137,11 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
       // same expressions: the hybrid's name, the Water entry, the Fire/Wind maximum-speed sum and the Dark Awareness share.
       // The type-independent half of effectsAt is resolved once per set of containing fields (cores) and shared by every monster type.
       let core = cores.get(k); if (!core) { core = effectsCore(fields, a.x, a.y); cores.set(k, core); }
-      const e = effectsFor(core, a.type); const base = baseOf(e), hybrid = e.hybrid?.name || null;
-      m = { e, base, hybrid, water: base.Water, ms: (-(base.Fire?.strength ?? 0) + (base.Wind?.strength ?? 0)) || 0, dark: base.Dark?.field.ability === 'DAR-01-F' ? 0 : pct(base.Dark?.strength), steam: hybrid === 'Steam', mind: hybrid === 'Mindstorm' };
+      const side = sideOf(a); const e = effectsFor(core, a.type, side); const base = baseOf(e), hybrid = e.hybrid && e.hybrid.applies !== false ? e.hybrid.name : null;
+      // Mindstorm's echo follows the runners of the club the combination works for (both clubs' when it formed across them);
+      // the chasing is done by their opponents (lure). Without sides: every nonparent inside, as before.
+      const H = e.hybrid; const mind = H?.name === 'Mindstorm' && (side && H.side && H.side !== 'both' ? H.side === side : !!hybrid);
+      m = { e, base, hybrid, water: base.Water, ms: speedOf(base), dark: darkOf(base), steam: hybrid === 'Steam', mind };
       byType.set(k, m);
     }
     return m;
@@ -147,30 +164,42 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
       // The entry checks run only when his resolved lookup is not the one of his previous tick (third pass): after one pass over a
       // lookup every one of its field ids and its hybrid name is in `seen`, so with the same lookup again every test below would be
       // false: no entry event, no Electric roll.
-      const departedSmoke = st.base?.Dark?.field?.ability === 'DAR-01-F' && st.base.Dark.field.id !== m.base.Dark?.field.id ? st.base.Dark.field : null;
+      const prevDark = st.m?.base.Dark; // the zone he stood in last tick (not the carried-over effect)
+      const departedSmoke = prevDark?.field?.ability === 'DAR-01-F' && prevDark.field.id !== m.base.Dark?.field.id ? prevDark.field : null;
       if (departedSmoke && !a.ignoreDarkConfusion && a.type !== 'Dark') {
         const attempt = { id: 'confused', strength: 20, duration: 0, restOfPlay: true, sourceId: departedSmoke.owner, abilityId: departedSmoke.ability, payload: { pct: 20, wrongAssignment: true } };
         const res = applySharedStatus ? applySharedStatus(a, attempt) : applyStatus(state, a.mid, attempt);
         if (res.accepted) ev(a, 'field_confused', `${a.name} leaves the smoke Confused`, { field: departedSmoke.id, ability: departedSmoke.ability, status: 'confused' });
       }
       if (m !== st.m) {
-        st.m = m; st.base = m.base; st.hybrid = m.hybrid; if (m.hybrid === 'Magnetic Storm') magEver = true;
+        st.m = m; st.hybrid = m.hybrid; if (m.hybrid === 'Magnetic Storm') magEver = true;
         for (const b of m.e.base) if (!st.seen.has(b.fieldId)) {
           st.seen.add(b.fieldId); ev(a, 'field_enter', `${$E('sim.enters_a_field', { name: a.name, type: b.type })}`, { field: b.fieldId, element: b.type });
-          if (b.type === 'Electric') electric(a, st.base.Electric);
+          if (b.type === 'Electric') electric(a, m.base.Electric);
         }
         if (st.hybrid && !st.seen.has(st.hybrid)) { st.seen.add(st.hybrid); ev(a, 'field_enter', `${a.name} enters ${st.hybrid}`, { hybrid: st.hybrid }); }
       }
+      // Carry-over (ZONE_LINGER): each effect he is under is renewed while he stays; after he leaves it lasts until its time runs out.
+      let base = m.base, ms = m.ms, dark = m.dark;
+      if (m.e.base.length) { const L = (st.ling ||= new Map()); for (const b of m.e.base) if (!NO_LINGER.has(b.type)) L.set(b.type, { entry: m.base[b.type], until: t + ZONE_LINGER }); }
+      if (st.ling?.size) {
+        let carried = null;
+        for (const [type, l] of st.ling) { if (l.until <= t) { st.ling.delete(type); continue; } if (!m.base[type]) (carried ||= { ...m.base })[type] = l.entry; }
+        if (carried) { base = carried; ms = speedOf(base); dark = darkOf(base); }
+      }
+      st.base = base;
+      if (m.steam) st.steamUntil = t + ZONE_LINGER;
+      const steam = m.steam || st.steamUntil > t;
       const cut = a.cutUntil;
-      if (m.water && cut !== st.cut && cut > t) water(a, m.water);
+      if (base.Water && !st.slipped && ((cut !== st.cut && cut > t) || Math.hypot(a.vx, a.vy) >= WATER_SLIP_SPEED)) water(a, base.Water);
       if (cut !== st.cut) st.cut = cut; // water() does not move cutUntil; an equal value is not stored again
-      const ms = m.ms; // Fire and Wind: one maximum-speed property, added
+      // Fire and Wind: one maximum-speed property, added
       // One aggregation with the statuses (§11). st.fms is the entry this function last left in maxSpeedMods.field (0: none; tick is its
       // only writer and both start empty with the play), so an unchanged sum touches nothing, exactly as before.
       if (ms !== st.fms) { if (ms) (a.maxSpeedMods ||= {}).field = ms; else if (a.maxSpeedMods) delete a.maxSpeedMods.field; st.fms = ms; refreshMaxSpeed?.(a); }
       if (recording && reported.get(a) !== m) { reported.set(a, m); trace(t8, 'field-speed', { target: a.mid, type: a.type, t, x: a.x, y: a.y, expected: ms, actual: a.maxSpeedMods?.field || 0, ...(refreshMaxSpeed && a.baseMaxSpeed != null ? { expectedMax: a.baseMaxSpeed * maxSpeedFactor(a.maxSpeedMods), actualMax: a.maxSpeed } : {}), base: m.e.base, hybrid: m.hybrid }); }
-      layer(a, 'awareness', a.ignoreFieldAwareness ? 0 : m.dark); // M3 hook: a.ignoreFieldAwareness (set by a contract's tick) ignores only the Dark base field's Awareness term
-      if (m.steam || st.attr.catching || st.attr.blocking) { layer(a, 'catching', m.steam ? STEAM.catching : 0); layer(a, 'blocking', m.steam ? STEAM.blocking : 0); }
+      layer(a, 'awareness', a.ignoreFieldAwareness ? 0 : dark); // M3 hook: a.ignoreFieldAwareness (set by a contract's tick) ignores only the Dark base field's Awareness term
+      if (steam || st.attr.catching || st.attr.blocking) { layer(a, 'catching', steam ? STEAM.catching : 0); layer(a, 'blocking', steam ? STEAM.blocking : 0); }
       if (m.mind || st.echo) {
         if (m.mind && !st.echo) { st.echo = { of: a, x: a.x, y: a.y, live: true }; echoes.push(st.echo); placeEcho(st.echo); ev(a, 'field_echo', `${$E('sim.a_mindstorm_echo_trails', { name: a.name })}`, { hybrid: 'Mindstorm', x: +st.echo.x.toFixed(2), y: +st.echo.y.toFixed(2) }); }
         else if (st.echo?.live) { if (m.mind) placeEcho(st.echo); else st.echo.live = false; }
@@ -228,12 +257,16 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
       if (r > MAGNETIC_STORM.pairWithin) { const step = Math.min(MAGNETIC_STORM.pull * vmax * dt, r - MAGNETIC_STORM.pairWithin); dx += ((o.x - a.x) / r) * step; dy += ((o.y - a.y) / r) * step; }
     }
     if (st.hybrid === 'Froststorm' && st.drift < FROSTSTORM.cap) {
-      const step = Math.min(FROSTSTORM.drift * vmax * dt, FROSTSTORM.cap - st.drift), ny = a.y + dy + driftDir * step;
+      // Into his sideways run (owner 2026-11-24): a fixed side gave pursuers heading that way a free push, so the crosswind blows
+      // against the way he is moving across the field; standing or running straight, the play's seeded side.
+      const dir = Math.abs(a.vy) > 0.3 ? -Math.sign(a.vy) : driftDir;
+      const step = Math.min(FROSTSTORM.drift * vmax * dt, FROSTSTORM.cap - st.drift), ny = a.y + dy + dir * step;
       const clear = actors.every((o) => o === a || o === a.engaged || Math.hypot(o.x - (a.x + dx), o.y - ny) >= 0.7); // collision-safe
-      if (clear && (!B || (ny > B.left + 0.3 && ny < B.right - 0.3))) { dy += driftDir * step; st.drift += step; }
+      if (clear && (!B || (ny > B.left + 0.3 && ny < B.right - 0.3))) { dy += dir * step; st.drift += step; }
     }
     a.x += dx; a.y += dy;
     if (clumps.length && a.type !== 'Nature' && a.type !== 'Earth') for (const c of clumps) { // nonparents path around; parents pass through
+      if (c.side && c.side !== 'both' && sideOf(a) === c.side) continue; // the club that grew them walks through (owner 2026-11-24)
       const r = hyp(c, a), R = LIVING_TERRAIN.diameter / 2 + 0.35;
       if (r < R) { const ux = r > 1e-6 ? (a.x - c.x) / r : 0, uy = r > 1e-6 ? (a.y - c.y) / r : 1; a.x = c.x + ux * R; a.y = c.y + uy * R; }
     }
@@ -260,7 +293,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   }
   /** Eclipse: an active signature cannot start inside (the contract spends nothing on a blocked start). */
   function canStart(a) {
-    const h = effectsHere(a).e.hybrid?.name; if (h !== 'Eclipse') return true;
+    const h = effectsHere(a).hybrid; if (h !== 'Eclipse') return true; // only where the Eclipse acts on him
     ev(a, 'field_blocked_start', `${$E('sim.s_signature_cannot_start_inside_the', { name: a.name })}`, { hybrid: 'Eclipse' }); return false;
   }
   // M3 hook: a field's Prism Break removed footprints (holes) go out with it
@@ -291,6 +324,7 @@ export function placeClumps(fields, actors, rng) {
     for (let i = ok.length - 1; i > 0; i--) { const j = Math.floor(rng.next() * (i + 1)); [ok[i], ok[j]] = [ok[j], ok[i]]; }
     const mine = [];
     for (const p of ok) { if (mine.length >= LIVING_TERRAIN.clumps) break; if (mine.every((q) => Math.hypot(q.x - p.x, q.y - p.y) >= 1.5) && out.every((q) => Math.hypot(q.x - p.x, q.y - p.y) >= 1.5)) mine.push(p); }
+    for (const p of mine) { const side = effectsCore(fields, p.x, p.y).pick?.side; if (side) p.side = side; } // whose vines
     out.push(...mine);
   }
   return out;

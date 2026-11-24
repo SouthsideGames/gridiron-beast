@@ -30,7 +30,7 @@ function comboLines(p) {
   const out = [];
   for (const o of p.placementOptions) for (const m of o.overlaps || []) {
     const [a, b] = m.parents[0] === p.type ? m.parents : [...m.parents].reverse();
-    const line = $t('playview.zone_combo', { spot: o.label, name: m.name, a, b, effect: comboEffectText(m.parents) });
+    const line = $t('playview.zone_combo', { spot: o.label, name: m.name, a, b, effect: comboEffectText(m.parents) }) + (m.cross ? ` ${$t('playview.zone_combo_both')}` : '');
     if (!out.some((l) => l.line === line)) out.push({ line, picked: p.picked === o.id });
   }
   return out.map((l) => `<div class="zone-combo${l.picked ? ' picked' : ''}">◆ ${esc(l.line)}</div>`).join('');

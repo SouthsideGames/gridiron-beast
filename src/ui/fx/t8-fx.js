@@ -16,6 +16,27 @@ import { fieldDecor, FIELD_REVEAL } from './fields-fx.js';
 import { overheadSvg, STATUS_GLYPH } from './overhead.js';
 import { readiness } from './charge.js';
 import { familyById } from '../../data/beast-dex.js';
+import { t as $t } from '../../text/index.js';
+
+// Zone pop-ups (owner 2026-11-24): a word rises over a monster when a zone takes hold of him, so a zone is seen working.
+// One per monster per zone (or combination) per play; Electric and Water show at the stun and the slip, Metal when it holds him.
+const ZONE_POP_ENTER = { Fire: () => $t('fx.zone_pop_fire'), Wind: () => $t('fx.zone_pop_wind'), Nature: () => $t('fx.zone_pop_nature'), Ice: () => $t('fx.zone_pop_ice'), Earth: () => $t('fx.zone_pop_earth'), Psychic: () => $t('fx.zone_pop_psychic'), Dark: () => $t('fx.zone_pop_dark'), Light: () => $t('fx.zone_pop_light') };
+const ZONE_POP_KIND = { field_stun: ['Electric', () => $t('fx.zone_pop_stunned')], field_slip: ['Water', () => $t('fx.zone_pop_slipped')], field_defer: ['Metal', () => $t('fx.zone_pop_metal')], field_lured: ['Psychic', () => $t('fx.zone_pop_lured')], field_bond: ['Electric', () => $t('fx.zone_pop_bound')], field_blocked_start: ['Dark', () => $t('fx.zone_pop_eclipsed')] };
+const ZONE_POP_DUR = 1.1;
+const HYBRID_ELEMENT = { Steam: 'Water', Eclipse: 'Dark', 'Living Terrain': 'Nature', 'Magnetic Storm': 'Electric', Froststorm: 'Ice', Mindstorm: 'Psychic' };
+export function zonePops(events) {
+  const out = []; const seen = new Set(); const lastWord = new Map(); // a word seen in the last 0.3 s (several linemen at the snap) shows once
+  for (const e of events || []) {
+    if (!e.by || !e.side) continue; let element = null, word = null;
+    if (e.kind === 'field_enter' && e.element && ZONE_POP_ENTER[e.element]) { element = e.element; word = ZONE_POP_ENTER[e.element](); }
+    else if (e.kind === 'field_enter' && e.hybrid) { element = HYBRID_ELEMENT[e.hybrid] || 'Psychic'; word = `${e.hybrid}!`; }
+    else if (ZONE_POP_KIND[e.kind]) { [element, word] = [ZONE_POP_KIND[e.kind][0], ZONE_POP_KIND[e.kind][1]()]; }
+    if (!word) continue; const key = `${e.side}|${e.by}|${word}`; if (seen.has(key)) continue; seen.add(key);
+    const t0 = e.t ?? 0; if (lastWord.has(word) && t0 - lastWord.get(word) < 0.3) continue; lastWord.set(word, t0);
+    out.push({ team: e.side, slot: e.by, t0, word, element });
+  }
+  return out;
+}
 
 export const DEX_ID = /^[A-Z]{3}-\d\d-F$/;
 export const T8_REVISION = 2; // bump when the drawing of a look changes (the reviewer's fingerprint includes it)
@@ -98,7 +119,7 @@ export function buildT8(sim, lookup, meta = null) {
   // ghost from the start of the pre-roll and dissolves as the beam fractures it (presentation only; the engine already removed it).
   const ghosts = items.filter((it) => it.kind === 'pre' && it.ev?.rect && it.ev?.zoneType).map((it, i) => ({ id: `prism-ghost-${i}`, type: it.ev.zoneType, yard: [...it.ev.rect.yard], lat: [...it.ev.rect.lat], ghost: true, fadeAt: it.start + (it.look?.lead ?? 1.2) - 0.1, fadeDur: 0.4 }));
   const slots = frames.length ? { off: frames[0].off.map((q) => q[0]), def: frames[0].def.map((q) => q[0]) } : { off: [], def: [] };
-  return { items, badges, spends, fields, ghosts, obstacles, last, preroll, slots, hud: meta?.hud || hudOf(view), names: sim?.names || null };
+  return { items, badges, spends, fields, ghosts, obstacles, last, preroll, slots, hud: meta?.hud || hudOf(view), names: sim?.names || null, pops: zonePops(events) };
 }
 
 /** A fresh field's reveal progress 0..1 at time t (1 when it is not new this play). */
@@ -167,6 +188,13 @@ export function drawT8(state, t, pos, { quality = 'full', toSvg = null, ball = n
   if (state.hud) for (const [k, v] of Object.entries(state.hud)) { if (!v.charge?.ready || !v.family) continue; const look = LOOKS[familyById(v.family)?.abilities?.football]; if (!look?.ready) continue;
     const [team, slot] = k.split(':'); const sp = state.spends.find((x) => x.team === team && x.slot === slot); if (sp && t >= sp.t) continue; const P = pos(team, slot); if (!P) continue;
     const c = { cx: P[0], cy: P[1], t, L: elementOf(look.element), sid: slot.charCodeAt(0) * 17 + seed, n: (m) => countFor(m, quality), q: quality }; if (look.ready.u) u += look.ready.u(c); if (look.ready.o) o += look.ready.o(c); }
+  // Zone pop-ups: rise and fade over the monster (stacked a little when two land on him together).
+  const stack = new Map();
+  for (const p of state.pops || []) {
+    const age = t - p.t0; if (age < 0 || age >= ZONE_POP_DUR) continue; const P = pos(p.team, p.slot); if (!P) continue;
+    const key = `${p.team}|${p.slot}`; const n = stack.get(key) || 0; stack.set(key, n + 1); const kb = age / ZONE_POP_DUR; const L = elementOf(p.element);
+    o += `<g class="zone-pop" opacity="${op(kb < 0.15 ? kb / 0.15 : 1 - Math.max(0, kb - 0.6) / 0.4)}"><text x="${f2(cl(P[0], 6))}" y="${f2(P[1] - 4.2 - n * 2.1 - kb * 1.6)}" text-anchor="middle" font-size="1.8" font-weight="900" fill="${L.a}" stroke="#0b1a14" stroke-width="0.38" paint-order="stroke">${esc(p.word)}</text></g>`;
+  }
   // Over the head: the shared status badge, the charge / recharge bar and the low-stamina battery, alternating (never together).
   o += overheadSvg(state, t, pos, { quality, seed });
   return { under: u, over: o, ball: b, cues };

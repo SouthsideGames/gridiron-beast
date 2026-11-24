@@ -66,7 +66,7 @@ test('real field telemetry records applied slow and same-type neutrality without
   withTrace(t8, (kind, data) => seen.push({ kind, ...data }), () => {
     const fx = createFieldPlay({ t8, fields: [{ id: 'f', type: 'Fire', strength: 25, lat: [-10, 10], yard: [-10, 10] }], actors }); fx.tick(.05); fx.tick(.1);
   });
-  assert.equal(seen.length, 2, 'record transitions, not every tick'); assert.equal(seen[0].actual, -25); assert.equal(seen[1].actual, 0);
+  assert.equal(seen.length, 2, 'record transitions, not every tick'); assert.equal(seen[0].actual, -35, 'Fire 25 + the zone bonus'); assert.equal(seen[1].actual, 0);
   assert.equal(checkPlay({}, state(), {}, seen).length, 0);
 });
 test('bounded rings preserve flagged play evidence and say when replay inputs are too large', () => {

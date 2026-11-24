@@ -40,8 +40,20 @@ const recipeFor = (a, b) => RECIPES.find((r) => r.parents.includes(a) && r.paren
  *   creation of its two oldest parents), then stable ids; there is never a recursive hybrid.
  * - Inside a hybrid the parents' base effects are replaced; unpaired base effects still apply; parent types are exempt from the hybrid.
  * - A base field never affects monsters of its own type (same-type neutrality). Dragon has no base field.
+ * - Sides (owner 2026-11-24). With `side` (the monster's club, 'home' | 'away') and a field that knows the club that placed it
+ *   (`team`, else `ownerTeam`): a buff (Wind, Light, Earth) reaches only the placing club, every type; a debuff reaches only the other
+ *   club, its own type still immune. A combination formed by one club's two zones hits only that club's opponents; one formed across
+ *   clubs hits everyone; its parent types are always immune. Without side information the rule above stands unchanged.
  */
-export function effectsAt(fields, yard, lat, monsterType) { return effectsFor(effectsCore(fields, yard, lat), monsterType); }
+export const BUFF_TYPES = Object.freeze(['Wind', 'Light', 'Earth']);
+const teamOfField = (f) => f.team ?? f.ownerTeam ?? null;
+/** Does this field's own (base) effect reach a monster of `type` on club `side`? */
+export function reaches(f, type, side) {
+  const team = teamOfField(f);
+  if (!side || !team) return f.type !== type;
+  return BUFF_TYPES.includes(f.type) ? side === team : side !== team && f.type !== type;
+}
+export function effectsAt(fields, yard, lat, monsterType, side = null) { return effectsFor(effectsCore(fields, yard, lat), monsterType, side); }
 /**
  * effectsAt in two steps (perf, outcome-identical: the same statements in the same order). effectsCore is everything that does not
  * depend on the monster's type (the strongest field of each base type at the point and the one hybrid that forms there);
@@ -50,8 +62,8 @@ export function effectsAt(fields, yard, lat, monsterType) { return effectsFor(ef
  */
 export function effectsCore(fields, yard, lat) {
   const here = fields.filter((f) => f.type !== 'Dragon' && contains(f, yard, lat));
-  const byType = new Map();
-  for (const f of here) { const cur = byType.get(f.type); if (!cur || (f.strength ?? 0) > (cur.strength ?? 0) || ((f.strength ?? 0) === (cur.strength ?? 0) && f.createdAt < cur.createdAt)) byType.set(f.type, f); }
+  const byType = new Map(); const stronger = (f, cur) => !cur || (f.strength ?? 0) > (cur.strength ?? 0) || ((f.strength ?? 0) === (cur.strength ?? 0) && f.createdAt < cur.createdAt);
+  for (const f of here) if (stronger(f, byType.get(f.type))) byType.set(f.type, f);
   const oldest = new Map(); for (const f of here) { const o = oldest.get(f.type); if (!o || f.createdAt < o.createdAt || (f.createdAt === o.createdAt && String(f.id) < String(o.id))) oldest.set(f.type, f); }
   const types = [...byType.keys()].sort();
   let pick = null;
@@ -59,14 +71,28 @@ export function effectsCore(fields, yard, lat) {
     const r = recipeFor(types[i], types[j]); if (!r) continue;
     const a = oldest.get(types[i]), b = oldest.get(types[j]);
     const formed = Math.max(a.createdAt, b.createdAt); const key = [a.id, b.id].map(String).sort().join('|');
-    if (!pick || formed < pick.formed || (formed === pick.formed && key < pick.key)) pick = { r, formed, key };
+    // The combination's side: one club's two zones -> that club; two clubs -> 'both'; unknown -> null (everyone but the parents)
+    const ta = teamOfField(a), tb = teamOfField(b); const side = ta && tb ? (ta === tb ? ta : 'both') : null;
+    if (!pick || formed < pick.formed || (formed === pick.formed && key < pick.key)) pick = { r, formed, key, side };
   }
-  return { strongest: [...byType.values()], pick, replaced: new Set(pick ? pick.r.parents : []) };
+  return { strongest: [...byType.values()], here, stronger, pick, replaced: new Set(pick ? pick.r.parents : []) };
 }
-export function effectsFor(core, monsterType) {
+/**
+ * One monster's effects from a core. Without `side` the result is exactly the type-only rule. With it, each base type is the
+ * strongest field of that type that reaches him, and the hybrid comes back for every type present with `applies` (does it act on
+ * him: not a parent type, and on the receiving side) and `side` (the combination's club, 'both' or null).
+ */
+export function effectsFor(core, monsterType, side = null) {
   const { strongest, pick, replaced } = core;
-  const base = strongest.filter((f) => !replaced.has(f.type) && f.type !== monsterType).map((f) => ({ type: f.type, strength: f.strength, fieldId: f.id }));
-  const hybrid = pick && !pick.r.parents.includes(monsterType) ? { name: pick.r.hybrid, parents: [...pick.r.parents] } : null;
+  if (!side) {
+    const base = strongest.filter((f) => !replaced.has(f.type) && f.type !== monsterType).map((f) => ({ type: f.type, strength: f.strength, fieldId: f.id }));
+    const hybrid = pick && !pick.r.parents.includes(monsterType) ? { name: pick.r.hybrid, parents: [...pick.r.parents] } : null; // the type-only result, unchanged (applies: always)
+    return { base, hybrid };
+  }
+  const best = new Map();
+  for (const f of core.here) if (!replaced.has(f.type) && reaches(f, monsterType, side) && core.stronger(f, best.get(f.type))) best.set(f.type, f);
+  const base = [...best.values()].map((f) => ({ type: f.type, strength: f.strength, fieldId: f.id }));
+  const hybrid = pick ? { name: pick.r.hybrid, parents: [...pick.r.parents], side: pick.side ?? null, applies: !pick.r.parents.includes(monsterType) && (!pick.side || pick.side === 'both' || pick.side !== side) } : null;
   return { base, hybrid };
 }
 
@@ -89,7 +115,7 @@ export function toPlayFrame(fields, { home, ballOn, ballLat = 0 }) {
   return (fields || []).map((f) => {
     const xs = f.yard.map(fx), ys = f.lat.map(fy);
     const hole = (h) => { const hx = h.yard.map(fx), hy = h.lat.map(fy); return { yard: [Math.min(...hx), Math.max(...hx)], lat: [Math.min(...hy), Math.max(...hy)] }; };
-    return { id: f.id, type: f.type, createdAt: f.createdAt, strength: f.strength ?? null, owner: f.owner ?? null, ability: f.ability ?? null, payload: f.payload ?? null, remaining: f.remaining, clock: f.clock, ownerTeam: f.ownerTeam, ...(f.createdThisPlay ? { fresh: true } : {}), /* Task 8 presentation: the field's creation play (reveal), data only */
+    return { id: f.id, type: f.type, createdAt: f.createdAt, strength: f.strength ?? null, owner: f.owner ?? null, team: f.team ?? null, ability: f.ability ?? null, payload: f.payload ?? null, remaining: f.remaining, clock: f.clock, ownerTeam: f.ownerTeam, ...(f.createdThisPlay ? { fresh: true } : {}), /* Task 8 presentation: the field's creation play (reveal), data only */
       yard: [Math.min(...xs), Math.max(...xs)], lat: [Math.min(...ys), Math.max(...ys)], ...(f.holes?.length ? { holes: f.holes.map(hole) } : {}) }; // M3 hook: removed footprints
   });
 }

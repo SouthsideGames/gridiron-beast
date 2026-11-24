@@ -237,16 +237,24 @@ function spotPlacement(state, sim, p) {
   const x = sim.ballOn + p.immediate.x;
   return { centerLat: absLat(state, (sim.ballLat || 0) + p.immediate.y), yardFrom: absYard(state, x - p.length / 2), yardTo: absYard(state, x + p.length / 2), width: p.width };
 }
-/** After a play with fields: the Light recharge for non-Light participants finishing inside a Light field (once per monster per play;
- *  never from his own field), then each field's clock (G1/G2). */
+/** After a play with fields: the Light recharge, then each field's clock (G1/G2). Light (owner 2026-11-24): every participant who
+ *  entered a Light zone during the play that reached him (the placing club's monsters, every type; see fields.js reaches) gains
+ *  one recharge unit, once per monster per play and never from his own zone. Plays without side information keep the old rule:
+ *  non-Light participants finishing inside a Light field. */
 /** The active fields in this play's frame (the engine's x from the line toward the offense's goal, y lateral in its frame). */
 const playFields = (state, t8) => toPlayFrame(T8F.activeFields(t8), { home: state.possession === 'home', ballOn: state.ballOn, ballLat: state.ballLat || 0 });
 function afterPlayFields(state, t8, slots, sim, offIds) {
   const last = sim.frames?.[sim.frames.length - 1]; const inputs = { ...Object.fromEntries(Object.entries(slots.offense).map(([k, v]) => [`off:${k}`, v])), ...Object.fromEntries(Object.entries(slots.defense).map(([k, v]) => [`def:${k}`, v])) };
+  const lit = new Set(); const byId = new Map(T8F.activeFields(t8).map((f) => [f.id, f]));
+  for (const e of sim.events || []) {
+    if (e.kind !== 'field_enter' || e.element !== 'Light' || !e.by) continue;
+    const x = inputs[`${e.side}:${e.by}`], f = byId.get(e.field); if (!x?.id || !f || f.owner === x.id || lit.has(x.id) || !(f.team ?? f.ownerTeam)) continue;
+    lit.add(x.id); extraCooldownUnit(t8, x.id);
+  }
   if (last) for (const [team, rows] of [['off', last.off], ['def', last.def]]) for (const row of rows || []) {
-    const x = inputs[`${team}:${row[0]}`]; if (!x?.id || x.type === 'Light') continue;
+    const x = inputs[`${team}:${row[0]}`]; if (!x?.id || x.type === 'Light' || lit.has(x.id)) continue;
     const yard = absYard(state, sim.ballOn + row[1]), lat = absLat(state, (sim.ballLat || 0) + row[2]);
-    const lights = T8F.fieldsAt(t8, yard, lat).filter((f) => f.type === 'Light' && f.owner !== x.id); if (lights.length) extraCooldownUnit(t8, x.id);
+    const lights = T8F.fieldsAt(t8, yard, lat).filter((f) => f.type === 'Light' && f.owner !== x.id && !(f.team ?? f.ownerTeam)); if (lights.length) extraCooldownUnit(t8, x.id); // sideless zones only
   }
   // M3 hook: field clocks. creatorOffense: the creator's own offensive plays (G2); team/owner Offense and Defense: the creator's club's
   // offensive / defensive scrimmage plays, creator on the field or not (the batches named them teamX and ownerX; both are accepted)
@@ -422,6 +430,14 @@ export function lineupForfeit(state, side) {
   state.forfeit={side,reason:'no-legal-lineup'}; state.score[side]=0; state.score[opponent(side)]=21;
   const text=$E('rotation.forfeit'); log(state,text,'info'); state.lastPlay={text,finished:true}; return state.lastPlay;
 }
+/** The club a monster plays for (owner 2026-11-24: a zone belongs to the club that placed it). On the field from the snap's sides,
+ *  else from either club's offense, defense or bench; null when not found. */
+function clubOfMonster(state, teams, mid, offIds, defIds) {
+  if (offIds.has(mid)) return state.possession; if (defIds.has(mid)) return opponent(state.possession);
+  const has = (v) => (Array.isArray(v) ? v : v && typeof v === 'object' ? Object.values(v) : []).some((p) => p?.id === mid);
+  for (const side of ['home', 'away']) { const t = teams?.[side]; if (t && (has(t.offense) || has(t.defense) || has(t.bench))) return side; }
+  return null;
+}
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
   preparePreChoice(state, teams);
@@ -445,7 +461,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const logMark = state.log[state.log.length - 1]; // Task 8 presentation: the pre-snap ability lines start after this entry
   preSnapContracts(state, t8, slots); // M3 hook: pre-choice producers that queue fields for this snap
   preSnapHooks(state, t8, slots, offensePlay, defensePlay); // M3 hook: (Nature / Electric) play-level preSnap hooks
-  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => pendingEligible(state, t8, p, offIds, defIds), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p, offensePlay, alignOf, defensePlay) }) : []; // G3
+  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => pendingEligible(state, t8, p, offIds, defIds), playIndex: state.playCount || 0, teamOf: (mid) => clubOfMonster(state, teams, mid, offIds, defIds), place: (p) => fieldPlacement(state, p, offensePlay, alignOf, defensePlay) }) : []; // G3
   delete t8.zoneChoices;
   // M3 hook: the snap's pre-choice point for every on-field contract (e.g. Prism Break), after this snap's fields exist
   for (const [team, play, map] of [['off', offensePlay, slots.offense], ['def', defensePlay, slots.defense]]) for (const [slot, m] of Object.entries(map)) {

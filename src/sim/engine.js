@@ -227,7 +227,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // cooldowns) lives in options.t8 (the football game state's Task 8 block); without one (labs, previews) it is per play only.
   const t8g = options.t8 || { status: {} };
   // Task 8 M3 fields (spec §11): options.fields in this play's frame (fields.js toPlayFrame); null without fields (src/sim/t8/field-effects.js)
-  const FX = createFieldPlay({ fields: options.fields, actors, seed, log: (...x) => log(...x), t8: t8g, setStatus: (a, c, d) => setStatus(a, c, d), bounds: B, dt: DT, refreshMaxSpeed: (a) => refreshMaxSpeed(a), applySharedStatus: (a, spec) => t8Apply(a, spec) });
+  const FX = createFieldPlay({ fields: options.fields, actors, offenseSide: options.offenseSide || null, seed, log: (...x) => log(...x), t8: t8g, setStatus: (a, c, d) => setStatus(a, c, d), bounds: B, dt: DT, refreshMaxSpeed: (a) => refreshMaxSpeed(a), applySharedStatus: (a, spec) => t8Apply(a, spec) });
   // Perf (outcome-identical): the contract context (and the ability stream, a pure function of the seed that only it draws from)
   // is built at the first contract hook call, so a play where no contract acts never allocates it.
   let abilityCtx = null;

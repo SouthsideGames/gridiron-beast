@@ -71,7 +71,7 @@ test('Runway: selectable 6x10 placement with form strength, extended offensive-t
     assert.ok(near(f.lat[1] - f.lat[0], 6, 1e-9) && Math.abs((f.lat[0] + f.lat[1]) / 2) <= HALF, 'centred on his slot lateral (WR1), not the play');
     const st = g.t8.ability[wr.id]; assert.equal(st.cd, 4, 'Stratosoar-tier mastery 2: cooldown 4, the creating play excluded');
     assert.equal(g.t8.mastery[wr.id].executions, 1);
-    if (g.possession !== side) continue; // a turnover: the next check needs his next offensive play
+    if (g.possession !== side || g.phase !== 'scrimmage') continue; // a turnover or a score: the next check needs his next offensive snap
     const [made] = fieldsOf(g, 'WIN-01-F'); assert.ok(made, 'lifetime 2 at mastery 2: one participating play left'); assert.equal(made.remaining, 3);
     const abs = side === 'home' ? f.yard.map((x) => ballOn + x) : [100 - ballOn - f.yard[1], 100 - ballOn - f.yard[0]];
     assert.ok(near(made.yard[0], abs[0], 1e-9) && near(made.yard[1], abs[1], 1e-9), 'absolute placement at the upcoming LOS');

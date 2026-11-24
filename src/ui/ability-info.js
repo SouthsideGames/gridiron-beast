@@ -9,6 +9,9 @@ import { esc } from './dom.js';
 import { abilitiesOf, familyById } from '../data/beast-dex.js';
 import { THRESHOLDS, TIERS, tierIndex } from '../franchise/t8/mastery.js';
 import { SPECS } from '../sim/abilities/review-texts.js';
+import { zoneEffectText } from './zone-planner.js';
+// Zones (owner 2026-11-24): what a zone does is the shared rule (src/ui/zone-planner.js), so the Dex and the Zones panel never disagree.
+const ZONE_TYPE = { FIR: 'Fire', WAT: 'Water', NAT: 'Nature', ELE: 'Electric', ICE: 'Ice', WIN: 'Wind', DAR: 'Dark', LIG: 'Light', MET: 'Metal', PSY: 'Psychic', EAR: 'Earth', DRA: 'Dragon' };
 import { t as $t } from '../text/index.js';
 import { dexLine, dexKey } from '../text/dex.js';
 
@@ -47,7 +50,11 @@ export function abilityInfo(x, mode = 'football') {
   const story = rule('Ability story');
   const summary = mode === 'clash' && CLASH_SIMPLE[a.id] ? dexLine(dexKey.abilityPlain(a.id), CLASH_SIMPLE[a.id]) : mode === 'football' && SPECS[id]?.expect ? dexLine(dexKey.abilitySummary(id), SPECS[id].expect) : dexLine(dexKey.abilityMechanic(a.id), tidy(a));
   const sections = SHOWN_SECTIONS.map((s) => { const raw = a.details?.find(d => d.section === s)?.rule; const text = raw ? dexLine(dexKey.abilityReadableRule(a.id, s), plainAbilityRule(raw)) : null; return text ? { label: SECTION_LABEL[s], text } : null; }).filter(Boolean);
-  return { id: a.id, name: dexLine(dexKey.abilityName(a.id), a.name), mode, category: a.category, summary, story, sections };
+  const zoneType = mode === 'football' && a.category === 'Zone' ? ZONE_TYPE[a.id.slice(0, 3)] : null;
+  // The other sections keep their lines, bar the ones that state the old rule (both teams, chance rolls).
+  const OLD_RULE = /both teams|either team|chance|\broll|rolls|\d+% stunned|defenders can use|immunity includes no/i;
+  const shown = zoneType && zoneEffectText(zoneType) ? sections.map((x) => (x.label === $t('shared.what_it_does') ? { ...x, text: `${$t('playview.zone_what', { type: zoneType, effect: zoneEffectText(zoneType) })} ${$t('shared.zone_rules_now')}` } : { ...x, text: x.text.split('\n').filter((l) => !OLD_RULE.test(l)).join('\n') })).filter((x) => x.text.trim()) : sections;
+  return { id: a.id, name: dexLine(dexKey.abilityName(a.id), a.name), mode, category: a.category, summary, story, sections: shown };
 }
 /** True when the family has no abilities (a Basic). */
 export const hasAbilities = (x) => { const id = familyIdOf(x); return !!(id && (abilitiesOf(id)?.football || abilitiesOf(id)?.clash)); };

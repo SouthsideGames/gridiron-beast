@@ -1,6 +1,6 @@
 // Shared football zone policy. UI previews, reviewer scenarios, AI and the snap all
 // use these legal options; no opponent assignments or random simulation draws.
-import { placeRect, RECIPES, effectsCore, contains } from './fields.js';
+import { placeRect, RECIPES, effectsCore, contains, BUFF_TYPES } from './fields.js';
 import { createRng } from '../../core/rng.js';
 import { ABILITIES } from '../../data/beast-dex.js';
 
@@ -23,7 +23,9 @@ export function zoneOverlaps(rect, type, fields, lifetime = 3, clock = null, own
     if ((f.holes || []).some((h) => area(intersect(overlap, h)) >= area(overlap) - 1e-6)) continue;
     const relevant = (c, owner) => /Offense$/.test(c || '') || c === 'teamOffense' ? owner : /Defense$/.test(c || '') || c === 'teamDefense' ? (owner === 'home' ? 'away' : 'home') : 'any';
     const a = relevant(clock, ownerTeam), b = relevant(f.clock, f.ownerTeam);
-    out.push({ name: recipe.hybrid, parents: [...recipe.parents], field: f.id, rect: overlap,
+    // cross: the other club's zone, so the combination would hit both clubs (owner 2026-11-24)
+    const theirs = f.team ?? f.ownerTeam ?? null; const cross = !!(ownerTeam && theirs && ownerTeam !== theirs);
+    out.push({ name: recipe.hybrid, parents: [...recipe.parents], field: f.id, rect: overlap, cross,
       remaining: a === b || a === 'any' || b === 'any' ? Math.min(lifetime, f.remaining ?? lifetime) : null, area: area(overlap) });
   }
   return out;
@@ -90,9 +92,9 @@ export function autoZoneOption(options, spec, ownPlay = null, state = null) {
   const jobs = Object.values(ownPlay?.assignments || {});
   const points = jobs.flatMap((j) => j.points?.length ? j.points.slice(1) : j.at ? [j.at] : []);
   // Own play only; damaging terrain is put where it meets opponents (the ability's
-  // role/depth), supportive Wind can follow the owner's intended routes.
+  // role/depth); a buff (Wind, Light, Earth: it helps only the placing club) follows the owner's intended routes.
   let preferred = 'middle';
-  if (spec.type === 'Wind' && points.length) {
+  if (BUFF_TYPES.includes(spec.type) && points.length) {
     const lane = points.reduce((n, p) => n + p[1], 0) / points.length;
     preferred = lane < -4 ? 'left' : lane > 4 ? 'right' : 'middle';
   }
@@ -100,7 +102,8 @@ export function autoZoneOption(options, spec, ownPlay = null, state = null) {
   // private stream never advances the game dice; previews cannot reroll it.
   let seed = 2166136261;
   for (const ch of `${state?.seed || 0}|${state ? snapKey(state) : 0}|${zoneKey(spec)}|${ownPlay?.id || ''}`) { seed ^= ch.charCodeAt(0); seed = Math.imul(seed, 16777619); }
-  return createRng(seed >>> 0).weighted(options.map((o) => [o, 1 + (o.id === preferred ? 1 : 0) + (o.overlaps?.length ? 1.5 : 0)]));
+  // A combination with the club's own zone works for it; one with the other club's hits both sides, so it earns no preference.
+  return createRng(seed >>> 0).weighted(options.map((o) => [o, 1 + (o.id === preferred ? 1 : 0) + (o.overlaps?.some((m) => !m.cross) ? 1.5 : 0)]));
 }
 export function selectedZoneOption(state, spec, options, ownPlay = null) {
   const saved = state.t8?.zoneChoices;
