@@ -165,10 +165,10 @@ export function fieldLayers(o) {
     if (sm?.over) statusOver += sm.over;
     let key = `${team}:${slot}`; while (keys.has(key)) key += "'"; keys.add(key);
     if (!m) { const base = simpleMarker(slot, x, y, team, engaged, holder); const html = (sm?.under || '') + (sm?.tf ? `<g transform="${sm.tf}">${base}</g>` : base); players.push({ key, html, sig: null }); return; }
-    const kit = kits?.[team] || null; const base = kit?.base || (team === 'off' ? colors.off : colors.def); // the uniform (team-kit.js): jersey on the sprite, kit colour under it
+    const kit = kits?.[team] || null; const base = kit?.base || (team === 'off' ? colors.off : colors.def); // the uniform's colour under the monster (team-kit.js); no jersey on the monster itself (owner 2026-11-24)
     const [mx] = moved(team, slot, x, y); const flip = o.facing?.[`${team}:${slot}`] ?? (Math.abs(mx) > 0.12 ? mx < 0 : team === 'def');
     // The sprite: a <use> of the monster's cached <symbol> (same viewBox, size and crisp edges as the inline art it replaces).
-    const ref = monsterSpriteRef(m, { flip, kit }); if (!seen.has(ref.id)) { seen.add(ref.id); symbols.push(ref); }
+    const ref = monsterSpriteRef(m, { flip }); if (!seen.has(ref.id)) { seen.add(ref.id); symbols.push(ref); }
     const ell = { cx: cx.toFixed(2), cy: (cy + 0.75).toFixed(2), fill: base, stroke: holder ? '#fff' : engaged ? '#ffcf5a' : '#0d1f17', 'stroke-width': holder ? '0.4' : '0.2' };
     const use = { href: `#${ref.id}`, x: (cx - 1.7).toFixed(2), y: (cy - 2.5).toFixed(2) };
     const art = `<use data-fv="s" href="${use.href}" x="${use.x}" y="${use.y}" width="3.4" height="3.4" aria-hidden="true"/>`;
