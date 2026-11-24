@@ -108,7 +108,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   const rivalTeam = rivalChoices.includes(rival) ? rival : rng.pick(rivalChoices);
   const roster = createRoster(rng.seed(), { cornerstone, cornerstoneOffense, cornerstoneDefense, quality: 56 });
   const f = {
-    schemaVersion: SCHEMA_VERSION, leagueFormat: LEAGUE_FORMAT, uid: newUid(), createdAt: new Date().toISOString(), seed, rngState: rng.state, // uid: the permanent identity of this franchise universe (GDD §42.3)
+    schemaVersion: SCHEMA_VERSION, leagueFormat: LEAGUE_FORMAT, coachNames: 2, uid: newUid(), createdAt: new Date().toISOString(), seed, rngState: rng.state, // uid: the permanent identity of this franchise universe (GDD §42.3)
     owner: { ...owner }, club, tier: 'challenger', staff: {},
     roster, lineupManual: {}, depth: {}, aging: nativeAging(), // born under the ageing rules of GDD §55: no transition
     season: null, week: blankWeek(), game: null,
@@ -1507,7 +1507,7 @@ export function monsterOutlook(f, m) { if (!m) return null; const starters = new
 /** Monsters with points waiting to be spent. */
 export function unspentPoints(f) { return f.roster.filter((m) => (m.points || 0) > 0); }
 /** The club's head coach by name (COY recipient). */
-export function coachNameOf(f, team) { return headCoachName(team, { seed: f.seed, playerClub: f.club, playerCoach: staffMember(f, 'head_coach')?.name || null }); }
+export function coachNameOf(f, team) { return headCoachName(team, { seed: f.seed, playerClub: f.club, playerCoach: staffMember(f, 'head_coach')?.name || null, names: f.coachNames || 1 }); }
 export const currentFixture = (f) => f.season.schedule.find((g) => g.week === f.season.week) || null;
 export const isBye = (f) => !!currentFixture(f)?.bye;
 export const inPlayoffs = (f) => f.season.week > REG_WEEKS;

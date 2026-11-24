@@ -9,6 +9,7 @@
 // position group → weighted sum → deterministic tie-breaks.
 
 import { leagueRows, withDerived, statLine, OFFENSE_POSITIONS, DEFENSE_POSITIONS } from './stats.js';
+import { COACH_FIRST_NAMES, COACH_LAST_NAMES } from '../data/staff.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
 import { ALL_TEAMS, RIVAL_GMS } from '../data/league.js';
 import { hashString } from '../core/rng.js';
@@ -130,10 +131,13 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
 /** A club's head coach by name: the gym coach, the player's hired coach, or a stable generated name. */
 const FIRST = ['Ray', 'Marcus', 'Dale', 'Tomas', 'Lionel', 'Harvey', 'Odell', 'Kurt', 'Rosa', 'Ivan', 'Gus', 'Priya', 'Walt', 'Nico', 'Benny', 'Clara'];
 const LAST = ['Okafor', 'Brandt', 'Castellano', 'Hughes', 'Mbeki', 'Lindqvist', 'Reyes', 'Donnelly', 'Kowalski', 'Tanaka', 'Moreau', 'Baptiste', 'Ferraro', 'Whitlock', 'Haddad', 'Olsen'];
-export function headCoachName(team, { seed = 0, playerClub = null, playerCoach = null } = {}) {
+/** Which name lists a franchise draws its generated coaches from: 1 (the original 16 × 16) or 2 (the owner's 400 × 400 lists). */
+const COACH_LISTS = { 1: [FIRST, LAST], 2: [COACH_FIRST_NAMES, COACH_LAST_NAMES] };
+export function headCoachName(team, { seed = 0, playerClub = null, playerCoach = null, names = 1 } = {}) {
   if (team === playerClub) return playerCoach || $t('franchise.your_head_coach');
   const gym = GYM_BY_CLUB[team]; if (gym) return gym.coach.name;
-  return generatedCoaches(seed)[team] || (() => { const h = hashString(`${`coach|${team}|${seed}`}`); return `${FIRST[h % FIRST.length]} ${LAST[(h >>> 8) % LAST.length]}`; })();
+  const [A, B] = COACH_LISTS[names] || COACH_LISTS[1];
+  return generatedCoaches(seed, names)[team] || (() => { const h = hashString(`${`coach|${team}|${seed}`}`); return `${A[h % A.length]} ${B[(h >>> 8) % B.length]}`; })();
 }
 /**
  * The generated head coaches of one franchise seed, club by club in league order. A name already taken, by an earlier club's
@@ -141,10 +145,10 @@ export function headCoachName(team, { seed = 0, playerClub = null, playerCoach =
  * most leagues (identity audit, 2026-11-23). The first draw is the old one, so most clubs keep the coach they had.
  */
 const COACH_CACHE = new Map();
-function generatedCoaches(seed) {
-  let out = COACH_CACHE.get(seed); if (out) return out;
+function generatedCoaches(seed, names = 1) {
+  const key = `${names}|${seed}`; let out = COACH_CACHE.get(key); if (out) return out; const [A, B] = COACH_LISTS[names] || COACH_LISTS[1];
   out = {}; const taken = new Set([...Object.values(RIVAL_GMS), ...Object.values(GYM_BY_CLUB).map((g) => g.coach.name)]);
   for (const team of ALL_TEAMS) { if (GYM_BY_CLUB[team]) continue;
-    for (let n = 0; n < 400; n++) { const h = hashString(`coach|${team}|${seed}${n ? `|${n}` : ''}`); const name = `${FIRST[h % FIRST.length]} ${LAST[(h >>> 8) % LAST.length]}`; if (!taken.has(name)) { out[team] = name; taken.add(name); break; } } }
-  if (COACH_CACHE.size > 64) COACH_CACHE.clear(); COACH_CACHE.set(seed, out); return out;
+    for (let n = 0; n < 400; n++) { const h = hashString(`coach|${team}|${seed}${n ? `|${n}` : ''}`); const name = `${A[h % A.length]} ${B[(h >>> 8) % B.length]}`; if (!taken.has(name)) { out[team] = name; taken.add(name); break; } } }
+  if (COACH_CACHE.size > 64) COACH_CACHE.clear(); COACH_CACHE.set(key, out); return out;
 }

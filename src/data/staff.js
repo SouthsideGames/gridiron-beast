@@ -81,3 +81,54 @@ export const BACKGROUNDS = Object.freeze({
   analyst: { label: $t('data.analyst'), text: $t('data.you_live_in_the_tape_thursday'), perk: 'analyst' },
   business: { label: $t('data.businessperson'), text: $t('data.you_know_money_the_salary_cap'), perk: 'cap' },
 });
+
+// Coach names (owner's lists, 2026-11-23): 400 first and 400 last names. Used for the name suggested when you create your coach
+// and for the other clubs' head coaches in franchises created after this change (f.coachNames === 2); older franchises keep the
+// names they were created with (src/franchise/awards.js).
+/** First names, one word each. */
+export const COACH_FIRST_NAMES = Object.freeze(`Aaron Adrian Aiden Akira Alejandro Alex Alexander Alexis Amara Amir Andre Andrew Angel Anthony Archer Aria Asher Atlas Austin
+Avery Axel Bailey Blake Brandon Brayden Brianna Bryce Caleb Cameron Carlos Carter Chase Chloe Christian Christopher Clara Cody
+Cole Connor Cooper Damian Daniel Dante Darius David Declan Derek Devin Diego Dominic Donovan Dylan Easton Elijah Elliot Emily
+Emma Enzo Eric Ethan Evan Ezra Felix Finn Gabriel Gavin Grayson Harper Hassan Hayden Henry Hudson Hugo Hunter Ian Isaac Isaiah
+Ivan Ivy Jace Jack Jackson Jacob Jade Jalen James Jasmine Jason Javier Jayden Jeremiah Jesse Jordan Joseph Joshua Julian Kai
+Kareem Kayden Keira Kenji Kevin Kieran Kingston Knox Kobe Kyle Landon Layla Leo Leon Levi Liam Logan Lorenzo Luca Lucas Luis
+Luna Malik Marcus Mason Mateo Maya Micah Michael Miles Milo Morgan Nadia Naomi Nathan Nico Noah Nolan Nori Nova Oliver Omar
+Orion Oscar Owen Parker Patrick Phoenix Quentin Rafael Ray Remy Riley River Roman Rowan Ryan Ryder Sage Samuel Santiago Savannah
+Sebastian Seth Silas Skylar Sofia Stephanie Sterling Theo Thomas Tobias Tristan Troy Tyler Valentina Victor Vincent Violet
+Wesley William Wyatt Xavier Yasmin Zane Zion Zoe Ace Apollo Ash Blaze Brock Caspian Dash Drake Ember Flint Jett Koda Onyx Raven
+Rex Storm Adam Albert Alfred Arthur Benjamin Bernard Bradley Brian Bruce Charles Colin Curtis Dennis Donald Douglas Edward Edwin
+Francis Frank Frederick George Gerald Graham Harold Harrison Harvey Hugh Jeffrey Jeremy Jonathan Kenneth Lawrence Louis Malcolm
+Martin Matthew Nicholas Peter Richard Robert Adonis Anderson Ashton Beckett Beckham Bentley Bodhi Boston Branson Brooks Bryson
+Callum Camden Cannon Cash Cayden Colton Crew Cruz Daxton Denver Edison Ellis Emerson Everett Ford Gage Greyson Hendrix Holden
+Houston Jaxon Kaden Kayson Keaton Maddox Maverick Paxton Rylan Weston Abigail Ada Addison Alice Amelia Andrea Anna Ariana Aubrey
+Aurora Autumn Bella Blair Brooke Camila Carmen Cassidy Celeste Charlotte Daisy Dakota Delilah Eden Eleanor Elena Elizabeth Ella
+Evelyn Faith Gabriella Grace Hannah Hazel Isabella Julia Kennedy Lily Mila Olivia Willow Abdul Ahmed Akio Alonzo Andres Antonio
+Arjun Arturo Aziz Cesar Chidi Cristiano Daichi Eduardo Emilio Esteban Fabian Fernando Franco Gael Haruto Ibrahim Idris Iker
+Jamal Joaquin Jorge Karim Khalil Kwame Leonardo Luciano Manuel Matias Miguel Mustafa Pablo Ren Riku Yuto Aero Aries Arrow Aster
+Bear Blade Bolt Boulder Bronx Cinder Clay Cliff Colt Comet Creed Dagger Dune Echo Falcon Fang Flash Hawk Jet Knight Legend Lynx
+Mars Mercury Neo Noble Oak Ranger Reign Ridge Rocky Rogue Slate Talon Titan Wolf`.split(/\s+/));
+/** Last names, one word each. */
+export const COACH_LAST_NAMES = Object.freeze(`Adams Aguilar Alexander Allen Alvarez Anderson Armstrong Austin Bailey Baker Banks Barnes Barrett Bell Bennett Bishop Black
+Boone Brooks Brown Bryant Butler Campbell Carter Castillo Chavez Clark Cole Coleman Collins Cooper Cortez Cruz Cunningham
+Daniels Davis Dawson Delgado Diaz Dixon Douglas Drake Edwards Ellis Evans Fields Fisher Flores Ford Foster Fox Franklin Freeman
+Garcia Gardner Gibson Gomez Gonzalez Gordon Graham Grant Gray Green Griffin Hall Hamilton Harris Harrison Hayes Henderson
+Hernandez Hill Hoffman Holmes Howard Hughes Hunter Jackson James Jenkins Johnson Jones Jordan Kareem Kelly Kennedy Kim King
+Knight Lee Lewis Lopez Marshall Martin Martinez Mason Matthews Mendoza Miller Mitchell Moore Morales Morgan Morris Murphy Naomi
+Nelson Nguyen Nori Ortiz Owens Palmer Parker Patel Patterson Perez Perry Peterson Phillips Pierce Porter Powell Price Ramirez
+Reed Reyes Reynolds Richards Rivera Roberts Robinson Rodriguez Rogers Romero Ross Russell Sanchez Sanders Scott Shaw Simmons
+Singh Smith Spencer Stephanie Stevens Stewart Stone Sullivan Taylor Thomas Thompson Torres Turner Vargas Vasquez Walker Wallace
+Ward Warren Washington Watson Wells West White Williams Wilson Wright Young Zhang Ashford Ashwood Blackwell Blackwood Brightwood
+Cross Crowe Frost Gale Hawthorne Ironwood Lockwood Moon Nightfall North Oakley Redwood Rivers Silver Steel Storm Summers Thorne
+Vale Wilder Winter Wolfe Wolfwood Evergreen Fairchild Abbott Atkins Baldwin Barton Bates Benson Blake Bradley Briggs Burke Burns
+Burton Chambers Chandler Chapman Clayton Crawford Curtis Davidson Dean Duncan Dunn Elliott Ferguson Fletcher Fowler Gilbert
+Goodman Graves Hardy Hart Hawkins Higgins Hopkins Hudson Lawson Little Lucas Pearson Sutton Acosta Alvarado Arias Bautista
+Benitez Cabrera Calderon Campos Cardenas Carrasco Castro Cervantes Contreras Dominguez Espinoza Estrada Fernandez Figueroa
+Fuentes Galindo Guerrero Guzman Herrera Ibarra Jimenez Leon Luna Marquez Medina Mendez Miranda Molina Montoya Moreno Navarro
+Nunez Ortega Pacheco Rojas Salazar Abbas Ahmed Ali Amin Anand Aziz Bhandari Chen Choi Das Dubois Fischer Gupta Hassan Ibrahim
+Ito Khan Kumar Laurent Lin Liu Malik Mehta Nakamura Okafor Okoro Park Rossi Sato Shah Sharma Silva Suzuki Tanaka Wang Watanabe
+Wong Yamamoto Yilmaz Yusuf Archer Banner Beck Bentley Bishopson Bond Bowman Branch Bridges Brock Buckley Cannon Carson Cash
+Chance Chase Cobb Conrad Crosby Dallas Dalton Diamond Duke Easton Finch Flynn Forbes Garrison Gates Glass Gold Hartley Hendrix
+Houston Kingston Maddox Maxwell Nash Rhodes Royal Amberstone Ashborne Blackthorn Bloodstone Bluewater Boulder Brightstar Cloud
+Coldwater Copperfield Darkwood Dawn Daybreak Emberstone Firestone Flame Foxwood Frostborn Goldleaf Goldstone Granite Grimwood
+Highwind Hollow Ironclaw Ironheart Lightfoot Longshadow Moonstone Nightshade Oakheart Rain Ravenwood Rockwell Shadow Silverwood
+Snow Starfall Thunder Windfall`.split(/\s+/));
