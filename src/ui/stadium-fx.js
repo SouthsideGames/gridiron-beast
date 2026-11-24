@@ -177,15 +177,20 @@ export const fieldBorder = () => (scene ? FIELD_BORDER : 0);
 export const FOOTBALL = Object.freeze({ rx: 0.7, ry: 0.45, fill: '#d9924f', stroke: '#fff', strokeWidth: 0.18 });
 
 // ---------------------------------------------------------------- the field edge (shared, data-driven)
-// Every look uses the same frame: a marker every six yards on each sideline, something that links one marker to the next, and
+// Every look uses the same frame: a marker halfway between the numbered lines on each sideline (the 5, 15, ... 45 of both halves,
+// owner 2026-11-24), something that links one marker to the next, and
 // a little drifting life beside it. `edge` picks the pieces; the stylesheet moves them. Jumps and pulses take turns (their delay
 // follows the marker's place on the field), so the effect cycles up the sideline.
-const turn = (yard, side, step, n = 7) => `animation-delay:-${((((n - ((Math.round(yard / 6) + (side > 0 ? 3 : 0)) % n)) % n)) * step).toFixed(2)}s`;
+/** Sideline markers stand halfway between the numbered lines: the 5, 15, 25, 35 and 45 of both halves, never in an end zone. */
+export const MARKER_GAP = 10;
+export const markerYards = (cam) => { const out = []; for (let yard = Math.max(5, Math.ceil((cam.bottom - 5) / MARKER_GAP) * MARKER_GAP + 5); yard < cam.top && yard <= 95; yard += MARKER_GAP) out.push(yard); return out; };
+const markerStep = (yard) => Math.round((yard - 5) / MARKER_GAP);
+const turn = (yard, side, step, n = 7) => `animation-delay:-${((((n - ((markerStep(yard) + (side > 0 ? 3 : 0)) % n)) % n)) * step).toFixed(2)}s`;
 const EDGES = {
   chain: { // Electric: current jumps from marker to marker
     track: (x, span, L) => `<line x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="#0c1430" stroke-width="0.3" opacity="0.85"/><line x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="${L.colors[0]}" stroke-width="0.1" opacity="0.7"/>`,
     marker: (x, y, k, side, yard, L) => `<circle cx="${x}" cy="${y}" r="0.62" fill="#0c1430" stroke="${L.colors[0]}" stroke-width="0.14"/><circle class="sfx-node sfx-anim" style="animation-delay:-${k * 0.8}s" cx="${x}" cy="${y}" r="0.34" fill="${L.colors[2]}"/>`,
-    link: (x, y, k, side, yard) => { const j = side * 0.42, dy = -6; return `<path class="sfx-chain sfx-anim" style="${turn(yard, side, 0.26)}" d="M${x} ${y - 0.5} l${-j} ${dy * 0.17} ${j * 1.7} ${dy * 0.16} ${-j * 1.9} ${dy * 0.17} ${j * 1.6} ${dy * 0.16} ${-j * 0.4} ${dy * 0.17}" fill="none" stroke="#1e9cff" stroke-width=".3" stroke-linecap="round" stroke-linejoin="round"/>`; },
+    link: (x, y, k, side, yard) => { const j = side * 0.42, dy = -MARKER_GAP; return `<path class="sfx-chain sfx-anim" style="${turn(yard, side, 0.26)}" d="M${x} ${y - 0.5} l${-j} ${dy * 0.17} ${j * 1.7} ${dy * 0.16} ${-j * 1.9} ${dy * 0.17} ${j * 1.6} ${dy * 0.16} ${-j * 0.4} ${dy * 0.17}" fill="none" stroke="#1e9cff" stroke-width=".3" stroke-linecap="round" stroke-linejoin="round"/>`; },
   },
   magma: { // Fire: magma flows along the sideline between flame towers; embers rise
     track: (x, span, L) => `<line x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="#1c0c08" stroke-width="0.46" opacity="0.9"/><line class="sfx-channel sfx-anim" x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="${L.colors[0]}" stroke-width="0.36" stroke-dasharray="2.5 2"/><line class="sfx-channel sfx-channel-b sfx-anim" x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="${L.colors[1]}" stroke-width="0.16" stroke-dasharray="1 3.5"/>`,
@@ -200,7 +205,7 @@ const EDGES = {
   vine: { // Grass: a vine links the trees; green energy travels along it in turn; leaves drift and fireflies glow
     track: () => '',
     marker: (x, y, k, side, yard, L) => `<circle cx="${x}" cy="${y}" r="${0.8 + k * 0.1}" fill="#174a2c"/><circle class="sfx-node sfx-anim" style="animation-delay:-${k * 0.9}s" cx="${x - side * 0.3}" cy="${y - 0.3}" r="${0.5 + k * 0.1}" fill="#2f9a4f"/>`,
-    link: (x, y, k, side, yard, L) => { const j = side * 0.5; const d = `M${x} ${y - 0.9} q${-j} -1.2 0 -2.2 t0 -2.2`; return `<path d="${d}" fill="none" stroke="#14532d" stroke-width="0.2"/><path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.3)}" d="${d}" fill="none" stroke="${L.colors[1]}" stroke-width="0.24" stroke-linecap="round"/><ellipse class="sfx-drift sfx-drift-leaf sfx-anim" style="animation-delay:-${(k * 1.4 + (side > 0 ? 1 : 0)).toFixed(1)}s" cx="${x - side * 1.1}" cy="${y - 2.2}" rx="0.26" ry="0.12" fill="${L.colors[0]}"/><circle class="sfx-firefly sfx-anim" style="animation-delay:-${(k * 1.9 + (side > 0 ? 0.7 : 0)).toFixed(1)}s" cx="${x - side * (0.9 + k * 0.3)}" cy="${y - 3.6}" r="0.11" fill="#fff6a8"/>`; },
+    link: (x, y, k, side, yard, L) => { const j = side * 0.5; const d = `M${x} ${y - 0.9} q${-j} -2.2 0 -4.2 t0 -4.2`; return `<path d="${d}" fill="none" stroke="#14532d" stroke-width="0.2"/><path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.3)}" d="${d}" fill="none" stroke="${L.colors[1]}" stroke-width="0.24" stroke-linecap="round"/><ellipse class="sfx-drift sfx-drift-leaf sfx-anim" style="animation-delay:-${(k * 1.4 + (side > 0 ? 1 : 0)).toFixed(1)}s" cx="${x - side * 1.1}" cy="${y - 2.2}" rx="0.26" ry="0.12" fill="${L.colors[0]}"/><circle class="sfx-firefly sfx-anim" style="animation-delay:-${(k * 1.9 + (side > 0 ? 0.7 : 0)).toFixed(1)}s" cx="${x - side * (0.9 + k * 0.3)}" cy="${y - 3.6}" r="0.11" fill="#fff6a8"/>`; },
   },
   frost: { // Ice: a row of snowmen along the sideline. Still: the cold does not need to move.
     track: () => '',
@@ -210,22 +215,22 @@ const EDGES = {
   quake: { // Ground: cacti along the sideline; a crack runs from one to the next in turn; dust rises
     track: (x, span, L) => `<line x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="${L.colors[1]}" stroke-width="0.1" stroke-dasharray="0.6 0.5" opacity="0.6"/>`,
     marker: (x, y, k, side, yard, L) => `<g class="sfx-cactus" fill="none" stroke-linecap="round"><ellipse cx="${x}" cy="${y + 0.95}" rx="0.6" ry="0.15" fill="#000" stroke="none" opacity="0.16"/><path d="M${x} ${y + 0.9} V${y - 0.85} M${x - 0.55} ${y - 0.35} V${y + 0.2} H${x} M${x + 0.55} ${y - 0.6} V${y - 0.05} H${x}" stroke="#1f5a2c" stroke-width="0.5" stroke-linejoin="round"/><path d="M${x} ${y + 0.9} V${y - 0.85} M${x - 0.55} ${y - 0.35} V${y + 0.2} H${x} M${x + 0.55} ${y - 0.6} V${y - 0.05} H${x}" stroke="#4fa55a" stroke-width="0.3" stroke-linejoin="round"/><circle cx="${x + (k % 2 ? 0.55 : 0)}" cy="${y - (k % 2 ? 0.8 : 1.02)}" r="0.14" fill="${k === 2 ? '#ffd24a' : '#ff7fb0'}" stroke="none"/></g>`,
-    link: (x, y, k, side, yard, L) => { const j = side * 0.3; return `<path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.26)}" d="M${x} ${y - 1.1} l${-j} -0.9 ${j * 1.8} -1 ${-j * 1.6} -1 ${j * 0.8} -1" fill="none" stroke="#5e3d1e" stroke-width="0.18" stroke-linecap="round" stroke-linejoin="round"/><circle class="sfx-drift sfx-anim" style="animation-delay:-${(k * 1.1).toFixed(1)}s" cx="${x - side * 0.45}" cy="${y - 1.4}" r="0.2" fill="#c79a5c" opacity="0.8"/><circle class="sfx-drift sfx-anim" style="animation-delay:-${(k * 1.1 + 1.6).toFixed(1)}s" cx="${x + side * 0.3}" cy="${y - 3.4}" r="0.15" fill="#c79a5c" opacity="0.8"/>`; },
+    link: (x, y, k, side, yard, L) => { const j = side * 0.3; return `<path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.26)}" d="M${x} ${y - 1.1} l${-j} -1.8 ${j * 1.8} -2 ${-j * 1.6} -2 ${j * 0.8} -2" fill="none" stroke="#5e3d1e" stroke-width="0.18" stroke-linecap="round" stroke-linejoin="round"/><circle class="sfx-drift sfx-anim" style="animation-delay:-${(k * 1.1).toFixed(1)}s" cx="${x - side * 0.45}" cy="${y - 1.4}" r="0.2" fill="#c79a5c" opacity="0.8"/><circle class="sfx-drift sfx-anim" style="animation-delay:-${(k * 1.1 + 1.6).toFixed(1)}s" cx="${x + side * 0.3}" cy="${y - 3.4}" r="0.15" fill="#c79a5c" opacity="0.8"/>`; },
   },
   gust: { // Sky: flags on poles along the sideline wave in the wind (three strips, each a beat behind the last); a gust runs from one to the next; cloud puffs drift
     track: () => '',
     marker: (x, y, k, side, yard, L) => { const col = ['#ff6b5a', '#ffb13d', L.colors[1]][k % 3]; const px = x - side * 0.62; const strip = (i) => `<rect class="sfx-wave sfx-anim" style="--amp:${(0.07 + i * 0.07).toFixed(2)}px;animation-delay:-${(k * 0.21 + (2 - i) * 0.17).toFixed(2)}s" x="${Math.min(px + side * i * 0.44, px + side * (i + 1) * 0.44) - 0.02}" y="${y - 1.15}" width="0.48" height="${0.74 - i * 0.07}" fill="${col}"/>`; return `<ellipse cx="${px}" cy="${y + 0.95}" rx="0.36" ry="0.12" fill="#000" opacity="0.16"/>${strip(0)}${strip(1)}${strip(2)}<line x1="${px}" y1="${y + 0.95}" x2="${px}" y2="${y - 1.25}" stroke="#4a5666" stroke-width="0.15" stroke-linecap="round"/><circle cx="${px}" cy="${y - 1.3}" r="0.13" fill="#ffe08a"/>`; },
-    link: (x, y, k, side, yard, L) => { const j = side * 0.5; return `<path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.3)}" d="M${x} ${y - 1.5} q${-j} -1 0 -1.8 t0 -1.8" fill="none" stroke="${L.colors[1]}" stroke-width="0.2" stroke-linecap="round"/><ellipse class="sfx-drift sfx-anim" style="animation-delay:-${(k * 1.3 + (side > 0 ? 0.8 : 0)).toFixed(1)}s" cx="${x + side * 0.3}" cy="${y - 2.6}" rx="0.42" ry="0.18" fill="#9cc9ee"/>`; },
+    link: (x, y, k, side, yard, L) => { const j = side * 0.5; return `<path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.3)}" d="M${x} ${y - 1.5} q${-j} -2 0 -3.8 t0 -3.8" fill="none" stroke="${L.colors[1]}" stroke-width="0.2" stroke-linecap="round"/><ellipse class="sfx-drift sfx-anim" style="animation-delay:-${(k * 1.3 + (side > 0 ? 0.8 : 0)).toFixed(1)}s" cx="${x + side * 0.3}" cy="${y - 2.6}" rx="0.42" ry="0.18" fill="#9cc9ee"/>`; },
   },
   orbit: { // Oracle: orbs along the sideline, each with a star circling it; the constellation lights up link by link
     track: (x, span, L) => `<line x1="${x}" y1="0" x2="${x}" y2="${span}" stroke="${L.colors[1]}" stroke-width="0.1" stroke-dasharray="0.15 0.9" stroke-linecap="round"/>`,
     marker: (x, y, k, side, yard, L) => `<circle cx="${x}" cy="${y}" r="0.6" fill="#4a2382" stroke="${L.colors[0]}" stroke-width="0.12"/><circle class="sfx-node sfx-anim" style="animation-delay:-${k * 0.8}s" cx="${x - 0.12}" cy="${y - 0.14}" r="0.26" fill="${L.colors[0]}"/><circle class="sfx-orbit sfx-anim" style="animation-delay:-${k}s" cx="${x}" cy="${y}" r="0.13" fill="#7a3fd0"/>`,
-    link: (x, y, k, side, yard, L) => `<path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.3)}" d="M${x} ${y - 0.9} l${side * 0.4} -2.1 l${-side * 0.4} -2.1" fill="none" stroke="#b03fc0" stroke-width="0.2" stroke-linecap="round" stroke-linejoin="round"/><path class="sfx-firefly sfx-anim" style="animation-delay:-${(k * 1.7 + (side > 0 ? 0.9 : 0)).toFixed(1)}s" d="M${x + side * 0.4 - 0.26} ${y - 3} h0.52 m-0.26 -0.26 v0.52" fill="none" stroke="#7a3fd0" stroke-width="0.12" stroke-linecap="round"/>`,
+    link: (x, y, k, side, yard, L) => `<path class="sfx-vine sfx-anim" style="${turn(yard, side, 0.3)}" d="M${x} ${y - 0.9} l${side * 0.4} -4.1 l${-side * 0.4} -4.1" fill="none" stroke="#b03fc0" stroke-width="0.2" stroke-linecap="round" stroke-linejoin="round"/><path class="sfx-firefly sfx-anim" style="animation-delay:-${(k * 1.7 + (side > 0 ? 0.9 : 0)).toFixed(1)}s" d="M${x + side * 0.4 - 0.26} ${y - 3} h0.52 m-0.26 -0.26 v0.52" fill="none" stroke="#7a3fd0" stroke-width="0.12" stroke-linecap="round"/>`,
   },
   cairn: { // Rock: stacked-stone towers along the sideline, still; now and then a pebble tumbles off one
     track: () => '',
     marker: (x, y, k, side, yard, L) => `<ellipse cx="${x}" cy="${y + 0.95}" rx="0.7" ry="0.16" fill="#000" opacity="0.18"/><ellipse cx="${x}" cy="${y + 0.6}" rx="0.72" ry="0.4" fill="${L.colors[1]}" stroke="#3c362e" stroke-width="0.1"/><ellipse cx="${x + 0.06}" cy="${y + 0.02}" rx="0.54" ry="0.32" fill="#968a79" stroke="#3c362e" stroke-width="0.1"/><ellipse cx="${x - 0.05}" cy="${y - 0.48}" rx="0.38" ry="0.25" fill="${L.colors[1]}" stroke="#3c362e" stroke-width="0.1"/><ellipse cx="${x + 0.03}" cy="${y - 0.86}" rx="0.22" ry="0.16" fill="${L.colors[0]}" stroke="#3c362e" stroke-width="0.09"/>`,
-    link: (x, y, k, side, yard, L) => (k === 1 ? `<ellipse class="sfx-tumble sfx-anim" style="--dx:${-side * 0.7}px;animation-delay:-${((yard / 6) % 5 * 1.3).toFixed(1)}s" cx="${x}" cy="${y - 0.9}" rx="0.15" ry="0.11" fill="${L.colors[1]}" stroke="#3c362e" stroke-width="0.06"/>` : ''),
+    link: (x, y, k, side, yard, L) => (k === 1 ? `<ellipse class="sfx-tumble sfx-anim" style="--dx:${-side * 0.7}px;animation-delay:-${(markerStep(yard) % 5 * 1.3).toFixed(1)}s" cx="${x}" cy="${y - 0.9}" rx="0.15" ry="0.11" fill="${L.colors[1]}" stroke="#3c362e" stroke-width="0.06"/>` : ''),
   },
   hive: { // Bug: beehive lanterns along the sideline light up in turn, each with a firefly circling it
     track: () => '',
@@ -245,7 +250,7 @@ const EDGES = {
   ropes: { // Clash: ring corner posts with padded tops, joined by ropes that twang in turn up the sideline
     track: () => '',
     marker: (x, y, k, side, yard, L) => `<ellipse cx="${x}" cy="${y + 0.95}" rx="0.55" ry="0.14" fill="#000" opacity="0.18"/><rect x="${x - 0.2}" y="${y - 0.5}" width="0.4" height="1.4" rx="0.1" fill="#3a3f4a" stroke="#1c1f26" stroke-width="0.08"/><rect x="${x - 0.42}" y="${y - 1.05}" width="0.84" height="0.7" rx="0.2" fill="${k === 1 ? '#3a6ad6' : L.colors[0]}" stroke="#1c1f26" stroke-width="0.09"/><rect x="${x - 0.28}" y="${y - 0.92}" width="0.56" height="0.16" rx="0.08" fill="#fff" opacity="0.5"/>`,
-    link: (x, y, k, side, yard, L) => `<g class="sfx-twang sfx-anim" style="${turn(yard, side, 0.26)}"><path d="M${x - 0.26} ${y - 0.5} V${y - 5.5}" stroke="${L.colors[0]}" stroke-width="0.14" fill="none"/><path d="M${x} ${y - 0.5} V${y - 5.5}" stroke="#f4f4f4" stroke-width="0.14" fill="none"/><path d="M${x + 0.26} ${y - 0.5} V${y - 5.5}" stroke="#3a6ad6" stroke-width="0.14" fill="none"/></g>`,
+    link: (x, y, k, side, yard, L) => `<g class="sfx-twang sfx-anim" style="${turn(yard, side, 0.26)}"><path d="M${x - 0.26} ${y - 0.5} V${y - 9.5}" stroke="${L.colors[0]}" stroke-width="0.14" fill="none"/><path d="M${x} ${y - 0.5} V${y - 9.5}" stroke="#f4f4f4" stroke-width="0.14" fill="none"/><path d="M${x + 0.26} ${y - 0.5} V${y - 9.5}" stroke="#3a6ad6" stroke-width="0.14" fill="none"/></g>`,
   },
   cauldron: { // Corrupt: bubbling cauldrons along the sideline; a bubble rises and pops from each in turn
     track: () => '',
@@ -274,10 +279,9 @@ export function edgeSvg(envId, cam, HW, Y, span) {
   const out = [];
   const b = fieldBorder(); // with the white paint around the field, the markers stand on the white, not on the grass
   for (const side of [-1, 1]) { const x = side * (b ? HW + b / 2 : HW - 0.45); out.push(E.track(x, span, L));
-    for (let yard = Math.ceil(cam.bottom / 6) * 6; yard < cam.top; yard += 6) {
-      if (yard < 0 || yard > 100) continue; // the markers stand along the field of play, not behind the end lines
-      const y = Y(yard + (side > 0 ? 3 : 0)); const k = Math.abs((yard / 6 + (side > 0 ? 1 : 0)) % 3);
-      if (yard + 6 <= 100) out.push(E.link(x, y, k, side, yard, L));
+    for (const yard of markerYards(cam)) { // both sidelines at the same yard: halfway between the numbers
+      const y = Y(yard); const k = (markerStep(yard) + (side > 0 ? 1 : 0)) % 3;
+      if (yard + MARKER_GAP <= 95) out.push(E.link(x, y, k, side, yard, L));
       out.push(E.marker(x, y, k, side, yard, L));
     } }
   return out.join('');
@@ -492,9 +496,8 @@ const MARKER = {
 export function homeEdgeSvg(venue, cam, HW, Y) {
   const L = venueLook(venue); if (!L?.region) return ''; const [P, S, A] = L.colors; const mk = MARKER[L.region.motif]; const out = [];
   const b = fieldBorder(); const x0 = b ? HW + b / 2 : HW - 0.45;
-  for (let yard = Math.ceil(cam.bottom / 6) * 6; yard < cam.top; yard += 6) {
-    if (yard < 0 || yard > 100) continue;
-    for (const side of [-1, 1]) out.push(mk(side * x0, Y(yard + (side > 0 ? 3 : 0)), P, S, A, side));
+  for (const yard of markerYards(cam)) {
+    for (const side of [-1, 1]) out.push(mk(side * x0, Y(yard), P, S, A, side));
   }
   return `<g class="home-edge" data-region="${L.region.label}">${out.join('')}</g>`;
 }

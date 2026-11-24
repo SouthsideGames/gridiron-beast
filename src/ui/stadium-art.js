@@ -5,7 +5,7 @@
 
 import { ENVIRONMENTS, WEATHER, STADIUM_VARIANTS } from '../data/stadiums.js';
 import { designField } from '../data/stadium-designs.js';
-import { lookFor, edgeSvg, homeEdgeSvg } from './stadium-fx.js';
+import { lookFor, edgeSvg, homeEdgeSvg, markerYards, MARKER_GAP } from './stadium-fx.js';
 
 const PATTERNS = {
   // Each: [width, height, inner svg, opacity] in yards. Low opacity, so yard lines, hashes and numbers stay on top and readable.
@@ -40,12 +40,12 @@ const SIDELINE_MOTION = {
   panels: '<rect x="-.18" y="-.86" width=".36" height=".55" rx=".1" fill="#cff8ff"/>',
 };
 
-/** Decor along both sidelines, every few yards of the visible window: under the players, half outside the field. */
+/** Decor along both sidelines halfway between the numbered lines (the 5, 15, ... 45 of both halves): under the players, half outside the field. */
 function sidelineDecor(env, cam, HW, Y) {
-  const out = []; const c = env.palette.decor; const start = Math.ceil(cam.bottom / 6) * 6;
-  for (let yard = start; yard < cam.top; yard += 6) {
+  const out = []; const c = env.palette.decor;
+  for (const yard of markerYards(cam)) {
     for (const side of [-1, 1]) {
-      const x = side * (HW - 0.45), y = Y(yard + (side > 0 ? 3 : 0)); const k = Math.abs((yard / 6 + (side > 0 ? 1 : 0)) % 3);
+      const n = Math.round((yard - 5) / MARKER_GAP); const x = side * (HW - 0.45), y = Y(yard); const k = (n + (side > 0 ? 1 : 0)) % 3;
       if (env.texture === 'ice') out.push(`<ellipse cx="${x}" cy="${y}" rx="0.9" ry="${1.6 + k * 0.4}" fill="${c}" opacity="0.75"/>`); // snowbanks
       else if (env.texture === 'lava') out.push(`<circle cx="${x}" cy="${y}" r="0.55" fill="#2a120c"/><circle cx="${x}" cy="${y}" r="0.32" fill="${c}" opacity="${0.55 + 0.15 * k}"/>`); // glowing vents
       else if (env.texture === 'leaves') out.push(`<circle cx="${x}" cy="${y}" r="${1.1 + k * 0.25}" fill="#174a2c"/><circle cx="${x - side * 0.3}" cy="${y - 0.3}" r="${0.7 + k * 0.2}" fill="${c}" opacity="0.7"/>`); // tree crowns
@@ -61,7 +61,8 @@ function sidelineDecor(env, cam, HW, Y) {
       if (env.texture === 'storm') {
         // Current jumps from this marker to the next one up the sideline. Each jump waits its turn (the delay follows the marker's
         // place on the field), so the electricity cycles along the sideline, marker to marker, on both sides.
-        const step = Math.round(yard / 6) + (side > 0 ? 3 : 0); const dy = -6; const j = side * 0.42;
+        if (yard + MARKER_GAP > 95) continue; // the last marker before the goal line has nothing further to jump to
+        const step = n + (side > 0 ? 3 : 0); const dy = -MARKER_GAP; const j = side * 0.42;
         out.push(`<path class="sfx-chain sfx-anim" style="animation-delay:-${(((7 - (step % 7)) % 7) * 0.26).toFixed(2)}s" d="M${x} ${y - 0.5} l${-j} ${dy * 0.17} ${j * 1.7} ${dy * 0.16} ${-j * 1.9} ${dy * 0.17} ${j * 1.6} ${dy * 0.16} ${-j * 0.4} ${dy * 0.17}" fill="none" stroke="#dff3ff" stroke-width=".24" stroke-linecap="round" stroke-linejoin="round"/>`);
       } else if (SIDELINE_MOTION[env.texture]) {
         out.push(`<g transform="translate(${x} ${y})"><g class="venue-detail venue-detail-${env.texture}" style="animation-delay:-${k * .85}s">${SIDELINE_MOTION[env.texture]}</g></g>`);

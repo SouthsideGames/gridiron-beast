@@ -199,7 +199,7 @@ test('Rock, Bug, Specter, Clash and Corrupt are designs only (Sky and Oracle bec
 
 test('Ice has still snowmen on its sidelines: nothing there moves', async () => {
   const { edgeSvg } = await import('../src/ui/stadium-fx.js'); const e = edgeSvg('frozen', { bottom: 35, top: 81 }, 27, (y) => 81 - y, 46);
-  assert.ok((e.match(/sfx-snowman/g) || []).length >= 14); assert.doesNotMatch(e, /sfx-anim/);
+  assert.equal((e.match(/sfx-snowman/g) || []).length, 10, 'one on each sideline at the 35, 45, 55, 65 and 75 (markers on the 5s, owner 2026-11-24)'); assert.doesNotMatch(e, /sfx-anim/);
 });
 
 // Checkpoint D revision.
