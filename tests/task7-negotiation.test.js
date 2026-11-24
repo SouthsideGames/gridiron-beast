@@ -23,21 +23,24 @@ const step = (x) => Math.round(x / 100) * 100;
 test('the renewal: an opening demand, two counteroffers with counters, a final decision; accepting the demand is binding and free; nothing past the limit', () => {
   const f = seasonDone(101); const items = F.offseasonPending(f).filter((i) => i.kind === 'monster');
   assert.ok(items.length >= 5);
-  let full = 0;
+  let full = 0, moved = 0;
   for (const i of items) {
     const n0 = F.renewalTalks(f, i.id); if (!n0 || n0.state !== 'active') continue;
     assert.equal(i.ask, n0.opening.salary, 'the book shows his opening demand'); assert.equal(n0.left, 2);
     const r1 = F.resolveContract(f, i.id, 'offer', { salary: step(n0.demand.salary * 0.88) }); assert.ok(r1.ok, r1.reason);
     const n1 = F.renewalTalks(f, i.id);
     if (r1.status === 'countered') {
-      assert.equal(n1.left, 1); assert.ok(r1.counter.salary < n0.demand.salary && r1.counter.salary >= step(n0.demand.salary * 0.88), 'a meaningful counter, between the offer and his demand');
-      const m = f.roster.find((x) => x.id === i.id); const R = E.reservationAt(f, m, f.club, r1.counter.years, r1.counter.bonus); if (R != null) assert.ok(r1.counter.salary >= R, 'never below his reservation');
+      const m = f.roster.find((x) => x.id === i.id); const R = E.reservationAt(f, m, f.club, r1.counter.years, r1.counter.bonus); if (R != null) assert.ok(r1.counter.salary >= Math.min(R, n0.demand.salary), 'never below his reservation (nor above his own demand, when that sits below it)');
+      // Between the offer and his demand. He holds firm (repeats his demand) only when his reservation already reaches it: the
+      // counter is never below his reservation (the second test bounds how often counters fail to move overall).
+      assert.equal(n1.left, 1); assert.ok(r1.counter.salary <= n0.demand.salary && r1.counter.salary >= step(n0.demand.salary * 0.88), 'a counter between the offer and his demand');
+      if (r1.counter.salary === n0.demand.salary) assert.ok(R != null && R >= n0.demand.salary - 100, 'he holds firm only when his reservation is his demand'); else moved++;
       const r2 = F.resolveContract(f, i.id, 'offer', { salary: step((r1.counter.salary + step(n0.demand.salary * 0.88)) / 2) }); assert.ok(['signed', 'declined'].includes(r2.status), `the second counteroffer gets a final decision (${r2.status})`);
       assert.equal(F.renewalTalks(f, i.id).left, 0); assert.equal(F.resolveContract(f, i.id, 'offer', { salary: 1 }).ok, false, 'nothing after the decision'); full++;
     } else assert.ok(['signed', 'declined'].includes(r1.status));
     if (full >= 3) break;
   }
-  assert.ok(full >= 1, 'at least one full two-counteroffer negotiation');
+  assert.ok(full >= 1, 'at least one full two-counteroffer negotiation'); assert.ok(moved >= 1, 'and at least one counter that comes down toward the offer');
   const left = F.offseasonPending(f).filter((i) => i.kind === 'monster' && F.renewalTalks(f, i.id)?.state === 'active')[0];
   if (left) { const a = F.resolveContract(f, left.id, 'sign'); assert.equal(a.status, 'signed', 'his demand, accepted, is binding'); const m = f.roster.find((x) => x.id === left.id); assert.equal(m.salary, left.ask); }
 });
