@@ -28,7 +28,7 @@ import { PLAYS, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.
 import { fxSvg, movementSvg, statusMarks } from './ability-fx.js';
 import { turfSvg } from './stadium-art.js';
 import { fieldBrand, brandEndZone, brandMidfield, LOGO_YARDS } from './field-branding.js';
-import { postsSvg, standsDepth, standSvg, wallSvg, apronSvg, borderSvg, barrierSvg, sideStandsSvg, SIDE_REACH, fieldBorder, FIELD_BORDER, STANDS_GRASS, STANDS_BARRIER, STANDS_GAP, FOOTBALL } from './stadium-fx.js';
+import { postsSvg, standsDepth, standSvg, bowlSvg, bowlDefs, apronSvg, borderSvg, barrierSvg, sideStandsSvg, SIDE_REACH, fieldBorder, FIELD_BORDER, STANDS_GRASS, STANDS_BARRIER, STANDS_GAP, FOOTBALL } from './stadium-fx.js';
 import { t as $t } from '../text/index.js';
 
 const SPAN = 46; // visible yards
@@ -108,14 +108,16 @@ export function fieldLayers(o) {
   // Line of scrimmage and line to gain.
   const ltg = Math.min(100, ballOn + toGo);
   if (!noLines) {
-    s += `<line x1="${-HW}" y1="${Y(ballOn)}" x2="${HW}" y2="${Y(ballOn)}" stroke="#4aa3ff" stroke-width="0.35"/>`;
-    if (ltg < 100) s += `<line x1="${-HW}" y1="${Y(ltg)}" x2="${HW}" y2="${Y(ltg)}" stroke="#ffb13d" stroke-width="0.35"/>`;
+    // Inside the sideline paint (owner 2026-11-24): the lines end where the white stripe begins, never over it.
+    const IN = HW - 0.3;
+    s += `<line x1="${-IN}" y1="${Y(ballOn)}" x2="${IN}" y2="${Y(ballOn)}" stroke="#4aa3ff" stroke-width="0.35"/>`;
+    if (ltg < 100) s += `<line x1="${-IN}" y1="${Y(ltg)}" x2="${IN}" y2="${Y(ltg)}" stroke="#ffb13d" stroke-width="0.35"/>`;
   }
   // Stadium Polish: what lies behind the end lines (the far stand with its crowd; the near wall). Over the turf and sidelines there.
   // A strip of grass runs between each end line and what stands behind it.
   // Behind the white: grass, the padded barrier, then the stand (far end) or the wall (near end), across the whole picture.
   if (cam.top > 110 + FIELD_BORDER) s += `${apronSvg(venue, -VW, Y(110 + FIELD_BORDER + STANDS_GRASS), VW * 2, STANDS_GRASS)}${barrierSvg(venue, -VW, Y(110 + STANDS_GAP), VW * 2, -1)}${cam.top > 110 + STANDS_GAP ? standSvg(venue, -VW, Y(110 + standsDepth()), VW * 2) : ''}`; // the stand only once it is in view
-  if (cam.bottom < -10 - FIELD_BORDER) s += `${apronSvg(venue, -VW, Y(-10 - FIELD_BORDER), VW * 2, STANDS_GRASS)}${barrierSvg(venue, -VW, Y(-10 - FIELD_BORDER - STANDS_GRASS), VW * 2, 1)}${cam.bottom < -10 - STANDS_GAP ? wallSvg(venue, -VW, Y(-10 - STANDS_GAP), VW * 2) : ''}`;
+  if (cam.bottom < -10 - FIELD_BORDER) s += `${apronSvg(venue, -VW, Y(-10 - FIELD_BORDER), VW * 2, STANDS_GRASS)}${barrierSvg(venue, -VW, Y(-10 - FIELD_BORDER - STANDS_GRASS), VW * 2, 1)}${cam.bottom < -10 - STANDS_GAP ? standSvg(venue, -VW, Y(-10 - STANDS_GAP), VW * 2, 'near') : ''}`;
   if (sideReach(span) > 0.05) { const side = sideStandsSvg(venue, cam, HW, Y); if (side) { s += side.svg; sideSymbols.push(...side.symbols); } }
   // Goal posts on the end lines (drawn flat from above: crossbar + uprights).
   for (const [end, dir] of [[110, 1], [-10, -1]]) if (cam.bottom - 1 < end && cam.top + 1 > end) { const y = Y(end) + (fieldBorder() ? -dir * 0.9 : dir * 0.6); s += `<g stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round"><line x1="-3" y1="${y}" x2="3" y2="${y}"/><line x1="-3" y1="${y}" x2="-3" y2="${y - dir * 2.4}"/><line x1="3" y1="${y}" x2="3" y2="${y - dir * 2.4}"/></g>${postsSvg(venue?.env, y, dir)}`; }
@@ -235,13 +237,17 @@ export function fieldLayers(o) {
   // them (ball effects, ball, read ring, effects, status marks, type badges). The groups carry no attributes: paint order and
   // pixels are those of the flat markup.
   const dynamic = `<g class="fv-pre">${pre}</g><g class="fv-pl">${players.map((x) => `<g>${x.html}</g>`).join('')}</g><g class="fv-post">${post}</g>`;
-  return { statics, dynamic, symbols, pre, players, post, span, clipId };
+  // The bowl of seats round the stadium (owner 2026-11-24): its own unclipped layer under the field, filling the box past the
+  // picture's edges (the svg shows overflow); its patterns go to <defs> once.
+  const bowl = fieldBorder() ? bowlSvg(viewHalf(span), span, Y(110 + standsDepth())) : '';
+  if (bowl) for (const d of bowlDefs()) if (!symbols.some((x) => x.id === d.id)) symbols.push(d);
+  return { statics, dynamic, symbols, pre, players, post, span, clipId, bowl };
 }
 
 /** The whole field as one SVG inner string: sprite definitions, the static layer, the dynamic layer. */
 export function fieldSvg(o) {
   const L = fieldLayers(o);
-  return `<defs class="fv-defs">${L.symbols.map((x) => x.symbol).join('')}</defs><g class="fv-static" clip-path="url(#${L.clipId})">${L.statics}</g><g class="fv-dyn" clip-path="url(#${L.clipId})">${L.dynamic}</g>`;
+  return `<defs class="fv-defs">${L.symbols.map((x) => x.symbol).join('')}</defs>${L.bowl ? `<g class="fv-bowl">${L.bowl}</g>` : ''}<g class="fv-static" clip-path="url(#${L.clipId})">${L.statics}</g><g class="fv-dyn" clip-path="url(#${L.clipId})">${L.dynamic}</g>`;
 }
 
 /**
@@ -271,6 +277,10 @@ export function fieldDraw(svg, o) {
   if (adoptedClip) { adoptedClip.setAttribute('id', clipId); st.ids.delete('fv-clip'); st.ids.add(clipId); }
   st.statics.setAttribute('clip-path', `url(#${clipId})`); st.dyn.setAttribute('clip-path', `url(#${clipId})`);
   for (const x of L.symbols) if (!st.ids.has(x.id)) { st.ids.add(x.id); st.defs.insertAdjacentHTML('beforeend', x.symbol); }
+  // The bowl's layer (unclipped, under the static layer): kept across draws, its markup replaced only when the camera moved it.
+  let bowlG = st.bowl?.parentNode === svg ? st.bowl : svg.querySelector(':scope > g.fv-bowl');
+  if (L.bowl) { if (!bowlG) { bowlG = svg.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'g'); bowlG.setAttribute('class', 'fv-bowl'); svg.insertBefore(bowlG, st.statics); } if (st.bowlStr !== L.bowl) { bowlG.innerHTML = L.bowl; st.bowlStr = L.bowl; } st.bowl = bowlG; }
+  else if (bowlG) { bowlG.remove(); st.bowl = null; st.bowlStr = null; }
   const clip = st.defs.querySelector(`#${clipId} rect`);
   if (clip) { clip.setAttribute('height', String(L.span)); clip.setAttribute('x', String(-viewHalf(L.span))); clip.setAttribute('width', String(viewHalf(L.span) * 2)); }
   const staticRedrawn = L.statics !== st.staticStr;

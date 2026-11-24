@@ -68,12 +68,12 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
       const defId = (defAvail.includes(choices.defensePlayId) ? choices.defensePlayId : null) || ctrl(R.opponent(tryTeam)).defensePlay(state, teams[R.opponent(tryTeam)], defAvail, tendencies[tryTeam], rng, teams[tryTeam], tendencies[R.opponent(tryTeam)]);
       done();
       const res = R.attemptTwoPoint(state, teams, offId, defId);
-      return { kind: 'try', text: res.text, sim: res.sim, offensePlayId: offId, defensePlayId: defId };
+      return { kind: 'try', text: res.text, sim: res.sim, offensePlayId: offId, defensePlayId: defId, good: !!res.good, tryTeam };
     }
     done();
     const kicking = state.tryTeam;
     const res = R.attemptTryKick(state, teams);
-    return { kind: 'try', text: res.text, kicking, from: 100 - FIELD.patSpot, res };
+    return { kind: 'try', text: res.text, kicking, from: 100 - FIELD.patSpot, res, good: !!res.good, tryTeam: kicking };
   }
   if (state.phase !== 'scrimmage') { done(); return null; }
 

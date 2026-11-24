@@ -12,10 +12,10 @@ import { DEVICE_SETTING_KEYS } from '../src/ui/device-settings.js';
 const play = (result, offenseSide, { sim = {}, ...rest } = {}) => ({ ...rest, sim: { result, stats: {}, ...sim }, offenseSide });
 
 test('touchdowns, interceptions, sacks and made field goals each get their own reaction, sized by the approved durations', () => {
-  assert.deepEqual(stadiumReaction(play('touchdown', 'home')), { kind: 'td', level: 'major', side: 'home', ms: 2600 });
+  assert.deepEqual(stadiumReaction(play('touchdown', 'home')), { kind: 'td', level: 'major', side: 'home', ms: 2600, hold: true }, 'a score is cheered until the next play (owner 2026-11-24)');
   assert.deepEqual(stadiumReaction(play('interception', 'away')), { kind: 'int', level: 'major', side: 'home', ms: 1300 });
   assert.deepEqual(stadiumReaction(play('sack', 'away')), { kind: 'sack', level: 'minor', side: 'home', ms: 600 });
-  assert.deepEqual(stadiumReaction({ kind: 'field_goal', scored: true, kicking: 'home', offenseSide: 'home' }), { kind: 'fg', level: 'major', side: 'home', ms: 1300 });
+  assert.deepEqual(stadiumReaction({ kind: 'field_goal', scored: true, kicking: 'home', offenseSide: 'home' }), { kind: 'fg', level: 'major', side: 'home', ms: 1300, hold: true });
   assert.ok(REACTION_MS.td >= 2000 && REACTION_MS.td <= 3000 && REACTION_MS.int >= 1000 && REACTION_MS.int <= 1500 && REACTION_MS.fumble >= 800 && REACTION_MS.fumble <= 1200 && REACTION_MS.sack >= 400 && REACTION_MS.sack <= 700 && REACTION_MS.fg >= 1000 && REACTION_MS.fg <= 1500);
   assert.ok(REACTION_MS.sack < REACTION_MS.int && REACTION_MS.int < REACTION_MS.td, 'a sack is smaller than a turnover, a turnover smaller than a touchdown');
 });
@@ -90,8 +90,8 @@ test('the stand: behind the far end zone only, in view only near it, and the fie
     assert.doesNotMatch(fieldSvg({ venue, ballOn: 50 }), /sfx-stand|sfx-wall/); assert.doesNotMatch(fieldSvg({ venue, ballOn: 79 }), /sfx-stand/);
     const near = fieldSvg({ venue, ballOn: 92 }); assert.match(near, /sfx-stand/); assert.ok(near.indexOf('sfx-border') < near.indexOf('sfx-apron') && near.indexOf('sfx-apron') < near.indexOf('sfx-barrier') && near.indexOf('sfx-barrier') < near.indexOf('sfx-stand') && near.indexOf('sfx-stand') < near.indexOf('class="sfx-post"'), 'white paint, grass, the barrier, then the crowd, with the goal posts in front');
     assert.match(fieldSvg({ venue, ballOn: 82 }), /sfx-apron/); assert.doesNotMatch(fieldSvg({ venue, ballOn: 82 }), /sfx-crowd-img|class="sfx-stand"><rect[^>]*y="0"/);
-    const own = fieldSvg({ venue, ballOn: 2 }); assert.match(own, /sfx-barrier/, 'the barrier closes the picture behind the near end zone'); assert.doesNotMatch(own, /sfx-stand|sfx-wall/, 'no crowd there, and the wall behind the barrier is drawn only when it is in view');
-    assert.match(fieldSvg({ venue, ballOn: 2, camera: { bottom: -21, top: 25 } }), /sfx-wall/);
+    const own = fieldSvg({ venue, ballOn: 2 }); assert.match(own, /sfx-barrier/, 'the barrier closes the picture behind the near end zone'); assert.doesNotMatch(own, /sfx-stand|sfx-wall/, 'no crowd there, and the stand behind the barrier is drawn only when it is in view');
+    assert.match(fieldSvg({ venue, ballOn: 2, camera: { bottom: -21, top: 25 } }), /sfx-stand sfx-stand-near/, 'fans (seen from behind) behind the near end zone, not a bare wall (owner 2026-11-24)');
     const full = kickoffRevealHtml(venue, 'full'); assert.ok(full.includes(`rx="${FOOTBALL.rx}" ry="${FOOTBALL.ry}" fill="${FOOTBALL.fill}"`), 'the reveal shows the game\'s own football');
     assert.match(fieldSvg({ venue, ballOn: 30, frame: { ball: [0, 0, 0], off: [], def: [] } }), new RegExp(`rx="${FOOTBALL.rx}" ry="${FOOTBALL.ry}" fill="${FOOTBALL.fill}"`));
   } finally { setStadiumScene(null); }
