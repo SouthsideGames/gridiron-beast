@@ -20,6 +20,8 @@ Selected RhosGFX Vector Icon Pack PRO SVG artwork supplied by the project owner 
 | League | General / Trophy |
 | More | UI / Hamburger Menu |
 
+Map (🗺), Coaching Staff (👥), Type Chart (🔺), Stadiums (🏟), History scroll (📜) and Beast Dex (📟) are drawn in-house in the same flat 64×64 style (2026-11-23 polish pass), not taken from the pack.
+
 The shared renderer maps common pictorial decorations to the selected art; unneeded pictorial decorations are omitted. Category labels and Surprise Me are text-only. Ordinary arrows, copyright characters, saved data and existing SVG monster/field artwork are preserved. Icons are decorative; existing labels and aria-labels remain. Router screens and sheets use the renderer, as do incremental football controls. Directly drawn SVG scenes and specialist incremental panels are intentionally not rewritten; review remaining pictographs in those views during browser validation.
 
 ## Validation

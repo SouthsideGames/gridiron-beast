@@ -16,6 +16,7 @@ import { reviews, setReview } from '../franchise/review-store.js';
 import { esc } from './dom.js';
 import { CARD_CHECK, CARD_STATUS_LABEL, CARD_PROPOSALS } from '../data/card-check.js';
 import { REVIEW_FP_ALIASES } from '../data/review-fp-aliases.js';
+import { BUILD } from '../version.js';
 
 function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 
@@ -139,6 +140,14 @@ export function queueText(q = reviewQueue()) {
   return q.plays.length ? part(q.plays.length, 'play') : '';
 }
 export const devNoticesOn = (settings) => settings?.devNotices !== false;
+/**
+ * Whether players see the developer review notices (the start-up pop-up and the counts on Developer buttons). Test builds: on
+ * unless switched off, as before. Released builds (owner 2026-11-23): off unless switched on in Settings, so playtesters on the
+ * live game are never told about the review queue.
+ */
+export const devNoticesActive = (settings, build = BUILD) => (build?.test ? settings?.devNotices !== false : settings?.devNotices === true);
+/** The settings to hand devBadge / cardBadge where a player can see them. */
+export const devNoticeSettings = (settings, build = BUILD) => ({ ...(settings || {}), devNotices: devNoticesActive(settings, build) });
 /** Small red count for a button, or ''. */
 export function devBadge(settings, n = reviewQueue().total) { return devNoticesOn(settings) && n ? `<span class="tab-badge inline-badge">${n > 99 ? '99+' : n}</span>` : ''; }
 

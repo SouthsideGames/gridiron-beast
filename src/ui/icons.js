@@ -49,10 +49,15 @@ const ART = {
   "target": "<g transform=\"scale(1 1) translate(-0 -0)\"><g><g><rect width=\"64\" height=\"64\" opacity=\"0\"></rect><path d=\"M57.5,28.8h-4.4c-1.39-9.22-8.68-16.5-17.9-17.9V6.5c0-1.1-.9-2-2-2h-2.4c-1.1,0-2,.9-2,2v4.4c-9.22,1.39-16.5,8.68-17.9,17.9H6.5c-1.1,0-2,.9-2,2v2.4c0,1.1,.9,2,2,2h4.4c1.39,9.22,8.68,16.5,17.9,17.9v4.4c0,1.1,.9,2,2,2h2.4c1.1,0,2-.9,2-2v-4.4c9.22-1.39,16.5-8.68,17.9-17.9h4.4c1.1,0,2-.9,2-2v-2.4c0-1.1-.9-2-2-2Zm-22.3,17.81v-3.8c0-1.1-.9-2-2-2h-2.4c-1.1,0-2,.9-2,2v3.8c-5.69-1.24-10.17-5.73-11.41-11.41h3.8c1.1,0,2-.9,2-2v-2.4c0-1.1-.9-2-2-2h-3.8c1.24-5.69,5.73-10.17,11.41-11.41v3.8c0,1.1,.9,2,2,2h2.4c1.1,0,2-.9,2-2v-3.8c5.69,1.24,10.17,5.73,11.41,11.41h-3.8c-1.1,0-2,.9-2,2v2.4c0,1.1,.9,2,2,2h3.8c-1.24,5.69-5.73,10.17-11.41,11.41Z\"></path></g></g></g>",
   "trade": "<g transform=\"scale(0.5 0.5) translate(-0 -0)\"><g><g><path d=\"M72.6,67.82h-28v-7.4a3.19,3.19,0,0,0-5-2.6L9.34,79.25a3.19,3.19,0,0,0,0,5.2l30.19,21.43a3.19,3.19,0,0,0,5-2.6V95.87h28a3.19,3.19,0,0,0,3.19-3.19V71A3.19,3.19,0,0,0,72.6,67.82Z\" fill=\"currentColor\"></path><path d=\"M118.66,43.55,88.47,22.12a3.19,3.19,0,0,0-5,2.6v7.41h-28a3.19,3.19,0,0,0-3.19,3.19V57a3.19,3.19,0,0,0,3.19,3.19h28v7.4a3.19,3.19,0,0,0,5,2.6l30.19-21.43A3.19,3.19,0,0,0,118.66,43.55Z\" fill=\"currentColor\"></path></g></g></g>",
   "upgrade": "<g transform=\"scale(0.5 0.5) translate(-0 -0)\"><g><g><polygon points=\"24.95 88.01 27.03 120 64 99.4 100.97 120 103.05 88.01 64 64.97 24.95 88.01\" fill=\"currentColor\"></polygon><polygon points=\"64 8 21.53 35.34 23.98 73.01 64 48.79 104.02 73.01 106.47 35.34 64 8\" fill=\"currentColor\"></polygon></g></g></g>",
+  "people": "<g><circle cx=\"22\" cy=\"20\" r=\"9\"></circle><circle cx=\"44\" cy=\"22\" r=\"7.5\"></circle><path d=\"M5 52c0-10.5 7.6-18 17-18s17 7.5 17 18v2H5Z\"></path><path d=\"M41 54v-2c0-6.4-2.1-12-5.7-16 2.4-1.3 5.2-2 8.2-2 8.3 0 14.5 6.3 14.5 15v5Z\"></path></g>",
+  "types": "<g><path d=\"M32 9 56 51H8Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"5\" stroke-linejoin=\"round\"></path><circle cx=\"32\" cy=\"10\" r=\"7.5\"></circle><circle cx=\"8.5\" cy=\"51\" r=\"7.5\"></circle><circle cx=\"55.5\" cy=\"51\" r=\"7.5\"></circle><path d=\"M32 30v10M27 35h10\" stroke=\"currentColor\" stroke-width=\"4\" stroke-linecap=\"round\"></path></g>",
+  "stadium": "<g><path d=\"M6 28c0-7.7 11.6-14 26-14s26 6.3 26 14v12c0 7.7-11.6 14-26 14S6 47.7 6 40Z\" opacity=\".55\"></path><ellipse cx=\"32\" cy=\"29\" rx=\"18\" ry=\"8\"></ellipse><path d=\"M14 14V6l7 3-7 3M50 14V6l-7 3 7 3\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linejoin=\"round\"></path></g>",
+  "scroll": "<g><path d=\"M16 8h32a8 8 0 0 1 8 8v2H44v30a8 8 0 0 1-8 8H14a8 8 0 0 1-8-8v-4h12V16a8 8 0 0 0-2-8Z\" opacity=\".6\"></path><path d=\"M24 22h14M24 30h14M24 38h10\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\"></path></g>",
+  "dex": "<g><rect x=\"12\" y=\"5\" width=\"40\" height=\"54\" rx=\"8\" opacity=\".55\"></rect><rect x=\"18\" y=\"12\" width=\"28\" height=\"22\" rx=\"3\"></rect><circle cx=\"24\" cy=\"45\" r=\"5\"></circle><path d=\"M35 42h11M35 49h11\" stroke=\"currentColor\" stroke-width=\"3.4\" stroke-linecap=\"round\"></path></g>",
   "map": "<g><path d=\"M6 14.5 22 8l20 6.5L58 8v41.5L42 56l-20-6.5L6 56Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"5\" stroke-linejoin=\"round\"></path><path d=\"M22 8v41.5M42 14.5V56\" stroke=\"currentColor\" stroke-width=\"4\" opacity=\".55\"></path><path d=\"M32 18c-5 0-8.5 3.6-8.5 8.2 0 5.9 8.5 14.3 8.5 14.3s8.5-8.4 8.5-14.3C40.5 21.6 37 18 32 18Zm0 11.4a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4Z\" fill=\"currentColor\"></path></g>",
 };
 const ICON_KEYS = Object.freeze({
-  '🏠': 'home', '🐾': 'paw', '📋': 'clipboard', '🏆': 'trophy', '☰': 'menu', '🗺': 'map',
+  '🏠': 'home', '🐾': 'paw', '📋': 'clipboard', '🏆': 'trophy', '☰': 'menu', '🗺': 'map', '👥': 'people', '🔺': 'types', '🏟': 'stadium', '📟': 'dex',
   '⚙': 'settings', '⚠': 'warning', '🔔': 'bell', '📖': 'book', '📘': 'book', '📕': 'book',
   '📅': 'calendar', '🗓': 'calendar', '📊': 'stats', '📈': 'stats', '✅': 'check', '❌': 'close',
   '🔒': 'lock', '⛔': 'warning', 'ℹ': 'info', '🔍': 'search', '🔎': 'search', '👀': 'search',
@@ -62,7 +67,7 @@ const ICON_KEYS = Object.freeze({
   '📰': 'news', '🗞': 'news', '⏸': 'pause', '⏭': 'skip', '⏩': 'skip', '💾': 'save', '⬇': 'download',
   '🔊': 'sound', '🔇': 'mute', '❓': 'question', '💬': 'message', '✉': 'mail', '🚪': 'door',
   '🎁': 'gift', '☠': 'skull', '🎯': 'target', '🧭': 'location', '🏅': 'trophy', '👑': 'trophy',
-  '📜': 'clipboard', '📝': 'clipboard', '📄': 'clipboard', '🤝': 'trade', '🔁': 'trade', '⬆': 'upgrade',
+  '📜': 'scroll', '📝': 'clipboard', '📄': 'clipboard', '🤝': 'trade', '🔁': 'trade', '⬆': 'upgrade',
 });
 export const iconNames = () => Object.keys(ART);
 /** Fixed, trusted artwork only. Decorative icons accompany labels or an existing accessible button name. */

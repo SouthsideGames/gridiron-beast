@@ -34,7 +34,7 @@ import { portraitSprite } from '../pixel-monster.js';
 import { applyFlashPref } from '../flash-pref.js';
 import { applyFrameRate, frameRateOf } from '../frame-rate.js';
 import { applyStadiumFx, STADIUM_FX_LEVELS } from '../stadium-fx.js';
-import { reviewQueue, queueText, devBadge, devNoticesOn, abilityQueueText, focusReviewer } from '../dev-review.js';
+import { reviewQueue, queueText, devBadge, devNoticesOn, devNoticesActive, devNoticeSettings, abilityQueueText, focusReviewer } from '../dev-review.js';
 import { t } from '../../text/index.js';
 import { t as $t } from '../../text/index.js';
 
@@ -71,7 +71,7 @@ export function registerMenuScreens(Router, app) {
           ${tile('achievements', '🏅', t('menu.achievements'), `${Object.keys(achievementsData().earned).length}/${ACHIEVEMENTS.length}`)}
           ${hof ? tile('hof', '🏛️', t('menu.hall_of_fame'), hof) : ''}
         </div>
-        <div class="grid2" style="margin-top:12px"><button class="btn block menu-util" data-action="go" data-screen="settings">${t('menu.settings')}</button><button class="btn block badge-host menu-util" data-action="go" data-screen="developer">${t('menu.developer')}${devBadge(app.settings)}</button></div>
+        <div class="grid2" style="margin-top:12px"><button class="btn block menu-util" data-action="go" data-screen="settings">${t('menu.settings')}</button><button class="btn block badge-host menu-util" data-action="go" data-screen="developer">${t('menu.developer')}${devBadge(devNoticeSettings(app.settings))}</button></div>
         <p class="center dim" style="margin-top:16px;font-size:12px">${t('menu.gridiron_beast_build_southside_games', { build: esc(buildLabel()) })}</p>`;
     },
     mount(root, ctx) {
@@ -135,7 +135,7 @@ export function registerMenuScreens(Router, app) {
           ${toggle('evosound', s.evoSound, t('menu.evolution_sounds_off_by_default_the'))}
           <p class="set-note">Audio starts after a tap. These settings apply across franchises.</p>`)}
         ${savePanelHtml(app)}
-        ${group('dev', 'Developer', toggle('devnotices', s.devNotices !== false, t('menu.developer_review_notices_new_or_changed')))}
+        ${group('dev', 'Developer', toggle('devnotices', devNoticesActive(s), t('menu.developer_review_notices_new_or_changed')))}
         <p class="dim set-foot">${t('menu.saves_from_earlier_versions_are_never')}</p>
         <p class="center dim set-foot">${t('menu.build_files_if_this_does_not', { build: esc(buildLabel()), gbFiles: globalThis.__gbFiles === 'mapped' ? t('menu.up_to_date') : globalThis.__gbFiles === 'refreshed' ? 'refreshed' : 'checking' })}</p>`;
     },
@@ -174,16 +174,16 @@ export function registerMenuScreens(Router, app) {
         ${q.total ? '' : `<div class="panel tight dim">${t('menu.nothing_waiting_for_review')}</div>`}
         <div class="stack">
         <button class="btn block" data-action="go" data-screen="test-session">Test Session · Problem Recorder</button>
-        <button class="btn block badge-host" data-action="go" data-screen="audit">${t('menu.playbook_audit')}${devBadge(app.settings, q.plays.length)}</button>
+        <button class="btn block badge-host" data-action="go" data-screen="audit">${t('menu.playbook_audit')}${devBadge(devNoticeSettings(app.settings), q.plays.length)}</button>
         <button class="btn block" data-action="go" data-screen="practice">${t('menu.practice_field')}</button>
         <button class="btn block" data-action="go" data-screen="ai-lab">${t('menu.ai_testing_lab_qb_decisions')}</button>
         <button class="btn block" data-action="go" data-screen="attr-lab">${t('menu.attribute_testing_lab')}</button>
-        <button class="btn block badge-host" data-action="go" data-screen="beast-dex-reviewer">Beast Dex Reviewer${devBadge(app.settings, q.beastdex.outstanding)}</button>
+        <button class="btn block badge-host" data-action="go" data-screen="beast-dex-reviewer">Beast Dex Reviewer${devBadge(devNoticeSettings(app.settings), q.beastdex.outstanding)}</button>
         <button class="btn block" data-action="go" data-screen="monster-cry-reviewer">Monster Cry Reviewer</button>
         <button class="btn block" data-action="go" data-screen="evo-preview">${t('menu.preview_evolution')}</button>
-        <button class="btn block badge-host" data-action="go" data-screen="ability-reviewer">${t('menu.ability_reviewer')}${devBadge(app.settings, q.football.outstanding)}</button>
+        <button class="btn block badge-host" data-action="go" data-screen="ability-reviewer">${t('menu.ability_reviewer')}${devBadge(devNoticeSettings(app.settings), q.football.outstanding)}</button>
         <button class="btn block" data-action="go" data-screen="ability-balance">${t('menu.ability_balance')}</button>
-        <button class="btn block badge-host" data-action="go" data-screen="clash-ability-reviewer">${t('menu.clash_ability_reviewer')}${devBadge(app.settings, q.clash.outstanding)}</button>
+        <button class="btn block badge-host" data-action="go" data-screen="clash-ability-reviewer">${t('menu.clash_ability_reviewer')}${devBadge(devNoticeSettings(app.settings), q.clash.outstanding)}</button>
         <button class="btn block" data-action="go" data-screen="clash-lab">${t('menu.clash_lab_beast_clash_phase_1')}</button>
         ${app.f ? `<h3>${t('menu.feature_testing_this_franchise')}</h3><p class="dim" style="margin-top:0">${t('menu.for_trying_the_new_features_without')}</p>
         <div class="row" style="gap:6px;flex-wrap:wrap">${['aurodrax', 'tempestra', 'titanolith', 'nyxshade', 'glacivern', 'elderoot'].map((sp) => `<button class="btn small" data-action="dev-legend" data-sp="${sp}">+ ${sp[0].toUpperCase() + sp.slice(1)}</button>`).join('')}</div>
@@ -284,20 +284,29 @@ export function registerMenuScreens(Router, app) {
       return `<div class="stack">
         <button class="btn block" data-action="go" data-screen="dex">${t('menu.beast_dex_2')} <span class="dim mono">${dexCounts(f).all.seen}/${dexCounts(f).all.total}</span></button>
         <button class="btn block" data-action="go" data-screen="guide">${t('menu.guide')} <span class="dim">${t('menu.guide_note')}</span></button>
-        <button class="btn block" data-action="go" data-screen="settings">${t('menu.settings')}</button>
+        <button class="btn block" data-action="go" data-screen="settings">${t('menu.settings')} <span class="dim">${t('menu.settings_note')}</span></button>
         <button class="btn block" data-action="menu">${t('menu.main_menu')}</button></div>`;
     },
     mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), menu: () => Router.go('menu', {}, { reset: true }) }); },
   });
   // The Guide (owner 2026-11-23): the reference pages that used to sit loose on More.
+  // The Guide (owner 2026-11-23): How to Play and the reference pages, each a card with a small picture and a line on what it is.
+  const GUIDE_ART = {
+    howto: `<svg viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="12" fill="#1e4a33"/><path d="M8 14h40M8 42h40" stroke="#e9f4ec" stroke-width="2" opacity=".5"/><g stroke="#e9f4ec" stroke-width="1.4" opacity=".35"><path d="M16 14v28M28 14v28M40 14v28"/></g><ellipse cx="28" cy="28" rx="11" ry="7" fill="#8a4a24" stroke="#e9f4ec" stroke-width="1.4" transform="rotate(-28 28 28)"/><path d="M24 30l8-4M25 27l2 2M28 25.6l2 2M31 24l2 2" stroke="#e9f4ec" stroke-width="1.3"/></svg>`,
+    stats: `<svg viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="12" fill="#17302a"/>${[[10, 30, '#4ade80'], [20, 18, '#facc15'], [30, 26, '#60a5fa'], [40, 12, '#f87171']].map(([x, h, c]) => `<rect x="${x}" y="${44 - h}" width="7" height="${h}" rx="2" fill="${c}"/>`).join('')}<path d="M8 45H48" stroke="#b7cdc0" stroke-width="2"/></svg>`,
+    types: `<svg viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="12" fill="#17302a"/><path d="M28 12L44 40H12Z" fill="none" stroke="#b7cdc0" stroke-width="1.6" stroke-dasharray="3 3"/>${[[28, 12, 14], [44, 40, 200], [12, 40, 120]].map(([x, y, h]) => `<circle cx="${x}" cy="${y}" r="8" fill="hsl(${h} 70% 50%)" stroke="#0d1a14" stroke-width="2"/>`).join('')}</svg>`,
+    stadiums: `<svg viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="12" fill="#17302a"/><ellipse cx="28" cy="30" rx="23" ry="17" fill="#5a6b7a"/><ellipse cx="28" cy="30" rx="17" ry="11" fill="#236b49"/><path d="M15 30h26M28 20v20" stroke="#e9f4ec" stroke-width="1.2" opacity=".7"/><path d="M12 15V8l6 2.5-6 2.5M44 15V8l-6 2.5 6 2.5" fill="#facc15" stroke="#facc15" stroke-width="1.4" stroke-linejoin="round"/></svg>`,
+  };
   Router.registerScreen('guide', {
     title: t('menu.guide_title'),
     render() {
-      return `<div class="stack">
-        <button class="btn block" data-action="statguide">${t('menu.what_the_stats_mean')}</button>
-        <button class="btn block" data-action="typechart">${t('menu.type_chart')} <span class="dim">${t('menu.strengths_and_weaknesses')}</span></button>
-        <button class="btn block" data-action="stadiums">${t('menu.stadiums')} <span class="dim">${t('menu.every_clubs_field')}</span></button></div>`;
+      const card = (action, art, title, note) => `<button class="guide-card" data-action="${action}"><span class="guide-art">${GUIDE_ART[art]}</span><span class="guide-text"><b>${title}</b><span class="dim">${note}</span></span><span class="guide-go" aria-hidden="true">›</span></button>`;
+      return `<p class="muted" style="margin-top:0">${t('menu.guide_intro')}</p><div class="guide-list">
+        ${card('howto', 'howto', t('menu.how_to_play'), t('menu.how_to_play_note'))}
+        ${card('statguide', 'stats', t('menu.what_the_stats_mean_2'), t('menu.stats_note'))}
+        ${card('typechart', 'types', t('menu.type_chart_2'), t('menu.strengths_and_weaknesses_note'))}
+        ${card('stadiums', 'stadiums', t('menu.stadiums_2'), t('menu.stadiums_note'))}</div>`;
     },
-    mount(root) { delegate(root, { statguide: () => openStatGuide('QB'), typechart: () => openTypeChart(app.f?.roster?.[0]?.type || 'Fire'), stadiums: () => sheet(stadiumListHtml(app.f), { title: t('menu.stadiums_2') }) }); },
+    mount(root) { delegate(root, { howto: () => Router.go('guidebook'), statguide: () => openStatGuide('QB'), typechart: () => openTypeChart(app.f?.roster?.[0]?.type || 'Fire'), stadiums: () => sheet(stadiumListHtml(app.f), { title: t('menu.stadiums_2') }) }); },
   });
 }
