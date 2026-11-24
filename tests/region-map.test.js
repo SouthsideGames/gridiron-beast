@@ -38,3 +38,19 @@ test('no games are drawn in the offseason', () => {
   const f = fresh(); f.season.finished = true; assert.deepEqual(mapWeekGames(f), []);
   assert.doesNotMatch(regionMapSvg(f, { mode: 'week' }), /class="map-route[ "]/);
 });
+test('This Week shows each club\'s record and the score of every game already played', async () => {
+  const f = fresh(); const g = mapWeekGames(f)[0];
+  f.season.results.push({ week: f.season.week, home: g.home, away: g.away, homeScore: 24, awayScore: 17 });
+  f.season.records[g.home].w = 1; f.season.records[g.away].l = 1;
+  const svg = regionMapSvg(f, { mode: 'week' });
+  assert.equal((svg.match(/class="map-score/g) || []).length, 1); assert.match(svg, />24–17</);
+  assert.equal((svg.match(/class="map-rec"/g) || []).length, 32); assert.doesNotMatch(regionMapSvg(f, { mode: 'all' }), /map-rec|map-score/);
+});
+test('a region\'s sheet lists its four clubs in standing order with their records and names its gyms', async () => {
+  const { mapRegionHtml } = await import('../src/ui/screens/league-hub.js');
+  const f = fresh(); const html = mapRegionHtml(f, 'Redrock');
+  assert.equal((html.match(/data-action="regionclub"/g) || []).length, 4);
+  assert.match(html, /Gym Leaders: .*Canyon \(Earth\).*Thunder Mesa \(Electric\)/);
+  assert.match(mapRegionHtml(f, 'Golden Valley'), /no Gym Leaders here/);
+  assert.match(regionMapSvg(f, {}), /data-action="mapregion" data-division="Azure Isles"/);
+});

@@ -16,6 +16,14 @@ srv = socketserver.TCPServer(('127.0.0.1', 0), lambda *a, **k: Quiet(*a, directo
 problems, errors = [], []
 def shot(page, name):
     if SHOTS: page.screenshot(path=os.path.join(SHOTS, f'{W}-{name}.png'))
+def clear_scenes(page):
+    # An Apex discovery may open on the monster card (it is allowed there); dismiss it the way a player would before testing.
+    for _ in range(6):
+        if not page.query_selector('.apex-scene'): return
+        for sel in ['[data-apex="skip"]', '[data-apex="continue"]']:
+            b = page.query_selector(f'.apex-scene {sel}')
+            if b and b.is_visible(): b.click(); break
+        page.wait_for_timeout(250)
 def overflow(page): return page.evaluate("() => document.documentElement.scrollWidth - window.innerWidth")
 with sync_playwright() as pw:
     b = pw.chromium.launch(); ctx = b.new_context(viewport={'width': W, 'height': H}, device_scale_factor=2, is_mobile=True, has_touch=True); page = ctx.new_page()
@@ -64,7 +72,7 @@ with sync_playwright() as pw:
         page.touchscreen.tap(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2); page.wait_for_timeout(300)
         txt = page.evaluate("() => document.querySelector('.sheet')?.innerText || ''")
         if 'Matchup' not in txt or ('Type advantage' not in txt and 'Type disadvantage' not in txt and 'wildcard' not in txt): problems.append('panel did not open with a verdict: ' + txt[:200])
-        if 'not permanent stat increases' not in txt: problems.append('panel lacks the situational note')
+        if 'not to permanent ratings' not in txt: problems.append('panel lacks the situational note')
         if '%' not in txt: problems.append('panel lacks the modifier')
         shot(page, '2-panel')
         after = page.evaluate("() => { const G = __gb.f.game; return JSON.stringify([G.state.playCount, G.state.clock, G.selected, !!document.querySelector('#field image, #field svg')]) }")
@@ -100,7 +108,7 @@ with sync_playwright() as pw:
                 page.wait_for_timeout(50)
             if page.query_selector('.sheet-backdrop .tm-panel'): problems.append('a matchup popup appeared after the snap')
     # monster card and More
-    page.evaluate("async () => { const R = await import('/src/ui/router.js'); R.go('monster', { id: __gb.f.roster[0].id }); }"); page.wait_for_timeout(300)
+    page.evaluate("async () => { const R = await import('/src/ui/router.js'); R.go('monster', { id: __gb.f.roster[0].id }); }"); page.wait_for_timeout(300); clear_scenes(page)
     btn = page.query_selector('[data-action=typechart]')
     if not btn: problems.append('no Type Chart button on the monster card')
     else:
@@ -108,7 +116,7 @@ with sync_playwright() as pw:
         if 'Strong against' not in page.evaluate("() => document.querySelector('.sheet')?.innerText || ''"): problems.append('chart did not open from the monster card')
         if overflow(page) > 0: problems.append('overflow on the chart from the card')
         page.click('.sheet [data-action=sheet-close]')
-    page.evaluate("async () => (await import('/src/ui/router.js')).go('more')"); page.wait_for_timeout(200)
+    page.evaluate("async () => (await import('/src/ui/router.js')).go('more')"); page.wait_for_timeout(200); clear_scenes(page)
     if page.query_selector('[data-screen=guide]'): page.click('[data-screen=guide]'); page.wait_for_timeout(200)
     if not page.query_selector('[data-action=typechart]'): problems.append('no Type Chart entry in More > Guide')
     else:

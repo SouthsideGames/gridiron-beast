@@ -3,7 +3,7 @@
 // signature monster, the gym legendaries) with their 20-season continuity. Every monster name opens its career. Reads only.
 
 import { teamLogo, logoBody } from '../team-logo.js';
-import { esc, delegate } from '../dom.js';
+import { esc, delegate, sheet } from '../dom.js';
 import { yearOf } from '../../data/calendar.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { careerLink } from '../career-ui.js';
@@ -21,6 +21,7 @@ import { REGIONS, CLUB_NAMES } from '../../data/club-identity.js';
 import { GYM_BY_CLUB } from '../../data/gyms.js';
 import { TYPES } from '../../data/monsters.js';
 import { stadiumFor, ENVIRONMENTS } from '../../data/stadiums.js';
+import { venueHtml } from '../stadium-preview.js';
 
 const TAB_KEY = 'gridiron-beast-v7-league-tab';
 const TABS = [['clubs', $t('league.clubs')], ['leaders', $t('league.leaders')], ['moves', $t('league.moves')], ['races', $t('league.races')], ['rivals', $t('league.rivals')]];
@@ -262,13 +263,17 @@ export function regionMapSvg(f, { mode = 'all', sel = null } = {}) {
   const koruun = `<g clip-path="url(#map-koruun)">${full} fill="${R('Kingsport')}"/><g clip-path="url(#map-k-east)">${full} fill="${R('Greenheart')}"/></g><g clip-path="url(#map-k-south)">${full} fill="${R('Everwild')}"/></g></g>`;
   const isles = MAP_LAND.isles.map((d) => `<path d="${d}" fill="${R('Azure Isles')}" filter="url(#map-shadow)"/>${outline(d, 1.2)}`).join('')
     + ISLE_CENTERS.map(([cx, cy, a, b], i) => `<g transform="translate(${cx + (i % 2 ? -a * 0.62 : a * 0.6)} ${cy + (i % 2 ? b * 0.2 : -b * 0.25)}) scale(.85)">${MOTIF.palm()}</g>`).join('');
-  const labels = Object.entries(MAP_REGIONS).map(([d, c]) => `<text class="map-region" x="${c.label[0]}" y="${c.label[1]}">${esc(REGIONS[d]?.label || d).toUpperCase()}</text>`).join('')
+  const labels = Object.entries(MAP_REGIONS).map(([d, c]) => { const w = d.length * 7.6 + 8;
+    return `<g class="map-region-tap" data-action="mapregion" data-division="${esc(d)}" role="button" tabindex="0" aria-label="${esc($t('map.region_aria', { region: d }))}"><rect x="${c.label[0] - w}" y="${c.label[1] - 11}" width="${w * 2}" height="22" rx="6" fill="transparent"/><text class="map-region" x="${c.label[0]}" y="${c.label[1]}">${esc(REGIONS[d]?.label || d).toUpperCase()}</text></g>`; }).join('')
     + CONFERENCE_NAMES.map((conf) => { const [cx] = SHAPES[conf]; return `<text class="map-conf" x="${cx}" y="22">${esc(conf).toUpperCase()}</text>`; }).join('');
   // this week's games: every pairing in "This week", otherwise only yours
   const games = mode === 'week' ? mapWeekGames(f) : next ? [{ home: mine, away: next }] : [];
   const routes = games.map((g) => { const a = MAP_PINS[g.home], b = MAP_PINS[g.away]; if (!a || !b) return ''; const me = g.home === mine || g.away === mine;
     const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, bend = Math.min(40, len * 0.22);
-    return `<path class="map-route ${me ? 'mine' : ''}" d="M${a[0]} ${a[1]}Q${(mx - (dy / len) * bend).toFixed(1)} ${(my + (dx / len) * bend).toFixed(1)} ${b[0]} ${b[1]}"/>`; }).join('');
+    const qx = mx - (dy / len) * bend, qy = my + (dx / len) * bend;
+    const res = mode === 'week' ? (f.season?.results || []).find((x) => x.week === f.season.week && x.home === g.home && x.away === g.away) : null;
+    const score = res ? `<g class="map-score${me ? ' mine' : ''}" transform="translate(${((mx + qx) / 2).toFixed(1)} ${((my + qy) / 2).toFixed(1)})"><rect x="-17" y="-8" width="34" height="16" rx="8"/><text y="4">${res.homeScore}–${res.awayScore}</text></g>` : '';
+    return `<path class="map-route ${me ? 'mine' : ''}" d="M${a[0]} ${a[1]}Q${qx.toFixed(1)} ${qy.toFixed(1)} ${b[0]} ${b[1]}"/>${score}`; }).join('');
   const pins = Object.entries(MAP_PINS).map(([club, [x, y]]) => {
     const gym = GYM_BY_CLUB[club]; const held = gym && F.badgeOf(f, club); const me = club === mine; const dim = !lit.has(club);
     const ring = me ? `<circle class="map-ring you" r="20.5"/>` : club === next ? `<circle class="map-ring next" r="19.5"/>` : club === rival ? `<circle class="map-ring rival" r="19.5"/>` : '';
@@ -276,7 +281,7 @@ export function regionMapSvg(f, { mode = 'all', sel = null } = {}) {
     const place = CLUB_NAMES[club]?.[0] || club;
     return `<g class="map-pin${me ? ' me' : ''}${dim ? ' dim' : ''}${sel === club ? ' sel' : ''}" data-action="mapclub" data-club="${esc(club)}" transform="translate(${x} ${y})" role="button" tabindex="0" aria-label="${esc(club)}">
       <circle class="map-hit" r="24"/>${ring}<circle r="15.5" fill="#0e1824" stroke="${sel === club ? '#fff' : '#f4ecd0'}" stroke-width="${sel === club ? 2.4 : 1.4}"/>
-      <g transform="translate(-13.5 -13.5) scale(.27)">${logoBody(club)}</g>${g}<text class="map-name" y="28">${esc(place)}</text></g>`;
+      <g transform="translate(-13.5 -13.5) scale(.27)">${logoBody(club)}</g>${g}<text class="map-name" y="28">${esc(place)}</text>${mode === 'week' && !dim ? `<text class="map-rec" y="39">${f.season?.records?.[club]?.w ?? 0}-${f.season?.records?.[club]?.l ?? 0}</text>` : ''}</g>`;
   }).join('');
   return `<svg class="region-map" viewBox="${MAP_VIEW.x} ${MAP_VIEW.y} ${MAP_VIEW.w} ${MAP_VIEW.h}" role="img" aria-label="${esc($t('map.aria', { n: Object.keys(MAP_PINS).length }))}">${defs}
     <rect x="${MAP_VIEW.x}" y="${MAP_VIEW.y}" width="${MAP_VIEW.w}" height="${MAP_VIEW.h}" fill="url(#map-sea)"/>${waves}
@@ -294,12 +299,48 @@ function mapClubCard(f, club) {
   return `<div class="panel map-card"><div class="row" style="gap:10px;align-items:center">${teamLogo(club, 46, { cls: 'team-logo inline' })}<div class="grow"><div style="font-weight:900;color:${meta.ink}">${esc(club)}</div><div class="dim">${$t('map.division_line', { division: esc(div), conference: esc(conf) })}</div></div><span class="chip mono">${rec.w}-${rec.l}</span></div>
     ${tags ? `<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${tags}</div>` : ''}
     <div class="kv" style="margin-top:8px"><b>${$t('map.home')}</b><span>${env.icon} ${esc(st.name)} <span class="dim">${esc(env.short)}</span></span><b>${$t('map.standing')}</b><span>${placeIn ? $t('map.place_in', { place: placeIn, division: esc(div) }) : '—'}</span>${gym ? `<b>${$t('map.gym')}</b><span>${$t('map.gym_line', { coach: esc(gym.coach.name), element: esc(gym.element), badge: esc(gym.badge) })}<br><span class="${held ? 'good' : 'dim'}">${held ? $t('map.badge_held', { year: yearOf(held.year) }) : $t('map.badge_open')}</span></span>` : ''}</div>
-    <button class="btn block" data-action="club" data-club="${esc(club)}" style="margin-top:8px">${$t('map.club_page')}</button></div>`;
+    <div class="grid2" style="margin-top:8px"><button class="btn block" data-action="stadium" data-club="${esc(club)}">${$t('map.view_stadium')}</button><button class="btn block" data-action="club" data-club="${esc(club)}">${$t('map.club_page')}</button></div></div>`;
+}
+/** A region's sheet: its four clubs in standing order, each with record and points, and a way to each club. */
+export function mapRegionHtml(f, division) {
+  const clubs = (F.leagueStandings(f).divisions?.[division] || DIVISIONS[division] || []); const rec = (c) => f.season?.records?.[c] || { w: 0, l: 0, pf: 0, pa: 0 };
+  const gyms = clubs.filter((c) => GYM_BY_CLUB[c]).map((c) => `${esc(CLUB_NAMES[c]?.[0] || c)} (${esc(GYM_BY_CLUB[c].element)})`);
+  return `<p class="muted">${gyms.length ? $t('map.region_gyms', { conference: esc(conferenceFor(division)), gyms: gyms.join(', ') }) : $t('map.region_none', { conference: esc(conferenceFor(division)) })}</p><div class="list">${clubs.map((c, i) => { const g = GYM_BY_CLUB[c]; const r = rec(c);
+    return `<button class="item${c === f.club ? ' mine' : ''}" data-action="regionclub" data-club="${esc(c)}"><span class="dim mono" style="width:16px">${i + 1}</span>${teamLogo(c, 32, { cls: 'team-logo inline' })}<div class="grow"><div class="name">${esc(c)}</div><div class="sub">${esc(stadiumFor(c).name)}${g ? ` · 👑 ${esc(g.element)} Gym` : ''}</div></div><span class="mono">${r.w}-${r.l}</span><span class="dim mono" style="font-size:12px">${r.pf ?? 0}/${r.pa ?? 0}</span></button>`; }).join('')}</div>
+    <p class="dim" style="margin-top:6px">${$t('map.region_foot')}</p>`;
 }
 const MAP_ZOOMS = [1, 2, 3];
 // The whole world fits a wide screen; on a phone the map opens at 2× on your club and drags sideways.
 const mapDefaultZoom = () => ((globalThis.innerWidth || 1024) < 700 ? 2 : 1);
 const MAP_KEY = 'gridiron-beast-v7-map';
+
+/**
+ * Map gestures beyond native scrolling: two-finger pinch (touch), ctrl/⌘ + wheel or a trackpad pinch (desktop), and dragging
+ * with a mouse when zoomed in. Zoom snaps to MAP_ZOOMS when the gesture ends; while pinching the map scales live.
+ */
+function mapGestures(sc, { zoom, setZoom, canvas }) {
+  const snap = (z) => MAP_ZOOMS.reduce((a, b) => (Math.abs(b - z) < Math.abs(a - z) ? b : a));
+  let pinch = null;
+  const mid = (t) => { const r = sc.getBoundingClientRect(); return [(t[0].clientX + t[1].clientX) / 2 - r.left, (t[0].clientY + t[1].clientY) / 2 - r.top]; };
+  const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  sc.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { pinch = { d0: dist(e.touches), at: mid(e.touches), k: 1 }; } }, { passive: true });
+  sc.addEventListener('touchmove', (e) => { if (!pinch || e.touches.length !== 2) return; e.preventDefault();
+    pinch.k = Math.max(1 / zoom, Math.min(MAP_ZOOMS[MAP_ZOOMS.length - 1] / zoom, dist(e.touches) / pinch.d0));
+    if (canvas) { canvas.style.transformOrigin = `${sc.scrollLeft + pinch.at[0]}px ${sc.scrollTop + pinch.at[1]}px`; canvas.style.transform = `scale(${pinch.k})`; } }, { passive: false });
+  const endPinch = () => { if (!pinch) return; const p = pinch; pinch = null; if (canvas) canvas.style.transform = '';
+    const z1 = snap(zoom * p.k); if (z1 !== zoom) setZoom(z1, p.at[0], p.at[1]); };
+  sc.addEventListener('touchend', (e) => { if (e.touches.length < 2) endPinch(); }); sc.addEventListener('touchcancel', endPinch);
+  let wheel = 0, wheelAt = null, wheelT = null;
+  sc.addEventListener('wheel', (e) => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); const r = sc.getBoundingClientRect();
+    wheel -= e.deltaY; wheelAt = [e.clientX - r.left, e.clientY - r.top]; clearTimeout(wheelT);
+    wheelT = setTimeout(() => { const i = MAP_ZOOMS.indexOf(zoom) + (wheel > 0 ? 1 : -1); wheel = 0; const z1 = MAP_ZOOMS[Math.max(0, Math.min(MAP_ZOOMS.length - 1, i))]; if (z1 !== zoom) setZoom(z1, ...wheelAt); }, 140); }, { passive: false });
+  let drag = null, moved = false;
+  sc.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse' || e.button !== 0 || zoom === MAP_ZOOMS[0]) return; drag = { x: e.clientX, y: e.clientY, l: sc.scrollLeft, t: sc.scrollTop }; moved = false; });
+  sc.addEventListener('pointermove', (e) => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (!moved && Math.hypot(dx, dy) < 5) return;
+    moved = true; sc.classList.add('dragging'); sc.scrollLeft = drag.l - dx; sc.scrollTop = drag.t - dy; });
+  const up = () => { drag = null; sc.classList.remove('dragging'); }; sc.addEventListener('pointerup', up); sc.addEventListener('pointerleave', up);
+  sc.addEventListener('click', (e) => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true); // a drag is not a tap on a club
+}
 
 export function registerLeagueHubScreens(Router, app) {
   let scope = 'all';
@@ -326,7 +367,7 @@ export function registerLeagueHubScreens(Router, app) {
       const sel = MAP_PINS[mapSel] ? mapSel : f.club; const week = mapWeekGames(f);
       const label = { all: $t('map.mode_all'), division: $t('map.mode_division'), gyms: $t('map.mode_gyms'), week: $t('map.mode_week') };
       const note = mode === 'week' ? (week.length ? $t('map.week_games', { n: week.length, week: f.season.week }) : $t('map.week_none')) : $t('map.tap_hint');
-      return `<div class="seg wrap map-modes" role="tablist">${MAP_MODES.map((m) => `<button class="btn small ${m === mode ? 'primary' : ''}" role="tab" aria-selected="${m === mode}" data-action="mapmode" data-mode="${m}">${label[m]}</button>`).join('')}</div>
+      return `<div class="seg map-modes" role="tablist">${MAP_MODES.map((m) => `<button class="btn small ${m === mode ? 'primary' : ''}" role="tab" aria-selected="${m === mode}" data-action="mapmode" data-mode="${m}">${label[m]}</button>`).join('')}</div>
         <div class="map-frame"><div class="map-scroll" data-zoom="${zoom}"><div class="map-canvas" style="width:${zoom * 100}%">${regionMapSvg(f, { mode, sel })}</div></div></div>
         <div class="map-under"><p class="dim map-note">${note}</p><div class="map-zoom"><button class="btn small" data-action="mapzoom" data-d="-1" aria-label="${$t('map.zoom_out')}" ${zoom === MAP_ZOOMS[0] ? 'disabled' : ''}>−</button><button class="btn small" data-action="mapzoom" data-d="1" aria-label="${$t('map.zoom_in')}" ${zoom === MAP_ZOOMS[MAP_ZOOMS.length - 1] ? 'disabled' : ''}>+</button></div></div>
         <div class="map-legend"><span><i class="lg you"></i>${$t('map.legend_you')}</span><span><i class="lg next"></i>${$t('map.legend_next')}</span><span><i class="lg rival"></i>${$t('map.rival')}</span><span><i class="lg gym"></i>${$t('map.legend_gym')}</span><span><i class="lg badge"></i>${$t('map.legend_badge')}</span></div>
@@ -339,6 +380,16 @@ export function registerLeagueHubScreens(Router, app) {
         const [px, py] = MAP_PINS[mapSel || app.f.club]; const w = sc.scrollWidth, h = sc.scrollHeight;
         sc.scrollLeft = ((px - MAP_VIEW.x) / MAP_VIEW.w) * w - sc.clientWidth / 2; sc.scrollTop = ((py - MAP_VIEW.y) / MAP_VIEW.h) * h - sc.clientHeight / 2; }
       const keep = () => { if (sc) mapScroll = { left: sc.scrollLeft, top: sc.scrollTop }; };
+      const curZoom = () => { const p = mapPrefs(); return MAP_ZOOMS.includes(p.zoom) ? p.zoom : mapDefaultZoom(); };
+      /** Change zoom keeping the map point under (fx, fy) — the scroller's own pixels; its centre by default — where it was. */
+      const setZoom = (z1, fx = sc ? sc.clientWidth / 2 : 0, fy = sc ? sc.clientHeight / 2 : 0) => { const z0 = curZoom(); if (!MAP_ZOOMS.includes(z1) || z1 === z0) return;
+        if (sc) { const k = z1 / z0; mapScroll = { left: (sc.scrollLeft + fx) * k - fx, top: (sc.scrollTop + fy) * k - fy }; }
+        set(MAP_KEY, JSON.stringify({ ...mapPrefs(), zoom: z1 })); Router.render(); };
+      const openRegion = (division) => { if (!app.f || !DIVISIONS[division]) return;
+        const h = sheet(mapRegionHtml(app.f, division), { title: REGIONS[division]?.label || division });
+        const el = h?.el || document.querySelector('.sheet'); el?.addEventListener?.('click', (e) => { const b = e.target.closest?.('[data-action="regionclub"]'); if (!b) return;
+          h?.close ? h.close() : el.querySelector('[data-action="sheet-close"]')?.click(); mapSel = b.dataset.club; selectPin(mapSel);
+          root.querySelector(`.map-pin[data-club="${CSS.escape(mapSel)}"]`)?.scrollIntoView?.({ block: 'nearest', inline: 'center', behavior: 'smooth' }); }); };
       const save = (patch) => set(MAP_KEY, JSON.stringify({ ...mapPrefs(), ...patch }));
       // A tap only moves the selection and swaps the card: the map itself is not drawn again.
       const selectPin = (club) => {
@@ -348,12 +399,14 @@ export function registerLeagueHubScreens(Router, app) {
       delegate(root, {
         mapclub: (el) => { mapSel = el.dataset.club; selectPin(mapSel); },
         mapmode: (el) => { keep(); save({ mode: el.dataset.mode }); Router.render(); },
-        mapzoom: (el) => { const p = mapPrefs(); const z = MAP_ZOOMS.includes(p.zoom) ? p.zoom : mapDefaultZoom(); const i = Math.max(0, Math.min(MAP_ZOOMS.length - 1, MAP_ZOOMS.indexOf(z) + Number(el.dataset.d)));
-          if (sc) { const z0 = z, z1 = MAP_ZOOMS[i], k = z1 / z0; mapScroll = { left: (sc.scrollLeft + sc.clientWidth / 2) * k - sc.clientWidth / 2, top: (sc.scrollTop + sc.clientHeight / 2) * k - sc.clientHeight / 2 }; }
-          save({ zoom: MAP_ZOOMS[i] }); Router.render(); },
+        mapzoom: (el) => { const z = curZoom(); setZoom(MAP_ZOOMS[Math.max(0, Math.min(MAP_ZOOMS.length - 1, MAP_ZOOMS.indexOf(z) + Number(el.dataset.d)))]); },
+        mapregion: (el) => openRegion(el.dataset.division),
+        stadium: (el) => { const v = stadiumFor(el.dataset.club); sheet(venueHtml({ ...v, club: el.dataset.club }), { title: v.name }); },
         club: (el) => Router.go('club', { club: el.dataset.club }),
       });
-      root.addEventListener?.('keydown', (e) => { const pin = e.target?.closest?.('.map-pin'); if (pin && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); mapSel = pin.dataset.club; selectPin(mapSel); } });
+      root.addEventListener?.('keydown', (e) => { if (e.key !== 'Enter' && e.key !== ' ') return; const pin = e.target?.closest?.('.map-pin'), reg = e.target?.closest?.('.map-region-tap');
+        if (pin) { e.preventDefault(); mapSel = pin.dataset.club; selectPin(mapSel); } else if (reg) { e.preventDefault(); openRegion(reg.dataset.division); } });
+      if (sc) mapGestures(sc, { zoom: curZoom(), setZoom, canvas: root.querySelector('.map-canvas') });
     },
   });
   Router.registerScreen('club', {
