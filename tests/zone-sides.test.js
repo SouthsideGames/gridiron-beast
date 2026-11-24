@@ -101,3 +101,12 @@ test('Froststorm blows against an opponent\'s sideways run (a fixed side gave pu
   for (let k = 1; k <= 5; k++) { fx.tick(k * DT); fx.displace(left); fx.displace(right); }
   assert.ok(left.y > 0 && right.y < 0, `pushed back against the run: ${left.y}, ${right.y}`);
 });
+test('strengthened zones (owner 2026-11-24): Steam, Earth, Ice and Dark move the numbers that matter', () => {
+  const at = (extra) => M('m', 'Nature', 'def', { attrs: { awareness: 60, catching: 60, blocking: 60, tackling: 60, coverage: 60, agility: 60 }, ...extra });
+  const s = at(); play([Z('f', 'Fire', 'home'), Z('w', 'Water', 'home', { createdAt: 2 })], [s]).fx.tick(DT);
+  for (const k of ['catching', 'blocking', 'tackling']) assert.equal(+s.attrs[k].toFixed(6), 39, `Steam: ${k} -35%`);
+  const e = M('e', 'Nature', 'off', { attrs: { awareness: 60, catching: 60, blocking: 60, tackling: 60 } }); const ep = play([Z('g', 'Earth', 'home')], [e]); ep.fx.tick(DT);
+  assert.equal(+e.attrs.blocking.toFixed(6), 78, 'Earth: his club blocks 30% harder'); assert.equal(+e.attrs.tackling.toFixed(6), 78); assert.equal(+ep.fx.resist(e).toFixed(6), 0.5, 'and resists half a knockback (20 + 30)');
+  const i = at(); play([Z('i', 'Ice', 'home')], [i]).fx.tick(DT); assert.equal(+i.attrs.agility.toFixed(6), 48, 'Ice: Agility -20%');
+  const d = at(); play([Z('d', 'Dark', 'home')], [d]).fx.tick(DT); assert.equal(+d.attrs.awareness.toFixed(6), 24, 'Dark: Awareness -60% (20 + 40)'); assert.equal(+d.attrs.coverage.toFixed(6), 42, 'and Coverage -30%');
+});

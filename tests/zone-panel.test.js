@@ -10,7 +10,7 @@ const plan = (over = {}) => ({ key: 'a|PSY|0', name: 'Mind Bend', remaining: 3, 
 test('the panel explains the zone instead of the rules for moving it', () => {
   const html = zonePlannerHtml([plan()]);
   assert.doesNotMatch(html, /move with the line/, 'the old policy line is gone');
-  assert.match(html, /Psychic zone: Pulls opponents toward the middle of the zone\./);
+  assert.match(html, /Psychic zone: Pulls opponents hard toward the middle of the zone\./);
 });
 test('a spot that would make a combination zone names it, its parents and what it does', () => {
   const html = zonePlannerHtml([plan()]);

@@ -363,7 +363,7 @@ test('Night Watch: all allied cornerbacks and safeties are protected anywhere wh
   // the field effect itself: only the Dark base Awareness term is filtered
   const mk = (ign) => ({ team: 'def', slot: 'LB1', mid: 'x', name: 'X', type: 'Fire', x: 1, y: 0, vx: 0, vy: 0, attrs: { awareness: 80, catching: 60, blocking: 60 }, ignoreFieldAwareness: ign });
   const fields = [{ id: 'F1', type: 'Dark', strength: 25, createdAt: 0, yard: [0, 5], lat: [-3, 3] }];
-  for (const [ign, exp] of [[false, 60], [true, 80]]) { const a = mk(ign); createFieldPlay({ fields, actors: [a] }).tick(0.05); assert.ok(near(a.attrs.awareness, exp, 1e-9), `ignore ${ign}: ${a.attrs.awareness}`); }
+  for (const [ign, exp] of [[false, 28 /* Dark 25 + 40 = 65% lost (owner 2026-11-24) */], [true, 80]]) { const a = mk(ign); createFieldPlay({ fields, actors: [a] }).tick(0.05); assert.ok(near(a.attrs.awareness, exp, 1e-9), `ignore ${ign}: ${a.attrs.awareness}`); }
   // on the real engine: the aura credits its passive mastery once a protected ally stands in a Dark field
   const t8 = { status: {} }; const darkField = [{ id: 'F9', type: 'Dark', strength: 25, createdAt: 0, owner: 'x', yard: [-2, 30], lat: [-30, 30] }];
   for (let seed = 1; seed <= 3; seed++) play({ seed, offensePlay: 'quick_slants', def: { FS: mon(lineup(12, 64).defense.FS, { id: 'nw', species: 'nightowl', type: 'Dark', mastery: 3 }) }, t8, options: { fields: darkField }, defType: 'Fire' });

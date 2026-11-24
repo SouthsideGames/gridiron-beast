@@ -34,7 +34,7 @@ test('Fire and Wind: maximum-speed modifiers (strength + the zone bonus, capped)
   assert.equal(Fd.maxSpeedFactor({ a: -60, b: -40 }), 0.25, 'bounded at -75%'); assert.equal(Fd.maxSpeedFactor({ a: 40, b: 40 }), 1.5, 'bounded at +50%'); assert.equal(Fd.maxSpeedFactor(null), 1);
 });
 
-test('Nature reduces turning only; Ice reduces braking only and extends the stopping slide', () => {
+test('Nature reduces turning only; Ice reduces braking (strength + 45) and turning (30%) and extends the stopping slide', () => {
   const n = A('n', 'Fire', 0, 0, { vx: 5, vy: 0 }), nn = A('nn', 'Nature', 0, 0, { vx: 5, vy: 0 });
   const { fx } = world([F('n1', 'Nature', 20)], [n, nn]); fx.tick(DT);
   assert.deepEqual(fx.shapeDv(n, 0.3, 0.4).map((v) => +v.toFixed(6)), [0.3, 0.32], 'turning share -20%, straight acceleration unchanged');
@@ -42,7 +42,7 @@ test('Nature reduces turning only; Ice reduces braking only and extends the stop
   assert.equal(fx.shapeDv(nn, 0.3, 0.4), null, 'a Nature monster is unaffected');
   const i = A('i', 'Fire', 0, 0, { vx: 5, vy: 0 }), ii = A('ii', 'Ice', 0, 0, { vx: 5, vy: 0 });
   const w = world([F('i1', 'Ice', 25)], [i, ii]); w.fx.tick(DT);
-  assert.deepEqual(w.fx.shapeDv(i, -0.4, 0.2).map((v) => +v.toFixed(6)), [-0.3, 0.2], 'braking -25%, turning unchanged');
+  assert.deepEqual(w.fx.shapeDv(i, -0.4, 0.2).map((v) => +v.toFixed(6)), [-0.12, 0.14], 'braking -70% (25 + 45), turning -30%');
   assert.deepEqual(w.fx.shapeDv(i, 0.4, 0).map((v) => +v.toFixed(6)), [0.4, 0], 'acceleration unchanged');
   assert.ok(w.fx.coast(i) > 0.93 && w.fx.coast(ii) === 0.93, 'a coasting (stunned) slide lasts longer, only for non-Ice');
   assert.equal(w.fx.shapeDv(ii, -0.4, 0.2), null);
@@ -50,12 +50,12 @@ test('Nature reduces turning only; Ice reduces braking only and extends the stop
 
 test('Earth resists contact displacement without immunity; Dark reduces effective Awareness and restores it on leaving', () => {
   const e = A('e', 'Fire'), ee = A('ee', 'Earth'); const { fx } = world([F('e1', 'Earth', 30)], [e, ee]); fx.tick(DT);
-  assert.equal(+fx.resist(e).toFixed(6), 0.7); assert.equal(fx.resist(ee), 1);
+  assert.equal(+fx.resist(e).toFixed(6), 0.4, 'Earth 30 + 30: 60% of a knockback resisted'); assert.equal(fx.resist(ee), 1);
   const big = A('b', 'Fire'); const w = world([F('e2', 'Earth', 100)], [big]); w.fx.tick(DT); assert.ok(w.fx.resist(big) > 0, 'never a guaranteed immunity');
   const d = A('d', 'Fire'), dd = A('dd', 'Dark'); const v = world([F('d1', 'Dark', 15)], [d, dd]); v.fx.tick(DT);
-  assert.equal(+d.attrs.awareness.toFixed(6), 51); assert.equal(dd.attrs.awareness, 60);
-  v.fx.tick(2 * DT); assert.equal(+d.attrs.awareness.toFixed(6), 51, 'no compounding tick to tick');
-  d.x = 40; v.fx.tick(3 * DT); assert.equal(+d.attrs.awareness.toFixed(6), 51, 'carried on just after leaving');
+  assert.equal(+d.attrs.awareness.toFixed(6), 27, 'Dark 15 + 40: 55% of Awareness lost'); assert.equal(dd.attrs.awareness, 60);
+  v.fx.tick(2 * DT); assert.equal(+d.attrs.awareness.toFixed(6), 27, 'no compounding tick to tick');
+  d.x = 40; v.fx.tick(3 * DT); assert.equal(+d.attrs.awareness.toFixed(6), 27, 'carried on just after leaving');
   v.fx.tick(3 * DT + ZONE_LINGER + DT); assert.equal(+d.attrs.awareness.toFixed(6), 60, 'restored once it wears off');
 });
 
@@ -71,12 +71,13 @@ test('Electric: a sure short stun on entering through the shared gate; once a pl
   assert.equal(w.events.filter((x) => x.kind === 'field_stun').length, 1);
 });
 
-test('Water: a sure slip (Stumbles, 40% current speed) once a play as soon as he moves or cuts inside; Water monsters immune', () => {
+test('Water: a sure slip (Stumbles, 40% current speed) once a play once he runs or cuts inside; Water monsters immune', () => {
   const a = A('a', 'Fire', 0, 0, { vx: 6, vy: 0, cutUntil: 0 }), w = A('w', 'Water', 0, 0, { vx: 6, vy: 0, cutUntil: 0 }), still = A('s', 'Fire', 0, 0, { vx: 0, vy: 0, cutUntil: 0 });
   const t8 = { status: {} }; const { fx, events } = world([F('p', 'Water', 20)], [a, w, still], t8); fx.tick(DT);
   assert.equal(+a.vx.toFixed(6), 3.6, 'moving inside: he slips at once'); assert.equal(t8.status.m_a.id, 'stumbled'); assert.equal(w.vx, 6); assert.equal(t8.status.m_w, undefined);
   assert.equal(still.vx, 0); assert.equal(t8.status.m_s, undefined, 'standing still (at the snap): not yet');
-  still.vx = 2; fx.tick(2 * DT); assert.equal(+still.vx.toFixed(6), 1.2, 'his first step slips');
+  still.vx = 2; fx.tick(2 * DT); assert.equal(still.vx, 2, 'a first step: not yet');
+  still.vx = 5; fx.tick(2.5 * DT); assert.equal(+still.vx.toFixed(6), 3, 'running (WATER_SLIP_SPEED): he slips');
   a.vx = 6; a.cutUntil = 0.9; fx.tick(3 * DT); assert.equal(a.vx, 6, 'one slip per monster per play');
   assert.equal(events.filter((x) => x.kind === 'field_slip').length, 2);
 });
@@ -89,10 +90,10 @@ test('Metal: the first changed automatic decision inside waits one AI decision u
   assert.equal(fx.defer(m, 'read', true, false, 0.3), true);
 });
 
-test('Psychic: bounded inward pull at the field strength of applicable maximum speed, stopping at the centre deadband', () => {
+test('Psychic: bounded inward pull at the field strength + 20 of applicable maximum speed, stopping at the centre deadband', () => {
   const a = A('a', 'Fire', 4, 0), p = A('p', 'Psychic', 4, 0), c = A('c', 'Fire', 0.5, 0);
   const { fx } = world([F('y', 'Psychic', 20)], [a, p, c]); fx.tick(DT); fx.displace(a); fx.displace(p); fx.displace(c);
-  assert.equal(+a.x.toFixed(6), +(4 - 0.2 * 8 * DT).toFixed(6)); assert.equal(p.x, 4); assert.equal(c.x, 0.5, 'inside the deadband');
+  assert.equal(+a.x.toFixed(6), +(4 - 0.4 * 8 * DT).toFixed(6)); assert.equal(p.x, 4); assert.equal(c.x, 0.5, 'inside the deadband');
   a.maxSpeed = 8 * 0.5; const x0 = a.x; // the engine's one aggregation (refreshMaxSpeed) has applied a −50% status to a.maxSpeed fx.displace(a); assert.equal(+(x0 - a.x).toFixed(6), +(0.2 * 4 * DT).toFixed(6), 'applicable (modified) maximum speed');
   const e = A('e', 'Fire', 1.2, 0); fx.tick(2 * DT); fx.displace(e); assert.ok(e.x >= PSYCHIC_DEADBAND - 1e-9, 'never pulled inside the deadband');
 });

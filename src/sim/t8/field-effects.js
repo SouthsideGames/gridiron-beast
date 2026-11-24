@@ -18,7 +18,7 @@ import { E as $E } from '../../core/english.js';
 
 export const STUMBLE_SPEED_LOSS = 0.4; // §11 Water / STA-03: Stumbled loses 40% of current speed, maximum speed unchanged
 export const PSYCHIC_DEADBAND = 1; // the approved "standard Psychic field" centre deadband (PSY-04-F, PSY-01-F: 1 yard)
-export const STEAM = Object.freeze({ catching: 0.15, blocking: 0.15 });
+export const STEAM = Object.freeze({ catching: 0.35, blocking: 0.35, tackling: 0.35 }); // owner 2026-11-24: strengthened (was 15% Catching and Blocking)
 export const LIVING_TERRAIN = Object.freeze({ clumps: 4, diameter: 1 });
 export const MAGNETIC_STORM = Object.freeze({ pairWithin: 3, pull: 0.2, breakAt: 6 });
 export const FROSTSTORM = Object.freeze({ drift: 0.15, cap: 2 });
@@ -31,7 +31,14 @@ export const MINDSTORM = Object.freeze({ behind: 2, followChance: 1 });
 export const ZONE_LINGER = 2;
 export const ELECTRIC_STUN = 0.5;
 export const ZONE_SPEED_BONUS = 10, ZONE_SPEED_CAP = 35;
-export const WATER_SLIP_SPEED = 1.5; // yd/s: a slip needs him moving (a lineman standing at the snap slips on his first step)
+export const WATER_SLIP_SPEED = 4; // yd/s: he slips once he is running (or at his first cut), when it costs him; a first step at the snap would not
+// Strengthened zones (owner 2026-11-24): each adds to the ability's strength, within a cap.
+export const DARK_BONUS = 40, DARK_CAP = 75, DARK_COVERAGE = 0.3; // Awareness lost; Coverage lost too (they lose sight of receivers)
+export const EARTH_BONUS = 30, EARTH_CAP = 85;          // share of a knockback resisted
+export const EARTH_POWER = 0.3;                         // Blocking and Tackling gained
+export const ICE_BONUS = 45, ICE_CAP = 85, ICE_TURN = 30, ICE_AGILITY = 0.2; // braking lost; turning and Agility lost too
+export const PSYCHIC_BONUS = 20, PSYCHIC_CAP = 50;      // pull, % of maximum speed
+const boosted = (b, bonus, cap) => (b?.strength == null ? 0 : Math.min(cap, b.strength + bonus) / 100);
 const NO_LINGER = new Set(['Psychic']); // the pull is toward the zone itself: nothing to carry once he has left it
 
 const pct = (s) => (s == null ? 0 : Math.max(0, s) / 100);
@@ -39,7 +46,7 @@ const centre = (f) => ({ x: (f.yard[0] + f.yard[1]) / 2, y: (f.lat[0] + f.lat[1]
 const hyp = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
 const zoneSpeed = (b) => (b?.strength == null ? 0 : Math.min(ZONE_SPEED_CAP, b.strength + ZONE_SPEED_BONUS));
 const speedOf = (base) => (-zoneSpeed(base.Fire) + zoneSpeed(base.Wind)) || 0;
-const darkOf = (base) => (base.Dark?.field.ability === 'DAR-01-F' ? 0 : pct(base.Dark?.strength));
+const darkOf = (base) => (base.Dark?.field.ability === 'DAR-01-F' ? 0 : boosted(base.Dark, DARK_BONUS, DARK_CAP));
 
 /**
  * @param o.fields play-frame fields; o.actors the engine's actors; o.seed the play seed (own stream); o.log the engine's event log;
@@ -64,7 +71,7 @@ export function createFieldPlay({ fields, actors, offenseSide = null, seed = 1, 
   // absent; nothing enumerates it), so all of them share one object shape.
   // Same for the effective-attribute layer record (layer(): a missing key and undefined both read as 0; nothing enumerates it).
   // Third pass: `m` is the lookup the last tick resolved for him (its entry events are done) and `byType` his type's memo map.
-  const fxState = (cut) => ({ seen: new Set(), attr: { awareness: 0, catching: 0, blocking: 0 }, drift: 0, cut, base: undefined, hybrid: undefined, echo: undefined, pend: undefined, metalUsed: undefined, slipped: undefined, lured: undefined, bonded: undefined, m: undefined, byType: undefined, fms: 0, ling: undefined, zapped: undefined, steamUntil: 0 });
+  const fxState = (cut) => ({ seen: new Set(), attr: { awareness: 0, catching: 0, blocking: 0, tackling: 0, coverage: 0, agility: 0 }, drift: 0, cut, base: undefined, hybrid: undefined, echo: undefined, pend: undefined, metalUsed: undefined, slipped: undefined, lured: undefined, bonded: undefined, m: undefined, byType: undefined, fms: 0, ling: undefined, zapped: undefined, steamUntil: 0 });
   const applicableMax = (a) => a.maxSpeed; // already carries the shared modifiers (engine refreshMaxSpeed)
   const unpair = (a) => { if (a.engaged) { a.engaged.engaged = null; a.engaged = null; } };
 
@@ -198,8 +205,12 @@ export function createFieldPlay({ fields, actors, offenseSide = null, seed = 1, 
       // only writer and both start empty with the play), so an unchanged sum touches nothing, exactly as before.
       if (ms !== st.fms) { if (ms) (a.maxSpeedMods ||= {}).field = ms; else if (a.maxSpeedMods) delete a.maxSpeedMods.field; st.fms = ms; refreshMaxSpeed?.(a); }
       if (recording && reported.get(a) !== m) { reported.set(a, m); trace(t8, 'field-speed', { target: a.mid, type: a.type, t, x: a.x, y: a.y, expected: ms, actual: a.maxSpeedMods?.field || 0, ...(refreshMaxSpeed && a.baseMaxSpeed != null ? { expectedMax: a.baseMaxSpeed * maxSpeedFactor(a.maxSpeedMods), actualMax: a.maxSpeed } : {}), base: m.e.base, hybrid: m.hybrid }); }
-      layer(a, 'awareness', a.ignoreFieldAwareness ? 0 : dark); // M3 hook: a.ignoreFieldAwareness (set by a contract's tick) ignores only the Dark base field's Awareness term
-      if (steam || st.attr.catching || st.attr.blocking) { layer(a, 'catching', steam ? STEAM.catching : 0); layer(a, 'blocking', steam ? STEAM.blocking : 0); }
+      layer(a, 'awareness', a.ignoreFieldAwareness ? 0 : dark);
+      if (dark || st.attr.coverage) layer(a, 'coverage', dark && !a.ignoreFieldAwareness ? DARK_COVERAGE : 0);
+      const icy = base.Ice?.strength != null; if (icy || st.attr.agility) layer(a, 'agility', icy ? ICE_AGILITY : 0); // M3 hook: a.ignoreFieldAwareness (set by a contract's tick) ignores only the Dark base field's Awareness term
+      // Steam takes Catching, Blocking and Tackling; Earth gives its own club Blocking and Tackling (a negative share adds).
+      const earth = base.Earth ? -EARTH_POWER : 0;
+      if (steam || earth || st.attr.catching || st.attr.blocking || st.attr.tackling) { layer(a, 'catching', steam ? STEAM.catching : 0); layer(a, 'blocking', (steam ? STEAM.blocking : 0) + earth); layer(a, 'tackling', (steam ? STEAM.tackling : 0) + earth); }
       if (m.mind || st.echo) {
         if (m.mind && !st.echo) { st.echo = { of: a, x: a.x, y: a.y, live: true }; echoes.push(st.echo); placeEcho(st.echo); ev(a, 'field_echo', `${$E('sim.a_mindstorm_echo_trails', { name: a.name })}`, { hybrid: 'Mindstorm', x: +st.echo.x.toFixed(2), y: +st.echo.y.toFixed(2) }); }
         else if (st.echo?.live) { if (m.mind) placeEcho(st.echo); else st.echo.live = false; }
@@ -233,16 +244,16 @@ export function createFieldPlay({ fields, actors, offenseSide = null, seed = 1, 
   // at once and keeps nothing), so a shaped step allocates nothing.
   const shaped = [0, 0];
   function shapeDv(a, dvx, dvy) {
-    const nat = pct(a.fx?.base?.Nature?.strength), ice = pct(a.fx?.base?.Ice?.strength); if (!nat && !ice) return null;
+    const I = a.fx?.base?.Ice; const ice = boosted(I, ICE_BONUS, ICE_CAP); const nat = 1 - (1 - pct(a.fx?.base?.Nature?.strength)) * (1 - (I?.strength != null ? ICE_TURN / 100 : 0)); if (!nat && !ice) return null;
     const s = Math.hypot(a.vx, a.vy); if (s < 0.05) return null;
     const ux = a.vx / s, uy = a.vy / s; let par = dvx * ux + dvy * uy; const px = (dvx - par * ux) * (1 - nat), py = (dvy - par * uy) * (1 - nat);
     if (par < 0) par *= 1 - ice;
     shaped[0] = par * ux + px; shaped[1] = par * uy + py; return shaped;
   }
   /** A stunned monster's coasting decay per tick (0.93 ordinarily): Ice extends the slide by the same braking reduction. */
-  const coast = (a) => { const ice = pct(a.fx?.base?.Ice?.strength); return ice ? 1 - 0.07 * (1 - ice) : 0.93; };
+  const coast = (a) => { const ice = boosted(a.fx?.base?.Ice, ICE_BONUS, ICE_CAP); return ice ? 1 - 0.07 * (1 - ice) : 0.93; };
   /** Earth: the share of a contact displacement this monster still takes (never zero: no guaranteed immunity). */
-  const resist = (a) => 1 - Math.min(0.99, pct(a.fx?.base?.Earth?.strength));
+  const resist = (a) => 1 - boosted(a.fx?.base?.Earth, EARTH_BONUS, EARTH_CAP);
   /** Environmental motion after the monster's own move: Psychic pull, Froststorm drift, Magnetic pull, Living Terrain vines. */
   function displace(a) {
     const st = a.fx; if (!st) return;
@@ -250,7 +261,7 @@ export function createFieldPlay({ fields, actors, offenseSide = null, seed = 1, 
     const P = st.base.Psychic;
     if (P?.strength != null) {
       const c = (P.centre ||= centre(P.field)), r = hyp(c, a), db = P.field.payload?.deadband ?? PSYCHIC_DEADBAND;
-      if (r > db) { const step = Math.min(pct(P.strength) * vmax * dt, r - db); dx += ((c.x - a.x) / r) * step; dy += ((c.y - a.y) / r) * step; }
+      if (r > db) { const step = Math.min(boosted(P, PSYCHIC_BONUS, PSYCHIC_CAP) * vmax * dt, r - db); dx += ((c.x - a.x) / r) * step; dy += ((c.y - a.y) / r) * step; }
     }
     for (const b of bonds) if (b.live && (b.a === a || b.b === a)) {
       const o = b.a === a ? b.b : b.a, r = hyp(o, a);
