@@ -7,6 +7,7 @@ import { audioPreferences, setAudioPreferences } from '../../audio/context.js';
 import { esc, delegate, toast, confirmSheet, sheet } from '../dom.js';
 import { openTypeChart } from '../type-chart.js';
 import { stadiumListHtml } from '../stadium-preview.js';
+import { iconHtml } from '../icons.js';
 import { achievementsData } from '../../franchise/achievement-store.js';
 import { ACHIEVEMENTS } from '../../data/achievements.js';
 import { yearOf } from '../../data/calendar.js';
@@ -291,16 +292,13 @@ export function registerMenuScreens(Router, app) {
   });
   // The Guide (owner 2026-11-23): the reference pages that used to sit loose on More.
   // The Guide (owner 2026-11-23): How to Play and the reference pages, each a card with a small picture and a line on what it is.
-  const GUIDE_ART = {
-    howto: `<svg viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="12" fill="#1e4a33"/><path d="M8 14h40M8 42h40" stroke="#e9f4ec" stroke-width="2" opacity=".5"/><g stroke="#e9f4ec" stroke-width="1.4" opacity=".35"><path d="M16 14v28M28 14v28M40 14v28"/></g><ellipse cx="28" cy="28" rx="11" ry="7" fill="#8a4a24" stroke="#e9f4ec" stroke-width="1.4" transform="rotate(-28 28 28)"/><path d="M24 30l8-4M25 27l2 2M28 25.6l2 2M31 24l2 2" stroke="#e9f4ec" stroke-width="1.3"/></svg>`,
-    stats: `<svg viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="12" fill="#17302a"/>${[[10, 30, '#4ade80'], [20, 18, '#facc15'], [30, 26, '#60a5fa'], [40, 12, '#f87171']].map(([x, h, c]) => `<rect x="${x}" y="${44 - h}" width="7" height="${h}" rx="2" fill="${c}"/>`).join('')}<path d="M8 45H48" stroke="#b7cdc0" stroke-width="2"/></svg>`,
-    types: `<svg viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="12" fill="#17302a"/><path d="M28 12L44 40H12Z" fill="none" stroke="#b7cdc0" stroke-width="1.6" stroke-dasharray="3 3"/>${[[28, 12, 14], [44, 40, 200], [12, 40, 120]].map(([x, y, h]) => `<circle cx="${x}" cy="${y}" r="8" fill="hsl(${h} 70% 50%)" stroke="#0d1a14" stroke-width="2"/>`).join('')}</svg>`,
-    stadiums: `<svg viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="12" fill="#17302a"/><ellipse cx="28" cy="30" rx="23" ry="17" fill="#5a6b7a"/><ellipse cx="28" cy="30" rx="17" ry="11" fill="#236b49"/><path d="M15 30h26M28 20v20" stroke="#e9f4ec" stroke-width="1.2" opacity=".7"/><path d="M12 15V8l6 2.5-6 2.5M44 15V8l-6 2.5 6 2.5" fill="#facc15" stroke="#facc15" stroke-width="1.4" stroke-linejoin="round"/></svg>`,
-  };
+  // Each card's picture is the icon pack's own artwork on a coloured tile, so the Guide matches every other icon in the game.
+  const GUIDE_ART = { howto: ['football', '#2f8a5c'], stats: ['stats', '#3b6fb0'], types: ['lightning', '#b07a1e'], stadiums: ['flag', '#a8443a'] };
+  const guideTile = (k) => `<span class="guide-tile" style="--tile:${GUIDE_ART[k][1]}">${iconHtml(GUIDE_ART[k][0])}</span>`;
   Router.registerScreen('guide', {
     title: t('menu.guide_title'),
     render() {
-      const card = (action, art, title, note) => `<button class="guide-card" data-action="${action}"><span class="guide-art">${GUIDE_ART[art]}</span><span class="guide-text"><b>${title}</b><span class="dim">${note}</span></span><span class="guide-go" aria-hidden="true">›</span></button>`;
+      const card = (action, art, title, note) => `<button class="guide-card" data-action="${action}"><span class="guide-art">${guideTile(art)}</span><span class="guide-text"><b>${title}</b><span class="dim">${note}</span></span><span class="guide-go" aria-hidden="true">›</span></button>`;
       return `<p class="muted" style="margin-top:0">${t('menu.guide_intro')}</p><div class="guide-list">
         ${card('howto', 'howto', t('menu.how_to_play'), t('menu.how_to_play_note'))}
         ${card('statguide', 'stats', t('menu.what_the_stats_mean_2'), t('menu.stats_note'))}
