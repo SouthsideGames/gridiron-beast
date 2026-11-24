@@ -2783,3 +2783,48 @@ html[data-app-inactive="1"] .final-celebration * { animation-play-state: paused;
 .kit-pair { display: flex; gap: 10px; align-items: center; justify-content: center; }
 .kit-pair figure { margin: 0; text-align: center; font-size: 11px; color: var(--muted, #a9c7b6); }
 .mu-club .mu-logo { display: block; margin: 0 auto 4px; }
+
+/* ---------------------------------------------------------------- Region map (owner 2026-11-23) */
+.map-modes { margin-bottom: 8px; }
+.map-frame { position: relative; border: 1px solid var(--line-2); border-radius: 14px; overflow: hidden; background: #143651; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+.map-scroll { overflow: auto; max-height: min(70vh, 760px); cursor: grab; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.map-scroll[data-zoom="1"] { overflow: hidden; }
+.map-canvas { min-width: 100%; }
+.region-map { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; font-family: inherit; }
+.region-map .map-region { font-size: 12px; font-weight: 900; letter-spacing: 3px; text-anchor: middle; dominant-baseline: middle; fill: #fff; stroke: rgba(8,18,28,.75); stroke-width: 3px; paint-order: stroke; stroke-linejoin: round; opacity: .92; pointer-events: none; }
+.region-map .map-conf { font-size: 15px; font-weight: 900; letter-spacing: 5px; text-anchor: middle; fill: #cfe6f5; opacity: .9; pointer-events: none; }
+.region-map .map-name { font-size: 10px; font-weight: 800; text-anchor: middle; fill: #fff; stroke: #0b1622; stroke-width: 2.6px; paint-order: stroke; stroke-linejoin: round; pointer-events: none; }
+.region-map .map-compass { font-size: 9px; font-weight: 900; text-anchor: middle; fill: #f4ecd0; }
+.region-map .map-bowl { font-size: 7.5px; font-weight: 900; letter-spacing: 1.4px; text-anchor: middle; fill: #ffd34d; stroke: #0b1622; stroke-width: 2.4px; paint-order: stroke; }
+.region-map .map-pin { cursor: pointer; transition: opacity .2s; outline: none; }
+.region-map .map-pin .map-hit { fill: transparent; }
+.region-map .map-pin.dim { opacity: .28; }
+.region-map .map-pin.me .map-name { fill: var(--accent); }
+.region-map .map-pin:focus-visible > circle:nth-of-type(2), .region-map .map-pin.sel > circle:nth-of-type(2) { filter: drop-shadow(0 0 4px #fff); }
+.region-map .map-ring { fill: none; stroke-width: 2.6; }
+.region-map .map-ring.you { stroke: var(--accent); animation: map-pulse 2.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.region-map .map-ring.next { stroke: var(--bad); stroke-dasharray: 4 3; }
+.region-map .map-ring.rival { stroke: #a855f7; }
+.region-map .map-route { fill: none; stroke: #e9f4ec; stroke-width: 1.6; stroke-dasharray: 5 4; opacity: .7; }
+.region-map .map-route.mine { stroke: var(--accent); stroke-width: 2.6; opacity: 1; animation: map-march 1.4s linear infinite; }
+@keyframes map-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(1.12); } }
+@keyframes map-march { to { stroke-dashoffset: -18; } }
+:root[data-reduced-motion="1"] .region-map .map-ring.you, :root[data-reduced-motion="1"] .region-map .map-route.mine { animation: none; }
+@media (prefers-reduced-motion: reduce) { .region-map .map-ring.you, .region-map .map-route.mine { animation: none; } }
+.map-under { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 2px 4px; }
+.map-zoom { display: flex; gap: 6px; flex: none; }
+.map-zoom .btn { min-width: 40px; min-height: 40px; font-size: 20px; font-weight: 900; padding: 0; background: rgba(13,26,20,.85); }
+.map-zoom .btn[disabled] { opacity: .4; }
+.map-note { margin: 0; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--ink-2); margin: 0 2px 10px; }
+.map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.map-legend .lg { width: 12px; height: 12px; border-radius: 50%; display: inline-block; border: 2.5px solid; }
+.map-legend .lg.you { border-color: var(--accent); }
+.map-legend .lg.next { border-color: var(--bad); border-style: dashed; }
+.map-legend .lg.rival { border-color: #a855f7; }
+.map-legend .lg.gym { background: hsl(200 70% 52%); border: 1.5px solid #0b1622; }
+.map-legend .lg.badge { background: #ffd34d; border: 1.5px solid #0b1622; }
+.map-card .good { color: var(--good); }
+@media (min-width: 900px) { .screen-map .map-scroll { max-height: 82vh; } }
+.screen-map .map-modes, .screen-map .map-frame, .screen-map .map-under, .screen-map .map-legend { max-width: 1100px; margin-left: auto; margin-right: auto; }
+.screen-map .map-card { max-width: 640px; margin-left: auto; margin-right: auto; }

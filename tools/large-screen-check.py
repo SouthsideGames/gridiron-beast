@@ -64,7 +64,7 @@ with sync_playwright() as pw:
         page = browser.new_page(viewport={'width': w, 'height': h}, is_mobile=touch, has_touch=touch); errors = []
         page.on('pageerror', lambda e: errors.append(str(e)))
         page.goto(URL); page.wait_for_function("() => window.__gb && __gb.storage.mode !== 'starting'"); page.evaluate(FRANCHISE)
-        for screen, params in [('hq', {}), ('roster', {}), ('league', {}), ('office', {}), ('more', {}), ('monster', 'first')]:
+        for screen, params in [('hq', {}), ('roster', {}), ('league', {}), ('office', {}), ('map', {}), ('more', {}), ('monster', 'first')]:
             page.evaluate(GO, [screen, {'id': page.evaluate('__gb.f.roster[0].id')} if params == 'first' else params]); page.wait_for_timeout(350); clear(page)
             check(page.evaluate('document.documentElement.scrollWidth - innerWidth') <= 0, f'{name}: {screen} scrolls sideways')
         page.evaluate(GO, ['hq', {}]); page.wait_for_timeout(400); clear(page)

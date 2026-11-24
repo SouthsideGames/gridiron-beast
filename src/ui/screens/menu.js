@@ -245,7 +245,7 @@ export function registerMenuScreens(Router, app) {
 
   // ---------------------------------------------------------------- My office (GDD §18.6): the GM's own page
   Router.registerScreen('office', {
-    back: false, title: t('menu.my_office'),
+    title: t('menu.my_office'),
     render({ f }) {
       const b = f.board || { confidence: 0, goal: null, history: [] }; const g = b.goal; const p = g ? F.goalProgress(f) : null;
       const hof = F.hallOfFameProgress(f); const diff = DIFFICULTY[f.settings.difficulty] || DIFFICULTY.pro;
@@ -283,13 +283,21 @@ export function registerMenuScreens(Router, app) {
     render({ f }) {
       return `<div class="stack">
         <button class="btn block" data-action="go" data-screen="dex">${t('menu.beast_dex_2')} <span class="dim mono">${dexCounts(f).all.seen}/${dexCounts(f).all.total}</span></button>
-        <button class="btn block" data-action="statguide">${t('menu.what_the_stats_mean')}</button>
-        <button class="btn block" data-action="typechart">${t('menu.type_chart')} <span class="dim">${t('menu.strengths_and_weaknesses')}</span></button>
-        <button class="btn block" data-action="stadiums">${t('menu.stadiums')} <span class="dim">${t('menu.every_clubs_field')}</span></button>
+        <button class="btn block" data-action="go" data-screen="guide">${t('menu.guide')} <span class="dim">${t('menu.guide_note')}</span></button>
         <button class="btn block" data-action="go" data-screen="settings">${t('menu.settings')}</button>
-        ${devNoticesOn(app.settings) && reviewQueue().total ? `<button class="btn block badge-host" data-action="go" data-screen="developer">${t('menu.developer')}${devBadge(app.settings)}</button>` : ''}
         <button class="btn block" data-action="menu">${t('menu.main_menu')}</button></div>`;
     },
-    mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), menu: () => Router.go('menu', {}, { reset: true }), statguide: () => openStatGuide('QB'), typechart: () => openTypeChart(app.f?.roster?.[0]?.type || 'Fire'), stadiums: () => sheet(stadiumListHtml(app.f), { title: t('menu.stadiums_2') }) }); },
+    mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), menu: () => Router.go('menu', {}, { reset: true }) }); },
+  });
+  // The Guide (owner 2026-11-23): the reference pages that used to sit loose on More.
+  Router.registerScreen('guide', {
+    title: t('menu.guide_title'),
+    render() {
+      return `<div class="stack">
+        <button class="btn block" data-action="statguide">${t('menu.what_the_stats_mean')}</button>
+        <button class="btn block" data-action="typechart">${t('menu.type_chart')} <span class="dim">${t('menu.strengths_and_weaknesses')}</span></button>
+        <button class="btn block" data-action="stadiums">${t('menu.stadiums')} <span class="dim">${t('menu.every_clubs_field')}</span></button></div>`;
+    },
+    mount(root) { delegate(root, { statguide: () => openStatGuide('QB'), typechart: () => openTypeChart(app.f?.roster?.[0]?.type || 'Fire'), stadiums: () => sheet(stadiumListHtml(app.f), { title: t('menu.stadiums_2') }) }); },
   });
 }

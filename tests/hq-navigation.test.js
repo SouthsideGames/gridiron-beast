@@ -52,12 +52,13 @@ test('Needs Your Decision exists only while a real action is waiting',()=>{
   for(const m of f.roster)m.injury=null;
   assert.doesNotMatch(polishHeader(ctx,'hq'),/polish-notices/);
 });
-test('My Office replaces Plays, owns GM Career and appearance, and is removed from More',()=>{
+test('Map takes the tab bar slot; My Office opens from HQ and owns GM Career and appearance',()=>{
   const f=fresh(),{screens,route}=register(f);
-  const tabs=franchiseTabs(f,'office');
-  assert.deepEqual(tabs.map(x=>x.screen),['hq','roster','office','league','more']);
-  assert.equal(tabs[2].label,'My Office');assert.equal(tabs[2].active,true);
-  for(const screen of ['coach-look','gm-jobs'])assert.equal(franchiseTabs(f,screen).find(x=>x.active)?.screen,'office');
+  const tabs=franchiseTabs(f,'map');
+  assert.deepEqual(tabs.map(x=>x.screen),['hq','roster','map','league','more']);
+  assert.equal(tabs[2].label,'Map');assert.equal(tabs[2].active,true);
+  for(const screen of ['office','coach-look','gm-jobs'])assert.equal(franchiseTabs(f,screen).find(x=>x.active)?.screen,'hq');
+  assert.notEqual(screens.get('office').back,false,'My Office is reached from HQ, so it has Back');
   for(const screen of ['gameplan','playbook','playdetail'])assert.equal(TAB_OF[screen],'hq');
   assert.equal(franchiseTabs(null,'hq'),null);
   const office=screens.get('office').render({f}),more=screens.get('more').render({f});
@@ -67,4 +68,19 @@ test('My Office replaces Plays, owns GM Career and appearance, and is removed fr
   screens.get('office').mount(root);
   click({target:{closest:()=>({dataset:{action:'gmcareer'}})},preventDefault(){}});
   assert.deepEqual(route(),['gm-jobs']);
+});
+test('HQ links: My Office under History & Records; no League Hub or Standings (they are under League)',()=>{
+  const f=fresh(),{screens}=register(f);
+  const links=screens.get('hq').render({f}).split('hq-links')[1].split('</div>')[0];
+  const order=[...links.matchAll(/data-screen="([a-z-]+)"/g)].map(m=>m[1]);
+  assert.deepEqual(order,['schedule','history','staff','office']);
+  assert.equal(order.indexOf('office')-order.indexOf('history'),2,'second column, directly under History & Records');
+});
+test('More: one Guide button holds the stat guide, Type Chart and Stadiums; no Developer button',()=>{
+  const f=fresh(),{screens}=register(f);
+  const more=screens.get('more').render({f}),guide=screens.get('guide').render({f});
+  assert.match(more,/data-screen="guide"/);
+  assert.doesNotMatch(more,/data-action="(statguide|typechart|stadiums)"|data-screen="developer"/);
+  for(const a of ['statguide','typechart','stadiums'])assert.match(guide,new RegExp(`data-action="${a}"`));
+  assert.equal(TAB_OF.guide,'more');
 });
