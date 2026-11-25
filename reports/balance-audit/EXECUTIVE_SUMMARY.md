@@ -35,7 +35,7 @@
 - **Measured.**
   - With the hands-off owner and the real Board, **7 of 9 owners were dismissed within five seasons**. All 3 Pro and all 3 All-Star owners were gone by season 5.
   - One Pro owner went 11-3, 7-7, 7-7, then 3-11 against goals of 6, 8, 9 and 10 wins.
-- **Experiment X-2** (isolated): with the real AI strength in the forecast, **dismissals fall from 3 of 3 to 1 of 3** on the same Pro seeds. The remaining dismissal followed two 3-11 seasons.
+- **Experiment X-2** (isolated): with the real AI strength in the forecast, **dismissals fall from 6 of 6 to 2 of 6** on the same Pro and All-Star seeds. Both remaining dismissals followed three clearly losing seasons.
 - Details: `DIFFICULTY_AND_BOARD_BALANCE.md` §2; proposal R-0 in `RECOMMENDED_CHANGES.md`.
 
 ## High-priority issues
@@ -102,7 +102,7 @@ Full detail, with the 11 points each, is in `RECOMMENDED_CHANGES.md`.
 
 | Rank | Change | Severity |
 |---|---|---|
-| 1 | **R-0:** compare the owner with the real league in the Board forecast (one line; experiment X-2 done) | Critical |
+| 1 | **R-0:** compare the owner with the real league in the Board forecast (one line; experiment X-2: dismissals 6 of 6 → 2 of 6) | Critical |
 | 2 | **R-1:** make DL Speed, DL Tackling, defender Catching, zone Coverage and RB Awareness act in the engine, or re-weight the overall | High |
 | 3 | **R-2:** rein in speed's top end, or price it in the overall and salary | High |
 | 4 | **R-3:** fix the "abilities off" control in the study tools, then re-run the ability-strength study | High (tools) |

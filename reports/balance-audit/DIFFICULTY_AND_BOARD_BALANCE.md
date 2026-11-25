@@ -116,6 +116,19 @@ These are means over each run's recorded seasons, and the gap widens as seasons 
 
 The baseline goals for Pro seeds 2 and 3 were not traced. The live run records only the outcome.
 
+**X-2 on All-Star** (seeds 1–3, five seasons; `raw/experiment-forecast-board-trace-allstar-seed{1,2,3}.json`):
+
+| All-Star seed | Records (X-2) | Safe goals (X-2) | Baseline | X-2 |
+|---|---|---|---|---|
+| 1 | 5-9, 10-4, 6-8, 5-9, 6-8 | 4, 5, 6, 4, 5 (all met) | dismissed end of season 5 | **5 seasons, confidence +2** |
+| 2 | 2-12, 4-10, 6-8 | 3, 5, 7 (all missed) | dismissed end of season 3 | dismissed end of season 3 |
+| 3 | 5-9, 8-6, 2-12, 7-7, 12-2 | 3, 5, 5, 6, 7 | dismissed end of season 5 | **5 seasons, confidence +2** |
+
+**Across Pro and All-Star:**
+- **Dismissals fall from 6 of 6 to 2 of 6** with the real league strength in the forecast.
+- **Both remaining dismissals follow three clearly losing seasons.**
+
+
 
 ## 3. Difficulty over a whole career (Board kept content)
 

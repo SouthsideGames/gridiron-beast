@@ -31,7 +31,7 @@ Severity:
 6. **Code.** `src/franchise/franchise.js` line 989 (preseason `expectations`, `todayOverall`) and `boardForecastFor` (line 1473).
 7. **Current.** `talent = team === f.club ? teamOverall(playerTeam(f)) : todayOverall(f, team, year)`.
 8. **Proposal.** Use the persistent club's real team overall, `teamOverall(aiTeam(f, team, year))`, when the league registry exists.
-9. **Experiment X-2.** On Pro seeds 1–3, with the same game seeds, the first three seasons play out identically and only the goals change. Later seasons diverge slightly, because confidence funds the scouting bonus. **Dismissals fall from 3 of 3 to 1 of 3**. The remaining one followed two 3-11 seasons.
+9. **Experiment X-2.** On Pro seeds 1–3, with the same game seeds, the first three seasons play out identically and only the goals change. Later seasons diverge slightly, because confidence funds the scouting bonus. **Dismissals fall from 3 of 3 to 1 of 3**, and on All-Star seeds 1–3 from 3 of 3 to 1 of 3 (6 of 6 to 2 of 6 in all). Each remaining dismissal followed three clearly losing seasons.
 10. **Risks.**
     - Coach of the Year expectations change too, since they read the same field.
     - Goals become easier, so more scouting-bonus seasons.
