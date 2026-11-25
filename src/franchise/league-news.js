@@ -1,5 +1,6 @@
 // League News (GDD §39): the whole league's week, not the owner's inbox. Every week it writes a scoreboard of every game,
-// headlines worth a sentence (upsets, streaks, shutouts, blowouts, overtime finishes), the award races, award winners, league
+// headlines worth a sentence (streaks and unbeaten runs, never a single score: the scoreboard shows those, owner 2026-11-24),
+// injuries to starters and stars, trades and other moves, the award races, award winners, league
 // records broken, the playoff field and the champion. Read-only: it reads results, the records book and award races after
 // they are written, draws no random numbers and changes nothing else, so it cannot move a game, a stat or a save field the
 // simulation uses. The owner's own notices (trades, injuries, the commissioner) stay in the club log (f.news).
@@ -87,19 +88,15 @@ export function resultsNews({ year, week, results, club = null, rival = null, la
   const out = [{ id: id('scores'), year, week, kind: 'scores', tier: 'info', icon: '🏈', ...$L('franchise.week_scores', { week }), games: thisWeek.map((g) => ({ home: g.home, away: g.away, hs: g.homeScore, as: g.awayScore, ot: !!g.ot, clash: !!g.clash, w: winnerOf(g), mine: g.home === club || g.away === club, rival: !!rival && (g.home === rival || g.away === rival) })) }];
   const heads = [];
   for (const g of thisWeek) {
-    const w = winnerOf(g), l = loserOf(g); const margin = Math.abs(g.homeScore - g.awayScore);
-    if (!w) { heads.push({ id: id('tie', g.home), kind: 'overtime', tier: 'info', icon: '🤝', ...$L('franchise.and_tie', { home: g.home, away: g.away, homeScore: g.homeScore, awayScore: g.awayScore })}); continue; }
-    const bw = before[w], bl = before[l];
-    if (games(bw) >= NEWS_RULES.upsetMinGames && games(bl) >= NEWS_RULES.upsetMinGames && rate(bl) - rate(bw) >= NEWS_RULES.upsetGap) heads.push({ id: id('upset', w), kind: 'upset', tier: 'notable', icon: '😱', ...$L('franchise.upset_stun', { w, wRecord: recStr(bw), l, lRecord: recStr(bl), resultTail: resultTail(g) }) });
+    const w = winnerOf(g), l = loserOf(g);
+    if (!w) continue; // a tie is on the scoreboard
+    const bl = before[l];
     const perfect = after[w].l === 0 && after[w].t === 0;
-    if (bl && bl.l === 0 && bl.t === 0 && bl.w >= NEWS_RULES.unbeatenMarks[0] - 1) heads.push({ id: id('firstloss', l), kind: 'unbeaten', tier: 'notable', icon: '💥', ...$L('franchise.perfect_start_ends_at_0_win', { poss: poss(l), w: bl.w, w2: w, resultTail: resultTail(g) })});
+    if (bl && bl.l === 0 && bl.t === 0 && bl.w >= NEWS_RULES.unbeatenMarks[0] - 1) heads.push({ id: id('firstloss', l), kind: 'unbeaten', tier: 'notable', icon: '💥', ...$L('franchise.perfect_start_ends_at_0_win', { poss: poss(l), w: bl.w, w2: w, resultTail: '' })});
     else if (perfect && week === lastWeek && after[w].w >= NEWS_RULES.unbeatenMarks[0]) heads.push({ id: id('unbeaten', w), kind: 'unbeaten', tier: 'notable', icon: '🔥', ...$L('franchise.finish_the_regular_season_unbeaten_at', { w, w2: after[w].w })});
-    else if (perfect && NEWS_RULES.unbeatenMarks.includes(after[w].w)) heads.push({ id: id('unbeaten', w), kind: 'unbeaten', tier: 'notable', icon: '🔥', ...$L('franchise.stay_perfect_at_0_after_beating', { w, w2: after[w].w, l, resultTail: resultTail(g) })});
+    else if (perfect && NEWS_RULES.unbeatenMarks.includes(after[w].w)) heads.push({ id: id('unbeaten', w), kind: 'unbeaten', tier: 'notable', icon: '🔥', ...$L('franchise.stay_perfect_at_0_after_beating', { w, w2: after[w].w, l, resultTail: '' })});
     else if (!perfect && NEWS_RULES.streakMarks.includes(after[w].streak)) heads.push({ id: id('streak', w), kind: 'streak', tier: 'info', icon: '📈', ...$L('franchise.have_won_straight', { w, streak: after[w].streak, recStr: recStr(after[w]) })});
     if (NEWS_RULES.streakMarks.includes(-after[l].streak)) heads.push({ id: id('slide', l), kind: 'streak', tier: 'info', icon: '📉', ...$L('franchise.have_lost_in_a_row', { l, streak: -after[l].streak, recStr: recStr(after[l]) })});
-    if (g.clash || g.ot) heads.push({ id: id('ot', w), kind: 'overtime', tier: 'info', icon: '⏱️', ...g.clash && g.homeScore === g.awayScore ? $L('franchise.beat_in_a_v_beast_clash', { w, l, size: g.clash.size, size2: g.clash.size, homeScore: g.homeScore, awayScore: g.awayScore }) : $L('franchise.edge_in_overtime', { w, l, scoreLine: scoreLine(g) })});
-    else if (Math.min(g.homeScore, g.awayScore) === 0) heads.push({ id: id('shutout', w), kind: 'shutout', tier: 'info', icon: '🧱', ...$L('franchise.defense_shuts_out', { poss: poss(w), l, scoreLine: scoreLine(g) })});
-    else if (margin >= NEWS_RULES.blowout) heads.push({ id: id('blowout', w), kind: 'blowout', tier: 'info', icon: '💪', ...$L('franchise.rout', { w, l, scoreLine: scoreLine(g) })});
   }
   return [...out, ...pickHeadlines(heads).map((h) => ({ year, week, ...h }))];
 }
@@ -205,12 +202,13 @@ export function backfillLeagueNews(f) {
 // pick, a decorated veteran leaving the game. At most TRANSACTIONS_PER_WEEK lines a week in season; the offseason's moves
 // come as one digest of OFFSEASON_DIGEST lines; a draft comes as one digest. Written after the fact, no random draws.
 export const TRANSACTION_KINDS = new Set(['signing', 'release', 'trade', 'draft', 'retire', 'milestone', 'moves']);
-export const MOVE_RULES = Object.freeze({ ovr: 65, perWeek: 2, digest: 8, draftTop: 5 });
+export const MOVE_RULES = Object.freeze({ ovr: 65, perWeek: 4, digest: 8, draftTop: 5 });
 export const TRANSACTIONS_PER_WEEK = MOVE_RULES.perWeek;
 export const OFFSEASON_DIGEST = MOVE_RULES.digest;
 
 /** Is this move worth a line? `e` carries what the writer knew when it happened. */
 export function meaningfulMove(e, { club, rival, division = [] }) {
+  if (e.kind === 'injury') return (e.ovr || 0) >= MOVE_RULES.ovr || (!!e.starter && ((e.weeks || 0) >= 3 || (e.ovr || 0) >= 60)); // a star, or a starter out a while, wherever he plays
   if (e.kind === 'retire' || e.kind === 'milestone') return true;
   if ((e.ovr || 0) >= MOVE_RULES.ovr || e.starter) return true;
   if (e.formerMine) return true;
@@ -222,7 +220,7 @@ export function meaningfulMove(e, { club, rival, division = [] }) {
 /** Bigger monsters and closer connections first. */
 export function moveWeight(e, { rival, division = [] }) {
   const clubs = [e.club, e.from, e.to].filter(Boolean);
-  return (e.ovr || 0) + (e.kind === 'retire' ? 30 : e.kind === 'trade' ? 12 : e.kind === 'milestone' ? (e.tier >= 2 ? 12 : 2) : 0) + (e.formerMine ? 10 : 0) + (clubs.some((c) => c === rival) ? 10 : clubs.some((c) => division.includes(c)) ? 5 : 0) + (e.starter ? 6 : 0);
+  return (e.ovr || 0) + (e.kind === 'retire' ? 30 : e.kind === 'trade' ? 12 : e.kind === 'injury' ? Math.min(12, 2 * (e.weeks || 0)) : e.kind === 'milestone' ? (e.tier >= 2 ? 12 : 2) : 0) + (e.formerMine ? 10 : 0) + (clubs.some((c) => c === rival) ? 10 : clubs.some((c) => division.includes(c)) ? 5 : 0) + (e.starter ? 6 : 0);
 }
 const ageOf = (e) => (e.age ? `, ${e.age}` : '');
 /** One line of text for a move; the monster's name is linked by the UI through mid/mname. */
@@ -234,6 +232,7 @@ export function moveLine(e) {
     case 'trade': return (e.toOwner ? $L('franchise.trade_to_for', { from: e.from, who, to: e.to, consideration: e.consideration || 'picks' }) : $P($L('franchise.trade_goes_from_to', { who, from: e.from, to: e.to }), e.consideration ? ` for ${e.consideration}` : '', `.`));
     case 'draft': return $L('franchise.draft_at_round', { club: e.club, who, overall: e.overall, e: e.round });
     case 'retire': return $P($L('franchise.retires_at', { mname: e.mname, age: e.age || $t('franchise.the_end_of_a_long_career') }), e.honours ? `: ${honoursText(e.honours)}` : '', '.', e.club ? $P(' ', $L('franchise.he_played_his_last_season_with', { club: e.club })) : '');
+    case 'injury': return $L('franchise.league_injury_out', { club: e.club, who, weeks: e.weeks, n: e.weeks });
     case 'milestone': return $L('franchise.reaches', { mname: e.mname, club: e.club, milestone: e.milestone });
     default: return { text: `${e.mname}: ${e.kind}.` };
   }
@@ -247,15 +246,15 @@ export const moveText = (e) => lineText(moveLine(e));
 export function movesNews({ year, week, events, club, rival, division }) {
   const ctx = { club, rival, division };
   const keep = latestPerMonster(events).filter((e) => meaningfulMove(e, ctx)).sort((a, b) => moveWeight(b, ctx) - moveWeight(a, ctx)).slice(0, TRANSACTIONS_PER_WEEK);
-  return keep.map((e, i) => ({ id: `${year}|${week}|move|${e.kind}|${e.mid || i}`, year, week, kind: e.kind, tier: e.kind === 'retire' ? 'notable' : 'info', icon: ICON[e.kind] || '📰', mid: e.mid || null, mname: e.mname || null, ...moveLine(e) }));
+  return keep.map((e, i) => ({ id: `${year}|${week}|move|${e.kind}|${e.mid || i}`, year, week, kind: e.kind, tier: e.kind === 'retire' || (e.kind === 'injury' && e.starter && (e.ovr || 0) >= MOVE_RULES.ovr) ? 'notable' : 'info', icon: ICON[e.kind] || '📰', mid: e.mid || null, mname: e.mname || null, ...moveLine(e) }));
 }
 /** One line per monster per window: a walk followed by a claim reads as the claim ("late of …"); a retirement always stands. */
 export function latestPerMonster(events) { const last = new Map(); for (const e of events || []) { const cur = last.get(e.mid || Symbol()); if (!cur || cur.kind !== 'retire') last.set(e.mid || Symbol(), e); } return [...last.values()]; }
-const ICON = Object.freeze({ signing: '✍️', release: '🚪', trade: '🔁', draft: '🎓', retire: '🎖️', milestone: '🏁', moves: '🗞️' });
+const ICON = Object.freeze({ injury: '🩹', signing: '✍️', release: '🚪', trade: '🔁', draft: '🎓', retire: '🎖️', milestone: '🏁', moves: '🗞️' });
 /** The offseason's moves as one digest item (OFFSEASON_DIGEST lines), written as the new season opens (week 0, "Preseason"). */
 export function offseasonDigest({ year, events, club, rival, division }) {
   const ctx = { club, rival, division };
-  const keep = latestPerMonster(events).filter((e) => meaningfulMove(e, ctx)).sort((a, b) => moveWeight(b, ctx) - moveWeight(a, ctx)).slice(0, OFFSEASON_DIGEST);
+  const keep = latestPerMonster((events || []).filter((e) => e.kind !== 'injury')).filter((e) => meaningfulMove(e, ctx)).sort((a, b) => moveWeight(b, ctx) - moveWeight(a, ctx)).slice(0, OFFSEASON_DIGEST); // a playoff injury has healed by next season
   if (!keep.length) return [];
   const total = (events || []).length;
   return [{ id: `${year}|0|moves`, year, week: 0, kind: 'moves', tier: 'notable', icon: ICON.moves, ...$L('franchise.offseason_moves_transactions_across_the_league', { total, n: total }), lines: keep.map((e) => ({ mid: e.mid || null, mname: e.mname || null, ...moveLine(e) })) }];

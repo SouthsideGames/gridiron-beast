@@ -52,9 +52,9 @@ export function toast(text, kind = 'info', ms = 2600, { undo = null, sound = kin
     let el = $('#toast');
     if (!el) { el = html('<div id="toast" role="status" aria-live="polite"></div>'); document.body.appendChild(el); }
     el.replaceChildren(); const label = document.createElement('span'); label.textContent = message.text; el.appendChild(label);
-    if (message.undo) { const button = document.createElement('button'); button.className='btn small'; button.textContent='Undo';
+    if (message.undo) { const button = document.createElement('button'); button.className='toast-undo'; button.textContent='Undo';
       button.addEventListener('click',()=>{button.disabled=true; const undo=message.undo;toastQueue.dismiss();undo();},{once:true});el.appendChild(button); }
-    const dismiss=document.createElement('button');dismiss.className='btn ghost small';dismiss.textContent='×';dismiss.setAttribute('aria-label','Dismiss Message');dismiss.addEventListener('click',()=>toastQueue.dismiss());el.appendChild(dismiss);
+    const dismiss=document.createElement('button');dismiss.className='toast-x';dismiss.textContent='×';dismiss.setAttribute('aria-label','Dismiss Message');dismiss.addEventListener('click',()=>toastQueue.dismiss());el.appendChild(dismiss);
     el.dataset.kind=message.kind;el.classList.add('show');
   },()=>$('#toast')?.classList.remove('show'));
   if (sound) uiSound(sound);

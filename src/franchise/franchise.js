@@ -929,6 +929,9 @@ function aiAfterGame(f, team, game, side, r) {
   events.push(...commitGameInjuries(team.roster, game));
   { const played = game.rotation ? new Set(Object.keys(game.stats[side].players).filter(id => team.roster.some(m => m.id === id))) : playedIds(team.chart); const slots = selectDevSlots(team.roster, played); events.push(...practiceAfterGame(team.roster, slots.ids, played, r, { xpScale, autoSpend: true, autoEvolve: true, ledger, activityId: `${act}:reserve`, train })); } // C1 development slots (Task 6 Phase C)
   for (const e of events) if (e.kind === 'evolve') { const x = team.roster.find((p) => p.id === e.id); if (x) noteEvolution(x, { year: f.season.year, week: f.season.week, club: team.name, from: e.from, to: e.to }); } // Career Timeline (GDD §46)
+  // League News (owner 2026-11-24): a starter or a star out for two weeks or more is news; League News judges it like a move.
+  const starters = new Set(Object.values(team.chart || {}).filter(Boolean));
+  for (const e of events) if (e.kind === 'injury') { const x = team.roster.find((p) => p.id === e.id); const weeks = x?.injury?.weeks ?? e.weeks ?? 0; if (x && weeks >= 2) leagueEvent(f, { kind: 'injury', club: team.name, weeks, injuryType: x.injury?.type || null, starter: starters.has(x.id), ...moveIdentity(f, x) }); }
   return events;
 }
 /** In-season cover for a persistent club that injuries left without a legal lineup (league-season.js). */
@@ -2468,7 +2471,7 @@ export function finishSunday(f, gameState) {
   settleGymBadge(f, m, won, gameState.score[side], gameState.score[oppSide]);
   const lostBadge = heldBefore && !f.campaign.badges?.[m.opponent] ? m.opponent : null; // the badge went back to its Gym Leader (shown on the final screen)
   // Level-ups are shown after the game and on the Career Timeline; the club log keeps evolutions and injuries.
-  for (const e of events.filter((x) => x.kind !== 'xp' && x.kind !== 'levelup')) news(f, e.kind === 'levelup' ? $L('franchise.reached_level_ovr', { name: e.name, level: e.level, from: e.from, to: e.to, autoPoints: (f.settings.autoPoints ? '' : $L('franchise.2_attribute_points_to_spend_on'))}) : e.kind === 'evolve' ? $L('franchise.evolution_evolved_into_2', { from: `${e.name} (${e.from})`, to: e.to }) : e.kind === 'injury' ? $L('franchise.injured_out_weeks', { name: e.name, severity: e.severity, weeks: e.weeks, n: e.weeks }) : e.name, e.kind === 'evolve' ? 'win' : e.kind, e.id ? { mid: e.id, mname: e.name } : null);
+  for (const e of events.filter((x) => x.kind === 'evolve' || x.kind === 'injury')) news(f, e.kind === 'levelup' ? $L('franchise.reached_level_ovr', { name: e.name, level: e.level, from: e.from, to: e.to, autoPoints: (f.settings.autoPoints ? '' : $L('franchise.2_attribute_points_to_spend_on'))}) : e.kind === 'evolve' ? $L('franchise.evolution_evolved_into_2', { from: `${e.name} (${e.from})`, to: e.to }) : e.kind === 'injury' ? $L('franchise.injured_out_weeks', { name: e.name, severity: e.severity, weeks: e.weeks, n: e.weeks }) : e.name, e.kind === 'evolve' ? 'win' : e.kind, e.id ? { mid: e.id, mname: e.name } : null);
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
   f.game = null;
   recordPlayStats(f, gameState, side);

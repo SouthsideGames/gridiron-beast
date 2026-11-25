@@ -12,7 +12,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; min-width: 0; }
-html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+html { -webkit-text-size-adjust: 100%; background: var(--bg); touch-action: manipulation; } /* the game never zooms: a quick double tap on a button is two taps, not a zoom (owner 2026-11-24) */
 body { margin: 0; font-family: var(--font); color: var(--ink); background: var(--bg); line-height: 1.35; font-size: 15px; overflow-x: hidden; overscroll-behavior-y: none; }
 #app { min-height: 100dvh; display: flex; flex-direction: column; }
 h1, h2, h3, h4 { margin: 0; line-height: 1.2; }
@@ -112,6 +112,7 @@ input, select, textarea { font: inherit; width: 100%; min-height: var(--tap); pa
 .ln-week + .ln-week { margin-top: 14px; padding-top: 10px; border-top: 2px solid var(--line); }
 .ln-week-head { font-weight: 900; margin-bottom: 4px; }
 .clublog { margin-top: 10px; border-top: 2px solid var(--line); padding-top: 8px; }
+.clublog .news li { margin: 0 0 8px; line-height: 1.35; } /* each note its own line with room around it (owner 2026-11-24) */
 .clublog summary { cursor: pointer; font-weight: 700; font-size: 13px; color: var(--ink-2); min-height: 28px; display: flex; align-items: center; gap: 6px; }
 hr { border: 0; border-top: 2px solid var(--line); margin: var(--s3) 0; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -1941,8 +1942,13 @@ html[data-comfortable-text="1"] .item .sub, html[data-comfortable-text="1"] .dim
 .screen-hq.phone-has-next { padding-bottom:calc(var(--phone-tab-height,76px) + var(--phone-next-height,90px) + 24px); }
 .phone-offseason .btn { text-align:left; white-space:normal; }
 [id^="phone-"] { scroll-margin-top:calc(70px + var(--sat)); }
-#toast { display:flex; align-items:center; gap:8px; flex-wrap:wrap; max-width:min(92vw,640px); bottom:calc(160px + var(--sab)); }
-#toast > span { flex:1; min-width:100px; }
+/* One slim pill (owner 2026-11-24): the message, then a plain Undo and a small ×, on one line; the border colour says how it went. */
+#toast { display:flex; align-items:center; gap:2px; flex-wrap:nowrap; width:max-content; max-width:min(92vw,480px); bottom:calc(160px + var(--sab)); padding:4px 4px 4px 16px; border-radius:999px; font-weight:700; box-shadow:0 6px 18px rgba(0,0,0,.45); }
+#toast > span { flex:1 1 auto; padding:6px 6px 6px 0; line-height:1.25; }
+#toast .toast-undo, #toast .toast-x { appearance:none; font:inherit; background:none; border:0; cursor:pointer; touch-action:manipulation; min-height:40px; border-radius:999px; flex:0 0 auto; }
+#toast .toast-undo { color:var(--accent); font-weight:800; padding:0 12px; }
+#toast .toast-x { color:var(--ink-3); width:40px; font-size:20px; line-height:1; }
+#toast .toast-undo:active, #toast .toast-x:active { background:rgba(255,255,255,.08); }
 #toast.show button { pointer-events:auto; } /* only the Undo and × buttons take taps; the rest of the toast still lets taps through to the screen */
 .phone-manage { margin-top:12px; padding-top:8px; border-top:1px solid var(--line); }
 .phone-manage summary { cursor:pointer; font-weight:700; padding:8px 0; }

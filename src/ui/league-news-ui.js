@@ -41,9 +41,11 @@ function headlineHtml(it, f) {
   if (it.mid && it.mname) { const n = esc(it.mname); const i = t.indexOf(n); if (i >= 0) t = t.slice(0, i) + careerLink(it.mid, it.mname) + t.slice(i + n.length); }
   return `<li class="ln-head ${esc(it.tier)} k-${esc(it.kind)}"><span class="ln-icon" aria-hidden="true">${it.icon}</span><span>${t}</span></li>`;
 }
+/** Lines that only retold a score; older saves still hold them, and the scoreboard beside them already shows the result (owner 2026-11-24). */
+const SCORE_LINES = ['upset', 'shutout', 'blowout', 'overtime'];
 /** One week: headlines (major first), then the race and the scoreboard. `max` caps the headlines (HQ shows fewer). */
 export function weekHtml(group, f, { max = 99, race = true, board = true, raceRows = 7 } = {}) {
-  const heads = group.items.filter((x) => !['scores', 'race'].includes(x.kind));
+  const heads = group.items.filter((x) => !['scores', 'race', ...SCORE_LINES].includes(x.kind));
   const order = { major: 0, notable: 1, info: 2 }; const sorted = heads.slice().sort((a, b) => order[a.tier] - order[b.tier]);
   const shown = sorted.slice(0, max); const more = sorted.length - shown.length;
   const scores = group.items.filter((x) => x.kind === 'scores'); const rc = group.items.find((x) => x.kind === 'race');
@@ -56,7 +58,7 @@ const groupTitle = (g) => `${weekLabel(g.week)} · ${yearOf(g.year)}`;
 /** The HQ panel: the latest week, a button to every week, then the club log folded underneath. */
 export function leagueNewsPanel(f, { clubLog = [] } = {}) {
   const weeks = newsByWeek(f.leagueNews || []); const latest = weeks[0];
-  const club = clubLog.slice(0, 10);
+  const club = clubLog.filter((n) => !(n.kind === 'practice' && !n.tk && !n.tp)).slice(0, 10); // older saves kept a bare-name note for every monster that practised
   return `<div class="panel league-news"><div class="row between"><h3 style="margin:0">${$t('league.league_news')}</h3>${latest ? `<span class="dim">${esc(groupTitle(latest))}</span>` : ''}</div>
     ${latest ? weekHtml(latest, f, { max: 4, raceRows: 3 }) : `<p class="dim" style="margin:6px 0 0">${$t('league.scores_upsets_award_races_and_records')}</p>`}
     ${weeks.length ? `<button class="btn block small" data-action="leaguenews" style="margin-top:8px">${$t('league.all_league_news')}</button>` : ''}
