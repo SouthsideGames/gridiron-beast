@@ -327,8 +327,9 @@ export function standings(records) {
   // of the rest are the wild cards, seeds 5 to 7, each group ranked by the standings' own order and tiebreakers.
   for (const conf of CONFERENCE_NAMES) {
     const divs = CONFERENCES[conf];
-    const champions = divs.map((d) => divisions[d][0]).sort(cmp);
     const order = [...divs.flatMap((d) => DIVISIONS[d])].sort(cmp);
+    // Head-to-head makes the comparison non-transitive in a three-way tie, so the champions take their places from the conference order.
+    const champions = divs.map((d) => divisions[d][0]).sort((a, b) => order.indexOf(a) - order.indexOf(b));
     const wildcards = order.filter((t) => !champions.includes(t)).slice(0, WILD_CARDS);
     conferences[conf] = { divisions: [...divs], champions, wildcards, seeds: [...champions, ...wildcards], order };
   }
