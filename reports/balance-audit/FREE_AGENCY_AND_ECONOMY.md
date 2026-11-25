@@ -34,7 +34,7 @@
 - **Every AI club stays legal for 15 seasons.** Rosters stay within the 26–38 limits, and the market integrity checks (`marketProblems`) find nothing in any of the 30 markets.
 - **E-1 (High): the cap is not a constraint.**
   - No AI club ever comes within 12% of the cap. The tightest club-season still had 226 k of room, worth about 7 average starters.
-  - Mean room is about a fifth of the cap (18–21%) in every season. There is no visible cap pressure, now or later.
+  - Mean room is about a fifth of the cap (17–21%) in every season. There is no visible cap pressure, now or later.
 - **No inflation or deflation.** Mean payroll is flat from season 1 to season 15 (1.03 M to 1.03 M on Pro), because salary follows overall and league overall plateaus after season 5 (`PROGRESSION_AND_EVOLUTION.md`).
 
 ## 2. Salary barely separates quality
