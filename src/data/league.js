@@ -253,7 +253,7 @@ const fixtureCache = new Map();
  */
 export function leagueSeasonFixtures(season, seed = 0) {
   season = Math.max(1, Math.floor(Number(season) || 1));
-  const key = `${ACTIVE_LAYOUT}|${seed}|${season}`; if (fixtureCache.has(key)) return fixtureCache.get(key);
+  const key = `${seed}|${season}`; const cacheKey = `${ACTIVE_LAYOUT}|${key}`; if (fixtureCache.has(cacheKey)) return fixtureCache.get(cacheKey); // the layout keys the cache only: the draws are the same as before layouts existed
   const R = seeded(`gb-schedule|${key}`);
   const order = Object.fromEntries(Object.entries(DIVISIONS).map(([d, ts]) => [d, R.shuffle(ts)])); // each division's clubs in this season's order
   // Division rounds: three pairings, first leg then second leg with the home side swapped.
@@ -283,7 +283,7 @@ export function leagueSeasonFixtures(season, seed = 0) {
     weeks.push({ week, bye: false, games: rounds[seq[gi++]].games.map((g) => ({ home: g.home, away: g.away, category: categoryOf(g.home, g.away) })) });
   }
   if (fixtureCache.size > 24) fixtureCache.clear();
-  fixtureCache.set(key, weeks); return weeks;
+  fixtureCache.set(cacheKey, weeks); return weeks;
 }
 
 /** One team's view of the season. */

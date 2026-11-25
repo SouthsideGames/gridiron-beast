@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PLAYOFF_SEEDS, WILD_CARDS, CONFERENCE_ROUND, FINAL_ROUND, playoffByes, legacyPlayoffRound, contrastOnPanel } from '../src/data/league.js';
 import { runFranchise, newFranchise } from '../tools/franchise-soak.mjs';
-import { CONFERENCES, CONFERENCE_NAMES, DIVISIONS, STARTER_DIVISIONS, STARTER_CLUBS, ALL_TEAMS, TEAM_META, RIVAL_GMS, REG_GAMES, REG_WEEKS, PLAYOFF_ROUNDS, LAST_WEEK, SCHEDULE_MIX,
+import { useLeagueLayout, CURRENT_LAYOUT, CONFERENCES, CONFERENCE_NAMES, DIVISIONS, STARTER_DIVISIONS, STARTER_CLUBS, ALL_TEAMS, TEAM_META, RIVAL_GMS, REG_GAMES, REG_WEEKS, PLAYOFF_ROUNDS, LAST_WEEK, SCHEDULE_MIX,
   divisionOf, conferenceOf, conferenceFor, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound } from '../src/data/league.js';
 import { GYMS, GYM_BY_CLUB, isGymClub, FREE_LEGENDARIES } from '../src/data/gyms.js';
 import { STADIUMS, stadiumFor, fieldElement } from '../src/data/stadiums.js';
@@ -28,13 +28,14 @@ const LEADERS = { 'Frostpeak Howlers': ['Sigrid Hale', 'Ice', 'Frost Badge', 'Gl
   'Emberfall Infernos': ['Kael Ember', 'Fire', 'Blaze Badge', 'Pyroclast'], 'Cliffhaven Chargers': ['Aria Gale', 'Wind', 'Gale Badge', 'Tempestra'], 'Eastport Phantoms': ['Silas Mourne', 'Dark', 'Dusk Badge', 'Nyxshade'], 'Harbor Anchors': ['Nadia Reyes', 'Water', 'Tide Badge', 'Tsunarok'],
   'Sunfire Solars': ['Elias Dawn', 'Light', 'Dawn Badge', 'Aurelion'], 'Palmetto Wyrms': ['Marcus Vane', 'Dragon', 'Wyrm Badge', 'Aurodrax'], 'Aetheria Seers': ['Lyra Vesper', 'Psychic', 'Mind Badge', 'Astralux'], 'Westhaven Pirates': ['Rowan Thorne', 'Nature', 'Grove Badge', 'Elderoot'] };
 
-test('the league: 32 clubs in two conferences of four divisions of four, with the names of the specification', () => {
+test('the league: 32 clubs in two conferences of four divisions of four, with the names of the specification', () => { useLeagueLayout(1); try { // layout 1 (the league of existing saves, data/league.js LEAGUE_LAYOUTS)
   assert.deepEqual(CONFERENCE_NAMES, ['Veyra', 'Koruun']);
   for (const [conf, divs] of Object.entries(SPEC)) { assert.deepEqual(CONFERENCES[conf], Object.keys(divs)); for (const [d, clubs] of Object.entries(divs)) { assert.deepEqual(DIVISIONS[d], clubs, d); assert.equal(conferenceFor(d), conf); for (const c of clubs) { assert.equal(divisionOf(c), d); assert.equal(conferenceOf(c), conf); } } }
   assert.equal(ALL_TEAMS.length, 32); assert.equal(new Set(ALL_TEAMS).size, 32); assert.equal(Object.keys(DIVISIONS).length, 8);
   for (const c of ALL_TEAMS) { const m = TEAM_META[c]; assert.ok(m, c); assert.match(m.abbr, /^[A-Z]{3}$/); assert.match(m.color, /^#[0-9a-f]{6}$/i); assert.ok(STADIUMS[c], `${c} stadium`); assert.ok(IDENTITIES[c], `${c} identity`); assert.ok(RIVAL_GMS[c], `${c} general manager`); }
   assert.equal(new Set(ALL_TEAMS.map((c) => TEAM_META[c].abbr)).size, 32, 'every abbreviation is its own'); assert.equal(new Set(Object.values(RIVAL_GMS)).size, 32, 'no general manager runs two clubs');
   assert.equal(new Set(ALL_TEAMS.map((c) => stadiumFor(c).name)).size, 32, 'every stadium name is its own');
+  } finally { useLeagueLayout(CURRENT_LAYOUT); }
 });
 
 test('the starter clubs (layout 2, owner 2026-11-24): one rebuilding club in every division, eight to choose from, never a Gym Leader, rebuilding but not handicapped', () => {

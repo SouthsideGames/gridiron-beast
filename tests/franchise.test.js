@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import * as F from '../src/franchise/franchise.js';
 import { t7FA, t7FillToMin } from './t7-support.js';
 import { PLAYS as PLAYS_T7 } from '../src/data/playbook.js';
-import { teamSchedule, leagueSeasonFixtures, standings, blankRecord, applyResult, ALL_TEAMS } from '../src/data/league.js';
+import { teamSchedule, leagueSeasonFixtures, standings, blankRecord, applyResult, ALL_TEAMS, useLeagueLayout, CURRENT_LAYOUT } from '../src/data/league.js';
 import { STAFF_ROLES, staffById } from '../src/data/staff.js';
 import { validIndividualName } from '../src/data/individual-names.js';
 import { ROSTER_MAX } from '../src/data/monsters.js';
@@ -34,7 +34,7 @@ function newFranchise(seed = 7) {
 
 // 32-club league (2026-11-23): the vectors were regenerated for the seeded 14-game schedule (tests/tools/make-schedule-vectors.mjs);
 // the rules themselves are tested in tests/league-32.test.js. The 16-club campaign schedule they used to pin is retired.
-test('schedule generator matches the golden vectors (the seeded 14-game schedule)', () => {
+test('schedule generator matches the golden vectors (the seeded 14-game schedule)', () => { useLeagueLayout(1); try { // layout 1 (the league of existing saves, data/league.js LEAGUE_LAYOUTS)
   const v = JSON.parse(fs.readFileSync(new URL('./schedule-vectors.json', import.meta.url)));
   let checked = 0;
   for (const season of v.seasons) for (const [team, games] of Object.entries(season.teams)) {
@@ -43,6 +43,7 @@ test('schedule generator matches the golden vectors (the seeded 14-game schedule
   }
   assert.ok(checked >= 300);
   for (let y = 1; y <= 16; y++) { const w = leagueSeasonFixtures(y); assert.equal(w.filter((x) => x.bye).length, 1); for (const wk of w) if (!wk.bye) assert.equal(wk.games.length, 16); }
+  } finally { useLeagueLayout(CURRENT_LAYOUT); }
 });
 
 test('a new franchise has a legal roster, staff, cap room and a rival in its division', () => {
@@ -141,7 +142,7 @@ test('economy: cap, release rules and roster limits', () => {
   assert.ok(ROSTER_MAX >= f.roster.length);
 });
 
-test('standings tiebreakers and playoff seeding', () => {
+test('standings tiebreakers and playoff seeding', () => { useLeagueLayout(1); try { // layout 1 (the league of existing saves, data/league.js LEAGUE_LAYOUTS)
   const records = Object.fromEntries(ALL_TEAMS.map((t) => [t, blankRecord()]));
   applyResult(records, { home: 'Ember City Beasts', away: 'Bayou Stalkers', homeScore: 20, awayScore: 10 });
   applyResult(records, { home: 'Sunfire Solars', away: 'Palmetto Wyrms', homeScore: 21, awayScore: 20 });
@@ -150,6 +151,7 @@ test('standings tiebreakers and playoff seeding', () => {
   // 14-club playoffs (owner, 2026-11-23): seven seeds a conference, the four division champions first and three wild cards after.
   assert.equal(st.conferences.Koruun.seeds.length, 7); assert.equal(st.conferences.Veyra.seeds.length, 7);
   assert.equal(st.conferences.Koruun.seeds[0], 'Ember City Beasts', 'the division champions are seeds 1-4, the best record first'); assert.equal(st.conferences.Koruun.wildcards.length, 3); assert.equal(st.conferences.Koruun.seeds[4], 'Sunfire Solars', 'the best club that did not win its division is the first wild card');
+  } finally { useLeagueLayout(CURRENT_LAYOUT); }
 });
 
 test('save round-trips and the legacy v5 import preserves owner, club, staff and record', () => {

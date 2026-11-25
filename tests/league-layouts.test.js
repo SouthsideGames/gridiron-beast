@@ -88,3 +88,15 @@ test('the map: in either layout every club stands inside its own region', () => 
     for (const [club, [x, y]] of Object.entries(pins)) assert.equal(mapRegionAt(x, y), divisionIn(layout, club), `layout ${layout}: ${club}`);
   }
 });
+
+test('the past is the same in every layout: the archive is played in layout 1, and a layout-2 franchise\'s starters carry their picker records', async () => {
+  const H = await import('../src/franchise/preleague-history.js');
+  const canon = ['Skyvale Cyclones', 'Thornwood Wildroots', 'Skyvale Cyclones', 'Stormport Bolts', 'Stormport Bolts', 'Aetheria Seers', 'Harbor Anchors', 'Frostpeak Howlers'];
+  try { useLeagueLayout(1); assert.deepEqual(H.generateLeagueArchive({ seed: 8, club: 'Riverbend Rapids' }).seasons.map((s) => s.champion), canon); } finally { useLeagueLayout(CURRENT_LAYOUT); }
+  const f = F.createFranchise({ owner: { first: 'A', last: 'R' }, club: 'Sundown Drakes', seed: 8 }); const a = f.preLeagueHistory;
+  assert.deepEqual(a.seasons.map((s) => s.champion), canon); assert.deepEqual(H.validateLeagueArchive(a), []);
+  assert.deepEqual(a.seasons[0].divisions['Golden Valley'].slice().sort(), [...LEAGUE_LAYOUTS[1].divisions['Golden Valley']].sort(), 'the archive keeps the old divisions');
+  const y0 = a.seasons[a.seasons.length - 1].standings;
+  for (const c of LEAGUE_LAYOUTS[2].starters) { const r = y0.find((x) => x.club === c.name); assert.equal(`${r.w}-${r.l}`, c.record, c.name); }
+  assert.equal(L.ACTIVE_LAYOUT, CURRENT_LAYOUT, 'generating the archive puts the layout back');
+});

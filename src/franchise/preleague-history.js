@@ -22,7 +22,7 @@
 // the award winners from computeAwards run on each season's league table. Season totals are calibrated to what the game's
 // own simulated seasons produce (tools/preleague-study.mjs), not to another sport's numbers.
 
-import { legacyPlayoffRound, ALL_TEAMS, DIVISIONS, STARTER_CLUBS, REG_GAMES, CONFERENCE_NAMES, conferenceFor, divisionOf, leagueSeasonFixtures, blankRecord, applyResult, standings, playoffRound } from '../data/league.js';
+import { legacyPlayoffRound, LEAGUE_LAYOUTS, ACTIVE_LAYOUT, useLeagueLayout, ALL_TEAMS, DIVISIONS, STARTER_CLUBS, REG_GAMES, CONFERENCE_NAMES, conferenceFor, divisionOf, leagueSeasonFixtures, blankRecord, applyResult, standings, playoffRound } from '../data/league.js';
 import { hashString } from '../core/rng.js';
 import { isGymClub } from '../data/gyms.js';
 import { SPECIES_DEX } from '../data/species.js';
@@ -52,6 +52,8 @@ export const CANON = 'beast-league-canon-63';
  * the oldest to the newest: the best club in the league under the coach who has since left, then the slide to where the owner
  * finds it.
  */
+/** The league layout the archive's seasons were played in (data/league.js LEAGUE_LAYOUTS). */
+export const ARCHIVE_LAYOUT = 1;
 export const FALLEN_POWERS = Object.freeze({
   'Skyvale Cyclones': { coach: 'Aria Gale', now: 'Cliffhaven Chargers', left: -3, rise: [1.9, 2.1, 2.2, 1.8, 0.5, -0.3, -0.8, -1.1] },
   'Thornwood Wildroots': { coach: 'Rowan Thorne', now: 'Westhaven Pirates', left: -2, rise: [1.4, 1.9, 2.1, 2.2, 1.7, 0.3, -0.6, -1.1] },
@@ -283,7 +285,9 @@ export function generateLeagueArchive(f, { seasons = ARCHIVE_SEASONS, quality = 
   // `quality` is still asked once for every club, and its answers ignored: asking is what settles each AI club's lineup (and so its
   // monsters' ratings) at creation, as it always has, so an archive generated later from the same franchise is the same archive.
   if (quality) for (const t of ALL_TEAMS) quality(t);
-  const starters = new Set(STARTER_CLUBS.map((c) => c.name));
+  // The clubs that were at the bottom in the canon past are layout 1's starters, whatever layout the franchise plays in, so every
+  // franchise sees the same seasons before the last one; the franchise's own starter clubs are pinned to their records in year 0.
+  const starters = new Set(LEAGUE_LAYOUTS[ARCHIVE_LAYOUT].starters.map((c) => c.name));
   const strengthOf = {}; let walk = Object.fromEntries(ALL_TEAMS.map((t) => [t, C.n(`q|${t}`) * 0.8 + (isGymClub(t) ? 0.55 : 0) - (starters.has(t) ? 1.1 : 0)]));
   for (let year = 0; year >= firstYear; year--) {
     strengthOf[year] = { ...walk };
@@ -291,7 +295,11 @@ export function generateLeagueArchive(f, { seasons = ARCHIVE_SEASONS, quality = 
     walk = Object.fromEntries(ALL_TEAMS.map((t) => [t, walk[t] * 0.7 + C.n(`drift|${year}|${t}`) * 0.7]));
   }
   const fixed = Object.fromEntries(STARTER_CLUBS.map((c) => { const [w, l] = String(c.record).split('-').map(Number); return [c.name, { w, l }]; }).filter(([, r]) => r.w + r.l === REGULAR_GAMES));
-  const years = []; for (let year = firstYear; year <= 0; year++) years.push(playSeason(C, year, strengthOf[year], year === 0 ? fixed : null));
+  // The archive's seasons were played in the league's first divisions (layout 1): a franchise of a later layout arrives the year
+  // the league realigned (owner 2026-11-24), so every franchise keeps the same past. Its own starter clubs (above, from the layout
+  // in play) are the ones at the bottom, with exactly the records its club picker showed.
+  const years = []; const playedIn = ACTIVE_LAYOUT; useLeagueLayout(ARCHIVE_LAYOUT);
+  try { for (let year = firstYear; year <= 0; year++) years.push(playSeason(C, year, strengthOf[year], year === 0 ? fixed : null)); } finally { useLeagueLayout(playedIn); }
   const seasonOf = new Map(years.map((s) => [s.year, s]));
   const recordOf = (year, club) => seasonOf.get(year).standings.find((r) => r.club === club);
   const playoffGames = (year, club) => seasonOf.get(year).playoffs.filter((g) => g.home === club || g.away === club).length;
@@ -403,7 +411,12 @@ export function archiveRecords(f) {
 
 // ------------------------------------------------------------ validation
 /** Every inconsistency in an archive, as readable strings ([] when it is sound). Used by the tests and tools/preleague-study.mjs. */
-export function validateLeagueArchive(archive, { live = null } = {}) {
+/** The archive is checked against the divisions its seasons were played in (layout 1, see generateLeagueArchive). */
+export function validateLeagueArchive(archive, opts = {}) {
+  const before = ACTIVE_LAYOUT; useLeagueLayout(ARCHIVE_LAYOUT);
+  try { return validateArchive(archive, opts); } finally { useLeagueLayout(before); }
+}
+function validateArchive(archive, { live = null } = {}) {
   const errors = []; const say = (s) => errors.push(s);
   if (!archive || archive.version !== ARCHIVE_VERSION) return [`Not a version-${ARCHIVE_VERSION} archive`];
   const all = archive.seasons || []; const byYear = new Map(all.map((s) => [s.year, s]));
