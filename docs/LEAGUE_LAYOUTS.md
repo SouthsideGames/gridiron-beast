@@ -24,7 +24,11 @@ In the first 32-club league, all eight starter clubs were in two divisions, Gold
 
 The swaps are Canyon Crushers ⇄ Pinecrest Wardens and Sunfire Solars ⇄ Fernhaven Wisps. On the league map each pair also swaps home grounds (`mapPins` in `league-hub.js`), so every club stands in its own region. A club's region styling around the field follows its new division.
 
-Starter clubs are not weaker on the field (owner: "leave it for now"). The league history gives them their losing records for the season before year 1, and Skyvale and Thornwood keep their fallen-power stories as ordinary clubs.
+Starter clubs are not weaker on the field (owner: "leave it for now").
+
+**History.** The league realigned the year the new owner arrived. The archive's seasons are played in layout 1's divisions (`ARCHIVE_LAYOUT` in `preleague-history.js`), so every franchise has the same past, with the same champions, including Skyvale's two titles and Thornwood's one. Layout 2's starter clubs are pinned to their picker records in the season before year 1. The archive is validated against layout 1.
+
+**Schedules.** The layout keys the schedule cache only. The schedule draws (`gb-schedule|seed|season`) are the same as before layouts existed, so an existing save's fixtures do not change. The golden-vector test checks this under layout 1.
 
 ## Layout 1 (existing saves)
 
