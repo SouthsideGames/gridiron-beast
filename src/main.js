@@ -300,6 +300,8 @@ export function start() {
   const leaving = () => { if (!app.f || isArchived(app.f)) return; app.save({ immediate: true }); if (app.storage.store) app.storage.store.journal(app.f); cloudFlush(); };
   window.addEventListener('beforeunload', leaving);
   window.addEventListener('pagehide', leaving);
+  // No zoom anywhere (owner 2026-11-24): Safari ignores user-scalable=no, so pinch gestures are refused here too.
+  for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') leaving(); else checkOtherTabs(); });
   window.addEventListener('focus', checkOtherTabs);
 }

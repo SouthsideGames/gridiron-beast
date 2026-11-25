@@ -1,12 +1,13 @@
 import { plainAbilityRule } from '../text/ability-rules-plain.js';
 import { CLASH_SIMPLE } from '../text/clash-simple.js';
+import { FOOTBALL_SIMPLE } from '../text/football-simple.js';
 // Player-facing ability information (Task 8 M6). One source for every screen that names a monster's abilities: the Beast Dex
 // ability records (src/data/beast-dex.js), never the retired legacy cards or shared traits. Each family has one football and one
 // Beast Clash ability; a Basic family has none. Mastery is read from the individual's development record (spec §6): two
 // independent records, the relevant mode's shown as the third progress bar beside level and shared training.
 // Presentation only: nothing here is read by a simulation.
 import { esc } from './dom.js';
-import { abilitiesOf, familyById } from '../data/beast-dex.js';
+import { abilitiesOf, familyById, abilityById } from '../data/beast-dex.js';
 import { THRESHOLDS, TIERS, tierIndex } from '../franchise/t8/mastery.js';
 import { SPECS } from '../sim/abilities/review-texts.js';
 import { t as $t } from '../text/index.js';
@@ -48,6 +49,19 @@ export function abilityInfo(x, mode = 'football') {
   const summary = mode === 'clash' && CLASH_SIMPLE[a.id] ? dexLine(dexKey.abilityPlain(a.id), CLASH_SIMPLE[a.id]) : mode === 'football' && SPECS[id]?.expect ? dexLine(dexKey.abilitySummary(id), SPECS[id].expect) : dexLine(dexKey.abilityMechanic(a.id), tidy(a));
   const sections = SHOWN_SECTIONS.map((s) => { const raw = a.details?.find(d => d.section === s)?.rule; const text = raw ? dexLine(dexKey.abilityReadableRule(a.id, s), plainAbilityRule(raw)) : null; return text ? { label: SECTION_LABEL[s], text } : null; }).filter(Boolean);
   return { id: a.id, name: dexLine(dexKey.abilityName(a.id), a.name), mode, category: a.category, summary, story, sections };
+}
+/**
+ * The ability in a sentence or two a young player can read (owner 2026-11-24: the match's Inspect panel shows no codes, counts
+ * or timings; the Dex keeps the full rules). The plain "what it does" rule, cut to its first two sentences; else the summary.
+ */
+export function simpleAbilityText(abilityId) {
+  const a = abilityById(abilityId); if (!a) return '';
+  if (FOOTBALL_SIMPLE[a.id]) return dexLine(dexKey.abilityPlain(a.id), FOOTBALL_SIMPLE[a.id]);
+  const info = abilityInfo(a.familyId, a.mode || 'football'); if (!info) return '';
+  const what = info.sections.find((x) => x.label === SECTION_LABEL['Core resolution'])?.text || info.summary || '';
+  const clean = String(what).replace(/\b[A-Z]{3}-\d{2}-[A-Z]\b:?\s*/g, '').replace(/\s+/g, ' ').trim();
+  const sentences = clean.match(/[^.!?]+[.!?]+/g) || [clean];
+  return sentences.slice(0, 2).join(' ').trim();
 }
 /** True when the family has no abilities (a Basic). */
 export const hasAbilities = (x) => { const id = familyIdOf(x); return !!(id && (abilitiesOf(id)?.football || abilitiesOf(id)?.clash)); };

@@ -903,7 +903,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   /** A live kickoff in the air: the coverage runs down its lanes toward the landing spot; the kicker trails as the last man. */
   function kickoffFlightDefense(d) {
     const L = ball.landing; const asg = d.assignment || {};
-    if (asg.safety) { steer(d, Math.max(L.x + 20, d.x - 30), L.y + (asg.lane || 0), 0.85, 0.5); return; }
+    if (asg.safety) { steer(d, Math.min(d.x, Math.max(L.x + 20, d.x - 30)), L.y + (asg.lane || 0), 0.85, 0.5); return; } // never back away from the ball (owner 2026-11-24)
     steer(d, L.x, asg.lane ?? d.y, 1, 0.6);
   }
   /**
@@ -921,7 +921,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const mates = defs.filter((m) => m !== d && !m.engaged && !m.knockedDown && m.stun <= 0);
       const lastMan = !mates.some((m) => m.x > c.x) || mates.every((m) => dist(m, c) > dist(d, c));
       if (lastMan) { d.koBroke = true; return false; }
-      steer(d, Math.max(c.x + 20, d.x - 30), c.y, 0.85, 0.5); return true;
+      // Owner 2026-11-24: the safety used to keep a 20-yard cushion by running back toward his own goal as the returner came
+      // on, which read as a tackler running away from the ball. He now holds his ground (closing to 12 yards), never retreating.
+      steer(d, Math.min(d.x, Math.max(c.x + 12, d.x - 30)), c.y, 0.85, 0.5); return true;
     }
     const lane = asg.lane ?? d.y;
     if (d.x - c.x <= Math.abs(c.y - lane)) { d.koBroke = true; return false; }

@@ -638,10 +638,12 @@ export function registerMatchScreens(Router, app) {
       // choice stay on screen together on short phones (validation 2026-11-18: at 320 x 568 Choose Play fell below the screen).
       const tryMore = (sub) => sub || rpRow ? `<button class="btn small" data-action="match-panel" data-panel="more">${$t('playview.more_controls')}</button><div hidden data-match-panel="more">${rpRow}${sub}</div>` : '';
       if (s.tryTeam !== me) { const more = tryMore(substitutionStrip(f)); return `<div class="match-actions compact-actions">${autoBar}<button class="btn primary big block" data-action="continue">${$t('match.opponents_try_continue')}</button>${more ? `<div class="match-quick-actions">${more}</div>` : ''}</div>`; }
-      const two = PLAYS; const plays = teams[me].offensePlays.filter((id) => PLAYS[id].tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t)));
+      const near = (id) => PLAYS[id]?.tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t));
+      // The short-yardage plays first, then the rest of the plan: a plan without one used to open an empty Choose Play sheet (owner 2026-11-24).
+      const plan = teams[me].offensePlays.filter((id) => PLAYS[id]); const plays = [...plan.filter(near), ...plan.filter((id) => !near(id))];
       return `<div class="match-actions compact-actions">${autoBar}<p class="muted center" style="margin:0;font-size:12px">${$t('match.touchdown_kick', { tryDecision: AI.tryDecision(s) === 'two' ? 'coach suggests two' : $t('match.coach_suggests_the_kick') })}</p>
         <div class="primary-row" style="grid-template-columns:1fr 1fr"><button class="btn primary big" data-action="trykick">${$t('match.kick_pat_1')}</button><button class="btn big" data-action="trytwo">${$t('match.go_for_two')}</button></div>
-        <div class="match-quick-actions"><button class="btn small" data-action="match-panel" data-panel="plays">${$t('playview.choose_play')}</button>${tryMore(substitutionStrip(f))}</div><div hidden data-match-panel="plays">${cards(plays, 'offense', G.selected.offense, null)}</div></div>`;
+        <div class="match-quick-actions"><button class="btn small" data-action="match-panel" data-panel="plays">${$t('playview.choose_play')}</button>${tryMore(substitutionStrip(f))}</div><div hidden data-match-panel="plays">${plays.length ? cards(plays, 'offense', G.selected.offense, null) : `<p class="muted" style="margin:4px 0 12px">${$t('match.no_play_can_be_run_for_the_try')}</p>`}</div></div>`;
     }
     // Scrimmage.
     const myBall = s.possession === me;
@@ -783,6 +785,7 @@ export function registerMatchScreens(Router, app) {
         anim.key = key; anim.i = idx;
         const s = G.state; const t0 = performance.now();
         if (anim.follow) { const target = cameraFor((sim.ballOn || 0) + sim.frames[idx].ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
+        else if (anim.camera) { const target = carrierCamera(sim.ballOn || 0, sim.frames[idx]); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
         const prevT = sim.frames[Math.max(0, idx - 1)].t ?? 0, ft = sim.frames[idx].t ?? 0;
         const drawFrame = half ? midFrame(sim.frames[idx], sim.frames[idx + 1]) : sim.frames[idx];
         drawMatchField(svg, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), ...kitOpts(s, anim.ev.offenseSide), frame: drawFrame, prevFrame: sim.frames[idx - 1] || null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), qbRead: qbReadsShown(f.settings, { live: true }), ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
@@ -794,6 +797,17 @@ export function registerMatchScreens(Router, app) {
       anim.raf = requestAnimationFrame(tick);
     };
     anim.raf = requestAnimationFrame(tick);
+  }
+  /**
+   * Scrimmage plays (owner 2026-11-24): the close camera stays at the line until the ball nears an edge of the picture, then
+   * follows the ball carrier, so a long run is seen all the way to the end zone. It stops where the play's own camera stops: the
+   * stands behind the end line (cameraFor clamps). Zoomed out (Auto), the whole field is shown and this changes nothing.
+   */
+  function carrierCamera(ballOn, frame) {
+    const base = cameraFor(ballOn); const y = ballOn + (frame?.ball?.[0] ?? 0);
+    if (y > base.top - 12) return cameraFor(y - 19); // 12 yards of field kept ahead of the ball
+    if (y < base.bottom + 6) return cameraFor(y + 9); // a sack or a loss: 6 yards kept behind it
+    return base;
   }
   /** Kick plays follow the ball with the camera: the formula animations (kick-anim.js) and the live kickoff's engine frames. */
   function followsBall(sim) { return !!(sim.kick || sim.kickoff || sim.events?.some((e) => e.ability === 'PSY-02-F' || e.ability === 'DRA-03-F')); }
@@ -938,7 +952,7 @@ export function registerMatchScreens(Router, app) {
         ${st.exhausted ? `<div class="inspect-note">${$t('match.exhausted_for_the_rest_of_the')}</div>` : st.low ? `<div class="inspect-note">${$t('match.low_the_battery_shows_over_his')}</div>` : ''}${I.staminaNotes.map(note).join('')}</div>
       ${I.awarenessNotes.length ? `<div class="inspect-sec" data-sec="awareness">${$t('match.b_awareness_b')}${I.awarenessNotes.map(note).join('')}</div>` : ''}
       <div class="inspect-sec" data-sec="status"><div class="row between">${$t('match.b_status_b')}<span>${I.status ? `${esc(STATUS_NAME[I.status.id] || I.status.id)}${I.status.remaining != null ? ` ${$t('match.plays_left', { remaining: I.status.remaining, n: I.status.remaining })}` : $t('match.this_play')}` : $t('match.none')}</span></div></div>
-      ${I.ability ? `<div class="inspect-sec" data-sec="ability"><b>${esc(I.ability.name)}</b><div class="muted" style="font-size:12px">${esc(I.ability.text)}</div></div>` : ''}</div>`;
+      ${I.ability ? `<div class="inspect-sec" data-sec="ability"><b>${esc(I.ability.name)}</b><div style="font-size:14px;margin-top:2px">${esc(I.ability.text)}</div></div>` : ''}</div>`;
   }
   function openInspect(f, mid) {
     const G = f?.game; if (!G || !mid) return; const teams = teamsFor(f); const mine = findMonster(teams, mid)?.team === G.playerSide; // an opponent shows only what the field already shows

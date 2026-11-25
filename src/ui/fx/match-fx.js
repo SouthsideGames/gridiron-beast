@@ -23,6 +23,7 @@ import { IRON_LUNGS } from '../../sim/abilities/steelpaw.js';
 import { FIELD_REVEAL } from './fields-fx.js';
 import { LOOKS } from './looks/index.js';
 import { t as $t } from '../../text/index.js';
+import { simpleAbilityText } from '../ability-info.js';
 
 /** The approved name of a Dex football ability (its look's name), or null. */
 export const dexAbilityName = (id) => LOOKS[id]?.name || null;
@@ -275,7 +276,7 @@ export function inspectInfo(state, teams, mid, { formation = null, last = null, 
   const st = state?.t8 ? statusOf(state, mid) : null; const abs = (state?.t8?.absences || []).find((a) => a.mid === mid) || null; const abId = footballAbility(m);
   const out = { monster: m, team, slot: null, full: !!full, stamina: full ? { now: cur, capacity: cap, frac: cap ? Math.max(0, Math.min(1, cur / cap)) : 0, low, exhausted, played: !!rec } : { low, exhausted },
     status: st ? { id: st.id, remaining: st.restOfPlay ? null : st.remaining ?? null } : null, absent: abs ? { serveOn: abs.serveOn || null, ability: abs.ability || null } : null,
-    ability: abId ? { id: abId, name: dexAbilityName(abId) || abilityById(abId)?.name || abId, text: abilityById(abId)?.mechanic || '' } : null, staminaNotes: [], awarenessNotes: [] };
+    ability: abId ? { id: abId, name: dexAbilityName(abId) || abilityById(abId)?.name || abId, text: simpleAbilityText(abId) } : null, staminaNotes: [], awarenessNotes: [] };
   if (last?.lungs?.includes(mid)) out.staminaNotes.push({ tick: true, text: $t('fx.iron_lungs_saved_1_stamina_on') });
   if (last?.watch?.includes(mid)) out.awarenessNotes.push({ tick: true, text: $t('fx.night_watch_kept_his_awareness_full') });
   const progress = state?.t8?.ironLungs?.progress?.[mid] || 0; let lungsNow = false;
