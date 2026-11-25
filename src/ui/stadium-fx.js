@@ -417,7 +417,9 @@ export function bowlDefs() {
 /** The bowl's seats for one camera (the patterns are bowlDefs): rows lined up with the far stand's back at svg y `top`. */
 export function bowlSvg(VW, span, top) {
   const defs = bowlDefs(); if (!defs.length) return '';
-  const R = 90, x = -VW - R, y = -R - BOWL_H, w = (VW + R) * 2, h = span + R * 2 + BOWL_H * 2; const shift = (((top % BOWL_H) + BOWL_H) % BOWL_H).toFixed(2);
+  // Beside the picture only (owner 2026-11-24): fans above or below it stood in the middle of the field. The ends show their stands
+  // when the camera reaches them, and the field fills the box top to bottom (field-view.js setFieldSpan).
+  const shiftN = ((top % BOWL_H) + BOWL_H) % BOWL_H; const R = 90, x = -VW - R, y = -shiftN, w = (VW + R) * 2, h = span; const shift = shiftN.toFixed(2);
   const rect = (id, cls = '') => `<rect${cls ? ` class="${cls}"` : ''} x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" fill="url(#${id})"/>`;
   const [base, home, away] = defs;
   return `<g class="sfx-stand sfx-bowl" transform="translate(0 ${shift})"><rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" fill="#10151d"/>${rect(base.id)}${home ? rect(home.id, 'sfx-cheer sfx-cheer-home') : ''}${away ? rect(away.id, 'sfx-cheer sfx-cheer-away') : ''}<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" fill="#060a10" opacity="0.36"/></g>`;

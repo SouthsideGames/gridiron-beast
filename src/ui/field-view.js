@@ -31,23 +31,38 @@ import { fieldBrand, brandEndZone, brandMidfield, LOGO_YARDS } from './field-bra
 import { postsSvg, standsDepth, standSvg, bowlSvg, bowlDefs, apronSvg, borderSvg, barrierSvg, sideStandsSvg, SIDE_REACH, fieldBorder, FIELD_BORDER, STANDS_GRASS, STANDS_BARRIER, STANDS_GAP, FOOTBALL } from './stadium-fx.js';
 import { t as $t } from '../text/index.js';
 
-const SPAN = 46; // visible yards
+const SPAN = 46; // visible yards, at least (the close camera)
 const HW = FIELD.halfWidth + 0.33;
 let nextLiveClip = 0;
-
-export function cameraFor(ballOn) {
-  let bottom = ballOn - 15;
+/**
+ * The close camera's height in yards (owner 2026-11-24). A tall phone's field box is taller than 46 yards of field at its width,
+ * and the gap above and below the picture used to be filled with seats, so fans showed in the middle of the field. The camera now
+ * shows as many yards as the box holds (setFieldSpan, from the match screen's field box), so the field fills it; the stands show
+ * only behind an end zone, when the camera is near it.
+ */
+let spanNow = SPAN;
+export const fieldSpan = () => spanNow;
+export function setFieldSpan(yards) { const v = Math.max(SPAN, Math.min(120, Number(yards) || SPAN)); const changed = Math.abs(v - spanNow) > 0.25; if (changed) spanNow = v; return changed; }
+/** The close camera with its bottom edge at `bottom` yards, kept inside the stands at each end. */
+export function cameraFrom(bottom) {
   const reach = standsDepth(); // Stadium Polish: with a stadium scene set, the picture reaches a few yards past each end line (the stands)
-  bottom = Math.max(-10 - reach, Math.min(110 + reach - SPAN, bottom));
-  return { bottom, top: bottom + SPAN };
+  bottom = Math.max(-10 - reach, Math.min(110 + reach - spanNow, bottom));
+  return { bottom, top: bottom + spanNow };
 }
+/** The close camera for a snap at `ballOn`: the line about a third of the way up the picture. */
+export function cameraFor(ballOn) { return cameraFrom(ballOn - Math.round(spanNow * 15 / SPAN)); }
 export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
 /** Stadium Polish: half the picture's width. With a stadium scene set the picture is wider than the field by the white paint. */
 /** Zoomed out, the picture also takes in the stands along the sidelines; they slide into view as the camera pulls back. */
-const sideReach = (span) => (fieldBorder() ? SIDE_REACH * Math.max(0, Math.min(1, (span - SPAN) / 50)) : 0);
-const viewHalf = (span = SPAN) => HW + fieldBorder() + sideReach(span);
+const sideReach = (span) => (fieldBorder() ? SIDE_REACH * Math.max(0, Math.min(1, (span - spanNow) / 50)) : 0);
+const viewHalf = (span = spanNow) => HW + fieldBorder() + sideReach(span);
 /** The viewBox for the field on screen now (FIELD_VIEWBOX unless a stadium scene is set). */
-export const fieldViewBox = (span = SPAN) => `${-viewHalf(span)} 0 ${viewHalf(span) * 2} ${span}`;
+/** Fit the close camera to the field box on screen (match screen): as many yards tall as the box holds at its width. */
+export function fitFieldSpan(svg) {
+  const r = svg?.getBoundingClientRect?.(); if (!r || r.width < 50 || r.height < 50) return false;
+  const wide = (HW + fieldBorder()) * 2; return setFieldSpan(wide * r.height / r.width);
+}
+export const fieldViewBox = (span = spanNow) => `${-viewHalf(span)} 0 ${viewHalf(span) * 2} ${span}`;
 
 /**
  * @param {object} o
@@ -239,7 +254,7 @@ export function fieldLayers(o) {
   const dynamic = `<g class="fv-pre">${pre}</g><g class="fv-pl">${players.map((x) => `<g>${x.html}</g>`).join('')}</g><g class="fv-post">${post}</g>`;
   // The bowl of seats round the stadium (owner 2026-11-24): its own unclipped layer under the field, filling the box past the
   // picture's edges (the svg shows overflow); its patterns go to <defs> once.
-  const bowl = fieldBorder() ? bowlSvg(viewHalf(span), span, Y(110 + standsDepth())) : '';
+  const bowl = fieldBorder() ? bowlSvg(viewHalf(span), span, Y(110 + standsDepth())) : ''; // beside the picture only (bowlSvg): never above or below it
   if (bowl) for (const d of bowlDefs()) if (!symbols.some((x) => x.id === d.id)) symbols.push(d);
   return { statics, dynamic, symbols, pre, players, post, span, clipId, bowl };
 }
