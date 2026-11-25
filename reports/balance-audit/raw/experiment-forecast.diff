@@ -1,0 +1,4 @@
+989c989
+<     const talent = team === f.club ? teamOverall(playerTeam(f)) : todayOverall(f, team, year);
+---
+>     const talent = team === f.club ? teamOverall(playerTeam(f)) : (hasLeague(f) ? teamOverall(aiTeam(f, team, year)) : todayOverall(f, team, year)); // EXPERIMENT X-2: the persistent club's real strength

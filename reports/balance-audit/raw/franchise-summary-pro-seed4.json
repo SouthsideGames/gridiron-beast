@@ -1,0 +1,3561 @@
+{
+ "files": [
+  "reports/balance-audit/raw/franchise-pro-seed4.json"
+ ],
+ "runs": [
+  {
+   "file": "reports/balance-audit/raw/franchise-pro-seed4.json",
+   "seed": 4,
+   "difficulty": "pro",
+   "seasonsPlayed": 15,
+   "ownerClub": "Ashford Cinders",
+   "problems": [],
+   "problemCount": 0,
+   "error": null,
+   "seconds": 1878,
+   "owner": {
+    "winPct": 47.6,
+    "playoffSeasons": 7,
+    "titles": 2,
+    "forfeits0to21": 8,
+    "games": 210,
+    "byBlock": {
+     "1-5": 60,
+     "6-10": 21.4,
+     "11-15": 61.4,
+     "16-20": null
+    }
+   },
+   "titles": {
+    "distinctChampions": 9,
+    "mostByOneClub": 3,
+    "byClub": {
+     "Palmetto Wyrms": 3,
+     "Sunfire Solars": 2,
+     "Aetheria Seers": 2,
+     "Thunder Mesa Blitz": 1,
+     "Northstar Novas": 1,
+     "Ironpeak Colossi": 1,
+     "Mistport Veils": 2,
+     "Westhaven Pirates": 1,
+     "Ashford Cinders": 2
+    },
+    "gymTitles": 10,
+    "ownerTitles": 2
+   },
+   "departures": {
+    "walked": 1325,
+    "retired": 644,
+    "released": 176,
+    "traded": 119
+   },
+   "retirements": {
+    "n": 644,
+    "meanAge": 32.3,
+    "meanOvr": 58.1,
+    "starters": 488,
+    "byPos": {
+     "QB": 33.5,
+     "RB": 29.4,
+     "WR": 31,
+     "TE": 32.4,
+     "OL": 33.6,
+     "DL": 32.9,
+     "LB": 32.6,
+     "CB": 31,
+     "S": 32.4,
+     "K": 35.3
+    }
+   },
+   "arrivalsByOrigin": {
+    "drafted": 1302,
+    "traded": 117,
+    "signed:pool": 174,
+    "signed:generated": 392,
+    "signed:waivers": 117
+   },
+   "snapshots": {
+    "1": {
+     "year": 1,
+     "owner": {
+      "w": 10,
+      "l": 4,
+      "playoffs": true,
+      "champion": false,
+      "teamOvr": 57,
+      "roster": 37,
+      "forfeits0to21": 0,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 52.7,
+      "teamOvrSd": 3.7,
+      "teamOvrMin": 45,
+      "teamOvrMax": 60,
+      "winPctSd": 27.2,
+      "rivalOvr": 50,
+      "gymOvr": 55.7,
+      "ordinaryOvr": 50.8,
+      "capRoomMean": 384583,
+      "capRoomMin": 299620,
+      "negativeCap": 0,
+      "payrollMean": 1010417,
+      "rosterMin": 32,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 31,
+      "meanAge": 24.2,
+      "starterAge": 25.1,
+      "devMean": null,
+      "evolved": 89,
+      "meanLevel": 13.8,
+      "stage1": 148,
+      "stage2": 24,
+      "injured": 0
+     },
+     "champion": "Palmetto Wyrms",
+     "championGym": "late",
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 9.7,
+      "blowout21": 22,
+      "score0to21": 1,
+      "pointsPerTeamGame": 11.6
+     },
+     "monsters": {
+      "n": 1188,
+      "ovrMean": 43.7,
+      "ovr80": 19,
+      "ovr90": 5,
+      "ovr95": 3,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 58,
+      "levelMean": 14.1,
+      "stage2": 25,
+      "starterOvr": 53.7,
+      "reserveOvr": 33.2,
+      "contract3y": 139,
+      "contractYearsMean": 2.1
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 65,
+       "meanSalary": 29918,
+       "starterMeanSalary": 33027,
+       "starterMeanOvr": 62.9,
+       "salaryPerOvrStarter": 525
+      },
+      "RB": {
+       "n": 58,
+       "meanSalary": 25508,
+       "starterMeanSalary": 29240,
+       "starterMeanOvr": 47.2,
+       "salaryPerOvrStarter": 635
+      },
+      "WR": {
+       "n": 178,
+       "meanSalary": 26531,
+       "starterMeanSalary": 28905,
+       "starterMeanOvr": 47.7,
+       "salaryPerOvrStarter": 622
+      },
+      "TE": {
+       "n": 58,
+       "meanSalary": 27508,
+       "starterMeanSalary": 30106,
+       "starterMeanOvr": 53.8,
+       "salaryPerOvrStarter": 569
+      },
+      "OL": {
+       "n": 182,
+       "meanSalary": 27700,
+       "starterMeanSalary": 30385,
+       "starterMeanOvr": 54.8,
+       "salaryPerOvrStarter": 565
+      },
+      "DL": {
+       "n": 177,
+       "meanSalary": 27924,
+       "starterMeanSalary": 30132,
+       "starterMeanOvr": 53.8,
+       "salaryPerOvrStarter": 564
+      },
+      "LB": {
+       "n": 115,
+       "meanSalary": 27241,
+       "starterMeanSalary": 29761,
+       "starterMeanOvr": 50.4,
+       "salaryPerOvrStarter": 601
+      },
+      "CB": {
+       "n": 126,
+       "meanSalary": 26557,
+       "starterMeanSalary": 29686,
+       "starterMeanOvr": 50.7,
+       "salaryPerOvrStarter": 602
+      },
+      "S": {
+       "n": 121,
+       "meanSalary": 27209,
+       "starterMeanSalary": 29749,
+       "starterMeanOvr": 52.4,
+       "salaryPerOvrStarter": 575
+      },
+      "K": {
+       "n": 58,
+       "meanSalary": 31480,
+       "starterMeanSalary": 35021,
+       "starterMeanOvr": 68.4,
+       "salaryPerOvrStarter": 519
+      }
+     },
+     "fa": {
+      "aiSignings": 7,
+      "ownerSignings": 0,
+      "contested2plus": 5,
+      "meanSalary": 31471,
+      "meanYears": 2.3,
+      "withBonus": 0,
+      "unsignedAtClose": 30,
+      "extensions": 259,
+      "renewalsSigned": 83,
+      "renewalsDeclined": 33,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7945,
+      "comp": 4111,
+      "passYds": 60012,
+      "passTd": 452,
+      "intThrown": 106,
+      "sacked": 162,
+      "rush": 4279,
+      "rushYds": 19770,
+      "rushTd": 180,
+      "fgm": 251,
+      "fga": 335,
+      "xpm": 544,
+      "xpa": 631,
+      "fumLost": 84,
+      "points": 5196,
+      "forfeits": 0,
+      "score0to21": 1,
+      "ot": 16,
+      "clashDecided": 8
+     },
+     "awards": {
+      "mvp": "QB",
+      "opoy": "WR",
+      "dpoy": "DL",
+      "oroy": "WR",
+      "droy": "CB",
+      "coy": null,
+      "smoy": "QB"
+     },
+     "saveBytes": 6717802
+    },
+    "5": {
+     "year": 5,
+     "owner": {
+      "w": 5,
+      "l": 9,
+      "playoffs": false,
+      "champion": false,
+      "teamOvr": 60,
+      "roster": 38,
+      "forfeits0to21": 1,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 63.5,
+      "teamOvrSd": 3,
+      "teamOvrMin": 57,
+      "teamOvrMax": 71,
+      "winPctSd": 25.8,
+      "rivalOvr": 64,
+      "gymOvr": 65.3,
+      "ordinaryOvr": 62.4,
+      "capRoomMean": 322704,
+      "capRoomMin": 259800,
+      "negativeCap": 0,
+      "payrollMean": 1072296,
+      "rosterMin": 35,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 30,
+      "meanAge": 25.8,
+      "starterAge": 27.5,
+      "devMean": 1.6,
+      "evolved": 23,
+      "meanLevel": 25.4,
+      "stage1": 177,
+      "stage2": 52,
+      "injured": 0
+     },
+     "champion": "Aetheria Seers",
+     "championGym": "late",
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 10,
+      "blowout21": 24,
+      "score0to21": 4,
+      "pointsPerTeamGame": 14.5
+     },
+     "monsters": {
+      "n": 1202,
+      "ovrMean": 51,
+      "ovr80": 65,
+      "ovr90": 20,
+      "ovr95": 14,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 368,
+      "levelMean": 25.5,
+      "stage2": 52,
+      "starterOvr": 64.1,
+      "reserveOvr": 37.7,
+      "contract3y": 399,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 79,
+       "meanSalary": 30258,
+       "starterMeanSalary": 36159,
+       "starterMeanOvr": 70.7,
+       "salaryPerOvrStarter": 514
+      },
+      "RB": {
+       "n": 76,
+       "meanSalary": 26234,
+       "starterMeanSalary": 30186,
+       "starterMeanOvr": 57.1,
+       "salaryPerOvrStarter": 538
+      },
+      "WR": {
+       "n": 168,
+       "meanSalary": 27986,
+       "starterMeanSalary": 31549,
+       "starterMeanOvr": 58.6,
+       "salaryPerOvrStarter": 546
+      },
+      "TE": {
+       "n": 73,
+       "meanSalary": 27458,
+       "starterMeanSalary": 32497,
+       "starterMeanOvr": 64.5,
+       "salaryPerOvrStarter": 506
+      },
+      "OL": {
+       "n": 175,
+       "meanSalary": 29697,
+       "starterMeanSalary": 33975,
+       "starterMeanOvr": 69.5,
+       "salaryPerOvrStarter": 493
+      },
+      "DL": {
+       "n": 164,
+       "meanSalary": 29827,
+       "starterMeanSalary": 33200,
+       "starterMeanOvr": 64.1,
+       "salaryPerOvrStarter": 521
+      },
+      "LB": {
+       "n": 114,
+       "meanSalary": 28379,
+       "starterMeanSalary": 31897,
+       "starterMeanOvr": 58.5,
+       "salaryPerOvrStarter": 557
+      },
+      "CB": {
+       "n": 131,
+       "meanSalary": 27743,
+       "starterMeanSalary": 31707,
+       "starterMeanOvr": 60.6,
+       "salaryPerOvrStarter": 531
+      },
+      "S": {
+       "n": 118,
+       "meanSalary": 29311,
+       "starterMeanSalary": 33490,
+       "starterMeanOvr": 63.2,
+       "salaryPerOvrStarter": 535
+      },
+      "K": {
+       "n": 53,
+       "meanSalary": 32719,
+       "starterMeanSalary": 37087,
+       "starterMeanOvr": 76.3,
+       "salaryPerOvrStarter": 488
+      }
+     },
+     "fa": {
+      "aiSignings": 12,
+      "ownerSignings": 0,
+      "contested2plus": 6,
+      "meanSalary": 32675,
+      "meanYears": 1.8,
+      "withBonus": 0,
+      "unsignedAtClose": 44,
+      "extensions": 260,
+      "renewalsSigned": 90,
+      "renewalsDeclined": 9,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7879,
+      "comp": 4560,
+      "passYds": 67394,
+      "passTd": 603,
+      "intThrown": 168,
+      "sacked": 92,
+      "rush": 4201,
+      "rushYds": 24370,
+      "rushTd": 222,
+      "fgm": 250,
+      "fga": 338,
+      "xpm": 700,
+      "xpa": 805,
+      "fumLost": 79,
+      "points": 6491,
+      "forfeits": 0,
+      "score0to21": 4,
+      "ot": 14,
+      "clashDecided": 4
+     },
+     "awards": {
+      "mvp": "RB",
+      "opoy": "RB",
+      "dpoy": "CB",
+      "oroy": "RB",
+      "droy": "CB",
+      "coy": null,
+      "smoy": "QB"
+     },
+     "saveBytes": 10328478
+    },
+    "10": {
+     "year": 10,
+     "owner": {
+      "w": 6,
+      "l": 8,
+      "playoffs": false,
+      "champion": false,
+      "teamOvr": 56,
+      "roster": 37,
+      "forfeits0to21": 0,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 64.3,
+      "teamOvrSd": 3.5,
+      "teamOvrMin": 58,
+      "teamOvrMax": 70,
+      "winPctSd": 24.6,
+      "rivalOvr": 66,
+      "gymOvr": 64.4,
+      "ordinaryOvr": 64.3,
+      "capRoomMean": 343275,
+      "capRoomMin": 268500,
+      "negativeCap": 0,
+      "payrollMean": 1051725,
+      "rosterMin": 32,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 31,
+      "meanAge": 26.4,
+      "starterAge": 28.4,
+      "devMean": 1.1,
+      "evolved": 21,
+      "meanLevel": 24.6,
+      "stage1": 141,
+      "stage2": 29,
+      "injured": 0
+     },
+     "champion": "Mistport Veils",
+     "championGym": null,
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 8.7,
+      "blowout21": 18,
+      "score0to21": 4,
+      "pointsPerTeamGame": 16.3
+     },
+     "monsters": {
+      "n": 1163,
+      "ovrMean": 51.8,
+      "ovr80": 80,
+      "ovr90": 27,
+      "ovr95": 20,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 384,
+      "levelMean": 24.6,
+      "stage2": 29,
+      "starterOvr": 64.8,
+      "reserveOvr": 37.6,
+      "contract3y": 396,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 84,
+       "meanSalary": 29889,
+       "starterMeanSalary": 36972,
+       "starterMeanOvr": 69.5,
+       "salaryPerOvrStarter": 535
+      },
+      "RB": {
+       "n": 85,
+       "meanSalary": 26807,
+       "starterMeanSalary": 33155,
+       "starterMeanOvr": 61.1,
+       "salaryPerOvrStarter": 549
+      },
+      "WR": {
+       "n": 163,
+       "meanSalary": 28213,
+       "starterMeanSalary": 31994,
+       "starterMeanOvr": 59.5,
+       "salaryPerOvrStarter": 548
+      },
+      "TE": {
+       "n": 79,
+       "meanSalary": 28474,
+       "starterMeanSalary": 33063,
+       "starterMeanOvr": 63,
+       "salaryPerOvrStarter": 536
+      },
+      "OL": {
+       "n": 160,
+       "meanSalary": 29979,
+       "starterMeanSalary": 34445,
+       "starterMeanOvr": 69,
+       "salaryPerOvrStarter": 503
+      },
+      "DL": {
+       "n": 155,
+       "meanSalary": 29657,
+       "starterMeanSalary": 33108,
+       "starterMeanOvr": 64,
+       "salaryPerOvrStarter": 522
+      },
+      "LB": {
+       "n": 109,
+       "meanSalary": 29797,
+       "starterMeanSalary": 33241,
+       "starterMeanOvr": 62,
+       "salaryPerOvrStarter": 541
+      },
+      "CB": {
+       "n": 116,
+       "meanSalary": 28527,
+       "starterMeanSalary": 32264,
+       "starterMeanOvr": 62.2,
+       "salaryPerOvrStarter": 526
+      },
+      "S": {
+       "n": 107,
+       "meanSalary": 29785,
+       "starterMeanSalary": 34703,
+       "starterMeanOvr": 64.9,
+       "salaryPerOvrStarter": 545
+      },
+      "K": {
+       "n": 55,
+       "meanSalary": 33247,
+       "starterMeanSalary": 36953,
+       "starterMeanOvr": 76,
+       "salaryPerOvrStarter": 488
+      }
+     },
+     "fa": {
+      "aiSignings": 13,
+      "ownerSignings": 1,
+      "contested2plus": 10,
+      "meanSalary": 32977,
+      "meanYears": 2.2,
+      "withBonus": 0,
+      "unsignedAtClose": 34,
+      "extensions": 232,
+      "renewalsSigned": 121,
+      "renewalsDeclined": 9,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7859,
+      "comp": 4960,
+      "passYds": 69534,
+      "passTd": 644,
+      "intThrown": 150,
+      "sacked": 134,
+      "rush": 4055,
+      "rushYds": 26038,
+      "rushTd": 281,
+      "fgm": 252,
+      "fga": 338,
+      "xpm": 782,
+      "xpa": 911,
+      "fumLost": 89,
+      "points": 7286,
+      "forfeits": 0,
+      "score0to21": 4,
+      "ot": 17,
+      "clashDecided": 8
+     },
+     "awards": {
+      "mvp": "RB",
+      "opoy": "RB",
+      "dpoy": "DL",
+      "oroy": "RB",
+      "droy": "LB",
+      "coy": null,
+      "smoy": "WR"
+     },
+     "saveBytes": 12592763
+    },
+    "15": {
+     "year": 15,
+     "owner": {
+      "w": 14,
+      "l": 0,
+      "playoffs": true,
+      "champion": true,
+      "teamOvr": 61,
+      "roster": 38,
+      "forfeits0to21": 0,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 63.2,
+      "teamOvrSd": 4,
+      "teamOvrMin": 56,
+      "teamOvrMax": 73,
+      "winPctSd": 23.6,
+      "rivalOvr": 67,
+      "gymOvr": 63.4,
+      "ordinaryOvr": 63.1,
+      "capRoomMean": 389916,
+      "capRoomMin": 283700,
+      "negativeCap": 0,
+      "payrollMean": 1005084,
+      "rosterMin": 32,
+      "rosterMax": 38,
+      "lineupProblems": 3,
+      "weakGroupClubs": 31,
+      "meanAge": 25.2,
+      "starterAge": 27,
+      "devMean": 1.2,
+      "evolved": 23,
+      "meanLevel": 23.8,
+      "stage1": 119,
+      "stage2": 28,
+      "injured": 2
+     },
+     "champion": "Ashford Cinders",
+     "championGym": null,
+     "championOwner": true,
+     "games": {
+      "n": 224,
+      "meanMargin": 9.4,
+      "blowout21": 28,
+      "score0to21": 7,
+      "pointsPerTeamGame": 17.4
+     },
+     "monsters": {
+      "n": 1143,
+      "ovrMean": 51.6,
+      "ovr80": 87,
+      "ovr90": 37,
+      "ovr95": 27,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 328,
+      "levelMean": 23.8,
+      "stage2": 29,
+      "starterOvr": 64.1,
+      "reserveOvr": 37.7,
+      "contract3y": 345,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 80,
+       "meanSalary": 28841,
+       "starterMeanSalary": 33110,
+       "starterMeanOvr": 64.3,
+       "salaryPerOvrStarter": 521
+      },
+      "RB": {
+       "n": 84,
+       "meanSalary": 26379,
+       "starterMeanSalary": 34130,
+       "starterMeanOvr": 64.3,
+       "salaryPerOvrStarter": 542
+      },
+      "WR": {
+       "n": 162,
+       "meanSalary": 27339,
+       "starterMeanSalary": 30998,
+       "starterMeanOvr": 58.8,
+       "salaryPerOvrStarter": 545
+      },
+      "TE": {
+       "n": 78,
+       "meanSalary": 28150,
+       "starterMeanSalary": 33308,
+       "starterMeanOvr": 64.8,
+       "salaryPerOvrStarter": 516
+      },
+      "OL": {
+       "n": 144,
+       "meanSalary": 28973,
+       "starterMeanSalary": 32285,
+       "starterMeanOvr": 63.8,
+       "salaryPerOvrStarter": 522
+      },
+      "DL": {
+       "n": 147,
+       "meanSalary": 29151,
+       "starterMeanSalary": 31646,
+       "starterMeanOvr": 61.2,
+       "salaryPerOvrStarter": 528
+      },
+      "LB": {
+       "n": 110,
+       "meanSalary": 28606,
+       "starterMeanSalary": 32972,
+       "starterMeanOvr": 62.3,
+       "salaryPerOvrStarter": 539
+      },
+      "CB": {
+       "n": 118,
+       "meanSalary": 27789,
+       "starterMeanSalary": 32926,
+       "starterMeanOvr": 64.5,
+       "salaryPerOvrStarter": 525
+      },
+      "S": {
+       "n": 112,
+       "meanSalary": 29143,
+       "starterMeanSalary": 33524,
+       "starterMeanOvr": 65.6,
+       "salaryPerOvrStarter": 520
+      },
+      "K": {
+       "n": 57,
+       "meanSalary": 32678,
+       "starterMeanSalary": 37286,
+       "starterMeanOvr": 77.9,
+       "salaryPerOvrStarter": 479
+      }
+     },
+     "fa": {
+      "aiSignings": 27,
+      "ownerSignings": 2,
+      "contested2plus": 9,
+      "meanSalary": 28248,
+      "meanYears": 2,
+      "withBonus": 0,
+      "unsignedAtClose": 15,
+      "extensions": 215,
+      "renewalsSigned": 131,
+      "renewalsDeclined": 0,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7569,
+      "comp": 4742,
+      "passYds": 75647,
+      "passTd": 708,
+      "intThrown": 174,
+      "sacked": 188,
+      "rush": 4053,
+      "rushYds": 22664,
+      "rushTd": 252,
+      "fgm": 241,
+      "fga": 327,
+      "xpm": 848,
+      "xpa": 984,
+      "fumLost": 80,
+      "points": 7780,
+      "forfeits": 0,
+      "score0to21": 7,
+      "ot": 18,
+      "clashDecided": 6
+     },
+     "awards": {
+      "mvp": "WR",
+      "opoy": "WR",
+      "dpoy": "DL",
+      "oroy": "QB",
+      "droy": "S",
+      "coy": null,
+      "smoy": "WR"
+     },
+     "saveBytes": 13085572
+    },
+    "20": null
+   },
+   "seasons": [
+    {
+     "year": 1,
+     "owner": {
+      "w": 10,
+      "l": 4,
+      "playoffs": true,
+      "champion": false,
+      "teamOvr": 57,
+      "roster": 37,
+      "forfeits0to21": 0,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 52.7,
+      "teamOvrSd": 3.7,
+      "teamOvrMin": 45,
+      "teamOvrMax": 60,
+      "winPctSd": 27.2,
+      "rivalOvr": 50,
+      "gymOvr": 55.7,
+      "ordinaryOvr": 50.8,
+      "capRoomMean": 384583,
+      "capRoomMin": 299620,
+      "negativeCap": 0,
+      "payrollMean": 1010417,
+      "rosterMin": 32,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 31,
+      "meanAge": 24.2,
+      "starterAge": 25.1,
+      "devMean": null,
+      "evolved": 89,
+      "meanLevel": 13.8,
+      "stage1": 148,
+      "stage2": 24,
+      "injured": 0
+     },
+     "champion": "Palmetto Wyrms",
+     "championGym": "late",
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 9.7,
+      "blowout21": 22,
+      "score0to21": 1,
+      "pointsPerTeamGame": 11.6
+     },
+     "monsters": {
+      "n": 1188,
+      "ovrMean": 43.7,
+      "ovr80": 19,
+      "ovr90": 5,
+      "ovr95": 3,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 58,
+      "levelMean": 14.1,
+      "stage2": 25,
+      "starterOvr": 53.7,
+      "reserveOvr": 33.2,
+      "contract3y": 139,
+      "contractYearsMean": 2.1
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 65,
+       "meanSalary": 29918,
+       "starterMeanSalary": 33027,
+       "starterMeanOvr": 62.9,
+       "salaryPerOvrStarter": 525
+      },
+      "RB": {
+       "n": 58,
+       "meanSalary": 25508,
+       "starterMeanSalary": 29240,
+       "starterMeanOvr": 47.2,
+       "salaryPerOvrStarter": 635
+      },
+      "WR": {
+       "n": 178,
+       "meanSalary": 26531,
+       "starterMeanSalary": 28905,
+       "starterMeanOvr": 47.7,
+       "salaryPerOvrStarter": 622
+      },
+      "TE": {
+       "n": 58,
+       "meanSalary": 27508,
+       "starterMeanSalary": 30106,
+       "starterMeanOvr": 53.8,
+       "salaryPerOvrStarter": 569
+      },
+      "OL": {
+       "n": 182,
+       "meanSalary": 27700,
+       "starterMeanSalary": 30385,
+       "starterMeanOvr": 54.8,
+       "salaryPerOvrStarter": 565
+      },
+      "DL": {
+       "n": 177,
+       "meanSalary": 27924,
+       "starterMeanSalary": 30132,
+       "starterMeanOvr": 53.8,
+       "salaryPerOvrStarter": 564
+      },
+      "LB": {
+       "n": 115,
+       "meanSalary": 27241,
+       "starterMeanSalary": 29761,
+       "starterMeanOvr": 50.4,
+       "salaryPerOvrStarter": 601
+      },
+      "CB": {
+       "n": 126,
+       "meanSalary": 26557,
+       "starterMeanSalary": 29686,
+       "starterMeanOvr": 50.7,
+       "salaryPerOvrStarter": 602
+      },
+      "S": {
+       "n": 121,
+       "meanSalary": 27209,
+       "starterMeanSalary": 29749,
+       "starterMeanOvr": 52.4,
+       "salaryPerOvrStarter": 575
+      },
+      "K": {
+       "n": 58,
+       "meanSalary": 31480,
+       "starterMeanSalary": 35021,
+       "starterMeanOvr": 68.4,
+       "salaryPerOvrStarter": 519
+      }
+     },
+     "fa": {
+      "aiSignings": 7,
+      "ownerSignings": 0,
+      "contested2plus": 5,
+      "meanSalary": 31471,
+      "meanYears": 2.3,
+      "withBonus": 0,
+      "unsignedAtClose": 30,
+      "extensions": 259,
+      "renewalsSigned": 83,
+      "renewalsDeclined": 33,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7945,
+      "comp": 4111,
+      "passYds": 60012,
+      "passTd": 452,
+      "intThrown": 106,
+      "sacked": 162,
+      "rush": 4279,
+      "rushYds": 19770,
+      "rushTd": 180,
+      "fgm": 251,
+      "fga": 335,
+      "xpm": 544,
+      "xpa": 631,
+      "fumLost": 84,
+      "points": 5196,
+      "forfeits": 0,
+      "score0to21": 1,
+      "ot": 16,
+      "clashDecided": 8
+     },
+     "awards": {
+      "mvp": "QB",
+      "opoy": "WR",
+      "dpoy": "DL",
+      "oroy": "WR",
+      "droy": "CB",
+      "coy": null,
+      "smoy": "QB"
+     },
+     "saveBytes": 6717802
+    },
+    {
+     "year": 2,
+     "owner": {
+      "w": 9,
+      "l": 5,
+      "playoffs": true,
+      "champion": false,
+      "teamOvr": 60,
+      "roster": 38,
+      "forfeits0to21": 0,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 57,
+      "teamOvrSd": 3.2,
+      "teamOvrMin": 49,
+      "teamOvrMax": 63,
+      "winPctSd": 22.9,
+      "rivalOvr": 57,
+      "gymOvr": 59.8,
+      "ordinaryOvr": 55.3,
+      "capRoomMean": 374157,
+      "capRoomMin": 300900,
+      "negativeCap": 0,
+      "payrollMean": 1020843,
+      "rosterMin": 35,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 29,
+      "meanAge": 24.7,
+      "starterAge": 25.9,
+      "devMean": 3.1,
+      "evolved": 108,
+      "meanLevel": 17.9,
+      "stage1": 194,
+      "stage2": 47,
+      "injured": 0
+     },
+     "champion": "Palmetto Wyrms",
+     "championGym": "late",
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 8.7,
+      "blowout21": 22,
+      "score0to21": 6,
+      "pointsPerTeamGame": 13.1
+     },
+     "monsters": {
+      "n": 1200,
+      "ovrMean": 46.7,
+      "ovr80": 29,
+      "ovr90": 11,
+      "ovr95": 6,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 103,
+      "levelMean": 18.2,
+      "stage2": 48,
+      "starterOvr": 57.9,
+      "reserveOvr": 35.2,
+      "contract3y": 324,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 71,
+       "meanSalary": 29879,
+       "starterMeanSalary": 34914,
+       "starterMeanOvr": 66.2,
+       "salaryPerOvrStarter": 528
+      },
+      "RB": {
+       "n": 58,
+       "meanSalary": 25249,
+       "starterMeanSalary": 28797,
+       "starterMeanOvr": 48.4,
+       "salaryPerOvrStarter": 609
+      },
+      "WR": {
+       "n": 178,
+       "meanSalary": 26626,
+       "starterMeanSalary": 29374,
+       "starterMeanOvr": 52.7,
+       "salaryPerOvrStarter": 565
+      },
+      "TE": {
+       "n": 70,
+       "meanSalary": 26893,
+       "starterMeanSalary": 30329,
+       "starterMeanOvr": 58.5,
+       "salaryPerOvrStarter": 525
+      },
+      "OL": {
+       "n": 174,
+       "meanSalary": 27998,
+       "starterMeanSalary": 31488,
+       "starterMeanOvr": 60.8,
+       "salaryPerOvrStarter": 523
+      },
+      "DL": {
+       "n": 171,
+       "meanSalary": 28052,
+       "starterMeanSalary": 31060,
+       "starterMeanOvr": 57.2,
+       "salaryPerOvrStarter": 546
+      },
+      "LB": {
+       "n": 114,
+       "meanSalary": 27249,
+       "starterMeanSalary": 30182,
+       "starterMeanOvr": 54.4,
+       "salaryPerOvrStarter": 560
+      },
+      "CB": {
+       "n": 130,
+       "meanSalary": 26376,
+       "starterMeanSalary": 29744,
+       "starterMeanOvr": 54.9,
+       "salaryPerOvrStarter": 551
+      },
+      "S": {
+       "n": 122,
+       "meanSalary": 27417,
+       "starterMeanSalary": 30736,
+       "starterMeanOvr": 56,
+       "salaryPerOvrStarter": 554
+      },
+      "K": {
+       "n": 61,
+       "meanSalary": 30975,
+       "starterMeanSalary": 34727,
+       "starterMeanOvr": 71.9,
+       "salaryPerOvrStarter": 490
+      }
+     },
+     "fa": {
+      "aiSignings": 8,
+      "ownerSignings": 0,
+      "contested2plus": 6,
+      "meanSalary": 32263,
+      "meanYears": 2.8,
+      "withBonus": 0,
+      "unsignedAtClose": 32,
+      "extensions": 261,
+      "renewalsSigned": 50,
+      "renewalsDeclined": 21,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 8010,
+      "comp": 4282,
+      "passYds": 63008,
+      "passTd": 516,
+      "intThrown": 110,
+      "sacked": 117,
+      "rush": 4254,
+      "rushYds": 21266,
+      "rushTd": 194,
+      "fgm": 293,
+      "fga": 390,
+      "xpm": 600,
+      "xpa": 688,
+      "fumLost": 74,
+      "points": 5891,
+      "forfeits": 0,
+      "score0to21": 6,
+      "ot": 23,
+      "clashDecided": 10
+     },
+     "awards": {
+      "mvp": "WR",
+      "opoy": "RB",
+      "dpoy": "DL",
+      "oroy": "RB",
+      "droy": "DL",
+      "coy": null,
+      "smoy": "TE"
+     },
+     "saveBytes": 7764437
+    },
+    {
+     "year": 3,
+     "owner": {
+      "w": 10,
+      "l": 4,
+      "playoffs": true,
+      "champion": false,
+      "teamOvr": 61,
+      "roster": 38,
+      "forfeits0to21": 0,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 60.3,
+      "teamOvrSd": 2.7,
+      "teamOvrMin": 55,
+      "teamOvrMax": 65,
+      "winPctSd": 21.7,
+      "rivalOvr": 61,
+      "gymOvr": 62.6,
+      "ordinaryOvr": 58.8,
+      "capRoomMean": 349286,
+      "capRoomMin": 293600,
+      "negativeCap": 0,
+      "payrollMean": 1045714,
+      "rosterMin": 36,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 30,
+      "meanAge": 25.2,
+      "starterAge": 26.6,
+      "devMean": 2.4,
+      "evolved": 29,
+      "meanLevel": 21.7,
+      "stage1": 188,
+      "stage2": 52,
+      "injured": 0
+     },
+     "champion": "Sunfire Solars",
+     "championGym": "early",
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 9.8,
+      "blowout21": 30,
+      "score0to21": 2,
+      "pointsPerTeamGame": 13.3
+     },
+     "monsters": {
+      "n": 1209,
+      "ovrMean": 48.9,
+      "ovr80": 42,
+      "ovr90": 13,
+      "ovr95": 7,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 167,
+      "levelMean": 21.9,
+      "stage2": 53,
+      "starterOvr": 61.1,
+      "reserveOvr": 36.6,
+      "contract3y": 410,
+      "contractYearsMean": 2.3
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 74,
+       "meanSalary": 30207,
+       "starterMeanSalary": 35162,
+       "starterMeanOvr": 69.1,
+       "salaryPerOvrStarter": 510
+      },
+      "RB": {
+       "n": 68,
+       "meanSalary": 25934,
+       "starterMeanSalary": 29628,
+       "starterMeanOvr": 51.8,
+       "salaryPerOvrStarter": 581
+      },
+      "WR": {
+       "n": 172,
+       "meanSalary": 26972,
+       "starterMeanSalary": 29871,
+       "starterMeanOvr": 55.6,
+       "salaryPerOvrStarter": 544
+      },
+      "TE": {
+       "n": 72,
+       "meanSalary": 27178,
+       "starterMeanSalary": 31793,
+       "starterMeanOvr": 62.6,
+       "salaryPerOvrStarter": 512
+      },
+      "OL": {
+       "n": 175,
+       "meanSalary": 28430,
+       "starterMeanSalary": 32087,
+       "starterMeanOvr": 65,
+       "salaryPerOvrStarter": 498
+      },
+      "DL": {
+       "n": 170,
+       "meanSalary": 28684,
+       "starterMeanSalary": 31888,
+       "starterMeanOvr": 60.3,
+       "salaryPerOvrStarter": 531
+      },
+      "LB": {
+       "n": 117,
+       "meanSalary": 27853,
+       "starterMeanSalary": 31026,
+       "starterMeanOvr": 57.6,
+       "salaryPerOvrStarter": 543
+      },
+      "CB": {
+       "n": 129,
+       "meanSalary": 26884,
+       "starterMeanSalary": 30087,
+       "starterMeanOvr": 57.4,
+       "salaryPerOvrStarter": 533
+      },
+      "S": {
+       "n": 124,
+       "meanSalary": 27767,
+       "starterMeanSalary": 31477,
+       "starterMeanOvr": 59.6,
+       "salaryPerOvrStarter": 532
+      },
+      "K": {
+       "n": 57,
+       "meanSalary": 31593,
+       "starterMeanSalary": 35657,
+       "starterMeanOvr": 74.8,
+       "salaryPerOvrStarter": 482
+      }
+     },
+     "fa": {
+      "aiSignings": 6,
+      "ownerSignings": 0,
+      "contested2plus": 4,
+      "meanSalary": 27917,
+      "meanYears": 2.3,
+      "withBonus": 0,
+      "unsignedAtClose": 34,
+      "extensions": 276,
+      "renewalsSigned": 47,
+      "renewalsDeclined": 11,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7953,
+      "comp": 4484,
+      "passYds": 62777,
+      "passTd": 567,
+      "intThrown": 134,
+      "sacked": 80,
+      "rush": 4238,
+      "rushYds": 21016,
+      "rushTd": 166,
+      "fgm": 273,
+      "fga": 380,
+      "xpm": 629,
+      "xpa": 714,
+      "fumLost": 82,
+      "points": 5966,
+      "forfeits": 0,
+      "score0to21": 2,
+      "ot": 26,
+      "clashDecided": 16
+     },
+     "awards": {
+      "mvp": "QB",
+      "opoy": "WR",
+      "dpoy": "CB",
+      "oroy": "WR",
+      "droy": "S",
+      "coy": null,
+      "smoy": "QB"
+     },
+     "saveBytes": 8738536
+    },
+    {
+     "year": 4,
+     "owner": {
+      "w": 8,
+      "l": 6,
+      "playoffs": true,
+      "champion": false,
+      "teamOvr": 61,
+      "roster": 38,
+      "forfeits0to21": 1,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 62.2,
+      "teamOvrSd": 2.8,
+      "teamOvrMin": 58,
+      "teamOvrMax": 68,
+      "winPctSd": 25.8,
+      "rivalOvr": 63,
+      "gymOvr": 64.3,
+      "ordinaryOvr": 60.8,
+      "capRoomMean": 339420,
+      "capRoomMin": 270500,
+      "negativeCap": 0,
+      "payrollMean": 1055580,
+      "rosterMin": 33,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 31,
+      "meanAge": 25.5,
+      "starterAge": 27.1,
+      "devMean": 1.9,
+      "evolved": 27,
+      "meanLevel": 24.2,
+      "stage1": 179,
+      "stage2": 56,
+      "injured": 0
+     },
+     "champion": "Sunfire Solars",
+     "championGym": "early",
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 10.6,
+      "blowout21": 31,
+      "score0to21": 4,
+      "pointsPerTeamGame": 14.3
+     },
+     "monsters": {
+      "n": 1201,
+      "ovrMean": 50.4,
+      "ovr80": 58,
+      "ovr90": 17,
+      "ovr95": 11,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 241,
+      "levelMean": 24.4,
+      "stage2": 57,
+      "starterOvr": 63,
+      "reserveOvr": 37.5,
+      "contract3y": 401,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 77,
+       "meanSalary": 30075,
+       "starterMeanSalary": 35541,
+       "starterMeanOvr": 69.7,
+       "salaryPerOvrStarter": 512
+      },
+      "RB": {
+       "n": 65,
+       "meanSalary": 25806,
+       "starterMeanSalary": 30055,
+       "starterMeanOvr": 54.2,
+       "salaryPerOvrStarter": 567
+      },
+      "WR": {
+       "n": 167,
+       "meanSalary": 27653,
+       "starterMeanSalary": 30840,
+       "starterMeanOvr": 57.1,
+       "salaryPerOvrStarter": 549
+      },
+      "TE": {
+       "n": 74,
+       "meanSalary": 27431,
+       "starterMeanSalary": 31693,
+       "starterMeanOvr": 62.7,
+       "salaryPerOvrStarter": 518
+      },
+      "OL": {
+       "n": 169,
+       "meanSalary": 29197,
+       "starterMeanSalary": 32887,
+       "starterMeanOvr": 67.7,
+       "salaryPerOvrStarter": 491
+      },
+      "DL": {
+       "n": 174,
+       "meanSalary": 29018,
+       "starterMeanSalary": 32426,
+       "starterMeanOvr": 62.7,
+       "salaryPerOvrStarter": 519
+      },
+      "LB": {
+       "n": 118,
+       "meanSalary": 27950,
+       "starterMeanSalary": 31559,
+       "starterMeanOvr": 58.9,
+       "salaryPerOvrStarter": 542
+      },
+      "CB": {
+       "n": 129,
+       "meanSalary": 27463,
+       "starterMeanSalary": 30677,
+       "starterMeanOvr": 59.5,
+       "salaryPerOvrStarter": 523
+      },
+      "S": {
+       "n": 122,
+       "meanSalary": 28522,
+       "starterMeanSalary": 32461,
+       "starterMeanOvr": 62.3,
+       "salaryPerOvrStarter": 523
+      },
+      "K": {
+       "n": 55,
+       "meanSalary": 32325,
+       "starterMeanSalary": 36813,
+       "starterMeanOvr": 76.8,
+       "salaryPerOvrStarter": 483
+      }
+     },
+     "fa": {
+      "aiSignings": 5,
+      "ownerSignings": 1,
+      "contested2plus": 3,
+      "meanSalary": 32700,
+      "meanYears": 2.2,
+      "withBonus": 0,
+      "unsignedAtClose": 42,
+      "extensions": 272,
+      "renewalsSigned": 81,
+      "renewalsDeclined": 13,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7640,
+      "comp": 4555,
+      "passYds": 68839,
+      "passTd": 601,
+      "intThrown": 140,
+      "sacked": 114,
+      "rush": 4079,
+      "rushYds": 20552,
+      "rushTd": 196,
+      "fgm": 269,
+      "fga": 347,
+      "xpm": 687,
+      "xpa": 787,
+      "fumLost": 67,
+      "points": 6386,
+      "forfeits": 0,
+      "score0to21": 4,
+      "ot": 15,
+      "clashDecided": 5
+     },
+     "awards": {
+      "mvp": "WR",
+      "opoy": "RB",
+      "dpoy": "CB",
+      "oroy": "RB",
+      "droy": "CB",
+      "coy": null,
+      "smoy": "QB"
+     },
+     "saveBytes": 9569754
+    },
+    {
+     "year": 5,
+     "owner": {
+      "w": 5,
+      "l": 9,
+      "playoffs": false,
+      "champion": false,
+      "teamOvr": 60,
+      "roster": 38,
+      "forfeits0to21": 1,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 63.5,
+      "teamOvrSd": 3,
+      "teamOvrMin": 57,
+      "teamOvrMax": 71,
+      "winPctSd": 25.8,
+      "rivalOvr": 64,
+      "gymOvr": 65.3,
+      "ordinaryOvr": 62.4,
+      "capRoomMean": 322704,
+      "capRoomMin": 259800,
+      "negativeCap": 0,
+      "payrollMean": 1072296,
+      "rosterMin": 35,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 30,
+      "meanAge": 25.8,
+      "starterAge": 27.5,
+      "devMean": 1.6,
+      "evolved": 23,
+      "meanLevel": 25.4,
+      "stage1": 177,
+      "stage2": 52,
+      "injured": 0
+     },
+     "champion": "Aetheria Seers",
+     "championGym": "late",
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 10,
+      "blowout21": 24,
+      "score0to21": 4,
+      "pointsPerTeamGame": 14.5
+     },
+     "monsters": {
+      "n": 1202,
+      "ovrMean": 51,
+      "ovr80": 65,
+      "ovr90": 20,
+      "ovr95": 14,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 368,
+      "levelMean": 25.5,
+      "stage2": 52,
+      "starterOvr": 64.1,
+      "reserveOvr": 37.7,
+      "contract3y": 399,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 79,
+       "meanSalary": 30258,
+       "starterMeanSalary": 36159,
+       "starterMeanOvr": 70.7,
+       "salaryPerOvrStarter": 514
+      },
+      "RB": {
+       "n": 76,
+       "meanSalary": 26234,
+       "starterMeanSalary": 30186,
+       "starterMeanOvr": 57.1,
+       "salaryPerOvrStarter": 538
+      },
+      "WR": {
+       "n": 168,
+       "meanSalary": 27986,
+       "starterMeanSalary": 31549,
+       "starterMeanOvr": 58.6,
+       "salaryPerOvrStarter": 546
+      },
+      "TE": {
+       "n": 73,
+       "meanSalary": 27458,
+       "starterMeanSalary": 32497,
+       "starterMeanOvr": 64.5,
+       "salaryPerOvrStarter": 506
+      },
+      "OL": {
+       "n": 175,
+       "meanSalary": 29697,
+       "starterMeanSalary": 33975,
+       "starterMeanOvr": 69.5,
+       "salaryPerOvrStarter": 493
+      },
+      "DL": {
+       "n": 164,
+       "meanSalary": 29827,
+       "starterMeanSalary": 33200,
+       "starterMeanOvr": 64.1,
+       "salaryPerOvrStarter": 521
+      },
+      "LB": {
+       "n": 114,
+       "meanSalary": 28379,
+       "starterMeanSalary": 31897,
+       "starterMeanOvr": 58.5,
+       "salaryPerOvrStarter": 557
+      },
+      "CB": {
+       "n": 131,
+       "meanSalary": 27743,
+       "starterMeanSalary": 31707,
+       "starterMeanOvr": 60.6,
+       "salaryPerOvrStarter": 531
+      },
+      "S": {
+       "n": 118,
+       "meanSalary": 29311,
+       "starterMeanSalary": 33490,
+       "starterMeanOvr": 63.2,
+       "salaryPerOvrStarter": 535
+      },
+      "K": {
+       "n": 53,
+       "meanSalary": 32719,
+       "starterMeanSalary": 37087,
+       "starterMeanOvr": 76.3,
+       "salaryPerOvrStarter": 488
+      }
+     },
+     "fa": {
+      "aiSignings": 12,
+      "ownerSignings": 0,
+      "contested2plus": 6,
+      "meanSalary": 32675,
+      "meanYears": 1.8,
+      "withBonus": 0,
+      "unsignedAtClose": 44,
+      "extensions": 260,
+      "renewalsSigned": 90,
+      "renewalsDeclined": 9,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7879,
+      "comp": 4560,
+      "passYds": 67394,
+      "passTd": 603,
+      "intThrown": 168,
+      "sacked": 92,
+      "rush": 4201,
+      "rushYds": 24370,
+      "rushTd": 222,
+      "fgm": 250,
+      "fga": 338,
+      "xpm": 700,
+      "xpa": 805,
+      "fumLost": 79,
+      "points": 6491,
+      "forfeits": 0,
+      "score0to21": 4,
+      "ot": 14,
+      "clashDecided": 4
+     },
+     "awards": {
+      "mvp": "RB",
+      "opoy": "RB",
+      "dpoy": "CB",
+      "oroy": "RB",
+      "droy": "CB",
+      "coy": null,
+      "smoy": "QB"
+     },
+     "saveBytes": 10328478
+    },
+    {
+     "year": 6,
+     "owner": {
+      "w": 2,
+      "l": 12,
+      "playoffs": false,
+      "champion": false,
+      "teamOvr": 59,
+      "roster": 36,
+      "forfeits0to21": 1,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 63.9,
+      "teamOvrSd": 3.1,
+      "teamOvrMin": 58,
+      "teamOvrMax": 71,
+      "winPctSd": 23.5,
+      "rivalOvr": 66,
+      "gymOvr": 65.3,
+      "ordinaryOvr": 63,
+      "capRoomMean": 333371,
+      "capRoomMin": 254500,
+      "negativeCap": 0,
+      "payrollMean": 1061629,
+      "rosterMin": 33,
+      "rosterMax": 38,
+      "lineupProblems": 1,
+      "weakGroupClubs": 31,
+      "meanAge": 26,
+      "starterAge": 28,
+      "devMean": 1.1,
+      "evolved": 22,
+      "meanLevel": 25.6,
+      "stage1": 167,
+      "stage2": 45,
+      "injured": 0
+     },
+     "champion": "Thunder Mesa Blitz",
+     "championGym": "mid",
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 10,
+      "blowout21": 26,
+      "score0to21": 5,
+      "pointsPerTeamGame": 15.5
+     },
+     "monsters": {
+      "n": 1181,
+      "ovrMean": 51.6,
+      "ovr80": 66,
+      "ovr90": 23,
+      "ovr95": 17,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 436,
+      "levelMean": 25.7,
+      "stage2": 45,
+      "starterOvr": 64.5,
+      "reserveOvr": 37.9,
+      "contract3y": 404,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 81,
+       "meanSalary": 30106,
+       "starterMeanSalary": 36403,
+       "starterMeanOvr": 69.3,
+       "salaryPerOvrStarter": 527
+      },
+      "RB": {
+       "n": 80,
+       "meanSalary": 26114,
+       "starterMeanSalary": 30741,
+       "starterMeanOvr": 57.6,
+       "salaryPerOvrStarter": 543
+      },
+      "WR": {
+       "n": 164,
+       "meanSalary": 27905,
+       "starterMeanSalary": 31615,
+       "starterMeanOvr": 59.2,
+       "salaryPerOvrStarter": 540
+      },
+      "TE": {
+       "n": 74,
+       "meanSalary": 27934,
+       "starterMeanSalary": 33170,
+       "starterMeanOvr": 65.2,
+       "salaryPerOvrStarter": 511
+      },
+      "OL": {
+       "n": 173,
+       "meanSalary": 29895,
+       "starterMeanSalary": 34382,
+       "starterMeanOvr": 69.7,
+       "salaryPerOvrStarter": 499
+      },
+      "DL": {
+       "n": 162,
+       "meanSalary": 29969,
+       "starterMeanSalary": 33443,
+       "starterMeanOvr": 65,
+       "salaryPerOvrStarter": 519
+      },
+      "LB": {
+       "n": 110,
+       "meanSalary": 28990,
+       "starterMeanSalary": 32205,
+       "starterMeanOvr": 59.2,
+       "salaryPerOvrStarter": 552
+      },
+      "CB": {
+       "n": 121,
+       "meanSalary": 28312,
+       "starterMeanSalary": 31913,
+       "starterMeanOvr": 60.7,
+       "salaryPerOvrStarter": 534
+      },
+      "S": {
+       "n": 111,
+       "meanSalary": 29507,
+       "starterMeanSalary": 33941,
+       "starterMeanOvr": 64,
+       "salaryPerOvrStarter": 535
+      },
+      "K": {
+       "n": 56,
+       "meanSalary": 32548,
+       "starterMeanSalary": 37447,
+       "starterMeanOvr": 77.9,
+       "salaryPerOvrStarter": 482
+      }
+     },
+     "fa": {
+      "aiSignings": 12,
+      "ownerSignings": 0,
+      "contested2plus": 8,
+      "meanSalary": 32600,
+      "meanYears": 1.6,
+      "withBonus": 0,
+      "unsignedAtClose": 41,
+      "extensions": 253,
+      "renewalsSigned": 88,
+      "renewalsDeclined": 16,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7628,
+      "comp": 4488,
+      "passYds": 68447,
+      "passTd": 619,
+      "intThrown": 152,
+      "sacked": 149,
+      "rush": 4264,
+      "rushYds": 25277,
+      "rushTd": 255,
+      "fgm": 254,
+      "fga": 342,
+      "xpm": 761,
+      "xpa": 858,
+      "fumLost": 89,
+      "points": 6936,
+      "forfeits": 0,
+      "score0to21": 5,
+      "ot": 14,
+      "clashDecided": 7
+     },
+     "awards": {
+      "mvp": "RB",
+      "opoy": "RB",
+      "dpoy": "CB",
+      "oroy": "RB",
+      "droy": "LB",
+      "coy": null,
+      "smoy": "QB"
+     },
+     "saveBytes": 10967895
+    },
+    {
+     "year": 7,
+     "owner": {
+      "w": 1,
+      "l": 13,
+      "playoffs": false,
+      "champion": false,
+      "teamOvr": 58,
+      "roster": 34,
+      "forfeits0to21": 3,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 64.2,
+      "teamOvrSd": 3.4,
+      "teamOvrMin": 57,
+      "teamOvrMax": 72,
+      "winPctSd": 23.3,
+      "rivalOvr": 66,
+      "gymOvr": 65.4,
+      "ordinaryOvr": 63.4,
+      "capRoomMean": 336229,
+      "capRoomMin": 256900,
+      "negativeCap": 0,
+      "payrollMean": 1058771,
+      "rosterMin": 33,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 31,
+      "meanAge": 26.2,
+      "starterAge": 28.3,
+      "devMean": 1,
+      "evolved": 27,
+      "meanLevel": 25.3,
+      "stage1": 153,
+      "stage2": 48,
+      "injured": 0
+     },
+     "champion": "Aetheria Seers",
+     "championGym": "late",
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 8.7,
+      "blowout21": 20,
+      "score0to21": 3,
+      "pointsPerTeamGame": 18
+     },
+     "monsters": {
+      "n": 1173,
+      "ovrMean": 51.7,
+      "ovr80": 72,
+      "ovr90": 24,
+      "ovr95": 17,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 426,
+      "levelMean": 25.3,
+      "stage2": 48,
+      "starterOvr": 64.7,
+      "reserveOvr": 37.7,
+      "contract3y": 383,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 82,
+       "meanSalary": 29870,
+       "starterMeanSalary": 36210,
+       "starterMeanOvr": 68.2,
+       "salaryPerOvrStarter": 536
+      },
+      "RB": {
+       "n": 84,
+       "meanSalary": 26615,
+       "starterMeanSalary": 32269,
+       "starterMeanOvr": 59.5,
+       "salaryPerOvrStarter": 551
+      },
+      "WR": {
+       "n": 166,
+       "meanSalary": 27903,
+       "starterMeanSalary": 32068,
+       "starterMeanOvr": 59.7,
+       "salaryPerOvrStarter": 544
+      },
+      "TE": {
+       "n": 77,
+       "meanSalary": 27952,
+       "starterMeanSalary": 33700,
+       "starterMeanOvr": 64.8,
+       "salaryPerOvrStarter": 523
+      },
+      "OL": {
+       "n": 170,
+       "meanSalary": 30022,
+       "starterMeanSalary": 34696,
+       "starterMeanOvr": 69.8,
+       "salaryPerOvrStarter": 501
+      },
+      "DL": {
+       "n": 164,
+       "meanSalary": 29907,
+       "starterMeanSalary": 33479,
+       "starterMeanOvr": 64.9,
+       "salaryPerOvrStarter": 522
+      },
+      "LB": {
+       "n": 105,
+       "meanSalary": 29350,
+       "starterMeanSalary": 32900,
+       "starterMeanOvr": 59.6,
+       "salaryPerOvrStarter": 560
+      },
+      "CB": {
+       "n": 114,
+       "meanSalary": 28814,
+       "starterMeanSalary": 32007,
+       "starterMeanOvr": 61,
+       "salaryPerOvrStarter": 532
+      },
+      "S": {
+       "n": 110,
+       "meanSalary": 29245,
+       "starterMeanSalary": 34151,
+       "starterMeanOvr": 64.6,
+       "salaryPerOvrStarter": 532
+      },
+      "K": {
+       "n": 54,
+       "meanSalary": 32609,
+       "starterMeanSalary": 36473,
+       "starterMeanOvr": 77.2,
+       "salaryPerOvrStarter": 477
+      }
+     },
+     "fa": {
+      "aiSignings": 11,
+      "ownerSignings": 0,
+      "contested2plus": 7,
+      "meanSalary": 30900,
+      "meanYears": 2,
+      "withBonus": 0,
+      "unsignedAtClose": 43,
+      "extensions": 240,
+      "renewalsSigned": 105,
+      "renewalsDeclined": 15,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 8110,
+      "comp": 4857,
+      "passYds": 78885,
+      "passTd": 758,
+      "intThrown": 170,
+      "sacked": 162,
+      "rush": 4097,
+      "rushYds": 25224,
+      "rushTd": 278,
+      "fgm": 255,
+      "fga": 331,
+      "xpm": 879,
+      "xpa": 1015,
+      "fumLost": 69,
+      "points": 8066,
+      "forfeits": 1,
+      "score0to21": 3,
+      "ot": 24,
+      "clashDecided": 10
+     },
+     "awards": {
+      "mvp": "RB",
+      "opoy": "RB",
+      "dpoy": "DL",
+      "oroy": "RB",
+      "droy": "CB",
+      "coy": null,
+      "smoy": "QB"
+     },
+     "saveBytes": 11609405
+    },
+    {
+     "year": 8,
+     "owner": {
+      "w": 3,
+      "l": 11,
+      "playoffs": false,
+      "champion": false,
+      "teamOvr": 62,
+      "roster": 38,
+      "forfeits0to21": 1,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 64.2,
+      "teamOvrSd": 3.8,
+      "teamOvrMin": 58,
+      "teamOvrMax": 71,
+      "winPctSd": 23.2,
+      "rivalOvr": 67,
+      "gymOvr": 65.3,
+      "ordinaryOvr": 63.5,
+      "capRoomMean": 348090,
+      "capRoomMin": 227500,
+      "negativeCap": 0,
+      "payrollMean": 1046910,
+      "rosterMin": 32,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 31,
+      "meanAge": 26.3,
+      "starterAge": 28.5,
+      "devMean": 1,
+      "evolved": 15,
+      "meanLevel": 25.4,
+      "stage1": 145,
+      "stage2": 44,
+      "injured": 0
+     },
+     "champion": "Northstar Novas",
+     "championGym": null,
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 8.7,
+      "blowout21": 19,
+      "score0to21": 3,
+      "pointsPerTeamGame": 16
+     },
+     "monsters": {
+      "n": 1164,
+      "ovrMean": 52,
+      "ovr80": 74,
+      "ovr90": 25,
+      "ovr95": 19,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 411,
+      "levelMean": 25.5,
+      "stage2": 44,
+      "starterOvr": 64.8,
+      "reserveOvr": 37.9,
+      "contract3y": 380,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 79,
+       "meanSalary": 29670,
+       "starterMeanSalary": 35441,
+       "starterMeanOvr": 67,
+       "salaryPerOvrStarter": 538
+      },
+      "RB": {
+       "n": 82,
+       "meanSalary": 26597,
+       "starterMeanSalary": 31566,
+       "starterMeanOvr": 59.2,
+       "salaryPerOvrStarter": 541
+      },
+      "WR": {
+       "n": 168,
+       "meanSalary": 27809,
+       "starterMeanSalary": 32089,
+       "starterMeanOvr": 59.8,
+       "salaryPerOvrStarter": 544
+      },
+      "TE": {
+       "n": 79,
+       "meanSalary": 28285,
+       "starterMeanSalary": 34143,
+       "starterMeanOvr": 65,
+       "salaryPerOvrStarter": 529
+      },
+      "OL": {
+       "n": 165,
+       "meanSalary": 30381,
+       "starterMeanSalary": 34964,
+       "starterMeanOvr": 69.8,
+       "salaryPerOvrStarter": 505
+      },
+      "DL": {
+       "n": 158,
+       "meanSalary": 29961,
+       "starterMeanSalary": 33133,
+       "starterMeanOvr": 64.2,
+       "salaryPerOvrStarter": 524
+      },
+      "LB": {
+       "n": 104,
+       "meanSalary": 29230,
+       "starterMeanSalary": 32677,
+       "starterMeanOvr": 59.7,
+       "salaryPerOvrStarter": 553
+      },
+      "CB": {
+       "n": 117,
+       "meanSalary": 28375,
+       "starterMeanSalary": 31946,
+       "starterMeanOvr": 61.6,
+       "salaryPerOvrStarter": 526
+      },
+      "S": {
+       "n": 107,
+       "meanSalary": 29188,
+       "starterMeanSalary": 34092,
+       "starterMeanOvr": 65.1,
+       "salaryPerOvrStarter": 528
+      },
+      "K": {
+       "n": 54,
+       "meanSalary": 33208,
+       "starterMeanSalary": 37670,
+       "starterMeanOvr": 77.6,
+       "salaryPerOvrStarter": 488
+      }
+     },
+     "fa": {
+      "aiSignings": 14,
+      "ownerSignings": 0,
+      "contested2plus": 7,
+      "meanSalary": 30521,
+      "meanYears": 1.9,
+      "withBonus": 0,
+      "unsignedAtClose": 41,
+      "extensions": 244,
+      "renewalsSigned": 118,
+      "renewalsDeclined": 21,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7869,
+      "comp": 4704,
+      "passYds": 67262,
+      "passTd": 585,
+      "intThrown": 186,
+      "sacked": 168,
+      "rush": 4134,
+      "rushYds": 26322,
+      "rushTd": 291,
+      "fgm": 272,
+      "fga": 356,
+      "xpm": 752,
+      "xpa": 877,
+      "fumLost": 71,
+      "points": 7177,
+      "forfeits": 0,
+      "score0to21": 3,
+      "ot": 16,
+      "clashDecided": 9
+     },
+     "awards": {
+      "mvp": "RB",
+      "opoy": "RB",
+      "dpoy": "DL",
+      "oroy": "RB",
+      "droy": "S",
+      "coy": null,
+      "smoy": "TE"
+     },
+     "saveBytes": 12254269
+    },
+    {
+     "year": 9,
+     "owner": {
+      "w": 3,
+      "l": 11,
+      "playoffs": false,
+      "champion": false,
+      "teamOvr": 59,
+      "roster": 38,
+      "forfeits0to21": 0,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 64.3,
+      "teamOvrSd": 3.5,
+      "teamOvrMin": 57,
+      "teamOvrMax": 72,
+      "winPctSd": 23.7,
+      "rivalOvr": 67,
+      "gymOvr": 64.4,
+      "ordinaryOvr": 64.2,
+      "capRoomMean": 335230,
+      "capRoomMin": 229300,
+      "negativeCap": 0,
+      "payrollMean": 1059770,
+      "rosterMin": 33,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 31,
+      "meanAge": 26.3,
+      "starterAge": 28.5,
+      "devMean": 1,
+      "evolved": 22,
+      "meanLevel": 24.9,
+      "stage1": 141,
+      "stage2": 39,
+      "injured": 0
+     },
+     "champion": "Ironpeak Colossi",
+     "championGym": "late",
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 9.2,
+      "blowout21": 22,
+      "score0to21": 4,
+      "pointsPerTeamGame": 16.8
+     },
+     "monsters": {
+      "n": 1175,
+      "ovrMean": 51.9,
+      "ovr80": 78,
+      "ovr90": 26,
+      "ovr95": 19,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 405,
+      "levelMean": 25,
+      "stage2": 39,
+      "starterOvr": 64.8,
+      "reserveOvr": 38.1,
+      "contract3y": 399,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 81,
+       "meanSalary": 29699,
+       "starterMeanSalary": 36221,
+       "starterMeanOvr": 70,
+       "salaryPerOvrStarter": 521
+      },
+      "RB": {
+       "n": 81,
+       "meanSalary": 26780,
+       "starterMeanSalary": 32441,
+       "starterMeanOvr": 60,
+       "salaryPerOvrStarter": 551
+      },
+      "WR": {
+       "n": 174,
+       "meanSalary": 27926,
+       "starterMeanSalary": 32243,
+       "starterMeanOvr": 59.8,
+       "salaryPerOvrStarter": 549
+      },
+      "TE": {
+       "n": 77,
+       "meanSalary": 28454,
+       "starterMeanSalary": 33653,
+       "starterMeanOvr": 64.1,
+       "salaryPerOvrStarter": 530
+      },
+      "OL": {
+       "n": 159,
+       "meanSalary": 30275,
+       "starterMeanSalary": 34121,
+       "starterMeanOvr": 69.1,
+       "salaryPerOvrStarter": 499
+      },
+      "DL": {
+       "n": 161,
+       "meanSalary": 29711,
+       "starterMeanSalary": 33111,
+       "starterMeanOvr": 63.8,
+       "salaryPerOvrStarter": 527
+      },
+      "LB": {
+       "n": 106,
+       "meanSalary": 29686,
+       "starterMeanSalary": 33240,
+       "starterMeanOvr": 61.2,
+       "salaryPerOvrStarter": 546
+      },
+      "CB": {
+       "n": 117,
+       "meanSalary": 28349,
+       "starterMeanSalary": 32316,
+       "starterMeanOvr": 61.9,
+       "salaryPerOvrStarter": 532
+      },
+      "S": {
+       "n": 109,
+       "meanSalary": 29409,
+       "starterMeanSalary": 33782,
+       "starterMeanOvr": 64.6,
+       "salaryPerOvrStarter": 534
+      },
+      "K": {
+       "n": 59,
+       "meanSalary": 33249,
+       "starterMeanSalary": 37713,
+       "starterMeanOvr": 76.7,
+       "salaryPerOvrStarter": 494
+      }
+     },
+     "fa": {
+      "aiSignings": 11,
+      "ownerSignings": 1,
+      "contested2plus": 5,
+      "meanSalary": 33218,
+      "meanYears": 2,
+      "withBonus": 0,
+      "unsignedAtClose": 42,
+      "extensions": 251,
+      "renewalsSigned": 107,
+      "renewalsDeclined": 13,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7735,
+      "comp": 4672,
+      "passYds": 72449,
+      "passTd": 693,
+      "intThrown": 149,
+      "sacked": 157,
+      "rush": 4083,
+      "rushYds": 24877,
+      "rushTd": 260,
+      "fgm": 253,
+      "fga": 345,
+      "xpm": 806,
+      "xpa": 936,
+      "fumLost": 77,
+      "points": 7520,
+      "forfeits": 0,
+      "score0to21": 4,
+      "ot": 18,
+      "clashDecided": 4
+     },
+     "awards": {
+      "mvp": "QB",
+      "opoy": "WR",
+      "dpoy": "DL",
+      "oroy": "OL",
+      "droy": "CB",
+      "coy": null,
+      "smoy": "WR"
+     },
+     "saveBytes": 12480020
+    },
+    {
+     "year": 10,
+     "owner": {
+      "w": 6,
+      "l": 8,
+      "playoffs": false,
+      "champion": false,
+      "teamOvr": 56,
+      "roster": 37,
+      "forfeits0to21": 0,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 64.3,
+      "teamOvrSd": 3.5,
+      "teamOvrMin": 58,
+      "teamOvrMax": 70,
+      "winPctSd": 24.6,
+      "rivalOvr": 66,
+      "gymOvr": 64.4,
+      "ordinaryOvr": 64.3,
+      "capRoomMean": 343275,
+      "capRoomMin": 268500,
+      "negativeCap": 0,
+      "payrollMean": 1051725,
+      "rosterMin": 32,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 31,
+      "meanAge": 26.4,
+      "starterAge": 28.4,
+      "devMean": 1.1,
+      "evolved": 21,
+      "meanLevel": 24.6,
+      "stage1": 141,
+      "stage2": 29,
+      "injured": 0
+     },
+     "champion": "Mistport Veils",
+     "championGym": null,
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 8.7,
+      "blowout21": 18,
+      "score0to21": 4,
+      "pointsPerTeamGame": 16.3
+     },
+     "monsters": {
+      "n": 1163,
+      "ovrMean": 51.8,
+      "ovr80": 80,
+      "ovr90": 27,
+      "ovr95": 20,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 384,
+      "levelMean": 24.6,
+      "stage2": 29,
+      "starterOvr": 64.8,
+      "reserveOvr": 37.6,
+      "contract3y": 396,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 84,
+       "meanSalary": 29889,
+       "starterMeanSalary": 36972,
+       "starterMeanOvr": 69.5,
+       "salaryPerOvrStarter": 535
+      },
+      "RB": {
+       "n": 85,
+       "meanSalary": 26807,
+       "starterMeanSalary": 33155,
+       "starterMeanOvr": 61.1,
+       "salaryPerOvrStarter": 549
+      },
+      "WR": {
+       "n": 163,
+       "meanSalary": 28213,
+       "starterMeanSalary": 31994,
+       "starterMeanOvr": 59.5,
+       "salaryPerOvrStarter": 548
+      },
+      "TE": {
+       "n": 79,
+       "meanSalary": 28474,
+       "starterMeanSalary": 33063,
+       "starterMeanOvr": 63,
+       "salaryPerOvrStarter": 536
+      },
+      "OL": {
+       "n": 160,
+       "meanSalary": 29979,
+       "starterMeanSalary": 34445,
+       "starterMeanOvr": 69,
+       "salaryPerOvrStarter": 503
+      },
+      "DL": {
+       "n": 155,
+       "meanSalary": 29657,
+       "starterMeanSalary": 33108,
+       "starterMeanOvr": 64,
+       "salaryPerOvrStarter": 522
+      },
+      "LB": {
+       "n": 109,
+       "meanSalary": 29797,
+       "starterMeanSalary": 33241,
+       "starterMeanOvr": 62,
+       "salaryPerOvrStarter": 541
+      },
+      "CB": {
+       "n": 116,
+       "meanSalary": 28527,
+       "starterMeanSalary": 32264,
+       "starterMeanOvr": 62.2,
+       "salaryPerOvrStarter": 526
+      },
+      "S": {
+       "n": 107,
+       "meanSalary": 29785,
+       "starterMeanSalary": 34703,
+       "starterMeanOvr": 64.9,
+       "salaryPerOvrStarter": 545
+      },
+      "K": {
+       "n": 55,
+       "meanSalary": 33247,
+       "starterMeanSalary": 36953,
+       "starterMeanOvr": 76,
+       "salaryPerOvrStarter": 488
+      }
+     },
+     "fa": {
+      "aiSignings": 13,
+      "ownerSignings": 1,
+      "contested2plus": 10,
+      "meanSalary": 32977,
+      "meanYears": 2.2,
+      "withBonus": 0,
+      "unsignedAtClose": 34,
+      "extensions": 232,
+      "renewalsSigned": 121,
+      "renewalsDeclined": 9,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7859,
+      "comp": 4960,
+      "passYds": 69534,
+      "passTd": 644,
+      "intThrown": 150,
+      "sacked": 134,
+      "rush": 4055,
+      "rushYds": 26038,
+      "rushTd": 281,
+      "fgm": 252,
+      "fga": 338,
+      "xpm": 782,
+      "xpa": 911,
+      "fumLost": 89,
+      "points": 7286,
+      "forfeits": 0,
+      "score0to21": 4,
+      "ot": 17,
+      "clashDecided": 8
+     },
+     "awards": {
+      "mvp": "RB",
+      "opoy": "RB",
+      "dpoy": "DL",
+      "oroy": "RB",
+      "droy": "LB",
+      "coy": null,
+      "smoy": "WR"
+     },
+     "saveBytes": 12592763
+    },
+    {
+     "year": 11,
+     "owner": {
+      "w": 2,
+      "l": 12,
+      "playoffs": false,
+      "champion": false,
+      "teamOvr": 57,
+      "roster": 37,
+      "forfeits0to21": 1,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 64.4,
+      "teamOvrSd": 3.3,
+      "teamOvrMin": 56,
+      "teamOvrMax": 70,
+      "winPctSd": 19.5,
+      "rivalOvr": 65,
+      "gymOvr": 63.8,
+      "ordinaryOvr": 64.8,
+      "capRoomMean": 355595,
+      "capRoomMin": 247340,
+      "negativeCap": 0,
+      "payrollMean": 1039405,
+      "rosterMin": 31,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 31,
+      "meanAge": 26.3,
+      "starterAge": 28.4,
+      "devMean": 1.1,
+      "evolved": 22,
+      "meanLevel": 24.5,
+      "stage1": 133,
+      "stage2": 28,
+      "injured": 0
+     },
+     "champion": "Westhaven Pirates",
+     "championGym": "early",
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 8.9,
+      "blowout21": 16,
+      "score0to21": 5,
+      "pointsPerTeamGame": 16.8
+     },
+     "monsters": {
+      "n": 1149,
+      "ovrMean": 52,
+      "ovr80": 84,
+      "ovr90": 28,
+      "ovr95": 21,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 368,
+      "levelMean": 24.5,
+      "stage2": 29,
+      "starterOvr": 64.9,
+      "reserveOvr": 37.7,
+      "contract3y": 398,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 83,
+       "meanSalary": 29943,
+       "starterMeanSalary": 36445,
+       "starterMeanOvr": 70.7,
+       "salaryPerOvrStarter": 517
+      },
+      "RB": {
+       "n": 80,
+       "meanSalary": 26752,
+       "starterMeanSalary": 33086,
+       "starterMeanOvr": 60.5,
+       "salaryPerOvrStarter": 560
+      },
+      "WR": {
+       "n": 163,
+       "meanSalary": 28403,
+       "starterMeanSalary": 32445,
+       "starterMeanOvr": 59.7,
+       "salaryPerOvrStarter": 557
+      },
+      "TE": {
+       "n": 77,
+       "meanSalary": 28613,
+       "starterMeanSalary": 32916,
+       "starterMeanOvr": 61.7,
+       "salaryPerOvrStarter": 548
+      },
+      "OL": {
+       "n": 155,
+       "meanSalary": 29958,
+       "starterMeanSalary": 34535,
+       "starterMeanOvr": 69.5,
+       "salaryPerOvrStarter": 501
+      },
+      "DL": {
+       "n": 156,
+       "meanSalary": 29809,
+       "starterMeanSalary": 33146,
+       "starterMeanOvr": 63.5,
+       "salaryPerOvrStarter": 527
+      },
+      "LB": {
+       "n": 110,
+       "meanSalary": 29393,
+       "starterMeanSalary": 33394,
+       "starterMeanOvr": 62,
+       "salaryPerOvrStarter": 547
+      },
+      "CB": {
+       "n": 112,
+       "meanSalary": 28557,
+       "starterMeanSalary": 32069,
+       "starterMeanOvr": 62.6,
+       "salaryPerOvrStarter": 521
+      },
+      "S": {
+       "n": 112,
+       "meanSalary": 29821,
+       "starterMeanSalary": 34133,
+       "starterMeanOvr": 65.4,
+       "salaryPerOvrStarter": 529
+      },
+      "K": {
+       "n": 51,
+       "meanSalary": 33293,
+       "starterMeanSalary": 36752,
+       "starterMeanOvr": 75.9,
+       "salaryPerOvrStarter": 488
+      }
+     },
+     "fa": {
+      "aiSignings": 13,
+      "ownerSignings": 2,
+      "contested2plus": 9,
+      "meanSalary": 31969,
+      "meanYears": 1.8,
+      "withBonus": 0,
+      "unsignedAtClose": 37,
+      "extensions": 236,
+      "renewalsSigned": 117,
+      "renewalsDeclined": 11,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7638,
+      "comp": 4957,
+      "passYds": 72294,
+      "passTd": 697,
+      "intThrown": 118,
+      "sacked": 146,
+      "rush": 4041,
+      "rushYds": 24289,
+      "rushTd": 257,
+      "fgm": 233,
+      "fga": 322,
+      "xpm": 831,
+      "xpa": 950,
+      "fumLost": 66,
+      "points": 7543,
+      "forfeits": 0,
+      "score0to21": 5,
+      "ot": 26,
+      "clashDecided": 14
+     },
+     "awards": {
+      "mvp": "WR",
+      "opoy": "TE",
+      "dpoy": "DL",
+      "oroy": "OL",
+      "droy": "CB",
+      "coy": null,
+      "smoy": "QB"
+     },
+     "saveBytes": 12732606
+    },
+    {
+     "year": 12,
+     "owner": {
+      "w": 5,
+      "l": 9,
+      "playoffs": false,
+      "champion": false,
+      "teamOvr": 61,
+      "roster": 37,
+      "forfeits0to21": 0,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 64.7,
+      "teamOvrSd": 3.9,
+      "teamOvrMin": 56,
+      "teamOvrMax": 73,
+      "winPctSd": 23,
+      "rivalOvr": 63,
+      "gymOvr": 64.4,
+      "ordinaryOvr": 64.9,
+      "capRoomMean": 338170,
+      "capRoomMin": 228800,
+      "negativeCap": 0,
+      "payrollMean": 1056830,
+      "rosterMin": 33,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 29,
+      "meanAge": 26.3,
+      "starterAge": 28.4,
+      "devMean": 1.2,
+      "evolved": 26,
+      "meanLevel": 24.3,
+      "stage1": 134,
+      "stage2": 27,
+      "injured": 0
+     },
+     "champion": "Mistport Veils",
+     "championGym": null,
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 9.1,
+      "blowout21": 25,
+      "score0to21": 8,
+      "pointsPerTeamGame": 16.9
+     },
+     "monsters": {
+      "n": 1168,
+      "ovrMean": 52.2,
+      "ovr80": 82,
+      "ovr90": 27,
+      "ovr95": 22,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 357,
+      "levelMean": 24.3,
+      "stage2": 28,
+      "starterOvr": 65.3,
+      "reserveOvr": 38.1,
+      "contract3y": 406,
+      "contractYearsMean": 2.3
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 87,
+       "meanSalary": 29826,
+       "starterMeanSalary": 36552,
+       "starterMeanOvr": 70.8,
+       "salaryPerOvrStarter": 517
+      },
+      "RB": {
+       "n": 80,
+       "meanSalary": 27304,
+       "starterMeanSalary": 34272,
+       "starterMeanOvr": 62.4,
+       "salaryPerOvrStarter": 558
+      },
+      "WR": {
+       "n": 165,
+       "meanSalary": 28072,
+       "starterMeanSalary": 32189,
+       "starterMeanOvr": 60,
+       "salaryPerOvrStarter": 547
+      },
+      "TE": {
+       "n": 80,
+       "meanSalary": 28257,
+       "starterMeanSalary": 32983,
+       "starterMeanOvr": 63.2,
+       "salaryPerOvrStarter": 523
+      },
+      "OL": {
+       "n": 154,
+       "meanSalary": 29787,
+       "starterMeanSalary": 33549,
+       "starterMeanOvr": 67.7,
+       "salaryPerOvrStarter": 504
+      },
+      "DL": {
+       "n": 150,
+       "meanSalary": 29782,
+       "starterMeanSalary": 32968,
+       "starterMeanOvr": 63,
+       "salaryPerOvrStarter": 528
+      },
+      "LB": {
+       "n": 112,
+       "meanSalary": 29597,
+       "starterMeanSalary": 33858,
+       "starterMeanOvr": 63.7,
+       "salaryPerOvrStarter": 535
+      },
+      "CB": {
+       "n": 110,
+       "meanSalary": 29019,
+       "starterMeanSalary": 33013,
+       "starterMeanOvr": 63.8,
+       "salaryPerOvrStarter": 522
+      },
+      "S": {
+       "n": 122,
+       "meanSalary": 29479,
+       "starterMeanSalary": 34409,
+       "starterMeanOvr": 66.2,
+       "salaryPerOvrStarter": 526
+      },
+      "K": {
+       "n": 58,
+       "meanSalary": 33315,
+       "starterMeanSalary": 36549,
+       "starterMeanOvr": 76.9,
+       "salaryPerOvrStarter": 477
+      }
+     },
+     "fa": {
+      "aiSignings": 18,
+      "ownerSignings": 0,
+      "contested2plus": 10,
+      "meanSalary": 31644,
+      "meanYears": 2.1,
+      "withBonus": 0,
+      "unsignedAtClose": 25,
+      "extensions": 214,
+      "renewalsSigned": 132,
+      "renewalsDeclined": 6,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7700,
+      "comp": 4785,
+      "passYds": 73304,
+      "passTd": 718,
+      "intThrown": 181,
+      "sacked": 160,
+      "rush": 4186,
+      "rushYds": 26292,
+      "rushTd": 259,
+      "fgm": 213,
+      "fga": 295,
+      "xpm": 827,
+      "xpa": 965,
+      "fumLost": 73,
+      "points": 7557,
+      "forfeits": 0,
+      "score0to21": 8,
+      "ot": 17,
+      "clashDecided": 9
+     },
+     "awards": {
+      "mvp": "RB",
+      "opoy": "WR",
+      "dpoy": "DL",
+      "oroy": "TE",
+      "droy": "S",
+      "coy": null,
+      "smoy": "WR"
+     },
+     "saveBytes": 12911208
+    },
+    {
+     "year": 13,
+     "owner": {
+      "w": 11,
+      "l": 3,
+      "playoffs": true,
+      "champion": false,
+      "teamOvr": 64,
+      "roster": 36,
+      "forfeits0to21": 0,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 64,
+      "teamOvrSd": 4.6,
+      "teamOvrMin": 53,
+      "teamOvrMax": 72,
+      "winPctSd": 22.9,
+      "rivalOvr": 65,
+      "gymOvr": 63.3,
+      "ordinaryOvr": 64.4,
+      "capRoomMean": 356219,
+      "capRoomMin": 244800,
+      "negativeCap": 0,
+      "payrollMean": 1038781,
+      "rosterMin": 32,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 31,
+      "meanAge": 26.2,
+      "starterAge": 28.3,
+      "devMean": 1.2,
+      "evolved": 21,
+      "meanLevel": 23.9,
+      "stage1": 117,
+      "stage2": 29,
+      "injured": 0
+     },
+     "champion": "Palmetto Wyrms",
+     "championGym": "late",
+     "championOwner": false,
+     "games": {
+      "n": 224,
+      "meanMargin": 9.1,
+      "blowout21": 26,
+      "score0to21": 8,
+      "pointsPerTeamGame": 16.6
+     },
+     "monsters": {
+      "n": 1150,
+      "ovrMean": 52.2,
+      "ovr80": 81,
+      "ovr90": 32,
+      "ovr95": 25,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 342,
+      "levelMean": 24.1,
+      "stage2": 30,
+      "starterOvr": 64.6,
+      "reserveOvr": 38.3,
+      "contract3y": 405,
+      "contractYearsMean": 2.3
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 84,
+       "meanSalary": 29679,
+       "starterMeanSalary": 36445,
+       "starterMeanOvr": 69.6,
+       "salaryPerOvrStarter": 525
+      },
+      "RB": {
+       "n": 80,
+       "meanSalary": 27306,
+       "starterMeanSalary": 34138,
+       "starterMeanOvr": 63.5,
+       "salaryPerOvrStarter": 546
+      },
+      "WR": {
+       "n": 168,
+       "meanSalary": 28020,
+       "starterMeanSalary": 31578,
+       "starterMeanOvr": 59.8,
+       "salaryPerOvrStarter": 538
+      },
+      "TE": {
+       "n": 74,
+       "meanSalary": 28449,
+       "starterMeanSalary": 32893,
+       "starterMeanOvr": 63.7,
+       "salaryPerOvrStarter": 519
+      },
+      "OL": {
+       "n": 148,
+       "meanSalary": 29947,
+       "starterMeanSalary": 33378,
+       "starterMeanOvr": 66.2,
+       "salaryPerOvrStarter": 516
+      },
+      "DL": {
+       "n": 149,
+       "meanSalary": 29571,
+       "starterMeanSalary": 32210,
+       "starterMeanOvr": 61.3,
+       "salaryPerOvrStarter": 534
+      },
+      "LB": {
+       "n": 116,
+       "meanSalary": 29245,
+       "starterMeanSalary": 33349,
+       "starterMeanOvr": 62.9,
+       "salaryPerOvrStarter": 538
+      },
+      "CB": {
+       "n": 111,
+       "meanSalary": 28943,
+       "starterMeanSalary": 33253,
+       "starterMeanOvr": 63.4,
+       "salaryPerOvrStarter": 541
+      },
+      "S": {
+       "n": 111,
+       "meanSalary": 29621,
+       "starterMeanSalary": 34307,
+       "starterMeanOvr": 64.7,
+       "salaryPerOvrStarter": 545
+      },
+      "K": {
+       "n": 60,
+       "meanSalary": 33015,
+       "starterMeanSalary": 36430,
+       "starterMeanOvr": 76.3,
+       "salaryPerOvrStarter": 478
+      }
+     },
+     "fa": {
+      "aiSignings": 13,
+      "ownerSignings": 0,
+      "contested2plus": 7,
+      "meanSalary": 31846,
+      "meanYears": 2,
+      "withBonus": 0,
+      "unsignedAtClose": 31,
+      "extensions": 230,
+      "renewalsSigned": 105,
+      "renewalsDeclined": 12,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7815,
+      "comp": 4953,
+      "passYds": 74257,
+      "passTd": 701,
+      "intThrown": 151,
+      "sacked": 146,
+      "rush": 4041,
+      "rushYds": 23037,
+      "rushTd": 242,
+      "fgm": 250,
+      "fga": 315,
+      "xpm": 773,
+      "xpa": 917,
+      "fumLost": 63,
+      "points": 7459,
+      "forfeits": 0,
+      "score0to21": 8,
+      "ot": 22,
+      "clashDecided": 11
+     },
+     "awards": {
+      "mvp": "WR",
+      "opoy": "TE",
+      "dpoy": "DL",
+      "oroy": "WR",
+      "droy": "CB",
+      "coy": null,
+      "smoy": "TE"
+     },
+     "saveBytes": 12997815
+    },
+    {
+     "year": 14,
+     "owner": {
+      "w": 11,
+      "l": 3,
+      "playoffs": true,
+      "champion": true,
+      "teamOvr": 63,
+      "roster": 36,
+      "forfeits0to21": 0,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 63.9,
+      "teamOvrSd": 4.7,
+      "teamOvrMin": 55,
+      "teamOvrMax": 75,
+      "winPctSd": 22.3,
+      "rivalOvr": 65,
+      "gymOvr": 63,
+      "ordinaryOvr": 64.4,
+      "capRoomMean": 337643,
+      "capRoomMin": 225400,
+      "negativeCap": 0,
+      "payrollMean": 1057357,
+      "rosterMin": 32,
+      "rosterMax": 38,
+      "lineupProblems": 0,
+      "weakGroupClubs": 31,
+      "meanAge": 26.2,
+      "starterAge": 28.3,
+      "devMean": 1.2,
+      "evolved": 33,
+      "meanLevel": 24,
+      "stage1": 126,
+      "stage2": 31,
+      "injured": 0
+     },
+     "champion": "Ashford Cinders",
+     "championGym": null,
+     "championOwner": true,
+     "games": {
+      "n": 224,
+      "meanMargin": 10.8,
+      "blowout21": 35,
+      "score0to21": 5,
+      "pointsPerTeamGame": 19.2
+     },
+     "monsters": {
+      "n": 1172,
+      "ovrMean": 51.8,
+      "ovr80": 84,
+      "ovr90": 34,
+      "ovr95": 27,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 341,
+      "levelMean": 24,
+      "stage2": 32,
+      "starterOvr": 64.6,
+      "reserveOvr": 38,
+      "contract3y": 406,
+      "contractYearsMean": 2.3
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 82,
+       "meanSalary": 29426,
+       "starterMeanSalary": 35503,
+       "starterMeanOvr": 67.1,
+       "salaryPerOvrStarter": 530
+      },
+      "RB": {
+       "n": 87,
+       "meanSalary": 27378,
+       "starterMeanSalary": 34814,
+       "starterMeanOvr": 64.3,
+       "salaryPerOvrStarter": 547
+      },
+      "WR": {
+       "n": 165,
+       "meanSalary": 27927,
+       "starterMeanSalary": 31342,
+       "starterMeanOvr": 59,
+       "salaryPerOvrStarter": 544
+      },
+      "TE": {
+       "n": 75,
+       "meanSalary": 28357,
+       "starterMeanSalary": 33057,
+       "starterMeanOvr": 63.6,
+       "salaryPerOvrStarter": 522
+      },
+      "OL": {
+       "n": 147,
+       "meanSalary": 29868,
+       "starterMeanSalary": 33216,
+       "starterMeanOvr": 65.8,
+       "salaryPerOvrStarter": 514
+      },
+      "DL": {
+       "n": 151,
+       "meanSalary": 29498,
+       "starterMeanSalary": 32008,
+       "starterMeanOvr": 61,
+       "salaryPerOvrStarter": 538
+      },
+      "LB": {
+       "n": 118,
+       "meanSalary": 29529,
+       "starterMeanSalary": 34434,
+       "starterMeanOvr": 64.1,
+       "salaryPerOvrStarter": 547
+      },
+      "CB": {
+       "n": 116,
+       "meanSalary": 28331,
+       "starterMeanSalary": 32908,
+       "starterMeanOvr": 63,
+       "salaryPerOvrStarter": 538
+      },
+      "S": {
+       "n": 121,
+       "meanSalary": 29755,
+       "starterMeanSalary": 34552,
+       "starterMeanOvr": 66.7,
+       "salaryPerOvrStarter": 529
+      },
+      "K": {
+       "n": 61,
+       "meanSalary": 33321,
+       "starterMeanSalary": 37250,
+       "starterMeanOvr": 77.6,
+       "salaryPerOvrStarter": 480
+      }
+     },
+     "fa": {
+      "aiSignings": 14,
+      "ownerSignings": 0,
+      "contested2plus": 9,
+      "meanSalary": 29043,
+      "meanYears": 2.1,
+      "withBonus": 0,
+      "unsignedAtClose": 26,
+      "extensions": 230,
+      "renewalsSigned": 119,
+      "renewalsDeclined": 21,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7835,
+      "comp": 4969,
+      "passYds": 81399,
+      "passTd": 826,
+      "intThrown": 166,
+      "sacked": 177,
+      "rush": 3911,
+      "rushYds": 24812,
+      "rushTd": 279,
+      "fgm": 217,
+      "fga": 295,
+      "xpm": 976,
+      "xpa": 1108,
+      "fumLost": 51,
+      "points": 8582,
+      "forfeits": 0,
+      "score0to21": 5,
+      "ot": 22,
+      "clashDecided": 11
+     },
+     "awards": {
+      "mvp": "RB",
+      "opoy": "RB",
+      "dpoy": "DL",
+      "oroy": "OL",
+      "droy": null,
+      "coy": null,
+      "smoy": "WR"
+     },
+     "saveBytes": 13172998
+    },
+    {
+     "year": 15,
+     "owner": {
+      "w": 14,
+      "l": 0,
+      "playoffs": true,
+      "champion": true,
+      "teamOvr": 61,
+      "roster": 38,
+      "forfeits0to21": 0,
+      "games": 14
+     },
+     "ai": {
+      "clubs": 31,
+      "teamOvrMean": 63.2,
+      "teamOvrSd": 4,
+      "teamOvrMin": 56,
+      "teamOvrMax": 73,
+      "winPctSd": 23.6,
+      "rivalOvr": 67,
+      "gymOvr": 63.4,
+      "ordinaryOvr": 63.1,
+      "capRoomMean": 389916,
+      "capRoomMin": 283700,
+      "negativeCap": 0,
+      "payrollMean": 1005084,
+      "rosterMin": 32,
+      "rosterMax": 38,
+      "lineupProblems": 3,
+      "weakGroupClubs": 31,
+      "meanAge": 25.2,
+      "starterAge": 27,
+      "devMean": 1.2,
+      "evolved": 23,
+      "meanLevel": 23.8,
+      "stage1": 119,
+      "stage2": 28,
+      "injured": 2
+     },
+     "champion": "Ashford Cinders",
+     "championGym": null,
+     "championOwner": true,
+     "games": {
+      "n": 224,
+      "meanMargin": 9.4,
+      "blowout21": 28,
+      "score0to21": 7,
+      "pointsPerTeamGame": 17.4
+     },
+     "monsters": {
+      "n": 1143,
+      "ovrMean": 51.6,
+      "ovr80": 87,
+      "ovr90": 37,
+      "ovr95": 27,
+      "ageless": 13,
+      "agelessStarters": 13,
+      "level50": 328,
+      "levelMean": 23.8,
+      "stage2": 29,
+      "starterOvr": 64.1,
+      "reserveOvr": 37.7,
+      "contract3y": 345,
+      "contractYearsMean": 2.2
+     },
+     "salaryByPos": {
+      "QB": {
+       "n": 80,
+       "meanSalary": 28841,
+       "starterMeanSalary": 33110,
+       "starterMeanOvr": 64.3,
+       "salaryPerOvrStarter": 521
+      },
+      "RB": {
+       "n": 84,
+       "meanSalary": 26379,
+       "starterMeanSalary": 34130,
+       "starterMeanOvr": 64.3,
+       "salaryPerOvrStarter": 542
+      },
+      "WR": {
+       "n": 162,
+       "meanSalary": 27339,
+       "starterMeanSalary": 30998,
+       "starterMeanOvr": 58.8,
+       "salaryPerOvrStarter": 545
+      },
+      "TE": {
+       "n": 78,
+       "meanSalary": 28150,
+       "starterMeanSalary": 33308,
+       "starterMeanOvr": 64.8,
+       "salaryPerOvrStarter": 516
+      },
+      "OL": {
+       "n": 144,
+       "meanSalary": 28973,
+       "starterMeanSalary": 32285,
+       "starterMeanOvr": 63.8,
+       "salaryPerOvrStarter": 522
+      },
+      "DL": {
+       "n": 147,
+       "meanSalary": 29151,
+       "starterMeanSalary": 31646,
+       "starterMeanOvr": 61.2,
+       "salaryPerOvrStarter": 528
+      },
+      "LB": {
+       "n": 110,
+       "meanSalary": 28606,
+       "starterMeanSalary": 32972,
+       "starterMeanOvr": 62.3,
+       "salaryPerOvrStarter": 539
+      },
+      "CB": {
+       "n": 118,
+       "meanSalary": 27789,
+       "starterMeanSalary": 32926,
+       "starterMeanOvr": 64.5,
+       "salaryPerOvrStarter": 525
+      },
+      "S": {
+       "n": 112,
+       "meanSalary": 29143,
+       "starterMeanSalary": 33524,
+       "starterMeanOvr": 65.6,
+       "salaryPerOvrStarter": 520
+      },
+      "K": {
+       "n": 57,
+       "meanSalary": 32678,
+       "starterMeanSalary": 37286,
+       "starterMeanOvr": 77.9,
+       "salaryPerOvrStarter": 479
+      }
+     },
+     "fa": {
+      "aiSignings": 27,
+      "ownerSignings": 2,
+      "contested2plus": 9,
+      "meanSalary": 28248,
+      "meanYears": 2,
+      "withBonus": 0,
+      "unsignedAtClose": 15,
+      "extensions": 215,
+      "renewalsSigned": 131,
+      "renewalsDeclined": 0,
+      "marketProblems": 0
+     },
+     "football": {
+      "games": 224,
+      "att": 7569,
+      "comp": 4742,
+      "passYds": 75647,
+      "passTd": 708,
+      "intThrown": 174,
+      "sacked": 188,
+      "rush": 4053,
+      "rushYds": 22664,
+      "rushTd": 252,
+      "fgm": 241,
+      "fga": 327,
+      "xpm": 848,
+      "xpa": 984,
+      "fumLost": 80,
+      "points": 7780,
+      "forfeits": 0,
+      "score0to21": 7,
+      "ot": 18,
+      "clashDecided": 6
+     },
+     "awards": {
+      "mvp": "WR",
+      "opoy": "WR",
+      "dpoy": "DL",
+      "oroy": "QB",
+      "droy": "S",
+      "coy": null,
+      "smoy": "WR"
+     },
+     "saveBytes": 13085572
+    }
+   ]
+  }
+ ]
+}

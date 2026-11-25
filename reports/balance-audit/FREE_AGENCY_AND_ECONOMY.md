@@ -102,6 +102,7 @@ Over the 15 offseason markets of each run:
   - Here the repair owner needed only 0 pre-game signings and 4 to 8 offseason signings in 15 seasons.
   - The owner's club played 210 games with 0 forfeits on Pro and at most 1 0–21 result on All-Star. That one may be a genuine 21–0 game, see `TECHNICAL_ISSUES.md` T-1.
   - With 34–36 monsters still unsigned at every market close, supply is no longer the bottleneck.
+  - **One exception on seed 4 (Pro):** in season 7, week 5, the repair owner found no healthy RB on the market and the game was forfeited. That is 1 empty-market forfeit in 420 owner games across the two Pro seeds. The problem is rare now, but not gone.
 
 ## 4. Retention, movement, draft and trades
 

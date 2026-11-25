@@ -1,0 +1,93 @@
+{
+ "seed": 1,
+ "difficulty": "pro",
+ "fired": true,
+ "seasons": [
+  "11-3",
+  "7-7",
+  "7-7",
+  "3-11"
+ ],
+ "board": [
+  {
+   "year": 1,
+   "id": "wins",
+   "label": "Win 6 games",
+   "labelL": {
+    "tk": "franchise.win_games",
+    "tv": {
+     "safeWins": 6
+    }
+   },
+   "met": true,
+   "miss": null,
+   "wins": 11,
+   "forecast": 6.1,
+   "confidence": 1,
+   "reason": null,
+   "confidenceNow": 1,
+   "misses": 0,
+   "fired": false
+  },
+  {
+   "year": 2,
+   "id": "wins",
+   "label": "Win 8 games",
+   "labelL": {
+    "tk": "franchise.win_games",
+    "tv": {
+     "safeWins": 8
+    }
+   },
+   "met": false,
+   "miss": "narrow",
+   "wins": 7,
+   "forecast": 8.3,
+   "confidence": 0,
+   "reason": null,
+   "confidenceNow": 0,
+   "misses": 1,
+   "fired": false
+  },
+  {
+   "year": 3,
+   "id": "wins",
+   "label": "Win 9 games",
+   "labelL": {
+    "tk": "franchise.win_games",
+    "tv": {
+     "safeWins": 9
+    }
+   },
+   "met": false,
+   "miss": "narrow",
+   "wins": 7,
+   "forecast": 8.9,
+   "confidence": -1,
+   "reason": null,
+   "confidenceNow": -1,
+   "misses": 2,
+   "fired": false
+  },
+  {
+   "year": 4,
+   "id": "wins",
+   "label": "Win 10 games",
+   "labelL": {
+    "tk": "franchise.win_games",
+    "tv": {
+     "safeWins": 10
+    }
+   },
+   "met": false,
+   "miss": "clear",
+   "wins": 3,
+   "forecast": 9.6,
+   "confidence": -2,
+   "reason": "3 missed seasons in a row",
+   "confidenceNow": -2,
+   "misses": 3,
+   "fired": true
+  }
+ ]
+}
