@@ -96,3 +96,13 @@ Further issues from the long runs are added below as they are confirmed.
 - measure the depth from the line of scrimmage plus the LB's normal 4.5-yard alignment.
 
 Re-check with `foresight-probe.mjs` and `task10-ability-census.mjs`.
+
+## T-7. Air Brake and Crosswind Rescue never execute: not explained by breakup rarity (Low, open)
+
+- **The facts.**
+  - Both abilities charge on three personal pass breakups and lose the charge at the end of the game (`src/sim/abilities/skywarden.js`, `windlynx.js`).
+  - In 100 generated games (`tools/balance-audit/pbu-probe.mjs`, `raw/pbu-probe-100.json`), one defender reached 3 or more breakups in 21.5 of 100 team-games (4.55 breakups a game).
+- **The conclusion.** Charging is therefore uncommon but not rare, and 0 executions in 88 (Air Brake) and 37 (Crosswind Rescue) census appearances is lower than the charge rate alone suggests. The activation condition is the likelier blocker:
+  - Air Brake needs a later catch by the receiver he guards, within 8 yards;
+  - Crosswind Rescue requires no lanes of his own to remain.
+- **Not traced further in the time available.**

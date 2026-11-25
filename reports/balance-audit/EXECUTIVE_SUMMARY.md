@@ -136,7 +136,7 @@ Full detail, with the 11 points each, is in `RECOMMENDED_CHANGES.md`.
 
 1. Re-run the live-Board study with R-0 applied, on more seeds and all difficulties.
 2. Run `task10-ability-strength` with the corrected strip (R-3).
-3. ~~Why Foresight never executes~~: **found** (`TECHNICAL_ISSUES.md` T-6). Its 3-yard LB depth rule matches 4 of 255 LB alignments. Air Brake and Crosswind Rescue remain to trace.
+3. ~~Why Foresight never executes~~: **found** (`TECHNICAL_ISSUES.md` T-6). Its 3-yard LB depth rule matches 4 of 255 LB alignments. Air Brake and Crosswind Rescue remain to trace. Their charge, 3 breakups by one defender, happens in about 21% of team-games, so the block is in the activation condition (T-7).
 4. Separate in-game forfeits from genuine 21–0 results in franchise leagues (needs a recorded flag).
 5. Decide the completion and sack targets (owner decision).
 
