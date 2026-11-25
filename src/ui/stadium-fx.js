@@ -61,12 +61,14 @@ export function stadiumReaction(ev) {
   else if (r === 'interception' || r === 'touchback_return') { kind = 'int'; team = def; }
   else if (r === 'fumble') { kind = 'fumble-lost'; team = def; } // the ball came loose AND possession changed: impact, then the stronger pulse
   else if (ev.kind === 'field_goal') { if (!ev.scored) return null; kind = 'fg'; team = ev.kicking || off; } // a miss is never celebrated
+  else if (ev.kind === 'try') { if (!ev.good) return null; kind = 'fg'; team = ev.tryTeam || ev.kicking || off; } // a good extra point or two-point try
   else if (r === 'sack') { kind = 'sack'; team = def; }
   else if (ev.sim?.stats?.fumbledBy) { kind = 'fumble'; team = def; } // loose ball the offense kept: the impact only
   if (!kind) return null;
   const side = team === 'home' ? 'home' : 'away';
   const ms = Math.round(REACTION_MS[kind] * (side === 'home' ? 1 : 0.7));
-  return { kind, level: MAJOR.has(kind) ? 'major' : 'minor', side, ms };
+  // A score is cheered until the next play starts (owner 2026-11-24): the match screen stops it at its next event.
+  return { kind, level: MAJOR.has(kind) ? 'major' : 'minor', side, ms, ...(kind === 'td' || kind === 'fg' ? { hold: true } : {}) };
 }
 
 // ---------------------------------------------------------------- reaction playback (DOM, one at a time)
@@ -74,15 +76,15 @@ let timer = null; let current = null; let playing = null; // playing: { kind, si
 /** Clear whatever is playing (also on leaving the screen). */
 export function stopStadiumReaction(wrap = current) {
   clearTimeout(timer); timer = null; playing = null;
-  if (wrap?.dataset) { delete wrap.dataset.sfx; delete wrap.dataset.sfxSide; }
+  if (wrap?.dataset) { delete wrap.dataset.sfx; delete wrap.dataset.sfxSide; delete wrap.dataset.sfxHold; }
   current = null;
 }
 /** The screen was rebuilt while a reaction was playing: carry the reaction on to the new box for the time it has left. */
 export function resumeStadiumReaction(wrap, now = Date.now()) {
   if (!wrap || !playing || wrap === current) return false;
   const left = playing.until - now; if (left < 120) return false;
-  wrap.dataset.sfx = playing.kind; wrap.dataset.sfxSide = playing.side; current = wrap;
-  clearTimeout(timer); timer = setTimeout(() => stopStadiumReaction(wrap), left);
+  wrap.dataset.sfx = playing.kind; wrap.dataset.sfxSide = playing.side; if (playing.hold) wrap.dataset.sfxHold = '1'; current = wrap;
+  clearTimeout(timer); timer = Number.isFinite(left) ? setTimeout(() => stopStadiumReaction(wrap), left) : null;
   return true;
 }
 /**
@@ -95,6 +97,8 @@ export function playStadiumReaction(wrap, reaction, level = 'full') {
   stopStadiumReaction(current || wrap);
   void wrap.offsetWidth; // restart the keyframes even when the same reaction repeats
   wrap.dataset.sfx = reaction.kind; wrap.dataset.sfxSide = reaction.side; current = wrap;
+  // hold: the cheer goes on (the fans keep jumping) until the screen stops it at the next play; the flashes still play once
+  if (reaction.hold && level !== 'reduced') { wrap.dataset.sfxHold = '1'; playing = { kind: reaction.kind, side: reaction.side, until: Infinity, hold: true }; timer = null; return true; }
   playing = { kind: reaction.kind, side: reaction.side, until: Date.now() + reaction.ms + 80 };
   timer = setTimeout(() => stopStadiumReaction(wrap), reaction.ms + 80);
   return true;
@@ -318,9 +322,13 @@ export function postsSvg(envId, y, dir) {
  * end zone). Three rows of the generated crowd, the two "arms up" layers for celebrations, and the stadium's rail in front.
  * `y0` is the svg y of the back of the stand, `x0`/`w` its left edge and width, all in yards.
  */
-export function standSvg(venue, x0, y0, w) {
+export function standSvg(venue, x0, y0, w, stand = 'far') {
   const look = venueLook(venue); if (!look || !scene) return '';
-  const d = STANDS_ROWS; const [a, b] = look.colors; const img = scene.crowd ? crowdImages({ ...scene.crowd, stand: 'far' }) : null;
+  const d = STANDS_ROWS; const [a, b] = look.colors; const img = scene.crowd ? crowdImages({ ...scene.crowd, stand }) : null;
+  if (stand === 'near') { // behind the near end zone (owner 2026-11-24: fans, not a bare wall): the fans seen from behind, the rail on the field side
+    const pic = (cls, u) => (u ? `<image class="${cls}" href="${u}" x="${x0}" y="${y0 + 0.5}" width="${w}" height="${d - 0.5}" preserveAspectRatio="none" style="image-rendering:pixelated"/>` : '');
+    return `<g class="sfx-stand sfx-stand-near"><rect x="${x0}" y="${y0}" width="${w}" height="${d}" fill="#10151d"/>${pic('sfx-crowd-img', img?.base)}${pic('sfx-cheer sfx-cheer-home', img?.home)}${pic('sfx-cheer sfx-cheer-away', img?.away)}<rect x="${x0}" y="${y0}" width="${w}" height="0.5" fill="#0c1430"/><line class="sfx-channel sfx-anim" x1="${x0}" y1="${y0 + 0.25}" x2="${x0 + w}" y2="${y0 + 0.25}" stroke="${a}" stroke-width="0.22" stroke-dasharray="2.5 2"/></g>`;
+  }
   const pic = (cls, u) => (u ? `<image class="${cls}" href="${u}" x="${x0}" y="${y0}" width="${w}" height="${d - 0.5}" preserveAspectRatio="none" style="image-rendering:pixelated"/>` : '');
   return `<g class="sfx-stand"><rect x="${x0}" y="${y0}" width="${w}" height="${d}" fill="#10151d"/>${pic('sfx-crowd-img', img?.base)}${pic('sfx-cheer sfx-cheer-home', img?.home)}${pic('sfx-cheer sfx-cheer-away', img?.away)}<rect x="${x0}" y="${y0 + d - 0.5}" width="${w}" height="0.5" fill="#0c1430"/><line class="sfx-channel sfx-anim" x1="${x0}" y1="${y0 + d - 0.25}" x2="${x0 + w}" y2="${y0 + d - 0.25}" stroke="${a}" stroke-width="0.22" stroke-dasharray="2.5 2"/><line class="sfx-channel sfx-channel-b sfx-anim" x1="${x0}" y1="${y0 + d - 0.25}" x2="${x0 + w}" y2="${y0 + d - 0.25}" stroke="${b}" stroke-width="0.12" stroke-dasharray="1 3.5"/></g>`;
 }
@@ -391,6 +399,28 @@ export function wallSvg(venue, x0, y0, w) {
   const d = STANDS_ROWS; const [a] = look.colors;
   if (look.club) return homeWallSvg(look, x0, y0, w, d);
   return `<g class="sfx-wall"><rect x="${x0}" y="${y0}" width="${w}" height="${d}" fill="#0d1320"/><rect x="${x0}" y="${y0}" width="${w}" height="0.5" fill="#0c1430"/><line class="sfx-channel sfx-anim" x1="${x0}" y1="${y0 + 0.25}" x2="${x0 + w}" y2="${y0 + 0.25}" stroke="${a}" stroke-width="0.22" stroke-dasharray="2.5 2"/>${[0.18, 0.5, 0.82].map((k) => `<rect x="${x0 + w * k - 3}" y="${y0 + 1.4}" width="6" height="${d - 2}" rx="0.4" fill="#141c30" stroke="#26335a" stroke-width="0.12"/>`).join('')}</g>`;
+}
+/**
+ * The bowl (owner 2026-11-24): stadiums are built round the field, so wherever the field's picture leaves room in its box (beside the
+ * side stands when zoomed out, above and below the ends) there are seats: the crowd repeated (empty seats where the game did not sell
+ * out), drawn in yards under everything else so it zooms with the camera, with the same arms-up layers so it cheers with the stands.
+ * The field's svg shows it past its viewBox (overflow visible). `VW` is the picture's half width, `top` the svg y of the far stand's
+ * back (the rows line up with it). '' without a crowd.
+ */
+export const BOWL_W = 59, BOWL_H = STANDS_ROWS - 0.5; // one tile: the far stand's picture (37 seats, three rows) at its own size
+/** The bowl's seat patterns, once per game: [{ id, symbol }] for the field's <defs> ([] without a crowd). */
+export function bowlDefs() {
+  const img = scene?.crowd ? crowdImages({ ...scene.crowd, stand: 'bowl' }) : null; if (!img?.base) return [];
+  const pat = (k, u) => ({ id: `sfx-bowl-${k}-${scene.crowd.seed}`.replace(/[^\w-]/g, ''), symbol: `<pattern id="${`sfx-bowl-${k}-${scene.crowd.seed}`.replace(/[^\w-]/g, '')}" patternUnits="userSpaceOnUse" width="${BOWL_W}" height="${BOWL_H}"><image href="${u}" width="${BOWL_W}" height="${BOWL_H}" preserveAspectRatio="none" style="image-rendering:pixelated"/></pattern>` });
+  return [pat('base', img.base), ...(img.home ? [pat('home', img.home)] : []), ...(img.away ? [pat('away', img.away)] : [])];
+}
+/** The bowl's seats for one camera (the patterns are bowlDefs): rows lined up with the far stand's back at svg y `top`. */
+export function bowlSvg(VW, span, top) {
+  const defs = bowlDefs(); if (!defs.length) return '';
+  const R = 90, x = -VW - R, y = -R - BOWL_H, w = (VW + R) * 2, h = span + R * 2 + BOWL_H * 2; const shift = (((top % BOWL_H) + BOWL_H) % BOWL_H).toFixed(2);
+  const rect = (id, cls = '') => `<rect${cls ? ` class="${cls}"` : ''} x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" fill="url(#${id})"/>`;
+  const [base, home, away] = defs;
+  return `<g class="sfx-stand sfx-bowl" transform="translate(0 ${shift})"><rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" fill="#10151d"/>${rect(base.id)}${home ? rect(home.id, 'sfx-cheer sfx-cheer-home') : ''}${away ? rect(away.id, 'sfx-cheer sfx-cheer-away') : ''}<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" fill="#060a10" opacity="0.36"/></g>`;
 }
 /**
  * The surround for a venue: the edge light that reactions use and the lap of energy for the biggest moments. '' for a stadium

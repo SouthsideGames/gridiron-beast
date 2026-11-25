@@ -4,7 +4,8 @@ import { autoSpeed, cycleAutoSpeed } from '../phone-navigation.js';
 import { matchLogMatches } from '../match-log-filter.js';
 import { activityPaused } from '../activity.js';
 import { iconifyMarkup, infoIcon } from '../icons.js';
-import { surroundHtml, setStadiumScene, standsDepth, lookFor, introPlateHtml, kickoffRevealHtml, REVEAL_MS, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
+import { crowdTalk, showCrowdTalk } from '../crowd-talk.js';
+import { surroundHtml, setStadiumScene, stadiumScene, standsDepth, lookFor, introPlateHtml, kickoffRevealHtml, REVEAL_MS, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
 import { crowdFor } from '../stadium-crowd.js';
 import { guideFootball, guideMoment } from '../guided-week.js';
 import { recorder } from '../../testing/recorder.js';
@@ -340,7 +341,7 @@ export function registerMatchScreens(Router, app) {
   }
 
   const fieldBox = () => fieldViewBox().split(' ').map(Number); // [-half width, 0, width, span] of the picture on screen now
-  let pendingStadium = null;
+  let pendingStadium = null; let pendingTalk = null; // the crowd's bubbles for the play just shown (crowd-talk.js)
   // Stadium Polish: on the opening kickoff the stadium's strike reveals the football between the captains before the kick.
   // It only delays the kick the player just asked for, never changes it, and a tap (or the button again) skips it.
   let revealFinish = null;
@@ -395,16 +396,16 @@ export function registerMatchScreens(Router, app) {
     const contact=G.lastEvent?.sim?.typeContests?.find(x=>x.mod>(x.env?0.02:0));
     const contactNames=G.lastEvent?.sim?.names;
     const typeNote=contact&&contactNames?.[contact.team]?.[contact.a]&&contactNames?.[contact.team==='off'?'def':'off']?.[contact.b] ? $t('playview.type_contact',{name:esc(contactNames[contact.team][contact.a]),opponent:esc(contactNames[contact.team==='off'?'def':'off'][contact.b])}):'';
-    const co = G.lastEvent?.callout; const fresh = !!G.lastEvent?.fresh; const reaction = fresh && !anim ? G.lastEvent.stadium || null : null; if (G.lastEvent) G.lastEvent.fresh = false; // the pop plays once, not on every re-render
+    const co = G.lastEvent?.callout; const fresh = !!G.lastEvent?.fresh; const reaction = fresh && !anim ? G.lastEvent.stadium || null : null; if (fresh && !anim && G.lastEvent?.talk?.length) pendingTalk = G.lastEvent.talk; if (G.lastEvent) G.lastEvent.fresh = false; // the pop plays once, not on every re-render
     const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''} ${co ? `tier-${co.tier} ${co.mine === true ? 'mine' : co.mine === false ? 'theirs' : ''}` : ''} ${fresh ? 'fresh' : ''}" id="banner">${co && co.tier !== 'routine' ? `<div class="callout">${esc(co.text)}</div>` : co ? `<span class="callout small">${esc(co.text)}</span> ` : ''}${esc(G.lastEvent.text)}${typeNote?`<div class="type-contact-note">${typeNote}</div>`:''}${ab}</div>` : '';
     const tdFlash = reducedFlash(f.settings) ? '' : fresh && co?.tier === 'td' ? ` td-flash ${co.mine ? 'mine' : 'theirs'}` : fresh && co?.tier === 'turnover' ? ' to-flash' : '';
     const bump = (side) => (G.scoreSeen?.[side] != null && G.scoreSeen[side] !== s.score[side]) ? 'bump' : ''; const bumpA = bump('away'), bumpH = bump('home'); G.scoreSeen = { ...s.score };
     const eventBanner = G.event === 'rival' ? `<div class="rival-banner compact">${$t('match.rivalry_game_gm', { name: esc(s[them].name), gm: esc(f.rivals[f.tier]?.gm || '') })}</div>` : G.event === 'playoff' ? `<div class="rival-banner compact" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">${$t('match.playoffs', { tag: esc(G.tag || $t('match.win_or_go_home')) })}</div>` : '';
     const head = `${eventBanner}
         <div class="scoreboard" aria-live="polite" style="--away:${s.away.color};--home:${s.home.color};--away2:${TEAM_META[s.away.name]?.secondary || s.away.color};--home2:${TEAM_META[s.home.name]?.secondary || s.home.color}">
-          <div class="team"><span class="pos" style="visibility:${s.possession === 'away' && !s.finished ? 'visible' : 'hidden'}"></span><span class="abbr"><span style="color:${teamInk(s.away.name, s.away.color)}">${teamLogo(s.away.name, 18, { cls: 'team-logo sb-logo' })}${esc(s.away.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.away)}${'○'.repeat(3 - s.timeouts.away)}</span></span><span class="score ${bumpA}">${s.score.away}</span></div>
+          <div class="team"><span class="pos" style="visibility:${s.possession === 'away' && !s.finished ? 'visible' : 'hidden'}"></span>${teamLogo(s.away.name, 18, { cls: 'team-logo sb-logo' })}<span class="abbr"><span style="color:${teamInk(s.away.name, s.away.color)}">${esc(s.away.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.away)}${'○'.repeat(3 - s.timeouts.away)}</span></span><span class="score ${bumpA}">${s.score.away}</span></div>
           <div class="mid"><b>${s.finished ? $t('match.final') : R.quarterText(s)} ${s.ot ? '' : fmtClock(s.clock)}</b>${esc(sit)}</div>
-          <div class="team right"><span class="score ${bumpH}">${s.score.home}</span><span class="abbr"><span style="color:${teamInk(s.home.name, s.home.color)}">${esc(s.home.abbr)}${teamLogo(s.home.name, 18, { cls: 'team-logo sb-logo' })}</span><span class="to">${'●'.repeat(s.timeouts.home)}${'○'.repeat(3 - s.timeouts.home)}</span></span><span class="pos" style="visibility:${s.possession === 'home' && !s.finished ? 'visible' : 'hidden'}"></span></div>
+          <div class="team right"><span class="score ${bumpH}">${s.score.home}</span><span class="abbr"><span style="color:${teamInk(s.home.name, s.home.color)}">${esc(s.home.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.home)}${'○'.repeat(3 - s.timeouts.home)}</span></span>${teamLogo(s.home.name, 18, { cls: 'team-logo sb-logo' })}<span class="pos" style="visibility:${s.possession === 'home' && !s.finished ? 'visible' : 'hidden'}"></span></div>
           ${clockStateHtml(s, G, myBall)}
         </div>
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? $t('match.your_ball') : $t('match.your_defense')}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? $t('match.home_2') : $t('match.away_2')}${G.mode === 'key' ? $t('match.key_moments_2') : ''}</span></div>
@@ -423,7 +424,8 @@ export function registerMatchScreens(Router, app) {
   }
   /** What mount() does after the markup is in place; refresh() repeats it (the play clock restarts, Auto is rescheduled, the halftime sheet opens). */
   function afterRender(f, root) {
-    { const wrap = root?.querySelector('#fieldwrap'), svg = wrap?.querySelector('#field'); if (wrap && svg) { { const v = fieldBox(); layoutSurround(wrap, svg, v[2] / v[3], v[2]); } const r = pendingStadium; pendingStadium = null; if (r) playStadiumReaction(wrap, r, stadiumFxLevel(f.settings)); else resumeStadiumReaction(wrap); } }
+    { const wrap = root?.querySelector('#fieldwrap'), svg = wrap?.querySelector('#field'); if (wrap && svg) { { const v = fieldBox(); layoutSurround(wrap, svg, v[2] / v[3], v[2]); } const r = pendingStadium; pendingStadium = null; if (r) playStadiumReaction(wrap, r, stadiumFxLevel(f.settings)); else resumeStadiumReaction(wrap);
+      const tk = pendingTalk; pendingTalk = null; if (tk && stadiumFxLevel(f.settings) !== 'off') { const S = f.game.state; showCrowdTalk(wrap, tk, { seed: `${S.seed}|${S.playCount || 0}`, colors: { home: S.home.color, away: S.away.color } }); } } }
     { const G = f.game, st = G.state; if (!anim && !st.finished && st.quarter >= 3 && !G.halftimeShown) { G.halftimeShown = true; app.save(); openLiveBox(f, $t('match.halftime')); } }
     if (!anim) guideFootball(f, () => app.save());
     startPlayClock(f, root);
@@ -717,7 +719,11 @@ export function registerMatchScreens(Router, app) {
   }
   function afterStep(f, ev) {
     const G = f.game;
+    stopStadiumReaction(); // the next play: a held cheer (a score) ends here (owner 2026-11-24)
     if (!ev) { app.save(); refresh(f); return; }
+    { // a first down on this play (for the crowd's bubbles): the offense's first-down count went up
+      const st = G.state.stats || {}; const now = { home: st.home?.firstDowns || 0, away: st.away?.firstDowns || 0 }; const was = G.fdSeen || now;
+      const side = ev.offenseSide || G.state.possession; ev.firstDown = !!side && now[side] > (was[side] || 0); G.fdSeen = now; }
     if (ev.kind === 'kickoff' && ev.sim) ev.offenseSide = R.opponent(ev.kicking); // a live kickoff (Task 8 M2): the return unit is the engine's offense
     if (ev.sim && ev.sim.frames?.length > 1 && !f.settings.reducedMotion) { startAnim(f, ev); return; }
     if (!ev.sim && !f.settings.reducedMotion && (ev.kind === 'kickoff' || ev.kind === 'punt' || ev.kind === 'field_goal' || (ev.kind === 'try' && ev.res))) {
@@ -726,7 +732,7 @@ export function registerMatchScreens(Router, app) {
       const K = kickPlay(ev, kickLookup(f, ev.kicking), fxMeta(ev, true));
       if (K?.sim?.frames?.length > 1) { ev.offenseSide = ev.kicking; ev.sim = K.sim; ev.kickerName = teamsFor(f)[ev.kicking]?.kicker?.name || null; if (K.fx) kickFx.set(K.sim, K.fx); startAnim(f, ev); return; }
     }
-    G.lastEvent = { turnover: turnoverCue(ev)?.text, text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), stadium: stadiumReaction(ev), fresh: true };
+    G.lastEvent = { turnover: turnoverCue(ev)?.text, text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), stadium: stadiumReaction(ev), talk: crowdTalk(ev, { away: stadiumScene()?.crowd?.mix?.away ?? 0, seed: `${G.state.seed}|${G.state.playCount || 0}` }), fresh: true };
     app.save(); refresh(f);
   }
   function startAnim(f, ev, opts = {}) {
@@ -820,7 +826,7 @@ export function registerMatchScreens(Router, app) {
     if (anim.replay) { endReplay(f); return; }
     const { ev } = anim; cancelAnimationFrame(anim.raf); anim = null;
     const G = f.game;
-    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), stadium: stadiumReaction(ev), fresh: true };
+    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), stadium: stadiumReaction(ev), talk: crowdTalk(ev, { away: stadiumScene()?.crowd?.mix?.away ?? 0, seed: `${G.state.seed}|${G.state.playCount || 0}` }), fresh: true };
     app.save(); refresh(f); saveWhenIdle(); // the play's result is requested above and written while the screen is idle after it
     // Instant replay (GDD §34): the outcome is final and saved above; the replay only re-draws this play's recorded frames.
     const reason = replayReason(ev, G.state, G.playerSide);
