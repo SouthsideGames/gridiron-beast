@@ -34,7 +34,7 @@ test('three weeks: edit the coach, skip Wednesday, answer the press by hand, pla
     }
     assert.deepEqual(f.week.media, twin.week.media, 'the same save gets the same press conference and headline');
     const m = F.sundayMatchup(f); const v = F.gameVenue(f, m.home.name, m.away.name); assert.deepEqual(v, F.gameVenue(twin, m.home.name, m.away.name), 'same seed and week: same field');
-    const boss = GYMS.find((g) => g.club === m.home.name) || GYMS.find((g) => g.club === m.away.name);
+    const boss = GYMS.find((g) => g.club === m.home.name); // the home club decides the field (2026-11-22): a visiting Gym Leader plays on the home field
     if (boss) assert.equal(v.env, FIELD_BY_TYPE[boss.element] || 'grass', 'a boss plays on its own field'); fields.push(v.env);
     assert.equal(m.playerSide === 'home' ? m.home.boosts && Object.values(m.home.boosts).some((b) => b.training) : Object.values(m.away.boosts || {}).some((b) => b.training), false, 'no training bonus after a skip');
     sunday(f); sunday(twin); assert.equal(f.season.day, 0); assert.ok(!f.week.trainingSkipped && !f.week.media, 'the new week starts clean');
