@@ -1,0 +1,238 @@
+{
+ "mode": "persistent",
+ "difficulty": "allstar",
+ "seasons": 5,
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "boardReset": false,
+ "runs": [
+  {
+   "seed": 1,
+   "club": "Sundown Drakes",
+   "fired": true,
+   "seasonsPlayed": 4,
+   "rows": [
+    {
+     "year": 1,
+     "w": 5,
+     "l": 9,
+     "playoffs": false,
+     "champion": "Sunfire Solars",
+     "mine": 52,
+     "aiMid": 52.4,
+     "aiEnd": 55.5,
+     "today": 53.5,
+     "rivalEnd": 50,
+     "rivalToday": 47,
+     "forecast": null
+    },
+    {
+     "year": 2,
+     "w": 10,
+     "l": 4,
+     "playoffs": true,
+     "champion": "Thunder Mesa Blitz",
+     "mine": 56,
+     "aiMid": 56.6,
+     "aiEnd": 58.8,
+     "today": 54.8,
+     "rivalEnd": 53,
+     "rivalToday": 62,
+     "forecast": null
+    },
+    {
+     "year": 3,
+     "w": 6,
+     "l": 8,
+     "playoffs": false,
+     "champion": "Sunfire Solars",
+     "mine": 56,
+     "aiMid": 59.7,
+     "aiEnd": 61.4,
+     "today": 55.1,
+     "rivalEnd": 56,
+     "rivalToday": 59,
+     "forecast": null
+    },
+    {
+     "year": 4,
+     "w": 6,
+     "l": 8,
+     "playoffs": false,
+     "champion": "Sunfire Solars",
+     "mine": 58,
+     "aiMid": 62.1,
+     "aiEnd": 63.2,
+     "today": 54.6,
+     "rivalEnd": 58,
+     "rivalToday": 59,
+     "forecast": null
+    }
+   ],
+   "problems": [],
+   "seconds": 762
+  },
+  {
+   "seed": 2,
+   "club": "Riverbend Rapids",
+   "fired": true,
+   "seasonsPlayed": 2,
+   "rows": [
+    {
+     "year": 1,
+     "w": 2,
+     "l": 12,
+     "playoffs": false,
+     "champion": "Cliffhaven Chargers",
+     "mine": 52,
+     "aiMid": 53.4,
+     "aiEnd": 56.9,
+     "today": 54.4,
+     "rivalEnd": 61,
+     "rivalToday": 57,
+     "forecast": null
+    },
+    {
+     "year": 2,
+     "w": 4,
+     "l": 10,
+     "playoffs": false,
+     "champion": "Silvergrove Arcanists",
+     "mine": 60,
+     "aiMid": 57.8,
+     "aiEnd": 60,
+     "today": 55,
+     "rivalEnd": 64,
+     "rivalToday": 60,
+     "forecast": null
+    }
+   ],
+   "problems": [],
+   "seconds": 458
+  },
+  {
+   "seed": 3,
+   "club": "Palm Isle Mystics",
+   "fired": true,
+   "seasonsPlayed": 4,
+   "rows": [
+    {
+     "year": 1,
+     "w": 5,
+     "l": 9,
+     "playoffs": false,
+     "champion": "Palmetto Wyrms",
+     "mine": 54,
+     "aiMid": 54.4,
+     "aiEnd": 57.2,
+     "today": 55.2,
+     "rivalEnd": 61,
+     "rivalToday": 58,
+     "forecast": null
+    },
+    {
+     "year": 2,
+     "w": 8,
+     "l": 6,
+     "playoffs": false,
+     "champion": "Palmetto Wyrms",
+     "mine": 56,
+     "aiMid": 58.1,
+     "aiEnd": 60.3,
+     "today": 55.3,
+     "rivalEnd": 64,
+     "rivalToday": 59,
+     "forecast": null
+    },
+    {
+     "year": 3,
+     "w": 2,
+     "l": 12,
+     "playoffs": false,
+     "champion": "Palmetto Wyrms",
+     "mine": 60,
+     "aiMid": 60.8,
+     "aiEnd": 62.2,
+     "today": 56,
+     "rivalEnd": 66,
+     "rivalToday": 58,
+     "forecast": null
+    },
+    {
+     "year": 4,
+     "w": 7,
+     "l": 7,
+     "playoffs": true,
+     "champion": "Cliffhaven Chargers",
+     "mine": 63,
+     "aiMid": 62.7,
+     "aiEnd": 63.7,
+     "today": 55.7,
+     "rivalEnd": 66,
+     "rivalToday": 56,
+     "forecast": null
+    }
+   ],
+   "problems": [],
+   "seconds": 522
+  }
+ ],
+ "summary": {
+  "seasons": 10,
+  "winPct": 39.3,
+  "playoffPct": 20,
+  "titles": 0,
+  "fired": 3,
+  "aiMid": 57.8,
+  "aiEnd": 59.9,
+  "today": 55,
+  "rivalEnd": 59.9,
+  "rivalToday": 57.5,
+  "distinctChampions": 2,
+  "byYear": {
+   "1": {
+    "n": 3,
+    "winPct": 28.6,
+    "aiMid": 53.4,
+    "aiEnd": 56.5,
+    "today": 54.4
+   },
+   "2": {
+    "n": 3,
+    "winPct": 52.4,
+    "aiMid": 57.5,
+    "aiEnd": 59.7,
+    "today": 55
+   },
+   "3": {
+    "n": 2,
+    "winPct": 28.6,
+    "aiMid": 60.3,
+    "aiEnd": 61.8,
+    "today": 55.6
+   },
+   "4": {
+    "n": 2,
+    "winPct": 46.4,
+    "aiMid": 62.4,
+    "aiEnd": 63.5,
+    "today": 55.2
+   },
+   "5": null
+  },
+  "byBlock": {
+   "1-5": {
+    "n": 10,
+    "winPct": 39.3,
+    "aiMid": 57.8,
+    "aiEnd": 59.9,
+    "today": 55,
+    "rivalGap": 2.4,
+    "champions": 5
+   }
+  }
+ }
+}
