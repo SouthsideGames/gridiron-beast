@@ -4,7 +4,7 @@ import { autoSpeed, cycleAutoSpeed } from '../phone-navigation.js';
 import { matchLogMatches } from '../match-log-filter.js';
 import { activityPaused } from '../activity.js';
 import { iconifyMarkup, infoIcon } from '../icons.js';
-import { crowdTalk, showCrowdTalk } from '../crowd-talk.js';
+import { crowdTalk, showCrowdTalk } from '../stadium-crowd.js';
 import { surroundHtml, setStadiumScene, stadiumScene, standsDepth, lookFor, introPlateHtml, kickoffRevealHtml, REVEAL_MS, stadiumReaction, introReaction, playStadiumReaction, stopStadiumReaction, resumeStadiumReaction, layoutSurround, stadiumFxLevel } from '../stadium-fx.js';
 import { crowdFor } from '../stadium-crowd.js';
 import { guideFootball, guideMoment } from '../guided-week.js';
@@ -341,7 +341,7 @@ export function registerMatchScreens(Router, app) {
   }
 
   const fieldBox = () => fieldViewBox().split(' ').map(Number); // [-half width, 0, width, span] of the picture on screen now
-  let pendingStadium = null; let pendingTalk = null; // the crowd's bubbles for the play just shown (crowd-talk.js)
+  let pendingStadium = null; let pendingTalk = null; // the crowd's bubbles for the play just shown (stadium-crowd.js)
   // Stadium Polish: on the opening kickoff the stadium's strike reveals the football between the captains before the kick.
   // It only delays the kick the player just asked for, never changes it, and a tap (or the button again) skips it.
   let revealFinish = null;

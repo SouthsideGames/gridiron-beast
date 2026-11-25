@@ -1,6 +1,5 @@
 import { plainAbilityRule } from '../text/ability-rules-plain.js';
-import { CLASH_SIMPLE } from '../text/clash-simple.js';
-import { FOOTBALL_SIMPLE } from '../text/football-simple.js';
+import { CLASH_SIMPLE, FOOTBALL_SIMPLE } from '../text/clash-simple.js';
 // Player-facing ability information (Task 8 M6). One source for every screen that names a monster's abilities: the Beast Dex
 // ability records (src/data/beast-dex.js), never the retired legacy cards or shared traits. Each family has one football and one
 // Beast Clash ability; a Basic family has none. Mastery is read from the individual's development record (spec §6): two
