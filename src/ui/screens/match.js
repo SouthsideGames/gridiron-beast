@@ -30,7 +30,7 @@ import { PLAYS } from '../../data/playbook.js';
 import { TRAINING_FOCI } from '../../data/staff.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
 import { MatchCamera } from '../match-camera.js';
-import { fieldSvg, fieldDraw, fieldViewBox, presnapLook, cameraFor, cameraFrom, fitFieldSpan } from '../field-view.js';
+import { fieldSvg, fieldDraw, fieldViewBox, presnapLook, cameraFor, cameraFrom, fitFieldSpan, fieldSpan } from '../field-view.js';
 import { playCardSvg } from '../play-art.js';
 import { monsterSprite, portraitSprite } from '../pixel-monster.js';
 import { GYM_BY_CLUB } from '../../data/gyms.js';
@@ -81,7 +81,12 @@ export function registerMatchScreens(Router, app) {
   function cameraOptions(f, field) {
     const G = f.game;
     const portal = field.frame && (field.frame.hoardFlight || field.fx?.t8?.items?.some(i => i.id === 'PSY-02-F' && (field.frame.t ?? 0) >= i.t0));
-    const close = portal ? cameraFor(field.ballOn + field.frame.ball[0]) : field.camera || cameraFor(field.ballOn);
+    const close0 = portal ? cameraFor(field.ballOn + field.frame.ball[0]) : field.camera || cameraFor(field.ballOn);
+    // The close camera is always exactly as tall as the field box holds (owner 2026-11-25): a camera kept from a moment when the box
+    // was a different height (the play ran in a taller box) is refitted, keeping the same spot a third of the way up, so the close
+    // view never shrinks the field and shows the side stands. Only Auto's zoom-out shows those.
+    const d = (close0.top - close0.bottom) - fieldSpan();
+    const close = Math.abs(d) > 0.01 ? cameraFrom(close0.bottom + d * 15 / 46) : close0;
     const viewCamera = autoCamera.sample(close, { key: G.state, auto: G.auto && !G.state.finished && !anim?.replay, closeView: G.autoCloseView, reducedMotion: f.settings.reducedMotion || !!anim?.replay, pad: standsDepth() ? 3.5 : 0 }); // zoomed out: the white all round with the goal posts on it; the stands in view are the two along the sidelines // zoomed out: the white all round, and the goal posts standing on it
     // Planner art is caller-projected in the close camera's coordinate space.
     const underlay = field.underlay ? `<g transform="translate(0 ${viewCamera.top - close.top})">${field.underlay}</g>` : '';
@@ -452,11 +457,14 @@ export function registerMatchScreens(Router, app) {
     const put = (el, html) => { if (el.__html !== html) { el.innerHTML = iconifyMarkup(html); el.__html = html; } }; // unchanged regions are not rebuilt
     put(head, P.head);
     wrap.className = P.wrapClass;
-    drawMatchField(svg, P.field);
     while (svg.nextSibling) svg.nextSibling.remove();
     svg.insertAdjacentHTML('afterend', P.over);
     put(after, P.after);
     if (f.settings.liveClock) { controls.innerHTML = iconifyMarkup(P.controls); controls.__html = null; } else put(controls, P.controls); // the live play clock's digits are reset by a rebuild
+    // The field last (owner 2026-11-25): the result text over it and the buttons under it set the field box's height, so the
+    // close camera is fitted to the box as it now is. Drawn before them, a play's end fitted the taller box of the play and the
+    // field shrank into the middle once the result text appeared, with the seats showing beside it.
+    if (!anim?.noDraw) drawMatchField(svg, P.field);
     afterRender(f, root);
     momentSheets(f);
     if (!anim && f.game?.lastEvent?.sim?.events?.some(e => e.kind === 'ability' || e.kind === 'status')) guideMoment(f, 'status', () => app.save());
@@ -747,13 +755,20 @@ export function registerMatchScreens(Router, app) {
     // time before it: the first frame is held for fx.preroll seconds of play time while they draw, then the play runs as recorded.
     anim.pre = anim.fx?.preroll || 0; if (anim.pre) anim.start += anim.pre * 10 * anim.msPerFrame;
     G.lastEvent = null;
-    refresh(f);
+    anim.noDraw = true; refresh(f); anim.noDraw = false; // the field is drawn once, below, at its play-time size
+    // The snap without a stall (owner 2026-11-25): the field box takes its play-time height now (the result text above it and the
+    // play-call buttons under it are gone), so the camera is fitted once here instead of on the first frames of the play, and the
+    // play's clock starts at its first drawn frame, so the start of the play is never skipped while the screen updates.
+    { const svg0 = document.querySelector('#field'); if (svg0 && fitFieldSpan(svg0)) anim.camera = followsBall(sim) ? cameraFor(Math.max(0, (sim.ballOn || 0) + sim.frames[0].ball[0] + 6)) : cameraFor(sim.ballOn);
+      if (svg0) drawMatchField(svg0, screenParts(f).field); }
+    anim.t0 = performance.now();
     const cue = turnoverCue(ev);
     let cueShown = false;
     const tick = (rafNow) => {
       if (!anim) return;
       if (activityPaused()) { anim.pausedAt ??= rafNow; anim.raf = requestAnimationFrame(tick); return; }
       if (anim.pausedAt != null) { anim.start += rafNow - anim.pausedAt; delete anim.pausedAt; }
+      if (anim.t0 != null) { if (!RP_CLOCK && rafNow > anim.t0) anim.start += rafNow - anim.t0; anim.t0 = null; } // the clock starts at the first frame
       const now = RP_CLOCK ? RP_CLOCK(rafNow) : rafNow; // render-perf harness only (inert otherwise): a fixed clock for frame-exact screenshots
       // requestAnimationFrame timestamps can sit a hair before the performance.now() taken at start: clamp at frame 0, never finish early.
       if (anim.pre && now < anim.start && sim.frames.length) { // the pre-roll: the snap is at anim.start
