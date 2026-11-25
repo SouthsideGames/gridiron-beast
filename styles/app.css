@@ -2885,3 +2885,36 @@ html[data-app-inactive="1"] .final-celebration * { animation-play-state: paused;
 .zone-planner .zone-combo.picked { background: color-mix(in srgb, var(--accent, #f5c518) 16%, transparent); border-color: var(--accent, #f5c518); }
 .zone-planner .btn:has(> small) { flex-direction: column; line-height: 1.15; }
 .zone-planner .btn > small { color: inherit; opacity: .8; font-size: 11px; font-weight: 700; }
+/* Depth chart rows (owner 2026-11-24): the name (and its fit star) on the first line; species, captain chip and its info icon on the second. */
+.dc-mid { display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 2px; }
+.dc-mid .dc-name { flex: 0 0 100%; min-height: 0; line-height: 1.25; }
+.dc-mid .dc-species { order: 1; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0; font-size: 12px; color: var(--ink-2, #9fb3a8); line-height: 1.2; }
+.dc-mid .cap-badge, .dc-mid .polish-info { flex-shrink: 0; }
+.dc-mid { column-gap: 5px; }
+.dc-row { gap: 5px; }
+.dc-mid .cap-badge { order: 2; margin-left: 0; }
+.dc-mid .polish-info, .dc-mid .polish-info.btn.small, .dc-mid .info-mark.polish-info { order: 3; flex: 0 0 24px; width: 24px; height: 24px; min-width: 24px; min-height: 24px; padding: 0; margin: 0; border-radius: 50%; box-shadow: none; }
+.dc-mid .info-mark.polish-info::after { inset: -10px; } /* a 44px touch area around the small icon */
+.dc-mid .polish-info > .ui-icon, .dc-mid .polish-info svg { width: 13px; height: 13px; }
+.dc-mid .dc-more { order: 4; }
+.dc-row .ovr { text-align: right; }
+/* Monster page Previous / Next (owner 2026-11-24): the name sits centered in its button; the arrow stays at the outer edge. */
+.mon-nav-btn, .mon-nav-btn.next { justify-content: flex-start; }
+.mon-nav-btn .nm { flex: 1 1 auto; min-width: 0; text-align: center; }
+.mon-nav-btn > span[aria-hidden] { width: 12px; text-align: center; }
+.mon-nav-btn::after { content: ''; flex: 0 0 12px; } /* balances the arrow, so the name is centered in the button */
+.mon-nav-btn.next::after { order: -1; }
+/* Scoreboard (owner 2026-11-24): both clubs read the same: crest beside a column of the abbreviation over its timeout dots. */
+.scoreboard .abbr { align-items: center; }
+.scoreboard .team > .sb-logo { flex: none; margin: 0 2px; vertical-align: middle; }
+/* The bowl (owner 2026-11-24): drawn in the field's svg (stadium-fx.js bowlSvg), shown past its viewBox to fill the box. */
+.field-wrap:has(.sfx-bowl) { background: #10151d; }
+.field-wrap > #field:has(.sfx-bowl) { overflow: visible; }
+/* Crowd speech bubbles (crowd-talk.js): a fan's line over the seats, in his club's colour. */
+.crowd-bubble { position: absolute; z-index: 6; transform: translate(-50%, -100%); max-width: 36%; padding: 3px 7px; border-radius: 10px; pointer-events: none;
+  background: #fffdf4; color: #14100c; border: 2px solid var(--crowd-c, #f5c518); font: 800 11px/1.2 var(--font, system-ui); text-align: center; white-space: normal;
+  box-shadow: 0 2px 0 rgba(0,0,0,.35); opacity: 0; animation: crowd-bubble 2.6s ease-out both; }
+.crowd-bubble::after { content: ''; position: absolute; left: 50%; bottom: -7px; width: 10px; height: 10px; background: #fffdf4; border: 2px solid var(--crowd-c, #f5c518); border-top: 0; border-left: 0; transform: translateX(-50%) rotate(45deg); }
+@keyframes crowd-bubble { 0% { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 10% { opacity: 1; transform: translate(-50%, -100%) scale(1.05); } 16% { transform: translate(-50%, -100%) scale(1); } 82% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -112%); } }
+html[data-reduced-motion="1"] .crowd-bubble { animation: crowd-bubble-still 2.6s linear both; }
+@keyframes crowd-bubble-still { 0%, 85% { opacity: 1; transform: translate(-50%, -100%); } 100% { opacity: 0; transform: translate(-50%, -100%); } }
