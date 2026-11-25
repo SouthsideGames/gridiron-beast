@@ -64,3 +64,17 @@ Every issue below has been reproduced, with a seed and a command. Nothing in `sr
 ## T-4. More issues
 
 Further issues from the long runs are added below as they are confirmed.
+
+## Tool change verification
+
+- `tools/ai-franchise-benchmark.mjs` gained opt-in flags (`--owner=repair`, `--board=content`) and extra recording: season football totals, award positions and packed save sizes. Its defaults are unchanged.
+- The tests that cover it pass:
+  - `tests/ai-benchmark-tools.test.js`: 3 of 3;
+  - `tests/task6-phase0.test.js`: 6 of 6.
+- `git diff 58c33ee -- src index.html` is empty.
+
+## T-5. `balance-compare.mjs` drops the dismissal season (Low, measurement)
+
+- The tool records each season in `onSeason`. `runFranchise` calls that only after the offseason, so a season ending in a dismissal is never recorded.
+- **Effect:** "FIRED" after N recorded seasons means dismissed at the end of season N+1. The tool's win % and playoff % leave out every dismissal season.
+- See `DIFFICULTY_AND_BOARD_BALANCE.md`. Fix: record the season in `beforeOffseason`.

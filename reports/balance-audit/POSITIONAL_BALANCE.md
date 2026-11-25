@@ -58,7 +58,7 @@
 | DL (3) | +0.82 ± 0.83 | **0.32** | 0.86 |
 | K (1) | +0.22 ± 0.71 | 0.26 | 0.79 |
 
-- **P-5 (High): one point of overall is worth seven times more at TE, RB or QB than at DL or K.**
+- **P-5 (Medium): one point of overall is worth seven times more at TE, RB or QB than at DL or K.**
   - **The single offensive "skill" slots (TE, RB, QB) carry the most leverage** per slot.
   - **Safeties and defensive linemen carry very little.** This is consistent with the attribute sweep: the DL's speed and tackling and the safety's zone coverage do not act (`MONSTER_ATTRIBUTE_BALANCE.md` A-2), so a higher DL or S overall buys little on the field.
   - **Caution on the sample:** each group's SE is about ±0.85 points, so the per-slot figures for the one-starter groups are uncertain by roughly ±1.0 relative units. The ranking of the extremes (TE, RB, QB against DL, S, K) is robust; the middle is not.

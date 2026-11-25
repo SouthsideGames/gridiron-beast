@@ -95,7 +95,27 @@ These are means over each run's recorded seasons, and the gap widens as seasons 
 - **Evidence:** 7 of 9 runs; the mechanism is in the trace above.
 - **Cause:** one line, `franchise.js:989`. Coach of the Year expectations read the same field (`f.season.expectations`), so its preseason expectations are skewed the same way.
 
-EXPERIMENT_X2
+**Experiment X-2: the forecast uses each AI club's real strength (isolated, not applied).**
+- **The change:** one line in an isolated copy (`raw/experiment-forecast.diff`): an AI club's talent becomes `teamOverall(aiTeam(f, team, year))` when the league registry exists.
+- **The run:** `tools/balance-audit/board-trace.mjs` on Pro seeds 1–3, five seasons. The football is unchanged. The first three seasons' records are identical to the baseline; from season 4 they can differ, because the Board's confidence funds the scouting bonus (seed 1, season 4: 6-8 here against 3-11 in the baseline).
+- **Raw data:** `raw/experiment-forecast-board-trace-pro-seed{1,2,3}.json`.
+
+| Pro seed | Records | Baseline: safe goals (wins) | Baseline: outcome | X-2: safe goals | X-2: outcome |
+|---|---|---|---|---|---|
+| 1 | 11-3, 7-7, 7-7, then 3-11 (baseline) / 6-8, 7-7 (X-2) | 6, 8, 9, 10 | dismissed end of season 4 | 6, 8, 7, 6, 4 | **5 seasons, confidence +2** |
+| 2 | 6-8, 2-12, 6-8, … | (dismissed end of season 4) | dismissed | 4, 7, 6, 6, 5 | **5 seasons, confidence +2** |
+| 3 | 8-6, 3-11, 3-11, 6-8 | (dismissed end of season 4) | dismissed | 5, 7, 7, 7 | dismissed end of season 4 (three misses, two of them clear: 3-11 twice) |
+
+- **With the real league strength in the forecast, dismissals fall from 3 of 3 to 1 of 3.**
+- **The one remaining dismissal is earned.** That owner had two 3-11 seasons against goals of 7.
+- **The goals now fall as the club falls behind** (seed 1: 8, 7, 6, 4) instead of rising (8, 9, 10).
+- **Unintended consequences:**
+  - **Coach of the Year** reads the same preseason expectations, so its "beat expectations" part changes too.
+  - **Easier goals** mean more confidence and more scouting bonus seasons.
+  - **The three-strike rule still dismisses on narrow misses** (seed 3, season 4: 6 wins against a goal of 7). The owner may want to keep that rule or soften it separately.
+
+The baseline goals for Pro seeds 2 and 3 were not traced. The live run records only the outcome.
+
 
 ## 3. Difficulty over a whole career (Board kept content)
 

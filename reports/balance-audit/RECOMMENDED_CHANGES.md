@@ -17,7 +17,28 @@ Severity:
 - **Medium:** noticeable, with a clear cause.
 - **Low:** polish, or an owner decision.
 
-## R-1. Make five inert attributes act, or take them out of the overall (High, priority 1)
+
+## R-0. Fix the Board's forecast: compare the owner with the real league (Critical, priority 1)
+
+1. **Issue.** The Board's preseason forecast rates every AI club at what today's generator would field, not at the persistent club's real strength. Once the AI clubs develop past that, the owner's forecast and safe goal are inflated, and three missed seasons dismiss him.
+2. **Severity:** Critical for Franchise Mode. It ends careers unfairly, at every difficulty.
+3. **Intended.** The forecast "compares the club with the league" (`src/franchise/board.js` header, GDD §29).
+4. **Measured.**
+   - With the hands-off owner and the real Board, **7 of 9 owners were dismissed within five seasons**: Rookie 1 of 3, Pro 3 of 3, All-Star 3 of 3.
+   - Real AI strength is 57–60 overall against an assumed 50–55.
+   - Pro seed 1: goals of 6, 8, 9 and 10 wins while the club went 11-3, 7-7, 7-7 and 3-11.
+5. **Evidence.** `DIFFICULTY_AND_BOARD_BALANCE.md` §1–2; `raw/board-live-*.json`; `raw/board-trace-pro-seed1-5s.json`.
+6. **Code.** `src/franchise/franchise.js` line 989 (preseason `expectations`, `todayOverall`) and `boardForecastFor` (line 1473).
+7. **Current.** `talent = team === f.club ? teamOverall(playerTeam(f)) : todayOverall(f, team, year)`.
+8. **Proposal.** Use the persistent club's real team overall, `teamOverall(aiTeam(f, team, year))`, when the league registry exists.
+9. **Experiment X-2.** On Pro seeds 1–3, with the same game seeds, the first three seasons play out identically and only the goals change. Later seasons diverge slightly, because confidence funds the scouting bonus. **Dismissals fall from 3 of 3 to 1 of 3**. The remaining one followed two 3-11 seasons.
+10. **Risks.**
+    - Coach of the Year expectations change too, since they read the same field.
+    - Goals become easier, so more scouting-bonus seasons.
+    - Old saves keep the expectations already recorded for the current season.
+11. **Priority:** 1.
+
+## R-1. Make five inert attributes act, or take them out of the overall (High, priority 2)
 
 1. **Issue.** The overall formula counts attribute uses that the engine ignores. Every overall-based decision then mis-ranks those monsters, starting with the depth chart.
 2. **Severity:** High.
@@ -46,9 +67,9 @@ Severity:
 10. **Risks.**
     - Engine changes move every franchise season; the pinned tests and calibration studies need re-running.
     - Re-weighting the overall moves salaries (salary follows overall) and trade values.
-11. **Priority:** 1.
+11. **Priority:** 2.
 
-## R-2. Rein in speed, or price it (High, priority 2)
+## R-2. Rein in speed, or price it (High, priority 3)
 
 1. **Issue.** At a constant payroll, moving attribute points into speed wins clearly.
 2. **Severity:** High.
@@ -66,9 +87,9 @@ Severity:
 8. **Proposal.** Either flatten the speed curve in the engine (for example a softer top end on `maxSpeed`), or weight speed more in the overall for WR, RB, CB and S, so that speed is priced.
 9. **Experiments.** None in time. The roster-strategy study is the before/after test.
 10. **Risks.** Lower speed lowers explosive plays and scoring, which are already low on generated clubs (12.9 points per team-game).
-11. **Priority:** 2.
+11. **Priority:** 3.
 
-## R-3. Fix the study tools' "abilities off" control (High, priority 3)
+## R-3. Fix the study tools' "abilities off" control (High, priority 4)
 
 1. **Issue.** `tools/passing-calibration.mjs` strips the starting slots only; the rotation pool (PR #125) brings abilities back.
 2. **Severity:** High for measurement: every football "with and without" study since 2026-11-16 is suspect.
@@ -82,9 +103,9 @@ Severity:
 8. **Proposal.** Strip `rotationInputs` and `bench` too, as `tools/balance-audit/passing-calibration-rotation-strip.mjs` does. Then re-run the ability-strength study.
 9. **Experiment.** Done. The corrected control shows abilities cost 4.7 completion points.
 10. **Risks:** none (tools only).
-11. **Priority:** 3 (quick and cheap).
+11. **Priority:** 4 (quick and cheap).
 
-## R-4. Keep difficulty meaningful after the first seasons (High, priority 4)
+## R-4. Keep difficulty meaningful after the first seasons (High, priority 5)
 
 1. **Issue.** All three difficulties reach the same AI strength by season 5.
 2. **Severity:** High.
@@ -101,9 +122,9 @@ Severity:
    - or AI cap headroom by difficulty.
 9. **Experiments.** None. The test is the same seeds on all three difficulties, AI overall at seasons 5, 10 and 15.
 10. **Risks.** Over-tuning can recreate the "AI too strong late" drift Task 6 fixed.
-11. **Priority:** 4.
+11. **Priority:** 5.
 
-## R-5. Spread the defensive award and give every position an honour (Medium, priority 5)
+## R-5. Spread the defensive award and give every position an honour (Medium, priority 6)
 
 1. **Issue.** DPOY went to a DL in 43 of 45 seasons; no OL, LB, S or K won a major award.
 2. **Severity:** Medium (and a blocker for Career Mode at those positions).
@@ -117,9 +138,9 @@ Severity:
    - Add an All-League team by position.
 9. **Experiments.** None. Task 10 showed the MVP ceiling changed 41 of 120 MVP winners.
 10. **Risks.** Hall of Fame cases shift (honour ledger).
-11. **Priority:** 5.
+11. **Priority:** 6.
 
-## R-6. Decide what an emptied position does mid-game (Medium, priority 6)
+## R-6. Decide what an emptied position does mid-game (Medium, priority 7)
 
 1. **Issue.** An in-game injury that empties a position forfeits the game 0–21 and erases the score.
 2. **Severity:** Medium.
@@ -131,9 +152,9 @@ Severity:
 8. **Proposal.** Borrow a monster from another position (as `pickSlots` does within a play), or keep the score. Also record `forfeit` on league results.
 9. **Experiments:** none.
 10. **Risks.** A borrowed QB may produce absurd stat lines; a stat-line rule is needed.
-11. **Priority:** 6.
+11. **Priority:** 7.
 
-## R-7. Retune the outlier plays (Medium, priority 7)
+## R-7. Retune the outlier plays (Medium, priority 8)
 
 1. **Issue.** Two runs average twice the run average; several runs average under 3 yards.
 2. **Severity:** Medium.
@@ -147,9 +168,9 @@ Severity:
 6. **Code.** `src/data/playbook.js` and `src/data/playbook-reserve.js`, the play art.
 7. **Proposal.** Review each outlier in the Playbook Audit, then re-run `game-study`.
 8. **Risks:** small.
-9. **Priority:** 7.
+9. **Priority:** 8.
 
-## R-8. Let AI clubs use the released defensive book (Medium, priority 8)
+## R-8. Let AI clubs use the released defensive book (Medium, priority 9)
 
 1. **Issue.** AI base plans use 24 of 178 defensive calls.
 2. **Severity:** Medium.
@@ -161,9 +182,9 @@ Severity:
 8. **Proposal.** Build the pools from the released book by tag (X-1).
 9. **Experiment:** X-1. 143 calls used; points per team-game 12.87 → 12.79; sacks 2.7% → 3.6%.
 10. **Risks.** Counter logic was tuned on the old pool.
-11. **Priority:** 8.
+11. **Priority:** 9.
 
-## R-9. Make the cap and the market matter (Medium, priority 9)
+## R-9. Make the cap and the market matter (Medium, priority 10)
 
 1. **Issue.** No AI club comes within 12% of the cap. Salary spans only 30.9 k to 45.7 k from replacement level to 99. AI clubs never offer bonuses.
 2. **Severity:** Medium.
@@ -181,9 +202,9 @@ Severity:
 8. **Proposal.** Steepen the salary curve at the top (for example a quadratic term above OVR 70), or lower the cap. Decide T7-44 (AI bonuses).
 9. **Experiments:** none.
 10. **Risks.** A steeper curve can push clubs over the cap; the AI's roster-minimum logic must be checked.
-11. **Priority:** 9.
+11. **Priority:** 10.
 
-## R-10. Clear the idle and self-harming abilities (Medium, priority 10)
+## R-10. Clear the idle and self-harming abilities (Medium, priority 11)
 
 1. **Issue.** Some abilities essentially never act, and some hurt their user.
    - **Football:** Foresight (0 of 98 appearances, despite the M6 fix), Air Brake (0 of 88), Crosswind Rescue (0 of 37).
@@ -197,7 +218,7 @@ Severity:
 5. **Code.** `src/sim/abilities/<family>.js`; `src/clash/t8` contracts.
 6. **Proposal.** A trigger review per ability: loosen each trigger condition so it occurs in a typical game or battle, and re-check with `task10-ability-census` and `task10-clash-strength`.
 7. **Risks.** Each change moves balance; one at a time.
-8. **Priority:** 10.
+8. **Priority:** 11.
 
 ## Further items (lower priority)
 

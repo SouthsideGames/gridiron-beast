@@ -32,7 +32,7 @@
 | Integrity problems | 0 | 0 |
 
 - **Every AI club stays legal for 15 seasons.** Rosters stay within the 26–38 limits, and the market integrity checks (`marketProblems`) find nothing in any of the 30 markets.
-- **E-1 (High): the cap is not a constraint.**
+- **E-1 (Medium): the cap is not a constraint.**
   - No AI club ever comes within 12% of the cap. The tightest club-season still had 226 k of room, worth about 7 average starters.
   - Mean room is about a fifth of the cap (17–21%) in every season. There is no visible cap pressure, now or later.
 - **No inflation or deflation.** Mean payroll is flat from season 1 to season 15 (1.03 M to 1.03 M on Pro), because salary follows overall and league overall plateaus after season 5 (`PROGRESSION_AND_EVOLUTION.md`).
@@ -54,7 +54,7 @@
 | OL | 32,066 | 63.7 |
 | RB | 31,726 | 61.6 |
 
-- **E-2 (High): salary is a fixed function of overall, so the market cannot price anything else.**
+- **E-2 (Medium): salary is a fixed function of overall, so the market cannot price anything else.**
   - **The range is narrow:** a 46-overall reserve costs 30,900 and a 99 costs 45,700. The best monster in the league costs 1.5 times a replacement-level one.
   - **Position is not priced.** The kicker is the most expensive starter only because kickers carry high overall (kicking is weighted 6 of 7).
   - **Hidden value is not priced:**

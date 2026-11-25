@@ -112,7 +112,7 @@
 | DROY | CB 31, S 8, LB 4, DL 2 |
 | SMOY | QB 32, WR 11, RB 2 |
 
-- **F-3 (High): the defensive award is a defensive-lineman award.** DL won 43 of 45 DPOYs; no safety won one, and a linebacker or cornerback won once each. The formula weights pass rush and run defence (`src/franchise/awards.js`), and a DL accumulates sacks and tackles for loss far faster than a DB accumulates coverage stats.
+- **F-3 (Medium): the defensive award is a defensive-lineman award.** DL won 43 of 45 DPOYs; no safety won one, and a linebacker or cornerback won once each. The formula weights pass rush and run defence (`src/franchise/awards.js`), and a DL accumulates sacks and tackles for loss far faster than a DB accumulates coverage stats.
 - **The MVP is mostly a quarterback award** (31 of 45), after Task 10's MVP cap.
 - **No OL, LB, S or K won an MVP, OPOY or DPOY.** That is a Career Mode concern (`CAREER_MODE_READINESS.md`).
 - The rookie awards spread more widely (OL won 9 OROYs).
