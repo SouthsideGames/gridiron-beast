@@ -275,11 +275,15 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
     }
     prevOvr = new Map(); for (const mp of Object.values(tableSnap)) for (const [id, x] of mp) prevOvr.set(id, x.ovr);
     // Save integrity at the season boundary: the whole league registry survives an export/import round trip unchanged.
-    try { const back = Save.importJson(Save.exportJson(f)); if (!back) integrity.push(`season ${year}: save import failed`); else if (JSON.stringify(back.league) !== JSON.stringify(f.league)) integrity.push(`season ${year}: save round trip changed the league registry`); } catch (e) { integrity.push(`season ${year}: save round trip threw ${e.message}`); }
+    try { const txt = Save.exportJson(f); (v4.saveBytes ||= []).push([year, txt.length]); const back = Save.importJson(txt); if (!back) integrity.push(`season ${year}: save import failed`); else if (JSON.stringify(back.league) !== JSON.stringify(f.league)) integrity.push(`season ${year}: save round trip changed the league registry`); } catch (e) { integrity.push(`season ${year}: save round trip threw ${e.message}`); }
   };
 
   let res;
-  try { res = runFranchise(seed, { seasons, difficulty, check, onSeason }); }
+  // Balance audit 2026-11-25 (opt-in, default unchanged): --owner=repair gives the study owner the Task 10 repair policy
+  // (tools/study-owner.mjs: fill an open starting slot before a game and in the offseason); --board=content keeps the Board content
+  // after every season (confidence 2, no misses), as tools/task10-league-recorder.mjs does, so a run plays all its seasons.
+  const ownerOpts = {}; if (args.owner === 'repair') { const SO = await import('./study-owner.mjs'); const st = (v4.repair = {}); ownerOpts.beforeGame = (f) => SO.repairOwner(f, st); ownerOpts.onOffseason = (f) => { if (args.board === 'content' && f.board) { f.board.confidence = 2; f.board.misses = 0; } SO.repairOffseason(f, st); }; } else if (args.board === 'content') ownerOpts.onOffseason = (f) => { if (f.board) { f.board.confidence = 2; f.board.misses = 0; } };
+  try { res = runFranchise(seed, { seasons, difficulty, check, onSeason, ...ownerOpts }); }
   catch (e) { return { seed, error: String(e?.stack || e).slice(0, 2000), rows, decisions, integrity, seconds: Math.round((Date.now() - t0) / 1000), v4 }; }
   const { f, problems, log } = res;
   if (MEASURE === 'start' && pendingSeason) { // the last season: its offseason has run; start the next season when the franchise can, then record
