@@ -1,0 +1,107 @@
+{
+ "tool": "balance-audit/roster-strategy",
+ "games": 150,
+ "quality": 60,
+ "rows": {
+  "control": {
+   "games": 150,
+   "marginVsControl": 0,
+   "se": 0,
+   "winPct": 48.3,
+   "winPctVsControl": 0,
+   "pointsFor": 13.6,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 49.9
+  },
+  "eliteQB": {
+   "games": 150,
+   "marginVsControl": 1.64,
+   "se": 0.95,
+   "winPct": 55.7,
+   "winPctVsControl": 7.3,
+   "pointsFor": 15.1,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 49.9
+  },
+  "passing": {
+   "games": 150,
+   "marginVsControl": 1.47,
+   "se": 0.96,
+   "winPct": 55.7,
+   "winPctVsControl": 7.3,
+   "pointsFor": 17.8,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 50
+  },
+  "rushing": {
+   "games": 150,
+   "marginVsControl": 0.71,
+   "se": 0.93,
+   "winPct": 49.7,
+   "winPctVsControl": 1.3,
+   "pointsFor": 16.1,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 50
+  },
+  "defense": {
+   "games": 150,
+   "marginVsControl": -1.92,
+   "se": 0.86,
+   "winPct": 45.3,
+   "winPctVsControl": -3,
+   "pointsFor": 7.9,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 50.4
+  },
+  "offense": {
+   "games": 150,
+   "marginVsControl": 1.08,
+   "se": 0.91,
+   "winPct": 52.7,
+   "winPctVsControl": 4.3,
+   "pointsFor": 22,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 50.2
+  },
+  "speed": {
+   "games": 150,
+   "marginVsControl": 3.54,
+   "se": 0.99,
+   "winPct": 59,
+   "winPctVsControl": 10.7,
+   "pointsFor": 15.7,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 50
+  },
+  "strength": {
+   "games": 150,
+   "marginVsControl": -2.29,
+   "se": 0.88,
+   "winPct": 39.7,
+   "winPctVsControl": -8.7,
+   "pointsFor": 11.6,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 50
+  },
+  "superstars": {
+   "games": 150,
+   "marginVsControl": 0.97,
+   "se": 1.02,
+   "winPct": 55,
+   "winPctVsControl": 6.7,
+   "pointsFor": 15.6,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 50
+  },
+  "depth": {
+   "games": 150,
+   "marginVsControl": -3.57,
+   "se": 0.93,
+   "winPct": 35.7,
+   "winPctVsControl": -12.7,
+   "pointsFor": 11.5,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 48
+  }
+ }
+}
