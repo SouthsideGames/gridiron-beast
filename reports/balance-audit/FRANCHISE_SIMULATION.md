@@ -161,3 +161,32 @@
 | Save growth | 1.40 MB stored, 6.12 MB packed at season 15 (§1) |
 | Lifecycle integrity | 0 problems in 45 seasons. The 15-season cap holds |
 | Previously documented deviations | The owner's forfeits from an empty market (Task 10 R-1, T7-39) **no longer occur.** The owner-win-rate bands (T7-22 to T7-24) are not met by the repair owner on this seed, and difficulty does not order the results |
+
+## 7. Second seed (seed 4, Pro and All-Star, 15 seasons each)
+
+Raw data: `raw/franchise-{pro,allstar}-seed4.json`; summary: `raw/franchise-summary-seed4.json`.
+
+| Measure | Pro seed 4 | All-Star seed 4 |
+|---|---|---|
+| Problems / errors | 0 / 0 | 0 / 0 |
+| AI team overall, season 1 / 5 / 15 | 52.7 / 63.5 / 63.2 | 55.9 / 64.0 / 63.8 |
+| Owner win % (repair owner) | 47.6 | 61.4 |
+| Owner playoff seasons / titles | 7 / 2 | 9 / 0 |
+| Owner 0–21 results (upper bound on forfeits) | 8, including 1 confirmed empty-market forfeit (RB, season 7) | 6 |
+| Distinct champions / most by one club / gym titles | 9 / 3 / 10 | 9 / 3 / 10 |
+| DPOY by position | DL 11, CB 4 | DL 14, CB 1 |
+| MVP by position | RB 7, WR 5, QB 3 | RB 9, QB 4, WR 2 |
+| Points per team-game, season 1 / 15 | 11.6 / 17.4 | 12.3 / 19.6 |
+| Lowest AI cap room | 259.8 k | 227.5 k |
+| Stored save, season 15 (raw) | 13.09 MB raw | 13.43 MB raw |
+
+**The second seed confirms every structural finding:**
+- **Difficulty converges:** AI overall is about 63–64 from season 5 on both difficulties.
+- **Gyms win two titles in three:** 20 of 30 on seed 4, and 50 of 75 across all five runs.
+- **The DPOY is a lineman's award:** 25 of 30 on seed 4, and 68 of 75 across all five runs.
+- **Scoring rises 50–59%** on seed 4 (11.6→17.4 and 12.3→19.6), more than seed 3's 30–38%.
+- **The cap never binds.**
+
+**The MVP is seed-dependent:** running backs won 16 of 30 on seed 4 against 8 of 45 on seed 3.
+
+**Totals across the five 15-season franchises:** 75 seasons and about 17,800 league games (224 regular-season games plus about 13 playoff games a season).
