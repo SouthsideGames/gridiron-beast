@@ -83,10 +83,10 @@ test('the stand: behind the far end zone only, in view only near it, and the fie
     assert.equal(standsDepth(), 0); assert.deepEqual(cameraFor(95), { bottom: 64, top: 110 }); assert.deepEqual(cameraFor(2), { bottom: -10, top: 36 });
     assert.equal(setStadiumScene({ env: 'nowhere' }), null, 'an unknown field has no scene'); assert.equal(standsDepth(), 0);
     { setStadiumScene({ env: 'grass' }, null); assert.equal(standsDepth(), STANDS_DEPTH, 'a grass stadium has the same stands'); const g = fieldSvg({ venue: { env: 'grass', weather: 'clear' }, ballOn: 92 }); for (const part of ['sfx-border', 'sfx-apron', 'sfx-barrier', 'sfx-stand']) assert.match(g, new RegExp(part), `grass: ${part}`); assert.doesNotMatch(g, /class="sfx-post"|sfx-chain|sfx-node/, 'and none of a Gym Leader\'s posts or markers'); setStadiumScene(null); assert.equal(standsDepth(), 0); }
-    setStadiumScene(venue, null); assert.equal(standsDepth(), STANDS_DEPTH); assert.equal(STANDS_ROWS, 6, 'three rows of two yards'); assert.equal(STANDS_GAP, 5, 'white paint, grass and the barrier between the end line and the stands'); assert.equal(STANDS_DEPTH, 11);
+    setStadiumScene(venue, null); assert.equal(standsDepth(), STANDS_DEPTH); assert.equal(STANDS_ROWS, 6, 'three rows of two yards'); assert.equal(STANDS_GAP, 8, 'white paint, five yards of green and the barrier between the end line and the stands'); assert.equal(STANDS_DEPTH, 14);
     assert.deepEqual(cameraFor(50), { bottom: 35, top: 81 }, 'midfield is unchanged: no crowd in sight');
     assert.deepEqual(cameraFor(79), { bottom: 64, top: 110 }, 'the end line is just reached');
-    assert.equal(cameraFor(82).top, 113, 'first the white and the grass behind the end line'); assert.equal(cameraFor(85).top, 116, 'then the stand comes into view'); assert.equal(cameraFor(99).top, 121, 'and never more than its three rows');
+    assert.equal(cameraFor(82).top, 113, 'first the white and the grass behind the end line'); assert.equal(cameraFor(88).top, 119, 'then the stand comes into view'); assert.equal(cameraFor(99).top, 124, 'and never more than its three rows');
     assert.doesNotMatch(fieldSvg({ venue, ballOn: 50 }), /sfx-stand|sfx-wall/); assert.doesNotMatch(fieldSvg({ venue, ballOn: 79 }), /sfx-stand/);
     const near = fieldSvg({ venue, ballOn: 92 }); assert.match(near, /sfx-stand/); assert.ok(near.indexOf('sfx-border') < near.indexOf('sfx-apron') && near.indexOf('sfx-apron') < near.indexOf('sfx-barrier') && near.indexOf('sfx-barrier') < near.indexOf('sfx-stand') && near.indexOf('sfx-stand') < near.indexOf('class="sfx-post"'), 'white paint, grass, the barrier, then the crowd, with the goal posts in front');
     assert.match(fieldSvg({ venue, ballOn: 82 }), /sfx-apron/); assert.doesNotMatch(fieldSvg({ venue, ballOn: 82 }), /sfx-crowd-img|class="sfx-stand"><rect[^>]*y="0"/);
@@ -224,9 +224,10 @@ test('zoomed out, stands with the crowd run along both sidelines; the close view
   assert.equal(fieldViewBox(142), `${plain[0]} 0 ${plain[2]} 142`, 'no scene: no side stands');
   try {
     setStadiumScene(venue, null); const close = fieldViewBox().split(' ').map(Number), wide = fieldViewBox(142).split(' ').map(Number);
-    assert.ok(Math.abs(close[2] - (plain[2] + FIELD_BORDER * 2)) < 1e-9); assert.ok(Math.abs(wide[2] - (close[2] + SIDE_REACH * 2)) < 1e-9); assert.equal(SIDE_REACH, 9);
+    assert.ok(Math.abs(close[2] - (plain[2] + FIELD_BORDER * 2)) < 1e-9); assert.ok(Math.abs(wide[2] - (close[2] + SIDE_REACH * 2)) < 1e-9); assert.equal(SIDE_REACH, 13); // a 6-yard green sideline, the barrier, the stand (owner 2026-11-25)
     assert.doesNotMatch(fieldSvg({ venue, ballOn: 50 }), /sfx-stand-side/); const z = fieldSvg({ venue, ballOn: 50, viewCamera: { bottom: -21, top: 121 } });
-    assert.match(z, /sfx-stand-side/); assert.doesNotMatch(z, /NaN|undefined/); assert.doesNotMatch(z, /rotate\(-?90\)/, 'the side fans stand upright');
+    assert.match(z, /sfx-stand-side/); assert.doesNotMatch(z, /NaN|undefined/);
+    { const env = ENVIRONMENTS[venue.env]; const side = z.slice(z.indexOf('sfx-stand-side')); assert.ok(side.includes(`width="6" height="`) && side.includes(`fill="${env.palette.b || env.palette.a}"`), 'green sideline between the white and the stand'); } assert.doesNotMatch(z, /rotate\(-?90\)/, 'the side fans stand upright');
     const auto = fieldSvg({ venue, ballOn: 50, viewCamera: { bottom: -13.5, top: 113.5 } }); assert.match(auto, /sfx-stand-side/); assert.doesNotMatch(auto, /class="sfx-stand"><rect|sfx-wall/, 'zoomed out, only the two side stands are in view');
   } finally { setStadiumScene(null); }
 });
@@ -255,4 +256,14 @@ test('the match screen draws no weather layer, and the final screen has the winn
   assert.match(match, /s\.finished && !anim \? finalCelebration\(f, s, teams\)/); assert.match(match, /const side = s\.winner; if \(level === 'off' \|\| !side/, 'the winning side, whoever it is; nothing for a tie or at Off');
   assert.match(css, /\.final-celebration \{[^}]*pointer-events: none/); assert.match(css, /@keyframes final-jump\b/); assert.match(css, /@keyframes final-fall\b/);
   assert.equal((match.match(/Array\.from\(\{ length: 18 \}/g) || []).length, 1, 'a fixed, small number of confetti pieces');
+});
+
+test('the close view always fills the field box: refitted camera, the field drawn after the screen around it, one draw at the snap (owner 2026-11-25)', () => {
+  const match = fs.readFileSync(new URL('../src/ui/screens/match.js', import.meta.url), 'utf8');
+  const refresh = match.slice(match.indexOf('function refresh(f)'), match.indexOf('// ------------------------------------------------------------ the end-of-play save'));
+  assert.ok(refresh.indexOf('put(controls, P.controls)') < refresh.indexOf('drawMatchField(svg, P.field)'), 'the field is fitted after the result text and the buttons have their size');
+  assert.match(match, /const d = \(close0\.top - close0\.bottom\) - fieldSpan\(\);/, 'a kept camera of another height is refitted to the box');
+  const start = match.slice(match.indexOf('function startAnim('), match.indexOf('const cue = turnoverCue(ev);'));
+  assert.match(start, /anim\.noDraw = true; refresh\(f\); anim\.noDraw = false;/); assert.match(start, /fitFieldSpan\(svg0\)/); assert.match(start, /anim\.t0 = performance\.now\(\)/);
+  assert.match(match, /if \(anim\.t0 != null\) \{ if \(!RP_CLOCK && rafNow > anim\.t0\) anim\.start \+= rafNow - anim\.t0; anim\.t0 = null; \}/, 'the play clock starts at its first drawn frame');
 });
