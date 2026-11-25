@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PLAYOFF_SEEDS, WILD_CARDS, CONFERENCE_ROUND, FINAL_ROUND, playoffByes, legacyPlayoffRound, contrastOnPanel } from '../src/data/league.js';
 import { runFranchise, newFranchise } from '../tools/franchise-soak.mjs';
-import { CONFERENCES, CONFERENCE_NAMES, DIVISIONS, STARTER_DIVISIONS, STARTER_CLUBS, ALL_TEAMS, TEAM_META, RIVAL_GMS, REG_GAMES, REG_WEEKS, PLAYOFF_ROUNDS, LAST_WEEK, SCHEDULE_MIX,
+import { useLeagueLayout, CURRENT_LAYOUT, CONFERENCES, CONFERENCE_NAMES, DIVISIONS, STARTER_DIVISIONS, STARTER_CLUBS, ALL_TEAMS, TEAM_META, RIVAL_GMS, REG_GAMES, REG_WEEKS, PLAYOFF_ROUNDS, LAST_WEEK, SCHEDULE_MIX,
   divisionOf, conferenceOf, conferenceFor, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound } from '../src/data/league.js';
 import { GYMS, GYM_BY_CLUB, isGymClub, FREE_LEGENDARIES } from '../src/data/gyms.js';
 import { STADIUMS, stadiumFor, fieldElement } from '../src/data/stadiums.js';
@@ -28,35 +28,37 @@ const LEADERS = { 'Frostpeak Howlers': ['Sigrid Hale', 'Ice', 'Frost Badge', 'Gl
   'Emberfall Infernos': ['Kael Ember', 'Fire', 'Blaze Badge', 'Pyroclast'], 'Cliffhaven Chargers': ['Aria Gale', 'Wind', 'Gale Badge', 'Tempestra'], 'Eastport Phantoms': ['Silas Mourne', 'Dark', 'Dusk Badge', 'Nyxshade'], 'Harbor Anchors': ['Nadia Reyes', 'Water', 'Tide Badge', 'Tsunarok'],
   'Sunfire Solars': ['Elias Dawn', 'Light', 'Dawn Badge', 'Aurelion'], 'Palmetto Wyrms': ['Marcus Vane', 'Dragon', 'Wyrm Badge', 'Aurodrax'], 'Aetheria Seers': ['Lyra Vesper', 'Psychic', 'Mind Badge', 'Astralux'], 'Westhaven Pirates': ['Rowan Thorne', 'Nature', 'Grove Badge', 'Elderoot'] };
 
-test('the league: 32 clubs in two conferences of four divisions of four, with the names of the specification', () => {
+test('the league: 32 clubs in two conferences of four divisions of four, with the names of the specification', () => { useLeagueLayout(1); try { // layout 1 (the league of existing saves, data/league.js LEAGUE_LAYOUTS)
   assert.deepEqual(CONFERENCE_NAMES, ['Veyra', 'Koruun']);
   for (const [conf, divs] of Object.entries(SPEC)) { assert.deepEqual(CONFERENCES[conf], Object.keys(divs)); for (const [d, clubs] of Object.entries(divs)) { assert.deepEqual(DIVISIONS[d], clubs, d); assert.equal(conferenceFor(d), conf); for (const c of clubs) { assert.equal(divisionOf(c), d); assert.equal(conferenceOf(c), conf); } } }
   assert.equal(ALL_TEAMS.length, 32); assert.equal(new Set(ALL_TEAMS).size, 32); assert.equal(Object.keys(DIVISIONS).length, 8);
   for (const c of ALL_TEAMS) { const m = TEAM_META[c]; assert.ok(m, c); assert.match(m.abbr, /^[A-Z]{3}$/); assert.match(m.color, /^#[0-9a-f]{6}$/i); assert.ok(STADIUMS[c], `${c} stadium`); assert.ok(IDENTITIES[c], `${c} identity`); assert.ok(RIVAL_GMS[c], `${c} general manager`); }
   assert.equal(new Set(ALL_TEAMS.map((c) => TEAM_META[c].abbr)).size, 32, 'every abbreviation is its own'); assert.equal(new Set(Object.values(RIVAL_GMS)).size, 32, 'no general manager runs two clubs');
   assert.equal(new Set(ALL_TEAMS.map((c) => stadiumFor(c).name)).size, 32, 'every stadium name is its own');
+  } finally { useLeagueLayout(CURRENT_LAYOUT); }
 });
 
-test('the starter divisions: Golden Valley and Greenheart, eight clubs to choose from, no Gym Leader in either, rebuilding but not handicapped', () => {
-  assert.deepEqual(STARTER_DIVISIONS, ['Golden Valley', 'Greenheart']);
-  assert.deepEqual(STARTER_CLUBS.map((c) => c.name).sort(), [...DIVISIONS['Golden Valley'], ...DIVISIONS.Greenheart].sort());
+test('the starter clubs (layout 2, owner 2026-11-24): one rebuilding club in every division, eight to choose from, never a Gym Leader, rebuilding but not handicapped', () => {
+  assert.deepEqual(STARTER_DIVISIONS, Object.keys(DIVISIONS));
+  for (const d of Object.keys(DIVISIONS)) assert.equal(STARTER_CLUBS.filter((c) => divisionOf(c.name) === d).length, 1, `${d}: one starter club`);
   for (const c of STARTER_CLUBS) { assert.equal(isGymClub(c.name), false, `${c.name} has no Gym Leader`); const [w, l] = c.record.split('-').map(Number); assert.equal(w + l, REG_GAMES); assert.ok(w < l, `${c.name} is rebuilding`); assert.equal(stadiumFor(c.name).env, 'grass'); }
   for (const c of STARTER_CLUBS) { const f = F.createFranchise({ owner: { first: 'S', last: 'T' }, club: c.name, seed: 5 }); assert.equal(f.club, c.name); assert.equal(f.leagueFormat, 32); assert.equal(f.season.schedule.filter((g) => !g.bye).length, REG_GAMES);
-    assert.ok(DIVISIONS[divisionOf(c.name)].includes(f.rivals[f.tier].team), 'the rival is a division rival'); assert.equal(isGymClub(f.rivals[f.tier].team), false); }
+    assert.ok(DIVISIONS[divisionOf(c.name)].includes(f.rivals[f.tier].team), 'the rival is a division rival'); assert.equal(isGymClub(f.rivals[f.tier].team), false);
+    assert.ok(f.season.schedule.some((g) => !g.bye && g.category === 'Division' && isGymClub(g.opponent)), `${c.name} meets a Gym Leader in its division`); }
   // No permanent artificial disadvantage: a starter club's level is set like any ordinary club's, by the same function, with no penalty of its own.
   const f = F.createFranchise({ owner: { first: 'S', last: 'T' }, club: 'Goldhaven Royals', seed: 5 }); const q = (c) => F.clubQuality(f, c, 1);
   const startersQ = STARTER_CLUBS.map((c) => c.name).filter((c) => c !== f.club).map(q); const ordinaryQ = ALL_TEAMS.filter((c) => !isGymClub(c) && !STARTER_CLUBS.some((s) => s.name === c)).map(q); const avg = (a) => a.reduce((x, y) => x + y, 0) / a.length;
   assert.ok(Math.abs(avg(startersQ) - avg(ordinaryQ)) < 4, `starter clubs ${avg(startersQ).toFixed(1)} against other ordinary clubs ${avg(ordinaryQ).toFixed(1)}`);
 });
 
-test('twelve Gym Leaders, one per monster type, two in each of the six competitive divisions, each with its badge, legendary, field and lines', () => {
+test('twelve Gym Leaders, one per monster type, one or two in every division (layout 2), each with its badge, legendary, field and lines', () => {
   assert.equal(GYMS.length, 12); assert.deepEqual(GYMS.map((g) => g.club).sort(), Object.keys(LEADERS).sort());
   assert.deepEqual(GYMS.map((g) => g.element).sort(), ['Dark', 'Dragon', 'Earth', 'Electric', 'Fire', 'Ice', 'Light', 'Metal', 'Nature', 'Psychic', 'Water', 'Wind']);
   for (const g of GYMS) { const [leader, type, badge, legendary] = LEADERS[g.club]; assert.equal(g.coach.name, leader); assert.equal(g.element, type); assert.equal(g.badge, badge); assert.equal(SPECIES_BY_ID[g.legendary].name, legendary, `${g.club}'s legendary`); assert.equal(SPECIES_BY_ID[g.legendary].element, type);
     assert.equal(fieldElement(stadiumFor(g.club).env), type); assert.equal(headCoachName(g.club), leader); assert.notEqual(RIVAL_GMS[g.club], leader, 'the general manager is another person');
     const lines = GYM_LINES[g.club]; assert.ok(lines, `${g.club} has its lines`); for (const k of ['first', 'theyWon', 'youWon', 'badgeHeld', 'beaten']) assert.ok(lines[k]?.length >= 1 && lines[k].every((x) => typeof x === 'string' && x.length > 8), `${g.club} ${k}`); }
   assert.equal(new Set(GYMS.map((g) => g.badge)).size, 12); assert.equal(new Set(GYMS.map((g) => g.legendary)).size, 12); assert.equal(new Set(GYMS.map((g) => g.coach.name)).size, 12);
-  for (const [d, clubs] of Object.entries(DIVISIONS)) assert.equal(clubs.filter(isGymClub).length, STARTER_DIVISIONS.includes(d) ? 0 : 2, `${d}`);
+  for (const [d, clubs] of Object.entries(DIVISIONS)) assert.ok([1, 2].includes(clubs.filter(isGymClub).length), `${d}`);
   for (const c of CONFERENCE_NAMES) assert.equal(GYMS.filter((g) => conferenceOf(g.club) === c).length, 6, `${c}: six badges`);
   // the original eight keep their identities
   for (const [club, leader] of [['Frostpeak Howlers', 'Sigrid Hale'], ['Ironpeak Colossi', 'Brock Ferris'], ['Canyon Crushers', 'Dolores Crag'], ['Thunder Mesa Blitz', 'Lena Volkov'], ['Eastport Phantoms', 'Silas Mourne'], ['Harbor Anchors', 'Nadia Reyes'], ['Sunfire Solars', 'Elias Dawn'], ['Palmetto Wyrms', 'Marcus Vane']]) assert.equal(GYM_BY_CLUB[club].coach.name, leader);
@@ -112,8 +114,8 @@ test('the schedule is drawn from the franchise seed: the same seed and season re
 
 test('Gym Leader games are never forced: a starter club meets a different number of them from season to season, sometimes few and sometimes many', () => {
   const counts = []; const metAll = new Set();
-  for (const seed of SEEDS) for (let season = 1; season <= 12; season++) for (const club of ['Goldhaven Royals', 'Fernhaven Wisps']) { const gyms = teamSchedule(season, club, seed).filter((g) => !g.bye && isGymClub(g.opponent)); counts.push(gyms.length); for (const g of gyms) metAll.add(g.opponent);
-    assert.ok(gyms.every((g) => g.category !== 'Division'), 'no Gym Leader is a division rival of a starter club'); assert.ok(gyms.length <= 8); }
+  for (const seed of SEEDS) for (let season = 1; season <= 12; season++) for (const club of ['Riverbend Rapids', 'Bayou Stalkers']) { const gyms = teamSchedule(season, club, seed).filter((g) => !g.bye && isGymClub(g.opponent) && g.category !== 'Division'); counts.push(gyms.length); for (const g of gyms) metAll.add(g.opponent);
+    assert.ok(gyms.length <= 8); } // the division's own Gym Leader is met twice every season; the others are the schedule's draw
   const distinct = new Set(counts); assert.ok(distinct.size >= 4, `badge opportunities in a season vary: ${[...distinct].sort((a, b) => a - b).join(', ')}`);
   assert.ok(Math.min(...counts) <= 2, 'some seasons offer very few'); assert.ok(Math.max(...counts) >= 5, 'and some offer many');
   assert.equal(metAll.size, 12, 'over the seasons every Gym Leader comes up');

@@ -36,6 +36,7 @@ import { registerCaptainScreens } from './ui/screens/captains.js';
 import { tipHtml, maybeSheetTip, initTutorial, helpButtonHtml } from './ui/tutorial.js';
 import { openStatGuide } from './ui/stat-guide.js';
 import * as F from './franchise/franchise.js';
+import { useLayoutOf } from './data/league.js';
 import { setDexMirror, mergeDex, dexData } from './franchise/dex-store.js';
 import { $, toast, confirmSheet } from './ui/dom.js';
 import { registerMenuScreens } from './ui/screens/menu.js';
@@ -235,7 +236,7 @@ export function start() {
     'more', 'guide', 'settings', 'about', 'dex', 'office', 'coach-look', 'gm-jobs', 'staff']);
   app.findMonster = (id) => { const f = app.f; if (!f) return null; return f.roster.find((m) => m.id === id) || f.draft?.class?.find((m) => m.id === id) || f.week?.prospects?.map((p) => p.monster).find((m) => m?.id === id) || app.apexSeen?.get(id) || null; };
   app.playApex = (name = Router.currentScreen()?.name) => { if (!app.f || APEX_QUIET.has(name)) return false; return playPendingApex({ f: app.f, find: app.findMonster, settings: app.settings, save: () => app.save({ immediate: true }), onDone: () => Router.render() }); };
-  Router.init({ root: $('#app'), context: () => { if (app.f) syncDiscovery(app.f); return { app, f: app.f, inFranchise: !!app.f, tabOf: TAB_OF }; }, tabs,
+  Router.init({ root: $('#app'), context: () => { if (app.f) { useLayoutOf(app.f); syncDiscovery(app.f); } return { app, f: app.f, inFranchise: !!app.f, tabOf: TAB_OF }; }, tabs,
     tip: (ctx, name) => (ctx.f ? guideHtml(ctx.f, name) + (guideActive(ctx.f) ? '' : tipHtml(ctx.f, name)) : ''), mounted: (ctx, name) => { uiSceneSound(name,ctx); recorder.setContext({ screen: name }); recorder.record('screen', { name }); const track = musicForScreen(name); if (track !== undefined) void music.select(track).catch(() => {}); routeDetailAudio(name, ctx); if (ctx.f) { mountGuide(ctx.f, name, () => app.save()); if (!guideActive(ctx.f)) maybeSheetTip(ctx.f, name, () => app.save()); app.playApex(name); } }, help: (ctx, name) => (ctx.f ? helpButtonHtml(name) : '') });
   initGuidedWeek({ app, Router });
   initTutorial({ app, Router, openStats: () => openStatGuide() });
@@ -339,7 +340,7 @@ function migrateLeague(f) {
 // saving first would stamp a stale copy as the newest and upload it over progress another device already sent for this franchise.
 let holdLeagueSave = false; let heldLeagueSave = null;
 async function flushHeldLeagueSave() { const f = heldLeagueSave; heldLeagueSave = null; holdLeagueSave = false; if (f && app.f === f) await app.save({ immediate: true }); }
-function adopt(f) { migrateLeague(f); app.f = f; app.lastSig = null; deviceSettings.syncInto(f.settings ||= {}); applySettings(); mergeDex(f.dex, { franchise: F.franchiseKey(f) }); F.syncAchievementsToGlobal(f); if (f.uid && f.seed != null) { linkHofCards({ uid: f.uid, seed: f.seed }); linkAchievements({ uid: f.uid, seed: f.seed }); } }
+function adopt(f) { useLayoutOf(f); migrateLeague(f); app.f = f; app.lastSig = null; deviceSettings.syncInto(f.settings ||= {}); applySettings(); mergeDex(f.dex, { franchise: F.franchiseKey(f) }); F.syncAchievementsToGlobal(f); if (f.uid && f.seed != null) { linkHofCards({ uid: f.uid, seed: f.seed }); linkAchievements({ uid: f.uid, seed: f.seed }); } }
 
 /** Open storage, migrate the v39.1 save on first run, then load (or stop at recovery). Then reconcile with the cloud copy. */
 async function boot() {

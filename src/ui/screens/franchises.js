@@ -17,7 +17,7 @@ import { t as $t } from '../../text/index.js';
 
 const when = (t) => (t ? new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'never');
 const STATUS = { active: [$t('franchises.active'), 'good'], retired: [$t('franchises.retired'), ''], fired: [$t('franchises.dismissed'), 'warn'], damaged: [$t('franchises.needs_recovery'), 'bad'], migrating: [$t('franchises.moving_to_the_new_storage'), 'warn'], empty: [$t('franchises.empty_slot'), ''] };
-const tierLine = (meta) => { const t = TIERS.find((x) => x.id === meta?.tier); const div = meta?.club ? divisionOf(meta.club) : null; return [t?.name, div ? `${$t('franchises.division', { div })}` : null].filter(Boolean).join(' · ') || null; };
+const tierLine = (meta) => { const t = TIERS.find((x) => x.id === meta?.tier); const div = meta?.division || (meta?.club ? divisionOf(meta.club) : null); return [t?.name, div ? `${$t('franchises.division', { div })}` : null].filter(Boolean).join(' · ') || null; };
 const recordText = (r) => (r ? `${r.w}-${r.l}${r.t ? `-${r.t}` : ''}` : '—');
 
 /** One slot card. `s` is a summary from the slot manager; `active` marks the slot being played. */

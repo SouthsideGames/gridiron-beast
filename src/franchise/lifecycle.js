@@ -10,7 +10,7 @@
 
 import { CAREER_SEASONS } from './gm-career.js';
 import { monsterOverall } from '../data/monsters.js';
-import { divisionOf, TIERS } from '../data/league.js';
+import { divisionIn, layoutOf, TIERS } from '../data/league.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
 import { careerSnapshot } from './career-profile.js';
 import { t as $t } from '../text/index.js';
@@ -99,7 +99,7 @@ export function buildLegacy(f, { now = Date.now(), reason = 'retired' } = {}) {
   const rival = f.rivals?.[f.tier] || null;
   return {
     v: 1, reason, archivedAt: now,
-    owner: f.owner ? { first: f.owner.first, last: f.owner.last, portrait: f.owner.portrait ?? null } : null, club: f.club, division: divisionOf(f.club) || null,
+    owner: f.owner ? { first: f.owner.first, last: f.owner.last, portrait: f.owner.portrait ?? null } : null, club: f.club, division: divisionIn(layoutOf(f), f.club) || null,
     tier: tier ? { id: tier.id, name: tier.name, rank: tier.rank } : (f.tier ?? null), difficulty: f.settings?.difficulty || null,
     seasonsCompleted: hist.length, finalYear: f.season?.year ?? null, record,
     titles, playoffAppearances: seasons.filter((h) => h.playoffs).length,
@@ -148,7 +148,7 @@ export function finalizeArchive(f, { reason, hofCard = null, now = Date.now() } 
 
 /** The competitive tier line for a slot card: league/division and the tier's standing (GDD §42.5; promotion-relegation data model). */
 export function competitiveTier(f) {
-  const tier = TIERS.find((t) => t.id === f?.tier) || null; const div = f?.club ? divisionOf(f.club) : null;
+  const tier = TIERS.find((t) => t.id === f?.tier) || null; const div = f?.club ? divisionIn(layoutOf(f), f.club) : null;
   const q = f?.qualification?.[f?.tier]; const goal = tier?.badgeGoal;
   return { tier: tier?.name || null, division: div || null, qualification: q ?? null, badgeGoal: goal ?? null, relegationStreak: f?.bottomFourStreak ?? null };
 }

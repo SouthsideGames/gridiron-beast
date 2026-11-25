@@ -90,7 +90,8 @@ test('seasons follow the league\'s real format: fourteen games on real fixtures,
 test('last season\'s records are the ones the club picker shows, whichever club the owner took', () => {
   const shown = Object.fromEntries(STARTER_CLUBS.map((c) => [c.name, c.record]));
   for (const c of STARTER_CLUBS) { const [w, l] = c.record.split('-').map(Number); assert.equal(w + l, REGULAR_GAMES, `${c.name}: the picker shows ${c.record}, which is not a 14-game record`); }
-  for (const [seed, club] of SEEDS) {
+  const starters = STARTER_CLUBS.map((c) => c.name);
+  for (const [seed, club] of SEEDS.map(([seed], i) => [seed, starters[(i * 3) % starters.length]])) {
     const last = franchise(seed, club).preLeagueHistory.seasons.at(-1); assert.equal(last.year, 0);
     for (const [name, record] of Object.entries(shown)) { const r = last.standings.find((x) => x.club === name); assert.equal(`${r.w}-${r.l}`, record, `seed ${seed}: ${name}`); }
     assert.ok(!Object.values(last.seeds).flat().includes(club), 'a rebuilding club was not in last season\'s playoffs');
