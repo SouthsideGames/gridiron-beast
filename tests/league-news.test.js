@@ -43,9 +43,10 @@ test('results news: a full scoreboard with your game and the rival marked, and h
   const sc = items[0]; assert.equal(sc.kind, 'scores'); assert.equal(sc.games.length, 2);
   assert.ok(sc.games[0].mine && !sc.games[0].rival); assert.ok(sc.games[1].rival);
   const kinds = items.slice(1).map((x) => x.kind);
-  assert.equal(kinds[0], 'upset'); assert.ok(kinds.includes('unbeaten'));
-  assert.match(items.find((x) => x.kind === 'unbeaten').text, /Alpha's perfect start ends at 4-0/);
-  assert.match(items.find((x) => x.kind === 'overtime').text, /Charlie beat Delta in a 3v3 Beast Clash after a 14-14 tie/);
+  // Owner 2026-11-24: no line only retells a score (upsets, shutouts, blowouts, overtime): the scoreboard shows every result.
+  assert.ok(!kinds.some((k) => ['upset', 'overtime', 'shutout', 'blowout'].includes(k)), kinds.join(','));
+  assert.match(items.find((x) => x.kind === 'unbeaten').text, /^Alpha's perfect start ends at 4-0: Bravo win\.$/);
+  assert.ok(sc.games.some((g) => g.ot && g.clash), 'the overtime Beast Clash is on the scoreboard');
   assert.ok(items.length - 1 <= HEADLINES_PER_WEEK);
   assert.ok(items.every((x) => x.year === 1 && x.week === 5 && !/undefined|NaN/.test(x.text || '')));
 });
@@ -54,9 +55,9 @@ test('results news: streaks are mentioned at 4, 6 and 8, not every week they gro
   const res = []; const lines = [];
   for (let w = 1; w <= 8; w++) { res.push(G(w, 'Ember City Beasts', 'Bravo', 14, 0)); res.push(G(w, 'Delta', 'Charlie', 3, 10)); lines.push(resultsNews({ year: 1, week: w, results: res }).filter((x) => /in a row/.test(x.text)).length); }
   assert.deepEqual(lines, [0, 0, 0, 2, 0, 2, 0, 2]); // Bravo and Delta at 4, 6, 8
-  const shut = resultsNews({ year: 1, week: 1, results: res }).find((x) => x.kind === 'shutout');
-  assert.match(shut.text, /^Ember City Beasts' defense shuts out Bravo/);
-  assert.equal(poss('Thunder Mesa Blitz'), "Thunder Mesa Blitz's");
+  assert.ok(!resultsNews({ year: 1, week: 1, results: res }).some((x) => x.kind === 'shutout'), 'a shutout is on the scoreboard, not a headline');
+  assert.ok(resultsNews({ year: 1, week: 4, results: res }).some((x) => x.text === 'Ember City Beasts stay perfect at 4-0 after beating Bravo.'), 'a perfect start is news, without the score');
+  assert.equal(poss('Ember City Beasts'), "Ember City Beasts'"); assert.equal(poss('Thunder Mesa Blitz'), "Thunder Mesa Blitz's");
   assert.deepEqual(recordsFrom(res).Bravo, { w: 0, l: 8, t: 0, streak: -8 });
 });
 
