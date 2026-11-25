@@ -346,13 +346,14 @@ test('campaign: beating a gym club earns its badge once; Hall of Fame progress r
   assert.ok(gymWeek);
   while (f.season.week < gymWeek.week) { F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); continue; } const g = F.simulatePlayerGame(f); F.finishSunday(f, g); }
   F.autoRunToSunday(f);
+  const held = Object.keys(f.campaign.badges).length; // badges already won in the weeks simulated before this game
   const m = F.sundayMatchup(f); const side = m.playerSide;
   const score = { home: 0, away: 0 }; score[side] = 21;
   F.finishSunday(f, { winner: side, score, stats: { home: { players: {} }, away: { players: {} } }, ot: false });
   assert.ok(f.campaign.badges[gymWeek.opponent], 'badge earned');
   assert.equal(f.campaign.wins >= 1, true);
   const p = F.hallOfFameProgress(f);
-  assert.equal(p.rows.find((r) => r.key === 'badges').have, 1);
+  assert.equal(p.rows.find((r) => r.key === 'badges').have, held + 1);
   assert.equal(p.rows.find((r) => r.key === 'titles').goal, 2);
   assert.equal(p.eligible, false);
 });
