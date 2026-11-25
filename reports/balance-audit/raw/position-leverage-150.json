@@ -1,0 +1,112 @@
+{
+ "QB": {
+  "slots": 1,
+  "games": 150,
+  "bump": 8,
+  "ovrGain": 8,
+  "marginPerGroup": 1.847,
+  "se": 0.892,
+  "winPctPerGroup": 7.33,
+  "marginPerOvrPerSlot": 0.2308,
+  "relative": 2.12
+ },
+ "RB": {
+  "slots": 1,
+  "games": 150,
+  "bump": 8,
+  "ovrGain": 8,
+  "marginPerGroup": 2.02,
+  "se": 0.844,
+  "winPctPerGroup": 1.33,
+  "marginPerOvrPerSlot": 0.2525,
+  "relative": 2.32
+ },
+ "WR": {
+  "slots": 3,
+  "games": 150,
+  "bump": 8,
+  "ovrGain": 7.99,
+  "marginPerGroup": 3.113,
+  "se": 0.843,
+  "winPctPerGroup": 12.67,
+  "marginPerOvrPerSlot": 0.1298,
+  "relative": 1.19
+ },
+ "TE": {
+  "slots": 1,
+  "games": 150,
+  "bump": 8,
+  "ovrGain": 7.95,
+  "marginPerGroup": 2.033,
+  "se": 0.8,
+  "winPctPerGroup": 6.67,
+  "marginPerOvrPerSlot": 0.2557,
+  "relative": 2.35
+ },
+ "OL": {
+  "slots": 3,
+  "games": 150,
+  "bump": 8,
+  "ovrGain": 7.94,
+  "marginPerGroup": 1.84,
+  "se": 0.895,
+  "winPctPerGroup": 5.33,
+  "marginPerOvrPerSlot": 0.0773,
+  "relative": 0.71
+ },
+ "DL": {
+  "slots": 3,
+  "games": 150,
+  "bump": 8,
+  "ovrGain": 7.98,
+  "marginPerGroup": 0.82,
+  "se": 0.832,
+  "winPctPerGroup": 4.67,
+  "marginPerOvrPerSlot": 0.0343,
+  "relative": 0.32
+ },
+ "LB": {
+  "slots": 2,
+  "games": 150,
+  "bump": 8,
+  "ovrGain": 8,
+  "marginPerGroup": 1.62,
+  "se": 0.806,
+  "winPctPerGroup": 0.67,
+  "marginPerOvrPerSlot": 0.1013,
+  "relative": 0.93
+ },
+ "CB": {
+  "slots": 2,
+  "games": 150,
+  "bump": 8,
+  "ovrGain": 8,
+  "marginPerGroup": 2.187,
+  "se": 0.876,
+  "winPctPerGroup": 10,
+  "marginPerOvrPerSlot": 0.1367,
+  "relative": 1.26
+ },
+ "S": {
+  "slots": 2,
+  "games": 150,
+  "bump": 8,
+  "ovrGain": 8,
+  "marginPerGroup": 0.78,
+  "se": 0.86,
+  "winPctPerGroup": 4,
+  "marginPerOvrPerSlot": 0.0488,
+  "relative": 0.45
+ },
+ "K": {
+  "slots": 1,
+  "games": 150,
+  "bump": 8,
+  "ovrGain": 7.77,
+  "marginPerGroup": 0.22,
+  "se": 0.706,
+  "winPctPerGroup": -4,
+  "marginPerOvrPerSlot": 0.0283,
+  "relative": 0.26
+ }
+}
