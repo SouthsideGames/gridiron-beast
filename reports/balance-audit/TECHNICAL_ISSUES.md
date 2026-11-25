@@ -78,3 +78,21 @@ Further issues from the long runs are added below as they are confirmed.
 - The tool records each season in `onSeason`. `runFranchise` calls that only after the offseason, so a season ending in a dismissal is never recorded.
 - **Effect:** "FIRED" after N recorded seasons means dismissed at the end of season N+1. The tool's win % and playoff % leave out every dismissal season.
 - See `DIFFICULTY_AND_BOARD_BALANCE.md`. Fix: record the season in `beforeOffseason`.
+
+## T-6. Foresight can almost never fire: no linebacker lines up within 3 yards (Medium, game)
+
+**What happens.**
+- Foresight (cerebrix QB, PSY-03-F) marks an opposing LB "within 3 yards of the line" in the defence's predominant look (`src/sim/rules.js` `preparePreChoice`, `Math.abs(dp.align[sl][0]) <= 3`, with `FORESIGHT.depth = 3`).
+- Across the whole defensive book, **only 4 of 255 linebacker alignments are 3 yards deep or shallower.** The standard depth is 4.0–4.5 (for example `cover_3` LB1 at `[4.5, 0]`).
+- No mark is made, so the ability never reaches its blitz check.
+
+**Reproduction.**
+- Command: `node tools/balance-audit/foresight-probe.mjs --games=30`. The home QB is given the cerebrix species in his slot and in the rotation pool.
+- Result: 789 offensive snaps, 237 of them against blitz calls. **0 pre-snap marks, 0 marks at the snap, 0 executions.**
+- The census figure (0 executions in 98 appearances, `MONSTER_CATALOGUE_BALANCE.md` §4) has this cause. The adopted M6 fix did not touch the depth rule.
+
+**Fix (needs approval).** Either:
+- raise `FORESIGHT.depth` to cover the book's LB depth (about 5 yards); or
+- measure the depth from the line of scrimmage plus the LB's normal 4.5-yard alignment.
+
+Re-check with `foresight-probe.mjs` and `task10-ability-census.mjs`.

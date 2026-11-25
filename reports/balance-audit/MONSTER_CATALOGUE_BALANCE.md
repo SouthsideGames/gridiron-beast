@@ -76,6 +76,7 @@ Every position has at least one legendary; QB and WR have two each.
 | **Crosswind Rescue** (windlynx) | 37 | **0** |
 
 - Foresight was already at 0 of 563 at Task 8 M6. The owner adopted a fix for it (`docs/task10/MASTER_BALANCE_MATRIX.md` A-14), and it **still never executes** on this build.
+  - **The cause is now found** (`TECHNICAL_ISSUES.md` T-6). Its candidate rule needs an LB within 3 yards of the line, and only 4 of the book's 255 LB alignments are that shallow. A 30-game probe produced 0 marks in 789 snaps.
 - Crosswind Rescue was already at or near 0 in both Task 10 censuses.
 - **Air Brake is new to this list.**
 
