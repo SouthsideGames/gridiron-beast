@@ -53,6 +53,12 @@ Every issue below has been reproduced, with a seed and a command. Nothing in `sr
 
   They are therefore marked as cross-structure, not matched.
 
+## Checks that passed
+
+- **Determinism.** The same franchise season was run twice: seed 99, Pro, repair owner, Board kept content, `tools/ai-franchise-benchmark.mjs --seeds=99 --seasons=1`. Both runs give the identical franchise hash `hashV3 a304b5d9…cae8`.
+  - The full `hash` differs only because the second run also recorded packed save sizes in the observation-only `v4` block. That block is excluded from `hashV3`.
+- **No exceptions and no runner guard trips** in 1,000 generated games, 720 calibration games, the attribute sweeps and about 281,000 Clash battles.
+
 ## T-4. More issues
 
 Further issues from the long runs are added below as they are confirmed.
