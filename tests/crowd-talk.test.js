@@ -1,7 +1,7 @@
 // Owner 2026-11-24: the crowd cheers a score until the next play, and fans say things in speech bubbles; every line is in en.js.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { crowdTalk, moodLines, BIG_PLAY_YARDS } from '../src/ui/crowd-talk.js';
+import { crowdTalk, moodLines, BIG_PLAY_YARDS } from '../src/ui/stadium-crowd.js';
 import { stadiumReaction } from '../src/ui/stadium-fx.js';
 import { englishText } from '../src/text/index.js';
 
