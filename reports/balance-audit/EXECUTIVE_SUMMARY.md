@@ -19,7 +19,7 @@
 
 | Measure | Count |
 |---|---|
-| **Automated tests run** | **2,544, all passed, 0 failed.** Fast tier: 2,253 of 2,253 (1 h 42 min). Simulation tier: 278 of 278 before it was stopped at the 2-hour background limit, then 13 of 13 in a second attempt stopped to free CPU. **The simulation tier was not completed:** not every one of its 30 files ran |
+| **Automated tests run** | **The whole suite has now run, with 0 failures.** Fast tier: 2,253 of 2,253 (1 h 42 min). Simulation tier: every one of its 30 files ran on `58c33ee`'s game code across two runners (17:27 and 17:34): one run passed 289 tests before its 2-hour limit, and a second runner covered the 14 files the first had not reached, 128 of 128 passed (43 min). Two earlier partial attempts (278 and 13 tests) also passed. Test executions in all: 2,961, failures: 0 |
 | **Stand-alone football games** | about 5,900. Game studies 1,000; defensive-pool experiment 500; passing calibration 720; roster strategies 1,500; position leverage 1,650; ability census 200; score check 300 |
 | **Franchise seasons** | **about 139.** Five 15-season franchises (75); live-Board runs (39); Board traces (8); forecast experiment (15); one-season checks (2). Runs lost to the time limit are not counted |
 | **League games inside those franchises** | about 33,000 (about 237 a season) |
@@ -115,8 +115,11 @@ Full detail, with the 11 points each, is in `RECOMMENDED_CHANGES.md`.
 
 ## Testing limitations
 
-- **The full test suite was not completed.** The fast tier passed in full. The simulation tier passed every test it reached but was stopped at the 2-hour background limit, and its second attempt was stopped to free CPU for the studies.
-  - The first run also shared the two CPUs with studies, which the testing policy advises against. No test in that tier is wall-clock bound; only the separate performance test is, and it was not run.
+- **The full suite ran, but not as one `npm test` command.**
+  - The simulation tier was split across two runners because of the 2-hour background limit, so there is no single summary line.
+  - Some of those runs shared the two CPUs with studies, which the testing policy advises against. No simulation test is wall-clock bound.
+  - The separate performance test (`npm run test:perf`) was not run.
+
 - **Franchise evidence is two seeds** (3 on all difficulties, 4 on Pro and All-Star), plus three seeds for live-Board play. These are detailed observations, not statistical samples across seeds.
 - **Seasons 16 to 20 cannot be simulated** through the production lifecycle (15-season cap).
 - **Lost runs.** My first launch of the long runs used the default 30-minute background limit. The Rookie 20-season run and early versions of several studies were lost and rerun at reduced size:
