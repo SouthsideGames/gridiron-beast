@@ -1,0 +1,7 @@
+140,141c140,142
+< const ZONE_D = ['cover_3', 'cover_4', 'cover_2_zone', 'cover_6', 'tampa_2', 'max_drop', 'zone_blitz', 'corner_blitz'];
+< const MAN_D = ['cover_2_man', 'cover_1', 'man_press', 'robber', 'bracket_left', 'db_blitz', 'safety_blitz', 'double_a_mug', 'cover_0'];
+---
+> const EXP_OK = (id) => !PLAYS[id].legendary && !PLAYS[id].tags.some((t) => ['desperation','goalline','prevent','redzone','two_minute'].includes(t));
+> const ZONE_D = DEFENSE_IDS.filter((id) => PLAYS[id].tags.includes('zone') && EXP_OK(id)); // EXPERIMENT
+> const MAN_D = DEFENSE_IDS.filter((id) => PLAYS[id].tags.includes('man') && !PLAYS[id].tags.includes('zone') && EXP_OK(id)); // EXPERIMENT
