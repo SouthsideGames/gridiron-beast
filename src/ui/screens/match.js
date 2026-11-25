@@ -30,7 +30,7 @@ import { PLAYS } from '../../data/playbook.js';
 import { TRAINING_FOCI } from '../../data/staff.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
 import { MatchCamera } from '../match-camera.js';
-import { fieldSvg, fieldDraw, fieldViewBox, presnapLook, cameraFor } from '../field-view.js';
+import { fieldSvg, fieldDraw, fieldViewBox, presnapLook, cameraFor, cameraFrom, fitFieldSpan } from '../field-view.js';
 import { playCardSvg } from '../play-art.js';
 import { monsterSprite, portraitSprite } from '../pixel-monster.js';
 import { GYM_BY_CLUB } from '../../data/gyms.js';
@@ -89,6 +89,7 @@ export function registerMatchScreens(Router, app) {
   }
   function drawMatchField(svg, field) {
     cameraField = field; cameraSvg = svg; cameraLastDraw = performance.now();
+    if (fitFieldSpan(svg) && !anim) field = { ...field, camera: null }; // the box changed size: a new close camera at the new height (not mid-play)
     const result = fieldDraw(svg, cameraOptions(app.f, field));
     if (autoCamera.moving && cameraRaf == null) cameraRaf = requestAnimationFrame(tickCamera);
     return result;
@@ -804,9 +805,9 @@ export function registerMatchScreens(Router, app) {
    * stands behind the end line (cameraFor clamps). Zoomed out (Auto), the whole field is shown and this changes nothing.
    */
   function carrierCamera(ballOn, frame) {
-    const base = cameraFor(ballOn); const y = ballOn + (frame?.ball?.[0] ?? 0);
-    if (y > base.top - 12) return cameraFor(y - 19); // 12 yards of field kept ahead of the ball
-    if (y < base.bottom + 6) return cameraFor(y + 9); // a sack or a loss: 6 yards kept behind it
+    const base = cameraFor(ballOn); const y = ballOn + (frame?.ball?.[0] ?? 0); const span = base.top - base.bottom;
+    if (y > base.top - 12) return cameraFrom(y - span + 12); // 12 yards of field kept ahead of the ball
+    if (y < base.bottom + 6) return cameraFrom(y - 6); // a sack or a loss: 6 yards kept behind it
     return base;
   }
   /** Kick plays follow the ball with the camera: the formula animations (kick-anim.js) and the live kickoff's engine frames. */
