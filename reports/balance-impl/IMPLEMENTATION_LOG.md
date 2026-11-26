@@ -362,3 +362,8 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
 - **AI signing bonuses:** the mechanism exists (`fa-ai.js` `bonusTerms`, for money-minded monsters on multi-year deals when the cap is tight; used in bidding wars and urgent signings). The audit saw none because the cap never bound. With the curve the cap binds at the top, and the 15-season validation counts the bonuses. If there are still none, the AI's use is widened.
 ### R-16: trade values
 - Position leverage rerun on the final engine (300 games, bump 8) to re-derive `POSITION_LEVERAGE` with the documented recipe (shrink, half strength, clamp 0.6–1.6, rescale).
+- **Speed sweep after the slope** (`phase5/attr-sweep-n200.json`, Speed 30 / 65 / 95). Speed stays viable everywhere:
+  - WR peak speed 7.0 / 8.0 / 9.2 yd/s (was 6.8 / 8.2 / 9.4); deep-ball yards 9.1 / 11.0 / 23.9;
+  - CB completion allowed 40.5 / 29.5 / 26.5%;
+  - DL sacks 27.5 / 33 / 36%; safety pursuit yards allowed 10.4 / 6.5 / 4.2.
+  - RB yards 4.1 / 6.5 / 19.7: the Lab's elite back now breaks away 33% of the time against its all-65 defenders, against 12.5% before. That is a threshold effect of the one Lab trial (n = 200); in full games explosive runs held at 8.3%.
