@@ -1,0 +1,27 @@
+{
+ "tool": "balance-audit/clash-legendary-options",
+ "variant": "A (shipped)",
+ "n": 2000,
+ "families": {
+  "astralux": {
+   "family": "astralux",
+   "ability": "Astral Strike",
+   "abilityId": "PSY-06-C",
+   "rarity": "legendary",
+   "battles": 2000,
+   "winOnPct": 81.3,
+   "winOffPct": 74.9,
+   "abilityPts": 6.3,
+   "se": 1.6,
+   "exPerBattle": 1,
+   "noExecutionPct": 0,
+   "dmgPerBattle": 118,
+   "turnsPerBattle": 4.54,
+   "dmgPerTurn": 26,
+   "ordinaryHitMean": 26,
+   "signatureHits": 0,
+   "signatureHitMean": null,
+   "signatureTurnSharePct": 22
+  }
+ }
+}

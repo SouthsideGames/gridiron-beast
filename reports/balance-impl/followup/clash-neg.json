@@ -1,0 +1,103 @@
+{
+ "tool": "balance-audit/clash-legendary-options",
+ "variant": "A (shipped)",
+ "n": 8000,
+ "families": {
+  "cerebrix": {
+   "family": "cerebrix",
+   "ability": "Foresight",
+   "abilityId": "PSY-03-C",
+   "rarity": "uncommon",
+   "battles": 8000,
+   "winOnPct": 40.7,
+   "winOffPct": 44.1,
+   "abilityPts": -3.4,
+   "se": 0.8,
+   "exPerBattle": 0.23,
+   "noExecutionPct": 76.7,
+   "dmgPerBattle": 72.5,
+   "turnsPerBattle": 3.97,
+   "dmgPerTurn": 18.3,
+   "ordinaryHitMean": 19.4,
+   "signatureHits": 0,
+   "signatureHitMean": null,
+   "signatureTurnSharePct": 6.4,
+   "split": {
+    "foeHasStatusSource": {
+     "battles": 1869,
+     "abilityPts": -12.7,
+     "se": 1.6
+    },
+    "noStatusSource": {
+     "battles": 6131,
+     "abilityPts": -0.5,
+     "se": 0.9
+    }
+   }
+  },
+  "boulderox": {
+   "family": "boulderox",
+   "ability": "Unbroken Charge",
+   "abilityId": "EAR-03-C",
+   "rarity": "uncommon",
+   "battles": 8000,
+   "winOnPct": 37.8,
+   "winOffPct": 37.4,
+   "abilityPts": 0.4,
+   "se": 0.8,
+   "exPerBattle": 0.19,
+   "noExecutionPct": 81.5,
+   "dmgPerBattle": 69.4,
+   "turnsPerBattle": 4.53,
+   "dmgPerTurn": 15.3,
+   "ordinaryHitMean": 14.7,
+   "signatureHits": 1444,
+   "signatureHitMean": 29.3,
+   "signatureTurnSharePct": 8.1,
+   "split": {
+    "foeHasStatusSource": {
+     "battles": 1944,
+     "abilityPts": -1.3,
+     "se": 1.6
+    },
+    "noStatusSource": {
+     "battles": 6056,
+     "abilityPts": 1,
+     "se": 0.9
+    }
+   }
+  },
+  "icehorn": {
+   "family": "icehorn",
+   "ability": "Snowdrift Shelter",
+   "abilityId": "ICE-04-C",
+   "rarity": "common",
+   "battles": 8000,
+   "winOnPct": 38.6,
+   "winOffPct": 38.3,
+   "abilityPts": 0.3,
+   "se": 0.8,
+   "exPerBattle": 1.07,
+   "noExecutionPct": 8.5,
+   "dmgPerBattle": 74.6,
+   "turnsPerBattle": 5.72,
+   "dmgPerTurn": 13.1,
+   "ordinaryHitMean": 16.1,
+   "signatureHits": 0,
+   "signatureHitMean": null,
+   "signatureTurnSharePct": 18.7,
+   "split": {
+    "foeHasStatusSource": {
+     "battles": 1891,
+     "abilityPts": -0.6,
+     "se": 1.6
+    },
+    "noStatusSource": {
+     "battles": 6109,
+     "abilityPts": 0.6,
+     "se": 0.9
+    }
+   }
+  }
+ }
+}
