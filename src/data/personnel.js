@@ -91,12 +91,12 @@ export const emergencySources = (pos) => Object.keys(EMERGENCY_POSITION).filter(
 export const POSITION_WEIGHTS = Object.freeze({
   QB: { accuracy: 3, awareness: 3, arm: 2, agility: 1, speed: 1, durability: 0.5 },
   RB: { speed: 3, agility: 3, strength: 2, awareness: 2, catching: 1, blocking: 1, durability: 1 },
-  WR: { speed: 3, catching: 3, agility: 2, awareness: 1, strength: 1, durability: 0.5 },
+  WR: { speed: 4, catching: 3, agility: 2, awareness: 1, strength: 1, durability: 0.5 },
   TE: { catching: 2, blocking: 2, strength: 2, speed: 2, agility: 1, awareness: 1, durability: 0.5 },
   OL: { blocking: 4, strength: 3, awareness: 1, agility: 1, durability: 1 },
   DL: { strength: 3, tackling: 2, agility: 2, speed: 2, awareness: 1, durability: 1 },
   LB: { tackling: 3, awareness: 2, speed: 2, strength: 1, coverage: 1, durability: 1 },
-  CB: { coverage: 3, speed: 3, agility: 2, awareness: 1, catching: 1, durability: 0.5 },
+  CB: { coverage: 3, speed: 4, agility: 2, awareness: 1, catching: 1, durability: 0.5 },
   S: { coverage: 2, awareness: 2, speed: 2, tackling: 2, catching: 1, durability: 0.5 },
   K: { kicking: 6, awareness: 1, durability: 0.25 },
 });
