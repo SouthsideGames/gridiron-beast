@@ -315,3 +315,17 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - Live play (the displayed overall, salary, AI training) uses the new weights.
   - 3 of the 4 failures cleared. The fourth was R-10 Foresight: Eclipse Call acts from reserve, so the gate now looks at every living enemy (active or reserve). Effect −3.1 (4,000 battles).
 - **R-2 trial 3 result (speed slope 3.5):** the speed strategy fell from +3.17 to **+0.06** (standard error 0.90; 45.3% wins); strength −0.39 (was −2.29). Speed is no longer an exploit at constant payroll. Game-level and sweep checks next.
+- **15-season runs, seed 3** (the audit's seed; `ai-franchise-benchmark --owner=repair --board=content`). Rates 0.6 / 1.5. These runs predate the Phase 5 weights and speed slope; final runs follow.
+
+  | AI overall, season | 1 | 5 | 10 | 15 |
+  |---|---|---|---|---|
+  | Rookie now | 52.0 | 61.7 | 63.4 | 62.5 |
+  | Rookie, audit | 52.9 | 63.8 | 64.1 | 63.5 |
+  | All-Star now | 58.5 | 65.6 | 65.5 | 65.2 |
+  | All-Star, audit | 57.2 | 64.1 | 63.2 | 63.8 |
+
+  - The leagues now stay **3 points apart through season 15**, where the audit had them within 0.5 by season 5.
+  - All-Star does not run away late: 65.2 at season 15, against 63.8 in the audit.
+  - The repair owner (he fills holes only) won 27.6% on Rookie and 16.7% on All-Star on this seed. The audit's same owner won 38.6% and 57.1%, and the audit noted the spread between seeds is three times the spread between difficulties.
+  - Integrity: 0 problems, 0 errors, 0 negative cap rooms; rosters 31–38.
+- **R-12 (from the same runs): scoring still grows** from season 1 to season 15: Rookie 13.2 → 19.3 points per team-game (+46%), All-Star 14.7 → 19.8 (+35%). The target is about 10–15%. Investigation next.
