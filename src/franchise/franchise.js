@@ -804,9 +804,13 @@ export function comebackRule(f) { void f; return null; }
 export const SCHEME_LOCK_EDGE = 3;
 export function schemeLock(f) { const rf = rosterFit(f); const on = (x) => x.total > 0 && x.fit === x.total; return { offense: on(rf.offense) ? SCHEME_LOCK_EDGE : 0, defense: on(rf.defense) ? SCHEME_LOCK_EDGE : 0, fit: rf }; }
 export const DIFFICULTY = Object.freeze({
-  rookie: { label: 'Rookie', quality: -4, iq: 0.6, text: $t('franchise.weaker_clubs_that_call_plays_loosely'), hof: $t('franchise.hall_of_fame_8_badges_1'), hofGoals: { badges: 8, titles: 1, wins: 30, awards: 2 }, commissionerPicks: 5 },
-  pro: { label: 'Pro', quality: -1, iq: 1, text: $t('franchise.the_standard_league'), hof: $t('franchise.hall_of_fame_8_badges_2'), hofGoals: { badges: 8, titles: 2, wins: 50, awards: 3 }, commissionerPicks: 3 },
-  allstar: { label: 'All-Star', quality: 3, iq: 1.5, text: $t('franchise.stronger_clubs_whose_coaches_read_the'), hof: $t('franchise.hall_of_fame_8_badges_4'), hofGoals: { badges: 12, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
+  // R-4 (balance audit, 2026-11-25): `aiDev` scales the XP AI clubs' monsters earn from games and practice (the existing development
+  // system; no cap room, no in-game bonus). Founding quality and IQ were the only differences, and development levelled every league by
+  // season 5; a lasting difference in growth keeps the difficulties apart for the whole franchise. PROVISIONAL, calibrated on the
+  // standard benchmark (hands-off owner, board reset).
+  rookie: { label: 'Rookie', aiDev: 0.85, quality: -4, iq: 0.6, text: $t('franchise.weaker_clubs_that_call_plays_loosely'), hof: $t('franchise.hall_of_fame_8_badges_1'), hofGoals: { badges: 8, titles: 1, wins: 30, awards: 2 }, commissionerPicks: 5 },
+  pro: { label: 'Pro', aiDev: 1, quality: -1, iq: 1, text: $t('franchise.the_standard_league'), hof: $t('franchise.hall_of_fame_8_badges_2'), hofGoals: { badges: 8, titles: 2, wins: 50, awards: 3 }, commissionerPicks: 3 },
+  allstar: { label: 'All-Star', aiDev: 1.15, quality: 3, iq: 1.5, text: $t('franchise.stronger_clubs_whose_coaches_read_the'), hof: $t('franchise.hall_of_fame_8_badges_4'), hofGoals: { badges: 12, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
 });
 export const difficultyOf = (f) => DIFFICULTY[f?.settings?.difficulty] || DIFFICULTY.pro;
 /** Club quality for a season: base by difficulty, gym tier, growth per season, the title raising the floor, and "studied tape" after the player first beats a gym (GDD §15.3, §15.8). */
@@ -922,7 +926,7 @@ export const gameActivityId = (f, club) => `fb:${f.season.year}:w${f.season.week
 function aiAfterGame(f, team, game, side, r) {
   if (!leagueBooks(f, team.name)) return [];
   const won = game.winner === side;
-  const xpScale = 1; // N7f: no rubber-banding; the decision-C development slowdown for a club above its target is retired
+  const xpScale = difficultyOf(f).aiDev ?? 1; // R-4: the difficulty's AI development rate, the same for every AI club (N7f: no rubber-banding by standing)
   const ledger = (f.rewardLedger ||= createRewardLedger()); const act = gameActivityId(f, team.name);
   const train = trainingPriority(clubIdentity(f, team.name)); // Task 8 D7: the identity's attributes first in the AI allocation (null for none)
   const events = afterGame(team.roster, team.chart, game.stats?.[side]?.players || {}, r, { won, autoSpend: true, autoEvolve: true, xpScale, ledger, activityId: act, train, mastery: game.t8?.mastery, liveInjuries: !!game.rotation });

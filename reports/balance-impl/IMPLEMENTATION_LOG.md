@@ -225,3 +225,16 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
 
   Fixing them means changing what four legendary signatures are (for example, cast in addition to the attack, or a stronger effect), so this is raised with the owner rather than done.
 - **Other idle abilities (90%+ of battles with no execution, unchanged):** stoneguard, ironjaw, voltfang, terrabull, rockram, voltfin, mossclaw, reefclaw, snowmoth, flicker, lumen. All are conditional triggers that the 3 v 3 format rarely creates (a status to redirect, a shield to break, a knockout to avenge); in teams their effect is within ±4. Deferred: each needs its own trigger redesign.
+
+### R-11 and R-13 (interim, new leagues; developed leagues come from the Phase 4 franchise runs)
+- New-league game study after R-1, R-3, R-6, R-7, R-8 and R-14: completion 52.2%, sacks 3.2% of dropbacks, interceptions 1.1%. The provisional targets are 58–62% and 4–6%.
+- The R-3 calibration shows abilities taking 4.7 points of completion (59.7% off against 55.0% on).
+- Sacks rose from 2.7% to 3.2%, from the R-1 rush and the R-8 blitz variety. No probability was changed to meet the targets (the brief: no arbitrary forcing). The decision waits for the developed-league numbers.
+- R-13: field goals 77.0% (audit 75.4%) and extra points 84.1% (83.6%). Kicking is unchanged; monitored only.
+
+## Phase 4
+### R-4: AI development by difficulty (`DIFFICULTY.aiDev`)
+- The existing system was investigated first. AI XP comes from `afterGame` and `practiceAfterGame`, both called with `xpScale = 1`. The old decision-C slowdown was retired in N7f.
+- Founding quality (−4 / −1 / +3) and IQ (0.6 / 1 / 1.5) were the only differences, and development levelled every league by season 5 (audit F-1).
+- `aiAfterGame` now passes the difficulty's `aiDev`. It is the same for every AI club: no standing-based rubber-banding, no cap room, no in-game bonus.
+- First values (PROVISIONAL): Rookie 0.85, Pro 1, All-Star 1.15. Being calibrated on the standard benchmark (`tools/balance-compare.mjs --mode=persistent`: hands-off owner, board reset; seeds 1–4 × 8 seasons).
