@@ -27,8 +27,20 @@ const RULES = {
       "if (!f.status || !STEALABLE.includes(f.status.id)) return null;\n      if (me.status) { self.state.used = true; api.activate(self, 'eclipse strips ' + f.status.id, { targetId: foeId }); api.removeStatus(self, foeId, 'stripped'); api.executed(self); return { kind: 'done' }; }"]],
   },
 };
+// CLASH_DISABLE=family[,family]: that family's Clash contract registers with NO hooks (initBattle and values kept), so it never acts
+// and always uses the ordinary attack, while every other monster keeps its ability. Comparing a run with it against the shipped run on
+// the same seeds isolates that ability's own contribution (the audit's on/off effect also switches every other monster's ability).
+const DISABLE = (process.env.CLASH_DISABLE || '').split(',').filter(Boolean);
 export async function load(url, context, next) {
   const r = await next(url, context);
+  const dm = /\/src\/clash\/abilities\/([a-z0-9_]+)\.js$/.exec(url);
+  if (dm && DISABLE.includes(dm[1])) {
+    let src = typeof r.source === 'string' ? r.source : Buffer.from(r.source).toString('utf8');
+    src = sub(src, 'export default registerClashAbility({', 'export default registerClashAbility(__noHooks({', dm[1]);
+    const end = src.lastIndexOf('});'); if (end < 0) throw new Error(`clash-variant-hooks: no module end in ${dm[1]}`);
+    src = src.slice(0, end) + '}));\nfunction __noHooks(m) { return { ...m, hooks: {} }; }\n' + src.slice(end + 3);
+    return { ...r, source: src, shortCircuit: true };
+  }
   const m = /\/src\/clash\/abilities\/(tempestra|glacivern|nyxshade|elderoot)\.js$/.exec(url);
   if (!V || !m || !ONLY.includes(m[1]) || !RULES[V]?.[m[1]]) return r;
   let src = typeof r.source === 'string' ? r.source : Buffer.from(r.source).toString('utf8');

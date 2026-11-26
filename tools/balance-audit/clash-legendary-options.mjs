@@ -15,7 +15,10 @@
 import { writeFileSync } from 'node:fs';
 import { register } from 'node:module';
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
-if (args.variant) { process.env.CLASH_VARIANT = String(args.variant); register('./clash-variant-hooks.mjs', import.meta.url); }
+// --variant=X: the focus family's own ability disabled (CLASH_DISABLE), one family per process run, so the paired comparison with
+// the shipped run isolates that ability. With --variant=X the tool takes exactly one --only family.
+if (args.variant === 'X') { const fams = String(args.only || '').split(',').filter(Boolean); if (fams.length !== 1) { console.error('--variant=X takes exactly one --only family'); process.exit(2); } process.env.CLASH_DISABLE = fams[0]; register('./clash-variant-hooks.mjs', import.meta.url); }
+else if (args.variant) { process.env.CLASH_VARIANT = String(args.variant); register('./clash-variant-hooks.mjs', import.meta.url); }
 const { simulateClashT8 } = await import('../../src/clash/t8/index.js');
 const { FAMILIES, formsOf, abilityById } = await import('../../src/data/beast-dex.js');
 const { generateMonster } = await import('../../src/data/monsters.js');
