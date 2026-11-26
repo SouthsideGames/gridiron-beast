@@ -33,8 +33,10 @@ const eligible = (c, year, inducted) =>
 //               against kickers and linemen, never against a quarterback's yardage
 //   longevity   seasons on record and games played, each with a ceiling
 //   titles      a small bonus with a ceiling
+/** Follow-up A-2: STBOY, Golden Boot and Return King can reward the same season's special-teams play: per season only the best counts. */
+const ST_AWARDS = new Set(['stboy', 'gboot', 'rking']);
 export const HALL_CASE = Object.freeze({
-  award: Object.freeze({ mvp: 30, opoy: 22, dpoy: 22, smoy: 12, oroy: 8, droy: 8, stboy: 8, cboy: 6, mib: 4, iron: 4 }), awardOther: 14, // R-5: the new awards weigh less than the majors
+  award: Object.freeze({ mvp: 30, opoy: 22, dpoy: 22, smoy: 12, oroy: 8, droy: 8, stboy: 8, cboy: 6, mib: 4, iron: 4, gboot: 5, rking: 5 }), awardOther: 14, // R-5: the new awards weigh less than the majors; A-2: Golden Boot and Return King 5, below STBOY
   record: Object.freeze({ season: 10, game: 5 }), recordOther: 7, recordCap: 30,
   production: 40, productionPeers: 8, best: Object.freeze([16, 8]), bestPeers: 10,
   // games: set for nine-game seasons as one point per 16 games up to 160 (owner 2026-11-12); scaled to 14-game seasons by 14 / 9
@@ -157,11 +159,12 @@ export function monsterHofInductees(history = []) {
 
 /** The detail of a Hall case, read from a preserved career record: which awards, which kind of records, and the career's output. */
 export function caseFacts(stub) {
-  const awardsBy = {}; const recordsBy = {};
+  const awardsBy = {}; const recordsBy = {}; const stBest = {}; // A-2: one season's special-teams honours count once, at the highest weight
   for (const e of mergeHonours(stub?.careerHonours, stub?.ev)) { // Decision E: a legend's ledger, and the timeline of a legend preserved by an older save
-    if (e?.t === 'award') { const k = String(e.k || '').split(':')[1] || e.x?.award || 'other'; awardsBy[k] = (awardsBy[k] || 0) + 1; }
+    if (e?.t === 'award') { const k = String(e.k || '').split(':')[1] || e.x?.award || 'other'; if (ST_AWARDS.has(k)) { const y = e.y ?? String(e.k || '').split(':')[2]; const w = HALL_CASE.award[k] ?? 0; if (!(stBest[y]?.w >= w)) stBest[y] = { k, w }; continue; } awardsBy[k] = (awardsBy[k] || 0) + 1; }
     else if (e?.t === 'record') { const k = e.x?.scope || String(e.k || '').split(':')[1] || 'other'; recordsBy[k] = (recordsBy[k] || 0) + 1; }
   }
+  for (const { k } of Object.values(stBest)) awardsBy[k] = (awardsBy[k] || 0) + 1;
   return { awardsBy, recordsBy, prod: Math.round(careerProduction(stub?.position, stub?.career || {})) };
 }
 
