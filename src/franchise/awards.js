@@ -76,11 +76,12 @@ export const MVP_RESPONSIBILITY = Object.freeze({ QB: 1.35, RB: 1.0, WR: 1.0, TE
 const COMPONENT_LABEL = { volume: 'production', efficiency: 'efficiency', impact: 'impact', passRush: 'pass rush', takeaways: 'takeaways', coverage: 'coverage', runDefense: 'run defense' };
 
 /** z-score of fn within each position group of rows. */
-/** A total standardised within each position group of `rows` (or within `rows` as one group when `byPosition` is false), capped at +3 SD. */
+/** A total standardised within each position group of `rows` (or within `rows` as one group when `byPosition` is false). Not capped
+ *  again: its components already are, and a second cap at +3 made leaders tie, which the production tie-break then gave to linemen. */
 function zTotal(rows, fn, byPosition = true) {
   const by = {}; for (const r of rows) (by[byPosition ? r.position : '*'] ||= []).push(fn(r));
   const st = Object.fromEntries(Object.entries(by).map(([p, v]) => { const m = v.reduce((a, b) => a + b, 0) / v.length; const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length); return [p, { m, sd }]; }));
-  return (r) => { const s = st[byPosition ? r.position : '*']; if (!s || s.sd < 1e-6) return 0; return Math.min(3, (fn(r) - s.m) / s.sd); };
+  return (r) => { const s = st[byPosition ? r.position : '*']; if (!s || s.sd < 1e-6) return 0; return (fn(r) - s.m) / s.sd; };
 }
 function zWithin(rows, fn, cap = false) {
   const by = {}; for (const r of rows) (by[r.position] ||= []).push(fn(r));
