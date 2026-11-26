@@ -499,7 +499,7 @@ Owner's playtest round 3 found career stats at zero for a 320-yard quarterback: 
 
 The owner's full-season report. All LOCKED unless marked.
 
-* **17.2 Package rule and forfeits.** *(Superseded: §59.1 removed secondary positions, and §61.4 adds last-resort emergency positions for base slots.)* A depth-chart slot may be filled only by a monster whose primary or secondary position matches it (`SECONDARY_ELIGIBILITY`): a healthy reserve first, else a base starter who sits out in the packages that use the slot (SS ← LB2, DL3 ← LB2/FS, WR3 ← TE, C ← WR2). Base starters are filled across every group before package slots. A package slot nobody legal can fill makes every play using that package unavailable (greyed in the game plan and the match, never called by Auto or the AI). A game is a **forfeit** (0–21 loss, no stats, no XP, in the standings) only when the base seven or the kicker cannot be fielded legally, or every play in a side's plan needs a package that cannot be fielded. Out-of-position monsters carry **1.75×** injury risk in games and practice, stated on the assign screen.
+* **17.2 Package rule and forfeits.** *(Superseded: §59.1 removed secondary positions, and §61.4 adds last-resort emergency positions for base slots.)* A depth-chart slot may be filled only by a monster whose primary or secondary position matches it (`SECONDARY_ELIGIBILITY`): a healthy reserve first, else a base starter who sits out in the packages that use the slot (SS ← LB2, DL3 ← LB2/FS, WR3 ← TE, C ← WR2). Base starters are filled across every group before package slots. A package slot nobody legal can fill makes every play using that package unavailable (greyed in the game plan and the match, never called by Auto or the AI). A game is a **forfeit** (0–21 loss, no stats, no XP, in the standings) only when the base seven *(§61.13.3: no longer the kicker; a club with no available kicker plays without kicks)* cannot be fielded legally, or every play in a side's plan needs a package that cannot be fielded. Out-of-position monsters carry **1.75×** injury risk in games and practice, stated on the assign screen.
 * **17.3 Attribute points.** Level-ups keep the automatic +1s and bank **2 points** (`POINTS_PER_LEVEL`) the owner spends on the monster card, capped by potential, **only on an attribute that helps the monster's position** (§8.2; revised 2026-10-21, it was any attribute). A setting lets the trainer spend them. AI monsters regenerate each season (no points to spend).
 * **17.4 The board.** *(Forecast, goals and dismissal rules revised 2026-10-22: see §29.2, which governs where it differs from this paragraph.)* Before each season (and at creation) the commissioner offers three goals scaled to the preseason forecast — safe (win N, never more than 7 of 9 so a contender's safe goal stays easier than the title), medium (playoffs, or badges when the forecast is poor), stretch (the Beast Bowl, worth +2). Winning the Beast Bowl meets whatever goal was set: the champion is never fired. One commitment per season, settled at season end into **board confidence**: +1 per goal met (+2 title), −1 per miss; a met goal also lifts any deficit to 0 and funds one extra prospect every Monday next season. At −1 the owner is on the **hot seat** (rival GM needles, the postseason story event fires even on a winning record); at −2 the board **fires** the owner: the franchise ends (a Hall of Fame card only if already eligible). Nothing else in the game can end a franchise. Currency chosen so goals do not pile onto the cap (already four features) or the dex.
 * **17.5 Season flow.** When the playoffs are drawn: a **season recap** (record, standing, club leaders, badges, the goal, the league awards, and the playoff announcement with seed and first opponent, or "missed"). Awards news lands at that moment. An eliminated or non-qualified owner **watches the bracket** round by round (results sheet per round) or skips to the offseason. When the season ends: **how we finished** (elimination round or title, playoff record, board verdict, Hall of Fame progress, the awards book). The HQ button reads *Continue to the offseason*.
@@ -4993,8 +4993,8 @@ position is left (injuries, an emptied group).
   quality (−4 / −1 / +3) and coach IQ (0.6 / 1 / 1.5) are unchanged.
 - Development is bounded by each monster's attribute ceilings, so the rate mainly sets how soon a league reaches them.
 - **Gym Leader clubs** keep their designed advantages: tier growth, an ageless signature legendary and coach IQ +0.2. On Rookie they
-  are founded and resupplied at Pro quality (`difficultyQuality`), which the slower Rookie rate makes relatively larger. That
-  interaction is reported for an owner decision and is not changed here.
+  were founded and resupplied at Pro quality (`difficultyQuality`); **superseded by §61.13.1** (owner, 2026-11-26): on every
+  difficulty a gym follows that difficulty's founding and replenishment quality.
 
 ### 61.8 Awards (R-5; replaces the names in §16.4, the Task 10 MVP rule and §60.9)
 - **Names:** Most Valuable Beast (MVB), Offensive Beast of the Year (OBOY), Defensive Beast of the Year (DBOY), Signature Beast of the
@@ -5014,6 +5014,7 @@ position is left (injuries, an emptied group).
   lower weights (STBOY 8, CBOY 6, MIB 4, IRON 4, against 22–30 for the majors). The owner's Hall of Fame checklist still counts only the
   original seven awards.
 - GM of the Year was not added: AI clubs have no general manager to compare.
+- **Golden Boot and Return King:** added by §61.13.2.
 
 ### 61.9 Salaries and trade values (R-9, R-16)
 - **Salary by overall** (`salaryForOvr`): 18,000 + 280 × OVR up to OVR 70 (unchanged), plus 90 × (OVR − 70)² above it. So 80 costs
@@ -5057,6 +5058,56 @@ screens (reviewers, labs) and the frozen historical Clash move tables are unchan
   below the middle and followed up and down the field during the play. Pressing again eases back out. The play-calling view is the
   furthest out it goes. The choice is remembered (`settings.fieldZoom`). In Auto, Auto's own camera applies and the button is hidden.
   Presentation only: a crop of the drawn field (`ZoomCrop`, `src/ui/match-camera.js`).
+
+### 61.13 Follow-up implementations (owner brief "Final Balance Calibration and Follow-Up", 2026-11-26)
+#### 61.13.1 Rookie Gym Leader quality (A-1; amends §61.7 and Task 8 D7)
+- `difficultyQuality(D, gym)` returns the difficulty's own quality for every club, gym or not. On Rookie, gym clubs are founded and
+  resupplied (generated arrivals and replenishment) at Rookie quality, as ordinary Rookie clubs are. Pro and All-Star are unchanged
+  (gyms already used those difficulties' quality).
+- Gyms keep their designed advantages (tier growth, the ageless signature legendary, coach IQ +0.2). No Rookie attribute ceiling exists
+  or was added; the AI development rate stays 0.6 / 1.0 / 1.5.
+
+#### 61.13.2 Golden Boot and Return King (A-2; adds to §61.8)
+- **Golden Boot (BOOT, save key `gboot`):** the best kicker. Field-goal points above expectation per attempt (55%): each distance band's
+  makes (under 30, 30s, 40s, 50+) against the league's make rate in that band, times 3, divided by attempts — so a long make is worth
+  more than a chip shot and a miss from 50+ costs less than one from 25. Longest make 15%, extra-point accuracy 15% (with at least five
+  attempts), kicking points per game 15%. Each component is standardised within the pool. Eligible: the season workload gate and at
+  least 0.7 field-goal attempts per week of the season.
+- **Return King (RKING, save key `rking`):** the best return specialist. Yards per return 45%, return yards per game 20%, return
+  touchdowns 20%, longest return 15%, standardised within the pool. Eligible: the workload gate and at least 0.75 kick returns per week.
+- Neither rewards volume alone: each award's largest component is per attempt or per return. Punting is not used (only the punt count
+  is recorded, not distance), and return fumbles and per-return consistency are not recorded.
+- **STBOY stays** the overall special-teams award. In Hall of Fame voting the three special-teams honours do not stack: in a season only
+  the highest-weighted of STBOY (8), Golden Boot (5) and Return King (5) counts (`ST_AWARDS`). The other honours are unaffected.
+- Shown wherever the other honours are: the awards hub and season review, trophy shelves and Career Profiles (🥾 and 👑), Career
+  Timelines, League News and the season archive. Older seasons without them read as an empty race.
+
+#### 61.13.3 No available kicker (A-3; amends §17.2 and §61.4)
+- A kicker is available when the club's K is on the field and not injured (`kickerAvailable`). There is still **no emergency kicker**:
+  the emergency-position table is unchanged and no position lists K as its emergency position.
+- Without an available kicker:
+  - **no field goal, punt or extra-point kick**: on fourth down the offence goes for it (human and AI alike);
+  - **after a touchdown the try is a two-point conversion**;
+  - **kickoffs and free kicks are not kicked** (the opening kickoff, the second-half kickoff, kickoffs after scores, a free kick after a
+    safety, and an onside attempt): the receiving team starts first and 10 at its own 20. No time runs, no random draw is used and no
+    kicking, return or tackle statistic is recorded (`noKickerRestart`; log line `sim.no_kicker_restart`).
+- A missing kicker alone is **not a forfeit** (`forfeitProblems` excludes K). K remains a roster need and the AI keeps signing kickers.
+- Kicking returns as soon as a kicker is available again. A K covering QB in an emergency keeps kicking while healthy; if he is hurt,
+  kicking stops until a kicker is available.
+- **Roster rule (reported, not changed):** the offseason lineup gate (`lineupGate`) still requires a K before the season can continue.
+  That gate is a roster-management rule, separate from game legality; changing it needs an owner decision.
+- UI: the match screen shows "No available kicker: field goals and punts unavailable.", "No available kicker: two-point conversion
+  required." or "No available kicker: the opponent takes possession at its own 20-yard line." in place of the kick buttons, and the
+  lineup warning names the missing kicker.
+- Kicking accuracy is unchanged.
+
+#### 61.13.4 Scheme-fit thresholds (A-4)
+- The 27 scheme-fit thresholds were derived on every load by generating sample monsters (about 1.5 s on a phone, part of the slow
+  reopen). They are now a fixed table, `FIT_THRESHOLD_TABLE` in `src/data/monsters.js`, between generator markers. The values are the
+  derivation's exactly; `deriveFitThresholds()` keeps the derivation, and a test checks the table equals it key for key (and that
+  deriving does not move the random streams of generation or scheme fit).
+- Regenerate after a change to monster generation: `node tools/fit-thresholds.mjs --write` (without `--write` it checks and exits 1 if
+  the table is stale). The test fails if the table is not regenerated.
 
 ### 61.12 Validation (measured 2026-11-26; details in `reports/balance-impl/FINAL_REPORT.md`)
 - **Whole suite:** fast tier 2,263 of 2,263; simulation tier 310 of 310 after three set-up updates that follow §61.3–61.4.
