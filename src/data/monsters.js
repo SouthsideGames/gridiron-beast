@@ -3,8 +3,8 @@ import { individualName, catalogueName } from './individual-names.js';
 // generation and OVR. Everything here feeds the simulation (GDD §5.1).
 
 import { assignAmbition } from '../franchise/ambition.js';
-import { ATTRIBUTES, POSITION_WEIGHTS, CLASH_POSITION_WEIGHTS } from './personnel.js';
-export { CLASH_POSITION_WEIGHTS };
+import { ATTRIBUTES, POSITION_WEIGHTS, CLASH_POSITION_WEIGHTS, BASE_POSITION_WEIGHTS } from './personnel.js';
+export { CLASH_POSITION_WEIGHTS, BASE_POSITION_WEIGHTS };
 import { createRng, hashString } from '../core/rng.js';
 import { attributeHelps, ATTR_NAME, POSITION_NAME } from './stat-guide.js';
 import { SPECIES_DEX, RARITIES, ELEMENT_REGIONS, TRAITS } from './species.js';

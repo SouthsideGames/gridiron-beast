@@ -310,3 +310,8 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - Top speed slope 4.1 → 3.5 yd/s across the Speed range (`SPEED_SLOPE`, `speedCurve`), pivoting on Speed 50 (7.47 yd/s, unchanged).
   - Speed 30 goes from 6.65 to 6.76 yd/s; Speed 95 from 9.33 to 9.06.
   - Under test: the roster strategy, then a game study and the Speed sweep, to check that Speed stays viable.
+- **Generation kept stable.** Monster generation selected and developed candidates on the overall (`t8/selection.js` METRICS and the prior-career allocation in `t8/career.js`), so the new weights changed which monsters every seed generates. That made 4 Clash tests fail, on seeded fixtures, and would have invalidated the generation calibrations (CALIBRATION, HISTORY_REFERENCE).
+  - Generation now uses `BASE_POSITION_WEIGHTS` (the pre-audit weights; `CLASH_POSITION_WEIGHTS` is the same table).
+  - Live play (the displayed overall, salary, AI training) uses the new weights.
+  - 3 of the 4 failures cleared. The fourth was R-10 Foresight: Eclipse Call acts from reserve, so the gate now looks at every living enemy (active or reserve). Effect −3.1 (4,000 battles).
+- **R-2 trial 3 result (speed slope 3.5):** the speed strategy fell from +3.17 to **+0.06** (standard error 0.90; 45.3% wins); strength −0.39 (was −2.29). Speed is no longer an exploit at constant payroll. Game-level and sweep checks next.

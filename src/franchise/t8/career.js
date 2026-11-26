@@ -3,14 +3,14 @@
 import * as F from '../../core/fraction.js';
 import { activityTraining, offseasonPoints } from './awards.js';
 import { ATTRIBUTES, RULES } from '../../data/beast-dex.js';
-import { POSITION_WEIGHTS } from '../../data/personnel.js';
+import { POSITION_WEIGHTS, BASE_POSITION_WEIGHTS } from '../../data/personnel.js';
 import { CURVE, trueOnset, technicalOffset, isPhysical, physLoss, techLoss, drawLoss, ATTRIBUTE_FLOOR, peakWindowAge } from '../../data/aging.js';
 import { addLevelXp, addTrainingProgress, addBankedPoints, invest, trainingCost, evolve, effectiveCostNumber } from './progression.js';
 
 /** Weight of an attribute for AI and auto allocation (spec §4; corrected per owner instruction 2026-11-07 10:39). */
 export const ALLOCATION_TIER = Object.freeze({ approvedNonOvrUse: 0.5, apexUnusedAtPosition: 0.2 });
-export function allocationWeight(d, position, a) {
-  const ovr = (POSITION_WEIGHTS[position] || POSITION_WEIGHTS.WR)[a];
+export function allocationWeight(d, position, a, W = POSITION_WEIGHTS) {
+  const ovr = (W[position] || W.WR)[a];
   if (ovr) return ovr;                                         // positional value first
   if (RULES.attributeRoles[position]?.[a]) return ALLOCATION_TIER.approvedNonOvrUse; // approved non-OVR use (Appendix C "Active")
   return d.apex ? ALLOCATION_TIER.apexUnusedAtPosition : 0;   // "Not used" at the position: Apex only, so all 12 can reach 99
@@ -31,10 +31,10 @@ export function allocationWeight(d, position, a) {
  * those attributes ahead of the rest. Only attributes that count toward the position's OVR (POSITION_WEIGHTS) can be ranked first, so
  * the identity never brings in an attribute the approved policy would not train; among them, and then among the rest, the score
  * above decides as before. The banked points spent are the same. */
-export function allocateTraining(d, m, { first = null } = {}) {
-  const spent = []; const pos = POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR;
+export function allocateTraining(d, m, { first = null, weights: W = POSITION_WEIGHTS } = {}) {
+  const spent = []; const pos = W[m.position] || W.WR;
   const firsts = first?.length ? new Set(first.filter((a) => pos[a] > 0)) : null;
-  const weights = ATTRIBUTES.map((a) => allocationWeight(d, m.position, a)); // fixed for the call (position and Apex do not change)
+  const weights = ATTRIBUTES.map((a) => allocationWeight(d, m.position, a, W)); // fixed for the call (position and Apex do not change)
   while (F.cmp(d.bank, F.ZERO) > 0) {
     let best = null, bestScore = 0, bestTier = 0;
     const probe = { ...m, attributes: d.current }; // as trainingCost builds it; rebuilt after every invest
@@ -110,8 +110,8 @@ export function simulateHistory(rng, d, m, { seasons, profile = 'starter', xpMul
       evolve(d);
     }
     for (let c = 0; c < clashes; c++) { addLevelXp(d, Math.round(25 * xpMultiplier)); addTrainingProgress(d, activityTraining(d, F.frac(1, 4))); evolve(d); }
-    allocateTraining(d, m);
-    addBankedPoints(d, offseasonPoints(d)); allocateTraining(d, m);
+    allocateTraining(d, m, { weights: BASE_POSITION_WEIGHTS }); // generation's prior career: the pre-audit weights (personnel.js)
+    addBankedPoints(d, offseasonPoints(d)); allocateTraining(d, m, { weights: BASE_POSITION_WEIGHTS });
     if (!d.apex) m.age += 1;
     m.yearsPro = (m.yearsPro || 0) + 1;
     applyDecline(d, m, rng);

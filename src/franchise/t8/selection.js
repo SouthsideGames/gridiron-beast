@@ -2,7 +2,7 @@
 // switch calls it from every generation channel. Never alters an individual's ratings or ceilings.
 import { generateIndividual, APEX_CHANCE } from './progression.js';
 import { formById } from '../../data/beast-dex.js';
-import { overall } from '../../data/monsters.js';
+import { overall, BASE_POSITION_WEIGHTS } from '../../data/monsters.js';
 import { createRng, hashString } from '../../core/rng.js';
 import { simulateHistory } from './career.js';
 import { NEUTRAL_TEMPERS } from '../../data/temper.js';
@@ -21,8 +21,8 @@ export const targetPercentile = (quality, c = CALIBRATION) => Math.max(c.min, Ma
 /** Selection metrics: computed from level-1 ratings or ceilings only, so Temper (training efficiency) cannot bias selection.
  *  Post-history selection (below) applies `current` after a career evaluated under a neutral Temper, for the same reason. */
 export const METRICS = Object.freeze({
-  current: (d, position) => overall(d.current, position),
-  potential: (d, position) => overall(d.potential, position),
+  current: (d, position) => overall(d.current, position, BASE_POSITION_WEIGHTS), // balance audit 2026-11-25: generation keeps the pre-audit
+  potential: (d, position) => overall(d.potential, position, BASE_POSITION_WEIGHTS), // weights, so every seed generates the same monsters
 });
 
 const REF = new Map();

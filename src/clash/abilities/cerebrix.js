@@ -13,8 +13,8 @@ import { byTier, BENEFICIAL } from './util.js';
 import { E as $E } from '../../core/english.js';
 
 const TURNS = [2, 2, 3, 3]; const CLOCK = 'PSY-03-C:mirror';
-// R-10 (balance audit, 2026-11-25): Cerebrix prepares the mirror only against an active foe whose Clash ability applies a harmful
-// status to its target; against anyone else it attacks normally and keeps the once-use. Measured over 1,500 random 3 v 3 battles,
+// R-10 (balance audit, 2026-11-25): Cerebrix prepares the mirror only while a living enemy (active or in reserve) has a Clash ability
+// that applies a harmful status to its target; otherwise it attacks normally and keeps the once-use. Measured over 1,500 random 3 v 3 battles,
 // every ability-applied harmful status came from these six families (Downdraft, Eclipse Call, Dragon Roar, Faultline, Mind Game,
 // Cold Welcome); before, Cerebrix spent its action on a mirror that almost never had anything to turn back (−6.2 points in teams,
 // −30 in isolation, where no foe has an ability).
@@ -27,7 +27,7 @@ export default registerClashAbility({
   hooks: {
     chooseAction(api, self, { foeId } = {}) {
       if (self.state.used) return null;
-      const foe = foeId ? api.get(foeId) : null; if (!foe || !STATUS_SOURCES.includes(foe.species)) return null; // R-10: nothing to mirror: attack, keep the use
+      if (!api.enemies(self).some((e) => STATUS_SOURCES.includes(e.species))) return null; // R-10: no living enemy (active or reserve: Eclipse Call acts from reserve) can apply a status: attack, keep the use
       self.state.used = true; self.state.mirror = true; api.activate(self, `${$E('clashlog.psychic_mirror_for_owner_turns', { byTier: byTier(TURNS, self.tier) })}`); api.executed(self);
       api.durationClock(self, self.id, byTier(TURNS, self.tier), CLOCK);
       return { kind: 'done' };

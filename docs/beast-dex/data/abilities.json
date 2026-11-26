@@ -6655,13 +6655,13 @@
     "mode": "Beast Clash",
     "name": "Foresight",
     "category": "Signature action",
-    "activation": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only when the active foe's ability applies a harmful status (balance audit R-10, 2026-11-25; otherwise attack normally and keep the use). Once-use spent on preparation.",
+    "activation": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only while a living enemy's ability (active or reserve) applies a harmful status (balance audit R-10, 2026-11-25; otherwise attack normally and keep the use). Once-use spent on preparation.",
     "mechanic": "Foresight / Prevent incoming status and redirect one application to its caster with same strength and proposed duration. Caster ordinary status eligibility applies, with no second application accuracy roll. If caster cannot receive, incoming application still prevented and mirror consumed.",
     "sourceDesignStatus": "Approved design; implementation and interaction audit pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only when the active foe's ability applies a harmful status (balance audit R-10, 2026-11-25; otherwise attack normally and keep the use). Once-use spent on preparation.",
+        "rule": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only while a living enemy's ability (active or reserve) applies a harmful status (balance audit R-10, 2026-11-25; otherwise attack normally and keep the use). Once-use spent on preparation.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {

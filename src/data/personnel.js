@@ -88,10 +88,12 @@ export const emergencySources = (pos) => Object.keys(EMERGENCY_POSITION).filter(
  *  Balance audit 2026-11-25: R-17 adds Durability (it halves injury risk and sets Clash HP, but was in no overall): 1 for RB, OL, DL and
  *  LB (the most contact), 0.5 for QB, WR, TE, CB and S, 0.25 for K. R-2 prices DL and TE Speed at 2 (was 1): R-1 made the DL pass rush
  *  use Speed, and at constant payroll a fast lineup won 3.3 points a game because Speed was cheap in these overalls. */
-/** The position weights Beast Clash reads (combatant HP / attack / speed come from the overall on these). Balance audit 2026-11-25: the
- *  football overall changed (R-2 Speed, R-17 Durability); Beast Clash keeps the weights it was balanced and replay-fixed on, so every
- *  recorded battle and replay key plays exactly as before and Clash balance does not move with a football decision. */
-export const CLASH_POSITION_WEIGHTS = Object.freeze({
+/** The position weights before the balance audit (2026-11-25). Beast Clash reads them (combatant HP / attack / speed come from the overall
+ *  on these), and monster generation selects and develops its candidates on them (t8/selection.js, the prior-career simulation in
+ *  t8/career.js), so every recorded battle and replay key plays exactly as before, every seed generates the same monsters, and the
+ *  generation calibrations (CALIBRATION, HISTORY_REFERENCE) stay valid. The football overall (POSITION_WEIGHTS: R-2 Speed, R-17
+ *  Durability) is what the game shows, pays and trains by. */
+export const BASE_POSITION_WEIGHTS = Object.freeze({
   QB: { accuracy: 3, awareness: 3, arm: 2, agility: 1, speed: 1 },
   RB: { speed: 3, agility: 3, strength: 2, awareness: 2, catching: 1, blocking: 1 },
   WR: { speed: 3, catching: 3, agility: 2, awareness: 1, strength: 1 },
@@ -103,6 +105,7 @@ export const CLASH_POSITION_WEIGHTS = Object.freeze({
   S: { coverage: 2, awareness: 2, speed: 2, tackling: 2, catching: 1 },
   K: { kicking: 6, awareness: 1 },
 });
+export const CLASH_POSITION_WEIGHTS = BASE_POSITION_WEIGHTS;
 export const POSITION_WEIGHTS = Object.freeze({
   QB: { accuracy: 3, awareness: 3, arm: 2, agility: 1, speed: 1, durability: 0.5 },
   RB: { speed: 3, agility: 3, strength: 2, awareness: 2, catching: 1, blocking: 1, durability: 1 },
