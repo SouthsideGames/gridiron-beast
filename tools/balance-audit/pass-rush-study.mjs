@@ -5,10 +5,9 @@
 // frames).
 //
 //   node tools/balance-audit/pass-rush-study.mjs [--scenarios=avg,eliteOL,eliteDL,eliteQB,eliteRush,eliteAll] [--quality=58]
-//        [--elite=85] [--clubs=16] [--n=4] [--plays=K] [--defs=a,b] [--json=FILE]
+//        [--boost=20] [--clubs=16] [--n=4] [--plays=K] [--defs=a,b] [--json=FILE]
 //
-// Scenarios (offence O vs defence D, both generatedTeam(seed, quality); "elite X" = that group's monsters taken from the same seed's
-// club generated at --elite):
+// Scenarios (offence O vs defence D, both generatedTeam(seed, quality); "elite X" = the same monsters of that group with every attribute +--boost, capped at 99):
 //   avg        average v average            eliteOL    elite OL (LG, C, RG) v average DL
 //   eliteDL    average OL v elite DL         eliteQB    elite QB v average rush
 //   eliteRush  average QB v elite rush (DL + LB)            eliteAll   elite v elite (OL+QB v DL+LB)
@@ -25,23 +24,28 @@ const { simulatePlay } = await import(path.join(root, 'src/sim/engine.js'));
 const { PLAYS } = await import(path.join(root, 'src/data/playbook.js'));
 const { generatedTeam } = await import(path.join(root, 'src/franchise/roster.js'));
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? '1']; }));
-const Q = Number(args.quality) || 58, QE = Number(args.elite) || 85, C = Number(args.clubs) || 16, N = Number(args.n) || 4;
+const Q = Number(args.quality) || 58, C = Number(args.clubs) || 16, N = Number(args.n) || 4;
 const SCEN = String(args.scenarios || 'avg,eliteOL,eliteDL,eliteQB,eliteRush,eliteAll').split(',');
 const DEFS = args.defs ? String(args.defs).split(',') : ['cover_3', 'cover_2_zone', 'cover_4', 'cover_1', 'cover_2_man', 'tampa_2', 'zone_blitz', 'cover_0'];
 const allPass = Object.values(PLAYS).filter((p) => p.side === 'offense' && p.type === 'pass' && !(p.tags || []).some((t) => ['screen', 'legendary', 'desperation', 'two_minute'].includes(t)));
 const K = Number(args.plays) || 24; const step = Math.max(1, Math.floor(allPass.length / K));
 const PASSES = args.passes ? String(args.passes).split(',').map((id) => PLAYS[id]) : allPass.filter((_, i) => i % step === 0).slice(0, K);
 const OL = ['LG', 'C', 'RG'], QBS = ['QB'], DL = ['DL1', 'DL2', 'DL3'], LB = ['LB1', 'LB2'];
-const swap = (base, elite, slots) => { const x = { ...base }; for (const s of slots) if (elite[s]) x[s] = elite[s]; return x; };
+// generatedTeam clamps quality (the roster generator's post-history percentiles), so a quality-85 club is not elite. An "elite" group is
+// therefore the SAME monsters with every attribute raised by --boost (default 20) points, capped at 99: identical identity, type and
+// ability, only better ratings (an average developed DL at about 60 becomes about 80).
+const BOOST = Number(args.boost) || 20;
+const boosted = (m) => ({ ...m, attrs: Object.fromEntries(Object.entries(m.attrs).map(([k, v]) => [k, Math.min(99, v + BOOST)])) });
+const swap = (base, _unused, slots) => { const x = { ...base }; for (const s of slots) if (x[s]) x[s] = boosted(x[s]); return x; };
 function lineup(scen, i) {
   const o = generatedTeam(41000 + i, { id: 'o', name: 'O', quality: Q }), d = generatedTeam(42000 + i, { id: 'd', name: 'D', quality: Q });
-  const oe = generatedTeam(41000 + i, { id: 'o', name: 'O', quality: QE }), de = generatedTeam(42000 + i, { id: 'd', name: 'D', quality: QE });
+  const oe = null, de = null;
   let off = o.offense, def = d.defense;
-  if (scen === 'eliteOL') off = swap(off, oe.offense, OL);
-  if (scen === 'eliteDL') def = swap(def, de.defense, DL);
-  if (scen === 'eliteQB') off = swap(off, oe.offense, QBS);
-  if (scen === 'eliteRush') def = swap(def, de.defense, [...DL, ...LB]);
-  if (scen === 'eliteAll') { off = swap(off, oe.offense, [...OL, ...QBS]); def = swap(def, de.defense, [...DL, ...LB]); }
+  if (scen === 'eliteOL') off = swap(off, oe, OL);
+  if (scen === 'eliteDL') def = swap(def, de, DL);
+  if (scen === 'eliteQB') off = swap(off, oe, QBS);
+  if (scen === 'eliteRush') def = swap(def, de, [...DL, ...LB]);
+  if (scen === 'eliteAll') { off = swap(off, oe, [...OL, ...QBS]); def = swap(def, de, [...DL, ...LB]); }
   return { off, def };
 }
 const mean = (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : null);
@@ -87,6 +91,6 @@ function run(scen) {
     reasons: Object.fromEntries(Object.entries(A.reasons).map(([k, v]) => [k, pc(v, A.throws)])),
   };
 }
-const out = { tool: 'balance-audit/pass-rush-study', quality: Q, elite: QE, clubs: C, n: N, defs: DEFS, passes: PASSES.map((p) => p.id), results: [] };
+const out = { tool: 'balance-audit/pass-rush-study', quality: Q, boost: BOOST, clubs: C, n: N, defs: DEFS, passes: PASSES.map((p) => p.id), results: [] };
 for (const s of SCEN) { const r = run(s); out.results.push(r); console.log(JSON.stringify(r)); }
 if (args.json) fs.writeFileSync(String(args.json), JSON.stringify(out, null, 1));
