@@ -1,0 +1,66 @@
+{
+ "tool": "balance-audit/clash-focus",
+ "n": 4000,
+ "families": {
+  "boulderox": {
+   "family": "boulderox",
+   "ability": "Unbroken Charge",
+   "rarity": "uncommon",
+   "battles": 4000,
+   "winOnPct": 37.4,
+   "winOffPct": 38.2,
+   "abilityPts": -0.8,
+   "se": 1.1,
+   "exPerBattle": 0.19,
+   "noExecutionPct": 81.2
+  },
+  "cerebrix": {
+   "family": "cerebrix",
+   "ability": "Foresight",
+   "rarity": "uncommon",
+   "battles": 4000,
+   "winOnPct": 40.7,
+   "winOffPct": 43.7,
+   "abilityPts": -3,
+   "se": 1.1,
+   "exPerBattle": 0.16,
+   "noExecutionPct": 84.3
+  },
+  "icehorn": {
+   "family": "icehorn",
+   "ability": "Snowdrift Shelter",
+   "rarity": "common",
+   "battles": 4000,
+   "winOnPct": 38.3,
+   "winOffPct": 37.9,
+   "abilityPts": 0.3,
+   "se": 1.1,
+   "exPerBattle": 1.07,
+   "noExecutionPct": 8.4
+  },
+  "ashkit": {
+   "family": "ashkit",
+   "ability": "Cinder Clamp",
+   "rarity": "common",
+   "battles": 4000,
+   "winOnPct": 35,
+   "winOffPct": 36.6,
+   "abilityPts": -1.6,
+   "se": 1.1,
+   "exPerBattle": 1.16,
+   "noExecutionPct": 0.5
+  },
+  "titanolith": {
+   "family": "titanolith",
+   "ability": "Mountain Shelter",
+   "rarity": "legendary",
+   "battles": 4000,
+   "winOnPct": 84.3,
+   "winOffPct": 85.9,
+   "abilityPts": -1.6,
+   "se": 1.1,
+   "exPerBattle": 0.97,
+   "noExecutionPct": 2.6
+  }
+ }
+}

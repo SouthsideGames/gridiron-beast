@@ -199,3 +199,29 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
 
   - League: 12.90 points per team-game, completion 52.2%, 5.00 yards a carry, explosive runs 8.2% (audit 8.2%).
   - **fly_sweep (10.1 in games, 4.1 in the probe)** and **pistol_stretch (9.1)** now lead the run game in games. The gap between games and the probe means the AI's situational defence choice against them, not the play's geometry. Flagged for owner review, not changed.
+
+### R-10: Beast Clash abilities (`tools/balance-audit/clash-focus.mjs`)
+- The tool is study D (random 3 v 3 teams, last form, full mastery, on and off on the same seeds) with the focus family in every battle: 2,000 battles a family (standard error 1.6), or 4,000 (standard error 1.1).
+- Baseline, all 72 families (`r10/clash-focus-before.json`): mean ability effect +0.07, spread (SD) 4.8.
+- Changes (each family alone, `r10/clash-focus-after-fixed.json`, 4,000 battles):
+
+  | Ability | Before: effect / battles with no execution | After | Root cause and change |
+  |---|---|---|---|
+  | **Unbroken Charge** (boulderox) | −1.9 / 100% | −0.8 / 81% | Armed only by losing an action to Stunned, but in 1,500 random battles no harmful status ever reached it; all came from six families. It now also arms on a single hit of 30%+ of max HP that it survives. Once per Clash, same charge. |
+  | **Foresight** (cerebrix, Clash) | −9.8 / 0% | −3.0 / 84% | It always spent its action on a mirror that almost never had a status to turn back. It now prepares only against an active foe whose ability applies a harmful status (`STATUS_SOURCES`: Downdraft, Eclipse Call, Dragon Roar, Faultline, Mind Game, Cold Welcome); otherwise it attacks and keeps the use. |
+  | **Snowdrift Shelter** (icehorn) | −6.2 / 9% | +0.3 / 8% | It traded an attack for one halved enemy hit. The shelter now lasts three own turns (was one). Strength (50%), threshold and cooldown are unchanged. |
+  | Cinder Clamp (ashkit) | −0.5 | −1.6 (4,000) | **No change.** Neutral in teams within about 1.5 standard errors; the audit's −12.5 was the 1 v 1 isolation study. |
+  | Mountain Shelter (titanolith, legendary) | −1.7 | −1.6 | **No change**, neutral in teams. |
+
+- Dex contracts (`abilities.json`, family pages), log texts and review scenarios were updated. The Snowdrift review scenario now uses three turns and a foe that lets it run out; the Foresight scenarios use a status-source foe that spars. The Dex module was rebuilt. Clash ability tests: 257 of 259, then 0 failures after the scenario update (per-tier check: all 12 Snowdrift scenarios pass).
+- **Weak legendaries (not changed: an owner decision).** Each replaces Tempestra's, Glacivern's, Nyxshade's or Elderoot's attack with a once-per-Clash effect worth less than that attack:
+
+  | Ability | Effect | No execution |
+  |---|---|---|
+  | Eye of the Storm (tempestra) | −11.4 | 61.6% |
+  | Deep Winter (glacivern) | −9.6 | 97.2% (needs an enemy already under a harmful status) |
+  | Eclipse Theft (nyxshade) | −9.0 | 80.7% (needs a foe holding a benefit) |
+  | Root Communion (elderoot) | −8.9 | 26.4% (redistributes HP and gains none, at the cost of the attack) |
+
+  Fixing them means changing what four legendary signatures are (for example, cast in addition to the attack, or a stronger effect), so this is raised with the owner rather than done.
+- **Other idle abilities (90%+ of battles with no execution, unchanged):** stoneguard, ironjaw, voltfang, terrabull, rockram, voltfin, mossclaw, reefclaw, snowmoth, flicker, lumen. All are conditional triggers that the 3 v 3 format rarely creates (a status to redirect, a shield to break, a knockout to avenge); in teams their effect is within ±4. Deferred: each needs its own trigger redesign.

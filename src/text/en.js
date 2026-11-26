@@ -1412,7 +1412,7 @@ export default {
   'clashlog.is_below_hp_at_commit': '{name} is below {threshold}% HP at commit',
   'clashlog.conditional_attack': '{byTier}% conditional attack',
   'clashlog.radiant_pursuit': 'Radiant Pursuit',
-  'clashlog.shelter_guarded_50_through_the_next': 'shelter: Guarded 50% through the next own normal turn',
+  'clashlog.shelter_guarded_50_through_the_next': 'shelter: Guarded 50% through the next three own normal turns',
   'clashlog.core_turns_against_progression_at_this': 'Core {core} turns against Progression {ladder} at this tier',
   'clashlog.count_reset_the_empowered_attempt_awaits': 'count reset; the Empowered attempt awaits the duration ruling',
   'clashlog.self_empowered_for_owner_turns': { one: 'self Empowered +{byStage}% for {turns} owner turn', other: 'self Empowered +{byStage}% for {turns} owner turns' },

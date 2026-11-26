@@ -2814,13 +2814,13 @@
     "mode": "Beast Clash",
     "name": "Unbroken Charge",
     "category": "Stun-response special",
-    "activation": "Actually skip normal action due to Stunned",
-    "mechanic": "Stunned skipped action arms next performed normal-action undodgeable charge",
+    "activation": "Actually skip normal action due to Stunned, or take one hit of 30%+ max HP and stay up (balance audit R-10, 2026-11-25)",
+    "mechanic": "A Stunned skipped action or a heavy hit (30%+ max HP, survived) arms next performed normal-action undodgeable charge",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Actually losing a normal action to Stunned arms once-per-Clash charge. Merely receiving Stunned is not sufficient.",
+        "rule": "Actually losing a normal action to Stunned, or taking a single hit costing at least 30% of max HP and staying up (balance audit R-10, 2026-11-25: almost nothing applies Stunned in the Clash, so the charge never armed), arms once-per-Clash charge. Merely receiving Stunned is not sufficient.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3557,7 +3557,7 @@
     "name": "Snowdrift Shelter",
     "category": "Self Guarded preparation",
     "activation": "Ready source at <=50 percent HP and empty shared status slot",
-    "mechanic": "Sacrifice attack for one-next-owner-turn self Guarded shelter",
+    "mechanic": "Sacrifice attack for a three-owner-turn self Guarded shelter (balance audit R-10, 2026-11-25; was one turn)",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -3582,7 +3582,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Guarded lasts through NEXT owner normal turn and expires at that turn END. Setup turn excluded. On next turn emerge and perform ordinary legal action. Reserve pauses status and cooldown.",
+        "rule": "Guarded lasts through the NEXT THREE owner normal turns and expires at the third turn END (balance audit R-10, 2026-11-25; was one turn). Setup turn excluded. On those turns perform ordinary legal actions. Reserve pauses status and cooldown.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -6655,13 +6655,13 @@
     "mode": "Beast Clash",
     "name": "Foresight",
     "category": "Signature action",
-    "activation": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack. Once-use spent on preparation.",
+    "activation": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only when the active foe's ability applies a harmful status (balance audit R-10, 2026-11-25; otherwise attack normally and keep the use). Once-use spent on preparation.",
     "mechanic": "Foresight / Prevent incoming status and redirect one application to its caster with same strength and proposed duration. Caster ordinary status eligibility applies, with no second application accuracy roll. If caster cannot receive, incoming application still prevented and mirror consumed.",
     "sourceDesignStatus": "Approved design; implementation and interaction audit pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack. Once-use spent on preparation.",
+        "rule": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only when the active foe's ability applies a harmful status (balance audit R-10, 2026-11-25; otherwise attack normally and keep the use). Once-use spent on preparation.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
