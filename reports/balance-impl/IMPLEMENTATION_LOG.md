@@ -470,4 +470,4 @@ Each failure was reproduced on its own and bisected over the branch's commits (t
   - `task7-remediation` (R1 c): the constructed spare TE (seed 968) is rated 51 by the R-2/R-17 overall, below the pool rule's 52; seed 966 gives 52, so the scenario is the same.
   - `task8-abilities-fire-water` (Impact Pyre): after R-2, seed 5's natural drive hit 4th down on the creation play, and the turnover on downs cleared the zone (an approved rule). Snaps where he defends now start at 1st and 10 at the 35, as the test's lifetime plays already did.
   - Ball Clamp "jarred loose" review seeds (`review-texts.js`, docs/task8/REVIEWER_V2.md): fixed seeds found by an offline search for the first natural fumble roll; R-2/R-17 (27b46c9) moved the stream at mastery 1 and 2. Re-searched with the same method (seeds 1–3000): 432 and 153 (were 130); 968 and 57 unchanged.
-- The fast tier is rerun after these changes.
+- Rerun after these changes (2026-11-26, alone, 5,473 s): 2,263 tests, 2,263 pass, 0 fail.
