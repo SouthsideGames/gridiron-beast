@@ -368,7 +368,7 @@ Everything removed is kept in git history, and `reports/balance-audit/README.md`
 - Every study tool in `tools/balance-audit/` and `tools/lib/ability-strip.mjs`.
 - All regression tests, including the new `ability-strip` and `emergency-positions` tests.
 
-**Proposed after approval:** remove the intermediate evidence in `reports/balance-impl/` (`baseline/`, `phase3–5/`, `r0/`, `r1/`, `r4/`, `r10/`), keeping only this report, the log and `final/`.
+**Proposed after approval:** remove the intermediate evidence in `reports/balance-impl/` (`baseline/`, `phase3–5/`, `r0/`, `r1/`, `r4/`, `r10/`), keeping only this report, the log and `final/`. **Done in the follow-up (A-5, 2026-11-26):** removed; contents and the commit that holds them are listed in `followup/REPRODUCE.md`.
 
 **Remaining documentation concern.** `docs/task8/M6_STATUS.md` still says Task 8 "stays open". The GDD register now records that its benchmarks are superseded.
 
