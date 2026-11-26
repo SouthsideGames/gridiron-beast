@@ -365,6 +365,22 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
 - **300-game rerun** (`phase5/position-leverage-300.json`, bump 8, the final engine). Through the documented recipe it gives QB 1.34 · RB 1.54 · WR 1.14 · TE 1.21 · OL 0.65 · DL 1.05 · LB 0.91 · CB 1.09 · S 0.67 · K 1.07 (now: 1.37 · 1.6 · 1.01 · 1.45 · 0.63 · 0.86 · 1.02 · 1.21 · 0.9 · 0.79).
   - DL rises (the R-1 pass rush now uses DL Speed), as expected.
   - TE, S and K move by more than their noise allows a decision on: relative standard errors 0.86, 0.44 and 0.79 (the 2023 study's were 0.09–0.28 on 2,000 games). Not adopted yet; 700 more games (start 301) are running, to merge into 1,000.
+- **1,000 games** (`phase5/position-leverage-1000.json`: the 300 plus 700 from start 301, merged). Raw relative leverage QB 2.30 · RB 2.69 · WR 1.02 · TE 1.74 · OL 0.39 · DL 0.70 · LB 0.94 · CB 1.02 · S 0.56 · K 0.89; standard errors 0.15–0.47.
+  - **K:** kicking is untouched by the audit, so the 2,000-game study and the 1,000 new games are pooled by precision: 0.52 ± 0.17 (alone 0.89 ± 0.39, one standard deviation from the old 0.51).
+  - **Adopted** (`POSITION_LEVERAGE`, same recipe):
+
+    | | QB | RB | WR | TE | OL | DL | LB | CB | S | K |
+    |---|---|---|---|---|---|---|---|---|---|---|
+    | Before | 1.37 | 1.6 | 1.01 | 1.45 | 0.63 | 0.86 | 1.02 | 1.21 | 0.9 | 0.79 |
+    | After | 1.48 | 1.58 | 1.08 | 1.32 | 0.69 | 0.9 | 1.03 | 1.07 | 0.82 | 0.78 |
+
+  - Moves are small (at most 0.14), so a trade is repriced by a few percent at most. The trading tests pass (38).
+  - **Test change** (trading-second-pass, incoming offers): the fixture gap goes from 8 to 10. Bisected to the R-2/R-17 weights commit (27b46c9): the fixture rosters re-rate, the same mechanism as the earlier 6 → 8 drift.
+    - It is not a behaviour change: the owner's incoming calls in the 15-season seed-3 runs were 13 / 16 / 7 (Rookie / Pro / All-Star), against 19 / 9 / 6 in the audit.
+- **Fast-tier fixes after the UI phase:**
+  - The info-control test asserts the ⓘ's new place.
+  - Illegal-roster preset: with R-6, K covers QB, so the case now removes QB and K.
+  - Headline ratings skip Durability, so a kicker's stay Kicking and Awareness. The stat guide now lists Durability for K.
 - **Speed sweep after the slope** (`phase5/attr-sweep-n200.json`, Speed 30 / 65 / 95). Speed stays viable everywhere:
   - WR peak speed 7.0 / 8.0 / 9.2 yd/s (was 6.8 / 8.2 / 9.4); deep-ball yards 9.1 / 11.0 / 23.9;
   - CB completion allowed 40.5 / 29.5 / 26.5%;

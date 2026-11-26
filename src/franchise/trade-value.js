@@ -28,10 +28,16 @@ import { groupSuccession, successorShare } from './roster-plan.js';
  *      above the noise),
  *   2. taken at HALF STRENGTH (square root), because a price ratio of 9 : 1 between two positions is a rigid multiplier an owner
  *      could trade against, and one boost size in one engine is not a law of football (a judgement call, flagged for the owner),
- *   3. clamped to 0.6 – 1.6 (RB sits on the cap) so no position is worthless (kickers are 0.79) and none is a currency,
+ *   3. clamped to 0.6 – 1.6 (RB sits on the cap) so no position is worthless and none is a currency,
  *   4. rescaled so the slot-weighted mean is exactly 1: average prices do not move, only the shares between positions.
+ *
+ * Balance audit R-16 (2026-11-26): re-derived on the final balance engine with the same recipe, from 1,000 paired games at +8
+ * (reports/balance-impl/phase5/position-leverage-1000.json; raw relative QB 2.30 · RB 2.69 · WR 1.02 · TE 1.74 · OL 0.39 · DL 0.70 ·
+ * LB 0.94 · CB 1.02 · S 0.56, standard errors 0.15–0.47). K pools the 2,000 games above with the 1,000 new ones (kicking is untouched
+ * by the audit; 0.89 ± 0.39 alone, 0.52 ± 0.17 pooled). Before: QB 1.37 · RB 1.6 · WR 1.01 · TE 1.45 · OL 0.63 · DL 0.86 · LB 1.02 ·
+ * CB 1.21 · S 0.9 · K 0.79.
  */
-export const POSITION_LEVERAGE = Object.freeze({ QB: 1.37, RB: 1.6, WR: 1.01, TE: 1.45, OL: 0.63, DL: 0.86, LB: 1.02, CB: 1.21, S: 0.9, K: 0.79 });
+export const POSITION_LEVERAGE = Object.freeze({ QB: 1.48, RB: 1.58, WR: 1.08, TE: 1.32, OL: 0.69, DL: 0.9, LB: 1.03, CB: 1.07, S: 0.82, K: 0.78 });
 
 export const VALUE_PER_POINT = 4.2;     // value points per overall point above 50: the slope pickValue and the old playerValue share
 export const ROLE_SHARE = Object.freeze([1, 0.45, 0.15, 0.05]); // starter · first backup · second backup · the rest of the bench

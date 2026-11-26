@@ -193,7 +193,10 @@ test('incoming offers: deterministic, built from the club\'s roster, acceptable 
   // Task 8 M1 (fixture drift): quality is now a percentile target inside random Dex forms, so 55 vs 66 no longer makes the owner
   // thin and the club deep; made explicit: every owner monster GAP below as generated, every club monster GAP above. GAP 6 -> 8 on
   // 2026-11-08: post-history founding selection (N8b D1) changed the generated rosters and 6 no longer produced a call.
-  const GAP = 8;
+  // GAP 8 -> 10 on 2026-11-26 (balance audit R-2/R-17, owner-approved): Durability joined every overall and DL/TE Speed doubled,
+  // so the same fixture rosters re-rate and 8 no longer opens a gap a club acts on. Not a behaviour change: in the 15-season seed-3
+  // franchise runs the owner got 13 / 16 / 7 incoming calls (Rookie / Pro / All-Star), against 19 / 9 / 6 in the audit's runs.
+  const GAP = 10;
   for (const m of mine) { setOvr(m, Math.max(25, ovr(m) - GAP)); m.salary = salaryFor(m); } for (const m of theirs) { setOvr(m, Math.min(95, ovr(m) + GAP)); m.salary = salaryFor(m); }
   let seen = 0; const kinds = new Set();
   for (let k = 0; k < 80 && seen < 8; k++) {

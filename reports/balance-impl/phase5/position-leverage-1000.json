@@ -1,0 +1,112 @@
+{
+ "QB": {
+  "slots": 1,
+  "games": 1000,
+  "bump": 8,
+  "ovrGain": 7.97,
+  "marginPerGroup": 1.685,
+  "se": 0.342,
+  "winPctPerGroup": 6.3,
+  "marginPerOvrPerSlot": 0.2115,
+  "relative": 2.3
+ },
+ "RB": {
+  "slots": 1,
+  "games": 1000,
+  "bump": 8,
+  "ovrGain": 7.95,
+  "marginPerGroup": 1.971,
+  "se": 0.344,
+  "winPctPerGroup": 4.6,
+  "marginPerOvrPerSlot": 0.2479,
+  "relative": 2.69
+ },
+ "WR": {
+  "slots": 3,
+  "games": 1000,
+  "bump": 8,
+  "ovrGain": 7.96,
+  "marginPerGroup": 2.251,
+  "se": 0.361,
+  "winPctPerGroup": 7.5,
+  "marginPerOvrPerSlot": 0.0943,
+  "relative": 1.02
+ },
+ "TE": {
+  "slots": 1,
+  "games": 1000,
+  "bump": 8,
+  "ovrGain": 7.95,
+  "marginPerGroup": 1.274,
+  "se": 0.324,
+  "winPctPerGroup": 5.3,
+  "marginPerOvrPerSlot": 0.1602,
+  "relative": 1.74
+ },
+ "OL": {
+  "slots": 3,
+  "games": 1000,
+  "bump": 8,
+  "ovrGain": 7.95,
+  "marginPerGroup": 0.862,
+  "se": 0.344,
+  "winPctPerGroup": 3.4,
+  "marginPerOvrPerSlot": 0.0362,
+  "relative": 0.39
+ },
+ "DL": {
+  "slots": 3,
+  "games": 1000,
+  "bump": 8,
+  "ovrGain": 7.96,
+  "marginPerGroup": 1.531,
+  "se": 0.335,
+  "winPctPerGroup": 4.9,
+  "marginPerOvrPerSlot": 0.0641,
+  "relative": 0.7
+ },
+ "LB": {
+  "slots": 2,
+  "games": 1000,
+  "bump": 8,
+  "ovrGain": 7.97,
+  "marginPerGroup": 1.378,
+  "se": 0.345,
+  "winPctPerGroup": 5.2,
+  "marginPerOvrPerSlot": 0.0865,
+  "relative": 0.94
+ },
+ "CB": {
+  "slots": 2,
+  "games": 1000,
+  "bump": 8,
+  "ovrGain": 7.97,
+  "marginPerGroup": 1.489,
+  "se": 0.332,
+  "winPctPerGroup": 5.8,
+  "marginPerOvrPerSlot": 0.0935,
+  "relative": 1.02
+ },
+ "S": {
+  "slots": 2,
+  "games": 1000,
+  "bump": 8,
+  "ovrGain": 7.99,
+  "marginPerGroup": 0.827,
+  "se": 0.312,
+  "winPctPerGroup": 3,
+  "marginPerOvrPerSlot": 0.0518,
+  "relative": 0.56
+ },
+ "K": {
+  "slots": 1,
+  "games": 1000,
+  "bump": 8,
+  "ovrGain": 7.85,
+  "marginPerGroup": 0.646,
+  "se": 0.282,
+  "winPctPerGroup": 3.5,
+  "marginPerOvrPerSlot": 0.0823,
+  "relative": 0.89
+ }
+}
