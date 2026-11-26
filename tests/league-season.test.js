@@ -62,7 +62,11 @@ test('contracts: expiring starters and value re-sign at the ask, reserves walk t
   // Task 8 M1 (fixture drift): Dex individuals rate lower, so asks (18,000 + 280 × OVR) no longer reach the cap after re-signing,
   // and young reserves now nearly always carry upside (potential ≥ OVR + 5), so none walked. Made explicit: the below-median
   // reserves have no upside left (they walk), and the cap trim is exercised by a cap set just under the re-signed payroll.
-  const med = roster.map(monsterOverall).sort((a, b) => a - b)[Math.floor(roster.length / 2)];
+  // Balance audit R-2/R-17 (fixture drift, 2026-11-26): the new overall re-rates the roster, and with every below-median reserve forced
+  // to walk the club re-signed down to the roster floor (26), where a trim may not release anyone, so 'the cap trims' could not be
+  // exercised. The bottom quarter is forced instead: reserves still walk (59 on this seed) and the trim still has room to act. Every
+  // assertion is unchanged.
+  const med = roster.map(monsterOverall).sort((a, b) => a - b)[Math.floor(roster.length / 4)];
   for (const m of roster) if (!R.isProtected(m)) { m.contract = { signed: 0, ends: year, years: 2 }; m.salary = m.salary * 1.6; if (monsterOverall(m) < med) m.potential = monsterOverall(m); } // everyone expiring
   const prot1 = roster.find(R.isProtected); if (prot1) prot1.salary = 2_000_000;
   const out = S.leagueContracts(f, { year, cap }); assert.ok(out.resigned > 0 && out.walked > 0);
