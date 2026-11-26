@@ -667,6 +667,10 @@ html[data-reduced-motion="1"] .bar > i, html[data-reduced-motion="1"] .btn, html
 
 /* ---- the final whistle */
 .final-hero { text-align: center; padding: 10px 8px 12px; border: 2px solid var(--line); border-radius: var(--r); margin-bottom: var(--s3); background: linear-gradient(180deg, rgba(255,255,255,.03), transparent); }
+/* Play test 2026-11-26: the result opens at once; this line shows while the week settles (finishGame). */
+.final-pending { margin: var(--s3) 0; animation: final-pending-pulse 1.2s ease-in-out infinite; }
+@keyframes final-pending-pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .final-pending { animation: none; } }
 .final-hero.won { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(250,204,21,.25) inset; }
 .final-hero.lost { border-color: #5a2b2b; }
 .final-hero.playoff { background: linear-gradient(180deg, rgba(245,197,66,.12), transparent); }

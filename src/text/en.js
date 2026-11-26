@@ -5352,6 +5352,7 @@ export default {
   'match.fumble': 'FUMBLE!',
   'match.match': 'Match',
   'match.final_3': 'Final',
+  'match.wrapping_up_week': 'Wrapping up the week…',
   'match.try': 'Try',
   'match.kickoff': 'Kickoff',
   'match.b_type_advantage': '▲</b> type advantage',

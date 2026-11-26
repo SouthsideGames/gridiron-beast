@@ -1143,12 +1143,24 @@ export function registerMatchScreens(Router, app) {
 
   function finishGame(f) {
     if (!f.game?.state?.finished || finishGame.busy) return; // protect against a second tap
+    if (finishGame.pendingFor === f.game) return; // already settling
     if (f.guide?.enabled) { f.guide.evidence.gameFinished = true; app.save(); }
     finishGame.busy = true; setTimeout(() => { finishGame.busy = false; }, 0);
     const G = f.game; const s = G.state; const me = G.playerSide;
     const won = s.winner === me;
     const teams = teamsFor(f);
-    const r = F.finishSunday(f, s); app.save(); app.backup(f);
+    // Play test 2026-11-26: settling the week (finishSunday) and the save took seconds with the screen frozen. The result now opens at
+    // once with "Wrapping up the week…"; the rest fills in when ready. Closing early is carried out once the week is settled.
+    const them = R.opponent(me); const tag = G.tag || ''; const champ = G.event === 'playoff' && isBeastBowlTag(tag); /* only the Beast Bowl itself ("Titan Semifinal" matched /final/ before v42.11) */ const playoff = G.event === 'playoff';
+    const diff = s.score[me] - s.score[them]; const feel = won ? (champ ? $t('match.beast_bowl_champions') : playoff ? $t('match.playoff_win') : diff >= 17 ? $t('match.dominant_win') : diff <= 3 ? $t('match.narrow_win') : 'VICTORY') : (champ ? $t('match.beast_bowl_lost') : playoff ? $t('match.season_over') : diff >= -3 ? $t('match.narrow_loss') : 'DEFEAT');
+    let settled = null; let closeWanted = false; let onSettledClose = null; finishGame.pendingFor = G;
+    const pending = sheet(`<div class="final-hero ${won ? 'won' : 'lost'} ${champ ? 'champ' : playoff ? 'playoff' : ''}"><div class="final-feel">${feel}</div><div class="final-score"><span style="color:${teamInk(s[me].name, s[me].color)}">${esc(s[me].abbr)}</span> ${s.score[me]} <span class="dim">–</span> ${s.score[them]} <span style="color:${teamInk(s[them].name, s[them].color)}">${esc(s[them].abbr)}</span></div></div><p class="final-pending muted center" role="status">${$t('match.wrapping_up_week')}</p>`,
+      { title: $t('match.final_3'), onClose: () => { if (settled) onSettledClose?.(); else closeWanted = true; } });
+    const settle = () => {
+      try { const r = F.finishSunday(f, s); app.save(); app.backup(f); settled = r; finishScreen(r); } finally { finishGame.pendingFor = null; } // no second settle from a tap behind the sheet
+    };
+    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(settle, 0))); // paint first, then work
+    const finishScreen = (r) => {
     const ev = r.events || [];
     const badgeClub = r.newBadge; const gym = badgeClub ? GYM_BY_CLUB[badgeClub] : null;
     const otTag = s.tiebreak ? ` ${$t('match.ot_v_clash', { size: s.tiebreak.size, size2: s.tiebreak.size })}` : s.ot ? ' (OT)' : ''; const box = boxScoreHtml(s, teams, { title: gym ? `${$t('match.final_badge_game_won', { otTag })}` : `${$t('match.final_2', { otTag })}` });
@@ -1176,8 +1188,6 @@ export function registerMatchScreens(Router, app) {
     };
     // The final whistle (2026-10-22 presentation pass): a result hero weighted to the occasion, the box score, then what the
     // game did to the roster: XP for every starter, level-ups with the rating change, injuries.
-    const them = R.opponent(me); const tag = G.tag || ''; const champ = G.event === 'playoff' && isBeastBowlTag(tag); /* only the Beast Bowl itself ("Titan Semifinal" matched /final/ before v42.11) */ const playoff = G.event === 'playoff';
-    const diff = s.score[me] - s.score[them]; const feel = won ? (champ ? $t('match.beast_bowl_champions') : playoff ? $t('match.playoff_win') : diff >= 17 ? $t('match.dominant_win') : diff <= 3 ? $t('match.narrow_win') : 'VICTORY') : (champ ? $t('match.beast_bowl_lost') : playoff ? $t('match.season_over') : diff >= -3 ? $t('match.narrow_loss') : 'DEFEAT');
     const hero = `<div class="final-hero ${won ? 'won' : 'lost'} ${champ ? 'champ' : playoff ? 'playoff' : ''}"><div class="final-feel">${feel}</div><div class="final-score"><span style="color:${teamInk(s[me].name, s[me].color)}">${esc(s[me].abbr)}</span> ${s.score[me]} <span class="dim">–</span> ${s.score[them]} <span style="color:${teamInk(s[them].name, s[them].color)}">${esc(s[them].abbr)}</span></div><div class="dim">${esc(tag || `${$t('match.week', { week: f.season.week })}`)}${otTag}${G.event === 'rival' ? $t('match.rivalry') : ''}</div></div>`;
     const xpRows = ev.filter((e) => e.kind === 'xp').sort((a, b) => b.amount - a.amount);
     const lvl = ev.filter((e) => e.kind === 'levelup' || e.kind === 'evolve'); const inj = ev.filter((e) => e.kind === 'injury');
@@ -1189,7 +1199,13 @@ export function registerMatchScreens(Router, app) {
     // A held badge lost back to its Gym Leader (reclaimable badges): said plainly on the result, not only in the news.
     const lostGym = r.lostBadge ? GYM_BY_CLUB[r.lostBadge] : null;
     const surrendered = lostGym ? `<div class="panel tight badge-lost" style="border-color:#8a3b3b;margin-bottom:var(--s3)"><b>${$t('match.badge_surrendered', { badge: esc(lostGym.badge) })}</b><div class="muted">${$t('match.badge_surrendered_text', { name: esc(lostGym.coach.name), club: esc(r.lostBadge), n: Object.keys(f.campaign.badges || {}).length, total: Object.keys(GYM_BY_CLUB).length })}</div></div>` : '';
-    sheet(`${hero}${surrendered}${box}${postGameHtml(f, r.partnerships, r.captainNote)}${after}`, { title: gym ? $t('match.final_badge_game') : lostGym ? $t('match.final_badge_lost') : champ ? $t('match.beast_bowl') : playoff ? $t('match.final_playoffs') : $t('match.final_3'), onClose: handshake });
+    const fullTitle = gym ? $t('match.final_badge_game') : lostGym ? $t('match.final_badge_lost') : champ ? $t('match.beast_bowl') : playoff ? $t('match.final_playoffs') : $t('match.final_3');
+    onSettledClose = handshake;
+    if (closeWanted || !pending.el.isConnected) { handshake(); return; } // closed while the week was settling: carry the close out now
+    const head = pending.el.querySelector('.sheet-head strong'); if (head) head.textContent = fullTitle;
+    pending.el.setAttribute('aria-label', fullTitle);
+    const body = pending.el.querySelector('.sheet-body'); if (body) body.innerHTML = `${hero}${surrendered}${box}${postGameHtml(f, r.partnerships, r.captainNote)}${after}`;
+    };
   }
 
   function startPlayClock(f, root) {
