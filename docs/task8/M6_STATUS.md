@@ -1,4 +1,10 @@
-# M6 status — 2026-11-10
+# M6 status — 2026-11-10 (HISTORICAL RECORD; closed 2026-11-26)
+
+> **Current status (2026-11-26):** Task 8 is **closed**. It was merged to `main` on 2026-11-11 (GDD register, §59.10). The M6
+> benchmarks listed below as "not run here" were never run as M6 items; they are **superseded** by the balance audit of 2026-11-25
+> (`reports/balance-audit/`) and its implementation and follow-up (`reports/balance-impl/`, GDD §61), which re-measured career and
+> development, economy and balance, and loading on the current engine. The GDD is the authority. The text below is kept unchanged as
+> the record of the M6 branch on 2026-11-10; its "stays open" wording describes that day, not the present.
 
 Branch `task8-m6-presentation`, built on `codex/task8-m5` at f716b02 (verified M5 snapshot: 2,003 tests). Task 8 stays open:
 the M6 benchmarks below are not finished, and owner visual review and physical-device measurements remain separate.
