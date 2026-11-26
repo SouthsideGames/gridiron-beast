@@ -198,7 +198,9 @@ test('records book: single-game, team and season records are written and only im
   assert.ok(R.season.passYds?.value > 0 && R.season.passYds.year === 1, 'season record written at season end');
 });
 
-test('awards (Task 10, owner 2026-11-13): the +3 SD component cap applies to MVP only; OPOY, DPOY and rookie awards are uncapped; no penalty for past MVPs', () => {
+// Balance audit R-5 (owner decision 2026-11-25): the DBOY (key dpoy) now RANKS on components capped at +3 SD, as the MVB does; its sheet
+// still shows the real (uncapped) components, which is what this test reads. OBOY and the rookie awards stay uncapped. Title updated.
+test('awards (Task 10, owner 2026-11-13; R-5 2026-11-25): the +3 SD cap ranks the MVB and the DBOY; the DBOY sheet shows uncapped components; OBOY and rookie awards are uncapped; no penalty for past MVPs', () => {
   const edge = { name: 'Edge', position: 'DL', team: 'Club 3', line: { tackles: 30, assists: 10, tfl: 14, sacks: 12, pressures: 45, ff: 3, fr: 1 } };
   const r = run([edge]);
   const mvp = r.mvp.find((x) => x.name === 'Edge'); const dpoy = r.dpoy.find((x) => x.name === 'Edge');

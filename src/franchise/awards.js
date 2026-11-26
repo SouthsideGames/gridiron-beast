@@ -123,7 +123,7 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
   const opoy = top(off.map((r) => finalist(r, offScore(r))));
   // R-5 (2026-11-25): the DBOY scores each component capped at +3 SD within the position, as the MVB does. Uncapped, a lineman's sack
   // count (a long-tailed statistic) decided it: DL won 68 of 75 audit seasons.
-  const dpoy = top(def.map((r) => finalist(r, defScore(r, MVP_Z))));
+  const dpoy = top(def.map((r) => { const capped = defScore(r, MVP_Z), raw = defScore(r); return finalist(r, { s: capped.s, c: raw.c, prod: raw.prod }); })); // ranked on capped components; the sheet shows the real (uncapped) ones
   // Task 10 (owner 2026-11-13): MVP alone scores its statistical components with each capped at +3 SD within the position
   // (MVP_Z), so one skewed statistic cannot decide it. No repeat limit and no penalty for past wins: a repeat winner wins on merit.
   const mvp = top([
