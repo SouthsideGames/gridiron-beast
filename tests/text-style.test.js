@@ -38,7 +38,7 @@ test('Title Case on buttons and screen titles: the labels the owner flagged, and
   const hq = src['src/ui/screens/hq.js']; const en = (await import('../src/text/index.js')).englishText(); const lines = Object.values(en).flatMap((v) => (typeof v === 'string' ? [v] : Object.values(v)));
   const shown = (label, file = hq) => { const k = Object.keys(en).find((key) => en[key] === label || (typeof en[key] === 'string' && en[key].replace(/^[^A-Za-z]+/, '') === label)); assert.ok(k, `${label} is a line in en.js`); assert.ok(file.includes(`'${k}'`), `${label} (${k}) is used by the screen`); };
   shown('Choose Captains'); assert.ok(!lines.includes('Choose captains'));
-  for (const label of ['Monday · Scout a Region', 'Tuesday · Monster Encounter', 'Wednesday · Training Focus', 'Thursday · Scout Opponent', 'Friday · Set Game Plan', 'Saturday · Media Day', 'Play Sunday Game', 'Take the Bye Week']) shown(label);
+  for (const label of ['Monday · Scout a Region', 'Tuesday · Beast Encounter', 'Wednesday · Training Focus', 'Thursday · Scout Opponent', 'Friday · Set Game Plan', 'Saturday · Media Day', 'Play Sunday Game', 'Take the Bye Week']) shown(label);
   shown('Let the Staff Run the Week → Sunday'); shown('Finish and Read the Headline');
   assert.ok(lines.includes('✏️ Edit Appearance'), 'menu labels live in src/text/en.js'); shown('Receive the Kick', src['src/ui/screens/match.js']);
   // screen titles and dialog buttons: `title: '...'` and `okLabel: '...'` in the interface code are Title Case
