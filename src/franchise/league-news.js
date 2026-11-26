@@ -14,6 +14,13 @@ import { AWARDS, MAJOR_AWARDS, ALL_LEAGUE_SLOTS } from './awards.js';
 import { RECORD_CATEGORIES, TEAM_RECORDS } from './stats.js';
 import { yearOf } from '../data/calendar.js';
 import { t as $t, line as $L, lineParts as $P, lineText } from '../text/index.js';
+/** What an AI–AI trade paid, as a saved line (players as name/position/overall; picks worded now, so they follow the language). An event
+ *  saved before the picks were stored separately shows its consideration as written. */
+function considerationText(e) {
+  const picks = (e.considerationPicks || []).map((p) => $L('franchise.a_round_pick', { round: p.round, year: p.year }));
+  const parts = [e.consideration, ...picks].filter(Boolean); if (!parts.length) return null;
+  return parts.length === 1 ? parts[0] : $P(...parts.flatMap((x, i) => (i ? [' and ', x] : [x])));
+}
 
 export const LEAGUE_NEWS_VERSION = 1;
 export const LEAGUE_NEWS_KEEP = 200;        // items kept at most (this season and the last)
@@ -238,7 +245,7 @@ export function moveLine(e) {
   switch (e.kind) {
     case 'signing': { const l = (e.via === 'waivers' ? $P($L('franchise.claim_off_waivers', { club: e.club, who }), (e.from ? $L('franchise.late_of', { from: e.from }) : ''), `.`) : (e.generated ? $L('franchise.sign_a_veteran_out_of', { club: e.club, who, region: e.region || $t('franchise.the_regions') }) : $P(e.club, ` sign free agent `, who, (e.from ? $L('franchise.formerly_of', { from: e.from }) : ''), `.`))); return e.apex ? $P($L('franchise.apex_signing'), ' ', l) : l; }
     case 'release': return e.reason === 'walked' ? $L('franchise.leaves_as_a_free_agent_his', { who, club: e.club }) : $L('franchise.release', { club: e.club, who, why: (e.why === 'cap' ? $L('franchise.to_get_under_the_cap') : (e.why === 'room' ? $L('franchise.to_make_room') : ''))});
-    case 'trade': return (e.toOwner ? $L('franchise.trade_to_for', { from: e.from, who, to: e.to, consideration: e.consideration || 'picks' }) : $P($L('franchise.trade_goes_from_to', { who, from: e.from, to: e.to }), e.consideration ? ` for ${e.consideration}` : '', `.`));
+    case 'trade': { const cons = considerationText(e); return (e.toOwner ? $L('franchise.trade_to_for', { from: e.from, who, to: e.to, consideration: cons || 'picks' }) : $P($L('franchise.trade_goes_from_to', { who, from: e.from, to: e.to }), cons ? $P(' for ', cons) : '', `.`)); }
     case 'draft': return $L('franchise.draft_at_round', { club: e.club, who, overall: e.overall, e: e.round });
     case 'retire': return $P($L('franchise.retires_at', { mname: e.mname, age: e.age || $t('franchise.the_end_of_a_long_career') }), e.honours ? `: ${honoursText(e.honours)}` : '', '.', e.club ? $P(' ', $L('franchise.he_played_his_last_season_with', { club: e.club })) : '');
     case 'injury': return $L('franchise.league_injury_out', { club: e.club, who, weeks: e.weeks, n: e.weeks });
