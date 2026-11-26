@@ -92,7 +92,11 @@ export function registerMatchScreens(Router, app) {
     const close = Math.abs(d) > 0.01 ? cameraFrom(close0.bottom + d * 15 / 46) : close0;
     const viewCamera = autoCamera.sample(close, { key: G.state, auto: G.auto && !G.state.finished && !anim?.replay, closeView: G.autoCloseView, reducedMotion: f.settings.reducedMotion || !!anim?.replay, pad: standsDepth() ? 3.5 : 0 }); // zoomed out: the white all round with the goal posts on it; the stands in view are the two along the sidelines // zoomed out: the white all round, and the goal posts standing on it
     // Planner art is caller-projected in the close camera's coordinate space.
-    const underlay = field.underlay ? `<g transform="translate(0 ${viewCamera.top - close.top})">${field.underlay}</g>` : '';
+    // Owner play test 2026-11-26: the planner art is projected here, with the close camera the field is drawn with. It used to be
+    // projected when the screen was built; right after a play the banner changes the field box's height, the camera is refitted at the
+    // first draw, and the zone boxes stood off their spots until the next refresh.
+    const art = field.underlayAt ? field.underlayAt(close) : field.underlay;
+    const underlay = art ? `<g transform="translate(0 ${viewCamera.top - close.top})">${art}</g>` : '';
     return { ...field, viewCamera, underlay };
   }
   function drawMatchField(svg, field) {
@@ -401,9 +405,14 @@ export function registerMatchScreens(Router, app) {
       const mine = s.possession === me;
       const plans = zonePlans(s, teams, me, mine ? look.myPlay : look.presnap.offensePlay.id, mine ? look.presnap.defensePlay.id : look.myPlay);
       const plan = plans.find((p) => p.key === G.zoneFocus) || plans[0];
-      field.underlay = zonePlannerOverlay(plan, s, cameraFor(s.ballOn), { reducedMotion: !!f.settings.reducedMotion });
+      field.zonePlan = plan;
     }
-    if (!anim && s.phase === 'scrimmage' && s.possession !== me) field.underlay = (field.underlay || '') + prismOverlay(s, cameraFor(s.ballOn));
+    // The planner art (zone placement, Prism Break targets) in a given camera's space: drawn with the camera the field is drawn with.
+    const zonePlan = field.zonePlan || null; const prism = !anim && s.phase === 'scrimmage' && s.possession !== me;
+    if (zonePlan || prism) {
+      field.underlayAt = (cam) => (zonePlan ? zonePlannerOverlay(zonePlan, s, cam, { reducedMotion: !!f.settings.reducedMotion }) : '') + (prism ? prismOverlay(s, cam) : '');
+      field.underlay = field.underlayAt(cameraFor(s.ballOn)); // the first paint (fieldSvg), before the box is measured
+    }
     if (presnapNow) presnapNow.field = field;
     // Task 8 (I4): who stands where in the drawn formation (the players' paint order: defense, then offense), for the inspect sheet
     inspectMap = null; inspectForm = null;
