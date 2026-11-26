@@ -17,7 +17,8 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
 - Live-Board traces (hands-off owner, 5 seasons):
   - Pro seeds 1–3: 0 of 3 dismissed (audit: 3 of 3).
   - All-Star seeds 1–3: 1 of 3 dismissed, after 2-12, 5-9 and 3-11 (audit: 3 of 3). The other two owners met their goals in 9 of 10 seasons.
-  - In all: 1 of 6 dismissed, against the audit's 6 of 6 (experiment X-2: 2 of 6). The one dismissal followed three clearly losing seasons.
+  - Rookie seeds 1–3: 0 of 3 dismissed. Rookie seed 2 ended 4-10 and 3-11 with confidence −1, so the Board still warns on Rookie. These ran with R-0, R-1 and R-6.
+  - In all (Pro and All-Star): 1 of 6 dismissed, against the audit's 6 of 6 (experiment X-2: 2 of 6). The one dismissal followed three clearly losing seasons.
   - Missed goals still occur (Pro seed 3 went 5-9 with confidence −1), so the Board still bites.
   - Caveat: Pro seeds 1–3 and All-Star seed 1 ran on R-0 alone. All-Star seeds 2–3 started after the R-1 and R-6 commits, so they ran with those too.
 
