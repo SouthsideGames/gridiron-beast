@@ -1,0 +1,149 @@
+{
+ "tool": "balance-audit/save-browser-timing",
+ "emulated": true,
+ "results": {
+  "phone/empty-start": {
+   "loadMsMedian": 1399
+  },
+  "phone/season-1.json": {
+   "import": {
+    "ok": true,
+    "reason": null
+   },
+   "saveMsMedian": 304,
+   "saveMs": [
+    300,
+    341,
+    313,
+    304,
+    288
+   ],
+   "loadMsMedian": 8525,
+   "storeOpenMsMedian": 1625,
+   "storageUsageKB": 1036
+  },
+  "phone/season-5.json": {
+   "import": {
+    "ok": true,
+    "reason": null
+   },
+   "saveMsMedian": 460,
+   "saveMs": [
+    563,
+    461,
+    447,
+    428,
+    460
+   ],
+   "loadMsMedian": 11394,
+   "storeOpenMsMedian": 3465,
+   "storageUsageKB": 1732
+  },
+  "phone/season-10.json": {
+   "import": {
+    "ok": true,
+    "reason": null
+   },
+   "saveMsMedian": 478,
+   "saveMs": [
+    586,
+    469,
+    466,
+    490,
+    478
+   ],
+   "loadMsMedian": 14274,
+   "storeOpenMsMedian": 3827,
+   "storageUsageKB": 1416
+  },
+  "phone/season-15.json": {
+   "import": {
+    "ok": true,
+    "reason": null
+   },
+   "saveMsMedian": 549,
+   "saveMs": [
+    559,
+    515,
+    549,
+    532,
+    613
+   ],
+   "loadMsMedian": 13846,
+   "storeOpenMsMedian": 3785,
+   "storageUsageKB": 1512
+  },
+  "desktop/empty-start": {
+   "loadMsMedian": 276
+  },
+  "desktop/season-1.json": {
+   "import": {
+    "ok": true,
+    "reason": null
+   },
+   "saveMsMedian": 78,
+   "saveMs": [
+    82,
+    77,
+    72,
+    121,
+    78
+   ],
+   "loadMsMedian": 1896,
+   "storeOpenMsMedian": 386,
+   "storageUsageKB": 1036
+  },
+  "desktop/season-5.json": {
+   "import": {
+    "ok": true,
+    "reason": null
+   },
+   "saveMsMedian": 117,
+   "saveMs": [
+    132,
+    105,
+    120,
+    105,
+    117
+   ],
+   "loadMsMedian": 2343,
+   "storeOpenMsMedian": 684,
+   "storageUsageKB": 1732
+  },
+  "desktop/season-10.json": {
+   "import": {
+    "ok": true,
+    "reason": null
+   },
+   "saveMsMedian": 132,
+   "saveMs": [
+    140,
+    128,
+    140,
+    128,
+    132
+   ],
+   "loadMsMedian": 3133,
+   "storeOpenMsMedian": 833,
+   "storageUsageKB": 1416
+  },
+  "desktop/season-15.json": {
+   "import": {
+    "ok": true,
+    "reason": null
+   },
+   "saveMsMedian": 155,
+   "saveMs": [
+    149,
+    155,
+    171,
+    186,
+    142
+   ],
+   "loadMsMedian": 3139,
+   "storeOpenMsMedian": 809,
+   "storageUsageKB": 1512
+  }
+ },
+ "errors": []
+}

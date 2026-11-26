@@ -5108,6 +5108,14 @@ screens (reviewers, labs) and the frozen historical Clash move tables are unchan
   deriving does not move the random streams of generation or scheme fit).
 - Regenerate after a change to monster generation: `node tools/fit-thresholds.mjs --write` (without `--write` it checks and exits 1 if
   the table is stale). The test fails if the table is not regenerated.
+- Measured (emulated phone, 4× CPU; same snapshots before and after): reopen at season 1 / 5 / 10 / 15 went from 8.5 / 11.1 / 14.6 /
+  13.7 s to 3.7 / 5.4 / 10.0 / 10.2 s; saving unchanged (`reports/balance-impl/FOLLOW_UP_REPORT.md` §9).
+
+#### 61.13.5 Play-test fixes (owner, 2026-11-26)
+- **Two-point calls:** the play the coach calls on a two-point try is the play that runs. The short-yardage filter only narrows the
+  AI's own pick.
+- **Final whistle:** the result opens at once with "Wrapping up the week…" while the week settles, then fills in; closing early is
+  carried out once the week is settled.
 
 ### 61.12 Validation (measured 2026-11-26; details in `reports/balance-impl/FINAL_REPORT.md`)
 - **Whole suite:** fast tier 2,263 of 2,263; simulation tier 310 of 310 after three set-up updates that follow §61.3–61.4.

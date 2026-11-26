@@ -18,7 +18,7 @@ Evidence files: `reports/balance-impl/followup/`. Tools are listed with each res
 - **A-3:** A club with no available kicker plays on: no field goals, punts or kicked extra points; two-point tries; kickoffs replaced by
   the receiver at its own 20. No forfeit for a missing kicker. One rule conflict is reported (the offseason gate still requires a K).
 - **A-4:** Scheme-fit thresholds ship as a fixed table, identical to the derivation (18,000 fits compared). It removes about 1.2–1.5 s of
-  work from the first fit after load. The browser reopen time is in section 9.
+  work from the first fit after load. Emulated phone reopen is 26–57% faster (season 15: 13.7 → 10.2 s); section 9.
 - **A-5:** Intermediate evidence directories removed after their findings, seeds and commands were preserved; `M6_STATUS.md` marked as a
   closed historical record; GDD §61.13 written.
 - **Play-test fixes (owner, 2026-11-26):** a called two-point play is now the play that runs (section 7.4); the final result no longer
@@ -52,7 +52,7 @@ Evidence files: `reports/balance-impl/followup/`. Tools are listed with each res
 | A-1 Rookie gym quality | **Completed** | `difficultyQuality` returns the difficulty's quality for every club; aiDev 0.6/1.0/1.5 unchanged; no attribute ceiling | Rookie gym generated arrivals 38.1 → 33.8 overall; Rookie–Pro AI overall gap at S1/5/10/15: 2.7 / 2.9 / 1.5 / 1.9 (was 2.2 / 2.5 / 1.4 / 0.9) | task8-identities (updated) |
 | A-2 Golden Boot, Return King | **Completed** | Two awards beside STBOY; minimum participation; per-attempt main measures; hub, review, profiles, timeline, news, history; Hall weight 5, one special-teams honour per season counted | 15 seasons: Golden Boot always a K, Return King always a returner, pools 16–26; STBOY coincided with one of them every season | 41 of 41 (special-teams-awards new, task10-honour-ledger, preleague-history, monster-hof-voting) |
 | A-3 No available kicker | **Completed; one conflict reported** | No FG/punt/PAT kick; 4th down goes; two-point try; kickoffs and free kicks replaced at the receiver's 20 with no clock, dice or stats; no forfeit for K alone; AI follows; UI notes | Whole games with one kickerless club finish with no forfeit and no kicks | no-kicker (new, 7); 52 related files, 289 results, 0 failures |
-| A-4 Fixed scheme-fit table | **Completed** | `FIT_THRESHOLD_TABLE`, equality test, `tools/fit-thresholds.mjs` check / `--write` | 18,000 fits hash-identical; first fit in Node 1,182–1,454 ms → 0 ms; browser in section 9 | fit-thresholds (new); 155 of 155 related |
+| A-4 Fixed scheme-fit table | **Completed** | `FIT_THRESHOLD_TABLE`, equality test, `tools/fit-thresholds.mjs` check / `--write` | 18,000 fits hash-identical; first fit in Node 1,182–1,454 ms → 0 ms; emulated phone reopen at season 1/5/10/15: 8.5/11.1/14.6/13.7 s → 3.7/5.4/10.0/10.2 s | fit-thresholds (new); 155 of 155 related |
 | A-5 Cleanup | **Completed** | Intermediate directories removed after preserving findings (section 11); M6_STATUS fixed; GDD §61.13 | — | — |
 | Play test: two-point call | **Fixed** | The called play runs on a two-point try | New test fails on the old code (called Trap, ran Power Left) | 40 of 40 |
 | Play test: final whistle pause | **Fixed** | The result opens at once with "Wrapping up the week…"; the week settles after the first paint and fills the same sheet | Emulated phone: result visible after 0.1–0.15 s, was 21.6 s frozen | 12 match-screen files, 120 of 120 |
@@ -395,7 +395,41 @@ short injuries would create the need; both are mechanic changes for owner approv
 
 ## 9. Loading (A-4)
 
-LOADING_SECTION
+### 9.1 Reopen time before and after the fixed scheme-fit table
+**Method.** `tools/balance-audit/save-browser-timing.py` on the same four season snapshots (`r18-final/season-{1,5,10,15}.json`, the
+round-2 franchise exports), the same machine and conditions: "before" is the tree just before A-4 (`1835847`, in a separate worktree),
+"after" is this branch. Runs alternated before, after, before, after; each is itself the median of three cold reloads (and five saves).
+Phone = 390 px, touch, CPU throttled 4× (**emulated**); desktop = 1280 px, unthrottled (**emulated**). Values below are the mean of the
+two medians.
+
+| Reopen until the franchise is back | Before | After | Change |
+|---|---|---|---|
+| Phone, empty start | 1.43 s | 1.06 s | −0.37 s (−26%) |
+| Phone, season 1 | 8.54 s | 3.71 s | −4.83 s (−57%) |
+| Phone, season 5 | 11.13 s | 5.43 s | −5.70 s (−51%) |
+| Phone, season 10 | 14.56 s | 10.03 s | −4.54 s (−31%) |
+| Phone, season 15 | 13.73 s | 10.19 s | −3.54 s (−26%) |
+| Desktop, empty start | 0.32 s | 0.35 s | +0.03 s (noise) |
+| Desktop, season 1 | 1.91 s | 1.10 s | −0.81 s (−42%) |
+| Desktop, season 5 | 2.26 s | 1.72 s | −0.54 s (−24%) |
+| Desktop, season 10 | 3.09 s | 2.23 s | −0.87 s (−28%) |
+| Desktop, season 15 | 3.16 s | 2.27 s | −0.89 s (−28%) |
+
+- The saving is larger on a throttled phone than the 1.2–1.5 s the derivation takes in Node, because the derivation generated sample
+  monsters on the main thread at 4× slowdown. "Before" and "after" differ by everything committed between them (A-2, A-3, A-4 and the
+  play-test fixes), but only A-4 touches loading; none of the others runs at load.
+- **Saving is unchanged** (phone season 15: 0.54 → 0.56 s; desktop 0.14 → 0.14 s, within noise).
+- **Save integrity:** every snapshot imported in every run (`import.ok` true), and the 15-season franchise runs on this branch did a
+  full export / import round trip at every season boundary with 0 integrity problems at the shipped cap.
+- Late-season reopen on a phone is still about 10 s; the rest is the save's size and the screens built at load (R-18). Real-device
+  timing remains to be measured.
+- Evidence: `followup/load-timing-{before,after,before2,after2}.json`.
+
+### 9.2 Final whistle (play test)
+The final result used to appear only after the week had settled (the league's other games, development, news and the save): 21.6 s on
+the emulated phone under load, with the screen frozen. It now appears after 0.09–0.15 s with "Wrapping up the week…", and the full
+result fills in when the week is settled (about 22–28 s in the same conditions; that work is unchanged). Section 7.4 has the other
+play-test fix.
 
 ---
 
