@@ -550,7 +550,7 @@ Rookie of the Year needs rookies arriving together, so the league drafts.
 * **20.2 Monster bios.** The monster card carries a Bio panel: birthplace (the origin region, or the element's home region), seasons pro, the draft pick when drafted (round, overall, by which club), and a stint per club — the regional league before the first known club, every past club from `m.history` with why it ended (walked, released, cut by the commissioner, signed from the pool), and the current club from `m.joined`.
 * **20.3 Balance from the ten-season simulation.** See §17.4 (safe goal ≤ 7 wins; a title meets any goal) and §15.8 (unlocked legendaries guaranteed). Headless results, three franchises per difficulty with a plain staff-run owner: Rookie first title in S1 of one franchise, none in the other two over ten seasons but 8–9 playoff trips each; Pro one title (S3); All-Star none, one owner fired after S2. Making the playoffs is easy (≈75%); the Beast Bowl is hard (3 titles in 90 seasons). AI clubs grow every season while a monster stops at its potential, so by season 8 a dynasty needs churn through the draft and recruiting. Human coaching with scouting counters is the edge the simulation does not use.
 * **20.4 The clock, made visible (2026-10-18).** The clock is charged in chunks: each play's own seconds, then — only if the last play left the clock running — the runoff at the next snap (18 s normal, 8 hurry-up, 30 milking). That was invisible, so timeouts, spike, kneel and tempo looked pointless. Now: a line under the score reads **▶ RUNNING · −18 s at snap** or **⏸ STOPPED · snap costs 0 s** (and "can't be stopped" when the other side is out of timeouts with under 30 s); a **victory-formation rule** — a kneel with the clock running, no defensive timeouts and under 30 s left runs the clock out and ends the half or game at once (the "I knelt and nothing happened" bug); a **ⓘ button** in the match header opens "How a match works" (downs, the clock, timeout/spike/kneel/tempo, calling plays, the modes, the edges); and a tutorial sheet, *The clock*, fires the first time the player is inside two minutes of a half. Spike and timeouts stay: they are real decisions in the runoff model, and spike's honest niche is "no timeouts, seconds left".
-* **20.5 The cap, re-based (2026-10-18).** Measured at creation: the five coaches cost 675k — 37.5% of the 1.8M cap — so a founding 28 sat at 91% before the draft and a new owner was over the cap after three rookies and a signing; a full 38 at league-average quality was unreachable. Fix: **staff salaries scaled to 60%** (head coaches 96–117k, coordinators 66–93k); the cap stays 1.8M. Now: founding 28 ≈ 76%, after the creation draft ≈ 80% with ~365k of room (ten average monsters or five good ones). Ten-season check: ~330k free in season 1, a full 38 by season 3, 8–16k to spare from then on — the cap binds on upgrades and renewals, not on filling the roster. TUNABLE: the 60%.
+* **20.5 The cap, re-based (2026-10-18).** Measured at creation: the five coaches cost 675k — 37.5% of the 1.8M cap — so a founding 28 sat at 91% before the draft and a new owner was over the cap after three rookies and a signing; a full 38 at league-average quality was unreachable. Fix: **staff salaries scaled to 60%** (head coaches 96–117k, coordinators 66–93k); the cap stayed 1.8M *(superseded 2026-11-26: the Challenger cap is 1.6M for new franchises, §61.14.1)*. Now: founding 28 ≈ 76%, after the creation draft ≈ 80% with ~365k of room (ten average monsters or five good ones). Ten-season check: ~330k free in season 1, a full 38 by season 3, 8–16k to spare from then on — the cap binds on upgrades and renewals, not on filling the roster. TUNABLE: the 60%.
 * **20.6 Notices, manual evolution, the scheme section (2026-10-18).** *Notices* are computed from state (nothing to dismiss): a red count on the tab where something wants the owner, a red dot on the roster row, the thing itself on the card. Today: a monster ready to evolve, unspent attribute points (when the trainer is not spending them), contract decisions waiting in the offseason, the commissioner waiting on a cap decision. *Evolution is by hand for the owner's monsters:* reaching the level makes the monster "ready" (notice, chip, an Evolve button on the card with a before→after celebration); AI clubs still evolve automatically. The card shows the next form as a **silhouette** until it happens. Evolution no longer changes salary mid-contract (it was repricing it — a bug against §18.1). *Scheme section* on the card: every scheme on the monster's side, best fit first, with "your scheme" marked and what each wants; a monster that does not fit yours now says what it prefers instead of just "not a fit".
 * **20.7 Media day without the crib sheet (2026-10-18).** The answer cards name their nature but no longer say how many of the owner's monsters share it, and the "natures on your field" line is gone: picking the biggest boost was becoming arithmetic, and knowing your own monsters' natures is the point. The done-screen still names who heard themselves, so the lesson lands after the choice. *Also:* Salary & Contracts sorts by salary, position, OVR, contract end or cost per OVR; the Roster tab shows a notice strip (each row tappable, "Trainer: spend all points" when points are banked) and every lineup tile, depth-chart row and list row carries the red dot; a monster card's points panel has "Let the trainer spend them", and the global setting remains.
 * **20.8 Best lineup and the bracket (2026-10-18).** *Best lineup:* one button on the Roster tab (both views) orders every position by overall rating, best first, and clears manual slot picks — injured monsters keep their place and are skipped on Sunday as always. *The bracket:* the playoff screen opens on a broadcast-style bracket — Aurora semis and championship on the left, the Beast Bowl in the middle, Titan on the right — team-colored cells with seed and abbreviation (dark text on light colors), scores once played, losers greyed, winners outlined, the owner's club ringed in gold, TBD cells until a round is drawn, and a red CHAMPION bar beneath. The game-by-game list stays below it.
@@ -4979,7 +4979,7 @@ position is left (injuries, an emptied group).
   and Crosswind Rescue (WIN-04-F) charge on **passes defended**: his own breakup, or an incompletion on a throw at the receiver he
   covers, never an interception. Both stay rare signature plays.
 - **Beast Clash:** Unbroken Charge (boulderox) also arms on a single hit of 30% or more of max HP that it survives. Foresight (cerebrix)
-  prepares only when an enemy, active or in reserve, has an ability that applies a harmful status; otherwise it attacks and keeps the
+  prepares only when an enemy, active or in reserve, has an ability that applies a harmful status *(superseded by §61.14.2: the active foe only)*; otherwise it attacks and keeps the
   use. Snowdrift Shelter (icehorn) lasts three of its own turns (was one).
 - **Not changed (owner decision pending):** the four weak legendary signatures (Eye of the Storm, Deep Winter, Eclipse Theft and Root
   Communion), and eleven conditional abilities that rarely fire in 3 v 3.
@@ -5018,7 +5018,7 @@ position is left (injuries, an emptied group).
 
 ### 61.9 Salaries and trade values (R-9, R-16)
 - **Salary by overall** (`salaryForOvr`): 18,000 + 280 × OVR up to OVR 70 (unchanged), plus 90 × (OVR − 70)² above it. So 80 costs
-  49,400 (was 40,400), 90 costs 79,200 (was 43,200) and 99 costs 121,410 (was 45,720). Tier caps are unchanged. Existing contracts keep
+  49,400 (was 40,400), 90 costs 79,200 (was 43,200) and 99 costs 121,410 (was 45,720). Tier caps were unchanged here *(superseded by §61.14.1: 1.6M)*. Existing contracts keep
   their salary; new and renewed deals, the Apex renewal ask and the draft board's rookie salary use the curve.
 - **AI signing bonuses** use the existing cap-saving form: part of the salary moved into a bonus, for a money-minded monster on a multi-year deal, only where it gives him the same value for less cap. An AI club uses it when a deal would leave it under 20% of its cap next league year (`AI_MARKET.bonusRoom`), as well as when the deal would not fit at all. Before, it was used only in the second case, and no club in a 15-season league came that close to the cap.
 - **Position leverage in trade value** (`POSITION_LEVERAGE`), re-derived on the final engine from 1,000 games with the documented
@@ -5094,8 +5094,8 @@ screens (reviewers, labs) and the frozen historical Clash move tables are unchan
 - A missing kicker alone is **not a forfeit** (`forfeitProblems` excludes K). K remains a roster need and the AI keeps signing kickers.
 - Kicking returns as soon as a kicker is available again. A K covering QB in an emergency keeps kicking while healthy; if he is hurt,
   kicking stops until a kicker is available.
-- **Roster rule (reported, not changed):** the offseason lineup gate (`lineupGate`) still requires a K before the season can continue.
-  That gate is a roster-management rule, separate from game legality; changing it needs an owner decision.
+- ~~**Roster rule (reported, not changed):** the offseason lineup gate still requires a K.~~ *Superseded by §61.14.4 (F-14): a missing
+  kicker is a warning, not a blocker.*
 - UI: the match screen shows "No available kicker: field goals and punts unavailable.", "No available kicker: two-point conversion
   required." or "No available kicker: the opponent takes possession at its own 20-yard line." in place of the kick buttons, and the
   lineup warning names the missing kicker.
@@ -5116,6 +5116,54 @@ screens (reviewers, labs) and the frozen historical Clash move tables are unchan
   AI's own pick.
 - **Final whistle:** the result opens at once with "Wrapping up the week…" while the week settles, then fills in; closing early is
   carried out once the week is settled.
+
+### 61.14 Final calibration (owner decisions F-01 to F-14, 2026-11-26)
+Measured results and the experiments are in `reports/balance-impl/FINAL_CALIBRATION_REPORT.md`.
+
+#### 61.14.1 Salary cap (F-01)
+- **The Challenger cap is 1,600,000** (was 1,800,000). The unused higher tiers keep their ratios to it: Vanguard 2,300,000 (×1.44),
+  Sovereign 3,200,000 (×2.0). The salary curve (§61.9), the staff allowance (405,000) and AI signing bonuses are unchanged.
+- **Cap-aware founding.** A generated AI club whose roster would found above its usable cap (cap − staff allowance) founds without its
+  least valuable reserves per salary; starters, package players and protected monsters always stay, and no club drops below the roster
+  minimum (`foundWithinCap`). Those monsters are simply not founded: no release, news or waiver claim appears at creation. The creation
+  draft completes founding: a club its rookies take over the cap sheds a reserve the same silent way a full club makes room for a
+  creation-draft rookie (`creationCapSettle`). After creation the AI drafts within the cap as before (R7).
+- **Existing franchises keep the cap they were begun under** (`tierCap`, `LEGACY_TIER_CAPS`): a new franchise carries `capEra: 2`; a save
+  without it keeps 1.8 M. Lowering the cap inside a running save would put owners and AI clubs over it at once, and the existing remedy
+  (the commissioner's forced release) would release beasts, which the owner ruled out. A migration policy is proposed in the report for
+  approval; until then nothing changes in older saves.
+
+#### 61.14.2 Beast Clash abilities (F-04, F-05, F-08; supersedes the matching parts of §61.6)
+- **Root Communion** (Elderoot) and **Eye of the Storm** (Tempestra) are cast **in addition to the ordinary attack**: the effect
+  resolves, then the beast makes its ordinary attack in the same turn. Conditions, effects, durations and the once-per-Clash limit are
+  unchanged (Root Communion still triggers at 25%, Eye of the Storm still restricts for 2 turns).
+- **Foresight** (Cerebrix) prepares its mirror only while the **current active foe** has an ability that applies a harmful status. A
+  status source waiting in reserve no longer makes it give up its attack. It still replaces the attack when it prepares.
+- Deep Winter, Eclipse Theft, Lightning Rod, Clear Light and the other rarely-triggered abilities are unchanged.
+- **Replays:** a Clash replay re-runs the stored battle on today's rules. When those rules changed after the battle was played, the replay
+  says so; the stored result is never rewritten.
+
+#### 61.14.3 Plays (F-10, F-11, F-12)
+- **Counter:** after the false step and the two pulls, the back follows the pullers through the B gap (it used to bend outside the
+  kicked-out end to the edge). The pulls, the blocks and the false step are unchanged.
+- **Draw deception:** the four designated draws (QB Draw, Lead Draw, Spread Draw, Empty QB Draw; the play key `show`) show pass for
+  0.9 s (`SHOW_DRAW`): the quarterback sets at his drop point, the back holds beside him on his own side as a protector (on a QB draw the
+  quarterback holds his drop), and no exchange happens before the show ends. Defenders are not told anything: they read the same cues as
+  on every play (the line setting back, a quarterback who has dropped, a back standing still beside him, then the ball in a runner's
+  hands) at their own Awareness-set delay and cadence, so sharp defenders see through it sooner and blitzers still arrive. No other play
+  carries `show`; play-action passes are unchanged.
+- **Jet Sweep:** the motion is flipped. The slot lines up on the right (the trips side, with the back), comes across on the jet and runs
+  left, away from that crowded side; the line and the back lead to the left edge.
+
+#### 61.14.4 Offseason kicker (F-14; amends §61.13.3)
+- A missing kicker is a **warning**, never a blocker: the offseason lineup gate blocks only on the base lineup and the roster minimum,
+  and the weekly lineup check reports the kicker separately. The warning names every consequence (no field goals, punts or kicked
+  extra points; fourth downs played; two-point tries; the opponent starts at its own 20 after your kickoffs). AI clubs still treat K as
+  a roster need. Emergency positions are unchanged; no position covers K.
+
+#### 61.14.5 Experiments not adopted (production unchanged until the owner approves a value)
+- Rookie founding and replenishment quality −7 (production −4), Awareness-based quarterback read times (production `look` unchanged),
+  and weekly fatigue recovery below 28 (production 28): measured in the report, recommendations there.
 
 ### 61.12 Validation (measured 2026-11-26; details in `reports/balance-impl/FINAL_REPORT.md`)
 - **Whole suite:** fast tier 2,263 of 2,263; simulation tier 310 of 310 after three set-up updates that follow §61.3–61.4.
