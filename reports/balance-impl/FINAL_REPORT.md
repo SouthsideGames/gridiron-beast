@@ -374,8 +374,8 @@ Everything removed is kept in git history, and `reports/balance-audit/README.md`
 
 ## 8. GitHub and release summary
 
-- **Branch:** `impl/balance-audit-2026-11`, pushed; COMMIT_COUNT commits after `main` `58c33ee`. Not merged.
-- **Pull request:** PR_LINK (open, not merged).
+- **Branch:** `impl/balance-audit-2026-11`, pushed; 91 commits after `main` `58c33ee` (including this report's final commit). Not merged.
+- **Pull request:** [#191](https://github.com/SouthsideGames/gridiron-beast/pull/191), open and not merged. The audit's reports are in #190.
 - **Files changed since `main`:** 180, of which 53 are game source files and 23 are tests. The rest are tools, reports, docs and the GDD.
 - **Files added:**
   - 2 tests: `tests/ability-strip.test.js` and `tests/emergency-positions.test.js`;
