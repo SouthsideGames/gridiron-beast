@@ -1,0 +1,277 @@
+{
+ "mode": "persistent",
+ "difficulty": "rookie",
+ "seasons": 6,
+ "seeds": [
+  1,
+  2
+ ],
+ "boardReset": false,
+ "runs": [
+  {
+   "seed": 1,
+   "club": "Sundown Drakes",
+   "fired": false,
+   "seasonsPlayed": 6,
+   "rows": [
+    {
+     "year": 1,
+     "w": 11,
+     "l": 3,
+     "playoffs": true,
+     "champion": "Ironpeak Colossi",
+     "mine": 53,
+     "aiMid": 47.7,
+     "aiEnd": 51,
+     "today": 48.4,
+     "rivalEnd": 46,
+     "rivalToday": 44,
+     "forecast": null
+    },
+    {
+     "year": 2,
+     "w": 11,
+     "l": 3,
+     "playoffs": true,
+     "champion": "Sunfire Solars",
+     "mine": 56,
+     "aiMid": 52,
+     "aiEnd": 54.4,
+     "today": 49.6,
+     "rivalEnd": 48,
+     "rivalToday": 59,
+     "forecast": null
+    },
+    {
+     "year": 3,
+     "w": 11,
+     "l": 3,
+     "playoffs": true,
+     "champion": "Sunfire Solars",
+     "mine": 57,
+     "aiMid": 55.2,
+     "aiEnd": 57.2,
+     "today": 50.7,
+     "rivalEnd": 53,
+     "rivalToday": 56,
+     "forecast": null
+    },
+    {
+     "year": 4,
+     "w": 11,
+     "l": 3,
+     "playoffs": true,
+     "champion": "Thunder Mesa Blitz",
+     "mine": 58,
+     "aiMid": 58.2,
+     "aiEnd": 59.3,
+     "today": 50.2,
+     "rivalEnd": 57,
+     "rivalToday": 56,
+     "forecast": null
+    },
+    {
+     "year": 5,
+     "w": 9,
+     "l": 5,
+     "playoffs": true,
+     "champion": "Sunfire Solars",
+     "mine": 60,
+     "aiMid": 60,
+     "aiEnd": 60.7,
+     "today": 50.5,
+     "rivalEnd": 60,
+     "rivalToday": 47,
+     "forecast": null
+    },
+    {
+     "year": 6,
+     "w": 12,
+     "l": 2,
+     "playoffs": true,
+     "champion": "Cliffhaven Chargers",
+     "mine": 61,
+     "aiMid": 61.3,
+     "aiEnd": 62.2,
+     "today": 50.2,
+     "rivalEnd": 60,
+     "rivalToday": 53,
+     "forecast": null
+    }
+   ],
+   "problems": [],
+   "seconds": 1389
+  },
+  {
+   "seed": 2,
+   "club": "Riverbend Rapids",
+   "fired": false,
+   "seasonsPlayed": 6,
+   "rows": [
+    {
+     "year": 1,
+     "w": 9,
+     "l": 5,
+     "playoffs": true,
+     "champion": "Palmetto Wyrms",
+     "mine": 50,
+     "aiMid": 48.5,
+     "aiEnd": 51.7,
+     "today": 49.3,
+     "rivalEnd": 51,
+     "rivalToday": 49,
+     "forecast": null
+    },
+    {
+     "year": 2,
+     "w": 7,
+     "l": 7,
+     "playoffs": true,
+     "champion": "Sunfire Solars",
+     "mine": 54,
+     "aiMid": 52.7,
+     "aiEnd": 55.3,
+     "today": 50.2,
+     "rivalEnd": 55,
+     "rivalToday": 53,
+     "forecast": null
+    },
+    {
+     "year": 3,
+     "w": 10,
+     "l": 4,
+     "playoffs": true,
+     "champion": "Aetheria Seers",
+     "mine": 58,
+     "aiMid": 56.2,
+     "aiEnd": 58,
+     "today": 50.9,
+     "rivalEnd": 57,
+     "rivalToday": 51,
+     "forecast": null
+    },
+    {
+     "year": 4,
+     "w": 11,
+     "l": 3,
+     "playoffs": true,
+     "champion": "Aetheria Seers",
+     "mine": 59,
+     "aiMid": 58.5,
+     "aiEnd": 59.7,
+     "today": 50.6,
+     "rivalEnd": 59,
+     "rivalToday": 51,
+     "forecast": null
+    },
+    {
+     "year": 5,
+     "w": 5,
+     "l": 9,
+     "playoffs": false,
+     "champion": "Silvergrove Arcanists",
+     "mine": 60,
+     "aiMid": 60.6,
+     "aiEnd": 61,
+     "today": 51.6,
+     "rivalEnd": 63,
+     "rivalToday": 49,
+     "forecast": null
+    },
+    {
+     "year": 6,
+     "w": 6,
+     "l": 8,
+     "playoffs": false,
+     "champion": "Cliffhaven Chargers",
+     "mine": 59,
+     "aiMid": 61.8,
+     "aiEnd": 62.3,
+     "today": 51.6,
+     "rivalEnd": 64,
+     "rivalToday": 51,
+     "forecast": null
+    }
+   ],
+   "problems": [],
+   "seconds": 876
+  }
+ ],
+ "summary": {
+  "seasons": 12,
+  "winPct": 67.3,
+  "playoffPct": 83.3,
+  "titles": 0,
+  "fired": 0,
+  "aiMid": 56.1,
+  "aiEnd": 57.7,
+  "today": 50.3,
+  "rivalEnd": 56.1,
+  "rivalToday": 51.6,
+  "distinctChampions": 4.5,
+  "byYear": {
+   "1": {
+    "n": 2,
+    "winPct": 71.4,
+    "aiMid": 48.1,
+    "aiEnd": 51.4,
+    "today": 48.8
+   },
+   "2": {
+    "n": 2,
+    "winPct": 64.3,
+    "aiMid": 52.4,
+    "aiEnd": 54.9,
+    "today": 49.9
+   },
+   "3": {
+    "n": 2,
+    "winPct": 75,
+    "aiMid": 55.7,
+    "aiEnd": 57.6,
+    "today": 50.8
+   },
+   "4": {
+    "n": 2,
+    "winPct": 78.6,
+    "aiMid": 58.4,
+    "aiEnd": 59.5,
+    "today": 50.4
+   },
+   "5": {
+    "n": 2,
+    "winPct": 50,
+    "aiMid": 60.3,
+    "aiEnd": 60.9,
+    "today": 51.1
+   },
+   "6": {
+    "n": 2,
+    "winPct": 64.3,
+    "aiMid": 61.6,
+    "aiEnd": 62.3,
+    "today": 50.9
+   }
+  },
+  "byBlock": {
+   "1-5": {
+    "n": 10,
+    "winPct": 67.9,
+    "aiMid": 55,
+    "aiEnd": 56.8,
+    "today": 50.2,
+    "rivalGap": 3.4,
+    "champions": 6
+   },
+   "6-10": {
+    "n": 2,
+    "winPct": 64.3,
+    "aiMid": 61.6,
+    "aiEnd": 62.3,
+    "today": 50.9,
+    "rivalGap": 10,
+    "champions": 1
+   }
+  }
+ }
+}
