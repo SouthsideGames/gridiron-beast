@@ -334,3 +334,19 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - Scoring follows league maturation: generated clubs start near 52 overall and settle near 63–65 by season 5. Points per team-game go 13.2 → 18.3 by season 5, then hold at 17–19 through season 15.
   - The passing game responds most to talent: yards per attempt 8.6 → 10.5–11.6 and completion 54 → 64% (developed-league target 63–67% met), while sacks fall to 1.8–3.6% (target 5–7%).
   - Next: the engine's scoring at two fixed talent levels (game study, quality 52 against 64), to separate the engine's response from development.
+- **Phase 5 game study** (500 games, seed 1; R-2 slope, DL/TE Speed weight 2, Durability weights; `phase5/game-study-500-phase5.json`), against the Phase 3 R-7 study:
+
+  | Measure | Before | After |
+  |---|---|---|
+  | Points per team-game | 12.90 | 12.51 |
+  | Completion % | 52.2 | 52.2 |
+  | Yards per attempt | 7.72 | 7.57 |
+  | Yards per carry | 5.00 | 4.86 |
+  | Explosive passes, % | 11.4 | 10.8 |
+  | Explosive runs, % | 8.2 | 8.3 |
+  | Sacks, % of dropbacks | 3.2 | 3.2 |
+  | Interceptions, % of attempts | 1.1 | 1.2 |
+  | Upsets, % of decided games | 22.7 | 26.7 |
+  | Blowouts, 21+ % | 17.6 | 15.4 |
+
+  - The league plays the same game, a little closer. The Speed sweep checks that Speed stays worth having.
