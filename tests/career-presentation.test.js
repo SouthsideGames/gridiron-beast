@@ -150,7 +150,11 @@ test('the real franchise: summaries, trophies and links agree with its history; 
     const p = P.fullProfile(f, m, 'roster');
     const champs = p.trophies.find((t) => t.kind === 'champion');
     if (champs) for (const e of champs.entries) assert.ok(titleYears.includes(e.year), `${m.name}: a title in ${e.year} the history does not show`);
-    for (const t of p.trophies.filter((x) => P.TROPHY_META[x.kind]?.short)) for (const e of t.entries) { const h = f.history.find((x) => x.year === e.year); assert.equal(h.awards.league[t.kind]?.id, m.id, `${m.name}: ${t.kind} ${e.year} not in the award history`); }
+    // R-5: an All-League place is a team, archived by position in `h.allLeague` (first / second); every other short trophy is one winner
+    const AL = { allLeague1: 'first', allLeague2: 'second' };
+    for (const t of p.trophies.filter((x) => P.TROPHY_META[x.kind]?.short)) for (const e of t.entries) { const h = f.history.find((x) => x.year === e.year);
+      if (AL[t.kind]) assert.ok(Object.values(h.allLeague?.[AL[t.kind]] || {}).some((list) => (list || []).some((w) => w.id === m.id)), `${m.name}: ${t.kind} ${e.year} not in the All-League history`);
+      else assert.equal(h.awards.league[t.kind]?.id, m.id, `${m.name}: ${t.kind} ${e.year} not in the award history`); }
     for (const e of p.timeline.filter((x) => x.ref)) { linked++; const d = P.eventDetail(f, m, e.ref); if (d) opened++; }
   }
   assert.ok(linked > 0); assert.equal(opened, linked, 'every linked event opens a detail');
@@ -163,7 +167,7 @@ test('the real franchise: summaries, trophies and links agree with its history; 
 test('career card content: honours as pills (counted), three position stats or where he stands, tiers, file names', () => {
   const p = { name: 'Thunderhorn Maximus VI', tier: 'dynasty', level: 30, ovr: 88, seasons: 7, stats: { games: 60, focus: [{ label: 'Pass yards', text: '12,400' }, { label: 'Pass TD', text: '110' }, { label: 'INT thrown', text: '30' }, { label: 'Comp %', text: '64%' }] },
     trophies: [{ kind: 'hof', count: 1 }, { kind: 'champion', count: 3 }, { kind: 'mvp', count: 2 }, { kind: 'record', count: 1 }] };
-  assert.deepEqual(honourPills(p).map((x) => x.text), ['HALL OF FAME', '3× CHAMPION', '2× MVP', '1 LEAGUE RECORD']);
+  assert.deepEqual(honourPills(p).map((x) => x.text), ['HALL OF FAME', '3× CHAMPION', '2× MVB', '1 LEAGUE RECORD']); // R-5: the Most Valuable Beast
   assert.deepEqual(cardStats(p).map((s) => s.value), ['12,400', '110', '30']);
   assert.deepEqual(cardStats({ level: 1, ovr: 55, seasons: 1, stats: { games: 0 } }).map((s) => s.label), ['Level', 'Overall', 'Season']);
   for (const t of ['rookie', 'established', 'veteran', 'decorated', 'champion', 'dynasty', 'hof', 'prospect']) assert.ok(TIER_STYLE[t], t);

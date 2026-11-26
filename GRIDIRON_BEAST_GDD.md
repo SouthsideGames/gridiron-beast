@@ -4806,15 +4806,15 @@ format. A save made before this change keeps the award winners stored in it (the
 | Season | Champion | MVB | Offensive Beast of the Year | Defensive Beast of the Year |
 |---|---|---|---|---|
 | -7 | Skyvale Cyclones | Zolalin (RB, Emberfall Infernos) † | Zolalin (RB, Emberfall Infernos) † | Zellinen (DL, Emberfall Infernos) † |
-| -6 | Thornwood Wildroots | Ralelor (QB, Emberfall Infernos) † | Ralelor (QB, Emberfall Infernos) † | Voulor (LB, Emberfall Infernos) † |
+| -6 | Thornwood Wildroots | Ralelor (QB, Emberfall Infernos) † | Ralelor (QB, Emberfall Infernos) † | Lenroko (DL, Ember City Beasts) ‡ |
 | -5 | Skyvale Cyclones | Ralelor (QB, Emberfall Infernos) † | Zolalin (RB, Emberfall Infernos) † | Zellinen (DL, Emberfall Infernos) † |
 | -4 | Stormport Bolts | Maroyen (WR, Emberfall Infernos) † | Maroyen (WR, Emberfall Infernos) † | Tulomar (LB, Ashford Cinders) |
-| -3 | Stormport Bolts | Ralelor (QB, Emberfall Infernos) † | Ralelor (QB, Emberfall Infernos) † | Zellinen (DL, Emberfall Infernos) † |
+| -3 | Stormport Bolts | Ralelor (QB, Emberfall Infernos) † | Ralelor (QB, Emberfall Infernos) † | Tulomar (LB, Ashford Cinders) ‡ |
 | -2 | Aetheria Seers | Kiiken (RB, Ember City Beasts) | Kiiken (RB, Ember City Beasts) | Voulor (LB, Emberfall Infernos) † |
 | -1 | Harbor Anchors | Tulomar (LB, Ashford Cinders) | Filegen (WR, Ember City Beasts) | Tulomar (LB, Ashford Cinders) |
 | 0 | Frostpeak Howlers | Rauwen (QB, Deepwater Chompers) | Rauwen (QB, Deepwater Chompers) | Horabon (DL, Deepwater Chompers) |
 
-† a retired legend. (All six legends played for Emberfall: that is how the canon drew them, unchanged here.)
+† a retired legend. (All six legends played for Emberfall: that is how the canon drew them, unchanged here.) ‡ changed by the balance audit's Defensive Beast rule (§61.8): seasons −6 and −3 were Voulor (LB) and Zellinen (DL). New franchises have these winners; a save made before keeps the winners stored in it.
 
 ### 60.10 Saves
 
@@ -4998,11 +4998,11 @@ position is left (injuries, an emptied group).
 - **Names:** Most Valuable Beast (MVB), Offensive Beast of the Year (OBOY), Defensive Beast of the Year (DBOY), Signature Beast of the
   Year (SBOY). The rookie awards and Coach of the Year keep their names. Save keys are unchanged (`mvp`, `opoy`, `dpoy`, `smoy`), so
   every saved season keeps its awards.
-- **DBOY** caps each component at +3 standard deviations within the position, as the MVB does.
+- **DBOY** caps each component at +3 standard deviations within the position, as the MVB does, and then standardises each candidate's weighted total within his own position. A lineman's pass-rush and run-defence components share his sacks and tackles for loss, so without this his total spread wider than a corner's or a safety's. The components and weights are unchanged and no position is favoured or forced.
 - **New awards:**
   - **Special Teams Beast of the Year (STBOY):** the best kicker (points per game 45%, accuracy 40%, longest kick 15%) or kick returner
-    (yards per return 50%, return touchdowns 25%, return yards per game 25%), each against his own group.
-  - **Most Improved Beast (MIB):** the most overall gained in the season by a non-rookie regular, at least +2.
+    (yards per return 50%, return touchdowns 25%, return yards per game 25%), each against his own group. Each group's total is standardised within the group before the two are compared, so a long-tailed statistic (return touchdowns) cannot by itself put returners ahead.
+  - **Most Improved Beast (MIB):** the most overall gained in the season by a non-rookie regular, at least +2. The season-start overall is kept in the monster's season stats book (`stats.season.o0`), never read from the Career Timeline, so the Timeline cannot change the game.
   - **Comeback Beast of the Year (CBOY):** a veteran who played under half of last season after a full one before it, and is back above
     his position's average.
   - **Iron Beast (IRON):** every game and the most snaps.
@@ -5017,7 +5017,7 @@ position is left (injuries, an emptied group).
 - **Salary by overall** (`salaryForOvr`): 18,000 + 280 × OVR up to OVR 70 (unchanged), plus 90 × (OVR − 70)² above it. So 80 costs
   49,400 (was 40,400), 90 costs 79,200 (was 43,200) and 99 costs 121,410 (was 45,720). Tier caps are unchanged. Existing contracts keep
   their salary; new and renewed deals, the Apex renewal ask and the draft board's rookie salary use the curve.
-- **AI signing bonuses** use the existing mechanism (money-minded monsters on multi-year deals when the cap is tight).
+- **AI signing bonuses** use the existing cap-saving form: part of the salary moved into a bonus, for a money-minded monster on a multi-year deal, only where it gives him the same value for less cap. An AI club uses it when a deal would leave it under 20% of its cap next league year (`AI_MARKET.bonusRoom`), as well as when the deal would not fit at all. Before, it was used only in the second case, and no club in a 15-season league came that close to the cap.
 - **Position leverage in trade value** (`POSITION_LEVERAGE`), re-derived on the final engine from 1,000 games with the documented
   recipe: QB 1.48 · RB 1.58 · WR 1.08 · TE 1.32 · OL 0.69 · DL 0.90 · LB 1.03 · CB 1.07 · S 0.82 · K 0.78.
 

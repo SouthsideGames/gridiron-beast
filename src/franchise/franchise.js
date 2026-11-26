@@ -950,6 +950,7 @@ function leagueCareerAfterGame(f, teams, _game, lines, { playoff = false, round 
   for (const t of teams) {
     if (!leagueBooks(f, t.name)) continue;
     const rival = vsOwner && f.rivals?.[f.tier]?.team === t.name; // the rival's monsters remember big games against you, as yours do against them
+    noteSeasonStart(t.roster, f.season.year);
     careerAfterGame(t.roster, { year: f.season.year, week: f.season.week, club: t.name, playoffRound: playoff ? round : null, rival, records: f.records }, { lineOf: (m) => lines.get(m.id) });
     // career marks crossed in this game, read from the books themselves (never from the Timeline, which must not change what the game does)
     for (const m of t.roster) { const g = lines.get(m.id); if (!g) continue; const total = withDerived(addInto(addInto({}, m.stats?.career?.reg), m.stats?.career?.post)); const line = withDerived(g.line || {});
@@ -2495,6 +2496,7 @@ export function finishSunday(f, gameState) {
   f.game = null;
   recordPlayStats(f, gameState, side);
   // Career Timeline (GDD §38): read-only, after the game's stats are in the books.
+  noteSeasonStart(f.roster, f.season.year);
   careerAfterGame(f.roster, { year: f.season.year, week: f.season.week, club: f.club, playoffRound: playoffRoundNow, rival: !!m.rival, won, opponent: m.opponent, records: f.records });
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) noteEvolution(x, { year: f.season.year, week: f.season.week, club: f.club, from: e.from, to: e.to }); }
   f.lastGame = { ...f.week.gameResult, events, partnerships: captainRows.filter((x) => x.club === f.club), captainNote, year: f.season.year, week: f.season.week, newBadge: f.campaign.badges[m.opponent]?.year === f.season.year && f.campaign.badges[m.opponent]?.week === f.season.week && won ? m.opponent : null , lostBadge };
@@ -2717,11 +2719,18 @@ function priorRookieAwardIds(f) {
 /** Freeze the regular-season awards (called when the playoffs are drawn). */
 /** R-5: what the awards need beyond this season's table, for every monster in the league (owner and persistent AI rosters): the overall
  *  gained this season (career book) and the regular-season games one and two seasons ago (season books). Read only. */
+/**
+ * R-5 (Most Improved Beast): each monster's overall at his first game of the season, kept in his season stats book (`stats.season.o0`)
+ * at the moment the Career Timeline also notes it. The award reads the book, never the Timeline, so switching the Timeline's writers
+ * off changes nothing in the game (GDD §38.6; found by the sim tier, 2026-11-26).
+ */
+function noteSeasonStart(roster, year) { for (const m of roster) { const s = m.stats?.season; if (s && s.year === year && s.o0 == null) s.o0 = monsterOverall(m); } }
+const seasonStartOvr = (m, year) => (m.stats?.season?.year === year && m.stats.season.o0 != null ? m.stats.season.o0 : seasonStartOverall(m, year)); // the Timeline's note only for a season begun before this field
 function awardPrior(f) {
   const year = f.season.year; const by = new Map();
   const all = [...(f.roster || []), ...(hasLeague(f) ? leagueClubs(f).flatMap((c) => clubRoster(f, c)) : [])];
   for (const m of all) by.set(m.id, m);
-  return (id) => { const m = by.get(id); if (!m) return null; const o0 = seasonStartOverall(m, year); const games = (y) => { const b = (m.stats?.seasons || []).find((x) => x.year === y); return b ? (b.reg?.games || 0) : null; }; // no book: unknown (never counted as a missed season)
+  return (id) => { const m = by.get(id); if (!m) return null; const o0 = seasonStartOvr(m, year); const games = (y) => { const b = (m.stats?.seasons || []).find((x) => x.year === y); return b ? (b.reg?.games || 0) : null; }; // no book: unknown (never counted as a missed season)
     return { gain: o0 == null ? null : monsterOverall(m) - o0, lastGames: games(year - 1), beforeGames: games(year - 2) }; };
 }
 export function finalizeAwards(f) {
