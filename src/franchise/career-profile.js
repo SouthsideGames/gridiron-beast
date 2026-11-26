@@ -271,7 +271,7 @@ export function fullProfile(f, m, where = 'roster', team = null) {
   const archived = archiveCareer(f, m.id)?.seasons.filter((b) => !books.some((x) => x.year === b.year)).length || 0;
   const archiveNote = archived ? $t('franchise.his_earlier_seasons_are_in_the_league_archive', { n: archived, year: yearOf(1) }) : null;
   const count = (k) => trophies.find((t) => t.kind === k)?.count || 0;
-  const titles = count('champion'); const awards = ['mvp', 'opoy', 'dpoy', 'smoy', 'oroy', 'droy', 'stboy', 'cboy', 'mib', 'iron'].reduce((a, k) => a + count(k), 0); // R-5: the season awards (All-League selections are shown on their own shelf) const records = count('record'); const hof = count('hof') > 0;
+  const titles = count('champion'); const awards = ['mvp', 'opoy', 'dpoy', 'smoy', 'oroy', 'droy', 'stboy', 'cboy', 'mib', 'iron'].reduce((a, k) => a + count(k), 0); /* R-5: the season awards (All-League selections are shown on their own shelf) */ const records = count('record'); const hof = count('hof') > 0;
   const timeline = careerTimeline(m, { club: where === 'roster' ? f.club : null }).map((e) => ({ ...e, ref: eventRef(f, m, e) }));
   return {
     v: PROFILE_VERSION, kind: 'full', where, ...id0, club, clubs, seasons, onRecord, complete,
