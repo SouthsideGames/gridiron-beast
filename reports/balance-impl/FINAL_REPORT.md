@@ -74,7 +74,7 @@ The six concerns above are calibration choices for the owner, listed in §2 and 
 | R-15 | GDD and repository cleanup | **Completed** | GDD notice, league, status register, award names and superseded rules corrected in place; new §61; temporary files removed | See §7 | Older historical sections keep their period wording, marked superseded |
 | R-16 | Positional trade values | **Completed** | `POSITION_LEVERAGE` re-derived from 1,000 games on the final engine (documented recipe) | Moves of 0.14 at most; 38 trading tests pass; incoming calls 13 / 16 / 7 a franchise | None |
 | R-17 | Durability in the overall | **Completed with modifications** | Durability 1 (RB, OL, DL, LB), 0.5 (QB, WR, TE, CB, S), **0 for K** (provisional 0.25 tested: kickers are never injured) | Overalls computed live: saves unaffected; Clash and generation keep the frozen weights, so every recorded battle replays exactly | None |
-| R-18 | Save data | **Investigated — no change necessary** | Measured size, speed, parts and round trip at seasons 1/5/10/15 | 1.39 MB stored at season 15; exact round trip; no duplicate or debug data; browser timing in §6 | None |
+| R-18 | Save data | **Investigated — no change necessary** (save data) | Measured size, speed, parts and round trip at seasons 1/5/10/15, in Node and emulated browsers, branch against `main` | 1.39 MB stored at season 15; exact round trip; no duplicate or debug data; phone save 285–534 ms; branch no slower than `main` | Reopening a franchise on a slow phone takes 8–14 s, mostly startup work unrelated to the save (§6); a small follow-up would cut about 5 s |
 | R-19 | Gym club dominance | **Investigated — no change necessary** (owner decision on one interaction) | Traced the four mechanical advantages | Gym titles 67 of 90 seasons (audit 50 of 75); gyms equal ordinary clubs in average strength on All-Star; titles follow ageless legendaries | On Rookie, gyms are founded and resupplied at Pro quality, relatively larger now that Rookie develops slower: owner decision |
 
 ---
@@ -195,7 +195,7 @@ Gym Leader clubs won 21 / 22 / 24 of 30 seasons (Rookie / Pro / All-Star), again
 franchise; the owner won 3 titles in one run (Rookie seed 4).
 
 ### 3.10 Save size and performance
-See §6 (R-18): 502 KB stored at season 1 and 1,389 KB at season 15; exact round trip at every snapshot.
+See §6 (R-18): 502 KB stored at season 1 and 1,389 KB at season 15; exact round trip at every snapshot; emulated phone save 285–534 ms, reopen 8.4–14.4 s (`main` 8.3–16.5 s).
 
 ---
 
@@ -270,7 +270,25 @@ See §6 (R-18): 502 KB stored at season 1 and 1,389 KB at season 15; exact round
 
 **Save timing (R-18).**
 - Node, median of 5: season 1 saves in 650 ms and loads in 208 ms; season 15 saves in 1,824 ms and loads in 686 ms.
-- Emulated browser: SAVE_TIMING_RESULT
+- **Emulated browser** (headless Chromium; `tools/balance-audit/save-browser-timing.py`). The same four saves were imported into slot 2 and measured on this branch and on `main` (`58c33ee`). Saving is the median of 5 immediate saves; reopening is the median of 3 reloads, timed until the franchise is back. Store open is the store's own read, decode and verify. Phone means 390 px with the CPU throttled 4×; desktop means 1280 px with no throttle.
+
+  | Save | Phone: save | Phone: reopen (branch / `main`) | Phone: store open | Desktop: save | Desktop: reopen (branch / `main`) | Stored |
+  |---|---|---|---|---|---|---|
+  | Season 1 | 285 ms | 8.4 s / 8.3 s | 1.8 s | 104 ms | 2.1 s / 2.6 s | 1.0 MB |
+  | Season 5 | 383 ms | 9.5 s / 9.8 s | 3.1 s | 104 ms | 2.2 s / 2.4 s | 1.7 MB |
+  | Season 10 | 515 ms | 13.4 s / 14.4 s | 3.6 s | 141 ms | 3.2 s / 3.4 s | 1.4 MB |
+  | Season 15 | 534 ms | 14.4 s / 16.5 s | 3.7 s | 148 ms | 3.3 s / 3.3 s | 1.5 MB |
+
+  - An empty start (no franchise) takes 1.2 s on the phone and 0.3 s on desktop.
+  - There were 0 page errors, and every import succeeded.
+  - The branch is the same as `main` or slightly faster everywhere.
+  - **Reopening a franchise on a slow phone takes 8–14 s, and most of that is not the save.** A CPU profile of a season-15 reload (`tools/balance-audit/load-profile.py`, desktop) shows:
+    - about 1.2 s in `fitThresholds` (`src/data/monsters.js`), which generates about 4,800 sample monsters from a fixed seed to derive the scheme-fit thresholds;
+    - about 0.65 s in generating one individual (`selectIndividual`, `simulateHistory`);
+    - about 0.4 s in the name check on load (`dedupeRosterNames`);
+    - about 0.4 s decoding the store's parts.
+
+    The thresholds are identical on every run, so shipping them as a fixed table, with a test that it equals the live derivation, would take about 1.2 s off a desktop reload and about 5 s off an emulated phone reload. Nothing else would change. This is not done here, because it would mean another full test run; it is offered as a follow-up (§9).
 
 **Regressions discovered and corrected.**
 1. **Release advice (R-6):** at the roster minimum it could plan a release that left a position to its emergency cover. Fixed.
@@ -386,3 +404,4 @@ Everything removed is kept in git history, and `reports/balance-audit/README.md`
 5. **Plays (R-7):** draws, jet sweep and counter (engine limits); fly sweep and pistol stretch in games.
 6. **Special Teams Beast:** keep it as measured (returners 87%), or weight kickers differently.
 7. **Cleanup:** approve removing the intermediate evidence listed in §7.
+8. **Load time (R-18 follow-up):** ship the scheme-fit thresholds as a fixed table, with an equality test. It saves about 5 s per reopen on a slow phone and changes nothing else.
