@@ -1,0 +1,418 @@
+{
+ "generated": "2026-11-26T21:21:21.059Z",
+ "staffAllowance": 405000,
+ "groups": [
+  {
+   "label": "1.8M",
+   "files": [
+    "cap1800-s3.json",
+    "cap1800-s4.json"
+   ],
+   "cap": 1800000,
+   "usable": 1395000,
+   "runs": 2,
+   "seasons": 10,
+   "clubSeasons": 310,
+   "utilisation": {
+    "mean": 76.4,
+    "median": 76.3,
+    "p10": 71.6,
+    "p90": 82,
+    "max": 87.8
+   },
+   "capRoom": {
+    "mean": 329585,
+    "median": 330200,
+    "p10": 253400,
+    "min": 170167,
+    "tightestPerSeasonMean": 205694,
+    "tightestPerSeasonMin": 170167
+   },
+   "nearCap": {
+    "tightUnder50kPct": 0,
+    "nearUnder100kPct": 0,
+    "overCapRows": 0
+   },
+   "faClose": {
+    "utilMean": 76.4,
+    "utilMedian": 76.3,
+    "tightestRoomMean": 205694,
+    "tightestRoomMin": 170167
+   },
+   "freeAgency": {
+    "aiSignsPerSeason": 8.4,
+    "contestedPct": 57.1,
+    "meanBidders": 2.32,
+    "bonusSigns": 1,
+    "bonusSum": 13200,
+    "ownerSigns": 0,
+    "offersPerSeason": 20.8,
+    "unsignedAtClosePerSeason": 36.9
+   },
+   "contracts": {
+    "extensionsPerSeason": 265.1,
+    "renewalsSignedPerSeason": 72.5,
+    "renewalsDeclinedPerSeason": 19.6,
+    "resignedPerSeason": 72.5,
+    "walkedPerSeason": 78.6,
+    "overCapCases": 0,
+    "runaway": 0
+   },
+   "releases": {
+    "perSeason": 20,
+    "veteranPerSeason": 0.8,
+    "retiredPerSeason": 14,
+    "tradedPerSeason": 6.8
+   },
+   "retention": {
+    "eliteLostPerSeason": 0.4,
+    "eliteLostShareOfEliteExits": 44.4,
+    "youngProspectsLostPerSeason": 2.1
+   },
+   "roster": {
+    "mean": 37.5,
+    "min": 33,
+    "max": 38,
+    "lineupProblemClubSeasons": 0
+   },
+   "legality": {
+    "problems": 0,
+    "marketProblems": 0,
+    "overCapRows": 0
+   },
+   "owner": {
+    "winPct": 52.9,
+    "playoffSeasons": 5,
+    "titles": 0,
+    "roomMean": 187385,
+    "roomMin": 44100
+   },
+   "titles": {
+    "total": 10,
+    "gym": 9,
+    "distinctChampions": 5,
+    "topClubTitles": 4,
+    "top3Share": 80
+   },
+   "sustainability": {
+    "1": {
+     "aiTeamOvr": 52.7,
+     "aiPayroll": 1033470
+    },
+    "5": {
+     "aiTeamOvr": 62.7,
+     "aiPayroll": 1106685
+    }
+   }
+  },
+  {
+   "label": "1.6M",
+   "files": [
+    "cap1600-s3.json",
+    "cap1600-s4.json"
+   ],
+   "cap": 1600000,
+   "usable": 1195000,
+   "runs": 2,
+   "seasons": 10,
+   "clubSeasons": 310,
+   "utilisation": {
+    "mean": 88.9,
+    "median": 89,
+    "p10": 83.7,
+    "p90": 95.1,
+    "max": 99.6
+   },
+   "capRoom": {
+    "mean": 132760,
+    "median": 131405,
+    "p10": 59900,
+    "min": 4700,
+    "tightestPerSeasonMean": 33522,
+    "tightestPerSeasonMin": 4700
+   },
+   "nearCap": {
+    "tightUnder50kPct": 7.1,
+    "nearUnder100kPct": 26.1,
+    "overCapRows": 0
+   },
+   "faClose": {
+    "utilMean": 88.9,
+    "utilMedian": 89,
+    "tightestRoomMean": 33522,
+    "tightestRoomMin": 4700
+   },
+   "freeAgency": {
+    "aiSignsPerSeason": 8.8,
+    "contestedPct": 58,
+    "meanBidders": 2.35,
+    "bonusSigns": 9,
+    "bonusSum": 127600,
+    "ownerSigns": 1,
+    "offersPerSeason": 22,
+    "unsignedAtClosePerSeason": 39.9
+   },
+   "contracts": {
+    "extensionsPerSeason": 263.5,
+    "renewalsSignedPerSeason": 72.8,
+    "renewalsDeclinedPerSeason": 20.2,
+    "resignedPerSeason": 72.8,
+    "walkedPerSeason": 79.5,
+    "overCapCases": 0,
+    "runaway": 0
+   },
+   "releases": {
+    "perSeason": 20.5,
+    "veteranPerSeason": 0.9,
+    "retiredPerSeason": 13.8,
+    "tradedPerSeason": 6.4
+   },
+   "retention": {
+    "eliteLostPerSeason": 1.6,
+    "eliteLostShareOfEliteExits": 76.2,
+    "youngProspectsLostPerSeason": 3.1
+   },
+   "roster": {
+    "mean": 37.5,
+    "min": 32,
+    "max": 38,
+    "lineupProblemClubSeasons": 0
+   },
+   "legality": {
+    "problems": 32,
+    "marketProblems": 0,
+    "overCapRows": 0
+   },
+   "owner": {
+    "winPct": 45,
+    "playoffSeasons": 3,
+    "titles": 0,
+    "roomMean": 51695,
+    "roomMin": 900
+   },
+   "titles": {
+    "total": 10,
+    "gym": 8,
+    "distinctChampions": 7,
+    "topClubTitles": 3,
+    "top3Share": 60
+   },
+   "sustainability": {
+    "1": {
+     "aiTeamOvr": 52.6,
+     "aiPayroll": 1033090
+    },
+    "5": {
+     "aiTeamOvr": 62.5,
+     "aiPayroll": 1097257
+    }
+   }
+  },
+  {
+   "label": "1.5M",
+   "files": [
+    "cap1500-s3.json",
+    "cap1500-s4.json"
+   ],
+   "cap": 1500000,
+   "usable": 1095000,
+   "runs": 2,
+   "seasons": 10,
+   "clubSeasons": 310,
+   "utilisation": {
+    "mean": 95.1,
+    "median": 95.5,
+    "p10": 91.3,
+    "p90": 98.3,
+    "max": 99.9
+   },
+   "capRoom": {
+    "mean": 53992,
+    "median": 48757,
+    "p10": 18967,
+    "min": 900,
+    "tightestPerSeasonMean": 10238,
+    "tightestPerSeasonMin": 900
+   },
+   "nearCap": {
+    "tightUnder50kPct": 51,
+    "nearUnder100kPct": 91.3,
+    "overCapRows": 0
+   },
+   "faClose": {
+    "utilMean": 95.1,
+    "utilMedian": 95.5,
+    "tightestRoomMean": 10238,
+    "tightestRoomMin": 900
+   },
+   "freeAgency": {
+    "aiSignsPerSeason": 9.3,
+    "contestedPct": 58.1,
+    "meanBidders": 2.29,
+    "bonusSigns": 15,
+    "bonusSum": 215500,
+    "ownerSigns": 0,
+    "offersPerSeason": 21.7,
+    "unsignedAtClosePerSeason": 50.5
+   },
+   "contracts": {
+    "extensionsPerSeason": 263.7,
+    "renewalsSignedPerSeason": 72.1,
+    "renewalsDeclinedPerSeason": 20.3,
+    "resignedPerSeason": 72.1,
+    "walkedPerSeason": 78.9,
+    "overCapCases": 0,
+    "runaway": 0
+   },
+   "releases": {
+    "perSeason": 23.9,
+    "veteranPerSeason": 3.4,
+    "retiredPerSeason": 13.8,
+    "tradedPerSeason": 5.6
+   },
+   "retention": {
+    "eliteLostPerSeason": 4.9,
+    "eliteLostShareOfEliteExits": 89.1,
+    "youngProspectsLostPerSeason": 4.8
+   },
+   "roster": {
+    "mean": 37.4,
+    "min": 33,
+    "max": 38,
+    "lineupProblemClubSeasons": 0
+   },
+   "legality": {
+    "problems": 192,
+    "marketProblems": 0,
+    "overCapRows": 0
+   },
+   "owner": {
+    "winPct": 51.4,
+    "playoffSeasons": 3,
+    "titles": 0,
+    "roomMean": 455,
+    "roomMin": -65100
+   },
+   "titles": {
+    "total": 10,
+    "gym": 9,
+    "distinctChampions": 6,
+    "topClubTitles": 2,
+    "top3Share": 60
+   },
+   "sustainability": {
+    "1": {
+     "aiTeamOvr": 52.4,
+     "aiPayroll": 1020913
+    },
+    "5": {
+     "aiTeamOvr": 61,
+     "aiPayroll": 1054036
+    }
+   }
+  },
+  {
+   "label": "1.4M",
+   "files": [
+    "cap1400-s3.json",
+    "cap1400-s4.json"
+   ],
+   "cap": 1400000,
+   "usable": 995000,
+   "runs": 2,
+   "seasons": 10,
+   "clubSeasons": 310,
+   "utilisation": {
+    "mean": 97.5,
+    "median": 98,
+    "p10": 94.3,
+    "p90": 99.8,
+    "max": 100
+   },
+   "capRoom": {
+    "mean": 25307,
+    "median": 20350,
+    "p10": 1600,
+    "min": 0,
+    "tightestPerSeasonMean": 484,
+    "tightestPerSeasonMin": 0
+   },
+   "nearCap": {
+    "tightUnder50kPct": 87.7,
+    "nearUnder100kPct": 98.1,
+    "overCapRows": 0
+   },
+   "faClose": {
+    "utilMean": 97.5,
+    "utilMedian": 98,
+    "tightestRoomMean": 484,
+    "tightestRoomMin": 0
+   },
+   "freeAgency": {
+    "aiSignsPerSeason": 12.3,
+    "contestedPct": 72.4,
+    "meanBidders": 3.66,
+    "bonusSigns": 26,
+    "bonusSum": 415300,
+    "ownerSigns": 9,
+    "offersPerSeason": 46.8,
+    "unsignedAtClosePerSeason": 57.1
+   },
+   "contracts": {
+    "extensionsPerSeason": 228.3,
+    "renewalsSignedPerSeason": 55.4,
+    "renewalsDeclinedPerSeason": 30.5,
+    "resignedPerSeason": 55.4,
+    "walkedPerSeason": 85,
+    "overCapCases": 0,
+    "runaway": 0
+   },
+   "releases": {
+    "perSeason": 29.2,
+    "veteranPerSeason": 10,
+    "retiredPerSeason": 12.1,
+    "tradedPerSeason": 5.9
+   },
+   "retention": {
+    "eliteLostPerSeason": 8.2,
+    "eliteLostShareOfEliteExits": 94.3,
+    "youngProspectsLostPerSeason": 7.4
+   },
+   "roster": {
+    "mean": 35.7,
+    "min": 31,
+    "max": 38,
+    "lineupProblemClubSeasons": 0
+   },
+   "legality": {
+    "problems": 922,
+    "marketProblems": 0,
+    "overCapRows": 0
+   },
+   "owner": {
+    "winPct": 54.3,
+    "playoffSeasons": 5,
+    "titles": 0,
+    "roomMean": -1475,
+    "roomMin": -65600
+   },
+   "titles": {
+    "total": 10,
+    "gym": 9,
+    "distinctChampions": 6,
+    "topClubTitles": 3,
+    "top3Share": 70
+   },
+   "sustainability": {
+    "1": {
+     "aiTeamOvr": 51.4,
+     "aiPayroll": 964607
+    },
+    "5": {
+     "aiTeamOvr": 58.2,
+     "aiPayroll": 972843
+    }
+   }
+  }
+ ]
+}

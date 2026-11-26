@@ -21,7 +21,8 @@ Evidence files: `reports/balance-impl/followup/`. Tools are listed with each res
   work from the first fit after load. The browser reopen time is in section 9.
 - **A-5:** Intermediate evidence directories removed after their findings, seeds and commands were preserved; `M6_STATUS.md` marked as a
   closed historical record; GDD §61.13 written.
-- **Play-test fix (owner, 2026-11-26):** a called two-point play is now the play that runs (section 7.4).
+- **Play-test fixes (owner, 2026-11-26):** a called two-point play is now the play that runs (section 7.4); the final result no longer
+  freezes while the week settles (section 9.2).
 
 **Most important findings:**
 1. **The Clash "ability effect" used until now overstated how weak abilities are.** It switched every monster's ability off at once.
@@ -29,7 +30,9 @@ Evidence files: `reports/balance-impl/followup/`. Tools are listed with each res
    Deep Winter (−0.2) and Eclipse Theft (+0.6) are neutral. All 11 rarely-triggered abilities are neutral (−0.45 to +0.65). Foresight
    (−1.6) is the one remaining real negative, entirely in matchups against status-applying beasts. Section 6.
 2. **Salary cap:** 1.4 M fails at league creation (every club over the cap). 1.5 M puts half of all club-seasons within 50,000 of the
-   cap and drives elite monsters out. **1.6 M is the only workable candidate**; section 3 has its 15-season validation.
+   cap and drives elite monsters out. **1.6 M is the only workable candidate:** over 15 seasons it binds (46% of club-seasons within
+   100,000; bonuses 1 → 19) while AI strength and title spread are unchanged. It needs cap-aware founding first, and it makes the
+   owner's money management much harder. Section 3.
 3. **Sacks are low because the ball comes out in about 1.8–1.9 seconds and only about one pressure in ten becomes a sack**, not because
    rushers fail to beat blockers (they do so on 55% of snaps, first at about 1.1 s). Personnel matters strongly: an elite DL gives
    4.9% sacks, an elite OL 1.0%. Section 5.
@@ -52,6 +55,7 @@ Evidence files: `reports/balance-impl/followup/`. Tools are listed with each res
 | A-4 Fixed scheme-fit table | **Completed** | `FIT_THRESHOLD_TABLE`, equality test, `tools/fit-thresholds.mjs` check / `--write` | 18,000 fits hash-identical; first fit in Node 1,182–1,454 ms → 0 ms; browser in section 9 | fit-thresholds (new); 155 of 155 related |
 | A-5 Cleanup | **Completed** | Intermediate directories removed after preserving findings (section 11); M6_STATUS fixed; GDD §61.13 | — | — |
 | Play test: two-point call | **Fixed** | The called play runs on a two-point try | New test fails on the old code (called Trap, ran Power Left) | 40 of 40 |
+| Play test: final whistle pause | **Fixed** | The result opens at once with "Wrapping up the week…"; the week settles after the first paint and fills the same sheet | Emulated phone: result visible after 0.1–0.15 s, was 21.6 s frozen | 12 match-screen files, 120 of 120 |
 
 ---
 
@@ -92,10 +96,39 @@ through season 1; see 3.2.
 
 ### 3.2 15-season validation (1.6 M against the 1.8 M control, same seeds, same code)
 
-VALIDATION_TABLE
+| 15 seasons, seeds 3 and 4, Pro | 1.8 M (control) | 1.6 M |
+|---|---|---|
+| Utilisation of usable cap, mean / median | 79% / 79% | 91% / 91% |
+| Club-seasons within 50k / 100k of the cap | 0% / 0.8% | 18% / 46% |
+| Tightest club's room, mean per season | 149,400 | 17,200 |
+| AI signing bonuses (30 seasons) | 1 | 19 (319,000 in total) |
+| Free-agent signings per season / contested | 13.4 / 60% | 13.3 / 54% |
+| Renewals signed / declined per season | 99.5 / 15.3 | 98.2 / 14.9 |
+| Releases per season (veterans 29+) | 11.9 (0.7) | 13.6 (1.1) |
+| Elite (75+) monsters lost to money per season | 1.8 | 3.8 |
+| Young prospects lost to money per season | 1.5 | 2.9 |
+| Roster size, mean (min) | 36.9 (30) | 36.8 (28) |
+| Payroll-over-cap problems | 0 | 32 — all in season 1, from one club per seed founded over the cap; none afterwards |
+| AI overall at S1 / S5 / S10 / S15 | 52.7 / 62.7 / 63.2 / 63.3 | 52.6 / 62.5 / 63.3 / 63.1 |
+| AI payroll at S15 | 1,112,000 | 1,088,000 |
+| Titles: distinct champions / most by one club / gym titles | 15 / 8 / 21 | 16 / 10 / 21 |
+| Owner win % (hands-off "repair" owner) | 38.8 | 29.0 |
+| Owner cap room, mean / minimum | 139,100 / 7,800 | 28,500 / −72,100 |
+
+**Reading it:**
+- **1.6 M makes the cap a real constraint and stays sustainable.** Almost half of club-seasons come within 100,000 of it, bonuses go
+  from 1 to 19, elite and young departures for money double, yet AI strength, roster sizes, renewals and title spread are unchanged.
+- **Legality:** the only problems are clubs founded over the lower cap (founding rosters are not sized to the cap); every one clears by
+  the first offseason. A lower cap needs **cap-aware founding** before it ships.
+- **Owner difficulty rises sharply:** the benchmark's hands-off owner (it re-signs everyone it can and never manages money) falls from
+  38.8% to 29.0% and goes over the cap. A real owner would manage the cap, but the drop shows how much harder money management becomes.
 
 ### 3.3 Recommendation (not implemented)
-CAP_RECOMMENDATION
+- **If the owner wants the cap to matter: 1.6 M**, together with cap-aware founding (each founding roster sized to the cap) and a
+  check of the owner-side tools (the Desk's cap warnings and the renewal screen) because the owner will now meet the cap.
+- **1.5 M and 1.4 M: not recommended** (section 3.1).
+- **If the current loose economy is acceptable: keep 1.8 M**; nothing breaks, but the cap is decorative.
+- Nothing was changed: the shipped cap is 1,800,000.
 
 ---
 
@@ -378,6 +411,7 @@ Nothing here is full regression validation.
 | A-3 | `no-kicker` (new, 7) plus every fast-tier file that touches kicks, fourth downs, tries, lineups or forfeits (52 files) | 289 results, 0 failures (one file's results were reported in both runs after a timeout split the batch) |
 | A-4 | `fit-thresholds` (new) and the scheme-fit / generation files | 155 of 155 |
 | Two-point call | `two-point-call` (new, 2), `task8-special-plays`, `task8-abilities-light-metal`, `phone-match-polish`, `no-kicker` | 40 of 40 |
+| Final whistle | Every test file that reads the match screen (12 files) | 120 of 120 |
 | Determinism | A-4: 18,000 scheme fits hash-identical before and after | identical |
 | Simulations | All franchise runs: 0 errors; integrity problems only at the experimental caps (section 3) | — |
 
@@ -406,7 +440,7 @@ by logic tests only).
 
 | Decision | Finding | Option A | Option B | Option C | Recommended | Reason |
 |---|---|---|---|---|---|---|
-| Salary cap | DECISION_CAP_FINDING | Keep 1.8 M | 1.6 M with cap-aware founding | 1.5 M | DECISION_CAP_REC | DECISION_CAP_REASON |
+| Salary cap | 1.8 M never binds; 1.6 M binds (46% of club-seasons near it) and stays sustainable; 1.5 M and 1.4 M break legality | Keep 1.8 M | 1.6 M with cap-aware founding | 1.5 M | B (if a binding cap is wanted) | The only setting that binds without breaking rosters, legality or AI strength; founding must respect it first |
 | Rookie difficulty | Rookie–Pro gap 1.5–2.9 points; converges | Accept | Lower Rookie founding/replenishment quality (−4 → −7) | Lower Rookie aiDev (0.6 → 0.4) | B, measured first | Acts at every season including late |
 | Pass rush | 2% sacks: fast release, pressure rarely finishes | Accept | Longer read times for low-Awareness QBs | — | A (or B if a higher rate is wanted) | Rate responds to personnel and calls; forcing is ruled out |
 | Root Communion | −7.4 alone | Keep | Cast in addition to the attack | Trigger at 40% | B | Only option that removes most of the loss |
