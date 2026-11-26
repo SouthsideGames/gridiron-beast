@@ -362,6 +362,9 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
 - **AI signing bonuses:** the mechanism exists (`fa-ai.js` `bonusTerms`, for money-minded monsters on multi-year deals when the cap is tight; used in bidding wars and urgent signings). The audit saw none because the cap never bound. With the curve the cap binds at the top, and the 15-season validation counts the bonuses. If there are still none, the AI's use is widened.
 ### R-16: trade values
 - Position leverage rerun on the final engine (300 games, bump 8) to re-derive `POSITION_LEVERAGE` with the documented recipe (shrink, half strength, clamp 0.6–1.6, rescale).
+- **300-game rerun** (`phase5/position-leverage-300.json`, bump 8, the final engine). Through the documented recipe it gives QB 1.34 · RB 1.54 · WR 1.14 · TE 1.21 · OL 0.65 · DL 1.05 · LB 0.91 · CB 1.09 · S 0.67 · K 1.07 (now: 1.37 · 1.6 · 1.01 · 1.45 · 0.63 · 0.86 · 1.02 · 1.21 · 0.9 · 0.79).
+  - DL rises (the R-1 pass rush now uses DL Speed), as expected.
+  - TE, S and K move by more than their noise allows a decision on: relative standard errors 0.86, 0.44 and 0.79 (the 2023 study's were 0.09–0.28 on 2,000 games). Not adopted yet; 700 more games (start 301) are running, to merge into 1,000.
 - **Speed sweep after the slope** (`phase5/attr-sweep-n200.json`, Speed 30 / 65 / 95). Speed stays viable everywhere:
   - WR peak speed 7.0 / 8.0 / 9.2 yd/s (was 6.8 / 8.2 / 9.4); deep-ball yards 9.1 / 11.0 / 23.9;
   - CB completion allowed 40.5 / 29.5 / 26.5%;
@@ -405,4 +408,8 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   2. **Gym tier growth** (+1 / +4 / +7, with Aetheria −5) in the club target, used by arrivals every season. Designed.
   3. **Ageless legendaries:** each late gym's signature legendary never declines. With equal average strength on All-Star, titles follow those stars (the audit found the same).
   4. **Coach IQ +0.2** for gym coaches. Designed.
+- **Pro, seed 3, 15 seasons** (current code; repair owner): owner 51.4% (seasons 1–5 57.1, 6–10 42.9, 11–15 54.3), 7 playoff seasons, 1 title; 0 problems.
+  - Titles: 10 distinct champions, gyms 8 of 15 (audit 10).
+  - AI overall at seasons 1 / 5 / 10 / 15: Pro 53.3 / 62.5 / 62.9 / 62.4; Rookie 52.0 / 61.7 / 63.4 / 62.5; All-Star 58.5 / 65.6 / 65.5 / 65.2.
+  - **Finding:** Rookie and Pro converge by season 5 (within 1 point), while All-Star stays about 3 points above. The slower Rookie rate only delays reaching the same ceilings, as the first calibration found. The final runs (seeds 3 and 4) decide whether Rookie needs a ceiling-side change; any such change is an owner decision.
 - To be retested on the final runs; any correction comes after.
