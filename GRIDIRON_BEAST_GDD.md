@@ -5048,6 +5048,10 @@ screens (reviewers, labs) and the frozen historical Clash move tables are unchan
 ### 61.11b Play-test changes (owner, 2026-11-26)
 - **Plain home fields** have no sideline markers (§60.12); Gym Leader fields keep theirs.
 - **Match Day:** the week and the game type are two centred lines under VS ("WEEK 4" / "INTERCONFERENCE").
+- **Meteor Impact** (FIR-03-F, Pyronix QB): the catch shockwave pushes opponents 2.5 / 3 / 3.5 / 4 yards by mastery (was 1 / 1.25 /
+  1.5 / 1.75); radius 3 yards, trigger and cooldown unchanged. Measured (`tools/balance-audit/meteor-probe.mjs`: 400 seeds, deep post
+  against Cover 3, 121 powered catches, same seeds with and without): yards after the catch +2.15 at mastery 0 and +3.95 at mastery 3
+  (were +0.18 and +1.12).
 - **Zoom button** on the match field (not in Auto or a replay): a magnifier at the bottom right. Pressing it eases the camera in over
   1.8 s (the same timing and easing as Auto's camera) to 86% of the play-calling view, centred across the field, with the ball a little
   below the middle and followed up and down the field during the play. Pressing again eases back out. The play-calling view is the

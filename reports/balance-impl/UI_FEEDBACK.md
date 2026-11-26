@@ -45,3 +45,8 @@ Screenshots (emulated iPhone 390 px, disposable save): `ui/play-test-1126-*.png`
 |---|---|---|
 | 9 | Zone placement boxes stand off their spots right after a play, and snap into place once a play is chosen | **Cause, measured** (emulated phone, 390 px): during a play the field box is 586 px tall (camera 92 yards); when the play ends, the result banner shrinks it to 417 px (66 yards). The screen after the play was built while the camera was still 92 yards, so the planner art (zone placement boxes, Prism Break targets) was projected about 9–10 yards off. The field and players were drawn after the box was re-measured. Any refresh, such as choosing a play, re-projected it. **Fix:** the planner art is projected when the field is drawn, with the same camera as the field (`underlayAt`, match.js). Zone planner and match tests: 127 of 127. The exact screen (a pending zone ability with placement choices) was not recreated in emulation; the camera change behind it was |
 
+## Play test, 2026-11-26 (13:51)
+| # | Feedback | Done |
+|---|---|---|
+| 10 | Meteor Pass (now Meteor Impact, FIR-03-F) shockwave barely pushes the defenders back | Push 1 / 1.25 / 1.5 / 1.75 → **2.5 / 3 / 3.5 / 4 yards** by mastery; radius, trigger and cooldown unchanged. Measured on 400 seeds (deep post against Cover 3, 121 powered catches, same seeds with the ability off): yards after the catch +0.18 → **+2.15** (mastery 0) and +1.12 → **+3.95** (mastery 3). Dex text and module, ability tests (they now read the constant), review and Dex tests pass |
+

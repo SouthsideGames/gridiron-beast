@@ -1,7 +1,8 @@
 // FIR-03-F Meteor Impact (firestorm: Pyronix; QB). Task 8 M3 (special action; instant bounded displacement).
 // Contract (Dex): a forward pass targeted at least 15 yards beyond the line of scrimmage while ready commits on release (the
 // cooldown is spent even if the pass then fails). A completed teammate catch of that pass releases an outward shockwave: every
-// opponent within 3 yards of the catch is pushed radially away, up to 1 / 1.25 / 1.5 / 1.75 yards by mastery. No effect on tips,
+// opponent within 3 yards of the catch is pushed radially away, up to 2.5 / 3 / 3.5 / 4 yards by mastery
+// (owner play test 2026-11-26; was 1 / 1.25 / 1.5 / 1.75). No effect on tips,
 // drops or interceptions. Teammates unaffected; no stun or knockdown; no ball-trajectory change and no forced fumble; resistance
 // (the Earth field's contact-displacement resistance) reduces the displacement. Recharge: three completed offensive scrimmage plays
 // (fires 1, unavailable 2-4, ready 5). Two-point attempts neither activate nor advance the cooldown. No lingering zone.
@@ -16,7 +17,9 @@ import { registerAbility } from './registry.js';
 import { scrimmage, byMastery, cooldownStep } from './fw-util.js';
 import { E as $E } from '../../core/english.js';
 
-export const METEOR = Object.freeze({ minTarget: 15, radius: 3, pushByMastery: [1, 1.25, 1.5, 1.75], cooldown: 3 });
+// Owner play test 2026-11-26: the defenders "barely get pushed back" (measured: +0.18 yards after the catch at mastery 0, +1.1 at 3).
+// The push is 2.5 / 3 / 3.5 / 4 yards (was 1 / 1.25 / 1.5 / 1.75); the radius, trigger and cooldown are unchanged.
+export const METEOR = Object.freeze({ minTarget: 15, radius: 3, pushByMastery: [2.5, 3, 3.5, 4], cooldown: 3 });
 
 export default registerAbility({
   family: 'firestorm', abilityId: 'FIR-03-F', repeatableCooldown: true,

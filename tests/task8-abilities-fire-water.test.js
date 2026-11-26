@@ -17,6 +17,8 @@ import { registeredFamilies, contractOf, HOOKS } from '../src/sim/abilities/regi
 import { auraLayer } from '../src/sim/abilities/fw-util.js';
 import { FAMILIES } from '../src/data/beast-dex.js';
 import '../src/sim/abilities/index.js';
+// Owner play test 2026-11-26: Meteor Impact's push is 2.5 / 3 / 3.5 / 4 yards (was 1 / 1.25 / 1.5 / 1.75); its assertions read METEOR.
+import { METEOR } from '../src/sim/abilities/firestorm.js';
 
 const FAMS = { ashkit: 'FIR-02-F', firestorm: 'FIR-03-F', cinderclaw: 'FIR-04-F', pyrelynx: 'FIR-05-F', pyroclast: 'FIR-06-F', tidepaw: 'WAT-01-F', mudcub: 'WAT-02-F', reefclaw: 'WAT-03-F', tidefin: 'WAT-04-F', wavehorn: 'WAT-05-F', tsunarok: 'WAT-06-F' };
 const forced = (target, at) => ({ qb: { mode: 'human', at, action: 'throw', target } });
@@ -118,14 +120,14 @@ test('Meteor Impact: a ready pass aimed 15+ yards commits at release; a complete
     assert.equal(rel.length, 1, `seed ${seed}: commits on release`); assert.equal(t8.ability.o_QB.cd, 3, 'cooldown spent at release (fires 1)');
     assert.equal(sw.length, r.stats.receiver ? 1 : 0, 'a shockwave only on a completed catch');
     if (!r.stats.receiver) committedMiss++;
-    for (const e of sw) { shock++; for (const v of e.victims) { assert.ok(!['QB', 'RB', 'WR1', 'WR2', 'TE', 'LG', 'RG'].includes(v.slot), 'opponents only'); assert.ok(v.moved <= [1, 1.25, 1.5, 1.75][mastery] + 1e-9); } assert.ok(e.victims.some((v) => near(v.moved, [1, 1.25, 1.5, 1.75][mastery], 1e-3)) || !e.victims.length); }
+    for (const e of sw) { shock++; for (const v of e.victims) { assert.ok(!['QB', 'RB', 'WR1', 'WR2', 'TE', 'LG', 'RG'].includes(v.slot), 'opponents only'); assert.ok(v.moved <= METEOR.pushByMastery[mastery] + 1e-9); } assert.ok(e.victims.some((v) => near(v.moved, METEOR.pushByMastery[mastery], 1e-3)) || !e.victims.length); }
   }
   assert.ok(shock >= 2 && committedMiss >= 1, `shockwaves ${shock}, committed misses ${committedMiss}`);
   // Earth resistance (an Earth field over the whole field, 50%): every displacement is halved.
   let seen = 0;
   for (let seed = 1; seed <= 60 && seen < 2; seed++) {
     const r = play('deep_post', 'cover_3', seed, { off: { QB: 'firestorm' }, options: { t8: { status: {} }, ...forced('WR1', 1.9), fields: [{ id: 'E', type: 'Earth', strength: 50, createdAt: 0, owner: 'x', ability: 'TEST', yard: [-20, 120], lat: [-40, 40] }] } });
-    for (const e of abilityEvents(r, 'FIR-03-F').filter((x) => x.phase === 'shockwave')) for (const v of e.victims) { seen++; assert.ok(v.moved <= 0.5 + 1e-9, `resisted (${v.moved})`); }
+    for (const e of abilityEvents(r, 'FIR-03-F').filter((x) => x.phase === 'shockwave')) for (const v of e.victims) { seen++; assert.ok(v.moved <= METEOR.pushByMastery[0] * 0.5 + 1e-9, `resisted (${v.moved})`); }
   }
   assert.ok(seen >= 1, 'a resisted shockwave observed');
 });
