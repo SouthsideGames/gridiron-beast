@@ -115,3 +115,35 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - Fix: charge on **passes defended**: a personal breakup, or an incompletion on a throw at the receiver he covers (the engine's `coverBy`, man or zone), never an interception (`passDefended` in `abilities/common.js`).
   - Covered incompletions: about 1.0–1.2 a game for a CB1 and 0.3–0.55 for a free safety.
   - The Dex contract (`abilities.json`, family pages), the review texts and the plain text were updated; the Dex module was rebuilt (`--check` OK).
+  - Measured after the fix (60 games, subject at CB1 / FS):
+    - CB1: 3 or more passes defended in 5 of 60 games; Air Brake executed 5 times (about 8% of games).
+    - FS: 2 or more in 9 of 60 games; Crosswind Rescue created lanes 3 times in 30 games (about 10%).
+    - Both stay rare signature plays. The Dex already calls Crosswind "a genuinely rare trigger".
+  - Tests updated to the decision: `task8-abilities-wind-dark` (Air Brake charge), `task8-abilities-psychic-dragon` and `task8-n9d-prechoice` (Foresight depth). Each keeps its original intent: interceptions and two-point tries never charge; the mark comes from the visible look, not the hidden call.
+- **R-6 follow-up found by `task7-remediation` R1c.**
+  - With covers, AI clubs no longer saw an emptied position as an urgent need, so they would have played an OL at TE indefinitely.
+  - `staffingHoles` (true holes plus covered slots) now drives `clubNeeds` and `leagueInjuryCover`. AI clubs sign for a covered slot as before.
+  - The integrity check still uses `lineupProblems` (legality).
+- `task7-remediation`: 10 of 10 pass after the `staffingHoles` fix. Ability tests: 43 of 43.
+
+### R-8: AI defensive pools
+- `ZONE_D` and `MAN_D` are built from the released book by tag, excluding desperation, goal line, prevent, red zone and two-minute calls. That gives 80 zone and 58 man calls, against 8 and 9 before.
+- `RUN_D` adds the 19 released run fronts to the original 6.
+- Identity leans are unchanged in method (blitz / zone / man primary, the other family secondary, run-front clubs two run calls).
+- Offence checked: AI clubs already used 174 of 184 offensive calls (500-game study), so no change was needed.
+
+### R-14: fourth down
+- `weighOffense`: on 4th and 5+, passes ×1.8, draws ×0.35, other runs ×0.1. The audit measured runs converting 4.3% against 27.8% for passes there.
+- `fourthDownDecision` uses `read` = the coach's IQ scaled 0–1 (Rookie 0, Pro 0.44, All-Star 1, gym coaches +0.2):
+  - two scores down (−9 or worse) in the 4th quarter with under 10 minutes left, at the 40 or beyond and 4th and 5 or less: go (when read > 0);
+  - the short-yardage thresholds loosen with read: 4th and ≤3 beyond midfield goes at aggression > 0.35 − 0.1·read; 4th and ≤5 at the opponent's 40 or closer goes at aggression > 0.5 − 0.15·read (it was the 38).
+  - Kicker effectiveness enters through the existing field-goal range. Opposing personnel is not available to the decision; this is documented, not added.
+- Decision grid (ball on the 30–65, 4th and 1–10, four game states), go rate:
+
+  | IQ | Aggression 0.35 | 0.5 | 0.7 |
+  |---|---|---|---|
+  | 0.6 (Rookie, the old rules) | 8.2% | 16.3% | 22.4% |
+  | 1.0 (Pro) | 25.0% | 28.1% | 31.6% |
+  | 1.5 (All-Star) | 25.0% | 28.1% | 31.6% |
+
+  Coaching personalities stay distinguishable within each difficulty.

@@ -14,7 +14,7 @@ import { newContract, leagueContract, contractEnds, renewalAsk } from './contrac
 import { offseason } from './progression.js';
 import { playerValue } from './trades.js';
 import { careerSeasonEnd } from './career.js';
-import { buildDepthChart, lineupProblems, GROUP_SLOTS, teamOverall } from './roster.js';
+import { buildDepthChart, lineupProblems, staffingHoles, GROUP_SLOTS, teamOverall } from './roster.js';
 import { hasLeague, leagueClubs, clubRoster, clubRecord, isProtected, isAgeless, addToClub, clubPayroll, clubCapRoom, claimMonster } from './league-registry.js';
 import { releaseFromClub, takeFromPool, takeFromWaivers, weakestSpare, homeRegionOf } from './league.js';
 import { publicOnset } from '../data/aging.js';
@@ -188,7 +188,7 @@ export function growSignature(m, points = SIGNATURE_GROWTH) {
 
 /** What a club still needs to reach the full 38: [position, missing] with the base slots that nobody can cover first. */
 export function clubNeeds(f, club) {
-  const roster = clubRoster(f, club); const chart = buildDepthChart(roster); const problems = lineupProblems(roster, chart);
+  const roster = clubRoster(f, club); const chart = buildDepthChart(roster); const problems = staffingHoles(roster, chart); // R-6: a slot held by an emergency cover is still an urgent need
   const count = {}; for (const m of roster) count[m.position] = (count[m.position] || 0) + 1;
   const needs = [];
   for (const slot of problems) needs.push([positionOf(slot), 1, true]);
@@ -388,7 +388,7 @@ export function leagueInjuryCover(f, r, { year, cap, targetOf }) {
   for (const club of order(f)) {
     let guard = 0;
     while (guard++ < 6) {
-      const roster = clubRoster(f, club); const problems = lineupProblems(roster, buildDepthChart(roster)); if (!problems.length) break;
+      const roster = clubRoster(f, club); const problems = staffingHoles(roster, buildDepthChart(roster)); if (!problems.length) break; // R-6: covers are temporary
       const pos = positionOf(problems[0]);
       if (roster.length >= ROSTER_MAX) { const spare = weakestSpare(f, club, { position: null, exclude: new Set(roster.filter((m) => m.position === pos).map((m) => m.id)) }); if (!spare) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' }); }
       // cap room for at least a replacement-level deal: spares go first (never a starter at another short position, never the protected)

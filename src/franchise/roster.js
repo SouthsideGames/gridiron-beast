@@ -107,6 +107,9 @@ export function legalFiller(roster, chart, slot) {
   const emergency = roster.filter((m) => available(m) && !used.has(m.id) && canCoverEmergency(m.position, slot)); // R-6: base slots only, last resort
   return best(reserves.filter((m) => m.position === need)) || best(reserves) || best(doubling) || best(emergency) || null;
 }
+/** R-6: base slots a club must still staff with its own position: the true holes plus those held by an emergency cover. Clubs (AI
+ *  free agency and injury cover) sign for these as before; the cover only keeps the game legal meanwhile. */
+export function staffingHoles(roster, chart) { return [...lineupProblems(roster, chart), ...emergencySlots(roster, chart).map((e) => e.slot)]; }
 /** R-6: base-chart slots held by an emergency cover (a beast away from his own position), for the lineup screens. */
 export function emergencySlots(roster, chart) {
   const byId = new Map(roster.map((m) => [m.id, m]));
@@ -153,8 +156,12 @@ export function buildTeam({ id, name, abbr, color, roster, manual = {}, depth = 
 const RUN_PLAYS = ['inside_zone', 'power_right', 'power_left', 'outside_zone', 'stretch_left', 'counter', 'toss_sweep', 'trap', 'dive', 'read_option'];
 const PASS_PLAYS = ['quick_slants', 'curl_flat', 'smash', 'mesh', 'levels', 'dagger', 'flood', 'te_seam', 'stick', 'deep_post', 'deep_corner', 'three_verticals', 'pa_post', 'pa_boot', 'rb_screen', 'wheel', 'y_cross',
   'bunch_snag', 'bunch_whip', 'bunch_slant_arrow', 'bunch_flood']; // N8b: four of the released bunch plays join the AI pass pool (one per bunch concept: snag, whip, slant-arrow, flood)
-const ZONE_D = ['cover_3', 'cover_4', 'cover_2_zone', 'cover_6', 'tampa_2', 'max_drop', 'zone_blitz', 'corner_blitz'];
-const MAN_D = ['cover_2_man', 'cover_1', 'man_press', 'robber', 'bracket_left', 'db_blitz', 'safety_blitz', 'double_a_mug', 'cover_0'];
+// R-8 (balance audit, 2026-11-25): the AI's coverage pools are built from the released defensive book by tag, not from 17 hand-listed
+// calls (AI clubs called 24 of 176 defences). Situational calls (desperation, goal line, prevent, red zone, two-minute) stay out of the
+// weekly six; the identity leans (blitz / zone / man) and the run-front call are drawn from these pools exactly as before.
+const AI_D_OK = (id) => !PLAYS[id].legendary && !PLAYS[id].tags.some((t) => ['desperation', 'goalline', 'prevent', 'redzone', 'two_minute'].includes(t));
+const ZONE_D = DEFENSE_IDS.filter((id) => PLAYS[id].tags.includes('zone') && AI_D_OK(id));
+const MAN_D = DEFENSE_IDS.filter((id) => PLAYS[id].tags.includes('man') && !PLAYS[id].tags.includes('zone') && AI_D_OK(id));
 /** A playbook shaped by the coach profile, so scouting an opponent means something. */
 /** AI game plan: exactly 6 offensive and 6 defensive plays, like the player. Mix follows the coach's tendencies. */
 export const AI_PLAN_SIZE = 6;
@@ -166,7 +173,7 @@ export function playbookFor(seed, coach = {}) {
   const runs = passBias >= 0.62 ? 2 : passBias >= 0.5 ? 3 : 4; // run-heavy coaches carry four runs
   const offense = [...pick(RUN_PLAYS, runs), ...pick(PASS_PLAYS, AI_PLAN_SIZE - runs)];
   const primary = aggression > 0.55 ? MAN_D : ZONE_D, secondary = aggression > 0.55 ? ZONE_D : MAN_D;
-  const defense = [...pick(primary, 3), ...pick(secondary, 2), ...pick(['run_wall', 'edge_contain', 'bear_front', 'goal_line', 'goal_line_man', 'qb_spy'], 1)];
+  const defense = [...pick(primary, 3), ...pick(secondary, 2), ...pick(RUN_D, 1)];
   return { offense, defense };
 }
 /**
@@ -179,7 +186,8 @@ const IDENTITY_RUNS = Object.freeze({ pass: 2, balanced: 3, run: 4 });
 export const IDENTITY_STYLE_WEIGHT = 3; // PROVISIONAL
 const PASS_STYLE = Object.freeze({ vertical: ['deep', 'long'], quick: ['quick', 'short'] });
 const RUN_STYLE = Object.freeze({ inside: ['inside', 'goalline'], option: ['option', 'outside', 'misdirection'] });
-const RUN_D = ['run_wall', 'edge_contain', 'bear_front', 'goal_line', 'goal_line_man', 'qb_spy'];
+// R-8: the run call adds the released run fronts (neither zone nor man, e.g. okie, under, eight-man) to the original six.
+const RUN_D = [...new Set(['run_wall', 'edge_contain', 'bear_front', 'goal_line', 'goal_line_man', 'qb_spy', ...DEFENSE_IDS.filter((id) => AI_D_OK(id) && !ZONE_D.includes(id) && !MAN_D.includes(id))])];
 // Task 10: a coach with one of the five coach identities (identities.js COACH_STYLES) draws from the whole released book of his
 // side (the reviewed reserve plays released in Task 10 included), minus the desperation and red-zone-only calls; his style's tags
 // (with the club's passStyle / runStyle) are the ones drawn more often. A coach without a style keeps the older pools above.
