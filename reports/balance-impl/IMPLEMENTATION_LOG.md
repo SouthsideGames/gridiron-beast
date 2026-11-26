@@ -276,6 +276,7 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
 - **Second calibration (aiDev Rookie 0.6 / All-Star 1.5; seeds 1–2, 6 seasons):**
   - Rookie: owner 67.3% (band 54–70), 0 fired; AI overall at seasons 1 / 3 / 6: 51.4 / 57.6 / 62.3.
   - All-Star: owner 32.5% (band 32–40), 1 fired; AI overall: 57.2 / 63.4 / 65.5.
-  - Pro (aiDev 1, seed 1 so far): 48.2% (band 45–53).
+  - Pro (aiDev 1; seeds 1–4, 8 seasons): 47.3% (band 45–53); 2 of 4 fired; seasons 1–5: 52.4%, 6–8: 35.7%. AI overall 53.2 / 60.3 / 64.4 at seasons 1 / 3 / 8.
+  - Late decline: the hands-off owner never replaces ageing starters, so his win rate falls after season 5 on every difficulty. That is the benchmark owner's policy, not difficulty.
   - The leagues stay about 3 points apart at season 6, against about 1 at 0.85 / 1.15.
   - Adopted provisionally; the 15-season runs (`ai-franchise-benchmark --owner=repair --board=content`, seeds 3 and 4, the audit's seeds) check seasons 1, 5, 10 and 15 and late-franchise growth.
