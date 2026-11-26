@@ -526,3 +526,11 @@ to round 1 in every owner result; the others moved through the free-agency marke
   12,800 cr of room, one LB and two DL. LB2's emergency cover is a DL and both were needed on the line, so no legal defence existed, and the
   in-season market had no LB all season. The repair policy never releases or trades, so it cannot free cap. The game followed its rules
   (forfeit without a legal lineup; the lineup warnings name the gap). Round 1's same seed had 2 forfeits; the market's composition moved.
+
+## Whole suite on the final code (2026-11-26, code at 2334a3d)
+- Fast tier: 2,263 of 2,263 (88.5 min, alone).
+- Simulation tier (30 files, two halves of 15): 307 of 310. The three failures were set-ups on pre-audit rules, now updated, and their tests pass on rerun:
+  - `franchise` package rule (R-6: a spare lineman covers LB2; the forfeit case also removes the spare linemen);
+  - `league-flows` in-season QB cover (R-6: the kicker covers QB; the need is read from `staffingHoles`);
+  - `league-season` cap trim (R-2/R-17: the re-rated roster re-signed to the floor; the set-up forces the bottom quarter to walk).
+- Emulated save timing (branch against `main`) and a reload CPU profile: `final/save-browser-timing-*.json`, report §6.

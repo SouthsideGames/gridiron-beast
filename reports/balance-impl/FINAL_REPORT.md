@@ -246,7 +246,7 @@ See §6 (R-18): 502 KB stored at season 1 and 1,389 KB at season 15; exact round
 | Suite | Result |
 |---|---|
 | Fast tier (`node tools/test-tier.mjs fast`) | **2,263 of 2,263 passed, 0 failed, 0 skipped**, on `2334a3d`, the last code change (88.5 min, run alone). Later commits change only reports, documentation and tools |
-| Simulation tier (`node tools/test-tier.mjs sim`) | SIM_TIER_RESULT |
+| Simulation tier (the 30 files of `tools/test-tier.mjs sim`, run as two halves of 15 because of the 2-hour job limit) | **307 of 310 passed, 0 skipped**, on `2334a3d` (61 and 66 min). The 3 failures were test set-ups that still assumed the pre-audit rules: two from R-6 emergency covers, one from the R-2/R-17 re-rating. All 3 were updated with documenting comments, and no assertion was weakened. They pass on rerun: `league-season` 5 of 5, `league-flows` 5 of 5, and the package-rule test 1 of 1. Fast + sim = the whole suite |
 | Free-agency tests after the bonus change | 69 of 69 |
 | Award, career, history and profile tests after the award fixes | 30 of 30, and 52 of 53 → 53 of 53 after the All-League fix |
 | Text, Dex and Media Day tests after the wording change | 99 of 101 → 101 of 101 after two exact-text updates |
@@ -300,6 +300,8 @@ See §6 (R-18): 502 KB stored at season 1 and 1,389 KB at season 15; exact round
 
 **Tests changed because of approved design decisions.** Each change is documented in the test itself.
 - **R-6:**
+  - the package-rule test: a spare lineman now covers LB2, so its forfeit case also removes the spare linemen, and the cover itself is asserted;
+  - in-season QB cover: the need is read from `staffingHoles`, because the kicker now covers QB;
   - lineup gate fixtures;
   - the remediation R5 warnings;
   - "no fallback" becomes the emergency cover;
@@ -312,7 +314,8 @@ See §6 (R-18): 502 KB stored at season 1 and 1,389 KB at season 15; exact round
   - RB Durability allocation weight;
   - Impact Pyre snaps start at 1st and 10;
   - Ball Clamp review seeds;
-  - Goal Line Man sample 40 → 120 plays, which makes it stricter.
+  - Goal Line Man sample 40 → 120 plays, which makes it stricter;
+  - the league-contracts cap-trim set-up forces the bottom quarter of reserves to walk, not the lower half, so the club stays above the roster floor.
 - **R-5:** award names and the All-League archive path.
 - **Wording:** exact texts follow "beast".
 
