@@ -113,15 +113,16 @@ export function eligiblePlays(s,team,ids,plays) {
     return emergencyFeasible(pool,needs,base);
   });
 }
-/** R-6: can `pool` staff `needs` (beasts per position), with an emergency cover allowed only in base slots (`base`, per position)? Each
- *  position covers exactly one other, so the check is exact: a position's shortfall must be within its base slots and within the spare
- *  beasts (beyond their own position's need) of the positions that cover it. */
+/** R-6: can `pool` staff `needs` (beasts per position), with an emergency cover allowed only in base slots (`base`, per position)? A
+ *  cover only completes base personnel: a play that uses a package slot of the short position (a third WR, C, DL3, SS) still needs that
+ *  position's own beasts, so an emergency never opens a package call. Each position covers exactly one other, so the check is exact:
+ *  the shortfall must be within the spare beasts (beyond their own position's need) of the positions that cover it. */
 export function emergencyFeasible(pool,needs,base={}) {
   const have={};for(const p of pool)have[p.position]=(have[p.position]||0)+1;
   const spare=(pos)=>Math.max(0,(have[pos]||0)-(needs[pos]||0));
   return Object.entries(needs).every(([pos,n])=>{
     const short=n-(have[pos]||0); if(short<=0)return true;
-    if(short>(base[pos]||0))return false;
+    if(n>(base[pos]||0))return false; // the play uses a package slot of this position: own beasts only
     const cover=Object.keys(EMERGENCY_POSITION).filter(q=>EMERGENCY_POSITION[q]===pos).reduce((t,q)=>t+spare(q),0);
     return cover>=short;
   });

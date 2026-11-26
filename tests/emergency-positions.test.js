@@ -53,7 +53,7 @@ test('before the game: the cover is the best at the slot position, and never a b
 test('the play check: a shortfall is coverable only in base slots and only from spare beasts', () => {
   const pool = (o) => Object.entries(o).flatMap(([pos, n]) => Array.from({ length: n }, () => ({ position: pos })));
   assert.equal(emergencyFeasible(pool({ K: 1, WR: 2 }), { QB: 1, WR: 2 }, { QB: 1, WR: 2 }), true, 'K covers QB');
-  assert.equal(emergencyFeasible(pool({ QB: 1, WR: 2 }), { QB: 1, WR: 3 }, { QB: 1, WR: 2 }), false, 'the third WR is a package slot');
+  assert.equal(emergencyFeasible(pool({ QB: 1, WR: 2, RB: 2 }), { QB: 1, WR: 3, RB: 1 }, { QB: 1, WR: 2, RB: 1 }), false, 'a spare RB never opens a three-WR (package) call');
   assert.equal(emergencyFeasible(pool({ QB: 1, RB: 2, WR: 1 }), { QB: 1, RB: 1, WR: 2 }, { QB: 1, RB: 1, WR: 2 }), true, 'a spare RB covers WR');
   assert.equal(emergencyFeasible(pool({ QB: 1, RB: 1, WR: 1 }), { QB: 1, RB: 1, WR: 2 }, { QB: 1, RB: 1, WR: 2 }), false, 'the only RB is needed at RB');
 });

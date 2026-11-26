@@ -93,7 +93,7 @@ export function registerRosterScreens(Router, app) {
   /** R5 (owner 2026-11-05): what the lineup cannot field, why, and what would fix it (nobody is ever substituted out of position). */
   function warningsPanel(f) {
     const w = F.lineupWarnings(f); if (!w.length) return '';
-    return `<div class="panel tight" style="border-color:${w.some((x) => x.kind === 'base') ? 'var(--bad)' : 'var(--warn)'};margin-bottom:8px">${$t('roster.b_lineup_warnings_b')}${w.map((x) => `<div class="muted" style="margin-top:4px"><b>${esc(x.slot)}</b> (${esc(x.position)}) · ${esc(x.formation)}: ${x.kind === 'base' ? `<span class="chip bad">forfeit risk</span>` : `<span class="chip warn">plays unavailable</span>`}<div class="dim">${esc(fieldText(x, 'why'))}. ${esc(x.fix)}</div></div>`).join('')}</div>`;
+    return `<div class="panel tight" style="border-color:${w.some((x) => x.kind === 'base') ? 'var(--bad)' : 'var(--warn)'};margin-bottom:8px">${$t('roster.b_lineup_warnings_b')}${w.map((x) => `<div class="muted" style="margin-top:4px"><b>${esc(x.slot)}</b> (${esc(x.position)}) · ${esc(x.formation)}: ${x.kind === 'base' ? `<span class="chip bad">forfeit risk</span>` : x.kind === 'emergency' ? `<span class="chip warn">${$t('roster.emergency_cover_chip')}</span>` : `<span class="chip warn">plays unavailable</span>`}<div class="dim">${esc(fieldText(x, 'why'))}. ${esc(x.fix)}</div></div>`).join('')}</div>`;
   }
   const lineupChange = (fn) => {
     const f=app.f, ready=prepareLineupUndo(f);fn();const undo=ready();app.save();

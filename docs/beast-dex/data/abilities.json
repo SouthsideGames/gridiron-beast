@@ -4033,13 +4033,13 @@
     "mode": "Football",
     "name": "Air Brake",
     "category": "Targeted effect",
-    "activation": "Aeralis; uncommon Wind CB.3 personal pass breakups fill bar; interceptions excluded. On later successful forward-pass catch by assigned/tracked receiver, activate if Aeralis within8 yards and able. No activation on charge-filling play.",
-    "mechanic": "PBU charge displaces guarded catcher opposite heading with actual yardage loss",
+    "activation": "Aeralis; uncommon Wind CB. 3 passes defended fill bar (a personal pass breakup, or an incompletion thrown at the receiver he covers; balance audit R-10, 2026-11-25); interceptions excluded. On later successful forward-pass catch by assigned/tracked receiver, activate if Aeralis within8 yards and able. No activation on charge-filling play.",
+    "mechanic": "Pass-defended charge displaces guarded catcher opposite heading with actual yardage loss",
     "sourceDesignStatus": "Approved design; implementation required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Aeralis; uncommon Wind CB.3 personal pass breakups fill bar; interceptions excluded. On later successful forward-pass catch by assigned/tracked receiver, activate if Aeralis within8 yards and able. No activation on charge-filling play.",
+        "rule": "Aeralis; uncommon Wind CB. 3 passes defended fill bar (a personal pass breakup, or an incompletion thrown at the receiver he covers; balance audit R-10, 2026-11-25); interceptions excluded. On later successful forward-pass catch by assigned/tracked receiver, activate if Aeralis within8 yards and able. No activation on charge-filling play.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4074,7 +4074,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Push5 /6.5 /8 /10 yards by mastery. Charge threshold3 PBUs, range8 yards fixed. Replaces rejected40% current-speed-loss proposal. Audit catch-before-score eligibility, vector fallback, collision and forward-progress ledger; do not award negative catch distance twice. Design values approved all-A; implementation must reconcile normal stop/scoring rules explicitly.",
+        "rule": "Push5 /6.5 /8 /10 yards by mastery. Charge threshold 3 passes defended (R-10), range8 yards fixed. Replaces rejected40% current-speed-loss proposal. Audit catch-before-score eligibility, vector fallback, collision and forward-progress ledger; do not award negative catch distance twice. Design values approved all-A; implementation must reconcile normal stop/scoring rules explicitly.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       }
     ],
@@ -4139,13 +4139,13 @@
     "mode": "Football",
     "name": "Crosswind Rescue",
     "category": "Zone",
-    "activation": "Two personal pass breakups earn next-snap selectable lanes",
-    "mechanic": "Two personal pass breakups earn two independently selectable Wind lanes; lasts 3/4/4/5 defensive team plays by mastery.",
+    "activation": "Two passes defended earn next-snap selectable lanes",
+    "mechanic": "Two passes defended earn two independently selectable Wind lanes; lasts 3/4/4/5 defensive team plays by mastery.",
     "sourceDesignStatus": "Approved design; implementation required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Two personal pass breakups charge the bar; one credit per breakup event. Next eligible defensive scrimmage snap creates lanes while source able, at the selected locations.",
+        "rule": "Two passes defended charge the bar (a personal pass breakup, or an incompletion thrown at the receiver he covers; balance audit R-10, 2026-11-25); one credit per play. Next eligible defensive scrimmage snap creates lanes while source able, at the selected locations.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -6597,13 +6597,13 @@
     "mode": "Football",
     "name": "Foresight",
     "category": "Targeted effect",
-    "activation": "Before either side selects plays while ready, randomly mark one initially aligned opposing LB within 3 yards of LOS. Both sides see candidate. At snap validate marked defender actually blitzes.",
+    "activation": "Before either side selects plays while ready, randomly mark one initially aligned opposing LB within 5 yards of LOS (the box; balance audit R-10, 2026-11-25: at 3 yards almost no book alignment qualified). Both sides see candidate. At snap validate marked defender actually blitzes.",
     "mechanic": "Foresight / If marked LB blitzes and Cerebrix able, roll fixed 50% chance to apply Confused. Success attempts 20% effective Awareness reduction for current play with normal shared status-slot rules. Application chance and penalty magnitude are separate.",
     "sourceDesignStatus": "Approved design; implementation and interaction audit pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Before either side selects plays while ready, randomly mark one initially aligned opposing LB within 3 yards of LOS. Both sides see candidate. At snap validate marked defender actually blitzes.",
+        "rule": "Before either side selects plays while ready, randomly mark one initially aligned opposing LB within 5 yards of LOS (the box; balance audit R-10, 2026-11-25: at 3 yards almost no book alignment qualified). Both sides see candidate. At snap validate marked defender actually blitzes.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {

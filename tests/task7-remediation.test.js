@@ -196,8 +196,13 @@ test('R3: the renewal outlook is the extension evaluation itself (Interested / L
 test('R5: lineup warnings name the slot, the position, the formation, why, and the fix; nobody is substituted out of position', () => {
   const f = newFranchise(39); assert.deepEqual(F.lineupWarnings(f), [], 'a full roster has no warning');
   const cbs = f.roster.filter((m) => m.position === 'CB'); f.roster = f.roster.filter((m) => m.position !== 'CB' || m === cbs[0]); // one cornerback left
-  const w = F.lineupWarnings(f); const base = w.find((x) => x.kind === 'base' && x.position === 'CB');
-  assert.ok(base, JSON.stringify(w)); assert.equal(base.severity, 'forfeit'); assert.match(base.why, /1 healthy CB/); assert.match(base.fix, /CB/);
+  // Balance audit R-6 (owner decision 2026-11-25): a spare safety covers CB2 in an emergency; the warning names the cover (no forfeit).
+  // Without a spare safety the slot is still a forfeit risk. Test updated to the approved design.
+  const w = F.lineupWarnings(f); const em = w.find((x) => x.kind === 'emergency' && x.position === 'CB');
+  assert.ok(em, JSON.stringify(w)); assert.equal(em.cover.position, 'S'); assert.match(em.why, /covers CB2 in an emergency/); assert.match(em.why, /1 healthy CB/); assert.match(em.fix, /CB/);
+  f.roster = f.roster.filter((m) => m.position !== 'S' || m === f.roster.find((x) => x.position === 'S')); // and one safety: nobody spare
+  const base = F.lineupWarnings(f).find((x) => x.kind === 'base' && x.position === 'CB');
+  assert.ok(base, JSON.stringify(F.lineupWarnings(f))); assert.equal(base.severity, 'forfeit'); assert.match(base.why, /1 healthy CB/); assert.match(base.fix, /CB/);
   const g = newFranchise(40); const s = g.roster.filter((m) => m.position === 'S'); g.roster = g.roster.filter((m) => m.position !== 'S' || m === s[0]); // one safety: FS is filled, the Nickel slot (SS) is not
   const pk = F.lineupWarnings(g).find((x) => x.kind === 'package'); assert.ok(pk, JSON.stringify(F.lineupWarnings(g))); assert.match(pk.formation, /Nickel/); assert.equal(pk.position, 'S');
 });

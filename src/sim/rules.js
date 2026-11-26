@@ -17,6 +17,7 @@ import * as T8F from './t8/field-runtime.js';
 import { toPlayFrame, placeRect } from './t8/fields.js';
 import { extraCooldownUnit, contractOf, abilityState, recordExecution, kickHook } from './abilities/registry.js';
 import { runGameHook } from './abilities/game.js';
+import { FORESIGHT } from './abilities/cerebrix.js';
 import { getPlay, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
 import { prismBreak, prismTargets, targetType } from './abilities/prism.js';
 import * as ST from './special-teams.js';
@@ -402,7 +403,7 @@ export function preparePreChoice(state, teams, looks = {}, opts = {}) {
     if (m?.species !== 'cerebrix') continue;
     const st = abilityState(t8, m.id, m.species, m.form || `${m.species}:0`, m.mastery || 0);
     if (st.cd > 0 || T8S.sitsOutPlay(state, m.id)) continue;
-    const lbs = Object.entries(ds).filter(([sl, x]) => x?.id && positionOf(sl) === 'LB' && Math.abs(dp.align[sl]?.[0] ?? Infinity) <= 3).sort(([a], [b]) => a.localeCompare(b));
+    const lbs = Object.entries(ds).filter(([sl, x]) => x?.id && positionOf(sl) === 'LB' && Math.abs(dp.align[sl]?.[0] ?? Infinity) <= FORESIGHT.depth).sort(([a], [b]) => a.localeCompare(b));
     if (!lbs.length) continue;
     let h = 2166136261; for (const ch of `${state.seed}|${key}|${m.id}|foresight`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
     const [targetSlot, target] = lbs[createRng(h >>> 0 || 1).int(lbs.length)];

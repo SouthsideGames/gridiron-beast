@@ -32,7 +32,16 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
 - Zone Coverage: reaction weight 0.30, contest reach ×(1 + 0.6Δ), contest weight 0.45.
 - All three are centred on the typical new-league starter (`R1_TYPICAL`: DL Speed 40, DB Catching 35, zone Coverage 45; measured over 300 generated clubs: 35, 30–31, 36–48).
 - DL Tackling: works per sack attempt (finish 52 → 72%). Only the Lab trial was saturated; it is now fixed in the Lab (finish 46.5 → 77%). No engine change.
-- RB Awareness: works modestly through vision (yards per carry 4.28 → 5.08). Pending: decision after the attribute sweep.
+- RB Awareness: **investigated, no engine change.** It works through the owner-approved vision system (Phase C, `preContactLane` / `laneChoice`).
+  - Broad probe (6 runs × 3 fronts), Awareness 30 → 95: yards per carry 4.28 → 5.08, 10+ yard runs 10.8 → 16%. Stuffed runs are flat at 26.8%, because the stuff happens at the line before he reads.
+  - At the same weight in the RB overall (2), Strength moves yards 4.07 → 5.37. Speed (weight 3) moves them 3.87 → 9.57.
+  - Awareness is real but the weakest weighted RB attribute. Its weight is reviewed with the overall weights in Phase 5 (R-2 / R-17), not by a new engine term.
+- Attribute sweep after R-1 (`r1/attr-sweep-n200.json`, n = 200, levels 30–95):
+  - `speed_dl` sacks 0.265 → 0.40; the audit had them flat (0.265 → 0.28).
+  - `coverage_zone`: completions allowed 0.45 → 0.395, breakups 0.10 → 0.19; the audit had them flat at 0.80.
+  - `tackling_dl_sack` finish 0.53 → 0.79.
+  - `catching_cb_pick` interceptions 0.005 → 0.02. This trial rarely offers a pick chance; the probe shows 0.3 → 1.0%.
+  - Other trials moved in level by a few points but not in shape. The Lab's base of 65 sits above the R1_TYPICAL centres, so every Lab defender rushes and covers a little better than a typical starter. Expected, and the slopes are unchanged.
 - Game level, 500 mixed games (seed 1), audit → first version (centred on 65) → final version (centred on typical):
 
   | Measure | Audit | Centred on 65 | Centred on typical |
@@ -68,3 +77,41 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - The other mappings use the same formation slots and attributes the engine already reads. No technical problem found.
 - Repro (`repro-ingame-forfeit`, seeds 11–13, every home QB hurt in Q3): no forfeit. The games finished 17-3, 0-7 and 7-24.
 - Test: `tests/emergency-positions.test.js` (7 tests).
+- R-6 refinement: an emergency cover only completes base personnel. A play that uses a package slot of the short position (WR3, C, DL3 or SS) still needs that position's own beasts, so an emergency never opens a package call.
+- Lineup warnings gain `kind: 'emergency'` ("X (S) covers CB2 in an emergency") with an "emergency cover" chip on the Roster screen. Legal Lineup stays green, because a cover is legal.
+- Texts that said "only a CB may play there / nobody plays out of position" now say "may be listed there … no emergency cover is healthy".
+- Tests updated to the approved design (each change is documented in the test itself):
+  - `task7-lineup-gate`: the open-CB fixture also hurts the spare safeties, and the ineligible signing is now a WR;
+  - `task7-remediation` R5: one CB left gives an emergency warning (S cover); one CB and one S gives the forfeit warning;
+  - `coaching-gm-careers`: the old "no fallback" assertion becomes the emergency cover.
+
+### Position leverage after R-1 and R-6 (150 games, bump 8; standard error about 0.9 per group, so ±0.11 per overall point)
+
+| Position | Audit (relative) | Now (relative) |
+|---|---|---|
+| QB | 2.12 | 2.53 |
+| RB | 2.32 | 3.03 |
+| WR | 1.19 | 0.83 |
+| TE | 2.35 | 2.84 |
+| OL | 0.71 | 0.44 |
+| DL | 0.32 | 0.31 |
+| LB | 0.93 | 0.77 |
+| CB | 1.26 | 0.80 |
+| S | 0.45 | **1.09** |
+| K | 0.26 | 0.53 |
+
+- Safety value more than doubled, from zone Coverage.
+- DL is unchanged at about 0.3. The bump raises every DL attribute, and DL value is structurally low with 2–3 rushers in a 7-a-side game. The R-1 rush term works per play, but it is a small share of team margin.
+- Carried to R-16 (trade values) and R-5 (awards).
+
+## Phase 3 (started)
+### R-10: abilities
+- **Foresight (PSY-03-F).**
+  - Root cause: the mark depth was 3 yards, but the book sets LBs at 3.5–4.5. Only 12 of 258 LB alignments qualified.
+  - Fix: depth 5, the box (257 of 258).
+  - `foresight-probe`, 20 games, home QB as cerebrix: before, 0 marks and 0 executions; after, 302 marks and 46 executions (2.3 a game against 147 blitz calls), each a 50% roll for Confused.
+- **Air Brake (WIN-03-F) and Crosswind Rescue (WIN-04-F).**
+  - Root cause: both charged on the subject's own pass breakups. In 20–30 real games a CB1 had 0.1–0.2 breakups a game and a free safety 0.1–0.2, so 3 (or 2) never came within one game (0 of 50 games).
+  - Fix: charge on **passes defended**: a personal breakup, or an incompletion on a throw at the receiver he covers (the engine's `coverBy`, man or zone), never an interception (`passDefended` in `abilities/common.js`).
+  - Covered incompletions: about 1.0–1.2 a game for a CB1 and 0.3–0.55 for a free safety.
+  - The Dex contract (`abilities.json`, family pages), the review texts and the plain text were updated; the Dex module was rebuilt (`--check` OK).
