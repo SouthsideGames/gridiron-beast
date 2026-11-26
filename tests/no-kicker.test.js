@@ -89,3 +89,25 @@ test('franchise: no kicker on the roster is a roster need and a warning, not a f
   const w = F.lineupWarnings(f).find((x) => x.slot === 'K'); assert.equal(w.kind, 'kicker'); assert.equal(w.severity, 'kicking unavailable');
   const team = F.playerTeam(f); assert.equal(team.forfeit, false, team.forfeitReason); assert.equal(team.kicker.id, null);
 });
+
+// F-14 (owner 2026-11-26): the offseason gate warns about a missing kicker instead of blocking; every other requirement still blocks.
+test('F-14: a missing kicker is a gate warning, not a blocker; a base hole still blocks; the warning names every consequence', () => {
+  const f = newFranchise(62); f.roster = f.roster.filter((m) => m.position !== 'K');
+  const g = F.lineupGate(f);
+  assert.equal(g.ok, true, g.reason); assert.ok(g.kicker?.missing, 'the kicker warning is carried'); assert.equal(g.holes.some((h) => h.position === 'K'), false);
+  for (const w of [/field goals/i, /punts/i, /extra points/i, /fourth downs/i, /two-point/i, /own 20/i]) assert.match(g.kicker.warning, w);
+  const c = F.lineupCheck(f, { advance: false }); assert.equal(c.ok, true); assert.ok(c.kicker); assert.deepEqual(c.problems.filter((x) => x === 'K'), []);
+  // an unrelated requirement still blocks: take away every QB (QB is a base slot)
+  const h = newFranchise(63); h.roster = h.roster.filter((m) => m.position !== 'K' && m.position !== 'QB' && m.position !== 'WR');
+  const gh = F.lineupGate(h); assert.equal(gh.ok, false, 'a base hole still blocks'); assert.ok(gh.kicker?.missing);
+  // a kicker back on the roster clears the warning
+  const k = newFranchise(62); assert.equal(F.lineupGate(k).kicker, null);
+});
+
+test('F-14: the season start is not blocked by a missing kicker alone; the roster minimum still applies', () => {
+  const f = newFranchise(64); const ks = f.roster.filter((m) => m.position === 'K'); f.roster = f.roster.filter((m) => m.position !== 'K');
+  while (f.roster.length < F.ROSTER_MIN) f.roster.push({ ...JSON.parse(JSON.stringify(f.roster.find((m) => m.position === 'WR'))), id: `pad${f.roster.length}` });
+  const g = F.lineupGate(f); assert.equal(g.ok, true); assert.equal(g.shortRoster, false);
+  f.roster = f.roster.slice(0, F.ROSTER_MIN - 1); assert.equal(F.lineupGate(f).shortRoster, true, 'the minimum still blocks');
+  assert.ok(ks.length, 'the fixture had a kicker to remove');
+});

@@ -1255,7 +1255,7 @@ function runDraftToMe(f) {
 export function lineupWarnings(f, roster = f.roster, chart = buildDepthChart(roster, f.lineupManual, f.depth)) {
   const healthy = (pos) => roster.filter((m) => m.position === pos && !m.injury).length; const hurt = (pos) => roster.filter((m) => m.position === pos && m.injury).length;
   const why = (pos) => `${healthy(pos)} healthy ${pos}${hurt(pos) ? ` ${$t('franchise.injured_2', { hurt: hurt(pos) })}` : ''}${$t('franchise.only_a_may_play_there_one', { pos })}`;
-  const base = lineupProblems(roster, chart).map((slot) => { const pos = positionOf(slot); if (slot === 'K') return { kind: 'kicker', slot, position: pos, formation: 'kicks', severity: 'kicking unavailable', why: $t('match.no_kicker_fourth'), fix: `${$t('franchise.sign_draft_or_trade_for_a', { pos, pos2: '' })}` }; // A-3: no forfeit, no kicks
+  const base = lineupProblems(roster, chart).map((slot) => { const pos = positionOf(slot); if (slot === 'K') return { kind: 'kicker', slot, position: pos, formation: 'kicks', severity: 'kicking unavailable', why: $t('franchise.no_kicker_warning'), fix: `${$t('franchise.sign_draft_or_trade_for_a', { pos, pos2: '' })}` }; // A-3: no forfeit, no kicks
     return { kind: 'base', slot, position: pos, formation: 'every play', severity: 'forfeit', why: why(pos), fix: `${$t('franchise.sign_draft_or_trade_for_a', { pos, pos2: hurt(pos) ? $t('franchise.or_wait_for_the_injured_to') : '' })}` }; });
   const pkg = borrowedSlots(roster, chart).filter((b) => !b.legal).map((b) => { const pos = positionOf(b.slot); return { kind: 'package', slot: b.slot, position: pos, formation: `${PACKAGE_SLOT_USE[b.slot]} plays`, severity: 'plays unavailable', why: why(pos), fix: `${$t('franchise.add_a_beyond_your_starters_to', { pos, packageSlotUse: PACKAGE_SLOT_USE[b.slot] })}` }; });
   // R-6 (2026-11-25): a base slot held by an emergency cover is legal (no forfeit), but the owner is told who covers it and why.
@@ -1271,9 +1271,10 @@ export function lineupWarnings(f, roster = f.roster, chart = buildDepthChart(ros
  * the owner act (sign, release, lineup) or continue deliberately under the forfeit rule.
  */
 export function lineupGate(f) {
-  // A-3 (owner 2026-11-26): the offseason gate still asks for a kicker (kept as a roster requirement; reported to the owner), though a
-  // game without one is no longer a forfeit.
-  const warn = lineupWarnings(f).filter((w) => w.kind === 'base' || w.kind === 'kicker'); const shortRoster = f.roster.length < ROSTER_MIN;
+  // F-14 (owner 2026-11-26): a missing kicker is a WARNING here, not a blocker. The gate blocks only on the base lineup and the roster
+  // minimum; a club with no available kicker plays on without kicks (A-3), and `kicker` carries the warning for the screens.
+  const all = lineupWarnings(f); const warn = all.filter((w) => w.kind === 'base'); const shortRoster = f.roster.length < ROSTER_MIN;
+  const kickerHole = all.find((w) => w.kind === 'kicker') || null;
   const holes = warn.map((w) => ({ slot: w.slot, position: w.position, healthy: f.roster.filter((m) => m.position === w.position && !m.injury).length, injured: f.roster.filter((m) => m.position === w.position && m.injury).length, why: w.why }));
   const usable = hasFreeAgency(f) ? freeAgencyCap(f).usable : salarySummary(f).remaining; const rosterFull = f.roster.length >= ROSTER_MAX;
   const market = hasFreeAgency(f) ? freeAgentMarket(f).filter((x) => !x.mine) : [];
@@ -1285,7 +1286,8 @@ export function lineupGate(f) {
   const noLegalReplacement = holes.length > 0 && Object.values(fixes).some((l) => !l.length);
   const ok = !holes.length && !shortRoster;
   const reason = ok ? null : shortRoster ? `${$t('franchise.only_monsters_on_the_roster_the_2', { n: f.roster.length, rosterMin: ROSTER_MIN })}` : `${$t('franchise.no_legal_healthy_starter_for')} ${holes.map((h) => `${h.slot} (${h.position})`).join(', ')}${$t('franchise.only_a_monster_of_that_position')}`;
-  return { ok, holes, fixes, cap: usable, rosterFull, roster: f.roster.length, shortRoster, canSign, noLegalReplacement, reason };
+  const kicker = kickerHole ? { missing: true, slot: kickerHole.slot, warning: $t('franchise.no_kicker_warning'), market: market.filter((x) => x.monster.position === 'K' && !x.monster.injury && !faBlocker(f, f.club, x.monster, null, { newSpot: false })).sort((a, b) => a.ask.salary - b.ask.salary || (a.monster.id < b.monster.id ? -1 : 1)).slice(0, 4).map((x) => ({ id: x.monster.id, name: x.monster.name, ovr: monsterOverall(x.monster), ask: x.ask.salary, fits: x.ask.salary <= usable })) } : null;
+  return { ok, holes, fixes, cap: usable, rosterFull, roster: f.roster.length, shortRoster, canSign, noLegalReplacement, reason, kicker };
 }
 /** R7 (owner 2026-11-05): can the owner pay this prospect's rookie deal now (Task 7)? null when yes; else the shortfall and the options. */
 export function draftAffordability(f, id) {
@@ -2296,11 +2298,12 @@ export function autoRunToSunday(f) {
 }
 export function lineupCheck(f, { advance = true } = {}) {
   const chart = buildDepthChart(f.roster, f.lineupManual, f.depth);
-  const problems = lineupProblems(f.roster, chart);
+  const all = lineupProblems(f.roster, chart); const problems = all.filter((s) => s !== 'K'); // F-14: a missing kicker is a warning
+  const kicker = all.includes('K') ? $t('franchise.no_kicker_warning') : null;
   const tired = f.roster.filter((m) => Object.values(chart).includes(m.id) && m.fatigue >= 60).map((m) => m.name);
   const injured = f.roster.filter((m) => m.injury).map((m) => `${m.name} (${m.injury.severity}, ${m.injury.weeks} wk)`);
   if (advance) { f.week.lineupChecked = true; if (f.season.day === 5) { f.season.day = 6; recoverWeek(f.roster); commissionerReview(f); } }
-  return { ok: problems.length === 0, problems, borrowed: borrowedSlots(f.roster, chart), tired, injured, chart, commissioner: f.week.commissioner || null };
+  return { ok: problems.length === 0, problems, kicker, borrowed: borrowedSlots(f.roster, chart), tired, injured, chart, commissioner: f.week.commissioner || null };
 }
 /** Put a monster into a slot by moving them to that slot's place in the position's depth order. */
 export function assignSlot(f, slot, monsterId) {

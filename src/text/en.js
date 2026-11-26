@@ -1967,6 +1967,7 @@ export default {
   'franchise.iron_beast': 'Iron Beast',
   'franchise.golden_boot': 'Golden Boot',
   'franchise.return_king': 'Return King',
+  'franchise.no_kicker_warning': 'No available kicker. Field goals, punts and kicked extra points are unavailable; fourth downs must be played as downs; every touchdown needs a two-point try; on your kickoffs the other team starts at its own 20. Sign, draft or trade for a kicker when you can.',
   'franchise.rule_golden_boot': 'The best kicker: field-goal points above expectation per attempt, by distance (55%), longest make (15%), extra-point accuracy (15%) and kicking points per game (15%). At least 0.7 field-goal attempts per week.',
   'franchise.rule_return_king': 'The best return specialist: yards per return (45%), return yards per game (20%), return touchdowns (20%) and longest return (15%). At least 0.75 kick returns per week.',
   'franchise.why_golden_boot': ' · {fgm} of {fga} field goals, long {long}',

@@ -697,7 +697,8 @@ export function registerHqScreens(Router, app) {
     render({ f }) {
       const r = F.lineupCheck(f, { advance: false });
       const borrowed = r.borrowed?.length ? `<p class="muted" style="color:var(--warn)">${r.borrowed.map((b) => b.legal ? `↪ ${b.slot}: ${esc(b.name)} (${esc(b.position)}${b.outOfPosition ? $t('hq.1_75_injury_risk') : ''}) fills in` : `${$t('hq.nobody_legal_plays_using_it_are', { slot: b.slot })}`).join(' · ')}.</p>` : '';
-      const lineup = r.ok ? `<p class="muted">${$t('hq.lineup_set_every_starting_position_has')}${r.tired.length ? ` <span style="color:var(--warn)">${$t('hq.tired')} ${esc(r.tired.join(', '))}.</span>` : ''}</p>${borrowed}` : `<p style="color:var(--bad)">${$t('hq.no_legal_monster_for')} ${r.problems.join(', ')}${$t('hq.unless_you_fix_the_depth_chart')}</p>${borrowed}`;
+      const kickNote = r.kicker ? `<p class="muted" style="color:var(--warn)">⚠️ ${esc(r.kicker)}</p>` : ''; // F-14: a warning, not a blocker
+      const lineup = (r.ok ? `<p class="muted">${$t('hq.lineup_set_every_starting_position_has')}${r.tired.length ? ` <span style="color:var(--warn)">${$t('hq.tired')} ${esc(r.tired.join(', '))}.</span>` : ''}</p>${borrowed}` : `<p style="color:var(--bad)">${$t('hq.no_legal_monster_for')} ${r.problems.join(', ')}${$t('hq.unless_you_fix_the_depth_chart')}</p>${borrowed}`) + kickNote;
       if (f.week.media) {
         const md = f.week.media; const starM = md.star ? f.roster.find((x) => x.id === md.star) : null; const groups = starM ? `<span class="chip accent">${$t('hq.in_the_spotlight_2_awareness', { name: esc(starM.name) })}</span>` : '';
         const hl = md.headline; const paper = hl ? `<div class="newspaper" role="img" aria-label="${esc(hl.paper)}: ${esc(hl.title)}"><div class="np-mast">${esc(hl.paper)}</div><div class="np-rule"></div><div class="np-title">${esc(hl.title)}</div><div class="np-sub">${esc(hl.sub)}</div><div class="np-kicker">${esc(hl.kicker)}</div></div>` : '';
