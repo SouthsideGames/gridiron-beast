@@ -1,4 +1,5 @@
 import { playMonsterCry } from '../audio/detail-audio.js';
+import { ALL_LEAGUE_SLOTS } from '../franchise/awards.js';
 import { stopCry } from '../audio/monster-cries.js';
 // Monster Career Presentation (GDD §40): the summary header, the trophy case, the details behind timeline events and
 // trophies, and the career sheet that opens from anywhere in the game (roster, free agency, the draft, awards, news, the Hall
@@ -221,3 +222,15 @@ export function careerLink(id, label, { cls = '' } = {}) {
   return id ? `<button class="career-link ${cls}" data-career="${esc(id)}">${esc(label)}</button>` : esc(label);
 }
 export { timelineView, focusStats, fullProfile };
+
+// Balance audit R-5 (2026-11-25): the All-League First and Second Team, position by position, as one panel. Read only; absent for
+// seasons recorded before R-5 (the caller shows nothing then). Kept in this module so the release adds no file.
+/** `allLeague` = { first: { QB: [{ id, name, team, position }], ... }, second: { ... } }; `club` highlights the owner's monsters. */
+export function allLeagueHtml(allLeague, { club = null } = {}) {
+  if (!allLeague?.first) return '';
+  const team = (key, title) => `<div class="panel tight"><b>⭐ ${esc(title)}</b><div class="list">${Object.keys(ALL_LEAGUE_SLOTS).map((pos) => {
+    const list = allLeague[key]?.[pos] || []; if (!list.length) return '';
+    return `<div class="row between sub"><span class="dim">${esc(pos)}</span><span>${list.map((w) => `${w.team === club ? '<b>' : ''}${careerLink(w.id, w.name)}${w.team === club ? '</b>' : ''} <span class="dim">${esc(w.team)}</span>`).join(' · ')}</span></div>`;
+  }).join('')}</div></div>`;
+  return `${team('first', $t('franchise.all_league_first_team'))}${team('second', $t('franchise.all_league_second_team'))}`;
+}

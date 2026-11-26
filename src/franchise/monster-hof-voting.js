@@ -34,7 +34,7 @@ const eligible = (c, year, inducted) =>
 //   longevity   seasons on record and games played, each with a ceiling
 //   titles      a small bonus with a ceiling
 export const HALL_CASE = Object.freeze({
-  award: Object.freeze({ mvp: 30, opoy: 22, dpoy: 22, smoy: 12, oroy: 8, droy: 8 }), awardOther: 14,
+  award: Object.freeze({ mvp: 30, opoy: 22, dpoy: 22, smoy: 12, oroy: 8, droy: 8, stboy: 8, cboy: 6, mib: 4, iron: 4 }), awardOther: 14, // R-5: the new awards weigh less than the majors
   record: Object.freeze({ season: 10, game: 5 }), recordOther: 7, recordCap: 30,
   production: 40, productionPeers: 8, best: Object.freeze([16, 8]), bestPeers: 10,
   // games: set for nine-game seasons as one point per 16 games up to 160 (owner 2026-11-12); scaled to 14-game seasons by 14 / 9

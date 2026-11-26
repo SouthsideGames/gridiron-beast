@@ -10,13 +10,13 @@ import { migrationDue, migratePositions, migrateAmbitions } from './position-mig
 import { staffDemand, staffOptions, staffAnswer, noteStaffPreseason, noteStaffSeason, noteStaffTraining, noteStaffDraft, STAFF_BANDS } from './staff-negotiation.js';
 import { venueFor } from '../data/stadiums.js';
 import { generatedVenue } from '../data/field-generator.js';
-import { noteJoin, markCareerFresh, noteEvolution, careerAfterGame, careerSeasonEnd, noteHallOfFame, backfillCareer, careerTimeline, careerSummary, CAREER_MILESTONES, addEvent } from './career.js';
+import { noteJoin, markCareerFresh, noteEvolution, careerAfterGame, careerSeasonEnd, noteHallOfFame, backfillCareer, careerTimeline, careerSummary, CAREER_MILESTONES, addEvent, seasonStartOverall } from './career.js';
 import * as CP from './partnerships.js';
 import * as IH from './injury-history.js';
 import { syncLegendaryPlays, legendaryAvailable, legendaryStatus, equipLegendaryForAI, legendOf, LEGENDARY_IDS } from './legendary.js';
 import { createRng, rngFromState, hashString } from '../core/rng.js';
 import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine, updateSeasonRecords, archiveSeasonTables, withDerived, addInto } from './stats.js';
-import { AWARDS, computeAwards, headCoachName } from './awards.js';
+import { AWARDS, MAJOR_AWARDS, computeAwards, headCoachName } from './awards.js';
 import { newContract, contractEnds, renewalAsk, acceptsCounter, staffSalary, openOffseason, offseasonPending, offseasonReady, CONTRACT_YEARS, COUNTER_PCT, STAFF_RAISE } from './contracts.js';
 export { offseasonPending, offseasonReady, renewalAsk, CONTRACT_YEARS } from './contracts.js';
 import { openDraftClass, scoutDraftClass as draftScout, startDraft as draftStart, advanceDraft as draftAdvance, playerPick as draftPlayerPick, passPick as draftPassPick, prospectView, injectDraftees, ageDraftees, onTheClock, DRAFT_ROUNDS, ROOKIE_SCALE, rookieCharge } from './draft.js';
@@ -57,7 +57,7 @@ import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, PACKAGE_SLOT_USE } from '../data/personnel.js';
 import { careerSnapshot } from './career-profile.js';
-import { ensureLeagueNews, addLeagueNews, resultsNews, playoffNews, championNews, playoffFieldNews, raceNews, awardNews, recordNews, movesNews, offseasonDigest, draftDigest } from './league-news.js';
+import { ensureLeagueNews, addLeagueNews, resultsNews, playoffNews, championNews, playoffFieldNews, raceNews, awardNews, allLeagueNews, recordNews, movesNews, offseasonDigest, draftDigest } from './league-news.js';
 import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, emergencySlots, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, playbookFor, adaptPlaybook } from './roster.js';
 import { joinAsDraftee, takeFromPool, takeFromWaivers, leaveLeague, releaseFromClub } from './league.js';
 import { aiTrades } from './league-trades.js';
@@ -2659,7 +2659,7 @@ function endSeason(f) {
   // Campaign: league awards won by this club's monsters count toward the Hall of Fame.
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 };
   const mine = Object.entries(s.awards.league || {}).filter(([, w]) => w && w.team === f.club);
-  f.campaign.awards += mine.length;
+  f.campaign.awards += mine.filter(([k]) => MAJOR_AWARDS.includes(k)).length; // R-5: the Hall of Fame checklist counts the original seven awards only
   s.finished = true;
   GM.noteManagedClubSeason(f);
   checkAchievements(f, 'season', { wins: rec.w, losses: rec.l, champion: champion === f.club, awardsWon: mine.length, ...lineField('awardLine', mine.length ? $P(...mine.flatMap(([k, w], i) => [i ? ' ' : '', w.name, ': ', labelLine(AWARDS[k]?.label || k), '.'])) : ''), wasHotSeat, goalMet: !!s.boardVerdict?.met });
@@ -2713,11 +2713,21 @@ function priorRookieAwardIds(f) {
   return [...ids];
 }
 /** Freeze the regular-season awards (called when the playoffs are drawn). */
+/** R-5: what the awards need beyond this season's table, for every monster in the league (owner and persistent AI rosters): the overall
+ *  gained this season (career book) and the regular-season games one and two seasons ago (season books). Read only. */
+function awardPrior(f) {
+  const year = f.season.year; const by = new Map();
+  const all = [...(f.roster || []), ...(hasLeague(f) ? leagueClubs(f).flatMap((c) => clubRoster(f, c)) : [])];
+  for (const m of all) by.set(m.id, m);
+  return (id) => { const m = by.get(id); if (!m) return null; const o0 = seasonStartOverall(m, year); const games = (y) => { const b = (m.stats?.seasons || []).find((x) => x.year === y); return b ? (b.reg?.games || 0) : null; }; // no book: unknown (never counted as a missed season)
+    return { gain: o0 == null ? null : monsterOverall(m) - o0, lastGames: games(year - 1), beforeGames: games(year - 2) }; };
+}
 export function finalizeAwards(f) {
   if (f.season.awardsFinal) return f.season.awardsFinal;
-  const races = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n: 5, priorRookieAwardIds: priorRookieAwardIds(f) });
-  f.season.awardsFinal = { year: f.season.year, races, winners: Object.fromEntries(Object.entries(AWARDS).map(([k]) => [k, races[k]?.[0] || null])) };
+  const races = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n: 5, priorRookieAwardIds: priorRookieAwardIds(f), prior: awardPrior(f) });
+  f.season.awardsFinal = { year: f.season.year, races, winners: Object.fromEntries(Object.entries(AWARDS).map(([k]) => [k, races[k]?.[0] || null])), allLeague: races.allLeague || null };
   addLeagueNews(f, awardNews({ year: f.season.year, week: REG_WEEKS, winners: f.season.awardsFinal.winners, priorOf: (id, key) => (f.history || []).filter((h) => h.awards?.league?.[key]?.id === id).length }));
+  addLeagueNews(f, allLeagueNews({ year: f.season.year, week: REG_WEEKS, allLeague: f.season.awardsFinal.allLeague })); // R-5
   for (const [k, w] of Object.entries(f.season.awardsFinal.winners)) if (w && w.team === f.club) news(f, $L('franchise.one_of_yours', { short: AWARDS[k].short, k: (k === 'coy' ? $L('franchise.your_staff') : w.name)}), 'win');
   return f.season.awardsFinal;
 }
@@ -2737,6 +2747,7 @@ export function seasonAwards(f) {
     rusher: line(byStat('rushYds'), 'rushYds', 'rushing yards'), receiver: line(byStat('recYds'), 'recYds', 'receiving yards'), passer: line(byStat('passYds'), 'passYds', 'passing yards'),
     tackler: line(byStat('tackles'), 'tackles', 'solo tackles'), ballhawk: line(byStat('int'), 'int', 'interceptions'), rusherD: line(byStat('sacks'), 'sacks', 'sacks'),
     league: Object.fromEntries(Object.entries(AWARDS).map(([k]) => [k, (f.season.awardsFinal || finalizeAwards(f)).winners[k] || null])),
+    allLeague: (f.season.awardsFinal || finalizeAwards(f)).allLeague || null, // R-5: First and Second Team by position (absent in older seasons)
     leaders: leadersSnapshot(f.season.leagueStats), playoffLeaders: leadersSnapshot(f.season.playoffStats),
     rivalry: rival ? { team: rival.team, gm: rival.gm, wins: rivalGames.filter((g) => g.result.won).length, games: rivalGames.length, swept: rivalGames.length === 2 && rivalGames.every((g) => g.result.won) } : null,
   };

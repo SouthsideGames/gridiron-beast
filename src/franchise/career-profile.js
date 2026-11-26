@@ -41,14 +41,20 @@ const PCT_KEYS = new Set(['compPct', 'blockWinPct', 'compPctAllowed', 'fgPct']);
 const RATE_MIN = { compPct: ['att', 10], ypc: ['rush', 8], ypr: ['rec', 5], blockWinPct: ['pbSnaps', 20], compPctAllowed: ['covTargets', 8], fgPct: ['fga', 3] };
 
 /** Trophy kinds, most prestigious first. `award` expands to one shelf per award key. */
-export const TROPHY_ORDER = Object.freeze(['hof', 'champion', 'mvp', 'opoy', 'dpoy', 'smoy', 'oroy', 'droy', 'record']);
+export const TROPHY_ORDER = Object.freeze(['hof', 'champion', 'mvp', 'opoy', 'dpoy', 'allLeague1', 'smoy', 'oroy', 'droy', 'stboy', 'cboy', 'mib', 'allLeague2', 'iron', 'record']);
 export const TROPHY_META = Object.freeze({
   hof: { icon: '🏛', label: $t('franchise.hall_of_fame'), tier: 'legend' },
   champion: { icon: '🏆', label: $t('franchise.beast_bowl_champion'), tier: 'gold' },
-  mvp: { icon: '👑', label: AWARDS.mvp.label, short: 'MVP', tier: 'gold' },
-  opoy: { icon: '🏅', label: AWARDS.opoy.label, short: 'OPOY', tier: 'gold' },
-  dpoy: { icon: '🛡️', label: AWARDS.dpoy.label, short: 'DPOY', tier: 'gold' },
-  smoy: { icon: '✨', label: AWARDS.smoy.label, short: 'SMOY', tier: 'silver' },
+  mvp: { icon: '👑', label: AWARDS.mvp.label, short: AWARDS.mvp.short, tier: 'gold' },
+  opoy: { icon: '🏅', label: AWARDS.opoy.label, short: AWARDS.opoy.short, tier: 'gold' },
+  dpoy: { icon: '🛡️', label: AWARDS.dpoy.label, short: AWARDS.dpoy.short, tier: 'gold' },
+  allLeague1: { icon: '⭐', label: $t('franchise.all_league_first_team'), short: 'AL-1', tier: 'gold' }, // R-5
+  allLeague2: { icon: '⭐', label: $t('franchise.all_league_second_team'), short: 'AL-2', tier: 'silver' },
+  stboy: { icon: '🦶', label: AWARDS.stboy.label, short: AWARDS.stboy.short, tier: 'silver' },
+  cboy: { icon: '🔁', label: AWARDS.cboy.label, short: AWARDS.cboy.short, tier: 'silver' },
+  mib: { icon: '📈', label: AWARDS.mib.label, short: AWARDS.mib.short, tier: 'silver' },
+  iron: { icon: '🔩', label: AWARDS.iron.label, short: AWARDS.iron.short, tier: 'silver' },
+  smoy: { icon: '✨', label: AWARDS.smoy.label, short: AWARDS.smoy.short, tier: 'silver' },
   oroy: { icon: '🌟', label: AWARDS.oroy.label, short: 'OROY', tier: 'silver' },
   droy: { icon: '🌟', label: AWARDS.droy.label, short: 'DROY', tier: 'silver' },
   record: { icon: '📜', label: $t('franchise.league_record'), tier: 'silver' },
@@ -169,6 +175,10 @@ export function trophyCase(f, m, events = careerEvents(m)) {
   }
   // Awards on the franchise's history that name this monster's id (the same awards; the key dedupes them).
   for (const h of f?.history || []) for (const [k, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && TROPHY_META[k] && k !== 'coy') put(k, { key: `${`award:${k}:${h.year}`}`, year: h.year, club: w.team });
+  // R-5: All-League selections (First and Second Team) on the franchise's history and, once frozen, the current season.
+  const teams = (al, year) => { for (const [team, kind] of [['first', 'allLeague1'], ['second', 'allLeague2']]) for (const list of Object.values(al?.[team] || {})) for (const w of list || []) if (w && w.id === m.id) put(kind, { key: `${`${kind}:${year}`}`, year, club: w.team }); };
+  for (const h of f?.history || []) teams(h.allLeague, h.year);
+  if (f?.season?.awardsFinal?.allLeague) teams(f.season.awardsFinal.allLeague, f.season.awardsFinal.year ?? f.season.year);
   // The current season's awards, frozen when the regular season ends and announced in League News, count from that moment: the
   // Career Timeline entry and the season archive only arrive when the season closes after the playoffs (same key, so no double).
   const af = f?.season?.awardsFinal; if (af) for (const [k, w] of Object.entries(af.winners || {})) if (w && w.id === m.id && TROPHY_META[k] && k !== 'coy') put(k, { key: `${`award:${k}:${af.year ?? f.season.year}`}`, year: af.year ?? f.season.year, club: w.team });
@@ -261,7 +271,7 @@ export function fullProfile(f, m, where = 'roster', team = null) {
   const archived = archiveCareer(f, m.id)?.seasons.filter((b) => !books.some((x) => x.year === b.year)).length || 0;
   const archiveNote = archived ? $t('franchise.his_earlier_seasons_are_in_the_league_archive', { n: archived, year: yearOf(1) }) : null;
   const count = (k) => trophies.find((t) => t.kind === k)?.count || 0;
-  const titles = count('champion'); const awards = ['mvp', 'opoy', 'dpoy', 'smoy', 'oroy', 'droy'].reduce((a, k) => a + count(k), 0); const records = count('record'); const hof = count('hof') > 0;
+  const titles = count('champion'); const awards = ['mvp', 'opoy', 'dpoy', 'smoy', 'oroy', 'droy', 'stboy', 'cboy', 'mib', 'iron'].reduce((a, k) => a + count(k), 0); // R-5: the season awards (All-League selections are shown on their own shelf) const records = count('record'); const hof = count('hof') > 0;
   const timeline = careerTimeline(m, { club: where === 'roster' ? f.club : null }).map((e) => ({ ...e, ref: eventRef(f, m, e) }));
   return {
     v: PROFILE_VERSION, kind: 'full', where, ...id0, club, clubs, seasons, onRecord, complete,

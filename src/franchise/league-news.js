@@ -10,7 +10,7 @@
 
 import { REG_WEEKS, LAST_WEEK, FINAL_ROUND } from '../data/league.js';
 import { honoursText } from './league.js';
-import { AWARDS } from './awards.js';
+import { AWARDS, MAJOR_AWARDS, ALL_LEAGUE_SLOTS } from './awards.js';
 import { RECORD_CATEGORIES, TEAM_RECORDS } from './stats.js';
 import { yearOf } from '../data/calendar.js';
 import { t as $t, line as $L, lineParts as $P, lineText } from '../text/index.js';
@@ -151,9 +151,17 @@ export function raceNews({ year, week, races, meta }) {
 }
 /** Award winners (regular-season awards, frozen when the playoffs are drawn). `winners` = { key: finalist | null }. */
 /** `priorOf(id, key)`: how many times this monster won this award before (persistent careers, GDD §46): repeat winners are recognised. */
+/** R-5: one League News item naming the All-League First Team (position by position). */
+export function allLeagueNews({ year, week, allLeague }) {
+  if (!allLeague?.first) return [];
+  const names = Object.keys(ALL_LEAGUE_SLOTS).flatMap((pos) => (allLeague.first[pos] || []).map((w) => `${w.name} (${pos}, ${w.team})`));
+  if (!names.length) return [];
+  return [{ id: `${year}|allleague`, year, week, kind: 'award', tier: 'major', icon: '⭐', mid: null, mname: null, ...$P($L('franchise.all_league_first_team'), ': ', names.join(', '), '.') }];
+}
 export function awardNews({ year, week, winners, priorOf = null }) {
   const nth = ['', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth'];
-  return Object.entries(winners || {}).filter(([, w]) => w).map(([k, w]) => { const prior = k !== 'coy' && w.id && priorOf ? priorOf(w.id, k) : 0; return { id: `${year}|award|${k}`, year, week, kind: 'award', tier: 'major', icon: '🏆', mid: k === 'coy' ? null : w.id || null, mname: k === 'coy' ? null : w.name, ...$P(AWARDS[k]?.label || k, `: `, k === 'coy' ? (w.coach || w.name) : w.name, ` (`, w.team, w.position ? `, ${w.position}` : '', `)`, (w.record ? $L('franchise.club', { record: w.record }) : ''), (prior ? $P($L('franchise.his'), ` `, nth[prior] || `${prior + 1}th`) : ''), `.`)}; });
+  return Object.entries(winners || {}).filter(([, w]) => w).map(([k, w]) => { const prior = k !== 'coy' && w.id && priorOf ? priorOf(w.id, k) : 0; return { id: `${year}|award|${k}`, year, week, kind: 'award', tier: MAJOR_AWARDS.includes(k) ? 'major' : 'notable', // R-5: the new honours are notable, not major
+    icon: '🏆', mid: k === 'coy' ? null : w.id || null, mname: k === 'coy' ? null : w.name, ...$P(AWARDS[k]?.label || k, `: `, k === 'coy' ? (w.coach || w.name) : w.name, ` (`, w.team, w.position ? `, ${w.position}` : '', `)`, (w.record ? $L('franchise.club', { record: w.record }) : ''), (prior ? $P($L('franchise.his'), ` `, nth[prior] || `${prior + 1}th`) : ''), `.`)}; });
 }
 
 /**

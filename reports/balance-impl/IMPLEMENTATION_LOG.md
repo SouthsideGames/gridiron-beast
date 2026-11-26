@@ -238,3 +238,28 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
 - Founding quality (−4 / −1 / +3) and IQ (0.6 / 1 / 1.5) were the only differences, and development levelled every league by season 5 (audit F-1).
 - `aiAfterGame` now passes the difficulty's `aiDev`. It is the same for every AI club: no standing-based rubber-banding, no cap room, no in-game bonus.
 - First values (PROVISIONAL): Rookie 0.85, Pro 1, All-Star 1.15. Being calibrated on the standard benchmark (`tools/balance-compare.mjs --mode=persistent`: hands-off owner, board reset; seeds 1–4 × 8 seasons).
+
+## Phase 6 (started early, while the Phase 4 runs use the CPUs)
+### R-5: awards
+- **Renamed:** Most Valuable Beast (MVB), Offensive Beast of the Year (OBOY), Defensive Beast of the Year (DBOY).
+  - The Signature award became Signature Beast of the Year (SBOY), so the names stay consistent.
+  - The save keys (`mvp`, `opoy`, `dpoy`, `smoy`) are unchanged, so every saved season keeps its awards.
+- **DBOY** now caps each component at +3 SD within the position, as the MVB does. The evaluation over many seasons is pending, from the Phase 4/5 franchise runs.
+- **New awards** (`AWARDS`), each on the existing models and none repeating another's question:
+  - **Special Teams Beast of the Year (STBOY):** the best kicker (points per game 45%, accuracy 40%, longest kick 15%) or kick returner (yards per return 50%, return touchdowns 25%, return yards per game 25%), each against his own group.
+  - **Most Improved Beast (MIB):** the most overall gained during the season (from the career book's season-start rating) by a non-rookie regular, at least +2, with production as the tie-break.
+  - **Comeback Beast of the Year (CBOY):** a veteran who played under half of last season after a full one before it, and is back above his position's average.
+  - **Iron Beast (IRON):** every game and the most snaps (offence, defence and special teams).
+- **All-League First and Second Team** by position: QB 1, RB 1, WR 2, TE 1, OL 3, DL 2, LB 2, CB 2, S 2, K 1. Scored on the capped position scores (kickers on the STBOY kicking score); each monster appears once, at his own position.
+- **Left out on purpose:**
+  - **Breakout:** redundant with MIB and the rookie awards.
+  - **GM of the Year:** not supported, because AI clubs have no GM (no turnover exists), so it could only describe the owner.
+- **Integration:**
+  - `finalizeAwards` stores `allLeague`; the season archive (`seasonAwards`) keeps it.
+  - Career Timeline events (`award:allLeague1`, `award:allLeague2` and the new keys) and trophy shelves on profiles.
+  - League News: the new awards are "notable"; one "major" item names the First Team.
+  - Hall of Fame voting weights: STBOY 8, CBOY 6, MIB 4, IRON 4, against 22–30 for the majors.
+  - The owner's Hall of Fame checklist counts only the original seven awards (`MAJOR_AWARDS`), so the new honours do not make it easier.
+  - The All-League panel is on the League hub's award tab once the awards are frozen, and on the season review.
+  - No new file: the helper lives in `src/ui/career-ui.js`, respecting the release file count (512 published files).
+- Two-season check (seed 5, Pro): every award has a winner in both seasons except CBOY (none possible before season 3); the All-League teams are full.

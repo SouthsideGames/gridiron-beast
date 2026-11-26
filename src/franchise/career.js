@@ -60,6 +60,8 @@ const book = (m) => { const c = (m.career ||= { v: CAREER_VERSION, ev: [] }); c.
 // Decision E: with the timeline writers off, the after-game and season-end passes still run (they find the championships, awards and
 // records the honour ledger keeps), on a throwaway copy of the book, so nothing is written to the timeline itself.
 const passBook = (m) => (enabled ? book(m) : { ...(m.career || { v: CAREER_VERSION }), ev: [...(m.career?.ev || [])] });
+/** R-5 (2026-11-25): a monster's overall when his season began (the career book's first-game snapshot), or null. Read only. */
+export function seasonStartOverall(m, year) { const o = m?.career?.o0; return o && o.y === year ? o.ovr : null; }
 export const careerEvents = (m) => m.career?.ev || [];
 export const hasEvent = (m, k) => careerEvents(m).some((e) => e.k === k);
 /** Add one event unless its key is already there. Returns true when added. */
@@ -176,6 +178,7 @@ export function careerSeasonEnd(roster, ctx) {
     const b = passBook(m); const s = m.stats; const bookY = s?.season?.year === year ? s.season : (s?.seasons || []).find((x) => x.year === year);
     const reg = withDerived(bookY?.reg || {}), post = bookY?.post || {};
     for (const [key, w] of Object.entries(ctx.awards?.league || {})) if (w && w.id === m.id && w.team === club && key !== 'coy') added += addEvent(m, { k: `${`award:${key}:${year}`}`, t: 'award', y: year, c: club, x: { key } });
+    for (const [team, key] of [['first', 'allLeague1'], ['second', 'allLeague2']]) for (const list of Object.values(ctx.awards?.allLeague?.[team] || {})) if ((list || []).some((w) => w && w.id === m.id && w.team === club)) added += addEvent(m, { k: `${`award:${key}:${year}`}`, t: 'award', y: year, c: club, x: { key } }); // R-5
     for (const [cat, r] of Object.entries(ctx.records?.season || {})) if (year >= RECORDS_FROM_SEASON && r && r.year === year && r.team === club && (r.id ? r.id === m.id : r.name === m.name) && (reg[cat] || 0) === r.value) added += addEvent(m, { k: `${`rec:season:${cat}:${year}`}`, t: 'record', y: year, c: club, x: { scope: 'season', cat, value: r.value } });
     for (const S of SEASON_MARKS) if ((reg[S.key] || 0) >= S.at) added += addEvent(m, { k: `${`season:${S.key}:${year}`}`, t: 'season', y: year, c: club, x: { key: S.key, value: reg[S.key], at: S.at } });
     if (ctx.champion === club && (post.games || 0) > 0) added += addEvent(m, { k: `champ:${year}`, t: 'champion', y: year, c: club, x: { run: 1 } });
@@ -210,6 +213,7 @@ export function backfillCareer(f, m) {
   }
   for (const h of f.history || []) {
     for (const [key, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && w.team === h.club && key !== 'coy') added += addEvent(m, { k: `${`award:${key}:${h.year}`}`, t: 'award', y: h.year, c: h.club, x: { key } });
+    for (const [team, key] of [['first', 'allLeague1'], ['second', 'allLeague2']]) for (const list of Object.values(h.allLeague?.[team] || {})) if ((list || []).some((w) => w && w.id === m.id && w.team === h.club)) added += addEvent(m, { k: `${`award:${key}:${h.year}`}`, t: 'award', y: h.year, c: h.club, x: { key } }); // R-5
     const bk = seasons.find((x) => x.year === h.year);
     if (h.champion && h.champion === h.club && (bk?.post?.games || 0) > 0) added += addEvent(m, { k: `champ:${h.year}`, t: 'champion', y: h.year, c: h.club, x: { run: 1 } });
   }
@@ -220,7 +224,7 @@ export function backfillCareer(f, m) {
 
 // ------------------------------------------------------------ the timeline
 const TD_LABEL = Object.fromEntries(FIRSTS.map((x) => [x.id, x.label]));
-const AWARD = { mvp: [$t('franchise.most_valuable_monster'), 'Named the league\'s Most Valuable Monster.'], opoy: [$t('franchise.offensive_monster_of_the_year'), 'The league\'s best offensive monster this season.'], dpoy: [$t('franchise.defensive_monster_of_the_year'), 'The league\'s best defensive monster this season.'], oroy: [$t('franchise.offensive_rookie_of_the_year'), 'The best offensive rookie in the league.'], droy: [$t('franchise.defensive_rookie_of_the_year'), 'The best defensive rookie in the league.'], smoy: [$t('franchise.signature_monster_of_the_year'), 'No signature ability made a bigger difference.'] };
+const AWARD = { mvp: [$t('franchise.most_valuable_monster'), 'Named the league\'s Most Valuable Beast.'], opoy: [$t('franchise.offensive_monster_of_the_year'), 'The league\'s best offensive beast this season.'], dpoy: [$t('franchise.defensive_monster_of_the_year'), 'The league\'s best defensive beast this season.'], oroy: [$t('franchise.offensive_rookie_of_the_year'), 'The best offensive rookie in the league.'], droy: [$t('franchise.defensive_rookie_of_the_year'), 'The best defensive rookie in the league.'], smoy: [$t('franchise.signature_monster_of_the_year'), 'No signature ability made a bigger difference.'], allLeague1: [$t('franchise.all_league_first_team'), 'Named to the All-League First Team at his position.'], allLeague2: [$t('franchise.all_league_second_team'), 'Named to the All-League Second Team at his position.'], stboy: [$t('franchise.special_teams_beast_of_the_year'), 'The best kicker or returner in the league.'], mib: [$t('franchise.most_improved_beast'), 'Nobody in the league improved more this season.'], cboy: [$t('franchise.comeback_beast_of_the_year'), 'Back from a lost season as one of the best at his position.'], iron: [$t('franchise.iron_beast'), 'Every game and the most snaps in the league.'] };
 const STAT_LABEL = { passYds: 'passing yards', passTd: 'touchdown passes', rushYds: 'rushing yards', rushTd: 'rushing touchdowns', recYds: 'receiving yards', rec: 'receptions', recTd: 'receiving touchdowns', tacklesTotal: 'tackles', sacks: 'sacks', int: 'interceptions', pd: 'passes defended', fgLong: 'longest field goal' };
 const fmt = (n) => Number(n).toLocaleString('en-US');
 const ord = (n) => `${n}${['th', 'st', 'nd', 'rd'][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10] || 'th'}`;
