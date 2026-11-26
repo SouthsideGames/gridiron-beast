@@ -828,9 +828,11 @@ export function clubQuality(f, name, year = f.season?.year || 1) {
   void seasons; const growth = gym ? GYM_TIER[gym.tier] + (gym.balance || 0) : 0; const floor = 0; // `balance`: a Gym Leader's own correction to its tier's level (gyms.js)
   return Math.round(base + (h % 9) - 4 + (f.rivals[f.tier]?.team === name ? 2 : 0) + difficultyQuality(D, !!gym) + growth + floor);
 }
-/** Task 8 D7 (owner N8b, AI_IDENTITIES.md §5 q4): Rookie's −4 lowers ordinary clubs only; a gym keeps the standard (Pro) level on
- *  Rookie, so it stays the stronger strategic test. Pro and All-Star apply to every club as before. */
-export function difficultyQuality(D, gym) { return gym && D === DIFFICULTY.rookie ? DIFFICULTY.pro.quality : D.quality; }
+/** The difficulty's founding-quality step for a club. Follow-up A-1 (owner, 2026-11-26) supersedes Task 8 D7 (gyms kept Pro's level on
+ *  Rookie): every club, Gym Leader or ordinary, takes its difficulty's step, for founding and for the arrivals that replenish it
+ *  (both read clubQuality). A gym keeps its own advantages on top: tier growth, its legendary, ageless signatures and coach IQ.
+ *  `gym` is kept in the signature for callers. */
+export function difficultyQuality(D, gym) { void gym; return D.quality; }
 /** An AI club's coach: the gym's named coach, or one shaped by the club's hash; difficulty sets the IQ (GDD §15.2). */
 /** Task 8 D7: a club's fixed identity (identities.js) travels with its coach as `identity` { offense, defense, passStyle, runStyle,
  *  runFront }; the playbook reads it. A gym's named coach is fixed; an ordinary club's coach is still drawn from the season's hash (coaches

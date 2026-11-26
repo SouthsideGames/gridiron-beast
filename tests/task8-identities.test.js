@@ -180,12 +180,13 @@ test('gyms never fall below Compete; ordinary clubs cycle fully', () => {
   assert.equal(nextMode(null, 'rebuild', 1, { gym: false }).mode, 'rebuild');
 });
 
-test('Rookie lowers ordinary clubs only; gyms keep the standard level; Pro and All-Star unchanged', () => {
-  assert.equal(F.difficultyQuality(F.DIFFICULTY.rookie, false), -4); assert.equal(F.difficultyQuality(F.DIFFICULTY.rookie, true), F.DIFFICULTY.pro.quality);
+test('Rookie lowers every club, Gym Leaders included (follow-up A-1); Pro and All-Star unchanged', () => {
+  // Follow-up A-1 (owner 2026-11-26, supersedes Task 8 D7): on Rookie a Gym Leader club takes Rookie's step too, not Pro's.
+  assert.equal(F.difficultyQuality(F.DIFFICULTY.rookie, false), -4); assert.equal(F.difficultyQuality(F.DIFFICULTY.rookie, true), F.DIFFICULTY.rookie.quality);
   for (const k of ['pro', 'allstar']) for (const gym of [true, false]) assert.equal(F.difficultyQuality(F.DIFFICULTY[k], gym), F.DIFFICULTY[k].quality);
   const f = newFranchise(72); const pro = (club) => F.clubQuality(f, club, 1);
   const before = Object.fromEntries(ALL_TEAMS.map((c) => [c, pro(c)])); f.settings.difficulty = 'rookie';
-  for (const c of ALL_TEAMS) assert.equal(F.clubQuality(f, c, 1), before[c] + (GYM_BY_CLUB[c] ? 0 : -3), `${c} on Rookie`);
+  for (const c of ALL_TEAMS) assert.equal(F.clubQuality(f, c, 1), before[c] - 3, `${c} on Rookie`); // Pro −1 → Rookie −4, gyms too (A-1)
 });
 
 test('no boosts: an identity team plays its monsters\' own ratings, and building it changes nobody', () => {
