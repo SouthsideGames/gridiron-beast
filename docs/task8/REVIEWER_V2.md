@@ -56,7 +56,7 @@ Other staging prepares conditions without controlling outcomes, and the run labe
 - fixed seeds and calls.
 
 Ball Clamp's jarred-loose interaction uses no control. Its seed is the first, in an offline search of seeds 1–3000, where the
-extra check's own roll on the abilities' random stream comes up fumble: seed 968 at mastery 0, seed 130 at mastery 1–2, and seed 57 at mastery 3 (re-searched over seeds 1–3000 for the PR #136 type values; the same search on main gives 123 and 57).
+extra check's own roll on the abilities' random stream comes up fumble: seed 968 at mastery 0, seed 432 at mastery 1, seed 153 at mastery 2 and seed 57 at mastery 3 (re-searched over seeds 1–3000 for the PR #136 type values; the same search on main gives 123 and 57; mastery 1–2 re-searched again on 2026-11-26 after the balance audit's football overall change moved their stream, previously 130).
 
 ## Audit: every ability × form × mastery tier, before and after
 

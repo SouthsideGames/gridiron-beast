@@ -459,3 +459,15 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - AI overall at seasons 1 / 5 / 10 / 15: Pro 53.3 / 62.5 / 62.9 / 62.4; Rookie 52.0 / 61.7 / 63.4 / 62.5; All-Star 58.5 / 65.6 / 65.5 / 65.2.
   - **Finding:** Rookie and Pro converge by season 5 (within 1 point), while All-Star stays about 3 points above. The slower Rookie rate only delays reaching the same ceilings, as the first calibration found. The final runs (seeds 3 and 4) decide whether Rookie needs a ceiling-side change; any such change is an owner decision.
 - To be retested on the final runs; any correction comes after.
+### Fast tier on the final balance code (2026-11-26; 2,263 tests, 8 failures, all resolved)
+Each failure was reproduced on its own and bisected over the branch's commits (the audit's final commit d1f2d79 passes all of them).
+- **Code fixes (2):**
+  - `rosterFloorPlan` (release advice at the roster minimum) counted a slot held by an emergency cover as staffed, so after R-6 it suggested releasing one of two CBs (a safety would cover). It now counts emergency-held slots as holes (`staffingHoles`), as the AI's signing logic already does: the advisor never plans a release into an emergency. Bisected to baff24c (R-6). `task7-floor` passes unchanged.
+  - The play-end summary that abilities read rounded the gain once (`Math.round(x)`), while the play's recorded yards round the tenth-rounded gain (`Math.round(Math.round(x*10)/10)`), so a 11.46-yard catch was 11 yards to the hooks and 12 in the box score. Sovereign Arm's "12 net yards" check read 11 for a play recorded as 12. One rounding rule now (engine.js). Pre-existing; R-2's engine change exposed it on seed 9. `task8-abilities-psychic-dragon` passes unchanged.
+- **Test fixtures that followed approved changes (5, each documented in the test):**
+  - `task8-identities` (training priority): the "non-OVR attribute is never ranked first" probe used Durability, which R-17 put into every non-kicker overall; the probe is now Kicking.
+  - `task8-progression` (allocation tiers): RB Durability trains at its R-17 overall weight 1 (was 0.5 as a non-OVR role).
+  - `task7-remediation` (R1 c): the constructed spare TE (seed 968) is rated 51 by the R-2/R-17 overall, below the pool rule's 52; seed 966 gives 52, so the scenario is the same.
+  - `task8-abilities-fire-water` (Impact Pyre): after R-2, seed 5's natural drive hit 4th down on the creation play, and the turnover on downs cleared the zone (an approved rule). Snaps where he defends now start at 1st and 10 at the 35, as the test's lifetime plays already did.
+  - Ball Clamp "jarred loose" review seeds (`review-texts.js`, docs/task8/REVIEWER_V2.md): fixed seeds found by an offline search for the first natural fumble roll; R-2/R-17 (27b46c9) moved the stream at mastery 1 and 2. Re-searched with the same method (seeds 1–3000): 432 and 153 (were 130); 968 and 57 unchanged.
+- The fast tier is rerun after these changes.

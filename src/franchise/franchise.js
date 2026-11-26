@@ -58,7 +58,7 @@ import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT 
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, PACKAGE_SLOT_USE } from '../data/personnel.js';
 import { careerSnapshot } from './career-profile.js';
 import { ensureLeagueNews, addLeagueNews, resultsNews, playoffNews, championNews, playoffFieldNews, raceNews, awardNews, allLeagueNews, recordNews, movesNews, offseasonDigest, draftDigest } from './league-news.js';
-import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, emergencySlots, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, playbookFor, adaptPlaybook } from './roster.js';
+import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, staffingHoles, emergencySlots, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, playbookFor, adaptPlaybook } from './roster.js';
 import { joinAsDraftee, takeFromPool, takeFromWaivers, leaveLeague, releaseFromClub } from './league.js';
 import { aiTrades } from './league-trades.js';
 import { tradeWindowState, seasonTradeWeek } from './trade-window.js';
@@ -689,7 +689,9 @@ export function rosterFloorPlan(f) {
   const saving = (m) => capCharge(m, ly, { current: true });
   // Advisory only (the manual release policy in releaseMonster is unchanged): never suggest a release that leaves fewer eligible,
   // healthy monsters than the formation's required lineup slots, checked with the same depth-chart rule the season gate uses.
-  const holes = (roster) => { const ids = new Set(roster.map((x) => x.id)); const manual = Object.fromEntries(Object.entries(f.lineupManual || {}).filter(([, id]) => ids.has(id))); return lineupProblems(roster, buildDepthChart(roster, manual, f.depth)).length; };
+  // R-6: a slot held only by an emergency cover counts as a hole here (staffingHoles): emergency positions are a last resort for
+  // injuries, so the advisor never plans a release that leaves a position to its emergency cover.
+  const holes = (roster) => { const ids = new Set(roster.map((x) => x.id)); const manual = Object.fromEntries(Object.entries(f.lineupManual || {}).filter(([, id]) => ids.has(id))); return staffingHoles(roster, buildDepthChart(roster, manual, f.depth)).length; };
   const options = (roster) => { const base = holes(roster); return roster.filter((m) => !releaseRefusal({ ...f, roster }, m) && holes(roster.filter((x) => x !== m)) <= base); };
   const releases = options(f.roster).map((m) => { const sv = saving(m); const after = Math.max(0, cost(short + 1) - usable - sv); return { id: m.id, name: m.name, position: m.position, ovr: monsterOverall(m), saving: sv, gapAfter: after }; })
     .sort((a, b) => (a.gapAfter === 0) !== (b.gapAfter === 0) ? (a.gapAfter === 0 ? -1 : 1) : a.gapAfter - b.gapAfter || a.ovr - b.ovr || (a.id < b.id ? -1 : 1));

@@ -92,7 +92,9 @@ test('R1 c: an intervening signing elsewhere never makes the release-and-sign pa
   // market keeps (OVR 52-60 by the pool rule); a second club gets a genuine hole at his position, with the cap room to fill it, after
   // the release and before the later periods. Nobody is assigned to anybody: the clubs bid, and the monster decides, as in play.
   const f = openMarket(31); const clubs = leagueClubs(f).slice().sort(); const club = clubs[2], second = clubs[3]; const POS = 'TE'; const year = f.season.year;
-  const spare = Object.assign(generateMonster(createRng(968), { position: POS, quality: 68, age: 23, id: 'spare_te' }), { contract: { signed: 1, ends: 3, years: 2 }, salary: 20000 });
+  // Balance audit 2026-11-26: seed 968 -> 966. The R-2/R-17 football overall (TE Speed 2, Durability) rates seed 968's slow TE 51,
+  // below the pool rule; seed 966 gives an in-range spare (52), so the scenario's premise is unchanged.
+  const spare = Object.assign(generateMonster(createRng(966), { position: POS, quality: 68, age: 23, id: 'spare_te' }), { contract: { signed: 1, ends: 3, years: 2 }, salary: 20000 });
   assert.ok(monsterOverall(spare) >= POOL_WORTH.ovr && monsterOverall(spare) <= POOL_WORTH.market, `the spare qualifies to stay in the market (${monsterOverall(spare)})`);
   if (clubRoster(f, club).length >= ROSTER_MAX) { const low = clubRoster(f, club).filter((m) => !isProtected(m) && !m.legendary).sort((a, b) => monsterOverall(a) - monsterOverall(b))[0]; assert.ok(releaseFromClub(f, club, low.id, { year }).ok); }
   addToClub(f, club, spare, { year: 1 }); let i = 0; while (clubRoster(f, club).length < ROSTER_MAX) addToClub(f, club, Object.assign(mon({ id: `pad${i}`, pos: 'OL', q: 45, seed: 40 + i++ }), { contract: { signed: 1, ends: 3, years: 2 }, salary: 20000 }), { year: 1 });

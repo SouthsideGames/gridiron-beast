@@ -163,8 +163,9 @@ test('training: the identity\'s attributes come first among the position\'s OVR 
         // while an identity attribute has headroom, the next point goes to one
         const open = (d, a) => d.current[a] < d.potential[a];
         const firstSpent = id.spent[0]?.attr; if (firstSpent && pri[pos].some((a) => open(d0, a))) assert.ok(pri[pos].includes(firstSpent), `${club} ${pos}: first point on ${firstSpent}`);
-        // a non-OVR attribute passed as "first" is ignored (never ranked first)
-        const odd = run(['durability']); assert.deepEqual(odd.spent.map((x) => x.attr), plain.spent.map((x) => x.attr));
+        // a non-OVR attribute passed as "first" is ignored (never ranked first). Balance audit R-17 (2026-11-25) put Durability into
+        // every non-kicker overall, so the non-OVR probe is now Kicking (in no overall but the kicker's).
+        const odd = run(['kicking']); assert.deepEqual(odd.spent.map((x) => x.attr), plain.spent.map((x) => x.attr));
       }
     }
   }

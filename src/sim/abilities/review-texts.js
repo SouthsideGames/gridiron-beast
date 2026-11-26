@@ -209,7 +209,7 @@ export const VARIANTS = {
   ],
   ironjaw: [
     { id: 'interaction-jarred-loose', kind: 'interaction', label: 'Interaction: the extra check jars the ball loose (natural roll, fixed seed)',
-      scenario: { prime: () => ({ token: true }), calls: RUNS, seeds: 1, snaps: 12, seed0: (form, mastery) => ([968, 130, 130, 57][mastery]), how: 'token primed; run plays; the fixed seed (968 at mastery 0, 130 at mastery 1-2, 57 at mastery 3; re-searched for the candidate type values) is the first where the extra check\'s own roll on the abilities\' random stream comes up fumble: a natural outcome, not forced (found by an offline search of seeds 1-3000)' },
+      scenario: { prime: () => ({ token: true }), calls: RUNS, seeds: 1, snaps: 12, seed0: (form, mastery) => ([968, 432, 153, 57][mastery]), how: 'token primed; run plays; the fixed seed (968 at mastery 0, 432 at mastery 1, 153 at mastery 2, 57 at mastery 3; re-searched for the candidate type values, and for mastery 1-2 again after the balance audit\'s overall change, 2026-11-26) is the first where the extra check\'s own roll on the abilities\' random stream comes up fumble: a natural outcome, not forced (found by an offline search of seeds 1-3000)' },
       spec: { cleanupFn: null, resolveFn: (x) => { const r = SPECS.ironjaw.resolveFn(x); return r && x.aEv?.fumble ? r : null; }, resolve: 'The extra fumble check jars the ball loose (the fumble and its ordinary recovery)' } },
     { id: 'failure-no-token', kind: 'failure', label: 'Failure: no token (an ordinary tackle, no extra check)',
       scenario: { prime: () => ({ token: false }), calls: RUNS, seeds: 6, snaps: 12, how: 'no token: his tackles are ordinary' },

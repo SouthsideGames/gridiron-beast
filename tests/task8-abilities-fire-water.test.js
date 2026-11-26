@@ -87,7 +87,10 @@ test('Impact Pyre zone: chooses a legal lane, retains its 6x4 footprint, counts 
     let n = 0; while (!g.t8.ability[lb.id].queued && n++ < 200) snap(g, teams, 'inside_zone', 'run_wall');
     assert.ok(g.t8.ability[lb.id].queued, `${form}: the bar filled`); assert.equal(g.t8.fields.list.length, 0, 'nothing created on the earning play');
     let made = null, pre = null; n = 0;
-    while (!made && n++ < 80) { const x = snap(g, teams, 'inside_zone', 'run_wall'); made = playField(x.sim, 'FIR-02-F'); pre = x.pre; if (!made) assert.equal(g.t8.fields.pending.length, 1, 'waits while his team is on offense'); }
+    // Balance audit 2026-11-26: a snap where he defends starts at 1st and 10 at the 35, as the lifetime plays below do, so the creation
+    // play cannot end the possession (a turnover on downs clears every zone at the next snap, an approved rule); after the R-2 speed
+    // changes (bisected to 27b46c9..cc44b78) seed 5's natural drive reached 4th down at the creation play and the zone was cleared before play 3.
+    while (!made && n++ < 80) { if (g.possession === 'home') Object.assign(g, { phase: 'scrimmage', down: 1, toGo: 10, ballOn: 35 }); const x = snap(g, teams, 'inside_zone', 'run_wall'); made = playField(x.sim, 'FIR-02-F'); pre = x.pre; if (!made) assert.equal(g.t8.fields.pending.length, 1, 'waits while his team is on offense'); }
     assert.ok(made, 'created'); assert.equal(pre.possession, 'home', 'at a snap where he defends');
     const [ax, ay] = PLAYS.run_wall.align.LB1; assert.equal(made.type, 'Fire'); assert.equal(made.strength, slow);
     assert.ok(near(span(made.lat), 6) && near(span(made.yard), 4)); assert.ok(made.yard[0] >= -10 && made.yard[1] <= 100, 'centred on his starting position');
