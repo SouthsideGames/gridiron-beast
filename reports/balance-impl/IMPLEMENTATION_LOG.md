@@ -387,3 +387,22 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - Growth follows league maturation and then holds (seasons 5–15: 17–19 points).
   - Tuning it down would mean either a hidden season-based modifier (ruled out by the brief) or changing how strong a new league is founded (generation calibration), which is an owner decision.
   - The pass rush's relative decline with talent (sacks −27%) is the one engine-side lever, and the developed-league sack target (5–7%) is not met. Both are reported for an owner decision.
+
+## Phase 7 (started)
+### R-18: save audit
+- `tools/balance-audit/save-audit.mjs` measures, at seasons 1, 5, 10 and 15: raw, packed (gbp2) and stored (gzip) size; save time (pack + gzip) and load time (gunzip + unpack), the median of 5; an exact round trip; and the largest parts of the save.
+- Season 1 smoke run (seed 3, Pro): raw 6,678 KB; packed 2,593 KB; stored 504 KB; save 773 ms, load 257 ms (Node, this container); round trip exact.
+  - Largest parts: `league.monsters` 3,542 KB, `preLeagueHistory` 845 KB, `history[0]` 425 KB, `freeAgency.talks` 314 KB.
+- The 15-season run is in progress.
+### R-19: gym clubs (investigation, from the seed-3 15-season runs)
+- **Representation:** 12 gym clubs of 31 AI clubs (39%).
+- **Titles:** Rookie 15 of 15 to gyms; All-Star 11 of 15. The audit had 12, 10 and 8 of 15.
+- **Starter strength at season 15:**
+  - Rookie: gyms 65.1 against ordinary 60.9 (+4.2).
+  - All-Star: gyms 65.1 against ordinary 65.3 (equal), yet gyms took 11 titles.
+- **Mechanical advantages found in the code:**
+  1. **On Rookie, gyms are founded and resupplied at Pro quality** (`difficultyQuality`: gyms use Pro's −1, ordinary clubs −4). Free-agency and injury-cover arrivals use the same club target every season, so the gap is carried all franchise. With R-4's slower Rookie development, that 3-point arrival edge now matters more (+4.2 at season 15). This is a designed boss rule, but its interaction with R-4 is unintended.
+  2. **Gym tier growth** (+1 / +4 / +7, with Aetheria −5) in the club target, used by arrivals every season. Designed.
+  3. **Ageless legendaries:** each late gym's signature legendary never declines. With equal average strength on All-Star, titles follow those stars (the audit found the same).
+  4. **Coach IQ +0.2** for gym coaches. Designed.
+- To be retested on the final runs; any correction comes after.
