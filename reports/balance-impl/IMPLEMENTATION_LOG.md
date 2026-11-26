@@ -471,3 +471,33 @@ Each failure was reproduced on its own and bisected over the branch's commits (t
   - `task8-abilities-fire-water` (Impact Pyre): after R-2, seed 5's natural drive hit 4th down on the creation play, and the turnover on downs cleared the zone (an approved rule). Snaps where he defends now start at 1st and 10 at the 35, as the test's lifetime plays already did.
   - Ball Clamp "jarred loose" review seeds (`review-texts.js`, docs/task8/REVIEWER_V2.md): fixed seeds found by an offline search for the first natural fumble roll; R-2/R-17 (27b46c9) moved the stream at mastery 1 and 2. Re-searched with the same method (seeds 1–3000): 432 and 153 (were 130); 968 and 57 unchanged.
 - Rerun after these changes (2026-11-26, alone, 5,473 s): 2,263 tests, 2,263 pass, 0 fail.
+
+## Final validation, round 1 (2026-11-26; seeds 3 and 4 × Rookie / Pro / All-Star, 15 seasons, `--owner=repair --board=content`, commit a7b7c7f)
+All six runs: 0 errors, 0 integrity problems, no negative cap room, rosters 30–38. Three approved items were found not finished, fixed, and the
+six runs are repeated on the fixed code (round 2).
+- **R-9, AI signing bonuses: 0 in all six runs.** The cap never binds: in-season the tightest AI club had 1–11% of the 1.8 M cap free and the
+  median 16–17%; next league year the median was 16–30% (`cap-probe`, the season 1/5/10/15 exports). The AI used the cap-saving bonus only
+  when a deal did not fit at all. **Change:** it is used when a multi-year deal would leave the club under 20% of its cap next league year
+  (`AI_MARKET.bonusRoom`, `capTight`, `bonusWhenTight` in `fa-ai.js`), in new offers, raised offers in a bidding war and the AI's side of a
+  negotiation. The bonus form itself is unchanged (same value to a money-minded monster, less cap). Task 7 tests: 69 of 69.
+- **R-5, DBOY: DL 77 of 90** (audit: 43 of 45, then 68 of 75). On 15 collected Pro seasons (seed 5, `aw-compare`) the cause was two-fold:
+  - leaders tied at the +3 SD component cap, and the tie-break (raw production) always favours a lineman, whose sacks and tackles add up to more;
+  - a lineman's two heaviest components (pass rush, run defence) share his sacks and tackles for loss, so his total spreads wider.
+  - **Change:** the DBOY ranks on the capped total standardised within the position (`zTotal`), not capped again. On the 15 seasons: DL 11
+    (was 12) winners; top five DL 39 of 75 (was 47), LB 8 (0), S 10 (7), CB 18 (21). The remaining DL lead is measured performance: the best
+    rusher stands 3.1–3.6 SD above other linemen, the best corner 2.2–3.4. No position is forced (brief).
+  - **Canon effect:** the pre-league archive chooses its winners with the game's own award rules (owner ruling 2026-11-23), so seasons −6 and
+    −3 now have Lenroko (DL) and Tulomar (LB) as DBOY (were Voulor, LB, and Zellinen, DL). New franchises only; a save keeps its stored winners.
+    GDD §60.9 updated.
+- **R-5, STBOY: returners 81 of 90.** Same standardisation for the kicker and returner groups. On the 15 seasons returners still win 13: their
+  leaders stand about 4 SD above the other returners (long return touchdowns), a genuine outlier. Reported, not tuned.
+- **Sim-tier tests found two R-5 defects (they fail on the commit before these changes too, so they date from 3b8f7cc):**
+  - Most Improved read the season-start overall from the Career Timeline, so switching the Timeline's writers off changed the game
+    (`career-timeline` "never changes the game"). It is now kept in the season stats book (`stats.season.o0`, `noteSeasonStart`).
+  - All-League places were read from `h.allLeague`, which nothing writes; the archive has them under `h.awards.allLeague`. Profiles showed a
+    place only through the Timeline entry, and the older-save backfill never found one. Fixed in `career-profile.js` and `career.js`.
+  - Two tests asserted the old award names (`2× MVP`, "Defensive Monster of the Year"); they follow the approved names. The profile test now
+    checks All-League places in the archive as strictly as the single awards.
+- Other round-1 results (kept for comparison with round 2): AI overall at seasons 1 / 5 / 10 / 15 (mean of the two seeds) Rookie 50.7 / 60.2
+  / 62.0 / 61.6, Pro 52.9 / 62.8 / 63.8 / 62.1, All-Star 56.9 / 63.9 / 63.5 / 63.5; gym titles 22, 21 and 19 of 30; developed league (seasons
+  5–15) completion 59–64%, sacks 2.2–2.4% of dropbacks, interceptions 2.2–2.5%; points per team-game 10.7–14.2 in season 1, 16.8–19.4 in season 15.
