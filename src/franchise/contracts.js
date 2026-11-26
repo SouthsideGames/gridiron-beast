@@ -5,7 +5,7 @@
 // what the monster will ask for next time, not what it costs today. All
 // renewals happen in the offseason, before the next season can start.
 
-import { salaryFor, monsterOverall, ROSTER_MIN, ROSTER_MAX } from '../data/monsters.js';
+import { salaryFor, salaryForOvr, monsterOverall, ROSTER_MIN, ROSTER_MAX } from '../data/monsters.js';
 import { POSITION_WEIGHTS } from '../data/personnel.js';
 import { staffById } from '../data/staff.js';
 import { monsterLine } from './stats.js';
@@ -37,7 +37,7 @@ export function renewalAsk(m, { award = false, year = null, apexKnown = true } =
   const ordinary = salaryFor(withBankedPoints(m));
   // B9 + M6: a known Apex asks half the remaining gap to the OVR-99 salary.
   // Existing signed contracts remain fixed; unidentified offers use the ordinary ask.
-  const base = m.dev?.apex && apexKnown ? ordinary + (18000 + 280 * 99 - ordinary) / 2 : ordinary;
+  const base = m.dev?.apex && apexKnown ? ordinary + (salaryForOvr(99) - ordinary) / 2 : ordinary; // R-9: the OVR-99 salary on the current curve
   const L = monsterLine(m, 'season', 'reg');
   const big = (L.passYds || 0) >= 1500 || ((L.rushYds || 0) + (L.recYds || 0)) >= 900 || ((L.tackles || 0) + (L.assists || 0)) >= 50 || (L.sacks || 0) >= 8 || (L.int || 0) >= 4 || (L.fgm || 0) >= 12;
   let premium = 1;

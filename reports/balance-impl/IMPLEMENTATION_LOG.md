@@ -350,3 +350,15 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   | Blowouts, 21+ % | 17.6 | 15.4 |
 
   - The league plays the same game, a little closer. The Speed sweep checks that Speed stays worth having.
+### R-9: salary curve (PROVISIONAL)
+- `salaryForOvr(ovr)` = 18,000 + 280·OVR + 90·max(0, OVR − 70)², from `ELITE_SALARY`. Below 70 nothing changes:
+  - 50: 32,000; 70: 37,600 (unchanged);
+  - 80: 49,400 (was 40,400, +22%);
+  - 90: 79,200 (was 43,200, ×1.83);
+  - 99: 121,410 (was 45,720, ×2.65).
+- The hard-coded copies were replaced: the Apex renewal ask's OVR-99 salary, and the draft board's rookie salary on HQ.
+- The tier caps are unchanged, per the brief.
+- Existing contracts keep their stored salary; new and renewed deals use the curve.
+- **AI signing bonuses:** the mechanism exists (`fa-ai.js` `bonusTerms`, for money-minded monsters on multi-year deals when the cap is tight; used in bidding wars and urgent signings). The audit saw none because the cap never bound. With the curve the cap binds at the top, and the 15-season validation counts the bonuses. If there are still none, the AI's use is widened.
+### R-16: trade values
+- Position leverage rerun on the final engine (300 games, bump 8) to re-derive `POSITION_LEVERAGE` with the documented recipe (shrink, half strength, clamp 0.6–1.6, rescale).

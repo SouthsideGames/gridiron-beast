@@ -260,7 +260,12 @@ export const careerYears = (id, age) => (age <= 21 ? 0 : Math.max(0, age - 21 - 
 /** Prior-career participation profile from a standing (percentile): starter from 60%, rotation from 30%, else depth. */
 export const historyProfile = (p) => (p >= 0.6 ? 'starter' : p >= 0.3 ? 'rotation' : 'depth');
 
-export function salaryFor(m) { return 18000 + 280 * monsterOverall(m); }
+/** R-9 (balance audit, 2026-11-25): salary by overall. Linear (18,000 + 280 per point) up to ELITE_SALARY.from, then a premium that
+ *  grows with the square of the points above it, so stars cost meaningfully more while average and replacement-level monsters cost
+ *  what they did. PROVISIONAL, calibrated on 15-season franchise runs (cap use, bonuses, roster depth). */
+export const ELITE_SALARY = Object.freeze({ from: 70, perPointSq: 90 });
+export function salaryForOvr(ovr) { const over = Math.max(0, ovr - ELITE_SALARY.from); return Math.round(18000 + 280 * ovr + ELITE_SALARY.perPointSq * over * over); }
+export function salaryFor(m) { return salaryForOvr(monsterOverall(m)); }
 
 /** XP needed to reach the next level: 75 per level (N7c B6 starting curve); none past level 50 (MAX). */
 export const xpForLevel = (level) => (level >= MAX_LEVEL ? Infinity : XP_PER_LEVEL);

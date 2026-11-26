@@ -32,7 +32,7 @@ import { REGIONS, TRAINING_FOCI, ROLE_LABEL, trainingBonus } from '../../data/st
 import { PLAYS, LESSONS, counterPlays } from '../../data/playbook.js';
 import { CONFERENCE_NAMES, REG_WEEKS, CONFERENCE_ROUND, FINAL_ROUND, conferenceOf, tierById, TEAM_META, DIVISIONS, conferenceFor, divisionOf } from '../../data/league.js';
 import { temperSummary } from '../../data/temper.js';
-import { salaryFor, monsterOverall, TYPES, effectiveAttributes, HEADLINE, headlineAttributes, resolveSpecies, ABILITIES } from '../../data/monsters.js';
+import { salaryFor, salaryForOvr, monsterOverall, TYPES, effectiveAttributes, HEADLINE, headlineAttributes, resolveSpecies, ABILITIES } from '../../data/monsters.js';
 import { TRAITS } from '../../data/species.js';
 import { headlineHtml } from './roster.js';
 import { ATTRIBUTES, OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
@@ -280,7 +280,7 @@ export function registerHqScreens(Router, app) {
     const scouted = v.level >= 6; const fit = scouted ? F.fitFor(f, m) : null; // scheme fit shows only once the scout has the full picture (GDD §19.4)
     const pf = taken ? null : F.positionFit(f, m, { ovr: v.ovr ?? null });
     return `<div data-prospect-id="${esc(m.id)}" class="item ${scouted ? 'tappable' : 'static'} ${taken ? 'done' : ''} ${fit?.fits ? 'fit' : ''} ${fitClass(pf)}" style="align-items:flex-start" ${scouted ? `data-action="prospect" data-id="${m.id}" role="button" tabindex="0"` : ''}>${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)}${fit?.fits ? ` <span class="fit-star" title="${$t('hq.fits_your_scheme')}">✦</span>` : ''} <span class="dim">${esc(m.position)} · age ${m.age} · ${esc(m.origin || '')}</span>${scouted ? ` <span class="chip good">${$t('hq.scouted_tap_for_the_report')}</span>` : v.level > 0 ? ` <span class="chip">glanced</span>` : ''}</div>
-      <div class="sub">${beastSpeciesHtml(m)}</div>${prospectRanks(f, m)}<div class="sub">${v.ovr != null ? `${$t('hq.b_ovr_b', { ovr: v.ovr })}` : `<b>${$t('hq.ovr_3')}</b>`}${v.potential != null ? ` ${$t('hq.potential', { potential: v.potential })}` : ''}${apexEmblem(f, m) ? ` ${apexEmblem(f, m)}` : ''}${v.natureKnown ? ` ${$t('hq.temper', { name: esc(temperSummary(m.temper).name) })}` : ''} ${$t('hq.rookie_deal_yr', { ovr: (Math.round((18000 + 280 * (v.ovr ?? 52)) * F.ROOKIE_SCALE / 100) * 100).toLocaleString('en-US') })}</div>${pickable ? (() => { const a = F.draftAffordability(f, m.id); return a ? `<div class="sub" style="color:var(--bad)">${$t('hq.over_your_cap_his_rookie_deal', { toLocaleString: (a.charge).toLocaleString('en-US'), toLocaleString2: Math.max(0, a.usable).toLocaleString('en-US') })}</div>` : ''; })() : ''}<div>${bars}</div>${fitLine(pf)}</div>${pickable ? `<button class="btn small primary" data-action="pick" data-id="${m.id}">${$t('hq.pick')}</button>` : ''}</div>`;
+      <div class="sub">${beastSpeciesHtml(m)}</div>${prospectRanks(f, m)}<div class="sub">${v.ovr != null ? `${$t('hq.b_ovr_b', { ovr: v.ovr })}` : `<b>${$t('hq.ovr_3')}</b>`}${v.potential != null ? ` ${$t('hq.potential', { potential: v.potential })}` : ''}${apexEmblem(f, m) ? ` ${apexEmblem(f, m)}` : ''}${v.natureKnown ? ` ${$t('hq.temper', { name: esc(temperSummary(m.temper).name) })}` : ''} ${$t('hq.rookie_deal_yr', { ovr: (Math.round((salaryForOvr(v.ovr ?? 52)) * F.ROOKIE_SCALE / 100) * 100).toLocaleString('en-US') })}</div>${pickable ? (() => { const a = F.draftAffordability(f, m.id); return a ? `<div class="sub" style="color:var(--bad)">${$t('hq.over_your_cap_his_rookie_deal', { toLocaleString: (a.charge).toLocaleString('en-US'), toLocaleString2: Math.max(0, a.usable).toLocaleString('en-US') })}</div>` : ''; })() : ''}<div>${bars}</div>${fitLine(pf)}</div>${pickable ? `<button class="btn small primary" data-action="pick" data-id="${m.id}">${$t('hq.pick')}</button>` : ''}</div>`;
   }
   /** The scout's full report on a fully scouted prospect (GDD §19.4): bio, nature, ability, all twelve attributes, and how they compare with the owner's best at the position. */
   function prospectSheet(f, m) {
@@ -290,7 +290,7 @@ export function registerHqScreens(Router, app) {
     const mine = f.roster.filter((x) => x.position === m.position).sort((a, b) => monsterOverall(b) - monsterOverall(a));
     const best = mine[0]; const depth = F.depthNeeds(f).find((n) => n.position === m.position);
     const pk = f.draft?.picks?.find((p) => p.id === m.id);
-    const salary = Math.round((18000 + 280 * monsterOverall(m)) * F.ROOKIE_SCALE / 100) * 100;
+    const salary = Math.round(salaryForOvr(monsterOverall(m)) * F.ROOKIE_SCALE / 100) * 100;
     sheet(`<div class="row" style="gap:12px">${monsterSprite(m, 64)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(m.name)}</div><div class="muted">${$t('hq.type_age_board', { position: esc(m.position), type: esc(m.type), age: m.age })}</div><div class="muted">${$t('hq.born_in', { origin: esc(m.origin || '·'), name: esc(sp.name) })}${sp.rarity ? ` (${esc(sp.rarity)})` : ''}</div></div></div>
       ${prospectRanks(f, m)}
       ${pk ? `<p class="chip ${pk.team === f.club ? 'accent' : ''}">${$t('hq.drafted_r_by', { pk: pk.round, overall: pk.overall, team: esc(pk.team) })}</p>` : ''}
