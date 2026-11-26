@@ -589,10 +589,15 @@ test('package rule: one position per monster (Task 7 D6): only the slot’s own 
   assert.deepEqual(lineupProblems(f.roster, chart), [], 'the base seven are legal');
   const av = F.playAvailability(f); assert.ok(Object.keys(av.blocked).length && Object.values(av.blocked).every((sl) => sl === 'SS'));
   assert.ok(Object.keys(av.blocked).every((id) => PLAYS[id].onField.includes('SS')));
-  // One healthy linebacker: a lineman can no longer cover LB2, so the base lineup is illegal and Sunday is a forfeit.
+  // One healthy linebacker. Balance audit R-6 (owner decision 2026-11-25): a spare healthy lineman now covers LB2 as an emergency, so
+  // the forfeit needs the spare linemen gone too: with only the two starting DL healthy nobody may cover, the base lineup is illegal
+  // and Sunday is a forfeit, as before. The cover itself is asserted first.
   for (const m of f.roster.filter((m) => m.position === 'LB').slice(1)) m.injury = { severity: 'Minor', weeks: 2, type: 'knee' };
+  const covered = buildDepthChart(f.roster, f.lineupManual, f.depth);
+  assert.equal(f.roster.find((m) => m.id === covered.LB2)?.position, 'DL', 'a spare lineman covers LB2 in an emergency');
+  for (const m of f.roster.filter((m) => m.position === 'DL' && !m.injury).slice(2)) m.injury = { severity: 'Minor', weeks: 2, type: 'knee' };
   const chart2 = buildDepthChart(f.roster, f.lineupManual, f.depth);
-  assert.equal(chart2.LB2 ?? null, null, 'LB2 stays empty: no secondary position fills it');
+  assert.equal(chart2.LB2 ?? null, null, 'LB2 stays empty: no linebacker and no spare lineman to cover it');
   assert.deepEqual(lineupProblems(f.roster, chart2), ['LB2']);
   const team = F.playerTeam(f); assert.equal(team.forfeit, true); assert.ok(/LB2/.test(team.forfeitReason), team.forfeitReason);
 });
