@@ -329,3 +329,8 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - The repair owner (he fills holes only) won 27.6% on Rookie and 16.7% on All-Star on this seed. The audit's same owner won 38.6% and 57.1%, and the audit noted the spread between seeds is three times the spread between difficulties.
   - Integrity: 0 problems, 0 errors, 0 negative cap rooms; rosters 31–38.
 - **R-12 (from the same runs): scoring still grows** from season 1 to season 15: Rookie 13.2 → 19.3 points per team-game (+46%), All-Star 14.7 → 19.8 (+35%). The target is about 10–15%. Investigation next.
+- **R-12 investigation (seed 3, 15 seasons):**
+  - Starter overall by position, season 1 → 15 (Rookie): QB +2, RB +17, WR +13, TE +9, OL +12; DL +9, LB +12, CB +11, S +8. All-Star is similar. Offence and defence develop at about the same rate; ratings do not favour offence.
+  - Scoring follows league maturation: generated clubs start near 52 overall and settle near 63–65 by season 5. Points per team-game go 13.2 → 18.3 by season 5, then hold at 17–19 through season 15.
+  - The passing game responds most to talent: yards per attempt 8.6 → 10.5–11.6 and completion 54 → 64% (developed-league target 63–67% met), while sacks fall to 1.8–3.6% (target 5–7%).
+  - Next: the engine's scoring at two fixed talent levels (game study, quality 52 against 64), to separate the engine's response from development.
