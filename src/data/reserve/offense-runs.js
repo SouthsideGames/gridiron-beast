@@ -22,7 +22,8 @@ export default function batch(b) {
   'Early downs when you want a steady four yards with an extra lineman.', 'The back presses the center, then cuts behind whichever block wins.', 'Nickel looks and Cover 2 Man, light boxes.', 'Bear Front and Goal Line Stand.');
 
   add(O('wide_zone_rt', 'Wide Zone Right', 'tight_wing', {
-    QB: HANDOFF, RB: CARRY([[-6.5, 0], [-4.5, 3], [-1, 7], [4, 10], [20, 12]]),
+    // R-7 (balance audit, 2026-11-25): the back's bend starts a step deeper, so the reach blocks have time and the edge is earned (12.4 yd a carry in games, 8.6 in the probe → 6.1).
+    QB: HANDOFF, RB: CARRY([[-6.5, 0], [-4.9, 3], [-1.8, 7], [3, 10], [20, 12]]),
     C: RUNBLOCK([2, 2.5]), LG: RUNBLOCK([2, 1]), RG: RUNBLOCK([2.5, 4.5]), TE: RUNBLOCK([2.5, 7]), WR1: STALK([4, -14]),
   }, { type: 'run', tags: ['run', 'outside'], desc: 'Under center, everyone reaches right behind the wing; the back bends it outside or cuts up.' }),
   'With a fast back against slow edge defenders.', 'One cut: if the wing seals the edge, bounce it; if not, cut up behind the guard.', 'Heavy fronts stacked inside, Run Wall.', 'Edge Contain and fast corners.');
@@ -65,7 +66,8 @@ export default function batch(b) {
   'A simple downhill run on 1st-and-10.', 'The back aims just outside the tight end and stays on that track.', 'Light boxes and Cover 4.', 'Bear Front and Edge Contain.');
 
   add(O('dart', 'Dart', 'gun_pro_lt', {
-    QB: HANDOFF, RB: CARRY([[-5.2, -2.8], [-3, -0.5], [1, 1.5], [8, 2], [20, 2]]),
+    // R-7 (balance audit, 2026-11-25): the back aims a yard wider, at the B gap the pulling guard opens, not his inside hip (2.3 a play in the probe → 2.9).
+    QB: HANDOFF, RB: CARRY([[-5.2, -2.8], [-3, -0.5], [1, 2.5], [8, 3], [20, 3]]),
     LG: PULL([-1.5, 0], [1.5, 2.6]), RG: RUNBLOCK([1.5, 0.8]), TE: RUNBLOCK([1.5, 4.5]), WR1: STALK([4, -16]), WR2: STALK([4, 16]),
   }, { type: 'run', tags: ['run', 'inside'], desc: 'The backside guard pulls across to lead the back through the right B gap.' }),
   'When linebackers read the guards: the pull pulls them the wrong way.', 'The back follows the pulling guard and cuts off his block.', 'Run Wall and over-pursuing linebackers.', 'Double A Mug, pressure inside beats the pull.');
@@ -83,7 +85,8 @@ export default function batch(b) {
   'A big-play run when the defense is crowding the middle.', 'Two pullers lead: the first kicks out the edge, the second turns up on the linebacker.', 'Run Wall and Bear Front.', 'Edge Contain and fast corners.');
 
   add(O('student_body', 'Student Body Right', 'i_pro', {
-    QB: PITCH([[-1.6, 0], [-3, 1.5]]), RB: CARRY([[-6.5, 0], [-5, 5], [-2, 10], [3, 13], [22, 14]]),
+    // R-7 (balance audit, 2026-11-25): the toss is caught deeper, behind the pullers rather than level with them (10.3 yd a carry in games, 7.6 in the probe → 6.8).
+    QB: PITCH([[-1.6, 0], [-3, 1.5]]), RB: CARRY([[-6.5, 0], [-6, 5], [-4, 10], [1, 13], [22, 14]]),
     LG: PULL([-2, 2], [1.5, 8]), RG: PULL([-2, 3.5], [2, 11]), TE: RUNBLOCK([1.5, 5]), WR2: STALK([3, 17]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'outside'], desc: 'A toss with both guards pulling: a wall of blockers sweeps the right side.' }),
   'With a fast back when the edge defender plays inside.', 'The pitch is live: the back catches it moving and gets behind both guards.', 'Heavy fronts and Goal Line Stand.', 'Edge Contain and Man Press corners who come up fast.');
@@ -157,7 +160,8 @@ export default function batch(b) {
   'Quick perimeter yards with a fast back and a smart quarterback.', 'The quarterback runs at the end: he keeps if the end takes the back, pitches if the end comes at him.', 'Heavy fronts stacked inside.', 'Edge Contain and QB Spy.');
 
   add(O('inverted_veer', 'Inverted Veer', 'gun_pro', {
-    QB: OPTION([[-5, 0], [-4, 0.5], [-1, 1.5], [5, 1.5], [20, 1.5]]), RB: CARRY([[-5.2, 2.8], [-5, 6], [-2, 10], [3, 13], [20, 14]]),
+    // R-7 (balance audit, 2026-11-25): the sweeping back runs a deeper arc, so the end can play him and the read means something (9.8 a play in the probe → 8.5).
+    QB: OPTION([[-5, 0], [-4, 0.5], [-1, 1.5], [5, 1.5], [20, 1.5]]), RB: CARRY([[-5.2, 2.8], [-5.5, 6], [-3, 10], [2, 13], [20, 14]]),
     LG: PULL([-1.5, 0.5], [1.5, 2]), RG: RUNBLOCK([1.5, 0.5]), TE: RUNBLOCK([4, 2]), WR2: STALK([3, 16]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'option'], desc: 'The back sweeps outside; the quarterback reads the end and keeps it inside behind the pulling guard.' }),
   'With a strong runner at quarterback against defenses that widen to stop the sweep.', 'End widens with the back: the quarterback runs inside. End crashes: give the sweep.', 'Edge Contain and wide defensive ends.', 'QB Spy and Bear Front.');
@@ -169,8 +173,10 @@ export default function batch(b) {
   'Against an aggressive interior lineman.', 'The read is inside: lineman takes the back, the quarterback keeps up the middle.', 'Double A Mug and penetrating fronts.', 'QB Spy and Run Wall.');
 
   add(O('option_pitch', 'Option Pitch', 'tight_pistol', {
-    QB: OPTION([[-3.5, 0], [-3, 1.5], [0, 5], [5, 8], [20, 9]]), RB: CARRY([[-6.2, 0], [-5, 3], [-3, 8], [2, 12], [20, 14]]),
-    C: RUNBLOCK([2, 1.5]), LG: RUNBLOCK([2, 0]), RG: RUNBLOCK([2, 3]), TE: RUNBLOCK([4, 5]), WR1: STALK([4, -16]),
+    // R-7 (balance audit, 2026-11-25): the quarterback opens with a drop step and the back trails deeper as the pitch man; the center cuts off the backside. The pistol
+    // quarterback reached the edge so fast that he kept 85% of the time for 13 yards (9.4 a play in games, 13.2 in the probe → 9.4).
+    QB: OPTION([[-3.5, 0], [-4.5, 2], [-2, 6], [3, 9], [20, 11]]), RB: CARRY([[-6.2, 0], [-5.8, 3], [-4, 8], [1, 12], [20, 14]]),
+    C: RUNBLOCK([2, -1]), LG: RUNBLOCK([2, 0]), RG: RUNBLOCK([2, 3]), TE: RUNBLOCK([4, 5]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'option', 'outside'], desc: 'The tight end arc-blocks the safety while the quarterback attacks the edge with the back as the pitch man.' }),
   'Against base defenses when you have an extra lineman to block inside.', 'Watch the tight end’s arc block: it decides how far outside the play gets.', 'Bear Front and Run Wall.', 'Edge Contain.');
 
@@ -188,8 +194,9 @@ export default function batch(b) {
   'Once a game, when the defense is flying to the ball.', 'A long-developing play: the right guard and the back must get to the left edge in time.', 'Over-pursuing defenses and Zone Blitz.', 'Edge Contain and disciplined backside defenders.');
 
   add(O('rocket_toss', 'Rocket Toss', 'spread_left', {
-    QB: PITCH([[-5, 0], [-5.5, -0.5]]), WR3: CARRY([[-3.5, -5], [-6.5, -1], [-5.5, 3], [-3, 9], [2, 14], [20, 16]]),
-    LG: RUNBLOCK([1.5, 1.5]), RG: RUNBLOCK([2, 4.5]), RB: RUNBLOCK([0, 7]), WR2: STALK([3, 17]), WR1: STALK([4, -16]),
+    // R-7 (balance audit, 2026-11-25): the motion man catches the pitch a yard and a half shallower and the back leads at the line, not behind it (0.9 a play in the probe → 2.1).
+    QB: PITCH([[-5, 0], [-5.5, -0.5]]), WR3: CARRY([[-3.5, -5], [-5, -1], [-4, 3], [-1.5, 9], [2, 14], [20, 16]]),
+    LG: RUNBLOCK([1.5, 1.5]), RG: RUNBLOCK([2, 4.5]), RB: RUNBLOCK([0.5, 8]), WR2: STALK([3, 17]), WR1: STALK([4, -16]),
   }, { type: 'run', motion: { slot: 'WR3', to: [-3.5, -5] }, tags: ['run', 'outside', 'misdirection'], desc: 'Rocket motion: the left slot starts back behind the quarterback before the snap and takes the pitch already running right, with the back leading.' }),
   'Against defenses that overplay the twins side.', 'Speed to the far side: the back must kick out the first defender.', 'Defenses shaded to the twins and Cover 6.', 'Edge Contain.');
 

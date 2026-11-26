@@ -187,7 +187,7 @@ export const IDENTITY_STYLE_WEIGHT = 3; // PROVISIONAL
 const PASS_STYLE = Object.freeze({ vertical: ['deep', 'long'], quick: ['quick', 'short'] });
 const RUN_STYLE = Object.freeze({ inside: ['inside', 'goalline'], option: ['option', 'outside', 'misdirection'] });
 // R-8: the run call adds the released run fronts (neither zone nor man, e.g. okie, under, eight-man) to the original six.
-const RUN_D = [...new Set(['run_wall', 'edge_contain', 'bear_front', 'goal_line', 'goal_line_man', 'qb_spy', ...DEFENSE_IDS.filter((id) => AI_D_OK(id) && !ZONE_D.includes(id) && !MAN_D.includes(id))])];
+export const RUN_D = [...new Set(['run_wall', 'edge_contain', 'bear_front', 'goal_line', 'goal_line_man', 'qb_spy', ...DEFENSE_IDS.filter((id) => AI_D_OK(id) && !ZONE_D.includes(id) && !MAN_D.includes(id))])];
 // Task 10: a coach with one of the five coach identities (identities.js COACH_STYLES) draws from the whole released book of his
 // side (the reviewed reserve plays released in Task 10 included), minus the desperation and red-zone-only calls; his style's tags
 // (with the club's passStyle / runStyle) are the ones drawn more often. A coach without a style keeps the older pools above.

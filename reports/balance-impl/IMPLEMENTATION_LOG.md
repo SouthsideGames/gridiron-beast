@@ -147,3 +147,43 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   | 1.5 (All-Star) | 25.0% | 28.1% | 31.6% |
 
   Coaching personalities stay distinguishable within each difficulty.
+- Game study, 500 games (seed 1), R-1 + R-6 + R-8 + R-10 + R-14 (`phase3/game-study-500-r8r10r14.json`), against the audit:
+
+  | Measure | Audit | Now |
+  |---|---|---|
+  | Points per team-game | 12.87 | 12.94 |
+  | Completion % | 52.8 | 51.9 |
+  | Yards per carry | 5.31 | 5.09 |
+  | Sacks, % of dropbacks | 2.7 | 3.2 |
+  | Interceptions, % of attempts | 1.1 | 1.1 |
+  | Fourth-down conversion % | 38.3 | 34.7 |
+  | Upsets, % of decided games | 24.2 | 21.1 |
+  | Forfeits | 1 | 0 |
+  | Distinct defensive calls | 24 | 159 |
+
+  - 4th and 7+: runs fell from 47 of 310 plays (15%) to 6 of 395 (1.5%), and pass conversions rose from 73 to 90.
+  - 4th-down snaps rose from 712 to 783, because more teams go for it.
+
+### R-2: speed, re-evaluated after R-1 (`phase3/roster-strategy-150.json`, 150 games; this run already included R-8, R-10 and R-14)
+- Speed at constant payroll: **+3.29 points a game** (standard error 1.10; 58.0% wins). The audit had +3.54. The exploit remains.
+- Other strategies, against the audit: elite QB +2.33 (+1.64), passing +2.35 (+1.47), defence −1.16 (−1.92), strength −1.31 (−2.29), superstars +2.39 (+0.97), depth −3.75 (−3.57).
+- Per the brief (weighting before any change to the engine's curve), speed's price is set in Phase 5 with the overall weights.
+
+### R-7: plays (`tools/balance-audit/play-probe.mjs`; generated clubs, 12 defences, 960 snaps a play)
+- Retuned by geometry only (carrier path depth, one block); identities are kept:
+
+  | Play | Before | After |
+  |---|---|---|
+  | option_pitch | 13.2 | 9.4 |
+  | inverted_veer | 9.8 | 8.5 |
+  | wide_zone_rt | 8.6 | 6.1 |
+  | student_body | 7.6 | 6.8 |
+  | dart | 2.3 | 2.9 |
+  | rocket_toss | 0.9 | 2.1 |
+
+  - Option pitch: the pistol QB kept 85% of the time and gained 13.3. He now opens with a drop step and the centre cuts off the backside.
+- **Not retuned (engine limits, reported):**
+  - **Draws** (spread_draw 1.6, lead_draw 2.2; empty_qb_draw 3.4) are weakest against blitzes (−0.4). The engine has no "show pass" phase: defenders key the carrier at the handoff (about 0.6 s), so a draw cannot beat an aggressive rush. Paths and blocks were tried (OL at the line, a quicker back): ±0.3 at most. A draw-timing mechanic would be a new engine behaviour and is not done.
+  - **jet_sweep** (1.9): the fly-sweep path and blocks were tried (no change), because it runs into the trips strength.
+  - **counter** (8.0 in the probe, 8.1 in games): high for an inside run; the variants tried moved it by at most 0.4. Left for owner review.
+- Each changed play's review fingerprint moves on, so the Playbook Audit dev tool sends it back to the owner for review, as designed.

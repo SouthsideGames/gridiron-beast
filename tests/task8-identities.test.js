@@ -13,7 +13,7 @@ import { ALL_TEAMS } from '../src/data/league.js';
 import { PLAYS } from '../src/data/playbook.js';
 import { canPlay, positionOf, OFFENSE_SLOTS, DEFENSE_SLOTS, POSITION_WEIGHTS } from '../src/data/personnel.js';
 import { createRoster, generateMonster, monsterOverall, effectiveAttributes, FULL_ROSTER, schemeAttributes } from '../src/data/monsters.js';
-import { playbookFor, buildDepthChart, buildTeam, AI_PLAN_SIZE } from '../src/franchise/roster.js';
+import { RUN_D, playbookFor, buildDepthChart, buildTeam, AI_PLAN_SIZE } from '../src/franchise/roster.js';
 import { aiDraftPick } from '../src/franchise/draft.js';
 import { strategyValue } from '../src/franchise/fa-strategy.js';
 import { identityTradeTie, IDENTITY_TRADE_TIE, GYM_ELEMENT_TRADE_TIE } from '../src/franchise/league-trades.js';
@@ -84,8 +84,9 @@ test('play calling: each identity\'s 6 + 6 leans to it, with released plays only
       assert.equal(pb.offense.filter((p) => PLAYS[p].type === 'run').length, runs[id.offense], `${club}: ${id.offense} run count`);
       const tag = { pressure: 'blitz', man: 'man', coverage: 'zone' }[id.defense];
       assert.ok(pb.defense.filter((p) => PLAYS[p].tags.includes(tag)).length >= 3, `${club}: three or more ${tag} calls`);
-      const SITUATIONAL = ['run_wall', 'edge_contain', 'bear_front', 'goal_line', 'goal_line_man', 'qb_spy']; // the old book's situational call
-      assert.ok(pb.defense.filter((p) => SITUATIONAL.includes(p)).length >= (id.runFront ? 2 : 1), `${club}: the situational call kept (two for a run front)`);
+      // Balance audit R-8 (2026-11-25): the run call now comes from every released run front (RUN_D: the old six plus the book's run
+      // fronts), not the old six alone; the rule tested is unchanged (one run call, two for a physical run front). Test updated to the decision.
+      assert.ok(pb.defense.filter((p) => RUN_D.includes(p)).length >= (id.runFront ? 2 : 1), `${club}: the situational call kept (two for a run front)`);
     }
   }
   // the player's coach (no identity) keeps the old book unchanged
