@@ -5043,5 +5043,15 @@ Code names, text keys, `{placeholders}` and save keys keep "monster", so saves a
 screens (reviewers, labs) and the frozen historical Clash move tables are unchanged. Earlier sections of this document still say
 "monster" where they describe design history; in the game the word is "beast".
 
-### 61.12 Validation
-Filled in from the final validation runs on the final code.
+### 61.12 Validation (measured 2026-11-26; details in `reports/balance-impl/FINAL_REPORT.md`)
+- **Whole suite:** fast tier 2,263 of 2,263; simulation tier 310 of 310 after three set-up updates that follow §61.3–61.4.
+- **500 games** (seed 1): 12.45 points per team-game, completion 52.3%, sacks 3.2% of dropbacks, interceptions 1.2%, 159 distinct
+  defensive calls, 0 forfeits.
+- **Roster strategies** at constant summed overall: no strategy beyond ±1.3 points a game except pure depth (−4.3); Speed +0.85.
+- **15-season franchises** (seeds 3 and 4 on each difficulty): 0 integrity problems.
+  - AI overall at season 15: 61.6 / 62.5 / 64.2 (Rookie / Pro / All-Star).
+  - DBOY: DL 64, LB 13, CB 9, S 4 of 90.
+  - Gym Leader titles: 67 of 90.
+  - AI signing bonuses: 7 in 90 seasons.
+  - Developed-league completion 59–64%, sacks 2.1–2.4%.
+- **Saves:** 1.39 MB stored at season 15 with an exact round trip. Emulated phone: save 0.3–0.5 s, reopen 8–14 s (no slower than before).
