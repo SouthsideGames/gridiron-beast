@@ -76,6 +76,12 @@ export const MVP_RESPONSIBILITY = Object.freeze({ QB: 1.35, RB: 1.0, WR: 1.0, TE
 const COMPONENT_LABEL = { volume: 'production', efficiency: 'efficiency', impact: 'impact', passRush: 'pass rush', takeaways: 'takeaways', coverage: 'coverage', runDefense: 'run defense' };
 
 /** z-score of fn within each position group of rows. */
+/** A total standardised within each position group of `rows` (or within `rows` as one group when `byPosition` is false), capped at +3 SD. */
+function zTotal(rows, fn, byPosition = true) {
+  const by = {}; for (const r of rows) (by[byPosition ? r.position : '*'] ||= []).push(fn(r));
+  const st = Object.fromEntries(Object.entries(by).map(([p, v]) => { const m = v.reduce((a, b) => a + b, 0) / v.length; const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length); return [p, { m, sd }]; }));
+  return (r) => { const s = st[byPosition ? r.position : '*']; if (!s || s.sd < 1e-6) return 0; return Math.min(3, (fn(r) - s.m) / s.sd); };
+}
 function zWithin(rows, fn, cap = false) {
   const by = {}; for (const r of rows) (by[r.position] ||= []).push(fn(r));
   const st = Object.fromEntries(Object.entries(by).map(([p, v]) => { const m = v.reduce((a, b) => a + b, 0) / v.length; const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length); return [p, { m, sd }]; }));
@@ -123,7 +129,12 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
   const opoy = top(off.map((r) => finalist(r, offScore(r))));
   // R-5 (2026-11-25): the DBOY scores each component capped at +3 SD within the position, as the MVB does. Uncapped, a lineman's sack
   // count (a long-tailed statistic) decided it: DL won 68 of 75 audit seasons.
-  const dpoy = top(def.map((r) => { const capped = defScore(r, MVP_Z), raw = defScore(r); return finalist(r, { s: capped.s, c: raw.c, prod: raw.prod }); })); // ranked on capped components; the sheet shows the real (uncapped) ones
+  // Final runs (2026-11-26): capping alone left DL with 77 of 90 DBOYs. A lineman's two heaviest components (pass rush, run defence) share
+  // his sacks and tackles for loss, so his weighted total spreads wider than a corner's, whose coverage and takeaways barely move together.
+  // The DBOY therefore also standardises the capped total within the position (`zTotal`): every position's best is measured by how far he
+  // stands above his own peers, on the same scale. The components, weights and the sheet are unchanged, and nothing forces a position.
+  const dZ = zTotal(def, (r) => defScore(r, MVP_Z).s);
+  const dpoy = top(def.map((r) => { const raw = defScore(r); return finalist(r, { s: dZ(r), c: raw.c, prod: raw.prod }); })); // the sheet shows the real (uncapped) components
   // Task 10 (owner 2026-11-13): MVP alone scores its statistical components with each capped at +3 SD within the position
   // (MVP_Z), so one skewed statistic cannot decide it. No repeat limit and no penalty for past wins: a repeat winner wins on merit.
   const mvp = top([
@@ -158,7 +169,10 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
   const returners = rows.filter((r) => (r.krAtt || 0) >= 8);
   const rZ = { avg: zList(returners, (r) => (r.krYds || 0) / Math.max(1, r.krAtt || 0)), td: zList(returners, (r) => r.krTd || 0), vol: zList(returners, (r) => perGame(r, r.krYds || 0)) };
   const rScore = (r) => 0.5 * rZ.avg(r) + 0.25 * rZ.td(r) + 0.25 * rZ.vol(r);
-  const st = new Map(); for (const r of kickers) st.set(r.id, { r, s: kScore(r), c: { kicking: kScore(r) } }); for (const r of returners) { const s = rScore(r); const cur = st.get(r.id); if (!cur || s > cur.s) st.set(r.id, { r, s, c: { returns: s } }); }
+  // Each group's total is standardised within the group (as the DBOY's), so a long-tailed statistic such as return touchdowns cannot
+  // make the returners' best look more exceptional than the kickers' best (final runs, 2026-11-26: returners took 81 of 90).
+  const kT = zTotal(kickers, kScore, false), rT = zTotal(returners, rScore, false);
+  const st = new Map(); for (const r of kickers) st.set(r.id, { r, s: kT(r), c: { kicking: kScore(r) } }); for (const r of returners) { const s = rT(r); const cur = st.get(r.id); if (!cur || s > cur.s) st.set(r.id, { r, s, c: { returns: rScore(r) } }); }
   const stboy = top([...st.values()].map(({ r, s, c }) => finalist(r, { s, c, prod: s })));
   // Most Improved Beast: the most overall gained this season by a regular (not a rookie), production as the tie-break.
   const mib = !prior ? [] : top(rows.filter((r) => (r.yearsPro || 0) >= 1 && r.position !== 'K' && (prior(r.id)?.gain ?? 0) >= 2)
