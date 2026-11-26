@@ -4,7 +4,7 @@
 // raises its target monsters' attributes and lowers its donor monsters' attributes uniformly until the roster's summed overall is
 // back to the control's (never above it). The same generated club, the same opponent and the same game seed are played once per
 // strategy; the paired difference against the unchanged club (control) is the strategy's effect. The production engine plays.
-//   node tools/balance-audit/roster-strategy.mjs [--games=200] [--quality=60] [--json=FILE]
+//   node tools/balance-audit/roster-strategy.mjs [--games=200] [--quality=60] [--only=speed,strength] [--json=FILE]
 import fs from 'node:fs';
 import { generatedTeam, buildDepthChart, GROUP_SLOTS } from '../../src/franchise/roster.js';
 import { playGame } from '../../src/sim/game-runner.js';
@@ -38,7 +38,7 @@ const acc = {}; const audit = {};
 for (let i = 1; i <= G; i++) {
   const away = () => generatedTeam(7000 + i, { id: 'a', name: 'Away', quality: Q });
   let base = null;
-  for (const [name, mk] of Object.entries(STRATEGIES)) {
+  for (const [name, mk] of Object.entries(STRATEGIES).filter(([n]) => !args.only || n === 'control' || String(args.only).split(',').includes(n))) { // --only=speed,strength (2026-11-26: the control always runs)
     let info = null;
     const home = generatedTeam(5000 + i, { id: 'h', name: 'Home', quality: Q, afterRoster: (r) => { const before = { sum: sumOvr(r), st: [...starters(r)] }; const out = mk()(r); const stIds = starters(out); info = { sumBefore: before.sum, sumAfter: sumOvr(out), starterOvr: out.filter((m) => stIds.has(m.id)).reduce((s, m) => s + monsterOverall(m), 0) / Math.max(1, stIds.size) }; return out; } });
     const g = playGame({ home, away: away(), seed: 9000 + i, quarterLength: 180, otPeriods: 1 });

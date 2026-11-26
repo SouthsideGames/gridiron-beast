@@ -280,3 +280,20 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - Late decline: the hands-off owner never replaces ageing starters, so his win rate falls after season 5 on every difficulty. That is the benchmark owner's policy, not difficulty.
   - The leagues stay about 3 points apart at season 6, against about 1 at 0.85 / 1.15.
   - Adopted provisionally; the 15-season runs (`ai-franchise-benchmark --owner=repair --board=content`, seeds 3 and 4, the audit's seeds) check seasons 1, 5, 10 and 15 and late-franchise growth.
+- R-6 addendum: `OUT_OF_POSITION_RISK` (a 1.75× injury risk for a monster away from his position, dormant since the one-position rule) would have hit every emergency cover. It is a familiarity penalty, so it is set to 1 per the brief (only with testing evidence). The value is kept named.
+
+## Phase 5
+### R-2: speed, the overall weights
+- `attr-leverage.mjs --attr=speed --bump=12 --games=120` (`phase5/attr-leverage-speed.json`). Margin per group per game for +12 Speed on the starters of one group:
+
+  | QB | RB | WR | TE | OL | DL | LB | CB | S |
+  |---|---|---|---|---|---|---|---|---|
+  | −0.03 | −0.91 | +0.85 | +1.26 | +0.04 | +0.73 | −0.32 | +0.81 | −1.73 |
+
+  - Standard error is about 0.9 everywhere, so no single position is decisive.
+  - Overall bought by that Speed: QB 1.2, RB 3.0, WR 3.5, TE 1.3, OL 0, DL 1.3, LB 2.7, CB 3.5, S 2.6.
+  - Speed is cheapest where it buys the most: TE and DL, now that DL Speed drives the rush. The roster-strategy gain (+3.3) comes from Speed being almost free there and at OL, where it does nothing.
+- **Change:** DL and TE Speed weight 1 → 2. OL is left at 0, since Speed does nothing there; the strategy's OL Speed is wasted, not exploited. The engine's Speed curve is unchanged, as the brief prefers weighting first.
+### R-17: Durability in the overall
+- Durability weights: 1 at RB, OL, DL and LB; 0.5 at QB, WR, TE, CB and S; 0.25 at K.
+- Overalls change for every monster (computed live; nothing is stored, so saves are unaffected). AI training now also spends on Durability in proportion.
