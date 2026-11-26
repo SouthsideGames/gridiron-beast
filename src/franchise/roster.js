@@ -117,10 +117,13 @@ export function emergencySlots(roster, chart) {
 }
 /** Base starters off the field in the packages that use each package slot. */
 export const SITS_OUT = Object.freeze({ SS: ['LB2'], DL3: ['LB2', 'FS'], WR3: ['TE'], C: ['WR2'] });
-/** Base slots (and the kicker) nobody legal can cover: the game cannot be played, a forfeit. */
+/** Base slots (and the kicker) nobody legal can cover: the club's unfilled needs (AI signing, warnings, the offseason gate). */
 export function lineupProblems(roster, chart) {
   return [...OFFENSE_BASE, ...DEFENSE_BASE, 'K'].filter((s) => !chart[s] && !legalFiller(roster, chart, s));
 }
+/** The needs that stop a game (a forfeit): every base slot, but not K. Follow-up A-3 (owner 2026-11-26): a club without a kicker plays
+ *  on with no field goals, punts, extra points or kickoffs; K stays an unfilled need in lineupProblems. */
+export function forfeitProblems(roster, chart) { return lineupProblems(roster, chart).filter((s) => s !== 'K'); }
 /** Package slots with no dedicated monster: who legally fills in, or null when nobody can (plays using that package are unavailable). */
 export function borrowedSlots(roster, chart) {
   const out = [];

@@ -58,7 +58,7 @@ import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT 
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, PACKAGE_SLOT_USE } from '../data/personnel.js';
 import { careerSnapshot } from './career-profile.js';
 import { ensureLeagueNews, addLeagueNews, resultsNews, playoffNews, championNews, playoffFieldNews, raceNews, awardNews, allLeagueNews, recordNews, movesNews, offseasonDigest, draftDigest } from './league-news.js';
-import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, staffingHoles, emergencySlots, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, playbookFor, adaptPlaybook } from './roster.js';
+import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, forfeitProblems, staffingHoles, emergencySlots, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, playbookFor, adaptPlaybook } from './roster.js';
 import { joinAsDraftee, takeFromPool, takeFromWaivers, leaveLeague, releaseFromClub } from './league.js';
 import { aiTrades } from './league-trades.js';
 import { tradeWindowState, seasonTradeWeek } from './trade-window.js';
@@ -768,8 +768,8 @@ export function playerTeam(f, { trainingBonus: tb = null } = {}) {
   const offenseOk = offense.filter((id) => !avail.blocked[id]), defenseOk = defense.filter((id) => !avail.blocked[id]);
   const team = buildTeam({ id: f.club, name: f.club, abbr: meta.abbr, color: meta.color, roster: f.roster, manual: f.lineupManual, depth: f.depth, offensePlays: offenseOk.length ? offenseOk : offense, defensePlays: defenseOk.length ? defenseOk : defense, coach: coachProfile(f), trainingBonus: tb });
   team.blockedSlots = avail.slots; team.blockedPlays = Object.keys(avail.blocked).filter((id) => offense.includes(id) || defense.includes(id));
-  team.forfeit = f.roster.length < ROSTER_MIN || !offenseOk.length || !defenseOk.length || lineupProblems(f.roster, team.chart).length > 0;
-  team.forfeitReason = f.roster.length < ROSTER_MIN ? `${$t('franchise.only_monsters_on_the_roster_the', { n: f.roster.length, rosterMin: ROSTER_MIN })}` : lineupProblems(f.roster, team.chart).length ? `${$t('franchise.no_legal_monster_for')} ${lineupProblems(f.roster, team.chart).join(', ')}` : !offenseOk.length ? $t('franchise.every_offensive_play_in_the_plan') : !defenseOk.length ? $t('franchise.every_defensive_play_in_the_plan') : null;
+  team.forfeit = f.roster.length < ROSTER_MIN || !offenseOk.length || !defenseOk.length || forfeitProblems(f.roster, team.chart).length > 0;
+  team.forfeitReason = f.roster.length < ROSTER_MIN ? `${$t('franchise.only_monsters_on_the_roster_the', { n: f.roster.length, rosterMin: ROSTER_MIN })}` : forfeitProblems(f.roster, team.chart).length ? `${$t('franchise.no_legal_monster_for')} ${forfeitProblems(f.roster, team.chart).join(', ')}` : !offenseOk.length ? $t('franchise.every_offensive_play_in_the_plan') : !defenseOk.length ? $t('franchise.every_defensive_play_in_the_plan') : null;
   { const lock = schemeLock(f); if (lock.offense || lock.defense) team.schemeLock = { offense: lock.offense, defense: lock.defense }; }
   // Scheme alignment: a small execution bonus/penalty on awareness for every starter.
   const bump = (side, pct) => { const delta = Math.round((pct - 80) / 10); for (const p of Object.values(team[side])) if (p.attrs.awareness) p.attrs.awareness = Math.max(1, Math.min(99, p.attrs.awareness + delta)); };
@@ -1255,7 +1255,8 @@ function runDraftToMe(f) {
 export function lineupWarnings(f, roster = f.roster, chart = buildDepthChart(roster, f.lineupManual, f.depth)) {
   const healthy = (pos) => roster.filter((m) => m.position === pos && !m.injury).length; const hurt = (pos) => roster.filter((m) => m.position === pos && m.injury).length;
   const why = (pos) => `${healthy(pos)} healthy ${pos}${hurt(pos) ? ` ${$t('franchise.injured_2', { hurt: hurt(pos) })}` : ''}${$t('franchise.only_a_may_play_there_one', { pos })}`;
-  const base = lineupProblems(roster, chart).map((slot) => { const pos = positionOf(slot); return { kind: 'base', slot, position: pos, formation: 'every play', severity: 'forfeit', why: why(pos), fix: `${$t('franchise.sign_draft_or_trade_for_a', { pos, pos2: hurt(pos) ? $t('franchise.or_wait_for_the_injured_to') : '' })}` }; });
+  const base = lineupProblems(roster, chart).map((slot) => { const pos = positionOf(slot); if (slot === 'K') return { kind: 'kicker', slot, position: pos, formation: 'kicks', severity: 'kicking unavailable', why: $t('match.no_kicker_fourth'), fix: `${$t('franchise.sign_draft_or_trade_for_a', { pos, pos2: '' })}` }; // A-3: no forfeit, no kicks
+    return { kind: 'base', slot, position: pos, formation: 'every play', severity: 'forfeit', why: why(pos), fix: `${$t('franchise.sign_draft_or_trade_for_a', { pos, pos2: hurt(pos) ? $t('franchise.or_wait_for_the_injured_to') : '' })}` }; });
   const pkg = borrowedSlots(roster, chart).filter((b) => !b.legal).map((b) => { const pos = positionOf(b.slot); return { kind: 'package', slot: b.slot, position: pos, formation: `${PACKAGE_SLOT_USE[b.slot]} plays`, severity: 'plays unavailable', why: why(pos), fix: `${$t('franchise.add_a_beyond_your_starters_to', { pos, packageSlotUse: PACKAGE_SLOT_USE[b.slot] })}` }; });
   // R-6 (2026-11-25): a base slot held by an emergency cover is legal (no forfeit), but the owner is told who covers it and why.
   const cover = emergencySlots(roster, chart).map((e) => { const pos = positionOf(e.slot); return { kind: 'emergency', slot: e.slot, position: pos, formation: 'every play', severity: 'emergency cover', cover: { id: e.id, name: e.name, position: e.position }, why: `${$t('franchise.emergency_cover_why', { name: e.name, position: e.position, slot: e.slot })} ${why(pos)}`, fix: `${$t('franchise.sign_draft_or_trade_for_a', { pos, pos2: hurt(pos) ? $t('franchise.or_wait_for_the_injured_to') : '' })}` }; });
@@ -1270,7 +1271,9 @@ export function lineupWarnings(f, roster = f.roster, chart = buildDepthChart(ros
  * the owner act (sign, release, lineup) or continue deliberately under the forfeit rule.
  */
 export function lineupGate(f) {
-  const warn = lineupWarnings(f).filter((w) => w.kind === 'base'); const shortRoster = f.roster.length < ROSTER_MIN;
+  // A-3 (owner 2026-11-26): the offseason gate still asks for a kicker (kept as a roster requirement; reported to the owner), though a
+  // game without one is no longer a forfeit.
+  const warn = lineupWarnings(f).filter((w) => w.kind === 'base' || w.kind === 'kicker'); const shortRoster = f.roster.length < ROSTER_MIN;
   const holes = warn.map((w) => ({ slot: w.slot, position: w.position, healthy: f.roster.filter((m) => m.position === w.position && !m.injury).length, injured: f.roster.filter((m) => m.position === w.position && m.injury).length, why: w.why }));
   const usable = hasFreeAgency(f) ? freeAgencyCap(f).usable : salarySummary(f).remaining; const rosterFull = f.roster.length >= ROSTER_MAX;
   const market = hasFreeAgency(f) ? freeAgentMarket(f).filter((x) => !x.mine) : [];

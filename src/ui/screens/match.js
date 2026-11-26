@@ -621,7 +621,7 @@ export function registerMatchScreens(Router, app) {
     if (s.phase === 'kickoff' || s.phase === 'free_kick') return act(f, s.kickingTeam === me ? { kickoff: 'normal' } : {});
     if (s.phase === 'try') {
       if (s.tryTeam !== me) return act(f, {});
-      if (AI.tryDecision(s) === 'two') { const plays = teams[me].offensePlays.filter((id) => PLAYS[id].tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t))); G.selected.offense = plays[0] || teams[me].offensePlays[0]; return act(f, { tryChoice: 'two' }); }
+      if (AI.tryDecision(s, me, teams[me]) === 'two') { const plays = teams[me].offensePlays.filter((id) => PLAYS[id].tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t))); G.selected.offense = plays[0] || teams[me].offensePlays[0]; return act(f, { tryChoice: 'two' }); }
       return act(f, { tryChoice: 'kick' });
     }
     if (s.phase !== 'scrimmage') return act(f, {});
@@ -663,8 +663,11 @@ export function registerMatchScreens(Router, app) {
     if (s.finished && s.needsTiebreak && !s.winner) { const n = F.inPlayoffs(f) ? 5 : 3; return `<div class="match-actions"><div class="panel center"><h2>${$t('match.still_tied')}</h2><div class="muted">${$t('match.after_overtime', { name: esc(s.away.name), away: s.score.away, home: s.score.home, name2: esc(s.home.name) })}</div><p class="muted" style="margin:6px 0 0">${$t('match.a_b_v_beast_clash_b', { n, n2: n })}</p></div><button class="btn primary big block" data-action="otclash">${$t('match.overtime_beast_clash')}</button></div>`; }
     if (s.finished) return `<div class="match-actions"><div class="panel center"><h2>${s.winner === me ? $t('match.victory') : s.winner === null ? $t('match.tie') : $t('match.defeat')}</h2><div class="muted">${esc(s.away.name)} ${s.score.away}-${s.score.home} ${esc(s.home.name)}${s.tiebreak ? ` ${$t('match.ot_won_by_v_beast_clash', { size: s.tiebreak.size, size2: s.tiebreak.size })}` : s.ot ? ' (OT)' : ''}</div></div><button class="btn primary big block" data-action="finish">${$t('match.continue')}</button></div>`;
     if (G.lastEvent?.needsContinue) return `<div class="match-actions">${autoBar}${rpRow}<button class="btn primary big block" data-action="continue">${$t('match.continue')}</button></div>`;
+    const noKickNote = (key) => `<p class="muted center no-kicker-note" role="note" style="margin:0 0 6px;font-size:12px">⚠ ${$t(key)}</p>`; // A-3
     if (s.phase === 'kickoff' || s.phase === 'free_kick') {
       const weKick = s.kickingTeam === me;
+      // A-3 (owner 2026-11-26): a kicking team without an available kicker does not kick: the receiver starts at its own 20.
+      if (!R.kickerAvailable(s, teams[s.kickingTeam])) return `<div class="match-actions">${autoBar}${rpRow}${noKickNote('match.no_kicker_kickoff')}<button class="btn primary big block" data-action="kickoff">${$t('match.continue')}</button></div>`;
       return `<div class="match-actions">${autoBar}${rpRow}${weKick ? `<div class="primary-row ${s.phase === 'kickoff' ? 'three' : ''}" style="grid-template-columns:${s.phase === 'kickoff' ? '2fr 1fr' : '1fr'}"><button class="btn primary big" data-action="kickoff">${s.phase === 'free_kick' ? $t('match.free_kick_2') : $t('match.kick_off')}</button>${s.phase === 'kickoff' ? `<button class="btn" data-action="onside">${$t('match.onside')}</button>` : ''}</div>` : `<button class="btn primary big block" data-action="kickoff">${$t('match.receive_the_kick')}</button>`}</div>`;
     }
     if (s.phase === 'try') {
@@ -675,8 +678,9 @@ export function registerMatchScreens(Router, app) {
       const near = (id) => PLAYS[id]?.tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t));
       // The short-yardage plays first, then the rest of the plan: a plan without one used to open an empty Choose Play sheet (owner 2026-11-24).
       const plan = teams[me].offensePlays.filter((id) => PLAYS[id]); const plays = [...plan.filter(near), ...plan.filter((id) => !near(id))];
-      return `<div class="match-actions compact-actions">${autoBar}<p class="muted center" style="margin:0;font-size:12px">${$t('match.touchdown_kick', { tryDecision: AI.tryDecision(s) === 'two' ? 'coach suggests two' : $t('match.coach_suggests_the_kick') })}</p>
-        <div class="primary-row" style="grid-template-columns:1fr 1fr"><button class="btn primary big" data-action="trykick">${$t('match.kick_pat_1')}</button><button class="btn big" data-action="trytwo">${$t('match.go_for_two')}</button></div>
+      const canKick = R.kickerAvailable(s, teams[me]); // A-3: without a kicker the try is a two-point conversion
+      return `<div class="match-actions compact-actions">${autoBar}${canKick ? `<p class="muted center" style="margin:0;font-size:12px">${$t('match.touchdown_kick', { tryDecision: AI.tryDecision(s) === 'two' ? 'coach suggests two' : $t('match.coach_suggests_the_kick') })}</p>` : noKickNote('match.no_kicker_try')}
+        ${canKick ? `<div class="primary-row" style="grid-template-columns:1fr 1fr"><button class="btn primary big" data-action="trykick">${$t('match.kick_pat_1')}</button><button class="btn big" data-action="trytwo">${$t('match.go_for_two')}</button></div>` : `<button class="btn primary big block" data-action="trytwo">${$t('match.go_for_two')}</button>`}
         <div class="match-quick-actions"><button class="btn small" data-action="match-panel" data-panel="plays">${$t('playview.choose_play')}</button>${tryMore(substitutionStrip(f))}</div><div hidden data-match-panel="plays">${plays.length ? cards(plays, 'offense', G.selected.offense, null) : `<p class="muted" style="margin:4px 0 12px">${$t('match.no_play_can_be_run_for_the_try')}</p>`}</div></div>`;
     }
     // Scrimmage.
@@ -686,18 +690,20 @@ export function registerMatchScreens(Router, app) {
     const suggestion = AI.suggestPlay(s, teams[me], plan, side, G.tendencies[myBall ? me : them], teams[them], G.tendencies[me]);
     const selected = look.myPlay;
     let primary;
-    if (myBall && s.down === 4) {
+    const myKicker = R.kickerAvailable(s, teams[me]); // A-3
+    if (myBall && s.down === 4 && !myKicker) primary = `${noKickNote('match.no_kicker_fourth')}<button class="btn primary big block" data-action="snap" ${selected ? '' : 'disabled'}>${$t('match.go_for_it')}</button>`;
+    else if (myBall && s.down === 4) {
       const fg = R.fieldGoalInfo(s, teams); const dec = AI.fourthDownDecision(s, teams[me]);
       primary = `<div class="primary-row three"><button class="btn ${dec === 'go' ? 'primary' : ''} big" data-action="snap" ${selected ? '' : 'disabled'}>${$t('match.go_for_it')}</button><button class="btn ${dec === 'punt' ? 'primary' : ''} big" data-action="punt">${$t('match.punt')}</button><button class="btn ${dec === 'fg' ? 'primary' : ''} big" data-action="fg">${$t('match.fg_yd_br', { distance: fg.distance })}<small>${Math.round(fg.chance * 100)}%</small></button></div>`;
     } else primary = `<button class="btn primary big block" data-action="snap" ${selected ? '' : 'disabled'}>${myBall ? (selected ? `${$t('match.snap', { name: esc(PLAYS[selected].name) })}` : $t('match.pick_a_play')) : (selected ? `${$t('match.set_defense', { name: esc(PLAYS[selected].name) })}` : $t('match.pick_a_defense'))}</button>`;
     // Early field goal: on any down, when the kick is makeable; highlighted when a half is about to end.
     let fgEarly = '';
-    if (myBall && s.down < 4 && s.phase === 'scrimmage') { const fg = R.fieldGoalInfo(s, teams); if (fg.chance >= 0.2) fgEarly = `<button class="btn small ${!s.ot && s.clock <= 30 && (s.quarter === 2 || s.quarter >= 4) ? 'good' : ''}" data-action="fg" title="${$t('match.kick_now_instead_of_running_a')}">FG ${fg.distance} yd · ${Math.round(fg.chance * 100)}%</button>`; }
+    if (myBall && myKicker && s.down < 4 && s.phase === 'scrimmage') { const fg = R.fieldGoalInfo(s, teams); if (fg.chance >= 0.2) fgEarly = `<button class="btn small ${!s.ot && s.clock <= 30 && (s.quarter === 2 || s.quarter >= 4) ? 'good' : ''}" data-action="fg" title="${$t('match.kick_now_instead_of_running_a')}">FG ${fg.distance} yd · ${Math.round(fg.chance * 100)}%</button>`; }
     const secondary = `<div class="secondary">
       <button class="btn small" data-action="timeout" ${s.timeouts[me] ? '' : 'disabled'}>${$t('match.timeout_2', { timeouts: s.timeouts[me] })}</button>
       ${myBall ? `<select class="btn small" data-change="tempo" aria-label="${$t('match.tempo')}" style="min-height:36px;margin:0;flex:1"><option value="normal" ${(G.tempo || 'normal') === 'normal' ? 'selected' : ''}>${$t('match.tempo_normal')}</option><option value="hurry" ${G.tempo === 'hurry' ? 'selected' : ''}>${$t('match.tempo_hurry_up')}</option><option value="milk" ${G.tempo === 'milk' ? 'selected' : ''}>${$t('match.tempo_milk_clock')}</option></select>` : ''}
       ${fgEarly}
-      ${myBall && s.phase === 'scrimmage' ? (() => { const sg = R.fieldGoalSignature(s, teams); return sg?.available ? `<button class="btn small good" data-action="fgsig" title="${$t('match.once_per_game_the_signature_kicks')}">${esc(sg.label)} ${sg.distance} yd · ${Math.round(sg.chance * 100)}%</button>` : ''; })() : ''}
+      ${myBall && myKicker && s.phase === 'scrimmage' ? (() => { const sg = R.fieldGoalSignature(s, teams); return sg?.available ? `<button class="btn small good" data-action="fgsig" title="${$t('match.once_per_game_the_signature_kicks')}">${esc(sg.label)} ${sg.distance} yd · ${Math.round(sg.chance * 100)}%</button>` : ''; })() : ''}
       ${myBall && AI.shouldKneel(s) ? `<button class="btn small" data-action="kneel">${$t('match.kneel')}</button>` : ''}${myBall && !s.ot && s.clockRunning && s.quarter >= 2 && s.clock < 60 ? `<button class="btn small" data-action="spike">${$t('match.spike')}</button>` : ''}
       <button class="btn small ${G.auto ? 'primary' : ''}" data-action="auto" title="${$t('match.auto_the_coachs_suggested_plays_are')}">${G.auto ? $t('match.auto_stop') : $t('match.auto')}</button>
       ${G.auto ? `<button class="btn small ${autoSpeed(f) > 1 ? 'primary' : ''}" data-action="autospeed" title="${$t('match.auto_speed')}">${`${autoSpeed(f)}× ▶`}</button>${cameraButton(f)}` : ''}

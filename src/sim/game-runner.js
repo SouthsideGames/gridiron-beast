@@ -59,7 +59,8 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
   }
   if (state.phase === 'try') {
     const tryTeam = state.tryTeam;
-    const choice = choices.tryChoice || ctrl(tryTeam).tryChoice(state);
+    // A-3 (owner 2026-11-26): without an available kicker the try must be a two-point conversion (no extra-point kick).
+    const choice = !R.kickerAvailable(state, teams[tryTeam]) ? 'two' : choices.tryChoice || ctrl(tryTeam).tryChoice(state);
     if (choice === 'two') {
       const offAvail = goalLinePlays(eligiblePlays(state,teams[tryTeam],teams[tryTeam].offensePlays,PLAYS));
       const defAvail = eligiblePlays(state,teams[R.opponent(tryTeam)],teams[R.opponent(tryTeam)].defensePlays,PLAYS);
@@ -95,7 +96,9 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
   if (!choices.offensePlayId && ctrl(side).spike(state)) { done(); R.spike(state); return { kind: 'spike', text: state.lastPlay.text }; }
 
   // Fourth down, or an early field goal on any down (end of a half with no time to run a play).
-  if (state.down === 4 || choices.fourthDown === 'fg') {
+  // A-3 (owner 2026-11-26): without an available kicker there is no punt and no field goal: fourth down is played as a scrimmage down,
+  // and a failed conversion is an ordinary turnover on downs.
+  if ((state.down === 4 || choices.fourthDown === 'fg') && R.kickerAvailable(state, offTeam)) {
     const sig = R.fieldGoalSignature(state, teams); // Task 8 M3: a field-goal signature the kicker may activate (Dragon Roar), or null
     const decision = choices.fourthDown || ctrl(side).fourthDown(state, offTeam, sig?.available ? sig : null);
     if (decision === 'punt') { done(); const from = state.ballOn; const { text, res } = R.doPunt(state, teams); return { kind: 'punt', text, res, kicking: side, from }; }

@@ -6,6 +6,7 @@ import { PLAYS } from '../data/playbook.js';
 import { fieldGoalRange } from './special-teams.js';
 import { fieldGoalDistance, clamp } from '../core/field.js';
 import { opponent, inTwoMinute } from './rules.js';
+import { kickerAvailable } from './substitutions.js';
 import { matchupScore, USUAL_OPPONENT } from './type-matchups.js';
 
 const norm = (v) => clamp(v ?? 60, 1, 99) / 99;
@@ -179,6 +180,7 @@ export function fgSignatureDesperation(state, sig) {
 
 /** 'go' | 'punt' | 'fg', fourth-down decision. `sig`: an available field-goal signature (Task 8 M3), or null. */
 export function fourthDownDecision(state, team, sig = null) {
+  if (team && !kickerAvailable(state, team)) return 'go'; // A-3: no kicker, no punt or field goal
   const s = situation(state);
   const str = teamStrengths(team);
   const coach = team.coach || { aggression: 0.5 };
@@ -214,7 +216,8 @@ export function fourthDownDecision(state, team, sig = null) {
 }
 
 /** 'kick' | 'two' after a touchdown (standard chart). */
-export function tryDecision(state, side = state.tryTeam) {
+export function tryDecision(state, side = state.tryTeam, team = null) {
+  if (team && !kickerAvailable(state, team)) return 'two'; // A-3: no kicker, no extra-point kick
   const diff = state.score[side] - state.score[opponent(side)]; // after the six
   if (state.ot && state.ot.period >= 3) return 'two';
   const late = state.quarter >= 4 || (state.quarter === 3 && state.clock < 60);

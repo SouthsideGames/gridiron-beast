@@ -11,6 +11,12 @@ const book = (s) => (s.rotation ||= { active: {}, manual: {}, injuries: {}, noti
 export function teamInputs(team) { return [...new Map((team.rotationInputs || [...Object.values(team.offense || {}), ...Object.values(team.defense || {}), ...(team.bench || []), team.kicker]).filter(p => p?.id).map(p => [p.id, p])).values()]; }
 export function staminaRatio(s, p) { const x = s.t8?.stamina?.[p.id]; return x ? Math.max(0, toNumber(x.stamina) / Math.max(1, x.capacity)) : 1; }
 export function unavailable(s, p) { return !p?.id || !!p.injury || !!s.rotation?.injuries?.[p.id]; }
+/**
+ * Follow-up A-3 (owner 2026-11-26): can this team kick right now? A team kicks only with its kicker (no position covers K). He is
+ * unavailable when the club has none, or he is hurt in this game (only possible while he covers QB in an emergency; a kicker covering
+ * QB and still healthy keeps kicking). Without one: no field goals, punts, extra points or kickoffs (rules.js, game-runner.js).
+ */
+export function kickerAvailable(s, team) { return !unavailable(s || {}, team?.kicker); }
 const rating = p => Object.values(p.attrs || {}).reduce((a, b) => a + b, 0) / Math.max(1, Object.keys(p.attrs || {}).length);
 /** A next-play override, validated again against the actual package at the snap. */
 export function requestSubstitution(s, teams, side, slot, id) {

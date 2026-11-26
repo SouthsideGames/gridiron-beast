@@ -1,4 +1,5 @@
-import { selectUnit, setStatInputs, statKey, contactInjuries, specialTeamView } from './substitutions.js';
+import { selectUnit, setStatInputs, statKey, contactInjuries, specialTeamView, kickerAvailable } from './substitutions.js';
+export { kickerAvailable };
 import { canPlaceZone, zoneOptions, selectedZoneOption, zoneKey } from './t8/zone-planning.js';
 // Game state machine: downs, distance, scoring, clock, quarters, special
 // teams phases and overtime (GDD §3). Pure functions on a plain state object
@@ -751,6 +752,7 @@ function safety(state, lines) {
 // --------------------------------------------------------------------------- tries
 export function attemptTryKick(state, teams) {
   if (state.phase !== 'try') throw new Error('not a try');
+  if (!kickerAvailable(state, teams[state.tryTeam])) throw new Error('no kicker: a two-point try is required (A-3)');
   const { r, save } = rng(state);
   const res = ST.attemptExtraPoint(r, teams[state.tryTeam].kicker);
   kickerPerformance(state, state.tryTeam, 'pats', [{ made: res.good, probability: res.chance }]);
@@ -842,6 +844,7 @@ function kickoffPlays(units) {
 
 export function doKickoff(state, teams, { onside = false } = {}) {
   if (state.phase !== 'kickoff' && state.phase !== 'free_kick') throw new Error('not a kickoff');
+  if (!kickerAvailable(state, teams[state.kickingTeam])) return noKickerRestart(state); // A-3: no kick is simulated
   const { r, save } = rng(state);
   const kicking = state.kickingTeam, receiving = opponent(kicking);
   let res; let sim = null; let units = null;
@@ -891,6 +894,21 @@ export function doKickoff(state, teams, { onside = false } = {}) {
   } else kickerStat(state, kicking, 'kickoffs'); // onside and free kicks stay formula plays: the kick itself is credited
   if (state.clock <= 0 && state.phase === 'scrimmage') endOfPeriod(state);
   return { res, text, sim };
+}
+/**
+ * Follow-up A-3 (owner 2026-11-26): the kicking team has no available kicker. No kickoff (or free kick after a safety) is simulated:
+ * the receiving team takes over at its own 20 and play goes on. No time runs off, no random number is drawn and no kicking, return or
+ * special-teams statistic is recorded.
+ */
+function noKickerRestart(state) {
+  const kicking = state.kickingTeam, receiving = opponent(kicking);
+  state.phase = 'scrimmage'; state.clockRunning = false; state.ballLat = 0;
+  state.possession = receiving; state.ballOn = 20; firstDown(state);
+  state.drive = { team: receiving, plays: 0, yards: 0, start: 20 };
+  const text = $E('sim.no_kicker_restart', { team: state[kicking].name, name: state[receiving].name });
+  state.lastPlay = { text, result: 'no_kicker' };
+  log(state, text, 'kick', { team: kicking, noKicker: true });
+  return { res: { noKicker: true, ballOn: 20 }, text, sim: null };
 }
 /** What a live kickoff's engine result means for the game (receiving team's yards unless noted). */
 function kickoffOutcome(sim, catchAt, team, who) {
@@ -955,6 +973,7 @@ function creditFormulaUnits(state, teams, kicking, kind) {
 }
 export function doPunt(state, teams) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
+  if (!kickerAvailable(state, teams[state.possession])) throw new Error('no kicker: punts and field goals are unavailable (A-3)');
   const { r, save } = rng(state);
   const kicking = state.possession, receiving = opponent(kicking);
   const puntTarget = Math.min(100, Math.max(state.ballOn + 10, Math.min(95, state.ballOn + 34 + 16 * Math.max(1, Math.min(99, teams[kicking].kicker?.attrs?.kicking ?? 60)) / 99)));
@@ -987,6 +1006,7 @@ export function fieldGoalSignature(state, teams) {
 }
 export function doFieldGoal(state, teams, { signature = false } = {}) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
+  if (!kickerAvailable(state, teams[state.possession])) throw new Error('no kicker: punts and field goals are unavailable (A-3)');
   const { r, save } = rng(state);
   const kicking = state.possession;
   // M3 hook: an activated signature (Dragon Roar) is spent on the launch and replaces the kick's odds with its own chart; a
