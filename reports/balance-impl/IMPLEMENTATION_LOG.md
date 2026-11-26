@@ -303,3 +303,10 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - Every recorded battle and replay key plays as before.
   - Durability still counts in Clash through its own HP tilt.
 - **R-2 trial 1** (DL and TE Speed weight 2): the speed strategy fell only to +2.81 (standard error 0.90); strength −2.23. Trial 2 adds WR and CB Speed weight 4.
+- **R-2 trial 2** (plus WR and CB Speed weight 4): speed +3.17 (standard error 1.0), strength −2.29.
+  - No better than trial 1: pricing Speed in the overall does not remove the edge, because Speed simply buys more than its weight even at 4.
+  - WR and CB go back to 3. DL and TE stay at 2, which the R-1 rush justifies.
+- **R-2 trial 3: the engine curve**, which the brief allows once weighting has been tried.
+  - Top speed slope 4.1 → 3.5 yd/s across the Speed range (`SPEED_SLOPE`, `speedCurve`), pivoting on Speed 50 (7.47 yd/s, unchanged).
+  - Speed 30 goes from 6.65 to 6.76 yd/s; Speed 95 from 9.33 to 9.06.
+  - Under test: the roster strategy, then a game study and the Speed sweep, to check that Speed stays viable.

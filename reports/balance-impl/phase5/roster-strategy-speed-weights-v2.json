@@ -1,0 +1,37 @@
+{
+ "tool": "balance-audit/roster-strategy",
+ "games": 150,
+ "quality": 60,
+ "rows": {
+  "control": {
+   "games": 150,
+   "marginVsControl": 0,
+   "se": 0,
+   "winPct": 43.3,
+   "winPctVsControl": 0,
+   "pointsFor": 13.4,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 49.6
+  },
+  "speed": {
+   "games": 150,
+   "marginVsControl": 3.17,
+   "se": 1,
+   "winPct": 53.3,
+   "winPctVsControl": 10,
+   "pointsFor": 14.9,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 49.6
+  },
+  "strength": {
+   "games": 150,
+   "marginVsControl": -2.29,
+   "se": 0.95,
+   "winPct": 38,
+   "winPctVsControl": -5.3,
+   "pointsFor": 12.4,
+   "meanBudgetDiffOvr": 0,
+   "meanStarterOvr": 49.6
+  }
+ }
+}

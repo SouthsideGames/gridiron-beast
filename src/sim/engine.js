@@ -49,6 +49,11 @@ const norm = (v) => clamp(v, 1, 99) / 99;
 /** R-1 (balance audit, 2026-11-25): typical starter ratings in a new league (generated clubs, quality 46-66; measured over 300 clubs:
  *  DL Speed 35, CB/S Catching 30-31, zone defenders' Coverage 36-48). The R-1 attribute terms are centred here, so a typical starter
  *  plays as before and the attribute moves him either way. */
+/** R-2 (balance audit, 2026-11-25): top speed in yards per second from the Speed attribute. Was 5.4 + 4.1 × Speed/99 for everyone; the
+ *  slope is now SPEED_SLOPE, pivoting on a typical starter (Speed 50 keeps 7.47 yd/s), so a point of Speed buys less separation and
+ *  pursuit. At constant payroll an all-Speed lineup won 3.2 points a game however Speed was priced in the overall (two weighting trials). */
+export const SPEED_SLOPE = 3.5;
+export const speedCurve = (speed) => 5.4 + 4.1 * norm(50) + SPEED_SLOPE * (norm(speed) - norm(50));
 export const R1_TYPICAL = Object.freeze({ dlSpeed: 40, dbCatching: 35, zoneCoverage: 45 });
 
 const EDGE_ATTRS = ['speed', 'agility', 'strength', 'awareness', 'catching', 'accuracy', 'tackling', 'coverage', 'blocking'];
@@ -215,7 +220,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const [x, y] = play.align[slot];
     const a = actorRecord({
       team, slot, mid, type: input?.type || null, overcharged, sovereignQ4, baseAwareness: attrs.awareness, attrs, ability, abilityName, abilityKind, name: input?.name || slot, reactionBonus: 0, auraAttrs: null,
-      x, y, lineX: x, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
+      x, y, lineX: x, vx: 0, vy: 0, maxSpeed: speedCurve(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
       assignment: play.assignments[slot], wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, baseAttrs: given,
     });
@@ -310,7 +315,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const attrs = { ...DEFAULT_ATTRS, ...(spec.attrs || {}) }; const { attrs: _given, credit = null, ...flags } = spec;
     const v = { overcharged: false, sovereignQ4: false, ability: null, abilityName: null, abilityKind: null, reactionBonus: 0, auraAttrs: null, ...flags,
       mid: spec.mid || `${spec.team}:${spec.slot}`, type: spec.type || null, name: spec.name || spec.slot, baseAwareness: attrs.awareness, attrs, baseAttrs: { ...attrs },
-      lineX: spec.x, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility), wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
+      lineX: spec.x, vx: 0, vy: 0, maxSpeed: speedCurve(attrs.speed), accel: 9 + 11 * norm(attrs.agility), wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, temp: { credit } };
     // Perf (outcome-identical): the same values as before, in the lineup's actor shape (actorRecord); the spec's other keys follow.
     const a = actorRecord(v); for (const k of Object.keys(v)) if (!RECORD_BASE.has(k)) a[k] = v[k];
