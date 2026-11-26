@@ -1,6 +1,6 @@
 # Owner play-test feedback (UI), received during the balance implementation
 
-Recorded 2026-11-25, 23:16. These are **not** done on this balance branch. They go in a separate UI change once this branch is reviewed and merged, because the Roster screen also carries R-6 work (the emergency-cover chip).
+Recorded 2026-11-25, 23:16. **Owner decision (23:17): these go in with the balance work, on this branch, done right after the balance phases (as an extra phase before the final report), whatever the balance report concludes.** Later UI feedback from the owner joins this list and is handled the same way.
 
 ## Roster: Depth chart
 1. **Remove the captain ⓘ** next to a captain's species line (the ⓘ beside the "C" badge). It only says he is a captain, and the "C" already shows that.
