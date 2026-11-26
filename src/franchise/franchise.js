@@ -983,12 +983,16 @@ export function startSeason(f, year) {
     addLeagueNews(f, [...(d ? draftDigest({ year, picks: d.picks, club: f.club, scouted }) : []), ...offseasonDigest({ year, events: takeEvents(f, year, 0), club: f.club, rival, division })]);
   }
   // Preseason expectations for Coach of the Year: recorded now, never reconstructed from the final table (GDD §16.4).
+  // Every club's preseason talent is its real team overall after the offseason (balance audit R-0, 2026-11-25): with the league
+  // registry an AI club is the persistent club as it stands (its developed roster), not what today's generator would field; a
+  // franchise without the registry keeps the generated estimate. The Board's forecast (boardForecastFor) and Coach of the Year
+  // both compare a club with the league's mean talent, so expectations follow the league as it develops.
+  const talents = {};
+  for (const team of ALL_TEAMS) talents[team] = team === f.club ? teamOverall(playerTeam(f)) : hasLeague(f) ? teamOverall(aiTeam(f, team, year)) : todayOverall(f, team, year);
+  const leagueTalent = Object.values(talents).reduce((a, b) => a + b, 0) / Math.max(1, ALL_TEAMS.length);
   for (const team of ALL_TEAMS) {
-    // An AI club's preseason talent is what today's generator would field (GDD §45.6): a persistent club opens below that and
-    // grows to it as it plays, so the Board's forecast and Coach of the Year keep today's calibration.
-    const talent = team === f.club ? teamOverall(playerTeam(f)) : todayOverall(f, team, year);
-    const lr = lastRecords?.[team]; const lastWinPct = lr && lr.w + lr.l ? lr.w / (lr.w + lr.l) : null;
-    f.season.expectations[team] = { talent, expectedWinPct: Math.max(0.1, Math.min(0.9, 0.5 + (talent - 60) * 0.025)), lastWinPct };
+    const talent = talents[team]; const lr = lastRecords?.[team]; const lastWinPct = lr && lr.w + lr.l ? lr.w / (lr.w + lr.l) : null;
+    f.season.expectations[team] = { talent, expectedWinPct: Math.max(0.1, Math.min(0.9, 0.5 + (talent - leagueTalent) * 0.025)), lastWinPct };
   }
 }
 /** Which plays are unavailable this week because their package needs a slot nobody legal can fill. {slots, blocked: {playId: slot}} */

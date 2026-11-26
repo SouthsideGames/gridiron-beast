@@ -2399,7 +2399,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     d.stun = 0.7; d.noEngage = 0.3;
     if (!scrambled && rng.chance(0.6)) scramble(qb);
-    log(`${qb.name} escapes ${d.name}`, { kind: 'escape' });
+    log(`${qb.name} escapes ${d.name}`, { kind: 'escape', by: d.slot, side: d.team }); // by: the rusher who missed (data for the Attribute Lab's sack-finish trial, R-1)
     return false;
   }
   function endPlay(kind, x, y, extra = {}) {
