@@ -297,3 +297,9 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
 ### R-17: Durability in the overall
 - Durability weights: 1 at RB, OL, DL and LB; 0.5 at QB, WR, TE, CB and S; 0.25 at K.
 - Overalls change for every monster (computed live; nothing is stored, so saves are unaffected). AI training now also spends on Durability in proportion.
+- **Beast Clash kept apart (R-17 and R-2 validation).**
+  - Clash HP, attack and speed come from the overall, so the new weights broke 16 of 840 Clash tests, including the byte-for-byte replays of recorded battles and replay keys.
+  - Clash now reads `CLASH_POSITION_WEIGHTS` (the weights it was balanced on): `overall(e, pos, weights)` in `t8/combatant.js`, `clash/stats.js` and the Clash auto-lineup.
+  - Every recorded battle and replay key plays as before.
+  - Durability still counts in Clash through its own HP tilt.
+- **R-2 trial 1** (DL and TE Speed weight 2): the speed strategy fell only to +2.81 (standard error 0.90); strength −2.23. Trial 2 adds WR and CB Speed weight 4.

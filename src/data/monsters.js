@@ -3,7 +3,8 @@ import { individualName, catalogueName } from './individual-names.js';
 // generation and OVR. Everything here feeds the simulation (GDD §5.1).
 
 import { assignAmbition } from '../franchise/ambition.js';
-import { ATTRIBUTES, POSITION_WEIGHTS } from './personnel.js';
+import { ATTRIBUTES, POSITION_WEIGHTS, CLASH_POSITION_WEIGHTS } from './personnel.js';
+export { CLASH_POSITION_WEIGHTS };
 import { createRng, hashString } from '../core/rng.js';
 import { attributeHelps, ATTR_NAME, POSITION_NAME } from './stat-guide.js';
 import { SPECIES_DEX, RARITIES, ELEMENT_REGIONS, TRAITS } from './species.js';
@@ -167,8 +168,8 @@ export function effectiveAttributes(m, { slotPosition = null, trainingBonus = nu
   return out;
 }
 
-export function overall(attrs, position) {
-  const w = POSITION_WEIGHTS[position] || POSITION_WEIGHTS.WR;
+export function overall(attrs, position, weights = POSITION_WEIGHTS) {
+  const w = weights[position] || weights.WR;
   let sum = 0; let total = 0;
   for (const [k, weight] of Object.entries(w)) { sum += (attrs[k] || 0) * weight; total += weight; }
   return Math.round(sum / total);

@@ -7,7 +7,7 @@
 //   5. the archetype multiplier, last and once
 //   6. O2 (experimental, off): Tanks +6% HP in 4-5 per side battles, applied here and nowhere else
 // No evolution multiplier, no second fatigue term, no training bonus, no position penalty.
-import { effectiveAttributes, overall, NATURES, clampAttr } from '../data/monsters.js';
+import { effectiveAttributes, overall, NATURES, clampAttr, CLASH_POSITION_WEIGHTS } from '../data/monsters.js';
 import { SPECIES_DEX } from '../data/species.js';
 import { CLASH_MOVES } from '../data/clash-moves.js';
 import { CLASH_MOVES_V1_0_0 } from '../data/clash-moves-v1.0.0.js';
@@ -47,7 +47,7 @@ export function buildCombatant(m, { perSide = 3, config = null, slot = 0, side =
   const move = patchedMove(sp.id, moveTableFor(config)[sp.id], config); if (!move) throw new Error(`No battle move for ${sp.id}`);
   const V = CLASH_VALUES; const arch = V.archetypes[move.archetype]; const S = V.stats;
   const e = legacyNatureFor(effectiveAttributes(m, {}), m, config); // fatigue once; Nature only when replaying a historical ruleset
-  const ovr = overall(e, m.position);                          // from the same attributes
+  const ovr = overall(e, m.position, CLASH_POSITION_WEIGHTS);                          // from the same attributes
   const mean = (e.speed + e.agility + e.strength + e.awareness + e.durability) / 5;
   const tilt = (x) => clamp(1 + (x - mean) / S.tiltDiv, S.tiltMin, S.tiltMax);
   const hpBase = S.hpBase + S.hpPerOverall * ovr, atkBase = S.atkBase + S.atkPerOverall * ovr;
