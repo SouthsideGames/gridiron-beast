@@ -263,3 +263,13 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - The All-League panel is on the League hub's award tab once the awards are frozen, and on the season review.
   - No new file: the helper lives in `src/ui/career-ui.js`, respecting the release file count (512 published files).
 - Two-season check (seed 5, Pro): every award has a winner in both seasons except CBOY (none possible before season 3); the All-League teams are full.
+- **First calibration (aiDev Rookie 0.85 / All-Star 1.15; seeds 1–4, 8 seasons, hands-off owner):**
+
+  | Difficulty | Owner win % | Fired | AI overall at seasons 1 / 5 / 8 |
+  |---|---|---|---|
+  | Rookie | 49.5 (seasons 1–5: 56.1; 6–8: 33.0) | 2 of 4 | 52.0 / 63.1 / 63.8 |
+  | All-Star | 42.0 (seasons 1–5: 39.5; 6–8: 46.8) | 1 of 4 | 56.7 / 64.5 / 64.5 |
+
+  - **Finding:** the XP rate barely separates the leagues after season 4 (about 1 overall point at season 5). AI development is bounded by each monster's attribute ceilings (`dev.potential`), so a faster rate only reaches the same ceilings sooner; arrivals' ceilings decide the equilibrium.
+  - The hands-off owner's own roster ages out (his club is 50–55 overall all along), so his late seasons collapse on every difficulty.
+  - Testing wider rates (0.6 / 1.5) before deciding.
