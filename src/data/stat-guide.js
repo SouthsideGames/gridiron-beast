@@ -39,7 +39,7 @@ export const STAT_GUIDE = Object.freeze({
     LB: $t('guide.covering_backs_and_tight_ends'), CB: $t('guide.reacting_to_a_receivers_cuts_anticipating'), S: $t('guide.deep_coverage_and_breaking_up_contested') } },
   durability: { summary: $t('guide.how_well_the_body_holds_up'), by: {
     QB: $t('guide.tiring_more_slowly_and_fewer_injuries'), RB: $t('guide.tiring_more_slowly_and_fewer_injuries'), WR: $t('guide.tiring_more_slowly_and_fewer_injuries'), TE: $t('guide.tiring_more_slowly_and_fewer_injuries'), OL: $t('guide.tiring_more_slowly_and_fewer_injuries'),
-    DL: $t('guide.tiring_more_slowly_and_fewer_injuries'), LB: $t('guide.tiring_more_slowly_and_fewer_injuries'), CB: $t('guide.tiring_more_slowly_and_fewer_injuries'), S: $t('guide.tiring_more_slowly_and_fewer_injuries'), K: $t('guide.tiring_more_slowly_and_fewer_injuries') } }, // K: R-17 (durability is in the kicker's overall too)
+    DL: $t('guide.tiring_more_slowly_and_fewer_injuries'), LB: $t('guide.tiring_more_slowly_and_fewer_injuries'), CB: $t('guide.tiring_more_slowly_and_fewer_injuries'), S: $t('guide.tiring_more_slowly_and_fewer_injuries') } },
   kicking: { summary: $t('guide.leg_strength_and_precision'), by: { K: $t('guide.field_goal_range_and_accuracy_punts') } },
 });
 

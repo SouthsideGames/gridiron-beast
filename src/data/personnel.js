@@ -86,7 +86,8 @@ export const emergencySources = (pos) => Object.keys(EMERGENCY_POSITION).filter(
 
 /** Attributes that matter most per position; used for OVR and level-ups.
  *  Balance audit 2026-11-25: R-17 adds Durability (it halves injury risk and sets Clash HP, but was in no overall): 1 for RB, OL, DL and
- *  LB (the most contact), 0.5 for QB, WR, TE, CB and S, 0.25 for K. R-2 prices DL and TE Speed at 2 (was 1): R-1 made the DL pass rush
+ *  LB (the most contact), 0.5 for QB, WR, TE, CB and S. K was provisionally 0.25 (the brief's "low") and is 0 after
+ *  testing: kickers are never injured and fatigue does not touch kicking, so Durability does nothing for a kicker in football. R-2 prices DL and TE Speed at 2 (was 1): R-1 made the DL pass rush
  *  use Speed, and at constant payroll a fast lineup won 3.3 points a game because Speed was cheap in these overalls. */
 /** The position weights before the balance audit (2026-11-25). Beast Clash reads them (combatant HP / attack / speed come from the overall
  *  on these), and monster generation selects and develops its candidates on them (t8/selection.js, the prior-career simulation in
@@ -116,7 +117,7 @@ export const POSITION_WEIGHTS = Object.freeze({
   LB: { tackling: 3, awareness: 2, speed: 2, strength: 1, coverage: 1, durability: 1 },
   CB: { coverage: 3, speed: 3, agility: 2, awareness: 1, catching: 1, durability: 0.5 },
   S: { coverage: 2, awareness: 2, speed: 2, tackling: 2, catching: 1, durability: 0.5 },
-  K: { kicking: 6, awareness: 1, durability: 0.25 },
+  K: { kicking: 6, awareness: 1 }, // R-17: 0 for K after testing (kickers are never injured and fatigue does not touch kicking)
 });
 
 export const ATTRIBUTES = Object.freeze([

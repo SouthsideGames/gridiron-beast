@@ -380,7 +380,14 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
 - **Fast-tier fixes after the UI phase:**
   - The info-control test asserts the ⓘ's new place.
   - Illegal-roster preset: with R-6, K covers QB, so the case now removes QB and K.
-  - Headline ratings skip Durability, so a kicker's stay Kicking and Awareness. The stat guide now lists Durability for K.
+  - Headline ratings skip Durability, so a kicker's stay Kicking and Awareness.
+- **R-17, kicker weight → 0 (modification).**
+  - The stat-guide test documents that kickers are never injured and fatigue does not touch kicking, so Durability does nothing for a kicker in football.
+  - The provisional 0.25 (the brief's "low") is now 0, and the guide keeps saying Durability does nothing for K.
+  - Beast Clash HP is unaffected (Clash uses its own frozen weights).
+- **Two more tests follow approved changes:**
+  - Offseason checklist (R-6): the lineup blocker now needs QB and K out.
+  - Goal Line Man (run-read): the sample per comparison goes from 40 to 120 plays. After R-1/R-2 the quick-game gap is about 0.5 yd and one fixed 40-play sample flipped it. At 120 all three claims hold (screens 4.5 against 11.6, quick 5.7 against 6.2, play-action 7.8 against 5.8). The test is stricter, not looser.
 - **Speed sweep after the slope** (`phase5/attr-sweep-n200.json`, Speed 30 / 65 / 95). Speed stays viable everywhere:
   - WR peak speed 7.0 / 8.0 / 9.2 yd/s (was 6.8 / 8.2 / 9.4); deep-ball yards 9.1 / 11.0 / 23.9;
   - CB completion allowed 40.5 / 29.5 / 26.5%;

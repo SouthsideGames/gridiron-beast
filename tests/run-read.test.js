@@ -252,7 +252,9 @@ test('Goal Line Man: on a pass he covers again, it still stops screens and the q
     if (e[8]?.state === 'pass') { shown++; assert.equal(e[2], 'none', `${off} ${s}: with pass shown he covers the short middle (${e[2]})`); }
   }
   assert.ok(shown >= 20, `pass shown before the throw on ${shown} dropbacks`);
-  const ypp = (def, offs) => mean(offs.flatMap((off) => Array.from({ length: 40 }, (_, s) => play({ off, def, attr: 'speed', value: 65, seed: 20500 + s }).yards)));
+  // 40 -> 120 plays per call (balance audit 2026-11-26): after R-1/R-2 the quick-game gap is 0.5 yd, inside the noise of 40 plays
+  // (one fixed sample flipped it); 120 holds it with margin. All three comparisons are unchanged and the test is stricter, not looser.
+  const ypp = (def, offs) => mean(offs.flatMap((off) => Array.from({ length: 120 }, (_, s) => play({ off, def, attr: 'speed', value: 65, seed: 20500 + s }).yards)));
   const screens = ['bubble_screen', 'rb_screen'], quick = ['quick_slants', 'stick', 'curl_flat'], pa = ['pa_post', 'pa_boot', 'pa_shot'];
   assert.ok(ypp('goal_line_man', screens) < ypp('goal_line', screens), 'it stops screens better than Goal Line Stand');
   assert.ok(ypp('goal_line_man', quick) < ypp('goal_line', quick), 'and the quick game');
