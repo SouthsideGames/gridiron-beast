@@ -21,7 +21,7 @@
 // The same validation and the same evaluation as the owner's offers apply (fa-engine.js). Nothing draws from the generator.
 import { monsterOverall } from '../data/monsters.js';
 import { ALL_TEAMS } from '../data/league.js';
-import { tierById } from '../data/league.js';
+import { tierById, tierCap } from '../data/league.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
 import { clubIdentity } from '../data/identities.js';
 import { leagueClubs, isProtected } from './league-registry.js';
@@ -127,7 +127,7 @@ export function aiClubTurn(f, club, { bench }) {
   // R5: upgrades signed or still being negotiated this league year count against the mode's allowance; c. a release completes it
   const ly = leagueYear(f); const used = Object.values(f.freeAgency.offers).filter((o) => o.club === club && o.upgrade && o.ly === ly && (o.state === 'signed' || LIVE.has(o.state))).length;
   if (budget > 0 && used < upgradesAllowed(mode)) {
-    const pick = bestUpgrade(f, club, bench, tierById(f.tier).cap);
+    const pick = bestUpgrade(f, club, bench, tierCap(f));
     if (pick && (spots() > 0 || pick.release) && wants(f, club, pick.m) && unsigned(f, pick.m.id) && !liveOffers(f, (o) => o.club === club && o.mid === pick.m.id).length) tryOffer(pick.m, { tag: 'upgrade', priority: true, release: pick.release || null });
   }
   return acted;

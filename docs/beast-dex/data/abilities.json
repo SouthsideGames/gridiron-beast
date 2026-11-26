@@ -1860,14 +1860,14 @@
     "mode": "Beast Clash",
     "name": "Root Communion",
     "category": "Support",
-    "activation": "Eligible normal turn redistributes living team current HP",
+    "activation": "Eligible normal turn redistributes living team current HP, then the ordinary attack follows (F-04, 2026-11-26)",
     "mechanic": "Once-per-Clash simultaneous HP-percentage equalization",
     "sourceDesignStatus": "Approved; engine work required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Own normal turn while unused, living ally at 25% max HP or less and redistribution would increase that ally HP. Otherwise ordinary attack preserve use; Stunned skips cannot activate.",
-        "provenance": "Owner-approved Nature review; final audit questions flagged separately."
+        "rule": "Own normal turn while unused, living ally at 25% max HP or less and redistribution would increase that ally HP. Otherwise ordinary attack preserve use; Stunned skips cannot activate. When it activates, the ordinary attack still follows in the same turn (owner decision F-04, 2026-11-26).",
+        "provenance": "Owner decision F-04, final balance calibration, November 26, 2026. Earlier: Owner-approved Nature review; final audit questions flagged separately."
       },
       {
         "section": "Targets / placement",
@@ -1881,8 +1881,8 @@
       },
       {
         "section": "Recharge / frequency",
-        "rule": "ONCE per Clash replaces normal attack, same effect all mastery levels.",
-        "provenance": "Owner-approved Nature review; final audit questions flagged separately."
+        "rule": "ONCE per Clash, cast in addition to the normal attack (F-04, 2026-11-26; it replaced the attack before), same effect all mastery levels.",
+        "provenance": "Owner decision F-04, final balance calibration, November 26, 2026. Earlier: Owner-approved Nature review; final audit questions flagged separately."
       },
       {
         "section": "Lifetime / persistence",
@@ -4404,14 +4404,14 @@
     "mode": "Beast Clash",
     "name": "Eye of the Storm",
     "category": "Signature action",
-    "activation": "Tempestra; legendary; WR; Clash archetype Disruptor \u2192 Disruptor. Once per Clash own normal action replaces attack if enemy front active has a ready, repeatable signature.",
+    "activation": "Tempestra; legendary; WR; Clash archetype Disruptor \u2192 Disruptor. Once per Clash, at its own normal action, if the enemy front active has a ready, repeatable signature: the restriction is cast IN ADDITION to the ordinary attack, which follows in the same turn (owner decision F-05, 2026-11-26; it no longer replaces the attack).",
     "mechanic": "Once normal action temporarily restricts enemy active to ordinary attacks without cooldown extension",
     "sourceDesignStatus": "Approved design; implementation required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Tempestra; legendary; WR; Clash archetype Disruptor \u2192 Disruptor. Once per Clash own normal action replaces attack if enemy front active has a ready, repeatable signature.",
-        "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
+        "rule": "Tempestra; legendary; WR; Clash archetype Disruptor \u2192 Disruptor. Once per Clash, at its own normal action, if the enemy front active has a ready, repeatable signature: the restriction is cast IN ADDITION to the ordinary attack, which follows in the same turn (owner decision F-05, 2026-11-26; it no longer replaces the attack).",
+        "provenance": "Owner decision F-05, final balance calibration, November 26, 2026. Earlier: Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
         "section": "Targets / placement",
@@ -6655,14 +6655,14 @@
     "mode": "Beast Clash",
     "name": "Foresight",
     "category": "Signature action",
-    "activation": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only while a living enemy's ability (active or reserve) applies a harmful status (balance audit R-10, 2026-11-25; otherwise attack normally and keep the use). Once-use spent on preparation.",
+    "activation": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only while the CURRENT ACTIVE enemy has an ability that applies a harmful status (owner decision F-08, 2026-11-26; a status source in reserve no longer counts; balance audit R-10, 2026-11-25, introduced the status-source rule). Otherwise attack normally and keep the use. Once-use spent on preparation.",
     "mechanic": "Foresight / Prevent incoming status and redirect one application to its caster with same strength and proposed duration. Caster ordinary status eligibility applies, with no second application accuracy roll. If caster cannot receive, incoming application still prevented and mirror consumed.",
     "sourceDesignStatus": "Approved design; implementation and interaction audit pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only while a living enemy's ability (active or reserve) applies a harmful status (balance audit R-10, 2026-11-25; otherwise attack normally and keep the use). Once-use spent on preparation.",
-        "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
+        "rule": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only while the CURRENT ACTIVE enemy has an ability that applies a harmful status (owner decision F-08, 2026-11-26; a status source in reserve no longer counts; balance audit R-10, 2026-11-25, introduced the status-source rule). Otherwise attack normally and keep the use. Once-use spent on preparation.",
+        "provenance": "Owner decision F-08, final balance calibration, November 26, 2026. Earlier: Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Targets / placement",

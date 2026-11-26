@@ -1,5 +1,5 @@
 // PSY-03-C Foresight (cerebrix: Cerebrix; Disruptor). Batch F.
-// Contract (Dex; R-10: only against an active foe whose ability applies a harmful status): once per Clash, spend its own normal action
+// Contract (Dex; R-10 / F-08: only while the ACTIVE foe has an ability that applies a harmful status; a reserve does not count): once per Clash, spend its own normal action
 // while active and able to prepare a psychic mirror, replacing the attack; the
 // once-use is spent on preparation (source inability before preparation keeps it). The mirror lasts 2 / 2 / 3 / 3 owner normal turns by
 // mastery, the preparation turn excluded. It intercepts the NEXT successful enemy ABILITY-applied harmful-status roll aimed at Cerebrix,
@@ -27,7 +27,10 @@ export default registerClashAbility({
   hooks: {
     chooseAction(api, self, { foeId } = {}) {
       if (self.state.used) return null;
-      if (!api.enemies(self).some((e) => STATUS_SOURCES.includes(e.species))) return null; // R-10: no living enemy (active or reserve: Eclipse Call acts from reserve) can apply a status: attack, keep the use
+      // F-08 (owner 2026-11-26): only the CURRENT ACTIVE foe counts. A status source waiting in reserve no longer makes Cerebrix give up
+      // its attack (the follow-up study measured −7 points in those battles); otherwise it attacks and keeps the use.
+      const foe = foeId ? api.get(foeId) : null;
+      if (!foe || !STATUS_SOURCES.includes(foe.species)) return null;
       self.state.used = true; self.state.mirror = true; api.activate(self, `${$E('clashlog.psychic_mirror_for_owner_turns', { byTier: byTier(TURNS, self.tier) })}`); api.executed(self);
       api.durationClock(self, self.id, byTier(TURNS, self.tier), CLOCK);
       return { kind: 'done' };
@@ -51,6 +54,10 @@ export default registerClashAbility({
         explain: () => 'Cerebrix prepares the mirror on exchange 1. Vyrnax\'s Dragon Roar hits on exchange 2: the damage lands, and its Weakened is prevented and redirected to Vyrnax.',
         setup: () => ({ a: [{ species: 'cerebrix', overall: 99 }], b: [{ species: 'vyrnax', overall: 30 }], seed: 1, stopAt: { exchange: 2 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
         expect: (r, h) => { h.check('Weakened blocked on Cerebrix', h.has('status_blocked', (e) => e.target === 'a0' && /Foresight/.test(e.reason))); h.check('Weakened lands on Vyrnax instead', h.has('status', (e) => e.target === 'b0' && e.status === 'weakened' && e.abilityId === 'PSY-03-C')); h.check('the roar\'s damage resolved', h.has('damage', (e) => e.abilityId === 'DRA-05-C')); h.executed(1); } },
+      { id: 'reserve-source-only', kind: 'blocked', title: 'F-08: a status source waiting in reserve does not count; Cerebrix attacks and keeps the use',
+        explain: () => 'The active foe (Gravelpup) applies no status; Vyrnax, a status source, waits in reserve. Cerebrix makes its ordinary attack and does not prepare.',
+        setup: () => ({ a: [{ species: 'cerebrix', overall: 99 }], b: [{ species: 'gravelpup', overall: 30 }, { species: 'vyrnax', overall: 30 }], seed: 1, stopAt: { exchange: 1 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
+        expect: (r, h) => { h.check('no mirror prepared (use kept)', h.state('a0')?.used === false); h.check('Cerebrix attacked', h.has('damage', (e) => e.actor === 'a0')); } },
       { id: 'expires', kind: 'depletion', title: 'Nothing arrives: the mirror lapses after its owner turns',
         explain: (c) => `The foe can apply a status (Cold Welcome) but is sparring: nothing is aimed at Cerebrix, and the mirror lapses after ${c.values.mirrorTurns} owner turns.`,
         setup: () => ({ a: [{ species: 'cerebrix' }], b: [{ species: 'hailfang', sparring: true }], seed: 1, stopAt: { exchange: 5 } }),

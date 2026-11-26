@@ -81,7 +81,7 @@ Cerebrix warns one linebacker that it has seen the rush coming. The defender mus
 
 Ability ID: `PSY-03-C`. Category: Signature action.
 
-Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only while a living enemy's ability (active or reserve) applies a harmful status (balance audit R-10, 2026-11-25; otherwise attack normally and keep the use). Once-use spent on preparation.
+Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only while the CURRENT ACTIVE enemy has an ability that applies a harmful status (owner decision F-08, 2026-11-26; a status source in reserve no longer counts; balance audit R-10, 2026-11-25, introduced the status-source rule). Otherwise attack normally and keep the use. Once-use spent on preparation.
 
 Foresight / Prevent incoming status and redirect one application to its caster with same strength and proposed duration. Caster ordinary status eligibility applies, with no second application accuracy roll. If caster cannot receive, incoming application still prevented and mirror consumed.
 
@@ -89,7 +89,7 @@ Source: workbook v18. Apply the later shared overrides in [Approved Rules](../AP
 
 ### Trigger / eligibility
 
-Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only while a living enemy's ability (active or reserve) applies a harmful status (balance audit R-10, 2026-11-25; otherwise attack normally and keep the use). Once-use spent on preparation.
+Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack, only while the CURRENT ACTIVE enemy has an ability that applies a harmful status (owner decision F-08, 2026-11-26; a status source in reserve no longer counts; balance audit R-10, 2026-11-25, introduced the status-source rule). Otherwise attack normally and keep the use. Once-use spent on preparation.
 
 ### Targets / placement
 

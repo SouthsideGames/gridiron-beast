@@ -93,12 +93,16 @@ const BRACKET = (key, zone) => ({ a: 'zone', zone, bracket: key });
 const SPY = { a: 'spy' };
 const CONTAIN = (gap) => ({ a: 'contain', gap });
 
+// F-11 (owner 2026-11-26): seconds a designated draw shows pass before the exchange (see engine.js SHOW). Calibrated in
+// reports/balance-impl/FINAL_CALIBRATION_REPORT.md §7.
+export const SHOW_DRAW = 0.9;
 function offense(id, name, formation, assignments, opts = {}) {
   const f = OFFENSE_FORMATIONS[formation];
   if (!f) throw new Error(`${name}: unknown formation ${formation}`);
   const play = { id, name, side: 'offense', type: opts.type || 'pass', formation, pkg: f.pkg, align: { ...f.align, ...(opts.align || {}) }, assignments, primary: opts.primary || null, progression: opts.progression || [], drop: opts.drop || 'three', tags: opts.tags || [], desc: opts.desc || '' };
   if (opts.reserve) play.reserve = true; // only reserve plays carry the key, so live plays keep their review fingerprints
   if (opts.motion) play.motion = opts.motion; // pre-snap motion: { slot, to } (only plays with motion carry the key)
+  if (opts.show) play.show = opts.show; // F-11: draw deception, seconds of showing pass before the exchange (only the designated draws carry the key)
   if (opts.legendary) play.legendary = opts.legendary; // Legendary Plays (GDD §36): { species, slot }
   return play;
 }
@@ -143,7 +147,10 @@ const OFFENSE_PLAYS = [
     RG: RUNBLOCK([2, 0]), C: RUNBLOCK([2, -2.5]), LG: RUNBLOCK([2.5, -5]), TE: RUNBLOCK([2, 2]), WR1: STALK([3, -15]),
   }, { type: 'run', tags: ['run', 'outside'], desc: $t('plays.wide_zone_to_the_left_behind') }),
   offense('counter', $t('plays.counter'), 'tight_i', {
-    QB: HANDOFF, RB: CARRY([[-6.5, 0], [-5.9, 0.9], [-3.9, -1], [0, -3], [6, -3.8], [20, -4]]),
+    // F-10 (owner 2026-11-26): the back follows the pullers through the B gap (y −2.2 → −2.6). He used to bend outside the kicked-out
+    // end to the edge (−3 → −4): an inside run that finished as an off-tackle sweep behind two lead blockers, 12.8 yards a carry against
+    // the AI's own calls and 18.2 against run fronts. The false step, the pullers and the blocks are unchanged.
+    QB: HANDOFF, RB: CARRY([[-6.5, 0], [-5.9, 0.9], [-3.9, -1], [0, -2.2], [6, -2.4], [20, -2.6]]),
     RG: PULL([-1.2, 0], [1.2, -3.6]), TE: PULL([-1.6, 1.2], [2.5, -5]), // Phase C1 (F5): tight pulls, so guard and tight end lead the back instead of trailing him
     C: RUNBLOCK([1.5, 0.5]), LG: RUNBLOCK([1.5, -2]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'inside', 'misdirection'], desc: $t('plays.false_step_right_then_the_guard') }),
@@ -158,7 +165,7 @@ const OFFENSE_PLAYS = [
   offense('qb_draw', $t('plays.qb_draw'), 'gun_pro', {
     QB: KEEP([[-5, 0], [-6, 0], [-2, 0.5], [3, 0], [20, 0]]), RB: RUNBLOCK([0, 3.5]),
     LG: RUNBLOCK([-1.5, -2]), TE: CLIMB([2.5, 1]), RG: RUNBLOCK([-1.5, 2.5]), WR1: R('go'), WR2: R('go'), // Phase C1 (F3): the tight end climbs to the linebacker (the centre this was written for is not in the Pro set)
-  }, { type: 'run', tags: ['run', 'inside', 'long', 'draw'], desc: $t('plays.fake_the_drop_then_the_quarterback') }),
+  }, { type: 'run', show: SHOW_DRAW, tags: ['run', 'inside', 'long', 'draw'], desc: $t('plays.fake_the_drop_then_the_quarterback') }),
   offense('read_option', $t('plays.read_option'), 'gun_pro', {
     // Phase C1 (F1): the back crosses the quarterback's face, so the give is a real exchange at the mesh (v42.15's paths never
     // came within 2.8 yards: every give moved the ball 3-6 yards to a back who was never in reach).
@@ -166,9 +173,12 @@ const OFFENSE_PLAYS = [
     LG: RUNBLOCK([2, -2]), RG: RUNBLOCK([2, 2]), TE: RUNBLOCK([1.4, 3.4]), WR1: STALK([4, -16]), WR2: STALK([4, 16]), // Phase C1 (F3): the tight end seals the keep side (the inside block was written for a centre the Pro set does not have)
   }, { type: 'run', tags: ['run', 'option'], desc: $t('plays.the_quarterback_reads_the_unblocked_edge') }),
   offense('jet_sweep', $t('plays.jet_sweep'), 'gun_trips', {
-    QB: HANDOFF, WR3: CARRY([[-1.6, -4.5], [-2, -1], [-1, 6], [3, 13], [20, 16]]),
-    LG: RUNBLOCK([1.5, -1]), RB: RUNBLOCK([2, 8]), RG: RUNBLOCK([2, 5]), WR2: STALK([3, 17]), WR1: STALK([4, -16]), // Phase C1 (F3): the back leads to the edge (the centre this was written for is not in the Spread set)
-  }, { type: 'run', motion: { slot: 'WR3', to: [-1.6, -4.5] }, tags: ['run', 'outside', 'misdirection'], desc: $t('plays.the_slot_receiver_takes_the_jet') }),
+    // F-12 (owner 2026-11-26): the motion is flipped. The slot (WR3) lines up on the right, inside WR2 with the back, comes across on
+    // the jet and runs LEFT, away from that crowded side (before: from the left into the trips side, 2.0 yards a carry against the AI's
+    // calls). The line and the back lead to the left edge; WR1 stalks the play-side corner; WR2 stalks on the backside.
+    QB: HANDOFF, WR3: CARRY([[-1.6, 4.5], [-2, 1], [-1, -6], [3, -13], [20, -16]]),
+    LG: RUNBLOCK([2, -5]), RB: RUNBLOCK([2, -8]), RG: RUNBLOCK([1.5, 1]), WR2: STALK([3, 17]), WR1: STALK([4, -16]),
+  }, { type: 'run', align: { WR3: [-1.2, 12] }, motion: { slot: 'WR3', to: [-1.6, 4.5] }, tags: ['run', 'outside', 'misdirection'], desc: $t('plays.the_slot_receiver_takes_the_jet') }),
 
   // ---- quick passes
   offense('quick_slants', $t('plays.quick_slants'), 'gun_pro', {
@@ -373,7 +383,7 @@ export const RELEASED_RESERVE_OFFENSE = Object.freeze(['bunch_snag', 'bunch_whip
 const RELEASED = new Set(RELEASED_RESERVE_OFFENSE);
 // Task 10 (owner 2026-11-13): every reviewed reserve play is released into the open pools below. The compiled play keeps its catalogue
 // flag (`reserve`), so a play's data and its review fingerprint (dev-review.js) are exactly what was reviewed; release is pool membership.
-const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: !RELEASED.has(id) }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN, BRACKET });
+const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: !RELEASED.has(id) }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN, BRACKET, SHOW_DRAW });
 // Legendary Plays (GDD §36): built on the same assignments as every play, each tied to one Legendary monster who must be on
 // the field in its slot. Like reserve plays they live in PLAYS (engine, art, audit) and never in OFFENSE_IDS / DEFENSE_IDS:
 // a club can call one only when it holds that Legendary and has put the play in one of its six slots.

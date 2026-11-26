@@ -16,6 +16,7 @@ import { consequence } from '../../franchise/assist-advice.js';
 import { createArena } from '../clash/arena.js';
 import { stateAt as stateAtRecord } from '../clash/choreographer.js';
 import { toArenaRecord, T8_STATUS_ICON, T8_STATUS_NAME } from '../clash/t8-record.js';
+import { logHashFor } from '../../clash/index.js';
 const stateAt = (r, i) => stateAtRecord(toArenaRecord(r), i);
 import { monsterOverall } from '../../data/monsters.js';
 import { archetypeOf } from '../../clash/stats.js';
@@ -364,7 +365,12 @@ export function registerClashBattle(Router, app) {
       if (!e || e.status === 'ready' || e.status === 'skipped') return setupHtml(f);
       if (!f.week || (st.kind === 'pregame' && f.game) || (st.kind === 'overtime' && !f.game)) { setTimeout(() => Router.go(f.game ? 'match' : 'hq', {}, { reset: true }), 0); return `<p class="muted">${$t('clash.opening_the_game')}</p>`; }
       if (e.status === 'battle') { if (e.mode === 'skip' && !st.replaying) { setTimeout(() => finish(f), 0); return `<p class="muted">${$t('clash.playing_the_battle')}</p>`; } return battleHtml(f, e); }
-      if (st.replaying) return `${battleHtml(f, e)}<button class="btn block" data-action="endreplay" style="margin-top:8px">${$t('clash.back_to_the_result')}</button>`;
+      if (st.replaying) {
+        // F-04/F-05/F-08 (2026-11-26): a replay re-runs the stored battle on today's rules. If an ability's rules changed since it was
+        // played, the replay can differ from the battle that was decided; the stored result is never rewritten, and the replay says so.
+        st.replayResult = b.battle(f); const stale = !!(e?.result?.hash && st.replayResult && logHashFor(st.replayResult) !== e.result.hash);
+        return `${stale ? `<p class="muted center" role="note" style="margin:0 0 6px">${$t('clash.replay_rules_changed')}</p>` : ''}${battleHtml(f, e)}<button class="btn block" data-action="endreplay" style="margin-top:8px">${$t('clash.back_to_the_result')}</button>`;
+      }
       return resultHtml(f, e);
     },
     mount(root) {
@@ -416,7 +422,7 @@ export function registerClashBattle(Router, app) {
       });
       root.classList.toggle('cl-wide', !!(e && (e.status === 'battle' || st.replaying)));
       if (e && e.status === 'battle' && e.mode !== 'skip') mountBattle(root, f, e);
-      else if (e && st.replaying) { st.result = b.battle(f); const host = root.querySelector('#fb-arena'); if (host && st.result) { st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, infoButton: true, onCursor: (i) => { st.cursor = i; } }); setTimeout(playWhenReady, 300); } }
+      else if (e && st.replaying) { st.result = st.replayResult || b.battle(f); st.replayResult = null; const host = root.querySelector('#fb-arena'); if (host && st.result) { st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, infoButton: true, onCursor: (i) => { st.cursor = i; } }); setTimeout(playWhenReady, 300); } }
     },
     unmount() { stop(); st.replaying = false; },
   });

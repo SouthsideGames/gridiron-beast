@@ -143,7 +143,7 @@ export default function batch(b) {
   add(O('empty_qb_draw', 'Empty QB Draw', 'pro_empty', {
     QB: KEEP([[-5, 0], [-6, 0], [-2, 0.4], [3, 0], [20, 0]]),
     LG: RUNBLOCK([-1.5, -2]), RG: RUNBLOCK([-1.5, 2]), RB: R('go'), TE: R('seam'), WR1: R('go'), WR2: R('go'),
-  }, { type: 'run', tags: ['run', 'inside', 'long', 'draw'], desc: 'Five out in an empty set; the quarterback sells the pass, then runs into the empty middle.' }),
+  }, { type: 'run', show: b.SHOW_DRAW, tags: ['run', 'inside', 'long', 'draw'], desc: 'Five out in an empty set; the quarterback sells the pass, then runs into the empty middle.' }),
   '3rd-and-medium against a defense dropping everyone into coverage.', 'Everyone runs off; the quarterback waits a beat and goes when the rushers get upfield.', 'Max Drop, Prevent and Cover 4.', 'QB Spy and Double A Mug.');
 
   // ---- option family
@@ -215,13 +215,13 @@ export default function batch(b) {
   add(O('lead_draw', 'Lead Draw', 'gun_pro', {
     QB: HANDOFF, RB: CARRY([[-5.2, 2.8], [-5.4, 1], [-2, 0.2], [3, 0], [20, 0]]),
     LG: RUNBLOCK([-1, -2]), RG: RUNBLOCK([-1, 2]), TE: RUNBLOCK([3, 0.5]), WR1: R('go'), WR2: R('go'),
-  }, { type: 'run', tags: ['run', 'inside', 'long', 'draw'], desc: 'The line shows pass, the receivers run off, then the back takes it up the middle behind the tight end.' }),
+  }, { type: 'run', show: b.SHOW_DRAW, tags: ['run', 'inside', 'long', 'draw'], desc: 'The line shows pass, the receivers run off, then the back takes it up the middle behind the tight end.' }),
   '2nd-and-long when the defense drops into coverage.', 'Patience: the back waits for the rushers to get upfield, then follows the tight end.', 'Max Drop, Cover 4 and Prevent.', 'Double A Mug and Run Wall.');
 
   add(O('spread_draw', 'Spread Draw', 'gun_spread', {
     QB: HANDOFF, RB: CARRY([[-5.2, -2.8], [-5.4, -1], [-2, -0.3], [3, 0], [20, 0]]),
     LG: RUNBLOCK([-1.5, -2]), RG: RUNBLOCK([-1.5, 2]), WR1: R('go'), WR2: R('go'), WR3: R('seam'),
-  }, { type: 'run', tags: ['run', 'inside', 'long', 'draw'], desc: 'Three vertical routes clear the coverage; the back takes a delayed handoff into the empty middle.' }),
+  }, { type: 'run', show: b.SHOW_DRAW, tags: ['run', 'inside', 'long', 'draw'], desc: 'Three vertical routes clear the coverage; the back takes a delayed handoff into the empty middle.' }),
   '3rd-and-long when you expect a deep zone.', 'The routes must run hard to pull the defenders deep; the back hits the middle late.', 'Cover 4, Prevent and Max Drop.', 'QB Spy and Bear Front.');
 
   return { plays, lessons };

@@ -28,7 +28,7 @@ export { MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
 export { pickKey, currentClassYear, tradableYears, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, describePick, canTakePlayer } from './trades.js';
 export * as Stats from './stats.js';
 export { GROUP_SLOTS } from './roster.js';
-import { REG_GAMES, REG_WEEKS, LAST_WEEK, PLAYOFF_ROUNDS, CONFERENCE_ROUND, FINAL_ROUND, CONFERENCE_NAMES, DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, CURRENT_LAYOUT, useLeagueLayout, layoutOf, rivalChoicesIn, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
+import { REG_GAMES, REG_WEEKS, LAST_WEEK, PLAYOFF_ROUNDS, CONFERENCE_ROUND, FINAL_ROUND, CONFERENCE_NAMES, DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, tierCap, CAP_ERA, CURRENT_LAYOUT, useLeagueLayout, layoutOf, rivalChoicesIn, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
 import { retirementPass, agingContext, nativeAging, retirementOutlook } from './retirement.js';
 import { recordRetiredMonsterCandidates, electMonsterHallOfFame } from './monster-hof-voting.js';
@@ -109,7 +109,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   const roster = createRoster(rng.seed(), { cornerstone, cornerstoneOffense, cornerstoneDefense, quality: 56 });
   const f = {
     schemaVersion: SCHEMA_VERSION, leagueFormat: LEAGUE_FORMAT, leagueLayout: CURRENT_LAYOUT, coachNames: 2, uid: newUid(), createdAt: new Date().toISOString(), seed, rngState: rng.state, // uid: the permanent identity of this franchise universe (GDD §42.3)
-    owner: { ...owner }, club, tier: 'challenger', staff: {},
+    owner: { ...owner }, club, tier: 'challenger', capEra: CAP_ERA, staff: {}, // capEra: F-01, a new franchise plays under the 1.6 M cap
     roster, lineupManual: {}, depth: {}, aging: nativeAging(), // born under the ageing rules of GDD §55: no transition
     season: null, week: blankWeek(), game: null,
     rivals: { challenger: { team: rivalTeam, gm: RIVAL_GMS[rivalTeam] || $t('franchise.rival_gm'), headToHead: { w: 0, l: 0 } } },
@@ -650,7 +650,7 @@ export function catalog(f, side) {
 
 // ------------------------------------------------------------ economy
 export const ownerPerk = (f) => BACKGROUNDS[f?.owner?.background]?.perk || null;
-export const capFor = (f) => Math.round(tierById(f.tier).cap * (ownerPerk(f) === 'cap' ? 1.04 : 1));
+export const capFor = (f) => Math.round(tierCap(f) * (ownerPerk(f) === 'cap' ? 1.04 : 1));
 export function salarySummary(f, proposed = 0) {
   const ly = f.freeAgency?.leagueYear ?? f.season?.year; const monsters = f.roster.reduce((s, m) => s + (m.salary || salaryFor(m)) + bonusCharge(m, ly), 0); // Task 7: plus this league year's bonus allocation
   const staff = Object.keys(f.staff).reduce((sum, role) => sum + staffSalary(f, role), 0);
@@ -745,7 +745,7 @@ export function poolActivity(f, r) {
 }
 /** The AI club a pooled monster would sign with: the one that needs his position most among those with roster room and cap room; a tie goes to the generator. */
 function clubInNeed(f, m, r) {
-  const cap = tierById(f.tier).cap; const salary = salaryFor(m);
+  const cap = tierCap(f); const salary = salaryFor(m);
   const cands = leagueClubs(f).filter((c) => clubRoster(f, c).length < ROSTER_MAX && clubCapRoom(f, c, cap) >= salary).map((c) => ({ c, need: positionNeeds(clubRoster(f, c))[m.position] || 0 })).filter((x) => x.need >= 0.15);
   if (!cands.length) return null;
   const top = Math.max(...cands.map((x) => x.need)); const best = cands.filter((x) => x.need >= top - 0.05);
@@ -877,6 +877,20 @@ function leagueTeam(f, name, year, { scouting = null } = {}) {
   team.scoutingNotes = notes;
   return equipLegendaryForAI(team);
 }
+/** F-01: the founding roster within the usable cap (see ensureLeague). Pure: returns a new array, the input is not changed. */
+export function foundWithinCap(roster, usable) {
+  const sal = (m) => (isProtected(m) ? 0 : (m.salary || salaryFor(m)));
+  const pay = (r) => r.reduce((s, m) => s + sal(m), 0);
+  if (pay(roster) <= usable) return roster;
+  const keep = new Set(Object.values(buildDepthChart(roster)).filter(Boolean)); // every starter and package slot
+  let r = roster.slice();
+  while (pay(r) > usable && r.length > ROSTER_MIN) {
+    const spare = r.filter((m) => !isProtected(m) && !keep.has(m.id)).sort((a, b) => monsterOverall(a) / sal(a) - monsterOverall(b) / sal(b) || (a.id < b.id ? -1 : 1))[0];
+    if (!spare) break;
+    r = r.filter((x) => x !== spare);
+  }
+  return r;
+}
 /**
  * The league registry for this universe (GDD §42.6; schema 8). A new franchise gets one at creation; an older save gets one the
  * first time it is opened by this build, built from the very rosters it was facing (`persistentFrom`), verified on the copy
@@ -892,6 +906,11 @@ export function ensureLeague(f, { qualityDelta = 0, fresh = false } = {}) {
   let result, before;
   try {
     before = Object.fromEntries(clubs.map((c) => [c, legacyAiTeam(f, c, year, { qualityDelta })]));
+    // F-01 (owner 2026-11-26): cap-aware founding. A new club must start within its cap (tier cap − staff allowance). A generated roster
+    // above it founds without its least valuable reserves per salary (never a starter or package player, never a protected monster,
+    // never below the roster minimum): they are simply not founded, so no release, news or waiver claim appears at creation.
+    const usable = tierCap(f) - STAFF_ALLOWANCE;
+    for (const c of clubs) before[c] = { ...before[c], roster: foundWithinCap(before[c].roster, usable) };
     const onRosters = new Set(Object.values(before).flatMap((t) => t.roster.map((m) => m.id)));
     // Every id already in the save keeps its place. A draftee the roster brings in is the same monster the class and
     // `draftResults` list, not a clash; the owner's monsters, pools and market can never be the same individual as an AI one.
@@ -943,7 +962,7 @@ function aiAfterGame(f, team, game, side, r) {
   return events;
 }
 /** In-season cover for a persistent club that injuries left without a legal lineup (league-season.js). */
-function leagueCover(f) { if (!hasLeague(f)) return; const { r, save } = frng(f); const n = leagueInjuryCover(f, r, { year: f.season.year, cap: tierById(f.tier).cap, targetOf: (c) => clubQuality(f, c) }); if (n) save(); }
+function leagueCover(f) { if (!hasLeague(f)) return; const { r, save } = frng(f); const n = leagueInjuryCover(f, r, { year: f.season.year, cap: tierCap(f), targetOf: (c) => clubQuality(f, c) }); if (n) save(); }
 /** Career marks League News reports for the league's monsters (the Timeline keeps every one). */
 const MILESTONE_NEWS = new Set(['passYds', 'rushYds', 'recYds', 'tdTotal', 'sacks', 'int', 'tacklesTotal', 'games']);
 const MILESTONE_LABEL = Object.freeze({ passYds: 'passing yards', rushYds: 'rushing yards', recYds: 'receiving yards', tdTotal: 'touchdowns', sacks: 'sacks', int: 'interceptions', tacklesTotal: 'tackles', games: 'games' });
@@ -1236,14 +1255,28 @@ export function beginDraft(f) {
   runDraftToMe(f);
   return { ok: true, draft: f.draft };
 }
+/** F-01 (owner 2026-11-26): the creation draft completes founding, so a club its rookies take over the cap sheds its least valuable
+ *  reserve per salary (never a starter or package player, never this draft's rookies, never protected, never below the roster minimum)
+ *  the same silent way a full club makes room for a creation-draft rookie (joinAsDraftee). After creation the AI drafts within the cap
+ *  as before (R7). */
+function creationCapSettle(f, team, year) {
+  const cap = tierCap(f); let guard = 0;
+  while (clubCapRoom(f, team, cap) < 0 && clubRoster(f, team).length > ROSTER_MIN && guard++ < 10) {
+    const roster = clubRoster(f, team); const keep = new Set(Object.values(buildDepthChart(roster)).filter(Boolean));
+    const sal = (m) => m.salary || salaryFor(m);
+    const out = roster.filter((m) => !isProtected(m) && !keep.has(m.id) && !(m.joined === year && m.contract?.rookie)).sort((a, b) => monsterOverall(a) / sal(a) - monsterOverall(b) / sal(b) || (a.id < b.id ? -1 : 1))[0];
+    if (!out) break;
+    releaseFromClub(f, team, out.id, { year, reason: 'released', silent: true, why: 'cap' });
+  }
+}
 function runDraftToMe(f) {
   const { r, save } = frng(f);
   const league = hasLeague(f); const creation = !!f.draft?.creation; const year = creation ? f.season.year : f.season.year + 1;
   const bench = league ? leagueBenchOf(f) : null; // Task 6 Phase B (R7): each AI club drafts by its roster plan, derived at its pick
-  const t7 = league && !creation && hasFreeAgency(f); const cap = tierById(f.tier).cap; // R7 (owner 2026-11-05): AI picks within the cap
+  const t7 = league && !creation && hasFreeAgency(f); const cap = tierCap(f); // R7 (owner 2026-11-05): AI picks within the cap
   const r7 = t7 ? { affordOf: (team) => (m) => rookieCharge(m) <= clubCapRoom(f, team, cap), makeRoom: (team) => { const sp = floorSpare(f, team, null); if (!sp) return false; releaseFromClub(f, team, sp.id, { year, reason: 'released', why: 'cap' }); return true; },
     onAiPass: (team, why) => { (f.draft.aiPasses ||= []).push({ team, overall: f.draft.index, why }); news(f, $L('franchise.passed_at_pick', { team, index: f.draft.index, why }), 'info'); } } : {};
-  const made = draftAdvance(f, r, { ...r7, playerClub: f.club, persist: !league, onAiPick: league ? (team, m) => clubRecord(f, team) ? joinAsDraftee(f, team, m, { year, silent: creation }) : { ok: false, reason: 'Draft club is unavailable.' } : null, planOf: league ? (team) => (clubRecord(f, team) ? { ...rosterPlan(clubRoster(f, team), bench), mode: modeOf(f, team) } : null) : null }); // Phase D (R7): the club's strategy mode weights the pick
+  const made = draftAdvance(f, r, { ...r7, playerClub: f.club, persist: !league, onAiPick: league ? (team, m) => { if (!clubRecord(f, team)) return { ok: false, reason: 'Draft club is unavailable.' }; const j = joinAsDraftee(f, team, m, { year, silent: creation }); if (j.ok && creation) creationCapSettle(f, team, year); return j; } : null, planOf: league ? (team) => (clubRecord(f, team) ? { ...rosterPlan(clubRoster(f, team), bench), mode: modeOf(f, team) } : null) : null }); // Phase D (R7): the club's strategy mode weights the pick
   save(); return made;
 }
 /**
@@ -1372,13 +1405,13 @@ export function acceptTrade(f, offer) {
 // ---------------------------------------------------------------- the trade desk (GDD §19.6c, Task 5): monsters and picks, both ways
 /** Everything the trade desk judges a deal with: the owner's roster, cap room and picks, and each club's roster and cap room. */
 function deskEnv(f, extra = {}) {
-  const cap = tierById(f.tier).cap;
+  const cap = tierCap(f);
   return { ownerRoster: f.roster, ownerRoom: salarySummary(f).remaining, ownerPicks: myTradablePicks(f), roster: (t) => clubRoster(f, t), room: (t) => clubCapRoom(f, t, cap), difficulty: f.settings?.difficulty || 'pro', year: contractYear(f), allTeams: ALL_TEAMS, clubs: leagueClubs(f), windowOpen: tradeOpen(f), ...extra };
 }
 /** Monster trades need the persistent league (every save since v41); older saves keep the picks-only desk. */
 export const deskAvailable = (f) => hasLeague(f);
 /** The 15 clubs and what the owner may still ask each this window. */
-export function deskPartners(f) { return leagueClubs(f).slice().sort().map((team) => ({ team, ...deskUsage(f, team), roster: clubRoster(f, team).length, room: clubCapRoom(f, team, tierById(f.tier).cap) })); }
+export function deskPartners(f) { return leagueClubs(f).slice().sort().map((team) => ({ team, ...deskUsage(f, team), roster: clubRoster(f, team).length, room: clubCapRoom(f, team, tierCap(f)) })); }
 /** One club's side of the desk: who can move on each side and why not, the picks each holds, how many proposals are left. */
 export function deskAssetsFor(f, team) { return deskAssets(f, team, deskEnv(f)); }
 const proposalShape = (p) => ({ team: p.team, giveMonsters: [...(p.giveMonsters || [])], givePicks: (p.givePicks || []).map((x) => ({ year: x.year, round: x.round, original: x.original })), getMonsters: [...(p.getMonsters || [])], getPicks: (p.getPicks || []).map((x) => ({ year: x.year, round: x.round, original: x.original })) });
@@ -1745,7 +1778,7 @@ export function captainStatus(f, side, club = f.club) {
 function simulateLeagueWeek(f) {
   const { r, save } = frng(f);
   ensureCaptains(f); // Captain Partnerships (GDD §27.4B): a season without captains yet gets them before its next games
-  if (hasLeague(f)) { const deals = aiTrades(f, r, { year: f.season.year, cap: tierById(f.tier).cap, window: 'season' }); noteCaptainTrades(f, deals); }
+  if (hasLeague(f)) { const deals = aiTrades(f, r, { year: f.season.year, cap: tierCap(f), window: 'season' }); noteCaptainTrades(f, deals); }
   if (hasLeague(f) && hasFreeAgency(f) && f.season.week === EXTENSION_WEEK) { const st = (f.freeAgency.steps[f.season.year] ||= {}); if (!st.midExt) { st.midExt = aiExtensions(f); } } // R6: the mid-season extension window, once // weeks 2–8: an occasional deal between AI clubs (GDD §46); a traded captain leaves his partnership inactive
   const fixtures = leagueSeasonFixtures(f.season.year, f.seed).find((w) => w.week === f.season.week);
   const results = [];
@@ -2658,8 +2691,8 @@ function endSeason(f) {
   noteGrowth(f, (c) => aiTeam(f, c, s.year));
   if (hasLeague(f)) for (const c of leagueClubs(f)) { const st = clubRecord(f, c).strategy; st.today = teamOverall(legacyAiTeam(f, c, s.year + 1)); st.todayYear = s.year + 1; } // today's generated strength for the coming season, computed once and reused by the transition and the Board's forecast
   const excessOf = () => 0; // N7f: no rubber-banding; the runaway-veteran attrition (decision C) is retired
-  const modeChanges = hasLeague(f) ? evaluateStrategies(f, { year: s.year, cap: tierById(f.tier).cap, teamOf: (c) => aiTeam(f, c, s.year) }) : []; // Task 6 Phase D (R2): each AI club's strategy mode, before contracts and the draft
-  if (hasLeague(f)) f.leagueOffseason = { ...(f.leagueOffseason?.opened === s.year ? f.leagueOffseason : {}), closed: s.year, modeChanges: modeChanges.length, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap, excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
+  const modeChanges = hasLeague(f) ? evaluateStrategies(f, { year: s.year, cap: tierCap(f), teamOf: (c) => aiTeam(f, c, s.year) }) : []; // Task 6 Phase D (R2): each AI club's strategy mode, before contracts and the draft
+  if (hasLeague(f)) f.leagueOffseason = { ...(f.leagueOffseason?.opened === s.year ? f.leagueOffseason : {}), closed: s.year, modeChanges: modeChanges.length, contracts: leagueContracts(f, { year: s.year, cap: tierCap(f), excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
   }
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
@@ -2778,7 +2811,7 @@ function ensureRival(f) { if (!f.rivals[f.tier]) { const { r, save } = frng(f); 
 // extensions take over] → Periods 1–5 → draft → roster preparation → next season. Each step records itself in
 // `f.freeAgency.steps[year]`, so a reload never repeats ageing, expiries or renewals.
 function closeSeasonTask7(f, s, rec) {
-  const year = s.year; const cap = tierById(f.tier).cap; const steps = (f.freeAgency.steps[year] ||= {});
+  const year = s.year; const cap = tierCap(f); const steps = (f.freeAgency.steps[year] ||= {});
   // Task 6 strategy, exactly where and from what Task 6 validated it: this season's results and the rosters before ageing
   noteGrowth(f, (c) => aiTeam(f, c, year));
   noteClubResults(f, year); // Ambition: every club's record, the last three seasons (competitive outlook)
@@ -2831,7 +2864,7 @@ export function openFreeAgency(f) {
   const fa = f.freeAgency; const year = f.season.year; const steps = (fa.steps[year] ||= {});
   if (steps.faOpen) return { ok: true, already: true, period: fa.period };
   if (!offseasonReady(f)) return t7fail(`${$t('franchise.contract_decisions_still_waiting', { n: offseasonPending(f).length })}`);
-  const { r, save } = frng(f); const cap = tierById(f.tier).cap, next = year + 1;
+  const { r, save } = frng(f); const cap = tierCap(f), next = year + 1;
   for (const i of f.offseason?.items || []) if (i.kind === 'monster' && i.status === 'declined') { const m = f.roster.find((x) => x.id === i.id); if (m) { f.roster = f.roster.filter((x) => x !== m); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === m.id) delete f.lineupManual[slot]; toPool(f, m, 'walked'); news(f, $L('franchise.turned_down_your_renewal_and_is', { name: m.name }), 'loss'); } i.status = 'walked'; }
   const trades = hasLeague(f) ? aiTrades(f, r, { year: next, cap, window: 'offseason' }) : []; // AI–AI trades before the market, as before Task 7 (GDD §46)
   fa.leagueYear = next; pruneLocks(f); promoteExtensions(f, next); // the league year turns (Task 7 §3.2)
@@ -2927,7 +2960,7 @@ export function startNextSeason(f, opts = {}) {
   }
   if (hasLeague(f)) { // the league's offseason after the owner's (GDD §42.6 steps 3, 6-8; decisions C, D, F)
     const t0 = globalThis.performance?.now?.() ?? Date.now();
-    const year = f.season.year, next = year + 1, cap = tierById(f.tier).cap;
+    const year = f.season.year, next = year + 1, cap = tierCap(f);
     const targetOf = (club) => clubQuality(f, club, next); // arrivals are generated at the club's quality for the coming season
     const overallTarget = (club) => preseasonTarget(f, club, todayOverall(f, club, next)); // today's generated team for the season, less the growth the club will gain by playing it (league-season.js calibration)
     if (!t7) leagueAgeing(f, r, { year, ctx: ageCtx }); leagueTrim(f, { year: next, cap }); // salaries refreshed with the ratings: back under the cap before anyone shops
@@ -3164,7 +3197,7 @@ export function acceptGmJob(f, club) {
   if (isArchived(f)) return {ok:false,reason:$t('gm.read_only')};
   const result = GM.acceptJob(f,club,{reopenContracts: (x,{from}) => {
     for (const m of x.roster) { uniqueName(x,m); backfillCareer(x,m); } // inherited AI rosters may share species names; keep owner display names reload-stable
-    const year=x.season.year, cap=tierById(x.tier).cap;
+    const year=x.season.year, cap=tierCap(x);
     openOffseason(x,{year,awardWinnerIds:new Set(),winningRecord:false});
     staffDemands(x,year); monsterRenewals(x);
     // The club the GM left becomes an AI club in this same offseason: it gets its strategy mode, then its expiring contracts go through

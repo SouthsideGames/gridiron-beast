@@ -1,5 +1,5 @@
 // NAT-06-C Root Communion (elderoot: Elderoot; Support, legendary). Batch C.
-// Contract (Dex, spec §9): on its own normal turn while unused, when a living ally is at 25% max HP or less and redistribution would
+// Contract (Dex, spec §9; F-04 2026-11-26: cast IN ADDITION to the ordinary attack, no longer replacing it): on its own normal turn while unused, when a living ally is at 25% max HP or less and redistribution would
 // increase that ally's HP (otherwise the ordinary attack, use kept; Stunned skips cannot activate it). ALL living allies, Elderoot and
 // the reserves included (KO allies excluded; no revival; shields not pooled or changed). The common target percentage = sum of CURRENT
 // HP / sum of MAX HP; current HP is redistributed toward it simultaneously with the pinned whole-HP apportionment (src/clash/t8/apportion.js):
@@ -27,15 +27,15 @@ export default registerClashAbility({
       self.state.used = true; api.trigger(self, `${low.map((v) => v.name).join(', ')} ${$E('clashlog.at_or_below_max_hp', { line: LINE })}`); api.executed(self);
       api.activate(self, $E('clashlog.redistribute_current_hp_toward_the_common'));
       for (const p of plan) if (p.after !== p.before) api.setHp(self, p.id, p.after, p.lost ? `${$E('clashlog.apportioned_healing_lost_to_healing_reduced', { lost: p.lost })}` : 'apportioned');
-      return { kind: 'done' };
+      return null; // F-04 (owner 2026-11-26): cast in addition to the ordinary attack, which follows in the same turn
     },
   },
   review: {
     scenarios: [
-      { id: 'activates', kind: 'valid', title: 'An ally at 20% HP: all living allies move to the common percentage; the total HP is conserved',
+      { id: 'activates', kind: 'valid', title: 'An ally at 20% HP: all living allies move to the common percentage; the total HP is conserved; then Elderoot attacks',
         explain: () => 'A reserve is staged at about 20% HP: the side\'s current HP is pooled and spread to the same percentage, whole HP, total conserved.',
         setup: () => ({ a: [{ species: 'elderoot' }, { species: 'tidepaw', hp: 12 }, { species: 'lumen' }], b: [{ species: 'gravelpup', sparring: true }], seed: 1, stopAt: { exchange: 1, turn: 1 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
-        expect: (r, h) => { const sets = h.ev('hp_set', (e) => e.abilityId === 'NAT-06-C'); h.check('HP moved', sets.length >= 2); h.check('total conserved (no Healing Reduced)', sets.reduce((s, e) => s + e.delta, 0) === 0); const after = r.lines.a.map((x) => x.hp / x.maxHp); h.check('percentages within one HP of each other', Math.max(...after) - Math.min(...after) < 0.05); h.executed(1); } },
+        expect: (r, h) => { const sets = h.ev('hp_set', (e) => e.abilityId === 'NAT-06-C'); h.check('HP moved', sets.length >= 2); h.check('total conserved (no Healing Reduced)', sets.reduce((s, e) => s + e.delta, 0) === 0); const after = r.lines.a.map((x) => x.hp / x.maxHp); h.check('percentages within one HP of each other', Math.max(...after) - Math.min(...after) < 0.05); h.check('F-04: the ordinary attack follows in the same turn', h.has('damage', (e) => e.actor === 'a0' && e.ex === 1)); h.executed(1); } },
       { id: 'nobody-low', kind: 'blocked', title: 'No ally at or below 25%: ordinary attack, use kept',
         explain: () => 'Everyone is healthy.',
         setup: () => ({ a: [{ species: 'elderoot' }, { species: 'tidepaw' }], b: [{ species: 'gravelpup' }], seed: 1, stopAt: { exchange: 1 } }),

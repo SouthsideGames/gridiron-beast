@@ -287,6 +287,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // own approved conditions. Effects an eligible kicker ability creates (e.g. Dawn Signal's Quickened) and ordinary shared-status
   // carryover and countdowns are unaffected (statuses are not cleansed). This overrides conflicting contract wording on these plays.
   const SPECIAL_PLAY = !!(KO || options.twoPoint);
+  // F-11 (owner 2026-11-26): draw deception. A play that declares `show` (the designated draws: QB Draw, Lead Draw, Spread Draw, Empty QB
+  // Draw) shows pass for that many seconds: the quarterback sets at his drop point, the back (or the quarterback on a keep) holds at his
+  // first spot as if protecting, and no exchange happens before the show ends. Defenders are told nothing: they read the same cues as on
+  // any play (a line setting back, a quarterback who has dropped, a back standing beside him, then the ball in a runner's hands), at their
+  // own Awareness-set delay and cadence, so a sharp linebacker sees through it sooner and a blitzer still arrives. No other play has `show`.
+  const SHOW = offensePlay.show && !SPECIAL_PLAY && !dry ? offensePlay.show : 0;
   const mayAct = (a) => !SPECIAL_PLAY || (!!KO && a.slot === 'K' && a.kickerAbility);
   const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; if (h && !abilityCtx) abilityCtx = buildAbilityCtx(); return h && mayAct(a) ? h(abilityCtx, a, ...args) : undefined; };
   // M3 hook: physical obstacles from contracts (stone walls, snowballs): kinds 'circle' {x, y, r} and 'rect' {x0, x1, y0, y1}, live until
@@ -960,6 +966,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (a.fixedJob) { if (a.engaged) resolveEngagement(a); else passBlock(a); return; } // M3 hook: a summoned pass protector keeps that job only
     if (KO && asg?.a === 'ko_block') { kickoffBlock(a); return; }
     if (KO && ball.inAir) { kickoffFlightOffense(a); return; }
+    if (SHOW && a === qb && asg?.a === 'keep' && t < SHOW && ball.holder === a) { const p = asg.points[1] || asg.points[0]; if (dist(a, { x: p[0], y: p[1] }) > 0.3) steer(a, p[0], p[1], 0.8, 0.3); else steer(a, a.x, a.y, 0, 0.2); if (a.wp < 2) a.wp = 2; return; } // F-11: a QB draw sets and shows pass first
     if (ball.holder === a && (phase === 'carry' || a !== qb)) { carrierMove(a); return; }
     if (asg.a === 'release' && !a.released && t >= screenReleaseAt()) screenRelease(a); // lets go of his man on time, even mid-block
     if (a.engaged) { resolveEngagement(a); return; }
@@ -1026,7 +1033,15 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       case 'handoff': { if (a === qb) qbHandoff(a); return; }
       case 'pitch': { if (a === qb) qbPitch(a); return; }
       case 'option': { qbOption(a); return; }
-      case 'keep': case 'carry': { followPath(a, asg.points, 0.9); return; }
+      case 'keep': case 'carry': {
+        if (SHOW && ((asg.a === 'keep' && t < SHOW) || (asg.a === 'carry' && !handoffDone))) { // F-11: hold the show spot. The quarterback on a keep holds his
+          // drop point until the show ends; a back sets beside the quarterback's set point on his own side, as a protector would, and waits
+          // there for the exchange (the quarterback comes to him when the show ends).
+          const qs = asg.a === 'keep' ? null : qb?.assignment?.points?.[1]; const own = asg.points[1] || asg.points[0];
+          const p = qs ? [qs[0] + 0.4, qs[1] + (Math.sign(own[1] - qs[1]) || 1) * 1.0] : own;
+          if (dist(a, { x: p[0], y: p[1] }) > 0.3) steer(a, p[0], p[1], 0.6, 0.3); else steer(a, a.x, a.y, 0, 0.2); if (a.wp < 2) a.wp = 2; return; }
+        followPath(a, asg.points, 0.9); return;
+      }
       case 'pass': case 'play_action': case 'boot': { qbTick(a); return; }
       default: steer(a, a.x, a.y, 0, 0.2);
     }
@@ -1139,8 +1154,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         // An end-around receiver starts wide and must travel behind the QB before the exchange, so the missed-mesh fallback waits
         // longer for him (Task 10). Every other handoff keeps the 1.1 s fallback. (End Around itself is still held back: see the report.)
         const endAround = offensePlay.id === 'end_around' && /^WR/.test(runner.slot);
-        const deadline = endAround ? 4.5 : 1.1;
-        a.mesh ||= meshPoint({ x: a.assignment.points[0][0], y: a.assignment.points[0][1] }, runner);
+        const deadline = (endAround ? 4.5 : 1.1) + SHOW;
+        if (SHOW && t < SHOW) { const p = a.assignment.points[1] || a.assignment.points[0]; if (dist(a, { x: p[0], y: p[1] }) > 0.3) steer(a, p[0], p[1], 0.8, 0.3); else steer(a, a.x, a.y, 0, 0.2); return; } // F-11: set and show pass
+        a.mesh ||= SHOW ? { x: runner.x - 0.4, y: runner.y } : meshPoint({ x: a.assignment.points[0][0], y: a.assignment.points[0][1] }, runner); // F-11: on a draw the quarterback hands it to the back where he waits
         steer(a, a.mesh.x, a.mesh.y, 0.8, 0.3);
         if (dist(a, runner) < 1.5 && t > 0.2) giveBall(runner);
         else if (t > deadline) missedMesh(a, runner); // Never teleport the ball across an unreachable mesh.

@@ -18,6 +18,9 @@ const { generatedTeam } = await import(path.join(root, 'src/franchise/roster.js'
 const AI = await import(path.join(root, 'src/sim/coach-ai.js'));
 const { createRng } = await import(path.join(root, 'src/core/rng.js')).catch(() => import(path.join(root, 'src/sim/rng.js')));
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? '1']; }));
+// --patch=FILE.mjs (calibration only): a module that mutates play assignments in THIS process before measuring (the play objects are
+// frozen, their assignment objects are not). Nothing on disk changes; the output records the patch file.
+if (args.patch) await import(path.resolve(String(args.patch)));
 const C = Number(args.clubs) || 16, N = Number(args.n) || 3;
 const SIT = [
   { id: '1st&10 own 30', down: 1, toGo: 10, ballOn: 30 },
@@ -65,7 +68,7 @@ function measure(playIds) {
   return res;
 }
 const plays = String(args.plays || '').split(',').filter(Boolean);
-const out = { tool: 'balance-audit/playbook-situations', clubs: C, n: N, families: FAM, situations: SIT, plays: {} };
+const out = { tool: 'balance-audit/playbook-situations', patch: args.patch || null, clubs: C, n: N, families: FAM, situations: SIT, plays: {} };
 for (const id of plays) { if (!PLAYS[id]) { console.error('no such play', id); continue; } out.plays[id] = measure([id]); console.log(id, JSON.stringify(Object.fromEntries(Object.entries(out.plays[id]).map(([s, r]) => [s, Object.fromEntries(Object.entries(r).map(([f, x]) => [f, x.yds + '/' + x.successPct + '%']))])))); }
 for (const b of (args.baseline === 'both' ? ['run', 'pass'] : args.baseline ? [args.baseline] : [])) {
   const ids = Object.values(PLAYS).filter((p) => p.side === 'offense' && p.type === b && !(p.tags || []).some((t) => ['legendary', 'desperation', 'two_minute'].includes(t))).map((p) => p.id);

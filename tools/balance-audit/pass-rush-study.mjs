@@ -20,6 +20,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
+// F-03 (2026-11-26, experiment only): --qbk=K steepens Awareness-based read times through tools/balance-audit/qb-read-hooks.mjs in this
+// process; --qbAware=N sets every quarterback's Awareness to N (other attributes untouched) for controlled comparisons.
+{ const a = Object.fromEntries(process.argv.slice(2).map((x) => { const [k, v] = x.replace(/^--/, '').split('='); return [k, v ?? '1']; }));
+  if (a.qbk && Number(a.qbk) !== 1) { process.env.QB_LOOK_K = a.qbk; if (a.qbPivot) process.env.QB_LOOK_PIVOT = a.qbPivot; const { register } = await import('node:module'); register('./qb-read-hooks.mjs', import.meta.url); } }
 const { simulatePlay } = await import(path.join(root, 'src/sim/engine.js'));
 const { PLAYS } = await import(path.join(root, 'src/data/playbook.js'));
 const { generatedTeam } = await import(path.join(root, 'src/franchise/roster.js'));
@@ -41,6 +45,7 @@ function lineup(scen, i) {
   const o = generatedTeam(41000 + i, { id: 'o', name: 'O', quality: Q }), d = generatedTeam(42000 + i, { id: 'd', name: 'D', quality: Q });
   const oe = null, de = null;
   let off = o.offense, def = d.defense;
+  if (args.qbAware) off = { ...off, QB: { ...off.QB, attrs: { ...off.QB.attrs, awareness: Number(args.qbAware) } } };
   if (scen === 'eliteOL') off = swap(off, oe, OL);
   if (scen === 'eliteDL') def = swap(def, de, DL);
   if (scen === 'eliteQB') off = swap(off, oe, QBS);
@@ -70,7 +75,7 @@ function run(scen) {
       if (st.pressure) { A.pressure++; if (bl) A.pressBlitz++; }
       if (sim.qb?.sensedAt != null) { A.sensed++; A.sensedAt.push(sim.qb.sensedAt); }
       const th = ev.find((e) => e.kind === 'throw'); const dec = sim.qb?.decision;
-      if (th) { A.throws++; A.throwT.push(th.t); if (dec?.m1 != null) A.sep.push(dec.m1); if (sim.result === 'interception') A.ints++; else if (sim.result !== 'incomplete' && sim.result !== 'throwaway') { A.comp++; A.passYds += sim.yards; } }
+      if (th) { A.throws++; A.throwT.push(th.t); if (dec?.m1 != null) A.sep.push(dec.m1); if (sim.result === 'interception') A.ints++; else if (sim.result !== 'incomplete' && sim.result !== 'throwaway') { A.comp++; A.passYds += sim.yards; if (sim.yards >= 20) A.expl = (A.expl || 0) + 1; if (sim.touchdown) A.td = (A.td || 0) + 1; } }
       if (dec?.reason) A.reasons[dec.reason] = (A.reasons[dec.reason] || 0) + 1;
       const passBlockers = Object.entries(st.blockers || {}).filter(([, b]) => b.pass); const pbSlots = new Set(passBlockers.map(([k]) => k));
       const sheds = ev.filter((e) => e.kind === 'shed' && pbSlots.has(e.blocker) && (!th || e.t <= th.t)); A.sheds += sheds.length; if (sheds.length) { A.shedSnaps++; A.firstShed.push(sheds[0].t); if (th) A.shedToThrow.push(th.t - sheds[0].t); }
@@ -85,12 +90,12 @@ function run(scen) {
     scenario: scen, snaps: A.snaps, sackPct: pc(A.sacks, A.snaps), pressurePct: pc(A.pressure, A.snaps), sensedPct: pc(A.sensed, A.snaps), timeToSense: r2(mean(A.sensedAt)), timeToThrow: r2(mean(A.throwT)),
     sackTime: r2(mean(A.sackTime)), shedsPerSnap: r2(A.sheds / A.snaps), shedSnapPct: pc(A.shedSnaps, A.snaps), firstShedT: r2(mean(A.firstShed)), shedToThrow: r2(mean(A.shedToThrow)),
     blockerBeatenPct: pc(A.beaten, A.blockers), protectionTime: r2(mean(A.protTime)), sackConversionPct: pc(A.sacks, A.sacks + A.escapes), pressureToSackPct: pc(A.sacks, A.pressure), escapesPerSnap: r2(A.escapes / A.snaps),
-    unblockedSackPct: pc(A.unblockedSacks, A.sacks), scramblePct: pc(A.scrambles, A.snaps), compPct: pc(A.comp, A.throws), intPct: pc(A.ints, A.throws), ypa: r2(A.passYds / Math.max(1, A.throws)), separation: r2(mean(A.sep)),
+    unblockedSackPct: pc(A.unblockedSacks, A.sacks), scramblePct: pc(A.scrambles, A.snaps), compPct: pc(A.comp, A.throws), intPct: pc(A.ints, A.throws), explosivePct: pc(A.expl || 0, A.throws), yardsPerDropback: r2(((A.passYds) - 0) / A.snaps), ypa: r2(A.passYds / Math.max(1, A.throws)), separation: r2(mean(A.sep)),
     nearestDefToQB: Object.fromEntries(Object.entries(A.dist).map(([k, v]) => [k, r2(mean(v))])), minNearestBeforeRelease: r2(mean(A.minDist)), minUnder3Pct: pc(A.minDist.filter((x) => x < 3.2).length, A.minDist.length),
     blitz: { sackPct: pc(A.sacksBlitz, A.snapsBlitz), pressurePct: pc(A.pressBlitz, A.snapsBlitz) }, base: { sackPct: pc(A.sacks - A.sacksBlitz, A.snaps - A.snapsBlitz), pressurePct: pc(A.pressure - A.pressBlitz, A.snaps - A.snapsBlitz) },
     reasons: Object.fromEntries(Object.entries(A.reasons).map(([k, v]) => [k, pc(v, A.throws)])),
   };
 }
-const out = { tool: 'balance-audit/pass-rush-study', quality: Q, boost: BOOST, clubs: C, n: N, defs: DEFS, passes: PASSES.map((p) => p.id), results: [] };
+const out = { tool: 'balance-audit/pass-rush-study', qbk: args.qbk || 1, qbAware: args.qbAware || null, quality: Q, boost: BOOST, clubs: C, n: N, defs: DEFS, passes: PASSES.map((p) => p.id), results: [] };
 for (const s of SCEN) { const r = run(s); out.results.push(r); console.log(JSON.stringify(r)); }
 if (args.json) fs.writeFileSync(String(args.json), JSON.stringify(out, null, 1));

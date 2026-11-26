@@ -7,7 +7,7 @@ import { esc, delegate, sheet } from '../dom.js';
 import { yearOf } from '../../data/calendar.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { careerLink, allLeagueHtml } from '../career-ui.js';
-import { TEAM_META, tierById, REG_WEEKS, teamSwatch, DIVISIONS, CONFERENCE_NAMES, divisionOf, conferenceFor, leagueSeasonFixtures, ACTIVE_LAYOUT } from '../../data/league.js';
+import { TEAM_META, tierById, tierCap, REG_WEEKS, teamSwatch, DIVISIONS, CONFERENCE_NAMES, divisionOf, conferenceFor, leagueSeasonFixtures, ACTIVE_LAYOUT } from '../../data/league.js';
 import { AWARDS } from '../../franchise/awards.js';
 import { RECORD_CATEGORIES } from '../../franchise/stats.js';
 import { teamOverall } from '../../franchise/roster.js';
@@ -426,7 +426,7 @@ export function registerLeagueHubScreens(Router, app) {
     render({ f, params }) {
       const club = params.club; const meta = TEAM_META[club]; if (!meta) return `<p>${$t('league.no_such_club')}</p>`;
       const rows = clubRosterView(f, club); const rec = f.season.records[club] || { w: 0, l: 0 }; const mine = club === f.club;
-      const cap = tierById(f.tier).cap; const payroll = mine ? F.salarySummary(f).monsters : (hasLeague(f) ? clubPayroll(f, club) : null);
+      const cap = tierCap(f); const payroll = mine ? F.salarySummary(f).monsters : (hasLeague(f) ? clubPayroll(f, club) : null);
       const h2h = mine ? null : headToHead(f, club);
       const year = f.season.year;
       return `<div class="panel"><div class="row between"><b style="color:${meta.ink}">${teamLogo(club, 40, { cls: 'team-logo inline' })}${teamSwatch(club)} ${esc(club)}</b><span class="chip">${rec.w}-${rec.l}</span></div><div class="muted">${$t('league.monsters_team_ovr', { n: rows.length, club: overallOf(f)(club) })}${payroll != null ? ` ${$t('league.payroll_cr', { toLocaleString: payroll.toLocaleString('en-US'), toLocaleString2: cap.toLocaleString('en-US') })}` : ''}${h2h ? ` ${$t('league.against_you', { w: h2h.w, l: h2h.l })}` : ''}</div></div>

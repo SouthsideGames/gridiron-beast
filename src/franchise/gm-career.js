@@ -1,6 +1,6 @@
 // A career owns one league/save identity. Changing jobs swaps the managed club, never recreates the universe.
 import { createRng, hashString } from '../core/rng.js';
-import { DIVISIONS, divisionOf, RIVAL_GMS, tierById, REG_GAMES } from '../data/league.js';
+import { DIVISIONS, divisionOf, RIVAL_GMS, tierById, tierCap, REG_GAMES } from '../data/league.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
 import { STAFF, STAFF_ROLES } from '../data/staff.js';
 import { clubRoster, isProtected, verifyLeague } from './league-registry.js';
@@ -72,7 +72,7 @@ export function jobMarket(f) {
     const applied=f.gmCareer?.applications?.[`${f.season.year}|${club}`];
     const accepted=club===safety || rep>=requirement && hashString(`${f.seed}|offer|${f.season.year}|${club}`)%5!==0;
     const inherited=inheritedStaff(f,club), payroll=roster.filter(m=>!isProtected(m)).reduce((a,m)=>a+capCharge(m,f.season.year+1),0)+Object.entries(inherited.staff).reduce((a,[role,id])=>a+Math.round((STAFF.find(s=>s.id===id)?.salary||0)*(inherited.staffRaise?.[role]||1)),0)+(inherited.pendingDeadCap || 0);
-    return {club,overall,rebuilding:club===safety,approached:!!approach,applied:!!applied,offered:!!approach || applied==='offered',eligible:accepted,cap:tierById(f.tier).cap,payroll,capRoom:tierById(f.tier).cap-payroll,roster,staff:inherited.staff,expectation:overall>=75?'contend':overall>=65?'playoffs':'rebuild',picks:f.pickOwners || {}};
+    return {club,overall,rebuilding:club===safety,approached:!!approach,applied:!!applied,offered:!!approach || applied==='offered',eligible:accepted,cap:tierCap(f),payroll,capRoom:tierCap(f)-payroll,roster,staff:inherited.staff,expectation:overall>=75?'contend':overall>=65?'playoffs':'rebuild',picks:f.pickOwners || {}};
   });
 }
 export function applyForJob(f,club) {
