@@ -1338,6 +1338,7 @@ export default {
   'clashlog.ordinary_attack_readiness_kept': '{id}: ordinary attack, readiness kept',
   'clashlog.lowhp_branch_self_guarded': 'LowHP branch: self Guarded {byTier}%',
   'clashlog.a_normal_action_was_lost_to': 'a normal action was lost to Stunned: the charge arms',
+  'clashlog.a_heavy_hit_arms_the_charge': 'a heavy hit (30% of its HP or more) was taken: the charge arms',
   'clashlog.unbroken_charge_at_undodgeable': 'unbroken charge at {byTier}% (undodgeable)',
   'clashlog.unbroken_charge': 'Unbroken Charge',
   'clashlog.the_knockout_destroys_the_armed_charge': 'the knockout destroys the armed charge',

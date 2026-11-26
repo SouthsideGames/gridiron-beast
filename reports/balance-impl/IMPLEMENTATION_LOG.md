@@ -187,3 +187,15 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - **jet_sweep** (1.9): the fly-sweep path and blocks were tried (no change), because it runs into the trips strength.
   - **counter** (8.0 in the probe, 8.1 in games): high for an inside run; the variants tried moved it by at most 0.4. Left for owner review.
 - Each changed play's review fingerprint moves on, so the Playbook Audit dev tool sends it back to the owner for review, as designed.
+- R-7 at game level (`phase3/game-study-500-r7.json`), yards a carry on downs 1–3:
+
+  | Play | Before (Phase 3 study) | After |
+  |---|---|---|
+  | wide_zone_rt | 12.4 | 8.2 |
+  | student_body | 10.3 | 7.0 |
+  | option_pitch | 9.4 | 8.4 |
+  | dart | 2.5 | 4.9 |
+  | rocket_toss | 1.2 | 1.9 |
+
+  - League: 12.90 points per team-game, completion 52.2%, 5.00 yards a carry, explosive runs 8.2% (audit 8.2%).
+  - **fly_sweep (10.1 in games, 4.1 in the probe)** and **pistol_stretch (9.1)** now lead the run game in games. The gap between games and the probe means the AI's situational defence choice against them, not the play's geometry. Flagged for owner review, not changed.
