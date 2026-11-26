@@ -245,7 +245,7 @@ See §6 (R-18): 502 KB stored at season 1 and 1,389 KB at season 15; exact round
 
 | Suite | Result |
 |---|---|
-| Fast tier (`node tools/test-tier.mjs fast`) | FAST_TIER_RESULT |
+| Fast tier (`node tools/test-tier.mjs fast`) | **2,263 of 2,263 passed, 0 failed, 0 skipped**, on `2334a3d`, the last code change (88.5 min, run alone). Later commits change only reports, documentation and tools |
 | Simulation tier (`node tools/test-tier.mjs sim`) | SIM_TIER_RESULT |
 | Free-agency tests after the bonus change | 69 of 69 |
 | Award, career, history and profile tests after the award fixes | 30 of 30, and 52 of 53 → 53 of 53 after the All-League fix |
