@@ -396,7 +396,30 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
 - `tools/balance-audit/save-audit.mjs` measures, at seasons 1, 5, 10 and 15: raw, packed (gbp2) and stored (gzip) size; save time (pack + gzip) and load time (gunzip + unpack), the median of 5; an exact round trip; and the largest parts of the save.
 - Season 1 smoke run (seed 3, Pro): raw 6,678 KB; packed 2,593 KB; stored 504 KB; save 773 ms, load 257 ms (Node, this container); round trip exact.
   - Largest parts: `league.monsters` 3,542 KB, `preLeagueHistory` 845 KB, `history[0]` 425 KB, `freeAgency.talks` 314 KB.
-- The 15-season run is in progress.
+- **15-season run** (seed 3, Pro; `r18-save-audit-seed3.json`; Node in this container, median of 5):
+
+  | Season | Raw | Packed | Stored (gzip) | Save | Load | Round trip |
+  |---|---|---|---|---|---|---|
+  | 1 | 6,678 KB | 2,593 KB | 504 KB | 744 ms | 324 ms | exact |
+  | 5 | 10,233 KB | 4,448 KB | 967 KB | 1,313 ms | 463 ms | exact |
+  | 10 | 12,520 KB | 5,727 KB | 1,298 KB | 1,580 ms | 688 ms | exact |
+  | 15 | 13,333 KB | 6,173 KB | 1,405 KB | 1,893 ms | 781 ms | exact |
+
+  - Growth slows after season 5: about 65 KB stored a season from season 10 to 15.
+  - What the save holds at season 15 (raw):
+    - `league.monsters` 5,652 KB, flat since season 5 (about 1,170 monsters). Most of it is each monster's development state (`dev`: about 1.9 KB a monster in per-attribute maps that the training and ageing code reads every week), then season and career stat books.
+    - Season history: about 410 KB a season (per-club league and playoff stat lines and awards). Award-winner rows are already compacted against the monsters' season books (history-compact.js).
+    - `league.legends` 774 KB: retired monsters' career stubs (Hall of Fame and records history).
+    - `freeAgency.talks` 314 KB at season 1, no longer among the largest parts later (closed talks are pruned).
+  - Found no duplicate, debug, temporary or play-by-play data: game logs keep box lines only, and the one known duplicate (award rows) was removed in an earlier phase.
+  - The storage layer already limits routine cost:
+    - IndexedDB with content-addressed parts. History, draft results and the pre-league archive are written only when they change.
+    - Encoding runs in a worker. A routine save writes the core part (about half the raw save at season 15).
+    - Backups share unchanged parts. Every save round-trips exactly.
+  - **R-18 conclusion: investigated, no change necessary.**
+    - The data is either live game state or history the brief protects.
+    - Stored size at season 15 (1.4 MB a slot) is far inside browser IndexedDB quotas, so there is no technical need for a save redesign.
+    - An emulated phone check (throttled CPU) of saving and loading a season-15 save is part of the final validation.
 ### R-19: gym clubs (investigation, from the seed-3 15-season runs)
 - **Representation:** 12 gym clubs of 31 AI clubs (39%).
 - **Titles:** Rookie 15 of 15 to gyms; All-Star 11 of 15. The audit had 12, 10 and 8 of 15.
