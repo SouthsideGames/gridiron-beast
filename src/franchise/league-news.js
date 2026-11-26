@@ -218,6 +218,7 @@ export const OFFSEASON_DIGEST = MOVE_RULES.digest;
 export function meaningfulMove(e, { club, rival, division = [] }) {
   if (e.kind === 'injury') return (e.ovr || 0) >= MOVE_RULES.ovr || (!!e.starter && ((e.weeks || 0) >= 3 || (e.ovr || 0) >= 60)); // a star, or a starter out a while, wherever he plays
   if (e.kind === 'retire' || e.kind === 'milestone') return true;
+  if (e.kind === 'signing' && e.apex) return true; // UI feedback 2026-11-25: a club signing a (discovered) Apex is always news
   if ((e.ovr || 0) >= MOVE_RULES.ovr || e.starter) return true;
   if (e.formerMine) return true;
   const clubs = [e.club, e.from, e.to].filter(Boolean);
@@ -228,14 +229,14 @@ export function meaningfulMove(e, { club, rival, division = [] }) {
 /** Bigger monsters and closer connections first. */
 export function moveWeight(e, { rival, division = [] }) {
   const clubs = [e.club, e.from, e.to].filter(Boolean);
-  return (e.ovr || 0) + (e.kind === 'retire' ? 30 : e.kind === 'trade' ? 12 : e.kind === 'injury' ? Math.min(12, 2 * (e.weeks || 0)) : e.kind === 'milestone' ? (e.tier >= 2 ? 12 : 2) : 0) + (e.formerMine ? 10 : 0) + (clubs.some((c) => c === rival) ? 10 : clubs.some((c) => division.includes(c)) ? 5 : 0) + (e.starter ? 6 : 0);
+  return (e.ovr || 0) + (e.kind === 'retire' ? 30 : e.kind === 'trade' ? 12 : e.kind === 'injury' ? Math.min(12, 2 * (e.weeks || 0)) : e.kind === 'milestone' ? (e.tier >= 2 ? 12 : 2) : 0) + (e.formerMine ? 10 : 0) + (e.apex ? 20 : 0) + (clubs.some((c) => c === rival) ? 10 : clubs.some((c) => division.includes(c)) ? 5 : 0) + (e.starter ? 6 : 0);
 }
 const ageOf = (e) => (e.age ? `, ${e.age}` : '');
 /** One line of text for a move; the monster's name is linked by the UI through mid/mname. */
 export function moveLine(e) {
   const who = $P(e.mname, ' (', e.position, e.ovr ? $L('franchise.ovr_2', { ovr: e.ovr }) : '', ageOf(e), ')');   // a saved line itself: it is a value inside the lines below
   switch (e.kind) {
-    case 'signing': return (e.via === 'waivers' ? $P($L('franchise.claim_off_waivers', { club: e.club, who }), (e.from ? $L('franchise.late_of', { from: e.from }) : ''), `.`) : (e.generated ? $L('franchise.sign_a_veteran_out_of', { club: e.club, who, region: e.region || $t('franchise.the_regions') }) : $P(e.club, ` sign free agent `, who, (e.from ? $L('franchise.formerly_of', { from: e.from }) : ''), `.`)));
+    case 'signing': { const l = (e.via === 'waivers' ? $P($L('franchise.claim_off_waivers', { club: e.club, who }), (e.from ? $L('franchise.late_of', { from: e.from }) : ''), `.`) : (e.generated ? $L('franchise.sign_a_veteran_out_of', { club: e.club, who, region: e.region || $t('franchise.the_regions') }) : $P(e.club, ` sign free agent `, who, (e.from ? $L('franchise.formerly_of', { from: e.from }) : ''), `.`))); return e.apex ? $P($L('franchise.apex_signing'), ' ', l) : l; }
     case 'release': return e.reason === 'walked' ? $L('franchise.leaves_as_a_free_agent_his', { who, club: e.club }) : $L('franchise.release', { club: e.club, who, why: (e.why === 'cap' ? $L('franchise.to_get_under_the_cap') : (e.why === 'room' ? $L('franchise.to_make_room') : ''))});
     case 'trade': return (e.toOwner ? $L('franchise.trade_to_for', { from: e.from, who, to: e.to, consideration: e.consideration || 'picks' }) : $P($L('franchise.trade_goes_from_to', { who, from: e.from, to: e.to }), e.consideration ? ` for ${e.consideration}` : '', `.`));
     case 'draft': return $L('franchise.draft_at_round', { club: e.club, who, overall: e.overall, e: e.round });

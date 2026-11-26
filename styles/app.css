@@ -2924,3 +2924,29 @@ html[data-app-inactive="1"] .final-celebration * { animation-play-state: paused;
 @keyframes crowd-bubble { 0% { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 10% { opacity: 1; transform: translate(-50%, -100%) scale(1.05); } 16% { transform: translate(-50%, -100%) scale(1); } 82% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -112%); } }
 html[data-reduced-motion="1"] .crowd-bubble { animation: crowd-bubble-still 2.6s linear both; }
 @keyframes crowd-bubble-still { 0%, 85% { opacity: 1; transform: translate(-50%, -100%); } 100% { opacity: 0; transform: translate(-50%, -100%); } }
+
+/* UI feedback 2026-11-25 (play test): depth chart rows, roster bar and Apex badge.
+   Depth row: the slot tag and fatigue join the second line (species · C · A · slot · fatigue), so the name has the width and the
+   overall keeps a gap from ▲▼; no ⓘ inside a row (polish.js). */
+.dc-row { grid-template-columns: 18px 26px minmax(0, 1fr) 34px auto; column-gap: 6px; }
+.dc-mid .dc-tag { order: 3; display: inline-flex; flex-direction: row; align-items: center; gap: 4px; flex-shrink: 0; }
+.dc-mid .apex-badge { order: 2; flex-shrink: 0; }
+.dc-mid .dc-more { order: 5; }
+.dc-mid .dc-tag .chip, .dc-mid .dc-tag .fat-pip { font-size: 11px; line-height: 16px; padding: 0 6px; }
+.dc-row .ovr { text-align: right; margin-right: 6px; }
+.dc-move { gap: 6px; }
+/* The Apex "A" badge (after the captain's "C") and the gold name of a discovered Apex. */
+.chip.apex-badge { padding: 0 6px; font-weight: 900; font-size: 11px; line-height: 16px; color: #ffe9a8; border-color: #e7c75a; background: rgba(120, 90, 10, .45); }
+.apex-gold, .dc-name.apex-gold, .slot .nm.apex-gold { color: #ffd666; }
+.slot .slot-badges { position: absolute; top: -8px; right: -4px; display: flex; gap: 2px; z-index: 1; } /* on the corner, clear of the slot label */
+.slot .slot-badges .cap-badge { position: static; }
+/* Roster bar: Lineup / Depth share the row; the roster-and-cap pill keeps its ⓘ beside it and takes a full row when the width is short. */
+.screen-roster .roster-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+.screen-roster .roster-bar > .btn { flex: 1 1 0; min-width: 88px; max-width: 200px; }
+.roster-room-wrap { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; justify-content: flex-end; min-width: 0; }
+.roster-room-wrap .roster-room { margin-left: 0; min-width: 0; }
+.roster-tools { display: flex; }
+.roster-tools > .btn { flex: 1 1 0; }
+.roster-lineup-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.roster-lineup-controls .roster-side-controls { display: flex; }
+.roster-lineup-controls .roster-side-controls > .btn { flex: 1 1 0; }

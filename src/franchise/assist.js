@@ -3,6 +3,7 @@
 // in f.tutorial.seen, so a tip dismissed once stays dismissed in every mode until the player asks to see the tips again.
 // Coach Assist never makes a decision, never changes a number in the game, and never touches achievements or the Hall of Fame.
 import { t as $t } from '../text/index.js';
+import { ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 
 export const ASSIST_MODES = Object.freeze(['guided', 'standard', 'expert']);
 export const ASSIST_MODE_TEXT = Object.freeze({
@@ -77,6 +78,7 @@ export const TOPICS = Object.freeze({
   gameday: { area: 'Football', title: $t('franchise.sunday_game_day'), brief: $t('franchise.first_the_pregame_clash_decides_who'), screens: ['pregame'] },
   // --- roster
   roster: { area: 'Roster', title: $t('franchise.your_roster'), brief: $t('franchise.seven_starters_a_side_plus_package'), steps: [$t('franchise.starters_are_the_top_name_at'), $t('franchise.an_injured_monster_cannot_play_a'), 'Training points banked each offseason are spent on the monster card.'], screens: ['roster', 'assign'] },
+  rosterRoom: { area: 'Roster', title: $t('franchise.roster_room_title'), brief: $t('franchise.roster_room_brief', { max: ROSTER_MAX, min: ROSTER_MIN }), steps: [$t('franchise.roster_room_step_counts'), $t('franchise.roster_room_step_over'), $t('franchise.roster_room_step_info')], screens: ['roster'] },
   health: { area: 'Roster', title: $t('franchise.injuries_and_fatigue'), brief: $t('franchise.fatigue_builds_with_games_practice_and'), screens: ['roster', 'monster'] },
   evolution: { area: 'Roster', title: $t('franchise.levels_and_evolution'), brief: $t('franchise.monsters_level_up_from_games_and'), screens: ['monster'] },
   // --- contracts and cap
