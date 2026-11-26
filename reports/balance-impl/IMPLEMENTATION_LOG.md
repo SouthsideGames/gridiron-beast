@@ -367,3 +367,23 @@ Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `5
   - CB completion allowed 40.5 / 29.5 / 26.5%;
   - DL sacks 27.5 / 33 / 36%; safety pursuit yards allowed 10.4 / 6.5 / 4.2.
   - RB yards 4.1 / 6.5 / 19.7: the Lab's elite back now breaks away 33% of the time against its all-65 defenders, against 12.5% before. That is a threshold effect of the one Lab trial (n = 200); in full games explosive runs held at 8.3%.
+- **R-12 engine response** (`phase4/game-study-300-q52.json` against `-q64.json`; both clubs at the same quality, 300 games, seed 7, current engine). From league quality 52 to 64 (+12, about the maturation of a new league):
+
+  | Measure | Change |
+  |---|---|
+  | Points per team-game | 10.93 → 13.01 (+19%) |
+  | Completion | 51.0 → 54.8% |
+  | Yards per attempt | 7.16 → 8.05 (+12%) |
+  | Yards per carry | 4.24 → 5.01 (+18%) |
+  | Sacks, % of dropbacks | 3.7 → 2.7 (−27%) |
+  | Interceptions, % of attempts | 1.1 → 1.2 |
+  | Explosive passes | +22% |
+  | Explosive runs | +28% |
+
+  - Equal talent growth on both sides is worth about +19% scoring on this engine.
+  - The franchises' +35–46% is that plus what development concentrates beyond the average: stars, Apex individuals and evolutions (80+ monsters 19 → 72 by season 15; 90+ 4 → 32) and mastered abilities.
+- **R-12 conclusion: investigated, no progression change.**
+  - The brief's premise (offence developing faster than defence) is not borne out: starters at every position grow by similar amounts.
+  - Growth follows league maturation and then holds (seasons 5–15: 17–19 points).
+  - Tuning it down would mean either a hidden season-based modifier (ruled out by the brief) or changing how strong a new league is founded (generation calibration), which is an owner decision.
+  - The pass rush's relative decline with talent (sacks −27%) is the one engine-side lever, and the developed-league sack target (5–7%) is not met. Both are reported for an owner decision.
