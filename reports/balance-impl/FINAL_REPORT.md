@@ -250,7 +250,8 @@ See §6 (R-18): 502 KB stored at season 1 and 1,389 KB at season 15; exact round
 | Free-agency tests after the bonus change | 69 of 69 |
 | Award, career, history and profile tests after the award fixes | 30 of 30, and 52 of 53 → 53 of 53 after the All-League fix |
 | Text, Dex and Media Day tests after the wording change | 99 of 101 → 101 of 101 after two exact-text updates |
-| Play-test UI changes after the full suite (commit `104a779`: sideline markers, Match Day tag, zoom button) | the 20 camera, match-screen, field and stadium test files: 156 of 156; sideline and club-visual tests 12 of 12; emulated browser checks of the zoom in and out, Auto taking over, and Match Day at 320 and 390 px. The fast tier was not rerun after this commit |
+| Play-test changes after the full suite (owner, 2026-11-26) | Targeted tests only:<br>• `104a779` (sideline markers, Match Day tag, zoom button): the 20 camera, match-screen, field and stadium test files, 156 of 156; sideline and club-visual tests 12 of 12; emulated browser checks of the zoom in and out, Auto taking over, and Match Day at 320 and 390 px.<br>• `c10aa30` (zone boxes): zone planner and match tests, 127 of 127.<br>• `32cd70d` (Meteor Impact push): ability, Dex and review tests 67 of 67; review-sequence tests 14 of 14 |
+| **Full tiers on the final code** | **Not rerun, by the owner's decision (2026-11-26, 14:08).** The fast and simulation tiers above ran on `2334a3d`; the four play-test commits after it were checked with the targeted tests only |
 | Release file list (`tools/release-files.py`) | 512 files, the same as the last release; no new files |
 | Beast Dex module (`build-beast-dex.mjs --check`) | up to date (192 families, 222 forms, 144 abilities) |
 | Text export (`tools/text-export.py`) | regenerated |
