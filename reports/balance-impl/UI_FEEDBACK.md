@@ -30,3 +30,13 @@ Screenshots: four iPhone captures, 11:04–11:14 (Roster depth chart offense and
 | 5 | League News: an AI club signing an Apex is always a news line, "Apex signing: …", ranked high. **Choice:** only for an Apex the owner has already discovered (scouting, draft or free-agent report, or one who played for him), so the news never reveals an undiscovered Apex. | src/franchise/league-registry.js (`moveIdentity`), src/franchise/league-news.js |
 
 Screenshots (emulated iPhone width 390 px and desktop 1280 px, disposable save): reports/balance-impl/ui/ (before-*, after-*). Script: tools/balance-audit/roster-ui-shots.py.
+
+## Play test, 2026-11-26 (12:59)
+| # | Feedback | Done |
+|---|---|---|
+| 6 | Remove the down markers on the regular (non-Gym Leader) stadiums | The regional sideline markers on the twenty plain home fields are gone (`homeEdgeSvg` removed); Gym Leader fields keep theirs. Tests updated to assert their absence |
+| 7 | "Interconference" off-centre on Match Day | Week and game type are two centred lines; the middle column may widen to fit. Centred to the pixel and no overflow at 320 and 390 px (emulated) |
+| 8 | A zoom in / zoom out button when not in Auto, slow like Auto, never further out than today | Magnifier button at the field's bottom right; eases over 1.8 s to 86% of the play-calling view and back; follows the ball up and down the field during a play; hidden in Auto and replays; remembered. 0.72 and 0.80 were tried first: both cut off the yard numbers |
+
+Screenshots (emulated iPhone 390 px, disposable save): `ui/play-test-1126-*.png`. Script: `tools/balance-audit/zoom-shots.py`.
+

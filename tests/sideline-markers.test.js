@@ -1,8 +1,9 @@
 // Owner 2026-11-24: sideline markers stand halfway between the numbered lines (the 5, 15, 25, 35 and 45 of both halves), on both
-// sidelines at the same yard, never in an end zone, in every stadium: gym leaders' looks, home grass and the plain textures.
+// sidelines at the same yard, never in an end zone: gym leaders' looks and the plain textures. Home grass has none (owner, 2026-11-26).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LOOKS, edgeSvg, homeEdgeSvg, markerYards } from '../src/ui/stadium-fx.js';
+import { LOOKS, edgeSvg, markerYards } from '../src/ui/stadium-fx.js';
+import { turfSvg } from '../src/ui/stadium-art.js';
 import { ENVIRONMENTS, venueFor } from '../src/data/stadiums.js';
 import { lookFor } from '../src/ui/stadium-fx.js';
 import { CLUB_NAMES } from '../src/data/club-identity.js';
@@ -26,13 +27,15 @@ test('every gym leader look puts its markers on the 5s, the same yard on both si
     for (const y of HALVES) assert.ok(yardsDrawn(svg).has(y), `${id}: a marker at the ${y > 50 ? 100 - y : y}`);
   }
 });
-test('home grass stadiums: the regional markers sit on the 5s too', () => {
+test('home grass stadiums: no sideline markers (owner play test 2026-11-26; a Gym Leader\'s look keeps its own)', () => {
   let seen = 0;
   for (const club of Object.keys(CLUB_NAMES)) {
-    const svg = homeEdgeSvg(venueFor(club, 'k'), whole, 26, Y); if (!svg) continue; seen++;
-    assert.deepEqual([...yardsDrawn(svg)].sort((a, b) => a - b), HALVES, `${club}`);
+    const venue = venueFor(club, 'k'); if (venue.env !== 'grass') continue; seen++;
+    const over = turfSvg(venue, whole, 26, 120 * SCALE, Y).over;
+    assert.ok(!over.includes('home-edge'), `${club}: no regional markers`);
+    assert.deepEqual([...yardsDrawn(over)].filter((y) => HALVES.includes(y)), [], `${club}: nothing drawn at the marker yards`);
   }
-  assert.ok(seen > 0, 'some home stadium has regional markers');
+  assert.ok(seen > 0, 'some club plays on home grass');
 });
 test('every stadium is covered: each non-grass environment has a look', () => {
   assert.deepEqual(Object.keys(ENVIRONMENTS).filter((e) => e !== 'grass' && !lookFor(e)), []);

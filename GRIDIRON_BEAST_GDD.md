@@ -4894,6 +4894,8 @@ and left on the device unchanged; settings, achievements and other data are unto
   the barrier, the stand rail and the wall behind the near end zone (with the logo and two banners, one of four banner patterns),
   and the region of its division around the field: Frostlands snow, Redrock red rock, Golden Valley wheat, Suncoast sand and palms,
   Kingsport brick and lamps, Everwild reeds, Greenheart hedges, Azure Isles piers (`REGIONS`). The playing surface stays grass.
+  **No sideline markers** (owner play test 2026-11-26): the regional markers at the 5, 15, 25… along both sidelines are removed;
+  only a Gym Leader's field has sideline markers.
 * **The twelve Gym Leader stadiums keep their approved designs:** surfaces, environments, structures, effects and animations are
   unchanged; only the logo and the two end-zone words are added (light lettering with a dark line), nothing is recoloured.
 
@@ -5042,6 +5044,15 @@ legacy species descriptions, the load-error message, the stadium preview, the au
 Code names, text keys, `{placeholders}` and save keys keep "monster", so saves and translations are unaffected. Developer-only
 screens (reviewers, labs) and the frozen historical Clash move tables are unchanged. Earlier sections of this document still say
 "monster" where they describe design history; in the game the word is "beast".
+
+### 61.11b Play-test changes (owner, 2026-11-26)
+- **Plain home fields** have no sideline markers (§60.12); Gym Leader fields keep theirs.
+- **Match Day:** the week and the game type are two centred lines under VS ("WEEK 4" / "INTERCONFERENCE").
+- **Zoom button** on the match field (not in Auto or a replay): a magnifier at the bottom right. Pressing it eases the camera in over
+  1.8 s (the same timing and easing as Auto's camera) to 86% of the play-calling view, centred across the field, with the ball a little
+  below the middle and followed up and down the field during the play. Pressing again eases back out. The play-calling view is the
+  furthest out it goes. The choice is remembered (`settings.fieldZoom`). In Auto, Auto's own camera applies and the button is hidden.
+  Presentation only: a crop of the drawn field (`ZoomCrop`, `src/ui/match-camera.js`).
 
 ### 61.12 Validation (measured 2026-11-26; details in `reports/balance-impl/FINAL_REPORT.md`)
 - **Whole suite:** fast tier 2,263 of 2,263; simulation tier 310 of 310 after three set-up updates that follow §61.3–61.4.

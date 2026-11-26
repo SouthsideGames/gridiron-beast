@@ -5043,6 +5043,8 @@ export default {
   // SECTION: FOOTBALL — pre-game, live match and results
   'match.camera_full_field': 'Full Field',
   'match.camera_close_view': 'Close View',
+  'match.zoom_in': 'Zoom in',
+  'match.zoom_out': 'Zoom out',
   'match.well_played_dont_get_used_to': 'Well played. Don’t get used to it.',
   'match.you_earned_that_one_keep_it': 'You earned that one. Keep it polished for me.',
   'match.i_had_you_beaten_on_tape': 'I had you beaten on tape. Tape lies, apparently.',

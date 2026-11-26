@@ -29,7 +29,7 @@ import { rngFromState } from '../../core/rng.js';
 import { PLAYS } from '../../data/playbook.js';
 import { TRAINING_FOCI } from '../../data/staff.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
-import { MatchCamera } from '../match-camera.js';
+import { MatchCamera, ZoomCrop } from '../match-camera.js';
 import { fieldSvg, fieldDraw, fieldViewBox, presnapLook, cameraFor, cameraFrom, fitFieldSpan, fieldSpan } from '../field-view.js';
 import { playCardSvg } from '../play-art.js';
 import { monsterSprite, portraitSprite } from '../pixel-monster.js';
@@ -62,6 +62,8 @@ export let startSundayGame = null;
 
 // Owner revision 2026-11-15 (Prism Break): when the player's charged Prismara faces two or more enemy zones, the play-call screen
 // lists them (nearest first) and outlines them on the field; nothing is removed until the player picks or snaps (Auto = nearest).
+/** The zoom button's magnifier: + to zoom in, − to zoom back out (owner play test 2026-11-26). */
+const zoomIcon = (zoomed) => `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><line x1="15" y1="15" x2="21" y2="21" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><line x1="7" y1="10" x2="13" y2="10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>${zoomed ? '' : '<line x1="10" y1="7" x2="10" y2="13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>'}</svg>`;
 function prismPickerHtml(s) {
   const c = s.t8?.preChoice?.prismChoice; if (!c?.options?.length) return '';
   const btn = (id, label, primary) => `<button class="btn small ${primary ? 'primary' : 'ghost'}" data-action="prismpick" data-choice="${esc(id)}" style="min-height:44px">${esc(label)}</button>`;
@@ -77,6 +79,7 @@ function prismOverlay(s, camera) {
 export function registerMatchScreens(Router, app) {
   let pregameTeam = 'mine';
   const autoCamera = new MatchCamera();
+  const zoomCrop = new ZoomCrop(); // the player's zoom button (owner play test 2026-11-26)
   let cameraRaf = null, cameraField = null, cameraSvg = null, cameraLastDraw = 0;
   function cameraOptions(f, field) {
     const G = f.game;
@@ -95,9 +98,20 @@ export function registerMatchScreens(Router, app) {
   function drawMatchField(svg, field) {
     cameraField = field; cameraSvg = svg; cameraLastDraw = performance.now();
     if (fitFieldSpan(svg) && !anim) field = { ...field, camera: null }; // the box changed size: a new close camera at the new height (not mid-play)
-    const result = fieldDraw(svg, cameraOptions(app.f, field));
-    if (autoCamera.moving && cameraRaf == null) cameraRaf = requestAnimationFrame(tickCamera);
+    const opts = cameraOptions(app.f, field);
+    const result = fieldDraw(svg, opts);
+    applyFieldZoom(svg, opts);
+    if ((autoCamera.moving || zoomCrop.moving) && cameraRaf == null) cameraRaf = requestAnimationFrame(tickCamera);
     return result;
+  }
+  /** The zoom button's crop of the drawn close view: never in Auto (its own camera) or a replay; eased like Auto's zoom. */
+  const zoomAllowed = (f) => !!f?.game && !f.game.auto && !anim?.replay;
+  function applyFieldZoom(svg, o) {
+    const f = app.f; const amount = zoomCrop.sample(!!f?.settings?.fieldZoom && zoomAllowed(f), { reducedMotion: !!f?.settings?.reducedMotion });
+    if (amount <= 0.0001) { zoomCrop.focus = null; return; }
+    const vb = svg.viewBox.baseVal; const cam = o.viewCamera; const fr = o.frame;
+    const lat = (o.ballLat || 0) + (fr?.ball ? fr.ball[1] : 0), yard = (o.ballOn ?? 25) + (fr?.ball ? fr.ball[0] : 0);
+    svg.setAttribute('viewBox', zoomCrop.crop({ x: vb.x, y: vb.y, width: vb.width, height: vb.height }, amount, lat, cam.top - yard, { follow: !!(anim && fr) }));
   }
   function tickCamera(now) {
     cameraRaf = null;
@@ -135,7 +149,7 @@ export function registerMatchScreens(Router, app) {
       const gym = GYM_BY_CLUB[m.opponent]; const held = gym && F.badgeOf(f, m.opponent);
       return `<div class="pregame">${m.rival ? `<div class="rival-banner">${$t('match.rivalry_game')}<div class="muted" style="font-weight:600;font-size:12px">${$t('match.gm_all_time', { gm: esc(rv?.gm || ''), w: rv?.headToHead.w || 0, l: rv?.headToHead.l || 0 })}</div></div>` : m.playoff ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 ${esc(m.tag)}</div>` : ''}${gym ? `<div class="rival-banner" style="border-color:hsl(${TYPES[gym.element]?.hue ?? 120} 70% 55%);background:linear-gradient(90deg,hsl(${TYPES[gym.element]?.hue ?? 120} 40% 18%),hsl(${TYPES[gym.element]?.hue ?? 120} 30% 10%))">${held ? `${$t('match.held', { toUpperCase: esc(gym.badge).toUpperCase() })}` : `${$t('match.badge_game', { toUpperCase: esc(gym.badge).toUpperCase() })}`}<div class="muted" style="font-weight:600;font-size:12px">${$t('match.gym', { name: esc(gym.coach.name), element: esc(gym.element), held: held ? '' : $t('match.win_to_earn_it_no_replays') })}</div></div>` : ''}
         ${(() => { const rec = (t) => { const r = f.season.records[t]; return r ? `${r.w}-${r.l}` : ''; }; const side = (team, label, who) => `<div class="mu-club ${who}">${teamLogo(team.name, 46, { cls: 'team-logo mu-logo' })}<div class="mu-abbr" style="color:${teamInk(team.name, team.color)}">${esc(team.abbr)}</div><div class="mu-name">${esc(team.name)}</div><div class="dim mono">${$t('match.ovr', { rec: esc(rec(team.name)), teamOverall: teamOverall(team) })}</div><div class="chip">${label}</div></div>`;
-          return `<div class="matchup-head md-hero ${m.playoff ? 'playoff' : ''}" style="--mine:${mine.color};--theirs:${theirs.color}">${side(mine, m.playerSide === 'home' ? $t('match.home') : $t('match.away'), 'mine')}<div class="mu-vs"><div class="mu-vs-word">VS</div><div class="mu-tag">${esc(m.tag || '')}</div></div>${side(theirs, m.playerSide === 'home' ? $t('match.away') : $t('match.home'), 'theirs')}</div>`; })()}
+          return `<div class="matchup-head md-hero ${m.playoff ? 'playoff' : ''}" style="--mine:${mine.color};--theirs:${theirs.color}">${side(mine, m.playerSide === 'home' ? $t('match.home') : $t('match.away'), 'mine')}<div class="mu-vs"><div class="mu-vs-word">VS</div><div class="mu-tag">${(m.tag || '').includes(' · ') ? (m.tag || '').split(' · ').map((t) => `<span class="mu-tag-line">${esc(t)}</span>`).join('') : esc(m.tag || '')}</div></div>${side(theirs, m.playerSide === 'home' ? $t('match.away') : $t('match.home'), 'theirs')}</div>`; })()}
         ${(() => { const v = F.sundayVenue(f); if (!v) return ''; const n = (team) => v.type ? Object.values({ ...team.offense, ...team.defense }).filter((p, i, arr) => p?.type === v.type && arr.findIndex((q) => q?.id === p.id) === i).length : null; return venueHtml(v, { mine: n(mine), theirs: n(theirs) }); })()}
         ${(() => { const hn = m.playerSide === 'home' ? mine.name : theirs.name, an = m.playerSide === 'home' ? theirs.name : mine.name; const k = gameKits(hn, an); if (!k.home || !k.away) return ''; const fig = (kit) => `<figure>${kitJersey(kit, 64)}<figcaption>${esc(TEAM_META[kit.club].abbr)} · ${({ home: $t('match.kit_home'), away: $t('match.kit_away'), alt: $t('match.kit_alt') })[kit.kind]}</figcaption></figure>`; return `<div class="panel kit-panel"><div class="muted" style="margin-bottom:4px">${$t('match.uniforms_today')}</div><div class="kit-pair">${fig(k.away)}${fig(k.home)}</div></div>`; })()}
         ${pregameTypeReport(mine,theirs)}${talkHtml(f)}
@@ -257,6 +271,7 @@ export function registerMatchScreens(Router, app) {
         mode: () => { const G = f.game; G.mode = G.mode === 'key' ? 'full' : 'key'; app.save(); Router.render(); },
         auto: () => { const G = f.game; G.auto = !G.auto; G.autoCloseView = false; app.save(); if (!G.auto) { clearTimeout(autoTimer); autoTimer = null; } Router.render(); },
         autocamera: () => { f.game.autoCloseView = !f.game.autoCloseView; app.save(); refresh(f); },
+        fieldzoom: () => { f.settings.fieldZoom = !f.settings.fieldZoom; app.save(); const b = document.querySelector('[data-action="fieldzoom"]'); if (b) { b.setAttribute('aria-pressed', String(!!f.settings.fieldZoom)); b.setAttribute('aria-label', f.settings.fieldZoom ? $t('match.zoom_out') : $t('match.zoom_in')); b.innerHTML = zoomIcon(f.settings.fieldZoom); } if (cameraSvg?.isConnected && cameraField) drawMatchField(cameraSvg, cameraField); },
         autospeed: () => { cycleAutoSpeed(f); if(anim){const now=performance.now(),frames=(now-anim.start)/anim.msPerFrame;anim.msPerFrame=100/((f.settings.speed||1)*autoSpeed(f));anim.start=now-frames*anim.msPerFrame;} app.save(); Router.render(); },
         keymoment: () => simToKeyMoment(f),
         simfinal: async () => { if (!(await confirmSheet($t('match.let_the_coach_play_the_rest'), { title: $t('match.sim_to_final'), okLabel: $t('match.sim_it') }))) return; simToFinal(f); },
@@ -417,7 +432,8 @@ export function registerMatchScreens(Router, app) {
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? $t('match.your_ball') : $t('match.your_defense')}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? $t('match.home_2') : $t('match.away_2')}${G.mode === 'key' ? $t('match.key_moments_2') : ''}</span></div>
         ${edgeStrip(f, s, teams, me, pre8?.returning || [])}`;
     const wrapClass = `field-wrap${tdFlash}${venueClass(s.venue)}${anim?.replay ? ' replaying' : ''}`;
-    const over = `${s.finished && !anim ? finalCelebration(f, s, teams) : ''}${openingKickoff ? introPlateHtml(s.venue, esc) + kickoffCaptains(f, s, teams) : ''}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> ${$t('match.instant_replay_b_b', { label: esc(anim.replay.reason.label) })}</div><div class="replay-slow" aria-hidden="true">${$t('match.slow_mo')}</div>` : banner}${!anim && fresh && G.lastEvent?.turnover ? `<div class="turnover-cue" role="status">${esc(G.lastEvent.turnover)}</div>` : ''}`;
+    const zoomBtn = !G.auto && !anim?.replay ? `<button class="field-zoom" data-action="fieldzoom" aria-pressed="${!!f.settings.fieldZoom}" aria-label="${f.settings.fieldZoom ? $t('match.zoom_out') : $t('match.zoom_in')}">${zoomIcon(f.settings.fieldZoom)}</button>` : '';
+    const over = `${zoomBtn}${s.finished && !anim ? finalCelebration(f, s, teams) : ''}${openingKickoff ? introPlateHtml(s.venue, esc) + kickoffCaptains(f, s, teams) : ''}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> ${$t('match.instant_replay_b_b', { label: esc(anim.replay.reason.label) })}</div><div class="replay-slow" aria-hidden="true">${$t('match.slow_mo')}</div>` : banner}${!anim && fresh && G.lastEvent?.turnover ? `<div class="turnover-cue" role="status">${esc(G.lastEvent.turnover)}</div>` : ''}`;
     // N9c: a field the snap creates only if its creator is in the play (Runway, Bloom Break, Crosswind Rescue) is marked as conditional
     const warning = !anim ? (s.t8?.preChoice?.foresight || []).map((m) => `<div class="t8-conditional" role="note">${$t('match.foresight_is_marked_blitzing_risks_confused', { name: esc(findMonster(teams, m.targetMid)?.monster?.name || m.targetSlot) })}</div>`).join('') + (s.t8?.preChoice?.prism || []).map(() => `<div class="t8-conditional" role="note">${$t('match.prism_break_shattered_an_existing_enemy')}</div>`).join('') : '';
     const cond = !anim && pre8?.notes?.length ? `<div class="t8-conditional" role="note">${pre8.notes.map((n) => `<span class="${n.shown ? '' : 'held'}" data-ability="${esc(n.ability)}">◇ <b>${esc(n.name)}</b> ${n.shown ? `${$t('match.is_created_at_the_snap_only', { creator: esc(n.creator) })}` : `${$t('match.is_not_created_is_not_on', { creator: esc(n.creator) })}`}</span>`).join('')}</div>` : '';
