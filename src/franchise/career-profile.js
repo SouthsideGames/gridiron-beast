@@ -177,7 +177,7 @@ export function trophyCase(f, m, events = careerEvents(m)) {
   for (const h of f?.history || []) for (const [k, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && TROPHY_META[k] && k !== 'coy') put(k, { key: `${`award:${k}:${h.year}`}`, year: h.year, club: w.team });
   // R-5: All-League selections (First and Second Team) on the franchise's history and, once frozen, the current season.
   const teams = (al, year) => { for (const [team, kind] of [['first', 'allLeague1'], ['second', 'allLeague2']]) for (const list of Object.values(al?.[team] || {})) for (const w of list || []) if (w && w.id === m.id) put(kind, { key: `${`${kind}:${year}`}`, year, club: w.team }); };
-  for (const h of f?.history || []) teams(h.allLeague, h.year);
+  for (const h of f?.history || []) teams(h.awards?.allLeague, h.year); // archived with the season's awards (seasonAwards); it was read from h.allLeague, which nothing writes (sim tier, 2026-11-26)
   if (f?.season?.awardsFinal?.allLeague) teams(f.season.awardsFinal.allLeague, f.season.awardsFinal.year ?? f.season.year);
   // The current season's awards, frozen when the regular season ends and announced in League News, count from that moment: the
   // Career Timeline entry and the season archive only arrive when the season closes after the playoffs (same key, so no double).

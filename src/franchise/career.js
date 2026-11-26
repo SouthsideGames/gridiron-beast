@@ -213,7 +213,7 @@ export function backfillCareer(f, m) {
   }
   for (const h of f.history || []) {
     for (const [key, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && w.team === h.club && key !== 'coy') added += addEvent(m, { k: `${`award:${key}:${h.year}`}`, t: 'award', y: h.year, c: h.club, x: { key } });
-    for (const [team, key] of [['first', 'allLeague1'], ['second', 'allLeague2']]) for (const list of Object.values(h.allLeague?.[team] || {})) if ((list || []).some((w) => w && w.id === m.id && w.team === h.club)) added += addEvent(m, { k: `${`award:${key}:${h.year}`}`, t: 'award', y: h.year, c: h.club, x: { key } }); // R-5
+    for (const [team, key] of [['first', 'allLeague1'], ['second', 'allLeague2']]) for (const list of Object.values(h.awards?.allLeague?.[team] || {})) if ((list || []).some((w) => w && w.id === m.id && w.team === h.club)) added += addEvent(m, { k: `${`award:${key}:${h.year}`}`, t: 'award', y: h.year, c: h.club, x: { key } }); // R-5
     const bk = seasons.find((x) => x.year === h.year);
     if (h.champion && h.champion === h.club && (bk?.post?.games || 0) > 0) added += addEvent(m, { k: `champ:${h.year}`, t: 'champion', y: h.year, c: h.club, x: { run: 1 } });
   }

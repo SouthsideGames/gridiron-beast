@@ -150,10 +150,10 @@ test('the real franchise: summaries, trophies and links agree with its history; 
     const p = P.fullProfile(f, m, 'roster');
     const champs = p.trophies.find((t) => t.kind === 'champion');
     if (champs) for (const e of champs.entries) assert.ok(titleYears.includes(e.year), `${m.name}: a title in ${e.year} the history does not show`);
-    // R-5: an All-League place is a team, archived by position in `h.allLeague` (first / second); every other short trophy is one winner
+    // R-5: an All-League place is a team, archived by position in `h.awards.allLeague` (first / second); every other short trophy is one winner
     const AL = { allLeague1: 'first', allLeague2: 'second' };
     for (const t of p.trophies.filter((x) => P.TROPHY_META[x.kind]?.short)) for (const e of t.entries) { const h = f.history.find((x) => x.year === e.year);
-      if (AL[t.kind]) assert.ok(Object.values(h.allLeague?.[AL[t.kind]] || {}).some((list) => (list || []).some((w) => w.id === m.id)), `${m.name}: ${t.kind} ${e.year} not in the All-League history`);
+      if (AL[t.kind]) assert.ok(Object.values(h.awards.allLeague?.[AL[t.kind]] || {}).some((list) => (list || []).some((w) => w.id === m.id)), `${m.name}: ${t.kind} ${e.year} not in the All-League history`);
       else assert.equal(h.awards.league[t.kind]?.id, m.id, `${m.name}: ${t.kind} ${e.year} not in the award history`); }
     for (const e of p.timeline.filter((x) => x.ref)) { linked++; const d = P.eventDetail(f, m, e.ref); if (d) opened++; }
   }
