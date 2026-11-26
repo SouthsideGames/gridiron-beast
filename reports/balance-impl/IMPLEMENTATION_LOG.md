@@ -1,5 +1,8 @@
 # Balance audit implementation log (working notes for the final report)
 
+> **Follow-up A-5 (2026-11-26):** the intermediate directories this log names (`baseline/`, `phase3–5/`, `r0/`, `r1/`, `r4/`, `r10/`) were
+> removed from the tree; their contents, commands and the commit that still holds them are in `followup/REPRODUCE.md`.
+
 Branch `impl/balance-audit-2026-11`, from audit `d1f2d79` (game code = `main` `58c33ee`, v43.50.0-sideline).
 
 ## Phase 1: tools and baselines (R-3)
