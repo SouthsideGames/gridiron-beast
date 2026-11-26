@@ -3,7 +3,8 @@
 // hands-off owner, Board kept content). At each snapshot: raw JSON bytes, packed (gbp2) bytes, gzipped (stored) bytes, the time to pack
 // and compress and to decompress and unpack (median of 5), an exact round trip, and the largest parts of the save by raw bytes, so
 // what makes a save big is visible. Measurement only: the franchise is the game's own; nothing is written to storage.
-//   node tools/balance-audit/save-audit.mjs [--seed=3] [--difficulty=pro] [--seasons=15] [--json=FILE]
+//   node tools/balance-audit/save-audit.mjs [--seed=3] [--difficulty=pro] [--seasons=15] [--json=FILE] [--export=DIR]
+// --export writes each snapshot as a game export file (DIR/season-N.json), a disposable save for the browser timing check.
 import fs from 'node:fs';
 import { performance } from 'node:perf_hooks';
 import { runFranchise } from '../franchise-soak.mjs';
@@ -32,5 +33,6 @@ const pending = [];
 runFranchise(SEED, { difficulty: D, seasons: SEASONS, check: () => [],
   onOffseason: (f) => { if (f.board) { f.board.confidence = 3; f.board.misses = 0; f.board.fired = false; } },
   onSeason: (f) => { if (AT.has(f.season.year)) pending.push([f.season.year, JSON.stringify(f)]); } });
+if (args.export) { const { exportFranchise } = await import('../../src/franchise/store.js'); fs.mkdirSync(String(args.export), { recursive: true }); for (const [year, s] of pending) { const x = exportFranchise(JSON.parse(s)); fs.writeFileSync(`${args.export}/season-${year}.json`, typeof x === 'string' ? x : JSON.stringify(x)); } }
 for (const [year, s] of pending) { const m = await measure(JSON.parse(s), year); out.snapshots.push(m); console.log(JSON.stringify({ ...m, top: m.top.slice(0, 5), deep: m.deep.slice(0, 6) })); }
 if (args.json) fs.writeFileSync(String(args.json), JSON.stringify(out, null, 1));
