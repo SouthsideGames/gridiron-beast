@@ -501,3 +501,28 @@ six runs are repeated on the fixed code (round 2).
 - Other round-1 results (kept for comparison with round 2): AI overall at seasons 1 / 5 / 10 / 15 (mean of the two seeds) Rookie 50.7 / 60.2
   / 62.0 / 61.6, Pro 52.9 / 62.8 / 63.8 / 62.1, All-Star 56.9 / 63.9 / 63.5 / 63.5; gym titles 22, 21 and 19 of 30; developed league (seasons
   5–15) completion 59–64%, sacks 2.2–2.4% of dropbacks, interceptions 2.2–2.5%; points per team-game 10.7–14.2 in season 1, 16.8–19.4 in season 15.
+
+## Final validation, round 2 (2026-11-26; the same six runs on commit 7194aab, the code of round 1's fixes; text wording changes after it do not change play)
+All six: 0 errors, 0 integrity problems, 0 market problems, no negative cap room, rosters 32–38. Pro seed 4 and Rookie seed 4 are identical
+to round 1 in every owner result; the others moved through the free-agency market.
+
+| | Rookie | Pro | All-Star |
+|---|---|---|---|
+| AI overall, seasons 1 / 5 / 10 / 15 (mean of seeds 3 and 4) | 50.7 / 60.2 / 62.2 / 61.6 | 52.9 / 62.7 / 63.6 / 62.5 | 56.9 / 64.0 / 63.8 / 64.2 |
+| Repair owner win %, seed 3 / seed 4 | 39.0 / 59.0 | 38.1 / 57.6 | 22.9 / 29.5 |
+| Gym Leader titles (of 30) | 21 | 22 | 24 |
+| AI signing bonuses (two runs, 15 seasons each) | 4 | 1 | 2 |
+| Tightest AI club's cap room at season 15 (two seeds) | 103,820 / 81,390 | 126,060 / 154,167 | 106,800 / 77,870 |
+
+- Developed league (seasons 5–15): completion 59.2–63.5%, yards per attempt 9.1–10.2, sacks 2.1–2.4% of dropbacks, interceptions 2.2–2.5%,
+  yards per carry 4.6–5.6, field goals 72.9–74.6%, extra points 86.8–87.4%. Seasons 1–2: completion 51.3–58.8%, sacks 2.1–3.0%.
+- Points per team-game: 10.7–14.2 in season 1, 16.8–18.5 in season 15.
+- Awards over the 90 seasons: DBOY DL 64, LB 13, CB 9, S 4 (round 1: DL 77, LB 6, CB 5, S 2; audit: DL 43 of 45). MVB QB 42, RB 40, WR 6, TE 2.
+  OBOY RB 49, WR 34, TE 7. STBOY returners (WR) 78, kickers 12. MIB spread over all nine non-kicker positions; CBOY 46 winners in 90
+  seasons (none possible before season 3); IRON LB 41, CB 30.
+- **R-9 conclusion:** AI clubs now use signing bonuses, but rarely (7 in 90 seasons), because they keep 78,000–154,000 of cap room even at
+  the tightest. Making the cap bind (a lower cap or a steeper elite curve) is a calibration of the economy and is left to the owner.
+- **One owner collapse, a benchmark artefact:** All-Star seed 3, season 15, the repair owner forfeited all 14 games (20 in the run). He had
+  12,800 cr of room, one LB and two DL. LB2's emergency cover is a DL and both were needed on the line, so no legal defence existed, and the
+  in-season market had no LB all season. The repair policy never releases or trades, so it cannot free cap. The game followed its rules
+  (forfeit without a legal lineup; the lineup warnings name the gap). Round 1's same seed had 2 forfeits; the market's composition moved.
