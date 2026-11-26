@@ -34,7 +34,7 @@ export function backup(f) { const s = storage(); if (!s) return; try { s.setItem
 export function loadBackup() { const s = storage(); if (!s) return null; try { const raw = s.getItem(BACKUP_KEY); return raw ? migrate(JSON.parse(raw)) : null; } catch { return null; } }
 export function clear() { const s = storage(); if (s) { s.removeItem(SAVE_KEY); s.removeItem(BACKUP_KEY); } }
 /** The message for a save written by an earlier version of the game (Task 8 fresh-save break). `code: 'incompatible'`. */
-export const INCOMPATIBLE_MESSAGE = 'This franchise was saved by an earlier version of Gridiron Beast. The monster system has changed, so it cannot be loaded. It is kept on this device unchanged. Start a new franchise to play this version.';
+export const INCOMPATIBLE_MESSAGE = 'This franchise was saved by an earlier version of Gridiron Beast. The beast system has changed, so it cannot be loaded. It is kept on this device unchanged. Start a new franchise to play this version.';
 /** The message for a franchise saved in the 16-club league. Same `code: 'incompatible'`, with `reason: 'league-format'`. */
 export const OLD_LEAGUE_MESSAGE = 'This franchise was saved in the 16-club league. The league now has 32 clubs, so it cannot be continued. It is kept on this device unchanged. Start a new franchise to play this version.';
 export function incompatibleSave(f) { return Object.assign(new Error(INCOMPATIBLE_MESSAGE), { code: 'incompatible', schemaVersion: f?.schemaVersion ?? null }); }

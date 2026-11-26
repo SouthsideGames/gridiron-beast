@@ -39,7 +39,7 @@ test('the dead end resolves: the plan shows the shortfall and the savings, the o
   const plan = F.rosterFloorPlan(f); assert.equal(plan.short, 2); assert.ok(plan.gap > 0, 'short of cap for the replacements');
   assert.ok(plan.releases.length > 5 && plan.releases.every((x) => x.saving > 0), 'every listed release shows its saving');
   assert.ok(plan.recoverable && plan.path.length >= 1, 'a sequence of releases closes the shortfall');
-  const blocked = F.startNextSeason(f); assert.equal(blocked.ok, false); assert.match(blocked.reason, /Release monsters to free [\d,]+ cr\./, blocked.reason); // plain-language wording (2026-11-14)
+  const blocked = F.startNextSeason(f); assert.equal(blocked.ok, false); assert.match(blocked.reason, /Release beasts to free [\d,]+ cr\./, blocked.reason); // plain-language wording (2026-11-14)
   const cheapest = F.freeAgentMarket(f).sort((a, b) => a.ask.salary - b.ask.salary)[0];
   assert.equal(F.negotiateFreeAgent(f, cheapest.monster.id, cheapest.ask).code, 'cap', 'no signing over the cap');
   assert.equal(f.roster.length, F.ROSTER_MIN - 2, 'nothing was released for the owner');

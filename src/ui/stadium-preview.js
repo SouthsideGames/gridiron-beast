@@ -17,7 +17,7 @@ export function envSwatch(envId) {
 /** Who benefits: the type chip and the bonus, or the neutral line. */
 export function envBonusHtml(envId) {
   const env = ENVIRONMENTS[envId] || ENVIRONMENTS.grass;
-  return env.type ? `${typeChip(env.type)} monsters <b class="tc-up">${$t('league.b_in_direct_contests_blocks_tackles', { percent: pct(FOOTBALL_TYPE_VALUES.envMatch) })}` : `<span class="dim">${$t('league.neutral_field_no_type_bonus')}</span>`;
+  return env.type ? `${typeChip(env.type)} beasts <b class="tc-up">${$t('league.b_in_direct_contests_blocks_tackles', { percent: pct(FOOTBALL_TYPE_VALUES.envMatch) })}` : `<span class="dim">${$t('league.neutral_field_no_type_bonus')}</span>`;
 }
 /**
  * The venue card for one game. `venue` from F.sundayVenue / state.venue; `ctx` = { mineCount, theirsCount } of starters

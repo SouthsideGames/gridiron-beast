@@ -5035,5 +5035,13 @@ position is left (injuries, an emptied group).
   score always agree.
 - The owner's release advice at the roster minimum counts emergency-held slots as holes (§61.4).
 
+### 61.11a Terminology (owner, 2026-11-26)
+Every player-facing text says **beast**, not monster: `src/text/en.js` (the central text file), the plain-language ability rules, the
+Beast Dex source text (`docs/beast-dex/data`, rebuilt into `beast-dex.generated.js`), the Media Day dialogue (`src/data/media.js`), the
+legacy species descriptions, the load-error message, the stadium preview, the audio setting ("Beast cries") and the app description.
+Code names, text keys, `{placeholders}` and save keys keep "monster", so saves and translations are unaffected. Developer-only
+screens (reviewers, labs) and the frozen historical Clash move tables are unchanged. Earlier sections of this document still say
+"monster" where they describe design history; in the game the word is "beast".
+
 ### 61.12 Validation
 Filled in from the final validation runs on the final code.
