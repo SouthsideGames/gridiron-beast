@@ -62,10 +62,14 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
     // A-3 (owner 2026-11-26): without an available kicker the try must be a two-point conversion (no extra-point kick).
     const choice = !R.kickerAvailable(state, teams[tryTeam]) ? 'two' : choices.tryChoice || ctrl(tryTeam).tryChoice(state);
     if (choice === 'two') {
-      const offAvail = goalLinePlays(eligiblePlays(state,teams[tryTeam],teams[tryTeam].offensePlays,PLAYS));
+      // Play test 2026-11-26 (owner): the play the coach called is the play that runs. The short-yardage filter (goalLinePlays) only
+      // narrows what the AI picks from; a called play is honoured whenever it is in the plan and can be fielded (eligiblePlays). Before,
+      // a called play without a short / goal-line / red-zone tag was silently replaced by the AI's pick, often a run.
+      const offEligible = eligiblePlays(state,teams[tryTeam],teams[tryTeam].offensePlays,PLAYS);
+      const offAvail = goalLinePlays(offEligible);
       const defAvail = eligiblePlays(state,teams[R.opponent(tryTeam)],teams[R.opponent(tryTeam)].defensePlays,PLAYS);
       if(!offAvail.length || !defAvail.length) return {kind:'forfeit',text:R.lineupForfeit(state,!offAvail.length?tryTeam:R.opponent(tryTeam)).text};
-      const offId = (offAvail.includes(choices.offensePlayId) ? choices.offensePlayId : null) || ctrl(tryTeam).offensePlay(state, teams[tryTeam], offAvail, tendencies[tryTeam], rng, teams[R.opponent(tryTeam)]);
+      const offId = (offEligible.includes(choices.offensePlayId) ? choices.offensePlayId : null) || ctrl(tryTeam).offensePlay(state, teams[tryTeam], offAvail, tendencies[tryTeam], rng, teams[R.opponent(tryTeam)]);
       const defId = (defAvail.includes(choices.defensePlayId) ? choices.defensePlayId : null) || ctrl(R.opponent(tryTeam)).defensePlay(state, teams[R.opponent(tryTeam)], defAvail, tendencies[tryTeam], rng, teams[tryTeam], tendencies[R.opponent(tryTeam)]);
       done();
       const res = R.attemptTwoPoint(state, teams, offId, defId);
