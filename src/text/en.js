@@ -2306,6 +2306,7 @@ export default {
   'franchise.stronger_clubs_whose_coaches_read_the': 'Stronger clubs whose coaches read the situation sharply.',
   'franchise.hall_of_fame_8_badges_4': 'Hall of Fame: all 12 badges, 4 titles, 80 wins, 5 awards.',
   'franchise.no_game_today': 'No game today.',
+  'franchise.in_game_forfeit_tag': '(forfeit: no legal lineup mid-game; {played} when play stopped)',
   'franchise.forfeit_could_not_field_a_legal': 'FORFEIT: {club} could not field a legal lineup against {opponent}. Recorded as a 0-21 loss.',
   'franchise.walks_as_a_free_agent_back': '{name} walks as a free agent. Back to {homeRegion}\'s pool.',
   'franchise.next_seasons_cap_has_cr_free': 'Next season\'s cap has {toLocaleString} cr. free; this deal needs {toLocaleString2} cr. in its first season.',
@@ -6659,6 +6660,7 @@ export default {
 
   // SECTION: ROTATION
   'rotation.forfeit': 'No legal lineup: the game is forfeited, 0–21.',
+  'rotation.emergency_entered': "{name} ({position}) covers {slot} in an emergency: no healthy beast of that position is left.",
   'rotation.heavy': "Heavy Rotation",
   'rotation.balanced': "Balanced Rotation",
   'rotation.starters': "Starter-Focused",

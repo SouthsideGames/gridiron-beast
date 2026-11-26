@@ -152,16 +152,16 @@ export function regionSpecies(regionName, regionTypes, week = 1) {
 
 export function clampAttr(v) { return Math.max(1, Math.min(99, Math.round(v))); }
 
-/** Effective attributes = base × fatigue × secondary-position penalty. Nature multipliers are retired (spec §3; N7c B14). */
+/** Effective attributes = base × fatigue. Nature multipliers are retired (spec §3; N7c B14). `slotPosition` is accepted for callers that
+ *  rate a beast at a slot; it no longer scales attributes: an emergency cover plays on its own attributes (balance audit R-6, 2026-11-25:
+ *  no artificial out-of-position penalty; the old ×0.9 secondary-position factor was unreachable under one-position eligibility). */
 export function effectiveAttributes(m, { slotPosition = null, trainingBonus = null } = {}) {
   const fatiguePenalty = 1 - Math.min(0.06, (m.fatigue || 0) / 100 * 0.06);
-  const secondary = slotPosition && slotPosition !== m.position ? 0.9 : 1;
   const out = {};
   for (const k of ATTRIBUTES) {
     let v = m.attributes[k] || 1;
     if (trainingBonus && trainingBonus[k]) v += trainingBonus[k];
     if (['speed', 'strength', 'agility'].includes(k)) v *= fatiguePenalty;
-    v *= secondary;
     out[k] = clampAttr(v);
   }
   return out;

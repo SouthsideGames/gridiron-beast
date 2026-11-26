@@ -1,5 +1,6 @@
 // Shared between live coaching and headless games. State is JSON-safe and keyed by individual, never by a mutable slot.
-import { positionOf } from '../data/personnel.js';
+import { positionOf, canCoverEmergency, BASE_SLOTS, EMERGENCY_POSITION } from '../data/personnel.js';
+import { overall } from '../data/monsters.js';
 import { createRng, hashString } from '../core/rng.js';
 import { toNumber } from '../core/fraction.js';
 import { E as $E } from '../core/english.js';
@@ -54,6 +55,20 @@ export function selectUnit(s, team, side, slots, initial, { pinned = [] } = {}) 
       active[slot] = { id: pick.id, key };
     } else out[slot] = { id: null, name: slot, attrs: {} };
   }
+  // R-6 (2026-11-25): a base slot with no healthy beast of its own position left takes an emergency cover from the beasts not on this
+  // play, after every slot has had its own position's pick. The best by the slot position's overall on his own attributes (no penalty).
+  for (const slot of slots) {
+    if (out[slot]?.id || !BASE_SLOTS.includes(slot)) continue;
+    const need = positionOf(slot);
+    const covers = pool.filter(p => canCoverEmergency(p.position, slot) && !used.has(p.id) && !unavailable(s, p) && !s.t8?.stamina?.[p.id]?.exhausted)
+      .sort((a, b) => overall(b.attrs || {}, need) - overall(a.attrs || {}, need) || pool.indexOf(a) - pool.indexOf(b));
+    const pick = covers[0];
+    if (!pick) continue;
+    used.add(pick.id); out[slot] = pick;
+    const saved = active[slot];
+    if (saved?.id !== pick.id) { b.notices.push({ side, slot, from: saved?.id || null, to: pick.id, name: pick.name, reason: 'emergency', position: pick.position, play: s.playCount || 0, ...(saved?.id && s.rotation?.injuries?.[saved.id] ? { injured: true } : {}) }); b.notices = b.notices.slice(-24); }
+    active[slot] = { id: pick.id, key };
+  }
   return out;
 }
 /** Deterministic contact injury rolls, independent of animation and UI rerenders. No mutation of the persistent roster until settlement. */
@@ -78,7 +93,7 @@ export function contactInjuries(s, slots, sim, { offenseSide = s.possession } = 
 export function playNotices(s, side) {
   const now = (s.rotation?.notices || []).filter(n => n.play === (s.playCount || 0));
   const mine = now.filter(n => n.side === side && n.reason !== 'injury');
-  return { injuries: now.filter(n => n.reason === 'injury'), replacements: mine.filter(n => n.injured), routine: mine.filter(n => !n.injured) };
+  return { injuries: now.filter(n => n.reason === 'injury'), replacements: mine.filter(n => n.injured || n.reason === 'emergency'), routine: mine.filter(n => !n.injured && n.reason !== 'emergency') };
 }
 /** Persist individual stat keys for rotating players while retaining old saves' slot keys. */
 export function statKey(s, side, slot) { return s.rotation?.statKeys?.[side]?.[slot] || slot; }
@@ -94,8 +109,21 @@ export function eligiblePlays(s,team,ids,plays) {
   const pool=teamInputs(team).filter(p=>!unavailable(s,p));
   return ids.filter(id=>{
     const play=plays[id];if(!play)return false;
-    const needs={};for(const slot of play.onField) {const pos=positionOf(slot);needs[pos]=(needs[pos]||0)+1;}
-    return Object.entries(needs).every(([pos,n])=>pool.filter(p=>p.position===pos).length>=n);
+    const needs={},base={};for(const slot of play.onField) {const pos=positionOf(slot);needs[pos]=(needs[pos]||0)+1;if(BASE_SLOTS.includes(slot))base[pos]=(base[pos]||0)+1;}
+    return emergencyFeasible(pool,needs,base);
+  });
+}
+/** R-6: can `pool` staff `needs` (beasts per position), with an emergency cover allowed only in base slots (`base`, per position)? Each
+ *  position covers exactly one other, so the check is exact: a position's shortfall must be within its base slots and within the spare
+ *  beasts (beyond their own position's need) of the positions that cover it. */
+export function emergencyFeasible(pool,needs,base={}) {
+  const have={};for(const p of pool)have[p.position]=(have[p.position]||0)+1;
+  const spare=(pos)=>Math.max(0,(have[pos]||0)-(needs[pos]||0));
+  return Object.entries(needs).every(([pos,n])=>{
+    const short=n-(have[pos]||0); if(short<=0)return true;
+    if(short>(base[pos]||0))return false;
+    const cover=Object.keys(EMERGENCY_POSITION).filter(q=>EMERGENCY_POSITION[q]===pos).reduce((t,q)=>t+spare(q),0);
+    return cover>=short;
   });
 }
 /** Special teams fill from the healthy chart before selecting their seven, so an injured package WR yields to another blocker. */

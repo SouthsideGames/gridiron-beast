@@ -1004,6 +1004,13 @@ export function playAvailability(f) {
   return { slots, blocked };
 }
 /** Forfeit (GDD §17.2): no legal lineup, or no legal plays left. Recorded as a 0-21 loss, no stats, no experience. */
+/** R-6 (2026-11-25): a game stopped by the forfeit rule mid-game (no legal lineup even with emergency cover) is recorded as a
+ *  forfeit: the official result is the rule's 0-21 (homeScore/awayScore, for standings), with the score actually played kept beside
+ *  it, and the stats played stay recorded. Empty for any other game, so results and old saves are unchanged. */
+export function inGameForfeit(game, names) {
+  const x = game?.forfeit; if (!x) return {};
+  return { forfeit: true, inGame: true, forfeitBy: names[x.side] || null, playedScore: x.played ? { home: x.played.home, away: x.played.away } : null, forfeitQuarter: x.quarter ?? null };
+}
 export function forfeitSunday(f) {
   const m = sundayMatchup(f); if (!m) return { ok: false, reason: $t('franchise.no_game_today') };
   const side = m.playerSide, oppSide = side === 'home' ? 'away' : 'home';
@@ -1740,7 +1747,7 @@ function simulateLeagueWeek(f) {
       const lines = new Map(); recordGame(f, game, { home, away }, { playoff: false, booksFor: (t) => leagueBooks(f, t), onLine: (t, m, g) => lines.set(m.id, g) });
       leagueCareerAfterGame(f, [home, away], game, lines, { playoff: false });
       afterCaptainGame(f, game, { home: g.home, away: g.away, week: f.season.week });
-      const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot, winner: game.winner ? (game.winner === 'home' ? g.home : g.away) : null, clash: game.tiebreak || null, pregameClash: toss.clash ? { winner: toss.coinWinner, choice: toss.choice, by: toss.clash.by, exchanges: toss.clash.exchanges } : null };
+      const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot, winner: game.winner ? (game.winner === 'home' ? g.home : g.away) : null, ...inGameForfeit(game, { home: g.home, away: g.away }), clash: game.tiebreak || null, pregameClash: toss.clash ? { winner: toss.coinWinner, choice: toss.choice, by: toss.clash.by, exchanges: toss.clash.exchanges } : null };
       applyResult(f.season.records, res); results.push(res);
     }
   }
@@ -2429,7 +2436,7 @@ export function finishSunday(f, gameState) {
   for (const x of m[oppSide].roster) dexRecord(f, x, 'seen'); // every monster you face goes in the dex
   const won = gameState.winner === side;
   settleTiebreak(f, gameState); // a tied game that reached the screen's end without the Clash (should not happen) is settled headless
-  const pg = f.week.pregame; const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: gameState.score.home, awayScore: gameState.score.away, ot: !!gameState.ot, player: true, winner: gameState.winner ? m[gameState.winner].name : null, clash: gameState.tiebreak || null, pregameClash: pg?.result ? { winner: gameState.coin?.winner || null, choice: gameState.coin?.choice || null, by: pg.result.by, exchanges: pg.result.exchanges, playerWon: pg.result.winner === 'a' } : null };
+  const pg = f.week.pregame; const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: gameState.score.home, awayScore: gameState.score.away, ot: !!gameState.ot, player: true, winner: gameState.winner ? m[gameState.winner].name : null, ...inGameForfeit(gameState, { home: m.home.name, away: m.away.name }), clash: gameState.tiebreak || null, pregameClash: pg?.result ? { winner: gameState.coin?.winner || null, choice: gameState.coin?.choice || null, by: pg.result.by, exchanges: pg.result.exchanges, playerWon: pg.result.winner === 'a' } : null };
   const { r, save } = frng(f);
   const ledger = (f.rewardLedger ||= createRewardLedger()); const act = gameActivityId(f, f.club);
   const knowledgePlayers = gameState.rotation ? new Set(Object.keys(gameState.stats[side].players).filter(id => f.roster.some(m => m.id === id))) : playedIds(m[side].chart);
@@ -2457,7 +2464,7 @@ export function finishSunday(f, gameState) {
   const captainRows = afterCaptainGame(f, gameState, { home: m.home.name, away: m.away.name, week: f.season.week, playoff: !!m.playoff, round: playoffRoundNow }); // chemistry earned in this game, committed once
   const captainNote = !gameState.partners && CP.captainsOf(f, f.club) ? $t('franchise.this_game_kicked_off_before_your') : null;
   if (m.playoff) { recordPlayoffResult(f, res); }
-  else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: gameState.score[side], oppScore: gameState.score[oppSide], won }; }
+  else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: gameState.score[side], oppScore: gameState.score[oppSide], won, ...(res.forfeit ? { forfeit: true, inGame: true } : {}) }; }
   news(f, $P(won ? $L('franchise.win') : $L('franchise.loss'), ` `, gameState.score[side], `-`, gameState.score[oppSide], ` vs `, m.opponent, (gameState.tiebreak ? $P(` `, $L('franchise.ot_v_beast_clash', { size: gameState.tiebreak.size, size2: gameState.tiebreak.size })) : gameState.ot ? ' (OT)' : ''), `.`), won ? 'win' : 'loss');
   // Promised starters: three games on the bench and they walk (GDD §15.7).
   for (const x of f.roster.filter((p) => p.promise)) {
@@ -2562,7 +2569,7 @@ function recordPlayoffResult(f, res) {
   const p = f.season.playoffs;
   const g = p.fixtures.find((x) => x.round === p.round && x.home === res.home && x.away === res.away);
   const winner = res.winner || (res.homeScore > res.awayScore ? res.home : res.away);
-  g.result = res; p.results.push({ round: p.round, conf: g.conf, winner, home: res.home, away: res.away, homeScore: res.homeScore, awayScore: res.awayScore, ot: res.ot, clash: res.clash || null });
+  g.result = res; p.results.push({ round: p.round, conf: g.conf, winner, home: res.home, away: res.away, homeScore: res.homeScore, awayScore: res.awayScore, ot: res.ot, clash: res.clash || null, ...(res.forfeit ? { forfeit: true, inGame: !!res.inGame, forfeitBy: res.forfeitBy, playedScore: res.playedScore } : {}) });
 }
 function simulatePlayoffWeek(f) {
   const p = f.season.playoffs; if (!p || p.champion) return;
@@ -2580,7 +2587,7 @@ function simulatePlayoffWeek(f) {
     const lines = new Map(); recordGame(f, game, { home, away }, { playoff: true, booksFor: (t) => leagueBooks(f, t), onLine: (t, m, g) => lines.set(m.id, g) });
     leagueCareerAfterGame(f, [home, away], game, lines, { playoff: true, round: p.round });
     afterCaptainGame(f, game, { home: g.home, away: g.away, week: f.season.week, playoff: true, round: p.round });
-    const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot, winner: game.winner ? (game.winner === 'home' ? g.home : g.away) : null, clash: game.tiebreak || null, pregameClash: toss.clash ? { winner: toss.coinWinner, choice: toss.choice, by: toss.clash.by, exchanges: toss.clash.exchanges } : null };
+    const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot, winner: game.winner ? (game.winner === 'home' ? g.home : g.away) : null, ...inGameForfeit(game, { home: g.home, away: g.away }), clash: game.tiebreak || null, pregameClash: toss.clash ? { winner: toss.coinWinner, choice: toss.choice, by: toss.clash.by, exchanges: toss.clash.exchanges } : null };
     g.result = res; p.results.push({ round: p.round, conf: g.conf, ...res, winner: res.winner || (res.homeScore > res.awayScore ? g.home : g.away) });
   }
   save();

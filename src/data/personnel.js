@@ -68,6 +68,22 @@ export const SECONDARY_ELIGIBILITY = Object.freeze({ QB: [], RB: [], WR: [], TE:
 
 export function canPlay(position, slot) { return position === positionOf(slot); }
 
+/**
+ * Emergency positions (balance audit R-6, owner decision 2026-11-25). Each position has one emergency position it may cover, and only
+ * as a last resort: when no healthy beast of a base slot's own position is left (injuries, an emptied group). Normal eligibility is
+ * unchanged (`canPlay`, one position per family), the owner cannot list a beast at its emergency position, and a beast's primary position
+ * never changes. Emergency cover fills the base lineup (OFFENSE_BASE, DEFENSE_BASE) only: package slots still need their own position, so
+ * a package play is not opened by it. A beast plays the emergency slot on its own attributes, with no out-of-position penalty or boost;
+ * the best one is chosen by the overall for the slot's position (its relevant attributes), not its own. Same rule for player and AI.
+ * K has no emergency cover (no position lists K), so an empty kicker slot still cannot be filled.
+ */
+export const EMERGENCY_POSITION = Object.freeze({ QB: 'WR', RB: 'WR', WR: 'RB', TE: 'OL', OL: 'TE', DL: 'LB', LB: 'DL', CB: 'S', S: 'CB', K: 'QB' });
+export const BASE_SLOTS = Object.freeze([...OFFENSE_BASE, ...DEFENSE_BASE]);
+/** May a beast of `position` cover `slot` in an emergency (a base slot of its emergency position)? */
+export function canCoverEmergency(position, slot) { return BASE_SLOTS.includes(slot) && EMERGENCY_POSITION[position] === positionOf(slot); }
+/** The positions whose emergency position is `pos` (who may cover a `pos` base slot): e.g. WR ← QB, RB. */
+export const emergencySources = (pos) => Object.keys(EMERGENCY_POSITION).filter((p) => EMERGENCY_POSITION[p] === pos);
+
 /** Attributes that matter most per position; used for OVR and level-ups. */
 export const POSITION_WEIGHTS = Object.freeze({
   QB: { accuracy: 3, awareness: 3, arm: 2, agility: 1, speed: 1 },

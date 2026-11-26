@@ -46,6 +46,10 @@ const DROP_TIME = { quick: 0.55, three: 1.1, five: 1.7, pa: 1.5 };
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const sigmoid = (v) => 1 / (1 + Math.exp(-v));
 const norm = (v) => clamp(v, 1, 99) / 99;
+/** R-1 (balance audit, 2026-11-25): typical starter ratings in a new league (generated clubs, quality 46-66; measured over 300 clubs:
+ *  DL Speed 35, CB/S Catching 30-31, zone defenders' Coverage 36-48). The R-1 attribute terms are centred here, so a typical starter
+ *  plays as before and the attribute moves him either way. */
+export const R1_TYPICAL = Object.freeze({ dlSpeed: 40, dbCatching: 35, zoneCoverage: 45 });
 
 const EDGE_ATTRS = ['speed', 'agility', 'strength', 'awareness', 'catching', 'accuracy', 'tackling', 'coverage', 'blocking'];
 // ---- Pursuit effort (v42.13, GDD §53.5i): pure helpers, exported for tests and the Lab ----
@@ -588,9 +592,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const be = blocker.ability || {};
     const ba = blockAttrs(blocker, d); // M3 hook: pair-specific / split engagement attributes
     const bScore = ba.blocking * 0.6 + ba.strength * 0.4 + (be.blockStrength || 0) + (!runFit ? (be.anchor || 0) : 0);
-    // R-1 (2026-11-25): a defensive lineman's pass rush uses his Speed too (get-off and the edge): on a pass block his shed score is
-    // 80% the ordinary score and 20% Speed, so at Speed 65 with the other attributes at 65 nothing changes; run fits are unchanged.
-    const baseShed = shedScore(d.attrs, positionOf(d.slot)); const rushShed = !runFit && positionOf(d.slot) === 'DL' ? 0.8 * baseShed + 0.2 * d.attrs.speed : baseShed;
+    // R-1 (2026-11-25): a defensive lineman's pass rush uses his Speed too (get-off and the edge): on a pass block his shed score gains
+    // 0.2 per point of Speed above a typical lineman's (R1_TYPICAL.dlSpeed) and loses it below, so the league-wide rush is unchanged and
+    // a fast rusher beats his man sooner. Run fits are unchanged.
+    const baseShed = shedScore(d.attrs, positionOf(d.slot)); const rushShed = !runFit && positionOf(d.slot) === 'DL' ? baseShed + 0.2 * (d.attrs.speed - R1_TYPICAL.dlSpeed) : baseShed;
     const dScore = rushShed + (d.ability?.shedStrength || 0) + (runFit ? (d.ability?.runStuff || 0) : 0); // N7c B2: DL/CB/S 0.5 Agility + 0.3 Strength + 0.2 Tackling; LB 0.5 Strength + 0.3 Agility + 0.2 Tackling
     if ((be.blockStrength || (!runFit && be.anchor)) && t > 0.5) abilityUsed(blocker, be.blockStrength ? 'blockStrength' : 'anchor');
     const edge = (dScore * scaleVs(d, blocker, 'shed') - bScore * scaleVs(blocker, d, 'block')) / 100; // positive when the defender is winning (type edges: the pair actually engaged)
@@ -1691,8 +1696,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const asg = d.assignment; const eyesOnMan = asg.a === 'man' && bySlot.off[manKeys[asg.key]] !== ball.target;
     const canopy = d.ability?.breakRadius && deepZoneOf(d) ? d.ability.reaction || 0 : 0;
     // R-1 (2026-11-25): a zone defender's break on the throw leans on Coverage (reading the quarterback, breaking on the ball): its
-    // weight is 0.30 rather than 0.12, centred on 65 so an average defender breaks as before. Man defenders are unchanged.
-    const covW = asg.a === 'zone' ? 0.30 : 0.12; const cov = asg.a === 'zone' ? 0.12 * norm(65) + covW * (norm(d.attrs.coverage) - norm(65)) : 0.12 * norm(d.attrs.coverage);
+    // weight is 0.30 rather than 0.12, centred on a typical zone defender (R1_TYPICAL.zoneCoverage) so he breaks as before. Man is unchanged.
+    const Z = norm(R1_TYPICAL.zoneCoverage); const cov = asg.a === 'zone' ? 0.12 * Z + 0.30 * (norm(d.attrs.coverage) - Z) : 0.12 * norm(d.attrs.coverage);
     return Math.max(0.05, 0.32 - 0.12 * norm(d.attrs.awareness) - cov + (eyesOnMan ? 0.08 : 0) - reactionOf(d) - canopy);
   }
   function perceivedLanding(d) {
@@ -2430,9 +2435,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // distance from which that defender can still contest; the defender's edge grows it. Read here, at the catch point.
     const sepScale = nearest ? scaleVs(nearest.d, r, 'coverage') * (2 - scaleVs(r, nearest.d, 'separation')) : 1;
     // R-1 (2026-11-25): a zone defender's Coverage sets how far from the receiver he still plays the ball (closing on the throw):
-    // ×(1 + 0.6 × (Coverage − 65 normalised)), so 1.0 at 65, about 0.79 at 30 and 1.18 at 95. Man coverage is unchanged (it already
-    // keeps him close through the trail delay).
-    const zoneReach = nearest && nearest.d.assignment?.a === 'zone' ? 1 + 0.6 * (norm(nearest.d.attrs.coverage) - norm(65)) : 1;
+    // ×(1 + 0.6 × (Coverage − typical, normalised)): 1.0 for a typical zone defender (45), about 0.91 at 30 and 1.30 at 95. Man coverage
+    // is unchanged (it already keeps him close through the trail delay).
+    const zoneReach = nearest && nearest.d.assignment?.a === 'zone' ? 1 + 0.6 * (norm(nearest.d.attrs.coverage) - norm(R1_TYPICAL.zoneCoverage)) : 1;
     let contested = nearest && nearest.dd < (deep ? 1.6 : 1.1) * sepScale * zoneReach; // at full sprint a trailing defender a step away still plays the ball
     // Thunderclap: a defender trailing the receiver (behind him on his path) cannot break up a quick pass.
     const trailing = nearest && ((nearest.d.x - r.x) * r.vx + (nearest.d.y - r.y) * r.vy) < 0;
@@ -2465,18 +2470,19 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const dCover = nearest.d.attrs.coverage + (nearest.d.ability?.contest || 0) + (nearest.d.assignment?.a === 'man' && dist(nearest.d, r) <= STEP ? (nearest.d.ability?.manCoverage || 0) : 0); // Sticky: within a step (Phase B fix 7)
       const rCatch = r.attrs.catching + (r.ability?.catchContest || 0);
       // R-1 (2026-11-25): in zone the defender at the ball has only his read and his break, so Coverage weighs twice as much in the
-      // contest (0.45 per normalised point around 65 rather than 0.22); at Coverage 65 the contest is unchanged, and man is unchanged.
-      const dc = norm(dCover * scaleVs(nearest.d, r, 'breakup')); const zoneD = nearest.d.assignment?.a === 'zone';
-      catchP *= 0.7 + 0.22 * norm(rCatch * scaleVs(r, nearest.d, 'catch')) - (zoneD ? 0.22 * norm(65) + 0.45 * (dc - norm(65)) : 0.22 * dc); // the defender actually at the ball, not the one who lined up on him
+      // contest (0.45 per normalised point around a typical zone defender rather than 0.22); for him the contest is unchanged; man is unchanged.
+      const dc = norm(dCover * scaleVs(nearest.d, r, 'breakup')); const zoneD = nearest.d.assignment?.a === 'zone'; const Zc = norm(R1_TYPICAL.zoneCoverage);
+      catchP *= 0.7 + 0.22 * norm(rCatch * scaleVs(r, nearest.d, 'catch')) - (zoneD ? 0.22 * Zc + 0.45 * (dc - Zc) : 0.22 * dc); // the defender actually at the ball, not the one who lined up on him
       if (nearest.d.ability?.wingShadow) { catchP *= 1 - nearest.d.ability.wingShadow; abilityUsed(nearest.d, 'wingShadow'); } // Wing Shadow: contested catches against him are 15% harder
       if (nearest.d.ability?.contest || (nearest.d.ability?.manCoverage && nearest.d.assignment?.a === 'man' && dist(nearest.d, r) <= STEP)) abilityUsed(nearest.d, nearest.d.ability.contest ? 'contest' : 'manCoverage'); if (r.ability?.catchContest) abilityUsed(r, 'catchContest');
     }
     // A defender on the ball plays it (v42.8): within a yard, and not clearly beaten to it by the receiver (before the lead fix,
     // under-led balls fell to trailing defenders; with the ball on the receiver this keeps interceptions real without inventing them).
     const reviewPick = !!options[REVIEW_ONLY]?.wouldBeInterception && !!nearest && nearest.dd <= 2.5 && !thunderShield; // M3 hook (review only): see REVIEW_ONLY
-    // R-1 (2026-11-25): the defender's Catching sets how far from the ball he can still make a play on it (ball skills): 1.0 yard at
-    // Catching 65, about 0.65 at 30 and 1.33 at 95. Before this only the roll used Catching, and the chance itself was rare.
-    const pickReach = nearest ? 1.0 + 1.0 * (norm(nearest.d.attrs.catching + (nearest.d.ability?.pickCatching || 0)) - norm(65)) : 1.0;
+    // R-1 (2026-11-25): the defender's Catching sets how far from the ball he can still make a play on it (ball skills): the old 1.0
+    // yard for a typical defender (R1_TYPICAL.dbCatching, 35), about 0.96 at 30, 1.24 at 65 and 1.48 at 95. Before this only the roll
+    // used Catching, and the chance itself was rare.
+    const pickReach = nearest ? 1.0 + 0.8 * (norm(nearest.d.attrs.catching + (nearest.d.ability?.pickCatching || 0)) - norm(R1_TYPICAL.dbCatching)) : 1.0;
     if (reviewPick || (nearest && nearest.dd < pickReach && nearest.dd < dr + 0.35 * pickReach && !thunderShield)) {
       const pickCatching = nearest.d.attrs.catching + (nearest.d.ability?.pickCatching || 0);
       let pickP = (0.05 + 0.22 * norm(pickCatching)) * (dr > catchRadius ? 1.15 : 0.78); // v42.8: with the ball led onto the receiver, a defender who got there too has a real play on it (0.5 before, when under-led balls fell to him anyway)

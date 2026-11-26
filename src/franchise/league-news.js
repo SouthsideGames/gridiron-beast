@@ -40,7 +40,7 @@ export const poss = (team) => (/s$/.test(team) ? `${team}'` : `${team}'s`);
 /** The score as a sentence ends it: a tie settled by the Beast Clash says so instead of "beat 16-16". */
 // a saved line when it has wording in it: every use is a value inside a saved line
 const resultTail = (g) => (g.clash && g.homeScore === g.awayScore ? $P(' ', $L('franchise.after_a_tie_in_a_v', { homeScore: g.homeScore, awayScore: g.awayScore, size: g.clash.size, size2: g.clash.size })) : ` ${scoreLine(g)}${otTag(g)}`);
-const otTag = (g) => (g.clash ? ` ${$t('franchise.ot_decided_by_a_v_beast', { size: g.clash.size, size2: g.clash.size })}` : g.ot ? ' (OT)' : '');
+const otTag = (g) => (g.forfeit && g.inGame ? ` ${$t('franchise.in_game_forfeit_tag', { played: g.playedScore ? `${g.playedScore.home}-${g.playedScore.away}` : '?' })}` : g.clash ? ` ${$t('franchise.ot_decided_by_a_v_beast', { size: g.clash.size, size2: g.clash.size })}` : g.ot ? ' (OT)' : ''); // R-6: an in-game forfeit names the score actually played
 
 export function ensureLeagueNews(f) { if (!Array.isArray(f.leagueNews)) f.leagueNews = []; f.leagueNewsMeta ||= { v: LEAGUE_NEWS_VERSION, leaders: {} }; return f.leagueNews; }
 /** Add items (deduplicated by id), newest first, trimmed to LEAGUE_NEWS_KEEP. Returns how many were added. */

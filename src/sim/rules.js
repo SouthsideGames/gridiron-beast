@@ -5,7 +5,8 @@ import { canPlaceZone, zoneOptions, selectedZoneOption, zoneKey } from './t8/zon
 // so the UI, Key Moments and headless league games share one rulebook.
 
 import { venueFor } from '../data/stadiums.js';
-import { positionOf, canPlay } from '../data/personnel.js';
+import { positionOf, canPlay, canCoverEmergency } from '../data/personnel.js';
+import { overall } from '../data/monsters.js';
 import { boostSlots, qualifyingEvent, slotOf } from './partnership-play.js';
 import { createRng, rngFromState } from '../core/rng.js';
 import { FIELD, yardLabel, fieldGoalDistance, clamp } from '../core/field.js';
@@ -427,7 +428,9 @@ export function preparePreChoice(state, teams, looks = {}, opts = {}) {
 }
 export function lineupForfeit(state, side) {
   state.finished=true; state.phase='final'; state.winner=opponent(side);
-  state.forfeit={side,reason:'no-legal-lineup'}; state.score[side]=0; state.score[opponent(side)]=21;
+  // R-6 (2026-11-25): the game played so far is kept: the score at the stoppage, the quarter and clock, and every stat already
+  // recorded. The official result stays the forfeit rule's 0-21 (state.score), recorded separately from what was played.
+  state.forfeit={side,reason:'no-legal-lineup',played:{...state.score},quarter:state.quarter,clock:state.clock,playCount:state.playCount||0}; state.score[side]=0; state.score[opponent(side)]=21;
   const text=$E('rotation.forfeit'); log(state,text,'info'); state.lastPlay={text,finished:true}; return state.lastPlay;
 }
 /** The club a monster plays for (owner 2026-11-24: a zone belongs to the club that placed it). On the field from the snap's sides,
@@ -534,7 +537,8 @@ export function pickSlots(lineup, slots, team = null, play = null, state = null,
     const need = positionOf(s);
     const bench = (team?.bench || []).filter((p) => p?.id && !onField.has(p.id));
     const resting = Object.entries(lineup).filter(([k]) => !slots.includes(k)).map(([, p]) => p).filter((p) => p?.id && !onField.has(p.id));
-    const pick = bench.find((p) => p.position === need) || bench.find((p) => canPlay(p.position, s)) || resting.find((p) => canPlay(p.position, s)) || null; // primary or secondary position only (GDD §17.2)
+    const cover = (list) => list.filter((p) => canCoverEmergency(p.position, s)).sort((a, b) => overall(b.attrs || {}, need) - overall(a.attrs || {}, need))[0]; // R-6: base slots only, last resort
+    const pick = bench.find((p) => p.position === need) || bench.find((p) => canPlay(p.position, s)) || resting.find((p) => canPlay(p.position, s)) || cover(bench) || cover(resting) || null; // own position first (GDD §17.2), then an emergency cover (R-6)
     if (pick) { out[s] = { ...pick, borrowed: true }; onField.add(pick.id); } else out[s] = { attrs: {}, name: s, id: null };
   }
   // Legendary Plays (GDD §36.2): the Legendary the play is built around takes its slot for this snap, swapping with

@@ -1,7 +1,7 @@
 // Depth chart and team building: turns a roster of monsters into the
 // slot → attributes lineup the engine consumes.
 
-import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, canPlay, OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../data/personnel.js';
+import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, canPlay, canCoverEmergency, OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../data/personnel.js';
 import { tierIndex } from './t8/mastery.js';
 import { effectiveAttributes, monsterOverall, createRoster, speciesEffect } from '../data/monsters.js';
 import { OFFENSE_IDS, DEFENSE_IDS, PLAYS, counterPlays } from '../data/playbook.js';
@@ -61,6 +61,15 @@ export function buildDepthChart(roster, manual = {}, depth = null, { prefer = nu
       if (secondary) { take(slot, secondary); continue; }
       chart[slot] = null;
     }
+    // R-6 (2026-11-25): a base slot no beast of its own position can fill takes an emergency cover, after every base slot has had its
+    // own position's pick (so a cover is never a beast his own group still needs). The best by the slot position's overall (its
+    // relevant attributes). Package slots never take one.
+    if (phase === 'base') for (const slot of slots) {
+      if (chart[slot] || slot === 'K') continue;
+      const need = positionOf(slot);
+      const cover = roster.filter((m) => !used.has(m.id) && available(m) && canCoverEmergency(m.position, slot)).sort((a, b) => monsterOverall(b, { slotPosition: need }) - monsterOverall(a, { slotPosition: need }))[0];
+      if (cover) take(slot, cover);
+    }
   }
   return chart;
 }
@@ -85,7 +94,8 @@ export function lineupFromChart(roster, chart, { trainingBonus = null } = {}) {
 /**
  * Who may cover an empty slot (GDD §17.2): only a monster whose primary or
  * secondary position matches it, a healthy reserve first, else a base starter
- * who sits out in the packages that use the slot. Never a lineman at safety.
+ * who sits out in the packages that use the slot. Last, for a base slot only, an emergency
+ * cover (R-6, 2026-11-25: EMERGENCY_POSITION in personnel.js). Never a lineman at safety.
  */
 export function legalFiller(roster, chart, slot) {
   const used = new Set(Object.values(chart).filter(Boolean));
@@ -94,7 +104,13 @@ export function legalFiller(roster, chart, slot) {
   const best = (list) => list.sort((a, b) => monsterOverall(b, { slotPosition: need }) - monsterOverall(a, { slotPosition: need }))[0] || null;
   const sitsOut = SITS_OUT[slot] || [];
   const doubling = sitsOut.map((b) => roster.find((m) => m.id === chart[b])).filter((m) => m && canPlay(m.position, slot));
-  return best(reserves.filter((m) => m.position === need)) || best(reserves) || best(doubling) || null;
+  const emergency = roster.filter((m) => available(m) && !used.has(m.id) && canCoverEmergency(m.position, slot)); // R-6: base slots only, last resort
+  return best(reserves.filter((m) => m.position === need)) || best(reserves) || best(doubling) || best(emergency) || null;
+}
+/** R-6: base-chart slots held by an emergency cover (a beast away from his own position), for the lineup screens. */
+export function emergencySlots(roster, chart) {
+  const byId = new Map(roster.map((m) => [m.id, m]));
+  return Object.entries(chart).filter(([slot, id]) => id && byId.get(id) && byId.get(id).position !== positionOf(slot)).map(([slot, id]) => ({ slot, id, name: byId.get(id).name, position: byId.get(id).position }));
 }
 /** Base starters off the field in the packages that use each package slot. */
 export const SITS_OUT = Object.freeze({ SS: ['LB2'], DL3: ['LB2', 'FS'], WR3: ['TE'], C: ['WR2'] });
