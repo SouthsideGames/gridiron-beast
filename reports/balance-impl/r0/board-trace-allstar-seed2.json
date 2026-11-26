@@ -1,0 +1,114 @@
+{
+ "seed": 2,
+ "difficulty": "allstar",
+ "fired": false,
+ "seasons": [
+  "8-6",
+  "8-6",
+  "10-4",
+  "6-8",
+  "4-10"
+ ],
+ "board": [
+  {
+   "year": 1,
+   "id": "wins",
+   "label": "Win 3 games",
+   "labelL": {
+    "tk": "franchise.win_games",
+    "tv": {
+     "safeWins": 3
+    }
+   },
+   "met": true,
+   "miss": null,
+   "wins": 8,
+   "forecast": 2.5,
+   "confidence": 1,
+   "reason": null,
+   "confidenceNow": 1,
+   "misses": 0,
+   "fired": false
+  },
+  {
+   "year": 2,
+   "id": "wins",
+   "label": "Win 6 games",
+   "labelL": {
+    "tk": "franchise.win_games",
+    "tv": {
+     "safeWins": 6
+    }
+   },
+   "met": true,
+   "miss": null,
+   "wins": 8,
+   "forecast": 6.1,
+   "confidence": 2,
+   "reason": null,
+   "confidenceNow": 2,
+   "misses": 0,
+   "fired": false
+  },
+  {
+   "year": 3,
+   "id": "wins",
+   "label": "Win 6 games",
+   "labelL": {
+    "tk": "franchise.win_games",
+    "tv": {
+     "safeWins": 6
+    }
+   },
+   "met": true,
+   "miss": null,
+   "wins": 10,
+   "forecast": 6.4,
+   "confidence": 2,
+   "reason": null,
+   "confidenceNow": 2,
+   "misses": 0,
+   "fired": false
+  },
+  {
+   "year": 4,
+   "id": "wins",
+   "label": "Win 6 games",
+   "labelL": {
+    "tk": "franchise.win_games",
+    "tv": {
+     "safeWins": 6
+    }
+   },
+   "met": true,
+   "miss": null,
+   "wins": 6,
+   "forecast": 6.3,
+   "confidence": 2,
+   "reason": null,
+   "confidenceNow": 2,
+   "misses": 0,
+   "fired": false
+  },
+  {
+   "year": 5,
+   "id": "wins",
+   "label": "Win 5 games",
+   "labelL": {
+    "tk": "franchise.win_games",
+    "tv": {
+     "safeWins": 5
+    }
+   },
+   "met": false,
+   "miss": "narrow",
+   "wins": 4,
+   "forecast": 5.5,
+   "confidence": 1,
+   "reason": null,
+   "confidenceNow": 1,
+   "misses": 1,
+   "fired": false
+  }
+ ]
+}
