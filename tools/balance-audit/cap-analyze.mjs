@@ -3,7 +3,7 @@
 // tools/balance-audit/cap-experiment.mjs) and reports, per file group, cap utilisation and the money-driven behaviour the brief
 // asks about. Groups are formed by `--group=label:fileA,fileB` (repeatable) or, without it, one group per cap found in the files.
 //
-//   node tools/balance-audit/cap-analyze.mjs --group=1.8M:a.json,b.json --group=1.5M:c.json,d.json [--out=summary.json]
+//   node tools/balance-audit/cap-analyze.mjs --group=1.8M:a.json,b.json --group=1.5M:c.json,d.json [--out=summary.json] [--cap=1600000]
 //        [--years=1,5,10,15]
 //
 // Definitions (all AI clubs unless marked owner):
@@ -47,7 +47,7 @@ function analyse(files) {
     teamOvrByYear: {}, payrollByYear: {} };
   for (const file of files) {
     const o = JSON.parse(fs.readFileSync(file, 'utf8'));
-    const cap = o.capExperiment?.cap ?? 1800000; acc.cap = cap; const usable = cap - STAFF;
+    const cap = o.capExperiment?.cap ?? (Number(opt.cap) || 1800000); acc.cap = cap; const usable = cap - STAFF; // --cap=N: runs on the final-calibration code (1.6 M) record no capExperiment
     for (const r of o.runs) {
       acc.runs++; acc.seasons += r.seasons || 0; acc.problems += r.problemCount || 0;
       const owner = r.ownerClub;
