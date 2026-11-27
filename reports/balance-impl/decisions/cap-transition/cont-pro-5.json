@@ -1,0 +1,171 @@
+{
+ "tool": "balance-audit/cap-transition-study",
+ "in": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/dec/cap/pro-5.json",
+ "rows": [
+  {
+   "label": "loaded",
+   "year": 3,
+   "week": 10,
+   "finished": false,
+   "capEra": null,
+   "cap": 1800000,
+   "owner": {
+    "payroll": 1541400,
+    "room": 258600,
+    "over": false,
+    "roster": 38
+   },
+   "ai": {
+    "clubs": 31,
+    "overUsable": 0,
+    "maxOver": 0,
+    "minRoster": 38
+   },
+   "transition": null
+  },
+  {
+   "label": "season over",
+   "year": 3,
+   "week": 20,
+   "finished": true,
+   "capEra": 2,
+   "cap": 1600000,
+   "owner": {
+    "payroll": 1516800,
+    "room": 83200,
+    "over": false,
+    "roster": 37
+   },
+   "ai": {
+    "clubs": 31,
+    "overUsable": 1,
+    "maxOver": 40210,
+    "minRoster": 36
+   },
+   "transition": {
+    "year": 3,
+    "from": 1800000,
+    "to": 1600000,
+    "committed": 945600
+   }
+  },
+  {
+   "label": "next season start",
+   "year": 4,
+   "week": 1,
+   "finished": false,
+   "capEra": 2,
+   "cap": 1600000,
+   "owner": {
+    "payroll": 1563300,
+    "room": 36700,
+    "over": false,
+    "roster": 37
+   },
+   "ai": {
+    "clubs": 31,
+    "overUsable": 1,
+    "maxOver": 40210,
+    "minRoster": 38
+   },
+   "transition": {
+    "year": 3,
+    "from": 1800000,
+    "to": 1600000,
+    "committed": 945600
+   },
+   "started": true,
+   "reason": null
+  },
+  {
+   "label": "season over",
+   "year": 4,
+   "week": 20,
+   "finished": true,
+   "capEra": 2,
+   "cap": 1600000,
+   "owner": {
+    "payroll": 1595300,
+    "room": 4700,
+    "over": false,
+    "roster": 37
+   },
+   "ai": {
+    "clubs": 31,
+    "overUsable": 2,
+    "maxOver": 38110,
+    "minRoster": 33
+   },
+   "transition": {
+    "year": 3,
+    "from": 1800000,
+    "to": 1600000,
+    "committed": 945600
+   }
+  },
+  {
+   "label": "next season start",
+   "year": 5,
+   "week": 1,
+   "finished": false,
+   "capEra": 2,
+   "cap": 1600000,
+   "owner": {
+    "payroll": 1586300,
+    "room": 13700,
+    "over": false,
+    "roster": 37
+   },
+   "ai": {
+    "clubs": 31,
+    "overUsable": 2,
+    "maxOver": 38110,
+    "minRoster": 38
+   },
+   "transition": {
+    "year": 3,
+    "from": 1800000,
+    "to": 1600000,
+    "committed": 945600
+   },
+   "started": true,
+   "reason": null
+  },
+  {
+   "label": "season over",
+   "year": 5,
+   "week": 20,
+   "finished": true,
+   "capEra": 2,
+   "cap": 1600000,
+   "owner": {
+    "payroll": 1586300,
+    "room": 13700,
+    "over": false,
+    "roster": 37
+   },
+   "ai": {
+    "clubs": 31,
+    "overUsable": 0,
+    "maxOver": 0,
+    "minRoster": 29
+   },
+   "transition": {
+    "year": 3,
+    "from": 1800000,
+    "to": 1600000,
+    "committed": 945600
+   }
+  }
+ ],
+ "problems": [],
+ "problemCount": 0,
+ "capNews": [],
+ "commissionerReleases": 0,
+ "transition": {
+  "year": 3,
+  "from": 1800000,
+  "to": 1600000,
+  "committed": 945600
+ }
+}

@@ -1,0 +1,145 @@
+{
+ "tool": "balance-audit/cap-transition-study",
+ "in": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/dec/cap/allstar-4.json",
+ "rows": [
+  {
+   "label": "loaded",
+   "year": 4,
+   "week": 10,
+   "finished": false,
+   "capEra": null,
+   "cap": 1800000,
+   "owner": {
+    "payroll": 1713300,
+    "room": 86700,
+    "over": false,
+    "roster": 38
+   },
+   "ai": {
+    "clubs": 31,
+    "overUsable": 0,
+    "maxOver": 0,
+    "minRoster": 38
+   },
+   "transition": null
+  },
+  {
+   "label": "season over",
+   "year": 4,
+   "week": 20,
+   "finished": true,
+   "capEra": 2,
+   "cap": 1600000,
+   "owner": {
+    "payroll": 1560800,
+    "room": 39200,
+    "over": false,
+    "roster": 32
+   },
+   "ai": {
+    "clubs": 31,
+    "overUsable": 1,
+    "maxOver": 10270,
+    "minRoster": 34
+   },
+   "transition": {
+    "year": 4,
+    "from": 1800000,
+    "to": 1600000,
+    "committed": 974500
+   }
+  },
+  {
+   "label": "next season start",
+   "year": 5,
+   "week": 1,
+   "finished": false,
+   "capEra": 2,
+   "cap": 1600000,
+   "owner": {
+    "payroll": 1598300,
+    "room": 1700,
+    "over": false,
+    "roster": 32
+   },
+   "ai": {
+    "clubs": 31,
+    "overUsable": 2,
+    "maxOver": 66360,
+    "minRoster": 38
+   },
+   "transition": {
+    "year": 4,
+    "from": 1800000,
+    "to": 1600000,
+    "committed": 974500
+   },
+   "started": true,
+   "reason": null
+  },
+  {
+   "label": "season over",
+   "year": 5,
+   "week": 20,
+   "finished": true,
+   "capEra": 2,
+   "cap": 1600000,
+   "owner": {
+    "payroll": 1528600,
+    "room": 71400,
+    "over": false,
+    "roster": 30
+   },
+   "ai": {
+    "clubs": 31,
+    "overUsable": 1,
+    "maxOver": 13070,
+    "minRoster": 29
+   },
+   "transition": {
+    "year": 4,
+    "from": 1800000,
+    "to": 1600000,
+    "committed": 974500
+   }
+  },
+  {
+   "label": "next season start",
+   "year": 5,
+   "week": 20,
+   "finished": true,
+   "capEra": 2,
+   "cap": 1600000,
+   "owner": {
+    "payroll": 1528600,
+    "room": 71400,
+    "over": false,
+    "roster": 30
+   },
+   "ai": {
+    "clubs": 31,
+    "overUsable": 1,
+    "maxOver": 13070,
+    "minRoster": 29
+   },
+   "transition": {
+    "year": 4,
+    "from": 1800000,
+    "to": 1600000,
+    "committed": 974500
+   },
+   "started": false,
+   "reason": "The board has let you go. This franchise is over."
+  }
+ ],
+ "problems": [],
+ "problemCount": 0,
+ "capNews": [],
+ "commissionerReleases": 0,
+ "transition": {
+  "year": 4,
+  "from": 1800000,
+  "to": 1600000,
+  "committed": 974500
+ }
+}

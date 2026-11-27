@@ -1,0 +1,4 @@
+node tools/balance-audit/cap-transition-ai-check.mjs rookie-4.json   (legacy save made on the 1.8 M build, Rookie, seed 4, year 4 week 10)
+loaded y4 cap 1800000 AI committed>cap: 0  | AI usable<0: 0  | owner committed 1696700 usable 103300
+season over (after offseason) y4 cap 1600000 AI committed>cap: 0  | AI usable<0: 0  | owner committed 1583000 usable 17000
+next season start true y5 cap 1600000 AI committed>cap: 0  | AI usable<0: 0  | owner committed 1583000 usable 17000
