@@ -161,7 +161,9 @@ A complete row (Clean Sheet) shows no notice; the screenshot check confirmed 0 n
 
 **Existing achievement test:** `tests/achievements-catalogue.test.js` (12 tests). It was updated for the renamed `commanded` metric.
 
-**Targeted regression run:** see the run log below.
+**Targeted regression run (2026-11-26):** 18 test files, **137 of 137 tests passing**, 0 failing (26 min). The files include
+`achievements-catalogue`, `achievements-metrics`, `central-text`, `text-style`, `text-never-decides`, `task8-m6-screens`, `save`, `cloud-save`,
+`franchise-save-compat`, `guided-week`, `task10-clash-franchise`, `uid-isolation`, `lifecycle`, `task10-gym-badges` and `task8-encounter-bonus`.
 
 **Not run:** the full fast and sim suites. The brief asks for targeted testing only.
 
