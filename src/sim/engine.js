@@ -1586,7 +1586,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     ball.undertow = airD >= 15 ? defs.find((d) => d.ability?.undertow && (Math.abs(d.y) < 1 || Math.sign(d.y) === Math.sign(landing.y))) || null : null;
     phase = 'air'; stats.passer = passer.slot; stats.target = r.slot; stats.airYards = Math.round(landing.x);
     for (const def of defs) def.recognisedPass = true;
-    log(`${$E('sim.throws_to', { name: passer.name, name2: r.name, pressured: pressured ? ' under pressure' : '' })}`, { kind: 'throw', target: r.slot, pressured });
+    log(`${$E('sim.throws_to', { name: passer.name, name2: r.name, pressured: pressured ? ' under pressure' : '' })}`, { kind: 'throw', target: r.slot, targetDepth: lead.x, pressured });
     // M3 hook: the release. Defenders' contracts first, in lineup order: the first {breakup} ends it as an ordinary incompletion, no catch
     // made (Stonewall Swat); otherwise every contract observes the release (ball.target, ball.landing set).
     const rel = { ball, passer, receiver: r }; let brokeUp = false;
