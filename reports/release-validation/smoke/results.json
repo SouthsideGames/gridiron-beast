@@ -1,0 +1,57 @@
+[
+ [
+  "ok",
+  "app launch and main menu",
+  "1.1s"
+ ],
+ [
+  "ok",
+  "build label",
+  "v43.51.0-playtest"
+ ],
+ [
+  "ok",
+  "achievement catalogue (200)",
+  "200"
+ ],
+ [
+  "ok",
+  "load an existing franchise (after reload)",
+  "{'club': 'Skyvale Cyclones', 'year': 1, 'week': 6, 'n': 31}"
+ ],
+ [
+  "ok",
+  "HQ",
+  ""
+ ],
+ [
+  "ok",
+  "roster navigation",
+  "44"
+ ],
+ [
+  "ok",
+  "beast page opens",
+  ""
+ ],
+ [
+  "ok",
+  "save and reopen keeps the franchise",
+  "{\"w\":6,\"d\":0,\"ach\":4,\"news\":60}"
+ ],
+ [
+  "ok",
+  "create a new franchise (onboarding by taps)",
+  "steps 9"
+ ],
+ [
+  "ok",
+  "new franchise on the new cap",
+  "Northstar Novas capEra 2 undefined"
+ ],
+ [
+  "ok",
+  "no page errors",
+  "[]"
+ ]
+]
