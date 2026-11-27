@@ -25,7 +25,7 @@
    "presentation": "scene",
    "nameKey": "achievements.first_blood",
    "descKey": null,
-   "testing": "observed in a soak + original check unchanged; id kept (test)"
+   "testing": "original check unchanged; id kept (test)"
   },
   {
    "id": "rival_beaten",
@@ -50,7 +50,7 @@
    "presentation": "scene",
    "nameKey": "achievements.a_word_from",
    "descKey": null,
-   "testing": "observed in a soak + original check unchanged; id kept (test)"
+   "testing": "original check unchanged; id kept (test)"
   },
   {
    "id": "rival_swept",
@@ -75,7 +75,7 @@
    "presentation": "scene",
    "nameKey": "achievements.the_sweep",
    "descKey": null,
-   "testing": "observed in a soak + original check unchanged; id kept (test)"
+   "testing": "original check unchanged; id kept (test)"
   },
   {
    "id": "first_badge",
@@ -100,7 +100,7 @@
    "presentation": "scene",
    "nameKey": "achievements.the_first_badge",
    "descKey": null,
-   "testing": "observed in a soak + original check unchanged; id kept (test)"
+   "testing": "original check unchanged; id kept (test)"
   },
   {
    "id": "half_badges",
@@ -175,7 +175,7 @@
    "presentation": "scene",
    "nameKey": "achievements.a_winning_season",
    "descKey": null,
-   "testing": "observed in a soak + original check unchanged; id kept (test)"
+   "testing": "original check unchanged; id kept (test)"
   },
   {
    "id": "undefeated",
@@ -225,7 +225,7 @@
    "presentation": "scene",
    "nameKey": "achievements.the_playoffs",
    "descKey": null,
-   "testing": "observed in a soak + original check unchanged; id kept (test)"
+   "testing": "original check unchanged; id kept (test)"
   },
   {
    "id": "conference_title",
@@ -307,8 +307,8 @@
    "name": "A league award",
    "category": "awards",
    "rarity": "uncommon",
-   "description": "Have one of your monsters win a league award.",
-   "requirement": "original check (unchanged): Have one of your monsters win a league award.",
+   "description": "Have one of your beasts win a league award.",
+   "requirement": "original check (unchanged): Have one of your beasts win a league award.",
    "metric": "c_awards",
    "comparison": "ge",
    "target": 1,
@@ -325,7 +325,7 @@
    "presentation": "scene",
    "nameKey": "achievements.a_league_award",
    "descKey": null,
-   "testing": "observed in a soak + original check unchanged; id kept (test)"
+   "testing": "original check unchanged; id kept (test)"
   },
   {
    "id": "wins_10",
@@ -350,7 +350,7 @@
    "presentation": "scene",
    "nameKey": "achievements.ten_wins",
    "descKey": null,
-   "testing": "observed in a soak + original check unchanged; id kept (test)"
+   "testing": "original check unchanged; id kept (test)"
   },
   {
    "id": "wins_30",
@@ -375,7 +375,7 @@
    "presentation": "scene",
    "nameKey": "achievements.thirty_wins",
    "descKey": null,
-   "testing": "observed in a soak + original check unchanged; id kept (test)"
+   "testing": "original check unchanged; id kept (test)"
   },
   {
    "id": "wins_50",
@@ -432,8 +432,8 @@
    "name": "A legend unlocked",
    "category": "legendary",
    "rarity": "legendary",
-   "description": "Unlock a legendary monster (three Legend Tracks on one).",
-   "requirement": "original check (unchanged): Unlock a legendary monster (three Legend Tracks on one).",
+   "description": "Unlock a legendary beast (three Legend Tracks on one).",
+   "requirement": "original check (unchanged): Unlock a legendary beast (three Legend Tracks on one).",
    "metric": "c_unlocked",
    "comparison": "ge",
    "target": 1,
@@ -625,7 +625,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_shutout",
    "descKey": "ach.gp_shutout_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gp_score_30",
@@ -650,7 +650,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_score_30",
    "descKey": "ach.gp_score_30_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gp_road_wins",
@@ -675,7 +675,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_road_wins",
    "descKey": "ach.gp_road_wins_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gp_no_turnover_win",
@@ -700,7 +700,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_no_turnover_win",
    "descKey": "ach.gp_no_turnover_win_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gp_ot_win",
@@ -725,7 +725,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_ot_win",
    "descKey": "ach.gp_ot_win_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gp_hold_100",
@@ -750,7 +750,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_hold_100",
    "descKey": "ach.gp_hold_100_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gp_blowout_20",
@@ -775,7 +775,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_blowout_20",
    "descKey": "ach.gp_blowout_20_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gp_streak_5",
@@ -800,7 +800,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_streak_5",
    "descKey": "ach.gp_streak_5_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gp_home_unbeaten",
@@ -850,7 +850,7 @@
    "presentation": "card",
    "nameKey": "ach.gp_blowout_35",
    "descKey": "ach.gp_blowout_35_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gp_score_45",
@@ -895,12 +895,12 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.gp_comeback_14",
    "descKey": "ach.gp_comeback_14_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gp_beat_25",
@@ -945,7 +945,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.gp_comeback_21",
@@ -975,7 +975,7 @@
    "presentation": "card",
    "nameKey": "ach.gp_streak_10",
    "descKey": "ach.gp_streak_10_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gp_score_60",
@@ -995,7 +995,7 @@
    "speaker": "rival",
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "reveal",
    "nameKey": "ach.gp_score_60",
@@ -1020,7 +1020,7 @@
    "speaker": "rival",
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "reveal",
    "nameKey": "ach.gp_streak_20",
@@ -1150,7 +1150,7 @@
    "presentation": "card",
    "nameKey": "ach.fm_winning_run_3",
    "descKey": "ach.fm_winning_run_3_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "fm_points_300",
@@ -1170,7 +1170,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.fm_points_300",
@@ -1200,7 +1200,7 @@
    "presentation": "card",
    "nameKey": "ach.fm_twelve_wins",
    "descKey": "ach.fm_twelve_wins_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "fm_wins_100",
@@ -1270,7 +1270,7 @@
    "speaker": "board",
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "reveal",
    "nameKey": "ach.fm_wins_150",
@@ -1300,7 +1300,7 @@
    "presentation": "toast",
    "nameKey": "ach.ch_playoff_win",
    "descKey": "ach.ch_playoff_win_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "ch_playoffs_5",
@@ -1482,7 +1482,7 @@
    "name": "Air Raid",
    "category": "offense",
    "rarity": "common",
-   "description": "Have a monster throw for 250 yards in a game.",
+   "description": "Have a beast throw for 250 yards in a game.",
    "requirement": "one monster's passing yards in a game ≥ 250",
    "metric": "g_pass_yds",
    "comparison": "ge",
@@ -1500,14 +1500,14 @@
    "presentation": "toast",
    "nameKey": "ach.of_pass_250",
    "descKey": "ach.of_pass_250_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "of_rec_150",
    "name": "Go-To Target",
    "category": "offense",
    "rarity": "common",
-   "description": "Have a monster catch for 150 yards in a game.",
+   "description": "Have a beast catch for 150 yards in a game.",
    "requirement": "one monster's receiving yards in a game ≥ 150",
    "metric": "g_rec_yds",
    "comparison": "ge",
@@ -1525,14 +1525,14 @@
    "presentation": "toast",
    "nameKey": "ach.of_rec_150",
    "descKey": "ach.of_rec_150_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "of_rush_150",
    "name": "Workhorse",
    "category": "offense",
    "rarity": "common",
-   "description": "Have a monster rush for 150 yards in a game.",
+   "description": "Have a beast rush for 150 yards in a game.",
    "requirement": "one monster's rushing yards in a game ≥ 150",
    "metric": "g_rush_yds",
    "comparison": "ge",
@@ -1550,14 +1550,14 @@
    "presentation": "toast",
    "nameKey": "ach.of_rush_150",
    "descKey": "ach.of_rush_150_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "of_rush_td_3",
    "name": "Hat Trick",
    "category": "offense",
    "rarity": "common",
-   "description": "Have a monster score 3 rushing touchdowns in a game.",
+   "description": "Have a beast score 3 rushing touchdowns in a game.",
    "requirement": "one monster's rushing touchdowns in a game ≥ 3",
    "metric": "g_rush_td",
    "comparison": "ge",
@@ -1575,14 +1575,14 @@
    "presentation": "toast",
    "nameKey": "ach.of_rush_td_3",
    "descKey": "ach.of_rush_td_3_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "of_season_rec_1500",
    "name": "Route Runner",
    "category": "offense",
    "rarity": "common",
-   "description": "Have a monster catch for 1,500 yards in a regular season.",
+   "description": "Have a beast catch for 1,500 yards in a regular season.",
    "requirement": "one monster's receiving yards in a season ≥ 1500",
    "metric": "s_rec_yds",
    "comparison": "ge",
@@ -1600,14 +1600,14 @@
    "presentation": "toast",
    "nameKey": "ach.of_season_rec_1500",
    "descKey": "ach.of_season_rec_1500_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "of_pass_td_4",
    "name": "Four Strikes",
    "category": "offense",
    "rarity": "uncommon",
-   "description": "Have a monster throw 4 touchdown passes in a game.",
+   "description": "Have a beast throw 4 touchdown passes in a game.",
    "requirement": "one monster's touchdown passes in a game ≥ 4",
    "metric": "g_pass_td",
    "comparison": "ge",
@@ -1625,14 +1625,14 @@
    "presentation": "toast",
    "nameKey": "ach.of_pass_td_4",
    "descKey": "ach.of_pass_td_4_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "of_rec_250",
    "name": "Uncoverable",
    "category": "offense",
    "rarity": "uncommon",
-   "description": "Have a monster catch for 250 yards in a game.",
+   "description": "Have a beast catch for 250 yards in a game.",
    "requirement": "one monster's receiving yards in a game ≥ 250",
    "metric": "g_rec_yds",
    "comparison": "ge",
@@ -1650,7 +1650,7 @@
    "presentation": "toast",
    "nameKey": "ach.of_rec_250",
    "descKey": "ach.of_rec_250_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "of_long_80",
@@ -1675,14 +1675,14 @@
    "presentation": "toast",
    "nameKey": "ach.of_long_80",
    "descKey": "ach.of_long_80_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "of_season_pass_3000",
    "name": "Gunslinger",
    "category": "offense",
    "rarity": "uncommon",
-   "description": "Have a monster throw for 3,000 yards in a regular season.",
+   "description": "Have a beast throw for 3,000 yards in a regular season.",
    "requirement": "one monster's passing yards in a season ≥ 3000",
    "metric": "s_pass_yds",
    "comparison": "ge",
@@ -1700,14 +1700,14 @@
    "presentation": "toast",
    "nameKey": "ach.of_season_pass_3000",
    "descKey": "ach.of_season_pass_3000_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "of_season_rush_1000",
    "name": "Thousand-Yard Back",
    "category": "offense",
    "rarity": "uncommon",
-   "description": "Have a monster rush for 1,000 yards in a regular season.",
+   "description": "Have a beast rush for 1,000 yards in a regular season.",
    "requirement": "one monster's rushing yards in a season ≥ 1000",
    "metric": "s_rush_yds",
    "comparison": "ge",
@@ -1725,18 +1725,18 @@
    "presentation": "toast",
    "nameKey": "ach.of_season_rush_1000",
    "descKey": "ach.of_season_rush_1000_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "of_rush_250",
    "name": "Stampede",
    "category": "offense",
    "rarity": "uncommon",
-   "description": "Have a monster rush for 250 yards in a game.",
-   "requirement": "one monster's rushing yards in a game ≥ 250",
+   "description": "Have a beast rush for 200 yards in a game.",
+   "requirement": "one monster's rushing yards in a game ≥ 200",
    "metric": "g_rush_yds",
    "comparison": "ge",
-   "target": 250,
+   "target": 200,
    "params": null,
    "progress": "met or not",
    "trigger": "sunday",
@@ -1757,11 +1757,11 @@
    "name": "Aerial Assault",
    "category": "offense",
    "rarity": "epic",
-   "description": "Have a monster throw for 450 yards in a game.",
-   "requirement": "one monster's passing yards in a game ≥ 450",
+   "description": "Have a beast throw for 500 yards in a game.",
+   "requirement": "one monster's passing yards in a game ≥ 500",
    "metric": "g_pass_yds",
    "comparison": "ge",
-   "target": 450,
+   "target": 500,
    "params": null,
    "progress": "met or not",
    "trigger": "sunday",
@@ -1770,7 +1770,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.of_pass_450",
@@ -1807,7 +1807,7 @@
    "name": "Touchdown Factory",
    "category": "offense",
    "rarity": "rare",
-   "description": "Have a monster throw 40 touchdown passes in a regular season.",
+   "description": "Have a beast throw 40 touchdown passes in a regular season.",
    "requirement": "one monster's touchdown passes in a season ≥ 40",
    "metric": "s_pass_td",
    "comparison": "ge",
@@ -1832,7 +1832,7 @@
    "name": "Seven Up",
    "category": "offense",
    "rarity": "epic",
-   "description": "Have a monster throw 7 touchdown passes in a game.",
+   "description": "Have a beast throw 7 touchdown passes in a game.",
    "requirement": "one monster's touchdown passes in a game ≥ 7",
    "metric": "g_pass_td",
    "comparison": "ge",
@@ -1845,7 +1845,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.of_pass_td_7",
@@ -1875,7 +1875,7 @@
    "presentation": "toast",
    "nameKey": "ach.df_first_int",
    "descKey": "ach.df_first_int_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "df_sacks_3",
@@ -1900,7 +1900,7 @@
    "presentation": "toast",
    "nameKey": "ach.df_sacks_3",
    "descKey": "ach.df_sacks_3_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "df_tfl_5",
@@ -1925,7 +1925,7 @@
    "presentation": "toast",
    "nameKey": "ach.df_tfl_5",
    "descKey": "ach.df_tfl_5_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "df_int_2",
@@ -1950,14 +1950,14 @@
    "presentation": "toast",
    "nameKey": "ach.df_int_2",
    "descKey": "ach.df_int_2_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "df_tackles_12",
    "name": "Everywhere at Once",
    "category": "defense",
    "rarity": "uncommon",
-   "description": "Have a monster make 12 tackles in a game.",
+   "description": "Have a beast make 12 tackles in a game.",
    "requirement": "one monster's tackles in a game ≥ 12",
    "metric": "g_tackles",
    "comparison": "ge",
@@ -1975,7 +1975,7 @@
    "presentation": "toast",
    "nameKey": "ach.df_tackles_12",
    "descKey": "ach.df_tackles_12_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "df_pick_six",
@@ -2057,11 +2057,11 @@
    "name": "Lockdown Season",
    "category": "defense",
    "rarity": "rare",
-   "description": "Allow 100 points or fewer in a regular season.",
-   "requirement": "points allowed in one complete regular season ≤ 100",
+   "description": "Allow 150 points or fewer in a regular season.",
+   "requirement": "points allowed in one complete regular season ≤ 150",
    "metric": "s_points_allowed",
    "comparison": "le",
-   "target": 100,
+   "target": 150,
    "params": null,
    "progress": "met or not",
    "trigger": "season",
@@ -2070,7 +2070,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.df_season_allowed",
@@ -2082,11 +2082,11 @@
    "name": "Sack Party",
    "category": "defense",
    "rarity": "rare",
-   "description": "Record 25 team sacks in a regular season.",
-   "requirement": "team sacks in a season ≥ 25",
+   "description": "Record 10 team sacks in a regular season.",
+   "requirement": "team sacks in a season ≥ 10",
    "metric": "s_team_sacks",
    "comparison": "ge",
-   "target": 25,
+   "target": 10,
    "params": null,
    "progress": "met or not",
    "trigger": "season",
@@ -2095,7 +2095,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.df_season_sacks_25",
@@ -2107,11 +2107,11 @@
    "name": "Quarterback Hunter",
    "category": "defense",
    "rarity": "epic",
-   "description": "Have a monster record 4 sacks in a game.",
-   "requirement": "one monster's sacks in a game ≥ 4",
+   "description": "Have a beast record 3 sacks in a game.",
+   "requirement": "one monster's sacks in a game ≥ 3",
    "metric": "g_sacks",
    "comparison": "ge",
-   "target": 4,
+   "target": 3,
    "params": null,
    "progress": "met or not",
    "trigger": "sunday",
@@ -2120,7 +2120,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.df_player_sacks_4",
@@ -2154,14 +2154,14 @@
   },
   {
    "id": "df_player_season_sacks",
-   "name": "Double-Digit Sacks",
+   "name": "Sack Specialist",
    "category": "defense",
    "rarity": "epic",
-   "description": "Have a monster record 14 sacks in a regular season.",
-   "requirement": "one monster's sacks in a season ≥ 14",
+   "description": "Have a beast record 7 sacks in a regular season.",
+   "requirement": "one monster's sacks in a season ≥ 7",
    "metric": "s_sacks",
    "comparison": "ge",
-   "target": 14,
+   "target": 7,
    "params": null,
    "progress": "met or not",
    "trigger": "season",
@@ -2170,23 +2170,23 @@
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.df_player_season_sacks",
    "descKey": "ach.df_player_season_sacks_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "df_sacks_7",
    "name": "Siege",
    "category": "defense",
    "rarity": "epic",
-   "description": "Record 7 sacks as a team in a game.",
-   "requirement": "your sacks in a game ≥ 7",
+   "description": "Record 4 sacks as a team in a game.",
+   "requirement": "your sacks in a game ≥ 4",
    "metric": "g_team_sacks",
    "comparison": "ge",
-   "target": 7,
+   "target": 4,
    "params": null,
    "progress": "met or not",
    "trigger": "sunday",
@@ -2195,7 +2195,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.df_sacks_7",
@@ -2220,7 +2220,7 @@
    "speaker": "rival",
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "reveal",
    "nameKey": "ach.df_season_int_10",
@@ -2250,7 +2250,7 @@
    "presentation": "toast",
    "nameKey": "ach.st_first_fg",
    "descKey": "ach.st_first_fg_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "st_fg_50",
@@ -2275,7 +2275,7 @@
    "presentation": "toast",
    "nameKey": "ach.st_fg_50",
    "descKey": "ach.st_fg_50_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "st_golden_boot",
@@ -2375,7 +2375,7 @@
    "presentation": "toast",
    "nameKey": "ach.st_season_fg_12",
    "descKey": "ach.st_season_fg_12_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "st_kr_td",
@@ -2404,14 +2404,14 @@
   },
   {
    "id": "st_fg_3_game",
-   "name": "Three for Three",
+   "name": "Four on the Board",
    "category": "special",
    "rarity": "epic",
-   "description": "Make 3 field goals in a game.",
-   "requirement": "field goals made in one game ≥ 3",
+   "description": "Make 4 field goals in a game.",
+   "requirement": "field goals made in one game ≥ 4",
    "metric": "g_fgm",
    "comparison": "ge",
-   "target": 3,
+   "target": 4,
    "params": null,
    "progress": "met or not",
    "trigger": "sunday",
@@ -2425,7 +2425,7 @@
    "presentation": "card",
    "nameKey": "ach.st_fg_3_game",
    "descKey": "ach.st_fg_3_game_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "st_kr_td_3",
@@ -2470,7 +2470,7 @@
    "speaker": "rival",
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "reveal",
    "nameKey": "ach.st_perfect_kicker",
@@ -2495,12 +2495,12 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "toast",
    "nameKey": "ach.dx_seen_60",
    "descKey": "ach.dx_seen_60_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "dx_seen_100",
@@ -2520,12 +2520,12 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "toast",
    "nameKey": "ach.dx_seen_100",
    "descKey": "ach.dx_seen_100_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "dx_signed_10",
@@ -2545,7 +2545,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "toast",
    "nameKey": "ach.dx_signed_10",
@@ -2557,20 +2557,20 @@
    "name": "Original Collector",
    "category": "dex",
    "rarity": "common",
-   "description": "Collect 20 of the original families in play (founding roster not counted).",
-   "requirement": "original families collected in play (founding excluded) ≥ 20",
+   "description": "Collect 10 of the original families in play (founding roster not counted).",
+   "requirement": "original families collected in play (founding excluded) ≥ 10",
    "metric": "d_original_played",
    "comparison": "ge",
-   "target": 20,
+   "target": 10,
    "params": null,
-   "progress": "bar: original families collected in play (founding excluded) / 20",
+   "progress": "bar: original families collected in play (founding excluded) / 10",
    "trigger": "any",
    "scope": "franchise",
    "history": "complete",
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "toast",
    "nameKey": "ach.dx_original_20",
@@ -2582,20 +2582,20 @@
    "name": "Collector",
    "category": "dex",
    "rarity": "uncommon",
-   "description": "Collect 25 families in play with this franchise (founding roster not counted).",
-   "requirement": "different families collected by this franchise in play (founding roster and creation draft excluded) ≥ 25",
+   "description": "Collect 20 families in play with this franchise (founding roster not counted).",
+   "requirement": "different families collected by this franchise in play (founding roster and creation draft excluded) ≥ 20",
    "metric": "d_signed",
    "comparison": "ge",
-   "target": 25,
+   "target": 20,
    "params": null,
-   "progress": "bar: different families collected by this franchise in play (founding roster and creation draft excluded) / 25",
+   "progress": "bar: different families collected by this franchise in play (founding roster and creation draft excluded) / 20",
    "trigger": "any",
    "scope": "franchise",
    "history": "complete",
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "toast",
    "nameKey": "ach.dx_signed_25",
@@ -2607,7 +2607,7 @@
    "name": "Hands-On Research",
    "category": "dex",
    "rarity": "common",
-   "description": "Play monsters from 30 different families in games.",
+   "description": "Play beasts from 30 different families in games.",
    "requirement": "different families you have played in games ≥ 30",
    "metric": "d_knowledge",
    "comparison": "ge",
@@ -2625,27 +2625,27 @@
    "presentation": "toast",
    "nameKey": "ach.dx_knowledge_30",
    "descKey": "ach.dx_knowledge_30_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "dx_types_all",
    "name": "Every Element",
    "category": "dex",
    "rarity": "uncommon",
-   "description": "Collect at least 2 families of every type in play (founding roster not counted).",
-   "requirement": "families collected in play in your least-collected type ≥ 2",
+   "description": "Collect at least 1 families of every type in play (founding roster not counted).",
+   "requirement": "families collected in play in your least-collected type ≥ 1",
    "metric": "d_types_min",
    "comparison": "ge",
-   "target": 2,
+   "target": 1,
    "params": null,
-   "progress": "bar: families collected in play in your least-collected type / 2",
+   "progress": "met or not",
    "trigger": "any",
    "scope": "franchise",
    "history": "complete",
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "toast",
    "nameKey": "ach.dx_types_all",
@@ -2670,12 +2670,12 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "toast",
    "nameKey": "ach.dx_seen_140",
    "descKey": "ach.dx_seen_140_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "dx_seen_170",
@@ -2695,7 +2695,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.dx_seen_170",
@@ -2707,20 +2707,20 @@
    "name": "Menagerie",
    "category": "dex",
    "rarity": "rare",
-   "description": "Collect 50 families in play with this franchise (founding roster not counted).",
-   "requirement": "different families collected by this franchise in play (founding roster and creation draft excluded) ≥ 50",
+   "description": "Collect 35 families in play with this franchise (founding roster not counted).",
+   "requirement": "different families collected by this franchise in play (founding roster and creation draft excluded) ≥ 35",
    "metric": "d_signed",
    "comparison": "ge",
-   "target": 50,
+   "target": 35,
    "params": null,
-   "progress": "bar: different families collected by this franchise in play (founding roster and creation draft excluded) / 50",
+   "progress": "bar: different families collected by this franchise in play (founding roster and creation draft excluded) / 35",
    "trigger": "any",
    "scope": "franchise",
    "history": "complete",
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.dx_signed_50",
@@ -2745,7 +2745,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.dx_account_100",
@@ -2770,7 +2770,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.dx_seen_all",
@@ -2782,7 +2782,7 @@
    "name": "Transformation",
    "category": "evolution",
    "rarity": "common",
-   "description": "Evolve a monster.",
+   "description": "Evolve a beast.",
    "requirement": "evolutions made ≥ 1",
    "metric": "t_evolutions",
    "comparison": "ge",
@@ -2807,7 +2807,7 @@
    "name": "Fully Trained",
    "category": "evolution",
    "rarity": "common",
-   "description": "Train a monster to level 50 on your roster.",
+   "description": "Train a beast to level 50 on your roster.",
    "requirement": "monsters on the roster trained to level 50 with you ≥ 1",
    "metric": "r_level50",
    "comparison": "ge",
@@ -2825,14 +2825,14 @@
    "presentation": "toast",
    "nameKey": "ach.ev_level_50",
    "descKey": "ach.ev_level_50_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "ev_evolve_10",
    "name": "Evolution Lab",
    "category": "evolution",
    "rarity": "uncommon",
-   "description": "Evolve 10 monsters.",
+   "description": "Evolve 10 beasts.",
    "requirement": "evolutions made ≥ 10",
    "metric": "t_evolutions",
    "comparison": "ge",
@@ -2857,7 +2857,7 @@
    "name": "Final Form",
    "category": "evolution",
    "rarity": "uncommon",
-   "description": "Evolve a monster to its final form.",
+   "description": "Evolve a beast to its final form.",
    "requirement": "monsters on the roster that evolved to their final form with you ≥ 1",
    "metric": "r_final_stage",
    "comparison": "ge",
@@ -2882,7 +2882,7 @@
    "name": "Veteran Core",
    "category": "evolution",
    "rarity": "uncommon",
-   "description": "Have 10 monsters you trained to level 50 on your roster at once.",
+   "description": "Have 10 beasts you trained to level 50 on your roster at once.",
    "requirement": "monsters on the roster trained to level 50 with you ≥ 10",
    "metric": "r_level50",
    "comparison": "ge",
@@ -2907,7 +2907,7 @@
    "name": "Rising Star",
    "category": "evolution",
    "rarity": "uncommon",
-   "description": "Develop a monster to 80 overall on your roster.",
+   "description": "Develop a beast to 80 overall on your roster.",
    "requirement": "the overall of a monster who was below the target when first seen on your roster ≥ 80",
    "metric": "r_grown_ovr",
    "comparison": "ge",
@@ -2925,20 +2925,20 @@
    "presentation": "toast",
    "nameKey": "ach.ev_ovr_80",
    "descKey": "ach.ev_ovr_80_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "ev_growth",
    "name": "Breakout Season",
    "category": "evolution",
    "rarity": "uncommon",
-   "description": "Have a monster gain 10 overall in one season.",
-   "requirement": "overall gained by one monster in a season ≥ 10",
+   "description": "Have a beast gain 8 overall in one season.",
+   "requirement": "overall gained by one monster in a season ≥ 8",
    "metric": "r_growth",
    "comparison": "ge",
-   "target": 10,
+   "target": 8,
    "params": null,
-   "progress": "bar: overall gained by one monster in a season / 10",
+   "progress": "bar: overall gained by one monster in a season / 8",
    "trigger": "season",
    "scope": "franchise",
    "history": "complete",
@@ -2950,14 +2950,14 @@
    "presentation": "toast",
    "nameKey": "ach.ev_growth",
    "descKey": "ach.ev_growth_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "ev_evolve_25",
    "name": "Master Breeder",
    "category": "evolution",
    "rarity": "rare",
-   "description": "Evolve 25 monsters.",
+   "description": "Evolve 25 beasts.",
    "requirement": "evolutions made ≥ 25",
    "metric": "t_evolutions",
    "comparison": "ge",
@@ -2982,7 +2982,7 @@
    "name": "Superstar",
    "category": "evolution",
    "rarity": "rare",
-   "description": "Develop a monster to 90 overall on your roster.",
+   "description": "Develop a beast to 90 overall on your roster.",
    "requirement": "the overall of a monster who was below the target when first seen on your roster ≥ 90",
    "metric": "r_grown_ovr",
    "comparison": "ge",
@@ -3007,7 +3007,7 @@
    "name": "Homegrown Talent",
    "category": "evolution",
    "rarity": "rare",
-   "description": "Have a monster you drafted reach 80 overall.",
+   "description": "Have a beast you drafted reach 80 overall.",
    "requirement": "the overall of a monster you drafted ≥ 80",
    "metric": "r_drafted_ovr",
    "comparison": "ge",
@@ -3032,7 +3032,7 @@
    "name": "Apex Predator",
    "category": "evolution",
    "rarity": "rare",
-   "description": "Sign, draft, trade for or recruit an Apex monster (founding roster not counted).",
+   "description": "Sign, draft, trade for or recruit an Apex beast (founding roster not counted).",
    "requirement": "an Apex monster you acquired (not a founding one) ≥ 1",
    "metric": "r_apex",
    "comparison": "ge",
@@ -3045,7 +3045,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.ev_apex",
@@ -3057,7 +3057,7 @@
    "name": "Stacked Roster",
    "category": "evolution",
    "rarity": "epic",
-   "description": "Have 10 monsters at 80 overall or better at once.",
+   "description": "Have 10 beasts at 80 overall or better at once.",
    "requirement": "monsters at 80 overall or better on the roster at once ≥ 10",
    "metric": "r_ovr80",
    "comparison": "ge",
@@ -3070,7 +3070,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.ev_ovr80_x10",
@@ -3082,20 +3082,20 @@
    "name": "Elite Academy",
    "category": "evolution",
    "rarity": "epic",
-   "description": "Have 20 monsters you trained to level 50 on your roster at once.",
-   "requirement": "monsters on the roster trained to level 50 with you ≥ 20",
+   "description": "Have 15 beasts you trained to level 50 on your roster at once.",
+   "requirement": "monsters on the roster trained to level 50 with you ≥ 15",
    "metric": "r_level50",
    "comparison": "ge",
-   "target": 20,
+   "target": 15,
    "params": null,
-   "progress": "bar: monsters on the roster trained to level 50 with you / 20",
+   "progress": "bar: monsters on the roster trained to level 50 with you / 15",
    "trigger": "any",
    "scope": "franchise",
    "history": "tracked",
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.ev_level50_x20",
@@ -3107,7 +3107,7 @@
    "name": "Generational",
    "category": "evolution",
    "rarity": "legendary",
-   "description": "Develop a monster to 95 overall on your roster.",
+   "description": "Develop a beast to 95 overall on your roster.",
    "requirement": "the overall of a monster who was below the target when first seen on your roster ≥ 95",
    "metric": "r_grown_ovr",
    "comparison": "ge",
@@ -3120,7 +3120,7 @@
    "speaker": "commissioner",
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "reveal",
    "nameKey": "ach.ev_ovr_95",
@@ -3132,7 +3132,7 @@
    "name": "Evolved Dynasty",
    "category": "evolution",
    "rarity": "legendary",
-   "description": "Have 5 monsters you evolved to their final form on your roster at once.",
+   "description": "Have 5 beasts you evolved to their final form on your roster at once.",
    "requirement": "monsters on the roster that evolved to their final form with you ≥ 5",
    "metric": "r_final_stage",
    "comparison": "ge",
@@ -3145,7 +3145,7 @@
    "speaker": "commissioner",
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "reveal",
    "nameKey": "ach.ev_final_x5",
@@ -3175,7 +3175,7 @@
    "presentation": "toast",
    "nameKey": "ach.cl_first_win",
    "descKey": "ach.cl_first_win_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "cl_wins_10",
@@ -3200,7 +3200,7 @@
    "presentation": "toast",
    "nameKey": "ach.cl_wins_10",
    "descKey": "ach.cl_wins_10_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "cl_battles_25",
@@ -3225,14 +3225,14 @@
    "presentation": "toast",
    "nameKey": "ach.cl_battles_25",
    "descKey": "ach.cl_battles_25_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "cl_recruit_first",
    "name": "Earned the Signature",
    "category": "clash",
    "rarity": "common",
-   "description": "Sign a monster after winning its recruiting Clash.",
+   "description": "Sign a beast after winning its recruiting Clash.",
    "requirement": "monsters signed after a won recruiting Clash ≥ 1",
    "metric": "t_recruits",
    "comparison": "ge",
@@ -3250,20 +3250,20 @@
    "presentation": "toast",
    "nameKey": "ach.cl_recruit_first",
    "descKey": "ach.cl_recruit_first_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "cl_enc_wins_10",
    "name": "Recruiter",
    "category": "clash",
    "rarity": "common",
-   "description": "Win 10 recruiting Clashes.",
-   "requirement": "recruiting Clash wins ≥ 10",
+   "description": "Win 5 recruiting Clashes.",
+   "requirement": "recruiting Clash wins ≥ 5",
    "metric": "t_clash_enc",
    "comparison": "ge",
-   "target": 10,
+   "target": 5,
    "params": null,
-   "progress": "bar: recruiting Clash wins / 10",
+   "progress": "bar: recruiting Clash wins / 5",
    "trigger": "clash",
    "scope": "franchise",
    "history": "tracked",
@@ -3300,20 +3300,20 @@
    "presentation": "toast",
    "nameKey": "ach.cl_pre_wins_10",
    "descKey": "ach.cl_pre_wins_10_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "cl_recruits_10",
    "name": "Talent Magnet",
    "category": "clash",
    "rarity": "common",
-   "description": "Sign 10 monsters after winning their recruiting Clashes.",
-   "requirement": "monsters signed after a won recruiting Clash ≥ 10",
+   "description": "Sign 5 beasts after winning their recruiting Clashes.",
+   "requirement": "monsters signed after a won recruiting Clash ≥ 5",
    "metric": "t_recruits",
    "comparison": "ge",
-   "target": 10,
+   "target": 5,
    "params": null,
-   "progress": "bar: monsters signed after a won recruiting Clash / 10",
+   "progress": "bar: monsters signed after a won recruiting Clash / 5",
    "trigger": "recruit",
    "scope": "franchise",
    "history": "tracked",
@@ -3347,12 +3347,12 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "toast",
    "nameKey": "ach.cl_close",
    "descKey": "ach.cl_close_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "cl_ot_win",
@@ -3427,7 +3427,7 @@
    "presentation": "toast",
    "nameKey": "ach.cl_streak_5",
    "descKey": "ach.cl_streak_5_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "cl_quick",
@@ -3449,12 +3449,12 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "toast",
    "nameKey": "ach.cl_quick",
    "descKey": "ach.cl_quick_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "cl_wins_100",
@@ -3526,7 +3526,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.cl_dominant",
@@ -3601,7 +3601,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.cl_streak_15",
@@ -3613,20 +3613,20 @@
    "name": "Clash Legend",
    "category": "clash",
    "rarity": "legendary",
-   "description": "Win 250 Beast Clashes.",
-   "requirement": "Beast Clash wins ≥ 250",
+   "description": "Win 150 Beast Clashes.",
+   "requirement": "Beast Clash wins ≥ 150",
    "metric": "t_clash_wins",
    "comparison": "ge",
-   "target": 250,
+   "target": 150,
    "params": null,
-   "progress": "bar: Beast Clash wins / 250",
+   "progress": "bar: Beast Clash wins / 150",
    "trigger": "clash",
    "scope": "franchise",
    "history": "tracked",
    "speaker": "commissioner",
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "reveal",
    "nameKey": "ach.cl_wins_250",
@@ -3651,7 +3651,7 @@
    "speaker": "commissioner",
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "reveal",
    "nameKey": "ach.cl_season_unbeaten",
@@ -3681,7 +3681,7 @@
    "presentation": "toast",
    "nameKey": "ach.gy_badges_3",
    "descKey": "ach.gy_badges_3_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gy_gym_wins_10",
@@ -3706,7 +3706,7 @@
    "presentation": "toast",
    "nameKey": "ach.gy_gym_wins_10",
    "descKey": "ach.gy_gym_wins_10_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gy_season_4",
@@ -3756,7 +3756,7 @@
    "presentation": "toast",
    "nameKey": "ach.gy_regained",
    "descKey": "ach.gy_regained_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "gy_gym_wins_30",
@@ -3826,7 +3826,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": false,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.gy_season_6",
@@ -3838,7 +3838,7 @@
    "name": "Legend Sighting",
    "category": "legendary",
    "rarity": "uncommon",
-   "description": "Face a legendary monster in a game.",
+   "description": "Face a legendary beast in a game.",
    "requirement": "a legendary monster in the opponent's lineup ≥ 1",
    "metric": "g_faced_legend",
    "comparison": "ge",
@@ -3888,7 +3888,7 @@
    "name": "Myth Made Real",
    "category": "legendary",
    "rarity": "epic",
-   "description": "Have a legendary monster on your roster.",
+   "description": "Have a legendary beast on your roster.",
    "requirement": "a legendary monster on the roster ≥ 1",
    "metric": "r_legendary",
    "comparison": "ge",
@@ -3913,7 +3913,7 @@
    "name": "Legend on the Field",
    "category": "legendary",
    "rarity": "epic",
-   "description": "Win a game with a legendary monster in your lineup.",
+   "description": "Win a game with a legendary beast in your lineup.",
    "requirement": "a win with a legendary monster in the lineup ≥ 1",
    "metric": "g_legend_win",
    "comparison": "ge",
@@ -3938,7 +3938,7 @@
    "name": "Legend in the Playoffs",
    "category": "legendary",
    "rarity": "legendary",
-   "description": "Win a playoff game with a legendary monster in your lineup.",
+   "description": "Win a playoff game with a legendary beast in your lineup.",
    "requirement": "a playoff win with a legendary monster in your lineup ≥ 1",
    "metric": "g_legend_playoff_win",
    "comparison": "ge",
@@ -3963,7 +3963,7 @@
    "name": "Legendary Champions",
    "category": "legendary",
    "rarity": "mythic",
-   "description": "Win the Beast Bowl with a legendary monster on your roster.",
+   "description": "Win the Beast Bowl with a legendary beast on your roster.",
    "requirement": "a Beast Bowl title with a legendary on the roster ≥ 1",
    "metric": "s_legend_title",
    "comparison": "ge",
@@ -4006,7 +4006,7 @@
    "presentation": "toast",
    "nameKey": "ach.dr_first_pick",
    "descKey": "ach.dr_first_pick_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "dr_scout_full",
@@ -4031,20 +4031,20 @@
    "presentation": "toast",
    "nameKey": "ach.dr_scout_full",
    "descKey": "ach.dr_scout_full_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "dr_picks_25",
    "name": "Draft Room Veteran",
    "category": "draft",
    "rarity": "common",
-   "description": "Make 25 draft picks.",
-   "requirement": "draft picks made (season drafts) ≥ 25",
+   "description": "Make 10 draft picks.",
+   "requirement": "draft picks made (season drafts) ≥ 10",
    "metric": "t_draft_picks",
    "comparison": "ge",
-   "target": 25,
+   "target": 10,
    "params": null,
-   "progress": "bar: draft picks made (season drafts) / 25",
+   "progress": "bar: draft picks made (season drafts) / 10",
    "trigger": "draft",
    "scope": "franchise",
    "history": "partial",
@@ -4081,7 +4081,7 @@
    "presentation": "toast",
    "nameKey": "ach.dr_scouts_10",
    "descKey": "ach.dr_scouts_10_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "dr_regions",
@@ -4138,7 +4138,7 @@
    "name": "Franchise Cornerstone",
    "category": "draft",
    "rarity": "rare",
-   "description": "Have a monster you drafted play 50 games for you.",
+   "description": "Have a beast you drafted play 50 games for you.",
    "requirement": "games played by a monster you drafted ≥ 50",
    "metric": "r_drafted_games",
    "comparison": "ge",
@@ -4163,13 +4163,13 @@
    "name": "Hidden Gem",
    "category": "draft",
    "rarity": "rare",
-   "description": "Have a monster you drafted in round 3 reach 75 overall.",
-   "requirement": "the overall of a third-round pick you drafted ≥ 75",
+   "description": "Have a beast you drafted in round 3 reach 65 overall.",
+   "requirement": "the overall of a third-round pick you drafted ≥ 65",
    "metric": "r_late_gem",
    "comparison": "ge",
-   "target": 75,
+   "target": 65,
    "params": null,
-   "progress": "bar: the overall of a third-round pick you drafted / 75",
+   "progress": "bar: the overall of a third-round pick you drafted / 65",
    "trigger": "any",
    "scope": "franchise",
    "history": "complete",
@@ -4188,13 +4188,13 @@
    "name": "Drafted a Winner",
    "category": "draft",
    "rarity": "epic",
-   "description": "Have a monster you drafted win a league award.",
-   "requirement": "a league award won by a monster you drafted ≥ 1",
-   "metric": "r_draftee_award",
+   "description": "Have beasts you drafted win 3 league awards.",
+   "requirement": "league awards won by beasts you drafted ≥ 3",
+   "metric": "r_draftee_awards",
    "comparison": "ge",
-   "target": 1,
+   "target": 3,
    "params": null,
-   "progress": "met or not",
+   "progress": "bar: league awards won by beasts you drafted / 3",
    "trigger": "season",
    "scope": "franchise",
    "history": "complete",
@@ -4213,7 +4213,7 @@
    "name": "Draft-Day Legend",
    "category": "draft",
    "rarity": "legendary",
-   "description": "Have a monster you drafted enter the Monster Hall of Fame.",
+   "description": "Have a beast you drafted enter the Beast Hall of Fame.",
    "requirement": "Hall of Fame inductees you drafted ≥ 1",
    "metric": "r_draftee_hof",
    "comparison": "ge",
@@ -4388,7 +4388,7 @@
    "name": "Blockbuster",
    "category": "trades",
    "rarity": "rare",
-   "description": "Acquire a monster of 80 overall or better by trade.",
+   "description": "Acquire a beast of 80 overall or better by trade.",
    "requirement": "the highest overall acquired by trade ≥ 80",
    "metric": "t_trade_ovr",
    "comparison": "ge",
@@ -4485,16 +4485,16 @@
   },
   {
    "id": "tr_loyal_10",
-   "name": "One-Club Monster",
+   "name": "One-Club Beast",
    "category": "trades",
    "rarity": "epic",
-   "description": "Keep a monster on your roster for 10 seasons.",
-   "requirement": "seasons one monster has spent on your roster ≥ 10",
+   "description": "Keep a beast on your roster for 12 seasons.",
+   "requirement": "seasons one monster has spent on your roster ≥ 12",
    "metric": "r_loyal",
    "comparison": "ge",
-   "target": 10,
+   "target": 12,
    "params": null,
-   "progress": "bar: seasons one monster has spent on your roster / 10",
+   "progress": "bar: seasons one monster has spent on your roster / 12",
    "trigger": "season",
    "scope": "franchise",
    "history": "complete",
@@ -4556,7 +4556,7 @@
    "presentation": "toast",
    "nameKey": "ach.co_plays_1000",
    "descKey": "ach.co_plays_1000_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "co_hires_10",
@@ -4626,7 +4626,7 @@
    "speaker": null,
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.co_board_max",
@@ -4681,14 +4681,14 @@
    "presentation": "card",
    "nameKey": "ach.co_coy",
    "descKey": "ach.co_coy_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "aw_awards_5",
    "name": "Trophy Cabinet",
    "category": "awards",
    "rarity": "rare",
-   "description": "Have your monsters win 5 league awards.",
+   "description": "Have your beasts win 5 league awards.",
    "requirement": "league awards won by your monsters ≥ 5",
    "metric": "c_awards",
    "comparison": "ge",
@@ -4713,7 +4713,7 @@
    "name": "Record Breaker",
    "category": "awards",
    "rarity": "rare",
-   "description": "Have a monster hold a league record.",
+   "description": "Have a beast hold a league record.",
    "requirement": "a league record held by your monster ≥ 1",
    "metric": "aw_record",
    "comparison": "ge",
@@ -4731,14 +4731,14 @@
    "presentation": "card",
    "nameKey": "ach.aw_record",
    "descKey": "ach.aw_record_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "aw_monster_hof",
    "name": "Enshrined",
    "category": "awards",
    "rarity": "rare",
-   "description": "Have a monster who played for you enter the Monster Hall of Fame.",
+   "description": "Have a beast who played for you enter the Beast Hall of Fame.",
    "requirement": "Monster Hall of Fame inductees who played for you ≥ 1",
    "metric": "aw_hof",
    "comparison": "ge",
@@ -4763,7 +4763,7 @@
    "name": "Most Valuable",
    "category": "awards",
    "rarity": "epic",
-   "description": "Have a monster win the league MVP award.",
+   "description": "Have a beast win the league Most Valuable Beast award.",
    "requirement": "MVP awards ≥ 1",
    "metric": "aw_mvp",
    "comparison": "ge",
@@ -4826,7 +4826,7 @@
    "speaker": "board",
    "hidden": false,
    "retroactive": true,
-   "provisional": true,
+   "provisional": false,
    "legacy": false,
    "presentation": "reveal",
    "nameKey": "ach.aw_all_awards",
@@ -4835,10 +4835,10 @@
   },
   {
    "id": "aw_monster_hof_5",
-   "name": "Hall of Monsters",
+   "name": "Hall of Beasts",
    "category": "awards",
    "rarity": "legendary",
-   "description": "Have 5 monsters who played for you enter the Monster Hall of Fame.",
+   "description": "Have 5 beasts who played for you enter the Beast Hall of Fame.",
    "requirement": "Monster Hall of Fame inductees who played for you ≥ 5",
    "metric": "aw_hof",
    "comparison": "ge",
@@ -4881,7 +4881,7 @@
    "presentation": "toast",
    "nameKey": "ach.hd_one_point",
    "descKey": "ach.hd_one_point_d",
-   "testing": "observed in a soak + unit test (positive and negative)"
+   "testing": "unit test (positive and negative)"
   },
   {
    "id": "hd_tiebreak",
@@ -4963,13 +4963,13 @@
    "name": "Nemesis",
    "category": "hidden",
    "rarity": "epic",
-   "description": "Beat your rival 10 times.",
-   "requirement": "wins over your rival club ≥ 10",
+   "description": "Beat your rival 20 times.",
+   "requirement": "wins over your rival club ≥ 20",
    "metric": "rival_wins",
    "comparison": "ge",
-   "target": 10,
+   "target": 20,
    "params": null,
-   "progress": "bar: wins over your rival club / 10",
+   "progress": "bar: wins over your rival club / 20",
    "trigger": "sunday",
    "scope": "franchise",
    "history": "complete",

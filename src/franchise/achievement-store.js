@@ -243,7 +243,7 @@ export const METRICS = Object.freeze({
   r_growth: (f) => Math.max(0, ...roster(f).flatMap((m) => (m.career?.ev || []).filter((e) => e.t === 'growth' && e.c === f.club).map((e) => num(e.x?.to) - num(e.x?.from)))),
   r_drafted_ovr: (f) => Math.max(0, ...roster(f).filter((m) => mineDrafted(f, m)).map(ovr)), r_late_gem: (f) => Math.max(0, ...roster(f).filter((m) => mineDrafted(f, m) && m.drafted.round >= 3).map(ovr)),
   r_drafted_games: (f) => Math.max(0, ...roster(f).filter((m) => mineDrafted(f, m)).map((m) => num(m.stats?.career?.reg?.games) + num(m.stats?.career?.post?.games))),
-  r_draftee_award: (f) => (roster(f).some((m) => mineDrafted(f, m) && (m.career?.ev || []).some((e) => e.t === 'award' && e.c === f.club)) ? 1 : 0),
+  r_draftee_awards: (f) => roster(f).filter((m) => mineDrafted(f, m)).reduce((a, m) => a + (m.career?.ev || []).filter((e) => e.t === 'award' && e.c === f.club).length, 0), // calibration 2026-11-27: awards won by your draftees (counted)
   r_draftee_hof: (f) => { const ids = new Set([...roster(f).filter((m) => mineDrafted(f, m)).map((m) => String(m.id)), ...Object.keys(f.achTrack?.set?.drafted || {})]); return inductees(f).filter((x) => ids.has(String(x.id))).length; },
   r_legendary: (f, x) => (roster(f).some((m) => x.H?.isLegendary?.(m)) ? 1 : 0),
   r_loyal: (f) => Math.max(0, ...roster(f).map((m) => (m.joined != null ? num(f.season?.year) - m.joined + (f.season?.finished ? 1 : 0) : 0))),

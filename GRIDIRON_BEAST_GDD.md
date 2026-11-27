@@ -5293,3 +5293,10 @@ presentation that scales with rarity, and no change to the game. Full catalogue:
 
   Details: `reports/achievements/ACHIEVEMENT_REVIEW_FOLLOWUP.md`.
 
+* **62.10 Calibration on the merged balance (2026-11-27).** Six 15-season careers on main after the balance merge (Rookie, Pro and
+  All-Star, two seeds each) and positive and negative scenarios for every metric. 22 thresholds are adjusted and none is provisional any
+  more; the 200 rows, categories, rarities, original ids and records are unchanged.
+  - Record Breaker counts a record only after year one, and only when it beat an earlier mark (the record book's rule).
+  - Drafted a Winner counts three awards won by your draftees.
+  - Renamed: Four on the Board (4 field goals in a game) and Sack Specialist (7 sacks by one beast in a season).
+  - Details: `reports/achievement-audit/FINAL_ACHIEVEMENT_CALIBRATION.md`.

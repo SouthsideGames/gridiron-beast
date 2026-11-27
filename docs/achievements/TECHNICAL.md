@@ -28,7 +28,7 @@ These files are all existing files, so the published game still has 512 files.
   - `scope`: `franchise` or `account`.
   - `hidden`
   - `retro`: the row may be granted from history.
-  - `prov`: the threshold is provisional.
+  - `prov`: the threshold is provisional. Since the calibration of 2026-11-27 no row carries it.
   - `params`: other numbers that the description names.
   - `progress`: the metric the progress bar shows.
 - **Target:** the threshold. The description shows it as `{target}`.
@@ -150,3 +150,13 @@ Test fixtures run without `localStorage` in Node, so they never reach a player's
   - the queue;
   - persistence;
   - history coverage.
+
+## Calibration (2026-11-27)
+
+- `tools/achievements-calibration.mjs` plays whole careers through `runFranchise` and records first-unlock seasons, every owner game's
+  facts (`gameFacts`), season values and progress values.
+- `tools/achievements-calibration-report.mjs` summarises the runs.
+- `achHelpers` is exported for the harness only.
+- New metric `r_draftee_awards` (awards won by your draftees, counted) replaces `r_draftee_award`. `aw_record` follows the record
+  book's rule.
+- Results: `reports/achievement-audit/FINAL_ACHIEVEMENT_CALIBRATION.md`.
