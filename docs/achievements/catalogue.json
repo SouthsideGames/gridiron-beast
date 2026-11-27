@@ -23,7 +23,7 @@
    "presentation": "scene",
    "nameKey": "achievements.first_blood",
    "descKey": null,
-   "testing": "original check unchanged; id kept (test)"
+   "testing": "observed in a soak + original check unchanged; id kept (test)"
   },
   {
    "id": "rival_beaten",
@@ -46,7 +46,7 @@
    "presentation": "scene",
    "nameKey": "achievements.a_word_from",
    "descKey": null,
-   "testing": "original check unchanged; id kept (test)"
+   "testing": "observed in a soak + original check unchanged; id kept (test)"
   },
   {
    "id": "rival_swept",
@@ -69,7 +69,7 @@
    "presentation": "scene",
    "nameKey": "achievements.the_sweep",
    "descKey": null,
-   "testing": "original check unchanged; id kept (test)"
+   "testing": "observed in a soak + original check unchanged; id kept (test)"
   },
   {
    "id": "first_badge",
@@ -92,7 +92,7 @@
    "presentation": "scene",
    "nameKey": "achievements.the_first_badge",
    "descKey": null,
-   "testing": "original check unchanged; id kept (test)"
+   "testing": "observed in a soak + original check unchanged; id kept (test)"
   },
   {
    "id": "half_badges",
@@ -161,7 +161,7 @@
    "presentation": "scene",
    "nameKey": "achievements.a_winning_season",
    "descKey": null,
-   "testing": "original check unchanged; id kept (test)"
+   "testing": "observed in a soak + original check unchanged; id kept (test)"
   },
   {
    "id": "undefeated",
@@ -207,7 +207,7 @@
    "presentation": "scene",
    "nameKey": "achievements.the_playoffs",
    "descKey": null,
-   "testing": "original check unchanged; id kept (test)"
+   "testing": "observed in a soak + original check unchanged; id kept (test)"
   },
   {
    "id": "conference_title",
@@ -299,7 +299,7 @@
    "presentation": "scene",
    "nameKey": "achievements.a_league_award",
    "descKey": null,
-   "testing": "original check unchanged; id kept (test)"
+   "testing": "observed in a soak + original check unchanged; id kept (test)"
   },
   {
    "id": "wins_10",
@@ -322,7 +322,7 @@
    "presentation": "scene",
    "nameKey": "achievements.ten_wins",
    "descKey": null,
-   "testing": "original check unchanged; id kept (test)"
+   "testing": "observed in a soak + original check unchanged; id kept (test)"
   },
   {
    "id": "wins_30",
@@ -345,7 +345,7 @@
    "presentation": "scene",
    "nameKey": "achievements.thirty_wins",
    "descKey": null,
-   "testing": "original check unchanged; id kept (test)"
+   "testing": "observed in a soak + original check unchanged; id kept (test)"
   },
   {
    "id": "wins_50",
@@ -575,7 +575,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_shutout",
    "descKey": "ach.gp_shutout_d",
-   "testing": "unit test"
+   "testing": "observed in a soak + unit test"
   },
   {
    "id": "gp_score_30",
@@ -598,7 +598,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_score_30",
    "descKey": "ach.gp_score_30_d",
-   "testing": "unit test"
+   "testing": "observed in a soak + unit test"
   },
   {
    "id": "gp_road_wins",
@@ -621,7 +621,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_road_wins",
    "descKey": "ach.gp_road_wins_d",
-   "testing": "unit test"
+   "testing": "observed in a soak + unit test"
   },
   {
    "id": "gp_no_turnover_win",
@@ -644,7 +644,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_no_turnover_win",
    "descKey": "ach.gp_no_turnover_win_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "gp_ot_win",
@@ -667,7 +667,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_ot_win",
    "descKey": "ach.gp_ot_win_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "gp_hold_100",
@@ -690,7 +690,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_hold_100",
    "descKey": "ach.gp_hold_100_d",
-   "testing": "unit test"
+   "testing": "observed in a soak + unit test"
   },
   {
    "id": "gp_blowout_20",
@@ -713,7 +713,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_blowout_20",
    "descKey": "ach.gp_blowout_20_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "gp_streak_5",
@@ -736,7 +736,7 @@
    "presentation": "toast",
    "nameKey": "ach.gp_streak_5",
    "descKey": "ach.gp_streak_5_d",
-   "testing": "unit test"
+   "testing": "observed in a soak + unit test"
   },
   {
    "id": "gp_home_unbeaten",
@@ -782,7 +782,7 @@
    "presentation": "card",
    "nameKey": "ach.gp_blowout_35",
    "descKey": "ach.gp_blowout_35_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "gp_score_45",
@@ -828,7 +828,7 @@
    "presentation": "card",
    "nameKey": "ach.gp_comeback_14",
    "descKey": "ach.gp_comeback_14_d",
-   "testing": "unit test"
+   "testing": "observed in a soak + unit test"
   },
   {
    "id": "gp_beat_25",
@@ -897,7 +897,7 @@
    "presentation": "card",
    "nameKey": "ach.gp_streak_10",
    "descKey": "ach.gp_streak_10_d",
-   "testing": "unit test"
+   "testing": "observed in a soak + unit test"
   },
   {
    "id": "gp_score_60",
@@ -1058,7 +1058,7 @@
    "presentation": "card",
    "nameKey": "ach.fm_winning_run_3",
    "descKey": "ach.fm_winning_run_3_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "fm_points_300",
@@ -1104,7 +1104,7 @@
    "presentation": "card",
    "nameKey": "ach.fm_twelve_wins",
    "descKey": "ach.fm_twelve_wins_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "fm_wins_100",
@@ -1196,7 +1196,7 @@
    "presentation": "toast",
    "nameKey": "ach.ch_playoff_win",
    "descKey": "ach.ch_playoff_win_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "ch_playoffs_5",
@@ -1380,7 +1380,7 @@
    "presentation": "toast",
    "nameKey": "ach.of_pass_250",
    "descKey": "ach.of_pass_250_d",
-   "testing": "unit test"
+   "testing": "observed in a soak + unit test"
   },
   {
    "id": "of_rec_150",
@@ -1403,7 +1403,7 @@
    "presentation": "toast",
    "nameKey": "ach.of_rec_150",
    "descKey": "ach.of_rec_150_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "of_rush_150",
@@ -1426,7 +1426,7 @@
    "presentation": "toast",
    "nameKey": "ach.of_rush_150",
    "descKey": "ach.of_rush_150_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "of_rush_td_3",
@@ -1449,7 +1449,7 @@
    "presentation": "toast",
    "nameKey": "ach.of_rush_td_3",
    "descKey": "ach.of_rush_td_3_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "of_season_rec_1500",
@@ -1472,7 +1472,7 @@
    "presentation": "toast",
    "nameKey": "ach.of_season_rec_1500",
    "descKey": "ach.of_season_rec_1500_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "of_pass_td_4",
@@ -1495,7 +1495,7 @@
    "presentation": "toast",
    "nameKey": "ach.of_pass_td_4",
    "descKey": "ach.of_pass_td_4_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "of_rec_250",
@@ -1518,7 +1518,7 @@
    "presentation": "toast",
    "nameKey": "ach.of_rec_250",
    "descKey": "ach.of_rec_250_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "of_long_80",
@@ -1541,7 +1541,7 @@
    "presentation": "toast",
    "nameKey": "ach.of_long_80",
    "descKey": "ach.of_long_80_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "of_season_pass_3000",
@@ -1564,7 +1564,7 @@
    "presentation": "toast",
    "nameKey": "ach.of_season_pass_3000",
    "descKey": "ach.of_season_pass_3000_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "of_season_rush_1000",
@@ -1587,7 +1587,7 @@
    "presentation": "toast",
    "nameKey": "ach.of_season_rush_1000",
    "descKey": "ach.of_season_rush_1000_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "of_rush_250",
@@ -1613,26 +1613,26 @@
    "testing": "definition and metric checked (catalogue test)"
   },
   {
-   "id": "of_pass_400",
+   "id": "of_pass_450",
    "name": "Aerial Assault",
    "category": "offense",
    "rarity": "epic",
-   "description": "Have a monster throw for 400 yards in a game.",
-   "requirement": "one monster's passing yards in a game ≥ 400",
+   "description": "Have a monster throw for 450 yards in a game.",
+   "requirement": "one monster's passing yards in a game ≥ 450",
    "metric": "g_pass_yds",
    "comparison": "ge",
-   "target": 400,
+   "target": 450,
    "params": null,
    "progress": "met or not",
    "trigger": "sunday",
    "scope": "franchise",
    "hidden": false,
    "retroactive": false,
-   "provisional": false,
+   "provisional": true,
    "legacy": false,
    "presentation": "card",
-   "nameKey": "ach.of_pass_400",
-   "descKey": "ach.of_pass_400_d",
+   "nameKey": "ach.of_pass_450",
+   "descKey": "ach.of_pass_450_d",
    "testing": "definition and metric checked (catalogue test)"
   },
   {
@@ -1682,15 +1682,15 @@
    "testing": "unit test"
   },
   {
-   "id": "of_pass_td_6",
-   "name": "Six-Shooter",
+   "id": "of_pass_td_7",
+   "name": "Seven Up",
    "category": "offense",
    "rarity": "epic",
-   "description": "Have a monster throw 6 touchdown passes in a game.",
-   "requirement": "one monster's touchdown passes in a game ≥ 6",
+   "description": "Have a monster throw 7 touchdown passes in a game.",
+   "requirement": "one monster's touchdown passes in a game ≥ 7",
    "metric": "g_pass_td",
    "comparison": "ge",
-   "target": 6,
+   "target": 7,
    "params": null,
    "progress": "met or not",
    "trigger": "sunday",
@@ -1700,8 +1700,8 @@
    "provisional": true,
    "legacy": false,
    "presentation": "card",
-   "nameKey": "ach.of_pass_td_6",
-   "descKey": "ach.of_pass_td_6_d",
+   "nameKey": "ach.of_pass_td_7",
+   "descKey": "ach.of_pass_td_7_d",
    "testing": "definition and metric checked (catalogue test)"
   },
   {
@@ -1725,7 +1725,7 @@
    "presentation": "toast",
    "nameKey": "ach.df_first_int",
    "descKey": "ach.df_first_int_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "df_sacks_3",
@@ -1748,7 +1748,7 @@
    "presentation": "toast",
    "nameKey": "ach.df_sacks_3",
    "descKey": "ach.df_sacks_3_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "df_tfl_5",
@@ -1771,7 +1771,7 @@
    "presentation": "toast",
    "nameKey": "ach.df_tfl_5",
    "descKey": "ach.df_tfl_5_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "df_int_2",
@@ -1794,7 +1794,7 @@
    "presentation": "toast",
    "nameKey": "ach.df_int_2",
    "descKey": "ach.df_int_2_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "df_tackles_12",
@@ -1817,7 +1817,7 @@
    "presentation": "toast",
    "nameKey": "ach.df_tackles_12",
    "descKey": "ach.df_tackles_12_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "df_pick_six",
@@ -1935,26 +1935,26 @@
    "testing": "definition and metric checked (catalogue test)"
   },
   {
-   "id": "df_player_sacks_3",
+   "id": "df_player_sacks_4",
    "name": "Quarterback Hunter",
    "category": "defense",
    "rarity": "epic",
-   "description": "Have a monster record 3 sacks in a game.",
-   "requirement": "one monster's sacks in a game ≥ 3",
+   "description": "Have a monster record 4 sacks in a game.",
+   "requirement": "one monster's sacks in a game ≥ 4",
    "metric": "g_sacks",
    "comparison": "ge",
-   "target": 3,
+   "target": 4,
    "params": null,
    "progress": "met or not",
    "trigger": "sunday",
    "scope": "franchise",
    "hidden": false,
    "retroactive": false,
-   "provisional": false,
+   "provisional": true,
    "legacy": false,
    "presentation": "card",
-   "nameKey": "ach.df_player_sacks_3",
-   "descKey": "ach.df_player_sacks_3_d",
+   "nameKey": "ach.df_player_sacks_4",
+   "descKey": "ach.df_player_sacks_4_d",
    "testing": "definition and metric checked (catalogue test)"
   },
   {
@@ -1985,34 +1985,34 @@
    "name": "Double-Digit Sacks",
    "category": "defense",
    "rarity": "epic",
-   "description": "Have a monster record 10 sacks in a regular season.",
-   "requirement": "one monster's sacks in a season ≥ 10",
+   "description": "Have a monster record 14 sacks in a regular season.",
+   "requirement": "one monster's sacks in a season ≥ 14",
    "metric": "s_sacks",
    "comparison": "ge",
-   "target": 10,
+   "target": 14,
    "params": null,
    "progress": "met or not",
    "trigger": "season",
    "scope": "franchise",
    "hidden": false,
    "retroactive": true,
-   "provisional": false,
+   "provisional": true,
    "legacy": false,
    "presentation": "card",
    "nameKey": "ach.df_player_season_sacks",
    "descKey": "ach.df_player_season_sacks_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
-   "id": "df_sacks_6",
+   "id": "df_sacks_7",
    "name": "Siege",
    "category": "defense",
    "rarity": "epic",
-   "description": "Record 6 sacks as a team in a game.",
-   "requirement": "your sacks in a game ≥ 6",
+   "description": "Record 7 sacks as a team in a game.",
+   "requirement": "your sacks in a game ≥ 7",
    "metric": "g_team_sacks",
    "comparison": "ge",
-   "target": 6,
+   "target": 7,
    "params": null,
    "progress": "met or not",
    "trigger": "sunday",
@@ -2022,8 +2022,8 @@
    "provisional": true,
    "legacy": false,
    "presentation": "card",
-   "nameKey": "ach.df_sacks_6",
-   "descKey": "ach.df_sacks_6_d",
+   "nameKey": "ach.df_sacks_7",
+   "descKey": "ach.df_sacks_7_d",
    "testing": "definition and metric checked (catalogue test)"
   },
   {
@@ -2070,7 +2070,7 @@
    "presentation": "toast",
    "nameKey": "ach.st_first_fg",
    "descKey": "ach.st_first_fg_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "st_fg_50",
@@ -2093,7 +2093,7 @@
    "presentation": "toast",
    "nameKey": "ach.st_fg_50",
    "descKey": "ach.st_fg_50_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "st_career_fg_50",
@@ -2185,7 +2185,7 @@
    "presentation": "card",
    "nameKey": "ach.st_season_fg_12",
    "descKey": "ach.st_season_fg_12_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "st_kr_td",
@@ -2231,7 +2231,7 @@
    "presentation": "card",
    "nameKey": "ach.st_fg_3_game",
    "descKey": "ach.st_fg_3_game_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "st_kr_td_3",
@@ -2300,7 +2300,7 @@
    "presentation": "toast",
    "nameKey": "ach.dx_seen_60",
    "descKey": "ach.dx_seen_60_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "dx_seen_100",
@@ -2323,7 +2323,7 @@
    "presentation": "toast",
    "nameKey": "ach.dx_seen_100",
    "descKey": "ach.dx_seen_100_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "dx_signed_40",
@@ -2346,7 +2346,7 @@
    "presentation": "toast",
    "nameKey": "ach.dx_signed_40",
    "descKey": "ach.dx_signed_40_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "dx_original_45",
@@ -2415,7 +2415,7 @@
    "presentation": "toast",
    "nameKey": "ach.dx_knowledge_30",
    "descKey": "ach.dx_knowledge_30_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "dx_types_all",
@@ -2461,7 +2461,7 @@
    "presentation": "toast",
    "nameKey": "ach.dx_seen_140",
    "descKey": "ach.dx_seen_140_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "dx_seen_170",
@@ -2599,7 +2599,7 @@
    "presentation": "toast",
    "nameKey": "ach.ev_level_50",
    "descKey": "ach.ev_level_50_d",
-   "testing": "unit test"
+   "testing": "observed in a soak + unit test"
   },
   {
    "id": "ev_evolve_10",
@@ -2691,7 +2691,7 @@
    "presentation": "toast",
    "nameKey": "ach.ev_ovr_80",
    "descKey": "ach.ev_ovr_80_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "ev_growth",
@@ -2714,7 +2714,7 @@
    "presentation": "toast",
    "nameKey": "ach.ev_growth",
    "descKey": "ach.ev_growth_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "ev_evolve_25",
@@ -2921,7 +2921,7 @@
    "presentation": "toast",
    "nameKey": "ach.cl_first_win",
    "descKey": "ach.cl_first_win_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "cl_wins_10",
@@ -2944,7 +2944,7 @@
    "presentation": "toast",
    "nameKey": "ach.cl_wins_10",
    "descKey": "ach.cl_wins_10_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "cl_battles_25",
@@ -2967,7 +2967,7 @@
    "presentation": "toast",
    "nameKey": "ach.cl_battles_25",
    "descKey": "ach.cl_battles_25_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "cl_recruit_first",
@@ -2990,7 +2990,7 @@
    "presentation": "toast",
    "nameKey": "ach.cl_recruit_first",
    "descKey": "ach.cl_recruit_first_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "cl_enc_wins_10",
@@ -3036,7 +3036,7 @@
    "presentation": "toast",
    "nameKey": "ach.cl_pre_wins_10",
    "descKey": "ach.cl_pre_wins_10_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "cl_recruits_10",
@@ -3084,7 +3084,7 @@
    "presentation": "toast",
    "nameKey": "ach.cl_close",
    "descKey": "ach.cl_close_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "cl_ot_win",
@@ -3153,7 +3153,7 @@
    "presentation": "toast",
    "nameKey": "ach.cl_streak_5",
    "descKey": "ach.cl_streak_5_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "cl_quick",
@@ -3178,7 +3178,7 @@
    "presentation": "toast",
    "nameKey": "ach.cl_quick",
    "descKey": "ach.cl_quick_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "cl_wins_100",
@@ -3387,7 +3387,7 @@
    "presentation": "toast",
    "nameKey": "ach.gy_badges_3",
    "descKey": "ach.gy_badges_3_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "gy_gym_wins_10",
@@ -3410,7 +3410,7 @@
    "presentation": "toast",
    "nameKey": "ach.gy_gym_wins_10",
    "descKey": "ach.gy_gym_wins_10_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "gy_season_4",
@@ -3456,7 +3456,7 @@
    "presentation": "toast",
    "nameKey": "ach.gy_regained",
    "descKey": "ach.gy_regained_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "gy_gym_wins_30",
@@ -3686,7 +3686,7 @@
    "presentation": "toast",
    "nameKey": "ach.dr_first_pick",
    "descKey": "ach.dr_first_pick_d",
-   "testing": "unit test"
+   "testing": "observed in a soak + unit test"
   },
   {
    "id": "dr_scout_full",
@@ -3709,7 +3709,7 @@
    "presentation": "toast",
    "nameKey": "ach.dr_scout_full",
    "descKey": "ach.dr_scout_full_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "dr_picks_25",
@@ -3755,7 +3755,7 @@
    "presentation": "toast",
    "nameKey": "ach.dr_scouts_10",
    "descKey": "ach.dr_scouts_10_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "dr_regions",
@@ -4192,7 +4192,7 @@
    "presentation": "toast",
    "nameKey": "ach.co_plays_1000",
    "descKey": "ach.co_plays_1000_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "co_hires_10",
@@ -4307,7 +4307,7 @@
    "presentation": "card",
    "nameKey": "ach.co_coy",
    "descKey": "ach.co_coy_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "aw_awards_5",
@@ -4353,7 +4353,7 @@
    "presentation": "card",
    "nameKey": "ach.aw_record",
    "descKey": "ach.aw_record_d",
-   "testing": "definition and metric checked (catalogue test)"
+   "testing": "observed in a soak"
   },
   {
    "id": "aw_monster_hof",
@@ -4491,7 +4491,7 @@
    "presentation": "toast",
    "nameKey": "ach.hd_one_point",
    "descKey": "ach.hd_one_point_d",
-   "testing": "unit test"
+   "testing": "observed in a soak + unit test"
   },
   {
    "id": "hd_tiebreak",

@@ -8,24 +8,24 @@ Columns: requirement (what is measured, comparison, threshold), progress (how th
 
 | id | name | rarity | description | requirement | progress | trigger | scope | H | R | P | testing |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `first_win` (original) | First blood | common | Win your first game with a franchise. | original check (unchanged): Win your first game with a franchise. | met or not | sunday | franchise |  | ✓ |  | original check unchanged; id kept (test) |
-| `rival_beaten` (original) | A word from {rival} | common | Beat your rival club for the first time. | original check (unchanged): Beat your rival club for the first time. | met or not | sunday | franchise |  | ✓ |  | original check unchanged; id kept (test) |
-| `rival_swept` (original) | The sweep | uncommon | Beat your rival twice in one season without losing to them. | original check (unchanged): Beat your rival twice in one season without losing to them. | met or not (original check) | sunday | franchise |  |  |  | original check unchanged; id kept (test) |
-| `gp_shutout` | Clean Sheet | common | Win a game without allowing a point. | a win in which the opponent scores 0 ≥ 1 | met or not | sunday | franchise |  | ✓ |  | unit test |
-| `gp_score_30` | Thirty Up | common | Score 30 or more points in a game. | your points in one game ≥ 30 | met or not | sunday | franchise |  | ✓ |  | unit test |
-| `gp_road_wins` | Road Warriors | common | Win 10 road games. | road wins (tracked) ≥ 10 | bar: road wins (tracked) / 10 | sunday | franchise |  | ✓ |  | unit test |
-| `gp_no_turnover_win` | Ball Security | common | Win a game without turning the ball over. | a win with 0 turnovers committed ≥ 1 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `gp_ot_win` | Extra Time | common | Win a game in overtime. | a win in overtime ≥ 1 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `gp_hold_100` | Brick Wall | common | Win a game holding the opponent under 100 total yards. | the opponent's total yards in a win < 100 | met or not | sunday | franchise |  |  |  | unit test |
-| `gp_blowout_20` | Statement Win | uncommon | Win a game by 20 or more points. | the winning margin of one game ≥ 20 | met or not | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `gp_streak_5` | Hot Streak | uncommon | Win 5 games in a row. | the longest run of consecutive wins, playoffs included (tracked) ≥ 5 | bar: t_win_streak_now / 5 | sunday | franchise |  | ✓ |  | unit test |
+| `first_win` (original) | First blood | common | Win your first game with a franchise. | original check (unchanged): Win your first game with a franchise. | met or not | sunday | franchise |  | ✓ |  | observed in a soak + original check unchanged; id kept (test) |
+| `rival_beaten` (original) | A word from {rival} | common | Beat your rival club for the first time. | original check (unchanged): Beat your rival club for the first time. | met or not | sunday | franchise |  | ✓ |  | observed in a soak + original check unchanged; id kept (test) |
+| `rival_swept` (original) | The sweep | uncommon | Beat your rival twice in one season without losing to them. | original check (unchanged): Beat your rival twice in one season without losing to them. | met or not (original check) | sunday | franchise |  |  |  | observed in a soak + original check unchanged; id kept (test) |
+| `gp_shutout` | Clean Sheet | common | Win a game without allowing a point. | a win in which the opponent scores 0 ≥ 1 | met or not | sunday | franchise |  | ✓ |  | observed in a soak + unit test |
+| `gp_score_30` | Thirty Up | common | Score 30 or more points in a game. | your points in one game ≥ 30 | met or not | sunday | franchise |  | ✓ |  | observed in a soak + unit test |
+| `gp_road_wins` | Road Warriors | common | Win 10 road games. | road wins (tracked) ≥ 10 | bar: road wins (tracked) / 10 | sunday | franchise |  | ✓ |  | observed in a soak + unit test |
+| `gp_no_turnover_win` | Ball Security | common | Win a game without turning the ball over. | a win with 0 turnovers committed ≥ 1 | met or not | sunday | franchise |  |  |  | observed in a soak |
+| `gp_ot_win` | Extra Time | common | Win a game in overtime. | a win in overtime ≥ 1 | met or not | sunday | franchise |  |  |  | observed in a soak |
+| `gp_hold_100` | Brick Wall | common | Win a game holding the opponent under 100 total yards. | the opponent's total yards in a win < 100 | met or not | sunday | franchise |  |  |  | observed in a soak + unit test |
+| `gp_blowout_20` | Statement Win | uncommon | Win a game by 20 or more points. | the winning margin of one game ≥ 20 | met or not | sunday | franchise |  | ✓ |  | observed in a soak |
+| `gp_streak_5` | Hot Streak | uncommon | Win 5 games in a row. | the longest run of consecutive wins, playoffs included (tracked) ≥ 5 | bar: t_win_streak_now / 5 | sunday | franchise |  | ✓ |  | observed in a soak + unit test |
 | `gp_home_unbeaten` | Fortress | rare | Win every home game of a regular season. | every home game of a regular season won ≥ 1 | met or not | season | franchise |  | ✓ |  | unit test |
-| `gp_blowout_35` | Rout | rare | Win a game by 35 or more points. | the winning margin of one game ≥ 35 | met or not | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `gp_blowout_35` | Rout | rare | Win a game by 35 or more points. | the winning margin of one game ≥ 35 | met or not | sunday | franchise |  | ✓ |  | observed in a soak |
 | `gp_score_45` | Points Machine | rare | Score 45 or more points in a game. | your points in one game ≥ 45 | met or not | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `gp_comeback_14` | Never Out of It | rare | Win a game after trailing by 14 or more points. | the largest deficit you overcame in a win ≥ 14 | met or not | sunday | franchise |  |  | ✓ | unit test |
+| `gp_comeback_14` | Never Out of It | rare | Win a game after trailing by 14 or more points. | the largest deficit you overcame in a win ≥ 14 | met or not | sunday | franchise |  |  | ✓ | observed in a soak + unit test |
 | `gp_beat_25` | Around the League | rare | Beat 25 different clubs. | different clubs beaten ≥ 25 | bar: different clubs beaten / 25 | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `gp_comeback_21` | The Great Escape | epic | Win a game after trailing by 21 or more points. | the largest deficit you overcame in a win ≥ 21 | met or not | sunday | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
-| `gp_streak_10` | Unstoppable | epic | Win 10 games in a row. | the longest run of consecutive wins, playoffs included (tracked) ≥ 10 | bar: t_win_streak_now / 10 | sunday | franchise |  | ✓ |  | unit test |
+| `gp_streak_10` | Unstoppable | epic | Win 10 games in a row. | the longest run of consecutive wins, playoffs included (tracked) ≥ 10 | bar: t_win_streak_now / 10 | sunday | franchise |  | ✓ |  | observed in a soak + unit test |
 | `gp_score_60` | Scoreboard Broken | legendary | Score 60 or more points in a game. | your points in one game ≥ 60 | met or not | sunday | franchise |  | ✓ | ✓ | definition and metric checked (catalogue test) |
 | `gp_streak_20` | Dynasty Run | legendary | Win 20 games in a row, playoffs included. | the longest run of consecutive wins, playoffs included (tracked) ≥ 20 | bar: t_win_streak_now / 20 | sunday | franchise |  |  | ✓ | unit test |
 
@@ -33,18 +33,18 @@ Columns: requirement (what is measured, comparison, threshold), progress (how th
 
 | id | name | rarity | description | requirement | progress | trigger | scope | H | R | P | testing |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `winning_season` (original) | A winning season | common | Finish your first winning season. | original check (unchanged): Finish your first winning season. | met or not | season | franchise |  | ✓ |  | original check unchanged; id kept (test) |
+| `winning_season` (original) | A winning season | common | Finish your first winning season. | original check (unchanged): Finish your first winning season. | met or not | season | franchise |  | ✓ |  | observed in a soak + original check unchanged; id kept (test) |
 | `undefeated` (original) | Perfect | epic | Go unbeaten through a regular season. | original check (unchanged): Go unbeaten through a regular season. | met or not (original check) | season | franchise |  | ✓ |  | original check unchanged; id kept (test) |
-| `wins_10` (original) | Ten wins | common | Reach 10 career wins. | original check (unchanged): Reach 10 career wins. | bar: career wins / 10 | sunday | franchise |  | ✓ |  | original check unchanged; id kept (test) |
-| `wins_30` (original) | Thirty wins | uncommon | Reach 30 career wins. | original check (unchanged): Reach 30 career wins. | bar: career wins / 30 | sunday | franchise |  | ✓ |  | original check unchanged; id kept (test) |
+| `wins_10` (original) | Ten wins | common | Reach 10 career wins. | original check (unchanged): Reach 10 career wins. | bar: career wins / 10 | sunday | franchise |  | ✓ |  | observed in a soak + original check unchanged; id kept (test) |
+| `wins_30` (original) | Thirty wins | uncommon | Reach 30 career wins. | original check (unchanged): Reach 30 career wins. | bar: career wins / 30 | sunday | franchise |  | ✓ |  | observed in a soak + original check unchanged; id kept (test) |
 | `wins_50` (original) | Fifty wins | rare | Reach 50 career wins. | original check (unchanged): Reach 50 career wins. | bar: career wins / 50 | sunday | franchise |  | ✓ |  | original check unchanged; id kept (test) |
 | `fm_seasons_5` | Settled In | common | Complete 5 seasons with this franchise. | seasons completed ≥ 5 | bar: seasons completed / 5 | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `fm_games_100` | Century | common | Play 100 games. | games played (tracked) ≥ 100 | bar: games played (tracked) / 100 | sunday | franchise |  | ✓ |  | unit test |
 | `fm_seasons_10` | Decade at the Helm | uncommon | Complete 10 seasons with this franchise. | seasons completed ≥ 10 | bar: seasons completed / 10 | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `fm_winning_5` | Consistent Winner | rare | Finish 5 winning regular seasons. | winning regular seasons ≥ 5 | bar: winning regular seasons / 5 | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `fm_winning_run_3` | Built to Last | rare | Finish 3 winning regular seasons in a row. | consecutive winning regular seasons ≥ 3 | bar: consecutive winning regular seasons / 3 | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `fm_winning_run_3` | Built to Last | rare | Finish 3 winning regular seasons in a row. | consecutive winning regular seasons ≥ 3 | bar: consecutive winning regular seasons / 3 | season | franchise |  | ✓ |  | observed in a soak |
 | `fm_points_300` | High-Octane Season | rare | Score 300 points in a regular season. | points scored in one regular season ≥ 300 | met or not | season | franchise |  | ✓ | ✓ | definition and metric checked (catalogue test) |
-| `fm_twelve_wins` | Twelve and Counting | epic | Win 12 or more regular-season games. | regular-season wins in one season ≥ 12 | met or not | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `fm_twelve_wins` | Twelve and Counting | epic | Win 12 or more regular-season games. | regular-season wins in one season ≥ 12 | met or not | season | franchise |  | ✓ |  | observed in a soak |
 | `fm_wins_100` | One Hundred Wins | epic | Reach 100 career wins. | career wins ≥ 100 | bar: career wins / 100 | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `fm_seasons_15` | The Full Fifteen | legendary | Complete all 15 seasons of a franchise career. | seasons completed ≥ 15 | bar: seasons completed / 15 | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `fm_wins_150` | Hall of Wins | legendary | Reach 150 career wins. | career wins ≥ 150 | bar: career wins / 150 | sunday | franchise |  | ✓ | ✓ | definition and metric checked (catalogue test) |
@@ -53,11 +53,11 @@ Columns: requirement (what is measured, comparison, threshold), progress (how th
 
 | id | name | rarity | description | requirement | progress | trigger | scope | H | R | P | testing |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `first_playoffs` (original) | The playoffs | uncommon | Make the playoffs for the first time. | original check (unchanged): Make the playoffs for the first time. | met or not | playoffs | franchise |  | ✓ |  | original check unchanged; id kept (test) |
+| `first_playoffs` (original) | The playoffs | uncommon | Make the playoffs for the first time. | original check (unchanged): Make the playoffs for the first time. | met or not | playoffs | franchise |  | ✓ |  | observed in a soak + original check unchanged; id kept (test) |
 | `conference_title` (original) | Conference champions | rare | Win a conference championship. | original check (unchanged): Win a conference championship. | met or not | sunday | franchise |  | ✓ |  | original check unchanged; id kept (test) |
 | `first_title` (original) | Beast Bowl champions | epic | Win the Beast Bowl. | original check (unchanged): Win the Beast Bowl. | met or not | season | franchise |  | ✓ |  | original check unchanged; id kept (test) |
 | `second_title` (original) | Two titles | epic | Win a second Beast Bowl. | original check (unchanged): Win a second Beast Bowl. | bar: Beast Bowl titles / 2 | season | franchise |  | ✓ |  | original check unchanged; id kept (test) |
-| `ch_playoff_win` | Moving On | uncommon | Win a playoff game. | playoff wins (tracked) ≥ 1 | met or not | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `ch_playoff_win` | Moving On | uncommon | Win a playoff game. | playoff wins (tracked) ≥ 1 | met or not | sunday | franchise |  | ✓ |  | observed in a soak |
 | `ch_playoffs_5` | October Regulars | rare | Reach the playoffs 5 times. | playoff appearances ≥ 5 | bar: playoff appearances / 5 | playoffs | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `ch_playoff_wins_10` | Postseason Pedigree | epic | Win 10 playoff games. | playoff wins (tracked) ≥ 10 | bar: playoff wins (tracked) / 10 | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `ch_conf_titles_3` | Conference Kings | legendary | Win 3 conference championships. | conference championships (tracked) ≥ 3 | bar: conference championships (tracked) / 3 | sunday | franchise |  | ✓ |  | unit test |
@@ -70,54 +70,54 @@ Columns: requirement (what is measured, comparison, threshold), progress (how th
 
 | id | name | rarity | description | requirement | progress | trigger | scope | H | R | P | testing |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `of_pass_250` | Air Raid | common | Have a monster throw for 250 yards in a game. | one monster's passing yards in a game ≥ 250 | met or not | sunday | franchise |  |  |  | unit test |
-| `of_rec_150` | Go-To Target | common | Have a monster catch for 150 yards in a game. | one monster's receiving yards in a game ≥ 150 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `of_rush_150` | Workhorse | common | Have a monster rush for 150 yards in a game. | one monster's rushing yards in a game ≥ 150 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `of_rush_td_3` | Hat Trick | common | Have a monster score 3 rushing touchdowns in a game. | one monster's rushing touchdowns in a game ≥ 3 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `of_season_rec_1500` | Route Runner | common | Have a monster catch for 1500 yards in a regular season. | one monster's receiving yards in a season ≥ 1500 | met or not | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `of_pass_td_4` | Four Strikes | uncommon | Have a monster throw 4 touchdown passes in a game. | one monster's touchdown passes in a game ≥ 4 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `of_rec_250` | Uncoverable | uncommon | Have a monster catch for 250 yards in a game. | one monster's receiving yards in a game ≥ 250 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `of_long_80` | Home Run | uncommon | Gain 80 or more yards on a single play. | the longest run or reception in a game ≥ 80 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `of_season_pass_3000` | Gunslinger | uncommon | Have a monster throw for 3000 yards in a regular season. | one monster's passing yards in a season ≥ 3000 | met or not | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `of_season_rush_1000` | Thousand-Yard Back | uncommon | Have a monster rush for 1000 yards in a regular season. | one monster's rushing yards in a season ≥ 1000 | met or not | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `of_pass_250` | Air Raid | common | Have a monster throw for 250 yards in a game. | one monster's passing yards in a game ≥ 250 | met or not | sunday | franchise |  |  |  | observed in a soak + unit test |
+| `of_rec_150` | Go-To Target | common | Have a monster catch for 150 yards in a game. | one monster's receiving yards in a game ≥ 150 | met or not | sunday | franchise |  |  |  | observed in a soak |
+| `of_rush_150` | Workhorse | common | Have a monster rush for 150 yards in a game. | one monster's rushing yards in a game ≥ 150 | met or not | sunday | franchise |  |  |  | observed in a soak |
+| `of_rush_td_3` | Hat Trick | common | Have a monster score 3 rushing touchdowns in a game. | one monster's rushing touchdowns in a game ≥ 3 | met or not | sunday | franchise |  |  |  | observed in a soak |
+| `of_season_rec_1500` | Route Runner | common | Have a monster catch for 1500 yards in a regular season. | one monster's receiving yards in a season ≥ 1500 | met or not | season | franchise |  | ✓ |  | observed in a soak |
+| `of_pass_td_4` | Four Strikes | uncommon | Have a monster throw 4 touchdown passes in a game. | one monster's touchdown passes in a game ≥ 4 | met or not | sunday | franchise |  |  |  | observed in a soak |
+| `of_rec_250` | Uncoverable | uncommon | Have a monster catch for 250 yards in a game. | one monster's receiving yards in a game ≥ 250 | met or not | sunday | franchise |  |  |  | observed in a soak |
+| `of_long_80` | Home Run | uncommon | Gain 80 or more yards on a single play. | the longest run or reception in a game ≥ 80 | met or not | sunday | franchise |  |  |  | observed in a soak |
+| `of_season_pass_3000` | Gunslinger | uncommon | Have a monster throw for 3000 yards in a regular season. | one monster's passing yards in a season ≥ 3000 | met or not | season | franchise |  | ✓ |  | observed in a soak |
+| `of_season_rush_1000` | Thousand-Yard Back | uncommon | Have a monster rush for 1000 yards in a regular season. | one monster's rushing yards in a season ≥ 1000 | met or not | season | franchise |  | ✓ |  | observed in a soak |
 | `of_rush_250` | Stampede | uncommon | Have a monster rush for 250 yards in a game. | one monster's rushing yards in a game ≥ 250 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `of_pass_400` | Aerial Assault | epic | Have a monster throw for 400 yards in a game. | one monster's passing yards in a game ≥ 400 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
+| `of_pass_450` | Aerial Assault | epic | Have a monster throw for 450 yards in a game. | one monster's passing yards in a game ≥ 450 | met or not | sunday | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
 | `of_team_yards_500` | Yardage Avalanche | rare | Gain 500 total yards in a game. | your total yards in a game ≥ 500 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
 | `of_season_pass_td_40` | Touchdown Factory | rare | Have a monster throw 40 touchdown passes in a regular season. | one monster's touchdown passes in a season ≥ 40 | met or not | season | franchise |  | ✓ |  | unit test |
-| `of_pass_td_6` | Six-Shooter | epic | Have a monster throw 6 touchdown passes in a game. | one monster's touchdown passes in a game ≥ 6 | met or not | sunday | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
+| `of_pass_td_7` | Seven Up | epic | Have a monster throw 7 touchdown passes in a game. | one monster's touchdown passes in a game ≥ 7 | met or not | sunday | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
 
 ## defense (15)
 
 | id | name | rarity | description | requirement | progress | trigger | scope | H | R | P | testing |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `df_first_int` | Picked Off | common | Intercept a pass. | your interceptions in a game ≥ 1 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `df_sacks_3` | Pocket Collapse | common | Record 3 sacks as a team in a game. | your sacks in a game ≥ 3 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `df_tfl_5` | Into the Backfield | uncommon | Make 5 tackles for loss as a team in a game. | your tackles for loss in a game ≥ 5 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `df_int_2` | Ball Hawks | uncommon | Intercept 2 passes in a game. | your interceptions in a game ≥ 2 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `df_tackles_12` | Everywhere at Once | uncommon | Have a monster make 12 tackles in a game. | one monster's tackles in a game ≥ 12 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
+| `df_first_int` | Picked Off | common | Intercept a pass. | your interceptions in a game ≥ 1 | met or not | sunday | franchise |  |  |  | observed in a soak |
+| `df_sacks_3` | Pocket Collapse | common | Record 3 sacks as a team in a game. | your sacks in a game ≥ 3 | met or not | sunday | franchise |  |  |  | observed in a soak |
+| `df_tfl_5` | Into the Backfield | uncommon | Make 5 tackles for loss as a team in a game. | your tackles for loss in a game ≥ 5 | met or not | sunday | franchise |  |  |  | observed in a soak |
+| `df_int_2` | Ball Hawks | uncommon | Intercept 2 passes in a game. | your interceptions in a game ≥ 2 | met or not | sunday | franchise |  |  |  | observed in a soak |
+| `df_tackles_12` | Everywhere at Once | uncommon | Have a monster make 12 tackles in a game. | one monster's tackles in a game ≥ 12 | met or not | sunday | franchise |  |  |  | observed in a soak |
 | `df_pick_six` | Pick Six | uncommon | Score a defensive touchdown. | defensive touchdowns (tracked) ≥ 1 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
 | `df_takeaways_4` | Turnover Machine | rare | Force 4 turnovers in a game. | turnovers you forced in a game ≥ 4 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
 | `df_shutouts_5` | Zero Club | rare | Win 5 games without allowing a point. | shutout wins (tracked) ≥ 5 | bar: shutout wins (tracked) / 5 | sunday | franchise |  | ✓ |  | unit test |
 | `df_season_allowed` | Lockdown Season | rare | Allow 100 points or fewer in a regular season. | points allowed in one complete regular season ≤ 100 | met or not | season | franchise |  | ✓ | ✓ | unit test |
 | `df_season_sacks_25` | Sack Party | rare | Record 25 team sacks in a regular season. | team sacks in a season ≥ 25 | met or not | season | franchise |  | ✓ | ✓ | definition and metric checked (catalogue test) |
-| `df_player_sacks_3` | Quarterback Hunter | epic | Have a monster record 3 sacks in a game. | one monster's sacks in a game ≥ 3 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
+| `df_player_sacks_4` | Quarterback Hunter | epic | Have a monster record 4 sacks in a game. | one monster's sacks in a game ≥ 4 | met or not | sunday | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
 | `df_int_3` | Ballhawk Clinic | epic | Intercept 3 passes in a game. | your interceptions in a game ≥ 3 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `df_player_season_sacks` | Double-Digit Sacks | epic | Have a monster record 10 sacks in a regular season. | one monster's sacks in a season ≥ 10 | met or not | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `df_sacks_6` | Siege | epic | Record 6 sacks as a team in a game. | your sacks in a game ≥ 6 | met or not | sunday | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
+| `df_player_season_sacks` | Double-Digit Sacks | epic | Have a monster record 14 sacks in a regular season. | one monster's sacks in a season ≥ 14 | met or not | season | franchise |  | ✓ | ✓ | observed in a soak |
+| `df_sacks_7` | Siege | epic | Record 7 sacks as a team in a game. | your sacks in a game ≥ 7 | met or not | sunday | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
 | `df_season_int_10` | No-Fly Zone | legendary | Intercept 10 passes in a regular season. | team interceptions in a season ≥ 10 | met or not | season | franchise |  | ✓ | ✓ | definition and metric checked (catalogue test) |
 
 ## special (10)
 
 | id | name | rarity | description | requirement | progress | trigger | scope | H | R | P | testing |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `st_first_fg` | Three Points | common | Make a field goal. | field goals made (tracked) ≥ 1 | met or not | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `st_fg_50` | Big Leg | uncommon | Make a field goal of 50 yards or longer. | your longest made field goal (yards) ≥ 50 | met or not | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `st_first_fg` | Three Points | common | Make a field goal. | field goals made (tracked) ≥ 1 | met or not | sunday | franchise |  | ✓ |  | observed in a soak |
+| `st_fg_50` | Big Leg | uncommon | Make a field goal of 50 yards or longer. | your longest made field goal (yards) ≥ 50 | met or not | sunday | franchise |  | ✓ |  | observed in a soak |
 | `st_career_fg_50` | Reliable Boot | uncommon | Make 50 field goals. | field goals made (tracked) ≥ 50 | bar: field goals made (tracked) / 50 | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `st_touchbacks_30` | Out of Reach | uncommon | Kick 30 kickoff touchbacks in a regular season. | kickoff touchbacks in a season ≥ 30 | met or not | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `st_fg_60` | From Downtown | uncommon | Make a field goal of 60 yards or longer. | your longest made field goal (yards) ≥ 60 | met or not | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `st_season_fg_12` | Points on the Board | rare | Make 12 field goals in a regular season. | field goals made in a season ≥ 12 | met or not | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `st_season_fg_12` | Points on the Board | rare | Make 12 field goals in a regular season. | field goals made in a season ≥ 12 | met or not | season | franchise |  | ✓ |  | observed in a soak |
 | `st_kr_td` | Return to Sender | rare | Return a kickoff for a touchdown. | kickoff-return touchdowns (tracked) ≥ 1 | met or not | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `st_fg_3_game` | Three for Three | epic | Make 3 field goals in a game. | field goals made in one game ≥ 3 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
+| `st_fg_3_game` | Three for Three | epic | Make 3 field goals in a game. | field goals made in one game ≥ 3 | met or not | sunday | franchise |  |  |  | observed in a soak |
 | `st_kr_td_3` | Return Specialist | epic | Return 3 kickoffs for touchdowns. | kickoff-return touchdowns (tracked) ≥ 3 | bar: kickoff-return touchdowns (tracked) / 3 | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `st_perfect_kicker` | Automatic | legendary | Make every field goal and extra point of a regular season, with at least 10 field-goal attempts. | field-goal attempts in a season with every field goal and extra point made ≥ 10 | met or not | season | franchise |  | ✓ | ✓ | unit test |
 
@@ -128,14 +128,14 @@ Columns: requirement (what is measured, comparison, threshold), progress (how th
 | `dex_original` (original) | The original 72 | epic | Acquire a beast from all 72 original families to complete this Beast Dex collection. | original check (unchanged): Acquire a beast from all 72 original families to complete this Beast Dex collection. | bar: original families collected / 72 | any | franchise |  | ✓ |  | original check unchanged; id kept (test) |
 | `dex_basic` (original) | Every Basic | legendary | Acquire a beast from all 120 Basic families to complete this Beast Dex collection. | original check (unchanged): Acquire a beast from all 120 Basic families to complete this Beast Dex collection. | bar: Basic families collected / 120 | any | franchise |  | ✓ |  | original check unchanged; id kept (test) |
 | `dex_all` (original) | The complete Beast Dex | mythic | Acquire a beast from all 192 families to complete the Beast Dex. | original check (unchanged): Acquire a beast from all 192 families to complete the Beast Dex. | bar: families collected / 192 | any | franchise |  | ✓ |  | original check unchanged; id kept (test) |
-| `dx_seen_60` | Field Notes | common | Face 60 different families in games. | different families faced in games ≥ 60 | bar: different families faced in games / 60 | sunday | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
-| `dx_seen_100` | Keen Observer | common | Face 100 different families in games. | different families faced in games ≥ 100 | bar: different families faced in games / 100 | sunday | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
-| `dx_signed_40` | Growing Collection | common | Collect 40 different families with this franchise. | different families collected by this franchise ≥ 40 | bar: different families collected by this franchise / 40 | any | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `dx_seen_60` | Field Notes | common | Face 60 different families in games. | different families faced in games ≥ 60 | bar: different families faced in games / 60 | sunday | franchise |  |  | ✓ | observed in a soak |
+| `dx_seen_100` | Keen Observer | common | Face 100 different families in games. | different families faced in games ≥ 100 | bar: different families faced in games / 100 | sunday | franchise |  |  | ✓ | observed in a soak |
+| `dx_signed_40` | Growing Collection | common | Collect 40 different families with this franchise. | different families collected by this franchise ≥ 40 | bar: different families collected by this franchise / 40 | any | franchise |  | ✓ |  | observed in a soak |
 | `dx_original_45` | Original Collector | common | Collect 45 of the original families. | original families collected ≥ 45 | bar: original families collected / 45 | any | franchise |  | ✓ | ✓ | definition and metric checked (catalogue test) |
 | `dx_signed_60` | Collector | uncommon | Collect 60 different families with this franchise. | different families collected by this franchise ≥ 60 | bar: different families collected by this franchise / 60 | any | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `dx_knowledge_30` | Hands-On Research | common | Play monsters from 30 different families in games. | different families you have played in games ≥ 30 | bar: different families you have played in games / 30 | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `dx_knowledge_30` | Hands-On Research | common | Play monsters from 30 different families in games. | different families you have played in games ≥ 30 | bar: different families you have played in games / 30 | sunday | franchise |  | ✓ |  | observed in a soak |
 | `dx_types_all` | Every Element | uncommon | Collect at least 5 families of every type. | families collected in your least-collected type ≥ 5 | bar: families collected in your least-collected type / 5 | any | franchise |  | ✓ | ✓ | definition and metric checked (catalogue test) |
-| `dx_seen_140` | Scout of Beasts | uncommon | Face 140 different families in games. | different families faced in games ≥ 140 | bar: different families faced in games / 140 | sunday | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
+| `dx_seen_140` | Scout of Beasts | uncommon | Face 140 different families in games. | different families faced in games ≥ 140 | bar: different families faced in games / 140 | sunday | franchise |  |  | ✓ | observed in a soak |
 | `dx_seen_170` | Bestiary | rare | Face 170 different families in games. | different families faced in games ≥ 170 | bar: different families faced in games / 170 | sunday | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
 | `dx_signed_100` | Menagerie | rare | Collect 100 different families with this franchise. | different families collected by this franchise ≥ 100 | bar: different families collected by this franchise / 100 | any | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `dx_account_100` | Lifetime Collector | rare | Collect 100 families across all your franchises. | families collected across all your franchises ≥ 100 | bar: families collected across all your franchises / 100 | any | account |  | ✓ |  | definition and metric checked (catalogue test) |
@@ -146,12 +146,12 @@ Columns: requirement (what is measured, comparison, threshold), progress (how th
 | id | name | rarity | description | requirement | progress | trigger | scope | H | R | P | testing |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | `ev_first_evolve` | Transformation | common | Evolve a monster. | evolutions made ≥ 1 | met or not | evolve | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `ev_level_50` | Fully Trained | common | Have a monster reach level 50. | monsters on the roster trained to level 50 with you ≥ 1 | met or not | any | franchise |  |  |  | unit test |
+| `ev_level_50` | Fully Trained | common | Have a monster reach level 50. | monsters on the roster trained to level 50 with you ≥ 1 | met or not | any | franchise |  |  |  | observed in a soak + unit test |
 | `ev_evolve_10` | Evolution Lab | uncommon | Evolve 10 monsters. | evolutions made ≥ 10 | bar: evolutions made / 10 | evolve | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `ev_final_stage` | Final Form | uncommon | Have a monster reach its final evolution. | monsters on the roster that evolved to their final form with you ≥ 1 | met or not | any | franchise |  | ✓ |  | unit test |
 | `ev_level50_x10` | Veteran Core | uncommon | Have 10 monsters at level 50 on your roster at once. | monsters on the roster trained to level 50 with you ≥ 10 | bar: monsters on the roster trained to level 50 with you / 10 | any | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `ev_ovr_80` | Rising Star | uncommon | Have a monster reach 80 overall. | the overall of a monster who was below the target when first seen on your roster ≥ 80 | bar: the overall of a monster who was below the target when first seen on your roster / 80 | any | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `ev_growth` | Breakout Season | uncommon | Have a monster gain 10 overall in one season. | overall gained by one monster in a season ≥ 10 | bar: overall gained by one monster in a season / 10 | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `ev_ovr_80` | Rising Star | uncommon | Have a monster reach 80 overall. | the overall of a monster who was below the target when first seen on your roster ≥ 80 | bar: the overall of a monster who was below the target when first seen on your roster / 80 | any | franchise |  |  |  | observed in a soak |
+| `ev_growth` | Breakout Season | uncommon | Have a monster gain 10 overall in one season. | overall gained by one monster in a season ≥ 10 | bar: overall gained by one monster in a season / 10 | season | franchise |  | ✓ |  | observed in a soak |
 | `ev_evolve_25` | Master Breeder | rare | Evolve 25 monsters. | evolutions made ≥ 25 | bar: evolutions made / 25 | evolve | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `ev_ovr_90` | Superstar | rare | Have a monster reach 90 overall. | the overall of a monster who was below the target when first seen on your roster ≥ 90 | bar: the overall of a monster who was below the target when first seen on your roster / 90 | any | franchise |  |  |  | definition and metric checked (catalogue test) |
 | `ev_drafted_80` | Homegrown Talent | rare | Have a monster you drafted reach 80 overall. | the overall of a monster you drafted ≥ 80 | bar: the overall of a monster you drafted / 80 | any | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
@@ -165,18 +165,18 @@ Columns: requirement (what is measured, comparison, threshold), progress (how th
 
 | id | name | rarity | description | requirement | progress | trigger | scope | H | R | P | testing |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `cl_first_win` | First Clash | common | Win a Beast Clash. | Beast Clash wins ≥ 1 | met or not | clash | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `cl_wins_10` | Clash Contender | common | Win 10 Beast Clashes. | Beast Clash wins ≥ 10 | bar: Beast Clash wins / 10 | clash | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `cl_battles_25` | Battle-Hardened | common | Fight 25 Beast Clashes. | Beast Clashes fought ≥ 25 | bar: Beast Clashes fought / 25 | clash | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `cl_recruit_first` | Earned the Signature | common | Sign a monster after winning its recruiting Clash. | monsters signed after a won recruiting Clash ≥ 1 | met or not | recruit | franchise |  |  |  | definition and metric checked (catalogue test) |
+| `cl_first_win` | First Clash | common | Win a Beast Clash. | Beast Clash wins ≥ 1 | met or not | clash | franchise |  |  |  | observed in a soak |
+| `cl_wins_10` | Clash Contender | common | Win 10 Beast Clashes. | Beast Clash wins ≥ 10 | bar: Beast Clash wins / 10 | clash | franchise |  |  |  | observed in a soak |
+| `cl_battles_25` | Battle-Hardened | common | Fight 25 Beast Clashes. | Beast Clashes fought ≥ 25 | bar: Beast Clashes fought / 25 | clash | franchise |  |  |  | observed in a soak |
+| `cl_recruit_first` | Earned the Signature | common | Sign a monster after winning its recruiting Clash. | monsters signed after a won recruiting Clash ≥ 1 | met or not | recruit | franchise |  |  |  | observed in a soak |
 | `cl_enc_wins_10` | Recruiter | common | Win 10 recruiting Clashes. | recruiting Clash wins ≥ 10 | bar: recruiting Clash wins / 10 | clash | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `cl_pre_wins_10` | Coin-Toss Champions | common | Win 10 opening Clashes. | opening Clash wins ≥ 10 | bar: opening Clash wins / 10 | clash | franchise |  |  |  | definition and metric checked (catalogue test) |
+| `cl_pre_wins_10` | Coin-Toss Champions | common | Win 10 opening Clashes. | opening Clash wins ≥ 10 | bar: opening Clash wins / 10 | clash | franchise |  |  |  | observed in a soak |
 | `cl_recruits_10` | Talent Magnet | common | Sign 10 monsters after winning their recruiting Clashes. | monsters signed after a won recruiting Clash ≥ 10 | bar: monsters signed after a won recruiting Clash / 10 | recruit | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `cl_close` | By a Whisker | common | Win a Clash with less than 10% of your team’s health left. | Clash wins with team health under the stated share ≥ 1 (pct 10) | met or not | clash | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
+| `cl_close` | By a Whisker | common | Win a Clash with less than 10% of your team’s health left. | Clash wins with team health under the stated share ≥ 1 (pct 10) | met or not | clash | franchise |  |  | ✓ | observed in a soak |
 | `cl_ot_win` | Sudden Death | common | Win an overtime Clash. | overtime Clash wins ≥ 1 | met or not | clash | franchise |  |  |  | definition and metric checked (catalogue test) |
 | `cl_wins_50` | Clash Veteran | uncommon | Win 50 Beast Clashes. | Beast Clash wins ≥ 50 | bar: Beast Clash wins / 50 | clash | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `cl_streak_5` | Clash Streak | uncommon | Win 5 Clashes in a row. | the longest run of consecutive Clash wins ≥ 5 | bar: t_clash_streak_now / 5 | clash | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `cl_quick` | Blitzkrieg | uncommon | Win a Clash in 12 exchanges or fewer. | Clash wins within the stated exchanges ≥ 1 (ex 12) | met or not | clash | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
+| `cl_streak_5` | Clash Streak | uncommon | Win 5 Clashes in a row. | the longest run of consecutive Clash wins ≥ 5 | bar: t_clash_streak_now / 5 | clash | franchise |  |  |  | observed in a soak |
+| `cl_quick` | Blitzkrieg | uncommon | Win a Clash in 12 exchanges or fewer. | Clash wins within the stated exchanges ≥ 1 (ex 12) | met or not | clash | franchise |  |  | ✓ | observed in a soak |
 | `cl_wins_100` | Clash Master | epic | Win 100 Beast Clashes. | Beast Clash wins ≥ 100 | bar: Beast Clash wins / 100 | clash | franchise |  |  |  | definition and metric checked (catalogue test) |
 | `cl_ot_wins_5` | Overtime Specialists | rare | Win 5 overtime Clashes. | overtime Clash wins ≥ 5 | bar: overtime Clash wins / 5 | clash | franchise |  |  |  | definition and metric checked (catalogue test) |
 | `cl_flawless` | Flawless | rare | Win a Clash with at least 60% of your team’s health left. | Clash wins with team health at or above the stated share ≥ 1 (pct 60) | met or not | clash | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
@@ -190,13 +190,13 @@ Columns: requirement (what is measured, comparison, threshold), progress (how th
 
 | id | name | rarity | description | requirement | progress | trigger | scope | H | R | P | testing |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `first_badge` (original) | The first badge | common | Win your first gym badge. | original check (unchanged): Win your first gym badge. | met or not | sunday | franchise |  | ✓ |  | original check unchanged; id kept (test) |
+| `first_badge` (original) | The first badge | common | Win your first gym badge. | original check (unchanged): Win your first gym badge. | met or not | sunday | franchise |  | ✓ |  | observed in a soak + original check unchanged; id kept (test) |
 | `half_badges` (original) | Six of twelve | rare | Hold six of the twelve gym badges. | original check (unchanged): Hold six of the twelve gym badges. | bar: gym badges held now / 6 | sunday | franchise |  | ✓ |  | original check unchanged; id kept (test) |
 | `all_badges` (original) | All twelve | legendary | Hold all twelve gym badges. | original check (unchanged): Hold all twelve gym badges. | bar: gym badges held now / 12 | sunday | franchise |  | ✓ |  | original check unchanged; id kept (test) |
-| `gy_badges_3` | Badge Collector | common | Hold 3 gym badges at once. | gym badges held now ≥ 3 | bar: gym badges held now / 3 | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `gy_gym_wins_10` | Gym Regular | common | Beat gym clubs 10 times. | wins over gym clubs ≥ 10 | bar: wins over gym clubs / 10 | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `gy_badges_3` | Badge Collector | common | Hold 3 gym badges at once. | gym badges held now ≥ 3 | bar: gym badges held now / 3 | sunday | franchise |  | ✓ |  | observed in a soak |
+| `gy_gym_wins_10` | Gym Regular | common | Beat gym clubs 10 times. | wins over gym clubs ≥ 10 | bar: wins over gym clubs / 10 | sunday | franchise |  | ✓ |  | observed in a soak |
 | `gy_season_4` | Gym Tour | uncommon | Win 4 gym badges in a single season. | badges won and still held at the end of a season ≥ 4 | met or not | season | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `gy_regained` | Taking It Back | uncommon | Win back a gym badge you lost. | gym badges won back after losing them ≥ 1 | met or not | sunday | franchise |  |  |  | definition and metric checked (catalogue test) |
+| `gy_regained` | Taking It Back | uncommon | Win back a gym badge you lost. | gym badges won back after losing them ≥ 1 | met or not | sunday | franchise |  |  |  | observed in a soak |
 | `gy_gym_wins_30` | Gym Conqueror | rare | Beat gym clubs 30 times. | wins over gym clubs ≥ 30 | bar: wins over gym clubs / 30 | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `gy_badges_9` | Nine Badges | epic | Hold 9 gym badges at once. | gym badges held now ≥ 9 | bar: gym badges held now / 9 | sunday | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `gy_season_6` | Grand Gym Tour | epic | Win 6 gym badges in a single season. | badges won and still held at the end of a season ≥ 6 | met or not | season | franchise |  |  | ✓ | definition and metric checked (catalogue test) |
@@ -218,10 +218,10 @@ Columns: requirement (what is measured, comparison, threshold), progress (how th
 
 | id | name | rarity | description | requirement | progress | trigger | scope | H | R | P | testing |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `dr_first_pick` | On the Clock | common | Make a draft pick. | draft picks made (season drafts) ≥ 1 | met or not | draft | franchise |  | ✓ |  | unit test |
-| `dr_scout_full` | Full Report | common | Fully scout a draft prospect. | prospects fully scouted ≥ 1 | met or not | scout | franchise |  |  |  | definition and metric checked (catalogue test) |
+| `dr_first_pick` | On the Clock | common | Make a draft pick. | draft picks made (season drafts) ≥ 1 | met or not | draft | franchise |  | ✓ |  | observed in a soak + unit test |
+| `dr_scout_full` | Full Report | common | Fully scout a draft prospect. | prospects fully scouted ≥ 1 | met or not | scout | franchise |  |  |  | observed in a soak |
 | `dr_picks_25` | Draft Room Veteran | common | Make 25 draft picks. | draft picks made (season drafts) ≥ 25 | bar: draft picks made (season drafts) / 25 | draft | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `dr_scouts_10` | Scouting Department | common | Scout 10 times. | scouting trips ≥ 10 | bar: scouting trips / 10 | scout | franchise |  |  |  | definition and metric checked (catalogue test) |
+| `dr_scouts_10` | Scouting Department | common | Scout 10 times. | scouting trips ≥ 10 | bar: scouting trips / 10 | scout | franchise |  |  |  | observed in a soak |
 | `dr_regions` | Globetrotter | uncommon | Scout 8 different regions. | different regions scouted ≥ 8 | bar: different regions scouted / 8 | scout | franchise |  |  |  | definition and metric checked (catalogue test) |
 | `dr_top_pick` | First Overall | uncommon | Make the first overall pick of a draft. | first overall picks made ≥ 1 | met or not | draft | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `dr_drafted_games` | Franchise Cornerstone | rare | Have a monster you drafted play 50 games for you. | games played by a monster you drafted ≥ 50 | bar: games played by a monster you drafted / 50 | any | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
@@ -252,21 +252,21 @@ Columns: requirement (what is measured, comparison, threshold), progress (how th
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | `hot_seat_survived` (original) | Off the hot seat | rare | Meet the Board’s goal while on the hot seat. | original check (unchanged): Meet the Board’s goal while on the hot seat. | met or not (original check) | season | franchise |  |  |  | original check unchanged; id kept (test) |
 | `co_first_hire` | New Hire | common | Hire a staff member. | staff hired ≥ 1 | met or not | staff | franchise |  |  |  | definition and metric checked (catalogue test) |
-| `co_plays_1000` | Play Caller | common | Call 1000 offensive plays. | offensive plays called ≥ 1000 | bar: offensive plays called / 1000 | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `co_plays_1000` | Play Caller | common | Call 1000 offensive plays. | offensive plays called ≥ 1000 | bar: offensive plays called / 1000 | season | franchise |  | ✓ |  | observed in a soak |
 | `co_hires_10` | Talent Scout | uncommon | Hire 10 staff members. | staff hired ≥ 10 | bar: staff hired / 10 | staff | franchise |  |  |  | definition and metric checked (catalogue test) |
 | `co_new_club` | New Challenge | uncommon | Take a general manager job at another club. | a general manager job taken at another club ≥ 1 | met or not | any | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `co_board_max` | Board’s Favorite | rare | Finish 3 seasons with the Board’s highest confidence. | seasons ending at the Board's highest confidence ≥ 3 | bar: seasons ending at the Board's highest confidence / 3 | season | franchise |  | ✓ | ✓ | definition and metric checked (catalogue test) |
 | `co_goals_5` | Promises Kept | rare | Meet the Board’s season goal 5 times. | Board season goals met ≥ 5 | bar: Board season goals met / 5 | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `co_coy` | Coach of the Year | epic | Win Coach of the Year. | Coach of the Year awards ≥ 1 | met or not | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `co_coy` | Coach of the Year | epic | Win Coach of the Year. | Coach of the Year awards ≥ 1 | met or not | season | franchise |  | ✓ |  | observed in a soak |
 
 ## awards (9)
 
 | id | name | rarity | description | requirement | progress | trigger | scope | H | R | P | testing |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `first_award` (original) | A league award | uncommon | Have one of your monsters win a league award. | original check (unchanged): Have one of your monsters win a league award. | met or not | season | franchise |  | ✓ |  | original check unchanged; id kept (test) |
+| `first_award` (original) | A league award | uncommon | Have one of your monsters win a league award. | original check (unchanged): Have one of your monsters win a league award. | met or not | season | franchise |  | ✓ |  | observed in a soak + original check unchanged; id kept (test) |
 | `hof_eligible` (original) | The Hall of Fame | legendary | Qualify for the Hall of Fame. | original check (unchanged): Qualify for the Hall of Fame. | met or not (original check) | any | franchise |  | ✓ |  | original check unchanged; id kept (test) |
 | `aw_awards_5` | Trophy Cabinet | rare | Have your monsters win 5 league awards. | league awards won by your monsters ≥ 5 | bar: league awards won by your monsters / 5 | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
-| `aw_record` | Record Breaker | rare | Have a monster hold a league record. | a league record held by your monster ≥ 1 | met or not | any | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
+| `aw_record` | Record Breaker | rare | Have a monster hold a league record. | a league record held by your monster ≥ 1 | met or not | any | franchise |  | ✓ |  | observed in a soak |
 | `aw_monster_hof` | Enshrined | rare | Have a monster who played for you enter the Monster Hall of Fame. | Monster Hall of Fame inductees who played for you ≥ 1 | met or not | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `aw_mvp` | Most Valuable | epic | Have a monster win the league MVP award. | MVP awards ≥ 1 | met or not | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
 | `aw_season_3` | Awards Night | epic | Win 3 league awards in one season. | league awards in one season ≥ 3 | met or not | season | franchise |  | ✓ |  | definition and metric checked (catalogue test) |
@@ -277,7 +277,7 @@ Columns: requirement (what is measured, comparison, threshold), progress (how th
 
 | id | name | rarity | description | requirement | progress | trigger | scope | H | R | P | testing |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `hd_one_point` | So Close | common | Lose a game by a single point. | the margin of a loss = 1 | met or not | sunday | franchise | ✓ | ✓ |  | unit test |
+| `hd_one_point` | So Close | common | Lose a game by a single point. | the margin of a loss = 1 | met or not | sunday | franchise | ✓ | ✓ |  | observed in a soak + unit test |
 | `hd_tiebreak` | Decided by the Beasts | uncommon | Win a game settled by an overtime Clash. | a win decided by the overtime Beast Clash ≥ 1 | met or not | sunday | franchise | ✓ |  |  | definition and metric checked (catalogue test) |
 | `hd_outgained` | Stolen Victory | rare | Win a game in which you were outgained by 200 yards or more. | yards by which the opponent outgained you in a win ≥ 200 | met or not | sunday | franchise | ✓ |  |  | definition and metric checked (catalogue test) |
 | `hd_old_club` | Old Friends | rare | Beat a club you used to manage. | a win over a club you managed before ≥ 1 | met or not | sunday | franchise | ✓ |  |  | definition and metric checked (catalogue test) |
