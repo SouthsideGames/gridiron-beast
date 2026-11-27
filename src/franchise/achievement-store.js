@@ -261,7 +261,9 @@ export const METRICS = Object.freeze({
   aw_kinds: (f) => new Set(hist(f).flatMap((h) => awardsOf(h).map(([k]) => k))).size,
   aw_hof: (f) => { const ids = everPlayed(f); return inductees(f).filter((x) => ids.has(String(x.id))).length; },
   aw_gboot: (f) => hist(f).filter((h) => h.awards?.league?.gboot?.team === h.club).length, aw_rking: (f) => hist(f).filter((h) => h.awards?.league?.rking?.team === h.club).length,
-  aw_record: (f) => Math.max(best(f.achTrack, 'record'), ['game', 'season'].some((k) => Object.values(f.records?.[k] || {}).some((r) => r && r.team === f.club)) ? 1 : 0),
+  // Calibration (2026-11-27): the record book's own rule (league-news recordNews): a record counts once a full season is in the book and
+  // when it beat an earlier mark (`prev`). In year one every category is "held" by somebody, which made this Rare row automatic.
+  aw_record: (f) => Math.max(best(f.achTrack, 'record'), ['game', 'season'].some((k) => Object.values(f.records?.[k] || {}).some((r) => r && r.team === f.club && r.prev && hist(f).length >= 1 && num(r.year) > num(hist(f)[0]?.year))) ? 1 : 0),
   l_plays: (f) => Object.keys(f.legendaryPlays?.discovered || {}).length,
 });
 let ORIGINALS = null; const x_original = () => (ORIGINALS ||= SPECIES_DEX_IDS.filter((s) => s.rarity !== 'basic').map((s) => s.id));

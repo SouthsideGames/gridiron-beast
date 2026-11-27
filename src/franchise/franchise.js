@@ -411,7 +411,7 @@ function achDexGroups(f) {
   const groups = Object.fromEntries(Object.entries(DEX_GROUPS).map(([k, ids]) => { const n = ids.filter((id) => have.has(id)).length; return [k, { seen: n, signed: n, total: ids.length }]; }));
   return { seen: groups.all.seen, signed: groups.all.signed, ...groups };
 }
-function achHelpers(f) {
+export function achHelpers(f) {
   return { dexCounts: (x) => achDexGroups(x), dexCountsGlobal, isLegendary: (m) => isLegendaryMonster(m), badgesWonThisSeason: (x) => badgesWonThisSeason(x), rival: (x) => x.rivals?.[x.tier]?.team || null, gymCount: GYMS.length };
 }
 /** Record one catalogue achievement: once per franchise, in the account store, and queued for its unlock presentation. */

@@ -140,7 +140,8 @@ const CASES = {
   aw_gboot: ['st_golden_boot', (f) => { f.history = [hist(f, { awards: { league: { gboot: { team: f.club } } } })]; return {}; }, (f) => { f.history = [hist(f, { awards: { league: { gboot: { team: 'Other' } } } })]; return {}; }],
   aw_rking: ['st_return_king', (f) => { f.history = [hist(f, { awards: { league: { rking: { team: f.club } } } })]; return {}; }, (f) => { f.history = [hist(f, { awards: { league: { rking: { team: 'Other' } } } })]; return {}; }],
   aw_hof: ['aw_monster_hof', (f) => { f.history = [hist(f, { leagueStats: { [f.club]: { mH: {} } } })]; f.monsterHallOfFame = { elections: [{ inductees: [{ id: 'mH' }] }] }; return {}; }, (f) => { f.history = [hist(f)]; f.monsterHallOfFame = { elections: [{ inductees: [{ id: 'mH' }] }] }; return {}; }],
-  aw_record: ['aw_record', (f) => { f.records = { game: { recYds: { team: f.club } } }; return {}; }, (f) => { f.records = { game: { recYds: { team: 'Other' } } }; return {}; }],
+  // A record counts once a season is in the book and when it beat an earlier mark (the record book's own rule); year-one marks do not.
+  aw_record: ['aw_record', (f) => { const y0 = f.season.year; f.history = [{ year: y0, club: f.club }]; f.records = { game: { recYds: { team: f.club, year: y0 + 1, prev: { value: 150 } } } }; return {}; }, (f) => { const y0 = f.season.year; f.history = [{ year: y0, club: f.club }]; f.records = { game: { recYds: { team: f.club, year: y0, prev: null } } }; return {}; }],
 };
 
 test('every metric the catalogue uses has a positive and a negative case', () => {
