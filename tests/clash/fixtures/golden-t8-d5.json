@@ -1,0 +1,12 @@
+{
+ "note": "Owner decision D-5 (2026-11-26): Foresight (Cerebrix, PSY-03-C) prepares its mirror IN ADDITION to the ordinary attack. Only seed 17 holds a Cerebrix that prepares; its battle changes. previousHash/previousState are the expected values before D-5 (golden-t8.json with the N9c and N9d layers).",
+ "changes": {
+  "17": {
+   "previousHash": "1bbgce6",
+   "previousState": "n4o1au",
+   "hash": "mdorz7",
+   "state": "11fojkq",
+   "ability": "PSY-03-C"
+  }
+ }
+}

@@ -1002,8 +1002,10 @@ export function ensureLeague(f, { qualityDelta = 0, fresh = false } = {}) {
     // F-01 (owner 2026-11-26): cap-aware founding. A new club must start within its cap (tier cap − staff allowance). A generated roster
     // above it founds without its least valuable reserves per salary (never a starter or package player, never a protected monster,
     // never below the roster minimum): they are simply not founded, so no release, news or waiver claim appears at creation.
+    // Founding only (`fresh`, a new universe): an older save's universe captured mid-season keeps the very rosters it was facing
+    // (regression fix 2026-11-27, league-registry migration test); its clubs meet the cap through their ordinary offseason moves.
     const usable = tierCap(f) - STAFF_ALLOWANCE;
-    for (const c of clubs) before[c] = { ...before[c], roster: foundWithinCap(before[c].roster, usable) };
+    if (fresh) for (const c of clubs) before[c] = { ...before[c], roster: foundWithinCap(before[c].roster, usable) };
     const onRosters = new Set(Object.values(before).flatMap((t) => t.roster.map((m) => m.id)));
     // Every id already in the save keeps its place. A draftee the roster brings in is the same monster the class and
     // `draftResults` list, not a clash; the owner's monsters, pools and market can never be the same individual as an AI one.

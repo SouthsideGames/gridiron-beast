@@ -244,6 +244,9 @@ test('determinism: 20 golden t8 seeds replay from their replay keys (tests/clash
   const n9c = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-t8-n9c.json', import.meta.url), 'utf8'));
   assert.deepEqual(Object.keys(n9c.changes).sort(), ['14', '4'], 'only the two Dawn Song baseline cases change under N9c B');
   const n9d = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-t8-n9d.json', import.meta.url), 'utf8'));
+  // Owner decision D-5 (2026-11-26): Foresight prepares in addition to the ordinary attack; only seed 17 holds a preparing Cerebrix.
+  const d5 = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-t8-d5.json', import.meta.url), 'utf8'));
+  assert.deepEqual(Object.keys(d5.changes), ['17'], 'only the Cerebrix battle changes under D-5');
   assert.equal(Object.keys(stored).length, 20);
   withoutRandomness(() => {
     for (const seed of Object.keys(stored)) {
@@ -257,7 +260,14 @@ test('determinism: 20 golden t8 seeds replay from their replay keys (tests/clash
       const before = change || stored[seed];
       const current = n9d.normal[seed];
       if (current) { assert.equal(current.previousHash, before.hash); assert.equal(current.previousState, before.state); }
-      const expected = current || before;
+      const prior = current || before; const d5c = d5.changes[seed];
+      if (d5c) {
+        assert.equal(d5c.previousHash, prior.hash); assert.equal(d5c.previousState, prior.state);
+        const prep = r.log.find((e) => e.abilityId === 'PSY-03-C' && e.kind === 'ability');
+        assert.ok(prep, 'Foresight prepares in this battle');
+        assert.ok(r.log.some((e) => e.kind === 'damage' && e.actor === prep.actor && e.ex === prep.ex), 'and the same Cerebrix attacks in that exchange (D-5)');
+      }
+      const expected = d5c || prior;
       assert.equal(t8LogHash(r), expected.hash, `golden t8 seed ${seed}`); assert.equal(r.stateHash, expected.state);
       assert.equal(t8LogHash(simulateByRuleset({ a: k.a, b: k.b, seed: k.seed, config: { ruleset: 't8' } })), expected.hash);
     }

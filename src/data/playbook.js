@@ -23,6 +23,9 @@ export const OFFENSE_FORMATIONS = Object.freeze({
   gun_pro_lt: { pkg: 'pro', label: $t('plays.gun_pro_left'), align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], TE: [-0.6, 3.4], WR1: [-0.6, -18], WR2: [-1.2, 18] } },
   gun_spread: { pkg: 'spread', label: $t('plays.spread'), align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], WR1: [-0.6, -18], WR2: [-1.2, 18], WR3: [-1.2, 10] } },
   gun_trips: { pkg: 'spread', label: $t('plays.trips_left'), align: { ...OL, QB: [-5, 0], RB: [-5.2, 2.8], WR1: [-0.6, -19], WR3: [-1.2, -12], WR2: [-1.2, 18] } },
+  // Regression fix 2026-11-27: Jet Sweep's approved F-12 alignment (the slot on the right, inside WR2) as its own formation, so the pre-snap
+  // look shows where the slot actually lines up (task8-fx-render I2). A reserve formation like Tight I Left: no play list offers it.
+  gun_trips_jet: { pkg: 'spread', label: $t('plays.trips_right'), reserve: true, align: { ...OL, QB: [-5, 0], RB: [-5.2, 2.8], WR1: [-0.6, -19], WR3: [-1.2, 12], WR2: [-1.2, 18] } },
   tight_i: { pkg: 'tight', label: $t('plays.tight_i'), align: { ...OL3, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-0.6, 3.2], WR1: [-0.6, -18] } },
   tight_gun: { pkg: 'tight', label: $t('plays.tight_gun'), align: { ...OL3, QB: [-5, 0], RB: [-5.2, -2.8], TE: [-0.6, 3.2], WR1: [-1.2, -18] } },
   tight_wing: { pkg: 'tight', label: $t('plays.wing'), align: { ...OL3, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-1.4, 4.2], WR1: [-0.6, -18] } },
@@ -131,11 +134,13 @@ const OFFENSE_PLAYS = [
   // blocks on the play side; the receiver lines up right. It used to run away from the tight end, who sealed the back side: against the
   // two-lineman contain calls (Scrape Exchange 24.8, Pinch Spill 28.2 yards a carry) every play-side defender was blocked. A mirrored
   // Power Right measured 5.3 and 6.0; the redesigns that kept the back-side seal stayed at 14 to 28 (FINAL_DECISIONS_REPORT §5).
-  offense('power_left', $t('plays.power_left'), 'tight_i', {
+  // Regression fix 2026-11-27: the formation is Tight I Left (tight end left, receiver right), so the pre-snap look shows where it
+  // actually lines up (task8-fx-render I2); the alignment is the same as the mirror the owner approved.
+  offense('power_left', $t('plays.power_left'), 'tight_i_lt', {
     QB: HANDOFF, RB: CARRY([[-6.5, 0], [-3, -1.5], [1, -3], [6, -3.5], [20, -4]]),
     RG: PULL([-1.2, -0.6], [1.2, -3.4]), C: RUNBLOCK([1.5, 0.5]), // Phase C1 (F5): a tight pull, so the guard leads the back through the hole
     LG: RUNBLOCK([1.5, -2]), TE: RUNBLOCK([1.5, -4.5]), WR1: STALK([4, 16]),
-  }, { type: 'run', tags: ['run', 'inside', 'short', 'goalline'], align: { TE: [-0.6, -3.2], WR1: [-0.6, 18] }, desc: $t('plays.guard_pulls_to_lead_through_the_left') }),
+  }, { type: 'run', tags: ['run', 'inside', 'short', 'goalline'], desc: $t('plays.guard_pulls_to_lead_through_the_left') }),
   offense('dive', $t('plays.hb_dive'), 'i_pro', {
     QB: HANDOFF, RB: CARRY([[-6.5, 0], [-2, 0.6], [2, 0.8], [20, 1]]),
     LG: RUNBLOCK([1.5, -1.6]), RG: RUNBLOCK([1.5, 1.6]), TE: CLIMB([3, 1]), WR1: STALK([4, -16]), WR2: STALK([4, 16]), // Phase C1 (F3): the tight end leads up to the linebacker
@@ -176,13 +181,13 @@ const OFFENSE_PLAYS = [
     QB: { a: 'option', path: [[-5, 0], [-4, 2], [0, 5], [6, 9], [20, 11]] }, RB: CARRY([[-5.2, 2.8], [-4.2, 0.7], [-3, -0.8], [1, -2], [8, -3], [20, -3]]),
     LG: RUNBLOCK([2, -2]), RG: RUNBLOCK([2, 2]), TE: RUNBLOCK([1.4, 3.4]), WR1: STALK([4, -16]), WR2: STALK([4, 16]), // Phase C1 (F3): the tight end seals the keep side (the inside block was written for a centre the Pro set does not have)
   }, { type: 'run', tags: ['run', 'option'], desc: $t('plays.the_quarterback_reads_the_unblocked_edge') }),
-  offense('jet_sweep', $t('plays.jet_sweep'), 'gun_trips', {
+  offense('jet_sweep', $t('plays.jet_sweep'), 'gun_trips_jet', {
     // F-12 (owner 2026-11-26): the motion is flipped. The slot (WR3) lines up on the right, inside WR2 with the back, comes across on
     // the jet and runs LEFT, away from that crowded side (before: from the left into the trips side, 2.0 yards a carry against the AI's
     // calls). The line and the back lead to the left edge; WR1 stalks the play-side corner; WR2 stalks on the backside.
     QB: HANDOFF, WR3: CARRY([[-1.6, 4.5], [-2, 1], [-1, -6], [3, -13], [20, -16]]),
     LG: RUNBLOCK([2, -5]), RB: RUNBLOCK([2, -8]), RG: RUNBLOCK([1.5, 1]), WR2: STALK([3, 17]), WR1: STALK([4, -16]),
-  }, { type: 'run', align: { WR3: [-1.2, 12] }, motion: { slot: 'WR3', to: [-1.6, 4.5] }, tags: ['run', 'outside', 'misdirection'], desc: $t('plays.the_slot_receiver_takes_the_jet') }),
+  }, { type: 'run', motion: { slot: 'WR3', to: [-1.6, 4.5] }, tags: ['run', 'outside', 'misdirection'], desc: $t('plays.the_slot_receiver_takes_the_jet') }),
 
   // ---- quick passes
   offense('quick_slants', $t('plays.quick_slants'), 'gun_pro', {
