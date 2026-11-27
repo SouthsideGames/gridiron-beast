@@ -1,0 +1,1031 @@
+{
+ "tool": "balance-audit/playbook-situations",
+ "patch": null,
+ "clubs": 16,
+ "n": 3,
+ "families": {
+  "zone": [
+   "cover_3",
+   "cover_2_invert",
+   "base_cover_3",
+   "mug_drop_3"
+  ],
+  "man": [
+   "cover_2_man",
+   "double_bracket",
+   "two_man_press",
+   "cover_0_robber"
+  ],
+  "blitz": [
+   "cover_0",
+   "nickel_mug_zero",
+   "sam_fire",
+   "heavy_fire"
+  ],
+  "runFront": [
+   "edge_contain",
+   "heavy_robber",
+   "heavy_contain",
+   "over_front"
+  ],
+  "goalline": [
+   "goal_line",
+   "nickel_goal_line",
+   "goal_line_zone",
+   "goal_line_spy"
+  ]
+ },
+ "situations": [
+  {
+   "id": "1st&10 own 30",
+   "down": 1,
+   "toGo": 10,
+   "ballOn": 30
+  },
+  {
+   "id": "2nd&6 midfield",
+   "down": 2,
+   "toGo": 6,
+   "ballOn": 50
+  },
+  {
+   "id": "3rd&2",
+   "down": 3,
+   "toGo": 2,
+   "ballOn": 45
+  },
+  {
+   "id": "3rd&8",
+   "down": 3,
+   "toGo": 8,
+   "ballOn": 45
+  },
+  {
+   "id": "red zone 1st&10",
+   "down": 1,
+   "toGo": 10,
+   "ballOn": 85
+  },
+  {
+   "id": "goal line 1st&goal 3",
+   "down": 1,
+   "toGo": 3,
+   "ballOn": 97
+  }
+ ],
+ "plays": {
+  "power_left": {
+   "1st&10 own 30": {
+    "zone": {
+     "n": 192,
+     "yds": 10.7,
+     "successPct": 72.9,
+     "stuffPct": 3.6,
+     "explosivePct": 65.6,
+     "tdPct": 0,
+     "turnoverPct": 0
+    },
+    "man": {
+     "n": 192,
+     "yds": 12.49,
+     "successPct": 61.5,
+     "stuffPct": 4.7,
+     "explosivePct": 48.4,
+     "tdPct": 3.1,
+     "turnoverPct": 0.5
+    },
+    "blitz": {
+     "n": 192,
+     "yds": 7.98,
+     "successPct": 44.8,
+     "stuffPct": 19.3,
+     "explosivePct": 29.2,
+     "tdPct": 3.1,
+     "turnoverPct": 1
+    },
+    "runFront": {
+     "n": 192,
+     "yds": 18.43,
+     "successPct": 66.7,
+     "stuffPct": 2.1,
+     "explosivePct": 36.5,
+     "tdPct": 13,
+     "turnoverPct": 1
+    },
+    "aiCall": {
+     "n": 192,
+     "yds": 13.4,
+     "successPct": 73.4,
+     "stuffPct": 5.7,
+     "explosivePct": 45.3,
+     "tdPct": 8.3,
+     "turnoverPct": 0.5
+    }
+   },
+   "2nd&6 midfield": {
+    "zone": {
+     "n": 192,
+     "yds": 10.17,
+     "successPct": 76.6,
+     "stuffPct": 3.6,
+     "explosivePct": 66.7,
+     "tdPct": 1,
+     "turnoverPct": 1
+    },
+    "man": {
+     "n": 192,
+     "yds": 12.64,
+     "successPct": 69.8,
+     "stuffPct": 3.6,
+     "explosivePct": 55.2,
+     "tdPct": 4.2,
+     "turnoverPct": 1.6
+    },
+    "blitz": {
+     "n": 192,
+     "yds": 7.61,
+     "successPct": 45.3,
+     "stuffPct": 20.8,
+     "explosivePct": 25.5,
+     "tdPct": 3.6,
+     "turnoverPct": 0.5
+    },
+    "runFront": {
+     "n": 192,
+     "yds": 15.2,
+     "successPct": 66.7,
+     "stuffPct": 4.2,
+     "explosivePct": 39.1,
+     "tdPct": 12.5,
+     "turnoverPct": 0
+    },
+    "aiCall": {
+     "n": 192,
+     "yds": 11.74,
+     "successPct": 67.7,
+     "stuffPct": 12.5,
+     "explosivePct": 50,
+     "tdPct": 7.3,
+     "turnoverPct": 0.5
+    }
+   },
+   "3rd&2": {
+    "zone": {
+     "n": 192,
+     "yds": 10.1,
+     "successPct": 88.5,
+     "stuffPct": 6.3,
+     "explosivePct": 65.6,
+     "tdPct": 0.5,
+     "turnoverPct": 0
+    },
+    "man": {
+     "n": 192,
+     "yds": 12.16,
+     "successPct": 89.1,
+     "stuffPct": 5.2,
+     "explosivePct": 50.5,
+     "tdPct": 4.2,
+     "turnoverPct": 1
+    },
+    "blitz": {
+     "n": 192,
+     "yds": 10.09,
+     "successPct": 65.1,
+     "stuffPct": 16.1,
+     "explosivePct": 35.4,
+     "tdPct": 4.7,
+     "turnoverPct": 1
+    },
+    "runFront": {
+     "n": 192,
+     "yds": 16.63,
+     "successPct": 83.9,
+     "stuffPct": 3.6,
+     "explosivePct": 35.9,
+     "tdPct": 13.5,
+     "turnoverPct": 0.5
+    },
+    "goalline": {
+     "n": 192,
+     "yds": 14.36,
+     "successPct": 52.6,
+     "stuffPct": 17.2,
+     "explosivePct": 37.5,
+     "tdPct": 13.5,
+     "turnoverPct": 0
+    },
+    "aiCall": {
+     "n": 192,
+     "yds": 12.46,
+     "successPct": 78.1,
+     "stuffPct": 7.3,
+     "explosivePct": 45.8,
+     "tdPct": 5.2,
+     "turnoverPct": 0
+    }
+   },
+   "3rd&8": {
+    "zone": {
+     "n": 192,
+     "yds": 10.1,
+     "successPct": 76.6,
+     "stuffPct": 6.3,
+     "explosivePct": 65.6,
+     "tdPct": 0.5,
+     "turnoverPct": 0
+    },
+    "man": {
+     "n": 192,
+     "yds": 12.16,
+     "successPct": 53.1,
+     "stuffPct": 5.2,
+     "explosivePct": 50.5,
+     "tdPct": 4.2,
+     "turnoverPct": 1
+    },
+    "blitz": {
+     "n": 192,
+     "yds": 10.09,
+     "successPct": 39.6,
+     "stuffPct": 16.1,
+     "explosivePct": 35.4,
+     "tdPct": 4.7,
+     "turnoverPct": 1
+    },
+    "runFront": {
+     "n": 192,
+     "yds": 16.63,
+     "successPct": 42.7,
+     "stuffPct": 3.6,
+     "explosivePct": 35.9,
+     "tdPct": 13.5,
+     "turnoverPct": 0.5
+    },
+    "aiCall": {
+     "n": 192,
+     "yds": 12.03,
+     "successPct": 54.7,
+     "stuffPct": 6.3,
+     "explosivePct": 47.9,
+     "tdPct": 5.2,
+     "turnoverPct": 0
+    }
+   },
+   "red zone 1st&10": {
+    "zone": {
+     "n": 192,
+     "yds": 8.53,
+     "successPct": 70.8,
+     "stuffPct": 4.7,
+     "explosivePct": 60.4,
+     "tdPct": 11.5,
+     "turnoverPct": 0
+    },
+    "man": {
+     "n": 192,
+     "yds": 9.45,
+     "successPct": 73.4,
+     "stuffPct": 2.6,
+     "explosivePct": 58.9,
+     "tdPct": 34.4,
+     "turnoverPct": 0
+    },
+    "blitz": {
+     "n": 192,
+     "yds": 5.73,
+     "successPct": 46.4,
+     "stuffPct": 16.1,
+     "explosivePct": 34.9,
+     "tdPct": 14.6,
+     "turnoverPct": 0
+    },
+    "runFront": {
+     "n": 192,
+     "yds": 8.16,
+     "successPct": 65.1,
+     "stuffPct": 3.1,
+     "explosivePct": 39.1,
+     "tdPct": 36.5,
+     "turnoverPct": 0.5
+    },
+    "goalline": {
+     "n": 192,
+     "yds": 6.49,
+     "successPct": 43.2,
+     "stuffPct": 17.2,
+     "explosivePct": 39.1,
+     "tdPct": 35.4,
+     "turnoverPct": 0
+    },
+    "aiCall": {
+     "n": 192,
+     "yds": 7.39,
+     "successPct": 62,
+     "stuffPct": 7.8,
+     "explosivePct": 39.1,
+     "tdPct": 17.2,
+     "turnoverPct": 0.5
+    }
+   },
+   "goal line 1st&goal 3": {
+    "zone": {
+     "n": 192,
+     "yds": 2.58,
+     "successPct": 87,
+     "stuffPct": 6.8,
+     "explosivePct": 0,
+     "tdPct": 76,
+     "turnoverPct": 0
+    },
+    "man": {
+     "n": 192,
+     "yds": 2.73,
+     "successPct": 87,
+     "stuffPct": 5.7,
+     "explosivePct": 0,
+     "tdPct": 78.1,
+     "turnoverPct": 0.5
+    },
+    "blitz": {
+     "n": 192,
+     "yds": 1.9,
+     "successPct": 60.9,
+     "stuffPct": 18.2,
+     "explosivePct": 0,
+     "tdPct": 49,
+     "turnoverPct": 0.5
+    },
+    "runFront": {
+     "n": 192,
+     "yds": 2.52,
+     "successPct": 82.8,
+     "stuffPct": 3.6,
+     "explosivePct": 0,
+     "tdPct": 67.2,
+     "turnoverPct": 0
+    },
+    "goalline": {
+     "n": 192,
+     "yds": 1.74,
+     "successPct": 53.6,
+     "stuffPct": 15.1,
+     "explosivePct": 0,
+     "tdPct": 42.2,
+     "turnoverPct": 0.5
+    },
+    "aiCall": {
+     "n": 192,
+     "yds": 2.29,
+     "successPct": 72.9,
+     "stuffPct": 12.5,
+     "explosivePct": 0,
+     "tdPct": 65.1,
+     "turnoverPct": 0.5
+    }
+   }
+  },
+  "power_right": {
+   "1st&10 own 30": {
+    "zone": {
+     "n": 192,
+     "yds": 9.92,
+     "successPct": 73.4,
+     "stuffPct": 8.3,
+     "explosivePct": 59.9,
+     "tdPct": 0.5,
+     "turnoverPct": 1.6
+    },
+    "man": {
+     "n": 192,
+     "yds": 8.86,
+     "successPct": 60.9,
+     "stuffPct": 7.8,
+     "explosivePct": 28.6,
+     "tdPct": 1,
+     "turnoverPct": 0
+    },
+    "blitz": {
+     "n": 192,
+     "yds": 11.56,
+     "successPct": 60.9,
+     "stuffPct": 10.9,
+     "explosivePct": 39.1,
+     "tdPct": 4.2,
+     "turnoverPct": 0
+    },
+    "runFront": {
+     "n": 192,
+     "yds": 9.34,
+     "successPct": 43.2,
+     "stuffPct": 1.6,
+     "explosivePct": 18.2,
+     "tdPct": 3.1,
+     "turnoverPct": 1
+    },
+    "aiCall": {
+     "n": 192,
+     "yds": 7.72,
+     "successPct": 51.6,
+     "stuffPct": 4.7,
+     "explosivePct": 30.7,
+     "tdPct": 1,
+     "turnoverPct": 0
+    }
+   },
+   "2nd&6 midfield": {
+    "zone": {
+     "n": 192,
+     "yds": 9.09,
+     "successPct": 69.3,
+     "stuffPct": 9.4,
+     "explosivePct": 54.2,
+     "tdPct": 1,
+     "turnoverPct": 1
+    },
+    "man": {
+     "n": 192,
+     "yds": 8.26,
+     "successPct": 57.8,
+     "stuffPct": 11.5,
+     "explosivePct": 27.1,
+     "tdPct": 2.1,
+     "turnoverPct": 0.5
+    },
+    "blitz": {
+     "n": 192,
+     "yds": 8.3,
+     "successPct": 54.7,
+     "stuffPct": 14.1,
+     "explosivePct": 28.6,
+     "tdPct": 3.6,
+     "turnoverPct": 1
+    },
+    "runFront": {
+     "n": 192,
+     "yds": 8.05,
+     "successPct": 40.6,
+     "stuffPct": 4.2,
+     "explosivePct": 16.1,
+     "tdPct": 6.3,
+     "turnoverPct": 0.5
+    },
+    "aiCall": {
+     "n": 192,
+     "yds": 7.14,
+     "successPct": 51,
+     "stuffPct": 12,
+     "explosivePct": 26.6,
+     "tdPct": 3.1,
+     "turnoverPct": 2.1
+    }
+   },
+   "3rd&2": {
+    "zone": {
+     "n": 192,
+     "yds": 8.85,
+     "successPct": 84.4,
+     "stuffPct": 6.8,
+     "explosivePct": 52.6,
+     "tdPct": 1,
+     "turnoverPct": 0.5
+    },
+    "man": {
+     "n": 192,
+     "yds": 9.91,
+     "successPct": 83.9,
+     "stuffPct": 8.3,
+     "explosivePct": 35.4,
+     "tdPct": 3.1,
+     "turnoverPct": 1
+    },
+    "blitz": {
+     "n": 192,
+     "yds": 8.81,
+     "successPct": 79.7,
+     "stuffPct": 9.4,
+     "explosivePct": 27.1,
+     "tdPct": 4.2,
+     "turnoverPct": 1
+    },
+    "runFront": {
+     "n": 192,
+     "yds": 8.64,
+     "successPct": 72.9,
+     "stuffPct": 2.6,
+     "explosivePct": 17.7,
+     "tdPct": 5.2,
+     "turnoverPct": 0.5
+    },
+    "goalline": {
+     "n": 192,
+     "yds": 8.39,
+     "successPct": 53.6,
+     "stuffPct": 20.8,
+     "explosivePct": 19.8,
+     "tdPct": 6.8,
+     "turnoverPct": 0
+    },
+    "aiCall": {
+     "n": 192,
+     "yds": 7.29,
+     "successPct": 76.6,
+     "stuffPct": 9.9,
+     "explosivePct": 23.4,
+     "tdPct": 2.6,
+     "turnoverPct": 0
+    }
+   },
+   "3rd&8": {
+    "zone": {
+     "n": 192,
+     "yds": 8.85,
+     "successPct": 66.7,
+     "stuffPct": 6.8,
+     "explosivePct": 52.6,
+     "tdPct": 1,
+     "turnoverPct": 0.5
+    },
+    "man": {
+     "n": 192,
+     "yds": 9.91,
+     "successPct": 35.9,
+     "stuffPct": 8.3,
+     "explosivePct": 35.4,
+     "tdPct": 3.1,
+     "turnoverPct": 1
+    },
+    "blitz": {
+     "n": 192,
+     "yds": 8.81,
+     "successPct": 33.3,
+     "stuffPct": 9.4,
+     "explosivePct": 27.1,
+     "tdPct": 4.2,
+     "turnoverPct": 1
+    },
+    "runFront": {
+     "n": 192,
+     "yds": 8.64,
+     "successPct": 24,
+     "stuffPct": 2.6,
+     "explosivePct": 17.7,
+     "tdPct": 5.2,
+     "turnoverPct": 0.5
+    },
+    "aiCall": {
+     "n": 192,
+     "yds": 7.37,
+     "successPct": 36.5,
+     "stuffPct": 8.9,
+     "explosivePct": 27.6,
+     "tdPct": 2.1,
+     "turnoverPct": 0.5
+    }
+   },
+   "red zone 1st&10": {
+    "zone": {
+     "n": 192,
+     "yds": 7.51,
+     "successPct": 63.5,
+     "stuffPct": 11.5,
+     "explosivePct": 50.5,
+     "tdPct": 9.4,
+     "turnoverPct": 0.5
+    },
+    "man": {
+     "n": 192,
+     "yds": 6.45,
+     "successPct": 67.2,
+     "stuffPct": 6.3,
+     "explosivePct": 29.7,
+     "tdPct": 16.1,
+     "turnoverPct": 0
+    },
+    "blitz": {
+     "n": 192,
+     "yds": 5.77,
+     "successPct": 56.8,
+     "stuffPct": 12.5,
+     "explosivePct": 25.5,
+     "tdPct": 10.4,
+     "turnoverPct": 1
+    },
+    "runFront": {
+     "n": 192,
+     "yds": 5.43,
+     "successPct": 39.6,
+     "stuffPct": 3.6,
+     "explosivePct": 19.8,
+     "tdPct": 19.3,
+     "turnoverPct": 0
+    },
+    "goalline": {
+     "n": 192,
+     "yds": 4.82,
+     "successPct": 32.3,
+     "stuffPct": 18.2,
+     "explosivePct": 25.5,
+     "tdPct": 22.9,
+     "turnoverPct": 0
+    },
+    "aiCall": {
+     "n": 192,
+     "yds": 6.03,
+     "successPct": 56.8,
+     "stuffPct": 8.3,
+     "explosivePct": 27.1,
+     "tdPct": 6.3,
+     "turnoverPct": 0
+    }
+   },
+   "goal line 1st&goal 3": {
+    "zone": {
+     "n": 192,
+     "yds": 2.52,
+     "successPct": 83.9,
+     "stuffPct": 9.4,
+     "explosivePct": 0,
+     "tdPct": 69.8,
+     "turnoverPct": 0
+    },
+    "man": {
+     "n": 192,
+     "yds": 2.86,
+     "successPct": 88,
+     "stuffPct": 6.8,
+     "explosivePct": 0,
+     "tdPct": 80.2,
+     "turnoverPct": 0
+    },
+    "blitz": {
+     "n": 192,
+     "yds": 2.46,
+     "successPct": 79.7,
+     "stuffPct": 8.9,
+     "explosivePct": 0,
+     "tdPct": 60.9,
+     "turnoverPct": 0
+    },
+    "runFront": {
+     "n": 192,
+     "yds": 2.27,
+     "successPct": 74,
+     "stuffPct": 4.7,
+     "explosivePct": 0,
+     "tdPct": 44.3,
+     "turnoverPct": 0
+    },
+    "goalline": {
+     "n": 192,
+     "yds": 1.89,
+     "successPct": 62,
+     "stuffPct": 17.2,
+     "explosivePct": 0,
+     "tdPct": 35.4,
+     "turnoverPct": 1
+    },
+    "aiCall": {
+     "n": 192,
+     "yds": 2.46,
+     "successPct": 82.3,
+     "stuffPct": 6.8,
+     "explosivePct": 0,
+     "tdPct": 56.3,
+     "turnoverPct": 0
+    }
+   }
+  },
+  "baseline_run": {
+   "1st&10 own 30": {
+    "zone": {
+     "n": 3072,
+     "yds": 6.52,
+     "successPct": 49.8,
+     "stuffPct": 14.7,
+     "explosivePct": 24,
+     "tdPct": 0.6,
+     "turnoverPct": 0.7
+    },
+    "man": {
+     "n": 3072,
+     "yds": 9.1,
+     "successPct": 45.4,
+     "stuffPct": 6.4,
+     "explosivePct": 29,
+     "tdPct": 2.1,
+     "turnoverPct": 0.7
+    },
+    "blitz": {
+     "n": 3072,
+     "yds": 5.02,
+     "successPct": 30,
+     "stuffPct": 35.9,
+     "explosivePct": 16.8,
+     "tdPct": 1.1,
+     "turnoverPct": 0.9
+    },
+    "runFront": {
+     "n": 3072,
+     "yds": 7.89,
+     "successPct": 37,
+     "stuffPct": 23.7,
+     "explosivePct": 18.8,
+     "tdPct": 3.2,
+     "turnoverPct": 1.3
+    },
+    "aiCall": {
+     "n": 3072,
+     "yds": 6.47,
+     "successPct": 41,
+     "stuffPct": 20.8,
+     "explosivePct": 19.1,
+     "tdPct": 1.8,
+     "turnoverPct": 0.8
+    }
+   },
+   "2nd&6 midfield": {
+    "zone": {
+     "n": 3072,
+     "yds": 6.48,
+     "successPct": 50.2,
+     "stuffPct": 14.5,
+     "explosivePct": 25.4,
+     "tdPct": 0.8,
+     "turnoverPct": 0.8
+    },
+    "man": {
+     "n": 3072,
+     "yds": 9.04,
+     "successPct": 47.8,
+     "stuffPct": 5.7,
+     "explosivePct": 31.8,
+     "tdPct": 2.8,
+     "turnoverPct": 0.9
+    },
+    "blitz": {
+     "n": 3072,
+     "yds": 4.49,
+     "successPct": 29.7,
+     "stuffPct": 35.9,
+     "explosivePct": 15.2,
+     "tdPct": 1.7,
+     "turnoverPct": 0.7
+    },
+    "runFront": {
+     "n": 3072,
+     "yds": 6.92,
+     "successPct": 36.8,
+     "stuffPct": 25.5,
+     "explosivePct": 18.2,
+     "tdPct": 3.9,
+     "turnoverPct": 0.7
+    },
+    "aiCall": {
+     "n": 3072,
+     "yds": 5.74,
+     "successPct": 38,
+     "stuffPct": 22.7,
+     "explosivePct": 17.2,
+     "tdPct": 2.4,
+     "turnoverPct": 1
+    }
+   },
+   "3rd&2": {
+    "zone": {
+     "n": 3072,
+     "yds": 6.39,
+     "successPct": 72.3,
+     "stuffPct": 13.8,
+     "explosivePct": 24.3,
+     "tdPct": 0.6,
+     "turnoverPct": 0.7
+    },
+    "man": {
+     "n": 3072,
+     "yds": 8.76,
+     "successPct": 81,
+     "stuffPct": 6,
+     "explosivePct": 30.1,
+     "tdPct": 2.4,
+     "turnoverPct": 1
+    },
+    "blitz": {
+     "n": 3072,
+     "yds": 5.01,
+     "successPct": 52.3,
+     "stuffPct": 34.3,
+     "explosivePct": 16.7,
+     "tdPct": 1.7,
+     "turnoverPct": 0.8
+    },
+    "runFront": {
+     "n": 3072,
+     "yds": 7.46,
+     "successPct": 54.6,
+     "stuffPct": 24.4,
+     "explosivePct": 19.2,
+     "tdPct": 3.9,
+     "turnoverPct": 0.5
+    },
+    "goalline": {
+     "n": 3072,
+     "yds": 6.64,
+     "successPct": 32.1,
+     "stuffPct": 46.7,
+     "explosivePct": 19.1,
+     "tdPct": 5,
+     "turnoverPct": 0.8
+    },
+    "aiCall": {
+     "n": 3072,
+     "yds": 6.36,
+     "successPct": 57.3,
+     "stuffPct": 23.9,
+     "explosivePct": 18.9,
+     "tdPct": 2.7,
+     "turnoverPct": 0.7
+    }
+   },
+   "3rd&8": {
+    "zone": {
+     "n": 3072,
+     "yds": 6.39,
+     "successPct": 34,
+     "stuffPct": 13.8,
+     "explosivePct": 24.3,
+     "tdPct": 0.6,
+     "turnoverPct": 0.7
+    },
+    "man": {
+     "n": 3072,
+     "yds": 8.76,
+     "successPct": 34.5,
+     "stuffPct": 6,
+     "explosivePct": 30.1,
+     "tdPct": 2.4,
+     "turnoverPct": 1
+    },
+    "blitz": {
+     "n": 3072,
+     "yds": 5.01,
+     "successPct": 20.6,
+     "stuffPct": 34.3,
+     "explosivePct": 16.7,
+     "tdPct": 1.7,
+     "turnoverPct": 0.8
+    },
+    "runFront": {
+     "n": 3072,
+     "yds": 7.46,
+     "successPct": 24,
+     "stuffPct": 24.4,
+     "explosivePct": 19.2,
+     "tdPct": 3.9,
+     "turnoverPct": 0.5
+    },
+    "aiCall": {
+     "n": 3072,
+     "yds": 6.15,
+     "successPct": 25.5,
+     "stuffPct": 22.1,
+     "explosivePct": 18.7,
+     "tdPct": 2.3,
+     "turnoverPct": 0.8
+    }
+   },
+   "red zone 1st&10": {
+    "zone": {
+     "n": 3072,
+     "yds": 5.28,
+     "successPct": 49,
+     "stuffPct": 14.8,
+     "explosivePct": 23.2,
+     "tdPct": 9.4,
+     "turnoverPct": 0.6
+    },
+    "man": {
+     "n": 3072,
+     "yds": 6.4,
+     "successPct": 48.1,
+     "stuffPct": 5.3,
+     "explosivePct": 32,
+     "tdPct": 21,
+     "turnoverPct": 0.9
+    },
+    "blitz": {
+     "n": 3072,
+     "yds": 3.13,
+     "successPct": 30.1,
+     "stuffPct": 35.4,
+     "explosivePct": 15.5,
+     "tdPct": 8.7,
+     "turnoverPct": 0.6
+    },
+    "runFront": {
+     "n": 3072,
+     "yds": 4.29,
+     "successPct": 36.5,
+     "stuffPct": 26,
+     "explosivePct": 19.2,
+     "tdPct": 15.8,
+     "turnoverPct": 1
+    },
+    "goalline": {
+     "n": 3072,
+     "yds": 3.08,
+     "successPct": 23.1,
+     "stuffPct": 45.6,
+     "explosivePct": 19.8,
+     "tdPct": 17.4,
+     "turnoverPct": 0.6
+    },
+    "aiCall": {
+     "n": 3072,
+     "yds": 4.44,
+     "successPct": 40.8,
+     "stuffPct": 19.9,
+     "explosivePct": 18.6,
+     "tdPct": 10.6,
+     "turnoverPct": 0.9
+    }
+   },
+   "goal line 1st&goal 3": {
+    "zone": {
+     "n": 3072,
+     "yds": 1.91,
+     "successPct": 69.7,
+     "stuffPct": 15.7,
+     "explosivePct": 0,
+     "tdPct": 51,
+     "turnoverPct": 0.7
+    },
+    "man": {
+     "n": 3072,
+     "yds": 2.38,
+     "successPct": 82.1,
+     "stuffPct": 5.3,
+     "explosivePct": 0,
+     "tdPct": 50.8,
+     "turnoverPct": 0.5
+    },
+    "blitz": {
+     "n": 3072,
+     "yds": 1.07,
+     "successPct": 51.9,
+     "stuffPct": 34.1,
+     "explosivePct": 0,
+     "tdPct": 31.3,
+     "turnoverPct": 0.6
+    },
+    "runFront": {
+     "n": 3072,
+     "yds": 1.52,
+     "successPct": 54.8,
+     "stuffPct": 24.7,
+     "explosivePct": 0,
+     "tdPct": 38.8,
+     "turnoverPct": 0.7
+    },
+    "goalline": {
+     "n": 3072,
+     "yds": 0.67,
+     "successPct": 34.3,
+     "stuffPct": 45.5,
+     "explosivePct": 0,
+     "tdPct": 24.3,
+     "turnoverPct": 0.7
+    },
+    "aiCall": {
+     "n": 3072,
+     "yds": 1.56,
+     "successPct": 59,
+     "stuffPct": 24.8,
+     "explosivePct": 0,
+     "tdPct": 43.1,
+     "turnoverPct": 0.4
+    }
+   }
+  }
+ },
+ "baselineSample": {
+  "run": [
+   "inside_zone",
+   "power_left",
+   "outside_zone",
+   "counter",
+   "trap",
+   "read_option",
+   "split_zone",
+   "wide_zone_rt",
+   "trips_weak_zone",
+   "iso",
+   "belly",
+   "wham",
+   "student_body",
+   "crack_toss",
+   "pistol_counter",
+   "qb_power"
+  ]
+ }
+}

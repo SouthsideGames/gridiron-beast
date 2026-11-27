@@ -127,11 +127,15 @@ const OFFENSE_PLAYS = [
     LG: PULL([-1.2, 0.6], [1.2, 3.4]), C: RUNBLOCK([1.5, -0.5]), // Phase C1 (F5): a tight pull, just behind the centre, so the guard reaches the hole before the back (v42.15 pulled 2 yards deep and arrived behind him)
     RG: RUNBLOCK([1.5, 2]), TE: RUNBLOCK([1.5, 4.5]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'inside', 'short', 'goalline'], desc: $t('plays.guard_pulls_to_lead_through_the') }),
+  // D-4 (owner approved 2026-11-26, Option B): Power Left is the exact mirror of Power Right. The tight end lines up on the left and
+  // blocks on the play side; the receiver lines up right. It used to run away from the tight end, who sealed the back side: against the
+  // two-lineman contain calls (Scrape Exchange 24.8, Pinch Spill 28.2 yards a carry) every play-side defender was blocked. A mirrored
+  // Power Right measured 5.3 and 6.0; the redesigns that kept the back-side seal stayed at 14 to 28 (FINAL_DECISIONS_REPORT §5).
   offense('power_left', $t('plays.power_left'), 'tight_i', {
     QB: HANDOFF, RB: CARRY([[-6.5, 0], [-3, -1.5], [1, -3], [6, -3.5], [20, -4]]),
     RG: PULL([-1.2, -0.6], [1.2, -3.4]), C: RUNBLOCK([1.5, 0.5]), // Phase C1 (F5): a tight pull, so the guard leads the back through the hole
-    LG: RUNBLOCK([1.5, -2]), TE: RUNBLOCK([2, 3]), WR1: STALK([4, -16]),
-  }, { type: 'run', tags: ['run', 'inside', 'short', 'goalline'], desc: $t('plays.guard_pulls_left_tight_end_seals') }),
+    LG: RUNBLOCK([1.5, -2]), TE: RUNBLOCK([1.5, -4.5]), WR1: STALK([4, 16]),
+  }, { type: 'run', tags: ['run', 'inside', 'short', 'goalline'], align: { TE: [-0.6, -3.2], WR1: [-0.6, 18] }, desc: $t('plays.guard_pulls_to_lead_through_the_left') }),
   offense('dive', $t('plays.hb_dive'), 'i_pro', {
     QB: HANDOFF, RB: CARRY([[-6.5, 0], [-2, 0.6], [2, 0.8], [20, 1]]),
     LG: RUNBLOCK([1.5, -1.6]), RG: RUNBLOCK([1.5, 1.6]), TE: CLIMB([3, 1]), WR1: STALK([4, -16]), WR2: STALK([4, 16]), // Phase C1 (F3): the tight end leads up to the linebacker
@@ -526,7 +530,7 @@ export { OFFENSE_PACKAGES, DEFENSE_PACKAGES };
 export const LESSONS = Object.freeze({
   inside_zone: { when: $t('plays.your_bread_and_butter_run_on'), watch: $t('plays.the_back_reads_the_first_lineman'), beats: $t('plays.nickel_and_dime_looks'), loses: $t('plays.heavy_fronts_and_the_run_wall') },
   power_right: { when: $t('plays.short_yardage_and_goal_line_3rd'), watch: $t('plays.the_pulling_guard_the_hole_opens'), beats: $t('plays.light_boxes_goal_line_man_zone'), loses: $t('plays.all_out_pressure_and_run_wall') },
-  power_left: { when: $t('plays.same_job_as_power_right_call'), watch: $t('plays.the_tight_end_seals_the_back'), beats: $t('plays.defenses_shaded_to_your_right'), loses: $t('plays.goal_line_stand_run_wall_and') },
+  power_left: { when: $t('plays.same_job_as_power_right_call'), watch: $t('plays.the_pulling_guard_the_hole_opens'), beats: $t('plays.defenses_shaded_to_your_right'), loses: $t('plays.all_out_pressure_and_run_wall') },
   dive: { when: $t('plays.fast_safe_yards_when_you_need'), watch: $t('plays.hits_the_a_gap_instantly_the'), beats: $t('plays.soft_zone_shells_and_man_coverage'), loses: $t('plays.run_wall_and_stacked_boxes') },
   outside_zone: { when: $t('plays.get_the_ball_to_a_fast'), watch: $t('plays.whole_line_slides_the_back_either'), beats: $t('plays.slow_interior_linebackers_the_bear_front'), loses: $t('plays.goal_line_fronts_cover_0_all') },
   stretch_left: { when: $t('plays.outside_zone_to_the_left_use'), watch: $t('plays.if_the_corner_comes_up_hard'), beats: $t('plays.defenses_overplaying_one_side'), loses: $t('plays.edge_contain_and_blitzes_off_the') },

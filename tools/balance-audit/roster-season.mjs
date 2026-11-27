@@ -37,6 +37,9 @@ const RECOVERY = args.recovery != null ? Number(args.recovery) : null;
 // round(capacity * K * fatigue / 100) points (bounded: K <= 0.35, never to exhaustion); capacity, the drain, halftime and the
 // rotation rules are unchanged. Opponents are generated fresh each week (fatigue 0), so the paired comparison is between strategies
 // under the same variant.
+// --practice=light|normal|full (default normal: production practice choice, not production values changed); --rosterSize=N drops the
+// lowest-rated bench monsters (positions with more than two monsters) until N remain (a short-handed roster at the same ratings).
+const PRACTICE = args.practice || 'normal', RSIZE = Number(args.rosterSize) || null;
 const FSTART = Math.min(0.35, Math.max(0, Number(args.fatigueStart) || 0));
 const SR = await import(path.join(root, 'src/sim/t8/stamina-runtime.js'));
 const ratioOf = (st, id) => { const r = st.t8?.stamina?.[id]; if (!r) return null; const v = typeof r.stamina === 'number' ? r.stamina : (r.stamina.n ?? r.stamina[0]) / (r.stamina.d ?? r.stamina[1] ?? 1); return v / r.capacity; };
@@ -80,6 +83,7 @@ function season(i, name, strat) {
   let info = null;
   const base = generatedTeam(5000 + i, { id: 'h', name: 'Home', quality: Q, afterRoster: (r) => { const before = payroll(r); const out = commitRatings(strat.make(r)); info = { payrollBefore: before, payrollAfter: payroll(out) }; return out; } });
   const roster = base.roster; for (const m of roster) { m.fatigue = 0; m.injury = null; }
+  if (RSIZE) { const st = startersOf(roster); let g = 0; while (roster.length > RSIZE && g++ < 40) { const cut = roster.filter((m) => !st.has(m.id) && nonK(m) && roster.filter((x) => x.position === m.position).length > 2).sort((a, b) => monsterOverall(a) - monsterOverall(b))[0]; if (!cut) break; roster.splice(roster.indexOf(cut), 1); } }
   const coach = { ...(base.coach || {}), substitution: strat.rotation || 'balanced' };
   const rng = createRng(77000 + i);
   const S = { w: 0, l: 0, t: 0, margin: 0, lateMargin: 0, poMargin: 0, poWins: 0, injuries: 0, starterGamesMissed: 0, borrowed: 0, fatigueAtKick: [], forfeits: 0 };
@@ -92,7 +96,7 @@ function season(i, name, strat) {
     S.borrowed += borrowedSlots(roster, home.chart).length;
     const onChart = Object.values(home.chart).filter(Boolean); S.fatigueAtKick.push(onChart.reduce((s, id) => s + (roster.find((m) => m.id === id)?.fatigue || 0), 0) / Math.max(1, onChart.length));
     const fat = Object.fromEntries(roster.map((m) => [m.id, m.fatigue || 0])); const st0 = new Set(onChart);
-    for (const id of onChart) (S.fatStarters ||= []).push(fat[id]); for (const m of roster) if (!st0.has(m.id)) (S.fatBench ||= []).push(fat[m.id]);
+    for (const id of onChart) (S.fatStarters ||= []).push(fat[id]); ((S.byWeek ||= [])[wk - 1] = onChart.reduce((a, id) => a + fat[id], 0) / Math.max(1, onChart.length)); for (const m of roster) if (!st0.has(m.id)) (S.fatBench ||= []).push(fat[m.id]);
     let hooked = false, lastQ = 1, subs = 0, subsFatigue = 0, lastPlay = -1; const qRatio = [];
     const starterRatio = (st) => { const v = onChart.map((id) => ratioOf(st, id)).filter((x) => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
     const onStep = (ev, st) => {
@@ -112,10 +116,10 @@ function season(i, name, strat) {
     if (args.trace) { const pl = g.stats?.home?.players || {}; const byId = Object.fromEntries(roster.map((m) => [m.id, m])); let bench = 0, all = 0; for (const [k, st] of Object.entries(pl)) { const n = (st.snapsOff || 0) + (st.snapsDef || 0); all += n; const id = byId[k] ? k : home.chart[k]; if (id && !starters0.has(id)) bench += n; } (S.trace ||= []).push(`${margin}/${all ? Math.round(100 * bench / all) : 0}%`); }
     const ev = afterGame(roster, home.chart, g.stats?.home?.players || {}, rng, { won: margin > 0, autoSpend: false, autoEvolve: false, xpScale: 0, liveInjuries: !!g.rotation });
     ev.push(...commitGameInjuries(roster, g)); S.injuries += ev.filter((e) => e.kind === 'injury').length;
-    practiceFatigue(roster, 'normal'); weekRecover(roster);
+    practiceFatigue(roster, PRACTICE); weekRecover(roster);
   }
   const mean = (a) => (a?.length ? +(a.reduce((x, y) => x + y, 0) / a.length).toFixed(3) : null);
-  S.dist = { starterFatigueAtKickoff: qs(S.fatStarters || []), benchFatigueAtKickoff: qs(S.fatBench || []), starterStartStamina: mean(S.startRatio), starterStaminaAt_Q2start_Q3startAfterHalftime_Q4start_final: [1, 2, 3, 4].map((q) => mean(S.qRatio?.[q])), subsPerGame: +(S.subs / 16).toFixed(2), fatigueSubsPerGame: +(S.subsFatigue / 16).toFixed(2), exhaustedPerGame: +(S.exhausted / 16).toFixed(2), payroll: payroll(roster), rosterSize: roster.length };
+  S.dist = { starterFatigueAtKickoff: qs(S.fatStarters || []), benchFatigueAtKickoff: qs(S.fatBench || []), starterStartStamina: mean(S.startRatio), starterStaminaAt_Q2start_Q3startAfterHalftime_Q4start_final: [1, 2, 3, 4].map((q) => mean(S.qRatio?.[q])), subsPerGame: +(S.subs / 16).toFixed(2), starterFatigueByWeek: S.byWeek.map((x) => +x.toFixed(1)), starterFatigueOver30Pct: +(100 * (S.fatStarters || []).filter((x) => x >= 30).length / Math.max(1, (S.fatStarters || []).length)).toFixed(1), fatigueSubsPerGame: +(S.subsFatigue / 16).toFixed(2), exhaustedPerGame: +(S.exhausted / 16).toFixed(2), payroll: payroll(roster), rosterSize: roster.length };
   delete S.fatStarters; delete S.fatBench; delete S.startRatio; delete S.qRatio;
   return { ...S, endFatigue: S.fatigueAtKick.at(-1), peakFatigue: Math.max(...S.fatigueAtKick), fatigueAtKick: S.fatigueAtKick.reduce((a, b) => a + b, 0) / S.fatigueAtKick.length, benchShare: S.benchShare / 16, ...info };
 }
@@ -138,6 +142,6 @@ const rows = Object.fromEntries(Object.entries(acc).map(([k, a]) => { const [dw,
   return [k, { seasons: a.n, winsOf14plus2: +(a.wins / a.n).toFixed(2), winsVsControl: dw, se: dwse, marginPerGameVsControl: dm, marginSe: dmse, lateSeasonMarginVsControl: dl, lateSe: dlse, postseasonMarginVsControl: dp, postSe: dpse,
     postseasonWinsPerSeason: +(a.poWins / a.n).toFixed(2), injuriesPerSeason: +(a.injuries / a.n).toFixed(1), starterGamesMissedPerSeason: +(a.missed / a.n).toFixed(1), borrowedSlotsPerSeason: +(a.borrowed / a.n).toFixed(2), meanStarterFatigueAtKickoff: +(a.fatigue / a.n).toFixed(1), endOfSeasonFatigue: +(a.endF / a.n).toFixed(1), peakFatigue: +(a.peakF / a.n).toFixed(1), benchSnapSharePct: +(100 * a.bench / a.n).toFixed(1), payrollChange: Math.round(a.payDiff / a.n), maxUnusedPayroll: a.unused }]; }));
 for (const [k, a] of Object.entries(acc)) rows[k].distributions = avgDist(a.dists); // per-season quantiles, averaged over seasons
-const out = { tool: 'balance-audit/roster-season', seasons: SEASONS, quality: Q, recovery: RECOVERY ?? 'production (28)', fatigueStart: FSTART || 'production (A: none)', season: 'fixed 16-game study: 14 regular games + 2 postseason games always played (a real season has 14 games and a postseason only for qualifiers)', rows };
+const out = { tool: 'balance-audit/roster-season', seasons: SEASONS, quality: Q, recovery: RECOVERY ?? 'production (28)', fatigueStart: FSTART || 'production (A: none)', practice: PRACTICE, rosterSize: RSIZE || 'generated (28)', season: 'fixed 16-game study: 14 regular games + 2 postseason games always played (a real season has 14 games and a postseason only for qualifiers)', rows };
 if (args.json) fs.writeFileSync(String(args.json), JSON.stringify(out, null, 1));
 console.log(JSON.stringify(out, null, 1));
