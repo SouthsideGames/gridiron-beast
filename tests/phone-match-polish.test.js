@@ -9,6 +9,23 @@ import * as R from '../src/sim/rules.js';
 import {generatedTeam} from '../src/franchise/roster.js';
 import {kickPlay} from '../src/ui/fx/match-fx.js';
 import {fieldSvg} from '../src/ui/field-view.js';
+import {conversionCallout} from '../src/ui/screens/match.js';
+
+test('conversion banners use the recorded outcome and scoring side', () => {
+  const kick = { kind: 'try', tryTeam: 'home', kicking: 'home' };
+  assert.deepEqual(conversionCallout({ ...kick, good: false, text: 'Extra point is NO GOOD.' }, 'home'),
+    { tier: 'loss', text: 'NO GOOD', mine: false });
+  assert.deepEqual(conversionCallout({ ...kick, good: true }, 'home'),
+    { tier: 'score', text: 'EXTRA POINT', mine: true });
+  const two = { kind: 'try', tryTeam: 'away', offensePlayId: 'quick_slants' };
+  assert.deepEqual(conversionCallout({ ...two, good: true }, 'home'),
+    { tier: 'score', text: 'TWO POINTS', mine: false });
+  assert.deepEqual(conversionCallout({ ...two, good: false }, 'home'),
+    { tier: 'loss', text: 'NO GOOD', mine: true });
+  assert.deepEqual(conversionCallout({ ...two, good: false, sim: { stats: { defensiveScore: true } } }, 'home'),
+    { tier: 'score', text: 'TWO POINTS', mine: true });
+});
+
 let down=false;
 registerAbility({family:'phoneprobe',abilityId:'PHONE-PROBE',hooks:{playStart(ctx){if(down)for(const d of ctx.opponents('off'))ctx.applyStatus(d,{id:'knockedDown',strength:1,duration:0,restOfPlay:true});}}});
 test('knocked-down defenders cannot intercept, break up, tackle or sack until recovered',()=>{

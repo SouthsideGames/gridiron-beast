@@ -75,11 +75,24 @@ export function switchTab(name) {
   restoreTo=stack.at(-1)?.scroll??0;navigating=true;render();
 }
 let navigating = false; // a go/back scrolls to the top; a re-render of the same screen (spending a point, toggling a tab) keeps the scroll position
+function matchingControl(previous, region) {
+  const attributes = [...previous.attributes].filter(({ name }) =>
+    name === 'id' || name === 'name' || (name.startsWith('data-') && name !== 'data-busy'));
+  if (!attributes.length || !region) return null;
+  const candidates = [...app.querySelectorAll(region + ' ' + previous.tagName)].filter(control =>
+    attributes.every(({ name, value }) => control.getAttribute(name) === value));
+  return candidates.length === 1 ? candidates[0] : null;
+}
+
 export function render() {
   const top = currentScreen(); if (!top || !app) { restoreTo = null; return; }
   const restore = restoreTo; restoreTo = null; // consumed by this render only: never carried into a later, unrelated one
   const screen = screens.get(top.name);
   const keepScroll = !navigating && current === screen; const y = window.scrollY; const entering = navigating; navigating = false; // a go/back slides the new screen in; a re-render of the same screen stays put
+  const doc = app.ownerDocument;
+  const active = doc?.activeElement;
+  const keyboardFocus = active && app.contains(active) && active.matches(':focus-visible');
+  const focusRegion = keyboardFocus && keepScroll ? active.closest('header, main, nav')?.tagName : null;
   globalThis.dispatchEvent?.(new Event('gb-before-screen-render'));
   const ctx = { ...ctxProvider(), params: top.params, entering, go, back, render };
   if (current && current !== screen) current.unmount?.();
@@ -91,7 +104,7 @@ export function render() {
   app.innerHTML = iconifyMarkup(`
     <header class="topbar" role="banner">
       ${showBack ? `<button class="btn ghost back" data-action="router-back" aria-label="${$t('shared.back')}">‹</button>` : `<span class="back-spacer"></span>`}
-      <h1 class="title">${esc(title)}</h1>
+      <h1 class="title" tabindex="-1">${esc(title)}</h1>
       <span class="topbar-right">${screen.topRight ? screen.topRight(ctx) : ''}${helpProvider && screen.help !== false ? helpProvider(ctx, top.name) : ''}</span>
     </header>
     <main class="screen screen-${esc(top.name)} ${tabs ? 'with-tabs' : ''} ${entering ? 'enter' : ''}" id="screen">${tipProvider ? tipProvider(ctx, top.name) : ''}${polishHeader(ctx, top.name)}${screen.render(ctx)}</main>
@@ -111,5 +124,10 @@ export function render() {
   measure();
   if(globalThis.ResizeObserver){layoutObserver=new ResizeObserver(measure);if(tabbar)layoutObserver.observe(tabbar);if(nextBar)layoutObserver.observe(nextBar);}
 
+  if (keyboardFocus && doc.activeElement === doc.body && !doc.querySelector('[aria-modal="true"]')) {
+    const control = focusRegion && matchingControl(active, focusRegion);
+    if (control) control.focus?.({ preventScroll: true });
+    if (doc.activeElement === doc.body) app.querySelector('.topbar .title')?.focus({ preventScroll: true });
+  }
   if (keepScroll) window.scrollTo(0, y); else if (restore != null) window.scrollTo(0, restore); else window.scrollTo(0, 0);
 }
