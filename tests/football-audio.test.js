@@ -41,10 +41,29 @@ test('quarter and final whistles only cue on their transitions', () => {
 test('stadium cues follow the venue home and away teams', () => {
   const state = { phase: 'scrimmage', down: 3, possession: 'away' };
   assert.equal(stadiumBed(state), 'stadium_third_down_loop');
-  assert.equal(stadiumBed({ ...state, possession: 'home' }), 'stadium_quiet_loop');
+  assert.equal(stadiumBed({ ...state, possession: 'home' }), null);
+  assert.equal(stadiumBed({ ...state, down: 2 }), null);
+  assert.equal(stadiumBed({ ...state, phase: 'kickoff' }), null);
   assert.equal(stadiumBed({ ...state, finished: true }), null);
   const event = { kind: 'play', down: 3, firstDown: true };
   assert.equal(stadiumOutcome({ ...event, offenseSide: 'home' }), 'stadium_roar');
   assert.equal(stadiumOutcome({ ...event, offenseSide: 'away' }), 'stadium_stir');
   assert.equal(stadiumOutcome({ ...event, sim: { result: 'touchdown' } }), 'touchdown');
+});
+
+test('kick return catches use the hands cue at the first catch', () => {
+  const kickoff = { kind: 'kickoff', sim: { events: [{ kind: 'kick_catch', t: 2.4 }] } };
+  assert.deepEqual(footballCues(kickoff).at(-1), { id: 'catch_hands_02', time: 2.4 });
+  const punt = { kind: 'punt', res: { fairCatch: true }, sim: { frames: [
+    { t: .5, ball: [0, 0, 1] },
+    { t: 2.9, holderTeam: 'def', holder: 'PR' },
+    { t: 3, holderTeam: 'def', holder: 'PR' },
+  ] } };
+  assert.deepEqual(footballCues(punt), [{ id: 'kick_punt', time: .5 }, { id: 'catch_hands_02', time: 2.9 }]);
+  assert.deepEqual(footballCues({ kind: 'punt', res: { returnYards: 0 } }).at(-1), { id: 'catch_hands_02', time: 0 });
+  for (const res of [{ touchback: true, returnYards: 0 }, { blocked: true }, { distance: 50 }]) {
+    assert.equal(footballCues({ kind: 'punt', res }).length, 1);
+  }
+  assert.equal(footballCues({ kind: 'kickoff', res: { onside: true }, sim: punt.sim }).length, 1);
+  assert.deepEqual(footballCues({ kind: 'kickoff', res: { noKicker: true } }), []);
 });

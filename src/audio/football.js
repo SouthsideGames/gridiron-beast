@@ -14,7 +14,6 @@ export const FOOTBALL_CLIPS = Object.freeze({
   kick_punt: 'assets/audio/kick_punt.wav',
   whistle_short_01: 'assets/audio/whistle_short_01.wav',
   whistle_dead_01: 'assets/audio/whistle_dead_01.wav',
-  stadium_quiet_loop: 'assets/audio/stadium_quiet_loop.wav',
   stadium_third_down_loop: 'assets/audio/stadium_third_down_loop.wav',
   stadium_touchdown_01: 'assets/audio/stadium_touchdown_01.wav',
   stadium_touchdown_02: 'assets/audio/stadium_touchdown_02.wav',
@@ -28,13 +27,29 @@ export const FOOTBALL_CLIPS = Object.freeze({
 export function stadiumBed(state) {
   if (state.finished) return null;
   return state.phase === 'scrimmage' && state.down === 3 && state.possession === 'away'
-    ? 'stadium_third_down_loop' : 'stadium_quiet_loop';
+    ? 'stadium_third_down_loop' : null;
 }
 
 export function footballCues(event, play) {
   const kick = { kickoff: 'kick_off', punt: 'kick_punt', field_goal: 'kick_field' }[event.kind]
     || (event.kind === 'try' && event.kicking ? 'kick_field' : null);
-  if (kick) return [{ id: kick, time: event.sim?.frames?.find(frame => frame.ball?.[2] > 0)?.t ?? 0 }];
+  if (kick) {
+    if (event.res?.noKicker || event.res?.forfeit) return [];
+    const frames = event.sim?.frames;
+    const cues = [{ id: kick, time: frames?.find(frame => frame.ball?.[2] > 0)?.t ?? 0 }];
+    if (event.kind === 'kickoff' || event.kind === 'punt') {
+      const result = event.res;
+      const recordedCatch = event.sim?.events?.find(beat => beat.kind === 'kick_catch');
+      const animatedCatch = frames?.find(frame => frame.holderTeam === 'def' && ['KR', 'PR'].includes(frame.holder));
+      const caughtWithoutFrames = !frames?.length && result && !result.onside && !result.blocked
+        && (!result.touchback || result.returned)
+        && (result.fairCatch || result.touchdown || result.returnYards != null);
+      const catchTime = recordedCatch?.t ?? (result?.onside ? null : animatedCatch?.t)
+        ?? (caughtWithoutFrames ? 0 : null);
+      if (catchTime != null) cues.push({ id: 'catch_hands_02', time: catchTime });
+    }
+    return cues;
+  }
   if (event.kind !== 'play' && !(event.kind === 'try' && event.offensePlayId)) return [];
 
   const cues = [{ id: play?.align?.QB?.[0] <= -3 ? 'shotgun_snap_01' : 'snap_exchange_01', time: 0 }];

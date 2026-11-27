@@ -54,7 +54,7 @@ export function registerOnboardingScreens(Router, app) {
       if (!draft || params.fresh) { draft = fresh(); params.fresh = false; }
       const step = STEPS[draft.step];
       let body = '';
-      if (step === 'name') body = `<div class="grid2"><label class="field">${t('onboarding.first_name')}<input id="first" maxlength="18" value="${esc(draft.first)}" autocomplete="given-name"></label><label class="field">${t('onboarding.last_name')}<input id="last" maxlength="18" value="${esc(draft.last)}" autocomplete="family-name"></label></div>`;
+      if (step === 'name') body = `<div class="grid2"><label class="field">${t('onboarding.first_name')}<input id="first" required aria-describedby="err" maxlength="18" value="${esc(draft.first)}" autocomplete="given-name"></label><label class="field">${t('onboarding.last_name')}<input id="last" required aria-describedby="err" maxlength="18" value="${esc(draft.last)}" autocomplete="family-name"></label></div>`;
       if (step === 'look') {
         body = `<div class="row" style="margin-bottom:8px">${['Female', 'Male', 'Nonbinary'].map((g) => `<button class="btn small ${draft.gender === g ? 'primary' : ''}" data-action="gender" data-v="${g}">${g === 'Nonbinary' ? t('onboarding.non_binary') : g}</button>`).join('')}</div>
           ${coachEditorHtml(draft.editor.look, { tab: draft.editor.tab, canUndo: !!draft.editor.lookHistory?.length, teamColor: draft.club ? TEAM_META[draft.club]?.color : null, teamNote: t('onboarding.team_colors_follow_the_club_you') })}`;
@@ -74,18 +74,32 @@ export function registerOnboardingScreens(Router, app) {
       return `<div class="commissioner">${portraitSprite('commissioner', 56, { hue: 210 })}<div class="speech"><div class="muted" style="font-size:11px;margin-bottom:4px">${t('onboarding.league_commissioner', { step: draft.step + 1, n: STEPS.length })}</div>${esc(LINES[step])}</div></div>
         <div style="margin:12px 0">${body}</div>
         <div class="row between"><button class="btn" data-action="back">${t('onboarding.back')}</button>${step === 'name' ? `<button class="btn" data-action="random-name">${t('onboarding.random_name')}</button>` : ''}<button class="btn primary" data-action="next" id="next">${step === 'offense' ? t('onboarding.enter_the_league') : t('onboarding.continue')}</button></div>
-        <p id="err" class="muted" style="color:var(--bad);min-height:18px"></p>`;
+        <p id="err" class="muted" role="alert" style="color:var(--bad);min-height:18px"></p>`;
     },
     mount(root, ctx) {
       const err = (t) => { root.querySelector('#err').textContent = t; };
       const collect = () => {
         const step = STEPS[draft.step];
-        if (step === 'name') { draft.first = root.querySelector('#first').value.trim(); draft.last = root.querySelector('#last').value.trim(); if (!draft.first || !draft.last) return t('onboarding.please_enter_your_first_and_last'); }
+        if (step === 'name') {
+          const first = root.querySelector('#first');
+          const last = root.querySelector('#last');
+          draft.first = first.value.trim();
+          draft.last = last.value.trim();
+          first.setAttribute('aria-invalid', String(!draft.first));
+          last.setAttribute('aria-invalid', String(!draft.last));
+          if (!draft.first || !draft.last) return t('onboarding.please_enter_your_first_and_last');
+        }
         if (step === 'background') { const h = root.querySelector('#home'); if (h) draft.hometown = h.value.trim(); }
         if (step === 'club' && !draft.club) return t('onboarding.choose_a_club');
         if (step === 'offense' && !draft.offense) return t('onboarding.choose_a_cornerstone');
         return null;
       };
+      for (const input of root.querySelectorAll('#first, #last')) {
+        input.addEventListener('input', () => {
+          if (input.value.trim()) input.removeAttribute('aria-invalid');
+          if (!root.querySelector('input[aria-invalid="true"]')) err('');
+        });
+      }
       delegate(root, {
         'random-name': () => { Object.assign(draft, randomCoachName({ first: root.querySelector('#first').value.trim(), last: root.querySelector('#last').value.trim() })); Router.render(); },
         gender: (el) => { draft.gender = el.dataset.v; Router.render(); },
@@ -99,7 +113,12 @@ export function registerOnboardingScreens(Router, app) {
         details: (el) => { const c = cornerstoneOffers(draft.offerSeed).find((x) => x.name === el.dataset.v); const sp = resolveSpecies(c.species); sheet(`<div class="row">${monsterSprite({ id: c.name, name: c.name, species: c.species }, 64)}<div><b>${esc(c.givenName || c.name)}</b><div class="muted">${beastSpeciesHtml(c)} · ${c.position} · ${c.type} · ${c.rarity} · ${c.quality} OVR · ${c.archetype}</div></div></div><p style="font-style:italic">“${esc(sp.personality)}”</p><p class="dim">${t('onboarding.his_temper_how_efficiently_he_trains')}</p><h3>${t('onboarding.signature_abilities')}</h3>${abilitiesHtml(sp, { seeIt: true })}<h3>${t('onboarding.type')}</h3><p>${esc(TYPES[c.type].blurb)}.</p>`, { title: c.givenName || c.name }); },
         back: () => { if (draft.step > 0) { draft.step -= 1; Router.render(); } else Router.go('menu', {}, { reset: true }); },
         next: async () => {
-          const e = collect(); if (e) { err(e); return; }
+          const e = collect();
+          if (e) {
+            err(e);
+            root.querySelector('input[aria-invalid="true"]')?.focus();
+            return;
+          }
           if (STEPS[draft.step] === 'offense') {
             const offer = cornerstoneOffers(draft.offerSeed).find((x) => x.name === draft.offense);
             const f = createFranchise({ owner: { first: draft.first, last: draft.last, gender: draft.gender, portrait: spec(), hometown: draft.hometown, background: draft.background }, club: draft.club, rival: draft.rival, cornerstone: offer, settings: { ...app.defaultSettings, difficulty: draft.difficulty } });
