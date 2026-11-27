@@ -1109,11 +1109,17 @@ export function capTransitionOutlook(f) {
   const from = capFor(f); const to = Math.round(tierById(f.tier).cap * (ownerPerk(f) === 'cap' ? 1.04 : 1));
   const committed = committedNext(f); return { from, to, committed, room: to - committed, over: committed > to };
 }
-function applyCapTransition(f, year) {
+export function applyCapTransition(f, year) {
   if (!capTransitionDue(f)) return false;
   const o = capTransitionOutlook(f); f.capEra = CAP_ERA; f.capTransition = { year, from: o.from, to: o.to, committed: o.committed };
   news(f, o.over ? $L('franchise.cap_now_in_force_over', { cap: o.to.toLocaleString('en-US'), over: (o.committed - o.to).toLocaleString('en-US') }) : $L('franchise.cap_now_in_force', { cap: o.to.toLocaleString('en-US'), room: o.room.toLocaleString('en-US') }), o.over ? 'loss' : 'info');
   return true;
+}
+/** D-1: while the club is over the cap, a move that adds salary is refused (releases, renewals declined and trades that shed salary are
+ *  how a club gets back under; the commissioner's Saturday review is unchanged). `add`: the payroll the move adds (net). */
+export function overCapBlock(f, add) {
+  const cap = salarySummary(f); if (!cap.over || !(add > 0)) return null;
+  return { ok: false, code: 'cap', reason: $t('franchise.over_cap_no_additions', { over: Math.round(-cap.remaining).toLocaleString('en-US') }) };
 }
 // ------------------------------------------------------------ R7: staff affordability (owner approval 2026-11-05)
 // Staff commitments are checked against next season's books in a Task 7 offseason. The renewal demand itself is unchanged (STAFF_RAISE)
@@ -1224,6 +1230,7 @@ export function signFreeAgent(f, id) {
   if (!f.offseason) return { ok: false, reason: $t('franchise.the_market_is_open_in_the') };
   if (f.roster.length >= ROSTER_MAX) return { ok: false, reason: `${$t('franchise.roster_full', { rosterMax: ROSTER_MAX })}` };
   const entry = offseasonMarket(f).find((e) => e.monster.id === id); if (!entry) return { ok: false, reason: $t('franchise.not_on_the_market') };
+  { const b = overCapBlock(f, salaryFor(entry.monster)); if (b) return b; } // D-1
   const m = entry.monster; m.salary = salaryFor(m); m.contract = newContract(f.season.year + 1);
   if (entry.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } } else f.offseason.market = f.offseason.market.filter((x) => x !== m);
   uniqueName(f, m); m.joined = f.season.year + (f.offseason ? 1 : 0); backfillCareer(f, m); noteJoin(f, m, 'free_agent', entry.fromPool ? { region: homeRegion(m) } : {}); f.roster.push(m); dexRecord(f, m, 'signed');
@@ -1411,6 +1418,7 @@ export function tradeAskPicks(f, { give, year, round, count = 1 }) {
 export function acceptTrade(f, offer) {
   const c = checkGive(f, offer.give); if (!c.ok) return c;
   if (offer.get?.player && !canTakePlayer(f)) return { ok: false, reason: `${$t('franchise.roster_full', { rosterMax: ROSTER_MAX })}` };
+  if (offer.get?.player) { const b = overCapBlock(f, offer.get.player.salary || salaryFor(offer.get.player)); if (b) return b; } // D-1
   const year = f.season.year; const nextYear = f.draft?.creation ? year : year + 1;
   const got = executeTrade(f, offer, { club: f.club, year, nextYear }); if (got.player) { uniqueName(f, got.player); leagueEvent(f, { kind: 'trade', from: offer.team, to: f.club, toOwner: true, consideration: offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + '), ...moveIdentity(f, got.player) }); }
   if (got.player) { dexRecord(f, got.player, 'signed'); const cap = salarySummary(f); news(f, $P($L('franchise.trade_ovr_arrives_from_for', { name: got.player.name, position: got.player.position, monsterOverall: monsterOverall(got.player), team: offer.team }), ` `, offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + '), (cap.over ? $L('franchise.over_the_cap_the_commissioner_will_2') : ''), `.`), 'roster', { mid: got.player.id, mname: got.player.name }); }

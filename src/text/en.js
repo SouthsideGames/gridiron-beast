@@ -2288,6 +2288,7 @@ export default {
   'franchise.the_commissioner_is_waiting_on_a': 'The commissioner is waiting on a cap decision',
   'franchise.cap_change_notice': "Cap change: {from} now, {to} from this offseason. Next season's commitments leave {room} cr of room.",
   'franchise.cap_change_notice_over': "Cap change: {from} now, {to} from this offseason. Next season's commitments are {over} cr over it; decline renewals, trade or release before next season.",
+  'franchise.over_cap_no_additions': 'You are {over} cr over the cap. Until you are under it, only moves that lower your payroll are allowed: releases, declined renewals and trades that shed salary.',
   'franchise.cap_change_coming': "League office: the salary cap falls from {from} to {to} cr when this season ends. Contracts stand as signed; plan next season's payroll now.",
   'franchise.cap_now_in_force': "The {cap} cr salary cap is now in force. Next season's commitments leave {room} cr of room.",
   'franchise.cap_now_in_force_over': "The {cap} cr salary cap is now in force. Next season's commitments are {over} cr over it: get under through renewals, trades or releases before the season starts.",
