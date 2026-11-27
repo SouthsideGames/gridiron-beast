@@ -78,7 +78,7 @@ def run_size(pw, port, w, h, name):
     page.wait_for_selector('[data-action="new"]')
     # Achievements live on the main menu (GDD §21.4), outside any franchise.
     page.click('[data-action="go"][data-screen="achievements"]'); page.wait_for_selector('.ach-card'); no_overflow(page, 'achievements'); shot(page, f'{name}-01d-achievements')
-    check(page.evaluate("() => document.querySelectorAll('.ach-card').length") == 21, 'achievements: all 21 listed')
+    check(page.evaluate("() => document.querySelectorAll('.ach-card').length") == 200, 'achievements: all 200 listed')
     page.click('[data-action="router-back"]'); page.wait_for_selector('[data-action="new"]')
     # Onboarding: three steps, then straight to match day (default staff is hired automatically).
     page.click('[data-action="new"]')

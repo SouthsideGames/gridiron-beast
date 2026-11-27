@@ -16,7 +16,7 @@ import { AWARDS } from '../../franchise/awards.js';
 import { isArchived, SEASON_CAP } from '../../franchise/lifecycle.js';
 import { hasLeague, leagueClubs, clubRoster } from '../../franchise/league-registry.js';
 import { achievementsFor } from '../../franchise/achievement-store.js';
-import { ACHIEVEMENTS } from '../../data/achievements.js';
+import { ACHIEVEMENTS, achievementDesc } from '../../data/achievements.js';
 import { STAFF, STAFF_ROLES } from '../../data/staff.js';
 import { t as $t } from '../../text/index.js';
 
@@ -60,7 +60,7 @@ const ROLE_LABEL = { head_coach: $t('career.head_coach'), offensive_coordinator:
 /** Milestones, legendaries, the final staff and the draft history: from the save and the player's records, nothing invented. */
 function recordsPanelHtml(f) {
   const earned = f.uid ? achievementsFor(f.uid) : []; const own = Object.keys(f.achievements || {}); const ids = [...new Set([...earned, ...own])];
-  const names = ids.map((id) => ACHIEVEMENTS.find((a) => a.id === id)?.desc || id);
+  const names = ids.map((id) => { const a = ACHIEVEMENTS.find((x) => x.id === id); return a ? achievementDesc(a) : id; });
   const legendaries = (f.roster || []).filter((m) => SPECIES_BY_ID[m.species]?.rarity === 'legendary').map((m) => m.name);
   const unlocked = Object.keys(f.campaign?.unlocked || {}).map((id) => SPECIES_BY_ID[id]?.name || id);
   const staff = STAFF_ROLES.map((r) => { const id = f.staff?.[r]; const c = id ? STAFF.find((x) => x.id === id) : null; return `<div class="row between sub"><span>${esc(ROLE_LABEL[r] || r)}</span><span>${c ? esc(c.name) : na}</span></div>`; }).join('');

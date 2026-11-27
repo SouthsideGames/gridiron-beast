@@ -40,13 +40,13 @@ import { createRoster, generateMonster, monsterOverall, schemeFit, evolutionRead
 import { ELEMENT_REGIONS } from '../data/species.js';
 export { ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
-import { dexKnowledgeGame, knowledgeEventId, dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise } from './dex-store.js';
+import { dexKnowledgeGame, knowledgeEventId, dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise, dexCountsGlobal } from './dex-store.js';
 import { clubIdentity, identityCoach, lineupPreference, trainingPriority } from '../data/identities.js';
 import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, gymGrowth } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
 import { yearOf } from '../data/calendar.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
-import { recordAchievementGlobal } from './achievement-store.js';
+import { recordAchievementGlobal, markDisqualified, recordAchDex, achDexCounts, foundingFamily, evaluateCatalogue, trackGame, trackClash, trackRoster, achAdd, achMax, achMark, achTrack, achEligible, metricValue, meets } from './achievement-store.js';
 import { pickOwner, setPickOwner, currentClassYear, picksOwnedBy, pickUsed, tradableYears, askForPlayer, askForPicks, executeTrade, canTakePlayer, pickKey, samePick, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, playerValue, positionNeeds, buildTradeCall, contractYear, transferPick, CALL_CHANCE } from './trades.js';
 import { evaluateProposal, deskAssets, deskUsage, spendProposal, buildIncomingOffer, DESK_RULES } from './trade-desk.js';
 export { DESK_RULES } from './trade-desk.js';
@@ -68,7 +68,7 @@ import { selectDevSlots, practiceAfterGame, playedIds, devIneligibility, DEV, DE
 import { evaluateStrategies, modeOf } from './strategy.js';
 import { leagueSeasonEnd, leagueBenchOf, leagueUpgrades, leagueContracts, leagueAgeing, leagueFreeAgency, leagueNudge, validateClubs, notePreseason, noteGrowth, preseasonTarget, leagueInjuryCover, leagueTrim, CREATION_LIFT, floorSpare } from './league-season.js';
 export { validateClubs } from './league-season.js';
-import { hasLeague, clubRecord, clubRoster, leagueClubs, claimMonster, clubCapRoom, captureLeague, verifyLeague, addToClub, removeFromClub, isProtected, findInLeague, leagueEvent, takeEvents, moveIdentity } from './league-registry.js';
+import { isLegendaryMonster, hasLeague, clubRecord, clubRoster, leagueClubs, claimMonster, clubCapRoom, captureLeague, verifyLeague, addToClub, removeFromClub, isProtected, findInLeague, leagueEvent, takeEvents, moveIdentity } from './league-registry.js';
 export { hasLeague, isProtected, clubRoster, findInLeague } from './league-registry.js';
 import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
 import { ensureFreeAgency, hasFreeAgency, task7Offseason, leagueYear, pruneLocks, noteReleased, noteTraded, tradeLock, returnLock } from './fa-state.js';
@@ -356,6 +356,7 @@ export function evolveMonster(f, id) {
   noteEvolution(m, { year: f.season.year, week: f.season.week, club: f.club, from: ev.from, to: ev.to, level: m.level, ovr: [ovr0, monsterOverall(m)] }); // Career Timeline (level and overall: GDD §51.6)
   dexRecord(f, m, 'signed');
   news(f, $L('franchise.evolution_evolved_into', { from: `${m.name} (${ev.from})`, name: ev.to }), 'win', { mid: m.id, mname: m.name });
+  achAction(f, 'evolve', () => achAdd(f, 'evolutions'));
   return { ok: true, event: ev, monster: m };
 }
 /**
@@ -385,7 +386,9 @@ export const monsterNotices = (f, id) => notices(f).filter((n) => n.id === id);
  */
 export function checkAchievements(f, trigger, ctx = {}) {
   f.achievements ||= {}; f.scenes ||= [];
-  const c = { ...ctx, hofEligible: hallOfFameProgress(f).eligible, get dex() { return dexCounts(f); } }; // dex: the family collection counts (Task 8: 72 / 120 / 192), read only by the collection achievements
+  if (!achEligible(f)) { if (f.achDev) { try { markDisqualified(franchiseKey(f)); } catch { /* storage unavailable */ } } return []; } // a franchise played by a developer shortcut earns nothing, and its data never counts toward account-wide rows (achievement review)
+  try { recordAchDex(franchiseKey(f), Object.entries(f.dex?.signed || {}).map(([id, st]) => [id, foundingFamily(st)])); } catch { /* storage unavailable */ }
+  const c = { ...ctx, hofEligible: hallOfFameProgress(f).eligible, get dex() { return achDexGroups(f); } }; // dex: the family collection counts (Task 8: 72 / 120 / 192), read only by the collection achievements; from this franchise and other eligible ones, never the shared Beast Dex (achievement review)
   const earned = [];
   for (const a of ACHIEVEMENTS) {
     if (f.achievements[a.id] || (a.trigger !== trigger && a.trigger !== 'any')) continue;
@@ -395,7 +398,62 @@ export function checkAchievements(f, trigger, ctx = {}) {
     const vars = sceneVars(f, c); f.scenes.push({ id: a.id, ctx: vars }); earned.push(a.id); stampGlobal(f, a, vars);
     news(f, $L('franchise.achievement', { fillScene: captured(() => fillScene(a.titleKey ? $t(a.titleKey) : a.title, sceneVars(f, c))) }), 'win'); // Task 10: the title is kept as a line (it was a finished sentence inside the saved line)
   }
+  // The catalogue (achievement overhaul): the other 176 are measured by src/franchise/achievement-store.js and shown by rarity.
+  if (trigger === 'sunday' || trigger === 'season') trackRoster(f);
+  for (const id of evaluateCatalogue(f, trigger, { ...ctx, live: true, H: achHelpers(f) })) { awardCatalogue(f, ACHIEVEMENT_BY_ID[id]); earned.push(id); }
   return earned;
+}
+/** The franchise helpers the achievement metrics read (passed in, so the engine never imports this file). */
+/** The collection counts the dex achievements read: this franchise's families plus those of the account's other eligible franchises. */
+function achDexGroups(f) {
+  let other = []; try { other = achDexCounts().ids; } catch { /* storage unavailable */ }
+  const have = new Set([...Object.keys(f.dex?.signed || {}), ...other]);
+  const groups = Object.fromEntries(Object.entries(DEX_GROUPS).map(([k, ids]) => { const n = ids.filter((id) => have.has(id)).length; return [k, { seen: n, signed: n, total: ids.length }]; }));
+  return { seen: groups.all.seen, signed: groups.all.signed, ...groups };
+}
+export function achHelpers(f) {
+  return { dexCounts: (x) => achDexGroups(x), dexCountsGlobal, isLegendary: (m) => isLegendaryMonster(m), badgesWonThisSeason: (x) => badgesWonThisSeason(x), rival: (x) => x.rivals?.[x.tier]?.team || null, gymCount: GYMS.length };
+}
+/** Record one catalogue achievement: once per franchise, in the account store, and queued for its unlock presentation. */
+function awardCatalogue(f, a, { retro = false } = {}) {
+  if (!a || f.achievements[a.id]) return false;
+  f.achievements[a.id] = { year: f.season?.year || 1, week: f.season?.week || 1, ...(retro ? { backfilled: true } : {}) };
+  if (!retro) { (f.achQueue ||= []).push({ id: a.id }); trimAchQueue(f.achQueue); }
+  try { recordAchievementGlobal(a.id, { club: f.club, owner: `${f.owner.first} ${f.owner.last}`.trim(), year: f.season?.year || 1, difficulty: f.settings?.difficulty || 'pro', franchise: franchiseKey(f), scene: null, rarity: a.rarity }); } catch { /* storage unavailable */ }
+  if (!retro) news(f, $L('franchise.achievement', { fillScene: captured(() => $t(a.titleKey)) }), 'win');
+  return true;
+}
+/** An owner action the achievements count ('recruit', 'evolve', 'draft', 'scout', 'sign', 'staff'): bump the tracker, then check. */
+function achAction(f, trigger, bump) { if (!achEligible(f)) return; try { bump(); } catch { /* tracking never blocks an action */ } checkAchievements(f, trigger); }
+/**
+ * The unlock queue keeps at most ACH_QUEUE_MAX entries (achievement review). When it is full, the oldest Common/Uncommon toasts are
+ * folded into one "and N more" line first, then the oldest Rare/Epic cards; a Legendary or Mythic reveal and the backfill notice are
+ * never dropped. The earned record (f.achievements and the account store) is written before the queue and never depends on it.
+ */
+export const ACH_QUEUE_MAX = 40;
+export function trimAchQueue(q) {
+  const tier = (x) => (x.retro || x.more ? 9 : { toast: 0, card: 1, reveal: 9 }[ACHIEVEMENT_BY_ID[x.id]?.presentation] ?? 0);
+  for (const level of [0, 1]) while (q.length > ACH_QUEUE_MAX) {
+    const i = q.findIndex((x) => tier(x) === level); if (i < 0) break;
+    q.splice(i, 1); const more = q.find((x) => x.more); if (more) more.more += 1; else q.push({ more: 1 });
+  }
+  return q;
+}
+/** The next queued unlock to present ({ id } or { retro: n }), without removing it; dismissAchievementUnlock removes it. */
+export const pendingAchievementUnlocks = (f) => (f?.achQueue || []).slice();
+export function dismissAchievementUnlocks(f, n = 1) { if (f?.achQueue) f.achQueue.splice(0, Math.max(0, n)); return { ok: true, left: f?.achQueue?.length || 0 }; }
+/** The facts of one finished owner game that the achievements read (sim-neutral: read from the final game state only). */
+export function gameFacts(f, gameState, side, m, { won, lostBadge = null, newBadge = null, playoffRound = null } = {}) {
+  const opp = side === 'home' ? 'away' : 'home'; const st = gameState.stats?.[side] || {}, so = gameState.stats?.[opp] || {};
+  const P = Object.values(st.players || {}); const mx = (k) => Math.max(0, ...P.map((p) => Number(p[k]) || 0)); const sm = (k) => P.reduce((a, p) => a + (Number(p[k]) || 0), 0);
+  const lineupIds = new Set(Object.values(m[side]?.chart || {})); const lineupOpp = new Set(Object.values(m[opp]?.chart || {})); const formerClubs = new Set([...(f.history || []).map((h) => h.club), ...Object.keys(f.gmCareer?.clubs || {})].filter((c) => c && c !== f.club));
+  const pts = gameState.score?.[side] || 0, oppPts = gameState.score?.[opp] || 0;
+  return { won: !!won, tied: !gameState.winner, pts, opp: oppPts, ot: !!gameState.ot, tiebreak: !!gameState.tiebreak, home: side === 'home', playoff: !!m.playoff, conferenceRound: playoffRound === CONFERENCE_ROUND, oppClub: m.opponent,
+    maxDeficit: gameState.maxDeficit ? gameState.maxDeficit[side] ?? null : null, tos: st.turnovers || 0, takeaways: so.turnovers || 0, yards: st.yards || 0, oppYards: so.yards || 0,
+    passYds: mx('passYds'), passTd: mx('passTd'), rushYds: mx('rushYds'), rushTd: mx('rushTd'), recYds: mx('recYds'), tackles: mx('tackles'), playerSacks: mx('sacks'), longPlay: Math.max(mx('longRush'), mx('longRec')),
+    int: sm('int'), sacks: sm('sacks'), tfl: sm('tfl'), fgm: sm('fgm'), fgLong: mx('fgLong'), defTd: sm('defTd'), krTd: sm('krTd'),
+    legendInLineup: (f.roster || []).some((x) => lineupIds.has(x.id) && isLegendaryMonster(x)), oppLegend: (m[opp]?.roster || []).some((x) => lineupOpp.has(x.id) && isLegendaryMonster(x)), formerClub: formerClubs.has(m.opponent),
+    gymWin: !!won && !!GYM_BY_CLUB[m.opponent], newBadge, lostBadge, oppFamilies: [...new Set((m[opp]?.roster || []).map((x) => { try { return dexFamilyOf(x); } catch { return null; } }).filter(Boolean))] };
 }
 /** Record an achievement for the player across all franchises, with its cutscene as it played (GDD §21.4). */
 /** The permanent identity a global record names: the franchise `uid` (GDD §42.3); older saves without one keep their seed. */
@@ -420,7 +478,7 @@ export function nextScene(f) {
  */
 export function backfillAchievements(f) {
   if (!f?.campaign || f.achievementsBackfilled) return [];
-  f.achievementsBackfilled = true; f.achievements ||= {}; f.scenes ||= [];
+  f.achievementsBackfilled = true; if (!achEligible(f)) return []; f.achievements ||= {}; f.scenes ||= [];
   const hist = f.history || []; const c = f.campaign; const badges = Object.keys(c.badges || {}).length;
   const facts = { first_win: c.wins >= 1, rival_beaten: Object.entries(c.h2h || {}).some(([t, h]) => t === f.rivals?.[f.tier]?.team && h.w >= 1), first_badge: badges >= 1, half_badges: badges >= GYMS.length / 2, all_badges: badges >= GYMS.length,
     winning_season: hist.some((h) => h.record.w > h.record.l), undefeated: hist.some((h) => h.record.w >= REG_GAMES && h.record.l === 0), first_playoffs: hist.some((h) => h.playoffs) || !!(f.season?.playoffs && Object.values(f.season.playoffs.seeds).flat().includes(f.club)),
@@ -430,10 +488,42 @@ export function backfillAchievements(f) {
   for (const a of ACHIEVEMENTS) if (!f.achievements[a.id] && facts[a.id]) { f.achievements[a.id] = { year: f.season?.year || 1, week: f.season?.week || 1, backfilled: true }; const vars = sceneVars(f, {}); f.scenes.push({ id: a.id, ctx: vars }); got.push(a.id); stampGlobal(f, a, vars); }
   return got;
 }
+/**
+ * One-time catalogue backfill (achievement overhaul, 2026-11) for a save that predates the 200 achievements. Only what the save
+ * reliably proves is granted: the tracker is seeded from completed seasons that precede tracking (lower bounds only: a
+ * win streak within one season, the season's games, a kicker's season totals), then each row marked `retro` is checked
+ * against every past season and the current record. Nothing is invented; anything else starts counting from now. Granted rows
+ * are marked backfilled, go to the account store, and are announced once as a group rather than one by one.
+ */
+export function backfillCatalogue(f) {
+  if (!f?.campaign || f.achCatalogue >= 1) return [];
+  f.achCatalogue = 1; f.achievements ||= {};
+  if (!achEligible(f)) return [];
+  const t = achTrack(f); const H = achHelpers(f); const got = [];
+  if ((f.history || []).length || (f.season?.year || 1) > 1 || (f.season?.week || 1) > 1) t.preexisting = true; // the screen shows when tracking began for rows the history cannot prove
+  const before = (f.history || []).filter((h) => h.year < (t.from?.year || 1));
+  for (const h of before) {
+    const games = (h.schedule || []).filter((g) => g.result); let run = 0;
+    for (const g of games) { const r = g.result; achAdd(f, 'games'); if (r.won) { run++; achMax(f, 'winRun', run); achMark(f, 'clubsBeaten', g.opponent); if (!g.home) achAdd(f, 'roadWins'); if (r.oppScore === 0) achAdd(f, 'shutoutWins'); } else run = 0; }
+    const P = Object.values(h.leagueStats?.[h.club] || {}); const sum = (k) => P.reduce((a, p) => a + (Number(p[k]) || 0), 0);
+    achAdd(f, 'fgm', sum('fgm')); achAdd(f, 'krTd', sum('krTd')); achAdd(f, 'defTd', sum('defTd'));
+    if (h.champion && h.champion === h.club) { achAdd(f, 'confTitles'); achAdd(f, 'playoffWins', 2); } // a title proves the conference final and the Beast Bowl
+  }
+  const grant = (ids) => { for (const id of ids) if (awardCatalogue(f, ACHIEVEMENT_BY_ID[id], { retro: true })) got.push(id); };
+  for (const h of f.history || []) {
+    for (const g of (h.schedule || []).filter((x) => x.result)) grant(evaluateCatalogue(f, 'sunday', { retro: true, live: false, H, g: { won: !!g.result.won, pts: g.result.playerScore, opp: g.result.oppScore, home: !!g.home } }));
+    const fgLong = Math.max(0, ...Object.values(h.leagueStats?.[h.club] || {}).map((p) => Number(p.fgLong) || 0));
+    grant(evaluateCatalogue(f, 'season', { retro: true, live: false, H, h, g: { fgLong } }));
+  }
+  grant(evaluateCatalogue(f, 'any', { retro: true, live: false, H }));
+  if (got.length) (f.achQueue ||= []).push({ retro: got.length });
+  return got;
+}
 /** Copy a franchise's achievements into the player's account store (saves that earned them before the store existed). */
 export function syncAchievementsToGlobal(f) {
+  if (f?.achDev) { try { markDisqualified(franchiseKey(f)); } catch { /* storage unavailable */ } } // an imported or reopened disqualified franchise is marked on this device too; what it earned before stays
   if (!f?.achievements) return 0; let n = 0;
-  for (const [id, e] of Object.entries(f.achievements)) { const a = ACHIEVEMENT_BY_ID[id]; if (!a) continue; const vars = sceneVars(f, {}); try { if (recordAchievementGlobal(id, { club: f.club, owner: `${f.owner.first} ${f.owner.last}`.trim(), year: e.year || 1, difficulty: f.settings?.difficulty || 'pro', franchise: franchiseKey(f), scene: { title: fillScene(a.title, vars), speaker: a.speaker, beats: a.beats.map((b) => fillScene(b, vars)), rivalTeam: f.rivals?.[f.tier]?.team || null, rivalGm: f.rivals?.[f.tier]?.gm || null } })) n++; } catch { /* ignore */ } }
+  for (const [id, e] of Object.entries(f.achievements)) { const a = ACHIEVEMENT_BY_ID[id]; if (!a) continue; const vars = sceneVars(f, {}); try { if (recordAchievementGlobal(id, { club: f.club, owner: `${f.owner.first} ${f.owner.last}`.trim(), year: e.year || 1, difficulty: f.settings?.difficulty || 'pro', franchise: franchiseKey(f), scene: a.legacy ? { title: fillScene(a.title, vars), speaker: a.speaker, beats: a.beats.map((b) => fillScene(b, vars)), rivalTeam: f.rivals?.[f.tier]?.team || null, rivalGm: f.rivals?.[f.tier]?.gm || null } : null, ...(a.legacy ? {} : { rarity: a.rarity }) })) n++; } catch { /* ignore */ } } // catalogue rows have no cutscene (achievement review: they were skipped here before)
   return n;
 }
 export function dismissScene(f) { f.scenes?.shift(); return { ok: true, left: f.scenes?.length || 0 }; }
@@ -594,6 +684,7 @@ export function replaceStaff(f, id) {
   if (current && f.season && !f.season.finished) { severance = Math.round(current.salary * Math.max(0, (REG_WEEKS - (f.season.week || 1)) / REG_WEEKS)); f.deadCap = (f.deadCap || 0) + severance; }
   f.staff[c.role] = id; (f.staffContracts ||= {})[c.role] = newContract(f.season?.year || 1); (f.staffRaise ||= {})[c.role] = 1; withdrawStaffRenewal(f, c.role);
   news(f, $P(c.name, ` hired as `, c.role.replace(/_/g, ' '), (current ? $L('franchise.replacing', { name: current.name }) : ''), (severance ? $P(` `, $L('franchise.cr_severance_this_season', { toLocaleString: severance.toLocaleString('en-US') })) : ''), `.`), 'roster');
+  achAction(f, 'staff', () => achAdd(f, 'hires'));
   return { ok: true, replaced: current, severance };
 }
 export function hireStaff(f, id) {
@@ -602,6 +693,7 @@ export function hireStaff(f, id) {
   const budget = salarySummary(f, c.salary);
   if (budget.over) return { ok: false, reason: $t('franchise.exceeds_the_salary_cap') };
   f.staff[c.role] = id; (f.staffContracts ||= {})[c.role] = newContract(f.season?.year || 1); (f.staffRaise ||= {})[c.role] = 1;
+  achAction(f, 'staff', () => achAdd(f, 'hires'));
   return { ok: true };
 }
 export function schemeAlignment(f) {
@@ -664,7 +756,7 @@ registerOwnerHooks({ // Task 7: the engine's view of the owner's club (fa-engine
   capFor: (f) => capFor(f), news: (f, text, kind) => news(f, text, kind),
   releaseAi: (f, club, id) => releaseFromClub(f, club, id, { year: leagueYear(f), reason: 'released', why: 'upgrade' }), // R1 c: an AI upgrade's release, made with the signing
   staffTotal: (f) => Object.keys(f.staff || {}).reduce((sum, role) => sum + staffSalary(f, role), 0),
-  joinOwner: (f, m, via, start) => { uniqueName(f, m); m.origin ||= homeRegion(m); m.joined = start; backfillCareer(f, m); noteJoin(f, m, via, { region: homeRegion(m) }); f.roster.push(m); dexRecord(f, m, 'signed'); news(f, $P($L('franchise.ovr_signed_seasons_at_cr', { name: m.name, position: m.position, monsterOverall: monsterOverall(m), years: m.contract.years, toLocaleString: m.contract.salary.toLocaleString('en-US'), n: m.contract.years }), (m.contract.bonus ? $P(` `, $L('franchise.plus_a_cr_bonus', { toLocaleString: m.contract.bonus.toLocaleString('en-US') })) : ''), `.`), 'roster', { mid: m.id, mname: m.name }); },
+  joinOwner: (f, m, via, start) => { if (via === 'signed') achAction(f, 'sign', () => { achAdd(f, 'faSigned'); achMax(f, 'faOvr', monsterOverall(m)); }); uniqueName(f, m); m.origin ||= homeRegion(m); m.joined = start; backfillCareer(f, m); noteJoin(f, m, via, { region: homeRegion(m) }); f.roster.push(m); dexRecord(f, m, 'signed'); news(f, $P($L('franchise.ovr_signed_seasons_at_cr', { name: m.name, position: m.position, monsterOverall: monsterOverall(m), years: m.contract.years, toLocaleString: m.contract.salary.toLocaleString('en-US'), n: m.contract.years }), (m.contract.bonus ? $P(` `, $L('franchise.plus_a_cr_bonus', { toLocaleString: m.contract.bonus.toLocaleString('en-US') })) : ''), `.`), 'roster', { mid: m.id, mname: m.name }); },
 });
 /** Owner rule (2026-11-04): in a Task 7 offseason a club may release below the 26-monster minimum to free cap; the minimum still gates the next season. */
 const offseasonRelease = (f) => hasFreeAgency(f) && !!f.season?.finished;
@@ -1236,6 +1328,7 @@ export function signFreeAgent(f, id) {
   uniqueName(f, m); m.joined = f.season.year + (f.offseason ? 1 : 0); backfillCareer(f, m); noteJoin(f, m, 'free_agent', entry.fromPool ? { region: homeRegion(m) } : {}); f.roster.push(m); dexRecord(f, m, 'signed');
   const cap = salarySummary(f);
   news(f, $L('franchise.ovr_signed_as_a_free_agent', { name: m.name, position: m.position, monsterOverall: monsterOverall(m), over: (cap.over ? $L('franchise.over_the_cap_the_commissioner_will') : '')}), cap.over ? 'loss' : 'roster', { mid: m.id, mname: m.name });
+  achAction(f, 'sign', () => { achAdd(f, 'faSigned'); achMax(f, 'faOvr', monsterOverall(m)); });
   return { ok: true, overCap: cap.over };
 }
 // ------------------------------------------------------------ the draft (GDD §19)
@@ -1256,6 +1349,7 @@ export function scoutDraft(f, { focus = null } = {}) {
   const res = draftScout(f, r, { skill, focus, bonus: scoutBonusActive(f) ? 1 : 0 }); save();
   f.week.draftScouted = { studied: res.studied.map((m) => m.id), glanced: res.glanced.map((m) => m.id) };
   f.season.day = 1;
+  achAction(f, 'scout', () => { achAdd(f, 'scouts'); if (Object.values(f.draft?.revealed || {}).some((lvl) => lvl >= 4)) achAdd(f, 'fullScout'); });
   return { ok: true, ...res, scout: scout?.name || $t('franchise.your_scout') };
 }
 /** Tuesday in the draft window: recovery, fatigue off, injuries a week closer to healed. */
@@ -1368,7 +1462,7 @@ export function draftReserve(f, club = f.club) {
   const total = mine.reduce((s, o) => s + (board[Math.min(board.length - 1, o.i - d.index)] ? rookieCharge(board[Math.min(board.length - 1, o.i - d.index)]) : 0), 0);
   return { picks: mine.length, total };
 }
-export function myDraftPick(f, id) { { const a = draftAffordability(f, id); if (a) return { ok: false, ...a }; } const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; uniqueName(f, r.monster); dexRecord(f, r.monster, 'signed'); news(f, $L('franchise.drafted_rookie_deal_cr_for_two', { name: r.monster.name, position: r.monster.position, toLocaleString: r.monster.salary.toLocaleString('en-US') }), 'roster', { mid: r.monster.id, mname: r.monster.name }); runDraftToMe(f); return r; }
+export function myDraftPick(f, id) { { const a = draftAffordability(f, id); if (a) return { ok: false, ...a }; } const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; uniqueName(f, r.monster); dexRecord(f, r.monster, 'signed'); news(f, $L('franchise.drafted_rookie_deal_cr_for_two', { name: r.monster.name, position: r.monster.position, toLocaleString: r.monster.salary.toLocaleString('en-US') }), 'roster', { mid: r.monster.id, mname: r.monster.name }); if (!f.draft?.creation) achAction(f, 'draft', () => { achAdd(f, 'draftPicks'); achMark(f, 'drafted', r.monster.id); if (r.monster.drafted?.overall === 1) achAdd(f, 'topPick'); }); runDraftToMe(f); return r; }
 export function passDraftPick(f) { const r = draftPassPick(f, { playerClub: f.club }); if (!r.ok) return r; runDraftToMe(f); return r; }
 export const draftDone = (f) => !f.draft || f.draft.year !== f.season.year || f.draft.done;
 // ------------------------------------------------------------ draft-pick trading (GDD §19.6)
@@ -1911,6 +2005,7 @@ export function scoutRegion(f, regionName, { focus = null } = {}) {
   for (const p of prospects) p.depth = needs.find((n) => n.position === p.monster.position)?.status || 'ok';
   save();
   f.week.region = regionName; f.week.prospects = prospects; f.week.recruitAttempts = 0; f.season.day = 1;
+  achAction(f, 'scout', () => { achAdd(f, 'scouts'); achMark(f, 'regions', regionName); });
   return { ok: true, prospects, skill, scout: scout?.name || $t('franchise.your_scout'), need };
 }
 /** Chance of hearing one consolation pitch after a lost wild Clash. */
@@ -2120,6 +2215,11 @@ function battleOrPending(e, run, headless) {
   return { result };
 }
 /** Settle the battle: record the summary, pay out XP and fatigue, and open the offer (win), or settle pitch willingness (loss). Idempotent. `headless` settles an open prompt with Auto (staff, Skip). */
+/** Achievements: one settled owner Clash (encounter, opening or overtime), counted once by its activity id. */
+function achClashSettled(f, occasion, e, key, headless = false) {
+  if (!achEligible(f) || !e?.result) return;
+  if (trackClash(f, occasion, e.result, { key, playoff: !!(f.week?.overtime === e && playoffFixture(f)), commanded: !headless && normalizeMode(e.mode) === 'watch' && Object.keys(e.decisions?.a || {}).length > 0, year: f.season?.year })) checkAchievements(f, 'clash'); // commanded: the owner made at least one rotation call (a tap, including stay); watching alone is not commanding
+}
 export function resolveEncounter(f, { headless = false } = {}) {
   const e = f.week.encounter; if (!e) return { ok: false, reason: $t('franchise.no_encounter') };
   if (e.status !== 'battle') return { ok: true, encounter: e, already: true };
@@ -2136,6 +2236,7 @@ export function resolveEncounter(f, { headless = false } = {}) {
   const p = f.week.prospects[e.prospectIndex];
   e.hearsPitch = !won && r.chance(lossPitchChance(p.monster));
   save();
+  achClashSettled(f, 'encounter', e, activityId, headless);
   e.status = won ? 'offer' : e.hearsPitch ? 'pitch' : 'walked';
   if (e.status === 'walked') f.season.day = 2;
   news(f, won ? $L('franchise.beast_clash_won_wants_to_join', { name: p.monster.name, club: f.club }) : e.hearsPitch ? $L('franchise.beast_clash_lost_to_one_pitch', { name: p.monster.name }) : $L('franchise.beast_clash_pitch_refused', { name: p.monster.name }), won ? 'win' : 'info');
@@ -2152,6 +2253,7 @@ export function acceptOffer(f, { releaseId = null } = {}) {
   const out = signProspect(f, p, rc.needed ? releaseId : null);
   if (out.signed === false) return { ok: false, reason: out.reason }; /* the offer stays on the table */
   e.status = 'signed';
+  achAction(f, 'recruit', () => achAdd(f, 'recruits'));
   return { ok: true, success: true, ...out };
 }
 /** Let the monster go: after a win (turn down its offer) or after a loss (skip the one pitch). Nothing else changes. */
@@ -2568,8 +2670,9 @@ export function finishSunday(f, gameState) {
   careerAfterGame(f.roster, { year: f.season.year, week: f.season.week, club: f.club, playoffRound: playoffRoundNow, rival: !!m.rival, won, opponent: m.opponent, records: f.records });
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) noteEvolution(x, { year: f.season.year, week: f.season.week, club: f.club, from: e.from, to: e.to }); }
   f.lastGame = { ...f.week.gameResult, events, partnerships: captainRows.filter((x) => x.club === f.club), captainNote, year: f.season.year, week: f.season.week, newBadge: f.campaign.badges[m.opponent]?.year === f.season.year && f.campaign.badges[m.opponent]?.week === f.season.week && won ? m.opponent : null , lostBadge };
+  const achGame = gameFacts(f, gameState, side, m, { won, lostBadge, newBadge: f.lastGame.newBadge, playoffRound: playoffRoundNow }); if (achEligible(f)) trackGame(f, achGame, act); // achievement tracking (sim-neutral; once per game)
   { const rvTeam = f.rivals?.[f.tier]?.team; const vsRival = f.season.schedule.filter((g) => g.opponent === rvTeam && g.result);
-    checkAchievements(f, 'sunday', { won, opponent: m.opponent, rival: rvTeam === m.opponent, newBadge: !!f.lastGame?.newBadge, playoffRound: playoffRoundNow, rivalSeasonWins: vsRival.filter((g) => g.result.won).length + (rvTeam === m.opponent && won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0), rivalSeasonLosses: vsRival.filter((g) => !g.result.won).length + (rvTeam === m.opponent && !won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0) }); }
+    checkAchievements(f, 'sunday', { g: achGame, won, opponent: m.opponent, rival: rvTeam === m.opponent, newBadge: !!f.lastGame?.newBadge, playoffRound: playoffRoundNow, rivalSeasonWins: vsRival.filter((g) => g.result.won).length + (rvTeam === m.opponent && won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0), rivalSeasonLosses: vsRival.filter((g) => !g.result.won).length + (rvTeam === m.opponent && !won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0) }); }
   advanceWeek(f);
   return f.lastGame;
 }
@@ -2736,7 +2839,8 @@ function endSeason(f) {
   f.campaign.awards += mine.filter(([k]) => MAJOR_AWARDS.includes(k)).length; // R-5: the Hall of Fame checklist counts the original seven awards only
   s.finished = true;
   GM.noteManagedClubSeason(f);
-  checkAchievements(f, 'season', { wins: rec.w, losses: rec.l, champion: champion === f.club, awardsWon: mine.length, ...lineField('awardLine', mine.length ? $P(...mine.flatMap(([k, w], i) => [i ? ' ' : '', w.name, ': ', labelLine(AWARDS[k]?.label || k), '.'])) : ''), wasHotSeat, goalMet: !!s.boardVerdict?.met });
+  if (achEligible(f)) { if (!salarySummary(f).over) { const t = achTrack(f); if (t.capYear !== s.year) { t.capYear = s.year; achAdd(f, 'capClean'); } } }
+  checkAchievements(f, 'season', { h: (f.history || []).find((h) => h.year === s.year) || null, wins: rec.w, losses: rec.l, champion: champion === f.club, awardsWon: mine.length, ...lineField('awardLine', mine.length ? $P(...mine.flatMap(([k, w], i) => [i ? ' ' : '', w.name, ': ', labelLine(AWARDS[k]?.label || k), '.'])) : ''), wasHotSeat, goalMet: !!s.boardVerdict?.met });
 }
 export const TIERS_ENABLED = false;
 
@@ -2934,7 +3038,7 @@ export function negotiateFreeAgent(f, mid, terms) {
   if (f.season.finished && !freeAgencyDone(f) && task7Offseason(f)) return t7fail($t('franchise.the_market_opens_with_free_agency'));
   return negotiateNow(f, f.club, mid, terms);
 }
-export function extendContract(f, id, terms, { accept = false } = {}) { const m = f.roster.find((x) => x.id === id); if (!m) return t7fail($t('franchise.not_on_the_roster')); if (!hasFreeAgency(f)) return t7fail($t('franchise.extensions_come_with_the_new_free')); return extend(f, f.club, m, terms, { accept }); }
+export function extendContract(f, id, terms, { accept = false } = {}) { const m = f.roster.find((x) => x.id === id); if (!m) return t7fail($t('franchise.not_on_the_roster')); if (!hasFreeAgency(f)) return t7fail($t('franchise.extensions_come_with_the_new_free')); const out = extend(f, f.club, m, terms, { accept }); if (out?.ok && out.outcome === 'signed') achAction(f, 'sign', () => achAdd(f, 'extensions')); return out; }
 /** The extension negotiation with `id` in the current window, as it stands (or as it would open: viewing opens nothing). */
 export function extensionTalks(f, id) { const m = f.roster.find((x) => x.id === id); if (!m || !hasFreeAgency(f)) return null; const neg = negotiation(f, m, f.club, extWindow(f), { peek: true }); return neg ? { ...neg, left: countersLeft(neg) } : null; }
 /** The renewal negotiation behind an offseason book item (Task 7), as it stands. */
@@ -3085,6 +3189,7 @@ export function resolveOvertimeClash(f, { headless = false } = {}) {
   save();
   e.result = battleSummary(result); e.events = events; e.status = 'done';
   if (isT8Record(e)) { e.carryOut = carryOutOf(result); e.mastery = masteryRecord(result, `${`game:${f.season.year}:w${f.season.week}:${actClub(f.club)}`}`); } // the OT Clash shares its game's cap scope (§6)
+  achClashSettled(f, 'overtime', e, `${f.season.year}:w${f.season.week}:overtime`, headless);
   return { ok: true, overtime: e, won: result.winner === 'a', result, events };
 }
 /** The Clash's verdict written onto the finished football state: `winner` is set, the score is untouched, `tiebreak` records the Clash. The game is now actually over, so every status clears (§10). */
@@ -3175,6 +3280,7 @@ export function resolvePregameClash(f, { headless = false } = {}) {
   save();
   e.result = battleSummary(result); e.events = events; e.status = won ? 'choose' : 'done';
   if (isT8Record(e)) { e.carryOut = carryOutOf(result); e.mastery = masteryRecord(result, `${`game:${f.season.year}:w${f.season.week}:${actClub(f.club)}`}`); } // the opening Clash shares its game's cap scope (§6)
+  achClashSettled(f, 'pregame', e, `${f.season.year}:w${f.season.week}:pregame`, headless);
   return { ok: true, pregame: e, won, result, events };
 }
 /** The winner's possession choice (only the player chooses here; the AI chose when the battle was settled). */
@@ -3260,7 +3366,7 @@ export const MUTATORS = Object.freeze([
   // board and story
   'chooseGoal', 'commissionerReview', 'commissionerRelease', 'resolvePostseason', 'chooseLegendTrack', 'replyToCoach',
   // achievements, dex, news, retirement
-  'checkAchievements', 'backfillAchievements', 'nextScene', 'dismissScene', 'hallOfFameNotice', 'dexRecord', 'news', 'retire',
+  'checkAchievements', 'backfillAchievements', 'backfillCatalogue', 'dismissAchievementUnlocks', 'nextScene', 'dismissScene', 'hallOfFameNotice', 'dexRecord', 'news', 'retire',
   // the league registry (Phase 3)
   'ensureLeague',
   // Captain Partnerships (GDD §27.4B)
@@ -3276,7 +3382,7 @@ hireStaff = guarded(hireStaff); replaceStaff = guarded(replaceStaff); hireDefaul
 chooseInitialCaptains = guarded(chooseInitialCaptains); pickCaptains = guarded(pickCaptains); ensureCaptains = guarded(ensureCaptains); seasonCaptains = guarded(seasonCaptains);
 resolveContract = guarded(resolveContract); signFreeAgent = guarded(signFreeAgent); offseasonMarket = guarded(offseasonMarket); ensureDraftClass = guarded(ensureDraftClass); scoutDraft = guarded(scoutDraft); beginDraft = guarded(beginDraft); myDraftPick = guarded(myDraftPick); passDraftPick = guarded(passDraftPick); tradeAskPlayer = guarded(tradeAskPlayer); tradeAskPicks = guarded(tradeAskPicks); acceptTrade = guarded(acceptTrade); maybeTradeCall = guarded(maybeTradeCall); answerTradeCall = guarded(answerTradeCall);
 chooseGoal = guarded(chooseGoal); commissionerReview = guarded(commissionerReview); commissionerRelease = guarded(commissionerRelease); resolvePostseason = guarded(resolvePostseason); chooseLegendTrack = guarded(chooseLegendTrack); replyToCoach = guarded(replyToCoach);
-checkAchievements = guarded(checkAchievements); backfillAchievements = guarded(backfillAchievements); nextScene = guarded(nextScene); dismissScene = guarded(dismissScene); hallOfFameNotice = guarded(hallOfFameNotice); dexRecord = guarded(dexRecord); news = guarded(news); retire = guarded(retire);
+checkAchievements = guarded(checkAchievements); backfillAchievements = guarded(backfillAchievements); backfillCatalogue = guarded(backfillCatalogue); dismissAchievementUnlocks = guarded(dismissAchievementUnlocks); nextScene = guarded(nextScene); dismissScene = guarded(dismissScene); hallOfFameNotice = guarded(hallOfFameNotice); dexRecord = guarded(dexRecord); news = guarded(news); retire = guarded(retire);
 ensureLeague = guarded(ensureLeague);
 // GM careers: once the season is over, a roster, staff or trade transaction commits the GM to this club for the offseason, and a
 // dismissed GM may not reshape a club they are leaving. Depth-chart edits are not transactions and leave the job window alone.

@@ -125,6 +125,38 @@ tr.me td { background: #2a3f16; }
 #toast { position: fixed; left: 50%; bottom: calc(84px + var(--sab)); transform: translate(-50%, 20px); opacity: 0; transition: .2s; background: #0b1a14; border: 2px solid var(--line-2); color: var(--ink); padding: 10px 14px; border-radius: var(--r); z-index: 50; max-width: 90vw; font-size: 14px; pointer-events: none; }
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
 #toast[data-kind="bad"] { border-color: var(--bad); } #toast[data-kind="good"] { border-color: var(--good); }
+/* ---------------------------------------------------------------- achievements (overhaul 2026-11): badges by rarity, the screen, unlock cards */
+.ach-badge { --sz: 48px; --r1: #2e4f45; --r2: #1b3029; --ring: #5b8a78; flex: none; width: var(--sz); height: var(--sz); border-radius: 50%; display: grid; place-items: center; position: relative;
+  background: radial-gradient(circle at 35% 30%, var(--r1), var(--r2) 70%); box-shadow: 0 0 0 3px var(--ring), 0 2px 0 3px #0a1611; font-size: calc(var(--sz) * .46); line-height: 1; }
+.ach-badge.r-uncommon { --r1: #2f6b4a; --r2: #173a27; --ring: #4ade80; }
+.ach-badge.r-rare { --r1: #2f5c8f; --r2: #15304f; --ring: #60a5fa; }
+.ach-badge.r-epic { --r1: #6b3f9b; --r2: #331a52; --ring: #c084fc; }
+.ach-badge.r-legendary { --r1: #a7791a; --r2: #4d360a; --ring: #facc15; }
+.ach-badge.r-mythic { --r1: #9b2f5c; --r2: #3d0f24; border: 3px solid transparent; box-shadow: 0 2px 0 3px #0a1611;
+  background: radial-gradient(circle at 35% 30%, var(--r1), var(--r2) 70%) padding-box, conic-gradient(#f472b6, #facc15, #60a5fa, #c084fc, #f472b6) border-box; }
+.ach-badge.locked { --r1: #1d332c; --r2: #12221d; } .ach-badge.locked > span { filter: grayscale(1); opacity: .45; }
+.ach-rar { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--ink-2); }
+.ach-rar.r-uncommon { color: #4ade80; border-color: #2f6b4a; } .ach-rar.r-rare { color: #60a5fa; border-color: #2f5c8f; } .ach-rar.r-epic { color: #c084fc; border-color: #6b3f9b; }
+.ach-rar.r-legendary { color: #facc15; border-color: #a7791a; } .ach-rar.r-mythic { color: #f472b6; border-color: #9b2f5c; }
+.ach-rarities { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ach-recent { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.ach-mini { appearance: none; display: flex; align-items: center; gap: 8px; background: var(--panel-2); border: 2px solid var(--line); border-radius: var(--r); padding: 6px; color: inherit; font: inherit; font-size: 13px; text-align: left; cursor: pointer; min-height: var(--tap); }
+.ach-catgrid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; } .ach-catgrid .chip { cursor: pointer; min-height: 32px; }
+.ach-filters { display: grid; gap: 6px; margin: 0 0 var(--s3); } .ach-filters .input { width: 100%; min-width: 0; } .ach-filters .row > * { flex: 1; } .ach-filters .seg { display: flex; gap: 6px; } .ach-filters .seg .btn { flex: 1; }
+.ach-list { display: grid; gap: 8px; } @media (min-width: 720px) { .ach-list { grid-template-columns: 1fr 1fr; } }
+.ach-card { appearance: none; width: 100%; display: flex; gap: 12px; align-items: flex-start; background: var(--panel); border: 2px solid var(--line); border-radius: var(--r); padding: 10px; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ach-card.earned { border-color: var(--line-2); } .ach-card.locked { opacity: .92; } .ach-card.locked b { color: var(--ink-2); }
+.ach-card.earned.r-legendary { border-color: #a7791a; } .ach-card.earned.r-mythic { border-color: #9b2f5c; }
+.ach-body { display: grid; gap: 3px; flex: 1; min-width: 0; } .ach-body .muted { font-size: 13px; } .ach-date { font-size: 12px; }
+.ach-note { display: block; font-size: 12px; color: var(--ink-3); border-left: 2px solid var(--line-2); padding-left: 6px; margin-top: 2px; }
+.ach-prog { display: flex; align-items: center; gap: 8px; } .ach-prog .bar { flex: 1; } .ach-prog .mono { font-size: 12px; }
+.ach-detail, .ach-reveal { text-align: center; } .ach-detail .ach-badge, .ach-reveal .ach-badge { margin: 4px auto 0; }
+.ach-reveal .ach-badge { animation: ach-pop 600ms cubic-bezier(.2,1.4,.4,1) both; } @keyframes ach-pop { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ach-reveal .ach-badge { animation: none; } }
+#ach-pop { position: fixed; left: 50%; top: calc(12px + var(--sat, 0px)); transform: translate(-50%, -16px); opacity: 0; pointer-events: none; transition: .25s; z-index: 60; display: grid; gap: 6px; width: min(440px, calc(100vw - 32px)); }
+#ach-pop.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.ach-pop-card { display: flex; gap: 10px; align-items: center; background: #0b1a14; border: 2px solid var(--line-2); border-radius: var(--r); padding: 8px 10px; box-shadow: 0 4px 0 #050d0a; }
+.ach-pop-card.r-rare { border-color: #60a5fa; } .ach-pop-card.r-epic { border-color: #c084fc; }
 .sheet-backdrop { position: fixed; inset: 0; background: #000a; z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
 .sheet { background: var(--bg-2); border: 2px solid var(--line-2); border-bottom: 0; border-radius: 12px 12px 0 0; width: 100%; max-width: 640px; max-height: 88dvh; display: flex; flex-direction: column; padding-bottom: var(--sab); }
 .sheet-head { display: flex; justify-content: space-between; align-items: center; padding: var(--s2) var(--s3); border-bottom: 2px solid var(--line); }
