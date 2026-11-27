@@ -10,7 +10,7 @@ import { releaseFromClub, enterPool, joinAsDraftee, weakestSpare, POOL_WORTH } f
 import { newFranchise, runFranchise } from '../tools/franchise-soak.mjs';
 import { leagueInvariants } from '../tools/league-soak.mjs';
 import { teamOverall } from '../src/franchise/roster.js';
-import { ALL_TEAMS, tierById } from '../src/data/league.js';
+import { ALL_TEAMS, tierById, tierCap } from '../src/data/league.js';
 import { GYM_BY_CLUB } from '../src/data/gyms.js';
 import { createRng } from '../src/core/rng.js';
 import { ROSTER_MAX, monsterOverall } from '../src/data/monsters.js';
@@ -165,4 +165,15 @@ test('the pools: an AI castoff nobody would want leaves the league at once; a de
   const r4 = releaseFromClub(f, club, good.id, { year }); assert.equal(r4.where, 'pool'); assert.ok(Object.values(f.pool).flat().includes(good)); assert.equal(good.contract, null);
   for (let i = 0; i < 20; i++) enterPool(f, { id: `m_x${i}`, name: `X${i}`, position: 'WR', type: good.type, origin: good.origin, age: 22, attributes: {}, stats: {} }, { year, from: 'owner' });
   assert.ok(Object.values(f.pool).every((l) => l.length <= 12));
+});
+
+// Regression fix 2026-11-27: F-01 cap-aware founding applies when a universe is founded (a new franchise), never when an older save's
+// universe is captured mid-season (that capture keeps the very rosters it was facing; the migration test above).
+test('F-01: a new universe founds every AI club within its usable cap (tier cap − staff allowance)', () => {
+  const f = newFranchise(77); assert.ok(F.hasLeague(f));
+  const year = f.season.year; const usable = () => tierCap(f) - F.STAFF_ALLOWANCE; // the same usable cap ensureLeague founds with
+  for (const c of clubsOf(f)) {
+    const roster = F.aiTeam(f, c, year).roster; const pay = roster.reduce((a, m) => a + (m.salary || 0), 0);
+    assert.ok(pay <= usable(c) + 1e-6, `${c}: founded at ${pay}, within ${usable(c)}`);
+  }
 });
