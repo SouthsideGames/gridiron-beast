@@ -1,0 +1,105 @@
+{
+  "claim": "No Football file measures as a transposed copy of any file in the six nearest sound packs from the same studio (Kickoff, Matchday Baseball, Matchday IceHockey, Footfall, Haymaker, Squall).",
+  "packs": [
+    "Kickoff",
+    "Matchday/Baseball",
+    "Matchday/IceHockey",
+    "Footfall",
+    "Haymaker",
+    "Squall",
+    "Football"
+  ],
+  "filesPerNeighbour": {
+    "Kickoff": 103,
+    "Matchday/Baseball": 122,
+    "Matchday/IceHockey": 127,
+    "Footfall": 588,
+    "Haymaker": 134,
+    "Squall": 104
+  },
+  "method": "Every file re-measured from the shipped WAV files on two descriptors, both tolerant of a ±12% transposition: spectral shape (Welch power, 4096-sample Hann frames, short files zero padded to eight frames, 1/24-octave bands 60 Hz to 16 kHz, min over spectral shifts of the RMS dB difference of mean-removed profiles) and temporal envelope (10 ms RMS windows on a 2.5 ms hop in dB re the file maximum, floored at -60, min over time scalings). A copy must match on BOTH.",
+  "criterion": {
+    "definition": "per neighbour file: 1.25 x the distance at which a copy of that file resampled by 0.9,1.12 sits from itself, floored at the P90 over all neighbour files",
+    "floorSpectralDb": 1.52,
+    "floorEnvelopeDb": 1.876
+  },
+  "heldOutControls": [
+    {
+      "resampleFactor": 0.95,
+      "copies": 1178,
+      "caughtAsCopiesOfThemselves": 1170,
+      "missed": [
+        "Kickoff/power_t4_02 (2.65/2.32 dB spectral, 0.27/2.34 dB envelope)",
+        "Matchday/Baseball/land_seats_02 (0.28/1.90 dB spectral, 2.67/2.34 dB envelope)",
+        "Matchday/Baseball/pitching_machine_run_loop (3.15/2.32 dB spectral, 0.28/2.34 dB envelope)",
+        "Footfall/step_stone_sneak_heavy_01 (4.19/3.76 dB spectral, 0.53/3.23 dB envelope)",
+        "Footfall/step_stone_sneak_light_01 (4.20/1.90 dB spectral, 0.94/2.34 dB envelope)",
+        "Footfall/step_stone_sneak_light_03 (2.72/2.36 dB spectral, 0.72/2.97 dB envelope)",
+        "Footfall/step_stone_sneak_medium_02 (2.96/2.55 dB spectral, 1.17/2.34 dB envelope)",
+        "Haymaker/rooftop_wind_loop (2.09/1.90 dB spectral, 0.24/2.34 dB envelope)"
+      ]
+    },
+    {
+      "resampleFactor": 1.1,
+      "copies": 1178,
+      "caughtAsCopiesOfThemselves": 1169,
+      "missed": [
+        "Kickoff/buzzer_02 (4.44/3.10 dB spectral, 0.32/2.34 dB envelope)",
+        "Kickoff/power_t5_02 (2.84/2.62 dB spectral, 0.26/2.34 dB envelope)",
+        "Matchday/Baseball/pitching_machine_run_loop (6.05/2.32 dB spectral, 1.52/2.34 dB envelope)",
+        "Footfall/step_stone_sneak_heavy_02 (3.32/1.90 dB spectral, 0.46/2.34 dB envelope)",
+        "Footfall/step_stone_sneak_heavy_03 (2.08/1.90 dB spectral, 0.56/2.34 dB envelope)",
+        "Footfall/step_stone_sneak_heavy_04 (2.07/1.90 dB spectral, 0.79/2.34 dB envelope)",
+        "Footfall/step_stone_sneak_light_03 (3.33/2.36 dB spectral, 1.54/2.97 dB envelope)",
+        "Footfall/step_stone_sneak_medium_02 (3.50/2.55 dB spectral, 0.67/2.34 dB envelope)",
+        "Footfall/step_stone_sneak_medium_04 (3.31/1.90 dB spectral, 0.51/2.34 dB envelope)"
+      ]
+    }
+  ],
+  "arithmeticAgreement": {
+    "sampledPairs": 3000,
+    "worstDifferenceDb": 0,
+    "toleranceDb": 1e-9
+  },
+  "pairsCompared": 129580,
+  "pairsSpectrallyMatched": 31,
+  "pairsSeparated": 129580,
+  "nearestPairs": [
+    {
+      "power": "stadium_applause_01",
+      "neighbour": "Footfall/step_stone_sneak_medium_01",
+      "spectralDb": 6.089,
+      "envelopeDb": null,
+      "timesCriterion": 1.007
+    },
+    {
+      "power": "cleats_cut_01",
+      "neighbour": "Footfall/step_stone_sneak_light_02",
+      "spectralDb": 7.623,
+      "envelopeDb": null,
+      "timesCriterion": 1.014
+    },
+    {
+      "power": "drop_incomplete_01",
+      "neighbour": "Footfall/step_stone_sneak_light_02",
+      "spectralDb": 7.624,
+      "envelopeDb": null,
+      "timesCriterion": 1.014
+    },
+    {
+      "power": "stadium_stir",
+      "neighbour": "Footfall/step_stone_sneak_light_02",
+      "spectralDb": 7.68,
+      "envelopeDb": null,
+      "timesCriterion": 1.022
+    },
+    {
+      "power": "fumble_bounce_02",
+      "neighbour": "Footfall/step_stone_sneak_light_02",
+      "spectralDb": 7.683,
+      "envelopeDb": null,
+      "timesCriterion": 1.022
+    }
+  ],
+  "disclaimer": "Signal measurement only. No agent in this factory can hear. Separated means measurably not a transposed copy, never \"sounds good\"."
+}

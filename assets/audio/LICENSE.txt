@@ -1,0 +1,151 @@
+Home Crowd Football: Snap, Pads and Stadium Sound Effects
+Sound effects licence
+
+Copyright (c) 2026 Core Systems Asset Factory. All rights reserved.
+
+
+================================================================================
+THE SHORT VERSION
+================================================================================
+
+You bought it. Put it in your game and sell that game. You do not owe us money,
+a share, or a credit. You do not need to ask permission first.
+
+The one thing you may not do is resell or redistribute the SOUNDS THEMSELVES as
+sounds — as a pack, a sample library, or a stock-audio upload.
+
+
+================================================================================
+WHAT YOU MAY DO
+================================================================================
+
+1. COMMERCIAL USE — YES. Use these sounds in commercial projects. Sell those
+   projects. Keep all the money. There is no revenue limit, no unit cap, and no
+   additional licence to buy later if your game does well.
+
+2. UNLIMITED PROJECTS. This licence is per person or per company, not per
+   project. Use the pack in as many titles as you like, forever, including
+   projects you start years from now.
+
+3. ANY PLATFORM. PC, console, mobile, web, VR, arcade cabinets, installations.
+   Free games, paid games, jam entries, prototypes, client work.
+
+4. MODIFY FREELY. Pitch them, chop them, layer them, reverse them, run them
+   through your own effects, use them as raw material in a larger sound design.
+   The modified result is yours to ship under the same terms.
+
+5. BEYOND GAMES. Film, video, animation, streams, podcasts, apps, trailers,
+   advertising, YouTube and TikTok content. If it is a finished production that
+   an audience consumes, this licence covers it.
+
+6. TEAMS AND CONTRACTORS. If you bought this for a studio, everyone at that
+   studio may use it on that studio's projects. If you are a contractor, you may
+   use it in work you deliver to a client, and that client may ship it.
+
+7. NO CREDIT REQUIRED. Credit is welcome and never required. If you would like
+   to, a suggested line is provided below.
+
+
+================================================================================
+WHAT YOU MAY NOT DO
+================================================================================
+
+1. DO NOT REDISTRIBUTE THE SOUNDS AS SOUNDS. You may not resell, sublicense,
+   give away, or upload the audio files — original or modified — as a sound
+   pack, sample library, sound-effect collection, or stock-audio product. This
+   is the single restriction, and it exists only so the pack is not resold in
+   competition with itself.
+
+2. DO NOT SHIP THEM AS LOOSE, EXTRACTABLE ASSETS FOR OTHERS TO TAKE. Sounds
+   packed inside a game build are fine, including in a normal engine asset
+   bundle. A folder of .wav files published for download is not.
+
+3. DO NOT CLAIM AUTHORSHIP of the sound design itself, and do not register these
+   sounds — or a work consisting substantially of them — with a content-ID,
+   copyright-claim or rights-management system. Doing so would issue false
+   claims against other lawful buyers of this pack.
+
+4. NO NFT OR BLOCKCHAIN-ASSET MINTING of the audio files as the primary asset.
+
+
+================================================================================
+QUESTIONS THIS CATEGORY GETS ASKED, ANSWERED PLAINLY
+================================================================================
+
+"Can I use this in a commercial game?"
+    Yes. Including one that makes money. No extra licence, no revenue share.
+
+"Do I have to credit you?"
+    No. It is appreciated, never required.
+
+"Can I use it in a game I sell on Steam / itch / consoles / mobile stores?"
+    Yes, all of them.
+
+"Can I use it in a client project?"
+    Yes, and your client may ship the result. You do not both need a copy.
+
+"Can I use it on YouTube / TikTok / a stream?"
+    Yes. And because these sounds are synthesised from code by us and not
+    licensed from any stock library, no third party can lawfully content-ID
+    claim them against you.
+
+"Can I modify the sounds?"
+    Yes, however you like.
+
+"Can I integrate the pack into an app, soundboard, or asset tool that my users
+ can play sounds from?"
+    Ask first — that is redistribution of the sounds AS sounds, which restriction
+    1 covers. It is often fine with a written extended licence. Contact us
+    through the store page.
+
+"I am making a game with a team. Does everyone need to buy it?"
+    No. One purchase covers the studio for that studio's projects.
+
+"What happens if my game becomes a hit?"
+    Nothing changes. There is no success clause and nothing further to pay.
+
+
+================================================================================
+CREDIT LINE (optional — copy and paste)
+================================================================================
+
+    Sound effects: "Home Crowd Football: Snap, Pads and Stadium Sound Effects"
+    by Core Systems Asset Factory.
+
+Short form:
+
+    SFX: Football by Core Systems Asset Factory
+
+
+================================================================================
+PROVENANCE — WHY THIS LICENCE CAN BE THIS SIMPLE
+================================================================================
+
+Every sound in this pack was synthesised from scratch in code. There are no
+recorded samples, no third-party source material, no stock-library content, and
+nothing derived from another sound pack. The synthesis is deterministic: the
+same code run twice produces identical audio.
+
+That means there is no upstream licence sitting behind this one, no chain of
+rights that could be revoked, and no third-party claim that could ever surface
+against your project. It is also why the terms above can be short: we are not
+passing along restrictions imposed on us, because there are none.
+
+AI DISCLOSURE, stated truthfully: the CODE that generates these sounds was
+written with AI assistance. The SOUNDS are self-contained procedural synthesis —
+oscillators, filters, modal resonators and envelopes evaluated in code — and no
+generative audio model was used at any point in producing them. The cover art
+and store graphics are AI-generated.
+
+
+================================================================================
+NO WARRANTY
+================================================================================
+
+THE SOFTWARE AND AUDIO ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR AUDIO OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE OR AUDIO.
