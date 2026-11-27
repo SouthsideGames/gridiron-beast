@@ -1,7 +1,7 @@
 {
- "version": "v43.51.0-playtest",
- "commit": "81ada10466e46d063cd71899eeeb85dfd958a094",
- "artifactVersion": 152,
+ "version": "v43.51.1-playtest",
+ "commit": "6445c82849202ed405611ba2c9eb61fcb95d77b1",
+ "artifactVersion": 153,
  "extra": {},
  "files": {
   "assets/audio/music/championship.mp3": "828b7b3d9d079fb07ff0e451134f5ab82d79283d9e3038544b8f436cd7c616eb",
@@ -15,7 +15,7 @@
   "assets/audio/ui/05_Notification.wav": "a6ceb67dd47f314e0a3e8848151282a109be6791f73642657e14cbb6443c8851",
   "assets/audio/ui/06_Reward.wav": "e2cfafa96689e72cae73035ff8432696e3e80da65d9b7502f0fbfeefef2e67f3",
   "assets/audio/ui/07_Major_Achievement.wav": "34c6828d169a34d201b59235b711ccc171fe80b59a8086e2f14e7a809787cc6d",
-  "index.html": "4670dbe09a735c20f288e83895b362cb7f366a0b565269041801a4a34c12e6de",
+  "index.html": "9d8fceabb8ae28368027190c485061a80357963151e79a234336e52bf7337cf9",
   "manifest.webmanifest": "c9a8159ccf8c1bf95e30a2e510b259a0ad8eafdfd700313ad712fddf1917c699",
   "src/audio/context.js": "24f906671ff5058169e1822afc0636b7a2f23d89f51d9a65324376a73758e6d8",
   "src/audio/cry-reviews.js": "54416f7de3ffea7c8bf33c35f6da4ee30af78de713f793e45ec9b21b89af5d8d",
@@ -157,7 +157,7 @@
   "src/data/monsters.js": "b5140554965e0b6e2be60e72fbbea5e5f01ce3e3992a68fc9991c8b1ee23fe31",
   "src/data/personnel.js": "29cd4ebcf3f491d88017538c7ebf7547574fb179a8b523c99c53977f93638609",
   "src/data/playbook-reserve.js": "32484ca3fd625384e3698f565a7c27493cc77b20d38d75b76a2212325dd639c0",
-  "src/data/playbook.js": "4a70bd7c0579988741463f5f4c28456ccc7bf63fddb2f1d616994f59526d979d",
+  "src/data/playbook.js": "34d97b8b8674361367eceb95958ac092659bd8f826a7d1844b5dfe86ae47ff25",
   "src/data/postseason.js": "eaeef291536a1e18b5900275400bfcafd60d15e69a4a7a22869e3125c1e4a117",
   "src/data/press.js": "a6e342542694fa46672ba43066815d83c42c280c53da2973dd5edaa5fabc83db",
   "src/data/reserve/defense-coverage.js": "160d8862bd8a42134d9d7223eaf958dd8d93df40ae81822e98a4f63bf11fdf8f",
@@ -212,7 +212,7 @@
   "src/franchise/fa-personality.js": "0887dcce5fb4902335e17fc1138f59649b5008f06c8eb463d62ff4578d2a59a7",
   "src/franchise/fa-state.js": "6197d9a3125c4a968dbf73e2811621cc6f1f3152730dfe3b05f108f2d3e88ba8",
   "src/franchise/fa-strategy.js": "a0658d472723c2514ec3a0163b219173f15ee6080332193875e4a190d4d4a2a8",
-  "src/franchise/franchise.js": "3ca660db152229745560ef92479236866f85aae5b562d6767666f9abe32e6995",
+  "src/franchise/franchise.js": "c2d6704e174e27d35ad635285e048870402d9f3db889296cfab1c0a0ec66b8b8",
   "src/franchise/gm-career.js": "5dc807b06795abf5afe2cc59049a5681a2a112556fff10a735d563a46c970d45",
   "src/franchise/guide-lessons.js": "0d171fc190b1a3915bc869767ba6bf1887a4447ab9c5c8ba3db03db8d8f8d18b",
   "src/franchise/guide.js": "c6f799d0557c9566a825e4592a38dd3cf81fb4630c9b560f78b859464f572152",
@@ -513,7 +513,7 @@
   "src/ui/zone-planner.js": "4772f534cfa30972eb714d5f1ccefb1183f37166d2ec456bdb5d0279c82b7b72",
   "src/ui/zone-review-ready.js": "b3bebd359ed303d4f28405c330067cc9c7ff585c05cca2b24cb04a169e93c58f",
   "src/ui/zone-reviewer.js": "3843dafd7e36293fcefda56478047d6cd8c63b948cbbd10dc98c2ffa595f398d",
-  "src/version.js": "7dd83b57f08c2ba1e27f041b96bab65522371d55e236cd2667a8b7924b5b44c8",
+  "src/version.js": "d46d47e75627c20fd1c8997e1fb69df112e741399b2f83b2b8bfa960347ce2ed",
   "styles/app.css": "a7ce5607f184bebbb4a37374f2ccd2251b7e527b9ac4b2abe30013d476d6f271",
   "styles/clash.css": "b2c7ed22c42e69a64f81fed99f261f8d34e055c571a0ded69e8097f3e63b648c"
  }
