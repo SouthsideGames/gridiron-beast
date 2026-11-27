@@ -555,7 +555,7 @@ Rookie of the Year needs rookies arriving together, so the league drafts.
 
 A first season from the worst roster to the Beast Bowl "felt silent". Three changes.
 
-* **21.1 Achievements are cutscenes.** 21 one-time achievements, each delivered as a scene, never a banner: the **commissioner** in his office (first win, first badge, four badges, a winning season — "this is happening very fast" — an undefeated season, the playoffs, a league award, 10/30/50 wins, a Legend Track, surviving the hot seat), the **rival GM** on the phone (first win over them, a season sweep, a conference title, your first trade), or a typed **letter from the Board** (all eight badges, a Beast Bowl, a second title, a legendary unlocked, and Hall of Fame eligibility: "IT HAS NEVER WRITTEN THIS LETTER TO THE SAME NAME TWICE"). Scenes queue and play full-screen before headquarters, tapped through beat by beat; My office lists every achievement (earned with its year, unearned as ???). Checked after every game, at the playoff draw, at season's end, on a Legend Track and on a trade.
+* **21.1 Achievements are cutscenes.** *(Superseded in part by §62, 2026-11: the catalogue is now 200; these original achievements, now 24, keep their ids, checks and cutscenes, and the other 176 arrive by rarity.)* 21 one-time achievements, each delivered as a scene, never a banner: the **commissioner** in his office (first win, first badge, four badges, a winning season — "this is happening very fast" — an undefeated season, the playoffs, a league award, 10/30/50 wins, a Legend Track, surviving the hot seat), the **rival GM** on the phone (first win over them, a season sweep, a conference title, your first trade), or a typed **letter from the Board** (all eight badges, a Beast Bowl, a second title, a legendary unlocked, and Hall of Fame eligibility: "IT HAS NEVER WRITTEN THIS LETTER TO THE SAME NAME TWICE"). Scenes queue and play full-screen before headquarters, tapped through beat by beat; My office lists every achievement (earned with its year, unearned as ???). Checked after every game, at the playoff draw, at season's end, on a Legend Track and on a trade.
 * **21.2 The HQ header in the playoffs** shows the round ("Playoffs · Conference championships") and the matchup instead of the week and record; afterwards, the result ("Beast Bowl champions", "Eliminated in the conference semifinals"). The rival is labelled as the rival in the regular season (it read like an opponent) and hidden in the playoffs.
 * **21.3 The MVP bug.** Replaying the owner's real league: a QB with the league's best passing season (2,273 yds, 23 TD, 3 INT, 136.9 rating) ranked fourth because efficiency averaged every role 50/50 — his 13 scrambles and kneel-downs at 2.3 yds/carry counted as much as 205 throws. Efficiency now weights each role by its volume (throws, carries, targets, blocking snaps). Also: the team-record factor is smaller (a 9-0 club +1.5 instead of +2; still a boost), the versatility bonus is halved (0.1), and quarterback responsibility is 1.35 (was 1.25). The playtest case now ranks the QB first and the 22-TD back second; across twelve simulated seasons MVPs went QB 4, RB 5, WR 1, CB 1, DL 1 — no position owns the award.
 * **21.4 Achievements belong to the player.** Kept outside any franchise like the Beast Dex and the Hall of Fame (localStorage, mirrored to the per-viewer cloud document `achievements`). Cutscenes still play inside the franchise that earns them (each franchise earns each achievement once, so a new career replays "first win"); the account remembers the first time ever (club, league year, difficulty), how many franchises have earned it, and the scene exactly as it played. **Main menu → 🏅 Achievements** lists all 21 with what each takes, earned ones with **Replay the scene**, locked ones dimmed with their requirement (the scene itself stays a surprise). My office shows only this franchise's tally and points to the menu. Saves that earned achievements before the account store existed are synced into it when they load.
@@ -4896,4 +4896,38 @@ and left on the device unchanged; settings, achievements and other data are unto
 Aetheria won 30% of simulated titles. Its own starting level is reduced by 5 (`balance: -5` on its Gym Leader entry in
 `src/data/gyms.js`, so +2 over an ordinary club instead of the late tier's +7). Its tier, Lyra Vesper, the Psychic field,
 Astralux, colours, manager and playing style are unchanged. The analysis and the before/after simulations are in PR #165.
+
+## 62. Achievements: the 200-achievement catalogue (achievement overhaul, 2026-11; branch `feature/achievement-overhaul-200`; IMPLEMENTED, NOT MERGED)
+
+The owner's brief asked for exactly 200 achievements across sixteen categories and six rarities, a redesigned screen, a
+presentation that scales with rarity, and no change to the game. Full catalogue: `docs/achievements/CATALOGUE.md` (and
+`catalogue.json`); architecture: `docs/achievements/TECHNICAL.md`; report: `reports/achievements/ACHIEVEMENT_OVERHAUL_REPORT.md`.
+
+* **62.1 The catalogue.** 200 definitions in `src/data/achievements.js`: the 24 originals (ids, checks and cutscenes unchanged;
+  given a category and rarity) and 176 new rows. Categories: Game Performance 20, Franchise Milestones 15, Championships 12,
+  Offensive 15, Defensive 15, Special Teams 10, Beast Dex 15, Evolution & Development 15, Beast Clash 20, Gym Challenges 10,
+  Legendary Monsters 8, Draft & Scouting 10, Trades & Free Agency 12, Coaching & Management 8, Awards & Legacy 9, Hidden 6.
+  Rarities: Common 50, Uncommon 45, Rare 45, Epic 35, Legendary 20, Mythic 5. Each row names a metric, a comparison and one
+  threshold (the description shows it), its trigger, its scope (franchise or account), whether it is hidden, whether it may be
+  granted from a save's history, and whether its threshold is provisional.
+* **62.2 Measured, not scripted.** Thresholds come from measured distributions (300 single games, 300 Clashes, 96
+  club-seasons, soaks); a threshold that depends on balance still being tuned is marked provisional and lives in one place.
+  The game is never changed to make an achievement reachable.
+* **62.3 Event-driven.** Checked after the owner's game, Clash, season, playoff field, Legend choice, trade, recruit,
+  evolution, draft pick, scouting trip, signing, extension and hire; never per frame. A small franchise tracker (`f.achTrack`)
+  keeps what the save did not already record (streaks, Clash results, comebacks, faced families, who reached level 50 or an
+  overall with you). It is written only from results that already happened; nothing in the game reads it.
+* **62.4 Earned by play.** Founding gifts do not count (a founding roster's evolved forms, levels, Apex or creation-draft picks);
+  growth counts only when it happened on your roster. A franchise played by a developer shortcut earns nothing more; an archive
+  earns nothing; each game and battle is counted once by its own id. The game's own weekly simulation counts.
+* **62.5 Older saves.** On first load a one-time backfill grants only what the save proves (past seasons' results and box
+  scores, records, awards, trades, the Hall of Fame, the dex), marks those as backfilled, and announces them in one line.
+  Everything else starts counting from that day.
+* **62.6 Presentation by rarity.** Common and Uncommon: one compact toast (several at once become one); Rare and Epic: a card with
+  the description; Legendary and Mythic: a reveal with a word from the commissioner. Unlocks wait on HQ behind any scene or
+  sheet and never appear during a play or a Clash. The 24 originals keep their cutscenes. No audio.
+* **62.7 The screen.** Account-wide: x / 200, completion, rarity and category counts, recently unlocked, search, category,
+  rarity and locked/unlocked filters, progress bars for the open franchise, unlock dates, a detail sheet, hidden placeholders,
+  scene replay. Badges are one CSS framework: a category glyph inside a rarity ring, Mythic with a spectrum ring.
+* **62.8 Cosmetic only.** No achievement gives or changes anything in play.
 
