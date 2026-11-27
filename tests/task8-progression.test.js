@@ -6,6 +6,7 @@ import { createRng } from '../src/core/rng.js';
 import * as P from '../src/franchise/t8/progression.js';
 import { FORMS, formById, ATTRIBUTES } from '../src/data/beast-dex.js';
 import { NEUTRAL_TEMPERS, TEMPERS } from '../src/data/temper.js';
+import { POSITION_WEIGHTS } from '../src/data/personnel.js';
 
 const young = { id: 'm1', age: 21, position: 'RB' };
 
@@ -120,7 +121,9 @@ test('allocation tiers: ordinary uses OVR plus approved non-OVR roles only; Apex
   const { RULES } = await import('../src/data/beast-dex.js');
   const m = { id: 'q', age: 22, position: 'RB' };
   assert.equal(C.allocationWeight({ apex: false }, 'RB', 'speed'), 3);
-  assert.equal(C.allocationWeight({ apex: false }, 'RB', 'durability'), 0.5); // Appendix C: fatigue and injury resistance
+  // Balance audit R-17 (2026-11-25): Durability is in the RB overall at weight 1, so it trains at its OVR weight (was 0.5 as an
+  // approved non-OVR role, Appendix C: fatigue and injury resistance)
+  assert.equal(C.allocationWeight({ apex: false }, 'RB', 'durability'), POSITION_WEIGHTS.RB.durability); assert.equal(POSITION_WEIGHTS.RB.durability, 1);
   assert.equal(RULES.attributeRoles.RB.arm, false); assert.equal(C.allocationWeight({ apex: false }, 'RB', 'arm'), 0);
   assert.equal(C.allocationWeight({ apex: true }, 'RB', 'arm'), 0.2);
   // ordinary monster with lots of points never trains an attribute unused at its position

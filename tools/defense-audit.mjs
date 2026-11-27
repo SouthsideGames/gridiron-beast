@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { stripTeam, assertStripped } from './lib/ability-strip.mjs';
 // Defensive AI audit (v42.9): controlled measurements of the defense on the real engine, for the Defensive AI Audit report.
 // Plain-65 monsters, no ability or type unless a section says otherwise, identical seeds per comparison. Sections:
 //   coverage   by route (curl, comeback, slant, drag/cross, dig, go, post) vs man and zone, defenders' Coverage and Awareness 50/95
@@ -130,7 +131,9 @@ if (want('pursuit')) {
 }
 // ---- defensive abilities and types: matched games, defense stripped vs as played; which defensive abilities fire
 if (want('abilities')) {
-  const strip = (team, patch) => ({ ...team, defense: Object.fromEntries(Object.entries(team.defense).map(([k, m]) => [k, m && typeof m === 'object' ? { ...m, ...patch } : m])) });
+  // R-3 (2026-11-25): defenders off in every player source (slots, bench, rotation pool), not just the defensive slots.
+  const DEF = new Set(['DL', 'LB', 'CB', 'S']); const isDef = (p) => DEF.has(p.position);
+  const strip = (team, patch) => { const t = stripTeam(team, patch, isDef); assertStripped(t, team.name, isDef); return t; };
   const variants = { asPlayed: (t) => t, defenseAbilitiesOff: (t) => strip(t, { species: null, ability: null }), defenseAbilitiesAndTypesOff: (t) => strip(t, { species: null, ability: null, type: null }) };
   out.abilities = {}; const fired = {};
   for (const [name, fn] of Object.entries(variants)) {

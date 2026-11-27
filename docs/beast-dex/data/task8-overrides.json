@@ -50,7 +50,7 @@
     "LIG-01-F": {
       "ruling": "N7b P3, P4; Z24",
       "sections": {
-        "Core resolution": "Light zone: Your monsters who pass through recharge their abilities faster. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+        "Core resolution": "Light zone: Your beasts who pass through recharge their abilities faster. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
       },
       "values": {
         "lifetimePlaysByMastery": [
@@ -60,7 +60,7 @@
           5
         ]
       },
-      "mechanic": "One benefit per monster per play. No charge-bar or once-use restoration. Same-type neutrality and bench pause apply. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap. Light zone: Your monsters who pass through recharge their abilities faster. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      "mechanic": "One benefit per beast per play. No charge-bar or once-use restoration. Same-type neutrality and bench pause apply. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap. Light zone: Your beasts who pass through recharge their abilities faster. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
     },
     "LIG-02-F": {
       "ruling": "N7b P7",
@@ -119,7 +119,7 @@
     },
     "PSY-03-F": {
       "sections": {
-        "Targets / placement": "N9d: before both calls, choose and save one opposing LB within 3 yards of LOS in the initial visible formation. The initial look is locked once per snap. At snap validate that same monster is participating and actually blitzes; no substitute or reload/audible/redraw reroll. No future call alignment is read. Preserve the fixed 50% Confused attempt, 20% Awareness reduction and approved cooldown."
+        "Targets / placement": "N9d: before both calls, choose and save one opposing LB within 3 yards of LOS in the initial visible formation. The initial look is locked once per snap. At snap validate that same beast is participating and actually blitzes; no substitute or reload/audible/redraw reroll. No future call alignment is read. Preserve the fixed 50% Confused attempt, 20% Awareness reduction and approved cooldown."
       },
       "ruling": "N9d"
     },
@@ -213,14 +213,14 @@
     "WIN-01-F": {
       "ruling": "Z24",
       "sections": {
-        "Core resolution": "Wind zone: Your monsters inside run faster. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune.",
+        "Core resolution": "Wind zone: Your beasts inside run faster. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune.",
         "Exceptions / counterplay": "See What it does."
       }
     },
     "WIN-04-F": {
       "ruling": "Z24",
       "sections": {
-        "Core resolution": "Wind zone: Your monsters inside run faster. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+        "Core resolution": "Wind zone: Your beasts inside run faster. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
       }
     },
     "DAR-01-F": {
@@ -255,7 +255,7 @@
       "sections": {
         "Core resolution": "Psychic zone: Pulls opponents hard toward the middle of the zone. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
       },
-      "mechanic": "Stop pull within 1 yard of center. Ordinary movement can overcome pull. Psychic monsters have same-type neutrality. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap. Psychic zone: Pulls opponents hard toward the middle of the zone. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
+      "mechanic": "Stop pull within 1 yard of center. Ordinary movement can overcome pull. Psychic beasts have same-type neutrality. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap. Psychic zone: Pulls opponents hard toward the middle of the zone. It always takes effect on anyone it reaches, and lasts 2 seconds after they leave. Opponents of the zone's own type are immune."
     },
     "PSY-04-F": {
       "ruling": "Z24",
@@ -424,7 +424,7 @@
     {
       "id": "clash-immediate-ko",
       "ruling": "N7c B3",
-      "rule": "A monster at 0 HP on any damage path is knocked out immediately; its pending reactions, constructs, remaining hits and later turn are canceled except contract-verified post-KO exceptions (Falling Star, Faultline, Molten Brand lethal eruption, Shared Burden current split, Mountain Shelter, Astral Strike continuation, Cinder Clamp release, Second Spring). The replacement enters right after the current hit finishes resolving."
+      "rule": "A beast at 0 HP on any damage path is knocked out immediately; its pending reactions, constructs, remaining hits and later turn are canceled except contract-verified post-KO exceptions (Falling Star, Faultline, Molten Brand lethal eruption, Shared Burden current split, Mountain Shelter, Astral Strike continuation, Cinder Clamp release, Second Spring). The replacement enters right after the current hit finishes resolving."
     },
     {
       "id": "special-teams-units",
@@ -443,7 +443,7 @@
     {
       "id": "veteran-history",
       "ruling": "N7c B7",
-      "rule": "Generated veterans start at level 1 and simulate prior seasons with the approved model; accept when median within 1 level and 2 rating points and quartiles within 2 levels of played monsters."
+      "rule": "Generated veterans start at level 1 and simulate prior seasons with the approved model; accept when median within 1 level and 2 rating points and quartiles within 2 levels of played beasts."
     },
     {
       "id": "telemetry",

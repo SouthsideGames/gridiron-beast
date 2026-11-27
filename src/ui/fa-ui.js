@@ -290,7 +290,9 @@ export function lineupGateSheet(app, { mode = 'game', onContinue, onDone } = {})
   const f = app.f; let closed = false;
   const body = () => {
     const g = F.lineupGate(f);
-    if (g.ok) return `<div class="panel tight" style="border-color:var(--good)">${$t('market.b_lineup_complete_b')}<div class="muted">${$t('market.every_starting_slot_has_a_legal')}</div></div><button class="btn primary block" data-act="close">${$t('market.continue')}</button>`;
+    // F-14 (owner 2026-11-26): a missing kicker is a warning, never a blocker; the same panel shows whether or not the lineup is complete.
+    const kick = g.kicker ? `<div class="assist-note" role="status" style="margin:6px 0">⚠️ ${esc(g.kicker.warning)}${g.kicker.market.length ? `<div class="list" style="margin-top:4px">${g.kicker.market.map((x) => `<div class="item static"><div class="grow"><div class="name">${esc(x.name)} <span class="dim">${$t('market.ovr_2', { position: 'K', ovr: x.ovr })}</span></div><div class="sub">${$t('market.asks_yr', { amount: fmt(x.ask) })}</div></div>${g.canSign ? `<button class="btn small" data-act="sign" data-id="${esc(x.id)}">${$t('market.sign')}</button>` : ''}</div>`).join('')}</div>` : ''}</div>` : '';
+    if (g.ok) return `<div class="panel tight" style="border-color:var(--good)">${$t('market.b_lineup_complete_b')}<div class="muted">${$t('market.every_starting_slot_has_a_legal')}</div></div>${kick}<button class="btn primary block" data-act="close">${$t('market.continue')}</button>`;
     const holes = g.holes.map((h) => {
       const list = g.fixes[h.position] || [];
       const rows = list.map((x) => `<div class="item static"><div class="grow"><div class="name">${esc(x.name)} <span class="dim">${$t('market.ovr_2', { position: esc(h.position), ovr: x.ovr })}</span></div><div class="sub">${$t('market.asks_yr', { amount: fmt(x.ask) })} ${x.fits ? $t('market.fits_your_usable_cap') : `${$t('market.needs_more_usable_cap_release_a', { amount: fmt(x.short) })}`}${x.needsRoomOnRoster ? $t('market.roster_full_release_a_monster_first') : ''}</div></div>${g.canSign ? `<button class="btn small" data-act="sign" data-id="${x.id}">${$t('market.sign')}</button>` : ''}</div>`).join('');
@@ -301,7 +303,7 @@ export function lineupGateSheet(app, { mode = 'game', onContinue, onDone } = {})
     const periods = !g.canSign ? `<div class="dim">${$t('market.during_the_free_agency_periods_you')}</div>` : '';
     const cont = mode === 'game' ? $t('market.forfeit_this_game') : $t('market.start_the_season_anyway');
     return `<div class="assist-note critical" role="alert">⚠️ ${esc(g.reason)}</div>
-      <div class="muted" style="margin:6px 0">${$t('market.usable_cap_roster', { amount: fmt(g.cap), roster: g.roster, rosterMax: F.ROSTER_MAX })}</div>${short}${holes}${periods}
+      <div class="muted" style="margin:6px 0">${$t('market.usable_cap_roster', { amount: fmt(g.cap), roster: g.roster, rosterMax: F.ROSTER_MAX })}</div>${short}${holes}${kick}${periods}
       <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn small" data-act="market">${$t('market.free_agent_market')}</button><button class="btn small" data-act="contracts">${$t('market.release_a_monster')}</button><button class="btn small" data-act="lineup">${$t('market.lineup')}</button></div>
       <div class="dim" style="margin-top:8px">${mode === 'game' ? $t('market.if_you_continue_without_a_legal') : $t('market.if_you_start_without_a_legal')}</div>
       <button class="btn danger block" data-act="continue" style="margin-top:6px">${cont}</button>`;

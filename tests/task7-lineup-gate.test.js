@@ -16,6 +16,9 @@ import { t7Settle, t7FillToMin } from './t7-support.js';
  *  CBs the owner may sign (a monster the owner released himself is locked against him for the league year, and is not offered). */
 function openCB(f) {
   const cbs = f.roster.filter((m) => m.position === 'CB'); for (const m of cbs.slice(1)) m.injury = { weeks: 12, name: 'test injury' };
+  // Balance audit R-6 (owner decision 2026-11-25): a spare healthy safety now covers an open CB base slot in an emergency, so a real hole
+  // needs no spare safety either: every safety but the one at FS is hurt too (this test change follows the approved design).
+  for (const m of f.roster.filter((x) => x.position === 'S').slice(1)) m.injury = { weeks: 12, name: 'test injury' };
   for (const k of Object.keys(f.lineupManual)) delete f.lineupManual[k];
   // Task 8 M1 (fixture drift): a castoff reaches the owner's market only at the pool grade (POOL_WORTH: OVR 52–60, or 24 and under);
   // Dex CBs are often weaker and older, so they left the league and the market had no CB. Each released CB is chosen within the
@@ -51,8 +54,9 @@ test('a complete lineup progresses normally; an incomplete one is named exactly,
 
 test('signing an eligible monster resolves it; an ineligible one does not; cap and roster limits are reported accurately', () => {
   const f = newFranchise(132); openCB(f);
-  const s = F.freeAgentMarket(f).find((x) => x.monster.position === 'S' && !x.monster.injury);
-  if (s) { let r = F.negotiateFreeAgent(f, s.monster.id, s.ask); if (r.ok && r.outcome === 'countered') r = F.negotiateFreeAgent(f, s.monster.id, r.counter); assert.equal(F.lineupGate(f).ok, false, 'a safety does not fill CB2'); }
+  // R-6: a safety would now cover CB2 in an emergency, so the ineligible signing is a receiver (a WR's emergency position is RB).
+  const s = F.freeAgentMarket(f).find((x) => x.monster.position === 'WR' && !x.monster.injury);
+  if (s) { let r = F.negotiateFreeAgent(f, s.monster.id, s.ask); if (r.ok && r.outcome === 'countered') r = F.negotiateFreeAgent(f, s.monster.id, r.counter); assert.equal(F.lineupGate(f).ok, false, 'a receiver does not fill CB2'); }
   // cap: with almost no usable cap, the listed CBs say how much more is needed
   const keep = f.deadCap; f.deadCap = (f.deadCap || 0) + Math.max(0, F.freeAgencyCap(f).usable - 1000);
   const g = F.lineupGate(f); assert.ok(g.fixes.CB.every((x) => !x.fits && x.short > 0), 'insufficient cap shown'); f.deadCap = keep;

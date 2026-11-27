@@ -21,6 +21,10 @@ export const APEX_STAGES = Object.freeze(['silhouette', 'reveal', 'title', 'summ
 
 export const apexEmblem = (f, m) => (apexKnown(f, m) ? `<span class="apex-emblem" title="${$t('roster.apex_individual')}" aria-label="${$t('roster.apex')}">${$t('roster.apex_2')}</span>` : '');
 export const apexClass = (f, m) => (apexKnown(f, m) ? ' apex-known' : '');
+/** UI feedback 2026-11-25: a discovered Apex carries a gold "A" badge (after the captain's "C") and a gold name in the lineup, the
+ *  depth chart and roster lists. No title, so no ⓘ is added beside it. An undiscovered Apex shows neither. */
+export const apexBadge = (f, m) => (apexKnown(f, m) ? `<span class="chip apex-badge" aria-label="${$t('roster.apex_badge')}">A</span>` : '');
+export const apexNameClass = (f, m) => (apexKnown(f, m) ? ' apex-gold' : '');
 const VIA_TEXT = { roster: $t('roster.when_he_joined_your_club'), scouting: $t('roster.by_your_scouts_report'), 'draft-report': $t('roster.by_your_full_draft_report'), 'free-agent-report': $t('roster.from_his_free_agent_report') };
 
 /** The facts block for a discovered Apex (profile and reports). Empty string otherwise. */

@@ -62,7 +62,8 @@ test('lineup presets are named, bounded, scoped to the club and preview legal ch
 test('lineup preset review reports lost entries and refuses an illegal roster',()=>{
  const f=fresh(),depth={};for(const m of f.roster)(depth[m.position]||=[]).push(m.id);
  savePreset(f,'lineup','Original',{manual:{},depth});const p=polishState(f).presets.lineup[0];
- f.roster=f.roster.filter(m=>m.position!=='QB');const pv=lineupPresetPreview(f,p);
+ // Balance audit R-6 (owner decision 2026-11-25): a kicker may cover QB in an emergency, so the roster is illegal only with no QB and no K.
+ f.roster=f.roster.filter(m=>m.position!=='QB'&&m.position!=='K');const pv=lineupPresetPreview(f,p);
  assert.equal(pv.ok,false);assert.ok(pv.missing.includes('QB'));assert.ok(pv.gone.length);
 });
 test('unfinished game-plan selections survive serialization/detail navigation but do not commit or cross a week',()=>{

@@ -190,6 +190,10 @@ tr.me td { background: #2a3f16; }
 .situation b { color: var(--ink); font-size: 14px; }
 .field-wrap { position: relative; border: 3px solid #b8d7bb; border-radius: 4px; background: #236b49; overflow: hidden; margin-bottom: var(--s2); }
 .field-wrap > svg { display: block; width: 100%; height: auto; }
+/* The zoom button (owner play test 2026-11-26): bottom-right over the field, a 44 px target, under banners and celebrations. */
+.field-zoom { position: absolute; right: 8px; bottom: 8px; z-index: 3; width: 44px; height: 44px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 2px solid rgba(255,255,255,.55); background: rgba(10,22,18,.72); color: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.field-zoom[aria-pressed="true"] { border-color: var(--accent, #facc15); color: var(--accent, #facc15); }
+.field-zoom:focus-visible { outline: 3px solid var(--accent, #facc15); outline-offset: 2px; }
 .field-banner { position: absolute; z-index: 3; left: 8px; right: 8px; top: 8px; background: #0b1a14e6; border: 2px solid var(--line-2); border-radius: var(--r); padding: 8px 10px; font-size: 13px; }
 .field-banner.important { border-color: var(--accent); }
 .field-banner b { color: var(--accent); }
@@ -695,6 +699,10 @@ html[data-reduced-motion="1"] .bar > i, html[data-reduced-motion="1"] .btn, html
 
 /* ---- the final whistle */
 .final-hero { text-align: center; padding: 10px 8px 12px; border: 2px solid var(--line); border-radius: var(--r); margin-bottom: var(--s3); background: linear-gradient(180deg, rgba(255,255,255,.03), transparent); }
+/* Play test 2026-11-26: the result opens at once; this line shows while the week settles (finishGame). */
+.final-pending { margin: var(--s3) 0; animation: final-pending-pulse 1.2s ease-in-out infinite; }
+@keyframes final-pending-pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .final-pending { animation: none; } }
 .final-hero.won { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(250,204,21,.25) inset; }
 .final-hero.lost { border-color: #5a2b2b; }
 .final-hero.playoff { background: linear-gradient(180deg, rgba(245,197,66,.12), transparent); }
@@ -2158,6 +2166,10 @@ html[data-reduced-motion="1"] .draft-stage > :last-child { animation:none; }
 .pregame .md-hero .mu-vs-word { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--accent); font-size: 15px;
   background: radial-gradient(circle at 35% 30%, #4b3a0a, #120d00); border: 2px solid var(--accent); box-shadow: 0 0 16px rgba(250,204,21,.35); }
 .pregame .md-hero .mu-tag { font-size: 10px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .06em; text-align: center; max-width: 84px; }
+/* Owner play test 2026-11-26: "Week 4 · Interconference" spilled out of its 84 px slot off-centre. The week and the game type are two
+   centred lines, and a line may widen the middle column to fit (its longest word, INTERCONFERENCE, is about 100 px). */
+.pregame .md-hero .mu-tag-line { display: block; white-space: nowrap; }
+.pregame .md-hero .mu-tag:has(.mu-tag-line) { max-width: none; }
 /* stadium card: calmer, with the field type's colour as a stripe */
 .pregame .venue-card { border-width: 1px; border-left-width: 4px; border-radius: 12px; background: linear-gradient(180deg, #17302a, #13271f); }
 .pregame .venue-card .venue-name { font-size: 15px; }
@@ -2956,3 +2968,29 @@ html[data-app-inactive="1"] .final-celebration * { animation-play-state: paused;
 @keyframes crowd-bubble { 0% { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 10% { opacity: 1; transform: translate(-50%, -100%) scale(1.05); } 16% { transform: translate(-50%, -100%) scale(1); } 82% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -112%); } }
 html[data-reduced-motion="1"] .crowd-bubble { animation: crowd-bubble-still 2.6s linear both; }
 @keyframes crowd-bubble-still { 0%, 85% { opacity: 1; transform: translate(-50%, -100%); } 100% { opacity: 0; transform: translate(-50%, -100%); } }
+
+/* UI feedback 2026-11-25 (play test): depth chart rows, roster bar and Apex badge.
+   Depth row: the slot tag and fatigue join the second line (species · C · A · slot · fatigue), so the name has the width and the
+   overall keeps a gap from ▲▼; no ⓘ inside a row (polish.js). */
+.dc-row { grid-template-columns: 18px 26px minmax(0, 1fr) 34px auto; column-gap: 6px; }
+.dc-mid .dc-tag { order: 3; display: inline-flex; flex-direction: row; align-items: center; gap: 4px; flex-shrink: 0; }
+.dc-mid .apex-badge { order: 2; flex-shrink: 0; }
+.dc-mid .dc-more { order: 5; }
+.dc-mid .dc-tag .chip, .dc-mid .dc-tag .fat-pip { font-size: 11px; line-height: 16px; padding: 0 6px; }
+.dc-row .ovr { text-align: right; margin-right: 6px; }
+.dc-move { gap: 6px; }
+/* The Apex "A" badge (after the captain's "C") and the gold name of a discovered Apex. */
+.chip.apex-badge { padding: 0 6px; font-weight: 900; font-size: 11px; line-height: 16px; color: #ffe9a8; border-color: #e7c75a; background: rgba(120, 90, 10, .45); }
+.apex-gold, .dc-name.apex-gold, .slot .nm.apex-gold { color: #ffd666; }
+.slot .slot-badges { position: absolute; top: -8px; right: -4px; display: flex; gap: 2px; z-index: 1; } /* on the corner, clear of the slot label */
+.slot .slot-badges .cap-badge { position: static; }
+/* Roster bar: Lineup / Depth share the row; the roster-and-cap pill keeps its ⓘ beside it and takes a full row when the width is short. */
+.screen-roster .roster-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+.screen-roster .roster-bar > .btn { flex: 1 1 0; min-width: 88px; max-width: 200px; }
+.roster-room-wrap { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; justify-content: flex-end; min-width: 0; }
+.roster-room-wrap .roster-room { margin-left: 0; min-width: 0; }
+.roster-tools { display: flex; }
+.roster-tools > .btn { flex: 1 1 0; }
+.roster-lineup-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.roster-lineup-controls .roster-side-controls { display: flex; }
+.roster-lineup-controls .roster-side-controls > .btn { flex: 1 1 0; }

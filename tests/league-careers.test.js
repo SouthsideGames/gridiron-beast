@@ -113,7 +113,7 @@ test('retirement is a permanent exit: a decorated veteran leaving the league ret
   f.history.push({ year: 0, club: f.club, awards: { league: { dpoy: { id: vet.id, team: club, name: vet.name } } } });
   const q0 = (f.league.events || []).length;
   R.removeFromClub(f, club, vet.id, { year, reason: 'walked' }); const where = leaveLeague(f, vet, { year, club });
-  assert.equal(where, 'legend'); const ev = f.league.events.slice(q0); assert.ok(ev.some((e) => e.kind === 'retire' && e.mid === vet.id && /Defensive Monster of the Year/.test(honoursText(e.honours))));
+  assert.equal(where, 'legend'); const ev = f.league.events.slice(q0); assert.ok(ev.some((e) => e.kind === 'retire' && e.mid === vet.id && /Defensive Beast of the Year/.test(honoursText(e.honours)))); // R-5 award name
   assert.ok(f.league.legends[vet.id].seasons.length >= 1, 'his season books stay with the stub');
   const prof = careerProfile(f, vet.id); assert.equal(prof.kind, 'full'); assert.equal(prof.where, 'legend');
   assert.match(N.moveText(ev.find((e) => e.kind === 'retire')), /retires/);

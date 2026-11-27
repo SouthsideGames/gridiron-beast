@@ -1,5 +1,6 @@
 // WIN-03-F Air Brake (skywarden: Aeralis). Task 8 M3 Wind batch (targeted effect, pass-breakup charge).
-// Contract (Dex): three personal pass breakups fill the bar (interceptions excluded). On a later successful forward-pass catch by the
+// Contract (Dex; charge revised by balance audit R-10, 2026-11-25): three passes defended fill the bar: a personal breakup or an
+// incompletion on a throw at the receiver he covers (interceptions excluded). On a later successful forward-pass catch by the
 // receiver he guards (his man assignment, or the zone receiver he is tracking at the catch), Air Brake activates if he is within 8
 // yards of that receiver (measured at the completed catch) and able; never on the charge-filling play. A frontal wind displaces the
 // receiver 5 / 6.5 / 8 / 10 yards by mastery OPPOSITE the receiver's movement vector (lateral crossing routes included); the ball
@@ -19,7 +20,7 @@
 // guarded catch is the live activation (gated: a denied start preserves the bar); pass-breakup charges are in-play charge gains
 // (gated).
 import { registerAbility } from './registry.js';
-import { byMastery, able, pushSafely } from './common.js';
+import { byMastery, able, pushSafely, passDefended } from './common.js';
 import { E as $E } from '../../core/english.js';
 
 export const PBUS = 3, RANGE = 8;
@@ -43,7 +44,7 @@ export default registerAbility({
     },
     playEnd(ctx, self) {
       const st = ctx.state(self); if (self.team !== 'def' || ctx.twoPoint || self.ab?.fired) return;
-      if (ctx.stats.pbuBy === self.slot && !ctx.stats.interceptor && ctx.canGainCharge(self)) st.charges = Math.min(PBUS, st.charges + 1);
+      if (passDefended(ctx.stats, self.slot) && ctx.canGainCharge(self)) st.charges = Math.min(PBUS, st.charges + 1); // R-10: passes defended, not breakups alone
     },
   },
 });

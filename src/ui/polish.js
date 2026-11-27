@@ -176,6 +176,8 @@ export function mountPolish(root,ctx,name,Router) {
   }
   for(const node of root.querySelectorAll('.hl[title], .chip[title], .fat-pip[title], .boost[title]')){
     if(node.closest('button'))continue;
+    // UI feedback 2026-11-25: no ⓘ beside a captain's "C" badge, nor inside a depth-chart row (it crowded the name, fatigue and slot tag).
+    if(node.matches('.cap-badge')||node.closest('.dc-row'))continue;
     const help=document.createElement('button');help.className='btn small polish-info info-mark';help.type='button';help.dataset.polish='explain';help.dataset.info=node.title;help.innerHTML=infoIcon();help.setAttribute('aria-label',node.title);node.after(help);
   }
   const applyFilters=()=>{

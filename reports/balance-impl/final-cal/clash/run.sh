@@ -1,0 +1,5 @@
+cd /home/claude/gb-impl
+for f in tempestra elderoot; do node tools/balance-audit/clash-legendary-options.mjs --only=$f --n=3000 --json=/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/clash/$f-A.json; node tools/balance-audit/clash-legendary-options.mjs --only=$f --n=3000 --variant=X --json=/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/clash/$f-X.json; done
+node tools/balance-audit/clash-legendary-options.mjs --only=cerebrix --n=8000 --split=status --json=/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/clash/cerebrix-A.json; node tools/balance-audit/clash-legendary-options.mjs --only=cerebrix --n=8000 --split=status --variant=X --json=/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/clash/cerebrix-X.json
+for f in glacivern nyxshade; do node tools/balance-audit/clash-legendary-options.mjs --only=$f --n=3000 --json=/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/clash/$f-A.json; done
+echo done

@@ -1,0 +1,332 @@
+{
+ "groups": [
+  {
+   "label": "rookie-q4",
+   "files": [
+    "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/fr/rookie-q4-s3.json",
+    "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/fr/rookie-q4-s4.json"
+   ],
+   "byYear": {
+    "1": {
+     "ai": 49.9,
+     "gym": 52.3,
+     "ord": 48.4,
+     "gap": 3.9,
+     "grew": 3.5
+    },
+    "5": {
+     "ai": 59.5,
+     "gym": 61.3,
+     "ord": 58.4,
+     "gap": 2.8,
+     "grew": 1.5
+    },
+    "10": {
+     "ai": 60.8,
+     "gym": 61.4,
+     "ord": 60.4,
+     "gap": 1,
+     "grew": -0.4
+    },
+    "15": {
+     "ai": 60.4,
+     "gym": 62.1,
+     "ord": 59.3,
+     "gap": 2.8,
+     "grew": 0
+    }
+   },
+   "ownerWinPct": 35.7,
+   "ownerByBlock": {
+    "1-5": 52.1,
+    "6-10": 22.1,
+    "11-15": 32.9
+   },
+   "titles": {
+    "total": 30,
+    "gym": 20,
+    "gymShare": 66.7
+   },
+   "replenishment": {
+    "drafted": {
+     "n": 2603,
+     "ovr": 36.2,
+     "gym": 35.7,
+     "ord": 36.5
+    },
+    "signed:generated": {
+     "n": 806,
+     "ovr": 38.3,
+     "gym": 38.2,
+     "ord": 38.3
+    },
+    "signed:pool": {
+     "n": 311,
+     "ovr": 45,
+     "gym": 45.4,
+     "ord": 44.8
+    },
+    "signed:waivers": {
+     "n": 164,
+     "ovr": 71.9,
+     "gym": 71.8,
+     "ord": 72.1
+    }
+   },
+   "development": {
+    "all": 1.4,
+    "age19to23": 1.8,
+    "age24to27": 1.8,
+    "age28plus": 0.2,
+    "gym": 1.3,
+    "ord": 1.4
+   }
+  },
+  {
+   "label": "rookie-q7",
+   "files": [
+    "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/fr/rookie-q7-s3.json",
+    "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/fr/rookie-q7-s4.json"
+   ],
+   "byYear": {
+    "1": {
+     "ai": 48.8,
+     "gym": 50.6,
+     "ord": 47.6,
+     "gap": 3,
+     "grew": 3.7
+    },
+    "5": {
+     "ai": 59.3,
+     "gym": 60.8,
+     "ord": 58.4,
+     "gap": 2.3,
+     "grew": 1.7
+    },
+    "10": {
+     "ai": 61.1,
+     "gym": 62,
+     "ord": 60.6,
+     "gap": 1.4,
+     "grew": 0
+    },
+    "15": {
+     "ai": 61,
+     "gym": 62.3,
+     "ord": 60.3,
+     "gap": 2,
+     "grew": 0.2
+    }
+   },
+   "ownerWinPct": 50,
+   "ownerByBlock": {
+    "1-5": 62.1,
+    "6-10": 37.9,
+    "11-15": 50
+   },
+   "titles": {
+    "total": 30,
+    "gym": 15,
+    "gymShare": 50
+   },
+   "replenishment": {
+    "drafted": {
+     "n": 2604,
+     "ovr": 36.2,
+     "gym": 35.7,
+     "ord": 36.5
+    },
+    "signed:pool": {
+     "n": 316,
+     "ovr": 47.1,
+     "gym": 46.3,
+     "ord": 47.7
+    },
+    "signed:generated": {
+     "n": 807,
+     "ovr": 37.6,
+     "gym": 35.7,
+     "ord": 38.3
+    },
+    "signed:waivers": {
+     "n": 162,
+     "ovr": 72.3,
+     "gym": 73.2,
+     "ord": 71.6
+    }
+   },
+   "development": {
+    "all": 1.4,
+    "age19to23": 1.8,
+    "age24to27": 1.8,
+    "age28plus": 0.3,
+    "gym": 1.3,
+    "ord": 1.5
+   }
+  },
+  {
+   "label": "pro",
+   "files": [
+    "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/fr/pro-s3.json",
+    "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/fr/pro-s4.json"
+   ],
+   "byYear": {
+    "1": {
+     "ai": 52.7,
+     "gym": 55.7,
+     "ord": 50.9,
+     "gap": 4.8,
+     "grew": 4.6
+    },
+    "5": {
+     "ai": 62.3,
+     "gym": 64.5,
+     "ord": 60.9,
+     "gap": 3.5,
+     "grew": 1.6
+    },
+    "10": {
+     "ai": 62.5,
+     "gym": 63.5,
+     "ord": 61.9,
+     "gap": 1.6,
+     "grew": 0.1
+    },
+    "15": {
+     "ai": 62.9,
+     "gym": 63.2,
+     "ord": 62.7,
+     "gap": 0.6,
+     "grew": 0.3
+    }
+   },
+   "ownerWinPct": 36,
+   "ownerByBlock": {
+    "1-5": 45,
+    "6-10": 33.6,
+    "11-15": 29.3
+   },
+   "titles": {
+    "total": 30,
+    "gym": 24,
+    "gymShare": 80
+   },
+   "replenishment": {
+    "signed:generated": {
+     "n": 742,
+     "ovr": 42,
+     "gym": 41.9,
+     "ord": 42.1
+    },
+    "drafted": {
+     "n": 2604,
+     "ovr": 35.9,
+     "gym": 35.5,
+     "ord": 36.2
+    },
+    "signed:pool": {
+     "n": 328,
+     "ovr": 47.9,
+     "gym": 51.7,
+     "ord": 46
+    },
+    "signed:waivers": {
+     "n": 215,
+     "ovr": 70.6,
+     "gym": 71.2,
+     "ord": 70.2
+    }
+   },
+   "development": {
+    "all": 1.4,
+    "age19to23": 2,
+    "age24to27": 1.9,
+    "age28plus": -0.1,
+    "gym": 1.2,
+    "ord": 1.5
+   }
+  },
+  {
+   "label": "allstar",
+   "files": [
+    "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/fr/allstar-s3.json",
+    "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/fr/allstar-s4.json"
+   ],
+   "byYear": {
+    "1": {
+     "ai": 56.7,
+     "gym": 59,
+     "ord": 55.3,
+     "gap": 3.7,
+     "grew": 5
+    },
+    "5": {
+     "ai": 63.5,
+     "gym": 64.8,
+     "ord": 62.7,
+     "gap": 2.1,
+     "grew": 0.7
+    },
+    "10": {
+     "ai": 63,
+     "gym": 63.4,
+     "ord": 62.8,
+     "gap": 0.6,
+     "grew": 0.3
+    },
+    "15": {
+     "ai": 64,
+     "gym": 64.7,
+     "ord": 63.5,
+     "gap": 1.2,
+     "grew": 0
+    }
+   },
+   "ownerWinPct": 21.9,
+   "ownerByBlock": {
+    "1-5": 31.4,
+    "6-10": 20,
+    "11-15": 14.3
+   },
+   "titles": {
+    "total": 30,
+    "gym": 23,
+    "gymShare": 76.7
+   },
+   "replenishment": {
+    "drafted": {
+     "n": 2604,
+     "ovr": 35.9,
+     "gym": 35.6,
+     "ord": 36
+    },
+    "signed:pool": {
+     "n": 362,
+     "ovr": 49.5,
+     "gym": 51.6,
+     "ord": 48
+    },
+    "signed:generated": {
+     "n": 644,
+     "ovr": 45.2,
+     "gym": 43.1,
+     "ord": 46
+    },
+    "signed:waivers": {
+     "n": 258,
+     "ovr": 72.3,
+     "gym": 74,
+     "ord": 71.3
+    }
+   },
+   "development": {
+    "all": 1.3,
+    "age19to23": 2.2,
+    "age24to27": 1.7,
+    "age28plus": -0.3,
+    "gym": 1.2,
+    "ord": 1.4
+   }
+  }
+ ]
+}

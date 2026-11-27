@@ -75,7 +75,7 @@ Fixed3 catches,5-yard radius,3 distinct shots,40% current-speed loss at all4 mas
 
 Ability ID: `WIN-06-C`. Category: Signature action.
 
-Tempestra; legendary; WR; Clash archetype Disruptor → Disruptor. Once per Clash own normal action replaces attack if enemy front active has a ready, repeatable signature.
+Tempestra; legendary; WR; Clash archetype Disruptor → Disruptor. Once per Clash, at its own normal action, if the enemy front active has a ready, repeatable signature: the restriction is cast IN ADDITION to the ordinary attack, which follows in the same turn (owner decision F-05, 2026-11-26; it no longer replaces the attack).
 
 Once normal action temporarily restricts enemy active to ordinary attacks without cooldown extension
 
@@ -83,11 +83,11 @@ Source: workbook v18. Apply the later shared overrides in [Approved Rules](../AP
 
 ### Trigger / eligibility
 
-Tempestra; legendary; WR; Clash archetype Disruptor → Disruptor. Once per Clash own normal action replaces attack if enemy front active has a ready, repeatable signature.
+Tempestra; legendary; WR; Clash archetype Disruptor → Disruptor. Once per Clash, at its own normal action, if the enemy front active has a ready, repeatable signature: the restriction is cast IN ADDITION to the ordinary attack, which follows in the same turn (owner decision F-05, 2026-11-26; it no longer replaces the attack).
 
 ### Targets / placement
 
-Current enemy front active, lock monster identity.
+Current enemy front active, lock beast identity.
 
 ### Core resolution
 

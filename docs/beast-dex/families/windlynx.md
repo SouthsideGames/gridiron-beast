@@ -35,15 +35,15 @@ These are ordinary non-Apex profiles. Apex has separate 10–15 starting ratings
 
 Ability ID: `WIN-04-F`. Category: Zone.
 
-Galyx; uncommon Wind Safety.2 personal pass breakups charge bar; one credit per breakup event. Next eligible defensive scrimmage pre-play creates lanes while source able, before BOTH play selections.
+Galyx; uncommon Wind Safety. 2 passes defended charge bar (a personal pass breakup, or an incompletion thrown at the receiver he covers; balance audit R-10, 2026-11-25); one credit per play. Next eligible defensive scrimmage pre-play creates lanes while source able, before BOTH play selections.
 
-PBU charge creates paired stationary sideline Wind lanes at next eligible defensive snap
+Pass-defended charge creates paired stationary sideline Wind lanes at next eligible defensive snap
 
 Source: workbook v18. Apply the later shared overrides in [Approved Rules](../APPROVED_RULES.md) and the Task 8 specification.
 
 ### Trigger / eligibility
 
-Galyx; uncommon Wind Safety.2 personal pass breakups charge bar; one credit per breakup event. Next eligible defensive scrimmage pre-play creates lanes while source able, before BOTH play selections.
+Galyx; uncommon Wind Safety. 2 passes defended charge bar (a personal pass breakup, or an incompletion thrown at the receiver he covers; balance audit R-10, 2026-11-25); one credit per play. Next eligible defensive scrimmage pre-play creates lanes while source able, before BOTH play selections.
 
 ### Targets / placement
 
@@ -71,7 +71,7 @@ Two pale teal bordered gust lanes along sidelines; readable ball, yard marks and
 
 ### Progression / notes
 
-Lifetime1 /2 /2 /3 completed defensive scrimmage plays by mastery INCLUDING creation play. Charge2 PBUs, geometry and20% strength fixed. Requires PBU charge, source availability, field-pair lifetime, snap geometry/reveal and halftime cleanup. Design closed; bounds, replay and balance testing remain.
+Lifetime1 /2 /2 /3 completed defensive scrimmage plays by mastery INCLUDING creation play. Charge 2 passes defended (R-10), geometry and20% strength fixed. Requires PBU charge, source availability, field-pair lifetime, snap geometry/reveal and halftime cleanup. Design closed; bounds, replay and balance testing remain.
 
 ## Beast Clash: Second Wind
 

@@ -15,7 +15,7 @@
 // Nothing here draws from the franchise generator: the evaluation is a function of the monster (personality, career stage), the
 // club (roster, results, cap) and the terms, so the outcome of a negotiation is reproducible. The tie-break value is a saved hash.
 import { monsterOverall, salaryFor, ROSTER_MAX } from '../data/monsters.js';
-import { tierById } from '../data/league.js';
+import { tierById, tierCap } from '../data/league.js';
 import { hashString } from '../core/rng.js';
 import { renewalAsk } from './contracts.js';
 import { GROUP_SLOTS } from './roster.js';
@@ -52,7 +52,7 @@ export function registerOwnerHooks(h) { Object.assign(HOOKS, h); }
 export const isOwner = (f, club) => club === f.club;
 export const rosterOf = (f, club) => (isOwner(f, club) ? f.roster : clubRoster(f, club));
 export const allClubs = (f) => [f.club, ...(hasLeague(f) ? leagueClubs(f).slice().sort() : [])];
-export const capOf = (f, club) => (isOwner(f, club) ? (HOOKS.capFor ? HOOKS.capFor(f) : tierById(f.tier).cap) : tierById(f.tier).cap);
+export const capOf = (f, club) => (isOwner(f, club) ? (HOOKS.capFor ? HOOKS.capFor(f) : tierCap(f)) : tierCap(f));
 /** What a club has committed against league year `ly`: monsters (protected exempt for AI clubs, owner D1), staff, and staff charges. */
 export function committed(f, club, ly = leagueYear(f)) {
   const owner = isOwner(f, club); const current = ly === leagueYear(f);

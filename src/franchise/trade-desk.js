@@ -121,6 +121,9 @@ function evaluateProposalNow(f, prop, env) {
   const short = tp.find((c) => c.startsWith('short:')); if (short) block('position', `${$t('franchise.the_would_be_short_of_starters', { team, slice: short.slice(6) })}`);
   const roomT = env.room(team), roomAfter = roomT + get.reduce((s, m) => s + (m.salary || 0), 0) - give.reduce((s, m) => s + (m.salary || 0), 0);
   if (roomAfter < Math.min(0, roomT)) block('cap', `${$t('franchise.the_cannot_fit_the_salary_cr', { team, money: money(-roomAfter) })}`);
+  // D-1 (owner 2026-11-26): while the owner is over the cap, a trade may not add to his payroll (the same rule the AI clubs follow above).
+  const roomMe = env.ownerRoom, meAfter = roomMe + give.reduce((s, m) => s + (m.salary || 0), 0) - get.reduce((s, m) => s + (m.salary || 0), 0);
+  if (roomMe < 0 && meAfter < roomMe) block('cap', `${$t('franchise.over_cap_no_additions', { over: money(-roomMe) })}`);
   // 4. their lineup
   // A starter leaves only if the man who takes his place is within the gap — and what you send them in the same proposal counts: a like-for-like swap or an upgrade at the position is a replacement, not a hole.
   for (const m of get) {

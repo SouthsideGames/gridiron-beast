@@ -1,6 +1,6 @@
 // N9d: rules.preparePreChoice saves the candidate from the visible look; playStart only validates that saved monster and its final assignment. Historical snap-selection notes below are superseded.
 // PSY-03-F Foresight (cerebrix, QB). Task 8 M3 (targeted effect).
-// Contract (Dex): while ready, one initially aligned opposing LB within 3 yards of the line is marked at random (both sides see the
+// Contract (Dex; depth revised to 5 yards by balance audit R-10): while ready, one initially aligned opposing LB within 5 yards of the line is marked at random (both sides see the
 // candidate: a 'foresight_mark' event). At the snap the mark is validated: if the marked LB actually blitzes and Cerebrix is able, a
 // fixed 50% roll attempts Confused for the current play: 20% effective Awareness reduction through the shared status gate (a different
 // status blocks; the same status follows the shared stronger/equal policy). The application chance and the penalty are separate and
@@ -9,7 +9,7 @@
 // blocks; no eligible blitz or an unable source preserves readiness. The Confused is current-play only (it expires at the whistle).
 // Choices where the contract is silent or the engine has no slot for it (listed in the M3 report):
 //  - the engine has no pre-choice phase: the candidate is drawn from the abilities' own stream at the snap, among the LBs whose initial
-//    alignment (the drawn formation spot, before the snap) is within 3 yards of the line; the candidate never depends on the call, the
+//    alignment (the drawn formation spot, before the snap) is within FORESIGHT.depth (5) yards of the line; the candidate never depends on the call, the
 //    audible or any later movement, and only the final assignment at the snap decides "blitzes";
 //  - "blitzes" is the engine's pass-rush assignment for a linebacker (rush or contain, the same reading as the legacy Ambush card);
 //  - "able": not immobilised (no stun, not sitting the play out);
@@ -20,7 +20,9 @@ import { registerAbility } from './registry.js';
 import { positionOf } from '../../data/personnel.js';
 import { E as $E } from '../../core/english.js';
 
-export const FORESIGHT = Object.freeze({ chance: 0.5, awarenessPct: 20, depth: 3 });
+// R-10 (balance audit, 2026-11-25): the mark depth is 5 yards, the box. At 3 yards only 12 of 258 LB alignments in the book qualified (the
+// book sets LBs at 3.5-4.5), so Foresight never marked anyone; at 5 every box linebacker qualifies (257 of 258; one 6-yard LB does not).
+export const FORESIGHT = Object.freeze({ chance: 0.5, awarenessPct: 20, depth: 5 });
 const COOLDOWN = [6, 5, 4, 3];
 const BLITZ = new Set(['rush', 'contain']);
 

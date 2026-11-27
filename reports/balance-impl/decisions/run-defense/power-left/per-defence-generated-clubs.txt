@@ -1,0 +1,11 @@
+base
+power_left   scrape_exchange:24.80 pinch_spill:28.16 edge_contain:14.95 over_front:7.77 bear_front:6.34 run_wall:4.05 cover_3:10.03 cover_1:7.75 cover_0:15.93 zone_blitz:5.60
+power_right  scrape_exchange:4.30 pinch_spill:4.05 edge_contain:12.83 over_front:5.49 bear_front:11.02 run_wall:8.65 cover_3:8.29 cover_1:5.53 cover_0:12.54 zone_blitz:8.91
+mirror applied {"RG":[-0.6,1.7],"LG":[-0.6,-1.7],"C":[-0.4,0],"QB":[-1.6,0],"RB":[-6.5,0],"TE":[-0.6,-3.2],"WR1":[-0.6,18]}
+power_left   scrape_exchange:5.30 pinch_spill:5.97 edge_contain:10.01 over_front:5.95 bear_front:13.59 run_wall:9.32 cover_3:8.24 cover_1:4.98 cover_0:14.44 zone_blitz:7.29
+patch wham {"a":"pull","via":[-1.4,1.2],"to":[1,-2.6],"points":[[-0.6,3.2],[-1.4,1.2],[1,-2.6]]}
+power_left   scrape_exchange:27.31 pinch_spill:17.45 edge_contain:17.33 over_front:5.53 bear_front:20.27 run_wall:10.95 cover_3:7.30 cover_1:8.16 cover_0:19.31 zone_blitz:7.29
+patch hinge {"a":"run_block","to":[0.6,2.6],"points":[[-0.6,3.2],[0.6,2.6]]}
+power_left   scrape_exchange:24.20 pinch_spill:28.16 edge_contain:17.48 over_front:7.77 bear_front:6.34 run_wall:4.05 cover_3:10.03 cover_1:7.77 cover_0:15.93 zone_blitz:5.66
+power_left   scrape_exchange:17.30 pinch_spill:14.30 edge_contain:13.34 over_front:6.24 bear_front:6.71 run_wall:4.16 cover_3:9.33 cover_1:5.91 cover_0:10.27 zone_blitz:5.11
+power_left   scrape_exchange:24.84 pinch_spill:28.16 edge_contain:15.54 over_front:7.35 bear_front:6.09 run_wall:3.40 cover_3:10.31 cover_1:7.87 cover_0:16.19 zone_blitz:5.66

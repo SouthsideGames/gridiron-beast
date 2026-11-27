@@ -11,8 +11,10 @@ import * as FR from '../core/fraction.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, POSITION_WEIGHTS } from '../data/personnel.js';
 import { isAgeless } from './league-registry.js';
 import { CURVE, trueOnset, technicalOffset, peakWindowAge, isPhysical, physLoss, techLoss, drawLoss, transitionYears, SEVERE_INJURY_PHYSICAL, ATTRIBUTE_FLOOR } from '../data/aging.js';
-/** Injury-risk multiplier for a monster playing a secondary position. */
-export const OUT_OF_POSITION_RISK = 1.75;
+/** Injury-risk multiplier for a monster playing away from his position. Balance audit R-6 (owner decision 2026-11-25): an emergency cover
+ *  plays on his own attributes with no familiarity penalty unless testing shows one is needed, so this is 1 (it was 1.75 for the old
+ *  secondary positions, unreachable since the one-position rule). Kept as a named value so a future ruling can set it. */
+export const OUT_OF_POSITION_RISK = 1;
 
 const norm = (v) => Math.max(1, Math.min(99, v ?? 60)) / 99;
 

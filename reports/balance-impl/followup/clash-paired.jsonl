@@ -1,0 +1,27 @@
+{"family":"tempestra","ability":"Eye of the Storm","variant":"B","battles":3000,"winOnBase":53,"winOnVariant":58.2,"diffPts":5.17,"se":0.51,"changedBattles":245}
+{"family":"glacivern","ability":"Deep Winter","variant":"B","battles":3000,"winOnBase":72.1,"winOnVariant":72.6,"diffPts":0.47,"se":0.24,"changedBattles":52}
+{"family":"nyxshade","ability":"Eclipse Theft","variant":"B","battles":3000,"winOnBase":68.1,"winOnVariant":70.5,"diffPts":2.47,"se":0.39,"changedBattles":142}
+{"family":"elderoot","ability":"Root Communion","variant":"B","battles":3000,"winOnBase":33.1,"winOnVariant":39,"diffPts":5.9,"se":0.61,"changedBattles":347}
+{"family":"tempestra","ability":"Eye of the Storm","variant":"C","battles":3000,"winOnBase":53,"winOnVariant":53.7,"diffPts":0.67,"se":0.27,"changedBattles":66}
+{"family":"glacivern","ability":"Deep Winter","variant":"C","battles":3000,"winOnBase":72.1,"winOnVariant":72.4,"diffPts":0.23,"se":0.1,"changedBattles":9}
+{"family":"nyxshade","ability":"Eclipse Theft","variant":"C","battles":3000,"winOnBase":68.1,"winOnVariant":68.1,"diffPts":0.07,"se":0.16,"changedBattles":24}
+{"family":"elderoot","ability":"Root Communion","variant":"C","battles":3000,"winOnBase":33.1,"winOnVariant":31.8,"diffPts":-1.27,"se":0.43,"changedBattles":164}
+{"family":"tempestra","ability":"Eye of the Storm","variant":"X","battles":3000,"winOnBase":53,"winOnVariant":57.5,"diffPts":4.5,"se":0.48,"changedBattles":211}
+{"family":"glacivern","ability":"Deep Winter","variant":"X","battles":3000,"winOnBase":72.1,"winOnVariant":72.3,"diffPts":0.2,"se":0.15,"changedBattles":20}
+{"family":"nyxshade","ability":"Eclipse Theft","variant":"X","battles":3000,"winOnBase":68.1,"winOnVariant":67.4,"diffPts":-0.63,"se":0.36,"changedBattles":117}
+{"family":"elderoot","ability":"Root Communion","variant":"X","battles":3000,"winOnBase":33.1,"winOnVariant":40.5,"diffPts":7.43,"se":0.66,"changedBattles":405}
+{"family":"cerebrix","ability":"Foresight","variant":"X","battles":8000,"winOnBase":40.7,"winOnVariant":42.3,"diffPts":1.59,"se":0.22,"changedBattles":321}
+{"family":"boulderox","ability":"Unbroken Charge","variant":"X","battles":8000,"winOnBase":37.8,"winOnVariant":36.6,"diffPts":-1.13,"se":0.15,"changedBattles":152}
+{"family":"icehorn","ability":"Snowdrift Shelter","variant":"X","battles":8000,"winOnBase":38.6,"winOnVariant":36.6,"diffPts":-1.95,"se":0.38,"changedBattles":950}
+{"family":"astralux","ability":"Astral Strike","variant":"X","battles":2000,"winOnBase":81.3,"winOnVariant":67.9,"diffPts":-13.35,"se":0.91,"changedBattles":369}
+{"family":"stoneguard","ability":"Bank Shot","variant":"X","battles":2000,"winOnBase":68.3,"winOnVariant":68,"diffPts":-0.3,"se":0.25,"changedBattles":26}
+{"family":"ironjaw","ability":"Iron Bite","variant":"X","battles":2000,"winOnBase":53.2,"winOnVariant":53.1,"diffPts":-0.05,"se":0.15,"changedBattles":9}
+{"family":"voltfang","ability":"Phase Strike","variant":"X","battles":2000,"winOnBase":51.1,"winOnVariant":50.9,"diffPts":-0.25,"se":0.13,"changedBattles":7}
+{"family":"terrabull","ability":"Stone Divide","variant":"X","battles":2000,"winOnBase":44.5,"winOnVariant":43.9,"diffPts":-0.6,"se":0.25,"changedBattles":26}
+{"family":"rockram","ability":"Rubble Reprisal","variant":"X","battles":2000,"winOnBase":38.9,"winOnVariant":38.5,"diffPts":-0.45,"se":0.18,"changedBattles":13}
+{"family":"voltfin","ability":"Arc Rebound","variant":"X","battles":2000,"winOnBase":35.7,"winOnVariant":35.5,"diffPts":-0.2,"se":0.14,"changedBattles":8}
+{"family":"mossclaw","ability":"Spore Detonation","variant":"X","battles":2000,"winOnBase":34.6,"winOnVariant":34.8,"diffPts":0.1,"se":0.14,"changedBattles":8}
+{"family":"reefclaw","ability":"Shell Renewal","variant":"X","battles":2000,"winOnBase":49.3,"winOnVariant":48.6,"diffPts":-0.65,"se":0.21,"changedBattles":17}
+{"family":"snowmoth","ability":"Fresh Start","variant":"X","battles":2000,"winOnBase":29.9,"winOnVariant":30.4,"diffPts":0.45,"se":0.25,"changedBattles":25}
+{"family":"flicker","ability":"Lightning Rod","variant":"X","battles":2000,"winOnBase":29.9,"winOnVariant":29.9,"diffPts":0.05,"se":0.05,"changedBattles":1}
+{"family":"lumen","ability":"Clear Light","variant":"X","battles":2000,"winOnBase":31.8,"winOnVariant":31.6,"diffPts":-0.1,"se":0.07,"changedBattles":2}

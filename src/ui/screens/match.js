@@ -29,7 +29,7 @@ import { rngFromState } from '../../core/rng.js';
 import { PLAYS } from '../../data/playbook.js';
 import { TRAINING_FOCI } from '../../data/staff.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
-import { MatchCamera } from '../match-camera.js';
+import { MatchCamera, ZoomCrop } from '../match-camera.js';
 import { fieldSvg, fieldDraw, fieldViewBox, presnapLook, cameraFor, cameraFrom, fitFieldSpan, fieldSpan } from '../field-view.js';
 import { playCardSvg } from '../play-art.js';
 import { monsterSprite, portraitSprite } from '../pixel-monster.js';
@@ -62,6 +62,8 @@ export let startSundayGame = null;
 
 // Owner revision 2026-11-15 (Prism Break): when the player's charged Prismara faces two or more enemy zones, the play-call screen
 // lists them (nearest first) and outlines them on the field; nothing is removed until the player picks or snaps (Auto = nearest).
+/** The zoom button's magnifier: + to zoom in, − to zoom back out (owner play test 2026-11-26). */
+const zoomIcon = (zoomed) => `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><line x1="15" y1="15" x2="21" y2="21" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><line x1="7" y1="10" x2="13" y2="10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>${zoomed ? '' : '<line x1="10" y1="7" x2="10" y2="13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>'}</svg>`;
 function prismPickerHtml(s) {
   const c = s.t8?.preChoice?.prismChoice; if (!c?.options?.length) return '';
   const btn = (id, label, primary) => `<button class="btn small ${primary ? 'primary' : 'ghost'}" data-action="prismpick" data-choice="${esc(id)}" style="min-height:44px">${esc(label)}</button>`;
@@ -77,6 +79,7 @@ function prismOverlay(s, camera) {
 export function registerMatchScreens(Router, app) {
   let pregameTeam = 'mine';
   const autoCamera = new MatchCamera();
+  const zoomCrop = new ZoomCrop(); // the player's zoom button (owner play test 2026-11-26)
   let cameraRaf = null, cameraField = null, cameraSvg = null, cameraLastDraw = 0;
   function cameraOptions(f, field) {
     const G = f.game;
@@ -89,15 +92,30 @@ export function registerMatchScreens(Router, app) {
     const close = Math.abs(d) > 0.01 ? cameraFrom(close0.bottom + d * 15 / 46) : close0;
     const viewCamera = autoCamera.sample(close, { key: G.state, auto: G.auto && !G.state.finished && !anim?.replay, closeView: G.autoCloseView, reducedMotion: f.settings.reducedMotion || !!anim?.replay, pad: standsDepth() ? 3.5 : 0 }); // zoomed out: the white all round with the goal posts on it; the stands in view are the two along the sidelines // zoomed out: the white all round, and the goal posts standing on it
     // Planner art is caller-projected in the close camera's coordinate space.
-    const underlay = field.underlay ? `<g transform="translate(0 ${viewCamera.top - close.top})">${field.underlay}</g>` : '';
+    // Owner play test 2026-11-26: the planner art is projected here, with the close camera the field is drawn with. It used to be
+    // projected when the screen was built; right after a play the banner changes the field box's height, the camera is refitted at the
+    // first draw, and the zone boxes stood off their spots until the next refresh.
+    const art = field.underlayAt ? field.underlayAt(close) : field.underlay;
+    const underlay = art ? `<g transform="translate(0 ${viewCamera.top - close.top})">${art}</g>` : '';
     return { ...field, viewCamera, underlay };
   }
   function drawMatchField(svg, field) {
     cameraField = field; cameraSvg = svg; cameraLastDraw = performance.now();
     if (fitFieldSpan(svg) && !anim) field = { ...field, camera: null }; // the box changed size: a new close camera at the new height (not mid-play)
-    const result = fieldDraw(svg, cameraOptions(app.f, field));
-    if (autoCamera.moving && cameraRaf == null) cameraRaf = requestAnimationFrame(tickCamera);
+    const opts = cameraOptions(app.f, field);
+    const result = fieldDraw(svg, opts);
+    applyFieldZoom(svg, opts);
+    if ((autoCamera.moving || zoomCrop.moving) && cameraRaf == null) cameraRaf = requestAnimationFrame(tickCamera);
     return result;
+  }
+  /** The zoom button's crop of the drawn close view: never in Auto (its own camera) or a replay; eased like Auto's zoom. */
+  const zoomAllowed = (f) => !!f?.game && !f.game.auto && !anim?.replay;
+  function applyFieldZoom(svg, o) {
+    const f = app.f; const amount = zoomCrop.sample(!!f?.settings?.fieldZoom && zoomAllowed(f), { reducedMotion: !!f?.settings?.reducedMotion });
+    if (amount <= 0.0001) { zoomCrop.focus = null; return; }
+    const vb = svg.viewBox.baseVal; const cam = o.viewCamera; const fr = o.frame;
+    const lat = (o.ballLat || 0) + (fr?.ball ? fr.ball[1] : 0), yard = (o.ballOn ?? 25) + (fr?.ball ? fr.ball[0] : 0);
+    svg.setAttribute('viewBox', zoomCrop.crop({ x: vb.x, y: vb.y, width: vb.width, height: vb.height }, amount, lat, cam.top - yard, { follow: !!(anim && fr) }));
   }
   function tickCamera(now) {
     cameraRaf = null;
@@ -135,7 +153,7 @@ export function registerMatchScreens(Router, app) {
       const gym = GYM_BY_CLUB[m.opponent]; const held = gym && F.badgeOf(f, m.opponent);
       return `<div class="pregame">${m.rival ? `<div class="rival-banner">${$t('match.rivalry_game')}<div class="muted" style="font-weight:600;font-size:12px">${$t('match.gm_all_time', { gm: esc(rv?.gm || ''), w: rv?.headToHead.w || 0, l: rv?.headToHead.l || 0 })}</div></div>` : m.playoff ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 ${esc(m.tag)}</div>` : ''}${gym ? `<div class="rival-banner" style="border-color:hsl(${TYPES[gym.element]?.hue ?? 120} 70% 55%);background:linear-gradient(90deg,hsl(${TYPES[gym.element]?.hue ?? 120} 40% 18%),hsl(${TYPES[gym.element]?.hue ?? 120} 30% 10%))">${held ? `${$t('match.held', { toUpperCase: esc(gym.badge).toUpperCase() })}` : `${$t('match.badge_game', { toUpperCase: esc(gym.badge).toUpperCase() })}`}<div class="muted" style="font-weight:600;font-size:12px">${$t('match.gym', { name: esc(gym.coach.name), element: esc(gym.element), held: held ? '' : $t('match.win_to_earn_it_no_replays') })}</div></div>` : ''}
         ${(() => { const rec = (t) => { const r = f.season.records[t]; return r ? `${r.w}-${r.l}` : ''; }; const side = (team, label, who) => `<div class="mu-club ${who}">${teamLogo(team.name, 46, { cls: 'team-logo mu-logo' })}<div class="mu-abbr" style="color:${teamInk(team.name, team.color)}">${esc(team.abbr)}</div><div class="mu-name">${esc(team.name)}</div><div class="dim mono">${$t('match.ovr', { rec: esc(rec(team.name)), teamOverall: teamOverall(team) })}</div><div class="chip">${label}</div></div>`;
-          return `<div class="matchup-head md-hero ${m.playoff ? 'playoff' : ''}" style="--mine:${mine.color};--theirs:${theirs.color}">${side(mine, m.playerSide === 'home' ? $t('match.home') : $t('match.away'), 'mine')}<div class="mu-vs"><div class="mu-vs-word">VS</div><div class="mu-tag">${esc(m.tag || '')}</div></div>${side(theirs, m.playerSide === 'home' ? $t('match.away') : $t('match.home'), 'theirs')}</div>`; })()}
+          return `<div class="matchup-head md-hero ${m.playoff ? 'playoff' : ''}" style="--mine:${mine.color};--theirs:${theirs.color}">${side(mine, m.playerSide === 'home' ? $t('match.home') : $t('match.away'), 'mine')}<div class="mu-vs"><div class="mu-vs-word">VS</div><div class="mu-tag">${(m.tag || '').includes(' · ') ? (m.tag || '').split(' · ').map((t) => `<span class="mu-tag-line">${esc(t)}</span>`).join('') : esc(m.tag || '')}</div></div>${side(theirs, m.playerSide === 'home' ? $t('match.away') : $t('match.home'), 'theirs')}</div>`; })()}
         ${(() => { const v = F.sundayVenue(f); if (!v) return ''; const n = (team) => v.type ? Object.values({ ...team.offense, ...team.defense }).filter((p, i, arr) => p?.type === v.type && arr.findIndex((q) => q?.id === p.id) === i).length : null; return venueHtml(v, { mine: n(mine), theirs: n(theirs) }); })()}
         ${(() => { const hn = m.playerSide === 'home' ? mine.name : theirs.name, an = m.playerSide === 'home' ? theirs.name : mine.name; const k = gameKits(hn, an); if (!k.home || !k.away) return ''; const fig = (kit) => `<figure>${kitJersey(kit, 64)}<figcaption>${esc(TEAM_META[kit.club].abbr)} · ${({ home: $t('match.kit_home'), away: $t('match.kit_away'), alt: $t('match.kit_alt') })[kit.kind]}</figcaption></figure>`; return `<div class="panel kit-panel"><div class="muted" style="margin-bottom:4px">${$t('match.uniforms_today')}</div><div class="kit-pair">${fig(k.away)}${fig(k.home)}</div></div>`; })()}
         ${pregameTypeReport(mine,theirs)}${talkHtml(f)}
@@ -257,6 +275,7 @@ export function registerMatchScreens(Router, app) {
         mode: () => { const G = f.game; G.mode = G.mode === 'key' ? 'full' : 'key'; app.save(); Router.render(); },
         auto: () => { const G = f.game; G.auto = !G.auto; G.autoCloseView = false; app.save(); if (!G.auto) { clearTimeout(autoTimer); autoTimer = null; } Router.render(); },
         autocamera: () => { f.game.autoCloseView = !f.game.autoCloseView; app.save(); refresh(f); },
+        fieldzoom: () => { f.settings.fieldZoom = !f.settings.fieldZoom; app.save(); const b = document.querySelector('[data-action="fieldzoom"]'); if (b) { b.setAttribute('aria-pressed', String(!!f.settings.fieldZoom)); b.setAttribute('aria-label', f.settings.fieldZoom ? $t('match.zoom_out') : $t('match.zoom_in')); b.innerHTML = zoomIcon(f.settings.fieldZoom); } if (cameraSvg?.isConnected && cameraField) drawMatchField(cameraSvg, cameraField); },
         autospeed: () => { cycleAutoSpeed(f); if(anim){const now=performance.now(),frames=(now-anim.start)/anim.msPerFrame;anim.msPerFrame=100/((f.settings.speed||1)*autoSpeed(f));anim.start=now-frames*anim.msPerFrame;} app.save(); Router.render(); },
         keymoment: () => simToKeyMoment(f),
         simfinal: async () => { if (!(await confirmSheet($t('match.let_the_coach_play_the_rest'), { title: $t('match.sim_to_final'), okLabel: $t('match.sim_it') }))) return; simToFinal(f); },
@@ -386,9 +405,14 @@ export function registerMatchScreens(Router, app) {
       const mine = s.possession === me;
       const plans = zonePlans(s, teams, me, mine ? look.myPlay : look.presnap.offensePlay.id, mine ? look.presnap.defensePlay.id : look.myPlay);
       const plan = plans.find((p) => p.key === G.zoneFocus) || plans[0];
-      field.underlay = zonePlannerOverlay(plan, s, cameraFor(s.ballOn), { reducedMotion: !!f.settings.reducedMotion });
+      field.zonePlan = plan;
     }
-    if (!anim && s.phase === 'scrimmage' && s.possession !== me) field.underlay = (field.underlay || '') + prismOverlay(s, cameraFor(s.ballOn));
+    // The planner art (zone placement, Prism Break targets) in a given camera's space: drawn with the camera the field is drawn with.
+    const zonePlan = field.zonePlan || null; const prism = !anim && s.phase === 'scrimmage' && s.possession !== me;
+    if (zonePlan || prism) {
+      field.underlayAt = (cam) => (zonePlan ? zonePlannerOverlay(zonePlan, s, cam, { reducedMotion: !!f.settings.reducedMotion }) : '') + (prism ? prismOverlay(s, cam) : '');
+      field.underlay = field.underlayAt(cameraFor(s.ballOn)); // the first paint (fieldSvg), before the box is measured
+    }
     if (presnapNow) presnapNow.field = field;
     // Task 8 (I4): who stands where in the drawn formation (the players' paint order: defense, then offense), for the inspect sheet
     inspectMap = null; inspectForm = null;
@@ -417,7 +441,8 @@ export function registerMatchScreens(Router, app) {
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? $t('match.your_ball') : $t('match.your_defense')}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? $t('match.home_2') : $t('match.away_2')}${G.mode === 'key' ? $t('match.key_moments_2') : ''}</span></div>
         ${edgeStrip(f, s, teams, me, pre8?.returning || [])}`;
     const wrapClass = `field-wrap${tdFlash}${venueClass(s.venue)}${anim?.replay ? ' replaying' : ''}`;
-    const over = `${s.finished && !anim ? finalCelebration(f, s, teams) : ''}${openingKickoff ? introPlateHtml(s.venue, esc) + kickoffCaptains(f, s, teams) : ''}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> ${$t('match.instant_replay_b_b', { label: esc(anim.replay.reason.label) })}</div><div class="replay-slow" aria-hidden="true">${$t('match.slow_mo')}</div>` : banner}${!anim && fresh && G.lastEvent?.turnover ? `<div class="turnover-cue" role="status">${esc(G.lastEvent.turnover)}</div>` : ''}`;
+    const zoomBtn = !G.auto && !anim?.replay ? `<button class="field-zoom" data-action="fieldzoom" aria-pressed="${!!f.settings.fieldZoom}" aria-label="${f.settings.fieldZoom ? $t('match.zoom_out') : $t('match.zoom_in')}">${zoomIcon(f.settings.fieldZoom)}</button>` : '';
+    const over = `${zoomBtn}${s.finished && !anim ? finalCelebration(f, s, teams) : ''}${openingKickoff ? introPlateHtml(s.venue, esc) + kickoffCaptains(f, s, teams) : ''}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> ${$t('match.instant_replay_b_b', { label: esc(anim.replay.reason.label) })}</div><div class="replay-slow" aria-hidden="true">${$t('match.slow_mo')}</div>` : banner}${!anim && fresh && G.lastEvent?.turnover ? `<div class="turnover-cue" role="status">${esc(G.lastEvent.turnover)}</div>` : ''}`;
     // N9c: a field the snap creates only if its creator is in the play (Runway, Bloom Break, Crosswind Rescue) is marked as conditional
     const warning = !anim ? (s.t8?.preChoice?.foresight || []).map((m) => `<div class="t8-conditional" role="note">${$t('match.foresight_is_marked_blitzing_risks_confused', { name: esc(findMonster(teams, m.targetMid)?.monster?.name || m.targetSlot) })}</div>`).join('') + (s.t8?.preChoice?.prism || []).map(() => `<div class="t8-conditional" role="note">${$t('match.prism_break_shattered_an_existing_enemy')}</div>`).join('') : '';
     const cond = !anim && pre8?.notes?.length ? `<div class="t8-conditional" role="note">${pre8.notes.map((n) => `<span class="${n.shown ? '' : 'held'}" data-ability="${esc(n.ability)}">◇ <b>${esc(n.name)}</b> ${n.shown ? `${$t('match.is_created_at_the_snap_only', { creator: esc(n.creator) })}` : `${$t('match.is_not_created_is_not_on', { creator: esc(n.creator) })}`}</span>`).join('')}</div>` : '';
@@ -596,7 +621,7 @@ export function registerMatchScreens(Router, app) {
     if (s.phase === 'kickoff' || s.phase === 'free_kick') return act(f, s.kickingTeam === me ? { kickoff: 'normal' } : {});
     if (s.phase === 'try') {
       if (s.tryTeam !== me) return act(f, {});
-      if (AI.tryDecision(s) === 'two') { const plays = teams[me].offensePlays.filter((id) => PLAYS[id].tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t))); G.selected.offense = plays[0] || teams[me].offensePlays[0]; return act(f, { tryChoice: 'two' }); }
+      if (AI.tryDecision(s, me, teams[me]) === 'two') { const plays = teams[me].offensePlays.filter((id) => PLAYS[id].tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t))); G.selected.offense = plays[0] || teams[me].offensePlays[0]; return act(f, { tryChoice: 'two' }); }
       return act(f, { tryChoice: 'kick' });
     }
     if (s.phase !== 'scrimmage') return act(f, {});
@@ -638,8 +663,11 @@ export function registerMatchScreens(Router, app) {
     if (s.finished && s.needsTiebreak && !s.winner) { const n = F.inPlayoffs(f) ? 5 : 3; return `<div class="match-actions"><div class="panel center"><h2>${$t('match.still_tied')}</h2><div class="muted">${$t('match.after_overtime', { name: esc(s.away.name), away: s.score.away, home: s.score.home, name2: esc(s.home.name) })}</div><p class="muted" style="margin:6px 0 0">${$t('match.a_b_v_beast_clash_b', { n, n2: n })}</p></div><button class="btn primary big block" data-action="otclash">${$t('match.overtime_beast_clash')}</button></div>`; }
     if (s.finished) return `<div class="match-actions"><div class="panel center"><h2>${s.winner === me ? $t('match.victory') : s.winner === null ? $t('match.tie') : $t('match.defeat')}</h2><div class="muted">${esc(s.away.name)} ${s.score.away}-${s.score.home} ${esc(s.home.name)}${s.tiebreak ? ` ${$t('match.ot_won_by_v_beast_clash', { size: s.tiebreak.size, size2: s.tiebreak.size })}` : s.ot ? ' (OT)' : ''}</div></div><button class="btn primary big block" data-action="finish">${$t('match.continue')}</button></div>`;
     if (G.lastEvent?.needsContinue) return `<div class="match-actions">${autoBar}${rpRow}<button class="btn primary big block" data-action="continue">${$t('match.continue')}</button></div>`;
+    const noKickNote = (text) => `<p class="muted center no-kicker-note" role="note" style="margin:0 0 6px;font-size:12px">⚠ ${text}</p>`; // A-3 (the key is looked up at the call, so the text check sees it)
     if (s.phase === 'kickoff' || s.phase === 'free_kick') {
       const weKick = s.kickingTeam === me;
+      // A-3 (owner 2026-11-26): a kicking team without an available kicker does not kick: the receiver starts at its own 20.
+      if (!R.kickerAvailable(s, teams[s.kickingTeam])) return `<div class="match-actions">${autoBar}${rpRow}${noKickNote($t('match.no_kicker_kickoff'))}<button class="btn primary big block" data-action="kickoff">${$t('match.continue')}</button></div>`;
       return `<div class="match-actions">${autoBar}${rpRow}${weKick ? `<div class="primary-row ${s.phase === 'kickoff' ? 'three' : ''}" style="grid-template-columns:${s.phase === 'kickoff' ? '2fr 1fr' : '1fr'}"><button class="btn primary big" data-action="kickoff">${s.phase === 'free_kick' ? $t('match.free_kick_2') : $t('match.kick_off')}</button>${s.phase === 'kickoff' ? `<button class="btn" data-action="onside">${$t('match.onside')}</button>` : ''}</div>` : `<button class="btn primary big block" data-action="kickoff">${$t('match.receive_the_kick')}</button>`}</div>`;
     }
     if (s.phase === 'try') {
@@ -650,8 +678,9 @@ export function registerMatchScreens(Router, app) {
       const near = (id) => PLAYS[id]?.tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t));
       // The short-yardage plays first, then the rest of the plan: a plan without one used to open an empty Choose Play sheet (owner 2026-11-24).
       const plan = teams[me].offensePlays.filter((id) => PLAYS[id]); const plays = [...plan.filter(near), ...plan.filter((id) => !near(id))];
-      return `<div class="match-actions compact-actions">${autoBar}<p class="muted center" style="margin:0;font-size:12px">${$t('match.touchdown_kick', { tryDecision: AI.tryDecision(s) === 'two' ? 'coach suggests two' : $t('match.coach_suggests_the_kick') })}</p>
-        <div class="primary-row" style="grid-template-columns:1fr 1fr"><button class="btn primary big" data-action="trykick">${$t('match.kick_pat_1')}</button><button class="btn big" data-action="trytwo">${$t('match.go_for_two')}</button></div>
+      const canKick = R.kickerAvailable(s, teams[me]); // A-3: without a kicker the try is a two-point conversion
+      return `<div class="match-actions compact-actions">${autoBar}${canKick ? `<p class="muted center" style="margin:0;font-size:12px">${$t('match.touchdown_kick', { tryDecision: AI.tryDecision(s) === 'two' ? 'coach suggests two' : $t('match.coach_suggests_the_kick') })}</p>` : noKickNote($t('match.no_kicker_try'))}
+        ${canKick ? `<div class="primary-row" style="grid-template-columns:1fr 1fr"><button class="btn primary big" data-action="trykick">${$t('match.kick_pat_1')}</button><button class="btn big" data-action="trytwo">${$t('match.go_for_two')}</button></div>` : `<button class="btn primary big block" data-action="trytwo">${$t('match.go_for_two')}</button>`}
         <div class="match-quick-actions"><button class="btn small" data-action="match-panel" data-panel="plays">${$t('playview.choose_play')}</button>${tryMore(substitutionStrip(f))}</div><div hidden data-match-panel="plays">${plays.length ? cards(plays, 'offense', G.selected.offense, null) : `<p class="muted" style="margin:4px 0 12px">${$t('match.no_play_can_be_run_for_the_try')}</p>`}</div></div>`;
     }
     // Scrimmage.
@@ -661,18 +690,20 @@ export function registerMatchScreens(Router, app) {
     const suggestion = AI.suggestPlay(s, teams[me], plan, side, G.tendencies[myBall ? me : them], teams[them], G.tendencies[me]);
     const selected = look.myPlay;
     let primary;
-    if (myBall && s.down === 4) {
+    const myKicker = R.kickerAvailable(s, teams[me]); // A-3
+    if (myBall && s.down === 4 && !myKicker) primary = `${noKickNote($t('match.no_kicker_fourth'))}<button class="btn primary big block" data-action="snap" ${selected ? '' : 'disabled'}>${$t('match.go_for_it')}</button>`;
+    else if (myBall && s.down === 4) {
       const fg = R.fieldGoalInfo(s, teams); const dec = AI.fourthDownDecision(s, teams[me]);
       primary = `<div class="primary-row three"><button class="btn ${dec === 'go' ? 'primary' : ''} big" data-action="snap" ${selected ? '' : 'disabled'}>${$t('match.go_for_it')}</button><button class="btn ${dec === 'punt' ? 'primary' : ''} big" data-action="punt">${$t('match.punt')}</button><button class="btn ${dec === 'fg' ? 'primary' : ''} big" data-action="fg">${$t('match.fg_yd_br', { distance: fg.distance })}<small>${Math.round(fg.chance * 100)}%</small></button></div>`;
     } else primary = `<button class="btn primary big block" data-action="snap" ${selected ? '' : 'disabled'}>${myBall ? (selected ? `${$t('match.snap', { name: esc(PLAYS[selected].name) })}` : $t('match.pick_a_play')) : (selected ? `${$t('match.set_defense', { name: esc(PLAYS[selected].name) })}` : $t('match.pick_a_defense'))}</button>`;
     // Early field goal: on any down, when the kick is makeable; highlighted when a half is about to end.
     let fgEarly = '';
-    if (myBall && s.down < 4 && s.phase === 'scrimmage') { const fg = R.fieldGoalInfo(s, teams); if (fg.chance >= 0.2) fgEarly = `<button class="btn small ${!s.ot && s.clock <= 30 && (s.quarter === 2 || s.quarter >= 4) ? 'good' : ''}" data-action="fg" title="${$t('match.kick_now_instead_of_running_a')}">FG ${fg.distance} yd · ${Math.round(fg.chance * 100)}%</button>`; }
+    if (myBall && myKicker && s.down < 4 && s.phase === 'scrimmage') { const fg = R.fieldGoalInfo(s, teams); if (fg.chance >= 0.2) fgEarly = `<button class="btn small ${!s.ot && s.clock <= 30 && (s.quarter === 2 || s.quarter >= 4) ? 'good' : ''}" data-action="fg" title="${$t('match.kick_now_instead_of_running_a')}">FG ${fg.distance} yd · ${Math.round(fg.chance * 100)}%</button>`; }
     const secondary = `<div class="secondary">
       <button class="btn small" data-action="timeout" ${s.timeouts[me] ? '' : 'disabled'}>${$t('match.timeout_2', { timeouts: s.timeouts[me] })}</button>
       ${myBall ? `<select class="btn small" data-change="tempo" aria-label="${$t('match.tempo')}" style="min-height:36px;margin:0;flex:1"><option value="normal" ${(G.tempo || 'normal') === 'normal' ? 'selected' : ''}>${$t('match.tempo_normal')}</option><option value="hurry" ${G.tempo === 'hurry' ? 'selected' : ''}>${$t('match.tempo_hurry_up')}</option><option value="milk" ${G.tempo === 'milk' ? 'selected' : ''}>${$t('match.tempo_milk_clock')}</option></select>` : ''}
       ${fgEarly}
-      ${myBall && s.phase === 'scrimmage' ? (() => { const sg = R.fieldGoalSignature(s, teams); return sg?.available ? `<button class="btn small good" data-action="fgsig" title="${$t('match.once_per_game_the_signature_kicks')}">${esc(sg.label)} ${sg.distance} yd · ${Math.round(sg.chance * 100)}%</button>` : ''; })() : ''}
+      ${myBall && myKicker && s.phase === 'scrimmage' ? (() => { const sg = R.fieldGoalSignature(s, teams); return sg?.available ? `<button class="btn small good" data-action="fgsig" title="${$t('match.once_per_game_the_signature_kicks')}">${esc(sg.label)} ${sg.distance} yd · ${Math.round(sg.chance * 100)}%</button>` : ''; })() : ''}
       ${myBall && AI.shouldKneel(s) ? `<button class="btn small" data-action="kneel">${$t('match.kneel')}</button>` : ''}${myBall && !s.ot && s.clockRunning && s.quarter >= 2 && s.clock < 60 ? `<button class="btn small" data-action="spike">${$t('match.spike')}</button>` : ''}
       <button class="btn small ${G.auto ? 'primary' : ''}" data-action="auto" title="${$t('match.auto_the_coachs_suggested_plays_are')}">${G.auto ? $t('match.auto_stop') : $t('match.auto')}</button>
       ${G.auto ? `<button class="btn small ${autoSpeed(f) > 1 ? 'primary' : ''}" data-action="autospeed" title="${$t('match.auto_speed')}">${`${autoSpeed(f)}× ▶`}</button>${cameraButton(f)}` : ''}
@@ -1112,12 +1143,24 @@ export function registerMatchScreens(Router, app) {
 
   function finishGame(f) {
     if (!f.game?.state?.finished || finishGame.busy) return; // protect against a second tap
+    if (finishGame.pendingFor === f.game) return; // already settling
     if (f.guide?.enabled) { f.guide.evidence.gameFinished = true; app.save(); }
     finishGame.busy = true; setTimeout(() => { finishGame.busy = false; }, 0);
     const G = f.game; const s = G.state; const me = G.playerSide;
     const won = s.winner === me;
     const teams = teamsFor(f);
-    const r = F.finishSunday(f, s); app.save(); app.backup(f);
+    // Play test 2026-11-26: settling the week (finishSunday) and the save took seconds with the screen frozen. The result now opens at
+    // once with "Wrapping up the week…"; the rest fills in when ready. Closing early is carried out once the week is settled.
+    const them = R.opponent(me); const tag = G.tag || ''; const champ = G.event === 'playoff' && isBeastBowlTag(tag); /* only the Beast Bowl itself ("Titan Semifinal" matched /final/ before v42.11) */ const playoff = G.event === 'playoff';
+    const diff = s.score[me] - s.score[them]; const feel = won ? (champ ? $t('match.beast_bowl_champions') : playoff ? $t('match.playoff_win') : diff >= 17 ? $t('match.dominant_win') : diff <= 3 ? $t('match.narrow_win') : 'VICTORY') : (champ ? $t('match.beast_bowl_lost') : playoff ? $t('match.season_over') : diff >= -3 ? $t('match.narrow_loss') : 'DEFEAT');
+    let settled = null; let closeWanted = false; let onSettledClose = null; finishGame.pendingFor = G;
+    const pending = sheet(`<div class="final-hero ${won ? 'won' : 'lost'} ${champ ? 'champ' : playoff ? 'playoff' : ''}"><div class="final-feel">${feel}</div><div class="final-score"><span style="color:${teamInk(s[me].name, s[me].color)}">${esc(s[me].abbr)}</span> ${s.score[me]} <span class="dim">–</span> ${s.score[them]} <span style="color:${teamInk(s[them].name, s[them].color)}">${esc(s[them].abbr)}</span></div></div><p class="final-pending muted center" role="status">${$t('match.wrapping_up_week')}</p>`,
+      { title: $t('match.final_3'), onClose: () => { if (settled) onSettledClose?.(); else closeWanted = true; } });
+    const settle = () => {
+      try { const r = F.finishSunday(f, s); app.save(); app.backup(f); settled = r; finishScreen(r); } finally { finishGame.pendingFor = null; } // no second settle from a tap behind the sheet
+    };
+    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(settle, 0))); // paint first, then work
+    const finishScreen = (r) => {
     const ev = r.events || [];
     const badgeClub = r.newBadge; const gym = badgeClub ? GYM_BY_CLUB[badgeClub] : null;
     const otTag = s.tiebreak ? ` ${$t('match.ot_v_clash', { size: s.tiebreak.size, size2: s.tiebreak.size })}` : s.ot ? ' (OT)' : ''; const box = boxScoreHtml(s, teams, { title: gym ? `${$t('match.final_badge_game_won', { otTag })}` : `${$t('match.final_2', { otTag })}` });
@@ -1145,8 +1188,6 @@ export function registerMatchScreens(Router, app) {
     };
     // The final whistle (2026-10-22 presentation pass): a result hero weighted to the occasion, the box score, then what the
     // game did to the roster: XP for every starter, level-ups with the rating change, injuries.
-    const them = R.opponent(me); const tag = G.tag || ''; const champ = G.event === 'playoff' && isBeastBowlTag(tag); /* only the Beast Bowl itself ("Titan Semifinal" matched /final/ before v42.11) */ const playoff = G.event === 'playoff';
-    const diff = s.score[me] - s.score[them]; const feel = won ? (champ ? $t('match.beast_bowl_champions') : playoff ? $t('match.playoff_win') : diff >= 17 ? $t('match.dominant_win') : diff <= 3 ? $t('match.narrow_win') : 'VICTORY') : (champ ? $t('match.beast_bowl_lost') : playoff ? $t('match.season_over') : diff >= -3 ? $t('match.narrow_loss') : 'DEFEAT');
     const hero = `<div class="final-hero ${won ? 'won' : 'lost'} ${champ ? 'champ' : playoff ? 'playoff' : ''}"><div class="final-feel">${feel}</div><div class="final-score"><span style="color:${teamInk(s[me].name, s[me].color)}">${esc(s[me].abbr)}</span> ${s.score[me]} <span class="dim">–</span> ${s.score[them]} <span style="color:${teamInk(s[them].name, s[them].color)}">${esc(s[them].abbr)}</span></div><div class="dim">${esc(tag || `${$t('match.week', { week: f.season.week })}`)}${otTag}${G.event === 'rival' ? $t('match.rivalry') : ''}</div></div>`;
     const xpRows = ev.filter((e) => e.kind === 'xp').sort((a, b) => b.amount - a.amount);
     const lvl = ev.filter((e) => e.kind === 'levelup' || e.kind === 'evolve'); const inj = ev.filter((e) => e.kind === 'injury');
@@ -1158,7 +1199,13 @@ export function registerMatchScreens(Router, app) {
     // A held badge lost back to its Gym Leader (reclaimable badges): said plainly on the result, not only in the news.
     const lostGym = r.lostBadge ? GYM_BY_CLUB[r.lostBadge] : null;
     const surrendered = lostGym ? `<div class="panel tight badge-lost" style="border-color:#8a3b3b;margin-bottom:var(--s3)"><b>${$t('match.badge_surrendered', { badge: esc(lostGym.badge) })}</b><div class="muted">${$t('match.badge_surrendered_text', { name: esc(lostGym.coach.name), club: esc(r.lostBadge), n: Object.keys(f.campaign.badges || {}).length, total: Object.keys(GYM_BY_CLUB).length })}</div></div>` : '';
-    sheet(`${hero}${surrendered}${box}${postGameHtml(f, r.partnerships, r.captainNote)}${after}`, { title: gym ? $t('match.final_badge_game') : lostGym ? $t('match.final_badge_lost') : champ ? $t('match.beast_bowl') : playoff ? $t('match.final_playoffs') : $t('match.final_3'), onClose: handshake });
+    const fullTitle = gym ? $t('match.final_badge_game') : lostGym ? $t('match.final_badge_lost') : champ ? $t('match.beast_bowl') : playoff ? $t('match.final_playoffs') : $t('match.final_3');
+    onSettledClose = handshake;
+    if (closeWanted || !pending.el.isConnected) { handshake(); return; } // closed while the week was settling: carry the close out now
+    const head = pending.el.querySelector('.sheet-head strong'); if (head) head.textContent = fullTitle;
+    pending.el.setAttribute('aria-label', fullTitle);
+    const body = pending.el.querySelector('.sheet-body'); if (body) body.innerHTML = `${hero}${surrendered}${box}${postGameHtml(f, r.partnerships, r.captainNote)}${after}`;
+    };
   }
 
   function startPlayClock(f, root) {

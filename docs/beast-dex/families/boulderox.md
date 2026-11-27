@@ -75,15 +75,15 @@ Uncommon standalone RB. Source legacy +10 carry Strength removed; new ability us
 
 Ability ID: `EAR-03-C`. Category: Stun-response special.
 
-Actually skip normal action due to Stunned
+Actually skip normal action due to Stunned, or take one hit of 30%+ max HP and stay up (balance audit R-10, 2026-11-25)
 
-Stunned skipped action arms next performed normal-action undodgeable charge
+A Stunned skipped action or a heavy hit (30%+ max HP, survived) arms next performed normal-action undodgeable charge
 
 Source: workbook v18. Apply the later shared overrides in [Approved Rules](../APPROVED_RULES.md) and the Task 8 specification.
 
 ### Trigger / eligibility
 
-Actually losing a normal action to Stunned arms once-per-Clash charge. Merely receiving Stunned is not sufficient.
+Actually losing a normal action to Stunned, or taking a single hit costing at least 30% of max HP and staying up (balance audit R-10, 2026-11-25: almost nothing applies Stunned in the Clash, so the charge never armed), arms once-per-Clash charge. Merely receiving Stunned is not sufficient.
 
 ### Targets / placement
 

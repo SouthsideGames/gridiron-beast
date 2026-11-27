@@ -33,15 +33,15 @@ These are ordinary non-Apex profiles. Apex has separate 10–15 starting ratings
 
 Ability ID: `WIN-03-F`. Category: Targeted effect.
 
-Aeralis; uncommon Wind CB.3 personal pass breakups fill bar; interceptions excluded. On later successful forward-pass catch by assigned/tracked receiver, activate if Aeralis within8 yards and able. No activation on charge-filling play.
+Aeralis; uncommon Wind CB. 3 passes defended fill bar (a personal pass breakup, or an incompletion thrown at the receiver he covers; balance audit R-10, 2026-11-25); interceptions excluded. On later successful forward-pass catch by assigned/tracked receiver, activate if Aeralis within8 yards and able. No activation on charge-filling play.
 
-PBU charge displaces guarded catcher opposite heading with actual yardage loss
+Pass-defended charge displaces guarded catcher opposite heading with actual yardage loss
 
 Source: workbook v18. Apply the later shared overrides in [Approved Rules](../APPROVED_RULES.md) and the Task 8 specification.
 
 ### Trigger / eligibility
 
-Aeralis; uncommon Wind CB.3 personal pass breakups fill bar; interceptions excluded. On later successful forward-pass catch by assigned/tracked receiver, activate if Aeralis within8 yards and able. No activation on charge-filling play.
+Aeralis; uncommon Wind CB. 3 passes defended fill bar (a personal pass breakup, or an incompletion thrown at the receiver he covers; balance audit R-10, 2026-11-25); interceptions excluded. On later successful forward-pass catch by assigned/tracked receiver, activate if Aeralis within8 yards and able. No activation on charge-filling play.
 
 ### Targets / placement
 
@@ -69,7 +69,7 @@ Deflection charge bar; visible gust from ahead of receiver drives it backward re
 
 ### Progression / notes
 
-Push5 /6.5 /8 /10 yards by mastery. Charge threshold3 PBUs, range8 yards fixed. Replaces rejected40% current-speed-loss proposal. Audit catch-before-score eligibility, vector fallback, collision and forward-progress ledger; do not award negative catch distance twice. Design values approved all-A; implementation must reconcile normal stop/scoring rules explicitly.
+Push5 /6.5 /8 /10 yards by mastery. Charge threshold 3 passes defended (R-10), range8 yards fixed. Replaces rejected40% current-speed-loss proposal. Audit catch-before-score eligibility, vector fallback, collision and forward-progress ledger; do not award negative catch distance twice. Design values approved all-A; implementation must reconcile normal stop/scoring rules explicitly.
 
 ## Beast Clash: Downdraft
 

@@ -1,7 +1,7 @@
 {
   "name": "Gridiron Beast",
   "short_name": "Gridiron",
-  "description": "Monster football franchise game — 7-on-7, mobile-first.",
+  "description": "Beast football franchise game — 7-on-7, mobile-first.",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "any",
