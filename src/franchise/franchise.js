@@ -371,6 +371,7 @@ export function notices(f) {
   }
   if (f.season?.finished && f.offseason && offseasonPending(f).length) list.push({ screen: 'hq', kind: 'contracts', text: `${$t('franchise.contract_decisions_waiting', { n: offseasonPending(f).length })}` });
   if (tradeCall(f)) list.push({ screen: 'hq', kind: 'call', text: `${$t('franchise.the_are_on_the_line_with', { team: tradeCall(f).team })}` });
+  if (capTransitionDue(f) && !f.season?.finished) { const o = capTransitionOutlook(f); list.push({ screen: 'hq', kind: 'cap', text: o.over ? $t('franchise.cap_change_notice_over', { from: o.from.toLocaleString('en-US'), to: o.to.toLocaleString('en-US'), over: (o.committed - o.to).toLocaleString('en-US') }) : $t('franchise.cap_change_notice', { from: o.from.toLocaleString('en-US'), to: o.to.toLocaleString('en-US'), room: o.room.toLocaleString('en-US') }) }); }
   if (f.week?.commissioner) list.push({ screen: 'hq', kind: 'commissioner', text: $t('franchise.the_commissioner_is_waiting_on_a') });
   else if (salarySummary(f).over) list.push({ screen: 'hq', kind: 'cap', text: `${$t('franchise.over_the_cap_by_cr', { toLocaleString: Math.round(-salarySummary(f).remaining).toLocaleString('en-US') })}` });
   return list;
@@ -1096,6 +1097,24 @@ function renewalNeg(f, item, m) {
 function monsterRenewals(f) { for (const i of f.offseason?.items || []) if (i.kind === 'monster' && !i.status) { const m = f.roster.find((x) => x.id === i.id); if (m) renewalNeg(f, i, m); } }
 /** The owner's commitments in the coming league year without `except` (whose deal is being renewed). */
 function committedNext(f, except) { const ly = f.season.year + 1; let s = 0; for (const m of f.roster) if (m !== except) s += capCharge(m, ly); s += Object.keys(f.staff || {}).reduce((sum, role) => sum + staffSalary(f, role), 0) + (f.pendingDeadCap || 0); return s; }
+// ------------------------------------------------------------ D-1: existing franchises move to the 1.6 M cap at their next offseason
+// Owner decision D-1 (2026-11-26): one economy. A franchise begun under the 1.8 M cap (no `capEra`) finishes its current season under it
+// and moves to the new cap permanently when that season ends: before retirements, renewals, free agency and the draft, so every normal
+// offseason tool (declining renewals, releases, trades, cheaper signings) is available before next season's compliance check (the
+// commissioner's Saturday review, unchanged). No beast is released, no contract rewritten. It happens once (`capEra` is saved).
+export const capTransitionDue = (f) => !!f && !(f.capEra >= CAP_ERA);
+/** The owner's position under the new cap as things stand: next season's commitments (contracts that run on, staff, dead money). */
+export function capTransitionOutlook(f) {
+  if (!capTransitionDue(f)) return null;
+  const from = capFor(f); const to = Math.round(tierById(f.tier).cap * (ownerPerk(f) === 'cap' ? 1.04 : 1));
+  const committed = committedNext(f); return { from, to, committed, room: to - committed, over: committed > to };
+}
+function applyCapTransition(f, year) {
+  if (!capTransitionDue(f)) return false;
+  const o = capTransitionOutlook(f); f.capEra = CAP_ERA; f.capTransition = { year, from: o.from, to: o.to, committed: o.committed };
+  news(f, o.over ? $L('franchise.cap_now_in_force_over', { cap: o.to.toLocaleString('en-US'), over: (o.committed - o.to).toLocaleString('en-US') }) : $L('franchise.cap_now_in_force', { cap: o.to.toLocaleString('en-US'), room: o.room.toLocaleString('en-US') }), o.over ? 'loss' : 'info');
+  return true;
+}
 // ------------------------------------------------------------ R7: staff affordability (owner approval 2026-11-05)
 // Staff commitments are checked against next season's books in a Task 7 offseason. The renewal demand itself is unchanged (STAFF_RAISE)
 // until the performance-based staff negotiation (owner's Section 9) is approved; this framework applies to whatever the demand is.
@@ -2577,6 +2596,7 @@ function advanceWeek(f, { bye = false } = {}) {
   leagueRecoverWeek(f, { bye }); // the 15 persistent rosters rest and heal once a week (GDD §42.6)
   leagueCover(f); // a club left without a legal lineup by injuries signs cover before next week
   f.season.week += 1; f.season.day = 0;
+  if (capTransitionDue(f) && !inPlayoffs(f) && f.capNoticeYear !== f.season.year) { f.capNoticeYear = f.season.year; const o = capTransitionOutlook(f); news(f, $L('franchise.cap_change_coming', { from: o.from.toLocaleString('en-US'), to: o.to.toLocaleString('en-US') }), 'info'); } // D-1: advance notice, once a season
   const lastPlan = f.week.plan;
   f.week = blankWeek(); f.week.plan = lastPlan; // keep the plan as the default for next week
   maybeTradeCall(f); // a club may call with an offer this week (GDD §19.6)
@@ -2658,6 +2678,7 @@ function endSeason(f) {
   const place = st.overall.indexOf(f.club) + 1;
   f.bottomFourStreak = place > 12 ? f.bottomFourStreak + 1 : 0;
   f.history.push({ year: s.year, club: f.club, tier: f.tier, record: { w: rec.w, l: rec.l, t: rec.t }, place, champion, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), schedule: s.schedule.map((g) => ({ ...g })), rival: { ...f.rivals[f.tier] } });
+  applyCapTransition(f, s.year); // D-1: an older franchise moves to the new cap as its offseason opens (once)
   // Tier movement (promotion challenge / relegation) is designed but switched off for now:
   // the data model stays, the league stays one great season at a time.
   if (TIERS_ENABLED) {
