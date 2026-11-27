@@ -1,0 +1,478 @@
+{
+ "tool": "balance-audit/roster-season",
+ "seasons": 24,
+ "quality": 60,
+ "recovery": "production (28)",
+ "fatigueStart": 0.3,
+ "season": "fixed 16-game study: 14 regular games + 2 postseason games always played (a real season has 14 games and a postseason only for qualifiers)",
+ "rows": {
+  "control": {
+   "seasons": 24,
+   "winsOf14plus2": 8.17,
+   "winsVsControl": 0,
+   "se": 0,
+   "marginPerGameVsControl": 0,
+   "marginSe": 0,
+   "lateSeasonMarginVsControl": 0,
+   "lateSe": 0,
+   "postseasonMarginVsControl": 0,
+   "postSe": 0,
+   "postseasonWinsPerSeason": 0.92,
+   "injuriesPerSeason": 3.8,
+   "starterGamesMissedPerSeason": 3.1,
+   "borrowedSlotsPerSeason": 0.29,
+   "meanStarterFatigueAtKickoff": 0.6,
+   "endOfSeasonFatigue": 0.8,
+   "peakFatigue": 1.7,
+   "benchSnapSharePct": 3.2,
+   "payrollChange": 0,
+   "maxUnusedPayroll": 0,
+   "distributions": {
+    "starterFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 1.708,
+     "max": 12.333
+    },
+    "benchFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 0,
+     "max": 0.958
+    },
+    "starterStartStamina": 0.988,
+    "starterStaminaAt_Q2start_Q3startAfterHalftime_Q4start_final": [
+     0.849,
+     0.983,
+     0.835,
+     0.666
+    ],
+    "subsPerGame": 9.994,
+    "fatigueSubsPerGame": 5.53,
+    "exhaustedPerGame": 0.22,
+    "payroll": 862838.75,
+    "rosterSize": 28
+   }
+  },
+  "superstars": {
+   "seasons": 24,
+   "winsOf14plus2": 6.1,
+   "winsVsControl": -2.06,
+   "se": 0.73,
+   "marginPerGameVsControl": -3.69,
+   "marginSe": 1.13,
+   "lateSeasonMarginVsControl": -2.29,
+   "lateSe": 1.2,
+   "postseasonMarginVsControl": -3.02,
+   "postSe": 1.7,
+   "postseasonWinsPerSeason": 0.67,
+   "injuriesPerSeason": 3.5,
+   "starterGamesMissedPerSeason": 3.1,
+   "borrowedSlotsPerSeason": 0.04,
+   "meanStarterFatigueAtKickoff": 0.5,
+   "endOfSeasonFatigue": 0.9,
+   "peakFatigue": 1.4,
+   "benchSnapSharePct": 7.3,
+   "payrollChange": -161,
+   "maxUnusedPayroll": 270,
+   "distributions": {
+    "starterFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0.083,
+     "p90": 1.292,
+     "max": 13.833
+    },
+    "benchFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 0,
+     "max": 0.708
+    },
+    "starterStartStamina": 0.986,
+    "starterStaminaAt_Q2start_Q3startAfterHalftime_Q4start_final": [
+     0.807,
+     0.959,
+     0.774,
+     0.576
+    ],
+    "subsPerGame": 28.278,
+    "fatigueSubsPerGame": 15.955,
+    "exhaustedPerGame": 0.717,
+    "payroll": 862654.583,
+    "rosterSize": 28
+   }
+  },
+  "eliteQB": {
+   "seasons": 24,
+   "winsOf14plus2": 8.79,
+   "winsVsControl": 0.63,
+   "se": 0.55,
+   "marginPerGameVsControl": 0.73,
+   "marginSe": 0.82,
+   "lateSeasonMarginVsControl": 1.86,
+   "lateSe": 1.16,
+   "postseasonMarginVsControl": 0.9,
+   "postSe": 1.87,
+   "postseasonWinsPerSeason": 1.08,
+   "injuriesPerSeason": 3.8,
+   "starterGamesMissedPerSeason": 3.1,
+   "borrowedSlotsPerSeason": 0.08,
+   "meanStarterFatigueAtKickoff": 0.5,
+   "endOfSeasonFatigue": 0.6,
+   "peakFatigue": 1.4,
+   "benchSnapSharePct": 3.3,
+   "payrollChange": -306,
+   "maxUnusedPayroll": 2640,
+   "distributions": {
+    "starterFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 1.375,
+     "max": 12
+    },
+    "benchFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 0,
+     "max": 0.667
+    },
+    "starterStartStamina": 0.988,
+    "starterStaminaAt_Q2start_Q3startAfterHalftime_Q4start_final": [
+     0.842,
+     0.978,
+     0.829,
+     0.656
+    ],
+    "subsPerGame": 12.6,
+    "fatigueSubsPerGame": 6.638,
+    "exhaustedPerGame": 0.353,
+    "payroll": 862520.833,
+    "rosterSize": 28
+   }
+  },
+  "depth": {
+   "seasons": 24,
+   "winsOf14plus2": 6.9,
+   "winsVsControl": -1.27,
+   "se": 0.58,
+   "marginPerGameVsControl": -2.56,
+   "marginSe": 0.72,
+   "lateSeasonMarginVsControl": -2.21,
+   "lateSe": 0.85,
+   "postseasonMarginVsControl": -3.98,
+   "postSe": 1.79,
+   "postseasonWinsPerSeason": 0.67,
+   "injuriesPerSeason": 4.1,
+   "starterGamesMissedPerSeason": 3.7,
+   "borrowedSlotsPerSeason": 0.63,
+   "meanStarterFatigueAtKickoff": 0.4,
+   "endOfSeasonFatigue": 0.7,
+   "peakFatigue": 1.3,
+   "benchSnapSharePct": 3.2,
+   "payrollChange": -67,
+   "maxUnusedPayroll": 270,
+   "distributions": {
+    "starterFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 1.25,
+     "max": 10.542
+    },
+    "benchFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 0,
+     "max": 1
+    },
+    "starterStartStamina": 0.989,
+    "starterStaminaAt_Q2start_Q3startAfterHalftime_Q4start_final": [
+     0.847,
+     0.985,
+     0.837,
+     0.659
+    ],
+    "subsPerGame": 11.309,
+    "fatigueSubsPerGame": 6.447,
+    "exhaustedPerGame": 0.123,
+    "payroll": 862772.083,
+    "rosterSize": 28
+   }
+  },
+  "thinBench": {
+   "seasons": 24,
+   "winsOf14plus2": 11.65,
+   "winsVsControl": 3.48,
+   "se": 0.48,
+   "marginPerGameVsControl": 6.23,
+   "marginSe": 0.69,
+   "lateSeasonMarginVsControl": 6.88,
+   "lateSe": 0.94,
+   "postseasonMarginVsControl": 6.77,
+   "postSe": 1.66,
+   "postseasonWinsPerSeason": 1.33,
+   "injuriesPerSeason": 4,
+   "starterGamesMissedPerSeason": 2.8,
+   "borrowedSlotsPerSeason": 0.13,
+   "meanStarterFatigueAtKickoff": 0.5,
+   "endOfSeasonFatigue": 0.8,
+   "peakFatigue": 1.4,
+   "benchSnapSharePct": 1.8,
+   "payrollChange": -394,
+   "maxUnusedPayroll": 1830,
+   "distributions": {
+    "starterFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 1.333,
+     "max": 10.958
+    },
+    "benchFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 0,
+     "max": 0.292
+    },
+    "starterStartStamina": 0.99,
+    "starterStaminaAt_Q2start_Q3startAfterHalftime_Q4start_final": [
+     0.866,
+     0.99,
+     0.862,
+     0.71
+    ],
+    "subsPerGame": 5.438,
+    "fatigueSubsPerGame": 2.824,
+    "exhaustedPerGame": 0.078,
+    "payroll": 862456.25,
+    "rosterSize": 28
+   }
+  },
+  "control_heavy": {
+   "seasons": 24,
+   "winsOf14plus2": 7.21,
+   "winsVsControl": -0.96,
+   "se": 0.46,
+   "marginPerGameVsControl": -1.7,
+   "marginSe": 0.55,
+   "lateSeasonMarginVsControl": -0.7,
+   "lateSe": 0.89,
+   "postseasonMarginVsControl": -2.21,
+   "postSe": 1.25,
+   "postseasonWinsPerSeason": 0.71,
+   "injuriesPerSeason": 3.5,
+   "starterGamesMissedPerSeason": 2.9,
+   "borrowedSlotsPerSeason": 0.46,
+   "meanStarterFatigueAtKickoff": 0.1,
+   "endOfSeasonFatigue": 0.3,
+   "peakFatigue": 0.7,
+   "benchSnapSharePct": 11.2,
+   "payrollChange": 0,
+   "maxUnusedPayroll": 0,
+   "distributions": {
+    "starterFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 0.042,
+     "max": 6.417
+    },
+    "benchFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 0,
+     "max": 0.292
+    },
+    "starterStartStamina": 0.989,
+    "starterStaminaAt_Q2start_Q3startAfterHalftime_Q4start_final": [
+     0.855,
+     0.994,
+     0.853,
+     0.712
+    ],
+    "subsPerGame": 55.53,
+    "fatigueSubsPerGame": 30.257,
+    "exhaustedPerGame": 0.133,
+    "payroll": 862850.417,
+    "rosterSize": 28
+   }
+  },
+  "control_starters": {
+   "seasons": 24,
+   "winsOf14plus2": 8.69,
+   "winsVsControl": 0.52,
+   "se": 0.32,
+   "marginPerGameVsControl": 0.84,
+   "marginSe": 0.36,
+   "lateSeasonMarginVsControl": 1.18,
+   "lateSe": 0.51,
+   "postseasonMarginVsControl": 0.38,
+   "postSe": 1.1,
+   "postseasonWinsPerSeason": 1.04,
+   "injuriesPerSeason": 3.9,
+   "starterGamesMissedPerSeason": 3.3,
+   "borrowedSlotsPerSeason": 0.38,
+   "meanStarterFatigueAtKickoff": 0.7,
+   "endOfSeasonFatigue": 0.9,
+   "peakFatigue": 1.9,
+   "benchSnapSharePct": 1.9,
+   "payrollChange": 0,
+   "maxUnusedPayroll": 0,
+   "distributions": {
+    "starterFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0.042,
+     "p90": 2.25,
+     "max": 12.875
+    },
+    "benchFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 0,
+     "max": 1.083
+    },
+    "starterStartStamina": 0.988,
+    "starterStaminaAt_Q2start_Q3startAfterHalftime_Q4start_final": [
+     0.847,
+     0.971,
+     0.826,
+     0.657
+    ],
+    "subsPerGame": 3.523,
+    "fatigueSubsPerGame": 2.016,
+    "exhaustedPerGame": 0.517,
+    "payroll": 862850.417,
+    "rosterSize": 28
+   }
+  },
+  "depth_heavy": {
+   "seasons": 24,
+   "winsOf14plus2": 5.38,
+   "winsVsControl": -2.79,
+   "se": 0.52,
+   "marginPerGameVsControl": -4.59,
+   "marginSe": 0.83,
+   "lateSeasonMarginVsControl": -3.26,
+   "lateSe": 0.91,
+   "postseasonMarginVsControl": -2.69,
+   "postSe": 1.23,
+   "postseasonWinsPerSeason": 0.67,
+   "injuriesPerSeason": 3.5,
+   "starterGamesMissedPerSeason": 2.2,
+   "borrowedSlotsPerSeason": 0.25,
+   "meanStarterFatigueAtKickoff": 0.1,
+   "endOfSeasonFatigue": 0.1,
+   "peakFatigue": 0.5,
+   "benchSnapSharePct": 13.1,
+   "payrollChange": -67,
+   "maxUnusedPayroll": 270,
+   "distributions": {
+    "starterFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 0,
+     "max": 5.667
+    },
+    "benchFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 0,
+     "max": 1.042
+    },
+    "starterStartStamina": 0.989,
+    "starterStaminaAt_Q2start_Q3startAfterHalftime_Q4start_final": [
+     0.853,
+     0.995,
+     0.85,
+     0.708
+    ],
+    "subsPerGame": 60.63,
+    "fatigueSubsPerGame": 33.61,
+    "exhaustedPerGame": 0.078,
+    "payroll": 862783.75,
+    "rosterSize": 28
+   }
+  },
+  "thinBench_starters": {
+   "seasons": 24,
+   "winsOf14plus2": 11.71,
+   "winsVsControl": 3.54,
+   "se": 0.55,
+   "marginPerGameVsControl": 6.02,
+   "marginSe": 0.73,
+   "lateSeasonMarginVsControl": 6.64,
+   "lateSe": 1.09,
+   "postseasonMarginVsControl": 6.17,
+   "postSe": 1.65,
+   "postseasonWinsPerSeason": 1.38,
+   "injuriesPerSeason": 4.1,
+   "starterGamesMissedPerSeason": 2.5,
+   "borrowedSlotsPerSeason": 0.04,
+   "meanStarterFatigueAtKickoff": 0.5,
+   "endOfSeasonFatigue": 0.8,
+   "peakFatigue": 1.5,
+   "benchSnapSharePct": 1.2,
+   "payrollChange": -394,
+   "maxUnusedPayroll": 1830,
+   "distributions": {
+    "starterFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0.125,
+     "p90": 1.333,
+     "max": 11.458
+    },
+    "benchFatigueAtKickoff": {
+     "p10": 0,
+     "p25": 0,
+     "median": 0,
+     "p75": 0,
+     "p90": 0,
+     "max": 0.458
+    },
+    "starterStartStamina": 0.99,
+    "starterStaminaAt_Q2start_Q3startAfterHalftime_Q4start_final": [
+     0.866,
+     0.985,
+     0.857,
+     0.701
+    ],
+    "subsPerGame": 1.37,
+    "fatigueSubsPerGame": 0.626,
+    "exhaustedPerGame": 0.287,
+    "payroll": 862456.25,
+    "rosterSize": 28
+   }
+  }
+ }
+}
