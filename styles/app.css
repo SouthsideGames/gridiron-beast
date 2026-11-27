@@ -242,6 +242,9 @@ tr.me td { background: #2a3f16; }
 .day { font-size: 10px; text-align: center; padding: 6px 2px; border-radius: 4px; background: var(--panel); border: 2px solid var(--line); color: var(--ink-3); }
 .day.done { color: var(--good); border-color: #2f8f5a; }
 .day.today { color: var(--accent); border-color: var(--accent); }
+.hq-current-stage { margin: 0 0 var(--s2); font-size: 12px; }
+.hq-recap-score, .hq-recap-note { display: block; overflow-wrap: anywhere; }
+.hq-last-game > summary { padding-bottom: 4px; }
 
 /* Standings */
 .standings td:first-child { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
