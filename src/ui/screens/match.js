@@ -87,6 +87,39 @@ export function conversionCallout(ev, playerSide) {
   return { tier: 'loss', text: $t('match.no_good'), mine: !mine };
 }
 
+export function playResultCallout(ev, me, teams) {
+  const result = ev.sim?.result || ev.outcome?.result;
+  const stats = ev.sim?.stats;
+  const offense = ev.offenseSide;
+  const defense = offense ? R.opponent(offense) : null;
+  const lines = [];
+
+  if (result === 'throwaway') lines.push($t('match.pass_thrown_away'));
+  if (result === 'incomplete') {
+    lines.push(stats?.pbuBy ? $t('match.pass_broken_up')
+      : stats?.dropped ? $t('match.pass_dropped') : $t('match.pass_incomplete'));
+  }
+
+  if (result === 'fumble' || stats?.recoveredTeam) {
+    const side = stats?.recoveredTeam === 'off' ? offense : defense;
+    const name = ev.sim?.names?.[stats?.recoveredTeam]?.[stats?.recoveredSlot];
+    const club = teams?.[side]?.abbr;
+    const recovery = name && club ? `${name} (${club})` : name || club;
+    lines.push(recovery ? $t('match.fumble_recovered_by', { recovery }) : $t('match.fumble'));
+    if (!ev.outcome?.turnoverOnDowns) {
+      return { tier: result === 'fumble' ? 'turnover' : 'routine', text: lines.join(' · '), mine: side ? side === me : null };
+    }
+  }
+
+  const receiving = ev.outcome?.turnoverOnDowns;
+  if (receiving) {
+    const club = teams?.[receiving]?.abbr;
+    const text = club ? $t('match.turnover_on_downs_team', { club }) : $t('match.turnover_on_downs');
+    return { tier: 'turnover', text: [text, ...lines].join(' · '), mine: receiving === me };
+  }
+  return lines.length ? { tier: 'routine', text: lines.join(' · '), mine: defense ? defense === me : null } : null;
+}
+
 export function registerMatchScreens(Router, app) {
   let pregameTeam = 'mine';
   const autoCamera = new MatchCamera();
@@ -216,17 +249,17 @@ export function registerMatchScreens(Router, app) {
    * What just happened, in one word and one tier, so the field can show it with the right weight (2026-10-22 presentation
    * pass): a touchdown is bigger than a first down, a turnover is unmistakable, a sack lands, a routine gain just reports its yards.
    */
-  function callout(ev, me) {
+  function callout(ev, me, teams) {
     if (!ev) return null; const r = ev.sim?.result || ev.outcome?.result || null; const yards = ev.outcome?.yards ?? ev.sim?.yards; const off = ev.offenseSide;
     if (ev.kind === 'try') return conversionCallout(ev, me);
     const mineOff = off === me; const scoredFor = ev.scored?.team || (ev.scored ? off : null);
     if (r === 'touchdown' || (ev.kind === 'kickoff' && ev.scored)) return { tier: 'td', text: $t('match.touchdown_2'), mine: scoredFor ? scoredFor === me : mineOff };
     if (r === 'safety') return { tier: 'score', text: 'SAFETY', mine: !mineOff };
     if (r === 'interception' || r === 'touchback_return') return { tier: 'turnover', text: $t('match.intercepted'), mine: !mineOff };
-    if (r === 'fumble') return { tier: 'turnover', text: $t('match.fumble'), mine: !mineOff };
+    const playResult = playResultCallout(ev, me, teams);
+    if (playResult) return playResult;
     if (ev.kind === 'field_goal') return ev.scored ? { tier: 'score', text: $t('match.field_goal'), mine: ev.kicking === me } : { tier: 'loss', text: $t('match.no_good'), mine: ev.kicking !== me };
     if (r === 'sack') return { tier: 'sack', text: 'SACK', mine: !mineOff };
-    if (r === 'incomplete' || r === 'throwaway') return { tier: 'routine', text: 'INCOMPLETE', mine: !mineOff };
     if (ev.kind === 'punt') return { tier: 'routine', text: 'PUNT', mine: null };
     if (ev.kind === 'kickoff') return { tier: 'routine', text: /touchback/i.test(ev.text) ? 'TOUCHBACK' : 'KICKOFF', mine: null };
     if (typeof yards === 'number' && ev.kind === 'play') {
@@ -736,7 +769,12 @@ export function registerMatchScreens(Router, app) {
       <div hidden data-match-panel="plays">${cards(plan,side,selected,suggestion)}</div>`;
   }
   function cards(ids, side, selected, suggestion) {
-    return `<div class="play-grid">${ids.slice(0, 6).map((id) => `<button class="card ${selected === id ? 'selected' : ''} ${suggestion === id ? 'suggested' : ''} ${PLAYS[id].legendary ? 'legendary' : ''}" data-action="pick" data-side="${side}" data-id="${id}" aria-pressed="${selected === id}" aria-label="${esc(PLAYS[id].name)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;
+    return `<div class="play-grid">${ids.slice(0, 6).map((id) => {
+      const picked = selected === id;
+      const advised = suggestion === id;
+      const badges = [picked ? $t('match.selected_play') : '', advised ? $t('match.coach_pick') : ''].filter(Boolean);
+      return `<button class="card ${picked ? 'selected' : ''} ${PLAYS[id].legendary ? 'legendary' : ''}" data-action="pick" data-side="${side}" data-id="${id}" aria-pressed="${picked}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span>${badges.length ? `<span class="play-card-badges">${badges.map(badge => `<span>${esc(badge)}</span>`).join('')}</span>` : ''}</button>`;
+    }).join('')}</div>`;
   }
 
   /** Run one step with the human's choices applied, then animate if there is a play. */
@@ -785,7 +823,7 @@ export function registerMatchScreens(Router, app) {
       const K = kickPlay(ev, kickLookup(f, ev.kicking), fxMeta(ev, true));
       if (K?.sim?.frames?.length > 1) { ev.offenseSide = ev.kicking; ev.sim = K.sim; ev.kickerName = teamsFor(f)[ev.kicking]?.kicker?.name || null; if (K.fx) kickFx.set(K.sim, K.fx); startAnim(f, ev); return; }
     }
-    G.lastEvent = { turnover: turnoverCue(ev)?.text, text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), stadium: stadiumReaction(ev), talk: crowdTalk(ev, { away: stadiumScene()?.crowd?.mix?.away ?? 0, seed: `${G.state.seed}|${G.state.playCount || 0}` }), fresh: true };
+    G.lastEvent = { turnover: turnoverCue(ev)?.text, text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide, G.state), stadium: stadiumReaction(ev), talk: crowdTalk(ev, { away: stadiumScene()?.crowd?.mix?.away ?? 0, seed: `${G.state.seed}|${G.state.playCount || 0}` }), fresh: true };
     app.save(); refresh(f);
   }
   function startAnim(f, ev, opts = {}) {
@@ -898,7 +936,7 @@ export function registerMatchScreens(Router, app) {
     if (anim.replay) { endReplay(f); return; }
     const { ev } = anim; cancelAnimationFrame(anim.raf); anim = null;
     const G = f.game;
-    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), stadium: stadiumReaction(ev), talk: crowdTalk(ev, { away: stadiumScene()?.crowd?.mix?.away ?? 0, seed: `${G.state.seed}|${G.state.playCount || 0}` }), fresh: true };
+    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide, G.state), stadium: stadiumReaction(ev), talk: crowdTalk(ev, { away: stadiumScene()?.crowd?.mix?.away ?? 0, seed: `${G.state.seed}|${G.state.playCount || 0}` }), fresh: true };
     app.save(); refresh(f); saveWhenIdle(); // the play's result is requested above and written while the screen is idle after it
     // Instant replay (GDD §34): the outcome is final and saved above; the replay only re-draws this play's recorded frames.
     const reason = replayReason(ev, G.state, G.playerSide);
