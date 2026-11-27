@@ -110,3 +110,43 @@ Test fixtures run without `localStorage` in Node, so they never reach a player's
 - evaluation cost.
 
 `tests/task8-m6-screens.test.js` now expects 200 achievements, including the 24 originals.
+
+## Changes after the owner's review (2026-11-26)
+
+- **Account eligibility.** The account store also keeps:
+  - `disq`: franchise keys a developer shortcut played;
+  - `achDex`: families collected by eligible franchises, `{ fr, founding }`.
+
+  Both merge through the cloud like `earned`.
+  - Account-wide rows (`a_dex`, `a_title_franchises`) and the three original dex rows read `achDex` and exclude disqualified keys. They never read the shared Beast Dex.
+  - `checkAchievements` writes `achDex` for eligible franchises and calls `markDisqualified` for `f.achDev`.
+  - `syncAchievementsToGlobal` marks an opened disqualified franchise. It now copies catalogue rows too, with `scene: null`; before, they were skipped.
+- **Founding exclusions:**
+  - `foundingFamily(stamp)`: a family first collected in year 1, week 1. Used by `d_signed`, `d_original_played` and `d_types_min`, and marked in `achDex`.
+  - Draft metrics require `drafted.year ≥ 1`.
+  - Apex requires a non-founding join.
+  - Level 50 and overall marks need the monster seen below the mark on your roster (`set.below50`, `set.ovrMin`).
+  - Final form needs an evolve event at your club.
+- **History coverage.** `historyCoverage(a)` returns `complete`, `partial` or `tracked`. `trackingStart(f)` returns `{year, week}` for a franchise that predates tracking (`achTrack.preexisting`, set by the backfill). The screen shows `ach.track_from` or `ach.track_partial` only for rows that aren't complete.
+- **Queue.** `trimAchQueue` (`ACH_QUEUE_MAX` 40) first folds the oldest toasts into `{ more: n }`, then the oldest cards. It never drops reveals or `{ retro }`.
+- **Clash:**
+  - `t_clash_commanded`: live and at least one recorded rotation decision.
+  - `cl_dominant`: health at or above 60%. It replaces "flawless".
+- **Reveals.** `revealSpeaker(a)` picks the speaker by category:
+  - the commissioner: dex, evolution, Clash, legendary, draft;
+  - the rival GM: game, offense, defense, special teams, gym, hidden;
+  - the Board: championship, franchise, awards, coaching, trades.
+
+  `revealLine(a)` uses `ach.say_<category>`, or `ach.say_mythic_<speaker>` for Mythic.
+- **New metrics:**
+  - `aw_gboot` and `aw_rking`: the balance branch's Golden Boot and Return King awards;
+  - `g_faced_legend`, `g_legend_playoff_win`;
+  - `d_original_played`.
+- **Tests.** `tests/achievements-metrics.test.js` covers:
+  - every catalogue metric, with a positive and a negative case;
+  - real weeks of play;
+  - founding;
+  - disqualification;
+  - the queue;
+  - persistence;
+  - history coverage.

@@ -4930,4 +4930,24 @@ presentation that scales with rarity, and no change to the game. Full catalogue:
   rarity and locked/unlocked filters, progress bars for the open franchise, unlock dates, a detail sheet, hidden placeholders,
   scene replay. Badges are one CSS framework: a category glyph inside a rarity ring, Mythic with a spectrum ring.
 * **62.8 Cosmetic only.** No achievement gives or changes anything in play.
+* **62.9 Review changes (owner, 2026-11-26).**
+  - **Legendary and Mythic reveals** are spoken by the commissioner, the rival GM or the Board, chosen by category.
+  - **The history notice:** rows a save's history cannot prove show when tracking began.
+  - **The queue** never drops a reveal.
+  - **Developer shortcut:**
+    - a franchise played by it is disqualified for good;
+    - what it earned before stays;
+    - it never counts toward account-wide rows.
+  - **Account rows** read the achievements' own record of eligible franchises, not the shared Beast Dex.
+  - **Founding gifts and creation-draft picks** count for nothing.
+  - **Renamed rows:**
+    - "Flawless" is now **Dominant Victory**;
+    - **Field General** needs a rotation call made yourself.
+  - **Legendary-category fixes:**
+    - a track is chosen only after a Beast Bowl, so "3 tracks" and "2 unlocked" became **Legend Sighting** and **Legend in the Playoffs**;
+    - the originals' rarities are corrected.
+  - **New awards:** **Golden Boot** and **Return King** recognise the new awards.
+  - **Thresholds:** 40 provisional thresholds are re-measured after the balance merge.
+
+  Details: `reports/achievements/ACHIEVEMENT_REVIEW_FOLLOWUP.md`.
 

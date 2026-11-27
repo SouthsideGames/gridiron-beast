@@ -1,5 +1,17 @@
 # Achievement Overhaul: 200 Achievements
 
+> **Updated after the owner's review (2026-11-26).** The changes and findings are in `ACHIEVEMENT_REVIEW_FOLLOWUP.md`:
+> - renamed and replaced rows;
+> - category-based speakers;
+> - tracking notices;
+> - account eligibility;
+> - founding exclusions;
+> - queue safety;
+> - Golden Boot and Return King;
+> - metric tests.
+>
+> The catalogue (§3), the distributions (§4) and the provisional list (§12) below are regenerated. Where an older section disagrees, the follow-up governs.
+
 Branch: `feature/achievement-overhaul-200`, from `main` at 58c33ee. Not merged; it waits for the owner's review.
 It is a separate worktree from the balance work. No gameplay balance, simulation probability, attribute, ability or economy value changed.
 
@@ -37,7 +49,7 @@ It is a separate worktree from the balance work. No gameplay balance, simulation
   - Two 4-season soaks were run.
   - Phone screenshots are **emulated** (Playwright Chromium, iPhone 14 profile).
   - The full fast and sim suites were **not** run.
-- **36 thresholds are provisional** (section 12). The balance branch will move some distributions, so they should be re-measured after it merges.
+- **40 thresholds are provisional** (section 12). The balance branch will move some distributions, so they should be re-measured after it merges.
 
 ## 2. The original system
 
@@ -100,7 +112,7 @@ Machine-readable: `docs/achievements/catalogue.json`. Readable, with every field
 | `fm_points_300` | High-Octane Season | rare | points scored in one regular season ≥ 300 | retro provisional |
 | `fm_twelve_wins` | Twelve and Counting | epic | regular-season wins in one season ≥ 12 | retro |
 | `fm_wins_100` | One Hundred Wins | epic | career wins ≥ 100 | retro |
-| `fm_seasons_15` | The Full Fifteen | legendary | seasons completed ≥ 15 | retro |
+| `fm_seasons_15` | The Full Fifteen | uncommon | seasons completed ≥ 15 | retro |
 | `fm_wins_150` | Hall of Wins | legendary | career wins ≥ 150 | retro provisional |
 
 **Championships (12)**
@@ -112,11 +124,11 @@ Machine-readable: `docs/achievements/catalogue.json`. Readable, with every field
 | `first_title` | Beast Bowl champions | epic | original check (unchanged): Win the Beast Bowl. | original retro |
 | `second_title` | Two titles | epic | original check (unchanged): Win a second Beast Bowl. | original retro |
 | `ch_playoff_win` | Moving On | uncommon | playoff wins (tracked) ≥ 1 | retro |
-| `ch_playoffs_5` | October Regulars | rare | playoff appearances ≥ 5 | retro |
+| `ch_playoffs_5` | Postseason Regulars | rare | playoff appearances ≥ 5 | retro |
 | `ch_playoff_wins_10` | Postseason Pedigree | epic | playoff wins (tracked) ≥ 10 | retro |
 | `ch_conf_titles_3` | Conference Kings | legendary | conference championships (tracked) ≥ 3 | retro |
 | `ch_back_to_back` | Back to Back | legendary | consecutive Beast Bowl titles ≥ 2 | retro |
-| `ch_two_franchises` | Champion Anywhere | legendary | franchises with a Beast Bowl title ≥ 2 | retro account |
+| `ch_two_franchises` | Champion Anywhere | legendary | eligible franchises with a Beast Bowl title ≥ 2 | retro account |
 | `ch_five_titles` | Five Rings | mythic | Beast Bowl titles ≥ 5 | retro |
 | `ch_perfect_season` | The Perfect Season | mythic | an unbeaten regular season ending in the Beast Bowl title ≥ 1 | retro |
 
@@ -166,11 +178,11 @@ Machine-readable: `docs/achievements/catalogue.json`. Readable, with every field
 |---|---|---|---|---|
 | `st_first_fg` | Three Points | common | field goals made (tracked) ≥ 1 | retro |
 | `st_fg_50` | Big Leg | uncommon | your longest made field goal (yards) ≥ 50 | retro |
-| `st_career_fg_50` | Reliable Boot | uncommon | field goals made (tracked) ≥ 50 | retro |
-| `st_touchbacks_30` | Out of Reach | uncommon | kickoff touchbacks in a season ≥ 30 | retro |
+| `st_golden_boot` | Golden Boot | rare | Golden Boot awards (from the balance branch) ≥ 1 | retro |
+| `st_return_king` | Return King | rare | Return King awards (from the balance branch) ≥ 1 | retro |
 | `st_fg_60` | From Downtown | uncommon | your longest made field goal (yards) ≥ 60 | retro |
-| `st_season_fg_12` | Points on the Board | rare | field goals made in a season ≥ 12 | retro |
-| `st_kr_td` | Return to Sender | rare | kickoff-return touchdowns (tracked) ≥ 1 | retro |
+| `st_season_fg_12` | Points on the Board | uncommon | field goals made in a season ≥ 12 | retro |
+| `st_kr_td` | Return to Sender | uncommon | kickoff-return touchdowns (tracked) ≥ 1 | retro |
 | `st_fg_3_game` | Three for Three | epic | field goals made in one game ≥ 3 |  |
 | `st_kr_td_3` | Return Specialist | epic | kickoff-return touchdowns (tracked) ≥ 3 | retro |
 | `st_perfect_kicker` | Automatic | legendary | field-goal attempts in a season with every field goal and extra point made ≥ 10 | retro provisional |
@@ -184,15 +196,15 @@ Machine-readable: `docs/achievements/catalogue.json`. Readable, with every field
 | `dex_all` | The complete Beast Dex | mythic | original check (unchanged): Acquire a beast from all 192 families to complete the Beast Dex. | original retro |
 | `dx_seen_60` | Field Notes | common | different families faced in games ≥ 60 | provisional |
 | `dx_seen_100` | Keen Observer | common | different families faced in games ≥ 100 | provisional |
-| `dx_signed_40` | Growing Collection | common | different families collected by this franchise ≥ 40 | retro |
-| `dx_original_45` | Original Collector | common | original families collected ≥ 45 | retro provisional |
-| `dx_signed_60` | Collector | uncommon | different families collected by this franchise ≥ 60 | retro |
+| `dx_signed_10` | Growing Collection | common | different families collected by this franchise in play (founding roster and creation draft excluded) ≥ 10 | retro provisional |
+| `dx_original_20` | Original Collector | common | original families collected in play (founding excluded) ≥ 20 | retro provisional |
+| `dx_signed_25` | Collector | uncommon | different families collected by this franchise in play (founding roster and creation draft excluded) ≥ 25 | retro provisional |
 | `dx_knowledge_30` | Hands-On Research | common | different families you have played in games ≥ 30 | retro |
-| `dx_types_all` | Every Element | uncommon | families collected in your least-collected type ≥ 5 | retro provisional |
+| `dx_types_all` | Every Element | uncommon | families collected in play in your least-collected type ≥ 2 | retro provisional |
 | `dx_seen_140` | Scout of Beasts | uncommon | different families faced in games ≥ 140 | provisional |
 | `dx_seen_170` | Bestiary | rare | different families faced in games ≥ 170 | provisional |
-| `dx_signed_100` | Menagerie | rare | different families collected by this franchise ≥ 100 | retro |
-| `dx_account_100` | Lifetime Collector | rare | families collected across all your franchises ≥ 100 | retro account |
+| `dx_signed_50` | Menagerie | rare | different families collected by this franchise in play (founding roster and creation draft excluded) ≥ 50 | retro provisional |
+| `dx_account_100` | Lifetime Collector | rare | families collected in play across your eligible franchises (achievements dex, not the shared Beast Dex) ≥ 100 | retro provisional account |
 | `dx_seen_all` | Seen Them All | epic | different families faced in games ≥ 192 | provisional |
 
 **Evolution & Development (15)**
@@ -230,11 +242,11 @@ Machine-readable: `docs/achievements/catalogue.json`. Readable, with every field
 | `cl_ot_win` | Sudden Death | common | overtime Clash wins ≥ 1 |  |
 | `cl_wins_50` | Clash Veteran | uncommon | Beast Clash wins ≥ 50 |  |
 | `cl_streak_5` | Clash Streak | uncommon | the longest run of consecutive Clash wins ≥ 5 |  |
-| `cl_quick` | Blitzkrieg | uncommon | Clash wins within the stated exchanges ≥ 1 (ex 12) | provisional |
+| `cl_quick` | Lightning Round | uncommon | Clash wins within the stated exchanges ≥ 1 (ex 12) | provisional |
 | `cl_wins_100` | Clash Master | epic | Beast Clash wins ≥ 100 |  |
 | `cl_ot_wins_5` | Overtime Specialists | rare | overtime Clash wins ≥ 5 |  |
-| `cl_flawless` | Flawless | rare | Clash wins with team health at or above the stated share ≥ 1 (pct 60) | provisional |
-| `cl_watch_25` | Field General | rare | Clash wins you commanded (not simulated) ≥ 25 |  |
+| `cl_dominant` | Dominant Victory | rare | Clash wins with team health at or above the stated share (dominant wins) ≥ 1 (pct 60) | provisional |
+| `cl_commanded_25` | Field General | rare | Clash wins in which you made at least one rotation call (live, not simulated) ≥ 25 |  |
 | `cl_playoff_ot` | Playoff Showdown | epic | playoff overtime Clash wins ≥ 1 |  |
 | `cl_streak_15` | Untouchable | epic | the longest run of consecutive Clash wins ≥ 15 | provisional |
 | `cl_wins_250` | Clash Legend | legendary | Beast Clash wins ≥ 250 | provisional |
@@ -259,13 +271,13 @@ Machine-readable: `docs/achievements/catalogue.json`. Readable, with every field
 
 | id | name | rarity | requirement | flags |
 |---|---|---|---|---|
-| `legend_tracked` | A Legend Track | uncommon | original check (unchanged): Choose your first Legend Track. | original retro |
-| `legend_unlocked` | A legend unlocked | epic | original check (unchanged): Unlock a legendary monster (three Legend Tracks on one). | original retro |
-| `lg_tracks_3` | Legend Hunter | uncommon | legend tracks chosen ≥ 3 | retro |
+| `legend_tracked` | A Legend Track | epic | original check (unchanged): Choose your first Legend Track. | original retro |
+| `legend_unlocked` | A legend unlocked | legendary | original check (unchanged): Unlock a legendary monster (three Legend Tracks on one). | original retro |
+| `lg_sighting` | Legend Sighting | uncommon | a legendary monster in the opponent's lineup ≥ 1 |  |
 | `lg_legendary_play` | Legendary Play | rare | legendary plays discovered ≥ 1 | retro |
 | `lg_signed` | Myth Made Real | epic | a legendary monster on the roster ≥ 1 | retro |
 | `lg_legend_win` | Legend on the Field | epic | a win with a legendary monster in the lineup ≥ 1 |  |
-| `lg_unlocked_2` | Twin Legends | legendary | legendary monsters unlocked ≥ 2 | retro |
+| `lg_legend_playoff` | Legend in the Playoffs | legendary | a playoff win with a legendary monster in your lineup ≥ 1 |  |
 | `lg_legend_title` | Legendary Champions | mythic | a Beast Bowl title with a legendary on the roster ≥ 1 |  |
 
 **Draft & Scouting (10)**
@@ -345,7 +357,7 @@ Machine-readable: `docs/achievements/catalogue.json`. Readable, with every field
 | Category | Total | C | U | R | E | L | M |
 |---|---|---|---|---|---|---|---|
 | Game Performance | 20 | 8 | 3 | 5 | 2 | 2 | 0 |
-| Franchise Milestones | 15 | 4 | 2 | 4 | 3 | 2 | 0 |
+| Franchise Milestones | 15 | 4 | 3 | 4 | 3 | 1 | 0 |
 | Championships | 12 | 0 | 2 | 2 | 3 | 3 | 2 |
 | Offensive Performance | 15 | 5 | 6 | 2 | 2 | 0 | 0 |
 | Defensive Performance | 15 | 2 | 4 | 4 | 4 | 1 | 0 |
@@ -354,7 +366,7 @@ Machine-readable: `docs/achievements/catalogue.json`. Readable, with every field
 | Evolution & Development | 15 | 2 | 5 | 4 | 2 | 2 | 0 |
 | Beast Clash | 20 | 9 | 3 | 3 | 3 | 2 | 0 |
 | Gym Challenges | 10 | 3 | 2 | 2 | 2 | 1 | 0 |
-| Legendary Monsters | 8 | 0 | 2 | 1 | 3 | 1 | 1 |
+| Legendary Monsters | 8 | 0 | 1 | 1 | 3 | 2 | 1 |
 | Draft & Scouting | 10 | 4 | 2 | 2 | 1 | 1 | 0 |
 | Trades & Free Agency | 12 | 4 | 3 | 3 | 2 | 0 | 0 |
 | Coaching & Management | 8 | 2 | 2 | 3 | 1 | 0 | 0 |
@@ -365,8 +377,8 @@ Machine-readable: `docs/achievements/catalogue.json`. Readable, with every field
 **Other counts:**
 - Hidden: 6, all in the Hidden category.
 - Account scope: 2 (`ch_two_franchises`, `dx_account_100`); all other rows are franchise scope.
-- Retroactive: 124 rows may be granted from a save's history.
-- Provisional thresholds: 36.
+- Retroactive: 122 rows may be granted from a save's history.
+- Provisional thresholds: 40.
 
 **Where the thresholds come from.** All measurements are on `main` at 58c33ee and are observation only:
 - 300 single games between generated clubs (quality 50–69, 180 s quarters):
@@ -628,7 +640,7 @@ It ran on the branch as it stood at commit d6394f1. **Rerun on the final code: 9
 
 ## 12. Provisional thresholds
 
-There are 36 provisional rows. Each is configurable in its one row, and each should be re-measured once the balance branch lands: its cap, Rookie quality and play changes move scoring and roster strength.
+There are 40 provisional rows. Each is configurable in its one row, and each should be re-measured once the balance branch lands: its cap, Rookie quality and play changes move scoring and roster strength.
 
 | id | name | rarity | requirement |
 |---|---|---|---|
@@ -649,10 +661,14 @@ There are 36 provisional rows. Each is configurable in its one row, and each sho
 | `st_perfect_kicker` | Automatic | legendary | field-goal attempts in a season with every field goal and extra point made ≥ 10 |
 | `dx_seen_60` | Field Notes | common | different families faced in games ≥ 60 |
 | `dx_seen_100` | Keen Observer | common | different families faced in games ≥ 100 |
-| `dx_original_45` | Original Collector | common | original families collected ≥ 45 |
-| `dx_types_all` | Every Element | uncommon | families collected in your least-collected type ≥ 5 |
+| `dx_signed_10` | Growing Collection | common | different families collected by this franchise in play (founding roster and creation draft excluded) ≥ 10 |
+| `dx_original_20` | Original Collector | common | original families collected in play (founding excluded) ≥ 20 |
+| `dx_signed_25` | Collector | uncommon | different families collected by this franchise in play (founding roster and creation draft excluded) ≥ 25 |
+| `dx_types_all` | Every Element | uncommon | families collected in play in your least-collected type ≥ 2 |
 | `dx_seen_140` | Scout of Beasts | uncommon | different families faced in games ≥ 140 |
 | `dx_seen_170` | Bestiary | rare | different families faced in games ≥ 170 |
+| `dx_signed_50` | Menagerie | rare | different families collected by this franchise in play (founding roster and creation draft excluded) ≥ 50 |
+| `dx_account_100` | Lifetime Collector | rare | families collected in play across your eligible franchises (achievements dex, not the shared Beast Dex) ≥ 100 |
 | `dx_seen_all` | Seen Them All | epic | different families faced in games ≥ 192 |
 | `ev_apex` | Apex Predator | rare | an Apex monster you acquired (not a founding one) ≥ 1 |
 | `ev_ovr80_x10` | Stacked Roster | epic | monsters at 80 overall or better on the roster at once ≥ 10 |
@@ -660,8 +676,8 @@ There are 36 provisional rows. Each is configurable in its one row, and each sho
 | `ev_ovr_95` | Generational | legendary | the overall of a monster who was below the target when first seen on your roster ≥ 95 |
 | `ev_final_x5` | Evolved Dynasty | legendary | monsters on the roster that evolved to their final form with you ≥ 5 |
 | `cl_close` | By a Whisker | common | Clash wins with team health under the stated share ≥ 1 (pct 10) |
-| `cl_quick` | Blitzkrieg | uncommon | Clash wins within the stated exchanges ≥ 1 (ex 12) |
-| `cl_flawless` | Flawless | rare | Clash wins with team health at or above the stated share ≥ 1 (pct 60) |
+| `cl_quick` | Lightning Round | uncommon | Clash wins within the stated exchanges ≥ 1 (ex 12) |
+| `cl_dominant` | Dominant Victory | rare | Clash wins with team health at or above the stated share (dominant wins) ≥ 1 (pct 60) |
 | `cl_streak_15` | Untouchable | epic | the longest run of consecutive Clash wins ≥ 15 |
 | `cl_wins_250` | Clash Legend | legendary | Beast Clash wins ≥ 250 |
 | `cl_season_unbeaten` | Perfect Clash Season | legendary | Clashes fought in a season with every one won ≥ 10 |
@@ -699,7 +715,7 @@ Checked with `git merge-tree` against `origin/impl/balance-audit-2026-11`.
   - `src/sim/game-runner.js`: only here;
   - `styles/app.css`: the achievement styles sit beside the toast rules, which avoided an end-of-file conflict.
 - **Behaviour after the merge:**
-  - The 1.6 M cap, the Rookie quality experiment and the play changes shift scoring, sacks, roster strength and draft value. The 36 provisional thresholds should be re-measured on the merged build (`tools/achievements-catalogue.mjs` plus a soak).
+  - The 1.6 M cap, the Rookie quality experiment and the play changes shift scoring, sacks, roster strength and draft value. The 40 provisional thresholds should be re-measured on the merged build (`tools/achievements-catalogue.mjs` plus a soak).
   - `fa_cap_clean_5` reads `salarySummary(f).over`, so it follows whichever cap applies, including legacy caps for existing saves.
   - Kicker: with no kicker the owner can still play (F-14), and the special-teams rows simply do not progress.
 
