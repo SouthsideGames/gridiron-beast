@@ -33,7 +33,7 @@ It is a separate worktree from the balance work. No gameplay balance, simulation
 - **Published game files:** still 512. No new `src` file; release check `RELEASE FILE LIST OK: 512 files`.
 - **Testing:**
   - The new test file and the affected existing tests pass.
-  - A targeted run of save, cloud, rules and Clash tests was done (section 11).
+  - 167 of 167 targeted save, cloud, rules and Clash tests pass, and 79 of 79 on a rerun of the final code (section 11).
   - Two 4-season soaks were run.
   - Phone screenshots are **emulated** (Playwright Chromium, iPhone 14 profile).
   - The full fast and sim suites were **not** run.
@@ -612,7 +612,15 @@ What it never infers:
 - menu-onboarding-polish, evo-preview, qol-coach-portrait;
 - task10-gym-badges, task8-m6-screens, task8-foundations.
 
-TARGETED
+**Targeted run: 17 files, 167 of 167 passing in 38 minutes.** The run covers:
+- saves and compatibility: `save`, `franchise-save-compat`, `task9-save-compat`, `saved-lines`;
+- storage: `storage-foundation`, `storage-final-audit`;
+- cloud: `cloud-save`, `cloud-regressions`;
+- identity and lifecycle: `uid-isolation`, `lifecycle`;
+- league, replay and rules: `league-32`, `replay`, `rules`;
+- Clash and weekly play: `task10-clash-franchise`, `task8-encounter-bonus`, `guided-week`, `coach-assist`.
+
+It ran on the branch as it stood at commit d6394f1. **Rerun on the final code: 9 files, 79 of 79 passing.** The files are `achievements-catalogue`, `save`, `cloud-save`, `franchise-save-compat`, `guided-week`, `task10-clash-franchise`, `task8-m6-screens`, `central-text` and `text-style`.
 
 **Emulated phone check:** section 7. No page errors.
 
