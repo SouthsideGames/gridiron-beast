@@ -44,5 +44,7 @@ test('desperation attempts (owner N8b, provisional): the last play of a half, or
   assert.equal(fgSignatureDesperation(st({ score: { home: 0, away: 7 }, clock: 90 }), far), false, 'down 7 with time left: a field goal is not enough');
   assert.equal(fgSignatureDesperation(st(), { available: false, chance: 1 }), false, 'spent: never');
   assert.equal(fgSignatureDesperation(st(), { available: true, chance: null }), false, 'above 90: never');
-  assert.equal(fourthDownDecision(st(), { coach: { aggression: 0.5 }, offense: {}, defense: {}, kicker: { attrs: { kicking: 60 } }, roster: [] }, far), 'fg', 'the AI kicks it');
+  // Follow-up A-3 (owner 2026-11-26): a team kicks only with an available kicker, so the fixture's kicker is a real one (an id, healthy).
+  assert.equal(fourthDownDecision(st(), { coach: { aggression: 0.5 }, offense: {}, defense: {}, kicker: { id: 'k1', attrs: { kicking: 60 } }, roster: [] }, far), 'fg', 'the AI kicks it');
+  assert.equal(fourthDownDecision(st(), { coach: { aggression: 0.5 }, offense: {}, defense: {}, kicker: null, roster: [] }, far), 'go', 'A-3: without a kicker there is no kick');
 });
