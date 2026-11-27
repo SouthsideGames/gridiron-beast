@@ -2955,4 +2955,3 @@ html[data-app-inactive="1"] .final-celebration * { animation-play-state: paused;
 @keyframes crowd-bubble { 0% { opacity: 0; transform: translate(-50%, -80%) scale(.7); } 10% { opacity: 1; transform: translate(-50%, -100%) scale(1.05); } 16% { transform: translate(-50%, -100%) scale(1); } 82% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -112%); } }
 html[data-reduced-motion="1"] .crowd-bubble { animation: crowd-bubble-still 2.6s linear both; }
 @keyframes crowd-bubble-still { 0%, 85% { opacity: 1; transform: translate(-50%, -100%); } 100% { opacity: 0; transform: translate(-50%, -100%); } }
-
