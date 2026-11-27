@@ -117,7 +117,7 @@ Full report: `reports/achievement-audit/FINAL_ACHIEVEMENT_CALIBRATION.md`. It co
 | Clash performance, `engine.test.js` performance tests | 1 | 1 | 0 | Pass |
 | Targeted fix validation (17 files: formations, Clash golden, AI signatures, field effects, evolution), `325ba16` | 165 | 165 | 0 | Pass |
 | League registry after D-2 fix, `7c2934c` | 9 | 9 | 0 | Pass |
-| Affected-suite rerun (12 files: league registry, careers, league flows and season, trading, save compatibility ×2, floor and lineup gate, cap transition, Hall of Fame day), `7c2934c` | FIX3_TOTAL | FIX3_PASS | FIX3_FAIL | FIX3_STATUS |
+| Affected-suite rerun (12 files: league registry, careers, league flows and season, trading, save compatibility ×2, floor and lineup gate, cap transition, Hall of Fame day), `7c2934c` | 105 | 105 | 0 | Pass |
 | Achievements, targeted (20 files), PR #192 head | 146 | 146 | 0 | Pass |
 | Save compatibility (deploy check: 3 saves load, 1 old save refused), `6445c82` | 27 checks | 27 | 0 | Pass |
 | Published-file validation (release list, byte check against the commit, live listing, live hashes), `6445c82` | 512 files | 512 | 0 | Pass |
