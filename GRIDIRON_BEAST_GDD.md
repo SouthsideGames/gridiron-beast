@@ -5200,15 +5200,23 @@ Measured results are in `reports/balance-impl/FINAL_DECISIONS_REPORT.md`. Where 
 - **Foresight** (Cerebrix, PSY-03-C) prepares its mirror and then makes its ordinary attack in the same turn, like Root Communion and Eye
   of the Storm. It still prepares only while the **current active foe** applies a harmful status; everything else about it is unchanged.
 
-#### 61.15.5 Run defense: Counter, Power Left, Lead Draw (D-4, D-6)
-- Investigated with traces; **no engine change**. The Counter run-read test's Awareness-recovery assertion against Run Wall and Cover 3
-  fails since §61.14.3 (B-gap path): in those calls the false step deceives nobody, so there is nothing for Awareness to recover, and a
-  wider false step that would make the read matter delays the exchange (the mesh breaks). A test revision and the Power Left and contain
-  call findings await the owner (report §5). The test is unchanged.
+#### 61.15.5 Run defense: Counter, Power Left, Lead Draw (D-4, D-6; owner decisions 2026-11-26)
+- **No defensive engine change.** Read timing, the contain linebackers' run fits and the draw show are unchanged.
+- **Counter:** the B-gap path (§61.14.3) and the false step are unchanged. The run-read test was revised with the owner's approval: Awareness
+  must help recover where the false step deceives (Bear Front, Scrape Exchange); against Run Wall and Cover 3, where nobody bites, high
+  Awareness must not be a meaningful disadvantage (paired, 1.5-yard tolerance).
+- **Power Left is the mirror of Power Right** (supersedes its earlier design): the tight end lines up on the left and blocks on the play
+  side, the receiver lines up right, the right guard pulls. It used to run away from the tight end, who sealed the back side, and
+  against the two-lineman contain calls every play-side defender was blocked (Scrape Exchange 24.8, Pinch Spill 28.2 yards a carry).
+  Redesigns that kept the back-side seal stayed at 14 to 28; the mirror measures 5.3 and 6.0. Its coaching note is Power Right's: call it
+  when the defense overloads your right side.
+- **Lead Draw:** closed with no change. Its yards against the contain and edge calls match their written weakness (inside runs and
+  draws); Bear Front and Run Wall hold it under a yard a carry.
 
 #### 61.15.6 Stamina and depth (D-7)
 - Experiment only, nothing adopted. Production: every game starts at full stamina (capacity = permanent Durability); weekly fatigue does
-  not reach game stamina. Recovery stays 28, injury odds and Durability weights are unchanged, and there is no depth bonus.
+  not reach game stamina. Recovery stays 28; fatigue accumulation, injury odds, Durability weights and starting stamina are unchanged, and
+  there is no depth bonus. Results of variants B and C are in the report; any change waits for the owner.
 
 ### 61.12 Validation (measured 2026-11-26; details in `reports/balance-impl/FINAL_REPORT.md`)
 - **Whole suite:** fast tier 2,263 of 2,263; simulation tier 310 of 310 after three set-up updates that follow §61.3–61.4.
