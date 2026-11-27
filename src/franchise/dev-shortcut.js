@@ -13,6 +13,7 @@ const bestProspect = (f) => { const d = f.draft; const cls = (d?.class || []).fi
 /** Play the current season to its end and settle the offseason (contracts, draft, free agents, staff), without starting the next. */
 export function fastForwardSeason(f) {
   if (!shortcutsEnabled()) return { ok: false, reason: 'Developer shortcuts are off in this build.' };
+  f.achDev = true; // achievements (overhaul): a franchise a developer shortcut has played earns no more achievements
   if (isArchived(f)) return { ok: false, reason: 'This franchise is an archive.' };
   if (F.needsGoal(f)) { const g = F.commissionerGoals(f); F.chooseGoal(f, g[0]?.id); }
   let guard = 0;

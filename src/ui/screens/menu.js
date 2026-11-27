@@ -8,8 +8,8 @@ import { esc, delegate, toast, confirmSheet, sheet } from '../dom.js';
 import { openTypeChart } from '../type-chart.js';
 import { stadiumListHtml } from '../stadium-preview.js';
 import { iconHtml } from '../icons.js';
-import { achievementsData } from '../../franchise/achievement-store.js';
-import { ACHIEVEMENTS } from '../../data/achievements.js';
+import { achievementsData, achievementProgress } from '../../franchise/achievement-store.js';
+import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID, ACH_CATEGORIES, ACH_RARITIES, achievementDesc } from '../../data/achievements.js';
 import { yearOf } from '../../data/calendar.js';
 import * as Save from '../../franchise/save.js';
 import { savePanelHtml, fillStorageMeter, offerExport, importFile, openBackups } from '../storage-ui.js';
@@ -39,6 +39,49 @@ import { reviewQueue, queueText, devBadge, devNoticesOn, devNoticesActive, devNo
 import { t } from '../../text/index.js';
 import { t as $t } from '../../text/index.js';
 
+// ---------------------------------------------------------------- achievement badges and unlock presentation (overhaul 2026-11)
+// One CSS/SVG-free badge framework: a category glyph inside a rarity ring (styles/app.css .ach-badge), not 200 images.
+const ACH_ICON = Object.freeze({ game: '🏈', franchise: '🏟️', championship: '🏆', offense: '🎯', defense: '🛡️', special: '🦶', dex: '📖', evolution: '✨', clash: '⚔️', gym: '🏅', legendary: '🐉', draft: '📋', trades: '🤝', coaching: '📣', awards: '🎖️', hidden: '❓' });
+const ACH_CAT_LABEL = { game: () => t('ach.cat_game'), franchise: () => t('ach.cat_franchise'), championship: () => t('ach.cat_championship'), offense: () => t('ach.cat_offense'), defense: () => t('ach.cat_defense'), special: () => t('ach.cat_special'), dex: () => t('ach.cat_dex'), evolution: () => t('ach.cat_evolution'), clash: () => t('ach.cat_clash'), gym: () => t('ach.cat_gym'), legendary: () => t('ach.cat_legendary'), draft: () => t('ach.cat_draft'), trades: () => t('ach.cat_trades'), coaching: () => t('ach.cat_coaching'), awards: () => t('ach.cat_awards'), hidden: () => t('ach.cat_hidden') };
+const ACH_RAR_LABEL = { common: () => t('ach.r_common'), uncommon: () => t('ach.r_uncommon'), rare: () => t('ach.r_rare'), epic: () => t('ach.r_epic'), legendary: () => t('ach.r_legendary'), mythic: () => t('ach.r_mythic') };
+export const achCategoryLabel = (c) => ACH_CAT_LABEL[c]?.() || c;
+export const achRarityLabel = (r) => ACH_RAR_LABEL[r]?.() || r;
+/** An achievement's name: the 24 original ones may name the rival (filled from the scene as it played, else generic). */
+const achTitle = (a, e) => e?.scene?.title || String(a.titleKey ? t(a.titleKey) : a.title).replace(/\{\w+\}/g, t('menu.your_rival'));
+const achDate = (e) => { try { return e?.at ? new Date(e.at).toLocaleDateString() : yearOf(e?.year || 1); } catch { return yearOf(e?.year || 1); } };
+export function achBadgeHtml(a, { earned = false, secret = false, size = 48 } = {}) {
+  return `<span class="ach-badge r-${a.rarity} c-${a.category}${earned ? '' : ' locked'}" style="--sz:${size}px" aria-hidden="true"><span>${secret ? '❓' : ACH_ICON[a.category] || '🏅'}</span></span>`;
+}
+/**
+ * Present queued unlocks (f.achQueue) on a safe screen (HQ; never during a play or a Clash). Common/Uncommon: one compact toast
+ * (several at once are consolidated into one); Rare/Epic: a card with the description; Legendary/Mythic: a reveal with a word
+ * from the commissioner. The original 24 keep their cutscenes (f.scenes), which play first. Returns true if anything was shown.
+ */
+export function presentAchievementUnlocks(app) {
+  const f = app?.f; if (!f || f.game || isArchived(f) || !(f.achQueue || []).length || document.querySelector('.sheet')) return false;
+  const q = f.achQueue.slice(); const items = q.map((x) => (x.id ? ACHIEVEMENT_BY_ID[x.id] : null)).filter(Boolean); const retro = q.filter((x) => x.retro).reduce((n, x) => n + x.retro, 0);
+  F.dismissAchievementUnlocks(f, q.length); app.save?.();
+  const reveal = items.filter((a) => a.presentation === 'reveal'); const cards = items.filter((a) => a.presentation === 'card'); const small = items.filter((a) => a.presentation === 'toast');
+  if (retro) toast(t('ach.retro_notice', { n: retro }), 'good', 4200, { sound: null });
+  if (small.length === 1) toast(t('ach.unlocked_toast', { name: t(small[0].titleKey) }), 'good', 2800, { sound: null });
+  else if (small.length > 1) toast(t('ach.unlocked_many', { n: small.length }), 'good', 3200, { sound: null });
+  if (cards.length) achCards(cards);
+  if (reveal.length) { const a = reveal[0]; const more = reveal.length - 1;
+    sheet(`<div class="ach-reveal r-${a.rarity}">${achBadgeHtml(a, { earned: true, size: 96 })}<div class="ach-rar r-${a.rarity}" style="margin:10px auto 0">${achRarityLabel(a.rarity)} · ${esc(achCategoryLabel(a.category))}</div>
+      <h2 style="margin:8px 0 4px">${esc(t(a.titleKey))}</h2><p class="muted" style="margin:0 0 12px">${esc(achievementDesc(a))}</p>
+      <div class="row" style="gap:12px;align-items:flex-start;text-align:left">${portraitSprite('commissioner', 48, { hue: 40 })}<div class="talk" style="margin:0"><p class="talk-line">${esc(a.rarity === 'mythic' ? t('ach.reveal_line_mythic') : t('ach.reveal_line_legendary'))}</p></div></div>
+      ${more ? `<p class="dim" style="margin-top:10px">${t('ach.reveal_more', { n: more })}</p>` : ''}</div>`, { title: a.rarity === 'mythic' ? t('ach.reveal_title_mythic') : t('ach.reveal_title_legendary') });
+  }
+  return true;
+}
+/** Rare/Epic: a card above the tab bar, one after another, each dismissing itself (never blocks input). */
+function achCards(list) {
+  let el = document.getElementById('ach-pop'); if (!el) { el = document.createElement('div'); el.id = 'ach-pop'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
+  const shown = list.slice(0, 3); const extra = list.length - shown.length;
+  el.innerHTML = shown.map((a) => `<div class="ach-pop-card r-${a.rarity}">${achBadgeHtml(a, { earned: true, size: 40 })}<div><div class="dim" style="font-size:11px">${t('ach.unlocked_label')} · ${achRarityLabel(a.rarity)}</div><b>${esc(t(a.titleKey))}</b><div class="muted" style="font-size:12px">${esc(achievementDesc(a))}</div></div></div>`).join('') + (extra > 0 ? `<div class="ach-pop-card"><span class="dim">${t('ach.unlocked_many', { n: extra })}</span></div>` : '');
+  el.classList.add('show'); clearTimeout(achCards.timer); achCards.timer = setTimeout(() => el.classList.remove('show'), 5200);
+  el.onclick = () => el.classList.remove('show');
+}
 export function registerMenuScreens(Router, app) {
   Router.registerScreen('menu', {
     title: t('menu.gridiron_beast'), back: false, tabs: false,
@@ -207,24 +250,76 @@ export function registerMenuScreens(Router, app) {
         dexall: () => Router.go('dex', { all: true }), dexreset: async () => { if (await confirmSheet(t('menu.wipe_every_species_you_have_discovered'), { title: t('menu.reset_beast_dex'), okLabel: t('menu.reset'), danger: true })) { resetDex(); toast(t('menu.beast_dex_reset')); } } }); },
   });
 
-  // ---------------------------------------------------------------- Achievements (GDD §21.4): the player's, across every franchise
+  // ---------------------------------------------------------------- Achievements (GDD §21.4; overhaul 2026-11): the player's, across every franchise
+  // Account-wide (the store outlives any franchise); progress bars read the franchise that is open, when one is.
+  const achView = { q: '', cat: 'all', rar: 'all', show: 'all' };
   Router.registerScreen('achievements', {
     title: t('menu.achievements'), back: true,
     render() {
-      const earned = achievementsData().earned; const got = ACHIEVEMENTS.filter((a) => earned[a.id]).length;
-      const who = (sp) => sp === 'board' ? t('menu.a_letter_from_the_board') : sp === 'rival' ? t('menu.the_rival_gm') : t('menu.the_commissioner');
-      const diff = (d) => ({ rookie: t('menu.rookie'), pro: t('menu.pro'), allstar: t('menu.all_star') })[d] || d;
-      return `<div class="panel"><div class="row between">${t('menu.b_of_earned_b', { got, n: ACHIEVEMENTS.length })}<span class="dim">across every franchise</span></div><div class="bar" style="margin-top:6px"><i style="width:${Math.round(got / ACHIEVEMENTS.length * 100)}%"></i></div><p class="dim" style="margin:6px 0 0">${t('menu.each_one_arrives_in_your_franchise')}</p></div>
-        <div class="stack">${ACHIEVEMENTS.map((a) => { const e = earned[a.id]; return e ? `<div class="panel ach-card earned"><div class="row between"><b>🏅 ${esc(e.scene?.title || a.title.replace(/\{\w+\}/g, t('menu.your_rival')))}</b><span class="dim">${yearOf(e.year)}</span></div><div class="muted">${esc(a.desc || '')}</div><div class="dim" style="font-size:12px;margin-top:2px">${t('menu.first_earned_with', { who: who(a.speaker), club: esc(e.club || ''), diff: esc(diff(e.difficulty)) })}${e.count > 1 ? ` ${t('menu.franchises', { count: e.count })}` : ''}</div>${e.scene ? `<button class="btn small" data-action="replay" data-id="${a.id}" style="margin-top:6px">${t('menu.replay_the_scene')}</button>` : ''}</div>`
-          : `<div class="panel ach-card locked"><div class="row between"><b>🔒 ${esc(a.title.includes('{') ? t('menu.a_word_from_your_rival') : a.title)}</b><span class="dim">·</span></div><div class="muted">${esc(a.desc || '')}</div><div class="dim" style="font-size:12px;margin-top:2px">${who(a.speaker)}</div></div>`; }).join('')}</div>`;
+      const earned = achievementsData().earned; const f = app.f && !isArchived(app.f) ? app.f : null;
+      const got = ACHIEVEMENTS.filter((a) => earned[a.id]); const n = ACHIEVEMENTS.length; const pctAll = Math.round((got.length / n) * 100);
+      const count = (pick) => { const all = ACHIEVEMENTS.filter(pick); return { got: all.filter((a) => earned[a.id]).length, n: all.length }; };
+      const recent = got.slice().sort((a, b) => (earned[b.id].at || 0) - (earned[a.id].at || 0)).slice(0, 4);
+      const opt = (v, label, cur) => `<option value="${v}"${v === cur ? ' selected' : ''}>${esc(label)}</option>`;
+      return `<div class="panel ach-summary"><div class="row between"><b style="font-size:20px">${t('ach.screen_count', { got: got.length, n })}</b><span class="chip accent">${t('ach.screen_complete', { pct: pctAll })}</span></div>
+          <div class="bar" style="margin-top:6px"><i style="width:${pctAll}%"></i></div><p class="dim" style="margin:6px 0 0">${t('menu.each_one_arrives_in_your_franchise')}</p>
+          <div class="ach-rarities">${ACH_RARITIES.map((r) => { const c = count((a) => a.rarity === r); return `<span class="ach-rar r-${r}">${achRarityLabel(r)} <b>${c.got}/${c.n}</b></span>`; }).join('')}</div></div>
+        ${recent.length ? `<div class="panel"><div class="muted" style="margin-bottom:6px">${t('ach.recent')}</div><div class="ach-recent">${recent.map((a) => `<button class="ach-mini" data-action="achopen" data-id="${a.id}" aria-label="${esc(achTitle(a, earned[a.id]))}">${achBadgeHtml(a, { earned: true, size: 40 })}<span>${esc(achTitle(a, earned[a.id]))}</span></button>`).join('')}</div></div>` : ''}
+        <details class="panel ach-cats"><summary class="muted">${t('ach.by_category')}</summary><div class="ach-catgrid">${ACH_CATEGORIES.map((c) => { const x = count((a) => a.category === c); return `<button class="chip" data-action="achcat" data-cat="${c}">${ACH_ICON[c]} ${esc(achCategoryLabel(c))} <b>${x.got}/${x.n}</b></button>`; }).join('')}</div></details>
+        <div class="ach-filters"><input type="search" class="input" data-ach="q" placeholder="${esc(t('ach.search'))}" aria-label="${esc(t('ach.search'))}" value="${esc(achView.q)}">
+          <div class="row" style="gap:6px"><select class="input" data-ach="cat" aria-label="${esc(t('ach.category'))}">${opt('all', t('ach.all_categories'), achView.cat)}${ACH_CATEGORIES.map((c) => opt(c, achCategoryLabel(c), achView.cat)).join('')}</select>
+          <select class="input" data-ach="rar" aria-label="${esc(t('ach.rarity'))}">${opt('all', t('ach.all_rarities'), achView.rar)}${ACH_RARITIES.map((r) => opt(r, achRarityLabel(r), achView.rar)).join('')}</select></div>
+          <div class="seg" role="group">${[['all', t('ach.show_all')], ['unlocked', t('ach.show_unlocked')], ['locked', t('ach.show_locked')]].map(([v, label]) => `<button class="btn small${achView.show === v ? ' primary' : ''}" data-action="achshow" data-v="${v}">${label}</button>`).join('')}</div></div>
+        ${f ? `<div class="dim" style="margin:0 0 6px">${t('ach.progress_for', { club: esc(f.club) })}</div>` : ''}
+        <div class="ach-list" data-ach-list>${achListHtml(earned, f)}</div>`;
     },
     mount(root) {
-      delegate(root, { replay: (el) => { const e = achievementsData().earned[el.dataset.id]; const sc = e?.scene; if (!sc) return;
-        const head = sc.speaker === 'board' ? '' : sc.speaker === 'rival' ? `<div class="row" style="gap:12px;align-items:flex-start;margin-bottom:10px">${portraitSprite(`gm|${sc.rivalTeam}`, 56, { hue: 280 })}<div><div class="talk-name">${esc(sc.rivalGm || t('menu.the_rival_gm_2'))}</div><div class="dim">GM, ${esc(sc.rivalTeam || '')}</div></div></div>` : `<div class="row" style="gap:12px;align-items:flex-start;margin-bottom:10px">${portraitSprite('commissioner', 56, { hue: 40 })}<div><div class="talk-name">${t('menu.the_commissioner_2')}</div><div class="dim">${t('menu.league_office')}</div></div></div>`;
-        const body = sc.speaker === 'board' ? `<div class="board-letter">${sc.beats.map((b) => `<p>${esc(b)}</p>`).join('')}</div>` : `<div class="stack">${sc.beats.map((b) => `<div class="talk ${sc.speaker === 'rival' ? 'rival' : ''}" style="margin:0"><p class="talk-line">${esc(b)}</p></div>`).join('')}</div>`;
-        sheet(`<div class="scene">${head}${body}</div>`, { title: `🏅 ${sc.title}` }); } });
+      const list = () => root.querySelector('[data-ach-list]');
+      const redraw = () => { const el = list(); if (el) el.innerHTML = achListHtml(achievementsData().earned, app.f && !isArchived(app.f) ? app.f : null); };
+      root.addEventListener('input', (e) => { const k = e.target?.dataset?.ach; if (!k) return; achView[k] = e.target.value; redraw(); });
+      delegate(root, {
+        achshow: (el) => { achView.show = el.dataset.v; Router.render(); },
+        achcat: (el) => { achView.cat = el.dataset.cat; Router.render(); },
+        achopen: (el) => openAchievement(el.dataset.id),
+        replay: (el) => replayAchievementScene(el.dataset.id),
+      });
     },
   });
+  /** The filtered list: locked hidden achievements stay placeholders; progress is the open franchise's. */
+  function achListHtml(earned, f) {
+    const q = achView.q.trim().toLowerCase();
+    const rows = ACHIEVEMENTS.filter((a) => (achView.cat === 'all' || a.category === achView.cat) && (achView.rar === 'all' || a.rarity === achView.rar)
+      && (achView.show === 'all' || (achView.show === 'unlocked') === !!earned[a.id])
+      && (!q || ((!a.hidden || earned[a.id]) && `${achTitle(a, earned[a.id])} ${achievementDesc(a)} ${achCategoryLabel(a.category)}`.toLowerCase().includes(q))));
+    if (!rows.length) return `<p class="dim">${t('ach.none_match')}</p>`;
+    return rows.map((a) => { const e = earned[a.id]; const secret = a.hidden && !e; const pr = !e && !secret && f ? achievementProgress(f, a) : null;
+      return `<button class="ach-card ${e ? 'earned' : 'locked'} r-${a.rarity}" data-action="achopen" data-id="${a.id}">${achBadgeHtml(a, { earned: !!e, secret })}
+        <span class="ach-body"><span class="row between"><b>${esc(secret ? t('ach.hidden_name') : achTitle(a, e))}</b><span class="ach-rar r-${a.rarity}">${achRarityLabel(a.rarity)}</span></span>
+        <span class="muted">${esc(secret ? t('ach.hidden_desc') : achievementDesc(a))}</span>
+        ${e ? `<span class="dim ach-date">${t('ach.unlocked_on', { date: esc(achDate(e)) })}</span>` : pr ? `<span class="ach-prog"><span class="bar"><i style="width:${Math.round(pr.pct * 100)}%"></i></span><span class="dim mono">${t('ach.progress', { value: Math.floor(pr.value), target: pr.target })}</span></span>` : ''}</span></button>`; }).join('');
+  }
+  function openAchievement(id) {
+    const a = ACHIEVEMENT_BY_ID[id]; if (!a) return; const e = achievementsData().earned[id]; const secret = a.hidden && !e; const f = app.f && !isArchived(app.f) ? app.f : null;
+    const pr = !e && !secret && f ? achievementProgress(f, a) : null; const fr = f?.achievements?.[id];
+    const diff = (d) => ({ rookie: t('menu.rookie'), pro: t('menu.pro'), allstar: t('menu.all_star') })[d] || d;
+    const sh = sheet(`<div class="ach-detail">${achBadgeHtml(a, { earned: !!e, secret, size: 72 })}
+      <div class="ach-rar r-${a.rarity}" style="margin:8px auto 0">${achRarityLabel(a.rarity)} · ${esc(achCategoryLabel(a.category))}</div>
+      <p style="margin:10px 0 4px">${esc(secret ? t('ach.hidden_desc') : achievementDesc(a))}</p>
+      <div class="dim">${a.scope === 'account' ? t('ach.scope_account') : t('ach.scope_franchise')}</div>
+      ${a.legacy ? `<div class="dim">${a.speaker === 'board' ? t('menu.a_letter_from_the_board') : a.speaker === 'rival' ? t('menu.the_rival_gm') : t('menu.the_commissioner')}</div>` : ''}
+      ${pr ? `<div class="ach-prog" style="margin-top:8px"><span class="bar"><i style="width:${Math.round(pr.pct * 100)}%"></i></span><span class="dim mono">${t('ach.progress', { value: Math.floor(pr.value), target: pr.target })}</span></div>` : ''}
+      ${e ? `<div class="dim" style="margin-top:8px">${t('ach.unlocked_on', { date: esc(achDate(e)) })} · ${t('ach.first_with', { club: esc(e.club || ''), diff: esc(diff(e.difficulty)) })}${e.count > 1 ? ` · ${t('ach.franchise_count', { count: e.count })}` : ''}</div>` : ''}
+      ${fr ? `<div class="dim">${t('ach.in_this_franchise', { year: yearOf(fr.year || 1), week: fr.week || 1 })}${fr.backfilled ? ` · ${t('ach.from_history')}` : ''}</div>` : ''}
+      ${e?.scene ? `<button class="btn small" data-action="replay" data-id="${a.id}" style="margin-top:10px">${t('menu.replay_the_scene')}</button>` : ''}</div>`,
+      { title: `${secret ? t('ach.hidden_name') : achTitle(a, e)}` });
+    delegate(sh.el, { replay: () => { sh.close(); replayAchievementScene(a.id); } });
+  }
+  function replayAchievementScene(id) {
+    const e = achievementsData().earned[id]; const sc = e?.scene; if (!sc) return;
+    const head = sc.speaker === 'board' ? '' : sc.speaker === 'rival' ? `<div class="row" style="gap:12px;align-items:flex-start;margin-bottom:10px">${portraitSprite(`gm|${sc.rivalTeam}`, 56, { hue: 280 })}<div><div class="talk-name">${esc(sc.rivalGm || t('menu.the_rival_gm_2'))}</div><div class="dim">GM, ${esc(sc.rivalTeam || '')}</div></div></div>` : `<div class="row" style="gap:12px;align-items:flex-start;margin-bottom:10px">${portraitSprite('commissioner', 56, { hue: 40 })}<div><div class="talk-name">${t('menu.the_commissioner_2')}</div><div class="dim">${t('menu.league_office')}</div></div></div>`;
+    const body = sc.speaker === 'board' ? `<div class="board-letter">${sc.beats.map((b) => `<p>${esc(b)}</p>`).join('')}</div>` : `<div class="stack">${sc.beats.map((b) => `<div class="talk ${sc.speaker === 'rival' ? 'rival' : ''}" style="margin:0"><p class="talk-line">${esc(b)}</p></div>`).join('')}</div>`;
+    sheet(`<div class="scene">${head}${body}</div>`, { title: `🏅 ${sc.title}` });
+  }
   Router.registerScreen('hof', {
     title: t('menu.hall_of_fame'),
     mount(root) { root.addEventListener('click', (e) => { const b = e.target.closest('[data-hof]'); if (!b) return; const card = hallOfFame().find((c) => c.id === b.dataset.hof); if (!card) return; Router.go('career', { hof: card.id, i: Number(b.dataset.i) || 0 }); }); }, // the full-screen career (GDD §48): the card's snapshot, or the partial profile of an older card

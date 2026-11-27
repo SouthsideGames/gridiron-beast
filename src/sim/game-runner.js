@@ -38,7 +38,17 @@ function noteDefense(t, playId) { t.recentDefense.push(playId); if (t.recentDefe
  * `choices` lets the UI override the human side's decisions:
  *   { offensePlayId, defensePlayId, fourthDown, fgSignature, tryChoice, kickoff, tempo, timeout }  (fgSignature: activate the kicker's field-goal signature, Task 8 M3)
  */
+/**
+ * One step of the game. The wrapper keeps state.maxDeficit (each side's largest deficit so far) for the achievements (overhaul
+ * 2026-11, a comeback is "won after trailing by N"). It is written after the step from the score alone and nothing in the game
+ * reads it, so play is unchanged.
+ */
 export function step(state, teams, controllers, tendencies, choices = {}) {
+  const out = playStep(state, teams, controllers, tendencies, choices);
+  const sc = state.score; if (sc) { const d = (state.maxDeficit ||= { home: 0, away: 0 }); const h = (sc.home || 0) - (sc.away || 0); if (-h > d.home) d.home = -h; if (h > d.away) d.away = h; }
+  return out;
+}
+function playStep(state, teams, controllers, tendencies, choices = {}) {
   if (state.finished) return null;
   const side = state.possession;
   const rng = rngFromState(state.rngState);

@@ -5,6 +5,7 @@ import { browsePreferences, setBrowsePreferences } from '../../franchise/polish.
 import { getPlanDraft, storePlanDraft, compareBeast } from '../polish.js';
 import { draftProspectRankings } from '../../franchise/draft.js';
 import { registerGmJobs } from '../gm-jobs-ui.js';
+import { presentAchievementUnlocks } from './menu.js';
 import { playMonsterCry } from '../../audio/detail-audio.js';
 import { stopCry } from '../../audio/monster-cries.js';
 // Franchise Headquarters and the weekly action screens, plus playbook
@@ -132,7 +133,9 @@ export function registerHqScreens(Router, app) {
     },
     mount(root) {
       if (app.f && !app.f.achievementsBackfilled && F.backfillAchievements(app.f).length) app.save();
+      if (app.f && !isArchived(app.f) && !(app.f.achCatalogue >= 1)) { F.backfillCatalogue(app.f); app.save(); } // the 200-achievement catalogue: once, from the save's reliable history
       if (app.f && !app.f.game && F.nextScene(app.f)) { setTimeout(() => Router.go('scene', {}, { reset: true }), 0); return; } // an achievement cutscene plays before anything else (GDD §21)
+      if (app.f && !app.f.game) setTimeout(() => presentAchievementUnlocks(app), 0); // the other unlocks: toasts, cards and reveals, on HQ only (never during a play or a Clash)
       // Legendary Plays (GDD §36.8): a Legendary just joined? Show the discovery card once; the plan is never changed for the owner.
       if (app.f && !app.f.game) { const r = F.syncLegendary(app.f); const ids = unannouncedLegendary(app.f); if (ids.length && !document.querySelector('.sheet')) announceLegendary(app.f, ids, { onPlan: () => Router.go(app.f.season.day === 4 ? 'gameplan' : 'playbook'), save: () => app.save() }); else if (r.discovered.length || r.removed.length) app.save(); }
       if (F.hallOfFameNotice(app.f)) { app.save(); sheet(`<div class="commissioner">${portraitSprite('commissioner', 56, { hue: 210 })}<div class="speech"><div class="muted" style="font-size:11px;margin-bottom:4px">${$t('hq.league_commissioner')}</div>${$t('hq.eight_badges_the_titles_the_wins')}</div></div>`, { title: $t('hq.hall_of_fame') }); }

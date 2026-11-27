@@ -47,7 +47,7 @@ test('mastery per mode: tiers at 0 / 10 / 30 / 60, progress toward the next tier
 
 test('collection achievements: the original 72, the 120 Basics and all 192, separately, by family, once each', () => {
   for (const id of ['dex_original', 'dex_basic', 'dex_all']) assert.ok(ACHIEVEMENT_BY_ID[id], id);
-  assert.equal(ACHIEVEMENTS.length, 24);
+  assert.equal(ACHIEVEMENTS.length, 200, 'the 200-achievement catalogue (overhaul 2026-11)'); assert.equal(ACHIEVEMENTS.filter((a) => a.legacy).length, 24, 'the 24 original achievements are kept');
   resetDex(); const f = newFranchise(3, { difficulty: 'pro' }); f.scenes = []; f.achievements = {};
   const earned = (ids) => ids.filter((id) => id.startsWith('dex_'));
   // Isolate the exact collection boundaries from the random starting roster.
