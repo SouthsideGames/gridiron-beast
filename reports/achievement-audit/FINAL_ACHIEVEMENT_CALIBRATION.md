@@ -361,7 +361,26 @@ Before adjustment, 6 careers (section 1). Careers earned 88–119 achievements i
 
 ## 7. Targeted test results
 
-@@TESTS@@
+**Targeted validation: 20 files, 146 of 146 passing, 0 failing** (2026-11-27, branch head after calibration).
+
+| Area | Files |
+|---|---|
+| Definitions, ids, totals, boundaries, backfill, queue, duplicates, hidden rows, account store and cloud merge, evaluation cost | `achievements-catalogue` |
+| Every metric positive and negative, real play, founding, developer disqualification, queue overflow, persistence (reload, switching, cloud), history coverage | `achievements-metrics` |
+| Achievement screen (200 rows, the 24 originals), HQ-only presentation | `task8-m6-screens`, `hq-navigation` |
+| Awards and Hall of Fame (Golden Boot, Return King, Special Teams Beast of the Year, voting, induction day) | `special-teams-awards`, `task8-awards`, `monster-hof-voting`, `hall-of-fame-day` |
+| Text and terminology | `central-text`, `text-style`, `text-never-decides` |
+| Saves and existing franchises | `franchise-save-compat`, `save`, `cloud-save`, `uid-isolation`, `lifecycle`, `cap-transition` |
+| Weekly flow and Clash, so achievements never interrupt a live game or battle | `guided-week`, `task10-clash-franchise`, `beast-dex-notifications` |
+
+**Emulated phone check** (iPhone 14 profile, Playwright; `reports/achievement-audit/screenshots/`):
+- The catalogue shows 200 cards with no horizontal overflow and no small tap targets.
+- Hidden placeholders, search and the history notes work.
+- A Common toast, Rare and Epic cards, the reveals for each speaker (Commissioner, rival GM, Board) and the Mythic reveal all render, showing the new thresholds (Aerial Assault, 500 yards).
+- There were no console errors.
+- Unlocks appear only on HQ; the queue keeps them during games and Clashes.
+
+**Not run:** the full fast and simulation suites, as the brief asks. They follow the phone build.
 
 ## 8. Remaining limitations
 
