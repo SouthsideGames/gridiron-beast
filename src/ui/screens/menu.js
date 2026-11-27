@@ -8,7 +8,7 @@ import { esc, delegate, toast, confirmSheet, sheet } from '../dom.js';
 import { openTypeChart } from '../type-chart.js';
 import { stadiumListHtml } from '../stadium-preview.js';
 import { iconHtml } from '../icons.js';
-import { achievementsData, achievementProgress } from '../../franchise/achievement-store.js';
+import { achievementsData, achievementProgress, historyCoverage, trackingStart } from '../../franchise/achievement-store.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID, ACH_CATEGORIES, ACH_RARITIES, achievementDesc } from '../../data/achievements.js';
 import { yearOf } from '../../data/calendar.js';
 import * as Save from '../../franchise/save.js';
@@ -44,11 +44,27 @@ import { t as $t } from '../../text/index.js';
 const ACH_ICON = Object.freeze({ game: '🏈', franchise: '🏟️', championship: '🏆', offense: '🎯', defense: '🛡️', special: '🦶', dex: '📖', evolution: '✨', clash: '⚔️', gym: '🏅', legendary: '🐉', draft: '📋', trades: '🤝', coaching: '📣', awards: '🎖️', hidden: '❓' });
 const ACH_CAT_LABEL = { game: () => t('ach.cat_game'), franchise: () => t('ach.cat_franchise'), championship: () => t('ach.cat_championship'), offense: () => t('ach.cat_offense'), defense: () => t('ach.cat_defense'), special: () => t('ach.cat_special'), dex: () => t('ach.cat_dex'), evolution: () => t('ach.cat_evolution'), clash: () => t('ach.cat_clash'), gym: () => t('ach.cat_gym'), legendary: () => t('ach.cat_legendary'), draft: () => t('ach.cat_draft'), trades: () => t('ach.cat_trades'), coaching: () => t('ach.cat_coaching'), awards: () => t('ach.cat_awards'), hidden: () => t('ach.cat_hidden') };
 const ACH_RAR_LABEL = { common: () => t('ach.r_common'), uncommon: () => t('ach.r_uncommon'), rare: () => t('ach.r_rare'), epic: () => t('ach.r_epic'), legendary: () => t('ach.r_legendary'), mythic: () => t('ach.r_mythic') };
+/**
+ * Legendary and Mythic reveals are spoken by an existing character chosen by category (achievement review): the commissioner (wry,
+ * keeps the league's tallies) for collection, development, the Clash, legends and the draft; the rival GM on the phone (needling) for
+ * games, offense, defense, special teams, gyms and the hidden ones; the Board's typed letter for titles, the franchise, awards,
+ * management and trades. The original 24 keep their own cutscenes.
+ */
+const REVEAL_SPEAKER = { dex: 'commissioner', evolution: 'commissioner', clash: 'commissioner', legendary: 'commissioner', draft: 'commissioner', game: 'rival', offense: 'rival', defense: 'rival', special: 'rival', gym: 'rival', hidden: 'rival', championship: 'board', franchise: 'board', awards: 'board', coaching: 'board', trades: 'board' };
+export const revealSpeaker = (a) => REVEAL_SPEAKER[a.category] || 'commissioner';
+const SAY = { dex: () => t('ach.say_dex'), evolution: () => t('ach.say_evolution'), clash: () => t('ach.say_clash'), legendary: () => t('ach.say_legendary'), draft: () => t('ach.say_draft'), game: () => t('ach.say_game'), offense: () => t('ach.say_offense'), defense: () => t('ach.say_defense'), special: () => t('ach.say_special'), gym: () => t('ach.say_gym'), hidden: () => t('ach.say_hidden'), championship: () => t('ach.say_championship'), franchise: () => t('ach.say_franchise'), awards: () => t('ach.say_awards'), coaching: () => t('ach.say_coaching'), trades: () => t('ach.say_trades') };
+const SAY_MYTHIC = { commissioner: () => t('ach.say_mythic_commissioner'), rival: () => t('ach.say_mythic_rival'), board: () => t('ach.say_mythic_board') };
+export const revealLine = (a, sp = revealSpeaker(a)) => (a.rarity === 'mythic' ? SAY_MYTHIC[sp]() : (SAY[a.category] || SAY.dex)());
 export const achCategoryLabel = (c) => ACH_CAT_LABEL[c]?.() || c;
 export const achRarityLabel = (r) => ACH_RAR_LABEL[r]?.() || r;
 /** An achievement's name: the 24 original ones may name the rival (filled from the scene as it played, else generic). */
 const achTitle = (a, e) => e?.scene?.title || String(a.titleKey ? t(a.titleKey) : a.title).replace(/\{\w+\}/g, t('menu.your_rival'));
 const achDate = (e) => { try { return e?.at ? new Date(e.at).toLocaleDateString() : yearOf(e?.year || 1); } catch { return yearOf(e?.year || 1); } };
+/** The historical-tracking notice (achievement review): only for rows the open franchise's history cannot fully prove, in a franchise that predates tracking. */
+function achTrackingNote(f, a) {
+  if (!f || a.scope === 'account') return ''; const st = trackingStart(f); if (!st) return ''; const cov = historyCoverage(a); if (cov === 'complete') return '';
+  return cov === 'partial' ? t('ach.track_partial', { year: yearOf(st.year), week: st.week }) : t('ach.track_from', { year: yearOf(st.year), week: st.week });
+}
 export function achBadgeHtml(a, { earned = false, secret = false, size = 48 } = {}) {
   return `<span class="ach-badge r-${a.rarity} c-${a.category}${earned ? '' : ' locked'}" style="--sz:${size}px" aria-hidden="true"><span>${secret ? '❓' : ACH_ICON[a.category] || '🏅'}</span></span>`;
 }
@@ -60,17 +76,19 @@ export function achBadgeHtml(a, { earned = false, secret = false, size = 48 } = 
 export function presentAchievementUnlocks(app, { retries = 8 } = {}) {
   const f = app?.f; if (!f || f.game || isArchived(f) || !(f.achQueue || []).length) return false;
   if (document.querySelector('.sheet, [aria-modal="true"]')) { if (retries > 0) setTimeout(() => presentAchievementUnlocks(app, { retries: retries - 1 }), 1500); return false; } // another scene or sheet is up: wait for it
-  const q = f.achQueue.slice(); const items = q.map((x) => (x.id ? ACHIEVEMENT_BY_ID[x.id] : null)).filter(Boolean); const retro = q.filter((x) => x.retro).reduce((n, x) => n + x.retro, 0);
+  const q = f.achQueue.slice(); const items = q.map((x) => (x.id ? ACHIEVEMENT_BY_ID[x.id] : null)).filter(Boolean); const retro = q.filter((x) => x.retro).reduce((n, x) => n + x.retro, 0); const folded = q.filter((x) => x.more).reduce((n, x) => n + x.more, 0); // unlocks folded when the queue was full: still earned, shown as a count
   F.dismissAchievementUnlocks(f, q.length); app.save?.();
   const reveal = items.filter((a) => a.presentation === 'reveal'); const cards = items.filter((a) => a.presentation === 'card'); const small = items.filter((a) => a.presentation === 'toast');
   if (retro) toast(t('ach.retro_notice', { n: retro }), 'good', 4200, { sound: null });
-  if (small.length === 1) toast(t('ach.unlocked_toast', { name: t(small[0].titleKey) }), 'good', 2800, { sound: null });
-  else if (small.length > 1) toast(t('ach.unlocked_many', { n: small.length }), 'good', 3200, { sound: null });
+  if (small.length === 1 && !folded) toast(t('ach.unlocked_toast', { name: t(small[0].titleKey) }), 'good', 2800, { sound: null });
+  else if (small.length + folded > 0) toast(t('ach.unlocked_many', { n: small.length + folded }), 'good', 3200, { sound: null });
   if (cards.length) achCards(cards);
-  if (reveal.length) { const a = reveal[0]; const more = reveal.length - 1;
+  if (reveal.length) { const a = reveal[0]; const more = reveal.length - 1; const sp = revealSpeaker(a); const line = revealLine(a, sp);
+    const head = sp === 'rival' ? `<div class="row" style="gap:12px;align-items:flex-start;text-align:left">${portraitSprite(`gm|${f.rivals?.[f.tier]?.team || ''}`, 48, { hue: 280 })}<div><div class="talk-name">${esc(f.rivals?.[f.tier]?.gm || t('menu.the_rival_gm_2'))}</div><div class="dim">GM, ${esc(f.rivals?.[f.tier]?.team || '')}</div></div></div><div class="talk rival" style="margin:8px 0 0;text-align:left"><p class="talk-line">${esc(line)}</p></div>`
+      : sp === 'board' ? `<div class="board-letter" style="text-align:left"><p>${esc(t('achievements.to_the_general_manager_of', { CLUB: String(f.club).toUpperCase() }))}</p><p>${esc(line)}</p><p>${esc(t('achievements.the_board'))}</p></div>`
+      : `<div class="row" style="gap:12px;align-items:flex-start;text-align:left">${portraitSprite('commissioner', 48, { hue: 40 })}<div class="talk" style="margin:0"><p class="talk-line">${esc(line)}</p></div></div>`;
     sheet(`<div class="ach-reveal r-${a.rarity}">${achBadgeHtml(a, { earned: true, size: 96 })}<div class="ach-rar r-${a.rarity}" style="margin:10px auto 0">${achRarityLabel(a.rarity)} · ${esc(achCategoryLabel(a.category))}</div>
-      <h2 style="margin:8px 0 4px">${esc(t(a.titleKey))}</h2><p class="muted" style="margin:0 0 12px">${esc(achievementDesc(a))}</p>
-      <div class="row" style="gap:12px;align-items:flex-start;text-align:left">${portraitSprite('commissioner', 48, { hue: 40 })}<div class="talk" style="margin:0"><p class="talk-line">${esc(a.rarity === 'mythic' ? t('ach.reveal_line_mythic') : t('ach.reveal_line_legendary'))}</p></div></div>
+      <h2 style="margin:8px 0 4px">${esc(t(a.titleKey))}</h2><p class="muted" style="margin:0 0 12px">${esc(achievementDesc(a))}</p>${head}
       ${more ? `<p class="dim" style="margin-top:10px">${t('ach.reveal_more', { n: more })}</p>` : ''}</div>`, { title: a.rarity === 'mythic' ? t('ach.reveal_title_mythic') : t('ach.reveal_title_legendary') });
   }
   return true;
@@ -297,7 +315,8 @@ export function registerMenuScreens(Router, app) {
       return `<button class="ach-card ${e ? 'earned' : 'locked'} r-${a.rarity}" data-action="achopen" data-id="${a.id}">${achBadgeHtml(a, { earned: !!e, secret })}
         <span class="ach-body"><span class="row between"><b>${esc(secret ? t('ach.hidden_name') : achTitle(a, e))}</b><span class="ach-rar r-${a.rarity}">${achRarityLabel(a.rarity)}</span></span>
         <span class="muted">${esc(secret ? t('ach.hidden_desc') : achievementDesc(a))}</span>
-        ${e ? `<span class="dim ach-date">${t('ach.unlocked_on', { date: esc(achDate(e)) })}</span>` : pr ? `<span class="ach-prog"><span class="bar"><i style="width:${Math.round(pr.pct * 100)}%"></i></span><span class="dim mono">${t('ach.progress', { value: Math.floor(pr.value), target: pr.target })}</span></span>` : ''}</span></button>`; }).join('');
+        ${e ? `<span class="dim ach-date">${t('ach.unlocked_on', { date: esc(achDate(e)) })}</span>` : pr ? `<span class="ach-prog"><span class="bar"><i style="width:${Math.round(pr.pct * 100)}%"></i></span><span class="dim mono">${t('ach.progress', { value: Math.floor(pr.value), target: pr.target })}</span></span>` : ''}
+        ${!e && !secret && achTrackingNote(f, a) ? `<span class="ach-note">${esc(achTrackingNote(f, a))}</span>` : ''}</span></button>`; }).join('');
   }
   function openAchievement(id) {
     const a = ACHIEVEMENT_BY_ID[id]; if (!a) return; const e = achievementsData().earned[id]; const secret = a.hidden && !e; const f = app.f && !isArchived(app.f) ? app.f : null;
@@ -310,6 +329,7 @@ export function registerMenuScreens(Router, app) {
       ${a.legacy ? `<div class="dim">${a.speaker === 'board' ? t('menu.a_letter_from_the_board') : a.speaker === 'rival' ? t('menu.the_rival_gm') : t('menu.the_commissioner')}</div>` : ''}
       ${pr ? `<div class="ach-prog" style="margin-top:8px"><span class="bar"><i style="width:${Math.round(pr.pct * 100)}%"></i></span><span class="dim mono">${t('ach.progress', { value: Math.floor(pr.value), target: pr.target })}</span></div>` : ''}
       ${e ? `<div class="dim" style="margin-top:8px">${t('ach.unlocked_on', { date: esc(achDate(e)) })} · ${t('ach.first_with', { club: esc(e.club || ''), diff: esc(diff(e.difficulty)) })}${e.count > 1 ? ` · ${t('ach.franchise_count', { count: e.count })}` : ''}</div>` : ''}
+      ${!secret && achTrackingNote(f, a) ? `<div class="ach-note" style="margin-top:8px">${esc(achTrackingNote(f, a))}</div>` : ''}
       ${fr ? `<div class="dim">${t('ach.in_this_franchise', { year: yearOf(fr.year || 1), week: fr.week || 1 })}${fr.backfilled ? ` · ${t('ach.from_history')}` : ''}</div>` : ''}
       ${e?.scene ? `<button class="btn small" data-action="replay" data-id="${a.id}" style="margin-top:10px">${t('menu.replay_the_scene')}</button>` : ''}</div>`,
       { title: `${secret ? t('ach.hidden_name') : achTitle(a, e)}` });

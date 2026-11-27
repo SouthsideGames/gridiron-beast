@@ -148,6 +148,7 @@ tr.me td { background: #2a3f16; }
 .ach-card.earned { border-color: var(--line-2); } .ach-card.locked { opacity: .92; } .ach-card.locked b { color: var(--ink-2); }
 .ach-card.earned.r-legendary { border-color: #a7791a; } .ach-card.earned.r-mythic { border-color: #9b2f5c; }
 .ach-body { display: grid; gap: 3px; flex: 1; min-width: 0; } .ach-body .muted { font-size: 13px; } .ach-date { font-size: 12px; }
+.ach-note { display: block; font-size: 12px; color: var(--ink-3); border-left: 2px solid var(--line-2); padding-left: 6px; margin-top: 2px; }
 .ach-prog { display: flex; align-items: center; gap: 8px; } .ach-prog .bar { flex: 1; } .ach-prog .mono { font-size: 12px; }
 .ach-detail, .ach-reveal { text-align: center; } .ach-detail .ach-badge, .ach-reveal .ach-badge { margin: 4px auto 0; }
 .ach-reveal .ach-badge { animation: ach-pop 600ms cubic-bezier(.2,1.4,.4,1) both; } @keyframes ach-pop { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }

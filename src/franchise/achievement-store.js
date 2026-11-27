@@ -8,7 +8,7 @@
 export const ACH_KEY = 'gridiron-beast-achievements';
 const storage = () => { try { return globalThis.localStorage || null; } catch { return null; } };
 let data = null; let mirror = null;
-const blank = () => ({ earned: {}, links: {}, updatedAt: 0 });
+const blank = () => ({ earned: {}, links: {}, disq: {}, achDex: {}, updatedAt: 0 });
 // `links` maps an old seed (how pre-v40 entries name a franchise) to the franchise's permanent uid, once linked. Every copy
 // merged in later (the cloud's, another device's, a franchise's own list) is read through it, so a seed and its uid never
 // count as two franchises (GDD §47.4).
@@ -37,6 +37,8 @@ export function recordAchievementGlobal(id, stamp) {
 export function mergeAchievements(other) {
   if (!other?.earned) return; const d = load(); let changed = false;
   for (const [seed, uid] of Object.entries(other.links || {})) if (uid && !d.links?.[seed]) { (d.links ||= {})[seed] = uid; changed = true; }
+  for (const k of Object.keys(other.disq || {})) { const c = canon(d, k); if (!(d.disq ||= {})[c]) { d.disq[c] = 1; changed = true; } }
+  for (const [fam, e] of Object.entries(other.achDex || {})) { const mine = (d.achDex ||= {})[fam]; if (!mine || (mine.founding && !e.founding)) { d.achDex[fam] = { fr: canon(d, e.fr), founding: !!e.founding }; changed = true; } }
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   for (const [id, e] of Object.entries(other.earned)) {
     const mine = d.earned[id];
@@ -48,6 +50,25 @@ export function mergeAchievements(other) {
   if (changed) persist();
 }
 export function resetAchievements() { data = blank(); persist(); }
+/**
+ * Eligibility across the account (achievement review 2026-11-26): a franchise a developer shortcut has played is disqualified for
+ * good. Its key is kept here (and merged through the cloud like everything else) so that account-wide rows never count its data:
+ * its titles do not count toward "with two franchises" and its collected families never enter the achievements' dex.
+ */
+export function markDisqualified(key) { if (key == null) return; const d = load(); const c = canon(d, key); if ((d.disq ||= {})[c]) return; d.disq[c] = 1; persist(); }
+export const isDisqualified = (key) => { const d = load(); return key != null && !!d.disq?.[canon(d, key)]; };
+/**
+ * The achievements' own record of families collected across the account: written only from eligible franchises (never from the
+ * shared Beast Dex, which any franchise, a disqualified or imported one included, feeds). `founding` marks a family that came with a
+ * founding roster or the creation draft; it becomes false once the family is acquired in play anywhere.
+ */
+export function recordAchDex(key, families) {
+  if (key == null) return 0; const d = load(); const k = canon(d, key); let n = 0; d.achDex ||= {};
+  for (const [fam, founding] of families) { const e = d.achDex[fam]; if (!e) { d.achDex[fam] = { fr: k, founding: !!founding }; n++; } else if (e.founding && !founding) { e.founding = false; e.fr = k; n++; } }
+  if (n) persist(); return n;
+}
+/** Families in the achievements' dex from eligible franchises: { all, played } (played: acquired in play, not founding gifts). */
+export function achDexCounts() { const d = load(); const ok = Object.values(d.achDex || {}).filter((e) => !d.disq?.[canon(d, e.fr)]); return { all: ok.length, played: ok.filter((e) => !e.founding).length, ids: Object.keys(d.achDex || {}).filter((id) => !d.disq?.[canon(d, d.achDex[id].fr)]) }; }
 /**
  * Older entries name franchises by seed; link the one that belongs to `uid` (GDD §42.3). The link is remembered in `links`
  * so later merges translate the seed too; a seed is replaced by the uid only in entries that list that seed, and an entry
@@ -87,6 +108,7 @@ export function achievementsFor(uid) { const d = load(); return Object.entries(d
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
 import { REG_GAMES } from '../data/league.js';
 import { monsterOverall, resolveSpecies, TYPES } from '../data/monsters.js';
+import { SPECIES_DEX as SPECIES_DEX_IDS } from '../data/species.js';
 import { isArchived } from './lifecycle.js';
 
 export const TRACK_VERSION = 1;
@@ -129,15 +151,15 @@ export function trackRoster(f) {
   const lo = (t.set.ovrMin ||= {}); for (const m of roster(f)) { const k = String(m.id), v = ovr(m); if (lo[k] == null || v < lo[k]) lo[k] = v; } for (const id of Object.keys(lo)) if (!ids.has(id)) delete lo[id];
 }
 /** A settled Beast Clash of the owner's: occasion 'encounter' | 'pregame' | 'overtime'. */
-export function trackClash(f, occasion, s, { key = null, playoff = false, watched = false, year = null } = {}) {
+export function trackClash(f, occasion, s, { key = null, playoff = false, commanded = false, year = null } = {}) {
   const t = achTrack(f); if (!s || !once(t, key ? `c:${key}` : null)) return null;
   const won = s.winner === 'a'; const hp = s.hpShare?.a ?? null;
   achAdd(f, 'clashBattles'); const sy = (t.clashSeason ||= { year, battles: 0, wins: 0 }); if (sy.year !== year) Object.assign(sy, { year, battles: 0, wins: 0 }); sy.battles++;
   if (won) {
     achAdd(f, 'clashWins'); sy.wins++; achAdd(f, occasion === 'encounter' ? 'clashEnc' : occasion === 'pregame' ? 'clashPre' : 'clashOt');
-    if (occasion === 'overtime' && playoff) achAdd(f, 'clashPlayoffOt'); if (watched) achAdd(f, 'clashWatched');
+    if (occasion === 'overtime' && playoff) achAdd(f, 'clashPlayoffOt'); if (commanded) achAdd(f, 'clashCommanded');
     t.n.clashRun = cnt(t, 'clashRun') + 1; achMax(f, 'clashRun', t.n.clashRun);
-    const close = ACHIEVEMENT_BY_ID.cl_close?.params?.pct, flaw = ACHIEVEMENT_BY_ID.cl_flawless?.params?.pct, quick = ACHIEVEMENT_BY_ID.cl_quick?.params?.ex;
+    const close = ACHIEVEMENT_BY_ID.cl_close?.params?.pct, flaw = ACHIEVEMENT_BY_ID.cl_dominant?.params?.pct, quick = ACHIEVEMENT_BY_ID.cl_quick?.params?.ex;
     if (hp != null && close != null && hp < close / 100) achAdd(f, 'clashClose');
     if (hp != null && flaw != null && hp >= flaw / 100) achAdd(f, 'clashFlawless');
     if (quick != null && num(s.exchanges) > 0 && s.exchanges <= quick) achAdd(f, 'clashQuick');
@@ -157,6 +179,9 @@ const evolvedFinal = (f, m) => { const n = resolveSpecies(m)?.evolution?.length 
 /** Drafted by this club in a season's draft (the year-0 creation draft that founds the roster is not counted, as in the live check). */
 const mineDrafted = (f, m) => !!m?.drafted && m.drafted.club === f.club && num(m.drafted.year) >= 1;
 /** Level 50 reached with this club: the monster was seen below 50 on this roster (trackRoster) and is at 50 now. */
+/** A family that came with the founding roster or the creation draft (first collected in league year 1, week 1). */
+export const foundingFamily = (st) => !!st && Number(st.year) <= 1 && Number(st.week || 1) <= 1;
+const playedFamilies = (f) => Object.entries(f.dex?.signed || {}).filter(([, st]) => !foundingFamily(st)).map(([id]) => id);
 const trainedTo50 = (f, m) => num(m.level) >= 50 && !!f.achTrack?.set?.below50?.[String(m.id)];
 const leagueMine = (h) => Object.values(h?.leagueStats?.[h?.club] || {});
 const seasonMax = (k) => (f, x) => (x.h ? Math.max(0, ...leagueMine(x.h).map((p) => num(p[k]))) : null);
@@ -176,6 +201,7 @@ export const METRICS = Object.freeze({
   g_team_int: g((v) => v.int), g_team_sacks: g((v) => v.sacks), g_team_tfl: g((v) => v.tfl), g_tackles: g((v) => v.tackles), g_sacks: g((v) => v.playerSacks),
   g_takeaways: g((v) => v.takeaways), g_fg_long: g((v) => v.fgLong), g_fgm: g((v) => v.fgm), g_legend_win: g((v) => (v.won && v.legendInLineup ? 1 : 0)),
   g_loss_by: g((v) => (!v.won && !v.tied ? v.opp - v.pts : null)), g_tiebreak_win: g((v) => (v.won && v.tiebreak ? 1 : 0)),
+  g_faced_legend: g((v) => (v.oppLegend ? 1 : 0)), g_legend_playoff_win: g((v) => (v.won && v.playoff && v.legendInLineup ? 1 : 0)),
   g_win_outgained: g((v) => (v.won ? v.oppYards - v.yards : null)), g_beat_old_club: g((v) => (v.won && v.formerClub ? 1 : 0)),
   // tracked counts (franchise scope, from when tracking began; seeded from reliable history where it proves a value)
   t_road_wins: (f) => cnt(f.achTrack, 'roadWins'), t_shutout_wins: (f) => cnt(f.achTrack, 'shutoutWins'), t_games: (f) => cnt(f.achTrack, 'games'),
@@ -183,12 +209,12 @@ export const METRICS = Object.freeze({
   t_playoff_wins: (f) => cnt(f.achTrack, 'playoffWins'), t_conf_titles: (f) => cnt(f.achTrack, 'confTitles'), t_def_td: (f) => cnt(f.achTrack, 'defTd'), t_kr_td: (f) => cnt(f.achTrack, 'krTd'), t_fgm: (f) => cnt(f.achTrack, 'fgm'),
   t_gym_wins: (f) => Math.max(cnt(f.achTrack, 'gymWins'), Object.values(f.campaign?.gymWins || {}).reduce((a, b) => a + num(b), 0)), t_badge_regained: (f) => cnt(f.achTrack, 'badgeRegained'),
   t_clash_wins: (f) => cnt(f.achTrack, 'clashWins'), t_clash_battles: (f) => cnt(f.achTrack, 'clashBattles'), t_clash_enc: (f) => cnt(f.achTrack, 'clashEnc'), t_clash_pre: (f) => cnt(f.achTrack, 'clashPre'),
-  t_clash_ot: (f) => cnt(f.achTrack, 'clashOt'), t_clash_playoff_ot: (f) => cnt(f.achTrack, 'clashPlayoffOt'), t_clash_watched: (f) => cnt(f.achTrack, 'clashWatched'), t_clash_close: (f) => cnt(f.achTrack, 'clashClose'),
+  t_clash_ot: (f) => cnt(f.achTrack, 'clashOt'), t_clash_playoff_ot: (f) => cnt(f.achTrack, 'clashPlayoffOt'), t_clash_commanded: (f) => cnt(f.achTrack, 'clashCommanded'), t_clash_close: (f) => cnt(f.achTrack, 'clashClose'),
   t_clash_quick: (f) => cnt(f.achTrack, 'clashQuick'), t_clash_flawless: (f) => cnt(f.achTrack, 'clashFlawless'), t_clash_streak: (f) => best(f.achTrack, 'clashRun'), t_clash_streak_now: (f) => cnt(f.achTrack, 'clashRun'),
   t_recruits: (f) => cnt(f.achTrack, 'recruits'), t_evolutions: (f) => Math.max(cnt(f.achTrack, 'evolutions'), roster(f).reduce((a, m) => a + (m.career?.ev || []).filter((e) => e.t === 'evolve' && e.c === f.club).length, 0)),
   t_draft_picks: (f) => Math.max(cnt(f.achTrack, 'draftPicks'), roster(f).filter((m) => mineDrafted(f, m)).length), t_top_pick: (f) => Math.max(cnt(f.achTrack, 'topPick'), roster(f).some((m) => mineDrafted(f, m) && m.drafted.overall === 1) ? 1 : 0),
   t_full_scout: (f) => cnt(f.achTrack, 'fullScout'), t_scouts: (f) => cnt(f.achTrack, 'scouts'), t_regions: (f) => marks(f.achTrack, 'regions'),
-  t_fa_signed: (f) => Math.max(cnt(f.achTrack, 'faSigned'), roster(f).filter((m) => (m.career?.ev || []).some((e) => e.t === 'join' && e.x?.via === 'signed' && e.c === f.club)).length),
+  t_fa_signed: (f) => Math.max(cnt(f.achTrack, 'faSigned'), roster(f).filter((m) => (m.career?.ev || []).some((e) => e.t === 'join' && (e.x?.via === 'signed' || e.x?.via === 'free_agent') && e.c === f.club)).length),
   t_fa_ovr: (f) => best(f.achTrack, 'faOvr'), t_extensions: (f) => cnt(f.achTrack, 'extensions'), t_hires: (f) => cnt(f.achTrack, 'hires'), t_cap_clean: (f) => cnt(f.achTrack, 'capClean'),
   t_trades: (f) => (f.trades || []).length, t_rival_trades: (f, x) => (f.trades || []).filter((tr) => tr.team && tr.team === x.H?.rival?.(f)).length,
   t_trade_ovr: (f) => Math.max(0, ...(f.trades || []).map((tr) => num(tr.got?.player?.ovr))), t_trade_picks: (f) => Math.max(0, ...(f.trades || []).map((tr) => (tr.got?.picks || []).length)),
@@ -203,7 +229,7 @@ export const METRICS = Object.freeze({
   s_points_allowed: (f, x) => (x.h && regGames(x.h).length >= REG_GAMES ? regGames(x.h).reduce((a, s) => a + num(s.result.oppScore), 0) : null),
   s_home_unbeaten: (f, x) => { if (!x.h) return null; const home = regGames(x.h).filter((s) => s.home); return home.length && home.length === (x.h.schedule || []).filter((s) => s.home).length && home.every((s) => s.result.won) ? 1 : 0; },
   s_pass_yds: seasonMax('passYds'), s_rush_yds: seasonMax('rushYds'), s_rec_yds: seasonMax('recYds'), s_pass_td: seasonMax('passTd'), s_sacks: seasonMax('sacks'),
-  s_team_sacks: seasonSum('sacks'), s_team_int: seasonSum('int'), s_fgm: seasonSum('fgm'), s_touchbacks: seasonSum('koTouchbacks'),
+  s_team_sacks: seasonSum('sacks'), s_team_int: seasonSum('int'), s_fgm: seasonSum('fgm'),
   s_perfect_kicker: (f, x) => (x.h ? Math.max(0, ...leagueMine(x.h).filter((p) => num(p.fga) > 0 && p.fgm === p.fga && num(p.xpm) === num(p.xpa)).map((p) => num(p.fga))) : null),
   s_perfect_title: (f, x) => (x.h ? (x.h.champion === x.h.club && num(x.h.record?.l) === 0 && num(x.h.record?.t) === 0 && num(x.h.record?.w) >= REG_GAMES ? 1 : 0) : null),
   s_awards: (f, x) => (x.h ? awardsOf(x.h).length : null),
@@ -222,10 +248,11 @@ export const METRICS = Object.freeze({
   r_legendary: (f, x) => (roster(f).some((m) => x.H?.isLegendary?.(m)) ? 1 : 0),
   r_loyal: (f) => Math.max(0, ...roster(f).map((m) => (m.joined != null ? num(f.season?.year) - m.joined + (f.season?.finished ? 1 : 0) : 0))),
   // collection (franchise scope reads this franchise's dex; account scope the player's)
-  d_faced: (f) => marks(f.achTrack, 'faced'), d_signed: (f) => Object.keys(f.dex?.signed || {}).length, d_knowledge: (f) => Object.keys(f.dex?.knowledge || {}).length,
+  d_faced: (f) => marks(f.achTrack, 'faced'), d_signed: (f) => playedFamilies(f).length, d_knowledge: (f) => Object.keys(f.dex?.knowledge || {}).length,
   d_original: (f, x) => num(x.H?.dexCounts?.(f)?.original?.seen), d_basic: (f, x) => num(x.H?.dexCounts?.(f)?.basic?.seen), d_all: (f, x) => num(x.H?.dexCounts?.(f)?.all?.seen),
-  d_types_min: (f) => { const by = {}; for (const id of Object.keys(f.dex?.signed || {})) { const e = resolveSpecies(id)?.element; if (e) by[e] = (by[e] || 0) + 1; } const all = Object.keys(TYPES); return Math.min(...all.map((k) => by[k] || 0)); },
-  a_dex: (f, x) => num(x.H?.dexCountsGlobal?.()?.signed), a_title_franchises: () => (load().earned.first_title?.franchises || []).length,
+  d_types_min: (f) => { const by = {}; for (const id of playedFamilies(f)) { const e = resolveSpecies(id)?.element; if (e) by[e] = (by[e] || 0) + 1; } const all = Object.keys(TYPES); return Math.min(...all.map((k) => by[k] || 0)); },
+  d_original_played: (f) => { const orig = new Set(x_original()); return playedFamilies(f).filter((id) => orig.has(id)).length; },
+  a_dex: () => achDexCounts().played, a_title_franchises: () => { const d = load(); return (d.earned.first_title?.franchises || []).filter((k) => !d.disq?.[canon(d, k)]).length; },
   // management and legacy
   p_calls: (f) => Object.values(f.playStats || {}).reduce((a, y) => a + Object.values(y || {}).reduce((b, p) => b + num(p.used), 0), 0),
   b_conf_years: (f) => (f.board?.history || []).filter((h) => num(h.confidence) >= 2).length, b_goals: (f) => (f.board?.history || []).filter((h) => h.met).length,
@@ -233,12 +260,24 @@ export const METRICS = Object.freeze({
   aw_coy: (f) => hist(f).filter((h) => h.awards?.league?.coy?.team === h.club).length, aw_mvp: (f) => hist(f).filter((h) => h.awards?.league?.mvp?.team === h.club).length,
   aw_kinds: (f) => new Set(hist(f).flatMap((h) => awardsOf(h).map(([k]) => k))).size,
   aw_hof: (f) => { const ids = everPlayed(f); return inductees(f).filter((x) => ids.has(String(x.id))).length; },
+  aw_gboot: (f) => hist(f).filter((h) => h.awards?.league?.gboot?.team === h.club).length, aw_rking: (f) => hist(f).filter((h) => h.awards?.league?.rking?.team === h.club).length,
   aw_record: (f) => Math.max(best(f.achTrack, 'record'), ['game', 'season'].some((k) => Object.values(f.records?.[k] || {}).some((r) => r && r.team === f.club)) ? 1 : 0),
   l_plays: (f) => Object.keys(f.legendaryPlays?.discovered || {}).length,
 });
+let ORIGINALS = null; const x_original = () => (ORIGINALS ||= SPECIES_DEX_IDS.filter((s) => s.rarity !== 'basic').map((s) => s.id));
 const inductees = (f) => (f.monsterHallOfFame?.elections || []).flatMap((e) => e?.inductees || []);
 const everPlayed = (f) => new Set([...hist(f).flatMap((h) => Object.keys(h.leagueStats?.[h.club] || {})), ...roster(f).map((m) => m.id)].map(String));
 
+/**
+ * How much of a row a save's history can prove (achievement review: the screen says so when it cannot):
+ *   'complete' the save keeps everything the row reads (results, box scores per season, records, awards, trades, the dex)
+ *   'partial'  past seasons count where the record proves them (lower bounds, e.g. a win streak within one season); the rest is tracked
+ *   'tracked'  counted only from when tracking began (single-game box-score feats, Clash results, comebacks, owner actions)
+ */
+const PARTIAL = new Set(['t_road_wins', 't_shutout_wins', 't_games', 't_win_streak', 't_playoff_wins', 't_conf_titles', 't_def_td', 't_kr_td', 't_fgm', 't_evolutions', 't_draft_picks', 't_top_pick', 't_fa_signed', 'aw_record', 'r_draftee_hof']);
+export function historyCoverage(a) { if (!a || a.legacy || a.scope === 'account') return 'complete'; if (!a.retro) return 'tracked'; return PARTIAL.has(a.metric) ? 'partial' : 'complete'; }
+/** When tracking began for a franchise that predates it ({year, week}), or null when the franchise was tracked from its first week. */
+export function trackingStart(f) { const t = f?.achTrack; if (!t?.from || !t.preexisting) return null; return { year: t.from.year, week: t.from.week }; }
 /** The value a row's metric reads now (null: does not apply). */
 export function metricValue(f, a, x = {}) { const fn = METRICS[a.progress && x.progress ? a.progress : a.metric]; if (!fn) return null; try { const v = fn(f, { ...x, a }); return v == null || Number.isNaN(v) ? null : v; } catch { return null; } }
 export function meets(a, v) { if (v == null) return false; switch (a.cmp) { case 'le': return v <= a.target; case 'lt': return v < a.target; case 'eq': return v === a.target; default: return v >= a.target; } }

@@ -46,7 +46,7 @@ import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEAS
 import { PLAYS } from '../data/playbook.js';
 import { yearOf } from '../data/calendar.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
-import { recordAchievementGlobal, evaluateCatalogue, trackGame, trackClash, trackRoster, achAdd, achMax, achMark, achTrack, achEligible, metricValue, meets } from './achievement-store.js';
+import { recordAchievementGlobal, markDisqualified, recordAchDex, achDexCounts, foundingFamily, evaluateCatalogue, trackGame, trackClash, trackRoster, achAdd, achMax, achMark, achTrack, achEligible, metricValue, meets } from './achievement-store.js';
 import { pickOwner, setPickOwner, currentClassYear, picksOwnedBy, pickUsed, tradableYears, askForPlayer, askForPicks, executeTrade, canTakePlayer, pickKey, samePick, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, playerValue, positionNeeds, buildTradeCall, contractYear, transferPick, CALL_CHANCE } from './trades.js';
 import { evaluateProposal, deskAssets, deskUsage, spendProposal, buildIncomingOffer, DESK_RULES } from './trade-desk.js';
 export { DESK_RULES } from './trade-desk.js';
@@ -385,8 +385,9 @@ export const monsterNotices = (f, id) => notices(f).filter((n) => n.id === id);
  */
 export function checkAchievements(f, trigger, ctx = {}) {
   f.achievements ||= {}; f.scenes ||= [];
-  if (!achEligible(f)) return []; // a franchise played by a developer shortcut earns nothing (achievement overhaul: eligibility)
-  const c = { ...ctx, hofEligible: hallOfFameProgress(f).eligible, get dex() { return dexCounts(f); } }; // dex: the family collection counts (Task 8: 72 / 120 / 192), read only by the collection achievements
+  if (!achEligible(f)) { if (f.achDev) { try { markDisqualified(franchiseKey(f)); } catch { /* storage unavailable */ } } return []; } // a franchise played by a developer shortcut earns nothing, and its data never counts toward account-wide rows (achievement review)
+  try { recordAchDex(franchiseKey(f), Object.entries(f.dex?.signed || {}).map(([id, st]) => [id, foundingFamily(st)])); } catch { /* storage unavailable */ }
+  const c = { ...ctx, hofEligible: hallOfFameProgress(f).eligible, get dex() { return achDexGroups(f); } }; // dex: the family collection counts (Task 8: 72 / 120 / 192), read only by the collection achievements; from this franchise and other eligible ones, never the shared Beast Dex (achievement review)
   const earned = [];
   for (const a of ACHIEVEMENTS) {
     if (f.achievements[a.id] || (a.trigger !== trigger && a.trigger !== 'any')) continue;
@@ -402,20 +403,41 @@ export function checkAchievements(f, trigger, ctx = {}) {
   return earned;
 }
 /** The franchise helpers the achievement metrics read (passed in, so the engine never imports this file). */
+/** The collection counts the dex achievements read: this franchise's families plus those of the account's other eligible franchises. */
+function achDexGroups(f) {
+  let other = []; try { other = achDexCounts().ids; } catch { /* storage unavailable */ }
+  const have = new Set([...Object.keys(f.dex?.signed || {}), ...other]);
+  const groups = Object.fromEntries(Object.entries(DEX_GROUPS).map(([k, ids]) => { const n = ids.filter((id) => have.has(id)).length; return [k, { seen: n, signed: n, total: ids.length }]; }));
+  return { seen: groups.all.seen, signed: groups.all.signed, ...groups };
+}
 function achHelpers(f) {
-  return { dexCounts: (x) => dexCounts(x), dexCountsGlobal, isLegendary: (m) => isLegendaryMonster(m), badgesWonThisSeason: (x) => badgesWonThisSeason(x), rival: (x) => x.rivals?.[x.tier]?.team || null, gymCount: GYMS.length };
+  return { dexCounts: (x) => achDexGroups(x), dexCountsGlobal, isLegendary: (m) => isLegendaryMonster(m), badgesWonThisSeason: (x) => badgesWonThisSeason(x), rival: (x) => x.rivals?.[x.tier]?.team || null, gymCount: GYMS.length };
 }
 /** Record one catalogue achievement: once per franchise, in the account store, and queued for its unlock presentation. */
 function awardCatalogue(f, a, { retro = false } = {}) {
   if (!a || f.achievements[a.id]) return false;
   f.achievements[a.id] = { year: f.season?.year || 1, week: f.season?.week || 1, ...(retro ? { backfilled: true } : {}) };
-  if (!retro) { (f.achQueue ||= []).push({ id: a.id }); if (f.achQueue.length > 40) f.achQueue.splice(0, f.achQueue.length - 40); }
+  if (!retro) { (f.achQueue ||= []).push({ id: a.id }); trimAchQueue(f.achQueue); }
   try { recordAchievementGlobal(a.id, { club: f.club, owner: `${f.owner.first} ${f.owner.last}`.trim(), year: f.season?.year || 1, difficulty: f.settings?.difficulty || 'pro', franchise: franchiseKey(f), scene: null, rarity: a.rarity }); } catch { /* storage unavailable */ }
   if (!retro) news(f, $L('franchise.achievement', { fillScene: captured(() => $t(a.titleKey)) }), 'win');
   return true;
 }
 /** An owner action the achievements count ('recruit', 'evolve', 'draft', 'scout', 'sign', 'staff'): bump the tracker, then check. */
 function achAction(f, trigger, bump) { if (!achEligible(f)) return; try { bump(); } catch { /* tracking never blocks an action */ } checkAchievements(f, trigger); }
+/**
+ * The unlock queue keeps at most ACH_QUEUE_MAX entries (achievement review). When it is full, the oldest Common/Uncommon toasts are
+ * folded into one "and N more" line first, then the oldest Rare/Epic cards; a Legendary or Mythic reveal and the backfill notice are
+ * never dropped. The earned record (f.achievements and the account store) is written before the queue and never depends on it.
+ */
+export const ACH_QUEUE_MAX = 40;
+export function trimAchQueue(q) {
+  const tier = (x) => (x.retro || x.more ? 9 : { toast: 0, card: 1, reveal: 9 }[ACHIEVEMENT_BY_ID[x.id]?.presentation] ?? 0);
+  for (const level of [0, 1]) while (q.length > ACH_QUEUE_MAX) {
+    const i = q.findIndex((x) => tier(x) === level); if (i < 0) break;
+    q.splice(i, 1); const more = q.find((x) => x.more); if (more) more.more += 1; else q.push({ more: 1 });
+  }
+  return q;
+}
 /** The next queued unlock to present ({ id } or { retro: n }), without removing it; dismissAchievementUnlock removes it. */
 export const pendingAchievementUnlocks = (f) => (f?.achQueue || []).slice();
 export function dismissAchievementUnlocks(f, n = 1) { if (f?.achQueue) f.achQueue.splice(0, Math.max(0, n)); return { ok: true, left: f?.achQueue?.length || 0 }; }
@@ -423,13 +445,13 @@ export function dismissAchievementUnlocks(f, n = 1) { if (f?.achQueue) f.achQueu
 export function gameFacts(f, gameState, side, m, { won, lostBadge = null, newBadge = null, playoffRound = null } = {}) {
   const opp = side === 'home' ? 'away' : 'home'; const st = gameState.stats?.[side] || {}, so = gameState.stats?.[opp] || {};
   const P = Object.values(st.players || {}); const mx = (k) => Math.max(0, ...P.map((p) => Number(p[k]) || 0)); const sm = (k) => P.reduce((a, p) => a + (Number(p[k]) || 0), 0);
-  const lineupIds = new Set(Object.values(m[side]?.chart || {})); const formerClubs = new Set([...(f.history || []).map((h) => h.club), ...Object.keys(f.gmCareer?.clubs || {})].filter((c) => c && c !== f.club));
+  const lineupIds = new Set(Object.values(m[side]?.chart || {})); const lineupOpp = new Set(Object.values(m[opp]?.chart || {})); const formerClubs = new Set([...(f.history || []).map((h) => h.club), ...Object.keys(f.gmCareer?.clubs || {})].filter((c) => c && c !== f.club));
   const pts = gameState.score?.[side] || 0, oppPts = gameState.score?.[opp] || 0;
   return { won: !!won, tied: !gameState.winner, pts, opp: oppPts, ot: !!gameState.ot, tiebreak: !!gameState.tiebreak, home: side === 'home', playoff: !!m.playoff, conferenceRound: playoffRound === CONFERENCE_ROUND, oppClub: m.opponent,
     maxDeficit: gameState.maxDeficit ? gameState.maxDeficit[side] ?? null : null, tos: st.turnovers || 0, takeaways: so.turnovers || 0, yards: st.yards || 0, oppYards: so.yards || 0,
     passYds: mx('passYds'), passTd: mx('passTd'), rushYds: mx('rushYds'), rushTd: mx('rushTd'), recYds: mx('recYds'), tackles: mx('tackles'), playerSacks: mx('sacks'), longPlay: Math.max(mx('longRush'), mx('longRec')),
     int: sm('int'), sacks: sm('sacks'), tfl: sm('tfl'), fgm: sm('fgm'), fgLong: mx('fgLong'), defTd: sm('defTd'), krTd: sm('krTd'),
-    legendInLineup: (f.roster || []).some((x) => lineupIds.has(x.id) && isLegendaryMonster(x)), formerClub: formerClubs.has(m.opponent),
+    legendInLineup: (f.roster || []).some((x) => lineupIds.has(x.id) && isLegendaryMonster(x)), oppLegend: (m[opp]?.roster || []).some((x) => lineupOpp.has(x.id) && isLegendaryMonster(x)), formerClub: formerClubs.has(m.opponent),
     gymWin: !!won && !!GYM_BY_CLUB[m.opponent], newBadge, lostBadge, oppFamilies: [...new Set((m[opp]?.roster || []).map((x) => { try { return dexFamilyOf(x); } catch { return null; } }).filter(Boolean))] };
 }
 /** Record an achievement for the player across all franchises, with its cutscene as it played (GDD §21.4). */
@@ -455,7 +477,7 @@ export function nextScene(f) {
  */
 export function backfillAchievements(f) {
   if (!f?.campaign || f.achievementsBackfilled) return [];
-  f.achievementsBackfilled = true; f.achievements ||= {}; f.scenes ||= [];
+  f.achievementsBackfilled = true; if (!achEligible(f)) return []; f.achievements ||= {}; f.scenes ||= [];
   const hist = f.history || []; const c = f.campaign; const badges = Object.keys(c.badges || {}).length;
   const facts = { first_win: c.wins >= 1, rival_beaten: Object.entries(c.h2h || {}).some(([t, h]) => t === f.rivals?.[f.tier]?.team && h.w >= 1), first_badge: badges >= 1, half_badges: badges >= GYMS.length / 2, all_badges: badges >= GYMS.length,
     winning_season: hist.some((h) => h.record.w > h.record.l), undefeated: hist.some((h) => h.record.w >= REG_GAMES && h.record.l === 0), first_playoffs: hist.some((h) => h.playoffs) || !!(f.season?.playoffs && Object.values(f.season.playoffs.seeds).flat().includes(f.club)),
@@ -477,6 +499,7 @@ export function backfillCatalogue(f) {
   f.achCatalogue = 1; f.achievements ||= {};
   if (!achEligible(f)) return [];
   const t = achTrack(f); const H = achHelpers(f); const got = [];
+  if ((f.history || []).length || (f.season?.year || 1) > 1 || (f.season?.week || 1) > 1) t.preexisting = true; // the screen shows when tracking began for rows the history cannot prove
   const before = (f.history || []).filter((h) => h.year < (t.from?.year || 1));
   for (const h of before) {
     const games = (h.schedule || []).filter((g) => g.result); let run = 0;
@@ -497,8 +520,9 @@ export function backfillCatalogue(f) {
 }
 /** Copy a franchise's achievements into the player's account store (saves that earned them before the store existed). */
 export function syncAchievementsToGlobal(f) {
+  if (f?.achDev) { try { markDisqualified(franchiseKey(f)); } catch { /* storage unavailable */ } } // an imported or reopened disqualified franchise is marked on this device too; what it earned before stays
   if (!f?.achievements) return 0; let n = 0;
-  for (const [id, e] of Object.entries(f.achievements)) { const a = ACHIEVEMENT_BY_ID[id]; if (!a) continue; const vars = sceneVars(f, {}); try { if (recordAchievementGlobal(id, { club: f.club, owner: `${f.owner.first} ${f.owner.last}`.trim(), year: e.year || 1, difficulty: f.settings?.difficulty || 'pro', franchise: franchiseKey(f), scene: { title: fillScene(a.title, vars), speaker: a.speaker, beats: a.beats.map((b) => fillScene(b, vars)), rivalTeam: f.rivals?.[f.tier]?.team || null, rivalGm: f.rivals?.[f.tier]?.gm || null } })) n++; } catch { /* ignore */ } }
+  for (const [id, e] of Object.entries(f.achievements)) { const a = ACHIEVEMENT_BY_ID[id]; if (!a) continue; const vars = sceneVars(f, {}); try { if (recordAchievementGlobal(id, { club: f.club, owner: `${f.owner.first} ${f.owner.last}`.trim(), year: e.year || 1, difficulty: f.settings?.difficulty || 'pro', franchise: franchiseKey(f), scene: a.legacy ? { title: fillScene(a.title, vars), speaker: a.speaker, beats: a.beats.map((b) => fillScene(b, vars)), rivalTeam: f.rivals?.[f.tier]?.team || null, rivalGm: f.rivals?.[f.tier]?.gm || null } : null, ...(a.legacy ? {} : { rarity: a.rarity }) })) n++; } catch { /* ignore */ } } // catalogue rows have no cutscene (achievement review: they were skipped here before)
   return n;
 }
 export function dismissScene(f) { f.scenes?.shift(); return { ok: true, left: f.scenes?.length || 0 }; }
@@ -659,6 +683,7 @@ export function replaceStaff(f, id) {
   if (current && f.season && !f.season.finished) { severance = Math.round(current.salary * Math.max(0, (REG_WEEKS - (f.season.week || 1)) / REG_WEEKS)); f.deadCap = (f.deadCap || 0) + severance; }
   f.staff[c.role] = id; (f.staffContracts ||= {})[c.role] = newContract(f.season?.year || 1); (f.staffRaise ||= {})[c.role] = 1; withdrawStaffRenewal(f, c.role);
   news(f, $P(c.name, ` hired as `, c.role.replace(/_/g, ' '), (current ? $L('franchise.replacing', { name: current.name }) : ''), (severance ? $P(` `, $L('franchise.cr_severance_this_season', { toLocaleString: severance.toLocaleString('en-US') })) : ''), `.`), 'roster');
+  achAction(f, 'staff', () => achAdd(f, 'hires'));
   return { ok: true, replaced: current, severance };
 }
 export function hireStaff(f, id) {
@@ -2106,7 +2131,7 @@ function battleOrPending(e, run, headless) {
 /** Achievements: one settled owner Clash (encounter, opening or overtime), counted once by its activity id. */
 function achClashSettled(f, occasion, e, key, headless = false) {
   if (!achEligible(f) || !e?.result) return;
-  if (trackClash(f, occasion, e.result, { key, playoff: !!(f.week?.overtime === e && playoffFixture(f)), watched: !headless && normalizeMode(e.mode) === 'watch', year: f.season?.year })) checkAchievements(f, 'clash');
+  if (trackClash(f, occasion, e.result, { key, playoff: !!(f.week?.overtime === e && playoffFixture(f)), commanded: !headless && normalizeMode(e.mode) === 'watch' && Object.keys(e.decisions?.a || {}).length > 0, year: f.season?.year })) checkAchievements(f, 'clash'); // commanded: the owner made at least one rotation call (a tap, including stay); watching alone is not commanding
 }
 export function resolveEncounter(f, { headless = false } = {}) {
   const e = f.week.encounter; if (!e) return { ok: false, reason: $t('franchise.no_encounter') };

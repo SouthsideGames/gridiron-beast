@@ -66,11 +66,11 @@ test('streaks: the best run is kept, the current run resets on a loss; a replaye
 
 test('Clash tracking: by occasion, close and dominant wins, quick wins, the streak, and once per battle', () => {
   const f = fresh(); const win = (o = {}) => ({ winner: 'a', exchanges: 17, hpShare: { a: 0.3, b: 0 }, ...o });
-  S.trackClash(f, 'encounter', win(), { key: 'e1', year: 1 }); S.trackClash(f, 'pregame', win({ hpShare: { a: 0.05, b: 0 } }), { key: 'p1', year: 1, watched: true });
+  S.trackClash(f, 'encounter', win(), { key: 'e1', year: 1 }); S.trackClash(f, 'pregame', win({ hpShare: { a: 0.05, b: 0 } }), { key: 'p1', year: 1, commanded: true });
   S.trackClash(f, 'overtime', win({ exchanges: 11, hpShare: { a: 0.7, b: 0 } }), { key: 'o1', year: 1, playoff: true });
   assert.equal(S.trackClash(f, 'overtime', win(), { key: 'o1', year: 1 }), null, 'the same battle again is ignored');
   const m = (k) => S.METRICS[k](f);
-  assert.deepEqual([m('t_clash_wins'), m('t_clash_enc'), m('t_clash_pre'), m('t_clash_ot'), m('t_clash_playoff_ot'), m('t_clash_watched')], [3, 1, 1, 1, 1, 1]);
+  assert.deepEqual([m('t_clash_wins'), m('t_clash_enc'), m('t_clash_pre'), m('t_clash_ot'), m('t_clash_playoff_ot'), m('t_clash_commanded')], [3, 1, 1, 1, 1, 1]);
   assert.deepEqual([m('t_clash_close'), m('t_clash_flawless'), m('t_clash_quick'), m('t_clash_streak')], [1, 1, 1, 3]);
   S.trackClash(f, 'pregame', { winner: 'b', exchanges: 18, hpShare: { a: 0, b: 0.2 } }, { key: 'p2', year: 1 });
   assert.equal(m('t_clash_streak_now'), 0); assert.equal(m('t_clash_streak'), 3); assert.equal(m('t_clash_battles'), 4);
