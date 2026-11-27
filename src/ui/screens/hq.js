@@ -59,7 +59,19 @@ const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2
 const ATTR_LABEL = { speed: $t('hq.speed'), agility: $t('hq.agility'), strength: $t('hq.strength'), awareness: $t('hq.awareness'), catching: $t('hq.catching'), arm: $t('hq.arm'), accuracy: $t('hq.accuracy'), blocking: $t('hq.blocking'), tackling: $t('hq.tackling'), coverage: $t('hq.coverage'), durability: $t('hq.durability'), kicking: $t('hq.kicking') };
 
 export function weekStrip(f) {
-  return `<div class="week" aria-label="${$t('hq.week', { week: f.season.week })}">${F.DAYS.map((d, i) => `<div class="day ${i < f.season.day ? 'done' : i === f.season.day ? 'today' : ''}" title="${esc(F.DAY_ACTIONS[i])}">${d.slice(0, 3)}</div>`).join('')}</div>`;
+  const { day, finished, week } = f.season;
+  if (finished) return '';
+  const stage = F.DAY_ACTIONS[day];
+  return `<div class="hq-week">
+    <div class="week" role="list" aria-label="${esc($t('hq.week', { week }))}">
+      ${F.DAYS.map((name, i) => {
+        const current = i === day;
+        const done = i < day;
+        return `<div role="listitem" class="day ${done ? 'done' : current ? 'today' : ''}"${current ? ' aria-current="step"' : ''} aria-label="${esc(`${name} · ${F.DAY_ACTIONS[i]}${done ? ` · ${$t('hq.week_day_complete')}` : ''}`)}" title="${esc(F.DAY_ACTIONS[i])}">${done ? '<span aria-hidden="true">✓ </span>' : ''}${name.slice(0, 3)}</div>`;
+      }).join('')}
+    </div>
+    ${stage ? `<p class="dim hq-current-stage">${esc($t('hq.week_current_stage', { day: F.DAYS[day], stage }))}</p>` : ''}
+  </div>`;
 }
 
 export function registerHqScreens(Router, app) {
@@ -104,9 +116,26 @@ export function registerHqScreens(Router, app) {
         : po ? `<b>${esc(po.tag)}</b> · ${po.home === f.club ? 'vs' : '@'} ${esc(opp)}`
         : fx?.bye ? `<b>${$t('hq.bye_week')}</b>${$t('hq.rest_and_recover')}` : fx ? `<b>Week ${fx.week}</b> · ${fx.home ? 'vs' : '@'} ${esc(opp)} · ${esc(fx.category)}${rival?.team === opp ? $t('hq.rival') : ''}` : '';
       // Last game (2026-10-22 feedback pass): the result and what it did to the roster, shown through the following week.
-      const lg = f.lastGame; const lgFresh = lg && lg.year === f.season.year && (lg.week === f.season.week - 1 || (lg.week === f.season.week && f.season.day === 0)) && !f.season.finished;
-      const lgEvents = lgFresh ? (lg.events || []) : []; const lgLvl = lgEvents.filter((e) => e.kind === 'levelup' || e.kind === 'evolve'), lgInj = lgEvents.filter((e) => e.kind === 'injury');
-      const lastGame = lgFresh ? `<div class="panel tight last-game ${lg.won ? 'won' : 'lost'}"><div class="row between"><span><b>${lg.forfeit ? $t('hq.forfeit') : lg.won ? $t('hq.win') : $t('hq.loss')}</b> ${lg.playerScore}–${lg.oppScore} vs ${esc(lg.opponent)}</span><span class="dim">week ${lg.week}</span></div>${lgLvl.length || lgInj.length ? `<div class="dim" style="margin-top:2px">${lgLvl.map((e) => e.kind === 'evolve' ? `✨ ${esc(e.from)} → ${esc(e.to)}` : `⬆️ ${esc(e.name)} Lv ${e.level}`).join(' · ')}${lgLvl.length && lgInj.length ? ' · ' : ''}${lgInj.map((e) => `<span style="color:var(--bad)">🩹 ${esc(e.name)} ${e.weeks}w</span>`).join(' · ')}</div>` : ''}</div>` : '';
+      const lg = f.lastGame;
+      const recent = lg && !lg.bye && lg.year === f.season.year && !f.season.finished
+        && (lg.week === f.season.week - 1 || (lg.week === f.season.week && day === 0));
+      const events = recent ? (lg.events || []) : [];
+      const growth = events.filter(e => e.kind === 'levelup' || e.kind === 'evolve');
+      const injuries = events.filter(e => e.kind === 'injury');
+      const result = recent && (lg.forfeit ? $t('hq.forfeit') : lg.won ? $t('hq.win') : $t('hq.loss'));
+      const recapNote = [
+        growth.length ? $t('hq.last_game_growth_count', { n: growth.length }) : '',
+        injuries.length ? $t('hq.last_game_injury_count', { n: injuries.length }) : '',
+      ].filter(Boolean).join(' · ');
+      const lastGame = recent ? `<details class="polish-secondary hq-last-game"><summary>
+        <span class="dim">${$t('polish.last_game')} · ${$t('hq.week', { week: lg.week })}</span>
+        <span class="hq-recap-score">${esc(result)} ${esc(lg.playerScore)}–${esc(lg.oppScore)} · ${esc(lg.opponent)}</span>
+        ${recapNote ? `<span class="dim hq-recap-note">${esc(recapNote)}</span>` : ''}
+      </summary><div class="panel tight last-game ${lg.won ? 'won' : 'lost'}">
+        ${growth.map(e => e.kind === 'evolve' ? `✨ ${esc(e.from)} → ${esc(e.to)}` : `⬆️ ${esc(e.name)} Lv ${e.level}`).concat(
+          injuries.map(e => `<span class="bad">🩹 ${esc(e.name)} ${e.weeks}w</span>`)
+        ).join(' · ') || esc($t('hq.last_game_no_roster_changes'))}
+      </div></details>` : '';
       const lb = f.campaign?.lastBadge; const lbGym = lb && lb.year === f.season.year && f.season.week - lb.week <= 1 ? GYM_BY_CLUB[lb.club] : null;
       const badgeBanner = lbGym ? `<div class="badge-banner" style="--hue:${TYPES[lbGym.element]?.hue ?? 120}"><span class="badge-banner-star">★</span><div>${$t('hq.b_earned_b_badge_of_8', { badge: esc(lbGym.badge), n: lb.n })}<div class="dim">${$t('hq.s_beaten_in_week', { name: esc(lbGym.coach.name), club: esc(lb.club), lb: lb.week })} ${lb.n === 8 ? $t('hq.all_eight_the_gyms_are_yours') : `${$t('hq.to_go', { n: 8 - lb.n })}`}</div></div></div>` : '';
       const waitingCall = callPanelHtml(f);
@@ -120,7 +149,7 @@ export function registerHqScreens(Router, app) {
           ${cap.over && !f.week.commissioner ? `<p class="muted" style="color:var(--warn);margin-top:8px">${$t('hq.over_the_cap_by_the_commissioner', { amount: fmtMoney(-cap.remaining) })} <button class="btn small" data-action="releasemon">${$t('hq.release_a_monster')}</button></p>` : ''}
           ${f.week.commissioner ? `<p class="muted" style="color:var(--bad);margin-top:8px">${$t('hq.the_commissioner_is_waiting_over_the', { amount: fmtMoney(f.week.commissioner.over) })}</p>` : ''}${warningsHtml(f, { max: 2, only: ['min', 'depth', 'hurt', 'tight', 'points'] })}</div>
         ${waitingCall ? `<details class="polish-secondary polish-deals" open><summary>${$t('polish.trades')}</summary>${waitingCall}${tradeLineHtml(f)}</details>` : ''}
-        ${lastGame ? `<details class="polish-secondary hq-last-game"><summary>${$t('polish.last_game')}</summary>${lastGame}</details>` : ''}
+        ${lastGame}
         <details class="polish-secondary hq-team-story" open><summary>${$t('polish.team_story')}</summary>${captainCard(f)}
         ${rivalCard(f)}
         ${boardPanel(f)}
