@@ -307,7 +307,7 @@ The weekly series was added to the tool after the normal-practice runs, so only 
 
 | Area | Files | Result |
 |---|---|---|
-| D-1 cap transition and franchise (final tree) | `cap-transition`, `task7-floor`, `task8-identities`, `franchise-save-compat`, `save`, `trading-second-pass` | @@INTEG2@@ |
+| D-1 cap transition and franchise (final tree) | `cap-transition`, `task7-floor`, `task8-identities`, `franchise-save-compat`, `save`, `trading-second-pass` | 68 of 68 |
 | D-1 and D-2, first pass (before the Power Left change and the Counter revision) | those six plus `central-text`, `text-style`, `run-read` | 96 of 97; the one failure was the Counter test, since revised |
 | D-4 Counter (revised) | `run-read` | 17 of 17 |
 | D-4 Power Left (mirror) | `run-read`, `run-vision`, `run-game`, `attr-trials`, `task8-abilities-light-metal`, `central-text`, `text-style`, `playbook`, `playbook-reserve` | 96 of 96 |
