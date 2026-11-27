@@ -10,10 +10,17 @@
 
 import { REG_WEEKS, LAST_WEEK, FINAL_ROUND } from '../data/league.js';
 import { honoursText } from './league.js';
-import { AWARDS } from './awards.js';
+import { AWARDS, MAJOR_AWARDS, ALL_LEAGUE_SLOTS } from './awards.js';
 import { RECORD_CATEGORIES, TEAM_RECORDS } from './stats.js';
 import { yearOf } from '../data/calendar.js';
 import { t as $t, line as $L, lineParts as $P, lineText } from '../text/index.js';
+/** What an AI–AI trade paid, as a saved line (players as name/position/overall; picks worded now, so they follow the language). An event
+ *  saved before the picks were stored separately shows its consideration as written. */
+function considerationText(e) {
+  const picks = (e.considerationPicks || []).map((p) => $L('franchise.a_round_pick', { round: p.round, year: p.year }));
+  const parts = [e.consideration, ...picks].filter(Boolean); if (!parts.length) return null;
+  return parts.length === 1 ? parts[0] : $P(...parts.flatMap((x, i) => (i ? [' and ', x] : [x])));
+}
 
 export const LEAGUE_NEWS_VERSION = 1;
 export const LEAGUE_NEWS_KEEP = 200;        // items kept at most (this season and the last)
@@ -40,7 +47,7 @@ export const poss = (team) => (/s$/.test(team) ? `${team}'` : `${team}'s`);
 /** The score as a sentence ends it: a tie settled by the Beast Clash says so instead of "beat 16-16". */
 // a saved line when it has wording in it: every use is a value inside a saved line
 const resultTail = (g) => (g.clash && g.homeScore === g.awayScore ? $P(' ', $L('franchise.after_a_tie_in_a_v', { homeScore: g.homeScore, awayScore: g.awayScore, size: g.clash.size, size2: g.clash.size })) : ` ${scoreLine(g)}${otTag(g)}`);
-const otTag = (g) => (g.clash ? ` ${$t('franchise.ot_decided_by_a_v_beast', { size: g.clash.size, size2: g.clash.size })}` : g.ot ? ' (OT)' : '');
+const otTag = (g) => (g.forfeit && g.inGame ? ` ${$t('franchise.in_game_forfeit_tag', { played: g.playedScore ? `${g.playedScore.home}-${g.playedScore.away}` : '?' })}` : g.clash ? ` ${$t('franchise.ot_decided_by_a_v_beast', { size: g.clash.size, size2: g.clash.size })}` : g.ot ? ' (OT)' : ''); // R-6: an in-game forfeit names the score actually played
 
 export function ensureLeagueNews(f) { if (!Array.isArray(f.leagueNews)) f.leagueNews = []; f.leagueNewsMeta ||= { v: LEAGUE_NEWS_VERSION, leaders: {} }; return f.leagueNews; }
 /** Add items (deduplicated by id), newest first, trimmed to LEAGUE_NEWS_KEEP. Returns how many were added. */
@@ -151,9 +158,17 @@ export function raceNews({ year, week, races, meta }) {
 }
 /** Award winners (regular-season awards, frozen when the playoffs are drawn). `winners` = { key: finalist | null }. */
 /** `priorOf(id, key)`: how many times this monster won this award before (persistent careers, GDD §46): repeat winners are recognised. */
+/** R-5: one League News item naming the All-League First Team (position by position). */
+export function allLeagueNews({ year, week, allLeague }) {
+  if (!allLeague?.first) return [];
+  const names = Object.keys(ALL_LEAGUE_SLOTS).flatMap((pos) => (allLeague.first[pos] || []).map((w) => `${w.name} (${pos}, ${w.team})`));
+  if (!names.length) return [];
+  return [{ id: `${year}|allleague`, year, week, kind: 'award', tier: 'major', icon: '⭐', mid: null, mname: null, ...$P($L('franchise.all_league_first_team'), ': ', names.join(', '), '.') }];
+}
 export function awardNews({ year, week, winners, priorOf = null }) {
   const nth = ['', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth'];
-  return Object.entries(winners || {}).filter(([, w]) => w).map(([k, w]) => { const prior = k !== 'coy' && w.id && priorOf ? priorOf(w.id, k) : 0; return { id: `${year}|award|${k}`, year, week, kind: 'award', tier: 'major', icon: '🏆', mid: k === 'coy' ? null : w.id || null, mname: k === 'coy' ? null : w.name, ...$P(AWARDS[k]?.label || k, `: `, k === 'coy' ? (w.coach || w.name) : w.name, ` (`, w.team, w.position ? `, ${w.position}` : '', `)`, (w.record ? $L('franchise.club', { record: w.record }) : ''), (prior ? $P($L('franchise.his'), ` `, nth[prior] || `${prior + 1}th`) : ''), `.`)}; });
+  return Object.entries(winners || {}).filter(([, w]) => w).map(([k, w]) => { const prior = k !== 'coy' && w.id && priorOf ? priorOf(w.id, k) : 0; return { id: `${year}|award|${k}`, year, week, kind: 'award', tier: MAJOR_AWARDS.includes(k) ? 'major' : 'notable', // R-5: the new honours are notable, not major
+    icon: '🏆', mid: k === 'coy' ? null : w.id || null, mname: k === 'coy' ? null : w.name, ...$P(AWARDS[k]?.label || k, `: `, k === 'coy' ? (w.coach || w.name) : w.name, ` (`, w.team, w.position ? `, ${w.position}` : '', `)`, (w.record ? $L('franchise.club', { record: w.record }) : ''), (prior ? $P($L('franchise.his'), ` `, nth[prior] || `${prior + 1}th`) : ''), `.`)}; });
 }
 
 /**
@@ -210,6 +225,7 @@ export const OFFSEASON_DIGEST = MOVE_RULES.digest;
 export function meaningfulMove(e, { club, rival, division = [] }) {
   if (e.kind === 'injury') return (e.ovr || 0) >= MOVE_RULES.ovr || (!!e.starter && ((e.weeks || 0) >= 3 || (e.ovr || 0) >= 60)); // a star, or a starter out a while, wherever he plays
   if (e.kind === 'retire' || e.kind === 'milestone') return true;
+  if (e.kind === 'signing' && e.apex) return true; // UI feedback 2026-11-25: a club signing a (discovered) Apex is always news
   if ((e.ovr || 0) >= MOVE_RULES.ovr || e.starter) return true;
   if (e.formerMine) return true;
   const clubs = [e.club, e.from, e.to].filter(Boolean);
@@ -220,16 +236,16 @@ export function meaningfulMove(e, { club, rival, division = [] }) {
 /** Bigger monsters and closer connections first. */
 export function moveWeight(e, { rival, division = [] }) {
   const clubs = [e.club, e.from, e.to].filter(Boolean);
-  return (e.ovr || 0) + (e.kind === 'retire' ? 30 : e.kind === 'trade' ? 12 : e.kind === 'injury' ? Math.min(12, 2 * (e.weeks || 0)) : e.kind === 'milestone' ? (e.tier >= 2 ? 12 : 2) : 0) + (e.formerMine ? 10 : 0) + (clubs.some((c) => c === rival) ? 10 : clubs.some((c) => division.includes(c)) ? 5 : 0) + (e.starter ? 6 : 0);
+  return (e.ovr || 0) + (e.kind === 'retire' ? 30 : e.kind === 'trade' ? 12 : e.kind === 'injury' ? Math.min(12, 2 * (e.weeks || 0)) : e.kind === 'milestone' ? (e.tier >= 2 ? 12 : 2) : 0) + (e.formerMine ? 10 : 0) + (e.apex ? 20 : 0) + (clubs.some((c) => c === rival) ? 10 : clubs.some((c) => division.includes(c)) ? 5 : 0) + (e.starter ? 6 : 0);
 }
 const ageOf = (e) => (e.age ? `, ${e.age}` : '');
 /** One line of text for a move; the monster's name is linked by the UI through mid/mname. */
 export function moveLine(e) {
   const who = $P(e.mname, ' (', e.position, e.ovr ? $L('franchise.ovr_2', { ovr: e.ovr }) : '', ageOf(e), ')');   // a saved line itself: it is a value inside the lines below
   switch (e.kind) {
-    case 'signing': return (e.via === 'waivers' ? $P($L('franchise.claim_off_waivers', { club: e.club, who }), (e.from ? $L('franchise.late_of', { from: e.from }) : ''), `.`) : (e.generated ? $L('franchise.sign_a_veteran_out_of', { club: e.club, who, region: e.region || $t('franchise.the_regions') }) : $P(e.club, ` sign free agent `, who, (e.from ? $L('franchise.formerly_of', { from: e.from }) : ''), `.`)));
+    case 'signing': { const l = (e.via === 'waivers' ? $P($L('franchise.claim_off_waivers', { club: e.club, who }), (e.from ? $L('franchise.late_of', { from: e.from }) : ''), `.`) : (e.generated ? $L('franchise.sign_a_veteran_out_of', { club: e.club, who, region: e.region || $t('franchise.the_regions') }) : $P(e.club, ` sign free agent `, who, (e.from ? $L('franchise.formerly_of', { from: e.from }) : ''), `.`))); return e.apex ? $P($L('franchise.apex_signing'), ' ', l) : l; }
     case 'release': return e.reason === 'walked' ? $L('franchise.leaves_as_a_free_agent_his', { who, club: e.club }) : $L('franchise.release', { club: e.club, who, why: (e.why === 'cap' ? $L('franchise.to_get_under_the_cap') : (e.why === 'room' ? $L('franchise.to_make_room') : ''))});
-    case 'trade': return (e.toOwner ? $L('franchise.trade_to_for', { from: e.from, who, to: e.to, consideration: e.consideration || 'picks' }) : $P($L('franchise.trade_goes_from_to', { who, from: e.from, to: e.to }), e.consideration ? ` for ${e.consideration}` : '', `.`));
+    case 'trade': { const cons = considerationText(e); return (e.toOwner ? $L('franchise.trade_to_for', { from: e.from, who, to: e.to, consideration: cons || 'picks' }) : $P($L('franchise.trade_goes_from_to', { who, from: e.from, to: e.to }), cons ? $P(' for ', cons) : '', `.`)); }
     case 'draft': return $L('franchise.draft_at_round', { club: e.club, who, overall: e.overall, e: e.round });
     case 'retire': return $P($L('franchise.retires_at', { mname: e.mname, age: e.age || $t('franchise.the_end_of_a_long_career') }), e.honours ? `: ${honoursText(e.honours)}` : '', '.', e.club ? $P(' ', $L('franchise.he_played_his_last_season_with', { club: e.club })) : '');
     case 'injury': return $L('franchise.league_injury_out', { club: e.club, who, weeks: e.weeks, n: e.weeks });

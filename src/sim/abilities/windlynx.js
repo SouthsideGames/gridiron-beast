@@ -1,7 +1,9 @@
 // Football revision approved 2026-11-15. The current exact contract is in
 // docs/beast-dex/data/abilities.json (and task8-overrides.json where applicable).
 import { registerAbility } from './registry.js';
-import { byMastery } from './common.js';
+import { byMastery, passDefended } from './common.js';
+// R-10 (balance audit, 2026-11-25): two passes defended (a personal breakup, or an incompletion on a throw at the receiver he covers)
+// charge the bar, not two breakups alone, which a safety reached in almost no game.
 
 export const PBUS = 2, STRENGTH = 20;
 export const LIFETIME = [3, 4, 4, 5]; // by mastery
@@ -24,7 +26,7 @@ export default registerAbility({
       const st = ctx.state(self); if (self.team !== 'def' || ctx.kickoff) return;
       if (st.fresh) { st.fresh = false; return; } // the creation play cannot recharge
       if (ctx.twoPoint) return;
-      if (ctx.stats.pbuBy === self.slot && !ctx.stats.interceptor && ctx.canGainCharge(self)) st.charges = Math.min(PBUS, st.charges + 1);
+      if (passDefended(ctx.stats, self.slot) && ctx.canGainCharge(self)) st.charges = Math.min(PBUS, st.charges + 1);
     },
   },
 });

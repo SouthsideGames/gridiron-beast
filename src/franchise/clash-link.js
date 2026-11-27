@@ -10,7 +10,7 @@ import { clashGrade } from './t8/grading.js';
 import * as FR from '../core/fraction.js';
 import { simulateByRuleset, logHashFor, battleConfig, chooseLineup, archetypeOf, CLASH_VALUES, T8_RULESET, T8_VALUES, t8Config, createClashSessionT8 } from '../clash/index.js';
 import { createRng } from '../core/rng.js';
-import { monsterOverall, xpForLevel } from '../data/monsters.js';
+import { monsterOverall, xpForLevel, overall, effectiveAttributes, CLASH_POSITION_WEIGHTS } from '../data/monsters.js';
 import { tierIndex, applyMastery } from './t8/mastery.js';
 
 /** Battle sizes by occasion (GDD §26). */
@@ -119,7 +119,7 @@ export function eligibleBattlers(roster) { return roster.filter((m) => !m.injury
  * at most two of one archetype, Tank in front, Supports and Disruptors at the back). `seed` breaks ties deterministically.
  */
 export function autoLineup(roster, n, seed = 1) {
-  const pool = eligibleBattlers(roster).map((m) => ({ species: m.species, archetype: archetypeOf(m.species), overall: monsterOverall(m), type: m.type, monster: m }));
+  const pool = eligibleBattlers(roster).map((m) => ({ species: m.species, archetype: archetypeOf(m.species), overall: overall(effectiveAttributes(m), m.position, CLASH_POSITION_WEIGHTS), type: m.type, monster: m })); // the Clash overall (CLASH_POSITION_WEIGHTS, balance audit 2026-11-25)
   if (!pool.length || n <= 0) return [];
   return chooseLineup(pool, Math.min(n, pool.length), createRng(seed)).map((x) => x.monster);
 }

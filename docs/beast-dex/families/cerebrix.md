@@ -33,7 +33,7 @@ These are ordinary non-Apex profiles. Apex has separate 10–15 starting ratings
 
 Ability ID: `PSY-03-F`. Category: Targeted effect.
 
-Before either side selects plays while ready, randomly mark one initially aligned opposing LB within 3 yards of LOS. Both sides see candidate. At snap validate marked defender actually blitzes.
+Before either side selects plays while ready, randomly mark one initially aligned opposing LB within 5 yards of LOS (the box; balance audit R-10, 2026-11-25: at 3 yards almost no book alignment qualified). Both sides see candidate. At snap validate marked defender actually blitzes.
 
 Foresight / If marked LB blitzes and Cerebrix able, roll fixed 50% chance to apply Confused. Success attempts 20% effective Awareness reduction for current play with normal shared status-slot rules. Application chance and penalty magnitude are separate.
 
@@ -41,11 +41,11 @@ Source: workbook v18. Apply the later shared overrides in [Approved Rules](../AP
 
 ### Trigger / eligibility
 
-Before either side selects plays while ready, randomly mark one initially aligned opposing LB within 3 yards of LOS. Both sides see candidate. At snap validate marked defender actually blitzes.
+Before either side selects plays while ready, randomly mark one initially aligned opposing LB within 5 yards of LOS (the box; balance audit R-10, 2026-11-25: at 3 yards almost no book alignment qualified). Both sides see candidate. At snap validate marked defender actually blitzes.
 
 ### Targets / placement
 
-**Approved Task 8 rule (N9d):** N9d: before both calls, choose and save one opposing LB within 3 yards of LOS in the initial visible formation. The initial look is locked once per snap. At snap validate that same monster is participating and actually blitzes; no substitute or reload/audible/redraw reroll. No future call alignment is read. Preserve the fixed 50% Confused attempt, 20% Awareness reduction and approved cooldown.
+**Approved Task 8 rule (N9d):** N9d: before both calls, choose and save one opposing LB within 5 yards of LOS (the box; balance audit R-10, 2026-11-25: at 3 yards almost no book alignment qualified) in the initial visible formation. The initial look is locked once per snap. At snap validate that same monster is participating and actually blitzes; no substitute or reload/audible/redraw reroll. No future call alignment is read. Preserve the fixed 50% Confused attempt, 20% Awareness reduction and approved cooldown.
 
 > Superseded v18 text: Only marked LB. No future defensive choice inspection, substitute target or new audible selection. Keep same candidate through audibles and use final assignment at snap.
 
@@ -81,7 +81,7 @@ Cerebrix warns one linebacker that it has seen the rush coming. The defender mus
 
 Ability ID: `PSY-03-C`. Category: Signature action.
 
-Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack. Once-use spent on preparation.
+Once per Clash, while active and able, prepare psychic mirror IN ADDITION to the ordinary attack (owner decision D-5, 2026-11-26: the attack follows in the same turn), only while the CURRENT ACTIVE enemy has an ability that applies a harmful status (owner decision F-08, 2026-11-26; a status source in reserve no longer counts; balance audit R-10, 2026-11-25, introduced the status-source rule). Otherwise attack normally and keep the use. Once-use spent on preparation.
 
 Foresight / Prevent incoming status and redirect one application to its caster with same strength and proposed duration. Caster ordinary status eligibility applies, with no second application accuracy roll. If caster cannot receive, incoming application still prevented and mirror consumed.
 
@@ -89,7 +89,7 @@ Source: workbook v18. Apply the later shared overrides in [Approved Rules](../AP
 
 ### Trigger / eligibility
 
-Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack. Once-use spent on preparation.
+Once per Clash, while active and able, prepare psychic mirror IN ADDITION to the ordinary attack (owner decision D-5, 2026-11-26: the attack follows in the same turn), only while the CURRENT ACTIVE enemy has an ability that applies a harmful status (owner decision F-08, 2026-11-26; a status source in reserve no longer counts; balance audit R-10, 2026-11-25, introduced the status-source rule). Otherwise attack normally and keep the use. Once-use spent on preparation.
 
 ### Targets / placement
 

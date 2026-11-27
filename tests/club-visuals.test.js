@@ -12,7 +12,7 @@ import { fieldSvg } from '../src/ui/field-view.js';
 import { fieldBrand, LOGO_YARDS } from '../src/ui/field-branding.js';
 import { venueFor, STADIUMS, ENVIRONMENTS } from '../src/data/stadiums.js';
 import { GYMS, isGymClub } from '../src/data/gyms.js';
-import { setStadiumScene, venueLook, homeEdgeSvg, lookFor, LOOKS } from '../src/ui/stadium-fx.js';
+import { setStadiumScene, venueLook, lookFor, LOOKS } from '../src/ui/stadium-fx.js';
 
 const WORDS = {
   'Frostpeak Howlers': ['FROSTPEAK', 'HOWLERS'], 'Glacier Guardians': ['GLACIER', 'GUARDIANS'], 'Northstar Novas': ['NORTHSTAR', 'NOVAS'], 'Ironpeak Colossi': ['IRONPEAK', 'COLOSSI'],
@@ -64,7 +64,7 @@ test('every home field: its logo at midfield, place and nickname in the end zone
     } else {
       assert.equal(venue.env, 'grass', `${c}: grass`); assert.equal(b.gym, false); assert.ok(svg.includes(`fill="${ENVIRONMENTS.grass.palette.a}"`), 'ordinary grass surface');
       assert.equal(b.ends.nickname.fill, TEAM_META[c].secondary); assert.ok(b.ends.place.fill, 'end zone in club colours');
-      assert.ok(svg.includes(`class="home-edge" data-region="${regionOf(c).label}"`), `${c}: regional sideline markers`);
+      assert.ok(!svg.includes('class="home-edge"'), `${c}: no sideline markers on home grass (owner play test 2026-11-26)`);
     }
   }
 });
@@ -114,7 +114,6 @@ test('the twenty grass stadiums are dressed by region and club; the twelve Gym L
   const grass = ALL_TEAMS.filter((c) => !isGymClub(c)); assert.equal(grass.length, 20);
   for (const c of grass) { const L = venueLook({ club: c, env: 'grass' }); assert.deepEqual(L.colors, [TEAM_META[c].color, TEAM_META[c].secondary, TEAM_META[c].accent]); assert.equal(L.region, regionOf(c)); assert.ok(L.banner); }
   for (const c of ALL_TEAMS.filter(isGymClub)) { const env = STADIUMS[c].env; assert.equal(venueLook({ club: c, env }), lookFor(env), `${c}: approved look untouched`); }
-  assert.equal(homeEdgeSvg({ club: 'Frostpeak Howlers', env: 'frozen' }, { bottom: 0, top: 46 }, 27, (y) => y), '');
   // within a division, clubs on grass are told apart by more than colour: logo, badge and banner pattern
   for (const [d, clubs] of Object.entries(DIVISIONS)) { const g = clubs.filter((c) => !isGymClub(c)); if (g.length < 2) continue; assert.ok(new Set(g.map((c) => BADGES[c])).size === g.length || new Set(g.map((c) => venueLook({ club: c, env: 'grass' }).banner)).size > 1, d); }
   assert.ok(LOOKS.grass.plain);

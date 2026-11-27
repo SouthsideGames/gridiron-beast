@@ -20,7 +20,9 @@ test('N9d Foresight: first visible look is saved before calls; audibles, reload 
 });
 test('N9d Foresight: called-play alignment is not the initial visible alignment',()=>{
  const {state,teams}=setup();teams.away.defensePlays=['double_a_zero'];
- assert.equal(R.preparePreChoice(state,teams).foresight.length,0,'this play mugs LBs only in its hidden call; visible base LBs are 4.5 yd deep');
+ // R-10 (2026-11-25): the mark depth is now 5, so a visible base LB (4.5 deep) is marked; the mark still comes from the visible look,
+ // never the hidden mug alignment (updated from "no mark at 3 yards" to the approved depth).
+ const fs=R.preparePreChoice(state,teams).foresight;assert.equal(fs.length,1);assert.equal(Math.abs(fs[0].at[0]),4.5,'the visible base alignment, not the mugged call');
 });
 test('N9d Prism: fixed 12-yard reference selects an existing zone; pending zones stay banked; a reload cannot retarget',()=>{
  const {state,teams}=setup();Object.assign(teams.away.defense.FS,{species:'prism',type:'Light'});teams.away.defensePlays=['cover_3'];

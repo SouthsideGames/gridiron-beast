@@ -163,10 +163,18 @@ test('play-action: run fronts are more exposed, aware defenders bite less, and t
   assert.ok(lo.bite > 0, 'unaware defenders do bite');
 });
 
-test('misdirection: the counter still works against an over-committed front, and Awareness helps recover', () => {
-  const y = (def, v) => mean(Array.from({ length: 60 }, (_, s) => play({ off: 'counter', def, defSubjects: all(def), attr: 'awareness', value: v, seed: 15000 + s }).yards));
-  assert.ok(y('bear_front', 65) > y('cover_3', 65), 'the counter hurts the Bear Front more than a patient zone call');
-  for (const def of ['bear_front', 'run_wall', 'cover_3']) assert.ok(y(def, 95) < y(def, 50), `${def}: aware defenders recover against the counter`);
+// Revised with owner approval (D-4, 2026-11-26). Since the B-gap Counter path (F-10, §61.14.3) the false step deceives the calls that
+// over-commit to the flow (Bear Front, Scrape Exchange), and there Awareness must help recover. Against Run Wall and Cover 3 nobody bites,
+// so there is nothing to recover from: the paired Awareness effect (95 against 50, same seeds) was +0.27 ± 0.80 and −0.10 ± 0.71 yards.
+// There the test asks only that high Awareness is not meaningfully worse: a paired mean at most 1.5 yards above (about two standard errors).
+test('misdirection: the counter works against over-committed fronts and Awareness recovers there; elsewhere Awareness is no disadvantage', () => {
+  const ys = (def, v) => Array.from({ length: 60 }, (_, s) => play({ off: 'counter', def, defSubjects: all(def), attr: 'awareness', value: v, seed: 15000 + s }).yards);
+  assert.ok(mean(ys('bear_front', 65)) > mean(ys('cover_3', 65)), 'the counter hurts the Bear Front more than a patient zone call');
+  for (const def of ['bear_front', 'scrape_exchange']) { const lo = mean(ys(def, 50)), hi = mean(ys(def, 95)); assert.ok(hi < lo, `${def}: aware defenders recover against the counter (${hi.toFixed(2)} vs ${lo.toFixed(2)})`); }
+  for (const def of ['run_wall', 'cover_3']) {
+    const lo = ys(def, 50), hi = ys(def, 95); const d = mean(hi.map((y, i) => y - lo[i]));
+    assert.ok(d <= 1.5, `${def}: high Awareness is no meaningful disadvantage (paired +${d.toFixed(2)} yards, tolerance 1.5)`);
+  }
 });
 
 test('Bear Front lines up B-left, head-up nose, B-right', () => {
@@ -252,7 +260,9 @@ test('Goal Line Man: on a pass he covers again, it still stops screens and the q
     if (e[8]?.state === 'pass') { shown++; assert.equal(e[2], 'none', `${off} ${s}: with pass shown he covers the short middle (${e[2]})`); }
   }
   assert.ok(shown >= 20, `pass shown before the throw on ${shown} dropbacks`);
-  const ypp = (def, offs) => mean(offs.flatMap((off) => Array.from({ length: 40 }, (_, s) => play({ off, def, attr: 'speed', value: 65, seed: 20500 + s }).yards)));
+  // 40 -> 120 plays per call (balance audit 2026-11-26): after R-1/R-2 the quick-game gap is 0.5 yd, inside the noise of 40 plays
+  // (one fixed sample flipped it); 120 holds it with margin. All three comparisons are unchanged and the test is stricter, not looser.
+  const ypp = (def, offs) => mean(offs.flatMap((off) => Array.from({ length: 120 }, (_, s) => play({ off, def, attr: 'speed', value: 65, seed: 20500 + s }).yards)));
   const screens = ['bubble_screen', 'rb_screen'], quick = ['quick_slants', 'stick', 'curl_flat'], pa = ['pa_post', 'pa_boot', 'pa_shot'];
   assert.ok(ypp('goal_line_man', screens) < ypp('goal_line', screens), 'it stops screens better than Goal Line Stand');
   assert.ok(ypp('goal_line_man', quick) < ypp('goal_line', quick), 'and the quick game');

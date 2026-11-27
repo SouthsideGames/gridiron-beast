@@ -112,7 +112,7 @@ test('Mirror Rift: a live pass relocates in man and zone coverage; cooldown coun
   assert.ok(fired >= 20, 'both coverage styles exercise the mechanic');
 });
 
-test('Foresight (PSY-03-F): a marked LB within 3 yards who blitzes gets a 50% Confused (20% Awareness, current play); spent either way; no blitz keeps readiness', () => {
+test('Foresight (PSY-03-F): a marked LB within 5 yards (R-10 depth) who blitzes gets a 50% Confused (20% Awareness, current play); spent either way; no blitz keeps readiness', () => {
   let casts = 0, confused = 0; const BLITZ = ['double_a_zero', 'mug_zero', 'mug_sim', 'nickel_mug_zero', 'double_a_mug', 'goal_line'];
   for (let seed = 1; seed <= 200; seed++) { // B12: n = 200 casts' worth of plays; tolerance for the 50% roll: 0.35..0.65 of casts
     const t8 = { status: {} }; const r = run('mesh', BLITZ[seed % BLITZ.length], [put('offense', 'QB', 'cerebrix', { mastery: 3 })], seed, t8);
@@ -126,7 +126,9 @@ test('Foresight (PSY-03-F): a marked LB within 3 yards who blitzes gets a 50% Co
     } else { assert.equal(cast.length, 0); assert.equal(t8.ability.cerebrix_QB?.cd || 0, 0, 'no blitz: readiness kept'); }
   }
   assert.ok(casts >= 60, `casts ${casts}`); assert.ok(confused / casts > 0.35 && confused / casts < 0.65, `Confused ${confused}/${casts}`);
-  for (let seed = 1; seed <= 20; seed++) { const t8 = { status: {} }; const r = run('mesh', 'cover_3', [put('offense', 'QB', 'cerebrix')], seed, t8); assert.ok(!evs(r, (e) => e.kind === 'foresight_mark').length, 'no LB within 3 yards: no candidate'); }
+  // Balance audit R-10 (2026-11-25): the mark depth is 5 yards, so cover 3's box LBs (4.5 deep) are now candidates; cover 3 does not
+  // blitz, so the mark never casts and readiness is kept. (Before R-10 this asserted no candidate at 3 yards; updated to the decision.)
+  for (let seed = 1; seed <= 20; seed++) { const t8 = { status: {} }; const r = run('mesh', 'cover_3', [put('offense', 'QB', 'cerebrix')], seed, t8); assert.equal(evs(r, (e) => e.kind === 'foresight_mark').length, 1, 'a box LB is the candidate'); assert.equal(evs(r, (e) => e.kind === 'ability' && e.ability === 'PSY-03-F').length, 0, 'no blitz: no cast'); assert.equal(t8.ability?.cerebrix_QB?.cd || 0, 0, 'readiness kept'); }
   // Confused cuts the effective Awareness by 20% for the play (a different status blocks).
   const t8 = { status: { 'def:LB1': { id: 'slowed', strength: 10, originalStrength: 10, remaining: 2, applications: 1, appliedThisUnit: false } } };
   for (let seed = 1; seed <= 40; seed++) { const r = run('mesh', 'mug_zero', [put('offense', 'QB', 'cerebrix')], seed, structuredClone(t8)); const st = evs(r, (e) => e.kind === 'status' && e.status === 'confused' && e.victim === 'LB1'); for (const s of st) assert.equal(s.accepted, false, 'a different status blocks'); }

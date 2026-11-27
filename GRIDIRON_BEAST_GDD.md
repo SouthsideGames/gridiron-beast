@@ -1,6 +1,6 @@
 # Gridiron Beast — Game Design Document (Current Design + Historical Build Record)
 
-> **CURRENT DESIGN / AUTHORITY NOTICE (2026-10-21).** Active Franchise Mode is **7-on-7 football**, **16 clubs**, **one league/campaign** (no Challenger/Vanguard/Sovereign promotion or relegation). The nine-game regular season plus bye, gym-badge campaign, Beast Bowl, Legend Tracks, Board, draft, contracts and awards are active. **32 clubs are a long-term expansion goal, not current implementation.** Section **27** is the approved feature roadmap and accessibility policy; Section **26** records the implemented Beast Clash integration (Tuesday encounters, pregame and overtime Clash). Sections **1–23** contain historical build/playtest notes and must not override newer locked design. Section **24** (Career Mode) is **documentation-only**; its old references to 11-on-11 and league tiers are superseded. Section **25** governs Beast Clash. Git history retains previous revisions; maintain this file as the sole authoritative GDD.
+> **CURRENT DESIGN / AUTHORITY NOTICE (updated 2026-11-26).** Active Franchise Mode is **7-on-7 football** in **one league of 32 clubs** (two conferences, eight divisions; §60), with no promotion, relegation or tiers. A season is **14 games in 15 weeks**, then a **14-club playoff** and the Beast Bowl (§60.5–60.6). **Twelve Gym Leaders** hold twelve badges and the twelve legendaries (§60.3, §60.7–60.8). A franchise lasts at most **15 seasons**, across every club the GM manages (§27.5E). The Board, draft, free agency, contracts, trading, awards, Beast Clash (Tuesday encounters, pregame and overtime), coaching substitutions, in-game injuries and GM job changes are active. The balance audit of November 2026 (§61) sets the current overall ratings, emergency positions, award names, salary curve and AI difficulty rates. **Where sections disagree, the later section wins; §60 and §61 are the newest.** Section **27** is the roadmap and accessibility policy, and its register (below the §27 heading) is the status index. Sections **1–23** are historical build notes. Section **24** (Career Mode) is **documentation-only**. Section **25** governs Beast Clash. Git history keeps earlier revisions; this file is the sole authoritative GDD.
 
 
 **Owner:** Southside Games · **Branch:** `rebuild/mobile-7v7` · **Supersedes:** `docs/GRIDIRON_BEAST_MASTER_GDD.md` v4.9 for all football, UI and roster rules. Franchise rules from v4.9 that are not restated here remain in force.
@@ -196,7 +196,7 @@ Every decision uses down, distance, field position, score differential, quarter,
 
 ## 8. Franchise (LOCKED unless noted)
 
-**Onboarding** (unchanged): commissioner → owner name/look/hometown → pick one of four rebuilding clubs → random division rival GM → offensive cornerstone → defensive cornerstone → hire Head Coach, OC, DC, Scout, Trainer within the cap.
+**Onboarding** (unchanged except the club pick): commissioner → owner name/look/hometown → pick one of the eight rebuilding clubs of Golden Valley and Greenheart (§60.2) → random division rival GM → offensive cornerstone → defensive cornerstone → hire Head Coach, OC, DC, Scout, Trainer within the cap.
 
 **Week (one primary action per day; HQ always shows the next one):**
 
@@ -210,7 +210,7 @@ Every decision uses down, distance, field position, score differential, quarter,
 | Sat | Lineup check | Auto-fills injuries; warns about fatigue |
 | Sun | Game | All other league games are simulated with the same engine |
 
-**League (CURRENT):** 16 clubs, 2 conferences, 4 divisions, one campaign; 10-week regular season (9 games plus bye), 8-team postseason and Beast Bowl. Gym badges and Legend Tracks drive campaign progression. **No active promotion or relegation; no tiers.** See §15 and §26.
+**League (CURRENT):** 32 clubs, 2 conferences, 8 divisions, one campaign; 15-week regular season (14 games plus one bye), a 14-club postseason and the Beast Bowl. Twelve Gym Leader badges and Legend Tracks drive campaign progression. **No active promotion or relegation; no tiers.** See §60 (structure, schedule, playoffs, badges) and §26.
 
 **Progression:** XP for participation and contributions (yards, TDs, tackles, sacks, interceptions). Each level adds attribute points to the position's key attributes. Trainer bonuses are never permanent.
 
@@ -220,21 +220,23 @@ Every decision uses down, distance, field position, score differential, quarter,
 
 ### 8.2 What the twelve attributes do, by position (2026-10-21)
 
-Read from what the football engine actually uses (`src/sim`), plus each position's overall-rating weights (which also set the Beast Clash rating). The table lives in `src/data/stat-guide.js` and is shown in the game under **More → What the stats mean** and from every monster card (tap an attribute name). **Attribute points can only be spent on an attribute that helps the monster's position**; the trainer and level-up growth already only raise those. Points spent before this rule are kept.
+> **Updated by §61.2–61.3 (balance audit, 2026-11-26).** DL Speed now drives the pass rush, defender Catching sets the interception reach and zone Coverage counts in a zone defender's reaction and contest. Durability is in every overall except the kicker's, and DL and TE Speed weigh 2. Beast Clash keeps the pre-audit weights for its own ratings. The table below includes these changes.
+
+Read from what the football engine actually uses (`src/sim`), plus each position's overall-rating weights (`POSITION_WEIGHTS`; Beast Clash uses its own frozen copy, §61.3). The table lives in `src/data/stat-guide.js` and is shown in the game under **More → What the stats mean** and from every monster card (tap an attribute name). **Attribute points can only be spent on an attribute that helps the monster's position**; the trainer and level-up growth already only raise those. Points spent before this rule are kept.
 
 | Attribute | Helps | Does nothing for |
 |---|---|---|
-| Speed | Everyone but K: top speed, separation, pursuit, return distance | K |
+| Speed | Everyone but K: top speed, separation, pursuit, return distance; DL: the pass-rush shed | K (and nothing for OL ratings: OL Speed has no weight) |
 | Agility | Everyone but K: cuts, jukes, catch radius, escaping the rush, getting around blocks | K |
 | Strength | Everyone but K: holding blocks (40%), shedding blocks, breaking tackles, tackling | K |
 | Awareness | QB reads and decisions; ball carriers' vision; defenders' reactions, angles and play-action discipline; OL and K overall rating | (helps everyone) |
-| Catching | QB, RB, WR, TE (catches and ball security: fewer fumbles); LB, CB, S (interceptions) | OL, DL, K |
+| Catching | QB, RB, WR, TE (catches and ball security: fewer fumbles); LB, CB, S (interceptions and their reach) | OL, DL, K |
 | Arm | QB: ball speed, range, release | everyone else |
 | Accuracy | QB: where the ball lands | everyone else |
 | Blocking | OL, TE, RB (60% of a block); WR (stalk blocks) | QB, defenders, K |
 | Tackling | DL, LB, CB, S: sure tackles and sacks | offense, K |
-| Coverage | LB, CB, S: reacting to cuts, contesting catches | offense, DL, K |
-| Durability | Everyone but K: slower fatigue, fewer injuries | K (kickers are never injured and fatigue does not touch kicking) |
+| Coverage | LB, CB, S: reacting to cuts, contesting catches, in man and zone | offense, DL, K |
+| Durability | Everyone but K: slower fatigue, fewer injuries; in every overall but the kicker's (§61.3) | K (kickers are never injured and fatigue does not touch kicking) |
 | Kicking | K: field goals, punts, kickoffs | everyone else |
 
 
@@ -476,6 +478,8 @@ Owner's playtest round 3 found career stats at zero for a 320-yard quarterback: 
 * Award watch: every race opens its finalists with record, games, stat line, a one-line explanation from the recorded numbers, and the rule; points are labelled game-generated evaluation points.
 
 ### 16.4 Awards (`src/franchise/awards.js`, Gridiron Beast's own models)
+> **Names and awards updated by §61.8 (2026-11-26).** MVP, OPOY, DPOY and the Signature award below are now the Most Valuable Beast (MVB), Offensive, Defensive and Signature Beast of the Year (OBOY, DBOY, SBOY). DBOY caps its components like the MVB, and four awards and the All-League teams were added. The scoring models below are otherwise current.
+
 * Regular season only: frozen the moment the playoffs are drawn (`finalizeAwards`), so playoff games cannot move them.
 * Gate: ≥ 60 % of the league's weeks played and ≥ 50 % of the position's maximum snaps (kickers exempt). Rookie = `yearsPro === 0`, an explicit field set at generation and incremented each offseason — never age, rarity, stage or signing date.
 * Components are z-scores within the position group across the league, so nothing is tied to NFL thresholds or season length. Offense: production 45 % · efficiency 30 % · impact 25 % (+0.2 versatility). Defense weights by position — DL rush .4 / run .3 / takeaways .2 / coverage .1; LB .3/.3/.2/.2; CB coverage .45 / takeaways .3 / tackles .15 / rush .1; S .4/.3/.2/.1.
@@ -495,7 +499,7 @@ Owner's playtest round 3 found career stats at zero for a 320-yard quarterback: 
 
 The owner's full-season report. All LOCKED unless marked.
 
-* **17.2 Package rule and forfeits.** A depth-chart slot may be filled only by a monster whose primary or secondary position matches it (`SECONDARY_ELIGIBILITY`): a healthy reserve first, else a base starter who sits out in the packages that use the slot (SS ← LB2, DL3 ← LB2/FS, WR3 ← TE, C ← WR2). Base starters are filled across every group before package slots. A package slot nobody legal can fill makes every play using that package unavailable (greyed in the game plan and the match, never called by Auto or the AI). A game is a **forfeit** (0–21 loss, no stats, no XP, in the standings) only when the base seven or the kicker cannot be fielded legally, or every play in a side's plan needs a package that cannot be fielded. Out-of-position monsters carry **1.75×** injury risk in games and practice, stated on the assign screen.
+* **17.2 Package rule and forfeits.** *(Superseded: §59.1 removed secondary positions, and §61.4 adds last-resort emergency positions for base slots.)* A depth-chart slot may be filled only by a monster whose primary or secondary position matches it (`SECONDARY_ELIGIBILITY`): a healthy reserve first, else a base starter who sits out in the packages that use the slot (SS ← LB2, DL3 ← LB2/FS, WR3 ← TE, C ← WR2). Base starters are filled across every group before package slots. A package slot nobody legal can fill makes every play using that package unavailable (greyed in the game plan and the match, never called by Auto or the AI). A game is a **forfeit** (0–21 loss, no stats, no XP, in the standings) only when the base seven *(§61.13.3: no longer the kicker; a club with no available kicker plays without kicks)* cannot be fielded legally, or every play in a side's plan needs a package that cannot be fielded. Out-of-position monsters carry **1.75×** injury risk in games and practice, stated on the assign screen.
 * **17.3 Attribute points.** Level-ups keep the automatic +1s and bank **2 points** (`POINTS_PER_LEVEL`) the owner spends on the monster card, capped by potential, **only on an attribute that helps the monster's position** (§8.2; revised 2026-10-21, it was any attribute). A setting lets the trainer spend them. AI monsters regenerate each season (no points to spend).
 * **17.4 The board.** *(Forecast, goals and dismissal rules revised 2026-10-22: see §29.2, which governs where it differs from this paragraph.)* Before each season (and at creation) the commissioner offers three goals scaled to the preseason forecast — safe (win N, never more than 7 of 9 so a contender's safe goal stays easier than the title), medium (playoffs, or badges when the forecast is poor), stretch (the Beast Bowl, worth +2). Winning the Beast Bowl meets whatever goal was set: the champion is never fired. One commitment per season, settled at season end into **board confidence**: +1 per goal met (+2 title), −1 per miss; a met goal also lifts any deficit to 0 and funds one extra prospect every Monday next season. At −1 the owner is on the **hot seat** (rival GM needles, the postseason story event fires even on a winning record); at −2 the board **fires** the owner: the franchise ends (a Hall of Fame card only if already eligible). Nothing else in the game can end a franchise. Currency chosen so goals do not pile onto the cap (already four features) or the dex.
 * **17.5 Season flow.** When the playoffs are drawn: a **season recap** (record, standing, club leaders, badges, the goal, the league awards, and the playoff announcement with seed and first opponent, or "missed"). Awards news lands at that moment. An eliminated or non-qualified owner **watches the bracket** round by round (results sheet per round) or skips to the offseason. When the season ends: **how we finished** (elimination round or title, playoff record, board verdict, Hall of Fame progress, the awards book). The HQ button reads *Continue to the offseason*.
@@ -510,7 +514,7 @@ The owner's full-season report. All LOCKED unless marked.
 * **18.2 Roster 26–38.** Maximum 38 (one backup per depth-chart slot: 2 QB, 2 RB, 6 WR, 2 TE, 6 OL, 6 DL, 4 LB, 4 CB, 4 S, 2 K); minimum 26 to play (below it a game is a forfeit). The owner starts with 28; AI clubs carry 38.
 * **18.3 The free-agent pool.** Released, commissioner-cut and walked monsters return to their home region's pool with their stats and history (`m.history`), appear fully revealed on that region's Monday board, and are signed by AI clubs at 15% a week. The offseason market shows every pool monster plus a dozen generated veterans; signing over the cap is allowed and reviewed in week 1.
 * **18.4 League stats scope.** Leaders filter by whole league / conference / division. Awards always judge the whole league.
-* **18.5 Signature Monster of the Year.** A seventh league award: on every play where a monster's *ability* fired (traits excluded — they fire constantly), impact = yards beyond a normal play (±4), +15 TD, +20 takeaway; effectiveness = impact per firing × √(firings per game, capped at 6), compared across the league; needs at least one firing per game. Counts toward the Hall of Fame like every league award.
+* **18.5 Signature Monster of the Year** (now Signature Beast of the Year, SBOY, §61.8). A seventh league award: on every play where a monster's *ability* fired (traits excluded — they fire constantly), impact = yards beyond a normal play (±4), +15 TD, +20 takeaway; effectiveness = impact per firing × √(firings per game, capped at 6), compared across the league; needs at least one firing per game. Counts toward the Hall of Fame like every league award.
 * **18.6 My office.** Under More: the GM's portrait and background, board confidence and this season's goal with progress, career record, titles, awards, badges, Hall of Fame checklist, and (later) franchise cards.
 * **18.7 LATER — structure.** *Selling a franchise:* the owner may sell the club and start another; the sold club becomes a card in My office with its history, facing it is an event, and **board confidence resets to zero at the new club** (a legitimate escape from the hot seat). *League growth:* the target is **32 clubs, 8 divisions, 2 conferences**; schedule, playoff seeding and the gym calendar are written against `league.js` so the expansion is data, not a rewrite.
 * **18.8 LATER — the career outlives the franchise (2026-10-18).** Being fired (or selling) ends the *franchise*, not the *career*. The GM card is the persistent object: every club run, its seasons, titles, badges, awards, and the year and reason the owner left. A new franchise starts fresh on confidence and roster; the card carries the history and the Hall of Fame can be judged on the career. All-Star is meant to fire a GM now and then — the ten-season simulation (3 of 9 owners fired at Rookie/Pro/All-Star before the board fix; 1 of 9 after) is the intended feel.
@@ -546,7 +550,7 @@ Rookie of the Year needs rookies arriving together, so the league drafts.
 * **20.2 Monster bios.** The monster card carries a Bio panel: birthplace (the origin region, or the element's home region), seasons pro, the draft pick when drafted (round, overall, by which club), and a stint per club — the regional league before the first known club, every past club from `m.history` with why it ended (walked, released, cut by the commissioner, signed from the pool), and the current club from `m.joined`.
 * **20.3 Balance from the ten-season simulation.** See §17.4 (safe goal ≤ 7 wins; a title meets any goal) and §15.8 (unlocked legendaries guaranteed). Headless results, three franchises per difficulty with a plain staff-run owner: Rookie first title in S1 of one franchise, none in the other two over ten seasons but 8–9 playoff trips each; Pro one title (S3); All-Star none, one owner fired after S2. Making the playoffs is easy (≈75%); the Beast Bowl is hard (3 titles in 90 seasons). AI clubs grow every season while a monster stops at its potential, so by season 8 a dynasty needs churn through the draft and recruiting. Human coaching with scouting counters is the edge the simulation does not use.
 * **20.4 The clock, made visible (2026-10-18).** The clock is charged in chunks: each play's own seconds, then — only if the last play left the clock running — the runoff at the next snap (18 s normal, 8 hurry-up, 30 milking). That was invisible, so timeouts, spike, kneel and tempo looked pointless. Now: a line under the score reads **▶ RUNNING · −18 s at snap** or **⏸ STOPPED · snap costs 0 s** (and "can't be stopped" when the other side is out of timeouts with under 30 s); a **victory-formation rule** — a kneel with the clock running, no defensive timeouts and under 30 s left runs the clock out and ends the half or game at once (the "I knelt and nothing happened" bug); a **ⓘ button** in the match header opens "How a match works" (downs, the clock, timeout/spike/kneel/tempo, calling plays, the modes, the edges); and a tutorial sheet, *The clock*, fires the first time the player is inside two minutes of a half. Spike and timeouts stay: they are real decisions in the runoff model, and spike's honest niche is "no timeouts, seconds left".
-* **20.5 The cap, re-based (2026-10-18).** Measured at creation: the five coaches cost 675k — 37.5% of the 1.8M cap — so a founding 28 sat at 91% before the draft and a new owner was over the cap after three rookies and a signing; a full 38 at league-average quality was unreachable. Fix: **staff salaries scaled to 60%** (head coaches 96–117k, coordinators 66–93k); the cap stays 1.8M. Now: founding 28 ≈ 76%, after the creation draft ≈ 80% with ~365k of room (ten average monsters or five good ones). Ten-season check: ~330k free in season 1, a full 38 by season 3, 8–16k to spare from then on — the cap binds on upgrades and renewals, not on filling the roster. TUNABLE: the 60%.
+* **20.5 The cap, re-based (2026-10-18).** Measured at creation: the five coaches cost 675k — 37.5% of the 1.8M cap — so a founding 28 sat at 91% before the draft and a new owner was over the cap after three rookies and a signing; a full 38 at league-average quality was unreachable. Fix: **staff salaries scaled to 60%** (head coaches 96–117k, coordinators 66–93k); the cap stayed 1.8M *(superseded 2026-11-26: the Challenger cap is 1.6M for new franchises, §61.14.1)*. Now: founding 28 ≈ 76%, after the creation draft ≈ 80% with ~365k of room (ten average monsters or five good ones). Ten-season check: ~330k free in season 1, a full 38 by season 3, 8–16k to spare from then on — the cap binds on upgrades and renewals, not on filling the roster. TUNABLE: the 60%.
 * **20.6 Notices, manual evolution, the scheme section (2026-10-18).** *Notices* are computed from state (nothing to dismiss): a red count on the tab where something wants the owner, a red dot on the roster row, the thing itself on the card. Today: a monster ready to evolve, unspent attribute points (when the trainer is not spending them), contract decisions waiting in the offseason, the commissioner waiting on a cap decision. *Evolution is by hand for the owner's monsters:* reaching the level makes the monster "ready" (notice, chip, an Evolve button on the card with a before→after celebration); AI clubs still evolve automatically. The card shows the next form as a **silhouette** until it happens. Evolution no longer changes salary mid-contract (it was repricing it — a bug against §18.1). *Scheme section* on the card: every scheme on the monster's side, best fit first, with "your scheme" marked and what each wants; a monster that does not fit yours now says what it prefers instead of just "not a fit".
 * **20.7 Media day without the crib sheet (2026-10-18).** The answer cards name their nature but no longer say how many of the owner's monsters share it, and the "natures on your field" line is gone: picking the biggest boost was becoming arithmetic, and knowing your own monsters' natures is the point. The done-screen still names who heard themselves, so the lesson lands after the choice. *Also:* Salary & Contracts sorts by salary, position, OVR, contract end or cost per OVR; the Roster tab shows a notice strip (each row tappable, "Trainer: spend all points" when points are banked) and every lineup tile, depth-chart row and list row carries the red dot; a monster card's points panel has "Let the trainer spend them", and the global setting remains.
 * **20.8 Best lineup and the bracket (2026-10-18).** *Best lineup:* one button on the Roster tab (both views) orders every position by overall rating, best first, and clears manual slot picks — injured monsters keep their place and are skipped on Sunday as always. *The bracket:* the playoff screen opens on a broadcast-style bracket — Aurora semis and championship on the left, the Beast Bowl in the middle, Titan on the right — team-colored cells with seed and abbreviation (dark text on light colors), scores once played, losers greyed, winners outlined, the owner's club ringed in gold, TBD cells until a round is drawn, and a red CHAMPION bar beneath. The game-by-game list stays below it.
@@ -618,7 +622,7 @@ Continual polish on prototype 2 before prototype 3. If the owner prefers the pla
 6. **Position sequences** as set out in §24.3 (QB: snap, automatic drop and pocket, tap a receiver; WR: Call for Ball, Catch, Evade; RB: automatic run, timed evade/contact; LB: Tackle / Intercept / Swat on one button, Ready before a defensive snap; CB: timed pass defense and tackles on one button).
 7. **A press is an attempt, not an outcome.** A well-timed tap never guarantees a completion, catch, tackle or interception; attributes, positioning and the situation decide the result. Specifically for cornerback (owner's prototype feedback): pressing Intercept inside the timing window must not be an easy interception; the result must account for the monster's ratings and the situation, without relying only on overall rating or arbitrary failure rolls.
 8. **Life outside games matters.** A weekly loop of meaningful, limited choices (practice, film, team chemistry, development, ability training, recovery, relationships, personal events) with visible consequences; not a checklist of mandatory tasks. Separate from the owner's Franchise week.
-9. **Career progression** from creation through recruitment/draft, joining a team, earning playing time, development, honours, and possible transfers **within the current single-league 16-club campaign**. The three-tier promotion/relegation system is retired and is not a Career Mode prerequisite.
+9. **Career progression** from creation through recruitment/draft, joining a team, earning playing time, development, honours, and possible transfers **within the current single-league 32-club campaign**. The three-tier promotion/relegation system is retired and is not a Career Mode prerequisite.
 10. **Performance grades reward the position's job**, not only headline statistics.
 11. **Presentation:** the existing top-down field and play-art conventions (§6); the user team's play art before the snap, hidden during live play; the controlled monster easy to identify; restrained, clear feedback for opportunities, timing, results and ability readiness.
 
@@ -627,7 +631,7 @@ Continual polish on prototype 2 before prototype 3. If the owner prefers the pla
 Three points where the request meets the current document and an owner decision is needed. They are repeated in §24.10.
 
 * **Field format (CURRENT):** Franchise Mode is **7-on-7**. Career Mode must use the same 7-on-7 field and active positions if approved for implementation. The former 11-on-11 discussion is obsolete.
-* **League structure (CURRENT):** one 16-club league; no Challenger/Vanguard/Sovereign pyramid, promotion, relegation, or tier-transfer mechanics. Career Mode is documentation-only and must not reactivate these rules.
+* **League structure (CURRENT):** one 32-club league (§60); no Challenger/Vanguard/Sovereign pyramid, promotion, relegation, or tier-transfer mechanics. Career Mode is documentation-only and must not reactivate these rules.
 * **Signature-ability rules.** §23.9–§23.10 already govern abilities: a card must do exactly what it says; a signature ability belongs to one monster and is never shared; legendary-strength absolutes belong only to legendaries; non-legendary abilities are never absolutes. The creation system in §24.4 is written to obey those rules.
 
 ### 24.3 Controls and gameplay by position
@@ -785,7 +789,7 @@ Game grade (A–F, PROPOSED) = weighted snap grades; it feeds coach trust and XP
 ### 24.10 Open questions for the owner
 
 1. **Format (RESOLVED):** Career Mode, if built, uses the active **7-on-7** format unless the owner separately authorizes a format change.
-2. **League structure (RESOLVED):** Career Mode, if built, uses the active **single 16-club league**. No tier system or promotion/relegation prerequisite.
+2. **League structure (RESOLVED):** Career Mode, if built, uses the active **single 32-club league** (§60). No tier system or promotion/relegation prerequisite.
 3. **Created monster identity:** a one-off new form (proposed) or a member of an existing species? Does it evolve? Is nature picked or rolled?
 4. **Play calling:** may the player suggest or audible plays (e.g. a QB audible from the six-card plan), or does the coaching AI always call them?
 5. **Ability activation:** activatable abilities with charges, triggered abilities, or both (proposed)? How many charges per game?
@@ -943,7 +947,7 @@ This register is the **current planning index** for Franchise Mode. The detailed
 
 | Workstream | Current status | Evidence / authoritative detail | Outstanding action |
 |---|---|---|---|
-| Core 7v7 football, 16-club franchise, nine-game season, gym campaign, Beast Bowl | RELEASED (foundation) | §§1–23, 26, 30, 47 | Validate complete real-device season and edge cases |
+| Core 7v7 football, franchise, gym campaign, Beast Bowl | RELEASED (foundation) | §§1–23, 26, 30, 47; league shape now §60 | Validate complete real-device season and edge cases |
 | Beast Clash: Tuesday recruitment, pregame possession, overtime tiebreak | RELEASED (documented integration) | §§25–26, 28–31 | Real-device full-season acceptance; no new balance approval implied |
 | Coach Assist: Guided, Standard, Expert | RELEASED (documented foundation) | §§27.3, 30 | Real-device usability acceptance |
 | Type chart and football matchup effects | IMPLEMENTED (documented) | §32 | Confirm deployed version and real-device behavior |
@@ -952,23 +956,25 @@ This register is the **current planning index** for Franchise Mode. The detailed
 | Captain Partnerships (replaces original generic partnership proposal) | RELEASED | §49 | Long-term balance and clarity checks |
 | Monster career injury history | IMPLEMENTED; release status requires reconciliation | §§50, 52 (earlier §50 says not released; later release history may supersede it) | Verify main-link deployment; update this row with evidence |
 | Evolution presentation overhaul | RELEASED | §§51–52 | Verify real-device animation, audio and reduced motion |
-| Three save slots, retirement and Hall of Fame; 15-season career limit | FOUNDATION RELEASED; 15-SEASON CHANGE IN CANDIDATE | §§42–44, 47 | Full-lifecycle, recovery and migration validation |
+| Three save slots, retirement and Hall of Fame; 15-season career limit | RELEASED (15-season limit merged with the GM job changes, PR #125) | §§42–44, 47; §27.5E | Full-lifecycle, recovery and migration validation |
 | Persistent AI rosters, league-wide careers, AI–AI trades | RELEASED | §§45–47 | Multi-season balance and integrity validation |
 | QB intelligence, AI testing lab, defensive AI corrections | IMPLEMENTED; release status requires reconciliation | §53 historical implementation entries; recent main commits | Verify latest merged release and deployment; do not rely on §53's original NOT MERGED heading |
 | Broader owner trading: monster-for-monster, monster-plus-pick, incoming offers, Simple/Advanced | APPROVED | §27.5A | Define exact scope, implement and test; in-season trading remains conditional on rules |
 | Smarter AI long-term management (Task 6, AI Franchise Intelligence: ageing, roster plan, development, strategy modes, F1–F4) | RELEASED v42.21.0-ai-franchise, 2026-11-03 (PRs #83–#91, `main` `d2159f8`, artifact version 116) | §§55–58, §58.8; `docs/TASK6_FINAL_RELEASE_REPORT.md` | Task 6 closed. Accepted exceptions for this release only (§58.8): Rookie owner balance and drift, Pro drift, All-Star owner balance and drift uncertainty, the unmet franchise-balance targets. These do not lower future acceptance criteria |
-| **Task 7 — Free Agency Overhaul** | **TASK 7 — COMPLETE AND RELEASED** (v42.22.0-free-agency, 2026-11-05; owner's final authorization) | §59 (incl. §59.9 the lineup safeguard and §59.10 the Task 7 → Task 8 dependency); `docs/TASK7_*` | **Comprehensive franchise AI and difficulty balance testing is PENDING until Task 8** (owner decision, §59.10); the Task 7 results are kept as historical reference |
-| **Task 8 — Monster catalogue expansion and Nature/Temper** | **NEXT** | §59.10 | Expand and balance the catalogue across positions; then the mandatory validation of §59.10 |
-| Coaching substitution philosophies and in-game injuries | IMPLEMENTED CANDIDATE; NOT RELEASED | §27.5D; owner approval 2026-11-15 | Validate fixed philosophies, automatic/manual substitutions, AI parity, injury replacement and initial tunables |
-| GM job changes / career mobility | IMPLEMENTED CANDIDATE; NOT RELEASED | §27.5E; owner approval 2026-11-15 | Validate job moves, firing, returns, old saves and the 15-season total career before release |
-| Football penalties | REMOVED IN CANDIDATE | §3; owner decision 2026-11-15 | The optional 40-second clock is advisory; expiry resets its display with no gameplay consequence |
-| Stadium management, mentorship, weather, 32 clubs, separate Battle Room/Career Mode | DEFERRED | §§24, 27.6–27.7 | No implementation without separate approval |
+| **Task 7 — Free Agency Overhaul** | **TASK 7 — COMPLETE AND RELEASED** (v42.22.0-free-agency, 2026-11-05; owner's final authorization) | §59 (incl. §59.9 the lineup safeguard and §59.10 the Task 7 → Task 8 dependency); `docs/TASK7_*` | The comprehensive franchise AI and difficulty balance testing that §59.10 deferred until after Task 8 was done by the November 2026 balance audit (§61) |
+| **Task 8 — Monster catalogue expansion and Nature/Temper** | MERGED to `main` (2026-11-11): 72 families, 192 species, 25 natures and Temper | §59.10; `docs/task8/` | Its unfinished M6 benchmarks (`docs/task8/M6_STATUS.md`) are superseded by the balance audit (§61) |
+| Coaching substitution philosophies and in-game injuries | MERGED to `main` (PR #125) | §27.5D; owner approval 2026-11-15 | Real-device acceptance |
+| GM job changes / career mobility | MERGED to `main` (PR #125) | §27.5E; owner approval 2026-11-15 | Real-device acceptance |
+| Football penalties | REMOVED (merged, PR #125) | §3; owner decision 2026-11-15 | The optional 40-second clock is advisory; expiry resets its display with no gameplay consequence |
+| The 32-club league and twelve Gym Leaders | MERGED to `main` (PR #165, 2026-11-23) | §60 | Real-device acceptance |
+| Balance audit R-0 to R-19 (attributes, overall weights, emergency positions, plays, AI calls, abilities, AI difficulty rates, awards, salaries, trade values) | IMPLEMENTED; NOT MERGED, NOT RELEASED (branch `impl/balance-audit-2026-11`, awaiting owner review) | §61; `reports/balance-impl/` | Owner review of the implementation report; owner decisions listed in §61 |
+| Stadium management, mentorship, weather, separate Battle Room/Career Mode, Monster Career Mode, GM and coaching turnover for AI clubs | DEFERRED | §§24, 27.6–27.7 | No implementation without separate approval |
 
-**Status update (2026-11-05): TASK 7 — COMPLETE AND RELEASED (v42.22.0-free-agency, §59). Next: Task 8 (§59.10). Comprehensive franchise AI and difficulty balance testing is pending until Task 8. The paragraph below is the historical 2026-11-04 entry.**
+**Status update (2026-11-26):** Tasks 7 and 8, the coaching and GM candidate and the 32-club league are merged; the balance audit (§61) is implemented and awaiting owner review. *Historical (2026-11-05): Task 7 complete and released; Task 8 next; balance testing pending until Task 8. The paragraph below is the historical 2026-11-04 entry.*
 
 **Next approved work (2026-11-04): Task 7 — Free Agency Overhaul.** The owner-provided *Gridiron Beast — Task 7 Free Agency Implementation Specification* (foundational design approved, 30/30 decisions, October 31 audit resolutions) governs Task 7 scope. **DESIGN APPROVED; IMPLEMENTATION, MERGE AND PUBLICATION NOT YET AUTHORIZED.** Task 7 includes five manually advanced offseason free-agency periods before the draft; personality-driven negotiations, rival bidding and deadlines; salary/term/signing-bonus contracts and cap reservations; extensions and year-round simplified signings; AI integration with Task 6; legendary limits and legacy-save compliance; optional GM Assistant and Free-Agent Interest Dashboard; and deterministic migration and testing. Start with the specified repository/integration audit and resolve outstanding exceptions before coding. Trading Task 5 and AI Task 6 are already released; do not repeat them. Do not silently promote proposed monster-depth additions into approved work.
 
-**Task 7 single-position rule (owner reaffirmed 2026-11-04):** Every monster has exactly one canonical football position; a WR may occupy WR1/WR2 but not TE, and no secondary-position fallback is permitted. Apply consistently to player and AI rosters, species/generation, depth charts, draft, trades, free agency, team needs and UI. Preserve monster identity and old saves: audit secondary-position usage and provide a non-destructive lineup repair path before enforcement. Legendary offensive/defensive category derives from canonical position; no legendary special-teams eligibility. This rule is already approved in the Task 7 specification; this roadmap update does not implement it.
+**Task 7 single-position rule (owner reaffirmed 2026-11-04; amended by §61.4 on 2026-11-25):** Every monster has exactly one canonical football position; a WR may occupy WR1/WR2 but not TE, and no secondary-position fallback is permitted (the only exception is the last-resort emergency cover of a base slot, §61.4). Apply consistently to player and AI rosters, species/generation, depth charts, draft, trades, free agency, team needs and UI. Preserve monster identity and old saves: audit secondary-position usage and provide a non-destructive lineup repair path before enforcement. Legendary offensive/defensive category derives from canonical position; no legendary special-teams eligibility. This rule is already approved in the Task 7 specification; this roadmap update does not implement it.
 
 **Completion gate:** Franchise Mode cannot be marked feature-complete solely because individual features are coded. Require: (1) all approved completion-scope features implemented or explicitly re-scoped by owner; (2) multi-season football and monster progression, Clash, recruitment, trading, offseason and retirement tested together; (3) save migration, backup/restore and deterministic simulation verified; (4) real iOS/Android device walkthroughs and owner acceptance; (5) no critical gameplay, data-loss or progression blockers. The football/monster 50–50 depth assessment is a separate design review, not an approval to add features.
 
@@ -1094,7 +1100,7 @@ Use **one trade engine, two interfaces**:
 - **Stadium management:** optional hybrid owner feature, deferred; no stadium economy or construction requirements now.
 - **Mentorship:** possible small training interaction between veterans and rookies; fold into existing training if pursued, not a new weekly chore.
 - **Weather:** future football realism only if playtests justify the learning and balance costs. **Football penalties are removed from the design, not deferred.**
-- **League expansion to 32 clubs:** **owner-confirmed long-term intention, not cancelled**. The current active league remains **16 clubs, four divisions, two conferences, one competition/campaign**. A future design phase may expand to **32 clubs** and revisit divisional alignment, schedules, playoff scarcity, AI rosters, statistics, franchise migrations, gym-club distribution, and performance. **No target release or implementation authorization exists.** Do not confuse expansion with the abandoned three-tier promotion/relegation pyramid.
+- **League expansion to 32 clubs:** **implemented and merged in §60 (2026-11-23); the rest of this paragraph is history.** The current active league remains **16 clubs, four divisions, two conferences, one competition/campaign**. A future design phase may expand to **32 clubs** and revisit divisional alignment, schedules, playoff scarcity, AI rosters, statistics, franchise migrations, gym-club distribution, and performance. **No target release or implementation authorization exists.** Do not confuse expansion with the abandoned three-tier promotion/relegation pyramid.
 - **Separate modes:** a possible Battle Room (Draft Clash first; Custom Clash later) and Career Mode are future proposals only. Franchise Mode remains the development priority.
 
 ### 27.7 Explicit exclusions and documentation policy
@@ -1802,7 +1808,7 @@ Nothing is stored twice. `src/ui/career-ui.js` renders it in one place, used by 
 - A note appears when career totals cannot include seasons played before this franchise kept the monster's stats.
 - Rookies and monsters without games say so in plain words; a veteran free agent with no games on record is not called a rookie.
 
-**40.2 Trophy case.** The case shows tiles for Hall of Fame, Beast Bowl Champion, MVP, OPOY, DPOY, SMOY, OROY, DROY and league records, most prestigious first. Each tile has:
+**40.2 Trophy case.** The case shows tiles for Hall of Fame, Beast Bowl Champion, MVP, OPOY, DPOY, SMOY, OROY, DROY and league records, most prestigious first. *(Award names and the new honours: §61.8.)* Each tile has:
 - the honour's icon and name;
 - the seasons it was won;
 - a ×N count for repeats;
@@ -2083,7 +2089,7 @@ Every animation stops with reduced motion, from Settings or the system setting.
 > - **[OPEN]**: technical questions or decisions still to settle.
 
 ### 42.1 Locked franchise rules [APPROVED]
-1. **20-season maximum.** A franchise plays at most 20 complete seasons.
+1. **20-season maximum** *(superseded: the limit is now 15 seasons, shared across every club the GM manages, §27.5E; the 20-season figures in §42–§47 are measurements and designs of that time).* A franchise plays at most 20 complete seasons.
    - Retirement is mandatory after Season 20.
    - Season 20 runs in full first: playoffs, the Beast Bowl, awards, and every historical update.
 2. **Three save slots.** At most three franchises exist at once.
@@ -2991,7 +2997,7 @@ Phase 2 builds the three-slot save manager, the 20-season career, retirement and
 - **The Franchises screen** (main menu → Franchises; also where "Start a New Franchise" leads when a slot must be chosen): three cards with the actions of §42.5. Playing another slot saves and leaves the current one in place, opens the other slot's store, and reconciles it with the cloud. A card's record and competitive tier (league/division; the promotion-relegation data model stays switched off, `TIERS_ENABLED`) come from the manifest's summary, so older manifests show what they have.
 - **Rule 2 of §42.1:** a new franchise or an import needs an empty slot; with none, the owner is told to delete or export one first. There is no overwrite button.
 
-### 44.2 The 20-season career and retirement [IMPLEMENTED]
+### 44.2 The 20-season career and retirement [IMPLEMENTED; the limit is now 15 seasons, §27.5E]
 - **`src/franchise/lifecycle.js`:** `SEASON_CAP = 20`. `startNextSeason` refuses a 21st season with the retirement reason (`cap: true`), after the board's own refusal when fired. Retirement is **due** only after a complete season: `fired` (the board), `season-cap` (20 complete seasons; a franchise already beyond the cap finishes its current season first, decision M), or `voluntary` (the owner asked; available once the Hall of Fame checklist is met, decision R; it takes effect at season end and can be cancelled until then).
 - **The checklist** (§42.4) is verified before anything is written: season finished, a Beast Bowl champion, awards written, the season in the history with its tables archived, the records book and League News written, no game in progress, no scene waiting. If it fails, nothing changes and the player is told what is missing.
 - **The steps:** the Hall of Fame card is built when the checklist is met (decision L); the **Legacy summary** is built from the save's own records (owner and club, seasons and record, titles and playoff appearances, badges, league awards, records held, the five best monsters with career snapshots, the rival head-to-head, the Board's goal history, a season-by-season table); working-only state is dropped (draft, offseason market, recorded-game keys, the week's working content, scenes); the lifecycle record is written (`status`, `seasonsCompleted`, `finalSeason`, `retiredAt`/`firedAt`, `legacy`); the archive is committed **once** and mirrored once. **Deviation from §42.4 step 3:** the final season's monster books are not rolled over into the archived seasons (the stats readers assume one current book); the game lines stay in the final season's books as they do in any offseason. Nothing is lost by it.
@@ -4376,7 +4382,7 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 - The Phase 1 audit and the owner's decisions D1–D7 (`docs/TASK7_PHASE1_AUDIT.md` §8).
 - Where §18.1, §27.5C or §45–§46 differ, this section supersedes them.
 
-**59.1 One position per monster (D6; resolution 2).**
+**59.1 One position per monster (D6; resolution 2).** *(Amended by §61.4: a monster may cover his one emergency position in a base slot as a last resort; normal eligibility below is unchanged.)*
 - **Single position:** every species has one football position; species secondaries are gone.
 - **Eligibility:** a monster fills only its own position group's slots (a WR plays WR1–WR3, never TE). This holds for the owner and every AI club, in depth charts, auto-lineups, in-game substitutions and legendary plays.
 - **New monsters:** generated at their species' position only.
@@ -4609,9 +4615,9 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 
 **Testing philosophy (owner, 2026-11-13 afternoon): correctness first.** Every ability, attribute and mechanic must activate when intended and do what it documents. Strong monsters, dominant clubs, repeat MVPs and poor clubs are acceptable outcomes of working mechanics. Balance is investigated only when a result suggests a mechanic is not activating, an attribute has no effect, an ability differs from its description, a calculation is reversed or broken, an exploit bypasses a rule, or an outcome is impossible. No artificial win-rate targets or forced parity.
 
-**Sack rate.** A 7.0% of dropbacks figure was recorded earlier the same day. It is not to be forced: sacks must come from the existing pass-rush, blocking and quarterback mechanics. The Awareness, Speed, Agility and Strength contributions are audited first (one attribute varied at a time); a change is made only where an attribute does not act where intended. The experimental pocket-compression constant from `chatgpt/task10-balance-fixes` was not adopted (it did not move the sack rate and broke two engine tests).
+**Sack rate.** A 7.0% of dropbacks figure was recorded earlier the same day. It is not a target and is not enforced (owner D-3, §61.15.3). It is not to be forced: sacks must come from the existing pass-rush, blocking and quarterback mechanics. The Awareness, Speed, Agility and Strength contributions are audited first (one attribute varied at a time); a change is made only where an attribute does not act where intended. The experimental pocket-compression constant from `chatgpt/task10-balance-fixes` was not adopted (it did not move the sack rate and broke two engine tests).
 
-**MVP.** The MVP alone caps each statistical component at +3 standard deviations within the position. OPOY, DPOY and the rookie awards are unchanged. No voter fatigue and no repeat-winner limit: a monster may win repeatedly when his performance justifies it.
+**MVP.** The MVP alone caps each statistical component at +3 standard deviations within the position. OPOY, DPOY and the rookie awards are unchanged. *(Superseded in part by §61.8: the awards are now the MVB, OBOY and DBOY, and the DBOY caps its components too.)* No voter fatigue and no repeat-winner limit: a monster may win repeatedly when his performance justifies it.
 
 **Falling Star (FIR-03-C).** The delayed meteor and its main-target damage and mastery scaling stay. No splash: only the marked occupant is hit; reserves and team-mates of the target are never damaged.
 
@@ -4636,7 +4642,7 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 **Head-coach substitution philosophy — active design (owner, 2026-11-15).** The earlier deferred status is superseded by the owner's approved rules in §27.5D, including in-game injuries. GM job changes and a 15-season total GM career are approved in §27.5E. Both are approved for implementation; neither is implemented by this documentation update.
 
 
-## Coaching substitutions and GM job changes — implementation candidate (2026-11-15)
+## Coaching substitutions and GM job changes — implementation candidate (2026-11-15; MERGED to `main` as PR #125)
 
 Branch `codex/coaching-gm-careers`, build `v43.17.0-coaching-gm-preview`. This is implementation for Claude testing, not release acceptance. Details and the exact testing handoff: `docs/COACHING_GM_IMPLEMENTATION.md`.
 
@@ -4651,7 +4657,7 @@ Branch `codex/coaching-gm-careers`, build `v43.17.0-coaching-gm-preview`. This i
 
 Remaining release work: full policy-required suite on the final candidate, browser/phone walkthroughs, expanded multi-season job/firing/return checks and rotation/injury balance measurement. Do not mark this released or update the main link before that review.
 
-## 60. The 32-club league and the twelve Gym Leaders (owner specification 2026-11-23; branch `feature/league-32`; IMPLEMENTED, NOT MERGED)
+## 60. The 32-club league and the twelve Gym Leaders (owner specification 2026-11-23; branch `feature/league-32`; IMPLEMENTED and MERGED to `main` as PR #165)
 
 An expansion of the existing systems, not a rebuild: the football engine, abilities, Beast Clash, franchise management, AI, audio and
 the stadium presentation are unchanged. This section is the authority for the league's shape; where it disagrees with §8, §15.3,
@@ -4790,25 +4796,25 @@ franchise (`CANON` in `src/franchise/preleague-history.js`) and are not re-rolle
 and Thornwood once under their former Gym Leaders, and both have declined since. The careers of a save's own veterans still belong
 to that save, because rosters are generated per save.
 
-**Award winners are canon (owner ruling 2026-11-23, second set).** Each past season's MVP, Offensive and Defensive Monster of the
-Year are chosen by the game's own award rules (`computeAwards`) among the canon players of that season only: the six retired
+**Award winners are canon (owner ruling 2026-11-23, second set).** Each past season's Most Valuable, Offensive and Defensive Beast of the
+Year (named MVP and Monster of the Year before §61.8) are chosen by the game's own award rules (`computeAwards`) among the canon players of that season only: the six retired
 legends and twelve retired stars (`ARCHIVE_STARS`, six of an early era and six of a late one), all drawn from `CANON` with names
 chosen among themselves and reserved in every new save before its monsters are named. A save's veterans never take a canon
 award. Every winner played at least 60% of his season at a position that can win the award. Brackets stay the old three-round
 format. A save made before this change keeps the award winners stored in it (the archive is never regenerated).
 
-| Season | Champion | MVP | Offensive Monster of the Year | Defensive Monster of the Year |
+| Season | Champion | MVB | Offensive Beast of the Year | Defensive Beast of the Year |
 |---|---|---|---|---|
 | -7 | Skyvale Cyclones | Zolalin (RB, Emberfall Infernos) † | Zolalin (RB, Emberfall Infernos) † | Zellinen (DL, Emberfall Infernos) † |
-| -6 | Thornwood Wildroots | Ralelor (QB, Emberfall Infernos) † | Ralelor (QB, Emberfall Infernos) † | Voulor (LB, Emberfall Infernos) † |
+| -6 | Thornwood Wildroots | Ralelor (QB, Emberfall Infernos) † | Ralelor (QB, Emberfall Infernos) † | Lenroko (DL, Ember City Beasts) ‡ |
 | -5 | Skyvale Cyclones | Ralelor (QB, Emberfall Infernos) † | Zolalin (RB, Emberfall Infernos) † | Zellinen (DL, Emberfall Infernos) † |
 | -4 | Stormport Bolts | Maroyen (WR, Emberfall Infernos) † | Maroyen (WR, Emberfall Infernos) † | Tulomar (LB, Ashford Cinders) |
-| -3 | Stormport Bolts | Ralelor (QB, Emberfall Infernos) † | Ralelor (QB, Emberfall Infernos) † | Zellinen (DL, Emberfall Infernos) † |
+| -3 | Stormport Bolts | Ralelor (QB, Emberfall Infernos) † | Ralelor (QB, Emberfall Infernos) † | Tulomar (LB, Ashford Cinders) ‡ |
 | -2 | Aetheria Seers | Kiiken (RB, Ember City Beasts) | Kiiken (RB, Ember City Beasts) | Voulor (LB, Emberfall Infernos) † |
 | -1 | Harbor Anchors | Tulomar (LB, Ashford Cinders) | Filegen (WR, Ember City Beasts) | Tulomar (LB, Ashford Cinders) |
 | 0 | Frostpeak Howlers | Rauwen (QB, Deepwater Chompers) | Rauwen (QB, Deepwater Chompers) | Horabon (DL, Deepwater Chompers) |
 
-† a retired legend. (All six legends played for Emberfall: that is how the canon drew them, unchanged here.)
+† a retired legend. (All six legends played for Emberfall: that is how the canon drew them, unchanged here.) ‡ changed by the balance audit's Defensive Beast rule (§61.8): seasons −6 and −3 were Voulor (LB) and Zellinen (DL). New franchises have these winners; a save made before keeps the winners stored in it.
 
 ### 60.10 Saves
 
@@ -4888,6 +4894,8 @@ and left on the device unchanged; settings, achievements and other data are unto
   the barrier, the stand rail and the wall behind the near end zone (with the logo and two banners, one of four banner patterns),
   and the region of its division around the field: Frostlands snow, Redrock red rock, Golden Valley wheat, Suncoast sand and palms,
   Kingsport brick and lamps, Everwild reeds, Greenheart hedges, Azure Isles piers (`REGIONS`). The playing surface stays grass.
+  **No sideline markers** (owner play test 2026-11-26): the regional markers at the 5, 15, 25… along both sidelines are removed;
+  only a Gym Leader's field has sideline markers.
 * **The twelve Gym Leader stadiums keep their approved designs:** surfaces, environments, structures, effects and animations are
   unchanged; only the logo and the two end-zone words are added (light lettering with a dark line), nothing is recoloured.
 
@@ -4897,3 +4905,336 @@ Aetheria won 30% of simulated titles. Its own starting level is reduced by 5 (`b
 `src/data/gyms.js`, so +2 over an ordinary club instead of the late tier's +7). Its tier, Lyra Vesper, the Psychic field,
 Astralux, colours, manager and playing style are unchanged. The analysis and the before/after simulations are in PR #165.
 
+## 61. Balance audit implementation (owner-approved items R-0 to R-19; IMPLEMENTED 2026-11-26; branch `impl/balance-audit-2026-11`; NOT MERGED, NOT RELEASED)
+
+The owner approved the recommendations of the November 2026 balance audit (`reports/balance-audit/`) and they are implemented here.
+**This section is the authority for every rule it states.** Where an earlier section disagrees (§8.2, §16.4, §17.2, §59.1, the Task 10
+MVP rule, §60.9's award names), that passage is history. Working evidence, run by run, is in `reports/balance-impl/IMPLEMENTATION_LOG.md`.
+Nothing is hardcoded to an outcome: every change is a mechanism or a weight, and the results below are measured, not targeted.
+
+### 61.1 Board forecast and Coach of the Year (R-0)
+The season-start forecast compares the owner's club with the league as it really is. Once a persistent league exists, each AI club is
+rated at its persistent strength (`aiTeam`), not at a freshly generated club. Talent, expected win % and Coach of the Year all read
+`f.season.expectations`. An old save keeps the expectations stored for its current season.
+
+### 61.2 What the attributes do (R-1; replaces the matching rows of §8.2)
+- **DL Speed** joins the pass-rush shed (0.2 × (Speed − 40)).
+- **Defender Catching** sets the interception reach: about 1.0 yard at Catching 35, 1.24 at 65 and 1.48 at 95.
+- **Zone Coverage** counts in a zone defender's reaction (weight 0.30) and in his contest at the catch (reach ×(1 + 0.6Δ), weight 0.45).
+- These terms are centred on a typical new-league starter (`R1_TYPICAL`: DL Speed 40, DB Catching 35, zone Coverage 45), so a typical
+  starter plays as before and the attribute moves him either side.
+- **RB Awareness** works through the existing vision system (lane choice before contact); no engine change.
+- **DL Tackling** already worked per sack attempt. Only the Attribute Lab trial was saturated, and the Lab now isolates it.
+
+### 61.3 The overall rating (R-2, R-17)
+`POSITION_WEIGHTS` (`src/data/personnel.js`) is the football overall: what the game shows, pays and trains by.
+- **Speed:** DL and TE Speed weight 2 (was 1). OL Speed stays at 0 in the overall, because it does nothing there.
+- **Durability** is in every overall except the kicker's: 1 at RB, OL, DL and LB; 0.5 at QB, WR, TE, CB and S; 0 at K. Kickers are
+  never injured and fatigue does not touch kicking. The brief's provisional "low" kicker weight was tested and set to 0.
+- **Engine speed curve:** the top-speed slope across the Speed range is 3.5 yards a second (was 4.1), pivoting on Speed 50 (7.47 yd/s,
+  unchanged). Speed 30 runs 6.76 yd/s and Speed 95 runs 9.06. At constant payroll a fast lineup no longer wins on Speed alone
+  (+3.3 points a game before, +0.1 after), and Speed still matters at every position.
+- **Kept on the old weights:** Beast Clash (combatant HP, attack and speed: `CLASH_POSITION_WEIGHTS`) and monster generation (candidate
+  selection and the prior-career simulation: `BASE_POSITION_WEIGHTS`, the same table). So every recorded battle and replay key plays
+  exactly as before, every seed generates the same monsters, and the generation calibrations stay valid.
+- Overalls are computed live and never stored, so saves are unaffected. Existing contracts keep their stored salary.
+
+### 61.4 Emergency positions (R-6; amends §17.2 and §59.1)
+Every monster still has exactly one position, and normal eligibility is unchanged: a monster fills only its own position's slots.
+Each position has one **emergency position** it may cover, and only as a last resort, when no healthy monster of a base slot's own
+position is left (injuries, an emptied group).
+
+| Position | QB | RB | WR | TE | OL | DL | LB | CB | S | K |
+|---|---|---|---|---|---|---|---|---|---|---|
+| May cover in an emergency | WR | WR | RB | OL | TE | LB | DL | S | CB | QB |
+
+- Emergency cover fills the base lineup only (`OFFENSE_BASE`, `DEFENSE_BASE`). Package slots (WR3, C, DL3, SS) still need their own
+  position, so an emergency never opens a package play.
+- The best cover is chosen by the overall for the slot's position, using his own attributes. There is no out-of-position penalty or
+  boost and no extra injury risk (`OUT_OF_POSITION_RISK` is 1).
+- The owner cannot list a monster at his emergency position, and a monster's position never changes.
+- Nobody covers K, so an empty kicker slot is still a forfeit. A K covering QB is legal and weak.
+- The same rule applies to the owner and every AI club, before the game (`buildDepthChart`) and during it (`selectUnit`).
+- The lineup screen names an emergency cover ("X (S) covers CB2 in an emergency"), with an "emergency cover" chip. A legal lineup
+  stays green, because a cover is legal.
+- AI clubs, and the owner's release advice, treat a slot held only by a cover as a hole (`staffingHoles`). AI clubs still sign for
+  it, and the advisor never plans a release that leaves a position to its cover.
+- **Forfeit in a game:** when no legal lineup remains, the official result is still 0-21. The score, quarter and clock when play stopped
+  are kept, the statistics played stay recorded, and League News names it ("forfeit: no legal lineup mid-game; 14-3 when play stopped").
+
+### 61.5 Plays and AI play calling (R-7, R-8, R-14)
+- **Run plays retuned by geometry only** (carrier path depth, one block), identities kept: option pitch, inverted veer, wide zone,
+  student body, dart and rocket toss. Each changed play goes back to the owner through the Playbook Audit, as designed.
+- **Not changed, engine limits:** draws (the engine has no "show pass" phase), jet sweep and counter. Fly sweep and pistol stretch lead
+  the run game in full games, which reflects the AI's defensive choices rather than the plays' geometry. All are left for owner review.
+- **AI defensive pools** are built from the released book by tag, excluding desperation, goal line, prevent, red zone and two-minute
+  calls: 80 zone and 58 man calls (8 and 9 before), and 25 run fronts (6 before). Identity leans are unchanged.
+- **Fourth down:** on 4th and 5 or more, AI play weights favour passes (×1.8) over draws (×0.35) and other runs (×0.1). The go-for-it
+  decision uses the coach's football IQ (`read`, scaled 0–1: Rookie 0, Pro 0.44, All-Star 1, Gym Leaders +0.2). Two scores down in
+  the last ten minutes at the 40 or beyond on 4th and 5 or less, a reading coach goes for it, and the short-yardage thresholds loosen
+  with `read`. Coaching personalities stay distinct within each difficulty.
+
+### 61.6 Abilities (R-3, R-10)
+- **Football:** Foresight (PSY-03-F) marks linebackers up to 5 yards deep (was 3, which almost no alignment met). Air Brake (WIN-03-F)
+  and Crosswind Rescue (WIN-04-F) charge on **passes defended**: his own breakup, or an incompletion on a throw at the receiver he
+  covers, never an interception. Both stay rare signature plays.
+- **Beast Clash:** Unbroken Charge (boulderox) also arms on a single hit of 30% or more of max HP that it survives. Foresight (cerebrix)
+  prepares only when an enemy, active or in reserve, has an ability that applies a harmful status *(superseded by §61.14.2: the active foe only)*; otherwise it attacks and keeps the
+  use. Snowdrift Shelter (icehorn) lasts three of its own turns (was one).
+- **Not changed (owner decision pending):** the four weak legendary signatures (Eye of the Storm, Deep Winter, Eclipse Theft and Root
+  Communion), and eleven conditional abilities that rarely fire in 3 v 3.
+- The Dex contracts, review texts and review scenarios match the new behaviour.
+- **Study tools:** every "abilities off" control strips the slots, kicker, returner, bench and rotation pool (`tools/lib/ability-strip.mjs`),
+  and a control game that executes any ability fails the run.
+
+### 61.7 Difficulty (R-4, R-19)
+- **AI development rate** (`DIFFICULTY.aiDev`): XP for AI clubs' monsters from games and practice is scaled by 0.6 on Rookie, 1 on Pro and
+  1.5 on All-Star. It is the same for every AI club: no standing-based rubber-banding, no cap room and no in-game bonus. Founding
+  quality (−4 / −1 / +3) and coach IQ (0.6 / 1 / 1.5) are unchanged.
+- Development is bounded by each monster's attribute ceilings, so the rate mainly sets how soon a league reaches them.
+- **Gym Leader clubs** keep their designed advantages: tier growth, an ageless signature legendary and coach IQ +0.2. On Rookie they
+  were founded and resupplied at Pro quality (`difficultyQuality`); **superseded by §61.13.1** (owner, 2026-11-26): on every
+  difficulty a gym follows that difficulty's founding and replenishment quality.
+
+### 61.8 Awards (R-5; replaces the names in §16.4, the Task 10 MVP rule and §60.9)
+- **Names:** Most Valuable Beast (MVB), Offensive Beast of the Year (OBOY), Defensive Beast of the Year (DBOY), Signature Beast of the
+  Year (SBOY). The rookie awards and Coach of the Year keep their names. Save keys are unchanged (`mvp`, `opoy`, `dpoy`, `smoy`), so
+  every saved season keeps its awards.
+- **DBOY** caps each component at +3 standard deviations within the position, as the MVB does, and then standardises each candidate's weighted total within his own position. A lineman's pass-rush and run-defence components share his sacks and tackles for loss, so without this his total spread wider than a corner's or a safety's. The components and weights are unchanged and no position is favoured or forced.
+- **New awards:**
+  - **Special Teams Beast of the Year (STBOY):** the best kicker (points per game 45%, accuracy 40%, longest kick 15%) or kick returner
+    (yards per return 50%, return touchdowns 25%, return yards per game 25%), each against his own group. Each group's total is standardised within the group before the two are compared, so a long-tailed statistic (return touchdowns) cannot by itself put returners ahead.
+  - **Most Improved Beast (MIB):** the most overall gained in the season by a non-rookie regular, at least +2. The season-start overall is kept in the monster's season stats book (`stats.season.o0`), never read from the Career Timeline, so the Timeline cannot change the game.
+  - **Comeback Beast of the Year (CBOY):** a veteran who played under half of last season after a full one before it, and is back above
+    his position's average.
+  - **Iron Beast (IRON):** every game and the most snaps.
+- **All-League First and Second Team** by position (QB 1, RB 1, WR 2, TE 1, OL 3, DL 2, LB 2, CB 2, S 2, K 1), on the capped position
+  scores. Each monster appears once, at his own position.
+- The new honours appear in Career Timelines, trophy shelves, League News and the season archive. They count in Hall of Fame voting at
+  lower weights (STBOY 8, CBOY 6, MIB 4, IRON 4, against 22–30 for the majors). The owner's Hall of Fame checklist still counts only the
+  original seven awards.
+- GM of the Year was not added: AI clubs have no general manager to compare.
+- **Golden Boot and Return King:** added by §61.13.2.
+
+### 61.9 Salaries and trade values (R-9, R-16)
+- **Salary by overall** (`salaryForOvr`): 18,000 + 280 × OVR up to OVR 70 (unchanged), plus 90 × (OVR − 70)² above it. So 80 costs
+  49,400 (was 40,400), 90 costs 79,200 (was 43,200) and 99 costs 121,410 (was 45,720). Tier caps were unchanged here *(superseded by §61.14.1: 1.6M)*. Existing contracts keep
+  their salary; new and renewed deals, the Apex renewal ask and the draft board's rookie salary use the curve.
+- **AI signing bonuses** use the existing cap-saving form: part of the salary moved into a bonus, for a money-minded monster on a multi-year deal, only where it gives him the same value for less cap. An AI club uses it when a deal would leave it under 20% of its cap next league year (`AI_MARKET.bonusRoom`), as well as when the deal would not fit at all. Before, it was used only in the second case, and no club in a 15-season league came that close to the cap.
+- **Position leverage in trade value** (`POSITION_LEVERAGE`), re-derived on the final engine from 1,000 games with the documented
+  recipe: QB 1.48 · RB 1.58 · WR 1.08 · TE 1.32 · OL 0.69 · DL 0.90 · LB 1.03 · CB 1.07 · S 0.82 · K 0.78.
+
+### 61.10 Investigated, no change (R-11, R-12, R-13, R-18)
+- **Passing and sacks (R-11):** no probability was forced to meet a target. The measured rates are in §61.12.
+- **Scoring growth (R-12):** offence and defence develop at the same rate, and scoring follows the league's maturation, then holds.
+  Equal talent growth on both sides is worth about +19% scoring on this engine. Damping it would need a hidden season modifier (ruled
+  out) or a change to how strong a new league is founded (an owner decision).
+- **Kicking (R-13):** intentionally unchanged.
+- **Saves (R-18):** at season 15 a save is about 1.4 MB stored. It holds live game state and protected history, with no duplicate,
+  debug or play-by-play data. Saving and loading are measured in §61.12.
+
+### 61.11 Implementation fixes found in testing
+- One rounding rule for a play's yards: the play-end summary that abilities read now uses the recorded yards, so an ability and the box
+  score always agree.
+- The owner's release advice at the roster minimum counts emergency-held slots as holes (§61.4).
+
+### 61.11a Terminology (owner, 2026-11-26)
+Every player-facing text says **beast**, not monster: `src/text/en.js` (the central text file), the plain-language ability rules, the
+Beast Dex source text (`docs/beast-dex/data`, rebuilt into `beast-dex.generated.js`), the Media Day dialogue (`src/data/media.js`), the
+legacy species descriptions, the load-error message, the stadium preview, the audio setting ("Beast cries") and the app description.
+Code names, text keys, `{placeholders}` and save keys keep "monster", so saves and translations are unaffected. Developer-only
+screens (reviewers, labs) and the frozen historical Clash move tables are unchanged. Earlier sections of this document still say
+"monster" where they describe design history; in the game the word is "beast".
+
+### 61.11b Play-test changes (owner, 2026-11-26)
+- **Plain home fields** have no sideline markers (§60.12); Gym Leader fields keep theirs.
+- **Match Day:** the week and the game type are two centred lines under VS ("WEEK 4" / "INTERCONFERENCE").
+- **Meteor Impact** (FIR-03-F, Pyronix QB): the catch shockwave pushes opponents 2.5 / 3 / 3.5 / 4 yards by mastery (was 1 / 1.25 /
+  1.5 / 1.75); radius 3 yards, trigger and cooldown unchanged. Measured (`tools/balance-audit/meteor-probe.mjs`: 400 seeds, deep post
+  against Cover 3, 121 powered catches, same seeds with and without): yards after the catch +2.15 at mastery 0 and +3.95 at mastery 3
+  (were +0.18 and +1.12).
+- **Zoom button** on the match field (not in Auto or a replay): a magnifier at the bottom right. Pressing it eases the camera in over
+  1.8 s (the same timing and easing as Auto's camera) to 86% of the play-calling view, centred across the field, with the ball a little
+  below the middle and followed up and down the field during the play. Pressing again eases back out. The play-calling view is the
+  furthest out it goes. The choice is remembered (`settings.fieldZoom`). In Auto, Auto's own camera applies and the button is hidden.
+  Presentation only: a crop of the drawn field (`ZoomCrop`, `src/ui/match-camera.js`).
+
+### 61.13 Follow-up implementations (owner brief "Final Balance Calibration and Follow-Up", 2026-11-26)
+#### 61.13.1 Rookie Gym Leader quality (A-1; amends §61.7 and Task 8 D7)
+- `difficultyQuality(D, gym)` returns the difficulty's own quality for every club, gym or not. On Rookie, gym clubs are founded and
+  resupplied (generated arrivals and replenishment) at Rookie quality, as ordinary Rookie clubs are. Pro and All-Star are unchanged
+  (gyms already used those difficulties' quality).
+- Gyms keep their designed advantages (tier growth, the ageless signature legendary, coach IQ +0.2). No Rookie attribute ceiling exists
+  or was added; the AI development rate stays 0.6 / 1.0 / 1.5.
+
+#### 61.13.2 Golden Boot and Return King (A-2; adds to §61.8)
+- **Golden Boot (BOOT, save key `gboot`):** the best kicker. Field-goal points above expectation per attempt (55%): each distance band's
+  makes (under 30, 30s, 40s, 50+) against the league's make rate in that band, times 3, divided by attempts — so a long make is worth
+  more than a chip shot and a miss from 50+ costs less than one from 25. Longest make 15%, extra-point accuracy 15% (with at least five
+  attempts), kicking points per game 15%. Each component is standardised within the pool. Eligible: the season workload gate and at
+  least 0.7 field-goal attempts per week of the season.
+- **Return King (RKING, save key `rking`):** the best return specialist. Yards per return 45%, return yards per game 20%, return
+  touchdowns 20%, longest return 15%, standardised within the pool. Eligible: the workload gate and at least 0.75 kick returns per week.
+- Neither rewards volume alone: each award's largest component is per attempt or per return. Punting is not used (only the punt count
+  is recorded, not distance), and return fumbles and per-return consistency are not recorded.
+- **STBOY stays** the overall special-teams award. In Hall of Fame voting the three special-teams honours do not stack: in a season only
+  the highest-weighted of STBOY (8), Golden Boot (5) and Return King (5) counts (`ST_AWARDS`). The other honours are unaffected.
+- Shown wherever the other honours are: the awards hub and season review, trophy shelves and Career Profiles (🥾 and 👑), Career
+  Timelines, League News and the season archive. Older seasons without them read as an empty race.
+
+#### 61.13.3 No available kicker (A-3; amends §17.2 and §61.4)
+- A kicker is available when the club's K is on the field and not injured (`kickerAvailable`). There is still **no emergency kicker**:
+  the emergency-position table is unchanged and no position lists K as its emergency position.
+- Without an available kicker:
+  - **no field goal, punt or extra-point kick**: on fourth down the offence goes for it (human and AI alike);
+  - **after a touchdown the try is a two-point conversion**;
+  - **kickoffs and free kicks are not kicked** (the opening kickoff, the second-half kickoff, kickoffs after scores, a free kick after a
+    safety, and an onside attempt): the receiving team starts first and 10 at its own 20. No time runs, no random draw is used and no
+    kicking, return or tackle statistic is recorded (`noKickerRestart`; log line `sim.no_kicker_restart`).
+- A missing kicker alone is **not a forfeit** (`forfeitProblems` excludes K). K remains a roster need and the AI keeps signing kickers.
+- Kicking returns as soon as a kicker is available again. A K covering QB in an emergency keeps kicking while healthy; if he is hurt,
+  kicking stops until a kicker is available.
+- ~~**Roster rule (reported, not changed):** the offseason lineup gate still requires a K.~~ *Superseded by §61.14.4 (F-14): a missing
+  kicker is a warning, not a blocker.*
+- UI: the match screen shows "No available kicker: field goals and punts unavailable.", "No available kicker: two-point conversion
+  required." or "No available kicker: the opponent takes possession at its own 20-yard line." in place of the kick buttons, and the
+  lineup warning names the missing kicker.
+- Kicking accuracy is unchanged.
+
+#### 61.13.4 Scheme-fit thresholds (A-4)
+- The 27 scheme-fit thresholds were derived on every load by generating sample monsters (about 1.5 s on a phone, part of the slow
+  reopen). They are now a fixed table, `FIT_THRESHOLD_TABLE` in `src/data/monsters.js`, between generator markers. The values are the
+  derivation's exactly; `deriveFitThresholds()` keeps the derivation, and a test checks the table equals it key for key (and that
+  deriving does not move the random streams of generation or scheme fit).
+- Regenerate after a change to monster generation: `node tools/fit-thresholds.mjs --write` (without `--write` it checks and exits 1 if
+  the table is stale). The test fails if the table is not regenerated.
+- Measured (emulated phone, 4× CPU; same snapshots before and after): reopen at season 1 / 5 / 10 / 15 went from 8.5 / 11.1 / 14.6 /
+  13.7 s to 3.7 / 5.4 / 10.0 / 10.2 s; saving unchanged (`reports/balance-impl/FOLLOW_UP_REPORT.md` §9).
+
+#### 61.13.5 Play-test fixes (owner, 2026-11-26)
+- **Two-point calls:** the play the coach calls on a two-point try is the play that runs. The short-yardage filter only narrows the
+  AI's own pick.
+- **Final whistle:** the result opens at once with "Wrapping up the week…" while the week settles, then fills in; closing early is
+  carried out once the week is settled.
+
+### 61.14 Final calibration (owner decisions F-01 to F-14, 2026-11-26)
+Measured results and the experiments are in `reports/balance-impl/FINAL_CALIBRATION_REPORT.md`.
+
+#### 61.14.1 Salary cap (F-01)
+- **The Challenger cap is 1,600,000** (was 1,800,000). The unused higher tiers keep their ratios to it: Vanguard 2,300,000 (×1.44),
+  Sovereign 3,200,000 (×2.0). The salary curve (§61.9), the staff allowance (405,000) and AI signing bonuses are unchanged.
+- **Cap-aware founding.** A generated AI club whose roster would found above its usable cap (cap − staff allowance) founds without its
+  least valuable reserves per salary; starters, package players and protected monsters always stay, and no club drops below the roster
+  minimum (`foundWithinCap`). Those monsters are simply not founded: no release, news or waiver claim appears at creation. The creation
+  draft completes founding: a club its rookies take over the cap sheds a reserve the same silent way a full club makes room for a
+  creation-draft rookie (`creationCapSettle`). After creation the AI drafts within the cap as before (R7).
+- **Existing franchises keep the cap they were begun under** (`tierCap`, `LEGACY_TIER_CAPS`): a new franchise carries `capEra: 2`; a save
+  without it keeps 1.8 M. Lowering the cap inside a running save would put owners and AI clubs over it at once, and the existing remedy
+  (the commissioner's forced release) would release beasts, which the owner ruled out. A migration policy is proposed in the report for
+  approval; until then nothing changes in older saves.
+
+#### 61.14.2 Beast Clash abilities (F-04, F-05, F-08; supersedes the matching parts of §61.6)
+- **Root Communion** (Elderoot) and **Eye of the Storm** (Tempestra) are cast **in addition to the ordinary attack**: the effect
+  resolves, then the beast makes its ordinary attack in the same turn. Conditions, effects, durations and the once-per-Clash limit are
+  unchanged (Root Communion still triggers at 25%, Eye of the Storm still restricts for 2 turns).
+- **Foresight** (Cerebrix) prepares its mirror only while the **current active foe** has an ability that applies a harmful status. A
+  status source waiting in reserve no longer makes it give up its attack. It still replaces the attack when it prepares.
+- Deep Winter, Eclipse Theft, Lightning Rod, Clear Light and the other rarely-triggered abilities are unchanged.
+- **Replays:** a Clash replay re-runs the stored battle on today's rules. When those rules changed after the battle was played, the replay
+  says so; the stored result is never rewritten.
+
+#### 61.14.3 Plays (F-10, F-11, F-12)
+- **Counter:** after the false step and the two pulls, the back follows the pullers through the B gap (it used to bend outside the
+  kicked-out end to the edge). The pulls, the blocks and the false step are unchanged.
+- **Draw deception:** the four designated draws (QB Draw, Lead Draw, Spread Draw, Empty QB Draw; the play key `show`) show pass for
+  0.9 s (`SHOW_DRAW`): the quarterback sets at his drop point, the back holds beside him on his own side as a protector (on a QB draw the
+  quarterback holds his drop), and no exchange happens before the show ends. Defenders are not told anything: they read the same cues as
+  on every play (the line setting back, a quarterback who has dropped, a back standing still beside him, then the ball in a runner's
+  hands) at their own Awareness-set delay and cadence, so sharp defenders see through it sooner and blitzers still arrive. No other play
+  carries `show`; play-action passes are unchanged.
+- **Jet Sweep:** the motion is flipped. The slot lines up on the right (the trips side, with the back), comes across on the jet and runs
+  left, away from that crowded side; the line and the back lead to the left edge.
+
+#### 61.14.4 Offseason kicker (F-14; amends §61.13.3)
+- A missing kicker is a **warning**, never a blocker: the offseason lineup gate blocks only on the base lineup and the roster minimum,
+  and the weekly lineup check reports the kicker separately. The warning names every consequence (no field goals, punts or kicked
+  extra points; fourth downs played; two-point tries; the opponent starts at its own 20 after your kickoffs). AI clubs still treat K as
+  a roster need. Emergency positions are unchanged; no position covers K.
+
+#### 61.14.5 Experiments not adopted (production unchanged until the owner approves a value)
+- Rookie founding and replenishment quality −7 (production −4), Awareness-based quarterback read times (production `look` unchanged),
+  and weekly fatigue recovery below 28 (production 28): measured in the report, recommendations there.
+
+### 61.15 Final decisions (owner brief "Final Calibration Decisions and Targeted Implementation", 2026-11-26)
+Measured results are in `reports/balance-impl/FINAL_DECISIONS_REPORT.md`. Where this section and §61.14 differ, this section applies.
+
+#### 61.15.1 One salary cap: existing franchises move to 1.6 M at their next offseason (D-1; supersedes the last bullet of §61.14.1)
+- A franchise begun under the 1.8 M cap (no `capEra`) **finishes its current season under 1.8 M** and moves to the 1.6 M cap
+  **permanently when that season ends** (`applyCapTransition`, in `endSeason`, before retirements, renewals, free agency and the draft).
+  It happens once: `capEra: 2` and `capTransition { year, from, to, committed }` are saved, and a save that already has `capEra` never
+  repeats it. New franchises start on 1.6 M and are unaffected. History is not touched.
+- **Nothing is done to the roster.** No beast is released for the owner, no salary or contract is rewritten, no attribute is reduced, no
+  retirement is forced. The salary curve, the staff allowance (405,000), AI bonuses, cap-aware founding, contracts and the roster
+  requirements are unchanged.
+- **Remedies are the existing ones.** The offseason tools (declining renewals, releases, trades that shed salary, cheaper signings) come
+  before next season's compliance check, the commissioner's Saturday review (unchanged). **While a club is over the cap, a move that adds
+  salary is refused** (`overCapBlock` for offseason signings and pick-for-veteran trades; the trade desk refuses an owner trade that adds
+  salary while over, the same rule AI clubs already follow; the Task 7 market already refuses offers above usable cap). Being over the
+  cap never blocks the season gate, so progression cannot be stopped permanently. AI clubs use their ordinary offseason releases and
+  trades; there are no migration-specific releases.
+- **Advance notice through existing channels.** While the change is due: an HQ notice (`franchise.cap_change_notice`, or
+  `_over` with the projected excess and the actions that help), a League News item once per season (`franchise.cap_change_coming`), and
+  at the change a League News item saying the cap now in force and the room or excess (`franchise.cap_now_in_force`, `_over`).
+  No new screen.
+
+#### 61.15.2 Rookie quality −7 (D-2; supersedes the Rookie item of §61.14.5)
+- Rookie founding and replenishment quality is **−7** (was −4). Pro and All-Star are unchanged. AI development stays Rookie 0.6 / Pro 1.0 /
+  All-Star 1.5; the gym correction, ceilings, progression and evolution are unchanged. Existing beasts keep their attributes (it applies to
+  clubs and arrivals generated from now on); there is no rubber-banding. Quarterback Awareness and read timing stay as they are.
+
+#### 61.15.3 Sack rate (D-3)
+- The earlier 7.0%-of-dropbacks figure is **not a target and is not enforced**. Sacks come only from the pass-rush, blocking and
+  quarterback mechanics. The measurement tools (`pass-rush-study`) stay for observation.
+
+#### 61.15.4 Foresight casts in addition to the ordinary attack (D-5; supersedes the Foresight bullet of §61.14.2)
+- **Foresight** (Cerebrix, PSY-03-C) prepares its mirror and then makes its ordinary attack in the same turn, like Root Communion and Eye
+  of the Storm. It still prepares only while the **current active foe** applies a harmful status; everything else about it is unchanged.
+
+#### 61.15.5 Run defense: Counter, Power Left, Lead Draw (D-4, D-6; owner decisions 2026-11-26)
+- **No defensive engine change.** Read timing, the contain linebackers' run fits and the draw show are unchanged.
+- **Counter:** the B-gap path (§61.14.3) and the false step are unchanged. The run-read test was revised with the owner's approval: Awareness
+  must help recover where the false step deceives (Bear Front, Scrape Exchange); against Run Wall and Cover 3, where nobody bites, high
+  Awareness must not be a meaningful disadvantage (paired, 1.5-yard tolerance).
+- **Power Left is the mirror of Power Right** (supersedes its earlier design): the tight end lines up on the left and blocks on the play
+  side, the receiver lines up right, the right guard pulls. It used to run away from the tight end, who sealed the back side, and
+  against the two-lineman contain calls every play-side defender was blocked (Scrape Exchange 24.8, Pinch Spill 28.2 yards a carry).
+  Redesigns that kept the back-side seal stayed at 14 to 28; the mirror measures 5.3 and 6.0. Its coaching note is Power Right's: call it
+  when the defense overloads your right side.
+- **Lead Draw:** closed with no change. Its yards against the contain and edge calls match their written weakness (inside runs and
+  draws); Bear Front and Run Wall hold it under a yard a carry.
+
+#### 61.15.6 Stamina and depth (D-7)
+- Experiment only, nothing adopted. Production: every game starts at full stamina (capacity = permanent Durability); weekly fatigue does
+  not reach game stamina. Recovery stays 28; fatigue accumulation, injury odds, Durability weights and starting stamina are unchanged, and
+  there is no depth bonus. Results of variants B and C are in the report; any change waits for the owner.
+
+### 61.16 Balance audit closed (owner, 2026-11-26)
+- **The general balance audit is complete.** Comprehensive regression testing is pending: it runs after both pull requests are merged
+  and the phone build is updated. No further balance investigation or adjustment is made unless a real defect is found.
+- **Power Left and Power Right** are accepted as they are (§61.15.5); no further retuning, defensive adjustments or yardage penalties.
+- **Roster depth** stays as it is: recovery 28, full starting stamina, injury odds, Durability weights, rotation thresholds, fatigue gain
+  and bench ratings are unchanged. Improving the value of depth and rotation is a future enhancement (BACKLOG item 20), not a release
+  blocker.
+
+### 61.12 Validation (measured 2026-11-26; details in `reports/balance-impl/FINAL_REPORT.md`)
+- **Whole suite:** fast tier 2,263 of 2,263; simulation tier 310 of 310 after three set-up updates that follow §61.3–61.4.
+- **500 games** (seed 1): 12.45 points per team-game, completion 52.3%, sacks 3.2% of dropbacks, interceptions 1.2%, 159 distinct
+  defensive calls, 0 forfeits.
+- **Roster strategies** at constant summed overall: no strategy beyond ±1.3 points a game except pure depth (−4.3); Speed +0.85.
+- **15-season franchises** (seeds 3 and 4 on each difficulty): 0 integrity problems.
+  - AI overall at season 15: 61.6 / 62.5 / 64.2 (Rookie / Pro / All-Star).
+  - DBOY: DL 64, LB 13, CB 9, S 4 of 90.
+  - Gym Leader titles: 67 of 90.
+  - AI signing bonuses: 7 in 90 seasons.
+  - Developed-league completion 59–64%, sacks 2.1–2.4%.
+- **Saves:** 1.39 MB stored at season 15 with an exact round trip. Emulated phone: save 0.3–0.5 s, reopen 8–14 s (no slower than before).

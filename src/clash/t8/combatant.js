@@ -9,7 +9,7 @@
 // default to the first form and Developing. S12: `exhausted` (the football game's stamina book, spec §12) halves all 12 effective
 // attributes once, the same rounding as the football engine (src/sim/engine.js), before the formula; the incoming status slot is
 // the engine's `carryIn`.
-import { effectiveAttributes, overall } from '../../data/monsters.js';
+import { effectiveAttributes, overall, CLASH_POSITION_WEIGHTS } from '../../data/monsters.js';
 import { SPECIES_DEX } from '../../data/species.js';
 import { archetypeOf, isBasic, abilitiesOf, formsOf, formId } from '../../data/beast-dex.js';
 import { T8_VALUES } from './values.js';
@@ -30,7 +30,7 @@ export function buildT8Combatant(m, { slot = 0, side = 'a' } = {}) {
   const arch = T8_VALUES.archetypes[archetype]; const S = T8_VALUES.stats;
   const e = effectiveAttributes(m, {});
   if (m.exhausted) for (const k of Object.keys(e)) e[k] = Math.max(1, Math.round(e[k] / 2)); // §12: "halve all 12 effective attributes once ... including overtime/deciding Clash"
-  const ovr = overall(e, m.position);
+  const ovr = overall(e, m.position, CLASH_POSITION_WEIGHTS);
   const mean = (e.speed + e.agility + e.strength + e.awareness + e.durability) / 5;
   const tilt = (x) => clamp(1 + (x - mean) / S.tiltDiv, S.tiltMin, S.tiltMax);
   const hpBase = S.hpBase + S.hpPerOverall * ovr, atkBase = S.atkBase + S.atkPerOverall * ovr;

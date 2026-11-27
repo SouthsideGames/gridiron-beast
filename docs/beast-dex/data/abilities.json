@@ -41,7 +41,7 @@
       },
       {
         "section": "Visuals",
-        "rule": "Visible three-part charge bar above monster; full charge engulfs body in flame.",
+        "rule": "Visible three-part charge bar above beast; full charge engulfs body in flame.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -69,7 +69,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Triggering attacker; if invalid, current opposing active monster",
+        "rule": "Triggering attacker; if invalid, current opposing active beast",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -89,7 +89,7 @@
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "At third charge must survive and be able to act immediately, otherwise consume charge with no queued retaliation. If Stunned blocks counter, consume Stoke charge but NOT Stunned duration. Only normal turns advance status. Invalid attacker redirects to opposing active monster. Counterburst is reaction damage; no reaction chain. Shared status system supersedes old Shock-skip consumption exception.",
+        "rule": "At third charge must survive and be able to act immediately, otherwise consume charge with no queued retaliation. If Stunned blocks counter, consume Stoke charge but NOT Stunned duration. Only normal turns advance status. Invalid attacker redirects to opposing active beast. Counterburst is reaction damage; no reaction chain. Shared status system supersedes old Shock-skip consumption exception.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -258,7 +258,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Mastery increases max push 1/1.25/1.5/1.75 yards.",
+        "rule": "Mastery increases max push 2.5/3/3.5/4 yards.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       }
     ],
@@ -599,7 +599,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Mark lineup position occupied by normal attack target, not monster identity. Current occupant at eruption receives main hit. Healing block attaches to hit MONSTER and follows rotations; no persistent slot suppression.",
+        "rule": "Mark lineup position occupied by normal attack target, not beast identity. Current occupant at eruption receives main hit. Healing block attaches to hit BEAST and follows rotations; no persistent slot suppression.",
         "provenance": "Approved conversation decisions; unresolved points explicitly marked"
       },
       {
@@ -657,7 +657,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "On distinct sharp cut or sudden stop, roll form/mastery slip chance, never per frame. Water types immune; both teams otherwise affected. Slip attempts Stumbled via shared single-status gate: lose 40% CURRENT speed, maximum speed unchanged, Speed controls reacceleration. No Knocked Down. Maximum one successful slip per monster per play.",
+        "rule": "On distinct sharp cut or sudden stop, roll form/mastery slip chance, never per frame. Water types immune; both teams otherwise affected. Slip attempts Stumbled via shared single-status gate: lose 40% CURRENT speed, maximum speed unchanged, Speed controls reacceleration. No Knocked Down. Maximum one successful slip per beast per play.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -778,7 +778,7 @@
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "No two fixed targets for whole play. Reach, collision and ordinary contest rules remain. Does not duplicate monster, ball or statuses.",
+        "rule": "No two fixed targets for whole play. Reach, collision and ordinary contest rules remain. Does not duplicate beast, ball or statuses.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -1023,7 +1023,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Opposing ACTIVE monster only, not reserve. Benefits only; no traits, charges, marks or harmful-status removal.",
+        "rule": "Opposing ACTIVE beast only, not reserve. Benefits only; no traits, charges, marks or harmful-status removal.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -1129,7 +1129,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Opposing active monster; if it survives, send into reserve and opposing team chooses living replacement.",
+        "rule": "Opposing active beast; if it survives, send into reserve and opposing team chooses living replacement.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -1187,7 +1187,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Giant raindrop impact is cosmetic only: no damage, immediate stumble or displacement. Creates full-width Water field; later sharp cuts/stops slip30/32/34/36% mastery,40%current-speed loss, max1successful slip/monster/play, clearswhistle. Nature rules do not replace Water. Waterimmune both teams other types affected.",
+        "rule": "Giant raindrop impact is cosmetic only: no damage, immediate stumble or displacement. Creates full-width Water field; later sharp cuts/stops slip30/32/34/36% mastery,40%current-speed loss, max1successful slip/beast/play, clearswhistle. Nature rules do not replace Water. Waterimmune both teams other types affected.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -1235,7 +1235,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Departing opposing active monster. Forced rotations and knockout replacements do NOT trigger.",
+        "rule": "Departing opposing active beast. Forced rotations and knockout replacements do NOT trigger.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -1260,7 +1260,7 @@
       },
       {
         "section": "Visuals",
-        "rule": "Tsunarok briefly transforms into water and surges into departing monster. Damage resolves before lineup transition.",
+        "rule": "Tsunarok briefly transforms into water and surges into departing beast. Damage resolves before lineup transition.",
         "provenance": "Owner-approved Water review; unresolved details explicitly marked. Production unchanged."
       },
       {
@@ -1356,7 +1356,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Instant revival; resumed monster may later KO normally. Retain spent once-use flags and existing progression; revive runtime KO state, not roster duplication.",
+        "rule": "Instant revival; resumed beast may later KO normally. Retain spent once-use flags and existing progression; revive runtime KO state, not roster duplication.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
@@ -1366,7 +1366,7 @@
       },
       {
         "section": "Visuals",
-        "rule": "Seed beneath fallen monster; glowing flower bud closes, blossoms open, ally returns reserve. No extra status.",
+        "rule": "Seed beneath fallen beast; glowing flower bud closes, blossoms open, ally returns reserve. No extra status.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
@@ -1447,7 +1447,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Opposing active monster and its entire harmful shared status, all stacked remaining duration.",
+        "rule": "Opposing active beast and its entire harmful shared status, all stacked remaining duration.",
         "provenance": "Owner-approved Nature review; final audit questions flagged separately."
       },
       {
@@ -1860,14 +1860,14 @@
     "mode": "Beast Clash",
     "name": "Root Communion",
     "category": "Support",
-    "activation": "Eligible normal turn redistributes living team current HP",
+    "activation": "Eligible normal turn redistributes living team current HP, then the ordinary attack follows (F-04, 2026-11-26)",
     "mechanic": "Once-per-Clash simultaneous HP-percentage equalization",
     "sourceDesignStatus": "Approved; engine work required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Own normal turn while unused, living ally at 25% max HP or less and redistribution would increase that ally HP. Otherwise ordinary attack preserve use; Stunned skips cannot activate.",
-        "provenance": "Owner-approved Nature review; final audit questions flagged separately."
+        "rule": "Own normal turn while unused, living ally at 25% max HP or less and redistribution would increase that ally HP. Otherwise ordinary attack preserve use; Stunned skips cannot activate. When it activates, the ordinary attack still follows in the same turn (owner decision F-04, 2026-11-26).",
+        "provenance": "Owner decision F-04, final balance calibration, November 26, 2026. Earlier: Owner-approved Nature review; final audit questions flagged separately."
       },
       {
         "section": "Targets / placement",
@@ -1881,8 +1881,8 @@
       },
       {
         "section": "Recharge / frequency",
-        "rule": "ONCE per Clash replaces normal attack, same effect all mastery levels.",
-        "provenance": "Owner-approved Nature review; final audit questions flagged separately."
+        "rule": "ONCE per Clash, cast in addition to the normal attack (F-04, 2026-11-26; it replaced the attack before), same effect all mastery levels.",
+        "provenance": "Owner decision F-04, final balance calibration, November 26, 2026. Earlier: Owner-approved Nature review; final audit questions flagged separately."
       },
       {
         "section": "Lifetime / persistence",
@@ -1929,7 +1929,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Exchange remaining routes: each receiver heads toward the other route\u2019s next waypoint and follows its remaining path; no teleportation. QB targets remain attached to the monster and use its actual new route. Each collected defender gets one Confused roll: Zippit 35%, Zaptera 45%.",
+        "rule": "Exchange remaining routes: each receiver heads toward the other route\u2019s next waypoint and follows its remaining path; no teleportation. QB targets remain attached to the beast and use its actual new route. Each collected defender gets one Confused roll: Zippit 35%, Zaptera 45%.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2035,7 +2035,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Electric zone: Volcoil 20%, Eelectra 30% chance to apply Stunned on each non-Electric monster\u2019s first entry that play. Starting inside counts; one roll per monster, no re-entry reroll. Both teams affected, Electric immune, no total stun cap.",
+        "rule": "Electric zone: Volcoil 20%, Eelectra 30% chance to apply Stunned on each non-Electric beast\u2019s first entry that play. Starting inside counts; one roll per beast, no re-entry reroll. Both teams affected, Electric immune, no total stun cap.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2247,7 +2247,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Each non-Electric monster of either team independently rolls 15% Stunned on first entry; starting inside counts. No re-entry reroll and no total stun cap. Electric monsters are unaffected.",
+        "rule": "Each non-Electric beast of either team independently rolls 15% Stunned on first entry; starting inside counts. No re-entry reroll and no total stun cap. Electric beasts are unaffected.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2348,7 +2348,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Nearest DIFFERENT offensive monster currently engaged in blocking within three yards of Joltrex at shed time. Exclude the escaped blocker. Equal distance: stable lineup order. No eligible target: preserve readiness for later successful shed.",
+        "rule": "Nearest DIFFERENT offensive beast currently engaged in blocking within three yards of Joltrex at shed time. Exclude the escaped blocker. Equal distance: stable lineup order. No eligible target: preserve readiness for later successful shed.",
         "provenance": "Owner approval in this conversation, November 2, 2026; final selections supersede earlier proposals."
       },
       {
@@ -2628,7 +2628,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Only triggering hit is intercepted. Remaining multi-hit strikes stay aimed at original active monster; original attached effects also remain aimed there under normal rules (owner 8B).",
+        "rule": "Only triggering hit is intercepted. Remaining multi-hit strikes stay aimed at original active beast; original attached effects also remain aimed there under normal rules (owner 8B).",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -2814,13 +2814,13 @@
     "mode": "Beast Clash",
     "name": "Unbroken Charge",
     "category": "Stun-response special",
-    "activation": "Actually skip normal action due to Stunned",
-    "mechanic": "Stunned skipped action arms next performed normal-action undodgeable charge",
+    "activation": "Actually skip normal action due to Stunned, or take one hit of 30%+ max HP and stay up (balance audit R-10, 2026-11-25)",
+    "mechanic": "A Stunned skipped action or a heavy hit (30%+ max HP, survived) arms next performed normal-action undodgeable charge",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Actually losing a normal action to Stunned arms once-per-Clash charge. Merely receiving Stunned is not sufficient.",
+        "rule": "Actually losing a normal action to Stunned, or taking a single hit costing at least 30% of max HP and staying up (balance audit R-10, 2026-11-25: almost nothing applies Stunned in the Clash, so the charge never armed), arms once-per-Clash charge. Merely receiving Stunned is not sufficient.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3004,7 +3004,7 @@
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Not a zone, status or extra monster. Never spawn through/trap a monster; illegal overlap or boundary placement preserves readiness. Moving wall STOPS on obstructing defender contact; never displaces the defender.",
+        "rule": "Not a zone, status or extra beast. Never spawn through/trap a beast; illegal overlap or boundary placement preserves readiness. Moving wall STOPS on obstructing defender contact; never displaces the defender.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3143,7 +3143,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "EVERY living teammate, including source and reserves, GUARANTEED. No eligible-other-recipient prerequisite. Never revive KO monsters.",
+        "rule": "EVERY living teammate, including source and reserves, GUARANTEED. No eligible-other-recipient prerequisite. Never revive KO beasts.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3168,7 +3168,7 @@
       },
       {
         "section": "Visuals",
-        "rule": "Stone arches briefly rise over each protected monster then dissolve into standard Guarded badge. No persistent canopy clutter.",
+        "rule": "Stone arches briefly rise over each protected beast then dissolve into standard Guarded badge. No persistent canopy clutter.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3557,7 +3557,7 @@
     "name": "Snowdrift Shelter",
     "category": "Self Guarded preparation",
     "activation": "Ready source at <=50 percent HP and empty shared status slot",
-    "mechanic": "Sacrifice attack for one-next-owner-turn self Guarded shelter",
+    "mechanic": "Sacrifice attack for a three-owner-turn self Guarded shelter (balance audit R-10, 2026-11-25; was one turn)",
     "sourceDesignStatus": "Core approved; engine work required",
     "details": [
       {
@@ -3582,7 +3582,7 @@
       },
       {
         "section": "Lifetime / persistence",
-        "rule": "Guarded lasts through NEXT owner normal turn and expires at that turn END. Setup turn excluded. On next turn emerge and perform ordinary legal action. Reserve pauses status and cooldown.",
+        "rule": "Guarded lasts through the NEXT THREE owner normal turns and expires at the third turn END (balance audit R-10, 2026-11-25; was one turn). Setup turn excluded. On those turns perform ordinary legal actions. Reserve pauses status and cooldown.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3620,7 +3620,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "THREE-yard aura follows source. First opposing monster attempting NEW ability inside range; simultaneous attempts use stable lineup order.",
+        "rule": "THREE-yard aura follows source. First opposing beast attempting NEW ability inside range; simultaneous attempts use stable lineup order.",
         "provenance": "Owner approvals in this conversation, November 2, 2026. Final revised versions only."
       },
       {
@@ -3837,7 +3837,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Non-Wind monsters of BOTH teams gain +15 / +20 / +25% maximum movement speed by Gustling / Squallow / Stratosoar. Acceleration unchanged; entering/leaving adds/removes modifier.",
+        "rule": "Non-Wind beasts of BOTH teams gain +15 / +20 / +25% maximum movement speed by Gustling / Squallow / Stratosoar. Acceleration unchanged; entering/leaving adds/removes modifier.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -3938,7 +3938,7 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "ALL other on-field monsters on BOTH teams, including other Wind monsters; source RB alone excluded. One simultaneous snapshot of positions and current RB movement vector at activation. No radius limitation selected.",
+        "rule": "ALL other on-field beasts on BOTH teams, including other Wind beasts; source RB alone excluded. One simultaneous snapshot of positions and current RB movement vector at activation. No radius limitation selected.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -3958,12 +3958,12 @@
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Other Wind monsters are intentionally eligible: this is an ability, not Wind terrain. Source must be able and ball carrier. Do not apply generic shared-status gate to physical displacement. Ordinary explicit movement-immunity/collision rules need implementation tests.",
+        "rule": "Other Wind beasts are intentionally eligible: this is an ability, not Wind terrain. Source must be able and ball carrier. Do not apply generic shared-status gate to physical displacement. Ordinary explicit movement-immunity/collision rules need implementation tests.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
         "section": "Visuals",
-        "rule": "Charge bar alternates with status badge. At LOS crossing, visible gust drives affected monsters opposite runner heading; runner/ball remain readable. No new status badge.",
+        "rule": "Charge bar alternates with status badge. At LOS crossing, visible gust drives affected beasts opposite runner heading; runner/ball remain readable. No new status badge.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4033,13 +4033,13 @@
     "mode": "Football",
     "name": "Air Brake",
     "category": "Targeted effect",
-    "activation": "Aeralis; uncommon Wind CB.3 personal pass breakups fill bar; interceptions excluded. On later successful forward-pass catch by assigned/tracked receiver, activate if Aeralis within8 yards and able. No activation on charge-filling play.",
-    "mechanic": "PBU charge displaces guarded catcher opposite heading with actual yardage loss",
+    "activation": "Aeralis; uncommon Wind CB. 3 passes defended fill bar (a personal pass breakup, or an incompletion thrown at the receiver he covers; balance audit R-10, 2026-11-25); interceptions excluded. On later successful forward-pass catch by assigned/tracked receiver, activate if Aeralis within8 yards and able. No activation on charge-filling play.",
+    "mechanic": "Pass-defended charge displaces guarded catcher opposite heading with actual yardage loss",
     "sourceDesignStatus": "Approved design; implementation required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Aeralis; uncommon Wind CB.3 personal pass breakups fill bar; interceptions excluded. On later successful forward-pass catch by assigned/tracked receiver, activate if Aeralis within8 yards and able. No activation on charge-filling play.",
+        "rule": "Aeralis; uncommon Wind CB. 3 passes defended fill bar (a personal pass breakup, or an incompletion thrown at the receiver he covers; balance audit R-10, 2026-11-25); interceptions excluded. On later successful forward-pass catch by assigned/tracked receiver, activate if Aeralis within8 yards and able. No activation on charge-filling play.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4074,7 +4074,7 @@
       },
       {
         "section": "Progression / notes",
-        "rule": "Push5 /6.5 /8 /10 yards by mastery. Charge threshold3 PBUs, range8 yards fixed. Replaces rejected40% current-speed-loss proposal. Audit catch-before-score eligibility, vector fallback, collision and forward-progress ledger; do not award negative catch distance twice. Design values approved all-A; implementation must reconcile normal stop/scoring rules explicitly.",
+        "rule": "Push5 /6.5 /8 /10 yards by mastery. Charge threshold 3 passes defended (R-10), range8 yards fixed. Replaces rejected40% current-speed-loss proposal. Audit catch-before-score eligibility, vector fallback, collision and forward-progress ledger; do not award negative catch distance twice. Design values approved all-A; implementation must reconcile normal stop/scoring rules explicitly.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       }
     ],
@@ -4139,13 +4139,13 @@
     "mode": "Football",
     "name": "Crosswind Rescue",
     "category": "Zone",
-    "activation": "Two personal pass breakups earn next-snap selectable lanes",
-    "mechanic": "Two personal pass breakups earn two independently selectable Wind lanes; lasts 3/4/4/5 defensive team plays by mastery.",
+    "activation": "Two passes defended earn next-snap selectable lanes",
+    "mechanic": "Two passes defended earn two independently selectable Wind lanes; lasts 3/4/4/5 defensive team plays by mastery.",
     "sourceDesignStatus": "Approved design; implementation required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Two personal pass breakups charge the bar; one credit per breakup event. Next eligible defensive scrimmage snap creates lanes while source able, at the selected locations.",
+        "rule": "Two passes defended charge the bar (a personal pass breakup, or an incompletion thrown at the receiver he covers; balance audit R-10, 2026-11-25); one credit per play. Next eligible defensive scrimmage snap creates lanes while source able, at the selected locations.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4155,7 +4155,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Non-Wind monsters on BOTH teams gain20% maximum movement speed inside either lane. Acceleration unchanged. Wind monsters neither benefit nor suffer. Environmental modifier, not status.",
+        "rule": "Non-Wind beasts on BOTH teams gain20% maximum movement speed inside either lane. Acceleration unchanged. Wind beasts neither benefit nor suffer. Environmental modifier, not status.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4404,18 +4404,18 @@
     "mode": "Beast Clash",
     "name": "Eye of the Storm",
     "category": "Signature action",
-    "activation": "Tempestra; legendary; WR; Clash archetype Disruptor \u2192 Disruptor. Once per Clash own normal action replaces attack if enemy front active has a ready, repeatable signature.",
+    "activation": "Tempestra; legendary; WR; Clash archetype Disruptor \u2192 Disruptor. Once per Clash, at its own normal action, if the enemy front active has a ready, repeatable signature: the restriction is cast IN ADDITION to the ordinary attack, which follows in the same turn (owner decision F-05, 2026-11-26; it no longer replaces the attack).",
     "mechanic": "Once normal action temporarily restricts enemy active to ordinary attacks without cooldown extension",
     "sourceDesignStatus": "Approved design; implementation required",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Tempestra; legendary; WR; Clash archetype Disruptor \u2192 Disruptor. Once per Clash own normal action replaces attack if enemy front active has a ready, repeatable signature.",
-        "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
+        "rule": "Tempestra; legendary; WR; Clash archetype Disruptor \u2192 Disruptor. Once per Clash, at its own normal action, if the enemy front active has a ready, repeatable signature: the restriction is cast IN ADDITION to the ordinary attack, which follows in the same turn (owner decision F-05, 2026-11-26; it no longer replaces the attack).",
+        "provenance": "Owner decision F-05, final balance calibration, November 26, 2026. Earlier: Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
         "section": "Targets / placement",
-        "rule": "Current enemy front active, lock monster identity.",
+        "rule": "Current enemy front active, lock beast identity.",
         "provenance": "Owner workbook Wind blanket approval plus all13 A closeout, November3,2026. Rejected earlier versions superseded."
       },
       {
@@ -4458,7 +4458,7 @@
     "name": "Shadow Patch",
     "category": "Zone",
     "activation": "Umbrikit; common; CB; After own pass breakup while ready, bank field for next defensive scrimmage pre-choice. Interceptions excluded.",
-    "mechanic": "After his own pass breakup, bank a 6-by-6-yard Dark smoke zone. Choose its lane before the next defensive snap; lasts 3/3/4/5 defensive team plays by mastery. Non-Dark monsters on either team leave its smoke Confused for the rest of that play.",
+    "mechanic": "After his own pass breakup, bank a 6-by-6-yard Dark smoke zone. Choose its lane before the next defensive snap; lasts 3/3/4/5 defensive team plays by mastery. Non-Dark beasts on either team leave its smoke Confused for the rest of that play.",
     "sourceDesignStatus": "Approved",
     "details": [
       {
@@ -4473,7 +4473,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "The smoke visually conceals monsters inside. On leaving the base Dark smoke, a non-Dark monster attempts Confused through the normal single-status gate for the remainder of that play. Confused reduces Awareness by 20% and sends the monster toward a wrong assignment point; it does not replace player QB controls. This replaces this zone's old environmental Awareness penalty. Dark types and Night Watch-protected secondary defenders are immune. Cleanses and harmful-status wards apply. A hybrid replaces its parent effects inside the overlap.",
+        "rule": "The smoke visually conceals beasts inside. On leaving the base Dark smoke, a non-Dark beast attempts Confused through the normal single-status gate for the remainder of that play. Confused reduces Awareness by 20% and sends the beast toward a wrong assignment point; it does not replace player QB controls. This replaces this zone's old environmental Awareness penalty. Dark types and Night Watch-protected secondary defenders are immune. Cleanses and harmful-status wards apply. A hybrid replaces its parent effects inside the overlap.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4488,7 +4488,7 @@
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "No Confused status or auto-route error; ordinary Awareness formulas operate. Dark monsters receive no effect.",
+        "rule": "No Confused status or auto-route error; ordinary Awareness formulas operate. Dark beasts receive no effect.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -4722,18 +4722,18 @@
     "mode": "Beast Clash",
     "name": "Predator Rhythm",
     "category": "Clash ability",
-    "activation": "Duskyre; uncommon; RB; Clash archetype Striker \u2192 Striker. After two consecutive performed normal attacks damage the SAME enemy monster HP, next own normal attack on that monster is empowered.",
+    "activation": "Duskyre; uncommon; RB; Clash archetype Striker \u2192 Striker. After two consecutive performed normal attacks damage the SAME enemy beast HP, next own normal attack on that beast is empowered.",
     "mechanic": "DAR-03-C: Predator Rhythm; Third strike deals140 / 150 / 160 / 170% normal damage by mastery. Miss, shield-only hit, change of target or target departure resets sequence; no bonus dodge.",
     "sourceDesignStatus": "Approved",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Duskyre; uncommon; RB; Clash archetype Striker \u2192 Striker. After two consecutive performed normal attacks damage the SAME enemy monster HP, next own normal attack on that monster is empowered.",
+        "rule": "Duskyre; uncommon; RB; Clash archetype Striker \u2192 Striker. After two consecutive performed normal attacks damage the SAME enemy beast HP, next own normal attack on that beast is empowered.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
         "section": "Targets / placement",
-        "rule": "Previously damaged monster only while still enemy active.",
+        "rule": "Previously damaged beast only while still enemy active.",
         "provenance": "Owner approved Dark closeout, all 13 A, 2026-11-03"
       },
       {
@@ -5094,7 +5094,7 @@
     "name": "Beacon Lane",
     "category": "Zone",
     "activation": "Lumini; common; WR; After own reception that gains a first down while ready, bank next offensive field.",
-    "mechanic": "Non-Light finishing a participating scrimmage play inside Light gets one extra cooldown unit after ordinary decrement on shortest-running positive repeatable signature cooldown. One benefit per monster per play. No charge-bar or once-use restoration. Same-type neutrality and bench pause apply. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
+    "mechanic": "Non-Light finishing a participating scrimmage play inside Light gets one extra cooldown unit after ordinary decrement on shortest-running positive repeatable signature cooldown. One benefit per beast per play. No charge-bar or once-use restoration. Same-type neutrality and bench pause apply. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
     "sourceDesignStatus": "Design approved and closeout recorded; implementation pending",
     "details": [
       {
@@ -5109,7 +5109,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Non-Light finishing a participating scrimmage play inside Light gets one extra cooldown unit after ordinary decrement on shortest-running positive repeatable signature cooldown. One benefit per monster per play. No charge-bar or once-use restoration. Same-type neutrality and bench pause apply.",
+        "rule": "Non-Light finishing a participating scrimmage play inside Light gets one extra cooldown unit after ordinary decrement on shortest-running positive repeatable signature cooldown. One benefit per beast per play. No charge-bar or once-use restoration. Same-type neutrality and bench pause apply.",
         "provenance": "Owner approved final closeout all22 A, November4,2026."
       },
       {
@@ -5624,7 +5624,7 @@
     "name": "Daybreak",
     "category": "Special action",
     "activation": "Every opposing touchdown, including offense, defense and returns, adds one charge even with Aurelion off field. Two charges arm the ability. On its next eligible live successful reception, flare after catch resolution.",
-    "mechanic": "Daybreak: Guaranteed ability-specific Daybreak flash disrupts football assignments, targeting, deliberate pursuit, blocking and tackle initiation. Affected monsters wander independently with random direction changes at movement checkpoints. This is not a status effect or zone; an occupied status slot cannot block it.",
+    "mechanic": "Daybreak: Guaranteed ability-specific Daybreak flash disrupts football assignments, targeting, deliberate pursuit, blocking and tackle initiation. Affected beasts wander independently with random direction changes at movement checkpoints. This is not a status effect or zone; an occupied status slot cannot block it.",
     "sourceDesignStatus": "Approved design; shared dependencies and implementation pending",
     "details": [
       {
@@ -5634,12 +5634,12 @@
       },
       {
         "section": "Targets / placement",
-        "rule": "Every other monster on field from both teams, including Light types and allies. Aurelion alone is exempt. A touchdown scored by the catch itself preserves readiness.",
+        "rule": "Every other beast on field from both teams, including Light types and allies. Aurelion alone is exempt. A touchdown scored by the catch itself preserves readiness.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
         "section": "Core resolution",
-        "rule": "Guaranteed ability-specific Daybreak flash disrupts football assignments, targeting, deliberate pursuit, blocking and tackle initiation. Affected monsters wander independently with random direction changes at movement checkpoints. This is not a status effect or zone; an occupied status slot cannot block it.",
+        "rule": "Guaranteed ability-specific Daybreak flash disrupts football assignments, targeting, deliberate pursuit, blocking and tackle initiation. Affected beasts wander independently with random direction changes at movement checkpoints. This is not a status effect or zone; an occupied status slot cannot block it.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -5654,7 +5654,7 @@
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Existing statuses remain unchanged and continue operating. Immobilized monsters remain immobilized until restrictions end. Wandering respects boundaries, bodies and obstacles; bodies can obstruct movement but no new deliberate or accidental tackle attempt occurs while blinded. No new shared status badge.",
+        "rule": "Existing statuses remain unchanged and continue operating. Immobilized beasts remain immobilized until restrictions end. Wandering respects boundaries, bodies and obstacles; bodies can obstruct movement but no new deliberate or accidental tackle attempt occurs while blinded. No new shared status badge.",
         "provenance": "Owner Light/Metal review and chat approvals, November 3, 2026. Shared G decisions not blanket-approved."
       },
       {
@@ -6366,7 +6366,7 @@
     "name": "Mind Bend",
     "category": "Zone",
     "activation": "Personal tackle or assist after an opponent completed pass while ready banks a Psychic zone for the next eligible defensive pre-choice opportunity.",
-    "mechanic": "Mind Bend / Non-Psychic monsters of both teams inside receive inward movement vector at 20% of applicable maximum speed. Stop pull within 1 yard of center. Ordinary movement can overcome pull. Psychic monsters have same-type neutrality. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
+    "mechanic": "Mind Bend / Non-Psychic beasts of both teams inside receive inward movement vector at 20% of applicable maximum speed. Stop pull within 1 yard of center. Ordinary movement can overcome pull. Psychic beasts have same-type neutrality. Zone revision: 3/3/4/5 relevant team plays by mastery; choose a legal placement before the snap, with optional hybrid overlap.",
     "sourceDesignStatus": "Approved design; implementation and interaction audit pending",
     "details": [
       {
@@ -6381,7 +6381,7 @@
       },
       {
         "section": "Core resolution",
-        "rule": "Non-Psychic monsters of both teams inside receive inward movement vector at 20% of applicable maximum speed. Stop pull within 1 yard of center. Ordinary movement can overcome pull. Psychic monsters have same-type neutrality.",
+        "rule": "Non-Psychic beasts of both teams inside receive inward movement vector at 20% of applicable maximum speed. Stop pull within 1 yard of center. Ordinary movement can overcome pull. Psychic beasts have same-type neutrality.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
@@ -6597,13 +6597,13 @@
     "mode": "Football",
     "name": "Foresight",
     "category": "Targeted effect",
-    "activation": "Before either side selects plays while ready, randomly mark one initially aligned opposing LB within 3 yards of LOS. Both sides see candidate. At snap validate marked defender actually blitzes.",
+    "activation": "Before either side selects plays while ready, randomly mark one initially aligned opposing LB within 5 yards of LOS (the box; balance audit R-10, 2026-11-25: at 3 yards almost no book alignment qualified). Both sides see candidate. At snap validate marked defender actually blitzes.",
     "mechanic": "Foresight / If marked LB blitzes and Cerebrix able, roll fixed 50% chance to apply Confused. Success attempts 20% effective Awareness reduction for current play with normal shared status-slot rules. Application chance and penalty magnitude are separate.",
     "sourceDesignStatus": "Approved design; implementation and interaction audit pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Before either side selects plays while ready, randomly mark one initially aligned opposing LB within 3 yards of LOS. Both sides see candidate. At snap validate marked defender actually blitzes.",
+        "rule": "Before either side selects plays while ready, randomly mark one initially aligned opposing LB within 5 yards of LOS (the box; balance audit R-10, 2026-11-25: at 3 yards almost no book alignment qualified). Both sides see candidate. At snap validate marked defender actually blitzes.",
         "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
@@ -6655,14 +6655,14 @@
     "mode": "Beast Clash",
     "name": "Foresight",
     "category": "Signature action",
-    "activation": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack. Once-use spent on preparation.",
+    "activation": "Once per Clash, while active and able, prepare psychic mirror IN ADDITION to the ordinary attack (owner decision D-5, 2026-11-26: the attack follows in the same turn), only while the CURRENT ACTIVE enemy has an ability that applies a harmful status (owner decision F-08, 2026-11-26; a status source in reserve no longer counts; balance audit R-10, 2026-11-25, introduced the status-source rule). Otherwise attack normally and keep the use. Once-use spent on preparation.",
     "mechanic": "Foresight / Prevent incoming status and redirect one application to its caster with same strength and proposed duration. Caster ordinary status eligibility applies, with no second application accuracy roll. If caster cannot receive, incoming application still prevented and mirror consumed.",
     "sourceDesignStatus": "Approved design; implementation and interaction audit pending",
     "details": [
       {
         "section": "Trigger / eligibility",
-        "rule": "Once per Clash, spend own normal action while active and able to prepare psychic mirror, replacing attack. Once-use spent on preparation.",
-        "provenance": "Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
+        "rule": "Once per Clash, while active and able, prepare psychic mirror IN ADDITION to the ordinary attack (owner decision D-5, 2026-11-26: the attack follows in the same turn), only while the CURRENT ACTIVE enemy has an ability that applies a harmful status (owner decision F-08, 2026-11-26; a status source in reserve no longer counts; balance audit R-10, 2026-11-25, introduced the status-source rule). Otherwise attack normally and keep the use. Once-use spent on preparation.",
+        "provenance": "Owner decision D-5 (in addition to the attack) and F-08, final balance calibration, November 26, 2026. Earlier: Owner Psychic chat approvals through Astral Strike all A. Recommended Enigmane secondary defaults explicitly identified."
       },
       {
         "section": "Targets / placement",
@@ -6860,12 +6860,12 @@
       },
       {
         "section": "Exceptions / counterplay",
-        "rule": "Other defenders still cover real source. Ability effect uses no shared status slot. Physical movement constraints remain. Image carries no football and does not create a second roster monster. Afterimage safe-path representation and other-control priority need implementation audit.",
+        "rule": "Other defenders still cover real source. Ability effect uses no shared status slot. Physical movement constraints remain. Image carries no football and does not create a second roster beast. Afterimage safe-path representation and other-control priority need implementation audit.",
         "provenance": "Owner approved final closeout all22 A, November4,2026."
       },
       {
         "section": "Visuals",
-        "rule": "Visible psychic copy continues straight while real Enigmane cuts. Four-segment charge alternates with status badge using shared UI. Real ball and controlled-monster indicators remain accurate.",
+        "rule": "Visible psychic copy continues straight while real Enigmane cuts. Four-segment charge alternates with status badge using shared UI. Real ball and controlled-beast indicators remain accurate.",
         "provenance": "Owner approved final closeout all22 A, November4,2026."
       },
       {

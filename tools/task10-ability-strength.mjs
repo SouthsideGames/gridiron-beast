@@ -18,11 +18,12 @@ import { step, aiController, newTendencies } from '../src/sim/game-runner.js';
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
 const G = Number(args.games || 40); const ONLY = args.only ? new Set(String(args.only).split(',')) : null; const VAR = new Set(String(args.variants || 'base,top').split(','));
-const strip = (p) => (p ? { ...p, species: null, form: null, ability: null } : p);
+import { stripTeam, replacePlayer, allPlayers } from './lib/ability-strip.mjs';
+const STRIP = { species: null, form: null, ability: null }; // R-3 (2026-11-25): every player source, including the rotation pool
 function clubs(seed) {
   const home = generatedTeam(seed * 2 + 1, { id: 'H', name: 'Home', abbr: 'HOM', quality: 62 }), away = generatedTeam(seed * 2 + 2, { id: 'A', name: 'Away', abbr: 'AWY', quality: 62 });
-  for (const t of [home, away]) { const retId = t.returner?.id; for (const side of ['offense', 'defense']) for (const k of Object.keys(t[side])) t[side][k] = strip(t[side][k]); t.kicker = strip(t.kicker); if (t.returner) t.returner = Object.values({ ...t.offense, ...t.defense }).find((p) => p.id === retId) || strip(t.returner); }
-  return { home, away };
+  const out = { home: stripTeam(home, STRIP), away: stripTeam(away, STRIP) };
+  return out;
 }
 /** Place subjects (each { fam, form, mastery, on }) on the home club; `on` false keeps the same monster and type without the ability. */
 function place(team, subjects) {
@@ -33,8 +34,7 @@ function place(team, subjects) {
     used.add(`${at.side}:${slot}`);
     const base = at.side === 'kicker' ? team.kicker : team[at.side][slot];
     const subject = { ...base, id: `subject${i}`, type: s.fam.type, position: s.fam.position, name: s.fam.name, ability: null, ...(s.on ? { species: s.fam.id, form: s.form, mastery: s.mastery } : { species: null, form: null }) };
-    if (at.side === 'kicker') team.kicker = subject; else team[at.side][slot] = subject;
-    if (team.returner?.id && team.returner.id === base.id) team.returner = subject;
+    replacePlayer(team, base.id, subject); // the slot, kicker/returner, bench and rotation pool all field the subject
   }
 }
 function game(seed, subjects) {
@@ -47,6 +47,9 @@ function game(seed, subjects) {
     if (scrim && ev.kind === 'play' && ev.sim) { if (poss === 'home') { m.offPlays++; m.offYds += ev.sim.yards || 0; if (ev.sim.turnover) m.gave++; } else { m.defPlays++; m.defYds += ev.sim.yards || 0; if (ev.sim.turnover) m.took++; } }
   }
   const ex = subjects.map((_, i) => state.t8?.mastery?.[`subject${i}`]?.executions || 0);
+  // R-3 control check: with every subject off, nobody on the field may execute an ability.
+  const anyEx = Object.values(state.t8?.mastery || {}).reduce((n, x) => n + (x?.executions || 0), 0);
+  if (subjects.every((x) => !x.on) && anyEx > 0) throw new Error(`R-3 control check failed: ${anyEx} ability executions in an abilities-off game (seed ${seed})`);
   return { margin: state.score.home - state.score.away, pf: state.score.home, pa: state.score.away, win: state.score.home > state.score.away ? 1 : state.score.home === state.score.away ? 0.5 : 0, ypp: m.offYds / Math.max(1, m.offPlays), yppAllowed: m.defYds / Math.max(1, m.defPlays), to: m.took - m.gave, ex };
 }
 const KEYS = ['margin', 'pf', 'pa', 'win', 'ypp', 'yppAllowed', 'to'];

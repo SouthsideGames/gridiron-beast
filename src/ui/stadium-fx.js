@@ -497,25 +497,6 @@ export function introPlateHtml(venue, esc = (s) => s) {
 // markers along the sidelines, and the wall behind the near end zone with the club's banners and logo. Static
 // shapes in the club's colours: no animation, so the Stadium Effects setting has nothing to slow down here, and all of it is
 // drawn the same at Full, Reduced and Off.
-/** The markers along both sidelines of a plain home field: the region's kind of marker, in the club's colours. */
-const MARKER = {
-  snow: (x, y, P, S, A, side) => `<path d="M${x} ${y + 0.6} V${y - 1.1}" stroke="${S}" stroke-width="0.14"/><path d="M${x} ${y - 1.1} l${-side * 1.1} 0.35 l${side * 1.1} 0.35 Z" fill="${P}" stroke="${S}" stroke-width="0.06"/><ellipse cx="${x}" cy="${y + 0.62}" rx="0.45" ry="0.2" fill="#ffffff"/>`,
-  mesa: (x, y, P, S, A) => `<path d="M${x - 0.45} ${y + 0.55} L${x - 0.25} ${y - 0.55} H${x + 0.25} L${x + 0.45} ${y + 0.55} Z" fill="${S}"/><rect x="${x - 0.28}" y="${y - 0.55}" width="0.56" height="0.3" fill="${P}"/><rect x="${x - 0.38}" y="${y + 0.05}" width="0.76" height="0.14" fill="${A}"/>`,
-  wheat: (x, y, P, S, A) => `<rect x="${x - 0.42}" y="${y - 0.75}" width="0.84" height="1.25" fill="${P}" stroke="${S}" stroke-width="0.07"/><rect x="${x - 0.42}" y="${y - 0.3}" width="0.84" height="0.22" fill="${S}"/><path d="M${x} ${y + 0.5} v0.35" stroke="${S}" stroke-width="0.1"/>`,
-  palm: (x, y, P, S, A) => `<path d="M${x} ${y + 0.7} V${y - 0.5}" stroke="${S}" stroke-width="0.16"/><path d="M${x - 0.28} ${y - 0.5} Q${x} ${y - 1.4} ${x + 0.28} ${y - 0.5} Z" fill="${A}"/><path d="M${x - 0.2} ${y - 0.1} H${x + 0.2}" stroke="${P}" stroke-width="0.14"/>`,
-  brick: (x, y, P, S, A) => `<rect x="${x - 0.35}" y="${y + 0.2}" width="0.7" height="0.45" fill="#7a3f2c" stroke="#3a1f15" stroke-width="0.05"/><path d="M${x} ${y + 0.2} V${y - 0.8}" stroke="${S}" stroke-width="0.12"/><circle cx="${x}" cy="${y - 0.92}" r="0.26" fill="${A}" stroke="${P}" stroke-width="0.08"/>`,
-  reeds: (x, y, P, S, A) => `<path d="M${x - 0.3} ${y + 0.6} q0.05 -0.9 -0.2 -1.3 M${x} ${y + 0.6} v-1.5 M${x + 0.3} ${y + 0.6} q-0.05 -0.9 0.2 -1.3" stroke="${P}" stroke-width="0.14" fill="none"/><ellipse cx="${x}" cy="${y - 0.95}" rx="0.12" ry="0.3" fill="${S}"/><circle cx="${x}" cy="${y + 0.6}" r="0.22" fill="${A}"/>`,
-  hedge: (x, y, P, S, A) => `<circle cx="${x}" cy="${y}" r="0.62" fill="${S}"/><circle cx="${x - 0.15}" cy="${y - 0.15}" r="0.42" fill="${P}" opacity="0.85"/><circle cx="${x + 0.25}" cy="${y + 0.1}" r="0.12" fill="${A}"/>`,
-  pier: (x, y, P, S, A) => `<circle cx="${x}" cy="${y}" r="0.5" fill="${P}" stroke="${S}" stroke-width="0.1"/><rect x="${x - 0.5}" y="${y - 0.1}" width="1" height="0.2" fill="${A}"/>`,
-};
-export function homeEdgeSvg(venue, cam, HW, Y) {
-  const L = venueLook(venue); if (!L?.region) return ''; const [P, S, A] = L.colors; const mk = MARKER[L.region.motif]; const out = [];
-  const b = fieldBorder(); const x0 = b ? HW + b / 2 : HW - 0.45;
-  for (const yard of markerYards(cam)) {
-    for (const side of [-1, 1]) out.push(mk(side * x0, Y(yard), P, S, A, side));
-  }
-  return `<g class="home-edge" data-region="${L.region.label}">${out.join('')}</g>`;
-}
 /** The wall behind the near end zone of a plain home field: the club's colours, its logo in the middle and two banners. */
 function homeWallSvg(L, x0, y0, w, d) {
   const [P, S, A] = L.colors; const logo = teamLogoSymbol(L.club); const cx = x0 + w / 2; const bw = 7, bh = d - 1.8; let banners = '';

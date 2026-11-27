@@ -43,7 +43,8 @@ test('offseason checklist exposes every blocker without changing the save or RNG
  const f=fresh();f.season.finished=true;f.offseason={items:[]};const before=JSON.stringify(f);
  const rows=offseasonSteps(f);assert.equal(JSON.stringify(f),before);
  for(const id of ['contracts','free-agency','draft','staff','hall','roster','legendary','lineup','postseason','career'])assert.ok(rows.some(r=>r.id===id),id);
- const qb=f.roster.filter(m=>m.position==='QB');for(const m of qb)m.injury={weeks:1};
+ // Balance audit R-6 (owner decision 2026-11-25): a healthy kicker covers QB in an emergency, so the blocker needs QB and K out.
+ const qb=f.roster.filter(m=>m.position==='QB'||m.position==='K');for(const m of qb)m.injury={weeks:1};
  assert.equal(offseasonSteps(f).find(r=>r.id==='lineup').done,false);
  f.roster=[];assert.equal(offseasonSteps(f).find(r=>r.id==='roster').done,false);
 });

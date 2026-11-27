@@ -11,7 +11,7 @@ import { PLAYS, OFFENSE_IDS } from '../src/data/playbook.js';
 import { lineup } from './tools/lineup.js';
 import * as R from './helpers/zone-rules.js';
 import { contractOf } from '../src/sim/abilities/registry.js';
-import { pushSafely, BODY } from '../src/sim/abilities/common.js';
+import { pushSafely, BODY, passDefended } from '../src/sim/abilities/common.js';
 import { createFieldPlay } from '../src/sim/t8/field-effects.js';
 import { afterPlay as statusAfterPlay } from '../src/sim/t8/status-runtime.js';
 import '../src/sim/abilities/index.js';
@@ -164,7 +164,7 @@ test('Air Brake: on a completed catch by the receiver he guards within 8 yards, 
   assert.ok(fired >= 3 && kept >= 3, `fired ${fired}, preserved ${kept}`);
 });
 
-test('Air Brake: guarded means his man key or tracked zone receiver; range 8; never on a catch that ended the play; PBUs charge (cap 3), interceptions and two-point tries do not', () => {
+test('Air Brake: guarded means his man key or tracked zone receiver; range 8; never on a catch that ended the play; passes defended charge (cap 3; balance audit R-10: breakups or incompletions at his covered receiver), interceptions and two-point tries do not', () => {
   const { contractOf: c } = { contractOf }; const mod = c('skywarden');
   const mkCtx = (o = {}) => ({ state: () => o.st, statusOf: () => null, canStartSignature: () => true, canGainCharge: () => true, guards: (d, r) => o.guards, dist: () => o.dist, result: o.result ?? null, heading: () => [1, 0], actors: [], bounds: null, obstacles: () => [], ball: {}, executed: () => {}, log: () => {} });
   for (const [o, fires] of [[{ guards: true, dist: 8 }, true], [{ guards: true, dist: 8.01 }, false], [{ guards: false, dist: 3 }, false], [{ guards: true, dist: 3, result: 'touchdown' }, false]]) {
@@ -176,10 +176,11 @@ test('Air Brake: guarded means his man key or tracked zone receiver; range 8; ne
   for (let seed = 1; seed <= 150 && t8.ability.cb.charges < 3; seed++) {
     const before = t8.ability.cb.charges;
     const r = play({ seed, offensePlay: PASSES[seed % PASSES.length], def: { CB1: mon(lineup(12, 64).defense.CB1, { id: 'cb', species: 'skywarden', type: 'Wind' }) }, t8 });
-    const mine = r.stats.pbuBy === 'CB1' && !r.stats.interceptor; if (mine) pbus++;
+    const mine = passDefended(r.stats, 'CB1'); if (mine) pbus++; // R-10 (2026-11-25): passes defended, not breakups alone (test updated to the decision)
+    if (r.stats.interceptor) assert.equal(mine, false, 'an interception never charges');
     assert.equal(t8.ability.cb.charges, Math.min(3, before + (mine ? 1 : 0)), `seed ${seed}`);
   }
-  assert.ok(pbus >= 1, `breakups observed ${pbus}`);
+  assert.ok(pbus >= 1, `passes defended observed ${pbus}`);
   const t2 = { status: {}, ability: { cb: { charges: 0 } } };
   for (let seed = 1; seed <= 40; seed++) play({ seed, offensePlay: PASSES[seed % PASSES.length], def: { CB1: mon(lineup(12, 64).defense.CB1, { id: 'cb', species: 'skywarden', type: 'Wind' }) }, t8: t2, options: { twoPoint: true } });
   assert.equal(t2.ability.cb.charges, 0, 'two-point breakups do not charge');

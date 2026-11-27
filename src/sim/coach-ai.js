@@ -6,6 +6,7 @@ import { PLAYS } from '../data/playbook.js';
 import { fieldGoalRange } from './special-teams.js';
 import { fieldGoalDistance, clamp } from '../core/field.js';
 import { opponent, inTwoMinute } from './rules.js';
+import { kickerAvailable } from './substitutions.js';
 import { matchupScore, USUAL_OPPONENT } from './type-matchups.js';
 
 const norm = (v) => clamp(v ?? 60, 1, 99) / 99;
@@ -79,6 +80,8 @@ export function weighOffense(state, team, available, tendencies = null, opp = nu
     if (s.short) w *= tags.includes('short') || tags.includes('goalline') ? 2.2 : tags.includes('deep') ? 0.4 : 1;
     if (s.long) w *= tags.includes('long') || tags.includes('medium') || tags.includes('deep') ? 1.7 : p.type === 'run' ? 0.45 : 1;
     if (s.down === 3 && s.toGo >= 5) w *= isPass ? 1.6 : 0.5;
+    // R-14: on fourth and 5+ a run rarely converts (4.3% against 27.8% for passes in the audit): passes, a draw now and then.
+    if (s.down === 4 && s.toGo >= 5) w *= isPass ? 1.8 : tags.includes('draw') ? 0.35 : 0.1;
     if (s.goalToGo || s.redZone) w *= tags.includes('redzone') || tags.includes('goalline') || tags.includes('short') ? 1.8 : tags.includes('deep') ? 0.35 : 1;
     if (s.backedUp) w *= tags.includes('deep') || tags.includes('screen') ? 0.4 : tags.includes('inside') ? 1.4 : 1;
     if (s.twoMinute && s.diff <= 0) w *= tags.includes('two_minute') || tags.includes('quick') || tags.includes('medium') ? 1.8 : p.type === 'run' ? 0.3 : 1;
@@ -177,6 +180,7 @@ export function fgSignatureDesperation(state, sig) {
 
 /** 'go' | 'punt' | 'fg', fourth-down decision. `sig`: an available field-goal signature (Task 8 M3), or null. */
 export function fourthDownDecision(state, team, sig = null) {
+  if (team && !kickerAvailable(state, team)) return 'go'; // A-3: no kicker, no punt or field goal
   const s = situation(state);
   const str = teamStrengths(team);
   const coach = team.coach || { aggression: 0.5 };
@@ -199,15 +203,21 @@ export function fourthDownDecision(state, team, sig = null) {
     if (s.toGo <= 1 && s.ballOn < 80 && coach.aggression > 0.55) return 'go';
     return 'fg';
   }
-  if (s.ballOn < 45) return s.toGo <= 1 && s.ballOn >= 40 && coach.aggression > 0.75 ? 'go' : 'punt';
+  // R-14 (balance audit, 2026-11-25): how well the coach reads the odds is his IQ (Rookie 0.6, Pro 1, All-Star 1.5, gyms +0.2): 0 to 1.
+  // A sharp coach goes a little more often where going pays (short yardage beyond midfield, a big deficit late), never on long yardage;
+  // his aggression still decides how far he leans. Rookie-league coaches keep the older, plainer rules.
+  const read = clamp(((coach.iq ?? 1) - 0.6) / 0.9, 0, 1);
+  if (s.late && s.diff <= -9 && s.secondsLeft < 600 && s.ballOn >= 40 && s.toGo <= 5 && read > 0) return 'go'; // two scores down late: a punt only shortens the game
+  if (s.ballOn < 45) return s.toGo <= 1 && s.ballOn >= 40 && coach.aggression > 0.75 - 0.15 * read ? 'go' : 'punt';
   if (s.toGo <= 1) return 'go';
-  if (s.toGo <= 3 && s.ballOn >= 55) return coach.aggression > 0.35 ? 'go' : 'punt';
-  if (s.toGo <= 5 && s.ballOn >= 62) return coach.aggression > 0.5 ? 'go' : 'punt';
+  if (s.toGo <= 3 && s.ballOn >= 55) return coach.aggression > 0.35 - 0.1 * read ? 'go' : 'punt';
+  if (s.toGo <= 5 && s.ballOn >= 60) return coach.aggression > 0.5 - 0.15 * read ? 'go' : 'punt';
   return 'punt';
 }
 
 /** 'kick' | 'two' after a touchdown (standard chart). */
-export function tryDecision(state, side = state.tryTeam) {
+export function tryDecision(state, side = state.tryTeam, team = null) {
+  if (team && !kickerAvailable(state, team)) return 'two'; // A-3: no kicker, no extra-point kick
   const diff = state.score[side] - state.score[opponent(side)]; // after the six
   if (state.ot && state.ot.period >= 3) return 'two';
   const late = state.quarter >= 4 || (state.quarter === 3 && state.clock < 60);

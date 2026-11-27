@@ -123,7 +123,7 @@ export const FOOTBALL_SIMPLE = Object.freeze({
   'WIN-01-F': 'He makes a wind lane that helps his teammates run faster.',
   'WIN-02-F': 'After breaking tackles, his next run blows defenders back.',
   'WIN-03-F': 'A receiver he is guarding gets pushed back after the catch.',
-  'WIN-04-F': 'After knocking passes away, he makes wind lanes on defense.',
+  'WIN-04-F': 'After stopping passes thrown his way, he makes wind lanes on defense.',
   'WIN-05-F': 'He helps a teammate get his ability ready sooner.',
   'WIN-06-F': 'After a few catches, he makes a tornado that knocks opponents off balance.',
   'EAR-01-F': 'His next chance to knock a defender down is a sure thing.',

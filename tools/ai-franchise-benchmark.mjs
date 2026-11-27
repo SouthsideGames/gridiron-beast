@@ -51,6 +51,7 @@ const IH = await imp('src/franchise/injury-history.js');
 // Task 7 (recording only): the free-agency market, when the tree has one. Absent in older trees; `v4.seasons[].fa` is then not written.
 let FAE = null, FAL = null; try { FAE = await imp('src/franchise/fa-engine.js'); FAL = await imp('src/franchise/fa-legendary.js'); } catch { /* a tree before Task 7 */ }
 let AMB = null; try { AMB = await imp('src/franchise/ambition.js'); } catch { /* a tree before the Ambition system */ }
+let PACK_MOD = null; try { PACK_MOD = await imp('src/franchise/pack.js'); } catch { /* a tree before the packed save */ } const ZLIB = await import('node:zlib'); // balance audit 2026-11-25: save size, packed and gzipped (recording only)
 let CON = null; try { CON = await imp('src/franchise/contracts.js'); } catch { /* */ }
 /** One offseason's market, read from the franchise after it (recording only; nothing here changes the game). */
 function faRecord(f) {
@@ -271,15 +272,22 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
       };
       for (const c of clubs) { for (const [, x] of tableSnap[c]) row(x.m, c, x.starter); if (!v4.clubs[c]) v4.clubs[c] = { gym: GYM_BY_CLUB[c]?.tier || null }; }
       for (const m of f.roster) row(m, f.club, ownerStart.has(m.id));
-      v4.seasons.push({ year, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, games: (s.results || []).map((g) => [g.week ?? null, g.home, g.away, g.homeScore, g.awayScore]), strategy: Object.fromEntries(clubs.map((c) => [c, JSON.parse(JSON.stringify(REG.clubRecord(f, c).strategy || {}))])), modeContracts: f.leagueOffseason?.contracts?.byMode || null, modeUpgrades: f.leagueOffseason?.upgradesByMode || null, monsters, ...(FAE ? { fa: faRecord(f) } : {}) });
+      // Balance audit 2026-11-25 (recording only): the season's league football totals and award winners by position.
+      const football = (() => { try { const tot = { games: (s.results || []).length, att: 0, comp: 0, passYds: 0, passTd: 0, intThrown: 0, sacked: 0, rush: 0, rushYds: 0, rushTd: 0, fgm: 0, fga: 0, xpm: 0, xpa: 0, fumLost: 0 }; for (const T of Object.values(s.leagueStats || {})) for (const r of Object.values(T)) for (const k of Object.keys(tot)) if (k !== 'games') tot[k] += r[k] || 0; tot.points = (s.results || []).reduce((n, g) => n + (g.homeScore || 0) + (g.awayScore || 0), 0); tot.forfeits = (s.results || []).filter((g) => g.forfeit).length; tot.score0to21 = (s.results || []).filter((g) => (g.homeScore === 0 && g.awayScore === 21) || (g.homeScore === 21 && g.awayScore === 0)).length; tot.ot = (s.results || []).filter((g) => g.ot).length; tot.clashDecided = (s.results || []).filter((g) => g.clash).length; return tot; } catch (e) { return { error: String(e) }; } })();
+      const awards = (() => { try { const w = s.awardsFinal?.winners || {}; return Object.fromEntries(Object.entries(w).map(([k, x]) => [k, x ? { id: x.id ?? null, pos: x.position ?? null, team: x.team ?? null, score: x.score ?? null } : null])); } catch { return null; } })();
+      v4.seasons.push({ year, football, awards, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, games: (s.results || []).map((g) => [g.week ?? null, g.home, g.away, g.homeScore, g.awayScore]), strategy: Object.fromEntries(clubs.map((c) => [c, JSON.parse(JSON.stringify(REG.clubRecord(f, c).strategy || {}))])), modeContracts: f.leagueOffseason?.contracts?.byMode || null, modeUpgrades: f.leagueOffseason?.upgradesByMode || null, monsters, ...(FAE ? { fa: faRecord(f) } : {}) });
     }
     prevOvr = new Map(); for (const mp of Object.values(tableSnap)) for (const [id, x] of mp) prevOvr.set(id, x.ovr);
     // Save integrity at the season boundary: the whole league registry survives an export/import round trip unchanged.
-    try { const back = Save.importJson(Save.exportJson(f)); if (!back) integrity.push(`season ${year}: save import failed`); else if (JSON.stringify(back.league) !== JSON.stringify(f.league)) integrity.push(`season ${year}: save round trip changed the league registry`); } catch (e) { integrity.push(`season ${year}: save round trip threw ${e.message}`); }
+    try { const txt = Save.exportJson(f); let packedLen = null, gz = null; try { if (PACK_MOD) { const ps = JSON.stringify(PACK_MOD.pack(f)); packedLen = ps.length; gz = ZLIB.gzipSync(ps).length; } } catch { /* older tree */ } (v4.saveBytes ||= []).push([year, txt.length, packedLen, gz]); const back = Save.importJson(txt); if (!back) integrity.push(`season ${year}: save import failed`); else if (JSON.stringify(back.league) !== JSON.stringify(f.league)) integrity.push(`season ${year}: save round trip changed the league registry`); } catch (e) { integrity.push(`season ${year}: save round trip threw ${e.message}`); }
   };
 
   let res;
-  try { res = runFranchise(seed, { seasons, difficulty, check, onSeason }); }
+  // Balance audit 2026-11-25 (opt-in, default unchanged): --owner=repair gives the study owner the Task 10 repair policy
+  // (tools/study-owner.mjs: fill an open starting slot before a game and in the offseason); --board=content keeps the Board content
+  // after every season (confidence 2, no misses), as tools/task10-league-recorder.mjs does, so a run plays all its seasons.
+  const ownerOpts = {}; if (args.owner === 'repair') { const SO = await import('./study-owner.mjs'); const st = (v4.repair = {}); ownerOpts.beforeGame = (f) => SO.repairOwner(f, st); ownerOpts.onOffseason = (f) => { if (args.board === 'content' && f.board) { f.board.confidence = 2; f.board.misses = 0; } SO.repairOffseason(f, st); }; } else if (args.board === 'content') ownerOpts.onOffseason = (f) => { if (f.board) { f.board.confidence = 2; f.board.misses = 0; } };
+  try { res = runFranchise(seed, { seasons, difficulty, check, onSeason, ...ownerOpts }); }
   catch (e) { return { seed, error: String(e?.stack || e).slice(0, 2000), rows, decisions, integrity, seconds: Math.round((Date.now() - t0) / 1000), v4 }; }
   const { f, problems, log } = res;
   if (MEASURE === 'start' && pendingSeason) { // the last season: its offseason has run; start the next season when the franchise can, then record

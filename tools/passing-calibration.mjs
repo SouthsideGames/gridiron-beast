@@ -13,15 +13,15 @@ const { playGame } = await import(path.join(ROOT, 'src/sim/game-runner.js'));
 const { generatedTeam } = await import(path.join(ROOT, 'src/franchise/roster.js'));
 const G = Number(args.games) || 24;
 
+import { stripTeam, assertStripped } from './lib/ability-strip.mjs';
 const VARIANTS = {
   enabled: (t) => t,
   noAbilities: (t) => strip(t, { species: null, ability: null }),
   noAbilitiesNoTypes: (t) => strip(t, { species: null, ability: null, type: null }),
 };
-function strip(team, patch) {
-  const slots = (side) => Object.fromEntries(Object.entries(side).map(([k, m]) => [k, m && typeof m === 'object' ? { ...m, ...patch } : m]));
-  return { ...team, offense: slots(team.offense), defense: slots(team.defense), kicker: team.kicker ? { ...team.kicker, ...patch } : team.kicker, returner: team.returner ? { ...team.returner, ...patch } : team.returner };
-}
+// Balance audit R-3 (2026-11-25): strip every player source (slots, kicker, returner, bench, rotation pool), not just the slots;
+// the rotation pool (PR #125) brought abilities back. The "off" variants must show zero ability events (checked below).
+function strip(team, patch) { const t = stripTeam(team, patch); assertStripped(t, team.name); return t; }
 function study(variant) {
   const m = { games: 0, dropbacks: 0, attempts: 0, comp: 0, yds: 0, int: 0, sacks: 0, deepAtt: 0, deepComp: 0, abilityEvents: 0, abilityPlays: 0, plays: 0, runs: 0, runYds: 0, pts: 0, byAcc: {} };
   for (let i = 1; i <= G; i++) {
@@ -44,5 +44,6 @@ function study(variant) {
   return { games: m.games, attempts: m.attempts, completionPct: pct(m.comp, m.attempts), yardsPerAttempt: +(m.yds / m.attempts).toFixed(2), intPct: pct(m.int, m.attempts), sackPctOfDropbacks: pct(m.sacks, m.dropbacks), deepAttempts: m.deepAtt, deepCompletionPct: pct(m.deepComp, m.deepAtt), yardsPerCarry: +(m.runYds / m.runs).toFixed(2), pointsPerTeamGame: +(m.pts / (2 * m.games)).toFixed(1), abilityEventsPerGame: +(m.abilityEvents / m.games).toFixed(1), playsWithAnAbilityPct: pct(m.abilityPlays, m.plays), completionByQbAccuracy: Object.fromEntries(Object.entries(m.byAcc).map(([k, v]) => [k, { attempts: v.att, completionPct: pct(v.comp, v.att) }])) };
 }
 const out = { root: ROOT, games: G, variants: Object.fromEntries(Object.keys(VARIANTS).map((v) => [v, study(v)])) };
+for (const v of ['noAbilities', 'noAbilitiesNoTypes']) if (out.variants[v].abilityEventsPerGame > 0) { console.error(`R-3 control check failed: ${v} has ${out.variants[v].abilityEventsPerGame} ability events per game`); process.exitCode = 1; }
 if (args.json) fs.writeFileSync(String(args.json), JSON.stringify(out, null, 1));
 console.log(JSON.stringify(out, null, 1));

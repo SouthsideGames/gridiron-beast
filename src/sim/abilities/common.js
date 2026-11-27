@@ -55,3 +55,9 @@ export function pushSafely({ actors, movers, ux, uy, distance, bounds: B, obstac
   }
   return P.map((p) => { const moved = Math.hypot(p.x - p.from[0], p.y - p.from[1]); p.a.x = p.x; p.a.y = p.y; return { a: p.a, from: p.from, to: [p.x, p.y], moved }; });
 }
+
+/** R-10 (balance audit, 2026-11-25): a pass he defended. A personal breakup, or an incompletion on a throw at the receiver he covers
+ *  (the engine's covering defender at the ball, man or zone), never an interception. Breakups alone were about 0.1 a game for a
+ *  corner and 0.15 for a safety, so the bar almost never filled within a game; covered incompletions are about 1.2 a game for a CB1
+ *  and 0.55 for a free safety. */
+export const passDefended = (stats, slot) => !stats.interceptor && (stats.pbuBy === slot || (stats.coverBy === slot && stats.target && !stats.receiver));

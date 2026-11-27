@@ -1,11 +1,13 @@
-import { selectUnit, setStatInputs, statKey, contactInjuries, specialTeamView } from './substitutions.js';
+import { selectUnit, setStatInputs, statKey, contactInjuries, specialTeamView, kickerAvailable } from './substitutions.js';
+export { kickerAvailable };
 import { canPlaceZone, zoneOptions, selectedZoneOption, zoneKey } from './t8/zone-planning.js';
 // Game state machine: downs, distance, scoring, clock, quarters, special
 // teams phases and overtime (GDD §3). Pure functions on a plain state object
 // so the UI, Key Moments and headless league games share one rulebook.
 
 import { venueFor } from '../data/stadiums.js';
-import { positionOf, canPlay } from '../data/personnel.js';
+import { positionOf, canPlay, canCoverEmergency } from '../data/personnel.js';
+import { overall } from '../data/monsters.js';
 import { boostSlots, qualifyingEvent, slotOf } from './partnership-play.js';
 import { createRng, rngFromState } from '../core/rng.js';
 import { FIELD, yardLabel, fieldGoalDistance, clamp } from '../core/field.js';
@@ -16,6 +18,7 @@ import * as T8F from './t8/field-runtime.js';
 import { toPlayFrame, placeRect } from './t8/fields.js';
 import { extraCooldownUnit, contractOf, abilityState, recordExecution, kickHook } from './abilities/registry.js';
 import { runGameHook } from './abilities/game.js';
+import { FORESIGHT } from './abilities/cerebrix.js';
 import { getPlay, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
 import { prismBreak, prismTargets, targetType } from './abilities/prism.js';
 import * as ST from './special-teams.js';
@@ -401,7 +404,7 @@ export function preparePreChoice(state, teams, looks = {}, opts = {}) {
     if (m?.species !== 'cerebrix') continue;
     const st = abilityState(t8, m.id, m.species, m.form || `${m.species}:0`, m.mastery || 0);
     if (st.cd > 0 || T8S.sitsOutPlay(state, m.id)) continue;
-    const lbs = Object.entries(ds).filter(([sl, x]) => x?.id && positionOf(sl) === 'LB' && Math.abs(dp.align[sl]?.[0] ?? Infinity) <= 3).sort(([a], [b]) => a.localeCompare(b));
+    const lbs = Object.entries(ds).filter(([sl, x]) => x?.id && positionOf(sl) === 'LB' && Math.abs(dp.align[sl]?.[0] ?? Infinity) <= FORESIGHT.depth).sort(([a], [b]) => a.localeCompare(b));
     if (!lbs.length) continue;
     let h = 2166136261; for (const ch of `${state.seed}|${key}|${m.id}|foresight`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
     const [targetSlot, target] = lbs[createRng(h >>> 0 || 1).int(lbs.length)];
@@ -427,7 +430,9 @@ export function preparePreChoice(state, teams, looks = {}, opts = {}) {
 }
 export function lineupForfeit(state, side) {
   state.finished=true; state.phase='final'; state.winner=opponent(side);
-  state.forfeit={side,reason:'no-legal-lineup'}; state.score[side]=0; state.score[opponent(side)]=21;
+  // R-6 (2026-11-25): the game played so far is kept: the score at the stoppage, the quarter and clock, and every stat already
+  // recorded. The official result stays the forfeit rule's 0-21 (state.score), recorded separately from what was played.
+  state.forfeit={side,reason:'no-legal-lineup',played:{...state.score},quarter:state.quarter,clock:state.clock,playCount:state.playCount||0}; state.score[side]=0; state.score[opponent(side)]=21;
   const text=$E('rotation.forfeit'); log(state,text,'info'); state.lastPlay={text,finished:true}; return state.lastPlay;
 }
 /** The club a monster plays for (owner 2026-11-24: a zone belongs to the club that placed it). On the field from the snap's sides,
@@ -534,7 +539,8 @@ export function pickSlots(lineup, slots, team = null, play = null, state = null,
     const need = positionOf(s);
     const bench = (team?.bench || []).filter((p) => p?.id && !onField.has(p.id));
     const resting = Object.entries(lineup).filter(([k]) => !slots.includes(k)).map(([, p]) => p).filter((p) => p?.id && !onField.has(p.id));
-    const pick = bench.find((p) => p.position === need) || bench.find((p) => canPlay(p.position, s)) || resting.find((p) => canPlay(p.position, s)) || null; // primary or secondary position only (GDD §17.2)
+    const cover = (list) => list.filter((p) => canCoverEmergency(p.position, s)).sort((a, b) => overall(b.attrs || {}, need) - overall(a.attrs || {}, need))[0]; // R-6: base slots only, last resort
+    const pick = bench.find((p) => p.position === need) || bench.find((p) => canPlay(p.position, s)) || resting.find((p) => canPlay(p.position, s)) || cover(bench) || cover(resting) || null; // own position first (GDD §17.2), then an emergency cover (R-6)
     if (pick) { out[s] = { ...pick, borrowed: true }; onField.add(pick.id); } else out[s] = { attrs: {}, name: s, id: null };
   }
   // Legendary Plays (GDD §36.2): the Legendary the play is built around takes its slot for this snap, swapping with
@@ -746,6 +752,7 @@ function safety(state, lines) {
 // --------------------------------------------------------------------------- tries
 export function attemptTryKick(state, teams) {
   if (state.phase !== 'try') throw new Error('not a try');
+  if (!kickerAvailable(state, teams[state.tryTeam])) throw new Error('no kicker: a two-point try is required (A-3)');
   const { r, save } = rng(state);
   const res = ST.attemptExtraPoint(r, teams[state.tryTeam].kicker);
   kickerPerformance(state, state.tryTeam, 'pats', [{ made: res.good, probability: res.chance }]);
@@ -837,6 +844,7 @@ function kickoffPlays(units) {
 
 export function doKickoff(state, teams, { onside = false } = {}) {
   if (state.phase !== 'kickoff' && state.phase !== 'free_kick') throw new Error('not a kickoff');
+  if (!kickerAvailable(state, teams[state.kickingTeam])) return noKickerRestart(state); // A-3: no kick is simulated
   const { r, save } = rng(state);
   const kicking = state.kickingTeam, receiving = opponent(kicking);
   let res; let sim = null; let units = null;
@@ -886,6 +894,21 @@ export function doKickoff(state, teams, { onside = false } = {}) {
   } else kickerStat(state, kicking, 'kickoffs'); // onside and free kicks stay formula plays: the kick itself is credited
   if (state.clock <= 0 && state.phase === 'scrimmage') endOfPeriod(state);
   return { res, text, sim };
+}
+/**
+ * Follow-up A-3 (owner 2026-11-26): the kicking team has no available kicker. No kickoff (or free kick after a safety) is simulated:
+ * the receiving team takes over at its own 20 and play goes on. No time runs off, no random number is drawn and no kicking, return or
+ * special-teams statistic is recorded.
+ */
+function noKickerRestart(state) {
+  const kicking = state.kickingTeam, receiving = opponent(kicking);
+  state.phase = 'scrimmage'; state.clockRunning = false; state.ballLat = 0;
+  state.possession = receiving; state.ballOn = 20; firstDown(state);
+  state.drive = { team: receiving, plays: 0, yards: 0, start: 20 };
+  const text = $E('sim.no_kicker_restart', { team: state[kicking].name, name: state[receiving].name });
+  state.lastPlay = { text, result: 'no_kicker' };
+  log(state, text, 'kick', { team: kicking, noKicker: true });
+  return { res: { noKicker: true, ballOn: 20 }, text, sim: null };
 }
 /** What a live kickoff's engine result means for the game (receiving team's yards unless noted). */
 function kickoffOutcome(sim, catchAt, team, who) {
@@ -950,6 +973,7 @@ function creditFormulaUnits(state, teams, kicking, kind) {
 }
 export function doPunt(state, teams) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
+  if (!kickerAvailable(state, teams[state.possession])) throw new Error('no kicker: punts and field goals are unavailable (A-3)');
   const { r, save } = rng(state);
   const kicking = state.possession, receiving = opponent(kicking);
   const puntTarget = Math.min(100, Math.max(state.ballOn + 10, Math.min(95, state.ballOn + 34 + 16 * Math.max(1, Math.min(99, teams[kicking].kicker?.attrs?.kicking ?? 60)) / 99)));
@@ -982,6 +1006,7 @@ export function fieldGoalSignature(state, teams) {
 }
 export function doFieldGoal(state, teams, { signature = false } = {}) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
+  if (!kickerAvailable(state, teams[state.possession])) throw new Error('no kicker: punts and field goals are unavailable (A-3)');
   const { r, save } = rng(state);
   const kicking = state.possession;
   // M3 hook: an activated signature (Dragon Roar) is spent on the launch and replaces the kick's odds with its own chart; a

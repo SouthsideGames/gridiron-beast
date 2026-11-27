@@ -15,11 +15,23 @@ import { ALL_TEAMS, RIVAL_GMS } from '../data/league.js';
 import { hashString } from '../core/rng.js';
 import { t as $t, captured, lineField } from '../text/index.js';
 
+// Balance audit R-5 (owner decision 2026-11-25): the three major awards are the Most Valuable Beast (MVB), the Offensive Beast of the Year
+// (OBOY) and the Defensive Beast of the Year (DBOY); the save keys (mvp, opoy, dpoy) are unchanged, so every saved season keeps its awards.
+// Four awards are added (stboy, mib, cboy, iron) and an All-League First and Second Team (`allLeague`, computeAwards). GM of the Year
+// is not added: AI clubs have no general manager to judge (no GM turnover exists), so it would only ever describe the owner.
 export const AWARDS = Object.freeze({
-  mvp: { label: $t('franchise.most_valuable_monster'), short: 'MVP' }, opoy: { label: $t('franchise.offensive_monster_of_the_year'), short: 'OPOY' }, dpoy: { label: $t('franchise.defensive_monster_of_the_year'), short: 'DPOY' },
+  mvp: { label: $t('franchise.most_valuable_monster'), short: 'MVB' }, opoy: { label: $t('franchise.offensive_monster_of_the_year'), short: 'OBOY' }, dpoy: { label: $t('franchise.defensive_monster_of_the_year'), short: 'DBOY' },
   oroy: { label: $t('franchise.offensive_rookie_of_the_year'), short: 'OROY' }, droy: { label: $t('franchise.defensive_rookie_of_the_year'), short: 'DROY' }, coy: { label: $t('franchise.coach_of_the_year'), short: 'COY' },
-  smoy: { label: $t('franchise.signature_monster_of_the_year'), short: 'SMOY' },
+  smoy: { label: $t('franchise.signature_monster_of_the_year'), short: 'SBOY' },
+  stboy: { label: $t('franchise.special_teams_beast_of_the_year'), short: 'STBOY' }, mib: { label: $t('franchise.most_improved_beast'), short: 'MIB' },
+  cboy: { label: $t('franchise.comeback_beast_of_the_year'), short: 'CBOY' }, iron: { label: $t('franchise.iron_beast'), short: 'IRON' },
+  gboot: { label: $t('franchise.golden_boot'), short: 'BOOT' }, rking: { label: $t('franchise.return_king'), short: 'RKING' }, // follow-up A-2
 });
+/** The awards that count toward the owner's Hall of Fame checklist (GDD §15.9): the original seven, so the new honours (R-5) do not
+ *  make the checklist easier. */
+export const MAJOR_AWARDS = Object.freeze(['mvp', 'opoy', 'dpoy', 'oroy', 'droy', 'coy', 'smoy']);
+/** All-League team sizes by position: the base lineup (one QB, RB and TE, two WR, three linemen, two DL, LB, CB and safeties, one K). */
+export const ALL_LEAGUE_SLOTS = Object.freeze({ QB: 1, RB: 1, WR: 2, TE: 1, OL: 3, DL: 2, LB: 2, CB: 2, S: 2, K: 1 });
 
 /** The rules, in the words the award sheet shows. */
 export const AWARD_RULES = Object.freeze({
@@ -30,6 +42,12 @@ export const AWARD_RULES = Object.freeze({
   oroy: $t('franchise.first_season_monsters_scored_on_the'),
   droy: $t('franchise.first_season_monsters_scored_on_the_2'),
   smoy: $t('franchise.the_monster_whose_ability_did_the'),
+  stboy: $t('franchise.rule_special_teams_beast'),
+  mib: $t('franchise.rule_most_improved_beast'),
+  cboy: $t('franchise.rule_comeback_beast'),
+  iron: $t('franchise.rule_iron_beast'),
+  gboot: $t('franchise.rule_golden_boot'),
+  rking: $t('franchise.rule_return_king'),
 });
 
 // ------------------------------------------------------------ components
@@ -58,9 +76,17 @@ const DEF = {
 const DEF_WEIGHTS = { DL: { passRush: 0.4, runDefense: 0.3, takeaways: 0.2, coverage: 0.1 }, LB: { passRush: 0.3, runDefense: 0.3, takeaways: 0.2, coverage: 0.2 }, CB: { coverage: 0.45, takeaways: 0.3, runDefense: 0.15, passRush: 0.1 }, S: { coverage: 0.4, takeaways: 0.3, runDefense: 0.2, passRush: 0.1 } };
 /** MVP responsibility: a quarterback touches every snap; a blocker or a defender shapes fewer plays. Never an automatic win. */
 export const MVP_RESPONSIBILITY = Object.freeze({ QB: 1.35, RB: 1.0, WR: 1.0, TE: 0.95, OL: 0.8, DEF: 0.85 });
-const COMPONENT_LABEL = { volume: 'production', efficiency: 'efficiency', impact: 'impact', passRush: 'pass rush', takeaways: 'takeaways', coverage: 'coverage', runDefense: 'run defense' };
+const COMPONENT_LABEL = { volume: 'production', efficiency: 'efficiency', impact: 'impact', passRush: 'pass rush', takeaways: 'takeaways', coverage: 'coverage', runDefense: 'run defense',
+  accuracy: 'kicking accuracy', distance: 'long kicks', extraPoints: 'extra points', scoring: 'kicking points', average: 'yards per return', yards: 'return yards', touchdowns: 'return touchdowns', longest: 'long returns' }; // A-2
 
 /** z-score of fn within each position group of rows. */
+/** A total standardised within each position group of `rows` (or within `rows` as one group when `byPosition` is false). Not capped
+ *  again: its components already are, and a second cap at +3 made leaders tie, which the production tie-break then gave to linemen. */
+function zTotal(rows, fn, byPosition = true) {
+  const by = {}; for (const r of rows) (by[byPosition ? r.position : '*'] ||= []).push(fn(r));
+  const st = Object.fromEntries(Object.entries(by).map(([p, v]) => { const m = v.reduce((a, b) => a + b, 0) / v.length; const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length); return [p, { m, sd }]; }));
+  return (r) => { const s = st[byPosition ? r.position : '*']; if (!s || s.sd < 1e-6) return 0; return (fn(r) - s.m) / s.sd; };
+}
 function zWithin(rows, fn, cap = false) {
   const by = {}; for (const r of rows) (by[r.position] ||= []).push(fn(r));
   const st = Object.fromEntries(Object.entries(by).map(([p, v]) => { const m = v.reduce((a, b) => a + b, 0) / v.length; const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length); return [p, { m, sd }]; }));
@@ -84,7 +110,12 @@ const tieBreak = (a, b) => b.score - a.score || b.prod - a.prod || (b.games || 0
  * {team: {w,l,t,pf,pa}}; `expectations` from the preseason; `coachOf(team)`.
  * Returns {award: [finalist...]} with score, components, why and record.
  */
-export function computeAwards({ table, records, expectations = {}, coachOf = (t) => `${t} staff`, n = 5, priorRookieAwardIds = [] }) {
+/**
+ * `prior(id)`, optional: what the game knows of a monster beyond this season's table, for the R-5 awards: { gain } (overall gained
+ * this season, from the career book's season-start rating), { lastGames, beforeGames } (regular-season games one and two seasons ago).
+ * Without it (old callers, tests) the Most Improved and Comeback races are empty.
+ */
+export function computeAwards({ table, records, expectations = {}, coachOf = (t) => `${t} staff`, n = 5, priorRookieAwardIds = [], prior = null }) {
   const { rows, minGames, weeks } = eligibleRows(table);
   const off = rows.filter((r) => OFFENSE_POSITIONS.has(r.position)), def = rows.filter((r) => DEFENSE_POSITIONS.has(r.position));
   const Z = { volume: zWithin(off, OFF.volume), efficiency: zWithin(off, OFF.efficiency), impact: zWithin(off, OFF.impact), passRush: zWithin(def, DEF.passRush), takeaways: zWithin(def, DEF.takeaways), coverage: zWithin(def, DEF.coverage), runDefense: zWithin(def, DEF.runDefense) };
@@ -101,7 +132,14 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
   };
   const top = (list) => list.sort(tieBreak).slice(0, n);
   const opoy = top(off.map((r) => finalist(r, offScore(r))));
-  const dpoy = top(def.map((r) => finalist(r, defScore(r))));
+  // R-5 (2026-11-25): the DBOY scores each component capped at +3 SD within the position, as the MVB does. Uncapped, a lineman's sack
+  // count (a long-tailed statistic) decided it: DL won 68 of 75 audit seasons.
+  // Final runs (2026-11-26): capping alone left DL with 77 of 90 DBOYs. A lineman's two heaviest components (pass rush, run defence) share
+  // his sacks and tackles for loss, so his weighted total spreads wider than a corner's, whose coverage and takeaways barely move together.
+  // The DBOY therefore also standardises the capped total within the position (`zTotal`): every position's best is measured by how far he
+  // stands above his own peers, on the same scale. The components, weights and the sheet are unchanged, and nothing forces a position.
+  const dZ = zTotal(def, (r) => defScore(r, MVP_Z).s);
+  const dpoy = top(def.map((r) => { const raw = defScore(r); return finalist(r, { s: dZ(r), c: raw.c, prod: raw.prod }); })); // the sheet shows the real (uncapped) components
   // Task 10 (owner 2026-11-13): MVP alone scores its statistical components with each capped at +3 SD within the position
   // (MVP_Z), so one skewed statistic cannot decide it. No repeat limit and no penalty for past wins: a repeat winner wins on merit.
   const mvp = top([
@@ -125,7 +163,57 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
   const eff = (r) => ((r.abilityImpact || 0) / Math.max(1, r.abilityPlays || 0)) * Math.sqrt(Math.min(6, perGame(r, r.abilityPlays || 0)));
   const zSig = (() => { const v = sig.map(eff); const m = v.reduce((a, b) => a + b, 0) / (v.length || 1); const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / (v.length || 1)); return (r) => (sd < 1e-6 ? 0 : (eff(r) - m) / sd); })();
   const smoy = top(sig.map((r) => { const s = zSig(r); return { ...r, score: Math.round(s * 100) / 100, prod: r.abilityImpact || 0, components: { effectiveness: Math.round(zSig(r) * 100) / 100 }, ...lineField('why', captured(() => `${$t('franchise.ability_fired_times_impact_per_firing', { abilityPlays: r.abilityPlays, abilityImpact: ((r.abilityImpact || 0) / Math.max(1, r.abilityPlays)).toFixed(1), abilityImpact2: (r.abilityImpact || 0) >= 0 ? '+' : '', abilityImpact3: r.abilityImpact || 0, statLine: statLine(r) })}`)), record: recordOf(r.team), minGames, rookie: r.yearsPro === 0 }; }));
-  return { mvp, opoy, dpoy, oroy, droy, coy, smoy, minGames, weeks };
+  // ---- R-5 additions. Each is scored on the models above; none repeats another award's question.
+  const posScore = (r) => (OFFENSE_POSITIONS.has(r.position) ? offScore(r, MVP_Z) : defScore(r, MVP_Z));
+  const zList = (list, fn) => { const v = list.map(fn); const m = v.reduce((a, b) => a + b, 0) / (v.length || 1); const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / (v.length || 1)); return (r) => (sd < 1e-6 ? 0 : Math.min(3, (fn(r) - m) / sd)); };
+  // Special Teams Beast: the best kicker (points per game and accuracy) or returner (yards per return and return touchdowns), each
+  // judged against his own group; the better of the two scores counts.
+  const kickers = rows.filter((r) => r.position === 'K' && (r.fga || 0) + (r.xpa || 0) >= r.games);
+  const kZ = { pts: zList(kickers, (r) => perGame(r, (r.fgm || 0) * 3 + (r.xpm || 0))), acc: zList(kickers, (r) => (r.fgm || 0) / Math.max(1, r.fga || 0)), long: zList(kickers, (r) => r.fgLong || 0) };
+  const kScore = (r) => 0.45 * kZ.pts(r) + 0.4 * kZ.acc(r) + 0.15 * kZ.long(r);
+  const returners = rows.filter((r) => (r.krAtt || 0) >= 8);
+  const rZ = { avg: zList(returners, (r) => (r.krYds || 0) / Math.max(1, r.krAtt || 0)), td: zList(returners, (r) => r.krTd || 0), vol: zList(returners, (r) => perGame(r, r.krYds || 0)) };
+  const rScore = (r) => 0.5 * rZ.avg(r) + 0.25 * rZ.td(r) + 0.25 * rZ.vol(r);
+  // Each group's total is standardised within the group (as the DBOY's), so a long-tailed statistic such as return touchdowns cannot
+  // make the returners' best look more exceptional than the kickers' best (final runs, 2026-11-26: returners took 81 of 90).
+  const kT = zTotal(kickers, kScore, false), rT = zTotal(returners, rScore, false);
+  const st = new Map(); for (const r of kickers) st.set(r.id, { r, s: kT(r), c: { kicking: kScore(r) } }); for (const r of returners) { const s = rT(r); const cur = st.get(r.id); if (!cur || s > cur.s) st.set(r.id, { r, s, c: { returns: rScore(r) } }); }
+  const stboy = top([...st.values()].map(({ r, s, c }) => finalist(r, { s, c, prod: s })));
+  // ---- Follow-up A-2 (owner 2026-11-26): Golden Boot (the best kicker) and Return King (the best return specialist). STBOY stays the
+  // overall special-teams award. Neither rewards volume alone: the kicker's main measure is per attempt, the returner's per return.
+  // Golden Boot: field-goal points above expectation per attempt (each band's makes against the league's make rate in that band, so a
+  // long make counts for more than a chip shot and a miss from 50+ costs less than one from 25) 55%, longest make 15%, extra-point
+  // accuracy 15%, kicking points per game 15%. Eligible: the workload gate (most of the season played) and at least 0.7 field-goal
+  // attempts per week of the season. Punts are not used: only their count is recorded, not their distance.
+  const BANDS = [['fg0a', 'fg0m'], ['fg30a', 'fg30m'], ['fg40a', 'fg40m'], ['fg50a', 'fg50m']];
+  const bootPool = rows.filter((r) => r.position === 'K' && (r.fga || 0) >= Math.ceil(weeks * 0.7));
+  const bandRate = BANDS.map(([a, m]) => { const at = bootPool.reduce((n, r) => n + (r[a] || 0), 0), mk = bootPool.reduce((n, r) => n + (r[m] || 0), 0); return at ? mk / at : 0; });
+  const fgoe = (r) => BANDS.reduce((n, [a, m], i) => n + 3 * ((r[m] || 0) - (r[a] || 0) * bandRate[i]), 0) / Math.max(1, r.fga || 0);
+  const bZ = { oe: zList(bootPool, fgoe), long: zList(bootPool, (r) => r.fgLong || 0), xp: zList(bootPool, (r) => ((r.xpa || 0) >= 5 ? (r.xpm || 0) / r.xpa : 0)), pts: zList(bootPool, (r) => perGame(r, (r.fgm || 0) * 3 + (r.xpm || 0))) };
+  const gboot = top(bootPool.map((r) => { const c = { accuracy: bZ.oe(r), distance: bZ.long(r), extraPoints: bZ.xp(r), scoring: bZ.pts(r) }; return finalist(r, { s: 0.55 * c.accuracy + 0.15 * c.distance + 0.15 * c.extraPoints + 0.15 * c.scoring, c, prod: fgoe(r) }, () => $t('franchise.why_golden_boot', { fgm: r.fgm || 0, fga: r.fga || 0, long: r.fgLong || 0 })); }));
+  // Return King: yards per return 45%, return yards per game 20%, return touchdowns 20%, longest return 15%. Eligible: the workload gate
+  // and at least 0.75 kick returns per week of the season. Return fumbles and per-return consistency are not recorded, so not used.
+  const kingPool = rows.filter((r) => (r.krAtt || 0) >= Math.ceil(weeks * 0.75));
+  const kZ2 = { avg: zList(kingPool, (r) => (r.krYds || 0) / Math.max(1, r.krAtt || 0)), vol: zList(kingPool, (r) => perGame(r, r.krYds || 0)), td: zList(kingPool, (r) => r.krTd || 0), long: zList(kingPool, (r) => r.krLong || 0) };
+  const rking = top(kingPool.map((r) => { const c = { average: kZ2.avg(r), yards: kZ2.vol(r), touchdowns: kZ2.td(r), longest: kZ2.long(r) }; return finalist(r, { s: 0.45 * c.average + 0.2 * c.yards + 0.2 * c.touchdowns + 0.15 * c.longest, c, prod: r.krYds || 0 }, () => $t('franchise.why_return_king', { att: r.krAtt || 0, yds: r.krYds || 0, td: r.krTd || 0 })); }));
+  // Most Improved Beast: the most overall gained this season by a regular (not a rookie), production as the tie-break.
+  const mib = !prior ? [] : top(rows.filter((r) => (r.yearsPro || 0) >= 1 && r.position !== 'K' && (prior(r.id)?.gain ?? 0) >= 2)
+    .map((r) => { const g = prior(r.id).gain; const p = posScore(r); return finalist(r, { s: g + Math.max(-1, Math.min(1, p.s)) * 0.5, c: { growth: g, production: p.s }, prod: p.s }, () => $t('franchise.why_gained_overall', { gain: g })); }));
+  // Comeback Beast: a veteran who played under half of last season after a full one before it, and starred this season.
+  const cboy = !prior ? [] : top(rows.filter((r) => { const x = prior(r.id); return x && (r.yearsPro || 0) >= 2 && r.position !== 'K' && (x.lastGames ?? (x.beforeGames != null ? 0 : weeks)) < weeks * 0.5 && (x.beforeGames ?? 0) >= weeks * 0.6; }) // no book last season after a full one before it: he missed it
+    .map((r) => { const p = posScore(r); return finalist(r, { s: p.s + avail(r) * 0.3, c: { ...p.c }, prod: p.prod }, () => $t('franchise.why_comeback', { games: prior(r.id).lastGames ?? 0 })); }).filter((x) => x.score > 0));
+  // Iron Beast: every game of the season and the most snaps (offence, defence and special teams together).
+  const snapsOf = (r) => (r.snapsOff || 0) + (r.snapsDef || 0) + (r.stSnaps || 0);
+  const iron = top(rows.filter((r) => (r.games || 0) >= weeks).map((r) => finalist(r, { s: snapsOf(r) / 100, c: { snaps: snapsOf(r) }, prod: snapsOf(r) }, () => $t('franchise.why_iron', { snaps: snapsOf(r), games: r.games }))));
+  // All-League First and Second Team: by position, on the position scores above (each component capped at +3 SD); kickers on the
+  // Special Teams kicking score. A monster is named once, at his own position.
+  const slim = (r, s) => ({ id: r.id, name: r.name, team: r.team, position: r.position, type: r.type, species: r.species, score: Math.round(s * 100) / 100 });
+  const allLeague = { first: {}, second: {} };
+  for (const [pos, k] of Object.entries(ALL_LEAGUE_SLOTS)) {
+    const ranked = (pos === 'K' ? kickers.map((r) => [r, kScore(r)]) : rows.filter((r) => r.position === pos).map((r) => [r, posScore(r).s])).sort((a, b) => b[1] - a[1] || (b[0].games || 0) - (a[0].games || 0) || a[0].name.localeCompare(b[0].name));
+    allLeague.first[pos] = ranked.slice(0, k).map(([r, s2]) => slim(r, s2)); allLeague.second[pos] = ranked.slice(k, 2 * k).map(([r, s2]) => slim(r, s2));
+  }
+  return { mvp, opoy, dpoy, oroy, droy, coy, smoy, stboy, mib, cboy, iron, gboot, rking, allLeague, minGames, weeks };
 }
 
 /** A club's head coach by name: the gym coach, the player's hired coach, or a stable generated name. */

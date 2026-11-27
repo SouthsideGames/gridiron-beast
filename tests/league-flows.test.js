@@ -14,7 +14,7 @@ import { leagueInvariants } from '../tools/league-soak.mjs';
 import { createRng } from '../src/core/rng.js';
 import { monsterOverall, ROSTER_MAX, ROSTER_MIN } from '../src/data/monsters.js';
 import { ALL_TEAMS, tierById } from '../src/data/league.js';
-import { buildDepthChart, lineupProblems } from '../src/franchise/roster.js';
+import { buildDepthChart, lineupProblems, staffingHoles } from '../src/franchise/roster.js';
 
 const clubsOf = (f) => ALL_TEAMS.filter((t) => t !== f.club);
 const settle = (f) => { for (const i of F.offseasonPending(f)) if (!F.resolveContract(f, i.id, 'sign').ok) F.resolveContract(f, i.id, 'walk'); if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id); };
@@ -24,7 +24,9 @@ const fill = (f) => { let n = 0; while (f.roster.length < ROSTER_MIN && n++ < 20
 test('in-season cover: a club whose quarterbacks are all hurt signs one before the next week, within the cap and the roster limits', () => {
   const f = newFranchise(41); const cap = tierById(f.tier).cap; const club = clubsOf(f)[2]; const r = createRng(1);
   for (const m of R.clubRoster(f, club).filter((m) => m.position === 'QB')) m.injury = { severity: 'Moderate', weeks: 3, type: 'knee' };
-  assert.ok(lineupProblems(R.clubRoster(f, club), buildDepthChart(R.clubRoster(f, club))).includes('QB'));
+  // Balance audit R-6 (owner decision 2026-11-25): the kicker now covers QB as an emergency, so the lineup is legal; the club still
+  // needs a quarterback (`staffingHoles`: true holes plus emergency-held slots), and that is what the in-season cover acts on.
+  assert.ok(staffingHoles(R.clubRoster(f, club), buildDepthChart(R.clubRoster(f, club))).includes('QB'));
   const n = S.leagueInjuryCover(f, r, { year: 1, cap, targetOf: (c) => F.clubQuality(f, c) });
   assert.ok(n >= 1); const roster = R.clubRoster(f, club);
   assert.deepEqual(lineupProblems(roster, buildDepthChart(roster)), []); assert.ok(roster.length <= ROSTER_MAX); assert.ok(R.clubCapRoom(f, club, cap) >= 0, 'cover never breaks the cap');

@@ -43,10 +43,18 @@ test('Eclipse Theft riders: a stolen Glacier Wall shield does not carry its rebu
 });
 
 test('Foresight vs Eclipse Call: a successful Eclipse Call roll on Cerebrix is mirrored back on Nocturne (controlled seed selection)', () => {
+  // F-08 (owner 2026-11-26): Cerebrix prepares only while the ACTIVE foe is a status source. With a status source in reserve only
+  // (Nocturne behind a Gravelpup) it attacks and keeps the use; the reflection of a reserve caster's Eclipse Call is then exercised with
+  // a status-source active (Skywarden) that passes, so the mirror is up when Nocturne rolls from reserve.
+  for (let seed = 1; seed <= 5; seed++) {
+    const x = run([M('cerebrix', { overall: 99 })], [M('gravelpup'), M('nocturne')], { seed, stage: { a0: { status: { id: 'weakened', strength: 10, duration: 1 } } }, probes: [first('a0'), passes('b0')], stopAt: { exchange: 2 } });
+    assert.equal(ev(x, 'status_blocked', (e) => e.target === 'a0' && /Foresight/.test(e.reason)).length, 0, `seed ${seed}: no mirror against a reserve-only status source`);
+  }
   let r = null;
   // STAGED (labelled): Cerebrix starts with a 1-turn Weakened, so Eclipse Call has no eligible target on exchange 1 and waits (use kept);
-  // Cerebrix prepares the mirror on exchange 1, the Weakened expires, and Nocturne rolls at the start of exchange 2.
-  for (let seed = 1; seed < 200 && !r; seed++) { const x = run([M('cerebrix', { overall: 99 })], [M('gravelpup'), M('nocturne')], { seed, stage: { a0: { status: { id: 'weakened', strength: 10, duration: 1 } } }, probes: [first('a0'), passes('b0')], stopAt: { exchange: 2 } }); if (ev(x, 'roll', (e) => e.abilityId === 'DAR-05-C' && e.success && e.ex === 2).length) r = x; }
+  // Cerebrix prepares the mirror on exchange 1 (the active Skywarden is a status source), the Weakened expires, and Nocturne rolls at the
+  // start of exchange 2.
+  for (let seed = 1; seed < 200 && !r; seed++) { const x = run([M('cerebrix', { overall: 99 })], [M('skywarden'), M('nocturne')], { seed, stage: { a0: { status: { id: 'weakened', strength: 10, duration: 1 } } }, probes: [first('a0'), passes('b0')], stopAt: { exchange: 2 } }); if (ev(x, 'roll', (e) => e.abilityId === 'DAR-05-C' && e.success && e.ex === 2).length) r = x; }
   assert.ok(r, 'controlled seed selection: the exchange-2 Eclipse Call roll succeeds');
   assert.ok(ev(r, 'status_blocked', (e) => e.target === 'a0' && /Foresight/.test(e.reason)).length === 1);
   assert.ok(ev(r, 'status', (e) => e.target === 'b1' && e.status === 'confused' && e.abilityId === 'PSY-03-C').length === 1, 'Confused redirected to its caster (in reserve)');

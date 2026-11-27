@@ -46,6 +46,15 @@ const DROP_TIME = { quick: 0.55, three: 1.1, five: 1.7, pa: 1.5 };
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const sigmoid = (v) => 1 / (1 + Math.exp(-v));
 const norm = (v) => clamp(v, 1, 99) / 99;
+/** R-1 (balance audit, 2026-11-25): typical starter ratings in a new league (generated clubs, quality 46-66; measured over 300 clubs:
+ *  DL Speed 35, CB/S Catching 30-31, zone defenders' Coverage 36-48). The R-1 attribute terms are centred here, so a typical starter
+ *  plays as before and the attribute moves him either way. */
+/** R-2 (balance audit, 2026-11-25): top speed in yards per second from the Speed attribute. Was 5.4 + 4.1 × Speed/99 for everyone; the
+ *  slope is now SPEED_SLOPE, pivoting on a typical starter (Speed 50 keeps 7.47 yd/s), so a point of Speed buys less separation and
+ *  pursuit. At constant payroll an all-Speed lineup won 3.2 points a game however Speed was priced in the overall (two weighting trials). */
+export const SPEED_SLOPE = 3.5;
+export const speedCurve = (speed) => 5.4 + 4.1 * norm(50) + SPEED_SLOPE * (norm(speed) - norm(50));
+export const R1_TYPICAL = Object.freeze({ dlSpeed: 40, dbCatching: 35, zoneCoverage: 45 });
 
 const EDGE_ATTRS = ['speed', 'agility', 'strength', 'awareness', 'catching', 'accuracy', 'tackling', 'coverage', 'blocking'];
 // ---- Pursuit effort (v42.13, GDD §53.5i): pure helpers, exported for tests and the Lab ----
@@ -211,7 +220,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const [x, y] = play.align[slot];
     const a = actorRecord({
       team, slot, mid, type: input?.type || null, overcharged, sovereignQ4, baseAwareness: attrs.awareness, attrs, ability, abilityName, abilityKind, name: input?.name || slot, reactionBonus: 0, auraAttrs: null,
-      x, y, lineX: x, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
+      x, y, lineX: x, vx: 0, vy: 0, maxSpeed: speedCurve(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
       assignment: play.assignments[slot], wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, baseAttrs: given,
     });
@@ -278,6 +287,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // own approved conditions. Effects an eligible kicker ability creates (e.g. Dawn Signal's Quickened) and ordinary shared-status
   // carryover and countdowns are unaffected (statuses are not cleansed). This overrides conflicting contract wording on these plays.
   const SPECIAL_PLAY = !!(KO || options.twoPoint);
+  // F-11 (owner 2026-11-26): draw deception. A play that declares `show` (the designated draws: QB Draw, Lead Draw, Spread Draw, Empty QB
+  // Draw) shows pass for that many seconds: the quarterback sets at his drop point, the back (or the quarterback on a keep) holds at his
+  // first spot as if protecting, and no exchange happens before the show ends. Defenders are told nothing: they read the same cues as on
+  // any play (a line setting back, a quarterback who has dropped, a back standing beside him, then the ball in a runner's hands), at their
+  // own Awareness-set delay and cadence, so a sharp linebacker sees through it sooner and a blitzer still arrives. No other play has `show`.
+  const SHOW = offensePlay.show && !SPECIAL_PLAY && !dry ? offensePlay.show : 0;
   const mayAct = (a) => !SPECIAL_PLAY || (!!KO && a.slot === 'K' && a.kickerAbility);
   const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; if (h && !abilityCtx) abilityCtx = buildAbilityCtx(); return h && mayAct(a) ? h(abilityCtx, a, ...args) : undefined; };
   // M3 hook: physical obstacles from contracts (stone walls, snowballs): kinds 'circle' {x, y, r} and 'rect' {x0, x1, y0, y1}, live until
@@ -306,7 +321,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const attrs = { ...DEFAULT_ATTRS, ...(spec.attrs || {}) }; const { attrs: _given, credit = null, ...flags } = spec;
     const v = { overcharged: false, sovereignQ4: false, ability: null, abilityName: null, abilityKind: null, reactionBonus: 0, auraAttrs: null, ...flags,
       mid: spec.mid || `${spec.team}:${spec.slot}`, type: spec.type || null, name: spec.name || spec.slot, baseAwareness: attrs.awareness, attrs, baseAttrs: { ...attrs },
-      lineX: spec.x, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility), wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
+      lineX: spec.x, vx: 0, vy: 0, maxSpeed: speedCurve(attrs.speed), accel: 9 + 11 * norm(attrs.agility), wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, temp: { credit } };
     // Perf (outcome-identical): the same values as before, in the lineup's actor shape (actorRecord); the spec's other keys follow.
     const a = actorRecord(v); for (const k of Object.keys(v)) if (!RECORD_BASE.has(k)) a[k] = v[k];
@@ -588,7 +603,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const be = blocker.ability || {};
     const ba = blockAttrs(blocker, d); // M3 hook: pair-specific / split engagement attributes
     const bScore = ba.blocking * 0.6 + ba.strength * 0.4 + (be.blockStrength || 0) + (!runFit ? (be.anchor || 0) : 0);
-    const dScore = shedScore(d.attrs, positionOf(d.slot)) + (d.ability?.shedStrength || 0) + (runFit ? (d.ability?.runStuff || 0) : 0); // N7c B2: DL/CB/S 0.5 Agility + 0.3 Strength + 0.2 Tackling; LB 0.5 Strength + 0.3 Agility + 0.2 Tackling
+    // R-1 (2026-11-25): a defensive lineman's pass rush uses his Speed too (get-off and the edge): on a pass block his shed score gains
+    // 0.2 per point of Speed above a typical lineman's (R1_TYPICAL.dlSpeed) and loses it below, so the league-wide rush is unchanged and
+    // a fast rusher beats his man sooner. Run fits are unchanged.
+    const baseShed = shedScore(d.attrs, positionOf(d.slot)); const rushShed = !runFit && positionOf(d.slot) === 'DL' ? baseShed + 0.2 * (d.attrs.speed - R1_TYPICAL.dlSpeed) : baseShed;
+    const dScore = rushShed + (d.ability?.shedStrength || 0) + (runFit ? (d.ability?.runStuff || 0) : 0); // N7c B2: DL/CB/S 0.5 Agility + 0.3 Strength + 0.2 Tackling; LB 0.5 Strength + 0.3 Agility + 0.2 Tackling
     if ((be.blockStrength || (!runFit && be.anchor)) && t > 0.5) abilityUsed(blocker, be.blockStrength ? 'blockStrength' : 'anchor');
     const edge = (dScore * scaleVs(d, blocker, 'shed') - bScore * scaleVs(blocker, d, 'block')) / 100; // positive when the defender is winning (type edges: the pair actually engaged)
     // The pair moves slowly along the defender's intent; the blocker stays between.
@@ -947,6 +966,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (a.fixedJob) { if (a.engaged) resolveEngagement(a); else passBlock(a); return; } // M3 hook: a summoned pass protector keeps that job only
     if (KO && asg?.a === 'ko_block') { kickoffBlock(a); return; }
     if (KO && ball.inAir) { kickoffFlightOffense(a); return; }
+    if (SHOW && a === qb && asg?.a === 'keep' && t < SHOW && ball.holder === a) { const p = asg.points[1] || asg.points[0]; if (dist(a, { x: p[0], y: p[1] }) > 0.3) steer(a, p[0], p[1], 0.8, 0.3); else steer(a, a.x, a.y, 0, 0.2); if (a.wp < 2) a.wp = 2; return; } // F-11: a QB draw sets and shows pass first
     if (ball.holder === a && (phase === 'carry' || a !== qb)) { carrierMove(a); return; }
     if (asg.a === 'release' && !a.released && t >= screenReleaseAt()) screenRelease(a); // lets go of his man on time, even mid-block
     if (a.engaged) { resolveEngagement(a); return; }
@@ -1013,7 +1033,15 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       case 'handoff': { if (a === qb) qbHandoff(a); return; }
       case 'pitch': { if (a === qb) qbPitch(a); return; }
       case 'option': { qbOption(a); return; }
-      case 'keep': case 'carry': { followPath(a, asg.points, 0.9); return; }
+      case 'keep': case 'carry': {
+        if (SHOW && ((asg.a === 'keep' && t < SHOW) || (asg.a === 'carry' && !handoffDone))) { // F-11: hold the show spot. The quarterback on a keep holds his
+          // drop point until the show ends; a back sets beside the quarterback's set point on his own side, as a protector would, and waits
+          // there for the exchange (the quarterback comes to him when the show ends).
+          const qs = asg.a === 'keep' ? null : qb?.assignment?.points?.[1]; const own = asg.points[1] || asg.points[0];
+          const p = qs ? [qs[0] + 0.4, qs[1] + (Math.sign(own[1] - qs[1]) || 1) * 1.0] : own;
+          if (dist(a, { x: p[0], y: p[1] }) > 0.3) steer(a, p[0], p[1], 0.6, 0.3); else steer(a, a.x, a.y, 0, 0.2); if (a.wp < 2) a.wp = 2; return; }
+        followPath(a, asg.points, 0.9); return;
+      }
       case 'pass': case 'play_action': case 'boot': { qbTick(a); return; }
       default: steer(a, a.x, a.y, 0, 0.2);
     }
@@ -1126,8 +1154,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         // An end-around receiver starts wide and must travel behind the QB before the exchange, so the missed-mesh fallback waits
         // longer for him (Task 10). Every other handoff keeps the 1.1 s fallback. (End Around itself is still held back: see the report.)
         const endAround = offensePlay.id === 'end_around' && /^WR/.test(runner.slot);
-        const deadline = endAround ? 4.5 : 1.1;
-        a.mesh ||= meshPoint({ x: a.assignment.points[0][0], y: a.assignment.points[0][1] }, runner);
+        const deadline = (endAround ? 4.5 : 1.1) + SHOW;
+        if (SHOW && t < SHOW) { const p = a.assignment.points[1] || a.assignment.points[0]; if (dist(a, { x: p[0], y: p[1] }) > 0.3) steer(a, p[0], p[1], 0.8, 0.3); else steer(a, a.x, a.y, 0, 0.2); return; } // F-11: set and show pass
+        a.mesh ||= SHOW ? { x: runner.x - 0.4, y: runner.y } : meshPoint({ x: a.assignment.points[0][0], y: a.assignment.points[0][1] }, runner); // F-11: on a draw the quarterback hands it to the back where he waits
         steer(a, a.mesh.x, a.mesh.y, 0.8, 0.3);
         if (dist(a, runner) < 1.5 && t > 0.2) giveBall(runner);
         else if (t > deadline) missedMesh(a, runner); // Never teleport the ball across an unreachable mesh.
@@ -1687,7 +1716,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function ballReaction(d) {
     const asg = d.assignment; const eyesOnMan = asg.a === 'man' && bySlot.off[manKeys[asg.key]] !== ball.target;
     const canopy = d.ability?.breakRadius && deepZoneOf(d) ? d.ability.reaction || 0 : 0;
-    return Math.max(0.05, 0.32 - 0.12 * norm(d.attrs.awareness) - 0.12 * norm(d.attrs.coverage) + (eyesOnMan ? 0.08 : 0) - reactionOf(d) - canopy);
+    // R-1 (2026-11-25): a zone defender's break on the throw leans on Coverage (reading the quarterback, breaking on the ball): its
+    // weight is 0.30 rather than 0.12, centred on a typical zone defender (R1_TYPICAL.zoneCoverage) so he breaks as before. Man is unchanged.
+    const Z = norm(R1_TYPICAL.zoneCoverage); const cov = asg.a === 'zone' ? 0.12 * Z + 0.30 * (norm(d.attrs.coverage) - Z) : 0.12 * norm(d.attrs.coverage);
+    return Math.max(0.05, 0.32 - 0.12 * norm(d.attrs.awareness) - cov + (eyesOnMan ? 0.08 : 0) - reactionOf(d) - canopy);
   }
   function perceivedLanding(d) {
     const A = ball.aim || ball.landing, L = ball.landing;
@@ -2399,7 +2431,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     d.stun = 0.7; d.noEngage = 0.3;
     if (!scrambled && rng.chance(0.6)) scramble(qb);
-    log(`${qb.name} escapes ${d.name}`, { kind: 'escape' });
+    log(`${qb.name} escapes ${d.name}`, { kind: 'escape', by: d.slot, side: d.team }); // by: the rusher who missed (data for the Attribute Lab's sack-finish trial, R-1)
     return false;
   }
   function endPlay(kind, x, y, extra = {}) {
@@ -2423,7 +2455,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Route separation (type edge, GDD §32.2): the receiver's edge against the defender actually nearest the ball shrinks the
     // distance from which that defender can still contest; the defender's edge grows it. Read here, at the catch point.
     const sepScale = nearest ? scaleVs(nearest.d, r, 'coverage') * (2 - scaleVs(r, nearest.d, 'separation')) : 1;
-    let contested = nearest && nearest.dd < (deep ? 1.6 : 1.1) * sepScale; // at full sprint a trailing defender a step away still plays the ball
+    // R-1 (2026-11-25): a zone defender's Coverage sets how far from the receiver he still plays the ball (closing on the throw):
+    // ×(1 + 0.6 × (Coverage − typical, normalised)): 1.0 for a typical zone defender (45), about 0.91 at 30 and 1.30 at 95. Man coverage
+    // is unchanged (it already keeps him close through the trail delay).
+    const zoneReach = nearest && nearest.d.assignment?.a === 'zone' ? 1 + 0.6 * (norm(nearest.d.attrs.coverage) - norm(R1_TYPICAL.zoneCoverage)) : 1;
+    let contested = nearest && nearest.dd < (deep ? 1.6 : 1.1) * sepScale * zoneReach; // at full sprint a trailing defender a step away still plays the ball
     // Thunderclap: a defender trailing the receiver (behind him on his path) cannot break up a quick pass.
     const trailing = nearest && ((nearest.d.x - r.x) * r.vx + (nearest.d.y - r.y) * r.vy) < 0;
     const thunderShield = ball.thunder && ball.quick && trailing && nearest.dd < (deep ? 1.6 : 1.1) * sepScale;
@@ -2454,14 +2490,21 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (contested) {
       const dCover = nearest.d.attrs.coverage + (nearest.d.ability?.contest || 0) + (nearest.d.assignment?.a === 'man' && dist(nearest.d, r) <= STEP ? (nearest.d.ability?.manCoverage || 0) : 0); // Sticky: within a step (Phase B fix 7)
       const rCatch = r.attrs.catching + (r.ability?.catchContest || 0);
-      catchP *= 0.7 + 0.22 * norm(rCatch * scaleVs(r, nearest.d, 'catch')) - 0.22 * norm(dCover * scaleVs(nearest.d, r, 'breakup')); // the defender actually at the ball, not the one who lined up on him
+      // R-1 (2026-11-25): in zone the defender at the ball has only his read and his break, so Coverage weighs twice as much in the
+      // contest (0.45 per normalised point around a typical zone defender rather than 0.22); for him the contest is unchanged; man is unchanged.
+      const dc = norm(dCover * scaleVs(nearest.d, r, 'breakup')); const zoneD = nearest.d.assignment?.a === 'zone'; const Zc = norm(R1_TYPICAL.zoneCoverage);
+      catchP *= 0.7 + 0.22 * norm(rCatch * scaleVs(r, nearest.d, 'catch')) - (zoneD ? 0.22 * Zc + 0.45 * (dc - Zc) : 0.22 * dc); // the defender actually at the ball, not the one who lined up on him
       if (nearest.d.ability?.wingShadow) { catchP *= 1 - nearest.d.ability.wingShadow; abilityUsed(nearest.d, 'wingShadow'); } // Wing Shadow: contested catches against him are 15% harder
       if (nearest.d.ability?.contest || (nearest.d.ability?.manCoverage && nearest.d.assignment?.a === 'man' && dist(nearest.d, r) <= STEP)) abilityUsed(nearest.d, nearest.d.ability.contest ? 'contest' : 'manCoverage'); if (r.ability?.catchContest) abilityUsed(r, 'catchContest');
     }
     // A defender on the ball plays it (v42.8): within a yard, and not clearly beaten to it by the receiver (before the lead fix,
     // under-led balls fell to trailing defenders; with the ball on the receiver this keeps interceptions real without inventing them).
     const reviewPick = !!options[REVIEW_ONLY]?.wouldBeInterception && !!nearest && nearest.dd <= 2.5 && !thunderShield; // M3 hook (review only): see REVIEW_ONLY
-    if (reviewPick || (nearest && nearest.dd < 1.0 && nearest.dd < dr + 0.35 && !thunderShield)) {
+    // R-1 (2026-11-25): the defender's Catching sets how far from the ball he can still make a play on it (ball skills): the old 1.0
+    // yard for a typical defender (R1_TYPICAL.dbCatching, 35), about 0.96 at 30, 1.24 at 65 and 1.48 at 95. Before this only the roll
+    // used Catching, and the chance itself was rare.
+    const pickReach = nearest ? 1.0 + 0.8 * (norm(nearest.d.attrs.catching + (nearest.d.ability?.pickCatching || 0)) - norm(R1_TYPICAL.dbCatching)) : 1.0;
+    if (reviewPick || (nearest && nearest.dd < pickReach && nearest.dd < dr + 0.35 * pickReach && !thunderShield)) {
       const pickCatching = nearest.d.attrs.catching + (nearest.d.ability?.pickCatching || 0);
       let pickP = (0.05 + 0.22 * norm(pickCatching)) * (dr > catchRadius ? 1.15 : 0.78); // v42.8: with the ball led onto the receiver, a defender who got there too has a real play on it (0.5 before, when under-led balls fell to him anyway)
       if (ball.undertow) { pickP *= ball.undertow.ability.undertow; abilityUsed(ball.undertow, 'undertow'); } // Undertow: 25% more likely
@@ -2658,7 +2701,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // Task 8 M3: the whistle for every contract on the field (charges, clocks, field creation)
   // M3 hook: per-team scrimmage play counters in the game state (a cooldown that recharges while its owner is benched reads them)
   if (options.offenseSide && !options.kickoff && !options.twoPoint && !dry) { const tp = (t8g.teamPlays ||= {}), o = options.offenseSide, dfs = o === 'home' ? 'away' : 'home'; (tp[o] ||= { off: 0, def: 0 }).off += 1; (tp[dfs] ||= { off: 0, def: 0 }).def += 1; }
-  { const g0 = ['incomplete', 'throwaway'].includes(result) ? 0 : Math.round(clamp(ball.x, B.ownEndLine, B.endLine)); const summary = { result, gain: g0, carrier: stats.carrier, receiver: stats.receiver, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, firstDown: options.toGo != null && g0 >= options.toGo && !['incomplete', 'throwaway', 'interception', 'fumble'].includes(result) };
+  { const g0 = ['incomplete', 'throwaway'].includes(result) ? 0 : Math.round(Math.round(clamp(ball.x, B.ownEndLine, B.endLine) * 10) / 10); /* the recorded net yards (out.yards rounds the tenth-rounded gain): one rounding rule, so a hook never sees 11 for a play recorded as 12 (found 2026-11-26) */ const summary = { result, gain: g0, carrier: stats.carrier, receiver: stats.receiver, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, firstDown: options.toGo != null && g0 >= options.toGo && !['incomplete', 'throwaway', 'interception', 'fumble'].includes(result) };
     for (const a of actors) hook('playEnd', a, summary);
     for (const fn of whistleQueue) fn(summary); delete t8g.ward; } // M3 hook: ctx.afterWhistle callbacks, after every ordinary playEnd; per-play protection ends
   // M3 hook: temporary actors leave at the whistle: their shared status clears; their statistics go to their credited slot or nowhere

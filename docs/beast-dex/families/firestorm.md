@@ -69,7 +69,7 @@ Flaming powered pass; visible expanding shockwave synchronized to catch.
 
 ### Progression / notes
 
-Mastery increases max push 1/1.25/1.5/1.75 yards.
+Mastery increases max push 2.5/3/3.5/4 yards.
 
 ## Beast Clash: Falling Star
 

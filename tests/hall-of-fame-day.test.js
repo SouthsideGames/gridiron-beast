@@ -45,7 +45,7 @@ test('holding the ceremony reveals the class, writes one League News item and re
   assert.equal(hallCeremonyDue(f), false); assert.equal(sealedElectionYear(f), null); assert.equal(hallCeremonyHeld(f, 5), true);
   assert.deepEqual(ids(historicalHallOfFame(f).inductees), ['r0', 'r1']); assert.equal(monsterHallStatus(f, 'r0').induction.inductedYear, 5); assert.equal(careerPage(f, 'r1').facts.hof, true);
   assert.equal(f.leagueNews.length, 1); const item = f.leagueNews[0];
-  assert.equal(item.id, '5|hof'); assert.equal(item.kind, 'hof'); assert.equal(item.text, 'Hall of Fame Day: the Board inducts 2 monsters'); assert.equal(item.tk, 'franchise.hall_of_fame_day_the_board_inducts');
+  assert.equal(item.id, '5|hof'); assert.equal(item.kind, 'hof'); assert.equal(item.text, 'Hall of Fame Day: the Board inducts 2 beasts'); assert.equal(item.tk, 'franchise.hall_of_fame_day_the_board_inducts');
   assert.deepEqual(item.lines.map((l) => l.mid).sort(), ['r0', 'r1']); assert.match(item.lines[0].text, /^Vet 0\d \((K|QB)\) · \d+ of 15 Board votes$/);
   // nothing else moved
   const rest = (x) => { const { leagueNews, leagueNewsMeta, monsterHallOfFame, ...o } = x; const { ceremonySeenYears, ...hof } = monsterHallOfFame; return JSON.stringify([o, hof]); };
@@ -85,8 +85,8 @@ test('the ceremony: nominees in name order with no votes shown, one reveal per i
   // nobody was eligible
   const early = offseason({ year: 3 }); const ce = hallCeremony(early, 3); assert.deepEqual([ce.nominees.length, ce.inductees.length], [0, 0]);
   assert.deepEqual(ceremonyStages(ce), ['opening', 'none', 'class']); assert.equal(hallCeremonyDue(early), true, 'the day is still held');
-  assert.match(screens.get('hofceremony').render({ f: early, params: { year: 3, step: 1 } }), /No retired monster met the requirements this year/); // plain-language wording (2026-11-14) of the no-eligible case
-  assert.equal(hallNews(early, 3)[0].text, 'Hall of Fame Day: no retired monster was eligible this year');
+  assert.match(screens.get('hofceremony').render({ f: early, params: { year: 3, step: 1 } }), /No retired beast met the requirements this year/); // plain-language wording (2026-11-14) of the no-eligible case
+  assert.equal(hallNews(early, 3)[0].text, 'Hall of Fame Day: no retired beast was eligible this year');
   assert.match(screens.get('hofceremony').render({ f: early, params: { year: 44 } }), /No Hall of Fame election was held/);
   // reduced motion is carried by the screen
   assert.match(screens.get('hofceremony').render({ f: { ...f, settings: { reducedMotion: true } }, params: { year: 5 } }), /class="hofd reduced"/);

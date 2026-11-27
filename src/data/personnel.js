@@ -68,8 +68,33 @@ export const SECONDARY_ELIGIBILITY = Object.freeze({ QB: [], RB: [], WR: [], TE:
 
 export function canPlay(position, slot) { return position === positionOf(slot); }
 
-/** Attributes that matter most per position; used for OVR and level-ups. */
-export const POSITION_WEIGHTS = Object.freeze({
+/**
+ * Emergency positions (balance audit R-6, owner decision 2026-11-25). Each position has one emergency position it may cover, and only
+ * as a last resort: when no healthy beast of a base slot's own position is left (injuries, an emptied group). Normal eligibility is
+ * unchanged (`canPlay`, one position per family), the owner cannot list a beast at its emergency position, and a beast's primary position
+ * never changes. Emergency cover fills the base lineup (OFFENSE_BASE, DEFENSE_BASE) only: package slots still need their own position, so
+ * a package play is not opened by it. A beast plays the emergency slot on its own attributes, with no out-of-position penalty or boost;
+ * the best one is chosen by the overall for the slot's position (its relevant attributes), not its own. Same rule for player and AI.
+ * K has no emergency cover (no position lists K), so an empty kicker slot still cannot be filled.
+ */
+export const EMERGENCY_POSITION = Object.freeze({ QB: 'WR', RB: 'WR', WR: 'RB', TE: 'OL', OL: 'TE', DL: 'LB', LB: 'DL', CB: 'S', S: 'CB', K: 'QB' });
+export const BASE_SLOTS = Object.freeze([...OFFENSE_BASE, ...DEFENSE_BASE]);
+/** May a beast of `position` cover `slot` in an emergency (a base slot of its emergency position)? */
+export function canCoverEmergency(position, slot) { return BASE_SLOTS.includes(slot) && EMERGENCY_POSITION[position] === positionOf(slot); }
+/** The positions whose emergency position is `pos` (who may cover a `pos` base slot): e.g. WR ← QB, RB. */
+export const emergencySources = (pos) => Object.keys(EMERGENCY_POSITION).filter((p) => EMERGENCY_POSITION[p] === pos);
+
+/** Attributes that matter most per position; used for OVR and level-ups.
+ *  Balance audit 2026-11-25: R-17 adds Durability (it halves injury risk and sets Clash HP, but was in no overall): 1 for RB, OL, DL and
+ *  LB (the most contact), 0.5 for QB, WR, TE, CB and S. K was provisionally 0.25 (the brief's "low") and is 0 after
+ *  testing: kickers are never injured and fatigue does not touch kicking, so Durability does nothing for a kicker in football. R-2 prices DL and TE Speed at 2 (was 1): R-1 made the DL pass rush
+ *  use Speed, and at constant payroll a fast lineup won 3.3 points a game because Speed was cheap in these overalls. */
+/** The position weights before the balance audit (2026-11-25). Beast Clash reads them (combatant HP / attack / speed come from the overall
+ *  on these), and monster generation selects and develops its candidates on them (t8/selection.js, the prior-career simulation in
+ *  t8/career.js), so every recorded battle and replay key plays exactly as before, every seed generates the same monsters, and the
+ *  generation calibrations (CALIBRATION, HISTORY_REFERENCE) stay valid. The football overall (POSITION_WEIGHTS: R-2 Speed, R-17
+ *  Durability) is what the game shows, pays and trains by. */
+export const BASE_POSITION_WEIGHTS = Object.freeze({
   QB: { accuracy: 3, awareness: 3, arm: 2, agility: 1, speed: 1 },
   RB: { speed: 3, agility: 3, strength: 2, awareness: 2, catching: 1, blocking: 1 },
   WR: { speed: 3, catching: 3, agility: 2, awareness: 1, strength: 1 },
@@ -80,6 +105,19 @@ export const POSITION_WEIGHTS = Object.freeze({
   CB: { coverage: 3, speed: 3, agility: 2, awareness: 1, catching: 1 },
   S: { coverage: 2, awareness: 2, speed: 2, tackling: 2, catching: 1 },
   K: { kicking: 6, awareness: 1 },
+});
+export const CLASH_POSITION_WEIGHTS = BASE_POSITION_WEIGHTS;
+export const POSITION_WEIGHTS = Object.freeze({
+  QB: { accuracy: 3, awareness: 3, arm: 2, agility: 1, speed: 1, durability: 0.5 },
+  RB: { speed: 3, agility: 3, strength: 2, awareness: 2, catching: 1, blocking: 1, durability: 1 },
+  WR: { speed: 3, catching: 3, agility: 2, awareness: 1, strength: 1, durability: 0.5 },
+  TE: { catching: 2, blocking: 2, strength: 2, speed: 2, agility: 1, awareness: 1, durability: 0.5 },
+  OL: { blocking: 4, strength: 3, awareness: 1, agility: 1, durability: 1 },
+  DL: { strength: 3, tackling: 2, agility: 2, speed: 2, awareness: 1, durability: 1 },
+  LB: { tackling: 3, awareness: 2, speed: 2, strength: 1, coverage: 1, durability: 1 },
+  CB: { coverage: 3, speed: 3, agility: 2, awareness: 1, catching: 1, durability: 0.5 },
+  S: { coverage: 2, awareness: 2, speed: 2, tackling: 2, catching: 1, durability: 0.5 },
+  K: { kicking: 6, awareness: 1 }, // R-17: 0 for K after testing (kickers are never injured and fatigue does not touch kicking)
 });
 
 export const ATTRIBUTES = Object.freeze([

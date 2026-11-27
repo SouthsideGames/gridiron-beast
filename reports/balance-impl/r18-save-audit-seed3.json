@@ -1,0 +1,443 @@
+{
+ "tool": "balance-audit/save-audit",
+ "seed": 3,
+ "difficulty": "pro",
+ "snapshots": [
+  {
+   "year": 1,
+   "rawKB": 6678,
+   "packedKB": 2593,
+   "storedKB": 504,
+   "saveMs": 744,
+   "loadMs": 324,
+   "roundTrip": true,
+   "top": [
+    {
+     "part": "league",
+     "kb": 3609.2
+    },
+    {
+     "part": "preLeagueHistory",
+     "kb": 845.2
+    },
+    {
+     "part": "season",
+     "kb": 569.7
+    },
+    {
+     "part": "history",
+     "kb": 425.2
+    },
+    {
+     "part": "freeAgency",
+     "kb": 386.7
+    },
+    {
+     "part": "draft",
+     "kb": 296.4
+    },
+    {
+     "part": "roster",
+     "kb": 178.4
+    },
+    {
+     "part": "leagueNews",
+     "kb": 88.2
+    },
+    {
+     "part": "rewardLedger",
+     "kb": 77.3
+    },
+    {
+     "part": "injuryHistory",
+     "kb": 52.3
+    },
+    {
+     "part": "pool",
+     "kb": 31.4
+    },
+    {
+     "part": "individualNames",
+     "kb": 30.8
+    }
+   ],
+   "deep": [
+    {
+     "part": "league.monsters",
+     "kb": 3542
+    },
+    {
+     "part": "history.0",
+     "kb": 425.2
+    },
+    {
+     "part": "freeAgency.talks",
+     "kb": 314.2
+    },
+    {
+     "part": "season.leagueStats",
+     "kb": 296.4
+    },
+    {
+     "part": "season.playoffStats",
+     "kb": 92.7
+    },
+    {
+     "part": "season.awardsFinal",
+     "kb": 62.4
+    },
+    {
+     "part": "season.results",
+     "kb": 50.5
+    },
+    {
+     "part": "season.awards",
+     "kb": 33.8
+    },
+    {
+     "part": "freeAgency.log",
+     "kb": 29.6
+    },
+    {
+     "part": "freeAgency.extra",
+     "kb": 28.5
+    },
+    {
+     "part": "league.events",
+     "kb": 23.5
+    },
+    {
+     "part": "league.clubs",
+     "kb": 21.7
+    }
+   ]
+  },
+  {
+   "year": 5,
+   "rawKB": 10233,
+   "packedKB": 4448,
+   "storedKB": 967,
+   "saveMs": 1313,
+   "loadMs": 463,
+   "roundTrip": true,
+   "top": [
+    {
+     "part": "league",
+     "kb": 5304.6
+    },
+    {
+     "part": "history",
+     "kb": 2086
+    },
+    {
+     "part": "preLeagueHistory",
+     "kb": 845.2
+    },
+    {
+     "part": "season",
+     "kb": 552.3
+    },
+    {
+     "part": "roster",
+     "kb": 301.3
+    },
+    {
+     "part": "draft",
+     "kb": 296.6
+    },
+    {
+     "part": "freeAgency",
+     "kb": 271.5
+    },
+    {
+     "part": "leagueNews",
+     "kb": 106.1
+    },
+    {
+     "part": "injuryHistory",
+     "kb": 100.7
+    },
+    {
+     "part": "rewardLedger",
+     "kb": 77.2
+    },
+    {
+     "part": "partnerships",
+     "kb": 75.6
+    },
+    {
+     "part": "dex",
+     "kb": 60.4
+    }
+   ],
+   "deep": [
+    {
+     "part": "league.monsters",
+     "kb": 5137.8
+    },
+    {
+     "part": "history.0",
+     "kb": 425.2
+    },
+    {
+     "part": "history.1",
+     "kb": 418.6
+    },
+    {
+     "part": "history.3",
+     "kb": 418.1
+    },
+    {
+     "part": "history.2",
+     "kb": 413.6
+    },
+    {
+     "part": "history.4",
+     "kb": 410.5
+    },
+    {
+     "part": "season.leagueStats",
+     "kb": 280.1
+    },
+    {
+     "part": "freeAgency.talks",
+     "kb": 194.5
+    },
+    {
+     "part": "season.playoffStats",
+     "kb": 93.1
+    },
+    {
+     "part": "league.waivers",
+     "kb": 62.9
+    },
+    {
+     "part": "season.awardsFinal",
+     "kb": 59.4
+    },
+    {
+     "part": "season.results",
+     "kb": 50.5
+    }
+   ]
+  },
+  {
+   "year": 10,
+   "rawKB": 12520,
+   "packedKB": 5727,
+   "storedKB": 1298,
+   "saveMs": 1580,
+   "loadMs": 688,
+   "roundTrip": true,
+   "top": [
+    {
+     "part": "league",
+     "kb": 6193.6
+    },
+    {
+     "part": "history",
+     "kb": 3349.4
+    },
+    {
+     "part": "preLeagueHistory",
+     "kb": 845.2
+    },
+    {
+     "part": "season",
+     "kb": 548
+    },
+    {
+     "part": "draft",
+     "kb": 297.5
+    },
+    {
+     "part": "freeAgency",
+     "kb": 282.2
+    },
+    {
+     "part": "roster",
+     "kb": 272.9
+    },
+    {
+     "part": "injuryHistory",
+     "kb": 136.3
+    },
+    {
+     "part": "partnerships",
+     "kb": 128.3
+    },
+    {
+     "part": "dex",
+     "kb": 109
+    },
+    {
+     "part": "leagueNews",
+     "kb": 104.4
+    },
+    {
+     "part": "rewardLedger",
+     "kb": 78.9
+    }
+   ],
+   "deep": [
+    {
+     "part": "league.monsters",
+     "kb": 5677.9
+    },
+    {
+     "part": "history.3",
+     "kb": 418.1
+    },
+    {
+     "part": "history.2",
+     "kb": 413.6
+    },
+    {
+     "part": "history.4",
+     "kb": 410.5
+    },
+    {
+     "part": "history.5",
+     "kb": 410.5
+    },
+    {
+     "part": "history.7",
+     "kb": 409.8
+    },
+    {
+     "part": "history.8",
+     "kb": 408.2
+    },
+    {
+     "part": "history.9",
+     "kb": 404.9
+    },
+    {
+     "part": "history.6",
+     "kb": 402.5
+    },
+    {
+     "part": "league.legends",
+     "kb": 324.4
+    },
+    {
+     "part": "season.leagueStats",
+     "kb": 280.9
+    },
+    {
+     "part": "freeAgency.talks",
+     "kb": 187.8
+    }
+   ]
+  },
+  {
+   "year": 15,
+   "rawKB": 13333,
+   "packedKB": 6173,
+   "storedKB": 1405,
+   "saveMs": 1893,
+   "loadMs": 781,
+   "roundTrip": true,
+   "top": [
+    {
+     "part": "league",
+     "kb": 6589.8
+    },
+    {
+     "part": "history",
+     "kb": 3502.9
+    },
+    {
+     "part": "preLeagueHistory",
+     "kb": 845.2
+    },
+    {
+     "part": "season",
+     "kb": 549.6
+    },
+    {
+     "part": "roster",
+     "kb": 312.8
+    },
+    {
+     "part": "draft",
+     "kb": 296.9
+    },
+    {
+     "part": "freeAgency",
+     "kb": 288.1
+    },
+    {
+     "part": "partnerships",
+     "kb": 184.7
+    },
+    {
+     "part": "injuryHistory",
+     "kb": 174.5
+    },
+    {
+     "part": "dex",
+     "kb": 152.9
+    },
+    {
+     "part": "leagueNews",
+     "kb": 102.7
+    },
+    {
+     "part": "individualNames",
+     "kb": 83.1
+    }
+   ],
+   "deep": [
+    {
+     "part": "league.monsters",
+     "kb": 5651.9
+    },
+    {
+     "part": "league.legends",
+     "kb": 774.1
+    },
+    {
+     "part": "history.7",
+     "kb": 409.8
+    },
+    {
+     "part": "history.11",
+     "kb": 408.4
+    },
+    {
+     "part": "history.8",
+     "kb": 408.2
+    },
+    {
+     "part": "history.13",
+     "kb": 406.6
+    },
+    {
+     "part": "history.9",
+     "kb": 404.9
+    },
+    {
+     "part": "history.10",
+     "kb": 404.1
+    },
+    {
+     "part": "history.14",
+     "kb": 403.7
+    },
+    {
+     "part": "history.12",
+     "kb": 402.4
+    },
+    {
+     "part": "season.leagueStats",
+     "kb": 281.3
+    },
+    {
+     "part": "freeAgency.talks",
+     "kb": 223.1
+    }
+   ]
+  }
+ ]
+}

@@ -75,7 +75,7 @@ Legendary LB, Special action. Clone effective-rating fraction60/65/70/75%; fixed
 
 Ability ID: `NAT-06-C`. Category: Support.
 
-Eligible normal turn redistributes living team current HP
+Eligible normal turn redistributes living team current HP, then the ordinary attack follows (F-04, 2026-11-26)
 
 Once-per-Clash simultaneous HP-percentage equalization
 
@@ -83,7 +83,7 @@ Source: workbook v18. Apply the later shared overrides in [Approved Rules](../AP
 
 ### Trigger / eligibility
 
-Own normal turn while unused, living ally at 25% max HP or less and redistribution would increase that ally HP. Otherwise ordinary attack preserve use; Stunned skips cannot activate.
+Own normal turn while unused, living ally at 25% max HP or less and redistribution would increase that ally HP. Otherwise ordinary attack preserve use; Stunned skips cannot activate. When it activates, the ordinary attack still follows in the same turn (owner decision F-04, 2026-11-26).
 
 ### Targets / placement
 
@@ -95,7 +95,7 @@ Common target percentage=sum CURRENT HP/sum MAX HP. Redistribute current HP towa
 
 ### Recharge / frequency
 
-ONCE per Clash replaces normal attack, same effect all mastery levels.
+ONCE per Clash, cast in addition to the normal attack (F-04, 2026-11-26; it replaced the attack before), same effect all mastery levels.
 
 ### Lifetime / persistence
 

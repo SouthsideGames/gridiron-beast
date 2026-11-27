@@ -207,11 +207,21 @@ export const RIVAL_GMS = Object.freeze({ 'Glacier Guardians': 'Morgan Vale', 'No
   'Cliffhaven Chargers': 'Rook Tanner', 'Goldhaven Royals': 'Victor Hale', 'Riverbend Rapids': 'Maya Rivers', 'Pinecrest Wardens': 'Grant Mercer', 'Skyvale Cyclones': 'Emery Vance', 'Emberfall Infernos': 'Dana Cole', 'Coral Bay Tides': 'Marina Cole', 'Palm Isle Mystics': 'Jalen Tide', 'Thornwood Wildroots': 'Sage Alder', 'Silvergrove Arcanists': 'Lennox Wren', 'Mossvale Quakes': 'Hollis Grange', 'Fernhaven Wisps': 'Wren Calloway', 'Aetheria Seers': 'Noor Celeste', 'Deepwater Chompers': 'Finn Corrigan', 'Mistport Veils': 'Ellis Gray', 'Westhaven Pirates': 'Kit Teague' });
 
 export const TIERS = Object.freeze([
-  { id: 'challenger', name: $t('data.challenger_league'), rank: 3, cap: 1800000, badgeGoal: 4, next: 'vanguard' },
-  { id: 'vanguard', name: $t('data.vanguard_league'), rank: 2, cap: 2600000, badgeGoal: 6, next: 'sovereign' },
-  { id: 'sovereign', name: $t('data.sovereign_league'), rank: 1, cap: 3600000, badgeGoal: null, next: null },
+  // F-01 (owner 2026-11-26): the Challenger cap is 1,600,000 (was 1,800,000). The two higher tiers keep their ratios to it (×1.44 and
+  // ×2.0, as at 1.8 M: 2,600,000 and 3,600,000 were ×1.444 and ×2.0), rounded to 50,000. They are not reached in the 32-club league.
+  { id: 'challenger', name: $t('data.challenger_league'), rank: 3, cap: 1600000, badgeGoal: 4, next: 'vanguard' },
+  { id: 'vanguard', name: $t('data.vanguard_league'), rank: 2, cap: 2300000, badgeGoal: 6, next: 'sovereign' },
+  { id: 'sovereign', name: $t('data.sovereign_league'), rank: 1, cap: 3200000, badgeGoal: null, next: null },
 ]);
 export const tierById = (id) => TIERS.find((t) => t.id === id) || TIERS[0];
+/** F-01 (owner 2026-11-26): the caps a franchise begun before the 1.6 M cap keeps until the owner approves a migration policy for existing
+ *  saves (FINAL_CALIBRATION_REPORT §3). Lowering the cap in a running save would put owners and AI clubs over it at once, and the only
+ *  existing remedy (the commissioner's forced release) would release beasts, which the owner ruled out. */
+export const LEGACY_TIER_CAPS = Object.freeze({ challenger: 1800000, vanguard: 2600000, sovereign: 3600000 });
+/** The cap era a new franchise is created in; a save without it predates the 1.6 M cap. */
+export const CAP_ERA = 2;
+/** The tier cap that applies to this franchise: the current cap for saves of the current cap era, the legacy cap for older saves. */
+export const tierCap = (f) => (f?.capEra >= CAP_ERA ? tierById(f.tier).cap : LEGACY_TIER_CAPS[tierById(f?.tier).id] ?? tierById(f?.tier).cap);
 
 // ------------------------------------------------------------ schedule
 const categoryOf = (a, b) => (divisionOf(a) === divisionOf(b) ? 'Division' : conferenceOf(a) === conferenceOf(b) ? 'Conference' : 'Interconference');

@@ -79,7 +79,7 @@ Ability ID: `ICE-04-C`. Category: Self Guarded preparation.
 
 Ready source at <=50 percent HP and empty shared status slot
 
-Sacrifice attack for one-next-owner-turn self Guarded shelter
+Sacrifice attack for a three-owner-turn self Guarded shelter (balance audit R-10, 2026-11-25; was one turn)
 
 Source: workbook v18. Apply the later shared overrides in [Approved Rules](../APPROVED_RULES.md) and the Task 8 specification.
 
@@ -101,7 +101,7 @@ Cooldown 5/4/3/2 subsequent owner normal turns begins setup. Mastery cooldown on
 
 ### Lifetime / persistence
 
-Guarded lasts through NEXT owner normal turn and expires at that turn END. Setup turn excluded. On next turn emerge and perform ordinary legal action. Reserve pauses status and cooldown.
+Guarded lasts through the NEXT THREE owner normal turns and expires at the third turn END (balance audit R-10, 2026-11-25; was one turn). Setup turn excluded. On those turns perform ordinary legal actions. Reserve pauses status and cooldown.
 
 ### Exceptions / counterplay
 

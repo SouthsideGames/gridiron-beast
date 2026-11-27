@@ -25,6 +25,7 @@ import { newContract } from './contracts.js';
 import { bonusCharge } from './fa-contracts.js';
 import { rolloverMonster, addInto } from './stats.js';
 import { t as $t } from '../text/index.js';
+import { apexKnown } from './t8/discovery.js';
 
 export const LEAGUE_VERSION = 1;
 export const PERMANENT_CONTRACT = Object.freeze({ permanent: true });
@@ -104,7 +105,7 @@ export function addToClub(f, club, m, { year, via = 'signed', contract = null, s
   return m;
 }
 /** What League News needs to judge and tell a move (GDD §46): who, how good, how old, and the owner's connection to him. */
-export function moveIdentity(f, m) { return { mid: m.id, mname: m.name, position: m.position, ovr: monsterOverall(m), age: m.age ?? null, formerMine: (m.history || []).some((h) => h.club === f.club) }; }
+export function moveIdentity(f, m) { return { mid: m.id, mname: m.name, position: m.position, ovr: monsterOverall(m), age: m.age ?? null, formerMine: (m.history || []).some((h) => h.club === f.club), ...(apexKnown(f, m) ? { apex: true } : {}) }; } // apex: only an Apex the owner has discovered (UI feedback 2026-11-25), so the news never gives one away
 /** Queue a league move for League News; stamped with the week it belongs to (the offseason's moves belong to week 0 of the coming season). */
 export function leagueEvent(f, e) {
   if (!hasLeague(f) || !f.season) return;

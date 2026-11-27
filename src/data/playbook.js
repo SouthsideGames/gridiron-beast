@@ -93,12 +93,16 @@ const BRACKET = (key, zone) => ({ a: 'zone', zone, bracket: key });
 const SPY = { a: 'spy' };
 const CONTAIN = (gap) => ({ a: 'contain', gap });
 
+// F-11 (owner 2026-11-26): seconds a designated draw shows pass before the exchange (see engine.js SHOW). Calibrated in
+// reports/balance-impl/FINAL_CALIBRATION_REPORT.md §7.
+export const SHOW_DRAW = 0.9;
 function offense(id, name, formation, assignments, opts = {}) {
   const f = OFFENSE_FORMATIONS[formation];
   if (!f) throw new Error(`${name}: unknown formation ${formation}`);
   const play = { id, name, side: 'offense', type: opts.type || 'pass', formation, pkg: f.pkg, align: { ...f.align, ...(opts.align || {}) }, assignments, primary: opts.primary || null, progression: opts.progression || [], drop: opts.drop || 'three', tags: opts.tags || [], desc: opts.desc || '' };
   if (opts.reserve) play.reserve = true; // only reserve plays carry the key, so live plays keep their review fingerprints
   if (opts.motion) play.motion = opts.motion; // pre-snap motion: { slot, to } (only plays with motion carry the key)
+  if (opts.show) play.show = opts.show; // F-11: draw deception, seconds of showing pass before the exchange (only the designated draws carry the key)
   if (opts.legendary) play.legendary = opts.legendary; // Legendary Plays (GDD §36): { species, slot }
   return play;
 }
@@ -123,11 +127,15 @@ const OFFENSE_PLAYS = [
     LG: PULL([-1.2, 0.6], [1.2, 3.4]), C: RUNBLOCK([1.5, -0.5]), // Phase C1 (F5): a tight pull, just behind the centre, so the guard reaches the hole before the back (v42.15 pulled 2 yards deep and arrived behind him)
     RG: RUNBLOCK([1.5, 2]), TE: RUNBLOCK([1.5, 4.5]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'inside', 'short', 'goalline'], desc: $t('plays.guard_pulls_to_lead_through_the') }),
+  // D-4 (owner approved 2026-11-26, Option B): Power Left is the exact mirror of Power Right. The tight end lines up on the left and
+  // blocks on the play side; the receiver lines up right. It used to run away from the tight end, who sealed the back side: against the
+  // two-lineman contain calls (Scrape Exchange 24.8, Pinch Spill 28.2 yards a carry) every play-side defender was blocked. A mirrored
+  // Power Right measured 5.3 and 6.0; the redesigns that kept the back-side seal stayed at 14 to 28 (FINAL_DECISIONS_REPORT §5).
   offense('power_left', $t('plays.power_left'), 'tight_i', {
     QB: HANDOFF, RB: CARRY([[-6.5, 0], [-3, -1.5], [1, -3], [6, -3.5], [20, -4]]),
     RG: PULL([-1.2, -0.6], [1.2, -3.4]), C: RUNBLOCK([1.5, 0.5]), // Phase C1 (F5): a tight pull, so the guard leads the back through the hole
-    LG: RUNBLOCK([1.5, -2]), TE: RUNBLOCK([2, 3]), WR1: STALK([4, -16]),
-  }, { type: 'run', tags: ['run', 'inside', 'short', 'goalline'], desc: $t('plays.guard_pulls_left_tight_end_seals') }),
+    LG: RUNBLOCK([1.5, -2]), TE: RUNBLOCK([1.5, -4.5]), WR1: STALK([4, 16]),
+  }, { type: 'run', tags: ['run', 'inside', 'short', 'goalline'], align: { TE: [-0.6, -3.2], WR1: [-0.6, 18] }, desc: $t('plays.guard_pulls_to_lead_through_the_left') }),
   offense('dive', $t('plays.hb_dive'), 'i_pro', {
     QB: HANDOFF, RB: CARRY([[-6.5, 0], [-2, 0.6], [2, 0.8], [20, 1]]),
     LG: RUNBLOCK([1.5, -1.6]), RG: RUNBLOCK([1.5, 1.6]), TE: CLIMB([3, 1]), WR1: STALK([4, -16]), WR2: STALK([4, 16]), // Phase C1 (F3): the tight end leads up to the linebacker
@@ -143,7 +151,10 @@ const OFFENSE_PLAYS = [
     RG: RUNBLOCK([2, 0]), C: RUNBLOCK([2, -2.5]), LG: RUNBLOCK([2.5, -5]), TE: RUNBLOCK([2, 2]), WR1: STALK([3, -15]),
   }, { type: 'run', tags: ['run', 'outside'], desc: $t('plays.wide_zone_to_the_left_behind') }),
   offense('counter', $t('plays.counter'), 'tight_i', {
-    QB: HANDOFF, RB: CARRY([[-6.5, 0], [-5.9, 0.9], [-3.9, -1], [0, -3], [6, -3.8], [20, -4]]),
+    // F-10 (owner 2026-11-26): the back follows the pullers through the B gap (y −2.2 → −2.6). He used to bend outside the kicked-out
+    // end to the edge (−3 → −4): an inside run that finished as an off-tackle sweep behind two lead blockers, 12.8 yards a carry against
+    // the AI's own calls and 18.2 against run fronts. The false step, the pullers and the blocks are unchanged.
+    QB: HANDOFF, RB: CARRY([[-6.5, 0], [-5.9, 0.9], [-3.9, -1], [0, -2.2], [6, -2.4], [20, -2.6]]),
     RG: PULL([-1.2, 0], [1.2, -3.6]), TE: PULL([-1.6, 1.2], [2.5, -5]), // Phase C1 (F5): tight pulls, so guard and tight end lead the back instead of trailing him
     C: RUNBLOCK([1.5, 0.5]), LG: RUNBLOCK([1.5, -2]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'inside', 'misdirection'], desc: $t('plays.false_step_right_then_the_guard') }),
@@ -158,7 +169,7 @@ const OFFENSE_PLAYS = [
   offense('qb_draw', $t('plays.qb_draw'), 'gun_pro', {
     QB: KEEP([[-5, 0], [-6, 0], [-2, 0.5], [3, 0], [20, 0]]), RB: RUNBLOCK([0, 3.5]),
     LG: RUNBLOCK([-1.5, -2]), TE: CLIMB([2.5, 1]), RG: RUNBLOCK([-1.5, 2.5]), WR1: R('go'), WR2: R('go'), // Phase C1 (F3): the tight end climbs to the linebacker (the centre this was written for is not in the Pro set)
-  }, { type: 'run', tags: ['run', 'inside', 'long', 'draw'], desc: $t('plays.fake_the_drop_then_the_quarterback') }),
+  }, { type: 'run', show: SHOW_DRAW, tags: ['run', 'inside', 'long', 'draw'], desc: $t('plays.fake_the_drop_then_the_quarterback') }),
   offense('read_option', $t('plays.read_option'), 'gun_pro', {
     // Phase C1 (F1): the back crosses the quarterback's face, so the give is a real exchange at the mesh (v42.15's paths never
     // came within 2.8 yards: every give moved the ball 3-6 yards to a back who was never in reach).
@@ -166,9 +177,12 @@ const OFFENSE_PLAYS = [
     LG: RUNBLOCK([2, -2]), RG: RUNBLOCK([2, 2]), TE: RUNBLOCK([1.4, 3.4]), WR1: STALK([4, -16]), WR2: STALK([4, 16]), // Phase C1 (F3): the tight end seals the keep side (the inside block was written for a centre the Pro set does not have)
   }, { type: 'run', tags: ['run', 'option'], desc: $t('plays.the_quarterback_reads_the_unblocked_edge') }),
   offense('jet_sweep', $t('plays.jet_sweep'), 'gun_trips', {
-    QB: HANDOFF, WR3: CARRY([[-1.6, -4.5], [-2, -1], [-1, 6], [3, 13], [20, 16]]),
-    LG: RUNBLOCK([1.5, -1]), RB: RUNBLOCK([2, 8]), RG: RUNBLOCK([2, 5]), WR2: STALK([3, 17]), WR1: STALK([4, -16]), // Phase C1 (F3): the back leads to the edge (the centre this was written for is not in the Spread set)
-  }, { type: 'run', motion: { slot: 'WR3', to: [-1.6, -4.5] }, tags: ['run', 'outside', 'misdirection'], desc: $t('plays.the_slot_receiver_takes_the_jet') }),
+    // F-12 (owner 2026-11-26): the motion is flipped. The slot (WR3) lines up on the right, inside WR2 with the back, comes across on
+    // the jet and runs LEFT, away from that crowded side (before: from the left into the trips side, 2.0 yards a carry against the AI's
+    // calls). The line and the back lead to the left edge; WR1 stalks the play-side corner; WR2 stalks on the backside.
+    QB: HANDOFF, WR3: CARRY([[-1.6, 4.5], [-2, 1], [-1, -6], [3, -13], [20, -16]]),
+    LG: RUNBLOCK([2, -5]), RB: RUNBLOCK([2, -8]), RG: RUNBLOCK([1.5, 1]), WR2: STALK([3, 17]), WR1: STALK([4, -16]),
+  }, { type: 'run', align: { WR3: [-1.2, 12] }, motion: { slot: 'WR3', to: [-1.6, 4.5] }, tags: ['run', 'outside', 'misdirection'], desc: $t('plays.the_slot_receiver_takes_the_jet') }),
 
   // ---- quick passes
   offense('quick_slants', $t('plays.quick_slants'), 'gun_pro', {
@@ -373,7 +387,7 @@ export const RELEASED_RESERVE_OFFENSE = Object.freeze(['bunch_snag', 'bunch_whip
 const RELEASED = new Set(RELEASED_RESERVE_OFFENSE);
 // Task 10 (owner 2026-11-13): every reviewed reserve play is released into the open pools below. The compiled play keeps its catalogue
 // flag (`reserve`), so a play's data and its review fingerprint (dev-review.js) are exactly what was reviewed; release is pool membership.
-const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: !RELEASED.has(id) }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN, BRACKET });
+const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: !RELEASED.has(id) }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN, BRACKET, SHOW_DRAW });
 // Legendary Plays (GDD §36): built on the same assignments as every play, each tied to one Legendary monster who must be on
 // the field in its slot. Like reserve plays they live in PLAYS (engine, art, audit) and never in OFFENSE_IDS / DEFENSE_IDS:
 // a club can call one only when it holds that Legendary and has put the play in one of its six slots.
@@ -516,7 +530,7 @@ export { OFFENSE_PACKAGES, DEFENSE_PACKAGES };
 export const LESSONS = Object.freeze({
   inside_zone: { when: $t('plays.your_bread_and_butter_run_on'), watch: $t('plays.the_back_reads_the_first_lineman'), beats: $t('plays.nickel_and_dime_looks'), loses: $t('plays.heavy_fronts_and_the_run_wall') },
   power_right: { when: $t('plays.short_yardage_and_goal_line_3rd'), watch: $t('plays.the_pulling_guard_the_hole_opens'), beats: $t('plays.light_boxes_goal_line_man_zone'), loses: $t('plays.all_out_pressure_and_run_wall') },
-  power_left: { when: $t('plays.same_job_as_power_right_call'), watch: $t('plays.the_tight_end_seals_the_back'), beats: $t('plays.defenses_shaded_to_your_right'), loses: $t('plays.goal_line_stand_run_wall_and') },
+  power_left: { when: $t('plays.same_job_as_power_right_call'), watch: $t('plays.the_pulling_guard_the_hole_opens'), beats: $t('plays.defenses_shaded_to_your_right'), loses: $t('plays.all_out_pressure_and_run_wall') },
   dive: { when: $t('plays.fast_safe_yards_when_you_need'), watch: $t('plays.hits_the_a_gap_instantly_the'), beats: $t('plays.soft_zone_shells_and_man_coverage'), loses: $t('plays.run_wall_and_stacked_boxes') },
   outside_zone: { when: $t('plays.get_the_ball_to_a_fast'), watch: $t('plays.whole_line_slides_the_back_either'), beats: $t('plays.slow_interior_linebackers_the_bear_front'), loses: $t('plays.goal_line_fronts_cover_0_all') },
   stretch_left: { when: $t('plays.outside_zone_to_the_left_use'), watch: $t('plays.if_the_corner_comes_up_hard'), beats: $t('plays.defenses_overplaying_one_side'), loses: $t('plays.edge_contain_and_blitzes_off_the') },

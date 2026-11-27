@@ -13,7 +13,7 @@ import { ALL_TEAMS } from '../src/data/league.js';
 import { PLAYS } from '../src/data/playbook.js';
 import { canPlay, positionOf, OFFENSE_SLOTS, DEFENSE_SLOTS, POSITION_WEIGHTS } from '../src/data/personnel.js';
 import { createRoster, generateMonster, monsterOverall, effectiveAttributes, FULL_ROSTER, schemeAttributes } from '../src/data/monsters.js';
-import { playbookFor, buildDepthChart, buildTeam, AI_PLAN_SIZE } from '../src/franchise/roster.js';
+import { RUN_D, playbookFor, buildDepthChart, buildTeam, AI_PLAN_SIZE } from '../src/franchise/roster.js';
 import { aiDraftPick } from '../src/franchise/draft.js';
 import { strategyValue } from '../src/franchise/fa-strategy.js';
 import { identityTradeTie, IDENTITY_TRADE_TIE, GYM_ELEMENT_TRADE_TIE } from '../src/franchise/league-trades.js';
@@ -84,8 +84,9 @@ test('play calling: each identity\'s 6 + 6 leans to it, with released plays only
       assert.equal(pb.offense.filter((p) => PLAYS[p].type === 'run').length, runs[id.offense], `${club}: ${id.offense} run count`);
       const tag = { pressure: 'blitz', man: 'man', coverage: 'zone' }[id.defense];
       assert.ok(pb.defense.filter((p) => PLAYS[p].tags.includes(tag)).length >= 3, `${club}: three or more ${tag} calls`);
-      const SITUATIONAL = ['run_wall', 'edge_contain', 'bear_front', 'goal_line', 'goal_line_man', 'qb_spy']; // the old book's situational call
-      assert.ok(pb.defense.filter((p) => SITUATIONAL.includes(p)).length >= (id.runFront ? 2 : 1), `${club}: the situational call kept (two for a run front)`);
+      // Balance audit R-8 (2026-11-25): the run call now comes from every released run front (RUN_D: the old six plus the book's run
+      // fronts), not the old six alone; the rule tested is unchanged (one run call, two for a physical run front). Test updated to the decision.
+      assert.ok(pb.defense.filter((p) => RUN_D.includes(p)).length >= (id.runFront ? 2 : 1), `${club}: the situational call kept (two for a run front)`);
     }
   }
   // the player's coach (no identity) keeps the old book unchanged
@@ -162,8 +163,9 @@ test('training: the identity\'s attributes come first among the position\'s OVR 
         // while an identity attribute has headroom, the next point goes to one
         const open = (d, a) => d.current[a] < d.potential[a];
         const firstSpent = id.spent[0]?.attr; if (firstSpent && pri[pos].some((a) => open(d0, a))) assert.ok(pri[pos].includes(firstSpent), `${club} ${pos}: first point on ${firstSpent}`);
-        // a non-OVR attribute passed as "first" is ignored (never ranked first)
-        const odd = run(['durability']); assert.deepEqual(odd.spent.map((x) => x.attr), plain.spent.map((x) => x.attr));
+        // a non-OVR attribute passed as "first" is ignored (never ranked first). Balance audit R-17 (2026-11-25) put Durability into
+        // every non-kicker overall, so the non-OVR probe is now Kicking (in no overall but the kicker's).
+        const odd = run(['kicking']); assert.deepEqual(odd.spent.map((x) => x.attr), plain.spent.map((x) => x.attr));
       }
     }
   }
@@ -178,12 +180,13 @@ test('gyms never fall below Compete; ordinary clubs cycle fully', () => {
   assert.equal(nextMode(null, 'rebuild', 1, { gym: false }).mode, 'rebuild');
 });
 
-test('Rookie lowers ordinary clubs only; gyms keep the standard level; Pro and All-Star unchanged', () => {
-  assert.equal(F.difficultyQuality(F.DIFFICULTY.rookie, false), -4); assert.equal(F.difficultyQuality(F.DIFFICULTY.rookie, true), F.DIFFICULTY.pro.quality);
+test('Rookie lowers every club, Gym Leaders included (follow-up A-1); Pro and All-Star unchanged', () => {
+  // Follow-up A-1 (owner 2026-11-26, supersedes Task 8 D7): on Rookie a Gym Leader club takes Rookie's step too, not Pro's.
+  assert.equal(F.difficultyQuality(F.DIFFICULTY.rookie, false), -7); // owner D-2 (2026-11-26): Rookie −4 → −7 assert.equal(F.difficultyQuality(F.DIFFICULTY.rookie, true), F.DIFFICULTY.rookie.quality);
   for (const k of ['pro', 'allstar']) for (const gym of [true, false]) assert.equal(F.difficultyQuality(F.DIFFICULTY[k], gym), F.DIFFICULTY[k].quality);
   const f = newFranchise(72); const pro = (club) => F.clubQuality(f, club, 1);
   const before = Object.fromEntries(ALL_TEAMS.map((c) => [c, pro(c)])); f.settings.difficulty = 'rookie';
-  for (const c of ALL_TEAMS) assert.equal(F.clubQuality(f, c, 1), before[c] + (GYM_BY_CLUB[c] ? 0 : -3), `${c} on Rookie`);
+  for (const c of ALL_TEAMS) assert.equal(F.clubQuality(f, c, 1), before[c] - 6, `${c} on Rookie`); // Pro −1 → Rookie −7 (D-2), gyms too (A-1)
 });
 
 test('no boosts: an identity team plays its monsters\' own ratings, and building it changes nobody', () => {

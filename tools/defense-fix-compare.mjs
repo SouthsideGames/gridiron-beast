@@ -13,7 +13,9 @@ const ROOT = path.resolve(args.root || path.join(path.dirname(new URL(import.met
 const { playGame } = await import(path.join(ROOT, 'src/sim/game-runner.js'));
 const { generatedTeam } = await import(path.join(ROOT, 'src/franchise/roster.js'));
 const G = Number(args.games) || 80;
-const strip = (team, patch) => { const slots = (s) => Object.fromEntries(Object.entries(s).map(([k, m]) => [k, m && typeof m === 'object' ? { ...m, ...patch } : m])); return { ...team, offense: slots(team.offense), defense: slots(team.defense) }; };
+import { stripTeam, assertStripped } from './lib/ability-strip.mjs';
+// R-3 (2026-11-25): every player source, including the rotation pool.
+const strip = (team, patch) => { const t = stripTeam(team, patch); assertStripped(t, team.name); return t; };
 const VARIANTS = { abilitiesOn: (t) => t, abilitiesOff: (t) => strip(t, { species: null, ability: null }) };
 const pct = (a, b) => (b ? +(100 * a / b).toFixed(1) : null); const mean = (xs) => (xs.length ? +(xs.reduce((a, b) => a + b, 0) / xs.length).toFixed(3) : null);
 

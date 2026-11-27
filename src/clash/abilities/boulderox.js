@@ -1,5 +1,6 @@
 // EAR-03-C Unbroken Charge (boulderox: Bouldrox; Tank). Batch D.
-// Contract (Dex): ACTUALLY losing a normal action to Stunned (merely receiving Stunned is not enough) arms the once-per-Clash charge; the use
+// Contract (Dex; trigger widened by balance audit R-10): ACTUALLY losing a normal action to Stunned (merely receiving Stunned is not
+// enough), or taking a single hit of at least 30% of his maximum HP and staying up, arms the once-per-Clash charge; the use
 // is committed when it first arms. The next PERFORMED normal attack (against the enemy active then) is the charge: 150 / 160 / 170 / 180%
 // normal attack by mastery, UNDODGEABLE including decoys; normal type, shield, Guarded, active Tank protection and survival abilities
 // apply. It costs that normal action and counts as a performed attack for normal attack counters; no ordinary-only perks (special);
@@ -11,6 +12,11 @@ import { byTier } from './util.js';
 import { E as $E } from '../../core/english.js';
 
 const POWER = [150, 160, 170, 180];
+// R-10 (balance audit, 2026-11-25): Unbroken Charge also arms when Bouldrox takes one heavy hit and stays up: a single hit costing at
+// least HEAVY_HIT % of his maximum HP. Stunned, the only trigger before, is applied by almost nothing in the Clash (in 1,500 random
+// 3 v 3 battles no harmful status reached him once), so the charge never armed (100% of battles without an execution, Task 10 and
+// the audit). Still once per Clash, the same charge; a Stunned skip still arms it.
+export const HEAVY_HIT = 30;
 const STUN = { id: 'stunned', strength: 1, duration: 1 };
 
 export default registerClashAbility({
@@ -26,6 +32,11 @@ export default registerClashAbility({
       const st = self.state; if (!st.armed || !foeId) return null;
       st.armed = false; api.activate(self, `${$E('clashlog.unbroken_charge_at_undodgeable', { byTier: byTier(POWER, self.tier) })}`, { targetId: foeId });
       return { kind: 'attack', tag: 'special', mult: byTier(POWER, self.tier) / 100, undodgeable: true, strikeKey: 'charge', label: $E('clashlog.unbroken_charge') };
+    },
+    afterWholeHit(api, self, info) {
+      const st = self.state; if (st.committed) return; const l = info.landed?.find((x) => x.id === self.id); if (!l || l.koed) return;
+      const me = api.me(self); if (!me || me.koed || (l.loss || 0) * 100 < HEAVY_HIT * me.maxHp) return; // text: clashlog.a_heavy_hit_arms_the_charge (30%)
+      st.committed = true; st.armed = true; api.trigger(self, $E('clashlog.a_heavy_hit_arms_the_charge')); api.executed(self);
     },
     onKO(api, self) { if (self.state.armed) { self.state.armed = false; api.cleanup(self, $E('clashlog.the_knockout_destroys_the_armed_charge')); } },
   },

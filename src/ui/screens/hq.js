@@ -15,7 +15,7 @@ import { apexEmblem, apexFactsHtml } from '../apex-ui.js';
 import { discover } from '../../franchise/t8/discovery.js';
 import { venueHtml } from '../stadium-preview.js';
 import { leagueNewsPanel, leagueNewsSheetHtml } from '../league-news-ui.js';
-import { careerLink, careerBlockHtml } from '../career-ui.js';
+import { careerLink, careerBlockHtml, allLeagueHtml } from '../career-ui.js';
 import { legendaryCardHtml, openLegendarySheet, announceLegendary } from '../legendary-ui.js';
 import { LEGENDARY_IDS, unannouncedLegendary } from '../../franchise/legendary.js';
 import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
@@ -32,7 +32,7 @@ import { REGIONS, TRAINING_FOCI, ROLE_LABEL, trainingBonus } from '../../data/st
 import { PLAYS, LESSONS, counterPlays } from '../../data/playbook.js';
 import { CONFERENCE_NAMES, REG_WEEKS, CONFERENCE_ROUND, FINAL_ROUND, conferenceOf, tierById, TEAM_META, DIVISIONS, conferenceFor, divisionOf } from '../../data/league.js';
 import { temperSummary } from '../../data/temper.js';
-import { salaryFor, monsterOverall, TYPES, effectiveAttributes, HEADLINE, headlineAttributes, resolveSpecies, ABILITIES } from '../../data/monsters.js';
+import { salaryFor, salaryForOvr, monsterOverall, TYPES, effectiveAttributes, HEADLINE, headlineAttributes, resolveSpecies, ABILITIES } from '../../data/monsters.js';
 import { TRAITS } from '../../data/species.js';
 import { headlineHtml } from './roster.js';
 import { ATTRIBUTES, OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
@@ -280,7 +280,7 @@ export function registerHqScreens(Router, app) {
     const scouted = v.level >= 6; const fit = scouted ? F.fitFor(f, m) : null; // scheme fit shows only once the scout has the full picture (GDD §19.4)
     const pf = taken ? null : F.positionFit(f, m, { ovr: v.ovr ?? null });
     return `<div data-prospect-id="${esc(m.id)}" class="item ${scouted ? 'tappable' : 'static'} ${taken ? 'done' : ''} ${fit?.fits ? 'fit' : ''} ${fitClass(pf)}" style="align-items:flex-start" ${scouted ? `data-action="prospect" data-id="${m.id}" role="button" tabindex="0"` : ''}>${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)}${fit?.fits ? ` <span class="fit-star" title="${$t('hq.fits_your_scheme')}">✦</span>` : ''} <span class="dim">${esc(m.position)} · age ${m.age} · ${esc(m.origin || '')}</span>${scouted ? ` <span class="chip good">${$t('hq.scouted_tap_for_the_report')}</span>` : v.level > 0 ? ` <span class="chip">glanced</span>` : ''}</div>
-      <div class="sub">${beastSpeciesHtml(m)}</div>${prospectRanks(f, m)}<div class="sub">${v.ovr != null ? `${$t('hq.b_ovr_b', { ovr: v.ovr })}` : `<b>${$t('hq.ovr_3')}</b>`}${v.potential != null ? ` ${$t('hq.potential', { potential: v.potential })}` : ''}${apexEmblem(f, m) ? ` ${apexEmblem(f, m)}` : ''}${v.natureKnown ? ` ${$t('hq.temper', { name: esc(temperSummary(m.temper).name) })}` : ''} ${$t('hq.rookie_deal_yr', { ovr: (Math.round((18000 + 280 * (v.ovr ?? 52)) * F.ROOKIE_SCALE / 100) * 100).toLocaleString('en-US') })}</div>${pickable ? (() => { const a = F.draftAffordability(f, m.id); return a ? `<div class="sub" style="color:var(--bad)">${$t('hq.over_your_cap_his_rookie_deal', { toLocaleString: (a.charge).toLocaleString('en-US'), toLocaleString2: Math.max(0, a.usable).toLocaleString('en-US') })}</div>` : ''; })() : ''}<div>${bars}</div>${fitLine(pf)}</div>${pickable ? `<button class="btn small primary" data-action="pick" data-id="${m.id}">${$t('hq.pick')}</button>` : ''}</div>`;
+      <div class="sub">${beastSpeciesHtml(m)}</div>${prospectRanks(f, m)}<div class="sub">${v.ovr != null ? `${$t('hq.b_ovr_b', { ovr: v.ovr })}` : `<b>${$t('hq.ovr_3')}</b>`}${v.potential != null ? ` ${$t('hq.potential', { potential: v.potential })}` : ''}${apexEmblem(f, m) ? ` ${apexEmblem(f, m)}` : ''}${v.natureKnown ? ` ${$t('hq.temper', { name: esc(temperSummary(m.temper).name) })}` : ''} ${$t('hq.rookie_deal_yr', { ovr: (Math.round((salaryForOvr(v.ovr ?? 52)) * F.ROOKIE_SCALE / 100) * 100).toLocaleString('en-US') })}</div>${pickable ? (() => { const a = F.draftAffordability(f, m.id); return a ? `<div class="sub" style="color:var(--bad)">${$t('hq.over_your_cap_his_rookie_deal', { toLocaleString: (a.charge).toLocaleString('en-US'), toLocaleString2: Math.max(0, a.usable).toLocaleString('en-US') })}</div>` : ''; })() : ''}<div>${bars}</div>${fitLine(pf)}</div>${pickable ? `<button class="btn small primary" data-action="pick" data-id="${m.id}">${$t('hq.pick')}</button>` : ''}</div>`;
   }
   /** The scout's full report on a fully scouted prospect (GDD §19.4): bio, nature, ability, all twelve attributes, and how they compare with the owner's best at the position. */
   function prospectSheet(f, m) {
@@ -290,7 +290,7 @@ export function registerHqScreens(Router, app) {
     const mine = f.roster.filter((x) => x.position === m.position).sort((a, b) => monsterOverall(b) - monsterOverall(a));
     const best = mine[0]; const depth = F.depthNeeds(f).find((n) => n.position === m.position);
     const pk = f.draft?.picks?.find((p) => p.id === m.id);
-    const salary = Math.round((18000 + 280 * monsterOverall(m)) * F.ROOKIE_SCALE / 100) * 100;
+    const salary = Math.round(salaryForOvr(monsterOverall(m)) * F.ROOKIE_SCALE / 100) * 100;
     sheet(`<div class="row" style="gap:12px">${monsterSprite(m, 64)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(m.name)}</div><div class="muted">${$t('hq.type_age_board', { position: esc(m.position), type: esc(m.type), age: m.age })}</div><div class="muted">${$t('hq.born_in', { origin: esc(m.origin || '·'), name: esc(sp.name) })}${sp.rarity ? ` (${esc(sp.rarity)})` : ''}</div></div></div>
       ${prospectRanks(f, m)}
       ${pk ? `<p class="chip ${pk.team === f.club ? 'accent' : ''}">${$t('hq.drafted_r_by', { pk: pk.round, overall: pk.overall, team: esc(pk.team) })}</p>` : ''}
@@ -697,7 +697,8 @@ export function registerHqScreens(Router, app) {
     render({ f }) {
       const r = F.lineupCheck(f, { advance: false });
       const borrowed = r.borrowed?.length ? `<p class="muted" style="color:var(--warn)">${r.borrowed.map((b) => b.legal ? `↪ ${b.slot}: ${esc(b.name)} (${esc(b.position)}${b.outOfPosition ? $t('hq.1_75_injury_risk') : ''}) fills in` : `${$t('hq.nobody_legal_plays_using_it_are', { slot: b.slot })}`).join(' · ')}.</p>` : '';
-      const lineup = r.ok ? `<p class="muted">${$t('hq.lineup_set_every_starting_position_has')}${r.tired.length ? ` <span style="color:var(--warn)">${$t('hq.tired')} ${esc(r.tired.join(', '))}.</span>` : ''}</p>${borrowed}` : `<p style="color:var(--bad)">${$t('hq.no_legal_monster_for')} ${r.problems.join(', ')}${$t('hq.unless_you_fix_the_depth_chart')}</p>${borrowed}`;
+      const kickNote = r.kicker ? `<p class="muted" style="color:var(--warn)">⚠️ ${esc(r.kicker)}</p>` : ''; // F-14: a warning, not a blocker
+      const lineup = (r.ok ? `<p class="muted">${$t('hq.lineup_set_every_starting_position_has')}${r.tired.length ? ` <span style="color:var(--warn)">${$t('hq.tired')} ${esc(r.tired.join(', '))}.</span>` : ''}</p>${borrowed}` : `<p style="color:var(--bad)">${$t('hq.no_legal_monster_for')} ${r.problems.join(', ')}${$t('hq.unless_you_fix_the_depth_chart')}</p>${borrowed}`) + kickNote;
       if (f.week.media) {
         const md = f.week.media; const starM = md.star ? f.roster.find((x) => x.id === md.star) : null; const groups = starM ? `<span class="chip accent">${$t('hq.in_the_spotlight_2_awareness', { name: esc(starM.name) })}</span>` : '';
         const hl = md.headline; const paper = hl ? `<div class="newspaper" role="img" aria-label="${esc(hl.paper)}: ${esc(hl.title)}"><div class="np-mast">${esc(hl.paper)}</div><div class="np-rule"></div><div class="np-title">${esc(hl.title)}</div><div class="np-sub">${esc(hl.sub)}</div><div class="np-kicker">${esc(hl.kicker)}</div></div>` : '';
@@ -911,7 +912,7 @@ export function awardsHtml(a) {
   const line = (label, x) => x ? `<div class="item static"><div class="grow"><div class="name">${esc(label)}</div><div class="sub">${x.id ? careerLink(x.id, x.name) : esc(x.name)} (${esc(x.position)})${x.value != null ? ` · ${x.value} ${esc(x.label)}` : ''}</div></div></div>` : '';
   return `<div class="panel center"><div style="font-size:12px" class="muted">${$t('hq.season_2', { year: yearOf(a.year) })}</div><div style="font-size:20px;font-weight:900">${$t('hq.overall_2', { w: a.record.w, l: a.record.l, t: a.record.t ? '-' + a.record.t : '', place: a.place, n: ['st', 'nd', 'rd'][a.place - 1] || 'th' })}</div><div class="muted">${a.champion === undefined ? '' : a.playoffs ? $t('hq.made_the_playoffs') : $t('hq.missed_the_playoffs')}${a.champion ? ` ${$t('hq.beast_bowl_2', { champion: esc(a.champion) })}` : ''}</div></div>
     ${a.rivalry ? `<div class="panel tight" style="border-color:#a855f7">${$t('hq.rivalry_vs_b_b', { team: esc(a.rivalry.team), swept: a.rivalry.swept ? $t('hq.swept_gm_is_not_happy', { gm: esc(a.rivalry.gm) }) : a.rivalry.games ? a.rivalry.wins + '-' + (a.rivalry.games - a.rivalry.wins) : $t('hq.not_played') })}</div>` : ''}
-    ${a.league ? `<h3>${$t('hq.league_awards')}</h3><div class="list">${Object.entries(F.AWARDS).map(([k, aw]) => { const w = a.league[k]; if (!w) return ''; return `<div class="item static" style="${w.team === a.club ? 'border-color:var(--accent)' : ''}"><div class="grow"><div class="name">🏅 ${esc(aw.label)}</div><div class="sub">${k === 'coy' ? `${esc(w.coach)} · ${esc(w.team)} (${w.w}-${w.l})` : `${careerLink(w.id, w.name)} (${esc(w.position)}, ${esc(w.team)}) · ${esc(fieldText(w, 'why') || raceLine(w))}`}</div></div></div>`; }).join('')}</div>` : ''}
+    ${a.league ? `<h3>${$t('hq.league_awards')}</h3><div class="list">${Object.entries(F.AWARDS).map(([k, aw]) => { const w = a.league[k]; if (!w) return ''; return `<div class="item static" style="${w.team === a.club ? 'border-color:var(--accent)' : ''}"><div class="grow"><div class="name">🏅 ${esc(aw.label)}</div><div class="sub">${k === 'coy' ? `${esc(w.coach)} · ${esc(w.team)} (${w.w}-${w.l})` : `${careerLink(w.id, w.name)} (${esc(w.position)}, ${esc(w.team)}) · ${esc(fieldText(w, 'why') || raceLine(w))}`}</div></div></div>`; }).join('')}</div>` : ''}${a.allLeague ? allLeagueHtml(a.allLeague, { club: a.club }) : ''}
     <h3>${$t('hq.club_awards')}</h3><div class="list">${a.mvp ? `<div class="item static" style="border-color:var(--accent)"><div class="grow"><div class="name">${$t('hq.team_mvp')}</div><div class="sub">${esc(a.mvp.name)} (${esc(a.mvp.position)})</div></div></div>` : ''}${line($t('hq.rushing_leader'), a.rusher)}${line($t('hq.receiving_leader'), a.receiver)}${line($t('hq.passing_leader'), a.passer)}${line($t('hq.tackling_leader'), a.tackler)}${line($t('hq.sack_leader'), a.rusherD)}${line($t('hq.ball_hawk'), a.ballhawk)}</div>`;
 }
 

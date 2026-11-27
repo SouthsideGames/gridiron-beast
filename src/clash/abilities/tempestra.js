@@ -1,5 +1,6 @@
 // WIN-06-C Eye of the Storm (tempestra: Tempestra; Disruptor, legendary). Batch F.
-// Contract (Dex): once per Clash, its own normal action replaces the attack if the enemy front active has a READY, REPEATABLE signature
+// Contract (Dex; F-05 2026-11-26: cast IN ADDITION to the ordinary attack, no longer replacing it): once per Clash, at its own normal
+// action, if the enemy front active has a READY, REPEATABLE signature
 // (the ability-kind table's `signature` field, never guessed from an animation; ready = no running cooldown of its own). The current enemy
 // active, identity locked: for its next 2 recipient normal turns it must use the ordinary attack instead of a ready signature (the engine
 // does not consult that signature, so nothing is spent); its charges and cooldowns continue normally; no forced-rotation prevention; no
@@ -22,7 +23,7 @@ export default registerClashAbility({
       if (!f.abilityId || !restrictable(f.abilityId) || f.clocks.some((k) => k.kind === 'cooldown' && k.id === f.abilityId) || f.sigRestrict) return null;
       self.state.used = true; api.activate(self, `${$E('clashlog.s_is_restricted_for_of_its', { name: f.name, abilityId: f.abilityId, turns: TURNS })}`, { targetId: foeId }); api.executed(self);
       api.restrictSignature(self, foeId, TURNS);
-      return { kind: 'done' };
+      return null; // F-05 (owner 2026-11-26): cast in addition to the ordinary attack, which follows in the same turn
     },
   },
   review: {
@@ -31,6 +32,10 @@ export default registerClashAbility({
         explain: () => 'Tempestra restricts Aurodrax: its next two normal turns are ordinary attacks (Sovereign Balance is not consulted, nothing spent); then the signature is available again.',
         setup: () => ({ a: [{ species: 'tempestra', overall: 30, sparring: true }], b: [{ species: 'aurodrax', overall: 30 }], seed: 1, stopAt: { exchange: 4 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
         expect: (r, h) => { h.check('restricted turns are ordinary', h.ev('damage', (e) => e.actor === 'b0' && e.ex <= 2).every((e) => e.tag === 'ordinary')); h.check('restriction ends', h.has('signature_restriction_end', (e) => e.actor === 'b0')); h.check('Sovereign Balance used afterwards', h.has('damage', (e) => e.actor === 'b0' && e.abilityId === 'DRA-06-C' && e.ex >= 3)); h.executed(1); } },
+      { id: 'casts-and-attacks', kind: 'valid', title: 'F-05: the restriction is cast in addition to the attack: Tempestra still strikes on the cast turn',
+        explain: () => 'Tempestra restricts Aurodrax\'s Sovereign Balance and then makes its ordinary attack in the same turn (owner decision F-05, 2026-11-26).',
+        setup: () => ({ a: [{ species: 'tempestra', overall: 30 }], b: [{ species: 'aurodrax', overall: 30 }], seed: 1, stopAt: { exchange: 1 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
+        expect: (r, h) => { h.check('the restriction is cast', h.has('signature_restricted', (e) => e.abilityId === 'WIN-06-C') || h.has('ability', (e) => e.actor === 'a0' && e.abilityId === 'WIN-06-C')); h.check('Tempestra attacks on the cast turn', h.has('damage', (e) => e.actor === 'a0' && e.ex === 1 && e.tag === 'ordinary')); h.executed(1); } },
       { id: 'once-use-not-eligible', kind: 'blocked', title: 'A once-per-Clash ability is not a repeatable signature: no cast, use kept',
         explain: () => 'The opponent Pyronix\'s Falling Star is once per Clash: not restrictable; Tempestra attacks.',
         setup: () => ({ a: [{ species: 'tempestra' }], b: [{ species: 'firestorm' }], seed: 1, stopAt: { exchange: 1 } }),

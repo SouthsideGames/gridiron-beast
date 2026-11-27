@@ -132,7 +132,7 @@ export function registerMenuScreens(Router, app) {
           <p class="set-note">These display settings apply across franchises on this device.</p>`)}
         ${group('audio', 'Audio', `
           <label class="set-row set-toggle"><span class="set-text"><b>Mute all audio</b></span><input type="checkbox" role="switch" data-change="audio-mute" ${ap.muted ? 'checked' : ''}></label>
-          ${[['music', 'Music', 'Play Music'], ['sfx', 'Sound effects', 'Test'], ['crowd', 'Crowd', 'Test'], ['cries', 'Monster cries', 'Play Cry']].map(([key, label, test]) => `<div class="set-row set-volume"><label class="set-text" for="vol-${key}"><b>${label}</b></label><div class="set-volume-line"><input id="vol-${key}" type="range" min="0" max="1" step="0.05" data-change="audio-${key}" value="${ap[key]}" aria-label="${label} volume"><button class="btn small" data-action="audio-preview" data-channel="${key}">${test}</button></div></div>`).join('')}
+          ${[['music', 'Music', 'Play Music'], ['sfx', 'Sound effects', 'Test'], ['crowd', 'Crowd', 'Test'], ['cries', 'Beast cries', 'Play Cry']].map(([key, label, test]) => `<div class="set-row set-volume"><label class="set-text" for="vol-${key}"><b>${label}</b></label><div class="set-volume-line"><input id="vol-${key}" type="range" min="0" max="1" step="0.05" data-change="audio-${key}" value="${ap[key]}" aria-label="${label} volume"><button class="btn small" data-action="audio-preview" data-channel="${key}">${test}</button></div></div>`).join('')}
           ${toggle('evosound', s.evoSound, t('menu.evolution_sounds_off_by_default_the'))}
           <p class="set-note">Audio starts after a tap. These settings apply across franchises.</p>`)}
         ${savePanelHtml(app)}

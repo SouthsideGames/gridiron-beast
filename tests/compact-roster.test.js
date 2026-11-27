@@ -36,7 +36,9 @@ test('reserves and development start closed, retain manual expansion across redr
 });
 test('the square info control reveals and hides all lineup explanations without changing the team',()=>{
  const x=fixture(),html=x.render(true),before=JSON.stringify(x.f);
- assert.match(html,/data-action="bestlineup"[^]*?class="btn small roster-info-toggle"/);
+ // Owner UI feedback 2026-11-25: the square ⓘ moved from beside Best Lineup to beside the roster-and-cap pill (one info control, not two).
+ assert.match(html,/class="chip roster-room[^>]*>[^<]*<\/span><button class="btn small roster-info-toggle"/);
+ assert.doesNotMatch(html.match(/<div class="row roster-tools">[^]*?<\/div>/)[0],/roster-info-toggle/);
  assert.match(html,/<section id="roster-lineup-info"[^>]*hidden>/);
  const infoHtml=html.match(/<section id="roster-lineup-info"[^]*?<\/section>/)[0];
  assert.ok(infoHtml.includes(t('roster.your_seven_starters_tap_a_slot')));assert.ok(infoHtml.includes(t('roster.gold_outline')));

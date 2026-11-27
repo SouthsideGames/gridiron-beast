@@ -195,8 +195,10 @@ function moveMonster(f, from, to, m, year) {
 /** Carry out a deal: monsters both ways, picks to B, one League News event naming what A paid. */
 function execute(f, { A, B, m, ys, picks, year, na, nb, fl, sm, got, paid }) {
   moveMonster(f, B, A, m, year); for (const y of ys) moveMonster(f, A, B, y, year); for (const p of picks) setPickOwner(f, p, B);
-  const label = [...ys.map((y) => `${y.name} (${y.position}, ${ovr(y)} OVR)`), ...picks.map((p) => `${$t('franchise.a_round_pick', { round: p.round, year: p.year })}`)].join(' and ');
-  leagueEvent(f, { kind: 'trade', from: B, to: A, consideration: label, ...moveIdentity(f, m) });
+  // Saved without wording (text never decides, tests/text-never-decides.test.js): the players as name/position/overall, the picks as
+  // { round, year }; League News words them when it shows the event (league-news.js considerationText).
+  const label = ys.map((y) => `${y.name} (${y.position}, ${ovr(y)} OVR)`).join(' and ');
+  leagueEvent(f, { kind: 'trade', from: B, to: A, consideration: label || null, considerationPicks: picks.map((p) => ({ round: p.round, year: p.year })), ...moveIdentity(f, m) });
   const kind = ys.length && picks.length ? 'swap+picks' : ys.length ? 'swap' : 'picks';
   return { kind, A, B, toA: m.id, ...(ys.length ? { toB: ys[0].id, toBAll: ys.map((y) => y.id) } : {}), ...(picks.length ? { picks } : {}), pos: m.position, na: Math.round(na), nb: Math.round(nb), mv: [Math.round(got * 10) / 10, Math.round(paid * 10) / 10], fl, sm }; // mv: market value received and given, as the clubs saw it when they dealt (ratings move a little afterwards)
 }
