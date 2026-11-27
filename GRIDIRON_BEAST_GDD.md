@@ -4615,7 +4615,7 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 
 **Testing philosophy (owner, 2026-11-13 afternoon): correctness first.** Every ability, attribute and mechanic must activate when intended and do what it documents. Strong monsters, dominant clubs, repeat MVPs and poor clubs are acceptable outcomes of working mechanics. Balance is investigated only when a result suggests a mechanic is not activating, an attribute has no effect, an ability differs from its description, a calculation is reversed or broken, an exploit bypasses a rule, or an outcome is impossible. No artificial win-rate targets or forced parity.
 
-**Sack rate.** A 7.0% of dropbacks figure was recorded earlier the same day. It is not to be forced: sacks must come from the existing pass-rush, blocking and quarterback mechanics. The Awareness, Speed, Agility and Strength contributions are audited first (one attribute varied at a time); a change is made only where an attribute does not act where intended. The experimental pocket-compression constant from `chatgpt/task10-balance-fixes` was not adopted (it did not move the sack rate and broke two engine tests).
+**Sack rate.** A 7.0% of dropbacks figure was recorded earlier the same day. It is not a target and is not enforced (owner D-3, §61.15.3). It is not to be forced: sacks must come from the existing pass-rush, blocking and quarterback mechanics. The Awareness, Speed, Agility and Strength contributions are audited first (one attribute varied at a time); a change is made only where an attribute does not act where intended. The experimental pocket-compression constant from `chatgpt/task10-balance-fixes` was not adopted (it did not move the sack rate and broke two engine tests).
 
 **MVP.** The MVP alone caps each statistical component at +3 standard deviations within the position. OPOY, DPOY and the rookie awards are unchanged. *(Superseded in part by §61.8: the awards are now the MVB, OBOY and DBOY, and the DBOY caps its components too.)* No voter fatigue and no repeat-winner limit: a monster may win repeatedly when his performance justifies it.
 
@@ -5164,6 +5164,51 @@ Measured results and the experiments are in `reports/balance-impl/FINAL_CALIBRAT
 #### 61.14.5 Experiments not adopted (production unchanged until the owner approves a value)
 - Rookie founding and replenishment quality −7 (production −4), Awareness-based quarterback read times (production `look` unchanged),
   and weekly fatigue recovery below 28 (production 28): measured in the report, recommendations there.
+
+### 61.15 Final decisions (owner brief "Final Calibration Decisions and Targeted Implementation", 2026-11-26)
+Measured results are in `reports/balance-impl/FINAL_DECISIONS_REPORT.md`. Where this section and §61.14 differ, this section applies.
+
+#### 61.15.1 One salary cap: existing franchises move to 1.6 M at their next offseason (D-1; supersedes the last bullet of §61.14.1)
+- A franchise begun under the 1.8 M cap (no `capEra`) **finishes its current season under 1.8 M** and moves to the 1.6 M cap
+  **permanently when that season ends** (`applyCapTransition`, in `endSeason`, before retirements, renewals, free agency and the draft).
+  It happens once: `capEra: 2` and `capTransition { year, from, to, committed }` are saved, and a save that already has `capEra` never
+  repeats it. New franchises start on 1.6 M and are unaffected. History is not touched.
+- **Nothing is done to the roster.** No beast is released for the owner, no salary or contract is rewritten, no attribute is reduced, no
+  retirement is forced. The salary curve, the staff allowance (405,000), AI bonuses, cap-aware founding, contracts and the roster
+  requirements are unchanged.
+- **Remedies are the existing ones.** The offseason tools (declining renewals, releases, trades that shed salary, cheaper signings) come
+  before next season's compliance check, the commissioner's Saturday review (unchanged). **While a club is over the cap, a move that adds
+  salary is refused** (`overCapBlock` for offseason signings and pick-for-veteran trades; the trade desk refuses an owner trade that adds
+  salary while over, the same rule AI clubs already follow; the Task 7 market already refuses offers above usable cap). Being over the
+  cap never blocks the season gate, so progression cannot be stopped permanently. AI clubs use their ordinary offseason releases and
+  trades; there are no migration-specific releases.
+- **Advance notice through existing channels.** While the change is due: an HQ notice (`franchise.cap_change_notice`, or
+  `_over` with the projected excess and the actions that help), a League News item once per season (`franchise.cap_change_coming`), and
+  at the change a League News item saying the cap now in force and the room or excess (`franchise.cap_now_in_force`, `_over`).
+  No new screen.
+
+#### 61.15.2 Rookie quality −7 (D-2; supersedes the Rookie item of §61.14.5)
+- Rookie founding and replenishment quality is **−7** (was −4). Pro and All-Star are unchanged. AI development stays Rookie 0.6 / Pro 1.0 /
+  All-Star 1.5; the gym correction, ceilings, progression and evolution are unchanged. Existing beasts keep their attributes (it applies to
+  clubs and arrivals generated from now on); there is no rubber-banding. Quarterback Awareness and read timing stay as they are.
+
+#### 61.15.3 Sack rate (D-3)
+- The earlier 7.0%-of-dropbacks figure is **not a target and is not enforced**. Sacks come only from the pass-rush, blocking and
+  quarterback mechanics. The measurement tools (`pass-rush-study`) stay for observation.
+
+#### 61.15.4 Foresight casts in addition to the ordinary attack (D-5; supersedes the Foresight bullet of §61.14.2)
+- **Foresight** (Cerebrix, PSY-03-C) prepares its mirror and then makes its ordinary attack in the same turn, like Root Communion and Eye
+  of the Storm. It still prepares only while the **current active foe** applies a harmful status; everything else about it is unchanged.
+
+#### 61.15.5 Run defense: Counter, Power Left, Lead Draw (D-4, D-6)
+- Investigated with traces; **no engine change**. The Counter run-read test's Awareness-recovery assertion against Run Wall and Cover 3
+  fails since §61.14.3 (B-gap path): in those calls the false step deceives nobody, so there is nothing for Awareness to recover, and a
+  wider false step that would make the read matter delays the exchange (the mesh breaks). A test revision and the Power Left and contain
+  call findings await the owner (report §5). The test is unchanged.
+
+#### 61.15.6 Stamina and depth (D-7)
+- Experiment only, nothing adopted. Production: every game starts at full stamina (capacity = permanent Durability); weekly fatigue does
+  not reach game stamina. Recovery stays 28, injury odds and Durability weights are unchanged, and there is no depth bonus.
 
 ### 61.12 Validation (measured 2026-11-26; details in `reports/balance-impl/FINAL_REPORT.md`)
 - **Whole suite:** fast tier 2,263 of 2,263; simulation tier 310 of 310 after three set-up updates that follow §61.3–61.4.
