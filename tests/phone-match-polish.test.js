@@ -9,7 +9,7 @@ import * as R from '../src/sim/rules.js';
 import {generatedTeam} from '../src/franchise/roster.js';
 import {kickPlay} from '../src/ui/fx/match-fx.js';
 import {fieldSvg} from '../src/ui/field-view.js';
-import {conversionCallout} from '../src/ui/screens/match.js';
+import {conversionCallout, playResultCallout} from '../src/ui/screens/match.js';
 
 test('conversion banners use the recorded outcome and scoring side', () => {
   const kick = { kind: 'try', tryTeam: 'home', kicking: 'home' };
@@ -50,4 +50,36 @@ test('extra-point event carries final kick outcome and plays a real holder, kick
 });
 test('camera viewport clips both field art and moving actors',()=>{
  const html=fieldSvg({ballOn:7});assert.match(html,/<clipPath id="fv-clip"/);assert.equal((html.match(/clip-path="url\(#fv-clip\)"/g)||[]).length,2);
+});
+
+test('play callouts distinguish pass outcomes and name the team taking possession', () => {
+  const teams = { home: { abbr: 'HOM' }, away: { abbr: 'AWY' } };
+  const event = { kind: 'play', offenseSide: 'home' };
+  const result = (result, stats = {}, outcome = {}) =>
+    playResultCallout({ ...event, sim: { result, stats, names: { off: { RB: 'Runner' }, def: { LB: 'Backer' } } }, outcome }, 'home', teams);
+  assert.equal(result('incomplete').text, 'INCOMPLETE');
+  assert.equal(result('incomplete', { dropped: true }).text, 'PASS DROPPED');
+  assert.equal(result('incomplete', { dropped: true, pbuBy: 'LB' }).text, 'PASS BROKEN UP');
+  assert.equal(result('throwaway').text, 'THROWN AWAY');
+  assert.deepEqual(result('fumble', { recoveredTeam: 'def', recoveredSlot: 'LB' }),
+    { tier: 'turnover', text: 'FUMBLE · Backer (AWY) recovered', mine: false });
+  assert.deepEqual(result('tackle', { recoveredTeam: 'off', recoveredSlot: 'RB' }),
+    { tier: 'routine', text: 'FUMBLE · Runner (HOM) recovered', mine: true });
+  assert.deepEqual(result('incomplete', { dropped: true }, { turnoverOnDowns: 'away' }),
+    { tier: 'turnover', text: 'TURNOVER ON DOWNS · AWY ball · PASS DROPPED', mine: false });
+});
+
+test('fourth-down possession is captured from the rules before subsequent play', () => {
+  const home = generatedTeam(1, { id: 'h', name: 'Home', abbr: 'HOM' });
+  const away = generatedTeam(2, { id: 'a', name: 'Away', abbr: 'AWY' });
+  const makeGame = () => Object.assign(R.newGame({ home, away, seed: 4 }), {
+    phase: 'scrimmage', possession: 'home', down: 4, toGo: 3, ballOn: 44,
+  });
+  const failed = makeGame();
+  const play = { result: 'incomplete', yards: 0, elapsed: 1, ballOn: 44, stats: {}, events: [] };
+  assert.equal(R.applyScrimmageResult(failed, play).turnoverOnDowns, 'away');
+  assert.equal(failed.possession, 'away');
+  const converted = makeGame();
+  assert.equal(R.applyScrimmageResult(converted, { ...play, result: 'tackle', yards: 4 }).turnoverOnDowns, undefined);
+  assert.equal(converted.possession, 'home');
 });

@@ -169,6 +169,7 @@ tr.me td { background: #2a3f16; }
 .card .card-label { display: block; font-size: 11px; font-weight: 700; padding: 4px 3px; background: #203946; line-height: 1.15; min-height: 30px; display: flex; align-items: center; justify-content: center; }
 .card.selected { outline: 3px solid var(--accent); outline-offset: -3px; }
 .card.selected .card-label { background: #3b3410; color: var(--accent); }
+.play-card-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 6px; padding: 3px; font-size: 11px; line-height: 1.2; color: #ffe08a; }
 .card.suggested .card-label::after { content: " ★"; color: var(--accent); }
 .card.disabled { opacity: .4; }
 .art-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: var(--ink-2); margin: var(--s2) 0; }

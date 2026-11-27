@@ -618,6 +618,10 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
     case 'safety': { lines.push(`${$E('sim.is_tackled_in_the_end_zone', { player: playerName(sim, 'off', sim.stats.carrier) })}`); if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else if (sim.stats.carrier) S.rushYards += gain; S.yards += gain; scored = safety(state, lines); stops = true; break; }
     default: lines.push(lastEvent); nextDown(state, gain, lines);
   }
+  // Capture the team awarded possession before the period or overtime can move the ball again.
+  const turnoverOnDowns = downBefore === 4 && state.possession !== off
+    && !scored && !['interception', 'touchback_return', 'fumble'].includes(sim.result)
+    ? state.possession : null;
   if (!scored && state.phase === 'scrimmage' && !state.finished) state.clockRunning = !stops;
   if (scored) state.clockRunning = false;
   if (!scored && state.clock <= 0) endOfPeriod(state);
@@ -628,7 +632,7 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
   recordPlayerStats(state, sim, off, def, { toGo: toGoBefore });
   recordPerformance(state, sim, off, def, { toGo: toGoBefore, down: downBefore });
   if (state.ot) otCheckAfterPlay(state);
-  return { text, scored, result: sim.result, yards: gain };
+  return { text, scored, result: sim.result, yards: gain, ...(turnoverOnDowns ? { turnoverOnDowns } : {}) };
 }
 
 function playerName(sim, team, slot) { return slot ? (sim.names?.[team]?.[slot] || slot) : team === 'off' ? $E('sim.the_offense') : $E('sim.the_defense'); }
