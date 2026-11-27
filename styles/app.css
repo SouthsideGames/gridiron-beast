@@ -344,6 +344,8 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 
 /* Beast Dex */
 .dex-el { margin: 0 0 var(--s3); }
+.dex-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); margin-top: var(--s2); }
+.dex-el { scroll-margin-top: 72px; }
 .dex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); margin-top: var(--s2); }
 .dex-cell { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--panel); border: 2px solid var(--line); border-radius: var(--r); padding: 8px 4px 6px; color: inherit; font: inherit; cursor: pointer; min-width: 0; }
 .dex-cell.unknown { opacity: .75; }

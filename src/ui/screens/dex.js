@@ -39,22 +39,55 @@ export function registerDexScreens(Router, app) {
       const { seen, signed, total } = counts.all;
       const career = dexCountsGlobal();
       const next = COLLECTION_MILESTONES.find((m) => m.at > counts.original.seen);
-      const groupLine = [['original', $t('league.original')], ['basic', $t('league.basic')], ['all', $t('league.all')]].map(([k, l]) => `<span class="chip" data-dex-group="${k}">${l} ${counts[k].seen}/${counts[k].total}</span>`).join(' ');
-      const groups = Object.keys(TYPES).map((el) => {
-        const list = SPECIES_DEX.filter((s) => s.element === el);
-        const found = list.filter((s) => status(s) !== 'unknown').length;
-        return `<section class="dex-el"><div class="row between"><h3 style="color:hsl(${TYPES[el].hue} 70% 62%);margin:0">${esc(el)}</h3><span class="dim mono">${found}/${list.length}</span></div>
-          <div class="dex-grid">${list.map((s) => { const st = status(s); return `<button class="dex-cell ${st}" data-action="open" data-id="${s.id}" aria-label="${st === 'unknown' ? $t('league.unknown_species') : esc(s.name)}">${st === 'unknown' ? silhouette(s, 40) : sprite16(s, 40)}<span class="dex-name">${st === 'unknown' ? '???' : esc(s.name)}</span><span class="dex-r r-${s.rarity}">${st === 'unknown' ? '' : RARITIES[s.rarity].label}</span>${st === 'signed' ? `<span class="dex-tick" title="${$t('league.signed')}">✓</span>` : ''}</button>`; }).join('')}</div></section>`;
+      const filters = params?.dexFilters || {};
+      const group = filters.group || 'all';
+      const groupLine = [['original', $t('league.original')], ['basic', $t('league.basic')], ['all', $t('league.all')]].map(([k, l]) => `<button class="btn small ${k === group ? 'primary' : ''}" data-action="dex-group" data-dex-group="${k}" aria-pressed="${k === group}">${l} ${counts[k].seen}/${counts[k].total}</button>`).join(' ');
+      const select = (key, label, options) => `<label class="field">${label}<select class="input" data-change="dex-filter" data-filter="${key}">${options.map(([value, text]) => `<option value="${esc(value)}"${value === (filters[key] || 'all') ? ' selected' : ''}>${esc(text)}</option>`).join('')}</select></label>`;
+      const sections = Object.keys(TYPES).map(element => {
+        const families = SPECIES_DEX.filter(s => s.element === element);
+        const list = families.filter(s => {
+          const st = status(s);
+          if (filters.discovery && filters.discovery !== 'all' && filters.discovery !== st) return false;
+          if (group !== 'all' && (st === 'unknown' || !DEX_GROUPS[group].includes(s.id))) return false;
+          return !filters.rarity || filters.rarity === 'all' || (st !== 'unknown' && s.rarity === filters.rarity);
+        });
+        return { element, families, list };
+      }).filter(({ list }) => list.length);
+      const groups = sections.map(({ element: el, families, list }) => {
+        const found = families.filter(s => status(s) !== 'unknown').length;
+        return `<section class="dex-el" data-dex-element="${esc(el)}"><div class="row between"><h3 tabindex="-1" style="color:hsl(${TYPES[el].hue} 70% 62%);margin:0">${esc(el)}</h3><span class="dim mono">${found}/${families.length}</span></div>
+          <div class="dex-grid">${list.map((s) => { const st = status(s); return `<button class="dex-cell ${st}" data-action="open" data-id="${s.id}" aria-label="${st === 'unknown' ? $t('league.unknown_species') : esc(`${s.name} · ${$t(st === 'signed' ? 'league.signed' : 'league.dex_seen')}`)}">${st === 'unknown' ? silhouette(s, 40) : sprite16(s, 40)}<span class="dex-name">${st === 'unknown' ? '???' : esc(s.name)}</span><span class="dex-r r-${s.rarity}">${st === 'unknown' ? '' : RARITIES[s.rarity].label}</span>${st === 'signed' ? `<span class="dex-tick" title="${$t('league.signed')}">✓</span>` : ''}</button>`; }).join('')}</div></section>`;
       }).join('');
       return `
         <div class="panel tight"><div class="row between"><div>${$t('league.b_discovered_b', { seen, total })}<div class="muted">${$t('league.signed_2', { signed })} ${revealAll ? $t('league.developer_view_all_revealed') : career.franchises > 1 ? `${$t('league.your_collection_across_franchises', { franchises: career.franchises })}` : f ? $t('league.scout_a_region_or_play_a') : $t('league.your_collection_carries_into_every_franchise')}</div></div>${next ? `<div class="dim" style="text-align:right;font-size:12px;max-width:45%">${$t('league.next_at_original_families', { at: next.at, reward: esc(next.reward) })}</div>` : ''}</div>
           <div class="chips dex-groups" style="margin:6px 0 4px">${groupLine}</div>
           <div class="dex-bar"><i style="width:${(seen / total) * 100}%"></i></div></div>
-        ${groups}
+        <div class="dex-controls">
+          ${select('discovery', $t('league.dex_discovery'), [['all', $t('league.all')], ['signed', $t('league.signed')], ['seen', $t('league.dex_seen')], ['unknown', $t('league.dex_unknown')]])}
+          ${select('rarity', $t('league.dex_rarity'), [['all', $t('league.all')], ...Object.entries(RARITIES).map(([k, v]) => [k, v.label])])}
+          <label class="field">${$t('league.dex_jump')}<select class="input" data-change="dex-jump" ${sections.length ? '' : 'disabled'}><option value="">${$t('league.dex_choose_element')}</option>${sections.map(({ element }) => `<option value="${esc(element)}">${esc(element)}</option>`).join('')}</select></label>
+        </div>
+        <p class="dim" role="status">${$t('league.dex_matches', { n: sections.reduce((sum, { list }) => sum + list.length, 0) })}</p>
+        ${groups || `<div class="panel"><p>${$t('league.dex_no_matches')}</p><button class="btn" data-action="dex-clear">${$t('league.dex_clear')}</button></div>`}
         <p class="dim center" style="margin-top:12px">${$t('league.common_and_uncommon_species_are_scouted')}</p>`;
     },
     mount(root, ctx) {
+      const filter = (key, value) => {
+        ctx.params.dexFilters = { ...ctx.params.dexFilters, [key]: value };
+        Router.render();
+      };
+      root.addEventListener('change', ({ target }) => {
+        if (target.dataset.change === 'dex-filter') filter(target.dataset.filter, target.value);
+        if (target.dataset.change === 'dex-jump' && target.value) {
+          const section = [...root.querySelectorAll('[data-dex-element]')].find(el => el.dataset.dexElement === target.value);
+          section?.querySelector('h3')?.focus({ preventScroll: true });
+          section?.scrollIntoView({ block: 'start' });
+          target.value = '';
+        }
+      });
       delegate(root, {
+        'dex-group': el => filter('group', el.dataset.dexGroup),
+        'dex-clear': () => { delete ctx.params.dexFilters; Router.render(); },
         open: (el) => {
           const s = SPECIES_DEX.find((x) => x.id === el.dataset.id); if (!s) return;
           const st = ctx.params?.all ? 'seen' : dexStatus(ctx.f, s.id);

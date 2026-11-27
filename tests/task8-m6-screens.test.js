@@ -83,3 +83,19 @@ test('an Apex is ageless in fact: generated at a fixed young age, so his retirem
   assert.deepEqual(apex.map((m) => m.age), before, 'two offseasons do not age an Apex');
   for (const m of apex) { const y = (m.age + 1) - (trueOnset(m) + 4); for (const o of [{}, { unsigned: true, injury: 'severe' }, { declinedReserve: true, injury: 'severe' }]) assert.equal(retireChance(y, o), 0, `${m.id} age ${m.age}`); }
 });
+
+test('Dex filters keep undiscovered families masked and preserve collection totals', async () => {
+  resetDex();
+  const { registerDexScreens } = await import('../src/ui/screens/dex.js');
+  let screen;
+  registerDexScreens({ registerScreen: (_name, config) => { screen = config; } }, {});
+  const render = (dexFilters, all = false) => screen.render({ f: null, params: { all, dexFilters } });
+  assert.equal((render().match(/class="dex-cell unknown"/g) || []).length, 192);
+  assert.match(render({ discovery: 'signed' }), /No families match these filters/);
+  assert.match(render({ rarity: 'legendary' }), /No families match these filters/);
+  const demo = render({ group: 'basic', rarity: 'basic' }, true);
+  assert.equal((demo.match(/class="dex-cell seen"/g) || []).length, 120);
+  assert.match(demo, /120 families shown/);
+  assert.match(demo, /data-change="dex-jump"/);
+  assert.match(demo, /192\/192/);
+});
