@@ -105,7 +105,15 @@ test('captain chemistry, injury history, team, contracts and the rest of the fra
   const after = copy(f);
   assert.deepEqual(after.partnerships, before.partnerships); assert.deepEqual(after.injuryHistory, before.injuryHistory);
   assert.equal(after.roster.length, before.roster.length); assert.equal(after.roster[idx].id, m.id);
-  for (const k of Object.keys(before)) { if (['roster', 'news', 'dex'].includes(k)) continue; assert.deepEqual(after[k], before[k], `f.${k} unchanged`); }
+  // The achievement system (GDD §62, merged 2026-11-27) records the evolution itself: one more in the tracker's evolution count, and the
+  // evolution rows it unlocks (earned record and HQ queue). Nothing else in it changes.
+  const evo = (x) => x?.n?.evolutions || 0;
+  assert.equal(evo(after.achTrack), evo(before.achTrack) + 1, 'the tracker counts this one evolution');
+  assert.deepEqual({ ...after.achTrack, n: { ...after.achTrack.n, evolutions: evo(before.achTrack) } }, { ...before.achTrack, n: { ...before.achTrack.n, evolutions: evo(before.achTrack) } }, 'nothing else in the tracker');
+  const gained = Object.keys(after.achievements || {}).filter((id) => !(id in (before.achievements || {})));
+  assert.ok(gained.every((id) => /^ev_/.test(id)), `only evolution achievements are earned (${gained})`);
+  for (const id of Object.keys(before.achievements || {})) assert.deepEqual(after.achievements[id], before.achievements[id], `${id} unchanged`);
+  for (const k of Object.keys(before)) { if (['roster', 'news', 'dex', 'achTrack', 'achievements', 'achQueue'].includes(k)) continue; assert.deepEqual(after[k], before[k], `f.${k} unchanged`); }
   after.roster.forEach((x, i) => { if (i !== idx) assert.deepEqual(x, before.roster[i], `${x.name} unchanged`); });
 });
 
