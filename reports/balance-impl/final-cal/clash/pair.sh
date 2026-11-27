@@ -1,0 +1,4 @@
+cd /home/claude/gb-impl
+for f in tempestra elderoot cerebrix; do node tools/balance-audit/clash-pair.mjs /tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/clash/$f-A.json /tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/clash/$f-X.json; done
+echo "--- unchanged (same seeds as the follow-up shipped runs)"
+node -e 'const fs=require("fs");const o=JSON.parse(fs.readFileSync("/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/fu/i3/leg-A.json"));for(const f of ["glacivern","nyxshade"]){const n=JSON.parse(fs.readFileSync("/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/cal/clash/"+f+"-A.json")).families[f];const b=o.families[f];let same=0;for(let i=0;i<b.bits.length;i++)if(b.bits[i]===n.bits[i])same++;console.log(f,"winOn",b.winOnPct,"->",n.winOnPct,"identical battles",same,"/",b.bits.length);}'

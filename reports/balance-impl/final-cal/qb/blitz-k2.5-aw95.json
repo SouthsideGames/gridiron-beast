@@ -1,0 +1,94 @@
+{
+ "tool": "balance-audit/pass-rush-study",
+ "qbk": "2.5",
+ "qbAware": "95",
+ "quality": 62,
+ "boost": 20,
+ "clubs": 12,
+ "n": 2,
+ "defs": [
+  "cover_0",
+  "zone_blitz",
+  "sam_fire",
+  "heavy_fire"
+ ],
+ "passes": [
+  "stick",
+  "y_cross",
+  "deep_post",
+  "pa_post",
+  "empty_sit",
+  "slant_flat",
+  "fade_out",
+  "pivot_seam",
+  "slant_seam",
+  "out_seam",
+  "goal_fade",
+  "shallow_cross",
+  "spread_mills",
+  "choice",
+  "deep_cross",
+  "trips_smash",
+  "double_dig",
+  "four_verticals",
+  "post_corner",
+  "go_comeback",
+  "pistol_out_go",
+  "yankee",
+  "pa_dagger",
+  "te_throwback"
+ ],
+ "results": [
+  {
+   "scenario": "avg",
+   "snaps": 2304,
+   "sackPct": 2.3,
+   "pressurePct": 33,
+   "sensedPct": 64.8,
+   "timeToSense": 1.42,
+   "timeToThrow": 1.7,
+   "sackTime": 1.94,
+   "shedsPerSnap": 0.79,
+   "shedSnapPct": 57,
+   "firstShedT": 1.07,
+   "shedToThrow": 0.78,
+   "blockerBeatenPct": 50.4,
+   "protectionTime": 0.88,
+   "sackConversionPct": 67.5,
+   "pressureToSackPct": 7.1,
+   "escapesPerSnap": 0.01,
+   "unblockedSackPct": 68.5,
+   "scramblePct": 1,
+   "compPct": 40.6,
+   "intPct": 1.5,
+   "explosivePct": 9.1,
+   "yardsPerDropback": 6.2,
+   "ypa": 6.41,
+   "separation": 3.72,
+   "nearestDefToQB": {
+    "1": 5.53,
+    "2": 3.73,
+    "1.5": 4.26,
+    "2.5": 2.91
+   },
+   "minNearestBeforeRelease": 2.9,
+   "minUnder3Pct": 61.5,
+   "blitz": {
+    "sackPct": 2.3,
+    "pressurePct": 33
+   },
+   "base": {
+    "sackPct": null,
+    "pressurePct": null
+   },
+   "reasons": {
+    "noticed": 11.5,
+    "hot": 28.4,
+    "first_read": 48.5,
+    "progression": 10.7,
+    "revisit": 2.4,
+    "lane": 0.3
+   }
+  }
+ ]
+}
