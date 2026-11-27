@@ -2121,6 +2121,17 @@ html[data-reduced-motion="1"] .draft-stage > :last-child { animation:none; }
 .clash-live-console #fb-arena { overflow:hidden; }
 .clash-live-console #cl-subs { max-height:112px; overflow:auto; margin:0; padding:4px; }
 .clash-live-console #cl-subs .cl-sub-hint { font-size:11px; }
+@media (any-pointer: coarse), (max-width: 600px) {
+  .clash-presentation .cl-setup-tabs .btn,
+  .clash-presentation [data-action="edit"],
+  .clash-presentation [data-action="autol"],
+  .clash-presentation .cl-sort .chip,
+  .clash-live-console [data-action="rotprompt"],
+  .clash-live-console [data-sub="__auto"],
+  .screen-clash-battle [data-action="replay"] {
+    min-height: 44px;
+  }
+}
 @media (orientation:landscape) and (min-width:480px) {
   .match-console { grid-template-columns:minmax(0,1fr) minmax(220px,.7fr); grid-template-rows:auto auto minmax(0,1fr) auto; }
   .match-console #live-status, .match-console #match-head { grid-column:1/-1; }
