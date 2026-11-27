@@ -430,7 +430,7 @@ export function gameFacts(f, gameState, side, m, { won, lostBadge = null, newBad
     passYds: mx('passYds'), passTd: mx('passTd'), rushYds: mx('rushYds'), rushTd: mx('rushTd'), recYds: mx('recYds'), tackles: mx('tackles'), playerSacks: mx('sacks'), longPlay: Math.max(mx('longRush'), mx('longRec')),
     int: sm('int'), sacks: sm('sacks'), tfl: sm('tfl'), fgm: sm('fgm'), fgLong: mx('fgLong'), defTd: sm('defTd'), krTd: sm('krTd'),
     legendInLineup: (f.roster || []).some((x) => lineupIds.has(x.id) && isLegendaryMonster(x)), formerClub: formerClubs.has(m.opponent),
-    gymWin: !!won && !!GYM_BY_CLUB[m.opponent], newBadge, lostBadge };
+    gymWin: !!won && !!GYM_BY_CLUB[m.opponent], newBadge, lostBadge, oppFamilies: [...new Set((m[opp]?.roster || []).map((x) => { try { return dexFamilyOf(x); } catch { return null; } }).filter(Boolean))] };
 }
 /** Record an achievement for the player across all franchises, with its cutscene as it played (GDD §21.4). */
 /** The permanent identity a global record names: the franchise `uid` (GDD §42.3); older saves without one keep their seed. */

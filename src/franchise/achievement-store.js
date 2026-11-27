@@ -116,6 +116,7 @@ export function trackGame(f, g, key) {
   } else t.n.winRun = 0;
   if (g.defTd) achAdd(f, 'defTd', g.defTd); if (g.krTd) achAdd(f, 'krTd', g.krTd); if (g.fgm) achAdd(f, 'fgm', g.fgm);
   if (g.gymWin) achAdd(f, 'gymWins');
+  for (const fam of g.oppFamilies || []) achMark(f, 'faced', fam);
   if (g.lostBadge) achMark(f, 'badgeLost', g.lostBadge);
   if (g.newBadge && t.set.badgeLost?.[g.newBadge]) { achAdd(f, 'badgeRegained'); delete t.set.badgeLost[g.newBadge]; }
   return true;
@@ -125,6 +126,7 @@ export function trackRoster(f) {
   const t = achTrack(f); const ids = new Set(roster(f).map((m) => String(m.id))); const b = (t.set.below50 ||= {});
   for (const m of roster(f)) if (num(m.level) < 50) b[String(m.id)] = 1;
   for (const id of Object.keys(b)) if (!ids.has(id)) delete b[id];
+  const lo = (t.set.ovrMin ||= {}); for (const m of roster(f)) { const k = String(m.id), v = ovr(m); if (lo[k] == null || v < lo[k]) lo[k] = v; } for (const id of Object.keys(lo)) if (!ids.has(id)) delete lo[id];
 }
 /** A settled Beast Clash of the owner's: occasion 'encounter' | 'pregame' | 'overtime'. */
 export function trackClash(f, occasion, s, { key = null, playoff = false, watched = false, year = null } = {}) {
@@ -210,7 +212,7 @@ export const METRICS = Object.freeze({
   s_badges_won: (f, x) => (x.live ? num(x.H?.badgesWonThisSeason?.(f)) : null),
   s_clash_unbeaten: (f, x) => { const s = f.achTrack?.clashSeason; return x.live && s && s.year === f.season?.year && s.wins === s.battles ? s.battles : null; },
   // the roster as it stands
-  r_level50: (f) => roster(f).filter((m) => trainedTo50(f, m)).length, r_final_stage: (f) => roster(f).filter((m) => evolvedFinal(f, m)).length, r_max_ovr: (f) => Math.max(0, ...roster(f).map(ovr)),
+  r_level50: (f) => roster(f).filter((m) => trainedTo50(f, m)).length, r_final_stage: (f) => roster(f).filter((m) => evolvedFinal(f, m)).length, r_grown_ovr: (f, x) => { const T = x.a?.target ?? 0, lo = f.achTrack?.set?.ovrMin || {}; return Math.max(0, ...roster(f).filter((m) => lo[String(m.id)] != null && lo[String(m.id)] < T).map(ovr)); },
   r_ovr80: (f) => roster(f).filter((m) => ovr(m) >= 80).length, r_apex: (f) => (roster(f).some((m) => (m.apex || m.dev?.apex) && !founding(m)) ? 1 : 0),
   r_growth: (f) => Math.max(0, ...roster(f).flatMap((m) => (m.career?.ev || []).filter((e) => e.t === 'growth' && e.c === f.club).map((e) => num(e.x?.to) - num(e.x?.from)))),
   r_drafted_ovr: (f) => Math.max(0, ...roster(f).filter((m) => mineDrafted(f, m)).map(ovr)), r_late_gem: (f) => Math.max(0, ...roster(f).filter((m) => mineDrafted(f, m) && m.drafted.round >= 3).map(ovr)),
@@ -220,7 +222,7 @@ export const METRICS = Object.freeze({
   r_legendary: (f, x) => (roster(f).some((m) => x.H?.isLegendary?.(m)) ? 1 : 0),
   r_loyal: (f) => Math.max(0, ...roster(f).map((m) => (m.joined != null ? num(f.season?.year) - m.joined + (f.season?.finished ? 1 : 0) : 0))),
   // collection (franchise scope reads this franchise's dex; account scope the player's)
-  d_seen: (f) => Object.keys(f.dex?.seen || {}).length, d_signed: (f) => Object.keys(f.dex?.signed || {}).length, d_knowledge: (f) => Object.keys(f.dex?.knowledge || {}).length,
+  d_faced: (f) => marks(f.achTrack, 'faced'), d_signed: (f) => Object.keys(f.dex?.signed || {}).length, d_knowledge: (f) => Object.keys(f.dex?.knowledge || {}).length,
   d_original: (f, x) => num(x.H?.dexCounts?.(f)?.original?.seen), d_basic: (f, x) => num(x.H?.dexCounts?.(f)?.basic?.seen), d_all: (f, x) => num(x.H?.dexCounts?.(f)?.all?.seen),
   d_types_min: (f) => { const by = {}; for (const id of Object.keys(f.dex?.signed || {})) { const e = resolveSpecies(id)?.element; if (e) by[e] = (by[e] || 0) + 1; } const all = Object.keys(TYPES); return Math.min(...all.map((k) => by[k] || 0)); },
   a_dex: (f, x) => num(x.H?.dexCountsGlobal?.()?.signed), a_title_franchises: () => (load().earned.first_title?.franchises || []).length,
@@ -238,7 +240,7 @@ const inductees = (f) => (f.monsterHallOfFame?.elections || []).flatMap((e) => e
 const everPlayed = (f) => new Set([...hist(f).flatMap((h) => Object.keys(h.leagueStats?.[h.club] || {})), ...roster(f).map((m) => m.id)].map(String));
 
 /** The value a row's metric reads now (null: does not apply). */
-export function metricValue(f, a, x = {}) { const fn = METRICS[a.progress && x.progress ? a.progress : a.metric]; if (!fn) return null; try { const v = fn(f, x); return v == null || Number.isNaN(v) ? null : v; } catch { return null; } }
+export function metricValue(f, a, x = {}) { const fn = METRICS[a.progress && x.progress ? a.progress : a.metric]; if (!fn) return null; try { const v = fn(f, { ...x, a }); return v == null || Number.isNaN(v) ? null : v; } catch { return null; } }
 export function meets(a, v) { if (v == null) return false; switch (a.cmp) { case 'le': return v <= a.target; case 'lt': return v < a.target; case 'eq': return v === a.target; default: return v >= a.target; } }
 /**
  * Eligibility (brief: none from developer commands, debug tools, test fixtures, stat manipulation, duplicate events or save-loading

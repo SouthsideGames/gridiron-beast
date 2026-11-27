@@ -2932,12 +2932,9 @@ html[data-reduced-motion="1"] .crowd-bubble { animation: crowd-bubble-still 2.6s
 .ach-badge.r-rare { --r1: #2f5c8f; --r2: #15304f; --ring: #60a5fa; }
 .ach-badge.r-epic { --r1: #6b3f9b; --r2: #331a52; --ring: #c084fc; }
 .ach-badge.r-legendary { --r1: #a7791a; --r2: #4d360a; --ring: #facc15; }
-.ach-badge.r-mythic { --r1: #9b2f5c; --r2: #3d0f24; --ring: transparent; }
-.ach-badge.r-mythic::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; z-index: -1; background: conic-gradient(#f472b6, #facc15, #60a5fa, #c084fc, #f472b6); animation: ach-spin 6s linear infinite; }
-.ach-badge.locked { filter: grayscale(1) brightness(.55); }
-.ach-badge.locked::before { animation: none; }
-@keyframes ach-spin { to { transform: rotate(1turn); } }
-@media (prefers-reduced-motion: reduce) { .ach-badge.r-mythic::before { animation: none; } }
+.ach-badge.r-mythic { --r1: #9b2f5c; --r2: #3d0f24; border: 3px solid transparent; box-shadow: 0 2px 0 3px #0a1611;
+  background: radial-gradient(circle at 35% 30%, var(--r1), var(--r2) 70%) padding-box, conic-gradient(#f472b6, #facc15, #60a5fa, #c084fc, #f472b6) border-box; }
+.ach-badge.locked { --r1: #1d332c; --r2: #12221d; } .ach-badge.locked > span { filter: grayscale(1); opacity: .45; }
 .ach-rar { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--ink-2); }
 .ach-rar.r-uncommon { color: #4ade80; border-color: #2f6b4a; } .ach-rar.r-rare { color: #60a5fa; border-color: #2f5c8f; } .ach-rar.r-epic { color: #c084fc; border-color: #6b3f9b; }
 .ach-rar.r-legendary { color: #facc15; border-color: #a7791a; } .ach-rar.r-mythic { color: #f472b6; border-color: #9b2f5c; }

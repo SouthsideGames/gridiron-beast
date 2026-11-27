@@ -57,8 +57,9 @@ export function achBadgeHtml(a, { earned = false, secret = false, size = 48 } = 
  * (several at once are consolidated into one); Rare/Epic: a card with the description; Legendary/Mythic: a reveal with a word
  * from the commissioner. The original 24 keep their cutscenes (f.scenes), which play first. Returns true if anything was shown.
  */
-export function presentAchievementUnlocks(app) {
-  const f = app?.f; if (!f || f.game || isArchived(f) || !(f.achQueue || []).length || document.querySelector('.sheet')) return false;
+export function presentAchievementUnlocks(app, { retries = 8 } = {}) {
+  const f = app?.f; if (!f || f.game || isArchived(f) || !(f.achQueue || []).length) return false;
+  if (document.querySelector('.sheet, [aria-modal="true"]')) { if (retries > 0) setTimeout(() => presentAchievementUnlocks(app, { retries: retries - 1 }), 1500); return false; } // another scene or sheet is up: wait for it
   const q = f.achQueue.slice(); const items = q.map((x) => (x.id ? ACHIEVEMENT_BY_ID[x.id] : null)).filter(Boolean); const retro = q.filter((x) => x.retro).reduce((n, x) => n + x.retro, 0);
   F.dismissAchievementUnlocks(f, q.length); app.save?.();
   const reveal = items.filter((a) => a.presentation === 'reveal'); const cards = items.filter((a) => a.presentation === 'card'); const small = items.filter((a) => a.presentation === 'toast');
