@@ -76,6 +76,17 @@ function prismOverlay(s, camera) {
     const x = Math.min(...ls), y = camera.top - Math.max(...ys), w = Math.max(...ls) - x, h = Math.max(...ys) - Math.min(...ys); const col = i === 0 ? '#ffffff' : '#c9f0ff';
     return `<g data-action="prismpick" data-choice="${esc(o.id)}" role="button" tabindex="0" aria-label="${esc(`Shatter the ${o.type} zone`)}" style="cursor:pointer"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}" fill-opacity="0.08" stroke="${col}" stroke-width="0.32" stroke-dasharray="0.6 0.4"/><text x="${x + w / 2}" y="${y + h / 2 + 0.5}" text-anchor="middle" fill="${col}" stroke="#14281f" stroke-width="0.12" paint-order="stroke" font-size="1.4" font-weight="bold" pointer-events="none">◇ ${esc(o.type)}</text></g>`; }).join('');
 }
+export function conversionCallout(ev, playerSide) {
+  const mine = ev.tryTeam === playerSide;
+  const defensiveScore = ev.sim?.stats?.defensiveScore;
+  if (defensiveScore || ev.good) {
+    const twoPoints = defensiveScore || ev.offensePlayId != null;
+    return { tier: 'score', text: $t(twoPoints ? 'match.two_points' : 'match.extra_point'),
+      mine: defensiveScore ? !mine : mine };
+  }
+  return { tier: 'loss', text: $t('match.no_good'), mine: !mine };
+}
+
 export function registerMatchScreens(Router, app) {
   let pregameTeam = 'mine';
   const autoCamera = new MatchCamera();
@@ -207,13 +218,13 @@ export function registerMatchScreens(Router, app) {
    */
   function callout(ev, me) {
     if (!ev) return null; const r = ev.sim?.result || ev.outcome?.result || null; const yards = ev.outcome?.yards ?? ev.sim?.yards; const off = ev.offenseSide;
+    if (ev.kind === 'try') return conversionCallout(ev, me);
     const mineOff = off === me; const scoredFor = ev.scored?.team || (ev.scored ? off : null);
     if (r === 'touchdown' || (ev.kind === 'kickoff' && ev.scored)) return { tier: 'td', text: $t('match.touchdown_2'), mine: scoredFor ? scoredFor === me : mineOff };
     if (r === 'safety') return { tier: 'score', text: 'SAFETY', mine: !mineOff };
     if (r === 'interception' || r === 'touchback_return') return { tier: 'turnover', text: $t('match.intercepted'), mine: !mineOff };
     if (r === 'fumble') return { tier: 'turnover', text: $t('match.fumble'), mine: !mineOff };
     if (ev.kind === 'field_goal') return ev.scored ? { tier: 'score', text: $t('match.field_goal'), mine: ev.kicking === me } : { tier: 'loss', text: $t('match.no_good'), mine: ev.kicking !== me };
-    if (ev.kind === 'try') return /good|GOOD|converts|two-point conversion is good/i.test(ev.text) ? { tier: 'score', text: /two/i.test(ev.text) ? $t('match.two_points') : $t('match.extra_point'), mine: mineOff } : /no good|fails|stopped|missed/i.test(ev.text) ? { tier: 'loss', text: $t('match.no_good'), mine: !mineOff } : null;
     if (r === 'sack') return { tier: 'sack', text: 'SACK', mine: !mineOff };
     if (r === 'incomplete' || r === 'throwaway') return { tier: 'routine', text: 'INCOMPLETE', mine: !mineOff };
     if (ev.kind === 'punt') return { tier: 'routine', text: 'PUNT', mine: null };

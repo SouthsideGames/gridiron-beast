@@ -42,7 +42,18 @@ export function openTradeDesk(app, { onDone = null, team = null } = {}) {
   const body = el.querySelector('.sheet-body');
   const prop = () => ({ team: state.team, giveMonsters: state.giveM, givePicks: state.giveP, getMonsters: state.getM, getPicks: state.getP });
   const toggle = (arr, v, match = (a, b) => a === b) => { const i = arr.findIndex((x) => match(x, v)); if (i >= 0) arr.splice(i, 1); else arr.push(v); };
-  const render = () => {
+  let renderedTeam = state.team;
+  const render = (resetList = null) => {
+    const scroll = new Map([...body.querySelectorAll('[data-trade-list]')].map(list =>
+      [list.dataset.tradeList, list.scrollTop]));
+    const active = body.ownerDocument.activeElement;
+    const focused = body.contains(active)
+      ? ['data-m', 'data-p', 'data-f'].find(attribute => active.hasAttribute(attribute))
+      : null;
+    const focusValue = focused ? active.getAttribute(focused) : null;
+    if (renderedTeam !== state.team) scroll.delete('theirs');
+    scroll.delete(resetList);
+    renderedTeam = state.team;
     const assets = F.deskAssetsFor(f, state.team); const positions = Object.keys(F.GROUP_SLOTS);
     const empty = !(state.giveM.length || state.giveP.length) || !(state.getM.length || state.getP.length);
     const pv = empty ? null : F.deskPreview(f, prop());
@@ -50,7 +61,7 @@ export function openTradeDesk(app, { onDone = null, team = null } = {}) {
     const partnerSel = `<label class="field">${$t('market.trade_with')} <select class="input" data-f="team">${partners.map((p) => `<option value="${esc(p.team)}" ${p.team === state.team ? 'selected' : ''}>${$t('market.calls_left', { team: esc(p.team), clubLeft: p.clubLeft, n: p.clubLeft })}</option>`).join('')}</select></label>
       <div class="dim" style="font-size:12px;margin-top:4px">${$t('market.each_club_takes_proposals_a_window', { perClub: F.DESK_RULES.perClub, totalLeft: use.totalLeft, perWindow: F.DESK_RULES.perWindow })}</div>`;
     const list = (side, roster, sel, fPos) => `<div class="row between" style="margin-top:6px"><b>${side === 'mine' ? $t('market.you_send') : `${esc(state.team)} send`}</b><select class="input" data-f="${side === 'mine' ? 'fPos' : 'fPosTheirs'}" aria-label="${$t('market.filter_by_position')}" style="max-width:120px"><option value="all">${$t('market.all_positions')}</option>${positions.map((g) => `<option value="${g}" ${fPos === g ? 'selected' : ''}>${g}</option>`).join('')}</select></div>
-      <div class="list" style="max-height:230px;overflow:auto;margin-top:4px">${roster.filter((m) => fPos === 'all' || m.position === fPos).map((m) => monsterRow(m, side, sel.includes(m.id))).join('') || `<p class="dim">${$t('market.nobody_at_that_position')}</p>`}</div>`;
+      <div class="list" data-trade-list="${side}" style="max-height:230px;overflow:auto;margin-top:4px">${roster.filter((m) => fPos === 'all' || m.position === fPos).map((m) => monsterRow(m, side, sel.includes(m.id))).join('') || `<p class="dim">${$t('market.nobody_at_that_position')}</p>`}</div>`;
     const picks = (side, ps, sel) => `<div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center"><span class="dim" style="font-size:12px">${side === 'mine' ? $t('market.your_picks') : $t('market.their_picks')}</span>${ps.map((p) => `<button type="button" class="btn small ${sel.some((x) => key(x) === key(p)) ? 'primary' : ''}" data-p="${side}:${key(p)}" aria-pressed="${sel.some((x) => key(x) === key(p))}">${pickLabel(p)}${p.original && p.original !== (side === 'mine' ? f.club : state.team) ? '*' : ''}</button>`).join('') || `<span class="dim">none</span>`}</div>`;
     const d = pv?.detail;
     const summary = !pv ? `<div class="dim">${$t('market.choose_at_least_one_thing_to')}</div>` : !pv.ok ? `<p class="bad">${esc(pv.reason || pv.reasons?.[0]?.text || '')}</p>` : `<div class="panel tight" role="status">
@@ -75,11 +86,20 @@ export function openTradeDesk(app, { onDone = null, team = null } = {}) {
       <div class="panel tight">${list('theirs', assets.theirs, state.getM, state.fPosTheirs)}${picks('theirs', assets.theirPicks, state.getP)}</div>
       ${summary}
       <div class="polish-actions"><button type="button" class="btn primary big block" data-send="1" ${canSend ? '' : 'disabled'} style="margin-top:8px">${$t('market.send_the_proposal')}</button></div>${result}`;
+    for (const list of body.querySelectorAll('[data-trade-list]')) {
+      list.scrollTop = scroll.get(list.dataset.tradeList) ?? 0;
+    }
+    if (focused) {
+      const replacement = [...body.querySelectorAll(`[${focused}]`)].find(control =>
+        control.getAttribute(focused) === focusValue);
+      replacement?.focus({ preventScroll: true });
+    }
   };
   body.addEventListener('change', (e) => {
     const t = e.target; if (!t.dataset.f) return;
     if (t.dataset.f === 'team') { state.team = t.value; state.giveM = []; state.getM = []; state.giveP = []; state.getP = []; state.fPosTheirs = 'all'; } else state[t.dataset.f] = t.value;
-    state.result = null; render();
+    state.result = null;
+    render(t.dataset.f === 'fPos' ? 'mine' : t.dataset.f === 'fPosTheirs' ? 'theirs' : null);
   });
   el.addEventListener('click', async (e) => { // the whole sheet: Send the Proposal is pinned in the footer, outside the body
     const m = e.target.closest('[data-m]'); const p = e.target.closest('[data-p]');
