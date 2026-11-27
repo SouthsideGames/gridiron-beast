@@ -33,6 +33,7 @@ const out = { tool: 'balance-audit/clash-legendary-options', variant: args.varia
 for (const id of ONLY) {
   const me = top.find((x) => x.fam.id === id); if (!me) { console.error('no family', id); continue; }
   const r = createRng(hashString(`focus:${id}`)); let on = 0, off = 0, ex = 0, none = 0; const bits = [];
+  let refl = 0; // Foresight reflections (status_blocked on the focus monster by its mirror); D-5 study
   let dmg = 0, turns = 0, ordHits = 0, ordDmg = 0, sigHits = 0, sigDmg = 0, sigTurns = 0; const split = { src: [0, 0, 0], none: [0, 0, 0] };
   const draw = (ban) => { const t = []; while (t.length < (ban.length ? 3 : 2)) { const x = top[r.int(top.length)]; if (x !== me && !t.includes(x) && !ban.includes(x)) t.push(x); } return t; };
   for (let g = 0; g < N; g++) {
@@ -44,6 +45,7 @@ for (const id of ONLY) {
     const myLine = `${side}0`; // the focus monster leads its side's lineup
     const turnSet = new Set();
     for (const ev of rOn.log || []) {
+      if (ev.kind === 'status_blocked' && ev.target === myLine && /Foresight/.test(ev.reason || '')) refl++;
       if (ev.actor !== myLine) continue;
       if (ev.kind === 'turn_start') turns++;
       if (ev.kind === 'damage' && ev.damage != null) { dmg += ev.damage; if (ev.tag === 'ordinary') { ordHits++; ordDmg += ev.damage; } else if (ev.abilityId && ev.abilityId === me.fam.abilities.clash) { sigHits++; sigDmg += ev.damage; } }
@@ -54,7 +56,7 @@ for (const id of ONLY) {
   }
   const pts = (w, l, n) => +(100 * (w - l) / Math.max(1, n)).toFixed(1);
   const row = { family: id, ability: abilityById(me.fam.abilities.clash)?.name, abilityId: me.fam.abilities.clash, rarity: me.fam.rarity, battles: N, winOnPct: +(100 * on / N).toFixed(1), winOffPct: +(100 * off / N).toFixed(1), abilityPts: pts(on, off, N), se: +(100 * Math.sqrt(0.5 / N)).toFixed(1),
-    exPerBattle: +(ex / N).toFixed(2), noExecutionPct: +(100 * none / N).toFixed(1), dmgPerBattle: +(dmg / N).toFixed(1), turnsPerBattle: +(turns / N).toFixed(2), dmgPerTurn: +(dmg / Math.max(1, turns)).toFixed(1),
+    exPerBattle: +(ex / N).toFixed(2), executions: ex, reflections: refl, noExecutionPct: +(100 * none / N).toFixed(1), dmgPerBattle: +(dmg / N).toFixed(1), turnsPerBattle: +(turns / N).toFixed(2), dmgPerTurn: +(dmg / Math.max(1, turns)).toFixed(1),
     ordinaryHitMean: +(ordDmg / Math.max(1, ordHits)).toFixed(1), signatureHits: sigHits, signatureHitMean: sigHits ? +(sigDmg / sigHits).toFixed(1) : null, signatureTurnSharePct: +(100 * sigTurns / Math.max(1, turns)).toFixed(1),
     split: args.split ? { foeHasStatusSource: { battles: split.src[0], abilityPts: pts(split.src[1], split.src[2], split.src[0]), se: +(100 * Math.sqrt(0.5 / Math.max(1, split.src[0]))).toFixed(1) }, noStatusSource: { battles: split.none[0], abilityPts: pts(split.none[1], split.none[2], split.none[0]), se: +(100 * Math.sqrt(0.5 / Math.max(1, split.none[0]))).toFixed(1) } } : undefined,
     bits: bits.join('') };

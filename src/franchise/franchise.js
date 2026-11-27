@@ -810,7 +810,7 @@ export const DIFFICULTY = Object.freeze({
   // system; no cap room, no in-game bonus). Founding quality and IQ were the only differences, and development levelled every league by
   // season 5; a lasting difference in growth keeps the difficulties apart for the whole franchise. PROVISIONAL, calibrated on the
   // standard benchmark (hands-off owner, board reset).
-  rookie: { label: 'Rookie', aiDev: 0.6, quality: -4, iq: 0.6, text: $t('franchise.weaker_clubs_that_call_plays_loosely'), hof: $t('franchise.hall_of_fame_8_badges_1'), hofGoals: { badges: 8, titles: 1, wins: 30, awards: 2 }, commissionerPicks: 5 },
+  rookie: { label: 'Rookie', aiDev: 0.6, quality: -7, iq: 0.6, text: $t('franchise.weaker_clubs_that_call_plays_loosely'), hof: $t('franchise.hall_of_fame_8_badges_1'), hofGoals: { badges: 8, titles: 1, wins: 30, awards: 2 }, commissionerPicks: 5 },
   pro: { label: 'Pro', aiDev: 1, quality: -1, iq: 1, text: $t('franchise.the_standard_league'), hof: $t('franchise.hall_of_fame_8_badges_2'), hofGoals: { badges: 8, titles: 2, wins: 50, awards: 3 }, commissionerPicks: 3 },
   allstar: { label: 'All-Star', aiDev: 1.5, quality: 3, iq: 1.5, text: $t('franchise.stronger_clubs_whose_coaches_read_the'), hof: $t('franchise.hall_of_fame_8_badges_4'), hofGoals: { badges: 12, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
 });
