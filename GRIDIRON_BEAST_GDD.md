@@ -5218,6 +5218,14 @@ Measured results are in `reports/balance-impl/FINAL_DECISIONS_REPORT.md`. Where 
   not reach game stamina. Recovery stays 28; fatigue accumulation, injury odds, Durability weights and starting stamina are unchanged, and
   there is no depth bonus. Results of variants B and C are in the report; any change waits for the owner.
 
+### 61.16 Balance audit closed (owner, 2026-11-26)
+- **The general balance audit is complete.** Comprehensive regression testing is pending: it runs after both pull requests are merged
+  and the phone build is updated. No further balance investigation or adjustment is made unless a real defect is found.
+- **Power Left and Power Right** are accepted as they are (§61.15.5); no further retuning, defensive adjustments or yardage penalties.
+- **Roster depth** stays as it is: recovery 28, full starting stamina, injury odds, Durability weights, rotation thresholds, fatigue gain
+  and bench ratings are unchanged. Improving the value of depth and rotation is a future enhancement (BACKLOG item 20), not a release
+  blocker.
+
 ### 61.12 Validation (measured 2026-11-26; details in `reports/balance-impl/FINAL_REPORT.md`)
 - **Whole suite:** fast tier 2,263 of 2,263; simulation tier 310 of 310 after three set-up updates that follow §61.3–61.4.
 - **500 games** (seed 1): 12.45 points per team-game, completion 52.3%, sacks 3.2% of dropbacks, interceptions 1.2%, 159 distinct
