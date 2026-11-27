@@ -1,3 +1,4 @@
+import { createFootballAudio, footballCues, periodWhistle, stadiumBed } from '../../audio/football.js';
 import { presnapReadiness } from '../fx/match-fx.js';
 import { beastSpeciesHtml } from '../beast-identity.js';
 import { autoSpeed, cycleAutoSpeed } from '../phone-navigation.js';
@@ -122,6 +123,8 @@ export function playResultCallout(ev, me, teams) {
 
 export function registerMatchScreens(Router, app) {
   let pregameTeam = 'mine';
+  const footballAudio = createFootballAudio();
+  const announced = new WeakMap();
   const autoCamera = new MatchCamera();
   const zoomCrop = new ZoomCrop(); // the player's zoom button (owner play test 2026-11-26)
   let cameraRaf = null, cameraField = null, cameraSvg = null, cameraLastDraw = 0;
@@ -347,7 +350,7 @@ export function registerMatchScreens(Router, app) {
       if (!anim && f.game?.lastEvent?.sim?.events?.some(e => e.kind === 'ability' || e.kind === 'status')) guideMoment(f, 'status', () => app.save());
       document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => openLiveBox(f));
     },
-    unmount() { cancelReveal(); stopStadiumReaction(); setStadiumScene(null); pendingStadium = null; cancelAnimationFrame(cameraRaf); cameraRaf = null; cameraField = cameraSvg = null; autoCamera.reset(null); settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
+    unmount() { footballAudio.leave(); cancelReveal(); stopStadiumReaction(); setStadiumScene(null); pendingStadium = null; cancelAnimationFrame(cameraRaf); cameraRaf = null; cameraField = cameraSvg = null; autoCamera.reset(null); settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
   });
 
   /** Everything the match screen shows, as the strings render() and refresh() place: title, head, field options, overlays, panels, controls. */
@@ -499,6 +502,16 @@ export function registerMatchScreens(Router, app) {
   }
   /** What mount() does after the markup is in place; refresh() repeats it (the play clock restarts, Auto is rescheduled, the halftime sheet opens). */
   function afterRender(f, root) {
+    const state = f.game.state;
+    const liveBed = anim && !anim.replay
+      ? stadiumBed({ phase: 'scrimmage', down: anim.ev.down, possession: anim.ev.offenseSide })
+      : stadiumBed(state);
+    footballAudio.sync(liveBed);
+    if (!anim) {
+      footballAudio.cue(periodWhistle(announced.get(state), state));
+      const final = state.finished && (!state.needsTiebreak || !!state.winner);
+      announced.set(state, { quarter: state.quarter, final });
+    }
     { const wrap = root?.querySelector('#fieldwrap'), svg = wrap?.querySelector('#field'); if (wrap && svg) { { const v = fieldBox(); layoutSurround(wrap, svg, v[2] / v[3], v[2]); } const r = pendingStadium; pendingStadium = null; if (r) playStadiumReaction(wrap, r, stadiumFxLevel(f.settings)); else resumeStadiumReaction(wrap);
       const tk = pendingTalk; pendingTalk = null; if (tk && stadiumFxLevel(f.settings) !== 'off') { const S = f.game.state; showCrowdTalk(wrap, tk, { seed: `${S.seed}|${S.playCount || 0}`, colors: { home: S.home.color, away: S.away.color } }); } } }
     { const G = f.game, st = G.state; if (!anim && !st.finished && st.quarter >= 3 && !G.halftimeShown) { G.halftimeShown = true; app.save(); openLiveBox(f, $t('match.halftime')); } }
@@ -785,6 +798,7 @@ export function registerMatchScreens(Router, app) {
     const ai = s.phase === 'scrimmage' ? aiCall(f, teams, them) : null;
     const c = { ...choices, tempo: G.tempo || 'normal' };
     const offenseSide = s.possession, toGo = s.toGo, down = s.down;
+    const priorFirstDowns = s.stats[offenseSide]?.firstDowns || 0;
     if (s.phase === 'scrimmage') {
       if (s.possession === me) { c.offensePlayId = G.selected.offense; if (ai?.defense) c.defensePlayId = ai.defense; }
       else { c.defensePlayId = G.selected.defense; if (ai?.offense) c.offensePlayId = ai.offense; }
@@ -800,7 +814,10 @@ export function registerMatchScreens(Router, app) {
     const servedNow = s.phase === 'scrimmage' ? absentMonsters(s, teams).filter((a) => a.serveOn === offenseSide) : []; // presentation only (I5): absences this snap serves
     const ev = recorder.runStep(s, teams, G.tendencies, c, () => step(s, teams, controllers, G.tendencies, c), { mode: 'human', playerSide: me, tempo: G.tempo || 'normal' });
     if (rpT) globalThis.__gbRenderPerf.onStep(rpT, performance.now() - rpT, ev);
-    if (ev) { ev.offenseSide = offenseSide; ev.toGo = toGo; ev.down = down; if (shownPre?.length) ev.fxRevealed = shownPre; if (servedNow.length && ev.sim) { const vac = servedVacancies(servedNow, ev.sim, teams, R.opponent(offenseSide)); if (vac.length) ev.fxStaged = vac; } }
+    if (ev) { ev.offenseSide = offenseSide; ev.toGo = toGo; ev.down = down;
+      ev.firstDown = (s.stats[offenseSide]?.firstDowns || 0) > priorFirstDowns;
+      ev.possessionChanged = s.possession !== offenseSide;
+      if (shownPre?.length) ev.fxRevealed = shownPre; if (servedNow.length && ev.sim) { const vac = servedVacancies(servedNow, ev.sim, teams, R.opponent(offenseSide)); if (vac.length) ev.fxStaged = vac; } }
     afterStep(f, ev);
   }
   /** The human side: never auto-kneels, spikes or burns timeouts; tempo comes from the UI. */
@@ -812,9 +829,6 @@ export function registerMatchScreens(Router, app) {
     const G = f.game;
     stopStadiumReaction(); // the next play: a held cheer (a score) ends here (owner 2026-11-24)
     if (!ev) { app.save(); refresh(f); return; }
-    { // a first down on this play (for the crowd's bubbles): the offense's first-down count went up
-      const st = G.state.stats || {}; const now = { home: st.home?.firstDowns || 0, away: st.away?.firstDowns || 0 }; const was = G.fdSeen || now;
-      const side = ev.offenseSide || G.state.possession; ev.firstDown = !!side && now[side] > (was[side] || 0); G.fdSeen = now; }
     if (ev.kind === 'kickoff' && ev.sim) ev.offenseSide = R.opponent(ev.kicking); // a live kickoff (Task 8 M2): the return unit is the engine's offense
     if (ev.sim && ev.sim.frames?.length > 1 && !f.settings.reducedMotion) { startAnim(f, ev); return; }
     if (!ev.sim && !f.settings.reducedMotion && (ev.kind === 'kickoff' || ev.kind === 'punt' || ev.kind === 'field_goal' || (ev.kind === 'try' && ev.res))) {
@@ -823,6 +837,8 @@ export function registerMatchScreens(Router, app) {
       const K = kickPlay(ev, kickLookup(f, ev.kicking), fxMeta(ev, true));
       if (K?.sim?.frames?.length > 1) { ev.offenseSide = ev.kicking; ev.sim = K.sim; ev.kickerName = teamsFor(f)[ev.kicking]?.kicker?.name || null; if (K.fx) kickFx.set(K.sim, K.fx); startAnim(f, ev); return; }
     }
+    for (const cue of footballCues(ev, PLAYS[ev.offensePlayId])) footballAudio.cue(cue.id);
+    footballAudio.outcome(ev);
     G.lastEvent = { turnover: turnoverCue(ev)?.text, text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide, G.state), stadium: stadiumReaction(ev), talk: crowdTalk(ev, { away: stadiumScene()?.crowd?.mix?.away ?? 0, seed: `${G.state.seed}|${G.state.playCount || 0}` }), fresh: true };
     app.save(); refresh(f);
   }
@@ -844,6 +860,8 @@ export function registerMatchScreens(Router, app) {
     anim.t0 = performance.now();
     const cue = turnoverCue(ev);
     let cueShown = false;
+    const sounds = opts.lookup ? [] : footballCues(ev, PLAYS[ev.offensePlayId]);
+    let nextSound = 0;
     const tick = (rafNow) => {
       if (!anim) return;
       if (activityPaused()) { anim.pausedAt ??= rafNow; anim.raf = requestAnimationFrame(tick); return; }
@@ -855,6 +873,10 @@ export function registerMatchScreens(Router, app) {
         const svg0 = document.querySelector('#field');
         if (svg0 && now - (anim.preDrawn || 0) >= 33) { anim.preDrawn = now; const s0 = G.state; drawMatchField(svg0, { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s0, anim.ev), ...kitOpts(s0, anim.ev.offenseSide), frame: sim.frames[0], prevFrame: null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), time: Math.max(-anim.pre, (now - anim.start) / anim.msPerFrame * 0.1), ownLabel: s0[anim.ev.offenseSide].abbr, oppLabel: s0[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites }); }
         anim.raf = requestAnimationFrame(tick); return;
+      }
+      const playTime = Math.max(0, (now - anim.start) / anim.msPerFrame * .1);
+      while (nextSound < sounds.length && sounds[nextSound].time <= playTime) {
+        footballAudio.cue(sounds[nextSound++].id);
       }
       const raw = Math.max(0, Math.floor((now - anim.start) / anim.msPerFrame));
       if (cue && !cueShown && (now - anim.start) / anim.msPerFrame * .1 >= cue.time) {
@@ -935,6 +957,7 @@ export function registerMatchScreens(Router, app) {
     if (!anim) return;
     if (anim.replay) { endReplay(f); return; }
     const { ev } = anim; cancelAnimationFrame(anim.raf); anim = null;
+    footballAudio.outcome(ev);
     const G = f.game;
     G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide, G.state), stadium: stadiumReaction(ev), talk: crowdTalk(ev, { away: stadiumScene()?.crowd?.mix?.away ?? 0, seed: `${G.state.seed}|${G.state.playCount || 0}` }), fresh: true };
     app.save(); refresh(f); saveWhenIdle(); // the play's result is requested above and written while the screen is idle after it

@@ -84,3 +84,23 @@ test('More: one Guide button holds the stat guide, Type Chart and Stadiums; no D
   for(const a of ['statguide','typechart','stadiums'])assert.match(guide,new RegExp(`data-action="${a}"`));
   assert.equal(TAB_OF.guide,'more');
 });
+
+test('HQ marks the current weekly stage and shows the last result in the collapsed recap', () => {
+  const f = fresh();
+  f.season.week = 2;
+  f.season.day = 2;
+  f.lastGame = { year: f.season.year, week: 1, won: true, playerScore: 24, oppScore: 17,
+    opponent: 'Example Club', events: [{ kind: 'levelup', name: 'Puff', level: 2 }, { kind: 'injury', name: 'Frost', weeks: 1 }] };
+  const { screens } = register(f);
+  const render = () => screens.get('hq').render({ f });
+  const html = render();
+  assert.match(html, /aria-current="step"[^>]*Wednesday/);
+  assert.match(html, /<span aria-hidden="true">✓ <\/span>Mon/);
+  const recap = html.match(/<details class="polish-secondary hq-last-game"><summary>([\s\S]*?)<\/summary>/)?.[1];
+  assert.match(recap, /24–17 · Example Club/);
+  assert.match(recap, /Growth updates: 1 · 1 injured/);
+  assert.doesNotMatch(recap, /Puff|Frost/);
+  assert.match(html, /Puff Lv 2/);
+  f.lastGame.bye = true;
+  assert.doesNotMatch(render(), /hq-last-game/);
+});
